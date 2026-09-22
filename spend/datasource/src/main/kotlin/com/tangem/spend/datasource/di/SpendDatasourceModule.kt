@@ -5,18 +5,25 @@ import com.tangem.core.remote.RetrofitFactory
 import com.tangem.core.remote.Timeouts
 import com.tangem.core.remote.build
 import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
 import com.tangem.spend.datasource.config.TangemPay
 import com.tangem.spend.datasource.config.TangemPayEnvironmentConfig
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.TangemPayAuthApi
+import com.tangem.spend.datasource.pay.addTangemPayEnumFallbackAdapters
+import com.tangem.spend.datasource.pay.models.response.RawJsonAdapter
 import com.tangem.spend.datasource.visa.VisaApi
+import com.tangem.spend.datasource.visa.entity.PaymentAccountStatusValueDM
+import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM
 import com.tangem.utils.info.AppInfoProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
+import dagger.multibindings.IntoSet
 import dagger.multibindings.StringKey
+import dev.onenowy.moshipolymorphicadapter.NamePolymorphicAdapterFactory
 import javax.inject.Singleton
 
 @Module
@@ -89,5 +96,43 @@ internal object SpendDatasourceModule {
                 shouldUseSessionAuth = false,
             ),
         )
+    }
+
+    @Provides
+    @IntoSet
+    fun provideVisaMoshiConfigurer(): NetworkMoshiConfigurer {
+        return NetworkMoshiConfigurer { builder ->
+            builder
+                .addTangemPayEnumFallbackAdapters()
+                .add(RawJsonAdapter())
+                .add(
+                    NamePolymorphicAdapterFactory.of(PaymentAccountStatusValueDM::class.java)
+                        .withSubtype(PaymentAccountStatusValueDM.Empty::class.java, "empty")
+                        .withSubtype(PaymentAccountStatusValueDM.NotCreated::class.java, "not_created")
+                        .withSubtype(PaymentAccountStatusValueDM.UnderReview::class.java, "kyc_status")
+                        .withSubtype(PaymentAccountStatusValueDM.IssuingCard::class.java, "issuing_card")
+                        .withSubtype(PaymentAccountStatusValueDM.ActiveAccount::class.java, "active_account")
+                        .withSubtype(PaymentAccountStatusValueDM.DeactivatedAccount::class.java, "deactivated_account")
+                        .withSubtype(PaymentAccountStatusValueDM.CardIssueFailed::class.java, "card_issue_failed"),
+                )
+                .add(
+                    NamePolymorphicAdapterFactory.of(MoneyAccountStatusValueDM::class.java)
+                        .withSubtype(MoneyAccountStatusValueDM.Empty::class.java, "empty")
+                        .withSubtype(MoneyAccountStatusValueDM.NotCreated::class.java, "not_created")
+                        .withSubtype(MoneyAccountStatusValueDM.UnderReview::class.java, "kyc_status")
+                        .withSubtype(MoneyAccountStatusValueDM.Issuing::class.java, "issuing")
+                        .withSubtype(
+                            MoneyAccountStatusValueDM.VerificationDeclined::class.java,
+                            "verification_declined",
+                        )
+                        .withSubtype(MoneyAccountStatusValueDM.Activating::class.java, "activating")
+                        .withSubtype(
+                            MoneyAccountStatusValueDM.CountryNotSupported::class.java,
+                            "country_not_supported",
+                        )
+                        .withSubtype(MoneyAccountStatusValueDM.ActiveAccount::class.java, "active_account")
+                        .withSubtype(MoneyAccountStatusValueDM.Deactivated::class.java, "deactivated"),
+                )
+        }
     }
 }

@@ -26,10 +26,10 @@ internal class GetCoinCategoriesUseCaseTest {
     fun `GIVEN repository returns categories WHEN invoke THEN Right with the categories`() = runTest {
         // Arrange
         val categories = listOf(coinCategory(id = "42", code = "stocks"))
-        coEvery { marketsTokenRepository.getCoinCategories() } returns categories
+        coEvery { marketsTokenRepository.getCoinCategories(country = "US") } returns categories
 
         // Act
-        val actual = useCase()
+        val actual = useCase(country = "US")
 
         // Assert
         assertEither(actual = actual, expected = Either.Right(categories))
@@ -38,10 +38,10 @@ internal class GetCoinCategoriesUseCaseTest {
     @Test
     fun `GIVEN repository returns empty list WHEN invoke THEN Right with an empty list`() = runTest {
         // Arrange — no categories is a successful answer, not a failure
-        coEvery { marketsTokenRepository.getCoinCategories() } returns emptyList()
+        coEvery { marketsTokenRepository.getCoinCategories(country = "US") } returns emptyList()
 
         // Act
-        val actual = useCase()
+        val actual = useCase(country = "US")
 
         // Assert
         assertEither(actual = actual, expected = Either.Right(emptyList()))
@@ -51,10 +51,10 @@ internal class GetCoinCategoriesUseCaseTest {
     fun `GIVEN repository throws WHEN invoke THEN Left with the thrown error`() = runTest {
         // Arrange — the repository is not total, so the use case is the layer that closes the error channel
         val failure = IllegalStateException("categories unavailable")
-        coEvery { marketsTokenRepository.getCoinCategories() } throws failure
+        coEvery { marketsTokenRepository.getCoinCategories(country = "US") } throws failure
 
         // Act
-        val actual = useCase()
+        val actual = useCase(country = "US")
 
         // Assert
         assertEitherLeft(actual = actual, expected = failure)

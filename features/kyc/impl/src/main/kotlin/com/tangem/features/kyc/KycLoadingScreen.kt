@@ -9,14 +9,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.TangemPayTestTags
 
 @Composable
 internal fun KycLoadingScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     Scaffold(
-        modifier = modifier,
+        modifier = modifier.testTag(TangemPayTestTags.KYC_SCREEN),
         topBar = {
             AppBarWithBackButton(
                 modifier = Modifier.statusBarsPadding(),
@@ -26,7 +28,7 @@ internal fun KycLoadingScreen(onBack: () -> Unit, modifier: Modifier = Modifier)
         },
         content = { paddingValues ->
             Box(
-                modifier = modifier
+                modifier = Modifier
                     .padding(paddingValues)
                     .fillMaxSize(),
                 contentAlignment = Alignment.Center,

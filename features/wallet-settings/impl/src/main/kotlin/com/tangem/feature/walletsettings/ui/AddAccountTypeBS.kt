@@ -2,7 +2,10 @@ package com.tangem.feature.walletsettings.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -48,7 +51,6 @@ internal fun AddAccountTypeBS(
             TangemTopNavigation(
                 title = resourceReference(R.string.account_form_title_create),
                 contentAlign = TangemTopNavigation.ContentAlign.Center,
-                blurBackground = false,
                 onClose = onDismiss,
             )
         },
@@ -70,9 +72,7 @@ private fun AddAccountTypeContent(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .padding(bottom = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(vertical = 16.dp),
     ) {
         AccountTypeItem(
             icon = Icons.ic_user_20,
@@ -100,10 +100,7 @@ private fun AccountTypeItem(
 ) {
     TangemRow(
         onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(color = TangemTheme.colors3.bg.tertiary),
+        modifier = modifier.fillMaxWidth(),
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = {
             TangemIcon(

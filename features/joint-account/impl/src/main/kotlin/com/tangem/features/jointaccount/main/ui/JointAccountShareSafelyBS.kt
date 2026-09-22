@@ -58,7 +58,6 @@ internal fun JointAccountShareSafelyBS(onDismiss: () -> Unit, modifier: Modifier
             TangemTopNavigation(
                 title = resourceReference(CoreUiR.string.joint_account_invite_members_safety_sheet_title),
                 contentAlign = TangemTopNavigation.ContentAlign.Center,
-                blurBackground = false,
                 onClose = onDismiss,
             )
         },

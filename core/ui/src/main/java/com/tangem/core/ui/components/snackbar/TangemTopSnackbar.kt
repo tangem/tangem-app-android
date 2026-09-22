@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -73,7 +74,11 @@ fun TangemTopSnackbar(snackbarMessage: SnackbarMessage, modifier: Modifier = Mod
                     painter = painterResource(id = snackbarMessage.startIconId),
                     contentDescription = null,
                     modifier = Modifier.size(TangemTheme.dimens2.x5),
-                    tint = TangemTheme.colors2.graphic.neutral.secondary,
+                    tint = if (snackbarMessage.isIconTinted) {
+                        TangemTheme.colors2.graphic.neutral.secondary
+                    } else {
+                        Color.Unspecified
+                    },
                 )
 
                 SpacerW(TangemTheme.dimens2.x2)

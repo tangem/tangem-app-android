@@ -1,9 +1,7 @@
 package com.tangem.data.polymarket.error
 
-import com.squareup.moshi.Moshi
 import com.tangem.core.remote.response.ApiResponseError
-import com.tangem.datasource.api.polymarket.models.ProblemDetailResponse
-import com.tangem.core.remote.moshi.NetworkMoshi
+import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletError.RelayerRejected
 import javax.inject.Inject
@@ -16,10 +14,8 @@ import javax.inject.Inject
  * fallback for unrecognised messages.
  */
 internal class PolymarketWalletErrorResolver @Inject constructor(
-    @NetworkMoshi moshi: Moshi,
+    private val problemDetailParser: ProblemDetailParser,
 ) {
-
-    private val problemDetailAdapter = moshi.adapter(ProblemDetailResponse::class.java)
 
     fun resolve(error: ApiResponseError): PolymarketWalletError = when (error) {
         is ApiResponseError.HttpException -> resolveHttp(error)
@@ -31,13 +27,13 @@ internal class PolymarketWalletErrorResolver @Inject constructor(
     }
 
     private fun resolveHttp(error: ApiResponseError.HttpException): PolymarketWalletError {
-        val detail = parseDetail(error.errorBody)
-        return when (error.code.numericCode) {
-            HTTP_BAD_REQUEST -> PolymarketWalletError.InvalidRequest
-            HTTP_UNAUTHORIZED -> PolymarketWalletError.Unauthorized
-            HTTP_CONFLICT -> PolymarketWalletError.WalletNotDeployed
-            HTTP_UNPROCESSABLE_ENTITY -> resolveRelayerRejection(detail)
-            HTTP_BAD_GATEWAY -> PolymarketWalletError.RelayerUnavailable
+        val detail = problemDetailParser.parseDetail(error.errorBody)
+        return when (error.code) {
+            Code.BAD_REQUEST -> PolymarketWalletError.InvalidRequest
+            Code.UNAUTHORIZED -> PolymarketWalletError.Unauthorized
+            Code.CONFLICT -> PolymarketWalletError.WalletNotDeployed
+            Code.UNPROCESSABLE_ENTITY -> resolveRelayerRejection(detail)
+            Code.BAD_GATEWAY -> PolymarketWalletError.RelayerUnavailable
             else -> PolymarketWalletError.Unexpected(httpCode = error.code.numericCode, detail = detail)
         }
     }
@@ -53,16 +49,7 @@ internal class PolymarketWalletErrorResolver @Inject constructor(
         }
     }
 
-    private fun parseDetail(errorBody: String?): String? =
-        errorBody?.let { body -> runCatching { problemDetailAdapter.fromJson(body)?.detail }.getOrNull() }
-
     private companion object {
-        const val HTTP_BAD_REQUEST = 400
-        const val HTTP_UNAUTHORIZED = 401
-        const val HTTP_CONFLICT = 409
-        const val HTTP_UNPROCESSABLE_ENTITY = 422
-        const val HTTP_BAD_GATEWAY = 502
-
         // Relayer rejection messages from the BFF retry table (matched case-insensitively, as substrings).
         // Kept specific enough to avoid misclassifying unrelated 422s; anything else → RelayerRejected.Other.
         const val NOT_REGISTERED = "not registered"

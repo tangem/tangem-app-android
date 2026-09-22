@@ -7,7 +7,7 @@ import com.tangem.data.marketing.store.MarketingDismissStore
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
-import com.tangem.datasource.api.common.response.ETAG_HEADER
+import com.tangem.core.remote.response.ETAG_HEADER
 import com.tangem.datasource.api.marketing.models.BannerDto
 import com.tangem.datasource.api.marketing.models.CampaignDto
 import com.tangem.datasource.api.marketing.models.MarketingCampaignsCacheEntry

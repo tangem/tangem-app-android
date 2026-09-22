@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
@@ -38,6 +39,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -54,6 +56,7 @@ internal fun TangemPaySelectPlanScreen(state: TangemPaySelectPlanUM, modifier: M
     Box(
         modifier = modifier
             .fillMaxSize()
+            .testTag(TangemPayTestTags.SELECT_PLAN_SCREEN)
             .background(TangemTheme.colors3.bg.primary),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -88,7 +91,7 @@ internal fun TangemPaySelectPlanScreen(state: TangemPaySelectPlanUM, modifier: M
             }
         }
 
-        ComparePlansBottomSheet(compare = state.compare)
+        ComparePlansBottomSheet(compare = state.compare, onLinkClick = state.onLinkClick)
     }
 }
 
@@ -123,6 +126,7 @@ private fun ColumnScope.SelectContent(state: TangemPaySelectPlanUM) {
             state = pagerState,
             modifier = Modifier
                 .fillMaxWidth()
+                .testTag(TangemPayTestTags.SELECT_PLAN_PAGER)
                 .padding(top = 12.dp),
             pageSize = PageSize.Fixed(CARD_WIDTH.dp),
             contentPadding = PaddingValues(start = SCREEN_MARGIN.dp, end = endPadding),
@@ -148,7 +152,7 @@ private fun ColumnScope.SelectContent(state: TangemPaySelectPlanUM) {
     PlanDetails(
         title = plan.name,
         points = plan.points,
-        onPointLinkClick = state.onPointLinkClick,
+        onLinkClick = state.onLinkClick,
     )
 
     Spacer(modifier = Modifier.weight(1f))
@@ -158,11 +162,12 @@ private fun ColumnScope.SelectContent(state: TangemPaySelectPlanUM) {
 private fun PlanDetails(
     title: TextReference,
     points: ImmutableList<TangemPaySelectPlanUM.PointUM>,
-    onPointLinkClick: (url: String) -> Unit,
+    onLinkClick: (url: String) -> Unit,
 ) {
     Text(
         modifier = Modifier
             .fillMaxWidth()
+            .testTag(TangemPayTestTags.SELECT_PLAN_TITLE)
             .padding(horizontal = 24.dp)
             .padding(vertical = 12.dp),
         text = title.resolveReference(),
@@ -176,7 +181,7 @@ private fun PlanDetails(
             .padding(vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
-        points.fastForEach { point -> PlanPoint(point = point, onLinkClick = onPointLinkClick) }
+        points.fastForEach { point -> PlanPoint(point = point, onLinkClick = onLinkClick) }
     }
 }
 
@@ -187,7 +192,9 @@ private fun PlanPoint(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag(TangemPayTestTags.SELECT_PLAN_POINT),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.Top,
     ) {
@@ -233,7 +240,7 @@ private fun ColumnScope.ConfirmContent(state: TangemPaySelectPlanUM, content: Ta
     PlanDetails(
         title = content.title,
         points = content.points,
-        onPointLinkClick = state.onPointLinkClick,
+        onLinkClick = state.onLinkClick,
     )
     Spacer(modifier = Modifier.size(24.dp))
 }
@@ -248,7 +255,9 @@ private fun SelectFooter(content: TangemPaySelectPlanUM.Content.Select, modifier
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         TangemButton(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(TangemPayTestTags.SELECT_PLAN_COMPARE_BUTTON),
             variant = TangemButton.Variant.Secondary,
             size = TangemButton.Size.X12,
             text = resourceReference(R.string.tangempay_select_plan_compare),
@@ -256,7 +265,9 @@ private fun SelectFooter(content: TangemPaySelectPlanUM.Content.Select, modifier
             isEnabled = !content.isProcessing,
         )
         TangemButton(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(TangemPayTestTags.SELECT_PLAN_SELECT_BUTTON),
             variant = TangemButton.Variant.Primary,
             size = TangemButton.Size.X12,
             text = resourceReference(R.string.tangempay_select_plan_btn_select),
@@ -276,7 +287,9 @@ private fun ConfirmFooter(content: TangemPaySelectPlanUM.Content.Confirm, modifi
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         TangemButton(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(TangemPayTestTags.SELECT_PLAN_CANCEL_BUTTON),
             variant = TangemButton.Variant.Secondary,
             size = TangemButton.Size.X12,
             isEnabled = !content.isProcessing,
@@ -284,7 +297,9 @@ private fun ConfirmFooter(content: TangemPaySelectPlanUM.Content.Confirm, modifi
             onClick = content.onCancelClick,
         )
         TangemButton(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(TangemPayTestTags.SELECT_PLAN_CONFIRM_BUTTON),
             variant = TangemButton.Variant.Primary,
             size = TangemButton.Size.X12,
             isLoading = content.isProcessing,
@@ -356,7 +371,7 @@ private fun previewState(isConfirm: Boolean) = TangemPaySelectPlanUM(
     onPlanSelected = {},
     onBackClick = {},
     onCloseClick = {},
-    onPointLinkClick = {},
+    onLinkClick = {},
     content = if (isConfirm) {
         TangemPaySelectPlanUM.Content.Confirm(
             title = stringReference("We will issue Visa Plus for you"),

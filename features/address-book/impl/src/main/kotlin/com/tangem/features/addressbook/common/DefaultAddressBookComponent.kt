@@ -18,6 +18,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.addressbook.model.ContactId
 import com.tangem.features.addressbook.AddressBookComponent
+import com.tangem.features.addressbook.analytics.AddressBookEvents
 import com.tangem.features.addressbook.editcontact.ui.state.ValidatedAddress
 import com.tangem.features.addressbook.route.AddressBookRoute
 import dagger.assisted.Assisted
@@ -39,8 +40,17 @@ internal class DefaultAddressBookComponent @AssistedInject constructor(
         // Drop any results left over from a previous session before the (possibly preloaded) stack starts collecting.
         resultHolder.clear()
         selectNetworksResultHolder.clear()
-        if (params.addressBookOpenMode is AddressBookOpenMode.WithContactCreation) {
-            analyticsSender.sendAddContactTapped(fromSendSuccess = true, scope = componentScope)
+        val creationMode = params.addressBookOpenMode as? AddressBookOpenMode.WithContactCreation
+        if (creationMode != null) {
+            analyticsSender.sendAddContactTapped(
+                source = when (creationMode.source) {
+                    AddressBookOpenMode.ContactCreationSource.SendSuccess ->
+                        AddressBookEvents.AddContactTapped.Source.SendSuccess
+                    AddressBookOpenMode.ContactCreationSource.TransactionDetails ->
+                        AddressBookEvents.AddContactTapped.Source.TransactionDetails
+                },
+                scope = componentScope,
+            )
         }
     }
 
@@ -51,7 +61,10 @@ internal class DefaultAddressBookComponent @AssistedInject constructor(
         }
 
         override fun onAddContactClick() {
-            analyticsSender.sendAddContactTapped(fromSendSuccess = false, scope = componentScope)
+            analyticsSender.sendAddContactTapped(
+                source = AddressBookEvents.AddContactTapped.Source.Settings,
+                scope = componentScope,
+            )
             navigation.pushNew(AddressBookRoute.EditContact())
         }
 

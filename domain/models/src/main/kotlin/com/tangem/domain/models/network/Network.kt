@@ -88,6 +88,17 @@ data class Network(
         @Serializable
         data class Custom(override val value: String) : DerivationPath()
 
+        /**
+         * The owner key path of a participant of a joint account, `m/44'/60'/888888'/0/{index}`.
+         *
+         * The network behind it is a Safe contract: the key at this path only signs, the funds live at the Safe
+         * address, which arrives later as [NetworkStatus] data. The path tells the joint accounts of one wallet
+         * apart, so a joint [Network.ID] and the ids of its currencies collide neither with each other nor with a
+         * personal account.
+         */
+        @Serializable
+        data class Joint(override val value: String) : DerivationPath()
+
         /** Represents a lack of derivation path, which means the wallet does not support the HD wallet feature */
         @Serializable
         data object None : DerivationPath() {
@@ -98,6 +109,7 @@ data class Network(
             return when (this) {
                 is Card -> Card(value)
                 is Custom -> Custom(value)
+                is Joint -> Joint(value)
                 None -> None
             }
         }

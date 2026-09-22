@@ -10,30 +10,12 @@ private const val TX_HISTORY_PAGING_DEFAULT_LIMIT = 20
 @Suppress("TooManyFunctions")
 interface TangemPayApi {
 
-    /**
-     * Deprecated on the backend in favour of `v1/transactions`, which also carries per-transaction
-     * cashback. Used while the cashback toggle is off because the new endpoint is still being rolled out.
-     */
-    @GET("v1/customer/transactions")
-    suspend fun getTangemPayTxHistoryLegacy(
-        @Header("Authorization") authHeader: String,
-        @Query("cursor") cursor: String?,
-        @Query("limit") limit: Int = TX_HISTORY_PAGING_DEFAULT_LIMIT,
-    ): ApiResponse<TangemPayTxHistoryResponse>
-
     @GET("v1/transactions")
     suspend fun getTangemPayTxHistory(
         @Header("Authorization") authHeader: String,
         @Query("cursor") cursor: String?,
         @Query("limit") limit: Int = TX_HISTORY_PAGING_DEFAULT_LIMIT,
     ): ApiResponse<TangemPayTxHistoryResponse>
-
-    /** Deprecated on the backend in favour of `v1/transactions/{transaction_id}`, see [getTangemPayTxHistoryLegacy]. */
-    @GET("v1/customer/transactions/{transaction_id}")
-    suspend fun getTransactionLegacy(
-        @Header("Authorization") authHeader: String,
-        @Path("transaction_id") transactionId: String,
-    ): ApiResponse<TangemPayTransactionResponse>
 
     @GET("v1/transactions/{transaction_id}")
     suspend fun getTransaction(
@@ -68,6 +50,16 @@ interface TangemPayApi {
         @Path("product_instance_id") productInstanceId: String,
     ): ApiResponse<BankCredentialsResponse>
 
+    /** Recipients saved for bank off-ramp withdrawals. */
+    @GET("v1/account/bank-accounts")
+    suspend fun getBankAccounts(@Header("Authorization") authHeader: String): ApiResponse<BankAccountsResponse>
+
+    /** Source tokens and bank rails a withdrawal can use, with each rail's fee and ETA. */
+    @GET("v1/account/bank-offramp/options")
+    suspend fun getBankOfframpOptions(
+        @Header("Authorization") authHeader: String,
+    ): ApiResponse<BankOfframpOptionsResponse>
+
     @GET("v1/customer/wallets/{customer_wallet_id}")
     suspend fun checkCustomerWalletId(
         @Path("customer_wallet_id") customerWalletId: String,
@@ -82,6 +74,9 @@ interface TangemPayApi {
     @POST("v1/deeplink/validate")
     suspend fun validateDeeplink(@Body body: DeeplinkValidityRequest): ApiResponse<DeeplinkValidityResponse>
 
+    @GET("v1/images")
+    suspend fun getImages(@Query("deeplink_value") deeplinkValue: String): ApiResponse<ImagesResponse>
+
     @GET("v1/eligibility/channels")
     suspend fun getEligibilityChannels(): ApiResponse<TangemPayEligibilityChannels>
 
@@ -90,6 +85,32 @@ interface TangemPayApi {
     suspend fun getUserEligibilityChannels(
         @Header("Authorization") authHeader: String,
     ): ApiResponse<TangemPayEligibilityChannels>
+
+    @GET("v1/geo/countries")
+    suspend fun getGeoCountries(): ApiResponse<GeoCountriesResponse>
+
+    @GET("v1/geo/countries/{country_code}/regions")
+    suspend fun getGeoRegions(@Path("country_code") countryCode: String): ApiResponse<GeoRegionsResponse>
+
+    @GET("v1/eligibility/check")
+    suspend fun checkEligibilityForCountry(
+        @Query("product") product: String,
+        @Query("country") country: String,
+        @Query("region") region: String?,
+    ): ApiResponse<EligibilityCheckResponse>
+
+    @GET("v1/eligibility/check")
+    suspend fun checkEligibilityForCustomer(
+        @Header("Authorization") authHeader: String,
+        @Query("product") product: String,
+    ): ApiResponse<EligibilityCheckResponse>
+
+    @POST("v1/waitlist")
+    suspend fun joinWaitlist(
+        @Header("Authorization") authHeader: String?,
+        @Header("X-Idempotency-Key") idempotencyKey: String,
+        @Body body: WaitlistRequest,
+    ): ApiResponse<WaitlistResponse>
 
     @GET("v1/order/{order_id}")
     suspend fun getOrder(
@@ -122,6 +143,22 @@ interface TangemPayApi {
         @Body body: VirtualAccountOrderRequest,
     ): ApiResponse<OrderResponse>
 
+    @POST("v1/order")
+    suspend fun createBankOfframpOrder(
+        @Header("Authorization") authHeader: String,
+        @Header("Idempotency-Key") idempotencyKey: String,
+        @Body body: BankOfframpPlaceOrderRequest,
+    ): ApiResponse<OrderResponse>
+
+    /** Hands the backend the card's signature over the hash the order is waiting for. */
+    @POST("v1/order/{order_id}/bank-offramp/signature")
+    suspend fun submitBankOfframpSignature(
+        @Header("Authorization") authHeader: String,
+        @Header("Idempotency-Key") idempotencyKey: String,
+        @Path("order_id") orderId: String,
+        @Body body: BankOfframpSignatureRequest,
+    ): ApiResponse<Unit>
+
     @POST("v1/order/{order_id}/cancel")
     suspend fun cancelOrder(
         @Header("Authorization") authHeader: String,
@@ -130,7 +167,10 @@ interface TangemPayApi {
 
     /** Customer offers — used to gate the issue-additional-card flow. */
     @GET("v1/customer/offers")
-    suspend fun getCustomerOffers(@Header("Authorization") authHeader: String): ApiResponse<CustomerOffersResponse>
+    suspend fun getCustomerOffers(
+        @Header("Authorization") authHeader: String,
+        @Query("deeplink_value") deeplinkValue: String?,
+    ): ApiResponse<CustomerOffersResponse>
 
     @GET("v1/product-instances/{product_instance_id}/offers")
     suspend fun getProductInstanceOffers(
