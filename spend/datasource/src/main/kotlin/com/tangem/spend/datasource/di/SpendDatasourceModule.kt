@@ -10,6 +10,8 @@ import com.tangem.spend.datasource.config.TangemPay
 import com.tangem.spend.datasource.config.TangemPayEnvironmentConfig
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.TangemPayAuthApi
+import com.tangem.spend.datasource.pay.addTangemPayEnumFallbackAdapters
+import com.tangem.spend.datasource.pay.models.response.RawJsonAdapter
 import com.tangem.spend.datasource.visa.VisaApi
 import com.tangem.spend.datasource.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM
@@ -101,6 +103,8 @@ internal object SpendDatasourceModule {
     fun provideVisaMoshiConfigurer(): NetworkMoshiConfigurer {
         return NetworkMoshiConfigurer { builder ->
             builder
+                .addTangemPayEnumFallbackAdapters()
+                .add(RawJsonAdapter())
                 .add(
                     NamePolymorphicAdapterFactory.of(PaymentAccountStatusValueDM::class.java)
                         .withSubtype(PaymentAccountStatusValueDM.Empty::class.java, "empty")
