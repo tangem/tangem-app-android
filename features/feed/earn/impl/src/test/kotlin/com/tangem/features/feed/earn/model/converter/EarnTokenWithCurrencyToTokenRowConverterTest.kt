@@ -8,9 +8,11 @@ import com.tangem.domain.models.earn.EarnTokenWithCurrency
 import com.tangem.domain.models.earn.EarnType
 import com.tangem.features.feed.earn.createEarnCurrency
 import com.tangem.features.feed.earn.createEarnToken
+import com.tangem.features.feed.earn.createEarnTokenCurrency
 import com.tangem.features.feed.earn.createEarnTokenWithCurrency
 import com.tangem.features.feed.earn.impl.R
 import org.junit.jupiter.api.Test
+import com.tangem.core.ui.R as CoreUiR
 
 /**
  * The row draws from two sources at once — the earn token and the currency behind it — so the assertions
@@ -72,14 +74,33 @@ internal class EarnTokenWithCurrencyToTokenRowConverterTest {
     }
 
     @Test
-    fun `GIVEN a token WHEN converted THEN the icon points at the currency's image`() {
+    fun `GIVEN a native coin WHEN converted THEN the icon points at the currency's image without a badge`() {
         // Act
         val actual = converter.convert(token)
+
+        // Assert — the coin icon already is the network icon, so a badge on top of it is noise
+        assertThat(actual.icon).isEqualTo(
+            TangemTokenIcon.UiState.Token(
+                tokenState = TangemTokenIcon.State(url = "https://icons.tangem.com/eth.png"),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN a token WHEN converted THEN the icon carries the network badge`() {
+        // Arrange
+        val tether = createEarnTokenWithCurrency(cryptoCurrency = createEarnTokenCurrency())
+
+        // Act
+        val actual = converter.convert(tether)
 
         // Assert
         assertThat(actual.icon).isEqualTo(
             TangemTokenIcon.UiState.Token(
-                tokenState = TangemTokenIcon.State(url = "https://icons.tangem.com/eth.png"),
+                tokenState = TangemTokenIcon.State(
+                    url = "https://icons.tangem.com/usdt.png",
+                    topIcon = CoreUiR.drawable.img_eth_22,
+                ),
             ),
         )
     }
