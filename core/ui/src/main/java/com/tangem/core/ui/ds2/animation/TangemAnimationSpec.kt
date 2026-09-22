@@ -31,6 +31,9 @@ internal object TangemAnimationSpec {
     /** Snappy spring for alpha changes — fades and cross-fades. Paired with [Size]. */
     val Alpha: FiniteAnimationSpec<Float> = spring(stiffness = Spring.StiffnessMediumLow)
 
+    /** Snappy spring for a 0..1 reveal progress driving a slot's width. Paired with [Size]. */
+    val Reveal: FiniteAnimationSpec<Float> = spring(stiffness = Spring.StiffnessMediumLow)
+
     /** Snappy spring for color changes, so state-driven recoloring doesn't snap. */
     val Tint: FiniteAnimationSpec<Color> = spring(stiffness = Spring.StiffnessMediumLow)
 

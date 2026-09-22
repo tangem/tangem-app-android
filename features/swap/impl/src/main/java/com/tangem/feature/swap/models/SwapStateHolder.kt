@@ -56,6 +56,9 @@ sealed class SwapCardState {
 
     abstract val type: TransactionCardType
 
+    /** When `true`, suppresses the "Choose token" tap affordance on this card. */
+    abstract val isSelectionLocked: Boolean
+
     data class SwapCardData(
         override val type: TransactionCardType,
         val currencyIconState: CurrencyIconState,
@@ -72,8 +75,7 @@ sealed class SwapCardState {
          * [currencyIconState] to [com.tangem.core.ui.components.currency.icon.CurrencyIconState.PaymentAccount]).
          */
         val fiatSymbolOverride: String? = null,
-        /** When `true`, suppresses the "Choose token" tap affordance on this card. */
-        val isSelectionLocked: Boolean = false,
+        override val isSelectionLocked: Boolean = false,
     ) : SwapCardState()
 
     data class Empty(
@@ -81,11 +83,14 @@ sealed class SwapCardState {
         val amountEquivalent: TextReference,
         val amountField: AmountFieldModel? = null,
         val isPulseAnimationEnabled: Boolean = false,
+        override val isSelectionLocked: Boolean = false,
     ) : SwapCardState()
 
     data class Loading(
         override val type: TransactionCardType,
-    ) : SwapCardState()
+    ) : SwapCardState() {
+        override val isSelectionLocked: Boolean = true
+    }
 }
 
 data class SwapButton(
@@ -93,6 +98,7 @@ data class SwapButton(
     val isEnabled: Boolean,
     val mode: Mode = Mode.SWAP,
     val isHoldToConfirm: Boolean = false,
+    val title: TextReference? = null,
     val onClick: () -> Unit,
 ) {
     enum class Mode {

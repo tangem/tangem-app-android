@@ -12,7 +12,7 @@ import com.tangem.domain.markets.SentimentOutlook
 import com.tangem.domain.markets.sentimentOutlook
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
-import com.tangem.domain.models.account.filterCryptoPortfolio
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
@@ -31,9 +31,6 @@ internal const val FOR_YOU_TOP_EARN_TOKENS_COUNT = 5
  * already-active tokens still leaves enough candidates to fill the list.
  */
 internal const val TOP_EARN_TOKENS_BATCH_SIZE = 30
-
-/** Divisor converting backend percent values (5.5) to fractions (0.055). */
-internal val PERCENT_BASE = BigDecimal("100")
 
 /**
  * Cross-network grouping key for the portfolio review: the same asset on different networks (e.g. USDC
@@ -107,13 +104,15 @@ internal fun forYouSentimentBadge(
 /**
  * Ids of the accounts the portfolio selector can actually offer: the crypto-portfolio ones.
  *
- * A wallet's statuses also carry `Payment` / `Virtual` / `Prediction` / `Joint` accounts, and the selector
+ * A wallet's statuses also carry `Payment` / `MoneyAccount` / `Prediction` / `Joint` accounts, and the selector
  * renders no row for those. Seeding the selection with an id that has no row would strand it there forever —
  * nothing could ever uncheck it, so the selection could never become empty and the Apply button could never
  * disable.
  */
 internal fun Map<UserWalletId, AccountStatusList>.availableAccountIds(): Set<AccountId> = values
-    .flatMap { statusList -> statusList.accountStatuses.filterCryptoPortfolio().map { it.accountId } }
+    .flatMap { statusList ->
+        statusList.accountStatuses.filterIsInstance<AccountStatus.Personal>().map { it.accountId }
+    }
     .toSet()
 
 /**

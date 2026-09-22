@@ -14,9 +14,11 @@ import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.status.utils.AccountNameIndexer
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.account.tokens.MainAccountTokensMigration
+import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
+import com.tangem.domain.models.account.OwnerKeyIndex
 import com.tangem.domain.models.wallet.UserWalletId
 
 /**
@@ -26,6 +28,8 @@ import com.tangem.domain.models.wallet.UserWalletId
  * @property mainAccountTokensMigration handles the migration of tokens from the main account to the recovered account
  * @property cryptoCurrencyBalanceFetcher Fetcher for updating crypto currency balances.
  * @property singleAccountListFetcher fetches the list of accounts for a single user wallet
+ * @property singleJointAccountListFetcher refreshes the joint account list; a joint account is excluded from it
+ * while archived, so recovering one leaves the joint-specific store stale until this runs
  *
 [REDACTED_AUTHOR]
  */
@@ -34,6 +38,7 @@ class RecoverCryptoPortfolioUseCase(
     private val mainAccountTokensMigration: MainAccountTokensMigration,
     private val cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
     private val singleAccountListFetcher: SingleAccountListFetcher,
+    private val singleJointAccountListFetcher: SingleJointAccountListFetcher,
 ) {
 
     /**
@@ -46,26 +51,60 @@ class RecoverCryptoPortfolioUseCase(
 
         val accountList = getAccountList(userWalletId = accountId.userWalletId)
 
-        ensure(accountList.canAddMoreCryptoAccounts) {
-            raise(Error.AccountListRequirementsNotMet(cause = AccountList.Error.ExceedsMaxAccountsCount))
-        }
-
         val archivedAccount = getArchivedAccount(accountId = accountId)
 
         val recoveredAccount = archivedAccount.recover()
+
+        ensureCanAddMore(accountList = accountList, recoveredAccount = recoveredAccount)
 
         val updatedAccountList = add(accountList, recoveredAccount)
 
         saveAccounts(updatedAccountList)
 
-        mainAccountTokensMigration.migrate(
-            userWalletId = accountId.userWalletId,
-            derivationIndex = recoveredAccount.derivationIndex,
-        )
+        syncRecoveredAccount(userWalletId = accountId.userWalletId, recoveredAccount = recoveredAccount)
 
         refreshBalances(accountId = accountId)
 
         recoveredAccount
+    }
+
+    /**
+     * Main-account token migration only makes sense for a personal account — a joint one does not have unassigned
+     * tokens parked on Main. A joint account is instead excluded from `GET /joint-accounts` while archived, so its
+     * dedicated list must be refreshed for the recovered account to show up there again.
+     *
+     * Neither call's result is raised as an [Error]: the account is already recovered by this point (the PUT
+     * above succeeded), so a failure here must not be reported as a failed recovery.
+     */
+    private suspend fun syncRecoveredAccount(userWalletId: UserWalletId, recoveredAccount: Account.CryptoPortfolio) {
+        when (recoveredAccount) {
+            is Account.Personal -> {
+                mainAccountTokensMigration.migrate(
+                    userWalletId = userWalletId,
+                    derivationIndex = recoveredAccount.derivationIndex,
+                )
+            }
+            is Account.Joint -> {
+                singleJointAccountListFetcher(
+                    params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId),
+                )
+            }
+        }
+    }
+
+    /**
+     * Personal and joint accounts are capped independently (20 each, via [AccountList.canAddMoreCryptoAccounts] and
+     * [AccountList.canAddMoreJointAccounts]) — recovering one type must never be blocked by the other type's count.
+     */
+    private fun Raise<Error>.ensureCanAddMore(accountList: AccountList, recoveredAccount: Account.CryptoPortfolio) {
+        when (recoveredAccount) {
+            is Account.Personal -> ensure(accountList.canAddMoreCryptoAccounts) {
+                Error.AccountListRequirementsNotMet(cause = AccountList.Error.ExceedsMaxAccountsCount)
+            }
+            is Account.Joint -> ensure(accountList.canAddMoreJointAccounts) {
+                Error.AccountListRequirementsNotMet(cause = AccountList.Error.ExceedsMaxJointAccountsCount)
+            }
+        }
     }
 
     private suspend fun Raise<Error>.fetchAccountList(userWalletId: UserWalletId) {
@@ -94,14 +133,27 @@ class RecoverCryptoPortfolioUseCase(
             }
     }
 
-    private fun ArchivedAccount.recover(): Account.Personal {
-        return Account.Personal(
-            accountId = this.accountId,
-            accountName = this.name,
-            icon = this.icon,
-            derivationIndex = this.derivationIndex,
-            cryptoCurrencies = emptyList(),
-        )
+    private fun ArchivedAccount.recover(): Account.CryptoPortfolio {
+        return when (type) {
+            ArchivedAccount.Type.CRYPTO -> Account.Personal(
+                accountId = this.accountId,
+                accountName = this.name,
+                icon = this.icon,
+                derivationIndex = this.derivationIndex,
+                cryptoCurrencies = emptyList(),
+            )
+            // The backend reuses the derivation-index field for the owner key index of a joint account (see
+            // ArchivedAccount.derivationIndex); the real value comes back once the joint list is refreshed
+            ArchivedAccount.Type.JOINT -> Account.Joint(
+                accountId = this.accountId,
+                accountName = this.name,
+                icon = this.icon,
+                ownerKeyIndex = OwnerKeyIndex(this.derivationIndex.value).getOrElse {
+                    error("Unable to create OwnerKeyIndex from value: ${this.derivationIndex.value}. Cause: $it")
+                },
+                cryptoCurrencies = emptyList(),
+            )
+        }
     }
 
     private suspend fun Raise<Error>.saveAccounts(accountList: AccountList) {

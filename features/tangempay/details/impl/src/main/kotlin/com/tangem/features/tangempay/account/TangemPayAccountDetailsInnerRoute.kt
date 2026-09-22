@@ -43,4 +43,7 @@ internal sealed class TangemPayAccountDetailsInnerRoute : Route {
     data class OrderCard(
         val intent: TangemPayOrderCardIntent = TangemPayOrderCardIntent.Issue,
     ) : TangemPayAccountDetailsInnerRoute()
+
+    @Serializable
+    data object WithdrawHub : TangemPayAccountDetailsInnerRoute()
 }

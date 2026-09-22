@@ -8,33 +8,21 @@ import org.junit.jupiter.api.Test
 internal class ReceiveRoutingTest {
 
     @Test
-    fun `GIVEN multichain on and networks present WHEN shouldUseChooseNetwork THEN true`() {
+    fun `GIVEN networks present WHEN shouldUseChooseNetwork THEN true`() {
         // Arrange
         val networks = listOf(available())
 
         // Act
-        val result = shouldUseChooseNetwork(isMultichainEnabled = true, networks = networks)
+        val result = shouldUseChooseNetwork(networks)
 
         // Assert
         assertThat(result).isTrue()
     }
 
     @Test
-    fun `GIVEN multichain off WHEN shouldUseChooseNetwork THEN false`() {
-        // Arrange
-        val networks = listOf(available())
-
+    fun `GIVEN no networks WHEN shouldUseChooseNetwork THEN false`() {
         // Act
-        val result = shouldUseChooseNetwork(isMultichainEnabled = false, networks = networks)
-
-        // Assert
-        assertThat(result).isFalse()
-    }
-
-    @Test
-    fun `GIVEN multichain on but no networks WHEN shouldUseChooseNetwork THEN false`() {
-        // Arrange + Act
-        val result = shouldUseChooseNetwork(isMultichainEnabled = true, networks = emptyList())
+        val result = shouldUseChooseNetwork(emptyList())
 
         // Assert
         assertThat(result).isFalse()

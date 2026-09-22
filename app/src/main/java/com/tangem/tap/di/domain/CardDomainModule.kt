@@ -9,6 +9,7 @@ import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.demo.models.DemoConfig
+import com.tangem.domain.jointaccount.repository.JointOwnerKeysRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.wallets.usecase.*
@@ -56,6 +57,18 @@ internal object CardDomainModule {
     @Singleton
     fun provideDerivePublicKeysUseCase(derivationsRepository: DerivationsRepository): DerivePublicKeysUseCase {
         return DerivePublicKeysUseCase(derivationsRepository = derivationsRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDeriveCurrencyAndOwnerKeysUseCase(
+        derivationsRepository: DerivationsRepository,
+        jointOwnerKeysRepository: JointOwnerKeysRepository,
+    ): DeriveCurrencyAndOwnerKeysUseCase {
+        return DeriveCurrencyAndOwnerKeysUseCase(
+            derivationsRepository = derivationsRepository,
+            jointOwnerKeysRepository = jointOwnerKeysRepository,
+        )
     }
 
     @Provides

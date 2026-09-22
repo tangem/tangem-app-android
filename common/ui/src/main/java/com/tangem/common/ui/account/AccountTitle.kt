@@ -91,7 +91,7 @@ private fun PreviewAccountTitle() {
                 modifier = Modifier.padding(4.dp),
             )
             AccountTitle(
-                accountTitleUM = AccountTitleUM.Account.virtual(prefixText = stringReference(StringsSigns.DOT)),
+                accountTitleUM = AccountTitleUM.Account.moneyAccount(prefixText = stringReference(StringsSigns.DOT)),
                 modifier = Modifier.padding(4.dp),
             )
         }

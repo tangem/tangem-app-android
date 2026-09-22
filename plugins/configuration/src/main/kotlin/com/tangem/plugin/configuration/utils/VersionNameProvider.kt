@@ -39,8 +39,13 @@ internal class VersionNameProvider(
             }
         }
 
-        // Fallback to default if nothing works
-        return "1.0.0-SNAPSHOT"
+        // The app strips the suffix before comparing, so this reads as 1.0.0 and disables every
+        // version-gated feature toggle — the build then stops resembling the shipping one.
+        project.logger.warn(
+            "Could not resolve a release version for branch '$currentBranch'; falling back to " +
+                "$FALLBACK_VERSION_NAME — all version-gated feature toggles will be DISABLED.",
+        )
+        return FALLBACK_VERSION_NAME
     }
 
     /**
@@ -94,7 +99,7 @@ internal class VersionNameProvider(
                 // HEAD always resolves to the current commit, even in CI's detached checkout, so the
                 // script can compute which release branch this build descends from without relying on
                 // a local branch ref existing.
-                commandLine("sh", scriptPath.absolutePath, "HEAD")
+                commandLine(shell(), scriptPath.absolutePath, "HEAD")
             }.standardOutput.asText.get()
 
             if (!outputFile.exists()) {
@@ -111,6 +116,18 @@ internal class VersionNameProvider(
             outputFile.delete()
             null
         }
+    }
+
+    /**
+     * The script needs `set -o pipefail`, which dash (`/bin/sh` on the CI Docker image) rejects with
+     * exit 2. On Windows the reverse holds: `bash` is the WSL launcher, which cannot read a Windows
+     * path, while `sh` is Git Bash. Either mistake silently falls back to 1.0.0-SNAPSHOT and disables
+     * every version-gated feature toggle. Trying the shells in turn is not an option: a probe that
+     * exits non-zero is reported as a configuration-cache problem.
+     */
+    private fun shell(): String {
+        val osName = project.providers.systemProperty("os.name").orNull.orEmpty()
+        return if (osName.startsWith(prefix = "Windows", ignoreCase = true)) "sh" else "bash"
     }
 
     private fun extractVersionFromBranch(branch: String): String? {
@@ -137,5 +154,6 @@ internal class VersionNameProvider(
 
     private companion object {
         const val DETACHED_HEAD = "HEAD"
+        const val FALLBACK_VERSION_NAME = "1.0.0-SNAPSHOT"
     }
 }
