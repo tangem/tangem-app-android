@@ -43,7 +43,7 @@ internal class DefaultSingleJointAccountListFetcher @Inject constructor(
                 }
                 // The tag outlives the cache, so a 304 with nothing cached would read as a wallet without accounts
                 response.isNotModified() -> {
-                    TangemLogger.i("The joint accounts ETag outlived the cache, refetching without it")
+                    TangemLogger.i("The joint accounts ETag of $userWalletId outlived the cache, refetching without it")
                     eTagsStore.clear(userWalletId = userWalletId, key = ETAG_KEY)
 
                     storeAccounts(
