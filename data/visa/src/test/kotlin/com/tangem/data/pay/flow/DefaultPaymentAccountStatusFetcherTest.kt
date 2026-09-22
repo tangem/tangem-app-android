@@ -185,13 +185,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             availableBalance = BigDecimal.TEN,
             currency = "USD",
         ),
-        cryptoBalance: PaymentAccountStatusValue.CryptoBalance? = PaymentAccountStatusValue.CryptoBalance(
-            id = "usdc",
-            chainId = 137L,
-            depositAddress = "0xdeposit",
-            tokenContractAddress = "0xcontract",
-            balance = BigDecimal.TEN,
-        ),
         tariffPlan: TangemPayCustomerTariffPlan? = null,
         networks: List<CustomerInfo.NetworkInfo> = emptyList(),
     ) = CustomerInfo(
@@ -200,8 +193,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         kycStatus = KycStatus.APPROVED,
         state = CustomerInfo.State.ACTIVE,
         fiatBalance = fiatBalance,
-        cryptoBalance = cryptoBalance,
-        availableForWithdrawal = BigDecimal.TEN,
         cards = cards,
         productInstances = productInstances,
         tariffPlan = tariffPlan,
@@ -267,6 +258,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         coEvery { paymentAccountStatusesStore.store(any(), any()) } just Runs
 
         every { tangemPayCurrencyFactory.create(userWalletId) } returns token
+        every { tangemPayCurrencyFactory.createNetworkStatuses(any(), any(), any()) } returns emptyList()
 
         coEvery { singleQuoteSupplier.getSyncOrNull(any()) } returns null
 
@@ -313,19 +305,12 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         return PaymentAccountStatusValue.Loaded(
             source = StatusSource.ACTUAL,
             customerId = "cust_1",
+            paymentAccountAddress = "0xdeposit",
             balance = PaymentAccountStatusValue.Balance(
                 fiatBalance = PaymentAccountStatusValue.FiatBalance(
                     availableBalance = BigDecimal.TEN,
                     currency = "USD",
                 ),
-                cryptoBalance = PaymentAccountStatusValue.CryptoBalance(
-                    id = "usdc",
-                    chainId = 137L,
-                    depositAddress = "0xdeposit",
-                    tokenContractAddress = "0xcontract",
-                    balance = BigDecimal.TEN,
-                ),
-                availableForWithdrawal = BigDecimal.TEN,
             ),
             cryptoCurrency = token,
             cards = emptyList(),
@@ -768,7 +753,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 val customerInfo = buildCustomerInfo(
                     productInstances = emptyList(),
                     fiatBalance = null,
-                    cryptoBalance = null,
                     tariffPlan = customerTariffPlan,
                 )
                 stubHappyPath(customerInfo)
@@ -790,7 +774,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 val customerInfo = buildCustomerInfo(
                     productInstances = emptyList(),
                     fiatBalance = null,
-                    cryptoBalance = null,
                     tariffPlan = null,
                 )
                 stubHappyPath(customerInfo)
@@ -810,7 +793,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             val customerInfo = buildCustomerInfo(
                 productInstances = emptyList(),
                 fiatBalance = null,
-                cryptoBalance = null,
                 tariffPlan = customerTariffPlan,
             )
             stubHappyPath(customerInfo)
@@ -1004,7 +986,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 customerId = customerId,
                 productInstances = emptyList(),
                 fiatBalance = null,
-                cryptoBalance = null,
                 tariffPlan = customerTariffPlan,
             )
             stubHappyPath(customerInfo)
@@ -1511,7 +1492,23 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         )
 
         @Test
-        fun `GIVEN customer networks WHEN map loaded THEN networks populated from factory`() = runTest {
+        fun `GIVEN no networks in response WHEN map loaded THEN networks empty`() = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(networks = emptyList())
+            stubHappyPath(customerInfo)
+            every { tangemPayCurrencyFactory.createNetworkStatuses(any(), any(), any()) } returns emptyList()
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            val loaded = storedStatuses.lastLoaded()
+            assertThat(loaded.networks).isEmpty()
+        }
+
+        @Test
+        fun `GIVEN networks in response WHEN map loaded THEN networks populated from factory`() = runTest {
             // Arrange
             val networkStatus = PaymentNetworkStatus.Available(
                 network = mockk(),
@@ -1547,7 +1544,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                     paymentAccount = paymentAccount,
                     cards = emptyList(),
                     fiatBalance = null,
-                    cryptoBalance = null,
                     tariffPlan = customerTariffPlan,
                 )
                 stubHappyPath(customerInfo)
@@ -1576,7 +1572,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                     paymentAccount = paymentAccount,
                     cards = emptyList(),
                     fiatBalance = null,
-                    cryptoBalance = null,
                 )
                 stubHappyPath(customerInfo)
                 val cached = loadedFixture()
@@ -1604,7 +1599,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                     paymentAccount = paymentAccount,
                     cards = emptyList(),
                     fiatBalance = null,
-                    cryptoBalance = null,
                     tariffPlan = customerTariffPlan,
                 )
                 stubHappyPath(customerInfo)
@@ -1632,7 +1626,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                     paymentAccount = paymentAccount,
                     cards = emptyList(),
                     fiatBalance = null,
-                    cryptoBalance = null,
                 )
                 stubHappyPath(customerInfo)
                 val storedStatuses = captureStoredStatuses()
@@ -1654,7 +1647,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                     productInstances = emptyList(),
                     cards = emptyList(),
                     fiatBalance = null,
-                    cryptoBalance = null,
                     tariffPlan = customerTariffPlan,
                 )
                 stubHappyPath(customerInfo)
@@ -1681,7 +1673,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 productInstances = emptyList(),
                 cards = emptyList(),
                 fiatBalance = null,
-                cryptoBalance = null,
                 tariffPlan = customerTariffPlan,
             )
             stubHappyPath(customerInfo)
