@@ -1,11 +1,9 @@
 package com.tangem.data.staking.toggles
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.domain.staking.model.StakingIntegrationID
 import io.mockk.clearMocks
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
@@ -46,33 +44,5 @@ internal class DefaultStakingFeatureTogglesTest {
         }
 
         verify(exactly = 0) { featureTogglesManager.isFeatureEnabled(any()) }
-    }
-
-    @Test
-    fun `GIVEN TWI_1602_STAKING_TRANSACTION_VALIDATION enabled WHEN isTransactionValidationEnabled THEN true`() {
-        // Arrange
-        every {
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1602_STAKING_TRANSACTION_VALIDATION)
-        } returns true
-
-        // Act & Assert
-        assertThat(toggles.isTransactionValidationEnabled).isTrue()
-        verify(exactly = 1) {
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1602_STAKING_TRANSACTION_VALIDATION)
-        }
-    }
-
-    @Test
-    fun `GIVEN TWI_1602_STAKING_TRANSACTION_VALIDATION disabled WHEN isTransactionValidationEnabled THEN false`() {
-        // Arrange
-        every {
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1602_STAKING_TRANSACTION_VALIDATION)
-        } returns false
-
-        // Act & Assert
-        assertThat(toggles.isTransactionValidationEnabled).isFalse()
-        verify(exactly = 1) {
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1602_STAKING_TRANSACTION_VALIDATION)
-        }
     }
 }
