@@ -13,6 +13,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.introduction.impl.ui.state.CreateWalletUM
 import kotlinx.coroutines.delay
 
@@ -48,6 +49,9 @@ internal fun CreateWalletBottomSheet(config: TangemBottomSheetConfig?, prewarm: 
         // stays flat. Kept in the window's own overlay: a dialog window costs half a second of first
         // composition before the sheet can even start animating.
         isMaterialEnabled = false,
+        // The overlay composes in the host, outside this screen's forced palette, so the modal forces its own.
+        forceDarkTheme = true,
+        containerColor = TangemTheme.colors3.bg.secondary,
         // First tap on a fresh process is the tap this screen exists for, so the modal is warmed before it.
         prewarm = prewarm,
         title = { content ->
@@ -61,9 +65,11 @@ internal fun CreateWalletBottomSheet(config: TangemBottomSheetConfig?, prewarm: 
             )
         },
     ) { content ->
+        // The rows bring their own 16 dp of padding, which is the inset the design asks for, and they sit
+        // against each other with no gap.
         Column(
-            modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             WalletOptionCard(option = content.cardOrRing)
             WalletOptionCard(option = content.seedPhrase)
