@@ -12,8 +12,6 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
-import com.arkivanov.essenty.lifecycle.doOnStart
-import com.arkivanov.essenty.lifecycle.doOnStop
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -55,11 +53,6 @@ internal class PlacePredictionComponent(
             )
         },
     )
-
-    init {
-        lifecycle.doOnStart(isOneTime = false, block = model::onScreenShown)
-        lifecycle.doOnStop(isOneTime = false, block = model::onScreenHidden)
-    }
 
     @Composable
     override fun Content(modifier: Modifier) {
