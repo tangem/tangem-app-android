@@ -115,7 +115,7 @@ internal class ResolveQrSendTargetsUseCaseTest {
     }
 
     @Test
-    fun `GIVEN a joint account with a currency WHEN resolve THEN its currency is not a send target`() = runTest {
+    fun `GIVEN a joint account with a currency WHEN resolve THEN its currency is a send target`() = runTest {
         // Arrange
         val jointCurrency: CryptoCurrency = mockk(relaxed = true)
         val accounts = listOf(
@@ -139,9 +139,8 @@ internal class ResolveQrSendTargetsUseCaseTest {
         // Act
         useCase(RECIPIENT)
 
-        // Assert — the classifier never learns about the Safe's currency
-        verify { qrScanningEventsRepository.classify(RECIPIENT, emptyList()) }
-        verify(inverse = true) { qrScanningEventsRepository.classify(any(), match { jointCurrency in it }) }
+        // Assert — a transfer from the Safe is a co-signed operation, so its currency is offered like a personal one
+        verify { qrScanningEventsRepository.classify(RECIPIENT, listOf(jointCurrency)) }
     }
 
     private companion object {
