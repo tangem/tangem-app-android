@@ -12,10 +12,21 @@ import kotlinx.collections.immutable.ImmutableList
 internal data class TangemPayBankWithdrawFormUM(
     val header: BankWithdrawHeaderUM,
     val fields: ImmutableList<FieldUM>,
+    val suggestions: ImmutableList<SuggestionUM>,
     val isContinueEnabled: Boolean,
     val onBackClick: () -> Unit,
     val onContinueClick: () -> Unit,
 ) {
+
+    /** A saved recipient whose account number starts with what the user has typed into the account-number field. */
+    @Immutable
+    data class SuggestionUM(
+        val id: String,
+        val matchedPrefix: String,
+        val accountNumberSuffix: String,
+        val name: String,
+        val onClick: () -> Unit,
+    )
 
     @Immutable
     sealed interface FieldUM {
