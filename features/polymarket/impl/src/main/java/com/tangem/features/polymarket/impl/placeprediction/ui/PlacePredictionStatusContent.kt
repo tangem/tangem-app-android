@@ -99,6 +99,7 @@ private fun ResultFooter(viewPosition: ViewPositionUM, intents: PlacePredictionI
                 size = TangemButton.Size.X12,
                 text = resourceReference(R.string.prediction_place_result_view_position),
                 isLoading = viewPosition == ViewPositionUM.Awaiting,
+                isEnabled = viewPosition == ViewPositionUM.Available,
                 onClick = intents::onViewPositionClick,
             )
         }
