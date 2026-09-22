@@ -54,8 +54,8 @@ internal class PaymentAccountStatusValueMultichainTest {
         // Arrange
         val loaded = loaded(
             networks = listOf(
-                PaymentNetworkStatus.NotIssued(network = ethereum),
-                PaymentNetworkStatus.Disabled(network = ethereum, cryptoCurrencies = listOf(mockk())),
+                PaymentNetworkStatus.NotIssued(network = ethereum, chainId = 1L),
+                PaymentNetworkStatus.Disabled(network = ethereum, cryptoCurrencies = listOf(mockk()), chainId = 1L),
             ),
         )
 
@@ -73,7 +73,7 @@ internal class PaymentAccountStatusValueMultichainTest {
         val loaded = loaded(
             networks = listOf(
                 available(ethereum, listOf(s1, s2)),
-                PaymentNetworkStatus.NotIssued(network = createNetwork(id = "tron")),
+                PaymentNetworkStatus.NotIssued(network = createNetwork(id = "tron"), chainId = 1L),
                 available(polygon, listOf(s3)),
             ),
         )
