@@ -31,6 +31,7 @@ import com.tangem.grow.datasource.onramp.OnrampApi
 import com.tangem.grow.datasource.polymarket.PolymarketApi
 import com.tangem.grow.datasource.polymarket.bridge.PolymarketBridgeApi
 import com.tangem.grow.datasource.polymarket.clob.PolymarketClobApi
+import com.tangem.grow.datasource.polymarket.data.PolymarketDataApi
 import com.tangem.grow.datasource.polymarket.geo.PolymarketGeoApi
 import com.tangem.grow.datasource.polymarket.relayer.PolymarketRelayerApi
 import com.tangem.grow.datasource.stakekit.StakeKitApi
@@ -305,6 +306,13 @@ internal object GrowDatasourceModule {
 
     @Provides
     @IntoMap
+    @StringKey(PolymarketData.KEY)
+    fun providePolymarketDataConfig(): ApiConfig {
+        return PolymarketData()
+    }
+
+    @Provides
+    @IntoMap
     @StringKey(PolymarketRelayer.KEY)
     fun providePolymarketRelayerConfig(): ApiConfig {
         return PolymarketRelayer()
@@ -355,6 +363,18 @@ internal object GrowDatasourceModule {
         return factory.build(
             RetrofitApiSpec(
                 apiConfigId = PolymarketWeb.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providePolymarketDataApi(factory: RetrofitFactory): PolymarketDataApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = PolymarketData.ID,
                 shouldApplyTimeoutAnnotations = false,
                 shouldUseSessionAuth = false,
             ),
