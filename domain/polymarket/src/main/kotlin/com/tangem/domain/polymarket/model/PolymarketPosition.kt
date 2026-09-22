@@ -11,6 +11,9 @@ sealed interface PolymarketPosition {
     val title: String
     val iconUrl: String?
     val outcome: String
+
+    /** Position of the outcome among the market's outcomes; `null` when upstream does not serve it. */
+    val outcomeIndex: Int?
     val endDate: LocalDate?
     val avgPrice: BigDecimal
     val curPrice: BigDecimal
@@ -26,6 +29,7 @@ sealed interface PolymarketPosition {
         override val title: String,
         override val iconUrl: String?,
         override val outcome: String,
+        override val outcomeIndex: Int?,
         override val endDate: LocalDate?,
         override val avgPrice: BigDecimal,
         override val curPrice: BigDecimal,
@@ -53,6 +57,7 @@ sealed interface PolymarketPosition {
         override val title: String,
         override val iconUrl: String?,
         override val outcome: String,
+        override val outcomeIndex: Int?,
         override val endDate: LocalDate?,
         override val avgPrice: BigDecimal,
         override val curPrice: BigDecimal,
