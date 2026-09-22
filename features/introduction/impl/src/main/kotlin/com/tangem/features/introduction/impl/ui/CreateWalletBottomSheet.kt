@@ -2,7 +2,6 @@ package com.tangem.features.introduction.impl.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -11,7 +10,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.ds2.modal.TangemModal
-import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
+import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.introduction.impl.ui.state.CreateWalletUM
 import kotlinx.coroutines.delay
@@ -51,12 +50,8 @@ internal fun CreateWalletBottomSheet(config: TangemBottomSheetConfig?, prewarm: 
         // First tap on a fresh process is the tap this screen exists for, so the modal is warmed before it.
         prewarm = prewarm,
         title = { content ->
-            TangemTopNavigation(
+            TangemModal.TopNavigation(
                 title = resourceReference(R.string.introduction_button_create_wallet),
-                contentAlign = TangemTopNavigation.ContentAlign.Center,
-                windowInsets = WindowInsets(0.dp),
-                fadeEnabled = false,
-                onBack = null,
                 onClose = if (isCreatingWallet) null else content.onCloseClick,
             )
         },
