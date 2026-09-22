@@ -15,4 +15,6 @@ internal sealed interface CollectiblesRoute : Route {
 
     @Serializable
     data class Main(val userWalletId: UserWalletId) : CollectiblesRoute
+
+    data class MachineDetails(val externalId: String) : CollectiblesRoute
 }
