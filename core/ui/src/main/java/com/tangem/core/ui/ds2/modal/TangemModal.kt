@@ -424,9 +424,11 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> DefaultTangemMo
 @Composable
 @PublishedApi
 internal fun ModalPalette(forceDarkTheme: Boolean, content: @Composable () -> Unit) {
-    if (forceDarkTheme) {
+        val hazeState = LocalHazeState.current
         CompositionLocalProvider(LocalIsInDarkTheme provides true) {
-            TangemThemeRedesign(content = content)
+            TangemThemeRedesign {
+                CompositionLocalProvider(LocalHazeState provides hazeState, content = content)
+            }
         }
     } else {
         content()
