@@ -29,6 +29,7 @@ internal class DefaultJointAccountInviteDeepLinkHandlerTest {
     fun setUp() {
         clearMocks(appRouter, jointAccountFeatureToggles)
         every { jointAccountFeatureToggles.isJointAccountEnabled } returns true
+        every { appRouter.stack } returns emptyList()
         every { appRouter.push(any<AppRoute>(), any()) } just Runs
         every { appRouter.popTo(any<AppRoute>(), any()) } just Runs
     }
@@ -67,6 +68,35 @@ internal class DefaultJointAccountInviteDeepLinkHandlerTest {
         // Assert
         verify(exactly = 0) { appRouter.push(any<AppRoute>(), any()) }
         verify { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
+    }
+
+    @Test
+    fun `GIVEN the same invite already on top WHEN handle deeplink THEN nothing is pushed`() = runTest {
+        // Arrange
+        every { appRouter.stack } returns listOf(AppRoute.Wallet, AppRoute.JointAccountJoin(inviteId = "test-invite-id"))
+        val uri = fakeUri(listOf("joint-account", "join", "test-invite-id"))
+
+        // Act
+        createHandler(scope = this, deeplinkUri = uri)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { appRouter.push(any<AppRoute>(), any()) }
+        verify(exactly = 0) { appRouter.popTo(any<AppRoute>(), any()) }
+    }
+
+    @Test
+    fun `GIVEN another invite on top WHEN handle deeplink THEN the new invite is pushed`() = runTest {
+        // Arrange
+        every { appRouter.stack } returns listOf(AppRoute.Wallet, AppRoute.JointAccountJoin(inviteId = "other-invite-id"))
+        val uri = fakeUri(listOf("joint-account", "join", "test-invite-id"))
+
+        // Act
+        createHandler(scope = this, deeplinkUri = uri)
+        advanceUntilIdle()
+
+        // Assert
+        verify { appRouter.push(route = AppRoute.JointAccountJoin(inviteId = "test-invite-id"), onComplete = any()) }
     }
 
     private fun provideTestModels() = listOf(
