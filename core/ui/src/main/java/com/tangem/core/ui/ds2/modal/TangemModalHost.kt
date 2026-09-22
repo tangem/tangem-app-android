@@ -224,13 +224,13 @@ internal fun OverlayModalScaffold(
                 if (isBackDismissEnabled) backProgress.snapTo(event.progress)
             }
             when {
-                // Committed: keep the folded state — the dismissal continues from it.
+                // Committed: keep the previewed offset — the dismissal continues from it.
                 onBack != null -> onBack()
                 isDismissEnabled -> onDismissRequest()
                 // else: back is blocked, the gesture previewed nothing — nothing to restore.
             }
         } catch (expected: CancellationException) {
-            // Cancelled: unfold the card back into place.
+            // Cancelled: slide the card back into place.
             scope.launch { backProgress.animateTo(targetValue = 0f) }
         }
     }
@@ -240,15 +240,17 @@ internal fun OverlayModalScaffold(
         LaunchedEffect(sheetState) { sheetState.show() }
     }
 
-    // Dragging the sheet to hidden dismisses the modal — but only after it has been shown,
-    // since the sheet starts in the hidden state.
+    // Dragging the sheet to hidden dismisses the modal — but only once it has settled there, after
+    // the finger is lifted. The draggable's currentValue flips to Hidden halfway through the drag,
+    // and dismissing on that takes the modal away from under the finger mid-gesture.
+    // "Was visible" is read off the target, not the settled value, so a sheet swiped away before
+    // its show animation finished still reports its dismissal instead of staying parked offscreen.
     LaunchedEffect(sheetState) {
         var wasVisible = false
-        snapshotFlow { sheetState.currentValue }.collect { value ->
-            if (value != TangemSheetValue.Hidden) {
-                wasVisible = true
-            } else if (wasVisible) {
-                onDismissRequest()
+        snapshotFlow { sheetState.targetValue to sheetState.settledValue }.collect { (target, settled) ->
+            when {
+                target != TangemSheetValue.Hidden -> wasVisible = true
+                wasVisible && settled == TangemSheetValue.Hidden -> onDismissRequest()
             }
         }
     }
@@ -268,16 +270,23 @@ internal fun OverlayModalScaffold(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                // The sheet must be laid out to produce its drag anchors, but until those exist
-                // the card's in-box pin can't resolve against the sheet's own position — stay
-                // invisible for that one pass instead of flashing a misplaced card.
+                // The sheet must be laid out to produce its drag anchors, but until those exist it
+                // has no offset to be placed at — stay invisible for that one pass instead of
+                // flashing a card parked at the top of the window.
                 .graphicsLayer { alpha = if (sheetState.hasExpandedState) 1f else 0f },
             contentAlignment = Alignment.TopCenter,
         ) {
             CustomBottomSheet(
                 state = sheetState,
                 peekHeight = 0.dp,
-                modifier = Modifier.semantics { dialog() },
+                modifier = Modifier
+                    .semantics { dialog() }
+                    // The predictive-back gesture previews the dismissal by sliding the sheet down
+                    // a share of its height; the sheet's own offset is untouched, so committing
+                    // continues the slide from here and cancelling brings it back.
+                    .graphicsLayer {
+                        translationY = backProgress.value * MODAL_BACK_PREVIEW_FRACTION * size.height
+                    },
             ) {
                 content()
             }

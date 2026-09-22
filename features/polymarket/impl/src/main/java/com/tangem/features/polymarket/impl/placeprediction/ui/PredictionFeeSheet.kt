@@ -2,7 +2,6 @@ package com.tangem.features.polymarket.impl.placeprediction.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -14,11 +13,11 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.ds2.modal.TangemModal
+import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
-import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -37,13 +36,7 @@ internal fun PredictionFeeSheet(state: PredictionFeeSheetUM, onDismiss: () -> Un
         ),
         onBack = onDismiss,
         title = {
-            TangemTopNavigation(
-                title = resourceReference(R.string.prediction_place_fee),
-                contentAlign = TangemTopNavigation.ContentAlign.Center,
-                windowInsets = WindowInsets(0),
-                fadeEnabled = false,
-                blurBackground = false,
-            )
+            TangemModal.TopNavigation(title = resourceReference(R.string.prediction_place_fee))
         },
     ) {
         Column(modifier = Modifier.padding(bottom = 16.dp)) {
