@@ -1312,7 +1312,7 @@ internal class DefaultInitialCurrenciesResolverTest {
 
     // endregion
 
-    // region account top-up FROM auto-fill priority ([REDACTED_TASK_KEY])
+    // region account top-up FROM auto-fill priority
 
     @Test
     fun `GIVEN topup and wallet holds account currency funded WHEN resolve THEN that token is FROM`() = runTest {
@@ -1338,7 +1338,6 @@ internal class DefaultInitialCurrenciesResolverTest {
             initialCryptoCurrency = null,
             swapCurrencyPosition = CurrencyPosition.ANY,
             accountFlow = AccountFlow.TopUp,
-            isAccountFlowEnabled = true,
         )
 
         // Prefers the account's own currency (becomes a transfer), not the richer BTC.
@@ -1374,7 +1373,6 @@ internal class DefaultInitialCurrenciesResolverTest {
                 initialCryptoCurrency = null,
                 swapCurrencyPosition = CurrencyPosition.ANY,
                 accountFlow = AccountFlow.TopUp,
-                isAccountFlowEnabled = true,
             )
 
             assertThat(from?.status).isSameInstanceAs(btcStatus)
@@ -1410,7 +1408,6 @@ internal class DefaultInitialCurrenciesResolverTest {
             initialCryptoCurrency = null,
             swapCurrencyPosition = CurrencyPosition.ANY,
             accountFlow = AccountFlow.TopUp,
-            isAccountFlowEnabled = true,
         )
 
         // Assert
@@ -1459,7 +1456,6 @@ internal class DefaultInitialCurrenciesResolverTest {
                 initialCryptoCurrency = null,
                 swapCurrencyPosition = CurrencyPosition.ANY,
                 accountFlow = AccountFlow.TopUp,
-                isAccountFlowEnabled = true,
             )
 
             // Assert
@@ -1495,7 +1491,6 @@ internal class DefaultInitialCurrenciesResolverTest {
             initialCryptoCurrency = null,
             swapCurrencyPosition = CurrencyPosition.ANY,
             accountFlow = AccountFlow.TopUp,
-            isAccountFlowEnabled = true,
         )
 
         // Assert
@@ -1528,41 +1523,10 @@ internal class DefaultInitialCurrenciesResolverTest {
             initialCryptoCurrency = null,
             swapCurrencyPosition = CurrencyPosition.ANY,
             accountFlow = AccountFlow.TopUp,
-            isAccountFlowEnabled = true,
         )
 
         // Assert
         assertThat(from?.status).isSameInstanceAs(usdcPolygonStatus)
-    }
-
-    @Test
-    fun `GIVEN toggle off WHEN topup resolve THEN priority is not applied`() = runTest {
-        val usdcPolygonId = mockCurrencyId(rawNetworkId = "polygon", contractAddress = "0xUSDC")
-        val usdcPolygonInWallet = mockCryptoCurrency(id = usdcPolygonId)
-        val usdcPolygonInAccount = mockCryptoCurrency(
-            id = mockCurrencyId(rawNetworkId = "polygon", contractAddress = "0xUSDC"),
-        )
-        val btc = mockCryptoCurrency()
-
-        val usdcPolygonStatus = createCurrencyStatus(usdcPolygonInWallet, fiatAmount = BigDecimal("5"))
-        val btcStatus = createCurrencyStatus(btc, fiatAmount = BigDecimal("1000"))
-        val accountStatus = createCryptoPortfolioAccountStatus(listOf(usdcPolygonStatus, btcStatus))
-        setupSupplier(listOf(accountStatus))
-        setupAvailability(linkedMapOf(usdcPolygonInWallet to true, btc to true))
-
-        val accountUnderlyingStatus = createCurrencyStatus(usdcPolygonInAccount, fiatAmount = BigDecimal.ZERO)
-        coEvery { accountUnderlyingCurrencies.get(userWalletId) } returns listOf(accountUnderlyingStatus)
-
-        val (from, _) = resolver.invoke(
-            userWalletId,
-            initialCryptoCurrency = null,
-            swapCurrencyPosition = CurrencyPosition.ANY,
-            accountFlow = AccountFlow.TopUp,
-            isAccountFlowEnabled = false,
-        )
-
-        // Gate off → falls back to plain most-funded selection (BTC), ignoring the account currency.
-        assertThat(from?.status).isSameInstanceAs(btcStatus)
     }
 
     @Test
@@ -1588,7 +1552,6 @@ internal class DefaultInitialCurrenciesResolverTest {
             initialCryptoCurrency = null,
             swapCurrencyPosition = CurrencyPosition.ANY,
             accountFlow = AccountFlow.Withdraw,
-            isAccountFlowEnabled = true,
         )
 
         // AccountFlow.Withdraw is not TopUp → priority does not apply, plain most-funded selection wins.
@@ -1623,7 +1586,6 @@ internal class DefaultInitialCurrenciesResolverTest {
                 initialCryptoCurrency = legacyCurrency,
                 swapCurrencyPosition = CurrencyPosition.TO,
                 accountFlow = AccountFlow.TopUp,
-                isAccountFlowEnabled = true,
             )
 
             // Assert
@@ -1649,7 +1611,6 @@ internal class DefaultInitialCurrenciesResolverTest {
                 initialCryptoCurrency = legacyCurrency,
                 swapCurrencyPosition = CurrencyPosition.FROM,
                 accountFlow = AccountFlow.Withdraw,
-                isAccountFlowEnabled = true,
             )
 
             // Assert
@@ -1697,7 +1658,6 @@ internal class DefaultInitialCurrenciesResolverTest {
         initialCryptoCurrency = initialCryptoCurrency,
         swapCurrencyPosition = CurrencyPosition.FROM,
         accountFlow = AccountFlow.Withdraw,
-        isAccountFlowEnabled = true,
     )
 
     @Test
@@ -1714,52 +1674,6 @@ internal class DefaultInitialCurrenciesResolverTest {
             initialCryptoCurrency = legacyCurrency,
             swapCurrencyPosition = CurrencyPosition.FROM,
             accountFlow = AccountFlow.Withdraw,
-            isAccountFlowEnabled = true,
-        )
-
-        // Assert
-        assertThat(from?.status).isSameInstanceAs(legacyStatus)
-    }
-
-    @Test
-    fun `GIVEN toggle off WHEN withdraw resolve THEN the first issued currency is resolvable`() = runTest {
-        // Arrange — with the account flow off a payment account is represented by a single currency, which is
-        // now the first of its issued networks: there is no separate account-level currency any more.
-        val issuedCurrency = mockCryptoCurrency()
-        val issuedStatus = createCurrencyStatus(issuedCurrency, fiatAmount = BigDecimal("10"))
-        val secondStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("50"))
-        setupSupplier(listOf(createPaymentAccountStatus(issuedStatus, listOf(issuedStatus, secondStatus))))
-        setupAvailabilityForAnyCurrency()
-
-        // Act
-        val (from, _) = resolver.invoke(
-            userWalletId,
-            initialCryptoCurrency = issuedCurrency,
-            swapCurrencyPosition = CurrencyPosition.FROM,
-            accountFlow = AccountFlow.Withdraw,
-            isAccountFlowEnabled = false,
-        )
-
-        // Assert
-        assertThat(from?.status).isSameInstanceAs(issuedStatus)
-    }
-
-    @Test
-    fun `GIVEN toggle off WHEN withdraw resolve THEN the currency the entry point passed stays FROM`() = runTest {
-        // Arrange
-        val legacyCurrency = mockCryptoCurrency()
-        val legacyStatus = createCurrencyStatus(legacyCurrency, fiatAmount = BigDecimal.ZERO)
-        val richerStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("50"))
-        setupSupplier(listOf(createPaymentAccountStatus(legacyStatus, listOf(legacyStatus, richerStatus))))
-        setupAvailabilityForAnyCurrency()
-
-        // Act
-        val (from, _) = resolver.invoke(
-            userWalletId,
-            initialCryptoCurrency = legacyCurrency,
-            swapCurrencyPosition = CurrencyPosition.FROM,
-            accountFlow = AccountFlow.Withdraw,
-            isAccountFlowEnabled = false,
         )
 
         // Assert
@@ -1835,7 +1749,6 @@ internal class DefaultInitialCurrenciesResolverTest {
             initialCryptoCurrency = collateral,
             swapCurrencyPosition = CurrencyPosition.FROM,
             accountFlow = null,
-            isAccountFlowEnabled = true,
         )
 
         // Assert
@@ -1863,7 +1776,6 @@ internal class DefaultInitialCurrenciesResolverTest {
             initialCryptoCurrency = collateral,
             swapCurrencyPosition = CurrencyPosition.FROM,
             accountFlow = AccountFlow.PredictionWithdraw,
-            isAccountFlowEnabled = true,
         )
 
         // Assert
@@ -1892,7 +1804,6 @@ internal class DefaultInitialCurrenciesResolverTest {
                 initialCryptoCurrency = collateral,
                 swapCurrencyPosition = CurrencyPosition.FROM,
                 accountFlow = AccountFlow.PredictionWithdraw,
-                isAccountFlowEnabled = true,
             )
 
             // Assert

@@ -106,7 +106,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.T
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.*
 import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.rating.RatingComponent
-import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.features.tokendetails.ExpressTransactionsEvent
 import com.tangem.features.tokendetails.ExpressTransactionsEventListener
 import com.tangem.features.tokendetails.TokenDetailsComponent
@@ -191,7 +190,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
     private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase,
     private val onrampGetDefaultCurrencyUseCase: OnrampGetDefaultCurrencyUseCase,
-    private val swapFeatureToggles: SwapFeatureToggles,
     private val txHistoryFeatureToggle: TxHistoryFeatureToggles,
 ) : Model(),
     TokenDetailsClickIntents,
@@ -880,19 +878,11 @@ internal class TokenDetailsModel @Inject constructor(
     /**
      * Routes a tapped marketing-banner deeplink contextually for the current token, reusing the
      * regular swap/buy intents (availability checks, yield-supply warning, analytics). Returns
-     * `false` for external links, and for `tangem://swap` when the swap-deeplink toggle is enabled,
-     * so the banner falls back to the generic deeplink launcher (the swap deeplink handler).
+     * `false` for external links and for `tangem://swap`, so the banner falls back to the generic
+     * deeplink launcher (the swap deeplink handler).
      */
     fun onMarketingBannerDeeplink(deeplink: String): Boolean = when (resolveMarketingDeeplink(deeplink)) {
-        MarketingDeeplink.SWAP -> if (swapFeatureToggles.isSwapDeeplinkEnabled) {
-            false
-        } else {
-            val reason = latestTokenActions
-                .filterIsInstance<TokenActionsState.ActionState.Swap>()
-                .firstOrNull()?.unavailabilityReason ?: ScenarioUnavailabilityReason.None
-            onSwapClick(reason)
-            true
-        }
+        MarketingDeeplink.SWAP -> false
         MarketingDeeplink.BUY -> {
             val reason = latestTokenActions
                 .filterIsInstance<TokenActionsState.ActionState.Buy>()
