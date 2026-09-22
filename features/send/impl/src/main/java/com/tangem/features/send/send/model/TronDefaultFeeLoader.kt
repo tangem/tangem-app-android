@@ -12,7 +12,6 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
-import com.tangem.features.send.api.SendFeatureToggles
 import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -24,7 +23,6 @@ import javax.inject.Inject
 internal class TronDefaultFeeLoader @Inject constructor(
     private val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase,
     private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
-    private val sendFeatureToggles: SendFeatureToggles,
 ) {
 
     private var isPinnedToNative = false
@@ -33,8 +31,7 @@ internal class TronDefaultFeeLoader @Inject constructor(
         userWalletId: UserWalletId,
         network: Network,
         feeToken: CryptoCurrency.Token,
-    ): Boolean =
-        sendFeatureToggles.isTronGaslessEnabled && isTronGaslessSupportedUseCase(userWalletId, network, feeToken)
+    ): Boolean = isTronGaslessSupportedUseCase(userWalletId, network, feeToken)
 
     suspend fun load(
         userWalletId: UserWalletId,
