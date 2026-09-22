@@ -53,6 +53,112 @@ internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBa
     }
 
     @Test
+    fun `GIVEN a resumed session WHEN the positions are invalidated THEN the list is fetched again`() = runTest {
+        // Arrange
+        val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
+        val first = position(assetId = "one")
+        val second = position(assetId = "two")
+        var isReloaded = false
+        fetch = { page(listOf(if (isReloaded) second else first)) }
+        session.resume(backgroundScope)
+        runCurrent()
+
+        // Act
+        isReloaded = true
+        positionsUpdater.triggerUpdate(wallet)
+        runCurrent()
+
+        // Assert
+        assertThat(session.state.value)
+            .isEqualTo(PolymarketPositionsState(listOf(second), PaginationStatus.EndOfPagination))
+        assertThat(requests.map { it.second }).containsExactly(0, 0).inOrder()
+    }
+
+    @Test
+    fun `GIVEN the positions changed while paused WHEN the session resumes THEN it fetches them again`() = runTest {
+        // Arrange
+        val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
+        val first = position(assetId = "one")
+        val second = position(assetId = "two")
+        var isReloaded = false
+        fetch = { page(listOf(if (isReloaded) second else first)) }
+        session.resume(backgroundScope)
+        runCurrent()
+        session.pause()
+
+        // Act
+        isReloaded = true
+        positionsUpdater.triggerUpdate(wallet)
+        runCurrent()
+        session.resume(backgroundScope)
+        runCurrent()
+
+        // Assert
+        assertThat(session.state.value)
+            .isEqualTo(PolymarketPositionsState(listOf(second), PaginationStatus.EndOfPagination))
+        assertThat(requests.map { it.second }).containsExactly(0, 0).inOrder()
+    }
+
+    @Test
+    fun `GIVEN the positions changed before the first resume WHEN the session resumes THEN it fetches them once`() =
+        runTest {
+            // Arrange
+            val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
+            fetch = { page(listOf(position())) }
+            positionsUpdater.triggerUpdate(wallet)
+
+            // Act
+            session.resume(backgroundScope)
+            runCurrent()
+
+            // Assert
+            assertThat(requests.map { it.second }).containsExactly(0)
+        }
+
+    @Test
+    fun `GIVEN loaded pages changed while paused WHEN the session resumes THEN it reloads from the start only`() =
+        runTest {
+            // Arrange
+            val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
+            fetch = { offset -> page(listOf(position(assetId = "at$offset")), last = offset == 30) }
+            session.resume(backgroundScope)
+            runCurrent()
+            session.loadMore()
+            runCurrent()
+            session.pause()
+            val reloaded = position(assetId = "reloaded")
+            fetch = { page(listOf(reloaded)) }
+
+            // Act
+            positionsUpdater.triggerUpdate(wallet)
+            runCurrent()
+            session.resume(backgroundScope)
+            runCurrent()
+
+            // Assert
+            assertThat(session.state.value)
+                .isEqualTo(PolymarketPositionsState(listOf(reloaded), PaginationStatus.EndOfPagination))
+            assertThat(requests.map { it.second }).containsExactly(0, 30, 0).inOrder()
+        }
+
+    @Test
+    fun `GIVEN a paused session WHEN the positions are invalidated THEN nothing is fetched`() = runTest {
+        // Arrange
+        val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
+        fetch = { page(listOf(position())) }
+        session.resume(backgroundScope)
+        runCurrent()
+        session.pause()
+
+        // Act
+        positionsUpdater.triggerUpdate(wallet)
+        runCurrent()
+
+        // Assert
+        assertThat(requests.map { it.second }).containsExactly(0)
+    }
+
+    @Test
     fun `GIVEN failed next page WHEN manually retried THEN retains positions and retries the same offset`() = runTest {
         // Arrange
         val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
