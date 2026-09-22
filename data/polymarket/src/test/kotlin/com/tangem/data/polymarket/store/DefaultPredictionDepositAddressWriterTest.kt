@@ -1,14 +1,15 @@
 package com.tangem.data.polymarket.store
 
+import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
-import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -27,43 +28,53 @@ internal class DefaultPredictionDepositAddressWriterTest {
     fun resetMocks() = clearMocks(statusStore)
 
     @Test
-    fun `GIVEN an active status WHEN an address is stored THEN it lands on the status`() = runTest {
-        // Arrange
-        coEvery { statusStore.getSyncOrNull(USER_WALLET_ID) } returns ACTIVE
-
+    fun `GIVEN an active status WHEN an address is stored THEN the merge puts it on the status`() = runTest {
         // Act
         writer.store(userWalletId = USER_WALLET_ID, address = EVM_ADDRESS)
 
         // Assert
-        coVerify(exactly = 1) {
-            statusStore.store(userWalletId = USER_WALLET_ID, value = ACTIVE.copy(depositAddress = EVM_ADDRESS))
-        }
+        assertThat(capturedMerge()(ACTIVE)).isEqualTo(ACTIVE.copy(depositAddress = EVM_ADDRESS))
     }
 
     @Test
-    fun `GIVEN an active status WHEN null is stored THEN the address is withdrawn`() = runTest {
-        // Arrange
-        coEvery { statusStore.getSyncOrNull(USER_WALLET_ID) } returns ACTIVE.copy(depositAddress = EVM_ADDRESS)
-
+    fun `GIVEN an active status WHEN null is stored THEN the merge withdraws the address`() = runTest {
         // Act
         writer.store(userWalletId = USER_WALLET_ID, address = null)
 
         // Assert
-        coVerify(exactly = 1) {
-            statusStore.store(userWalletId = USER_WALLET_ID, value = ACTIVE.copy(depositAddress = null))
-        }
+        assertThat(capturedMerge()(ACTIVE.copy(depositAddress = EVM_ADDRESS)))
+            .isEqualTo(ACTIVE.copy(depositAddress = null))
     }
 
     @Test
-    fun `GIVEN no active status WHEN an address is stored THEN nothing is written`() = runTest {
+    fun `GIVEN no active status WHEN an address is stored THEN the merge writes nothing`() = runTest {
+        // Act
+        writer.store(userWalletId = USER_WALLET_ID, address = EVM_ADDRESS)
+
+        // Assert
+        assertThat(capturedMerge()(PredictionAccountStatusValue.Loading)).isNull()
+    }
+
+    @Test
+    fun `GIVEN a refresh commits first WHEN the address is written THEN the refreshed balance is kept`() = runTest {
         // Arrange
-        coEvery { statusStore.getSyncOrNull(USER_WALLET_ID) } returns PredictionAccountStatusValue.Loading
+        val refreshed = ACTIVE.copy(balance = BigDecimal("99"))
 
         // Act
         writer.store(userWalletId = USER_WALLET_ID, address = EVM_ADDRESS)
 
         // Assert
-        coVerify(exactly = 0) { statusStore.store(any(), any()) }
+        assertThat(capturedMerge()(refreshed)).isEqualTo(refreshed.copy(depositAddress = EVM_ADDRESS))
+    }
+
+    private fun capturedMerge(): (PredictionAccountStatusValue?) -> PredictionAccountStatusValue? {
+        val transform = slot<(PredictionAccountStatusValue?) -> PredictionAccountStatusValue?>()
+
+        coVerify(exactly = 1) {
+            statusStore.update(userWalletId = USER_WALLET_ID, transform = capture(transform))
+        }
+
+        return transform.captured
     }
 
     private companion object {
