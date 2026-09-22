@@ -54,6 +54,9 @@ internal fun HaveWalletBottomSheet(config: TangemBottomSheetConfig) {
         // Flat card for the same reason as the Create wallet sheet: the glass material would sample the
         // video behind the screen, and a dialog window costs half a second before the sheet can animate.
         isMaterialEnabled = false,
+        // The overlay composes in the host, outside this screen's forced palette, so the modal forces its own.
+        forceDarkTheme = true,
+        containerColor = TangemTheme.colors3.bg.secondary,
         // Back steps inside the sheet; on the first step it falls through to dismissing it.
         onBack = (step as? HaveWalletUM.Step.Import)?.onBack,
         title = { content ->
@@ -111,9 +114,11 @@ private fun ColumnScope.StepTitle(step: HaveWalletUM.Step) {
 
 @Composable
 private fun OptionsStep(step: HaveWalletUM.Step.Options) {
+    // The rows bring their own 16 dp of padding, which is the inset the design asks for, and they sit against
+    // each other with no gap.
     Column(
-        modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.padding(bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         WalletOptionCard(option = step.cardOrRing)
         step.socialLogin?.let { WalletOptionCard(option = it) }
