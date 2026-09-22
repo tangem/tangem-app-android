@@ -1,6 +1,8 @@
 package com.tangem.features.commonfeatures.impl.managefunds.model
 
 import androidx.compose.runtime.Immutable
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
 import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
@@ -19,10 +21,11 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetCryptoCurrencyActionsUseCaseV2
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.jointaccount.usecase.IsJointOperationSlotBusyUseCase
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.account.isMainAccount
 import com.tangem.domain.models.account.derivationIndex
+import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -57,6 +60,7 @@ internal class ManageFundsModel @Inject constructor(
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val appRouter: AppRouter,
+    private val isJointOperationSlotBusyUseCase: IsJointOperationSlotBusyUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model(), TokenActionsComponent.Callbacks {
 
@@ -78,6 +82,7 @@ internal class ManageFundsModel @Inject constructor(
 
     private val tokenActionsTrigger = MutableStateFlow<TokenActionsRequest?>(null)
     private val filteredEntries = MutableStateFlow<List<FilteredEntry>>(emptyList())
+    val jointSlotBusyNavigation: SlotNavigation<String> = SlotNavigation()
 
     val currentBottomAction: MutableStateFlow<BottomAction> =
         MutableStateFlow(BottomAction.None)
@@ -252,7 +257,7 @@ internal class ManageFundsModel @Inject constructor(
                 .first()
                 .firstOrNull { it.userWalletId == mode.userWalletId }
                 ?.accountStatuses
-                ?.filterCryptoPortfolio()
+                ?.filterIsInstance<AccountStatus.CryptoPortfolio>()
                 ?.firstNotNullOfOrNull { accountStatus ->
                     accountStatus.tokenList.flattenCurrencies()
                         .firstOrNull { it.currency.id == mode.currency.id }
@@ -320,8 +325,9 @@ internal class ManageFundsModel @Inject constructor(
         analyticsEventHandler.send(event)
     }
 
-    private fun openTokenActionsFromBridge(result: ChooseTokenResult) {
+    private suspend fun openTokenActionsFromBridge(result: ChooseTokenResult) {
         val account = result.account as? AccountStatus.CryptoPortfolio ?: return
+        if (isTransferBlocked(account = account, currency = result.currency.currency)) return
         openTokenActions(
             request = TokenActionsRequest(result.wallet, account, result.currency),
             bottomAction = if (result.wasJustAdded) {
@@ -330,6 +336,15 @@ internal class ManageFundsModel @Inject constructor(
                 BottomAction.None
             },
         )
+    }
+
+    private suspend fun isTransferBlocked(account: AccountStatus.CryptoPortfolio, currency: CryptoCurrency): Boolean {
+        if (flowType != ManageFundsComponent.FlowType.Transfer) return false
+        val jointAccount = (account as? AccountStatus.Joint)?.account ?: return false
+        if (!isJointOperationSlotBusyUseCase(account = jointAccount, network = currency.network)) return false
+
+        jointSlotBusyNavigation.activate(currency.network.name)
+        return true
     }
 
     private fun openTokenActions(request: TokenActionsRequest, bottomAction: BottomAction) {

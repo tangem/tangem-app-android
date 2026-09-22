@@ -16,6 +16,8 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
+import com.tangem.core.analytics.models.OtelIncludedEvent
+import com.tangem.core.analytics.models.OtelMetric
 import com.tangem.core.analytics.models.getReferralParams
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -172,7 +174,10 @@ sealed class SwapEvents(
             put(AnalyticsParam.Key.FEE_ASSET_TYPE, feeAssetType.value)
             putAll(getReferralParams(referralId))
         },
-    ), AppsFlyerIncludedEvent
+    ), AppsFlyerIncludedEvent, OtelIncludedEvent {
+
+        override val otelMetric = OtelMetric.Counter(allowedParams = setOf(PROVIDER))
+    }
 
     class ProviderClicked : SwapEvents("Provider Clicked")
 
@@ -255,6 +260,21 @@ sealed class SwapEvents(
         ),
     )
 
+    class NoticeGeoRestriction(
+        val sendToken: String,
+        val receiveToken: String,
+        val sendBlockchain: String,
+        val receiveBlockchain: String,
+    ) : SwapEvents(
+        event = "Notice - Geo Restriction",
+        params = mapOf(
+            SEND_TOKEN to sendToken,
+            RECEIVE_TOKEN to receiveToken,
+            SEND_BLOCKCHAIN to sendBlockchain,
+            RECEIVE_BLOCKCHAIN to receiveBlockchain,
+        ),
+    )
+
     class NoticeProviderError(
         val sendToken: String,
         val receiveToken: String,
@@ -270,7 +290,10 @@ sealed class SwapEvents(
             put(ERROR_CODE, errorCode.toString())
             errorMessage?.let { put(ERROR_MESSAGE, it) }
         },
-    )
+    ), OtelIncludedEvent {
+
+        override val otelMetric = OtelMetric.Counter(allowedParams = setOf(PROVIDER, ERROR_CODE))
+    }
     // TODO parameters
 
     // region Promo activity

@@ -1,13 +1,16 @@
 package com.tangem.features.swap.v2.impl.chooseprovider.model.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.components.audits.AuditLabelUM
 import com.tangem.core.ui.components.provider.entity.ProviderChooseUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.swap.models.SwapAmountType
+import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import io.mockk.every
 import io.mockk.mockk
@@ -114,11 +117,9 @@ internal class SwapProviderListItemConverterTest {
     }
 
     /**
-     * `isRestricted` is plumbed into [SwapQuoteUM.Content] but deliberately not read here: the provider
-     * list renders a region-restricted quote exactly like a purchasable one, and the restriction only
-     * surfaces as a blocking notification on Confirm (SwapNotificationsModelTest). The four tests below
-     * pin that contract as pairs — same assertion, only the flag differs — so adding an indicator to
-     * `getExtras` cannot land silently.
+     * A region-restricted quote is marked by its label, not by `getExtras`: the extra slot stays whatever
+     * the quote itself calls for (empty, or the FCA warning action). The four tests below pin that as
+     * pairs — same assertion, only the restriction flag differs.
      */
     @Test
     fun `GIVEN restricted content quote WHEN convert THEN extra is empty`() {
@@ -176,16 +177,90 @@ internal class SwapProviderListItemConverterTest {
         assertThat(item!!.providerUM.extraUM).isInstanceOf(ProviderChooseUM.ExtraUM.Action::class.java)
     }
 
+    @Test
+    fun `GIVEN restricted content quote WHEN convert THEN label says the provider is not available`() {
+        // Arrange
+        val converter = buildConverter(amountType = SwapAmountType.From)
+        val restrictedQuote = contentQuote(isRestricted = true)
+
+        // Act
+        val item = converter.convert(restrictedQuote)
+
+        // Assert
+        assertThat(item).isNotNull()
+        val label = item!!.providerUM.labelUM as ProviderChooseUM.LabelUM.Info
+        assertThat(label.auditLabelUM.type).isEqualTo(AuditLabelUM.Type.General)
+        assertThat((label.auditLabelUM.text as TextReference.Res).id).isEqualTo(R.string.common_not_available)
+    }
+
+    @Test
+    fun `GIVEN restricted content quote with rate difference WHEN convert THEN difference is replaced`() {
+        // Arrange
+        val converter = buildConverter(amountType = SwapAmountType.From)
+        val restrictedQuote = contentQuote(
+            isRestricted = true,
+            diffPercent = SwapQuoteUM.Content.DifferencePercent.Diff(
+                isPositive = true,
+                percent = stringReference("+0.09%"),
+            ),
+        )
+
+        // Act
+        val item = converter.convert(restrictedQuote)
+
+        // Assert
+        assertThat(item).isNotNull()
+        val label = item!!.providerUM.labelUM as ProviderChooseUM.LabelUM.Info
+        assertThat((label.auditLabelUM.text as TextReference.Res).id).isEqualTo(R.string.common_not_available)
+    }
+
+    @Test
+    fun `GIVEN restricted best rate quote WHEN convert THEN not available wins over best rate`() {
+        // Arrange
+        val converter = buildConverter(amountType = SwapAmountType.From)
+        val restrictedQuote = contentQuote(
+            isRestricted = true,
+            diffPercent = SwapQuoteUM.Content.DifferencePercent.Best,
+        )
+
+        // Act
+        val item = converter.convert(restrictedQuote)
+
+        // Assert
+        assertThat(item).isNotNull()
+        val label = item!!.providerUM.labelUM as ProviderChooseUM.LabelUM.Info
+        assertThat((label.auditLabelUM.text as TextReference.Res).id).isEqualTo(R.string.common_not_available)
+    }
+
+    @Test
+    fun `GIVEN purchasable best rate quote WHEN convert THEN label says best rate`() {
+        // Arrange
+        val converter = buildConverter(amountType = SwapAmountType.From)
+        val contentQuote = contentQuote(
+            isRestricted = false,
+            diffPercent = SwapQuoteUM.Content.DifferencePercent.Best,
+        )
+
+        // Act
+        val item = converter.convert(contentQuote)
+
+        // Assert
+        assertThat(item).isNotNull()
+        val label = item!!.providerUM.labelUM as ProviderChooseUM.LabelUM.Info
+        assertThat((label.auditLabelUM.text as TextReference.Res).id).isEqualTo(R.string.express_provider_best_rate)
+    }
+
     private fun contentQuote(
         isRestricted: Boolean,
         provider: ExpressProvider = this.provider,
+        diffPercent: SwapQuoteUM.Content.DifferencePercent = SwapQuoteUM.Content.DifferencePercent.Empty,
     ): SwapQuoteUM.Content = SwapQuoteUM.Content(
         provider = provider,
         toAmount = BigDecimal.ONE,
         fromAmount = BigDecimal.ONE,
         toAmountValue = TextReference.EMPTY,
         fromAmountValue = TextReference.EMPTY,
-        diffPercent = SwapQuoteUM.Content.DifferencePercent.Empty,
+        diffPercent = diffPercent,
         isSingleProvider = false,
         rate = TextReference.EMPTY,
         quoteId = null,

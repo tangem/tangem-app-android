@@ -16,5 +16,7 @@ dependencies {
     /** Domain */
     api(projects.domain.models)
     api(projects.domain.visa.models)
-    implementation(projects.core.utils)
+
+    /** Other */
+    implementation(deps.androidx.annotation)
 }
