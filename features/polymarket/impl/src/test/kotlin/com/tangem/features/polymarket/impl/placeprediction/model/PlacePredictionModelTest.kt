@@ -74,6 +74,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PredictionFeeSheetUMConverter
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.ViewPositionUM
+import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
 import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.positions.model.createPolymarketPosition
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -1544,6 +1545,27 @@ internal class PlacePredictionModelTest {
                 // Assert
                 assertThat(viewPosition(model)).isEqualTo(ViewPositionUM.Available)
                 coVerify(exactly = 12) { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) }
+            }
+
+        @Test
+        fun `GIVEN the market resolved while indexing WHEN the position is read THEN view position is hidden`() =
+            runTest {
+                // Arrange
+                coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
+                coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
+                    createPosition().copy(resolutionStatus = PolymarketResolutionStatus.RESOLVED).right()
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+                model.onAmountChange(value = "10")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+                // Act
+                model.onPlaceClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(viewPosition(model)).isEqualTo(ViewPositionUM.Hidden)
+                coVerify(exactly = 1) { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) }
             }
 
         @Test
