@@ -14,5 +14,6 @@ internal object PolymarketConst {
     val SHARES_STEP: BigDecimal = BigDecimal.ONE
 
     const val POSITION_INDEXING_READS = 5
+    const val CREATED_POSITION_READS = 15
     const val POSITION_INDEXING_RETRY_MILLIS = 2_000L
 }

@@ -516,8 +516,10 @@ internal class PlacePredictionModel @Inject constructor(
 
     /**
 
-     * until it appears. A read that fails is retried like a missing position; when the reads run out the button
-     * is withdrawn rather than left pointing at a screen that would say the position is unavailable.
+     * until it appears. The index answers with no position for a while even when the outcome was already held,
+     * so the window is wider than the one the details screen uses. A read that fails is retried like a missing
+     * position; when the reads run out the button is withdrawn rather than left pointing at a screen that would
+     * say the position is unavailable.
      */
     private fun awaitCreatedPosition(result: PlaceResultUM) {
         if (params.side != PredictionOrderSide.BUY) return
@@ -538,7 +540,7 @@ internal class PlacePredictionModel @Inject constructor(
                 return@launch
             }
 
-            repeat(PolymarketConst.POSITION_INDEXING_READS) { read ->
+            repeat(PolymarketConst.CREATED_POSITION_READS) { read ->
                 val position = withContext(dispatchers.default) {
                     positionsRepository.getPosition(addresses = addresses, id = positionId)
                 }.getOrNull()
@@ -548,12 +550,12 @@ internal class PlacePredictionModel @Inject constructor(
                     uiState.update(SetViewPositionTransformer(viewPosition = ViewPositionUM.Available))
                     return@launch
                 }
-                if (read < PolymarketConst.POSITION_INDEXING_READS - 1) {
+                if (read < PolymarketConst.CREATED_POSITION_READS - 1) {
                     delay(PolymarketConst.POSITION_INDEXING_RETRY_MILLIS)
                 }
             }
 
-            logger.i("The created position was not indexed after ${PolymarketConst.POSITION_INDEXING_READS} reads")
+            logger.i("The created position was not indexed after ${PolymarketConst.CREATED_POSITION_READS} reads")
             uiState.update(SetViewPositionTransformer(viewPosition = ViewPositionUM.Hidden))
         }
     }
