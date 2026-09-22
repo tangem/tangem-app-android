@@ -115,6 +115,11 @@ class NetworkFactoryTest {
                 userWallet = createUserWallet(),
                 expectedDerivationPath = Network.DerivationPath.Custom(value = "m/84'/0'/0'/0/0"),
             ),
+            createFirst(
+                extraDerivationPath = "m/44'/60'/888888'/0/6", // the reserved joint node is never a custom path
+                userWallet = createUserWallet(),
+                expectedDerivationPath = Network.DerivationPath.Joint(value = "m/44'/60'/888888'/0/6"),
+            ),
             // endregion
 
             // region create(networkId: Network.ID, derivationPath: Network.DerivationPath, scanResponse: ScanResponse)

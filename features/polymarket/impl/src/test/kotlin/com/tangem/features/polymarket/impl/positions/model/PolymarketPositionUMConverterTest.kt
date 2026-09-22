@@ -69,6 +69,18 @@ internal class PolymarketPositionUMConverterTest {
         assertThat(actual.outcomeVariant).isEqualTo(TangemMessageBubble.Variant.Neutral)
     }
 
+    @Test
+    fun `GIVEN second outcome of the market WHEN converted THEN colours it red whatever its label`() {
+        // Arrange
+        val position = createPolymarketPosition(outcome = "Down", outcomeIndex = 1)
+
+        // Act
+        val actual = converter.convert(position)
+
+        // Assert
+        assertThat(actual.outcomeVariant).isEqualTo(TangemMessageBubble.Variant.Error)
+    }
+
     @ParameterizedTest
     @ProvideTestModels
     fun `GIVEN explicit settlement WHEN converted THEN result does not follow pnl sign`(model: ResultModel) {
