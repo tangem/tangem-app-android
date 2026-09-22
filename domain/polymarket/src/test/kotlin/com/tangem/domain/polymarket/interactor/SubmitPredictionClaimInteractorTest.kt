@@ -235,7 +235,7 @@ internal class SubmitPredictionClaimInteractorTest {
         }
 
     @Test
-    fun `GIVEN the poll answers that the claim is unknown WHEN it is read THEN the polling stops at once`() =
+    fun `GIVEN the poll answers that the claim is unknown WHEN it is read THEN the polling stops and the claim is Unconfirmed`() =
         runTest {
             // Arrange
             coEvery { redeemRepository.submit(any(), any()) } returns
@@ -246,12 +246,13 @@ internal class SubmitPredictionClaimInteractorTest {
             val actual = interactor.claim(params())
 
             // Assert
-            assertThat(actual).isEqualTo(PredictionClaimFailure.Rejected(PolymarketRedeemError.NotFound).left())
+            assertThat(actual)
+                .isEqualTo(PredictionClaimFailure.Unconfirmed(receipt(PredictionClaimState.IN_PROGRESS)).left())
             coVerify(exactly = 1) { redeemRepository.getState(any(), any()) }
         }
 
     @Test
-    fun `GIVEN the poll is unauthorized WHEN it is read THEN the polling stops at once`() = runTest {
+    fun `GIVEN the poll is unauthorized WHEN it is read THEN the polling stops and the claim is Unconfirmed`() = runTest {
         // Arrange
         coEvery { redeemRepository.submit(any(), any()) } returns receipt(PredictionClaimState.IN_PROGRESS).right()
         coEvery { redeemRepository.getState(any(), any()) } returns PolymarketRedeemError.Unauthorized.left()
@@ -260,7 +261,8 @@ internal class SubmitPredictionClaimInteractorTest {
         val actual = interactor.claim(params())
 
         // Assert
-        assertThat(actual).isEqualTo(PredictionClaimFailure.Rejected(PolymarketRedeemError.Unauthorized).left())
+        assertThat(actual)
+            .isEqualTo(PredictionClaimFailure.Unconfirmed(receipt(PredictionClaimState.IN_PROGRESS)).left())
         coVerify(exactly = 1) { redeemRepository.getState(any(), any()) }
     }
 
