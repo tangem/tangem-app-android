@@ -2,7 +2,6 @@ package com.tangem.features.polymarket.impl.positiondetails.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -15,10 +14,10 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
 import com.tangem.core.ui.ds2.modal.TangemModal
+import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
-import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.rememberLastNonNull
 import com.tangem.core.ui.extensions.resourceReference
@@ -36,13 +35,7 @@ internal fun PolymarketFinishedPositionSheet(state: PolymarketFinishedPositionUM
             content = TangemBottomSheetConfigContent.Empty,
         ),
         title = {
-            TangemTopNavigation(
-                title = resourceReference(R.string.prediction_positions_finished_title),
-                contentAlign = TangemTopNavigation.ContentAlign.Center,
-                windowInsets = WindowInsets(0),
-                fadeEnabled = false,
-                blurBackground = false,
-            )
+            TangemModal.TopNavigation(title = resourceReference(R.string.prediction_positions_finished_title))
         },
     ) {
         Column(modifier = Modifier.padding(horizontal = 16.dp).padding(top = 32.dp, bottom = 24.dp)) {
