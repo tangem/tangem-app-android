@@ -13,7 +13,7 @@ import com.tangem.common.core.UserCodeRequestPolicy
 import com.tangem.domain.card.ResetCardUseCase
 import com.tangem.domain.card.ResetCardUserCodeParams
 import com.tangem.domain.card.models.ResetCardError
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.sdk.api.TangemSdkManager
 
 internal class DefaultResetCardUseCase(
@@ -35,14 +35,14 @@ internal class DefaultResetCardUseCase(
     override suspend fun invoke(
         cardNumber: Int,
         params: ResetCardUserCodeParams,
-        userWalletId: UserWalletId,
+        userWallet: UserWallet.Cold,
     ): Either<ResetCardError, Boolean> = resourceScope {
         either {
             withUserCodeRequestPolicy(params)
 
             tangemSdkManager.resetBackupCard(
                 cardNumber = cardNumber,
-                userWalletId = userWalletId,
+                userWallet = userWallet,
             ).bind(raise = this)
         }
     }

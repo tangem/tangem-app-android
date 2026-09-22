@@ -14,8 +14,9 @@ import com.tangem.data.walletconnect.sign.SignCollector
 import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
-import com.tangem.datasource.di.SdkMoshi
+import com.tangem.core.local.moshi.SdkMoshi
 import com.tangem.domain.core.lce.LceFlow
+import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.walletconnect.WcTransactionSignerProvider
 import com.tangem.domain.walletconnect.model.HandleMethodError
 import com.tangem.domain.walletconnect.model.WcBitcoinMethod
@@ -47,6 +48,7 @@ internal class WcBitcoinSignPsbtUseCase @AssistedInject constructor(
     @Assisted override val context: WcMethodUseCaseContext,
     @Assisted override val method: WcBitcoinMethod.SignPsbt,
     private val walletManagersFacade: WalletManagersFacade,
+    private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
     private val signerProvider: WcTransactionSignerProvider,
     override val respondService: WcRespondService,
     override val analytics: AnalyticsEventHandler,
@@ -70,12 +72,14 @@ internal class WcBitcoinSignPsbtUseCase @AssistedInject constructor(
         }
 
     override suspend fun SignCollector<TransactionData>.onSign(state: WcSignState<TransactionData>) {
-        // Update wallet manager to refresh UTXO data before processing Bitcoin transaction
-        walletManagersFacade.update(
-            userWalletId = wallet.walletId,
-            network = network,
-            extraTokens = emptySet(),
+        singleNetworkStatusFetcher(
+            params = SingleNetworkStatusFetcher.Params(userWalletId = wallet.walletId, network = network),
         )
+            .onLeft { error ->
+                val message = "Failed to refresh UTXO data: ${error.message}"
+                emit(state.toResult(HandleMethodError.UnknownError(message).left()))
+                return
+            }
 
         val walletManager = walletManagersFacade.getOrCreateWalletManager(wallet.walletId, network)
             ?: run {

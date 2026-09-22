@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -19,6 +20,7 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.CancelTariffPlanPendingTransitionUseCase
 import com.tangem.domain.pay.usecase.CancelTariffTransitionUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.common.tariffPlanState
@@ -48,6 +50,7 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val uiMessageSender: UiMessageSender,
     private val analytics: AnalyticsEventHandler,
+    private val urlOpener: UrlOpener,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayCurrentPlanComponent.Params>()
@@ -88,7 +91,14 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
             planState.tariff.status != TangemPayCustomerTariffPlan.Status.DOWNGRADE_PENDING &&
                 !planState.isPlanTransitioningState
         },
+        onLinkClick = urlOpener::openUrl,
+        onFullTermsClick = ::onFullTermsClick,
     )
+
+    private fun onFullTermsClick() {
+        analytics.send(TangemPayAnalyticsEvents.TermsAndLimitsClicked())
+        urlOpener.openUrl(TangemPayConstants.termsAndLimitsLink())
+    }
 
     private fun onChangePlanClick() {
         analytics.send(TangemPayAnalyticsEvents.Tiers.ChangePlanClicked())

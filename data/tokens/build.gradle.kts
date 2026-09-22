@@ -4,6 +4,7 @@ plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.hilt.android)
     id("configuration")
 }
 
@@ -30,12 +31,15 @@ dependencies {
     // endregion
 
     // region DI
-    implementation(deps.hilt.core)
+    implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
     // endregion
 
     // region Core modules
-    api(projects.core.datasource)
+    implementation(projects.core.local)
+    implementation(projects.core.remote)
+    implementation(projects.store.datasource)
+    implementation(projects.grow.datasource)
     api(projects.core.utils)
     // endregion
 
@@ -50,7 +54,9 @@ dependencies {
     api(projects.domain.transaction)
     api(projects.domain.walletManager)
     implementation(projects.domain.core)
+    implementation(projects.domain.jointAccount)
     implementation(projects.domain.models)
+    implementation(projects.features.jointAccount.api)
     runtimeOnly(projects.domain.account)
     runtimeOnly(projects.domain.card)
     runtimeOnly(projects.domain.staking)

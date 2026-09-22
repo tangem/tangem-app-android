@@ -2,12 +2,14 @@ package com.tangem.features.send.send.confirm.model.transformers
 
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.send.common.ui.state.ConfirmUM
+import com.tangem.features.send.common.ui.state.SendSignaturesUM
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.persistentListOf
 
 internal class SendConfirmInitialStateTransformer(
     private val isShowTapHelp: Boolean,
     private val walletName: TextReference,
+    private val signaturesUM: SendSignaturesUM? = null,
 ) : Transformer<ConfirmUM> {
     override fun transform(prevState: ConfirmUM): ConfirmUM {
         return ConfirmUM.Content(
@@ -16,6 +18,7 @@ internal class SendConfirmInitialStateTransformer(
             isShowTapHelp = isShowTapHelp,
             sendingFooter = TextReference.EMPTY,
             notifications = persistentListOf(),
+            signaturesUM = signaturesUM,
         )
     }
 }

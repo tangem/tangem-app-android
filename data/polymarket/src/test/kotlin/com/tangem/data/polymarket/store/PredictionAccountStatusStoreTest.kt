@@ -1,11 +1,14 @@
 package com.tangem.data.polymarket.store
 
+import com.tangem.data.polymarket.converter.PredictionAccountStatusValueDTOConverter
+
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.polymarket.entity.PredictionAccountStatusValueDTO
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.datastore.MockStateDataStore
@@ -13,6 +16,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
@@ -158,12 +163,17 @@ internal class PredictionAccountStatusStoreTest {
         testScope: TestScope,
         persistenceDataStore: MockStateDataStore<WalletIdWithPredictionStatusDTO> = MockStateDataStore(emptyMap()),
     ) = PredictionAccountStatusStore(
+        dtoConverter = PredictionAccountStatusValueDTOConverter(
+            collateralCurrencyFactory = mockk { every { createDepositTarget() } returns COLLATERAL },
+        ),
         runtimeStore = RuntimeSharedStore(),
         persistenceDataStore = persistenceDataStore,
         scope = TestAppCoroutineScope(testScope),
     )
 
     private companion object {
+        val COLLATERAL: CryptoCurrency.Token = mockk(relaxed = true)
+
         val WALLET_A = UserWalletId("011")
         val WALLET_B = UserWalletId("022")
 
@@ -171,12 +181,13 @@ internal class PredictionAccountStatusStoreTest {
             source = StatusSource.ACTUAL,
             balance = BigDecimal("12.5"),
             fiatRate = null,
-            isTradingAllowed = true,
+            depositCurrency = COLLATERAL,
+            depositAddress = "0xbridge0000000000000000000000000000000001",
         )
 
         val ACTIVE_DTO = PredictionAccountStatusValueDTO.Active(
             balance = BigDecimal("12.5"),
-            isTradingAllowed = true,
+            depositAddress = "0xbridge0000000000000000000000000000000001",
         )
     }
 }

@@ -61,11 +61,11 @@ internal object BlockAidMapper {
                 from.validation.resultType == VALIDATION_WARNING_STATUS -> ValidationResult.WARNING
                 else -> ValidationResult.UNSAFE
             },
-            simulation = if (from.simulation.status != SUCCESS_STATUS) {
-                SimulationResult.FailedToSimulate
-            } else {
-                mapSimulationSuccessResult(from.simulation.accountSummary)
-            },
+            simulation = from.simulation
+                ?.takeIf { simulation -> simulation.status == SUCCESS_STATUS }
+                ?.accountSummary
+                ?.let(::mapSimulationSuccessResult)
+                ?: SimulationResult.FailedToSimulate,
             description = from.validation.description,
         )
     }

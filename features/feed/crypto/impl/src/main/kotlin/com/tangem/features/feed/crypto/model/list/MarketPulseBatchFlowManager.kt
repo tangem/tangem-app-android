@@ -7,6 +7,7 @@ import com.tangem.domain.markets.TokenMarket
 import com.tangem.domain.markets.TokenMarketListConfig
 import com.tangem.domain.markets.TokenMarketUpdateRequest
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.features.feed.crypto.categories.MarketCategorySelection
 import com.tangem.features.feed.crypto.ui.state.MarketPulseItemUM
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchFetchResult
@@ -47,6 +48,7 @@ internal class MarketPulseBatchFlowManager(
     private val currentTrendInterval: () -> MarketPulseInterval,
     private val currentAppCurrency: () -> AppCurrency,
     private val currentCategory: () -> MarketPulseCategory,
+    private val currentCategoryFilter: () -> MarketCategorySelection = { MarketCategorySelection() },
     private val onItemClick: (CryptoCurrency.RawID) -> Unit,
     private val modelScope: CoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -189,6 +191,7 @@ internal class MarketPulseBatchFlowManager(
                         searchText = currentSearchText()?.let { current -> searchText ?: current },
                         priceChangeInterval = currentTrendInterval().toBatchRequestInterval(),
                         order = currentCategory().toRequestOrder(),
+                        geckoCategoryId = currentCategoryFilter().category?.id,
                     ),
                 ),
             )

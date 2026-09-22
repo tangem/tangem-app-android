@@ -1,9 +1,9 @@
 package com.tangem.data.polymarket.converter
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteFeesResponse
-import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteRequest
-import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteFeesResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteRequest
+import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteResponse
 import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
@@ -57,6 +57,7 @@ internal class PredictionOrderQuoteConverterTest {
                 total = BigDecimal("519.25000"),
                 builderCode = "0xbuilder",
                 minOrderSize = BigDecimal("5"),
+                minOrderAmount = BigDecimal("1"),
                 tickSize = BigDecimal("0.001"),
                 isLive = true,
             ),
@@ -83,6 +84,7 @@ internal class PredictionOrderQuoteConverterTest {
         StatusModel(wireStatus = "PARTIAL", expected = PredictionQuoteStatus.PARTIAL),
         StatusModel(wireStatus = "INSUFFICIENT_LIQUIDITY", expected = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY),
         StatusModel(wireStatus = "BELOW_MIN_ORDER_SIZE", expected = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE),
+        StatusModel(wireStatus = "BELOW_MIN_ORDER_AMOUNT", expected = PredictionQuoteStatus.BELOW_MIN_ORDER_AMOUNT),
         StatusModel(wireStatus = "MARKET_CLOSED", expected = PredictionQuoteStatus.MARKET_CLOSED),
         StatusModel(wireStatus = "SOMETHING_NEW", expected = PredictionQuoteStatus.MARKET_CLOSED),
         StatusModel(wireStatus = "full", expected = PredictionQuoteStatus.MARKET_CLOSED),
@@ -188,6 +190,7 @@ internal class PredictionOrderQuoteConverterTest {
         total: String = "519.25000",
         builderCode: String = "0xbuilder",
         minOrderSize: String = "5",
+        minOrderAmount: String? = "1",
         tickSize: String = "0.001",
         isLive: Boolean = true,
     ): PolymarketOrderQuoteResponse = PolymarketOrderQuoteResponse(
@@ -206,6 +209,7 @@ internal class PredictionOrderQuoteConverterTest {
         total = total,
         builderCode = builderCode,
         minOrderSize = minOrderSize,
+        minOrderAmount = minOrderAmount,
         tickSize = tickSize,
         isLive = isLive,
     )

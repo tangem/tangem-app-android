@@ -9,9 +9,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
@@ -35,7 +37,8 @@ fun NorthernLightsBackground(
 ) {
     val shouldUseShader = !forceSimpleVersion &&
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-        !NorthernLightsFrameMonitor.isDegraded
+        !NorthernLightsFrameMonitor.isDegraded &&
+        !NorthernLightsCrashGuard.isDisabled
     if (shouldUseShader) {
         NorthernLightsBackgroundWithShader(containerColor, modifier)
     } else {
@@ -46,6 +49,8 @@ fun NorthernLightsBackground(
 @Suppress("LongMethod", "NamedArguments")
 @Composable
 private fun NorthernLightsBackgroundWithShader(containerColor: Color, modifier: Modifier = Modifier) {
+    remember { NorthernLightsCrashGuard.arm() }
+
     val transition = rememberInfiniteTransition(label = "FluidMeshGradientV2")
     val isDark = LocalIsInDarkTheme.current
 
@@ -109,6 +114,15 @@ private fun NorthernLightsBackgroundWithShader(containerColor: Color, modifier: 
         NorthernLightsFrameMonitor.watch()
     }
 
+    LaunchedEffect(Unit) {
+        repeat(SURVIVED_FRAMES) { withFrameNanos { } }
+        NorthernLightsCrashGuard.markSurvived()
+    }
+
+    DisposableEffect(Unit) {
+        onDispose { NorthernLightsCrashGuard.markSurvived() }
+    }
+
     Box(
         modifier = modifier
             .background(containerColor)
@@ -123,6 +137,7 @@ private fun NorthernLightsBackgroundWithShader(containerColor: Color, modifier: 
 }
 
 private const val SHADER_RESOLUTION_DIVIDER = 3
+private const val SURVIVED_FRAMES = 30
 
 /**
  * Measures the content at 1/[divider] of the available size and scales the resulting layer back up.

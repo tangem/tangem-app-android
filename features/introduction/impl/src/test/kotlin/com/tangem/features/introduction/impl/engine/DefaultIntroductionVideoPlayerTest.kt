@@ -5,6 +5,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import com.google.common.truth.Truth.assertThat
 import io.mockk.clearMocks
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
@@ -175,6 +176,31 @@ internal class DefaultIntroductionVideoPlayerTest {
 
         // Assert
         assertThat(videoPlayer.isSurfaceAttached).isFalse()
+    }
+
+    @Test
+    fun `GIVEN playback under way WHEN the position is read THEN it is the player position within the pass`() {
+        // Arrange
+        every { player.currentPosition } returns 4_200L
+        val videoPlayer = createPlayer()
+
+        // Act
+        val positionMs = videoPlayer.positionMs
+
+        // Assert
+        assertThat(positionMs).isEqualTo(4_200L)
+    }
+
+    @Test
+    fun `GIVEN playback under way WHEN restarted THEN the current pass rewinds to its first frame`() {
+        // Arrange
+        val videoPlayer = createPlayer()
+
+        // Act
+        videoPlayer.restart()
+
+        // Assert
+        verify(exactly = 1) { player.seekTo(0L) }
     }
 
     private fun createPlayer(isMotionEnabled: Boolean = true) = DefaultIntroductionVideoPlayer(

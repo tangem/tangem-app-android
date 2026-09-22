@@ -1,7 +1,7 @@
 package com.tangem.data.pay.converter
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
+import com.tangem.spend.datasource.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -158,6 +158,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
                 fiatRate = null,
                 error = null,
                 virtualAccount = null,
+                isBankOfframpAvailable = null,
                 tariffPlan = null,
             )
 
@@ -284,7 +285,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
             // THEN
             val loaded = result as PaymentAccountStatusValue.Loaded
             assertThat(loaded.balance).isNull()
-            assertThat(loaded.cryptoCurrencyStatus).isNull()
+            assertThat(loaded.cryptoCurrencyStatuses).isEmpty()
             assertThat(loaded.source).isEqualTo(StatusSource.CACHE)
         }
 
@@ -392,6 +393,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
         fiatRate = null,
         error = null,
         virtualAccount = null,
+        isBankOfframpAvailable = null,
         tariffPlan = null,
         networks = emptyList(),
     )

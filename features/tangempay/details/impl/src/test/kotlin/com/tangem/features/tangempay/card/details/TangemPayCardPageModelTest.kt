@@ -141,7 +141,6 @@ internal class TangemPayCardPageModelTest {
         cardDetailsControllerFactory = controllerFactory,
         biometricAuthManager = mockk(relaxed = true),
         settingsManager = mockk(relaxed = true),
-        tangemPayFeatureToggles = mockk(relaxed = true),
         onboardingRepository = mockk(relaxed = true),
     )
 }

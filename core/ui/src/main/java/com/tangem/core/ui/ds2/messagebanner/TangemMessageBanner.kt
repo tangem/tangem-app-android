@@ -2,6 +2,7 @@
 
 package com.tangem.core.ui.ds2.messagebanner
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -78,7 +79,11 @@ fun TangemMessageBanner(
             TangemSurface(
                 modifier = Modifier.fillMaxWidth(),
                 color = tokens.background,
-                shape = RoundedCornerShape(28.dp),
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = TangemTheme.colors3.border.primary,
+                ),
+                shape = RoundedCornerShape(if (isClickable) 24.dp else 28.dp),
             ) {
                 Column(
                     modifier = Modifier
@@ -98,7 +103,7 @@ fun TangemMessageBanner(
             TangemGlowRing(
                 modifier = Modifier.matchParentSize(),
                 variant = tokens.glowRing,
-                cornerRadius = 28.dp,
+                cornerRadius = if (isClickable) 24.dp else 28.dp,
             )
         }
     }
@@ -297,6 +302,7 @@ private fun MessageBannerButtons(
             TangemButton(
                 modifier = Modifier.weight(1f),
                 variant = TangemButton.Variant.Secondary,
+                size = TangemButton.Size.X9,
                 text = button.text,
                 iconStart = button.iconStart,
                 iconEnd = button.iconEnd,
@@ -309,6 +315,7 @@ private fun MessageBannerButtons(
             TangemButton(
                 modifier = Modifier.weight(1f),
                 variant = TangemButton.Variant.Primary,
+                size = TangemButton.Size.X9,
                 text = button.text,
                 iconStart = button.iconStart,
                 iconEnd = button.iconEnd,
@@ -402,8 +409,9 @@ fun TangemMessageBanner.CloseButton(
     Icon(
         imageVector = Icons.ic_cross_circle_20_filled,
         contentDescription = null,
-        tint = TangemTheme.colors3.icon.secondary,
+        tint = TangemTheme.colors3.icon.tertiary,
         modifier = modifier
+            .testTag(NotificationTestTags.CLOSE_BUTTON)
             .size(20.dp)
             .clip(RoundedCornerShape(percent = 50))
             .clickableSingle(onClick = onClick)

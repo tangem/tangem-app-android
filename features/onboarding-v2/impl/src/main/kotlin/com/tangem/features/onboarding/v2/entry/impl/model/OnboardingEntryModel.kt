@@ -15,6 +15,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.onboarding.v2.TitleProvider
@@ -28,8 +29,12 @@ import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletCo
 import com.tangem.features.onboarding.v2.title.OnboardingTitle
 import com.tangem.features.onboarding.v2.twin.api.OnboardingTwinComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.OnboardingVisaAnalyticsEvent
+import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
+import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -45,6 +50,7 @@ internal class OnboardingEntryModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val uiMessageSender: UiMessageSender,
     private val userWalletsListRepository: UserWalletsListRepository,
+    private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<OnboardingEntryComponent.Params>()
@@ -167,17 +173,37 @@ internal class OnboardingEntryModel @Inject constructor(
                     OnboardingRoute.AskBiometry(modelCallbacks = AskBiometryModelCallbacks(doneMode)),
                 )
             } else {
-                doIfVisa {
-                    analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.SuccessScreenOpened())
-                }
-                stackNavigation.replaceAll(
-                    OnboardingRoute.Done(
-                        mode = doneMode,
-                        onDone = ::exitComponentScreen,
-                    ),
-                )
+                navigateToPushNotificationsOrDone(doneMode)
             }
         }
+    }
+
+    private suspend fun navigateToPushNotificationsOrDone(doneMode: OnboardingDoneComponent.Mode) {
+        // A failing read must not strand the viewer on the previous step, so the flow finishes instead.
+        val shouldAsk = runSuspendCatching { shouldAskPermissionUseCase(PUSH_PERMISSION) }
+            .getOrElse { error ->
+                TangemLogger.e("Unable to read the push permission preference", error)
+                false
+            }
+        if (shouldAsk) {
+            stackNavigation.replaceAll(
+                OnboardingRoute.PushNotifications(modelCallbacks = PushNotificationsCallbacks(doneMode)),
+            )
+        } else {
+            navigateToDone(doneMode)
+        }
+    }
+
+    private fun navigateToDone(doneMode: OnboardingDoneComponent.Mode) {
+        doIfVisa {
+            analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.SuccessScreenOpened())
+        }
+        stackNavigation.replaceAll(
+            OnboardingRoute.Done(
+                mode = doneMode,
+                onDone = ::exitComponentScreen,
+            ),
+        )
     }
 
     inner class AskBiometryModelCallbacks(
@@ -185,29 +211,24 @@ internal class OnboardingEntryModel @Inject constructor(
     ) : AskBiometryComponent.ModelCallbacks {
         override fun onAllowed() {
             analyticsEventHandler.send(OnboardingEntryEvent.Biometric(OnboardingEntryEvent.Biometric.State.On))
-            doIfVisa {
-                analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.SuccessScreenOpened())
-            }
-            stackNavigation.replaceAll(
-                OnboardingRoute.Done(
-                    mode = doneMode,
-                    onDone = ::exitComponentScreen,
-                ),
-            )
+            modelScope.launch { navigateToPushNotificationsOrDone(doneMode) }
         }
 
         override fun onDenied() {
             analyticsEventHandler.send(OnboardingEntryEvent.Biometric(OnboardingEntryEvent.Biometric.State.Off))
-            doIfVisa {
-                analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.SuccessScreenOpened())
-            }
-            stackNavigation.replaceAll(
-                OnboardingRoute.Done(
-                    mode = doneMode,
-                    onDone = ::exitComponentScreen,
-                ),
-            )
+            modelScope.launch { navigateToPushNotificationsOrDone(doneMode) }
         }
+    }
+
+    inner class PushNotificationsCallbacks(
+        private val doneMode: OnboardingDoneComponent.Mode,
+    ) : PushNotificationsModelCallbacks {
+
+        override fun onAllowSystemPermission() = navigateToDone(doneMode)
+
+        override fun onDenySystemPermission() = navigateToDone(doneMode)
+
+        override fun onDismiss() = navigateToDone(doneMode)
     }
 
     private fun popOrExitComponentScreen() {

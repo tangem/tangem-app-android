@@ -87,7 +87,11 @@ sealed class OnboardingAnalyticsEvent(
                 source?.value?.let { put(AnalyticsParam.SOURCE, it) }
                 putAll(getReferralParams(referralId))
             },
-        ), AppsFlyerIncludedEvent, CriticalEvent
+        ), AppsFlyerIncludedEvent, CriticalEvent, OtelIncludedEvent {
+
+            // Product Type is injected by the card/hot-wallet context params interceptors
+            override val otelMetric = OtelMetric.Counter(allowedParams = setOf(AnalyticsParam.PRODUCT_TYPE))
+        }
     }
 
     sealed class SeedPhrase(

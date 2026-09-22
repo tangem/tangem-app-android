@@ -51,6 +51,7 @@ sealed class ProviderState {
         data object Empty : AdditionalBadge()
         data object PermissionRequired : AdditionalBadge()
         data object Recommended : AdditionalBadge()
+        data object Unavailable : AdditionalBadge()
     }
 
     @Immutable

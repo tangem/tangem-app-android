@@ -8,7 +8,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.features.hotwallet.createmobilewallet.importoptions.model.ImportOptionsBottomSheetModel
 import com.tangem.features.hotwallet.createmobilewallet.importoptions.ui.ImportOptionsBottomSheet
-import com.tangem.features.hotwallet.restorecloudbackup.CloudRestoreResult
+import com.tangem.domain.cloudbackup.restore.CloudRestoreResult
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject

@@ -65,6 +65,7 @@ import com.tangem.features.send.common.ui.state.ConfirmUM
 import com.tangem.features.send.send.analytics.SendAnalyticHelper
 import com.tangem.features.send.send.confirm.SendConfirmComponent
 import com.tangem.features.send.send.confirm.model.SendConfirmModel
+import com.tangem.features.send.send.joint.JointSendDelegate
 import com.tangem.features.send.send.model.SendModel
 import com.tangem.features.send.send.model.TronDefaultFeeLoader
 import com.tangem.features.send.send.ui.state.SendUM
@@ -110,6 +111,7 @@ internal abstract class SendModelTestBase {
     protected val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase = mockk(relaxed = true)
     protected val sendAmountUpdateTrigger: SendAmountUpdateTrigger = mockk(relaxed = true)
     protected val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
+    protected val jointSendDelegate: JointSendDelegate = mockk(relaxed = true)
     protected val sendTransactionUseCase: SendTransactionUseCase = mockk(relaxed = true)
     protected val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase = mockk(relaxed = true)
     protected val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase = mockk(relaxed = true)
@@ -209,6 +211,7 @@ internal abstract class SendModelTestBase {
             isAccountsModeEnabledUseCase = isAccountsModeEnabledUseCase,
             sendAmountUpdateTrigger = sendAmountUpdateTrigger,
             analyticsEventHandler = analyticsEventHandler,
+            jointSendDelegate = jointSendDelegate,
             getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
             tronDefaultFeeLoader = TronDefaultFeeLoader(
                 getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
@@ -254,6 +257,7 @@ internal abstract class SendModelTestBase {
             createAndSendGaslessTransactionUseCase = createAndSendGaslessTransactionUseCase,
             createAndSendTronGaslessTransactionUseCase = createAndSendTronGaslessTransactionUseCase,
             isHighNetworkFeeUseCase = isHighNetworkFeeUseCase,
+            jointSendDelegate = jointSendDelegate,
             sendBalanceUpdaterFactory = sendBalanceUpdaterFactory,
         )
     }

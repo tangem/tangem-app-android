@@ -214,16 +214,16 @@ sealed interface Account {
     }
 
     @Serializable
-    data class Virtual private constructor(
+    data class Money private constructor(
         override val accountId: AccountId,
     ) : Account {
-        override val accountName: AccountName.Custom = AccountName.Custom("Virtual").getOrElse {
-            error("Can not create account name for Virtual account with userWalletId = ${accountId.userWalletId}")
+        override val accountName: AccountName.Custom = AccountName.Custom("Money").getOrElse {
+            error("Can not create account name for Money account with userWalletId = ${accountId.userWalletId}")
         }
 
         companion object {
-            operator fun invoke(userWalletId: UserWalletId): Virtual {
-                return Virtual(accountId = AccountId.forVirtualAccount(userWalletId = userWalletId))
+            operator fun invoke(userWalletId: UserWalletId): Money {
+                return Money(accountId = AccountId.forMoneyAccount(userWalletId = userWalletId))
             }
         }
     }
@@ -239,6 +239,28 @@ sealed interface Account {
         companion object {
             operator fun invoke(userWalletId: UserWalletId): Prediction {
                 return Prediction(accountId = AccountId.forPredictionAccount(userWalletId = userWalletId))
+            }
+        }
+    }
+
+    /**
+     * The wallet's gacha collectibles account.
+     *
+     * Owns no crypto currencies and carries no derivation index of the backend's account space: its key lives at
+     * the fixed `COLLECTIBLES_OWNER_DERIVATION_PATH`, and the funds it operates on belong to an on-chain vault
+     * rather than to this account.
+     */
+    @Serializable
+    data class Collectibles private constructor(
+        override val accountId: AccountId,
+    ) : Account {
+        override val accountName: AccountName.Custom = AccountName.Custom("Collectibles").getOrElse {
+            error("Can not create account name for Collectibles account with userWalletId = ${accountId.userWalletId}")
+        }
+
+        companion object {
+            operator fun invoke(userWalletId: UserWalletId): Collectibles {
+                return Collectibles(accountId = AccountId.forCollectiblesAccount(userWalletId = userWalletId))
             }
         }
     }

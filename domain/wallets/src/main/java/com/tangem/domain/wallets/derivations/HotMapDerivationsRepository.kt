@@ -23,6 +23,12 @@ interface HotMapDerivationsRepository {
     @Throws
     suspend fun derivePublicKeysByNetworks(userWallet: UserWallet.Hot, networks: List<Network>): UserWallet.Hot
 
+    /** Finds the derivation paths missing for [currencies], without deriving them */
+    suspend fun findMissingDerivations(
+        userWallet: UserWallet.Hot,
+        currencies: List<CryptoCurrency>,
+    ): Map<ByteArrayKey, List<DerivationPath>>
+
     @Throws
     suspend fun derivePublicKeys(
         userWallet: UserWallet.Hot,

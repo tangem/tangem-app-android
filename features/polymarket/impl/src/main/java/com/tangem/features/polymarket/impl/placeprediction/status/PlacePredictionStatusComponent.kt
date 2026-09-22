@@ -9,6 +9,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionModel
 import com.tangem.features.polymarket.impl.placeprediction.ui.PlacePredictionStatusContent
+import com.tangem.features.polymarket.impl.placeprediction.entity.side
 
 internal class PlacePredictionStatusComponent(
     appComponentContext: AppComponentContext,
@@ -23,6 +24,7 @@ internal class PlacePredictionStatusComponent(
         PlacePredictionStatusContent(
             result = result,
             market = state.market,
+            side = state.order.side,
             intents = model,
             modifier = modifier,
         )

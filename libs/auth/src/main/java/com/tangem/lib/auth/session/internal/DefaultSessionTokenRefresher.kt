@@ -90,6 +90,34 @@ internal class DefaultSessionTokenRefresher(
         deferred.await()
     }
 
+    override suspend fun ensureSession(): Either<SessionRefreshError, SessionTokens> = withContext(dispatchers.io) {
+        // Decide join / use-cached / refresh atomically under the mutex: if a refresh started between
+        // observing `inFlight == null` and reading the store, we'd otherwise hand back an about-to-be-
+        // rejected token while a server-401-triggered refresh is already running. Reading the (fast,
+        // local) store here closes that window; await()/refresh() run OUTSIDE the lock.
+        val decision = mutex.withLock {
+            val inFlightRefresh = inFlight
+            if (inFlightRefresh != null) {
+                EnsureDecision.Join(inFlightRefresh)
+            } else {
+                val current = store.get().getOrNull()
+                // Treat the stored session as usable only while its access token is still valid.
+                if (current != null && current.accessTokenExpiresAt > clock.now()) {
+                    EnsureDecision.UseCached(current)
+                } else {
+                    EnsureDecision.Refresh
+                }
+            }
+        }
+        when (decision) {
+            is EnsureDecision.Join -> decision.deferred.await()
+            is EnsureDecision.UseCached -> decision.tokens.right()
+            // No refresh was in flight and the token is unusable: refresh() (single-flight) rotates via
+            // /refresh (valid refresh token) or /authenticate (none), joining any refresh that starts meanwhile.
+            EnsureDecision.Refresh -> refresh()
+        }
+    }
+
     private suspend fun runRefresh(current: SessionTokens?): Either<SessionRefreshError, SessionTokens> {
         val now = clock.now()
 
@@ -98,9 +126,11 @@ internal class DefaultSessionTokenRefresher(
             TangemLogger.i("Calling /refresh with stored refresh token")
             when (val result = callRefresh(current.refreshToken)) {
                 is RefreshOutcome.Success -> {
-                    store.save(result.tokens)
+                    // the store answers with what is actually in effect: our reply may have lost a race
+                    // with another rotation, and the caller retries its request with what we return
+                    val inEffect = store.save(result.tokens)
                     TangemLogger.i("/refresh succeeded; session tokens persisted")
-                    return result.tokens.right()
+                    return inEffect.right()
                 }
                 // 401: refresh token is invalid/expired/revoked/replayed but the device key is
                 // intact server-side → fall back to /authenticate to mint a new pair.
@@ -179,9 +209,9 @@ internal class DefaultSessionTokenRefresher(
         when (authResponse) {
             is ApiResponse.Success -> {
                 val tokens = SessionTokensConverter.convertBack(authResponse.data)
-                store.save(tokens)
+                val inEffect = store.save(tokens)
                 TangemLogger.i("/authenticate succeeded; session tokens persisted")
-                tokens
+                inEffect
             }
             is ApiResponse.Error -> handleAuthError(errorConverter.convert(authResponse.cause))
         }
@@ -218,6 +248,12 @@ internal class DefaultSessionTokenRefresher(
         data object RefreshTokenInvalid : RefreshOutcome
         data object DeviceBlocked : RefreshOutcome
         data class Transient(val cause: AuthError) : RefreshOutcome
+    }
+
+    private sealed interface EnsureDecision {
+        data class Join(val deferred: CompletableDeferred<Either<SessionRefreshError, SessionTokens>>) : EnsureDecision
+        data class UseCached(val tokens: SessionTokens) : EnsureDecision
+        data object Refresh : EnsureDecision
     }
 
     private companion object {

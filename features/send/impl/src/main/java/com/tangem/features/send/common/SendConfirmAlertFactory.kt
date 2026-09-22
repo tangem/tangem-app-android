@@ -33,6 +33,48 @@ internal class SendConfirmAlertFactory @Inject constructor(
         )
     }
 
+    fun getJointSlotBusyState() = sendJointNotice(
+        title = R.string.joint_account_send_operation_in_progress_title,
+        message = R.string.joint_account_send_operation_in_progress_subtitle,
+    )
+
+    fun getJointAccountNotReadyState() = sendJointNotice(
+        title = R.string.joint_account_send_not_activated_title,
+        message = R.string.joint_account_send_not_activated_subtitle,
+    )
+
+    fun getJointNetworkStateMovedState() = sendJointNotice(
+        title = R.string.joint_account_send_network_changed_title,
+        message = R.string.joint_account_send_network_changed_subtitle,
+    )
+
+    fun getJointSendBlockedState(onSupportClick: () -> Unit) {
+        messageSender.send(
+            DialogMessage(
+                title = resourceReference(id = R.string.joint_account_send_blocked_title),
+                message = resourceReference(id = R.string.joint_account_send_blocked_subtitle),
+                firstActionBuilder = {
+                    EventMessageAction(title = resourceReference(R.string.common_support), onClick = onSupportClick)
+                },
+                secondActionBuilder = {
+                    EventMessageAction(title = resourceReference(R.string.common_close), onClick = onDismissRequest)
+                },
+            ),
+        )
+    }
+
+    private fun sendJointNotice(title: Int, message: Int) {
+        messageSender.send(
+            DialogMessage(
+                title = resourceReference(id = title),
+                message = resourceReference(id = message),
+                firstActionBuilder = {
+                    EventMessageAction(title = resourceReference(R.string.common_got_it), onClick = onDismissRequest)
+                },
+            ),
+        )
+    }
+
     fun getSendTransactionErrorState(
         error: SendTransactionError,
         popBack: () -> Unit,

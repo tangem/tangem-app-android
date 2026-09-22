@@ -29,6 +29,7 @@ import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
 import com.tangem.features.yield.supply.impl.subcomponents.YieldSupplyActionModelTestBase
 import com.tangem.features.yield.supply.impl.subcomponents.startearning.YieldSupplyStartEarningComponent
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -261,7 +262,7 @@ internal class YieldSupplyStartEarningModelTest : YieldSupplyActionModelTestBase
         yieldSupplyGetCurrentFeeUseCase = getCurrentFeeUseCase,
         yieldSupplyRepository = yieldSupplyRepository,
         yieldSupplyPendingTracker = pendingTracker,
-        appsFlyerStore = appsFlyerStore,
+        appsFlyerRepository = appsFlyerRepository,
     )
 
     private fun actionUM(): YieldSupplyActionUM = YieldSupplyActionUM(

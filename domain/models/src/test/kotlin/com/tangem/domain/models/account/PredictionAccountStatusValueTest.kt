@@ -5,6 +5,8 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
+import com.tangem.domain.models.currency.CryptoCurrency
+import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -13,9 +15,10 @@ import java.math.BigDecimal
 /**
  * Verifies the contribution [PredictionAccountStatusValue] makes to the wallet total.
  *
- * The wallet total is the sum of every account's contribution, and a single [TotalFiatBalance.Loading] one
- * short-circuits it. So the states that carry no balance must contribute a loaded zero rather than loading,
- * otherwise a prediction account that is still fetching hides the balance the user already had.
+ * The wallet total is the sum of every account's contribution, and a single [TotalFiatBalance.Loading] or
+ * [TotalFiatBalance.Failed] one short-circuits it. So the states that carry no balance must contribute a loaded
+ * zero, otherwise a prediction account that is still fetching, or one whose collateral this device cannot read
+ * at all, hides the balance the user already had.
  */
 internal class PredictionAccountStatusValueTest {
 
@@ -31,6 +34,18 @@ internal class PredictionAccountStatusValueTest {
 
             // Assert
             Truth.assertThat(actual).isEqualTo(model.expected)
+        }
+
+        @Test
+        fun `GIVEN a wallet set up elsewhere WHEN totalFiatBalance THEN it never blanks the wallet total`() {
+            // Arrange
+            val value = PredictionAccountStatusValue.Onboarded(source = StatusSource.ACTUAL)
+
+            // Act
+            val actual = value.totalFiatBalance
+
+            // Assert
+            Truth.assertThat(actual).isNotEqualTo(TotalFiatBalance.Failed)
         }
 
         @Test
@@ -56,7 +71,7 @@ internal class PredictionAccountStatusValueTest {
             ),
             TotalFiatBalanceModel(
                 value = PredictionAccountStatusValue.Onboarded(source = StatusSource.ACTUAL),
-                expected = TotalFiatBalance.Failed,
+                expected = TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = StatusSource.ACTUAL),
             ),
             TotalFiatBalanceModel(
                 value = onboarding(
@@ -168,6 +183,8 @@ internal class PredictionAccountStatusValueTest {
     )
 
     private companion object {
+        val COLLATERAL: CryptoCurrency.Token = mockk(relaxed = true)
+
 
         fun onboarding(source: StatusSource, stage: PredictionAccountStatusValue.Onboarding.Stage) =
             PredictionAccountStatusValue.Onboarding(source = source, stage = stage)
@@ -176,12 +193,12 @@ internal class PredictionAccountStatusValueTest {
             balance: BigDecimal,
             fiatRate: BigDecimal?,
             source: StatusSource = StatusSource.ACTUAL,
-            isTradingAllowed: Boolean = true,
         ) = PredictionAccountStatusValue.Active(
             source = source,
             balance = balance,
             fiatRate = fiatRate,
-            isTradingAllowed = isTradingAllowed,
+            depositCurrency = COLLATERAL,
+            depositAddress = "0xbridge",
         )
     }
 }

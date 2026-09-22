@@ -1,9 +1,9 @@
 package com.tangem.data.card
 
 import androidx.datastore.preferences.core.MutablePreferences
-import com.tangem.datasource.local.card.UsedCardInfo
+import com.tangem.data.card.model.UsedCardInfo
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectList
 import com.tangem.datasource.local.preferences.utils.getObjectListSync
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
@@ -15,10 +15,11 @@ import kotlinx.coroutines.flow.map
 
 internal class DefaultCardRepository(
     private val appPreferencesStore: AppPreferencesStore,
+    private val storePreferencesKeys: StorePreferencesKeys,
 ) : CardRepository {
 
     override fun wasCardScanned(cardId: String): Flow<Boolean> {
-        return appPreferencesStore.getObjectList<UsedCardInfo>(key = PreferencesKeys.USED_CARDS_INFO_KEY)
+        return appPreferencesStore.getObjectList<UsedCardInfo>(key = storePreferencesKeys.usedCardsInfoKey)
             .map { savedCards ->
                 savedCards?.any { it.cardId == cardId } == true
             }
@@ -57,11 +58,11 @@ internal class DefaultCardRepository(
     }
 
     override suspend fun isTangemTOSAccepted(): Boolean {
-        return appPreferencesStore.getSyncOrDefault(key = PreferencesKeys.IS_TANGEM_TOS_ACCEPTED_KEY, default = false)
+        return appPreferencesStore.getSyncOrDefault(key = storePreferencesKeys.isTangemTosAcceptedKey, default = false)
     }
 
     override suspend fun acceptTangemTOS() {
-        return appPreferencesStore.store(key = PreferencesKeys.IS_TANGEM_TOS_ACCEPTED_KEY, true)
+        return appPreferencesStore.store(key = storePreferencesKeys.isTangemTosAcceptedKey, true)
     }
 
     private suspend fun AppPreferencesStore.editUsedCards(cardId: String, update: (UsedCardInfo) -> UsedCardInfo) {
@@ -70,13 +71,13 @@ internal class DefaultCardRepository(
 
             val updatedUsedCards = usedCards.updateCard(cardId = cardId, update = update)
 
-            mutablePreferences.setObjectList(key = PreferencesKeys.USED_CARDS_INFO_KEY, value = updatedUsedCards)
+            mutablePreferences.setObjectList(key = storePreferencesKeys.usedCardsInfoKey, value = updatedUsedCards)
         }
     }
 
     private fun MutablePreferences.getUsedCards(): List<UsedCardInfo> {
         return with(appPreferencesStore) {
-            getObjectListOrDefault(key = PreferencesKeys.USED_CARDS_INFO_KEY, default = mutableListOf())
+            getObjectListOrDefault(key = storePreferencesKeys.usedCardsInfoKey, default = mutableListOf())
         }
     }
 
@@ -89,7 +90,7 @@ internal class DefaultCardRepository(
     }
 
     private suspend fun getUsedCardSync(cardId: String): UsedCardInfo? {
-        return appPreferencesStore.getObjectListSync<UsedCardInfo>(PreferencesKeys.USED_CARDS_INFO_KEY)
+        return appPreferencesStore.getObjectListSync<UsedCardInfo>(storePreferencesKeys.usedCardsInfoKey)
             .firstOrNull { it.cardId == cardId }
     }
 

@@ -2,11 +2,10 @@ package com.tangem.features.collectibles.impl.stories.model
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -108,17 +107,6 @@ internal class CollectiblesStoriesModelTest {
         return CollectiblesStoriesModel(
             router = router,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
-        )
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
         )
     }
 }

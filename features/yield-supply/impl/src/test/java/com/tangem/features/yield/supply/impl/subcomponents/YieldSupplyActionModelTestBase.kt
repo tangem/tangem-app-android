@@ -8,7 +8,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -25,14 +25,13 @@ import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.usecase.YieldSupplyPendingTracker
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsUpdateTrigger
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestScope
 import org.junit.jupiter.api.BeforeEach
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -56,7 +55,7 @@ internal abstract class YieldSupplyActionModelTestBase {
     protected val alertFactory: YieldSupplyAlertFactory = mockk(relaxed = true)
     protected val pendingTracker: YieldSupplyPendingTracker = mockk(relaxed = true)
     protected val yieldSupplyRepository: YieldSupplyRepository = mockk(relaxed = true)
-    protected val appsFlyerStore: AppsFlyerStore = mockk(relaxed = true)
+    protected val appsFlyerRepository: AppsFlyerRepository = mockk(relaxed = true)
 
     protected val userWalletId = UserWalletId("abcdef012345")
     protected val userWallet: UserWallet = mockk(relaxed = true) {
@@ -73,18 +72,6 @@ internal abstract class YieldSupplyActionModelTestBase {
         coEvery { getSelectedAppCurrencyUseCase.invokeSync() } returns AppCurrency.Default.right()
         every { notificationsUpdateTrigger.hasErrorFlow } returns MutableStateFlow(false)
         coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) } returns cryptoCurrencyStatus.right()
-    }
-
-    /** A [StandardTestDispatcher] for every role so `advanceUntilIdle()` drives the model's coroutines. */
-    protected fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
     }
 
     /** Network fee is paid in the native coin (token amounts are rejected by `increaseGasLimitBy`). */

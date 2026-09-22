@@ -438,7 +438,7 @@ internal class ForYouModel @Inject constructor(
 
     private suspend fun isCurrencyInPortfolio(rawCurrencyId: CryptoCurrency.RawID): Boolean {
         return availableAccountStatuses.first().values.any { accountStatusList ->
-            accountStatusList.flattenCurrencies().any { status ->
+            accountStatusList.flattenPersonalCurrencies().any { status ->
                 status.currency.id.rawCurrencyId == rawCurrencyId
             }
         }

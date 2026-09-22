@@ -182,6 +182,7 @@ internal class DefaultAddressSyncComponent(
                     }
                 },
                 source = AppRoute.PushNotification.Source.Onboarding,
+                isBackHandledByHost = true,
             ),
         )
     }

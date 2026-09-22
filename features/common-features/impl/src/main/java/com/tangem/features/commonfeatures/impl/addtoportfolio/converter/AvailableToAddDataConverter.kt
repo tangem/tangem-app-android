@@ -2,14 +2,15 @@ package com.tangem.features.commonfeatures.impl.addtoportfolio.converter
 
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.markets.FilterAvailableNetworksForWalletUseCase
+import com.tangem.domain.jointaccount.usecase.GetJointAccountSupportedNetworksUseCase
 import com.tangem.domain.markets.GetTokenMarketCryptoCurrency
 import com.tangem.domain.markets.RawMarketToken
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.account.filterCryptoPortfolio
-import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -21,6 +22,7 @@ import javax.inject.Inject
 
 internal class AvailableToAddDataConverter @Inject constructor(
     private val filterAvailableNetworksForWalletUseCase: FilterAvailableNetworksForWalletUseCase,
+    private val getJointAccountSupportedNetworksUseCase: GetJointAccountSupportedNetworksUseCase,
     private val getTokenMarketCryptoCurrency: GetTokenMarketCryptoCurrency,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
 ) {
@@ -31,7 +33,9 @@ internal class AvailableToAddDataConverter @Inject constructor(
         marketParams: RawMarketToken,
     ): AvailableToAddData {
         suspend fun AccountStatus.CryptoPortfolio.getAvailableToAddAccount(wallet: UserWallet): AvailableToAddAccount? {
-            val currencies = availableNetworks
+            if (this is AccountStatus.Joint && value !is JointAccountStatusValue.Active) return null
+            val accountNetworks = availableNetworks.supportedBy(account)
+            val currencies = accountNetworks
                 .mapNotNull { network ->
                     createCryptoCurrency(
                         userWallet = wallet,
@@ -55,7 +59,7 @@ internal class AvailableToAddDataConverter @Inject constructor(
 
             return AvailableToAddAccount(
                 account = this,
-                availableNetworks = availableNetworks,
+                availableNetworks = accountNetworks,
                 addedNetworks = addedNetworks,
             )
         }
@@ -95,6 +99,18 @@ internal class AvailableToAddDataConverter @Inject constructor(
         )
     }
 
+    private fun Set<TokenMarketInfo.Network>.supportedBy(
+        account: Account.CryptoPortfolio,
+    ): Set<TokenMarketInfo.Network> {
+        return when (account) {
+            is Account.Personal -> this
+            is Account.Joint -> {
+                val supported = getJointAccountSupportedNetworksUseCase().mapTo(hashSetOf()) { it.value }
+                filterTo(linkedSetOf()) { it.networkId in supported }
+            }
+        }
+    }
+
     private fun UserWallet.filteredAvailableNetworks(networks: Set<TokenMarketInfo.Network>) =
         filterAvailableNetworksForWalletUseCase(
             userWalletId = this.walletId,
@@ -111,7 +127,7 @@ internal class AvailableToAddDataConverter @Inject constructor(
             userWalletId = userWallet.walletId,
             tokenMarketParams = marketParams,
             network = network,
-            accountIndex = account.derivationIndex ?: return null,
+            account = account,
         )
     }
 }

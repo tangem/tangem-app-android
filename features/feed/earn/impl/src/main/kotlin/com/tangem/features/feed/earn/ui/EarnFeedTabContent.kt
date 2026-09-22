@@ -17,7 +17,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.UnableToLoadData
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.list.InfiniteListHandler
@@ -81,38 +80,33 @@ internal fun EarnFeedTabContent(
         ),
     ) {
         item(key = "promoBanners") {
-            promoBanners(Modifier.padding(vertical = 8.dp))
+            promoBanners(Modifier.padding(bottom = 20.dp))
         }
 
         item(key = "opportunities") {
             OpportunitiesContent(
                 state = state.mostlyUsed,
                 onScroll = state.onSliderScroll,
+                modifier = Modifier.padding(bottom = 48.dp),
             )
         }
 
         item(key = "best_opportunities_header") {
             SectionHeader(
                 title = stringResourceSafe(R.string.earn_assets),
-                modifier = Modifier.padding(
-                    top = if (state.mostlyUsed == EarnListUM.Empty) {
-                        24.dp
-                    } else {
-                        48.dp
-                    },
-                ),
+                modifier = Modifier.padding(bottom = 12.dp),
             )
         }
 
         item(key = "best_opportunities_filters") {
-            SpacerH(12.dp)
             TangemFilterGroup(
                 items = state.filters,
                 arrangement = Arrangement.SpaceBetween,
                 variant = TangemFilterItem.Variant.Transparent,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
             )
-            SpacerH(16.dp)
         }
 
         bestOpportunitiesItems(state = state.bestOpportunities)
@@ -120,16 +114,17 @@ internal fun EarnFeedTabContent(
 }
 
 @Composable
-private fun OpportunitiesContent(state: EarnListUM, onScroll: () -> Unit) {
+private fun OpportunitiesContent(state: EarnListUM, onScroll: () -> Unit, modifier: Modifier = Modifier) {
     AnimatedContent(
         targetState = state,
         contentKey = { it::class.java },
+        modifier = modifier,
     ) { animatedState ->
         Column {
             if (animatedState != EarnListUM.Empty) {
                 SectionHeader(
                     title = stringResourceSafe(R.string.common_featured),
-                    modifier = Modifier.padding(top = 24.dp, bottom = 16.dp),
+                    modifier = Modifier.padding(bottom = 16.dp),
                 )
             }
             when (animatedState) {

@@ -18,4 +18,15 @@ interface WalletRegistrationTrigger {
      * don't cancel the in-flight registration.
      */
     fun onMobileWalletCreated(userWallet: UserWallet.Hot)
+
+    /**
+     * Retries MOBILE registration for hot wallets that have just been unlocked. A wallet whose
+     * registration failed earlier (e.g. no session yet at creation) is only re-attempted for
+     * NoPassword wallets at startup; Password/Biometry wallets can't sign silently there, so unlocking
+     * is the moment a real signing context appears and they can finally register.
+     *
+     * Non-blocking and idempotent per wallet (already-registered wallets are skipped), so it is safe to
+     * call for every wallet unlocked in a batch.
+     */
+    fun onMobileWalletsUnlocked(userWallets: List<UserWallet.Hot>)
 }

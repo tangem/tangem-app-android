@@ -3,6 +3,8 @@ package com.tangem.data.markets.analytics
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.IS_NOT_HTTP_ERROR
+import com.tangem.core.analytics.models.OtelIncludedEvent
+import com.tangem.core.analytics.models.OtelMetric
 
 sealed interface MarketsDataAnalyticsEvent {
 
@@ -22,7 +24,10 @@ sealed interface MarketsDataAnalyticsEvent {
                 put(AnalyticsParam.ERROR_CODE, errorCode?.toString() ?: IS_NOT_HTTP_ERROR)
                 put(AnalyticsParam.ERROR_MESSAGE, errorMessage)
             },
-        )
+        ), OtelIncludedEvent {
+
+            override val otelMetric = OtelMetric.Counter(allowedParams = setOf(AnalyticsParam.ERROR_CODE))
+        }
     }
 
     sealed class Details(
@@ -45,7 +50,9 @@ sealed interface MarketsDataAnalyticsEvent {
                 put(AnalyticsParam.ERROR_CODE, errorCode?.toString() ?: IS_NOT_HTTP_ERROR)
                 put(AnalyticsParam.ERROR_MESSAGE, errorMessage)
             },
-        ) {
+        ), OtelIncludedEvent {
+
+            override val otelMetric = OtelMetric.Counter(allowedParams = setOf(AnalyticsParam.ERROR_CODE))
 
             enum class Request(val source: String) {
                 Chart("Chart"),
@@ -74,7 +81,11 @@ sealed interface MarketsDataAnalyticsEvent {
             put(AnalyticsParam.ERROR_MESSAGE, "Chart data contains null values from the API")
         },
     ),
-        MarketsDataAnalyticsEvent
+        MarketsDataAnalyticsEvent,
+        OtelIncludedEvent {
+
+        override val otelMetric = OtelMetric.Counter(allowedParams = setOf(AnalyticsParam.ERROR_CODE))
+    }
 
     enum class Type(val value: String) {
         Http("Http"),

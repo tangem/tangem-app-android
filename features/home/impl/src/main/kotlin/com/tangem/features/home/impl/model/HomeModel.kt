@@ -16,7 +16,6 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.appsflyer.AppsFlyerDeeplink
-import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.appsflyer.usecase.GetAppsFlyerDeeplinkUseCase
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.analytics.IntroductionProcess
@@ -43,7 +42,6 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.util.Locale
 import javax.inject.Inject
 
 private const val HIDE_PROGRESS_DELAY = 400L
@@ -63,7 +61,6 @@ internal class HomeModel @Inject constructor(
     private val saveWalletUseCase: SaveWalletUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val getAppsFlyerDeeplinkUseCase: GetAppsFlyerDeeplinkUseCase,
-    private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase,
     private val homeFeatureToggles: HomeFeatureToggles,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
 ) : Model() {
@@ -101,7 +98,7 @@ internal class HomeModel @Inject constructor(
             .distinctUntilChanged()
             .filterNotNull()
             .onEach { result ->
-                val userCountry = result.getOrNull() ?: UserCountry.Other(Locale.getDefault().country)
+                val userCountry = result.getOrNull() ?: UserCountry.fromDeviceLocale()
                 updateStoriesForCountry(userCountry)
             }
             .flowOn(dispatchers.io)
@@ -125,15 +122,12 @@ internal class HomeModel @Inject constructor(
         debouncer.debounce(modelScope) {
             modelScope.launch {
                 when (getAppsFlyerDeeplinkUseCase()) {
-                    // The app was opened by a Tangem Pay link: run its onboarding now that the stories are over.
-                    // It stays the stack root, as it was when the deep link opened it directly: on a device
-                    // without hot wallet support it falls back to Home with `replaceCurrent`, which would
-                    // otherwise leave this screen's predecessors stacked underneath a second Home.
-                    AppsFlyerDeeplink.TangemPayMobileOnboarding -> {
-                        clearAppsFlyerDeeplinkUseCase()
-                        router.replaceAll(AppRoute.TangemPayHotWalletOnboarding)
-                    }
-                    AppsFlyerDeeplink.Referral -> router.push(
+                    // AppsFlyerDeeplinkRouter consumes the Tangem Pay link on arrival, so reaching here means it
+                    // lost the race with this tap. Hot wallet creation keeps the intent, and the link is left
+                    // pending for the router to pick up once a wallet exists.
+                    AppsFlyerDeeplink.TangemPayMobileOnboarding,
+                    AppsFlyerDeeplink.Referral,
+                    -> router.push(
                         AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.HotWallet),
                     )
                     null -> router.push(

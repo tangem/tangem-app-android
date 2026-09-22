@@ -12,6 +12,7 @@ import com.tangem.domain.account.status.usecase.GetBackupProblematicWalletForAdd
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.transaction.usecase.IsMemoRequiredUseCase
 import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
 import com.tangem.features.swap.v2.impl.amount.entity.PriceImpact
@@ -55,7 +56,7 @@ internal class SwapNotificationsModel @Inject constructor(
     private val params: SwapNotificationsComponent.Params = paramsContainer.require()
 
     private var notificationData = params.swapNotificationData
-    private var lastSentErrorKeys: Set<Pair<String, Map<String, String>>> = emptySet()
+    private var lastSentNotificationKeys: Set<Pair<String, Map<String, String>>> = emptySet()
 
     @RemoveWithToggle("TWI_1741_TOP_UP_WARNING_ENABLED")
     private val backupProblematicWalletCache = AtomicReference<Pair<String, UserWalletId?>?>(null)
@@ -128,7 +129,7 @@ internal class SwapNotificationsModel @Inject constructor(
             }
         }
 
-        sendErrorAnalyticsIfNeeded(notifications)
+        sendNotificationAnalyticsIfNeeded(notifications)
     }
 
     private suspend fun MutableList<NotificationUM>.addDestinationTagRequiredNotification() {
@@ -246,7 +247,7 @@ internal class SwapNotificationsModel @Inject constructor(
         add(notification)
     }
 
-    private fun sendErrorAnalyticsIfNeeded(notifications: List<NotificationUM>) {
+    private fun sendNotificationAnalyticsIfNeeded(notifications: List<NotificationUM>) {
         val fromToken = notificationData.fromCryptoCurrency ?: return
         val toToken = notificationData.toCryptoCurrencyStatus?.currency
 
@@ -258,6 +259,15 @@ internal class SwapNotificationsModel @Inject constructor(
                     SendWithSwapAnalyticEvents.ErrorMinAmount(fromToken = fromToken)
                 is SwapNotificationUM.Error.MaximumAmountError ->
                     SendWithSwapAnalyticEvents.ErrorMaxAmount(fromToken = fromToken)
+                is SwapNotificationUM.Error.RegionRestriction -> toToken?.let { receiveToken ->
+                    SendWithSwapAnalyticEvents.NoticeGeoRestriction(
+                        direction = (notificationData.amountType ?: SwapAmountType.From).name,
+                        sendToken = fromToken.symbol,
+                        receiveToken = receiveToken.symbol,
+                        sendBlockchain = fromToken.network.name,
+                        receiveBlockchain = receiveToken.network.name,
+                    )
+                }
                 is SwapNotificationUM.Warning.ExpressGeneralError -> toToken?.let { receiveToken ->
                     SendWithSwapAnalyticEvents.ErrorExpressQuote(
                         fromToken = fromToken,
@@ -270,8 +280,8 @@ internal class SwapNotificationsModel @Inject constructor(
         }
 
         val currentKeys = events.map { it.event to it.params }.toSet()
-        val newEvents = events.filter { it.event to it.params !in lastSentErrorKeys }
-        lastSentErrorKeys = currentKeys
+        val newEvents = events.filter { it.event to it.params !in lastSentNotificationKeys }
+        lastSentNotificationKeys = currentKeys
 
         newEvents.forEach(analyticsEventHandler::send)
     }

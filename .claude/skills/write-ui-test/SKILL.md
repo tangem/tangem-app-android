@@ -32,10 +32,8 @@ different setup.
 5. **Write the test** per Conventions below.
 6. **Build BOTH APKs, install, run, and classify the result** correctly — Allure post-run hook
    failures are not test failures (see `reference/running-and-debugging.md`).
-   **One green run proves nothing when the test was flaky.** A fix for a flaky test is only done after
-   **3 consecutive green runs**; a single pass is exactly what a 1-in-4 race looks like. And before
-   blaming a test, check your local WireMock is started the way CI starts it — a misconfigured local
-   instance fails tests that are fine on CI (see `reference/running-and-debugging.md`).
+   Before blaming a test, check your local WireMock is started the way CI starts it — a misconfigured
+   local instance fails tests that are fine on CI (see `reference/running-and-debugging.md`).
 7. **Final cleanup pass — remove what you no longer use.** Before declaring done, review every file you
    touched for leftovers from iteration (see "Final cleanup" below). This is a required step, not optional.
 

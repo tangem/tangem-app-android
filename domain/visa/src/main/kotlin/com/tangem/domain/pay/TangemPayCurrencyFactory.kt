@@ -20,7 +20,7 @@ interface TangemPayCurrencyFactory {
      * @throws IllegalStateException if no wallet with [userWalletId] is currently loaded.
      */
     fun create(userWalletId: UserWalletId): CryptoCurrency.Token
-    fun createVirtualAccountToken(userWalletId: UserWalletId): CryptoCurrency.Token
+    fun createMoneyAccountToken(userWalletId: UserWalletId): CryptoCurrency.Token
 
     /**
      * Builds the domain multichain networks from the raw [networks] delivered by `customer/me`.

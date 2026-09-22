@@ -53,19 +53,29 @@ class ResolvePolymarketEntryInteractor(
 
             val addresses = derivePolymarketAddressesUseCase.stored(userWalletId)
             if (addresses == null) {
-                TangemLogger.i("Resolve: no addresses available without prompting, entry=Undetermined")
-                return@either PolymarketEntry.Undetermined
+                return@either unpromptedEntry(userWalletId)
             }
 
             entryFor(addresses = addresses).bind()
         }
+
+    private suspend fun unpromptedEntry(userWalletId: UserWalletId): PolymarketEntry {
+        val entry = if (polymarketOnboardedStore.isOnboardedSync(userWalletId)) {
+            PolymarketEntry.Reconnect
+        } else {
+            PolymarketEntry.Undetermined
+        }
+        TangemLogger.i("Resolve: no addresses available without prompting, entry=$entry")
+
+        return entry
+    }
 
     /**
      * The entry of a wallet already confirmed ready, or `null` when it is not confirmed or has nothing to sign
      * with — either way the backend has to be asked.
      */
     private suspend fun confirmedEntry(userWalletId: UserWalletId): PolymarketEntry? {
-        if (!polymarketOnboardedStore.isOnboarded(userWalletId)) return null
+        if (!polymarketOnboardedStore.isOnboardedSync(userWalletId)) return null
         if (getPolymarketApiCredentialsUseCase(userWalletId) == null) return null
 
         TangemLogger.i("Resolve: $userWalletId is confirmed onboarded")
@@ -107,10 +117,9 @@ class ResolvePolymarketEntryInteractor(
             )
         }
 
-    private fun PolymarketWalletState.toEntry(hasCredentials: Boolean): PolymarketEntry =
-        if (status == PolymarketWalletStatus.READY_TO_TRADE && hasCredentials) {
-            PolymarketEntry.Onboarded
-        } else {
-            PolymarketEntry.Onboard(status = status)
-        }
+    private fun PolymarketWalletState.toEntry(hasCredentials: Boolean): PolymarketEntry = when {
+        status != PolymarketWalletStatus.READY_TO_TRADE -> PolymarketEntry.Onboard(status = status)
+        hasCredentials -> PolymarketEntry.Onboarded
+        else -> PolymarketEntry.Reconnect
+    }
 }

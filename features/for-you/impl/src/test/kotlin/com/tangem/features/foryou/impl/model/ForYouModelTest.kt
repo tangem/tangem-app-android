@@ -69,15 +69,14 @@ import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchListState
 import com.tangem.pagination.PaginationStatus
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.StringsSigns.THREE_STARS
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -1105,17 +1104,6 @@ internal class ForYouModelTest {
         ).also { model = it }
     }
 
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
-    }
-
     private fun createAccountStatusList(
         currencies: List<CryptoCurrencyStatus>,
         walletId: UserWalletId = WALLET_ID,
@@ -1125,13 +1113,14 @@ internal class ForYouModelTest {
             userWalletId = walletId,
             cryptoCurrencies = currencies.map { it.currency },
         )
-        val cryptoPortfolioStatus = mockk<AccountStatus.CryptoPortfolio> {
+        val cryptoPortfolioStatus = mockk<AccountStatus.Personal> {
             every { flattenCurrencies() } returns currencies
             every { account } returns portfolioAccount
             every { accountId } returns portfolioAccount.accountId
         }
         return mockk {
             every { flattenCurrencies() } returns currencies
+            every { flattenPersonalCurrencies() } returns currencies
             every { userWalletId } returns walletId
             every { accountStatuses } returns listOf(cryptoPortfolioStatus)
         }

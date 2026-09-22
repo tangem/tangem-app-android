@@ -7,15 +7,15 @@ import kotlinx.collections.immutable.ImmutableList
 internal data class JointAccountPromoUM(
     val title: TextReference,
     val subtitle: TextReference,
-    val benefits: ImmutableList<BenefitUM>,
+    val points: ImmutableList<PointUM>,
     val onContinueClick: () -> Unit,
     val onCloseClick: () -> Unit,
 ) {
 
-    data class BenefitUM(
+    data class PointUM(
         val id: String,
         val icon: TangemIconUM,
-        val title: TextReference,
-        val subtitle: TextReference,
+        val lead: TextReference,
+        val description: TextReference,
     )
 }

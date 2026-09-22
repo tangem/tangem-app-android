@@ -175,6 +175,7 @@ internal class DefaultHistoryTxListManager @AssistedInject constructor(
                 ifLeft = { error ->
                     when (error) {
                         is TxHistoryStateError.DataError -> throw error
+                        is TxHistoryStateError.AddressNotReady -> throw error
                         TxHistoryStateError.EmptyTxHistories -> OnChainSource.BSDK
                         TxHistoryStateError.TxHistoryNotImplemented -> OnChainSource.IndexTable
                     }

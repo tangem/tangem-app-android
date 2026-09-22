@@ -26,7 +26,7 @@ dependencies {
     // endregion
 
     // region Project - Core
-    api(projects.core.datasource)
+    implementation(projects.store.datasource)
     api(projects.core.utils)
     // endregion
 

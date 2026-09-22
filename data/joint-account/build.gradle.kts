@@ -20,6 +20,7 @@ dependencies {
     // region Other libraries
     implementation(deps.androidx.datastore)
     implementation(deps.arrow.core)
+    implementation(deps.moshi)
     // endregion
 
     // region Tangem SDK
@@ -37,7 +38,7 @@ dependencies {
 
     // region Core
     implementation(projects.core.local)
-    implementation(projects.core.datasource)
+    implementation(projects.store.datasource)
     implementation(projects.core.utils)
     // endregion
 
@@ -47,9 +48,14 @@ dependencies {
 
     // region Domain
     api(projects.domain.jointAccount)
+    implementation(projects.domain.account)
+    implementation(projects.domain.blockaid)
+    implementation(projects.domain.blockaid.models)
     implementation(projects.domain.common)
     implementation(projects.domain.core)
     implementation(projects.domain.models)
+    implementation(projects.domain.transaction)
+    implementation(projects.domain.wallets)
     // endregion
 
     // region Tangem SDKs
@@ -62,5 +68,7 @@ dependencies {
 
     // region Tests
     testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
+    testImplementation(deps.web3j.core)
     // endregion
 }

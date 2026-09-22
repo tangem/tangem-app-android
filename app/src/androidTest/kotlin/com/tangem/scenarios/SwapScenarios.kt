@@ -474,6 +474,29 @@ fun BaseTestCase.changeReceiveToken(tokenName: String) {
     }
 }
 
+/** Opens the FROM token selector via the swap-card icon. The balance filter is only wired for FROM, not TO. */
+fun BaseTestCase.openSwapFromTokenSelector() {
+    step("Click on 'Select token' icon in 'From' field") {
+        onSwapTokenScreen { swapSelectTokenIcon.performClick() }
+    }
+}
+
+/**
+ * Opens the balance-filter dropdown on the FROM token selector and picks [filterLabel].
+ *
+ * The chip only renders once the portfolio block loads, so wait for it before clicking — callers may
+ * reach this right after opening the selector.
+ */
+fun BaseTestCase.selectBalanceFilter(filterLabel: String) {
+    step("Click on balance filter chip") {
+        awaitSuccess { onSwapSelectTokenScreen { balanceFilterChip.assertIsDisplayed() } }
+        onSwapSelectTokenScreen { balanceFilterChip.performClick() }
+    }
+    step("Click on '$filterLabel' filter option") {
+        onSwapSelectTokenScreen { balanceFilterOption(filterLabel).clickWithAssertion() }
+    }
+}
+
 /**
  * From a clean start: open the main screen (cold by default, or an existing hot wallet when
  * [seedPhrase] is given), open Swap for [fromTokenName], choose [receiveTokenName] to receive and
@@ -541,7 +564,12 @@ fun BaseTestCase.switchFeeTokenAndApply(currentFeeToken: String, newFeeToken: St
         openSwapNetworkFeeSelector()
     }
     step("Click on '$currentFeeToken' fee token to open 'Choose token'") {
-        onSendFeeSelectorBottomSheet { feeTokenItem(currentFeeToken).performClick() }
+        // A quote refresh rebuilds the sheet and stales its rows, and only reopening brings them back.
+        awaitAssert(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            runCatching { onSwapTokenScreen { networkFeeBlock.performClick() } }
+            runCatching { onSendFeeSelectorBottomSheet { feeTokenItem(currentFeeToken).performClick() } }
+            onSendFeeSelectorBottomSheet { chooseTokenTitle.assertIsDisplayed() }
+        }
     }
     step("Select '$newFeeToken' as the fee-paying token") {
         awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
