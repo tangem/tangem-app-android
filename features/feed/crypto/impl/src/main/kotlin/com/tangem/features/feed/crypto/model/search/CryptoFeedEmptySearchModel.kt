@@ -37,7 +37,7 @@ private const val UPDATE_QUOTES_TIMER_MILLIS = 60_000L
 private val TREND_INTERVAL = MarketPulseInterval.H24
 
 @ModelScoped
-internal class CryptoFeedEmptySearchTabModel @Inject constructor(
+internal class CryptoFeedEmptySearchModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
