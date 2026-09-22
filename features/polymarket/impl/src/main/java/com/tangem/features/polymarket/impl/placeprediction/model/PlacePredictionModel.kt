@@ -58,6 +58,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.ViewPositionUM
+import com.tangem.features.polymarket.impl.positiondetails.model.canOpenPositionDetails
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
 import com.tangem.features.polymarket.impl.placeprediction.entity.feeBreakdownQuote
@@ -519,7 +520,8 @@ internal class PlacePredictionModel @Inject constructor(
      * until it appears. The index answers with no position for a while even when the outcome was already held,
      * so the window is wider than the one the details screen uses. A read that fails is retried like a missing
      * position; when the reads run out the button is withdrawn rather than left pointing at a screen that would
-     * say the position is unavailable.
+     * say the position is unavailable. A market that resolved inside that window leads to the same dead end,
+     * so the button is withdrawn for a position the details screen would refuse.
      */
     private fun awaitCreatedPosition(result: PlaceResultUM) {
         if (params.side != PredictionOrderSide.BUY) return
@@ -546,8 +548,13 @@ internal class PlacePredictionModel @Inject constructor(
                 }.getOrNull()
 
                 if (position != null) {
-                    indexedPositionId = positionId
-                    uiState.update(SetViewPositionTransformer(viewPosition = ViewPositionUM.Available))
+                    val canOpen = position.canOpenPositionDetails
+                    if (canOpen) indexedPositionId = positionId
+                    uiState.update(
+                        SetViewPositionTransformer(
+                            viewPosition = if (canOpen) ViewPositionUM.Available else ViewPositionUM.Hidden,
+                        ),
+                    )
                     return@launch
                 }
                 if (read < PolymarketConst.CREATED_POSITION_READS - 1) {
