@@ -8,6 +8,7 @@ import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import kotlinx.serialization.Serializable
+import java.math.BigDecimal
 
 /**
  * Represents the various states a payment account can have, encapsulating different information based on the state.
@@ -132,9 +133,8 @@ sealed class PaymentAccountStatusValue {
      *
      * @property source The source of the status information.
      * @property customerId The unique identifier of the customer.
-     * @property balance The balance details (fiat, crypto and amount available for withdrawal), or `null` when
-     *                   the account exists but its balances are unavailable — `customer/me` delivered neither
-     *                   fiat nor crypto balance and no cached balance was found.
+     * @property balance The balance details, or `null` when the account exists but its balance is
+     *                   unavailable — `customer/me` delivered no fiat balance and no cached one was found.
      * @property cryptoCurrency The crypto currency held by the deactivated account.
      * @property networks Multichain: the blockchain networks attached to the account, each tagged by its
      *                    issuance status ([PaymentNetworkStatus]). Empty when the backend attached none.
@@ -154,6 +154,7 @@ sealed class PaymentAccountStatusValue {
         val fiatRate: SerializedBigDecimal?,
         val error: Error?,
     ) : PaymentAccountStatusValue() {
+
         /**
          * Multichain: statuses of every [PaymentNetworkStatus.Available] network flattened together.
          * Statuses are built per-network by the data layer. Empty when no `Available` network is attached.
@@ -161,6 +162,12 @@ sealed class PaymentAccountStatusValue {
         val cryptoCurrencyStatuses: List<CryptoCurrencyStatus>
             get() = networks.filterIsInstance<PaymentNetworkStatus.Available>()
                 .flatMap { it.cryptoCurrencyStatuses }
+
+        val cryptoCurrencyStatus: CryptoCurrencyStatus?
+            get() = cryptoCurrencyStatuses.singleCurrencyStatus(cryptoCurrency)
+
+        val availableForWithdrawal: SerializedBigDecimal
+            get() = cryptoCurrencyStatuses.maxAvailableForWithdrawal()
     }
 
     /**
@@ -168,13 +175,14 @@ sealed class PaymentAccountStatusValue {
      *
      * @property source The source of the status information.
      * @property customerId The unique identifier of the customer.
-     * @property balance The balance details (fiat, crypto and amount available for withdrawal), or `null` when
-     *                   the account exists but its balances are unavailable — `customer/me` delivered neither
-     *                   fiat nor crypto balance and no cached balance was found. The fiat currency code is
-     *                   available via [Balance.fiatBalance].
+     * @property paymentAccountAddress On-chain address of the payment account itself, or `null` when the
+     *                                 backend has not provisioned one yet.
+     * @property balance The balance details, or `null` when the account exists but its balance is
+     *                   unavailable — `customer/me` delivered no fiat balance and no cached one was found.
+     *                   The fiat currency code is available via [Balance.fiatBalance].
      * @property cryptoCurrency The crypto currency held by the account.
-     * @property networks Multichain: the blockchain networks attached to the account, each tagged by its
-     *                    issuance status ([PaymentNetworkStatus]). Empty when the backend attached none.
+     * @property networks The blockchain networks attached to the account, each tagged by its issuance
+     *                    status ([PaymentNetworkStatus]).
      * @property cards The list of user's cards.
      * @property fiatRate Exchange rate of [cryptoCurrency] to the account's fiat currency,
      *                    or `null` if the quote is not yet available. When `null`,
@@ -194,6 +202,7 @@ sealed class PaymentAccountStatusValue {
     data class Loaded(
         override val source: StatusSource,
         val customerId: String,
+        val paymentAccountAddress: String?,
         val balance: Balance?,
         val cryptoCurrency: CryptoCurrency.Token,
         val networks: List<PaymentNetworkStatus>,
@@ -204,6 +213,7 @@ sealed class PaymentAccountStatusValue {
         val isBankOfframpAvailable: Boolean?,
         val tariffPlan: TangemPayTariffPlanState?,
     ) : PaymentAccountStatusValue() {
+
         /**
          * Multichain: statuses of every [PaymentNetworkStatus.Available] network flattened together.
          * Statuses are built per-network by the data layer. Empty when no `Available` network is attached.
@@ -211,6 +221,12 @@ sealed class PaymentAccountStatusValue {
         val cryptoCurrencyStatuses: List<CryptoCurrencyStatus>
             get() = networks.filterIsInstance<PaymentNetworkStatus.Available>()
                 .flatMap { it.cryptoCurrencyStatuses }
+
+        val cryptoCurrencyStatus: CryptoCurrencyStatus?
+            get() = cryptoCurrencyStatuses.singleCurrencyStatus(cryptoCurrency)
+
+        val availableForWithdrawal: SerializedBigDecimal
+            get() = cryptoCurrencyStatuses.maxAvailableForWithdrawal()
     }
 
     /** Represents an error state for the payment account status. */
@@ -250,16 +266,9 @@ sealed class PaymentAccountStatusValue {
      * Aggregates all balance data of a payment account, as returned by the `customer/me` endpoint.
      *
      * @property fiatBalance The fiat balance details.
-     * @property cryptoBalance The crypto balance details.
-     * @property availableForWithdrawal The crypto amount currently available for withdrawal/swap
-     *                                  (excludes pending/locked funds).
      */
     @Serializable
-    data class Balance(
-        val fiatBalance: FiatBalance,
-        val cryptoBalance: CryptoBalance,
-        val availableForWithdrawal: SerializedBigDecimal,
-    )
+    data class Balance(val fiatBalance: FiatBalance)
 
     /**
      * Represents the fiat balance of the payment account.
@@ -269,24 +278,6 @@ sealed class PaymentAccountStatusValue {
      */
     @Serializable
     data class FiatBalance(val availableBalance: SerializedBigDecimal, val currency: String)
-
-    /**
-     * Represents the crypto balance of the payment account.
-     *
-     * @property id The unique identifier of the crypto asset.
-     * @property chainId The identifier of the blockchain network.
-     * @property depositAddress The address for deposits.
-     * @property tokenContractAddress The contract address of the token.
-     * @property balance The amount of the crypto balance.
-     */
-    @Serializable
-    data class CryptoBalance(
-        val id: String,
-        val chainId: Long,
-        val depositAddress: String,
-        val tokenContractAddress: String,
-        val balance: SerializedBigDecimal,
-    )
 
     private fun totalFiatBalanceOf(
         balance: Balance?,
@@ -300,6 +291,12 @@ sealed class PaymentAccountStatusValue {
         )
     }
 }
+
+private fun List<CryptoCurrencyStatus>.singleCurrencyStatus(currency: CryptoCurrency.Token): CryptoCurrencyStatus? =
+    firstOrNull { it.currency.network.id == currency.network.id } ?: firstOrNull()
+
+private fun List<CryptoCurrencyStatus>.maxAvailableForWithdrawal(): SerializedBigDecimal =
+    mapNotNull { it.value.amount }.maxOrNull() ?: BigDecimal.ZERO
 
 val PaymentAccountStatusValue.tariffPlan: TangemPayCustomerTariffPlan?
     get() = when (val value = this) {

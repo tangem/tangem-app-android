@@ -60,18 +60,9 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
                 }.getOrNull()
 
                 val fiatBalance = requireNotNull(response?.result?.fiat) { "Cannot get card balance fiat" }
-                val cryptoBalance = requireNotNull(response.result?.crypto) { "Cannot get card balance crypto" }
-                val withdrawalAmount = requireNotNull(response.result?.availableForWithdrawal) {
-                    "Cannot get card balance availableForWithdrawal"
-                }
                 TangemPayCardBalance(
                     fiatBalance = fiatBalance.availableBalance,
                     currencyCode = fiatBalance.currency,
-                    cryptoBalance = cryptoBalance.balance,
-                    availableForWithdrawal = withdrawalAmount.amount,
-                    chainId = cryptoBalance.chainId,
-                    depositAddress = cryptoBalance.depositAddress,
-                    contractAddress = cryptoBalance.tokenContractAddress,
                 ).right()
             },
             catch = ::catchException,
