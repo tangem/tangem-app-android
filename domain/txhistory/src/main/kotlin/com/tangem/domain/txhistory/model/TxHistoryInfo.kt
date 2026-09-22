@@ -52,16 +52,16 @@ sealed interface OnChainTx : TxHistoryInfo {
 }
 
 /**
- * Cross-batch identity of a tx: `txHash` alone is not enough because gasless flows surface several
- * events under the same on-chain hash (e.g. `GaslessFee` + `Transfer`). Pinning the [TxInfo.type]
- * keeps those legitimate sibling events apart while still collapsing the same event seen twice —
- * e.g. an Unconfirmed copy injected via `addRecentTransactions` and a Confirmed copy that arrives
- * in a later API batch.
+ * Cross-batch identity of a tx: `txHash` alone is not enough because one on-chain hash can surface as
+ * several rows — the events kept out of the merged group (`SdkTransactionHistoryItemConverter` decides
+ * which ones). Pinning the [TxInfo.type] and [TxInfo.destinationType] keeps those sibling rows apart while
+ * still collapsing the same event seen twice — e.g. an Unconfirmed copy injected via `addRecentTransactions`
+ * and a Confirmed copy that arrives in a later API batch.
  *
  * Single source of truth for tx identity, used both by [OnChainTx.BSDK.txId] and the on-chain de-duplication
  * in the history pipeline.
  */
-fun TxInfo.identityKey(): String = "$txHash|$type"
+fun TxInfo.identityKey(): String = "$txHash|$type|$destinationType"
 
 /**
  * Hash of the matched on-chain leg, used to open the row in a block explorer; `null` when there is no
