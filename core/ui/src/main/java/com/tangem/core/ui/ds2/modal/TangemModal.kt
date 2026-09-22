@@ -524,11 +524,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> TangemModalCont
             ) {
                 CompositionLocalProvider(LocalHazeState provides contentHazeState) {
                     DragIndicator(geometry = morphGeometry)
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.Red.copy(alpha = 0.3f)),
-                    ) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
                         title(model)
                     }
                 }
