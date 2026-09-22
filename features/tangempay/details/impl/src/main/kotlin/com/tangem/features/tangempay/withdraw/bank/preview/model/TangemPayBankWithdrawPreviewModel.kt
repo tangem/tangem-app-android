@@ -66,9 +66,10 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
     private val sendJobHolder = JobHolder()
 
     /**
-     * Generated on the first Send and kept while Retry is offered, so a retry can never create a second order.
-     * Cleared once the attempt is settled — an order exists, or the backend refused a concurrent withdrawal — so the
-     * next Send is a new attempt with a new key.
+     * Generated on the first Send and shared by every call of that attempt — creating the order and signing it — so
+     * neither a retry nor a resubmitted signature can produce a second withdrawal. Cleared once the attempt can no
+     * longer be resumed with it: the transfer is signed, the order was abandoned, or the backend refused the order
+     * the key belongs to. The next Send then starts a new attempt with a new key.
      */
     private var idempotencyKey: String? = null
 
@@ -93,7 +94,6 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
     }
 
     private suspend fun onOrderCreated(result: BankOfframpOrderResult) {
-        idempotencyKey = null
         params.onOrderCreated(result)
         awaitSignature(orderId = result.orderId)
     }
@@ -113,6 +113,7 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
             userWalletId = params.userWalletId,
             orderId = orderId,
             payloadHash = payloadHash,
+            idempotencyKey = requireNotNull(idempotencyKey) { "Signing an order created without an idempotency key" },
         ).fold(
             ifLeft = { error -> onOrderFailed(error = error, orderId = orderId) },
             ifRight = { result ->
@@ -125,16 +126,22 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
     }
 
     private fun onOrderSigned() {
+        idempotencyKey = null
         state.update { it.copy(send = SendState.Idle) }
         params.onOrderSigned()
     }
 
     /** Aborting the card prompt abandons the transfer, so the order is cancelled and the summary becomes editable. */
     private suspend fun onSignatureCancelled(orderId: String) {
+        idempotencyKey = null
+        cancelOrder(orderId = orderId)
+        state.update { it.copy(send = SendState.Idle, failure = null, resumableOrderId = null) }
+    }
+
+    private suspend fun cancelOrder(orderId: String) {
         cancelBankOfframpOrderUseCase(userWalletId = params.userWalletId, orderId = orderId).onLeft { error ->
             TangemLogger.withTag(TAG).e("Failed to cancel bank withdraw order $orderId: $error")
         }
-        state.update { it.copy(send = SendState.Idle, failure = null, resumableOrderId = null) }
     }
 
     private fun onSendFailed(error: BankOfframpError) {
@@ -152,14 +159,17 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
 
     /**
      * The order already exists here: only a timeout leaves it alive, so only then may Retry resume it. Anything
-     * else means the backend gave up on this order and a retry has to create a new one.
+     * else means the backend gave up on this order and a retry has to create a new one, so this one is cancelled —
+     * outside the send job, which a Retry would cancel with it — before it can settle behind the user's back.
      */
     private fun onOrderFailed(error: BankOfframpError, orderId: String) {
         TangemLogger.withTag(TAG).e("Bank withdraw order $orderId failed: $error")
-        fail(
-            failure = error.toFailure(),
-            resumableOrderId = orderId.takeIf { error == BankOfframpError.PollingTimeout },
-        )
+        val isResumable = error == BankOfframpError.PollingTimeout
+        if (!isResumable) {
+            idempotencyKey = null
+            modelScope.launch { cancelOrder(orderId = orderId) }
+        }
+        fail(failure = error.toFailure(), resumableOrderId = orderId.takeIf { isResumable })
     }
 
     private fun fail(failure: PreviewFailure, resumableOrderId: String?) {
@@ -192,6 +202,7 @@ private fun BankOfframpError.toFailure(): PreviewFailure = when (this) {
     BankOfframpError.RecipientRegionUnsupported -> PreviewFailure.RecipientRegion
     BankOfframpError.SenderRegionUnsupported -> PreviewFailure.SenderRegion
     BankOfframpError.BusinessUnsupported -> PreviewFailure.Business
+    BankOfframpError.UnsupportedConfiguration -> PreviewFailure.UnsupportedConfiguration
     BankOfframpError.Validation,
     BankOfframpError.PollingTimeout,
     BankOfframpError.WithdrawalInProgress,

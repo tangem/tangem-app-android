@@ -301,6 +301,7 @@
   <string name="collectibles_machine_tier_epic">Épico</string>
   <string name="collectibles_machine_tier_rare">Raro</string>
   <string name="collectibles_machine_tier_uncommon">Incomum</string>
+  <string name="collectibles_machine_turbo_mode">Modo turbo</string>
   <string name="collectibles_machine_value_and_odds_section">Valor e probabilidades do pacote</string>
   <string name="collectibles_main_all_cards_tab">Todos os cartões</string>
   <string name="collectibles_main_all_packs_tab">Todos os pacotes</string>
@@ -1776,7 +1777,12 @@
   </plurals>
   <string name="prediction_event_probability">Probabilidade</string>
   <string name="prediction_event_total_volume">Volume total:</string>
+  <string name="prediction_fee_sheet_builder_fee">Taxa de construção da Tangem</string>
+  <string name="prediction_fee_sheet_buy_description">Comprando %1$s ações a %2$s¢ cada. A quantidade final de ações (e o valor correspondente em %3$s executado) pode variar dentro do limite de %4$s de slippage, dependendo do que este mercado conseguir corresponder.</string>
+  <string name="prediction_fee_sheet_order">Ordem de previsão</string>
   <string name="prediction_fee_sheet_polymarket_fee">Taxa da Polymarket</string>
+  <string name="prediction_fee_sheet_sell_description">Vendendo %1$s ações a %2$s¢ cada. A quantidade final de ações (e o valor correspondente em %3$s executado) pode variar dentro do seu limite de %4$s de slippage, dependendo do que este mercado conseguir corresponder.</string>
+  <string name="prediction_fee_sheet_total">Total</string>
   <string name="prediction_main_data_outdated">Os dados podem estar desatualizados.</string>
   <string name="prediction_main_empty_events">Nenhum evento ainda</string>
   <string name="prediction_main_events_load_error">Falha ao carregar os eventos.\nToque para recarregar</string>
@@ -2605,7 +2611,7 @@
   <string name="tangempay_cashback_deposit_banner">Cashback %1$s referente a %2$s será depositado até %3$s</string>
   <string name="tangempay_cashback_deposited_on">Será depositado em %1$s</string>
   <string name="tangempay_cashback_details_cap">%1$s máximo por mês</string>
-  <string name="tangempay_cashback_details_eu_excluded">No momentoб não há reembolso em compras presenciais em estabelecimentos comerciais da UE.</string>
+  <string name="tangempay_cashback_details_eu_excluded">Por enquanto, não há cashback para compras presenciais em estabelecimentos comerciais da UE.</string>
   <string name="tangempay_cashback_details_paid_in">Pago em %1$s</string>
   <string name="tangempay_cashback_details_tier">%1$s%% para todas as compras com o seu %2$s cartões, compra mínima %3$s</string>
   <string name="tangempay_cashback_earned_title">%1$s de cashback em %2$s</string>

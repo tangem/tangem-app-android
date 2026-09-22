@@ -63,6 +63,7 @@ internal class MockBankOfframpOrderRepository(
         userWalletId: UserWalletId,
         orderId: String,
         signature: String,
+        idempotencyKey: String,
     ): Either<BankOfframpError, Unit> = mutex.withLock {
         either {
             val order = orders[orderId] ?: raise(unknownOrder(orderId))

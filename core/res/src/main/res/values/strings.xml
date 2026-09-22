@@ -301,6 +301,7 @@
   <string name="collectibles_machine_tier_epic">Epic</string>
   <string name="collectibles_machine_tier_rare">Rare</string>
   <string name="collectibles_machine_tier_uncommon">Uncommon</string>
+  <string name="collectibles_machine_turbo_mode">Turbo mode</string>
   <string name="collectibles_machine_value_and_odds_section">Pack value and odds</string>
   <string name="collectibles_main_all_cards_tab">All cards</string>
   <string name="collectibles_main_all_packs_tab">All packs</string>
@@ -2889,6 +2890,7 @@
   <string name="tangempay_withdraw_bank_error_general_title">Unable to perform the operation</string>
   <string name="tangempay_withdraw_bank_error_recipient_region">Transfers to recipient\'s region currently unavailable</string>
   <string name="tangempay_withdraw_bank_error_sender_region">Transfers from your region currently unavailable</string>
+  <string name="tangempay_withdraw_bank_error_unsupported_configuration">Transfers are not available. Please try again later</string>
   <plurals name="tangempay_withdraw_bank_eta_business_days">
     <item quantity="one">%d business day</item>
     <item quantity="other">%d business days</item>
