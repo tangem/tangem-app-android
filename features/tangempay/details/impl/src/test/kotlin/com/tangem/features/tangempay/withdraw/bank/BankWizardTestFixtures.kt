@@ -89,11 +89,12 @@ internal fun offrampSource(
 internal fun offrampDestination(
     rail: BankRail = BankRail.ACH,
     fee: BigDecimal = BigDecimal("1.00"),
+    feeName: String? = null,
     minDays: Int = 1,
     maxDays: Int = 3,
 ): OfframpDestination = OfframpDestination(
     rail = rail,
-    fee = OfframpFee(amount = fee, currency = "USD", description = null),
+    fee = OfframpFee(name = feeName, amount = fee, currency = "USD", description = null),
     eta = OfframpEta(minDays = minDays, maxDays = maxDays),
 )
 
