@@ -42,10 +42,10 @@ internal fun TxInfo.mayCarryStakingTarget(): Boolean = when (type) {
  * operation. [TxInfo.interactionAddressType] is normalized to that counterparty so the downstream transfer rendering
  * (title, counterparty card, subtitle) uses the correct side. Any other tx is returned unchanged.
  */
-internal fun TxInfo.reclassifyOwnOperationAsTransfer(
+internal fun TxInfo.Single.reclassifyOwnOperationAsTransfer(
     lookup: TxHistoryLookupContext,
     networkRawId: Network.RawID,
-): TxInfo {
+): TxInfo.Single {
     val isUnrecognizedCall = type is TxInfo.TransactionType.Operation ||
         type is TxInfo.TransactionType.UnknownOperation
     if (!isUnrecognizedCall) return this
