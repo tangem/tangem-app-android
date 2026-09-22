@@ -286,7 +286,6 @@
   </plurals>
   <string name="collectibles_account_collection_empty">Keine Karten</string>
   <string name="collectibles_account_collection_row_subtitle">Meine Sammlung</string>
-  <string name="collectibles_account_withdraw">Auszahlung</string>
   <string name="collectibles_entrance_card_subtitle">Geöffnete Packungen mit sortierten Sammelkarten</string>
   <string name="collectibles_entrance_card_title">Kollektionen entdecken</string>
   <string name="collectibles_machine_buyback_value">%s von Wert</string>
@@ -303,7 +302,6 @@
   <string name="collectibles_machine_tier_uncommon">Ungewöhnlich</string>
   <string name="collectibles_machine_turbo_mode">Turbo-Modus</string>
   <string name="collectibles_machine_value_and_odds_section">Packungswert und Gewinnchancen</string>
-  <string name="collectibles_main_all_cards_tab">Alle Karten</string>
   <string name="collectibles_main_all_packs_tab">Alle Pakete</string>
   <string name="collectibles_main_menu_activity_log">Aktivitätsprotokoll</string>
   <string name="collectibles_main_menu_deliveries">Lieferungen</string>
@@ -313,7 +311,6 @@
   <string name="collectibles_main_packs_empty">Hier gibt es noch keine Pakete.</string>
   <string name="collectibles_main_packs_load_error">Das Laden der Pakete ist fehlgeschlagen. Tippen Sie hier, um erneut zu laden.</string>
   <string name="collectibles_main_search_empty">Keine Ergebnisse. Versuchen Sie, Ihre Suchanfrage zu ändern, oder wählen Sie einen Begriff aus der Liste aus.</string>
-  <string name="collectibles_main_search_load_error">Die Kartenliste konnte nicht geladen werden.\nZum Neuladen bitte antippen</string>
   <string name="collectibles_main_title">Packs-Konto</string>
   <string name="collectibles_region_restrictions_subtitle">Tangem-Pakete werden in Ihrer Region nicht unterstützt, Sie können aber trotzdem Veranstaltungen ansehen.</string>
   <string name="collectibles_region_restrictions_title">Regionale Beschränkungen</string>
@@ -1116,15 +1113,15 @@
   <string name="introduction_i_have_wallet_sign_in_google_title">Mit Google anmelden</string>
   <string name="introduction_import_icloud_not_found">iCloud-Backup nicht gefunden</string>
   <string name="introduction_import_icloud_restore">iCloud-Backup wiederherstellen</string>
-  <string name="introduction_import_icloud_retry">iCloud-Backup erneut versuchen</string>
+  <string name="introduction_import_icloud_retry">iCloud Backup erneut versuchen</string>
   <string name="introduction_legal">Wenn Sie fortfahren, erklären Sie sich mit %1$s und %2$s</string>
-  <string name="introduction_scene_three_subtitle">Verdienen Sie bis zu 4% Cashback in US-Dollar</string>
-  <string name="introduction_scene_three_title">Bezahlen Sie überall</string>
-  <string name="introduction_scene_two_subtitle">Kaufen Sie Kryptowährungen und Aktien völlig gebührenfrei</string>
-  <string name="introduction_scene_two_title">Erweitern Sie Ihr Portfolio</string>
-  <string name="introduction_stories_button_primary">Scannen Sie Ihre Wallet\n</string>
+  <string name="introduction_scene_three_subtitle">Verdiene bis zu 4% Cashback in US-Dollar</string>
+  <string name="introduction_scene_three_title">Überall bezahlen</string>
+  <string name="introduction_scene_two_subtitle">Kaufe Krypto und Aktien ohne Gebühren</string>
+  <string name="introduction_scene_two_title">Lass dein Portfolio wachsen</string>
+  <string name="introduction_stories_button_primary">Wallet scannen</string>
   <string name="introduction_stories_button_secondary">Mehr erfahren oder kaufen</string>
-  <string name="introduction_stories_four_subtitle">Schließen Sie sich der weltweit genutzten Self-Custory-Wallet an.</string>
+  <string name="introduction_stories_four_subtitle">Nutze die Self-Custody Wallet, die weltweit im Einsatz ist</string>
   <string name="introduction_stories_four_title">Millionen Menschen vertrauen uns.</string>
   <string name="introduction_stories_one_subtitle">Bestätigen Sie jede Aktion mit Ihrem Tangem </string>
   <string name="introduction_stories_one_title">Kryptowährungen mit einem Fingertipp steuern</string>
@@ -1132,9 +1129,9 @@
   <string name="introduction_stories_three_title">Ihre Schlüssel, Ihre Krypto</string>
   <string name="introduction_stories_two_subtitle">Verwenden Sie eine Ihrer Karten, um auf Ihre Wallet zuzugreifen.</string>
   <string name="introduction_stories_two_title">Eine Wallet, mehrere Karten</string>
-  <string name="introduction_subtitle">In der einzigen App, die Sie brauchen</string>
+  <string name="introduction_subtitle">In der einzigen App, die du brauchst</string>
   <string name="introduction_terms_of_service">Nutzungsbedingungen</string>
-  <string name="introduction_title">Speichern Sie all Ihre Vermögenswerte</string>
+  <string name="introduction_title">Alle deine Assets an einem Ort</string>
   <string name="joint_account_activated_snackbar">Konto aktiviert</string>
   <string name="joint_account_activation_account_button_title">Konto aktivieren</string>
   <string name="joint_account_activation_subtitle">Alle Nutzer dieses Kontos teilen sich ein gemeinsames Guthaben. Jedes Mitglied kann das Guthaben jederzeit ausgeben oder abheben – auch ohne Ihre Zustimmung</string>
