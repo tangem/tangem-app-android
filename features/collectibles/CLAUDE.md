@@ -25,15 +25,12 @@ features/collectibles/
   api/    — Two declarations only: CollectiblesEntryComponent, CollectiblesFeatureToggles
   impl/
     common/ui/    — CollectiblesStatus (inline error/empty), CollectiblesLoadMoreEffect (scroll trigger),
-                    CollectiblesMaterialBackdrop (the haze source the blurring chrome samples)
     di/           — Component, Model and FeatureToggles Hilt modules
     onboarding/   — First screen; marketing copy, FAQ, "Create Gacha account"
     stories/      — Slide-based explainer, reachable again from the main menu
     main/         — Account chrome: balance, actions, collection widget, context menu, the LazyColumn
     discovery/    — The packs catalogue: tabs, search, paginated pack rows
-    packdetails/  — One machine: hero, odds, pack facts, paginated prize pool, pinned CTA footer
-    packreveal/   — Opening one pack: confirm order, reveal video, revealed card (one route)
-      engine/     — PackRevealVideoPlayer (interface + Factory + DI), shaped after features/introduction
+    machinedetails/ — One machine: hero, odds, pack facts, paginated prize pool, pinned CTA footer
 ```
 
 **Package convention:** both sides use the **plural** `com.tangem.features.collectibles.*` — api is
