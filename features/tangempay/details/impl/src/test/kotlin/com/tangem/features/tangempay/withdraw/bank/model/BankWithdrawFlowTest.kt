@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTarget
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
+import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -26,16 +27,52 @@ internal class BankWithdrawFlowTest {
     @Test
     fun `GIVEN new personal entry WHEN nextStep from amount THEN transfer type`() {
         // Act
-        val actual = BankWithdrawFlow.nextStep(BankWithdrawEntry.NewPersonal, TangemPayBankWithdrawInnerRoute.Amount)
+        val actual = BankWithdrawFlow.nextStep(
+            draft = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal),
+            current = TangemPayBankWithdrawInnerRoute.Amount,
+        )
 
         // Assert
         assertThat(actual).isEqualTo(TangemPayBankWithdrawInnerRoute.TransferType)
     }
 
     @Test
+    fun `GIVEN saved recipient picked mid-flow WHEN nextStep from amount THEN preview`() {
+        // Arrange
+        val draft = BankWithdrawDraft(
+            entry = BankWithdrawEntry.NewPersonal,
+            recipient = bankAccount(id = "acc-1"),
+        )
+
+        // Act
+        val actual = BankWithdrawFlow.nextStep(draft = draft, current = TangemPayBankWithdrawInnerRoute.Amount)
+
+        // Assert
+        assertThat(actual).isEqualTo(TangemPayBankWithdrawInnerRoute.Preview)
+    }
+
+    @Test
+    fun `GIVEN see all entry with a picked recipient WHEN nextStep from recipients THEN amount`() {
+        // Arrange
+        val draft = BankWithdrawDraft(
+            entry = BankWithdrawEntry.SeeAll,
+            recipient = bankAccount(id = "acc-1"),
+        )
+
+        // Act
+        val actual = BankWithdrawFlow.nextStep(draft = draft, current = TangemPayBankWithdrawInnerRoute.Recipients)
+
+        // Assert
+        assertThat(actual).isEqualTo(TangemPayBankWithdrawInnerRoute.Amount)
+    }
+
+    @Test
     fun `GIVEN saved entry WHEN nextStep from preview THEN null`() {
         // Act
-        val actual = BankWithdrawFlow.nextStep(BankWithdrawEntry.Saved("acc-1"), TangemPayBankWithdrawInnerRoute.Preview)
+        val actual = BankWithdrawFlow.nextStep(
+            draft = BankWithdrawDraft(entry = BankWithdrawEntry.Saved("acc-1")),
+            current = TangemPayBankWithdrawInnerRoute.Preview,
+        )
 
         // Assert
         assertThat(actual).isNull()
@@ -45,8 +82,8 @@ internal class BankWithdrawFlowTest {
     fun `GIVEN saved entry WHEN nextStep from step outside flow THEN null`() {
         // Act
         val actual = BankWithdrawFlow.nextStep(
-            BankWithdrawEntry.Saved("acc-1"),
-            TangemPayBankWithdrawInnerRoute.TransferType,
+            draft = BankWithdrawDraft(entry = BankWithdrawEntry.Saved("acc-1")),
+            current = TangemPayBankWithdrawInnerRoute.TransferType,
         )
 
         // Assert
@@ -56,8 +93,11 @@ internal class BankWithdrawFlowTest {
     @ParameterizedTest
     @MethodSource("provideCounterModels")
     fun `GIVEN entry and step WHEN stepCounter THEN counter matches header`(model: CounterModel) {
+        // Arrange
+        val draft = BankWithdrawDraft(entry = model.entry)
+
         // Act
-        val actual = BankWithdrawFlow.stepCounter(model.entry, model.step)
+        val actual = BankWithdrawFlow.stepCounter(draft = draft, step = model.step)
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)
@@ -67,7 +107,7 @@ internal class BankWithdrawFlowTest {
     fun `GIVEN edit route WHEN nextStep THEN null`() {
         // Act
         val actual = BankWithdrawFlow.nextStep(
-            entry = BankWithdrawEntry.NewPersonal,
+            draft = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal),
             current = TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.Amount),
         )
 
@@ -79,12 +119,83 @@ internal class BankWithdrawFlowTest {
     fun `GIVEN edit route WHEN stepCounter THEN null so the header shows no counter`() {
         // Act
         val actual = BankWithdrawFlow.stepCounter(
-            entry = BankWithdrawEntry.NewPersonal,
+            draft = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal),
             step = TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.RecipientDetails),
         )
 
         // Assert
         assertThat(actual).isNull()
+    }
+
+    @Test
+    fun `GIVEN saved recipient picked mid-flow WHEN stepCounter THEN null`() {
+        // Arrange
+        val draft = BankWithdrawDraft(
+            entry = BankWithdrawEntry.NewPersonal,
+            recipient = bankAccount(id = "acc-1"),
+        )
+
+        // Act
+        val actual = BankWithdrawFlow.stepCounter(draft = draft, step = TangemPayBankWithdrawInnerRoute.Amount)
+
+        // Assert
+        assertThat(actual).isNull()
+    }
+
+    @Test
+    fun `GIVEN forms above amount WHEN cut THEN amount kept and preview pushed`() {
+        // Arrange
+        val stack = listOf(
+            TangemPayBankWithdrawInnerRoute.Amount,
+            TangemPayBankWithdrawInnerRoute.TransferType,
+            TangemPayBankWithdrawInnerRoute.AccountType,
+            TangemPayBankWithdrawInnerRoute.RecipientDetails,
+        )
+
+        // Act
+        val actual = stack.cutToAmountThenPreview()
+
+        // Assert
+        assertThat(actual).containsExactly(
+            TangemPayBankWithdrawInnerRoute.Amount,
+            TangemPayBankWithdrawInnerRoute.Preview,
+        ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN edit above preview WHEN cut THEN single preview on top of amount`() {
+        // Arrange
+        val stack = listOf(
+            TangemPayBankWithdrawInnerRoute.Amount,
+            TangemPayBankWithdrawInnerRoute.RecipientDetails,
+            TangemPayBankWithdrawInnerRoute.BankDetails,
+            TangemPayBankWithdrawInnerRoute.Preview,
+            TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.RecipientDetails),
+        )
+
+        // Act
+        val actual = stack.cutToAmountThenPreview()
+
+        // Assert
+        assertThat(actual).containsExactly(
+            TangemPayBankWithdrawInnerRoute.Amount,
+            TangemPayBankWithdrawInnerRoute.Preview,
+        ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN no amount in stack WHEN cut THEN amount and preview`() {
+        // Arrange
+        val stack = listOf(TangemPayBankWithdrawInnerRoute.Recipients)
+
+        // Act
+        val actual = stack.cutToAmountThenPreview()
+
+        // Assert
+        assertThat(actual).containsExactly(
+            TangemPayBankWithdrawInnerRoute.Amount,
+            TangemPayBankWithdrawInnerRoute.Preview,
+        ).inOrder()
     }
 
     data class StepsModel(val entry: BankWithdrawEntry, val expected: List<TangemPayBankWithdrawInnerRoute>)
