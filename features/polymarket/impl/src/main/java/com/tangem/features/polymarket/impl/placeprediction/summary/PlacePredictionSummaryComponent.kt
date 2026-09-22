@@ -6,8 +6,6 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
-import com.arkivanov.essenty.lifecycle.doOnCreate
-import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
@@ -28,11 +26,6 @@ internal class PlacePredictionSummaryComponent(
             PredictionFeeSheetComponent(appComponentContext = childByContext(componentContext), model = model)
         },
     )
-
-    init {
-        lifecycle.doOnCreate { model.onSummaryOpenChange(isOpen = true) }
-        lifecycle.doOnDestroy { model.onSummaryOpenChange(isOpen = false) }
-    }
 
     @Composable
     override fun Content(modifier: Modifier) {
