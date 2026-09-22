@@ -116,11 +116,12 @@ positions preview (`PolymarketPositionsPreviewLoader`, polled every 20 s), and
 - **Quote loop.** Amount entry is debounced 500 ms, then one loop runs every 3 s
   (`QUOTE_POLL_INTERVAL_MILLIS`) and decides on each turn whether to ask `GetPredictionOrderQuoteUseCase`
   for a quote or `GetPredictionPriceUseCase` for a price — a quote while the amount is quotable, a price
-  while it is empty or below the minimum. The quote is never cached. The loop stops while the Summary step
-  is up (`PlacePredictionSummaryComponent` reports `onSummaryOpenChange` from its lifecycle): the summary shows
-  the figures known when it opened and signs that same quote, and the loop resumes on the way back to
-  Amount. `ValidatePredictionOrderUseCase` refuses a quote older than 60 s at signing, so a summary left
-  open longer than that fails with the generic place-error dialog. Two independent gates decide whether
+  while it is empty or below the minimum. The quote is never cached. The loop is bound to the Amount step
+  (`PlacePredictionAmountComponent` `doOnResume` / `doOnPause`), so it runs only while that screen is on top
+  and in the foreground: Slippage and Summary show the figures they were opened with, the summary signs that
+  same quote, and confirming a slippage requotes through the Amount resume after the pop.
+  `ValidatePredictionOrderUseCase` refuses a quote older than 60 s at signing, so a summary left open longer
+  than that fails with the generic place-error dialog. Two independent gates decide whether
   it is placeable: `quote.status.isPlaceable` (market state) and `isBelowMinAmount` (side-specific: BUY is
   price-weighted, SELL is the flat `minOrderSize`, lifted when the sale closes the whole position —
   `isFullClose`).
@@ -129,7 +130,7 @@ positions preview (`PolymarketPositionsPreviewLoader`, polled every 20 s), and
   (or the whole position when smaller), and 100 % is the position itself, so a full close reaches the
   last fraction.
 - **Slippage.** Default 3 %, range 0.1–30 % (`SlippagePickerUM`); a fill at the worst-case price counts as filled.
-- **Region.** Read by the flow itself when shown (`TradingPermissionUM`), re-read on resume only while
+- **Region.** Read by the flow itself when the Amount step is shown (`TradingPermissionUM`), re-read on its resume only while
   `Unknown`, never carried on the route and not re-read before signing. An unreadable region keeps the
   gate shut as `Unknown` — the order is refused, the user is not told they are restricted.
 - **Placing.** `SignPredictionOrderInteractor` (one signing session: card for Cold, unlock for Hot) →
