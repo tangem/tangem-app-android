@@ -131,6 +131,8 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
         PreviewFailure.RecipientRegion -> unavailable(R.string.tangempay_withdraw_bank_error_recipient_region)
         PreviewFailure.SenderRegion -> unavailable(R.string.tangempay_withdraw_bank_error_sender_region)
         PreviewFailure.Business -> unavailable(R.string.tangempay_withdraw_bank_error_business)
+        PreviewFailure.UnsupportedConfiguration ->
+            unavailable(R.string.tangempay_withdraw_bank_error_unsupported_configuration)
         PreviewFailure.General -> TangemPayBankWithdrawPreviewUM.Failed(
             title = resourceReference(R.string.tangempay_withdraw_bank_error_general_title),
             onCloseClick = callbacks.onCloseClick,

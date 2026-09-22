@@ -11,7 +11,11 @@ import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpSignResult
 import com.tangem.domain.pay.repository.BankOfframpOrderRepository
 
-/** Signs the order payload with the card (or hot wallet) and submits the signature to the backend. */
+/**
+ * Signs the order payload with the card (or hot wallet) and submits the signature to the backend.
+ *
+
+ */
 class SignBankOfframpOrderUseCase(
     private val repository: BankOfframpOrderRepository,
     private val authDataSource: TangemPayAuthDataSource,
@@ -22,6 +26,7 @@ class SignBankOfframpOrderUseCase(
         userWalletId: UserWalletId,
         orderId: String,
         payloadHash: String,
+        idempotencyKey: String,
     ): Either<BankOfframpError, BankOfframpSignResult> = either {
         val userWallet = userWalletsListRepository.userWallets.value
             ?.firstOrNull { wallet -> wallet.walletId == userWalletId }
@@ -40,6 +45,7 @@ class SignBankOfframpOrderUseCase(
                     userWalletId = userWalletId,
                     orderId = orderId,
                     signature = signature.signature,
+                    idempotencyKey = idempotencyKey,
                 ).bind()
                 BankOfframpSignResult.Signed
             }
