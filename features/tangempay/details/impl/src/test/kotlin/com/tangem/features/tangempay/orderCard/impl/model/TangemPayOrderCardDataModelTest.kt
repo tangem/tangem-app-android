@@ -64,6 +64,7 @@ private const val SLOW_LOAD_MS = 1_000L
 private const val SOURCE_PRODUCT_INSTANCE_ID = "pi_source_0001"
 private const val SOURCE_CARD_ID = "card_source_0001"
 private const val SOURCE_CARD_EMBOSS_NAME = "V ARASAKA"
+private const val CUSTOMER_EMBOSS_NAME = "KERRY EUROBEAT"
 private val REISSUE_INTENT = TangemPayOrderCardIntent.ReissuePlastic(
     sourceProductInstanceId = SOURCE_PRODUCT_INSTANCE_ID,
     sourceCardId = SOURCE_CARD_ID,
@@ -187,7 +188,7 @@ internal class TangemPayOrderCardDataModelTest {
     }
 
     @Test
-    fun `GIVEN empty form WHEN model created THEN order disabled`() = runTest {
+    fun `GIVEN only the prefilled emboss name WHEN model created THEN order disabled`() = runTest {
         // Act
         val model = createLoadedModel()
 
@@ -539,13 +540,70 @@ internal class TangemPayOrderCardDataModelTest {
     }
 
     @Test
-    fun `GIVEN the issue intent WHEN the form loads THEN the emboss name is empty and editable`() = runTest {
+    fun `GIVEN the issue intent WHEN the form loads THEN the customer emboss name is prefilled and editable`() =
+        runTest {
+            // Act
+            val model = createLoadedModel()
+
+            // Assert
+            assertThat(model.form.embossName.value).isEqualTo(CUSTOMER_EMBOSS_NAME)
+            assertThat(model.form.embossName.isEditable).isTrue()
+        }
+
+    @Test
+    fun `GIVEN no customer emboss name WHEN the form loads THEN the emboss name is empty and editable`() = runTest {
+        // Arrange
+        coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns
+            customerInfo(customerEmbossName = null).right()
+
         // Act
         val model = createLoadedModel()
 
         // Assert
         assertThat(model.form.embossName.value).isEmpty()
         assertThat(model.form.embossName.isEditable).isTrue()
+    }
+
+    @Test
+    fun `GIVEN the issue intent WHEN order clicked THEN the customer emboss name is submitted`() = runTest {
+        // Arrange
+        val model = createLoadedModel()
+        model.fillValidForm(embossName = null)
+
+        // Act
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(submitted?.embossName).isEqualTo(CUSTOMER_EMBOSS_NAME)
+    }
+
+    @Test
+    fun `GIVEN a non-latin customer emboss name WHEN the form loads THEN the emboss name is empty`() = runTest {
+        // Arrange
+        coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns
+            customerInfo(customerEmbossName = "JOSÉ PÉREZ").right()
+
+        // Act
+        val model = createLoadedModel()
+
+        // Assert
+        assertThat(model.form.embossName.value).isEmpty()
+        assertThat(model.form.embossName.error).isNull()
+    }
+
+    @Test
+    fun `GIVEN a non-latin customer emboss name WHEN a valid name is typed THEN order is enabled`() = runTest {
+        // Arrange
+        coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns
+            customerInfo(customerEmbossName = "JOSÉ PÉREZ").right()
+        val model = createLoadedModel()
+
+        // Act
+        model.fillValidForm(embossName = "JOSE PEREZ")
+
+        // Assert
+        assertThat(model.form.isOrderEnabled).isTrue()
     }
 
     @Test
@@ -992,6 +1050,7 @@ internal class TangemPayOrderCardDataModelTest {
         phoneMask: String? = PHONE_MASK,
         email: String? = EMAIL,
         sourceCardEmbossName: String? = SOURCE_CARD_EMBOSS_NAME,
+        customerEmbossName: String? = CUSTOMER_EMBOSS_NAME,
     ) = CustomerInfo(
         customerId = "c1",
         paymentAccount = null,
@@ -1004,6 +1063,7 @@ internal class TangemPayOrderCardDataModelTest {
         country = country,
         phoneMask = phoneMask,
         email = email,
+        embossName = customerEmbossName,
     )
 
     private fun sourceProductInstance() = CustomerInfo.ProductInstance(
