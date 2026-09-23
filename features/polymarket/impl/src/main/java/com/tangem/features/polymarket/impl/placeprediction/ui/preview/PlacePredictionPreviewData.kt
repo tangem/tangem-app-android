@@ -57,12 +57,6 @@ internal class PlacePredictionPreviewProvider : PreviewParameterProvider<PlacePr
             previewState(order = previewSell()),
             previewState(amountValue = "12.80", quote = QuoteUM.Loading, order = previewSell()),
             previewState(amountValue = "51.23", quote = previewSellQuote(), order = previewSell()),
-            previewState(
-                amountValue = "3",
-                quote = previewSellQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE),
-                minAmount = BigDecimal("5"),
-                order = previewSell(),
-            ),
         )
 }
 
