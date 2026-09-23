@@ -54,6 +54,7 @@ import java.math.RoundingMode
  * comes from the matched on-chain leg ([ExpressTx.txInfo]) — but only on a pay-in leg, see [isPayInLeg].
  */
 internal class ExpressTxToDetailsUMConverter(
+    private val currency: CryptoCurrency,
     private val onGoToProvider: (String) -> Unit,
     private val onCopyAddress: (String) -> Unit,
     private val lookup: TxHistoryLookupContext,
@@ -111,6 +112,7 @@ internal class ExpressTxToDetailsUMConverter(
             ),
             statusBanner = refundToken?.let(::refundedInBanner) ?: swap.tx.status.toStatusBannerUM(),
             rows = swap.toInfoRows(
+                currency = currency,
                 onProviderClick = swap.providerClick(),
                 rateRow = swap.tx.swapRateRow(),
                 showProviderType = true,
@@ -180,7 +182,11 @@ internal class ExpressTxToDetailsUMConverter(
                 isFaded = status is Status.Failed,
             ),
             statusBanner = onramp.tx.status.toStatusBannerUM(),
-            rows = onramp.toInfoRows(onProviderClick = onramp.providerClick(), rateRow = onramp.tx.onrampRateRow()),
+            rows = onramp.toInfoRows(
+                currency = currency,
+                onProviderClick = onramp.providerClick(),
+                rateRow = onramp.tx.onrampRateRow(),
+            ),
             providerButton = providerButton(onramp.externalTxUrl, onramp.tx.status.providerButtonLabel()),
         )
     }
@@ -414,22 +420,15 @@ private fun verificationBanner() = TxHistoryDetailsUM.StatusBannerUM(
  * no on-chain leg / fee is present or the viewed leg is not a pay-in one (see [isPayInLeg]).
  */
 private fun ExpressTx.toInfoRows(
+    currency: CryptoCurrency,
     onProviderClick: (() -> Unit)?,
     rateRow: TxHistoryDetailsUM.InfoRowUM?,
     showProviderType: Boolean = false,
 ): ImmutableList<TxHistoryDetailsUM.InfoRowUM> = buildList {
     provider?.let { add(it.providerRow(onProviderClick, showType = showProviderType)) }
     rateRow?.let { add(it) }
-    if (isPayInLeg) addAll(txInfo.toInfoRows())
+    if (isPayInLeg) addAll(txInfo.feeRows(currency))
 }.toImmutableList()
-
-/**
- * Whether the matched on-chain leg is the one the user paid for. Only a swap viewed from its `from` token qualifies:
- * that leg is the user's own pay-in tx. A payout leg — a swap viewed from its `to` token, or any onramp — is sent by
- * the provider, so its on-chain fee is not the user's and must never surface as "Network fee".
- */
-private val ExpressTx.isPayInLeg: Boolean
-    get() = this is ExpressTx.Swap && isOutgoing
 
 private fun ExpressProvider.providerRow(onClick: (() -> Unit)?, showType: Boolean): TxHistoryDetailsUM.InfoRowUM =
     TxHistoryDetailsUM.InfoRowUM(
@@ -441,8 +440,8 @@ private fun ExpressProvider.providerRow(onClick: (() -> Unit)?, showType: Boolea
     )
 
 /** Detail rows pulled from the matched on-chain leg of an express op; empty while the leg has not loaded. */
-private fun OnChainTx?.toInfoRows(): ImmutableList<TxHistoryDetailsUM.InfoRowUM> =
-    (this as? OnChainTx.BSDK)?.txInfo?.toInfoRows() ?: persistentListOf()
+private fun OnChainTx?.feeRows(currency: CryptoCurrency): ImmutableList<TxHistoryDetailsUM.InfoRowUM> =
+    (this as? OnChainTx.BSDK)?.txInfo?.feeRows(currency) ?: persistentListOf()
 
 // endregion
 

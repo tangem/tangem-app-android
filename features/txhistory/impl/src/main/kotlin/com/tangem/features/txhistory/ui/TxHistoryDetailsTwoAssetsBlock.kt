@@ -115,7 +115,7 @@ private fun TwoAssetsSideRow(asset: AssetUM, isBalanceHidden: Boolean, modifier:
                 } else {
                     TangemTheme.colors3.text.primary
                 },
-                textDecoration = if (asset.isFaded) TextDecoration.LineThrough else null,
+                textDecoration = if (asset.isFaded && !isBalanceHidden) TextDecoration.LineThrough else null,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(top = 6.dp),

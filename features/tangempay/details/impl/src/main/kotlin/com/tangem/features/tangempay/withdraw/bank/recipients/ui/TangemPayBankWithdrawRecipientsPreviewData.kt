@@ -58,7 +58,12 @@ internal object TangemPayBankWithdrawRecipientsPreviewData {
         ),
     )
 
-    val loading = TangemPayBankWithdrawRecipientsUM(search = search, content = ContentUM.Loading, onBackClick = {})
+    val loading = TangemPayBankWithdrawRecipientsUM(
+        search = search,
+        content = ContentUM.Loading,
+        onBackClick = {},
+        onCloseClick = {},
+    )
 
     val content = loading.copy(content = ContentUM.Recipients(items = recipients))
 

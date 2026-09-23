@@ -4,17 +4,26 @@ import android.view.SurfaceView
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.VideoSize
 
 internal class DefaultIntroductionVideoPlayer(
     private val player: Player,
     videoItem: MediaItem,
     override val isMotionEnabled: Boolean,
     private val listener: IntroductionVideoPlayer.Listener,
+    private val teardownScheduler: VideoTeardownScheduler,
 ) : IntroductionVideoPlayer {
 
     private val playerListener = object : Player.Listener {
 
         override fun onRenderedFirstFrame() = listener.onFirstFrameRendered()
+
+        override fun onVideoSizeChanged(videoSize: VideoSize) {
+            if (videoSize.width == 0 || videoSize.height == 0) return
+            listener.onAspectRatioChanged(
+                aspectRatio = videoSize.width * videoSize.pixelWidthHeightRatio / videoSize.height,
+            )
+        }
 
         override fun onPlayerError(error: PlaybackException) = listener.onError(error)
     }
@@ -38,6 +47,7 @@ internal class DefaultIntroductionVideoPlayer(
     }
 
     override fun attachSurface(surfaceView: SurfaceView) {
+        teardownScheduler.cancel()
         attachedSurfaceView = surfaceView
         player.setVideoSurfaceView(surfaceView)
         // With no surface set, media3 configures the codec against a placeholder one and reports a first
@@ -49,11 +59,11 @@ internal class DefaultIntroductionVideoPlayer(
     }
 
     override fun detachSurface(surfaceView: SurfaceView) {
-        // The unqualified clearVideoSurface() blocks for up to two seconds and can drop someone else's surface.
-        player.clearVideoSurfaceView(surfaceView)
         // A replacement can be attached before this one is released, and it keeps the picture.
         if (attachedSurfaceView !== surfaceView) return
         attachedSurfaceView = null
+        // The unqualified clearVideoSurface() would drop someone else's surface.
+        teardownScheduler.schedule { player.clearVideoSurfaceView(surfaceView) }
     }
 
     override fun setRunning(isRunning: Boolean) {
@@ -67,7 +77,9 @@ internal class DefaultIntroductionVideoPlayer(
     override fun release() {
         attachedSurfaceView = null
         player.removeListener(playerListener)
-        player.release()
+        // Releasing takes the surface with it, so a pending detach has nothing left to do.
+        teardownScheduler.cancel()
+        teardownScheduler.schedule { player.release() }
     }
 
     private companion object {

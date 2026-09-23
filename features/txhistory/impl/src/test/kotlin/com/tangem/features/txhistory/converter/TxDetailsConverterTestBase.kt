@@ -102,6 +102,7 @@ internal open class TxDetailsConverterTestBase {
         menu: ImmutableList<TxHistoryDetailsUM.MenuItemUM> = persistentListOf(),
         isBalanceHidden: Boolean = false,
     ) = ExpressTxToDetailsUMConverter(
+        currency = currency,
         onGoToProvider = openedUrls::add,
         onCopyAddress = copiedAddresses::add,
         lookup = lookup,
@@ -119,7 +120,7 @@ internal open class TxDetailsConverterTestBase {
             TxInfo.DestinationType.Single(addressType = TxInfo.AddressType.User(USER_ADDRESS)),
         sourceType: TxInfo.SourceType = TxInfo.SourceType.Single(address = USER_ADDRESS),
         fee: SdkAmount? = null,
-    ): TxInfo = TxInfo(
+    ): TxInfo.Single = TxInfo.Single(
         txHash = TX_HASH,
         timestampInMillis = TIMESTAMP,
         isOutgoing = isOutgoing,

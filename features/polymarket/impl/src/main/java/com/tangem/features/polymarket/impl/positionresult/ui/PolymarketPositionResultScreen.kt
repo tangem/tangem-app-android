@@ -149,12 +149,10 @@ private fun ResultFooter(note: TextReference?, action: PolymarketPositionResultU
                 is Action.Claim -> TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24)
                 Action.Dismiss -> null
             },
-            text = resourceReference(
-                when (action) {
-                    is Action.Claim -> R.string.prediction_position_result_claim_action
-                    Action.Dismiss -> R.string.prediction_position_result_dismiss_action
-                },
-            ),
+            text = when (action) {
+                is Action.Claim -> action.label
+                Action.Dismiss -> resourceReference(R.string.prediction_position_result_dismiss_action)
+            },
             onClick = onActionClick,
         )
     }

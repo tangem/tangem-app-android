@@ -204,16 +204,12 @@ internal class AddAddressModel @Inject constructor(
     }
 
     private fun subscribeToAddressInvalid() {
-        val walletId = params.walletId ?: return
         validation
             .map { it.address.isNotBlank() && it.matchedBlockchains.isEmpty() }
             .distinctUntilChanged()
             .filter { isInvalid -> isInvalid }
             .onEach {
-                analyticsSender.sendAddressInvalid(
-                    walletId = UserWalletId(walletId),
-                    contactId = params.excludeContactId.orEmpty(),
-                )
+                analyticsSender.sendAddressInvalid(contactId = params.excludeContactId.orEmpty())
             }
             .flowOn(dispatchers.default)
             .launchIn(modelScope)

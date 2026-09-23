@@ -116,11 +116,17 @@ internal class BankWithdrawFlowTest {
     }
 
     @Test
-    fun `GIVEN edit route WHEN stepCounter THEN null so the header shows no counter`() {
+    fun `GIVEN new personal draft with a picked recipient WHEN stepCounter for edit THEN null`() {
+        // Arrange
+        val draft = BankWithdrawDraft(
+            entry = BankWithdrawEntry.NewPersonal,
+            recipient = bankAccount(id = "acc-1"),
+        )
+
         // Act
         val actual = BankWithdrawFlow.stepCounter(
-            draft = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal),
-            step = TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.RecipientDetails),
+            draft = draft,
+            step = TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.BankDetails),
         )
 
         // Assert
@@ -276,6 +282,26 @@ internal class BankWithdrawFlowTest {
         CounterModel(
             entry = BankWithdrawEntry.SeeAll,
             step = TangemPayBankWithdrawInnerRoute.Amount,
+            expected = null,
+        ),
+        CounterModel(
+            entry = BankWithdrawEntry.NewPersonal,
+            step = TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.BankDetails),
+            expected = BankWithdrawFlow.StepCounter(current = 5, total = 5),
+        ),
+        CounterModel(
+            entry = BankWithdrawEntry.NewPersonal,
+            step = TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.Amount),
+            expected = BankWithdrawFlow.StepCounter(current = 1, total = 5),
+        ),
+        CounterModel(
+            entry = BankWithdrawEntry.NewBusiness,
+            step = TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.RecipientDetails),
+            expected = BankWithdrawFlow.StepCounter(current = 3, total = 4),
+        ),
+        CounterModel(
+            entry = BankWithdrawEntry.Saved("acc-1"),
+            step = TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.Amount),
             expected = null,
         ),
     )
