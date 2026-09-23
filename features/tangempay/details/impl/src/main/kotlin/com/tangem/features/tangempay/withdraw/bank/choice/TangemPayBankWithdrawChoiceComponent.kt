@@ -34,5 +34,6 @@ internal class TangemPayBankWithdrawChoiceComponent(
         val step: TangemPayBankWithdrawInnerRoute,
         val config: BankWithdrawChoiceConfig,
         val onContinue: (selectedId: String) -> Unit,
+        val onCloseFlow: () -> Unit,
     )
 }
