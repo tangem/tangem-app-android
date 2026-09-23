@@ -39,7 +39,7 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class CryptoFeedEmptySearchTabModelTest {
+internal class CryptoFeedEmptySearchModelTest {
 
     private val getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase = mockk()
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
@@ -155,8 +155,8 @@ internal class CryptoFeedEmptySearchTabModelTest {
         model.onDestroy()
     }
 
-    private fun createModel(testScope: TestScope): CryptoFeedEmptySearchTabModel {
-        return CryptoFeedEmptySearchTabModel(
+    private fun createModel(testScope: TestScope): CryptoFeedEmptySearchModel {
+        return CryptoFeedEmptySearchModel(
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             getMarketsTokenListFlowUseCase = getMarketsTokenListFlowUseCase,
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,

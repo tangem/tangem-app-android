@@ -48,8 +48,8 @@ class SendFeeScreenTest : BaseTestCase() {
             step("Type recipient address") {
                 onSendAddressScreen { addressTextField.performTextReplacement(TERRA_RECIPIENT_ADDRESS) }
             }
-            step("Click on 'Next' button") {
-                onSendScreen { nextButton.clickWithAssertion() }
+            step("Open 'Send confirm' screen via 'Next' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { openSendConfirmScreenViaNextButton() }
             }
             step("Assert fee block is displayed without fee selector") {
                 checkNetworkFeeBlock(currentFeeAmount = feeAmount, withFeeSelector = false)
@@ -312,8 +312,8 @@ class SendFeeScreenTest : BaseTestCase() {
             step("Type recipient address") {
                 onSendAddressScreen { addressTextField.performTextReplacement(BITCOIN_RECIPIENT_ADDRESS) }
             }
-            step("Click on 'Next' button") {
-                onSendScreen { nextButton.clickWithAssertion() }
+            step("Open 'Send confirm' screen via 'Next' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { openSendConfirmScreenViaNextButton() }
             }
             step("Assert fee block is displayed with fee selector") {
                 checkNetworkFeeBlock(currentFeeAmount = feeAmount, withFeeSelector = true)
@@ -405,8 +405,8 @@ class SendFeeScreenTest : BaseTestCase() {
             step("Type recipient address") {
                 onSendAddressScreen { addressTextField.performTextReplacement(ETHEREUM_RECIPIENT_ADDRESS) }
             }
-            step("Click on 'Next' button") {
-                onSendScreen { nextButton.clickWithAssertion() }
+            step("Open 'Send confirm' screen via 'Next' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { openSendConfirmScreenViaNextButton() }
             }
             step("Assert fee block is displayed with fee selector") {
                 checkNetworkFeeBlock(currentFeeAmount = feeAmount, withFeeSelector = true)
