@@ -1,7 +1,10 @@
 package com.tangem.domain.models.account
 
 import com.google.common.truth.Truth
+import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.test.core.ProvideTestModels
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
@@ -30,7 +33,26 @@ internal class CollectiblesVaultBalanceTest {
         FiatAmountModel(balance = vaultBalance(amount = "10", rate = null), expected = null),
     )
 
-    private companion object {
+    @Test
+    fun `GIVEN a priced vault WHEN cryptoCurrencyStatus THEN it is loaded at the token account`() {
+        // Act
+        val actual = vaultBalance(amount = "10", rate = "2").cryptoCurrencyStatus(source = StatusSource.ACTUAL)
 
+        // Assert
+        val value = actual.value as CryptoCurrencyStatus.Loaded
+        Truth.assertThat(value.amount).isEqualTo(BigDecimal("10"))
+        Truth.assertThat(value.fiatAmount).isEqualTo(BigDecimal("20"))
+        Truth.assertThat(value.networkAddress?.defaultAddress?.value).isEqualTo(VAULT_ATA_ADDRESS)
+    }
+
+    @Test
+    fun `GIVEN an unpriced vault WHEN cryptoCurrencyStatus THEN it has no quote`() {
+        // Act
+        val actual = vaultBalance(amount = "10", rate = null).cryptoCurrencyStatus(source = StatusSource.ACTUAL)
+
+        // Assert
+        val value = actual.value as CryptoCurrencyStatus.NoQuote
+        Truth.assertThat(value.amount).isEqualTo(BigDecimal("10"))
+        Truth.assertThat(value.networkAddress?.defaultAddress?.value).isEqualTo(VAULT_ATA_ADDRESS)
     }
 }

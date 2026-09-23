@@ -51,10 +51,12 @@ internal class CollectiblesAccountStatusValueDTOConverter @Inject constructor(
     private fun CollectiblesVaultBalance.toDTO() = CollectiblesVaultBalanceDTO(
         usdcAmount = usdcAmount,
         usdcMint = usdcToken.contractAddress,
+        usdcAtaAddress = ataAddress,
     )
 
     private fun CollectiblesVaultBalanceDTO.toDomain() = CollectiblesVaultBalance(
         usdcToken = currencyFactory.create(mint = usdcMint),
         usdcAmount = usdcAmount,
+        ataAddress = usdcAtaAddress,
     )
 }
