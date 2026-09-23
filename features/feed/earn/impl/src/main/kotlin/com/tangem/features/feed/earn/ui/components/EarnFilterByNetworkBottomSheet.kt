@@ -20,7 +20,9 @@ import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.button.TangemButtonGroup
 import com.tangem.core.ui.ds2.checkbox.TangemCheckmark
+import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItem
@@ -113,7 +115,7 @@ private fun NetworksBlock(
         networks.fastForEach { item -> NetworkRow(item = item) }
 
         if (hasFooter) {
-            SpacerH(128.dp)
+            SpacerH(FOOTER_HEIGHT)
         }
     }
 }
@@ -171,28 +173,36 @@ private fun NetworkRow(item: EarnFilterNetworkUM, modifier: Modifier = Modifier)
 
 @Composable
 private fun Footer(state: EarnFilterFooterUM, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(all = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(space = 8.dp),
+    TangemFooter(
+        modifier = modifier,
+        // the insets and the padding repeat what this footer looked like before it became a TangemFooter
+        windowInsets = WindowInsets(0),
+        contentPadding = PaddingValues(all = FOOTER_PADDING),
+        // inside a modal the fade samples the screen behind the sheet rather than the list under it,
+        // so the blur costs a pass per frame and shows nothing
+        blurBackground = false,
     ) {
-        TangemButton(
-            modifier = Modifier.fillMaxWidth(),
-            variant = TangemButton.Variant.Secondary,
-            size = TangemButton.Size.X12,
-            text = resourceReference(R.string.common_reset),
-            onClick = state.onReset,
-        )
-        TangemButton(
-            modifier = Modifier.fillMaxWidth(),
-            variant = TangemButton.Variant.Primary,
-            size = TangemButton.Size.X12,
-            text = resourceReference(R.string.common_apply),
-            onClick = state.onApply,
-        )
+        TangemButtonGroup {
+            TangemButton(
+                variant = TangemButton.Variant.Secondary,
+                size = TangemButton.Size.X12,
+                text = resourceReference(R.string.common_reset),
+                onClick = state.onReset,
+            )
+            TangemButton(
+                variant = TangemButton.Variant.Primary,
+                size = TangemButton.Size.X12,
+                text = resourceReference(R.string.common_apply),
+                onClick = state.onApply,
+            )
+        }
     }
 }
+
+private val FOOTER_PADDING = 16.dp
+
+/** Scroll reserve under the last network: the footer's two [TangemButton.Size.X12] buttons and its padding. */
+private val FOOTER_HEIGHT = FOOTER_PADDING * 2 + 48.dp * 2 + 8.dp
 
 // region Preview
 
