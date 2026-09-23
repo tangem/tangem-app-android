@@ -7,10 +7,8 @@ import com.tangem.common.core.CardSession
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.analytics.models.event.TechAnalyticsEvent
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.lib.auth.session.WalletSignatureBundle
 import com.tangem.lib.auth.session.WalletSigner
 import com.tangem.operations.attestation.AttestWalletKeyResponse
@@ -55,12 +53,7 @@ internal class ColdWalletRegistrationSigner @Inject constructor(
             ?: error("No wallets on card ${card.cardId}")
 
         if (wallet.curve != EllipticCurve.Secp256k1) {
-            analyticsEventHandler.send(
-                TechAnalyticsEvent.UnexpectedWalletCurve(
-                    userWalletId = UserWalletIdBuilder.card(card).build()?.stringValue.orEmpty(),
-                    cardId = card.cardId,
-                ),
-            )
+            analyticsEventHandler.send(BackendAuthAnalyticsEvent.UnexpectedWalletCurve(cardId = card.cardId))
             throw ColdWalletUnexpectedCurveException(card.cardId, wallet.curve)
         }
 

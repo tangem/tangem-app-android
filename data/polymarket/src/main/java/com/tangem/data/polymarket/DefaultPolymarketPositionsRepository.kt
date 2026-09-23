@@ -20,14 +20,17 @@ import com.tangem.domain.polymarket.model.PolymarketPositionsBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketPositionsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
 import com.tangem.grow.datasource.polymarket.PolymarketApi
+import com.tangem.grow.datasource.polymarket.data.PolymarketDataApi
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.pagination.BatchListSource
 import com.tangem.pagination.toBatchFlow
 import kotlinx.coroutines.withContext
+import java.math.BigDecimal
 import javax.inject.Inject
 
 internal class DefaultPolymarketPositionsRepository @Inject constructor(
     private val api: PolymarketApi,
+    private val dataApi: PolymarketDataApi,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PolymarketPositionsRepository {
 
@@ -100,6 +103,13 @@ internal class DefaultPolymarketPositionsRepository @Inject constructor(
             )
         },
         convert = { it.position?.let(PolymarketOpenPositionConverter::convert) },
+    )
+
+    override suspend fun getPositionsValue(
+        addresses: PolymarketAddresses,
+    ): Either<PolymarketPositionsError, BigDecimal> = read(
+        call = { dataApi.getPositionsValue(user = addresses.depositWalletAddress) },
+        convert = { it.firstOrNull()?.value ?: BigDecimal.ZERO },
     )
 
     private suspend fun <R : Any, T> read(

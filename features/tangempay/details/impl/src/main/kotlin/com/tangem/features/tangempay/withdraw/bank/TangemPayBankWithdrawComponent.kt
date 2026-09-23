@@ -10,6 +10,7 @@ import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.navigate
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
 import com.tangem.core.decompose.context.AppComponentContext
@@ -18,6 +19,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.eligibility.TangemPayCountrySelectorComponent
 import com.tangem.features.tangempay.withdraw.bank.amount.TangemPayBankWithdrawAmountComponent
@@ -30,6 +32,7 @@ import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormFi
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawFlow
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.bank.model.TangemPayBankWithdrawModel
+import com.tangem.features.tangempay.withdraw.bank.model.cutToAmountThenPreview
 import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTarget
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import com.tangem.features.tangempay.withdraw.bank.preview.TangemPayBankWithdrawPreviewComponent
@@ -82,6 +85,7 @@ internal class TangemPayBankWithdrawComponent(
                     model.onRecipientSelected(account)
                     pushNext(from = config)
                 },
+                onCloseFlow = ::closeFlow,
             ),
         )
         TangemPayBankWithdrawInnerRoute.Amount -> amountChild(
@@ -128,7 +132,7 @@ internal class TangemPayBankWithdrawComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayBankWithdrawSuccessComponent.Params(
                 draft = model.draft,
-                onDoneClick = ::onFlowFinished,
+                onDoneClick = ::closeFlow,
             ),
         )
         is TangemPayBankWithdrawInnerRoute.Edit -> editChild(step = config, componentContext = componentContext)
@@ -171,6 +175,7 @@ internal class TangemPayBankWithdrawComponent(
                 model.onAmountConfirmed(result)
                 onStepConfirmed(step = step, returnToPreview = returnToPreview)
             },
+            onCloseFlow = ::closeFlow,
         ),
     )
 
@@ -189,6 +194,7 @@ internal class TangemPayBankWithdrawComponent(
                 onSelected(selectedId)
                 pushNext(from = step)
             },
+            onCloseFlow = ::closeFlow,
         ),
     )
 
@@ -203,14 +209,22 @@ internal class TangemPayBankWithdrawComponent(
             draft = model.draft,
             step = step,
             fields = fields,
+            savedAccounts = model.savedAccounts,
             onBack = model::onDetailsFilled,
             onContinue = { result ->
                 model.onDetailsFilled(result)
                 onStepConfirmed(step = step, returnToPreview = returnToPreview)
             },
+            onSavedRecipientSelected = ::onSavedRecipientSelected,
+            onCloseFlow = ::closeFlow,
         ),
         countrySelectorFactory = countrySelectorFactory,
     )
+
+    private fun onSavedRecipientSelected(account: BankAccount) {
+        model.onSavedRecipientSelected(account)
+        stackNavigation.navigate { stack -> stack.cutToAmountThenPreview() }
+    }
 
     private fun recipientFields(): ImmutableList<BankWithdrawFormField> = BankWithdrawFormFields.recipientDetails(
         isBusiness = params.entry == BankWithdrawEntry.NewBusiness,
@@ -221,7 +235,7 @@ internal class TangemPayBankWithdrawComponent(
         stackNavigation.pushNew(TangemPayBankWithdrawInnerRoute.Success)
     }
 
-    private fun onFlowFinished() {
+    private fun closeFlow() {
         router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails)
     }
 
@@ -234,7 +248,7 @@ internal class TangemPayBankWithdrawComponent(
     }
 
     private fun pushNext(from: TangemPayBankWithdrawInnerRoute) {
-        val next = BankWithdrawFlow.nextStep(entry = params.entry, current = from) ?: return
+        val next = BankWithdrawFlow.nextStep(draft = model.draft.value, current = from) ?: return
         stackNavigation.pushNew(next)
     }
 

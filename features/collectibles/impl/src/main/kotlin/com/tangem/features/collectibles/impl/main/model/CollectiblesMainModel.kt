@@ -1,5 +1,9 @@
 package com.tangem.features.collectibles.impl.main.model
 
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -19,9 +23,11 @@ import com.tangem.domain.collectibles.usecase.CloseCollectiblesVaultUseCase
 import com.tangem.domain.collectibles.usecase.GetCollectiblesVaultTopUpAddressUseCase
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.features.collectibles.impl.CollectiblesRoute
+import com.tangem.features.collectibles.impl.main.CollectiblesMainBottomSheetConfig
 import com.tangem.features.collectibles.impl.main.CollectiblesMainComponent
 import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesActionsConverter
 import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesBalanceConverter
@@ -72,8 +78,12 @@ internal class CollectiblesMainModel @Inject constructor(
         onItemClick = ::onMenuItemClick,
     )
 
+    val bottomSheetNavigation = SlotNavigation<CollectiblesMainBottomSheetConfig>()
+
     val uiState: StateFlow<CollectiblesMainUM>
         field = MutableStateFlow(buildInitialState())
+
+    private var vaultCurrency: CryptoCurrency.Token? = null
 
     init {
         observeBalance()
@@ -84,9 +94,17 @@ internal class CollectiblesMainModel @Inject constructor(
             flow = collectiblesAccountStatusSupplier(params.userWalletId),
             flow2 = getSelectedAppCurrencyUseCase.invokeOrDefault(),
         ) { status, appCurrency ->
-            balanceConverter.convert(CollectiblesBalanceConverter.Input(status = status, appCurrency = appCurrency))
+            vaultCurrency = status.balance?.usdcToken
+
+            val balance = balanceConverter.convert(
+                CollectiblesBalanceConverter.Input(status = status, appCurrency = appCurrency),
+            )
+
+            balance to actionsConverter.convert(status)
         }
-            .onEach { balance -> uiState.update { state -> state.copy(balance = balance) } }
+            .onEach { (balance, actions) ->
+                uiState.update { state -> state.copy(balance = balance, actions = actions) }
+            }
             .launchIn(modelScope)
     }
 
@@ -99,7 +117,7 @@ internal class CollectiblesMainModel @Inject constructor(
                     appCurrency = AppCurrency.Default,
                 ),
             ),
-            actions = actionsConverter.convert(Unit),
+            actions = actionsConverter.convert(CollectiblesAccountStatusValue.Loading),
             collection = CollectiblesMainUM.CollectionUM(
                 subtitle = TextReference.Res(R.string.collectibles_account_collection_row_subtitle),
                 // TODO for 0 card collectibles_account_collection_empty
@@ -155,9 +173,39 @@ internal class CollectiblesMainModel @Inject constructor(
         router.pop()
     }
 
-    @Suppress("EmptyFunctionBlock")
     private fun onAddFundsClick() {
-        // TODO([REDACTED_TASK_KEY]): top-up flow is not built yet.
+        bottomSheetNavigation.activate(CollectiblesMainBottomSheetConfig.TopUp)
+    }
+
+    fun onDismissAddFunds() {
+        bottomSheetNavigation.dismiss()
+    }
+
+    fun onFromTangemWalletClick() {
+        val currency = vaultCurrency ?: return sendUnknownErrorMessage()
+
+        bottomSheetNavigation.dismiss()
+        router.push(
+            AppRoute.Swap(
+                userWalletId = params.userWalletId,
+                fromCryptoCurrency = currency,
+                fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.TO,
+                // TODO AnalyticsParam.ScreensSources.Collectibles.value ?
+                screenSource = "Collectibles",
+                accountFlow = AppRoute.Swap.AccountFlow.CollectiblesTopUp,
+            ),
+        )
+    }
+
+    private fun sendUnknownErrorMessage() {
+        messageSender.send(SnackbarMessage(message = resourceReference(R.string.common_unknown_error)))
+    }
+
+    @Suppress("EmptyFunctionBlock")
+    fun onFromAnotherWalletClick() {
+        // TODO([REDACTED_TASK_KEY]): which address to show is unresolved. Exchanges require a withdrawal address owned by the
+        // System Program with no data, which neither the vault's ATA nor its PDA is, and a sender that derives an
+        // ATA from the ATA creates a nested account whose funds cannot be moved.
     }
 
     @Suppress("EmptyFunctionBlock")

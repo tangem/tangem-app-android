@@ -36,7 +36,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.payout
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
-import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionIntents
+import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSummaryIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionDetailsBlock
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionMarketBlock
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionNotificationsBlock
@@ -47,7 +47,7 @@ import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlacePredi
 @Composable
 internal fun PlacePredictionSummaryContent(
     state: PlacePredictionUM,
-    intents: PlacePredictionIntents,
+    intents: PlacePredictionSummaryIntents,
     modifier: Modifier = Modifier,
 ) {
     var footerHeight by remember { mutableIntStateOf(0) }

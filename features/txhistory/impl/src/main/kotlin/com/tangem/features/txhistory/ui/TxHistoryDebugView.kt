@@ -33,6 +33,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_copy_24
 import com.tangem.domain.txhistory.model.ExpressTx
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 
@@ -68,6 +69,7 @@ internal fun TxHistoryDebugView(model: TxHistoryInfo, onDismiss: () -> Unit) {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 SummaryRow(label = "Type", value = model.debugSubtype)
                 SummaryRow(label = "On-chain leg", value = model.debugMatchedOnChainLeg)
+                SummaryRow(label = "TxInfo", value = model.debugTxInfoShape)
             }
 
             SelectionContainer(
@@ -129,6 +131,20 @@ val TxHistoryInfo.debugSubtype: String
         is ExpressTx.Swap -> "ExpressTx.Swap"
         is ExpressTx.Onramp -> "ExpressTx.Onramp"
     }
+
+/** Whether the row is backed by one provider record or by a group of them merged under one hash. */
+val TxHistoryInfo.debugTxInfoShape: String
+    get() = when (val txInfo = bsdkTxInfo()) {
+        is TxInfo.Single -> "TxInfo.Single"
+        is TxInfo.MultiTransfer -> "TxInfo.MultiTransfer (${txInfo.transfers.size} transfers)"
+        null -> "none (no blockchain-SDK leg)"
+    }
+
+private fun TxHistoryInfo.bsdkTxInfo(): TxInfo? = when (this) {
+    is OnChainTx.BSDK -> txInfo
+    is OnChainTx.TangemPay -> null
+    is ExpressTx -> (txInfo as? OnChainTx.BSDK)?.txInfo
+}
 
 val TxHistoryInfo.debugMatchedOnChainLeg: String
     get() = when (this) {

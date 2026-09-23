@@ -536,6 +536,7 @@ internal class PolymarketPositionDetailsModelTest {
         isAcceptingOrders: Boolean = true,
     ) = PolymarketMarket(
         id = "market-from-event",
+        conditionId = null,
         eventId = "event",
         title = "Will the event happen?",
         slug = "market",

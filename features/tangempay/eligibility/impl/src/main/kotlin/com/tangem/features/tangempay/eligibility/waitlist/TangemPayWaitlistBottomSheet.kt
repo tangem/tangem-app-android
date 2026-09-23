@@ -31,7 +31,7 @@ import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.checkbox.TangemCheckbox
 import com.tangem.core.ui.ds2.modal.TangemModal
-import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
+import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -48,12 +48,9 @@ internal fun TangemPayWaitlistBottomSheet(state: TangemPayWaitlistUM) {
             onDismissRequest = state.onDismiss,
             content = state,
         ),
-        isExpanded = true,
         scrollableContent = true,
         title = {
-            TangemTopNavigation(
-                windowInsets = WindowInsets(0),
-                fadeEnabled = false,
+            TangemModal.TopNavigation(
                 endButton = { TangemButton.Close(onClick = state.onDismiss) },
             )
         },
