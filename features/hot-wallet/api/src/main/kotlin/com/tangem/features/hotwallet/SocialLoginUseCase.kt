@@ -13,10 +13,14 @@ import com.tangem.domain.sociallogin.models.SocialLoginProvider
  */
 interface SocialLoginUseCase {
 
-    /** @param onStageChanged called on the calling coroutine, never after signIn returns */
+    /**
+     * @param onStageChanged called on the calling coroutine, never after signIn returns
+
+     */
     suspend fun signIn(
         provider: SocialLoginProvider,
         onStageChanged: (SocialLoginStage) -> Unit = {},
+        requestConsent: suspend () -> SocialLoginConsent?,
     ): Either<SocialLoginError, SocialLoginOutcome>
 
     /** Forgets the picked account, so the next [signIn] shows the chooser again ("switch account") */
@@ -38,6 +42,8 @@ enum class SocialLoginStage {
 
     RestoringWallet,
 }
+
+data class SocialLoginConsent(val isEmailSharingAllowed: Boolean)
 
 sealed interface SocialLoginOutcome {
 
