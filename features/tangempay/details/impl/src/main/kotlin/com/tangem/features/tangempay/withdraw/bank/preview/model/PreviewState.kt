@@ -5,6 +5,8 @@ internal data class PreviewState(
     val failure: PreviewFailure? = null,
     /** Set when a failure left a live order behind, so Retry resumes that order instead of creating a second one. */
     val resumableOrderId: String? = null,
+    /** A cold wallet signs the transfer with a card tap; a hot one signs without a card. */
+    val isColdWallet: Boolean = true,
 ) {
 
     val isSending: Boolean get() = send != SendState.Idle

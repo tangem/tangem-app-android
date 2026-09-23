@@ -7,6 +7,8 @@ import com.tangem.data.feedback.converters.WalletMetaInfoConverter
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
+import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
+import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.models.*
 import com.tangem.domain.feedback.repository.FeedbackRepository
@@ -31,6 +33,7 @@ import java.io.File
  *
 [REDACTED_AUTHOR]
  */
+@Suppress("LongParameterList")
 internal class DefaultFeedbackRepository(
     private val appLogsStore: AppLogsStore,
     private val userWalletsListRepository: UserWalletsListRepository,
@@ -38,6 +41,8 @@ internal class DefaultFeedbackRepository(
     private val emailSender: EmailSender,
     private val appInfoProvider: AppInfoProvider,
     private val cloudBackupRepository: CloudBackupRepository,
+    private val isSocialBackupCompletedUseCase: IsSocialBackupCompletedUseCase,
+    private val socialLoginFeatureToggles: SocialLoginFeatureToggles,
 ) : FeedbackRepository {
 
     private val blockchainsErrors = MutableStateFlow<Map<UserWalletId, BlockchainErrorInfo>>(emptyMap())
@@ -48,7 +53,16 @@ internal class DefaultFeedbackRepository(
             val metaInfo = WalletMetaInfoConverter.convert(wallet)
             if (wallet is UserWallet.Hot) {
                 val isCloudBackedUp = cloudBackupRepository.isBackedUp(wallet.walletId.stringValue)
-                metaInfo.copy(isHotWalletCloudBackedUp = isCloudBackedUp)
+                // while the feature is disabled the social line must not leak into the support email
+                val isSocialBackedUp = if (socialLoginFeatureToggles.isSocialLoginEnabled) {
+                    isSocialBackupCompletedUseCase(wallet.walletId)
+                } else {
+                    null
+                }
+                metaInfo.copy(
+                    isHotWalletCloudBackedUp = isCloudBackedUp,
+                    isHotWalletSocialBackedUp = isSocialBackedUp,
+                )
             } else {
                 metaInfo
             }

@@ -42,7 +42,11 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
         val failure = state.failure
         if (failure != null) return createFailed(failure)
         return TangemPayBankWithdrawPreviewUM.Summary(
-            header = BankWithdrawHeaderFactory.create(draft = draft, step = TangemPayBankWithdrawInnerRoute.Preview),
+            header = BankWithdrawHeaderFactory.create(
+                draft = draft,
+                step = TangemPayBankWithdrawInnerRoute.Preview,
+                onCloseClick = callbacks.onCloseClick,
+            ),
             transfer = createTransfer(draft = draft, isSending = state.isSending),
             recipientCards = draft.recipientDetails()?.let { details ->
                 createRecipientCards(
@@ -53,6 +57,7 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
             } ?: persistentListOf(),
             isSending = state.isSending,
             isSendEnabled = draft.toOrderRequest() != null,
+            isColdWallet = state.isColdWallet,
             onBackClick = callbacks.onBackClick,
             onCloseClick = callbacks.onCloseClick,
             onSendClick = callbacks.onSendClick,
