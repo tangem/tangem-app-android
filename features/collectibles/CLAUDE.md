@@ -2,9 +2,10 @@
 
 Gacha packs from Collector Crypt. Users land on an onboarding screen, optionally watch a stories
 explainer, then browse a paginated catalogue of packs ("gacha machines") filtered by category and
-search. Buying a pack, the collection screen and the activity log are not built yet — the feature
-currently ships the catalogue plus the account chrome, whose balance is live and whose collection widget is
-still a stub.
+search, and open a pack's details — its odds, its metadata and the collectibles in its prize pool.
+Buying a pack, the collection screen and the activity log are not built yet — the feature currently ships
+the catalogue and pack details plus the account chrome, whose balance is live and whose collection widget
+is still a stub.
 
 > This is **not** `features/nft` / `domain/nft`, which is the unrelated NFT-collection feature.
 > Collectibles owns its own vertical slice: `domain/collectibles`, `data/collectibles`, and the
@@ -23,12 +24,13 @@ Gated by `FeatureToggles.TWI_1640_COLLECTIBLES_PHASE_ONE_ENABLED`. The toggle is
 features/collectibles/
   api/    — Two declarations only: CollectiblesEntryComponent, CollectiblesFeatureToggles
   impl/
-    common/ui/    — FoldingBlock (collapses leading blocks when search activates)
+    common/ui/    — CollectiblesStatus (inline error/empty), CollectiblesLoadMoreEffect (scroll trigger),
     di/           — Component, Model and FeatureToggles Hilt modules
     onboarding/   — First screen; marketing copy, FAQ, "Create Gacha account"
     stories/      — Slide-based explainer, reachable again from the main menu
     main/         — Account chrome: balance, actions, collection widget, context menu, the LazyColumn
-    discovery/    — The packs catalogue: tabs, search, paginated pack rows. The only domain-backed part
+    discovery/    — The packs catalogue: tabs, search, paginated pack rows
+    machinedetails/ — One machine: hero, odds, pack facts, paginated prize pool, pinned CTA footer
 ```
 
 **Package convention:** both sides use the **plural** `com.tangem.features.collectibles.*` — api is
@@ -54,6 +56,9 @@ quirk here.) Impl has no `res/`, no `AndroidManifest.xml` and no `androidTest/`;
 | `CollectiblesDiscoveryModel` | Catalogue orchestration: categories, search debounce, pagination actions | `impl/.../impl/discovery/model/CollectiblesDiscoveryModel.kt` |
 | `CollectiblesDiscoveryContentTransformer` | Pure `PaginationStatus` → `ContentUM` mapping; de-dup + row chunking | `impl/.../discovery/model/transformer/…Transformer.kt` |
 | `CollectiblesDiscoveryUM` | Tabs, `ContentUM` (Loading/Content/Error/Empty), hoisted `TangemSearch.State` | `impl/.../discovery/ui/state/CollectiblesDiscoveryUM.kt` |
+| `CollectiblesPackDetailsModel` | One machine plus its prize-pool pagination; holds the Turbo flag | `impl/.../packdetails/model/CollectiblesPackDetailsModel.kt` |
+| `CollectiblesPackRevealScreen` | The opening flow's three beats and the seam between them | `impl/.../packreveal/ui/CollectiblesPackRevealScreen.kt` |
+| `CardChoreography` | Pure maths for the card's grow / turn / settle; JVM-tested | `impl/.../packreveal/ui/CardChoreography.kt` |
 | `CollectiblesMainList` | The single `LazyColumn`; header + discovery's items + filler | `impl/.../main/ui/components/CollectiblesMainList.kt` |
 | `CollectiblesMainUM` | Screen chrome only — balance, actions, collection, menu | `impl/.../main/ui/state/CollectiblesMainUM.kt` |
 
@@ -65,10 +70,15 @@ AppRoute.Collectibles(userWalletId, startRoute) → DefaultCollectiblesEntryComp
   │     onCreateAccountClick → router.replaceAll(Main(id), Stories)   [Stories pushed on top of Main]
   ├─ CollectiblesRoute.Stories                  → CollectiblesStoriesComponent    → CollectiblesStoriesModel
   │     last-slide continue / close → router.pop() → lands on Main
-  └─ CollectiblesRoute.Main(userWalletId)       → CollectiblesMainComponent       → CollectiblesMainModel
-        menu "How it works" → router.push(Stories)
-        embedded child (NOT a stack or slot entry): child(key = "discovery")
-            → CollectiblesDiscoveryComponent → CollectiblesDiscoveryModel
+  ├─ CollectiblesRoute.Main(userWalletId)       → CollectiblesMainComponent       → CollectiblesMainModel
+  │     menu "How it works" → router.push(Stories)
+  │     embedded child (NOT a stack or slot entry): child(key = "discovery")
+  │         → CollectiblesDiscoveryComponent → CollectiblesDiscoveryModel
+  │             pack tap → router.push(PackDetails(externalId))
+  ├─ CollectiblesRoute.PackDetails(externalId)  → CollectiblesPackDetailsComponent → CollectiblesPackDetailsModel
+  │     "Open for N USDC" → router.push(PackReveal(externalId))
+  └─ CollectiblesRoute.PackReveal(externalId)   → CollectiblesPackRevealComponent  → CollectiblesPackRevealModel
+        confirm → video → card, all inside the one route
 ```
 
 **The feature decides nothing about where it opens** — the caller does, and the route says so:
@@ -147,12 +157,13 @@ data/collectibles/           — DefaultCollectiblesRepository, CollectibleGacha
 grow/datasource/collectibles — CollectiblesApi (Retrofit), CollectiblesAuthProvider, request/response DTOs
 ```
 
-Use cases return `Either<CollectiblesError, T>` via `runSuspendCatching`, except
-`GetCollectibleGachaMachinesBatchFlowUseCase`, which is non-suspend and returns the flow directly. Only
-**two of the five** are wired into the UI today — `GetCollectibleGachaMachineCategoriesUseCase` and
-`GetCollectibleGachaMachinesBatchFlowUseCase`, both injected by `CollectiblesDiscoveryModel`.
-`GetCollectibleGachaMachineUseCase`, `GenerateCollectibleTxUseCase` and `SubmitCollectibleTxUseCase` exist
-and are tested but have no production call site yet.
+Use cases return `Either<CollectiblesError, T>` via `runSuspendCatching`, except the two
+`Get…BatchFlowUseCase`s, which are non-suspend and return the flow directly. `GenerateCollectibleTxUseCase`
+and `SubmitCollectibleTxUseCase` exist and are tested but have no production call site yet.
+
+Use cases are plain classes with an `@Inject` constructor — there is **no** `CollectiblesDomainModule`
+anywhere, so that annotation is the whole wiring. A use case without it cannot be injected, which is why
+`GetCollectibleGachaMachineUseCase` sat unused until the pack-details screen needed it.
 
 **Request headers ([REDACTED_TASK_KEY]).** `session-id` is a config-level header on *every* collectibles endpoint —
 `Collectibles` (`grow/datasource/config/`) puts `ProviderSuspend(collectiblesAuthProvider::getSessionId)`
@@ -225,10 +236,59 @@ visible index no longer exists.
 the main one's `firstVisibleItemIndex/Offset`; the hidden leading blocks are still emitted at zero height
 so indices keep their meaning. Changing what the header emits means revisiting that arithmetic.
 
+**`getMachine` is served from memory when it can be.** The catalogue endpoint returns a complete machine per
+list entry, so `DefaultCollectiblesRepository` writes every page into `CollectiblesMachineStore` (an in-memory
+`RuntimeSharedStore` keyed by `externalId`) and `getMachine(skipCache = false)` reads it — a pack opened from
+the catalogue paints without a round trip. The prize pool is deliberately *not* cached across entries: it is
+live inventory that shrinks as packs are opened. Do not reach for `CacheRegistry` here — its time-based expiry
+is globally disabled, so `skipCache = false` would degenerate to fetch-once-per-process.
+
+**The prize pool pages by page number, the catalogue by cursor.** `CollectibleGachaMachineNftsBatchFetcher`
+advances from the page it *requested*, not the one the backend echoes, so a backend that repeats a page number
+cannot pin the pagination.
+
 **Almost all copy is hardcoded English.** Onboarding, stories, tab labels, badge text and the error/empty
 messages are `stringReference("…")` literals in converters and transformers, pending Lokalise. Only
-`R.string.common_search`, `R.string.common_in_progress` and the two reused `prediction_onboarding_legal*`
-keys are real resources. New strings go through the `lokalise-strings` skill.
+`R.string.common_search`, `R.string.common_in_progress`, the four `collectibles_machine_tier_*` labels and
+the two reused `prediction_onboarding_legal*` keys are real resources. New strings go through the
+`lokalise-strings` skill.
+
+**The rarity ladder is `common`/`uncommon`/`rare`/`epic`, one vocabulary from the wire to the pixel.**
+`CollectibleRarity` (`domain/collectibles/models`) names it; `MachineDTO`'s nested odds/stock/tierRanges
+DTOs use the same four keys, and `CollectiblesPackTiersConverter` keys its `TIERS` table on the enum.
+`epic` is the only optional tier — a machine without it renders three odds cards instead of four, which
+is what the `mapNotNull` in that converter is for. An earlier build mapped a `common`/`rare`/`epic`/
+`legendary` backend onto the design's labels *by position*; that remap is gone, so do not reintroduce a
+tier whose field name and rendered label disagree.
+
+**The opening flow is one route with three beats, and the beats are not in the `StateFlow`.**
+`CollectiblesRoute.PackReveal` covers the confirm screen, the video and the revealed card, because the
+pack is thrown off the confirm screen straight into the video (`PackLaunch`) and a route boundary would
+cut that animation in half. The beat itself lives in `CollectiblesPackRevealScreen`: the seam is tripped
+from a video-frame callback on the playback thread and the choreography runs off `Animatable`s at display
+refresh rate, so routing either through the model would recompose the screen sixty times a second — the
+load that starves the decoder it is playing. The model supplies data only.
+
+**The seam comes off presented frames, with an end-of-video backstop.** `DefaultPackRevealVideoPlayer`
+(in `packreveal/engine/`) trips the seam from `setVideoFrameMetadataListener`, which compares frames the
+decoder actually *presented* — so it stalls with a starving decoder instead of running ahead of it, which
+is the required behaviour rather than a bug. `Player.STATE_ENDED` is the backstop; it cannot fire early
+by construction, because the card has to be on screen by the time the video ends.
+
+There used to be a second trip polling `player.currentPosition`. It existed only for a render whose audio
+outlived its picture, and **separate audio tracks are no longer supported** — the asset is one muxed
+file. Do not reintroduce it: `currentPosition` advances on the timeline, so it would fire the seam while
+a stalled picture was still frozen.
+
+Every failure path — no network, a document where a video should be, a codec that refuses the file,
+reduce-motion on — lands on the finished card instead: the animation is cosmetic and must never gate the
+result.
+
+**The reveal plays one hardcoded video and shows one hardcoded card.** `MachineDTO` carries no asset, so
+`PackRevealAssetSpec.DEFAULT_ASSET` points at a pushed `file:///…/Download/pack-reveal.mp4` with a
+hand-measured `seamMs`; and nothing in the API describes an open's outcome (`SubmitTxResponse` is a bare
+id, there is no reveal endpoint), so `CollectiblesRevealStub` supplies the pull. Approve advances the UI
+and submits nothing — `generateTx`/`submitTx` are still uncalled.
 
 **Routes are not `@Serializable`.** The stack is built with `childStack(serializer = null)`, so the inner
 back stack does not survive process death.

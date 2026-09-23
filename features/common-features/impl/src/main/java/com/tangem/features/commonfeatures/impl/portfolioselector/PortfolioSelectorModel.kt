@@ -22,7 +22,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
-import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorFeatureToggles
 import com.tangem.features.commonfeatures.impl.R
 import com.tangem.features.commonfeatures.impl.portfolioselector.converter.PortfolioSelectorGroupPositionsConverter
 import com.tangem.features.commonfeatures.impl.portfolioselector.entity.PortfolioSelectorButtonUM
@@ -45,7 +44,6 @@ internal class PortfolioSelectorModel @Inject constructor(
     private val getWalletIconUseCase: GetWalletIconUseCase,
     private val walletIconUMConverter: WalletIconUMConverter,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val featureToggles: PortfolioSelectorFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<PortfolioSelectorComponent.Params>()
@@ -89,7 +87,6 @@ internal class PortfolioSelectorModel @Inject constructor(
                     items = groupPositionsConverter.convert(uiList).toImmutableList(),
                     button = button.takeIf { params.settings.isMultiChoice },
                     isMultiChoiceEnabled = params.settings.isMultiChoice,
-                    isSelectorV3Enabled = featureToggles.isSelectorV3Enabled,
                 )
             },
         )
@@ -307,7 +304,6 @@ internal class PortfolioSelectorModel @Inject constructor(
         items = persistentListOf(),
         title = TextReference.EMPTY,
         button = null,
-        isSelectorV3Enabled = featureToggles.isSelectorV3Enabled,
         isMultiChoiceEnabled = params.settings.isMultiChoice,
     )
 

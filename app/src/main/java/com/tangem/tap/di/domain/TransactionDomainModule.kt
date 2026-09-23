@@ -6,8 +6,6 @@ import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.demo.models.DemoConfig
-import com.tangem.core.configtoggle.FeatureToggles
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.domain.dynamicaddresses.GetDynamicReceiveAddressUseCase
 import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.domain.transaction.GaslessYieldRepository
@@ -323,16 +321,12 @@ internal object TransactionDomainModule {
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         currencyChecksRepository: CurrencyChecksRepository,
         isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
-        featureTogglesManager: FeatureTogglesManager,
     ): GetAvailableFeeTokensUseCase {
         return GetAvailableFeeTokensUseCase(
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             gaslessTransactionRepository = gaslessTransactionRepository,
             currencyChecksRepository = currencyChecksRepository,
             isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
-            isYieldWithdrawEnabled = featureTogglesManager.isFeatureEnabled(
-                toggle = FeatureToggles.TWI_1327_GASLESS_YIELD_WITHDRAW_ENABLED,
-            ),
         )
     }
 
@@ -354,7 +348,6 @@ internal object TransactionDomainModule {
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         currencyChecksRepository: CurrencyChecksRepository,
         resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
-        featureTogglesManager: FeatureTogglesManager,
     ): GetFeeForGaslessUseCase {
         return GetFeeForGaslessUseCase(
             walletManagersFacade = walletManagersFacade,
@@ -365,9 +358,6 @@ internal object TransactionDomainModule {
             getFeeUseCase = getFeeUseCase,
             currencyChecksRepository = currencyChecksRepository,
             resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
-            isYieldWithdrawEnabled = featureTogglesManager.isFeatureEnabled(
-                toggle = FeatureToggles.TWI_1327_GASLESS_YIELD_WITHDRAW_ENABLED,
-            ),
         )
     }
 
@@ -420,7 +410,6 @@ internal object TransactionDomainModule {
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         currencyChecksRepository: CurrencyChecksRepository,
         resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
-        featureTogglesManager: FeatureTogglesManager,
     ): GetFeeForTokenUseCase {
         return GetFeeForTokenUseCase(
             gaslessTransactionRepository = gaslessTransactionRepository,
@@ -430,9 +419,6 @@ internal object TransactionDomainModule {
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             currencyChecksRepository = currencyChecksRepository,
             resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
-            isYieldWithdrawEnabled = featureTogglesManager.isFeatureEnabled(
-                toggle = FeatureToggles.TWI_1327_GASLESS_YIELD_WITHDRAW_ENABLED,
-            ),
         )
     }
 
@@ -452,7 +438,6 @@ internal object TransactionDomainModule {
         singleAccountListSupplier: SingleAccountListSupplier,
         cardSdkConfigRepository: CardSdkConfigRepository,
         tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
-        featureTogglesManager: FeatureTogglesManager,
     ): CreateAndSendGaslessTransactionUseCase {
         return CreateAndSendGaslessTransactionUseCase(
             walletManagersFacade = walletManagersFacade,
@@ -460,9 +445,6 @@ internal object TransactionDomainModule {
             gaslessTransactionRepository = gaslessTransactionRepository,
             cardSdkConfigRepository = cardSdkConfigRepository,
             getHotWalletSigner = tangemHotWalletSignerFactory::create,
-            isGaslessV2Enabled = featureTogglesManager.isFeatureEnabled(
-                toggle = FeatureToggles.TWI_1327_GASLESS_YIELD_WITHDRAW_ENABLED,
-            ),
         )
     }
 
@@ -475,7 +457,6 @@ internal object TransactionDomainModule {
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         currencyChecksRepository: CurrencyChecksRepository,
         resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
-        featureTogglesManager: FeatureTogglesManager,
     ): EstimateFeeForTokenUseCase {
         return EstimateFeeForTokenUseCase(
             gaslessTransactionRepository = gaslessTransactionRepository,
@@ -485,9 +466,6 @@ internal object TransactionDomainModule {
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             currencyChecksRepository = currencyChecksRepository,
             resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
-            isYieldWithdrawEnabled = featureTogglesManager.isFeatureEnabled(
-                toggle = FeatureToggles.TWI_1327_GASLESS_YIELD_WITHDRAW_ENABLED,
-            ),
         )
     }
 
@@ -501,7 +479,6 @@ internal object TransactionDomainModule {
         estimateFeeUseCase: EstimateFeeUseCase,
         currencyChecksRepository: CurrencyChecksRepository,
         resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
-        featureTogglesManager: FeatureTogglesManager,
     ): EstimateFeeForGaslessTxUseCase {
         return EstimateFeeForGaslessTxUseCase(
             gaslessTransactionRepository = gaslessTransactionRepository,
@@ -512,9 +489,6 @@ internal object TransactionDomainModule {
             estimateFeeUseCase = estimateFeeUseCase,
             currencyChecksRepository = currencyChecksRepository,
             resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
-            isYieldWithdrawEnabled = featureTogglesManager.isFeatureEnabled(
-                toggle = FeatureToggles.TWI_1327_GASLESS_YIELD_WITHDRAW_ENABLED,
-            ),
         )
     }
 

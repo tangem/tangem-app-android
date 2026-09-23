@@ -15,7 +15,6 @@ private const val ACCOUNT_TOP_UP_ABSTRACT_SYMBOL = "USD"
  */
 internal fun SwapStateHolder.withAccountFlowPresentation(
     accountFlow: AccountFlow?,
-    isAccountSwapFlowEnabled: Boolean,
     isReverseLocked: Boolean,
 ): SwapStateHolder {
     val reversedState = if (isReverseLocked) {
@@ -25,25 +24,24 @@ internal fun SwapStateHolder.withAccountFlowPresentation(
     }
 
     val flow = accountFlow ?: return reversedState
-    if (!isAccountSwapFlowEnabled && !flow.isPredictionFlow) return reversedState
 
     val titledState = reversedState.copy(titleId = flow.titleId())
+
     return when (flow) {
         is AccountFlow.PredictionWithdraw -> titledState.withPredictionWithdrawCards()
         is AccountFlow.PredictionTopUp -> titledState.withLockedReceiveCard()
+        is AccountFlow.CollectiblesTopUp -> titledState.withLockedReceiveCard()
         is AccountFlow.TopUp -> titledState.withAccountTopUpReceiveCard()
         is AccountFlow.Withdraw -> titledState
     }
 }
-
-private val AccountFlow.isPredictionFlow: Boolean
-    get() = this is AccountFlow.PredictionWithdraw || this is AccountFlow.PredictionTopUp
 
 private fun AccountFlow.titleId(): Int = when (this) {
     is AccountFlow.TopUp -> R.string.tangempay_card_details_add_funds
     is AccountFlow.Withdraw -> R.string.tangempay_card_details_withdraw
     is AccountFlow.PredictionWithdraw -> R.string.prediction_main_withdraw
     is AccountFlow.PredictionTopUp -> R.string.common_add_funds
+    is AccountFlow.CollectiblesTopUp -> R.string.common_add_funds
 }
 
 private fun SwapStateHolder.withPredictionWithdrawCards(): SwapStateHolder = copy(
