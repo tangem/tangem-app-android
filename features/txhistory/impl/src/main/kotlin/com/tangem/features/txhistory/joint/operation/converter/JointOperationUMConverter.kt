@@ -72,6 +72,7 @@ internal class JointOperationUMConverter(
                 isSigning = value.isSigning,
                 isRefusing = value.isRefusing,
                 hasAnswered = value.hasAnswered,
+                isColdWallet = value.isColdWallet,
             ),
         )
     }
@@ -149,6 +150,7 @@ internal class JointOperationUMConverter(
         isSigning: Boolean,
         isRefusing: Boolean,
         hasAnswered: Boolean,
+        isColdWallet: Boolean,
     ): TxHistoryDetailsUM.CosignActionUM {
         // The model overlays a local answer into the state, so the answer alone says whether this member signed;
         // [hasAnswered] also covers a local decline and only blocks a second tap
@@ -172,7 +174,7 @@ internal class JointOperationUMConverter(
             ),
             isEnabled = canSign,
             isLoading = isSigning || isRefusing,
-            iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_20).takeIf { canSign },
+            iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_20).takeIf { canSign && isColdWallet },
             onClick = onSignClick,
         )
     }
@@ -231,6 +233,7 @@ internal class JointOperationUMConverter(
         val hasAnswered: Boolean,
         val canCreateContact: Boolean,
         val isBalanceHidden: Boolean,
+        val isColdWallet: Boolean,
         val fiat: JointOperationFiat,
     )
 }

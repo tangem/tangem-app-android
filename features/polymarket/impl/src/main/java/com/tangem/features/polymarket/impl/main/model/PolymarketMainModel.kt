@@ -93,9 +93,12 @@ internal class PolymarketMainModel @Inject constructor(
     private val balanceConverter = PredictionBalanceUMConverter(
         onAddFundsClick = ::onAddFundsClick,
         onWithdrawClick = ::onWithdrawClick,
+        onBalanceModeClick = ::onBalanceModeClick,
     )
 
     private val activeStatus = MutableStateFlow<PredictionAccountStatusValue.Active?>(value = null)
+
+    private val balanceMode = MutableStateFlow(PredictionBalanceMode.AVAILABLE)
 
     private val fundingRequisites = PredictionFundingRequisites(
         refreshInteractor = refreshPredictionDepositRequisitesInteractor,
@@ -122,6 +125,7 @@ internal class PolymarketMainModel @Inject constructor(
                         status = PredictionAccountStatusValue.Loading,
                         requisites = RequisitesState.Loading,
                         isTradingAllowed = false,
+                        mode = PredictionBalanceMode.AVAILABLE,
                     ),
                 ),
                 categories = persistentListOf(),
@@ -143,20 +147,23 @@ internal class PolymarketMainModel @Inject constructor(
 
     init {
         combine(
-            predictionAccountStatusSupplier(userWalletId = params.userWalletId),
-            fundingRequisites.state,
-            tradingAllowance.isAllowed,
-        ) { status, requisites, isTradingAllowed ->
-            activeStatus.value = status as? PredictionAccountStatusValue.Active
+            flow = predictionAccountStatusSupplier(userWalletId = params.userWalletId),
+            flow2 = fundingRequisites.state,
+            flow3 = tradingAllowance.isAllowed,
+            flow4 = balanceMode,
+            transform = { status, requisites, isTradingAllowed, mode ->
+                activeStatus.value = status as? PredictionAccountStatusValue.Active
 
-            balanceConverter.convert(
-                PredictionBalanceUMConverter.Input(
-                    status = status,
-                    requisites = requisites,
-                    isTradingAllowed = isTradingAllowed,
-                ),
-            )
-        }
+                balanceConverter.convert(
+                    PredictionBalanceUMConverter.Input(
+                        status = status,
+                        requisites = requisites,
+                        isTradingAllowed = isTradingAllowed,
+                        mode = mode,
+                    ),
+                )
+            },
+        )
             .onEach { balance -> uiState.update { it.copy(balance = balance) } }
             .flowOn(dispatchers.default)
             .launchIn(modelScope)
@@ -375,7 +382,14 @@ internal class PolymarketMainModel @Inject constructor(
         modelScope.launch {
             listOf(
                 async { tradingAllowance.refresh() },
-                async { predictionAccountStatusFetcher(PredictionAccountStatusFetcher.Params(params.userWalletId)) },
+                async {
+                    predictionAccountStatusFetcher(
+                        PredictionAccountStatusFetcher.Params(
+                            userWalletId = params.userWalletId,
+                            mode = PredictionAccountStatusFetcher.Mode.FULL,
+                        ),
+                    )
+                },
             ).awaitAll()
             fundingRequisites.refresh()
 
@@ -387,6 +401,10 @@ internal class PolymarketMainModel @Inject constructor(
         uiState.update {
             it.copy(pullToRefreshConfig = it.pullToRefreshConfig.copy(isRefreshing = isRefreshing))
         }
+    }
+
+    private fun onBalanceModeClick() {
+        balanceMode.update { it.toggled() }
     }
 
     private fun onAddFundsClick() {

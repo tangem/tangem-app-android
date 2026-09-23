@@ -12,6 +12,8 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import arrow.core.getOrElse
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
@@ -28,6 +30,7 @@ import com.tangem.domain.jointaccount.usecase.SignJointOperationUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.txhistory.joint.ownJointAccount
 import com.tangem.features.txhistory.model.ContactCandidate
@@ -57,9 +60,14 @@ internal class JointOperationDelegate @Inject constructor(
     private val rejectJointOperationUseCase: RejectJointOperationUseCase,
     private val isAddressBookCompatibleUseCase: IsAddressBookCompatibleUseCase,
     private val ownerLookupProducer: TxHistoryOwnerLookupProducer,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
 ) {
+
+    fun isColdWallet(userWalletId: UserWalletId): Boolean {
+        return userWalletsListRepository.getSyncOrNull(id = userWalletId) is UserWallet.Cold
+    }
 
     /** The rate of [currency] in the selected app currency; the rate is null while there is no quote for it */
     fun fiat(userWalletId: UserWalletId, currency: CryptoCurrency): Flow<JointOperationFiat> = combine(
