@@ -105,9 +105,6 @@ internal class JointAccountMembersModel @Inject constructor(
 
     private val isResumed = MutableStateFlow(false)
 
-    /** The owner address is derived from the same key every time, so one derivation per account is enough */
-    private val ownAddresses = mutableMapOf<String, String>()
-
     private val resolvedAccountFlow: Flow<JointAccount?> = jointAccountListSupplier(userWalletId = params.userWalletId)
         .map { accounts ->
             accounts.firstOrNull { params.cryptoAccountId == null || it.cryptoAccountId == params.cryptoAccountId }
@@ -139,16 +136,16 @@ internal class JointAccountMembersModel @Inject constructor(
 
     private fun observeAccount() {
         resolvedAccountFlow
-            .map { account ->
-                account?.let { found ->
-                    ResolvedAccount(
-                        account = found,
-                        invites = getJointAccountInvitesUseCase(
-                            userWalletId = params.userWalletId,
-                            cryptoAccountId = found.cryptoAccountId,
-                        ),
-                        ownAddress = resolveOwnAddress(cryptoAccountId = found.cryptoAccountId),
-                    )
+            .flatMapLatest { account ->
+                if (account == null) return@flatMapLatest flowOf(null)
+
+                val invites = getJointAccountInvitesUseCase(
+                    userWalletId = params.userWalletId,
+                    cryptoAccountId = account.cryptoAccountId,
+                )
+
+                ownAddressFlow(cryptoAccountId = account.cryptoAccountId).map { ownAddress ->
+                    ResolvedAccount(account = account, invites = invites, ownAddress = ownAddress)
                 }
             }
             .onEach { resolved ->
@@ -170,16 +167,27 @@ internal class JointAccountMembersModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private suspend fun resolveOwnAddress(cryptoAccountId: String): String? {
-        ownAddresses[cryptoAccountId]?.let { return it }
-
-        val account = findAccount(cryptoAccountId = cryptoAccountId) ?: return null
-
-        return ownerAddressResolver
-            .resolve(userWalletId = params.userWalletId, ownerKeyIndex = account.ownerKeyIndex)
-            .onLeft { TangemLogger.e("Unable to resolve the own owner address of the joint account", it) }
+    /**
+     * The wallet's own owner address in the account, derived from the key index its `/accounts` record carries.
+     * Starts with null so the screen renders before that record arrives (the create and join flows refresh the two
+     * lists concurrently) and settles once it does; the key is derived once per index.
+     */
+    private fun ownAddressFlow(cryptoAccountId: String): Flow<String?> {
+        val accountId = AccountId
+            .forJointAccount(userWalletId = params.userWalletId, value = cryptoAccountId)
             .getOrNull()
-            ?.also { ownAddresses[cryptoAccountId] = it }
+            ?: return flowOf(null)
+
+        return singleAccountSupplier.filterJointAccount(accountId = accountId)
+            .map { account -> account.ownerKeyIndex }
+            .distinctUntilChanged()
+            .map { ownerKeyIndex ->
+                ownerAddressResolver
+                    .resolve(userWalletId = params.userWalletId, ownerKeyIndex = ownerKeyIndex)
+                    .onLeft { TangemLogger.e("Unable to resolve the own owner address of the joint account", it) }
+                    .getOrNull()
+            }
+            .onStart { emit(null) }
     }
 
     /**
