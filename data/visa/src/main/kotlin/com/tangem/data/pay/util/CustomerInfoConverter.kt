@@ -18,18 +18,15 @@ import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance.SpecificationDataType
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance.Status
 import com.tangem.spend.datasource.pay.models.response.BalanceResponse
-import com.tangem.spend.datasource.pay.models.response.CryptoBalance
 import com.tangem.spend.datasource.pay.models.response.CustomerMeResponse
 import com.tangem.spend.datasource.pay.models.response.FiatBalance
 import com.tangem.utils.converter.Converter
-import com.tangem.utils.extensions.orZero
 import org.joda.time.DateTime
 
 internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, CustomerInfo> {
     override fun convert(value: CustomerMeResponse.Result): CustomerInfo {
         val kycStatus = KycStatus.fromString(status = value.kyc?.status)
         val fiatBalance = value.balance?.fiat
-        val cryptoBalance = value.balance?.crypto
 
         val productInstances = value.productInstances.map { it.toDomain() }
 
@@ -41,8 +38,6 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
             kycStatus = kycStatus,
             state = CustomerInfo.State.fromString(value.state),
             fiatBalance = fiatBalance?.toDomain(),
-            cryptoBalance = cryptoBalance?.toDomain(),
-            availableForWithdrawal = value.balance?.availableForWithdrawal?.amount.orZero(),
             tariffPlan = value.customerTariffPlan?.toDomain(),
             networks = value.balance?.networks.orEmpty().map { it.toDomain() },
             country = value.profile?.country,
@@ -113,14 +108,6 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
     private fun FiatBalance.toDomain() = PaymentAccountStatusValue.FiatBalance(
         availableBalance = availableBalance,
         currency = currency,
-    )
-
-    private fun CryptoBalance.toDomain() = PaymentAccountStatusValue.CryptoBalance(
-        id = id,
-        chainId = chainId.toLong(),
-        depositAddress = depositAddress.orEmpty(),
-        tokenContractAddress = tokenContractAddress,
-        balance = balance,
     )
 
     private fun CustomerMeResponse.ProductInstance.Status.toDomain(): Status = when (this) {
