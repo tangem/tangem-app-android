@@ -106,7 +106,7 @@ internal class PredictionAccountStatusStoreTest {
         store.store(userWalletId = WALLET_A, value = ACTIVE)
 
         // Act
-        store.markUnrefreshed(userWalletId = WALLET_A, since = store.commitCount(WALLET_A))
+        store.markUnrefreshed(userWalletId = WALLET_A)
 
         // Assert — "could not be refreshed" is about this session, so it must not survive to the next launch
         assertThat(store.getSyncOrNull(WALLET_A)).isEqualTo(ACTIVE.copy(source = StatusSource.ONLY_CACHE))
@@ -156,7 +156,7 @@ internal class PredictionAccountStatusStoreTest {
         val store = createStore(testScope = this, persistenceDataStore = persisted)
 
         // Act
-        store.markUnrefreshed(userWalletId = WALLET_A, since = store.commitCount(WALLET_A))
+        store.markUnrefreshed(userWalletId = WALLET_A)
 
         // Assert — recorded for this session only, so the disk copy stays untouched
         assertThat(store.getSyncOrNull(WALLET_A)).isEqualTo(PredictionAccountStatusValue.Error.Unavailable)
@@ -296,36 +296,6 @@ internal class PredictionAccountStatusStoreTest {
             return delegate.updateData(transform)
         }
     }
-
-    @Test
-    fun `GIVEN a value committed since the refresh started WHEN it fails THEN the value is not flagged`() = runTest {
-        // Arrange
-        val store = createStore(testScope = this)
-        val since = store.commitCount(WALLET_A)
-        store.store(userWalletId = WALLET_A, value = ACTIVE)
-
-        // Act
-        store.markUnrefreshed(userWalletId = WALLET_A, since = since)
-
-        // Assert
-        assertThat(store.getSyncOrNull(WALLET_A)).isEqualTo(ACTIVE)
-    }
-
-    @Test
-    fun `GIVEN another wallet committed since the refresh started WHEN it fails THEN the value is flagged`() =
-        runTest {
-            // Arrange
-            val store = createStore(testScope = this)
-            store.store(userWalletId = WALLET_A, value = ACTIVE)
-            val since = store.commitCount(WALLET_A)
-            store.store(userWalletId = WALLET_B, value = ACTIVE)
-
-            // Act
-            store.markUnrefreshed(userWalletId = WALLET_A, since = since)
-
-            // Assert
-            assertThat(store.getSyncOrNull(WALLET_A)).isEqualTo(ACTIVE.copy(source = StatusSource.ONLY_CACHE))
-        }
 
     private fun createStore(
         testScope: TestScope,
