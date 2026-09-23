@@ -10,7 +10,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.dialog.Dialogs.hotWalletCreationNotSupportedDialog
 import com.tangem.core.decompose.model.MutableParamsContainer
@@ -1343,7 +1343,12 @@ internal class IntroductionModelTest {
             assertThat(options.cardOrRing.description)
                 .isEqualTo(resourceReference(CoreResR.string.introduction_i_have_wallet_hardware_description))
             assertThat(options.socialLogin?.title)
-                .isEqualTo(resourceReference(CoreResR.string.introduction_i_have_wallet_sign_in_google_title))
+                .isEqualTo(
+                    resourceReference(
+                        id = CoreResR.string.introduction_i_have_wallet_social_title,
+                        formatArgs = wrappedList("Google"),
+                    ),
+                )
             assertThat(options.importWallet.title)
                 .isEqualTo(resourceReference(CoreResR.string.hw_import_existing_wallet))
             assertThat(options.importWallet.description)
@@ -2016,8 +2021,11 @@ internal class IntroductionModelTest {
     private fun createWalletSocialOption(isEnabled: Boolean, onPicked: (SocialLoginProvider) -> Unit) =
         WalletOptionUM(
             iconRes = CoreUiR.drawable.ic_user_24,
-            title = stringReference("Create with Google"),
-            description = resourceReference(CoreResR.string.introduction_create_wallet_seed_phrase_description),
+            title = resourceReference(
+                id = CoreResR.string.introduction_create_wallet_social_title,
+                formatArgs = wrappedList("Google"),
+            ),
+            description = resourceReference(CoreResR.string.introduction_create_wallet_social_description),
             isEnabled = isEnabled,
             onClick = { onPicked(SocialLoginProvider.Google) },
         )
