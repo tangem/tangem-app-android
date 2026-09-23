@@ -45,6 +45,7 @@ internal object PolymarketEventConverter : Converter<PolymarketEventDto, Polymar
     private fun convertMarket(dto: PolymarketMarketDto): PolymarketMarket {
         return PolymarketMarket(
             id = dto.id,
+            conditionId = dto.conditionId,
             eventId = dto.eventId,
             title = dto.question,
             slug = dto.slug,

@@ -135,7 +135,7 @@ internal class EditContactModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 0) { analyticsSender.sendAddContactTapped(any(), any()) }
+        verify(exactly = 0) { analyticsSender.sendAddContactTapped(any()) }
     }
 
     @Test
@@ -502,7 +502,7 @@ internal class EditContactModelTest {
             )
         }
         verify(exactly = 1) {
-            analyticsSender.sendContactSaved(walletId = walletA.walletId, contactId = "saved-1", isEdit = false)
+            analyticsSender.sendContactSaved(contactId = "saved-1", isEdit = false)
         }
         assertThat(navigatedBack).isTrue()
     }
@@ -525,7 +525,7 @@ internal class EditContactModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 0) { analyticsSender.sendContactSaved(any(), any(), any()) }
+        verify(exactly = 0) { analyticsSender.sendContactSaved(any(), any()) }
     }
 
     @Test
@@ -547,7 +547,7 @@ internal class EditContactModelTest {
 
         // Assert
         verify(exactly = 1) {
-            analyticsSender.sendSaveErrorShown(walletId = walletA.walletId, contactId = null, error = error)
+            analyticsSender.sendSaveErrorShown(contactId = null, error = error)
         }
     }
 
@@ -570,7 +570,7 @@ internal class EditContactModelTest {
 
         // Assert
         verify(exactly = 1) {
-            analyticsSender.sendSaveErrorShown(walletId = walletA.walletId, contactId = "contact-id", error = error)
+            analyticsSender.sendSaveErrorShown(contactId = "contact-id", error = error)
         }
     }
 
@@ -957,7 +957,7 @@ internal class EditContactModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 1) { analyticsSender.sendContactScreenOpened(contactId = "", scope = any()) }
+        verify(exactly = 1) { analyticsSender.sendContactScreenOpened(contactId = "") }
     }
 
     @Test
@@ -973,7 +973,7 @@ internal class EditContactModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 1) { analyticsSender.sendContactScreenOpened(contactId = "c-1", scope = any()) }
+        verify(exactly = 1) { analyticsSender.sendContactScreenOpened(contactId = "c-1") }
     }
 
     @Test
@@ -991,7 +991,7 @@ internal class EditContactModelTest {
 
         // Assert — create mode reports a null contact id.
         verify(exactly = 1) {
-            analyticsSender.sendDuplicateNameErrorShown(walletId = walletA.walletId, contactId = null)
+            analyticsSender.sendDuplicateNameErrorShown(contactId = null)
         }
     }
 
@@ -1008,7 +1008,7 @@ internal class EditContactModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 0) { analyticsSender.sendDuplicateNameErrorShown(any(), any()) }
+        verify(exactly = 0) { analyticsSender.sendDuplicateNameErrorShown(any()) }
     }
 
     @Test
@@ -1025,8 +1025,8 @@ internal class EditContactModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 1) { analyticsSender.sendAddressRemoved(walletId = walletA.walletId, contactId = "c-1") }
-        verify(exactly = 0) { analyticsSender.sendContactDeleted(any(), any()) }
+        verify(exactly = 1) { analyticsSender.sendAddressRemoved(contactId = "c-1") }
+        verify(exactly = 0) { analyticsSender.sendContactDeleted(any()) }
     }
 
     @Test
@@ -1048,8 +1048,8 @@ internal class EditContactModelTest {
         advanceUntilIdle()
 
         // Assert — both events fire: the address removal, then the backend-confirmed deletion.
-        verify(exactly = 1) { analyticsSender.sendAddressRemoved(walletId = walletA.walletId, contactId = "c-1") }
-        verify(exactly = 1) { analyticsSender.sendContactDeleted(walletId = walletA.walletId, contactId = "c-1") }
+        verify(exactly = 1) { analyticsSender.sendAddressRemoved(contactId = "c-1") }
+        verify(exactly = 1) { analyticsSender.sendContactDeleted(contactId = "c-1") }
     }
 
     @Test
@@ -1072,8 +1072,8 @@ internal class EditContactModelTest {
             advanceUntilIdle()
 
             // Assert — explicit deletion is not an address removal.
-            verify(exactly = 1) { analyticsSender.sendContactDeleted(walletId = walletA.walletId, contactId = "c-1") }
-            verify(exactly = 0) { analyticsSender.sendAddressRemoved(any(), any()) }
+            verify(exactly = 1) { analyticsSender.sendContactDeleted(contactId = "c-1") }
+            verify(exactly = 0) { analyticsSender.sendAddressRemoved(any()) }
         }
 
     private fun twoAddressContact(): Contact = existingContact(walletId = "aa", name = "Alice", address = "0xAAA").copy(

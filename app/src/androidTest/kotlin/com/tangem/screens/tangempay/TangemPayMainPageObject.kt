@@ -64,6 +64,13 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         useUnmergedTree = true
     }
 
+    /** Card tiles print the card's last digits, which is what tells one tile from another. */
+    fun cardTileWithDigits(lastDigits: String): KNode = child {
+        hasTestTag(TangemPayTestTags.PAYMENT_ACCOUNT_CARD_BUTTON)
+        hasAnyDescendant(withText(lastDigits))
+        useUnmergedTree = true
+    }
+
     val paymentAccountTitle: KNode = child {
         hasText(getResourceString(CoreResR.string.tangempay_payment_account))
         useUnmergedTree = true

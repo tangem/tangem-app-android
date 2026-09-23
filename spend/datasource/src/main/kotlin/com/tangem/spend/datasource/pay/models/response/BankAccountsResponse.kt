@@ -6,8 +6,8 @@ import com.squareup.moshi.JsonClass
 /**
  * Response of `bff-v2/v1/account/bank-accounts` — the recipients saved for bank off-ramp withdrawals.
  *
- * Everything below the account id is optional: a recipient whose details the backend cannot fill is still
- * listed, and the converter drops it rather than showing a half-built recipient.
+ * Everything below the account id is optional: the converter keeps every recipient it can identify — a name and
+ * an account number — and drops only the ones it cannot tell apart.
  */
 @JsonClass(generateAdapter = true)
 data class BankAccountsResponse(
@@ -36,13 +36,13 @@ data class BankAccountsResponse(
         @Json(name = "bank_account_type") val bankAccountType: String?,
     )
 
-    /** [name] carries the company for a business beneficiary; [firstName] and [lastName] an individual. */
+    /** [businessName] carries the company for a business beneficiary; [firstName] and [lastName] an individual. */
     @JsonClass(generateAdapter = true)
     data class Beneficiary(
         @Json(name = "type") val type: String?,
         @Json(name = "first_name") val firstName: String?,
         @Json(name = "last_name") val lastName: String?,
-        @Json(name = "name") val name: String?,
+        @Json(name = "business_name") val businessName: String?,
     )
 
     @JsonClass(generateAdapter = true)

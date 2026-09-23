@@ -19,9 +19,14 @@ import java.util.Locale
 internal object BankOfframpOptionsConverter :
     Converter<BankOfframpOptionsResponse.Result, BankOfframpOptions> {
 
+    private const val FEDWIRE_RAIL = "FEDWIRE"
+
     override fun convert(value: BankOfframpOptionsResponse.Result) = BankOfframpOptions(
         sources = value.sources.orEmpty().mapNotNull(::convertSource),
-        destinations = value.destinations.orEmpty().mapNotNull(::convertDestination),
+        // `WIRE` and `FEDWIRE` collapse into one rail, and the rail sheet tells the routes apart by rail alone.
+        destinations = value.destinations.orEmpty()
+            .mapNotNull(::convertDestination)
+            .distinctBy(OfframpDestination::rail),
     )
 
     private fun convertSource(value: BankOfframpOptionsResponse.Source): OfframpSource? {
@@ -47,6 +52,7 @@ internal object BankOfframpOptionsConverter :
         return OfframpDestination(
             rail = convertRail(value.rail) ?: return null,
             fee = OfframpFee(
+                name = fee.name?.takeIf(String::isNotBlank),
                 amount = fee.amount ?: return null,
                 currency = fee.currency?.takeIf(String::isNotBlank) ?: return null,
                 description = fee.description?.takeIf(String::isNotBlank),
@@ -58,9 +64,10 @@ internal object BankOfframpOptionsConverter :
         )
     }
 
+    /** The catalog spells the wire rail either `WIRE` or `FEDWIRE`; outgoing payloads always say `WIRE`. */
     private fun convertRail(value: String?): BankRail? = when (value?.uppercase(Locale.US)) {
         BankRail.ACH.name -> BankRail.ACH
-        BankRail.WIRE.name -> BankRail.WIRE
+        BankRail.WIRE.name, FEDWIRE_RAIL -> BankRail.WIRE
         else -> null
     }
 }

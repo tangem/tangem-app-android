@@ -62,20 +62,17 @@ internal class DefaultBankOfframpRepositoryTest {
     }
 
     @Test
-    fun `GIVEN a recipient the backend describes partially WHEN getBankAccounts THEN only the complete one kept`() =
-        runTest {
-            // Arrange
-            val response = BankAccountsResponse(
-                result = listOf(account("a-1"), account("a-2").copy(details = null)),
-            )
-            coEvery { tangemPayApi.getBankAccounts(AUTH_HEADER) } returns ApiResponse.Success(response)
+    fun `GIVEN account without details WHEN getBankAccounts THEN it is skipped`() = runTest {
+        // Arrange
+        val response = BankAccountsResponse(result = listOf(account("a-1"), account("a-2").copy(details = null)))
+        coEvery { tangemPayApi.getBankAccounts(AUTH_HEADER) } returns ApiResponse.Success(response)
 
-            // Act
-            val actual = repository.getBankAccounts(WALLET_ID)
+        // Act
+        val actual = repository.getBankAccounts(WALLET_ID)
 
-            // Assert
-            assertThat(actual.getOrNull()?.map { it.id }).containsExactly("a-1")
-        }
+        // Assert
+        assertThat(actual.getOrNull()?.map { it.id }).containsExactly("a-1")
+    }
 
     @Test
     fun `GIVEN no recipients WHEN getBankAccounts THEN empty list`() = runTest {
@@ -158,7 +155,7 @@ internal class DefaultBankOfframpRepositoryTest {
                 type = "INDIVIDUAL",
                 firstName = "John",
                 lastName = "Doe",
-                name = null,
+                businessName = null,
             ),
             beneficiaryAddress = address(),
             bankName = "Chase Bank",
