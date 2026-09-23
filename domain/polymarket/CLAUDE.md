@@ -150,8 +150,7 @@ tracker uses to recover a persisted batch, submits it without that check — kno
 record, because the relayer recorded nothing; every other failure keeps it.
 
 Orders: `SignPredictionOrderInteractor` builds the draft from the quote (`BuildPredictionOrderDraftUseCase`),
-checks the quote age before prompting, signs with a 52-bit random salt, then `ValidatePredictionOrderUseCase`
-re-checks the signed order against the
+signs with a 52-bit random salt, then `ValidatePredictionOrderUseCase` re-checks the signed order against the
 draft, the deposit wallet, the market and the quote age before anything is sent. SELL side:
 `makerAmount = shares`, `takerAmount = collateral`; BUY the reverse.
 

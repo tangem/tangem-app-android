@@ -27,7 +27,6 @@ import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionOrderFailure
-import com.tangem.domain.polymarket.model.PredictionOrderValidationError
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
 import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.DelayedPredictionOrderOutcome
@@ -266,22 +265,6 @@ internal class PlacePredictionSummaryModel @Inject constructor(
     }
 
     private fun onSignFailure(failure: PredictionOrderFailure) {
-        if (failure is PredictionOrderFailure.Invalid && failure.error is PredictionOrderValidationError.StaleQuote) {
-            returnToIdle()
-            messageSender.send(
-                DialogMessage(
-                    message = resourceReference(R.string.prediction_place_price_changed_description),
-                    firstActionBuilder = {
-                        EventMessageAction(
-                            title = resourceReference(R.string.common_ok),
-                            onClick = ::onQuoteRetryClick,
-                        )
-                    },
-                ),
-            )
-            return
-        }
-
         val isCancelled = failure is PredictionOrderFailure.Signing &&
             failure.error == PolymarketSigningError.UserCancelled
 

@@ -52,22 +52,6 @@ internal class SignPredictionOrderInteractorTest {
         every { buildDraft(any(), any(), any(), any()) } returns DRAFT.right()
         coEvery { signer.signOrder(any(), any()) } returns SIGNED_ORDER.right()
         every { validateOrder(any(), any(), any(), any(), any(), any(), any()) } returns Unit.right()
-        every { validateOrder.validateQuoteAge(any(), any()) } returns Unit.right()
-    }
-
-    @Test
-    fun `GIVEN an expired quote WHEN signing requested THEN the card is not prompted`() = runTest {
-        // Arrange
-        val error = PredictionOrderValidationError.StaleQuote(ageMillis = 60_001)
-        every { validateOrder.validateQuoteAge(RECEIVED_AT, any()) } returns error.left()
-
-        // Act
-        val actual = interactor(request = createRequest())
-
-        // Assert
-        assertThat(actual).isEqualTo(PredictionOrderFailure.Invalid(error = error).left())
-        coVerify(exactly = 0) { signer.signOrder(any(), any()) }
-        verifyNothingValidated()
     }
 
     @Test
