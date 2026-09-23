@@ -11,9 +11,10 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.models.account.BankCredentials
-import com.tangem.domain.models.account.TangemPayOnrampFee
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.AccountFee
+import com.tangem.domain.pay.model.AccountFeeGroupType
 import com.tangem.domain.pay.usecase.CreateVirtualAccountOrderUseCase
 import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
 import com.tangem.domain.pay.usecase.GetOnrampFeesUseCase
@@ -66,7 +67,7 @@ internal class TangemPayVirtualAccountDepositModelTest {
             uiMessageSender,
             analytics,
         )
-        coEvery { getOnrampFeesUseCase(any()) } returns emptyList<TangemPayOnrampFee>().right()
+        coEvery { getOnrampFeesUseCase(any()) } returns emptyList<AccountFee>().right()
     }
 
     @Test
@@ -158,7 +159,7 @@ internal class TangemPayVirtualAccountDepositModelTest {
     @Test
     fun `GIVEN fees error WHEN retry clicked THEN fee block shimmers while request in flight`() = runTest {
         // GIVEN
-        val pending = CompletableDeferred<Either<VisaApiError, List<TangemPayOnrampFee>>>()
+        val pending = CompletableDeferred<Either<VisaApiError, List<AccountFee>>>()
         var calls = 0
         coEvery { getOnrampFeesUseCase(userWalletId) } coAnswers {
             calls++
@@ -175,7 +176,7 @@ internal class TangemPayVirtualAccountDepositModelTest {
         assertThat(model.uiState.value.fees).isEqualTo(TangemPayVirtualAccountDepositUM.FeesUM.Loading)
         coVerify(exactly = 2) { getOnrampFeesUseCase(userWalletId) }
 
-        pending.complete(emptyList<TangemPayOnrampFee>().right())
+        pending.complete(emptyList<AccountFee>().right())
         advanceUntilIdle()
     }
 
@@ -293,9 +294,11 @@ internal class TangemPayVirtualAccountDepositModelTest {
         analytics = analytics,
     )
 
-    private fun onrampFee(type: String, name: String, amount: BigDecimal) = TangemPayOnrampFee(
+    private fun onrampFee(type: String, name: String, amount: BigDecimal) = AccountFee(
         type = type,
         name = name,
+        paymentMethodId = null,
+        group = AccountFeeGroupType.ONRAMP,
         amount = amount,
         currency = "USD",
     )

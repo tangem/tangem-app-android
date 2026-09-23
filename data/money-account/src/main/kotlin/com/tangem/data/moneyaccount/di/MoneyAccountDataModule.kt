@@ -22,8 +22,11 @@ import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.pay.usecase.GetAccountFeesUseCase
 import com.tangem.domain.moneyaccount.repository.MoneyAccountActivationRepository
+import com.tangem.domain.moneyaccount.repository.MoneyAccountRepository
 import com.tangem.domain.moneyaccount.usecase.ActivateMoneyAccountUseCase
+import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountFeeTableUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBalanceUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountEligibilityUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountSuitableWalletsUseCase
@@ -135,6 +138,17 @@ internal interface MoneyAccountDataModule {
                 getMoneyAccountSuitableWalletsUseCase = getMoneyAccountSuitableWalletsUseCase,
                 onboardingRepository = onboardingRepository,
                 deviceSecurityInfoProvider = deviceSecurityInfoProvider,
+            )
+        }
+
+        @Provides
+        fun provideGetMoneyAccountFeeTableUseCase(
+            moneyAccountRepository: MoneyAccountRepository,
+            getAccountFeesUseCase: GetAccountFeesUseCase,
+        ): GetMoneyAccountFeeTableUseCase {
+            return GetMoneyAccountFeeTableUseCase(
+                moneyAccountRepository = moneyAccountRepository,
+                getAccountFeesUseCase = getAccountFeesUseCase,
             )
         }
     }
