@@ -20,7 +20,6 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
@@ -29,11 +28,9 @@ import java.math.BigDecimal
  * Tests `getRentInfoWarning` — whether the user is warned that their account sits below the rent-exemption
  * threshold.
  *
- * Two reasons this is worth pinning. It reads `getTotalStakingBalance`, the staking scalar that **excludes
- * rewards** (the with-rewards twin backs portfolio totals instead); switching it would silently clear the warning
- * for users who are only above the threshold on paper. And it reads the staking balance through
- * `stakingBalanceData`, so it must reach the same verdict whether the balance arrives as a contribution or
- * through the legacy typed field.
+ * It reads `getTotalStakingBalance`, the staking scalar that **excludes rewards** (the with-rewards twin backs
+ * portfolio totals instead); switching it would silently clear the warning for users who are only above the
+ * threshold on paper.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultCurrencyChecksRepositoryTest {
@@ -66,27 +63,6 @@ internal class DefaultCurrencyChecksRepositoryTest {
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)
-    }
-
-    @Test
-    fun `GIVEN the same staked balance WHEN reached either way THEN the verdict is identical`() = runTest {
-        // Arrange — a balance that lifts the user over the threshold, delivered through each architecture
-        coEvery { walletManagersFacade.getRentInfo(USER_WALLET_ID, any()) } returns RENT
-        val staked = stakeKit(BalanceType.STAKED to 5)
-
-        // Act
-        val viaContributions = repository.getRentInfoWarning(
-            userWalletId = USER_WALLET_ID,
-            currencyStatus = status(amount = 1, contributions = listOf(staked)),
-        )
-        val viaLegacyField = repository.getRentInfoWarning(
-            userWalletId = USER_WALLET_ID,
-            currencyStatus = status(amount = 1, stakingBalance = staked),
-        )
-
-        // Assert
-        assertThat(viaContributions).isEqualTo(viaLegacyField)
-        assertThat(viaContributions).isNull()
     }
 
     private fun provideTestModels() = listOf(
@@ -168,25 +144,19 @@ internal class DefaultCurrencyChecksRepositoryTest {
     }
 
     // region Fixtures
-    private fun status(
-        amount: Int,
-        contributions: List<BalanceContribution> = emptyList(),
-        stakingBalance: StakingBalance? = null,
-    ) = CryptoCurrencyStatus(
+    private fun status(amount: Int, contributions: List<BalanceContribution> = emptyList()) = CryptoCurrencyStatus(
         currency = solana,
-        value = loadedValue(amount = amount, contributions = contributions, stakingBalance = stakingBalance),
+        value = loadedValue(amount = amount, contributions = contributions),
     )
 
     private fun loadedValue(
         amount: Int,
         contributions: List<BalanceContribution> = emptyList(),
-        stakingBalance: StakingBalance? = null,
     ) = CryptoCurrencyStatus.Loaded(
         amount = BigDecimal(amount),
         fiatAmount = BigDecimal(amount),
         fiatRate = BigDecimal.ONE,
         priceChange = BigDecimal.ZERO,
-        stakingBalance = stakingBalance,
         yieldSupplyStatus = null,
         hasCurrentNetworkTransactions = false,
         pendingTransactions = emptySet(),
