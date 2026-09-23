@@ -4,8 +4,6 @@ import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.transaction.*
 import com.tangem.data.transaction.error.DefaultFeeErrorResolver
 import com.tangem.blockchainsdk.BlockchainSDKFactory
-import com.tangem.core.configtoggle.FeatureToggles
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.grow.datasource.gasless.GaslessTxServiceApi
 import com.tangem.grow.datasource.gasless.GaslessTxServiceApiV2
 import com.tangem.grow.datasource.gasless.TronGaslessApi
@@ -86,16 +84,11 @@ internal object TransactionDataModule {
         responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
         gaslessTxServiceApi: GaslessTxServiceApi,
         gaslessTxServiceApiV2: GaslessTxServiceApiV2,
-        featureTogglesManager: FeatureTogglesManager,
         coroutineDispatcherProvider: CoroutineDispatcherProvider,
     ): GaslessTransactionRepository {
         return DefaultGaslessTransactionRepository(
             gaslessTxServiceApi = gaslessTxServiceApi,
             gaslessTxServiceApiV2 = gaslessTxServiceApiV2,
-            // Single master toggle for the whole gasless v2 protocol (+ yield-withdraw batch).
-            isGaslessV2Enabled = featureTogglesManager.isFeatureEnabled(
-                toggle = FeatureToggles.TWI_1327_GASLESS_YIELD_WITHDRAW_ENABLED,
-            ),
             coroutineDispatcherProvider = coroutineDispatcherProvider,
             responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
         )

@@ -7,7 +7,6 @@ import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.domain.blockaid.BlockAidVerifier
 import com.tangem.domain.models.staking.NetworkType
 import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
-import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.domain.staking.verification.StakingBlockAidRequestFactory
 import com.tangem.domain.staking.verification.StakingTransactionRecognizer
 import kotlinx.coroutines.CancellationException
@@ -22,10 +21,10 @@ import kotlinx.coroutines.CancellationException
  * - UNSAFE → must block (Blockaid UNSAFE, unrecognized local tx, or missing payload).
  *
  * Blockaid no-answer (FAILED_TO_VALIDATE, Left, exception) → SAFE, because local recognition already
- * confirmed the transaction is staking. Disabled (returns SAFE, no checks) when the toggle is off.
+ * confirmed the transaction is staking.
  *
  * Emits a [StakingAnalyticsEvent.ScamVerification] for every actually-checked transaction
- * (Ethereum/Binance/Solana/Tron/Cosmos/Cardano); not for toggle-off, pass-through networks
+ * (Ethereum/Binance/Solana/Tron/Cosmos/Cardano); not for pass-through networks
  * (e.g. Polygon), or null payload.
  *
  * Additionally reports a [SuspiciousStakingTransactionException] non-fatal to Firebase whenever the
@@ -36,7 +35,6 @@ class CheckStakingTransactionUseCase(
     private val blockAidVerifier: BlockAidVerifier,
     private val recognizer: StakingTransactionRecognizer,
     private val requestFactory: StakingBlockAidRequestFactory,
-    private val stakingFeatureToggles: StakingFeatureToggles,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
 ) {
@@ -50,7 +48,6 @@ class CheckStakingTransactionUseCase(
         blockchain: String,
         provider: String,
     ): StakingTransactionVerdict {
-        if (!stakingFeatureToggles.isTransactionValidationEnabled) return StakingTransactionVerdict.SAFE
         val unsigned = unsignedTransaction ?: return StakingTransactionVerdict.UNSAFE
 
         val verdict = when (network) {
