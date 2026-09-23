@@ -59,8 +59,10 @@ import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.res.LocalBottomSheetAlwaysVisible
 import com.tangem.core.ui.res.LocalHazeState
+import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.core.ui.test.BaseBottomSheetTestTags
 import com.tangem.core.ui.utils.WindowInsetsZero
 import dev.chrisbanes.haze.rememberHazeState
@@ -102,6 +104,11 @@ import dev.chrisbanes.haze.rememberHazeState
  *   [TangemModal.Presentation].
  * @param isMaterialEnabled when `false`, the overlay card renders flat and opaque instead of glass —
  *   for screens whose background the material would sample into a washed-out sheen (e.g. video)
+ * @param forceDarkTheme renders the whole modal — scrim, card and slots — in the dark palette whatever the app
+ *   theme is. The overlay presentation composes the modal inside the host, in a different branch of the tree, so
+ *   a palette forced around the call site never reaches it.
+ * @param containerColor overrides the card fill; `null` keeps the component's own surface colour. Read at the
+ *   call site, so pass a colour from the palette the modal renders in.
  * @param prewarm when `true`, the sheet is composed and measured while hidden — invisibly, off to
  *   the side of the host — so that its first appearance starts moving as fast as its second. Only
  *   worth it where the first tap is the one that matters (an onboarding screen) and where the call
@@ -119,6 +126,8 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModal(
     scrollableContent: Boolean = true,
     presentation: TangemModal.Presentation = TangemModal.Presentation.Auto,
     isMaterialEnabled: Boolean = true,
+    forceDarkTheme: Boolean = false,
+    containerColor: Color? = null,
     prewarm: Boolean = false,
     crossinline title: @Composable BoxScope.(T) -> Unit = {},
     crossinline content: @Composable ColumnScope.(T) -> Unit,
@@ -133,6 +142,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModal(
     when {
         LocalBottomSheetAlwaysVisible.current -> PreviewTangemModal<T>(
             config = config,
+            containerColor = containerColor,
             scrollableContent = scrollableContent,
             title = title,
             content = content,
@@ -140,6 +150,8 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModal(
         overlayHost != null -> OverlayTangemModal<T>(
             host = overlayHost,
             isMaterialEnabled = isMaterialEnabled,
+            forceDarkTheme = forceDarkTheme,
+            containerColor = containerColor,
             config = config,
             onBack = onBack,
             dismissOnClickOutside = dismissOnClickOutside,
@@ -150,6 +162,8 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModal(
         )
         else -> DefaultTangemModal<T>(
             config = config,
+            forceDarkTheme = forceDarkTheme,
+            containerColor = containerColor,
             onBack = onBack,
             dismissOnClickOutside = dismissOnClickOutside,
             scrollableContent = scrollableContent,
@@ -188,6 +202,8 @@ object TangemModal {
 internal inline fun <reified T : TangemBottomSheetConfigContent> OverlayTangemModal(
     host: TangemModalHostState,
     isMaterialEnabled: Boolean,
+    forceDarkTheme: Boolean,
+    containerColor: Color?,
     config: TangemBottomSheetConfig,
     noinline onBack: (() -> Unit)?,
     dismissOnClickOutside: Boolean,
@@ -207,21 +223,25 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> OverlayTangemMo
     if (transition.isVisible && config.content is T) {
         val modalContent by rememberUpdatedState(
             @Composable {
-                OverlayModalScaffold(
-                    sheetState = transition.sheetState,
-                    backProgress = transition.backProgress,
-                    openProgress = transition::openProgress,
-                    isDismissEnabled = dismissOnClickOutside,
-                    onDismissRequest = config.onDismissRequest,
-                    onBack = onBack,
-                ) {
-                    TangemModalContainer<T>(
-                        config = config,
-                        isMaterial = isMaterialEnabled,
-                        scrollableContent = scrollableContent,
-                        title = title,
-                        content = content,
-                    )
+                // The palette wraps the scaffold, not just the slots: the scrim and the card read it too.
+                ModalPalette(forceDarkTheme = forceDarkTheme) {
+                    OverlayModalScaffold(
+                        sheetState = transition.sheetState,
+                        backProgress = transition.backProgress,
+                        openProgress = transition::openProgress,
+                        isDismissEnabled = dismissOnClickOutside,
+                        onDismissRequest = config.onDismissRequest,
+                        onBack = onBack,
+                    ) {
+                        TangemModalContainer<T>(
+                            config = config,
+                            isMaterial = isMaterialEnabled,
+                            containerColor = containerColor,
+                            scrollableContent = scrollableContent,
+                            title = title,
+                            content = content,
+                        )
+                    }
                 }
             },
         )
@@ -247,6 +267,8 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> OverlayTangemMo
             key = key,
             config = config,
             isMaterial = isMaterialEnabled,
+            forceDarkTheme = forceDarkTheme,
+            containerColor = containerColor,
             scrollableContent = scrollableContent,
             title = title,
             content = content,
@@ -273,34 +295,62 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> PrewarmTangemMo
     key: Any,
     config: TangemBottomSheetConfig,
     isMaterial: Boolean,
+    forceDarkTheme: Boolean,
+    containerColor: Color?,
     scrollableContent: Boolean,
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable ColumnScope.(T) -> Unit,
 ) {
     val prewarmContent by rememberUpdatedState(
         @Composable {
-            // Until the call site has a model of its own — a screen whose sheet content is only
-            // built by the tap that shows it — the shared chrome is warmed on its own. That is
-            // where the bulk of a first appearance goes anyway: the same warm-up serves any modal.
-            if (config.content is T) {
-                TangemModalContainer<T>(
-                    config = config,
-                    isMaterial = isMaterial,
-                    scrollableContent = scrollableContent,
-                    title = title,
-                    content = content,
-                )
-            } else {
-                ModalPrewarmChrome(
-                    isMaterial = isMaterial,
-                    scrollableContent = scrollableContent,
-                )
+            // The warm-up measures the card the viewer will get, so it is warmed in the same palette.
+            ModalPalette(forceDarkTheme = forceDarkTheme) {
+                // Until the call site has a model of its own — a screen whose sheet content is only
+                // built by the tap that shows it — the shared chrome is warmed on its own. That is
+                // where the bulk of a first appearance goes anyway: the same warm-up serves any modal.
+                if (config.content is T) {
+                    TangemModalContainer<T>(
+                        config = config,
+                        isMaterial = isMaterial,
+                        containerColor = containerColor,
+                        scrollableContent = scrollableContent,
+                        title = title,
+                        content = content,
+                    )
+                } else {
+                    ModalPrewarmChrome(
+                        isMaterial = isMaterial,
+                        scrollableContent = scrollableContent,
+                    )
+                }
             }
         },
     )
     DisposableEffect(host, key) {
         host.prewarm(key) { prewarmContent() }
         onDispose { host.stopPrewarm(key) }
+    }
+}
+
+/**
+ * The palette a modal renders in. The overlay presentation hands its content to [TangemModalHost], which composes
+ * it in its own branch of the tree, so composition locals provided around the call site do not reach it.
+ *
+ * Re-entering the theme would also hand the card a haze state of its own, and the card's material samples the
+ * host's — so the one in scope is carried through the wrap.
+ */
+@Composable
+@PublishedApi
+internal fun ModalPalette(forceDarkTheme: Boolean, content: @Composable () -> Unit) {
+    if (forceDarkTheme) {
+        val hazeState = LocalHazeState.current
+        CompositionLocalProvider(LocalIsInDarkTheme provides true) {
+            TangemThemeRedesign {
+                CompositionLocalProvider(LocalHazeState provides hazeState, content = content)
+            }
+        }
+    } else {
+        content()
     }
 }
 
@@ -311,6 +361,7 @@ internal fun ModalPrewarmChrome(isMaterial: Boolean, scrollableContent: Boolean)
     TangemModalContainer<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig.Empty,
         isMaterial = isMaterial,
+        containerColor = null,
         scrollableContent = scrollableContent,
         title = {},
         content = {},
@@ -327,6 +378,8 @@ internal fun ModalPrewarmChrome(isMaterial: Boolean, scrollableContent: Boolean)
 @Suppress("LongParameterList")
 internal inline fun <reified T : TangemBottomSheetConfigContent> DefaultTangemModal(
     config: TangemBottomSheetConfig,
+    forceDarkTheme: Boolean,
+    containerColor: Color?,
     noinline onBack: (() -> Unit)?,
     dismissOnClickOutside: Boolean,
     scrollableContent: Boolean,
@@ -349,21 +402,24 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> DefaultTangemMo
             ),
         ) {
             ModalDialogWindowEffect()
-            OverlayModalScaffold(
-                sheetState = transition.sheetState,
-                backProgress = transition.backProgress,
-                openProgress = transition::openProgress,
-                isDismissEnabled = dismissOnClickOutside,
-                onDismissRequest = config.onDismissRequest,
-                onBack = onBack,
-            ) {
-                TangemModalContainer<T>(
-                    config = config,
-                    isMaterial = false,
-                    scrollableContent = scrollableContent,
-                    title = title,
-                    content = content,
-                )
+            ModalPalette(forceDarkTheme = forceDarkTheme) {
+                OverlayModalScaffold(
+                    sheetState = transition.sheetState,
+                    backProgress = transition.backProgress,
+                    openProgress = transition::openProgress,
+                    isDismissEnabled = dismissOnClickOutside,
+                    onDismissRequest = config.onDismissRequest,
+                    onBack = onBack,
+                ) {
+                    TangemModalContainer<T>(
+                        config = config,
+                        isMaterial = false,
+                        containerColor = containerColor,
+                        scrollableContent = scrollableContent,
+                        title = title,
+                        content = content,
+                    )
+                }
             }
         }
     }
@@ -444,6 +500,7 @@ internal fun ModalDialogWindowEffect() {
 @PublishedApi
 internal inline fun <reified T : TangemBottomSheetConfigContent> PreviewTangemModal(
     config: TangemBottomSheetConfig,
+    containerColor: Color?,
     scrollableContent: Boolean,
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable ColumnScope.(T) -> Unit,
@@ -464,6 +521,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> PreviewTangemMo
             TangemModalContainer<T>(
                 config = config,
                 isMaterial = true,
+                containerColor = containerColor,
                 scrollableContent = scrollableContent,
                 title = title,
                 content = content,
@@ -478,6 +536,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> PreviewTangemMo
 internal inline fun <reified T : TangemBottomSheetConfigContent> TangemModalContainer(
     config: TangemBottomSheetConfig,
     isMaterial: Boolean,
+    containerColor: Color?,
     scrollableContent: Boolean,
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable ColumnScope.(T) -> Unit,
@@ -487,7 +546,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> TangemModalCont
     val morphGeometry = remember { ModalMorphGeometry() }
     ModalMorphAnimationEffect(geometry = morphGeometry)
     val shape = remember(morphGeometry) { ModalMorphShape(geometry = morphGeometry) }
-    val opaqueColor = TangemTheme.colors3.bg.primary
+    val opaqueColor = containerColor ?: TangemTheme.colors3.bg.primary
 
     Column(
         modifier = Modifier
