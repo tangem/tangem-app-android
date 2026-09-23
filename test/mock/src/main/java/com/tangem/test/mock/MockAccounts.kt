@@ -5,7 +5,9 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.*
 import com.tangem.domain.models.account.OwnerKeyIndex
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWalletId
 import java.math.BigDecimal
 
@@ -87,17 +89,17 @@ object MockAccounts {
         cryptoCurrency: CryptoCurrency.Token = createPaymentAccountToken(),
         source: StatusSource = StatusSource.ACTUAL,
         customerId: String = "cust_1",
-        depositAddress: String? = "0xdeposit",
+        paymentAccountAddress: String? = "0xdeposit",
         fiatRate: BigDecimal? = BigDecimal.ONE,
         balance: PaymentAccountStatusValue.Balance = createPaymentAccountBalance(),
-        networks: List<PaymentNetworkStatus> = emptyList(),
+        networks: List<PaymentNetworkStatus> = listOf(createPaymentNetworkStatus(cryptoCurrency)),
     ): AccountStatus.Payment {
         return AccountStatus.Payment(
             account = Account.Payment(userWalletId),
             value = PaymentAccountStatusValue.Loaded(
                 source = source,
                 customerId = customerId,
-                depositAddress = depositAddress,
+                paymentAccountAddress = paymentAccountAddress,
                 balance = balance,
                 cryptoCurrency = cryptoCurrency,
                 networks = networks,
@@ -110,24 +112,47 @@ object MockAccounts {
         )
     }
 
+    fun createPaymentNetworkStatus(
+        cryptoCurrency: CryptoCurrency.Token = createPaymentAccountToken(),
+        depositAddress: String = "0xdeposit",
+        chainId: Long = 137L,
+        amount: BigDecimal = BigDecimal.TEN,
+    ): PaymentNetworkStatus.Available {
+        return PaymentNetworkStatus.Available(
+            network = cryptoCurrency.network,
+            depositAddress = depositAddress,
+            chainId = chainId,
+            cryptoCurrencyStatuses = listOf(
+                CryptoCurrencyStatus(
+                    currency = cryptoCurrency,
+                    value = CryptoCurrencyStatus.NoQuote(
+                        amount = amount,
+                        networkAddress = NetworkAddress.Single(
+                            defaultAddress = NetworkAddress.Address(
+                                type = NetworkAddress.Address.Type.Primary,
+                                value = depositAddress,
+                            ),
+                        ),
+                        stakingBalance = null,
+                        yieldSupplyStatus = null,
+                        hasCurrentNetworkTransactions = false,
+                        pendingTransactions = emptySet(),
+                        sources = CryptoCurrencyStatus.Sources(),
+                    ),
+                ),
+            ),
+        )
+    }
+
     fun createPaymentAccountBalance(
         availableBalance: BigDecimal = BigDecimal.TEN,
         currency: String = "USD",
-        availableForWithdrawal: BigDecimal = BigDecimal.TEN,
     ): PaymentAccountStatusValue.Balance {
         return PaymentAccountStatusValue.Balance(
             fiatBalance = PaymentAccountStatusValue.FiatBalance(
                 availableBalance = availableBalance,
                 currency = currency,
             ),
-            cryptoBalance = PaymentAccountStatusValue.CryptoBalance(
-                id = "usdc",
-                chainId = 137L,
-                depositAddress = "0xdeposit",
-                tokenContractAddress = "0xcontract",
-                balance = BigDecimal.TEN,
-            ),
-            availableForWithdrawal = availableForWithdrawal,
         )
     }
 
