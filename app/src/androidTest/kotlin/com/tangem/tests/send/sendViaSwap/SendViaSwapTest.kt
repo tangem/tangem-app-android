@@ -14,6 +14,7 @@ import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R
 import com.tangem.domain.models.scan.ProductType
+import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.*
 import com.tangem.screens.*
 import com.tangem.tap.domain.sdk.mocks.content.Wallet2WithDerivationsMockContent
@@ -415,7 +416,7 @@ class SendViaSwapTest : BaseTestCase() {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenName)
             }
             step("Select token to Send via Swap") {
                 selectTokenToSendViaSwap(swapTokenName = swapTokenName, networkName = swapTokenName, networkType = main)
@@ -505,7 +506,7 @@ class SendViaSwapTest : BaseTestCase() {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenName)
             }
             step("Select token to Send via Swap") {
                 selectTokenToSendViaSwap(swapTokenName = swapTokenName, networkName = networkName)
@@ -584,7 +585,7 @@ class SendViaSwapTest : BaseTestCase() {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenName)
             }
             step("Select token to Send via Swap") {
                 selectTokenToSendViaSwap(swapTokenName = swapTokenName, networkName = swapTokenName, networkType = main)
@@ -674,7 +675,7 @@ class SendViaSwapTest : BaseTestCase() {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenName)
             }
             step("Click on 'Transfer' button") {
                 onTokenDetailsScreen { transferButton.clickWithAssertion() }
