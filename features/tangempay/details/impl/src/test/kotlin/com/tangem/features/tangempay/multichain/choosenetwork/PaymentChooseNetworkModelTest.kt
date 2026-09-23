@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.extensions.iconResId
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
@@ -14,6 +15,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.CreatePaymentNetworkContractUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -40,6 +42,7 @@ internal class PaymentChooseNetworkModelTest {
     private val supplier: PaymentAccountStatusSupplier = mockk()
     private val createContractUseCase: CreatePaymentNetworkContractUseCase = mockk()
     private val listener: ChooseNetworkListener = mockk(relaxed = true)
+    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
 
     private val statusFlow = MutableSharedFlow<AccountStatus.Payment>(replay = 1)
 
@@ -52,7 +55,7 @@ internal class PaymentChooseNetworkModelTest {
     fun setUp() {
         mockkStatic("com.tangem.common.ui.extensions.NetworkIconExtKt")
         polygon = network(networkName = "Polygon", networkRawId = "polygon")
-        notIssued = PaymentNetworkStatus.NotIssued(network = polygon)
+        notIssued = PaymentNetworkStatus.NotIssued(network = polygon, chainId = 1L)
         every { supplier.invoke(WALLET_ID) } returns statusFlow
     }
 
@@ -156,6 +159,110 @@ internal class PaymentChooseNetworkModelTest {
             model.onDestroy()
         }
 
+    @Test
+    fun `WHEN model created THEN Choose Network Popup Showed is sent`() = runTest {
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Multichain.ChooseNetworkPopupShowed()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN Available row WHEN tapped THEN Fast Way Network Clicked is sent with the network and chain id`() =
+        runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            statusFlow.emit(paymentStatus(listOf(available(network = polygon, chainId = 137L))))
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.fastWay.single().onClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analytics.send(
+                    TangemPayAnalyticsEvents.Multichain.FastWayNetworkClicked(blockchain = "Polygon", chainId = 137L),
+                )
+            }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN NotIssued row WHEN tapped THEN it is reported as a Fast Way click too`() = runTest {
+        // Arrange
+        coEvery { createContractUseCase(WALLET_ID, polygon) } coAnswers { awaitCancellation() }
+        val model = createModel(testScope = this)
+        statusFlow.emit(paymentStatus(listOf(notIssued)))
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.fastWay.single().onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(
+                TangemPayAnalyticsEvents.Multichain.FastWayNetworkClicked(blockchain = "Polygon", chainId = 1L),
+            )
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN Disabled row WHEN tapped THEN Other Way Network Clicked is sent with the network and chain id`() =
+        runTest {
+            // Arrange
+            val tron = network(networkName = "TRON", networkRawId = "tron")
+            val disabled = PaymentNetworkStatus.Disabled(
+                network = tron,
+                chainId = 728L,
+                cryptoCurrencies = listOf(currency("USDT")),
+            )
+            val model = createModel(testScope = this)
+            statusFlow.emit(paymentStatus(listOf(disabled)))
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.otherWays.single().onClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analytics.send(
+                    TangemPayAnalyticsEvents.Multichain.OtherWayNetworkClicked(blockchain = "TRON", chainId = 728L),
+                )
+            }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN contract creation keeps failing WHEN row tapped and retried THEN every error display is reported`() =
+        runTest {
+            // Arrange
+            coEvery { createContractUseCase(WALLET_ID, polygon) } returns VisaApiError.Unspecified.left()
+            val model = createModel(testScope = this)
+            statusFlow.emit(paymentStatus(listOf(notIssued)))
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.fastWay.single().onClick()
+            advanceUntilIdle()
+            model.uiState.value.fastWay.single().onRetry?.invoke()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 2) {
+                analytics.send(
+                    TangemPayAnalyticsEvents.Multichain.AddressFetchErrorShowed(blockchain = "Polygon", chainId = 1L),
+                )
+            }
+            model.onDestroy()
+        }
+
     private fun createModel(testScope: TestScope): PaymentChooseNetworkModel {
         return PaymentChooseNetworkModel(
             paramsContainer = MutableParamsContainer(
@@ -163,6 +270,7 @@ internal class PaymentChooseNetworkModelTest {
             ),
             paymentAccountStatusSupplier = supplier,
             createPaymentNetworkContractUseCase = createContractUseCase,
+            analytics = analytics,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
         )
     }
@@ -192,6 +300,15 @@ internal class PaymentChooseNetworkModelTest {
         }
         every { network.iconResId } returns ICON_RES_ID
         return network
+    }
+
+    private fun available(network: Network, chainId: Long): PaymentNetworkStatus.Available {
+        return PaymentNetworkStatus.Available(
+            network = network,
+            chainId = chainId,
+            depositAddress = "0xDEPOSIT",
+            cryptoCurrencyStatuses = listOf(CryptoCurrencyStatus(currency = currency("USDC"), value = mockk())),
+        )
     }
 
     private fun currency(symbol: String): CryptoCurrency.Token {
