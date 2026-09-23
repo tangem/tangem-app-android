@@ -29,14 +29,14 @@ import com.tangem.features.tangempay.multichain.choosenetwork.PaymentChooseNetwo
 import com.tangem.features.tangempay.multichain.othernetworks.PaymentOtherNetworksComponent
 import com.tangem.features.tangempay.multichain.receive.PaymentReceiveComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
-import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsBottomSheetComponent
-import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsListener
+import com.tangem.features.moneyaccount.details.component.MoneyAccountAddFundsBottomSheetComponent
+import com.tangem.features.moneyaccount.details.component.MoneyAccountAddFundsListener
 
 internal class TangemPayCardPageScreenComponent(
     private val appComponentContext: AppComponentContext,
     private val params: TangemPayCardPageComponent.Params,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
-    private val virtualAccountAddFundsComponentFactory: VirtualAccountAddFundsBottomSheetComponent.Factory,
+    private val moneyAccountAddFundsComponentFactory: MoneyAccountAddFundsBottomSheetComponent.Factory,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
     private val model: TangemPayCardPageModel = getOrCreateModel(params = params)
@@ -144,14 +144,14 @@ internal class TangemPayCardPageScreenComponent(
                     onOrderCreated = model::onVirtualAccountOrderCreated,
                 ),
             )
-            is TangemPayCardNavigation.VirtualAccountRequisites -> virtualAccountAddFundsComponentFactory.create(
+            is TangemPayCardNavigation.VirtualAccountRequisites -> moneyAccountAddFundsComponentFactory.create(
                 context = context,
-                params = VirtualAccountAddFundsBottomSheetComponent.Params(
+                params = MoneyAccountAddFundsBottomSheetComponent.Params(
                     userWalletId = navigation.userWalletId,
                     requisites = navigation.bankCredentials.toRequisitesRows(),
                     dailyDepositLimit = VA_DAILY_DEPOSIT_LIMIT_PLACEHOLDER,
                     shouldSkipIntro = true,
-                    listener = VirtualAccountAddFundsListener { model.bottomSheetNavigation.dismiss() },
+                    listener = MoneyAccountAddFundsListener { model.bottomSheetNavigation.dismiss() },
                     onDetailsShown = model::onVaBankingDetailsShown,
                     onShareClicked = model::onVaShareDetailsClicked,
                     onFieldCopied = model::onVaFieldCopied,

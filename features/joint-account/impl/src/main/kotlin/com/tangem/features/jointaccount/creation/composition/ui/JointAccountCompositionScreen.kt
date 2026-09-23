@@ -45,6 +45,8 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_sign_minus_24
 import com.tangem.core.ui.res.generated.icons.ic_sign_plus_24
 import com.tangem.core.ui.res.generated.icons.ic_user_24
+import com.tangem.core.ui.utils.dashedBorder
+import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.features.jointaccount.creation.composition.ui.state.JointAccountCompositionUM
 import com.tangem.features.jointaccount.impl.R
 
@@ -86,7 +88,7 @@ internal fun JointAccountCompositionScreen(
             Text(
                 modifier = Modifier.padding(start = 8.dp, bottom = 12.dp),
                 text = explanationText(state = state),
-                style = TangemTheme.typography3.body.medium,
+                style = TangemTheme.typography3.subheading.medium,
                 color = TangemTheme.colors3.text.secondary,
             )
 
@@ -151,46 +153,64 @@ private fun MemberSlotsRow(state: JointAccountCompositionUM, modifier: Modifier 
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        repeat(times = state.totalMembers.value) { index ->
-            MemberSlot(isActive = index < state.requiredToSign.value)
+        repeat(times = state.maxMembers) { index ->
+            val slotState = when {
+                index < state.requiredToSign.value -> MemberSlotState.ACTIVE
+                index < state.totalMembers.value -> MemberSlotState.FILLED
+                else -> MemberSlotState.PLACEHOLDER
+            }
+            MemberSlot(state = slotState)
         }
     }
 }
 
+private enum class MemberSlotState { ACTIVE, FILLED, PLACEHOLDER }
+
 @Composable
-private fun MemberSlot(isActive: Boolean, modifier: Modifier = Modifier) {
+private fun MemberSlot(state: MemberSlotState, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .size(48.dp)
             .clip(CircleShape)
-            .background(
-                color = if (isActive) {
-                    TangemTheme.colors3.bg.status.infoSubtle
-                } else {
-                    TangemTheme.colors3.bg.opaque.primary
+            .then(
+                when (state) {
+                    MemberSlotState.ACTIVE -> Modifier
+                        .background(color = TangemTheme.colors3.bg.status.infoSubtle)
+                        .border(
+                            color = TangemTheme.colors3.border.status.infoSubtle,
+                            shape = CircleShape,
+                            width = 1.dp,
+                        )
+                    MemberSlotState.FILLED -> Modifier
+                        .background(color = TangemTheme.colors3.bg.opaque.primary)
+                        .border(
+                            color = TangemTheme.colors3.border.primary,
+                            shape = CircleShape,
+                            width = 1.dp,
+                        )
+                    MemberSlotState.PLACEHOLDER -> Modifier.dashedBorder(
+                        color = TangemTheme.colors3.border.secondary,
+                        shape = CircleShape,
+                        dashLength = 4.dp,
+                        gapLength = 4.dp,
+                        strokeWidth = 1.5.dp,
+                    )
                 },
-            )
-            .border(
-                color = if (isActive) {
-                    TangemTheme.colors3.border.status.infoSubtle
-                } else {
-                    TangemTheme.colors3.border.primary
-                },
-                shape = CircleShape,
-                width = 1.dp,
             ),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            modifier = Modifier.size(24.dp),
-            imageVector = Icons.ic_user_24,
-            contentDescription = null,
-            tint = if (isActive) {
-                TangemTheme.colors3.icon.brand
-            } else {
-                TangemTheme.colors3.icon.secondary
-            },
-        )
+        if (state != MemberSlotState.PLACEHOLDER) {
+            Icon(
+                modifier = Modifier.size(24.dp),
+                imageVector = Icons.ic_user_24,
+                contentDescription = null,
+                tint = if (state == MemberSlotState.ACTIVE) {
+                    TangemTheme.colors3.icon.brand
+                } else {
+                    TangemTheme.colors3.icon.secondary
+                },
+            )
+        }
     }
 }
 
@@ -209,18 +229,25 @@ private fun SteppersCard(state: JointAccountCompositionUM, modifier: Modifier = 
                 state.maxMembers.toString(),
             ),
             stepper = state.totalMembers,
+            isLast = false,
         )
 
         StepperRow(
             title = stringResourceSafe(R.string.joint_account_members_signers_title),
             subtitle = stringResourceSafe(R.string.joint_account_members_signers_subtitle),
             stepper = state.requiredToSign,
+            isLast = true,
         )
     }
 }
 
 @Composable
-private fun StepperRow(title: String, subtitle: String, stepper: JointAccountCompositionUM.StepperUM) {
+private fun StepperRow(
+    title: String,
+    subtitle: String,
+    stepper: JointAccountCompositionUM.StepperUM,
+    isLast: Boolean,
+) {
     TangemRow(
         verticalAlignment = TangemRowVerticalAlignment.Center,
         titleSlot = {
@@ -236,7 +263,7 @@ private fun StepperRow(title: String, subtitle: String, stepper: JointAccountCom
         endSlot = {
             StepperControls(stepper = stepper)
         },
-        divider = true,
+        divider = !isLast,
     )
 }
 
@@ -332,6 +359,7 @@ private fun Preview_JointAccountCompositionScreen(
 private class JointAccountCompositionStateProvider : CollectionPreviewParameterProvider<JointAccountCompositionUM>(
     collection = listOf(
         createPreviewState(totalMembers = 2, requiredToSign = 2),
+        createPreviewState(totalMembers = 3, requiredToSign = 2),
         createPreviewState(totalMembers = 5, requiredToSign = 3),
     ),
 )
@@ -340,8 +368,8 @@ private fun createPreviewState(totalMembers: Int, requiredToSign: Int): JointAcc
     return JointAccountCompositionUM(
         totalMembers = JointAccountCompositionUM.StepperUM(
             value = totalMembers,
-            isDecrementEnabled = totalMembers > JointAccountCompositionUM.MIN_MEMBERS,
-            isIncrementEnabled = totalMembers < JointAccountCompositionUM.MAX_MEMBERS,
+            isDecrementEnabled = totalMembers > JointAccountConfig.MIN_MEMBERS_COUNT,
+            isIncrementEnabled = totalMembers < JointAccountConfig.MAX_MEMBERS_COUNT,
             onDecrement = {},
             onIncrement = {},
         ),
@@ -352,7 +380,7 @@ private fun createPreviewState(totalMembers: Int, requiredToSign: Int): JointAcc
             onDecrement = {},
             onIncrement = {},
         ),
-        maxMembers = JointAccountCompositionUM.MAX_MEMBERS,
+        maxMembers = JointAccountConfig.MAX_MEMBERS_COUNT,
         onContinueClick = {},
         onBackClick = {},
     )

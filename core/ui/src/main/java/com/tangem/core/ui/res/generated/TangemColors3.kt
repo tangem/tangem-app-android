@@ -933,8 +933,6 @@ class TangemColors3 internal constructor(
     class Material internal constructor(
         val tint: Tint,
         val fill: Fill,
-        val lighten: Lighten,
-        val softLight: SoftLight,
         val border: Border,
     ) {
 
@@ -972,46 +970,6 @@ class TangemColors3 internal constructor(
                 private set
 
             fun update(other: Fill) {
-                glass = other.glass
-                blur = other.blur
-                solid = other.solid
-            }
-        }
-
-        @Stable
-        class Lighten internal constructor(
-            glass: Color,
-            blur: Color,
-            solid: Color,
-        ) {
-            var glass by mutableStateOf(glass)
-                private set
-            var blur by mutableStateOf(blur)
-                private set
-            var solid by mutableStateOf(solid)
-                private set
-
-            fun update(other: Lighten) {
-                glass = other.glass
-                blur = other.blur
-                solid = other.solid
-            }
-        }
-
-        @Stable
-        class SoftLight internal constructor(
-            glass: Color,
-            blur: Color,
-            solid: Color,
-        ) {
-            var glass by mutableStateOf(glass)
-                private set
-            var blur by mutableStateOf(blur)
-                private set
-            var solid by mutableStateOf(solid)
-                private set
-
-            fun update(other: SoftLight) {
                 glass = other.glass
                 blur = other.blur
                 solid = other.solid
@@ -1041,8 +999,6 @@ class TangemColors3 internal constructor(
         fun update(other: Material) {
             tint.update(other.tint)
             fill.update(other.fill)
-            lighten.update(other.lighten)
-            softLight.update(other.softLight)
             border.update(other.border)
         }
     }
@@ -1051,8 +1007,6 @@ class TangemColors3 internal constructor(
     class MaterialInverted internal constructor(
         val tint: Tint,
         val fill: Fill,
-        val lighten: Lighten,
-        val softLight: SoftLight,
         val border: Border,
     ) {
 
@@ -1090,46 +1044,6 @@ class TangemColors3 internal constructor(
                 private set
 
             fun update(other: Fill) {
-                glass = other.glass
-                blur = other.blur
-                solid = other.solid
-            }
-        }
-
-        @Stable
-        class Lighten internal constructor(
-            glass: Color,
-            blur: Color,
-            solid: Color,
-        ) {
-            var glass by mutableStateOf(glass)
-                private set
-            var blur by mutableStateOf(blur)
-                private set
-            var solid by mutableStateOf(solid)
-                private set
-
-            fun update(other: Lighten) {
-                glass = other.glass
-                blur = other.blur
-                solid = other.solid
-            }
-        }
-
-        @Stable
-        class SoftLight internal constructor(
-            glass: Color,
-            blur: Color,
-            solid: Color,
-        ) {
-            var glass by mutableStateOf(glass)
-                private set
-            var blur by mutableStateOf(blur)
-                private set
-            var solid by mutableStateOf(solid)
-                private set
-
-            fun update(other: SoftLight) {
                 glass = other.glass
                 blur = other.blur
                 solid = other.solid
@@ -1159,8 +1073,6 @@ class TangemColors3 internal constructor(
         fun update(other: MaterialInverted) {
             tint.update(other.tint)
             fill.update(other.fill)
-            lighten.update(other.lighten)
-            softLight.update(other.softLight)
             border.update(other.border)
         }
     }
@@ -1169,8 +1081,6 @@ class TangemColors3 internal constructor(
     class MaterialModal internal constructor(
         val tint: Tint,
         val fill: Fill,
-        val lighten: Lighten,
-        val softLight: SoftLight,
         val border: Border,
     ) {
 
@@ -1215,46 +1125,6 @@ class TangemColors3 internal constructor(
         }
 
         @Stable
-        class Lighten internal constructor(
-            glass: Color,
-            blur: Color,
-            solid: Color,
-        ) {
-            var glass by mutableStateOf(glass)
-                private set
-            var blur by mutableStateOf(blur)
-                private set
-            var solid by mutableStateOf(solid)
-                private set
-
-            fun update(other: Lighten) {
-                glass = other.glass
-                blur = other.blur
-                solid = other.solid
-            }
-        }
-
-        @Stable
-        class SoftLight internal constructor(
-            glass: Color,
-            blur: Color,
-            solid: Color,
-        ) {
-            var glass by mutableStateOf(glass)
-                private set
-            var blur by mutableStateOf(blur)
-                private set
-            var solid by mutableStateOf(solid)
-                private set
-
-            fun update(other: SoftLight) {
-                glass = other.glass
-                blur = other.blur
-                solid = other.solid
-            }
-        }
-
-        @Stable
         class Border internal constructor(
             start: Color,
             mid: Color,
@@ -1277,8 +1147,6 @@ class TangemColors3 internal constructor(
         fun update(other: MaterialModal) {
             tint.update(other.tint)
             fill.update(other.fill)
-            lighten.update(other.lighten)
-            softLight.update(other.softLight)
             border.update(other.border)
         }
     }

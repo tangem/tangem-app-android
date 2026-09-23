@@ -18,6 +18,8 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
@@ -104,7 +106,7 @@ internal class OnrampTokenListModel @Inject constructor(
                 updateTokenListUM(
                     SetLoadingAccountTokenListTransformer(
                         appCurrency = appCurrency,
-                        accountList = accountList.accountStatuses.filterCryptoPortfolio().toList(),
+                        accountList = accountList.portfoliosForOperation(),
                         isAccountsMode = isAccountsMode,
                     ),
                 )
@@ -233,10 +235,16 @@ internal class OnrampTokenListModel @Inject constructor(
         )
     }
 
+    private fun AccountStatusList.portfoliosForOperation(): List<AccountStatus.CryptoPortfolio> {
+        return accountStatuses.filterCryptoPortfolio().filter { status ->
+            status !is AccountStatus.Joint ||
+                params.filterOperation == OnrampOperation.BUY && status.value is JointAccountStatusValue.Active
+        }
+    }
+
     private fun AccountStatusList.filterAccountsByQuery(
         query: String,
-    ): Map<Account.CryptoPortfolio, List<CryptoCurrencyStatus>> = accountStatuses.asSequence()
-        .filterCryptoPortfolio()
+    ): Map<Account.CryptoPortfolio, List<CryptoCurrencyStatus>> = portfoliosForOperation().asSequence()
         .associate { accountStatus ->
             val filteredList = accountStatus.tokenList.flattenCurrencies().filterByQuery(query = query)
             accountStatus.account to filteredList

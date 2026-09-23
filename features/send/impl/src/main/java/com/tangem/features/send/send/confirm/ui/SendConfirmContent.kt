@@ -15,7 +15,9 @@ import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorBlockComponent
+import com.tangem.features.send.common.ui.SignaturesBanner
 import com.tangem.features.send.common.ui.state.ConfirmUM
+import com.tangem.features.send.common.ui.state.SendSignaturesUM
 import com.tangem.features.send.common.ui.tapHelp
 import com.tangem.features.send.send.ui.state.SendUM
 import com.tangem.features.send.subcomponents.amount.DefaultSendAmountBlockComponent
@@ -23,6 +25,9 @@ import com.tangem.features.send.subcomponents.destination.DefaultSendDestination
 import com.tangem.features.send.subcomponents.notifications
 import com.tangem.features.send.subcomponents.notifications.DefaultSendNotificationsComponent
 import kotlinx.collections.immutable.ImmutableList
+import androidx.compose.material3.Text
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 
 private const val BLOCKS_KEY = "BLOCKS_KEY"
 
@@ -50,6 +55,8 @@ internal fun SendConfirmContent(
                 destinationBlockComponent = destinationBlockComponent,
                 amountBlockComponent = amountBlockComponent,
                 feeSelectorBlockComponent = feeSelectorBlockComponent,
+                signaturesUM = confirmUM?.signaturesUM,
+                setupFeeNote = confirmUM?.setupFeeNote,
             )
             if (confirmUM != null) {
                 tapHelp(isDisplay = confirmUM.isShowTapHelp)
@@ -75,6 +82,8 @@ private fun LazyListScope.blocks(
     destinationBlockComponent: DefaultSendDestinationBlockComponent,
     amountBlockComponent: DefaultSendAmountBlockComponent,
     feeSelectorBlockComponent: FeeSelectorBlockComponent,
+    signaturesUM: SendSignaturesUM?,
+    setupFeeNote: TextReference?,
 ) {
     item(key = BLOCKS_KEY) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -85,6 +94,17 @@ private fun LazyListScope.blocks(
                     .clip(TangemTheme.shapes.roundedCornersXMedium)
                     .background(TangemTheme.colors.background.action),
             )
+            if (setupFeeNote != null) {
+                Text(
+                    text = setupFeeNote.resolveReference(),
+                    style = TangemTheme.typography.caption2,
+                    color = TangemTheme.colors.text.tertiary,
+                    modifier = Modifier.padding(horizontal = 12.dp),
+                )
+            }
+            if (signaturesUM != null) {
+                SignaturesBanner(signaturesUM = signaturesUM)
+            }
         }
     }
 }

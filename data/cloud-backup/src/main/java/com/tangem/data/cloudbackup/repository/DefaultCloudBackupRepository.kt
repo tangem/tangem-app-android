@@ -5,17 +5,11 @@ import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
-import com.tangem.core.configtoggle.FeatureToggles
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.cloudbackup.CloudBackupJson
 import com.tangem.data.cloudbackup.crypto.CloudBackupCipher
 import com.tangem.data.cloudbackup.crypto.CloudBackupCryptoError
 import com.tangem.data.cloudbackup.crypto.CloudBackupFileData
 import com.tangem.data.cloudbackup.crypto.CloudBackupSecret
-import com.tangem.data.cloudbackup.datasource.DriveFile
-import com.tangem.data.cloudbackup.datasource.DriveFileMetadata
-import com.tangem.data.cloudbackup.datasource.GoogleDriveApi
-import com.tangem.data.cloudbackup.datasource.GoogleDriveTokenProvider
 import com.tangem.data.cloudbackup.store.CloudBackupStore
 import com.tangem.domain.cloudbackup.models.CloudBackupAccount
 import com.tangem.domain.cloudbackup.models.CloudBackupError
@@ -23,13 +17,17 @@ import com.tangem.domain.cloudbackup.models.CloudBackupInfo
 import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
 import com.tangem.domain.cloudbackup.models.RestoredCloudBackup
 import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
+import com.tangem.google.auth.GoogleAuthError
+import com.tangem.google.drive.DriveFile
+import com.tangem.google.drive.DriveFileMetadata
+import com.tangem.google.drive.GoogleDriveApi
+import com.tangem.google.drive.GoogleDriveTokenProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
@@ -57,11 +55,7 @@ internal class DefaultCloudBackupRepository(
     private val store: CloudBackupStore,
     private val cipher: CloudBackupCipher,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val featureTogglesManager: FeatureTogglesManager,
 ) : CloudBackupRepository {
-
-    override val isCloudBackupEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_922_GOOGLE_DRIVE_BACKUP_ENABLED)
 
     override suspend fun uploadBackup(
         walletId: String,
@@ -85,18 +79,20 @@ internal class DefaultCloudBackupRepository(
             val existingFile = existingFiles.firstOrNull { file ->
                 file.appProperties?.get(KEY_WALLET_ID) == walletId
             }
+            val takenNames = existingFiles
+                .filter { it.id != existingFile?.id }
+                .mapNotNull(DriveFile::name)
+                .toSet()
+            val backupName = resolveUniqueBackupName(walletName, BACKUP_FILE_EXTENSION, takenNames)
+            val fileName = "$backupName.$BACKUP_FILE_EXTENSION"
             val fileId = if (existingFile != null) {
-                val existingNames = existingFiles
-                    .filter { it.id != existingFile.id }
-                    .mapNotNull(DriveFile::name)
-                    .toSet()
                 // refresh metadata so the backups list and file name reflect the latest wallet name / timestamp
                 execute(errorHandler = { CloudBackupError.WriteError(it) }) {
                     api.updateFileMetadata(
                         authorization = auth,
                         fileId = existingFile.id,
                         metadata = DriveFileMetadata(
-                            name = resolveUniqueBackupName(walletName, BACKUP_FILE_EXTENSION, existingNames),
+                            name = fileName,
                             appProperties = backupAppProperties(walletId, walletName, createdAtMillis),
                         ),
                     )
@@ -108,7 +104,7 @@ internal class DefaultCloudBackupRepository(
                     walletId = walletId,
                     walletName = walletName,
                     createdAtMillis = createdAtMillis,
-                    existingNames = existingFiles.mapNotNull(DriveFile::name).toSet(),
+                    fileName = fileName,
                 )
             }
 
@@ -122,6 +118,7 @@ internal class DefaultCloudBackupRepository(
 
             CloudBackupInfo(
                 fileId = fileId,
+                backupName = backupName,
                 walletName = walletName,
                 createdAtMillis = createdAtMillis,
                 walletId = walletId,
@@ -142,9 +139,11 @@ internal class DefaultCloudBackupRepository(
                 val supported =
                     if (validateContent) filterSupported(files, cipher) { downloadContentWith(auth, it) } else files
                 supported.map { file ->
+                    val walletName = file.appProperties?.get(KEY_WALLET_NAME) ?: file.name.orEmpty()
                     CloudBackupInfo(
                         fileId = file.id,
-                        walletName = file.appProperties?.get(KEY_WALLET_NAME) ?: file.name.orEmpty(),
+                        backupName = file.name?.removeSuffix(".$BACKUP_FILE_EXTENSION") ?: walletName,
+                        walletName = walletName,
                         createdAtMillis = file.resolveCreatedAtMillis(),
                         walletId = file.appProperties?.get(KEY_WALLET_ID),
                     )
@@ -250,29 +249,16 @@ internal class DefaultCloudBackupRepository(
         }
     }
 
-    /**
-     * The stored flag survives turning the feature off, so it is reported only while the feature is on —
-     * otherwise a wallet backed up earlier would keep counting as backed up with the whole cloud backup UI
-     * hidden, and nothing could clear the flag anymore (deletion is gated by the same toggle).
-     */
     override suspend fun isBackedUp(walletId: String): Boolean {
-        return isCloudBackupEnabled && walletId in store.getBackedUpWalletIds().first()
+        return walletId in store.getBackedUpWalletIds().first()
     }
 
     override fun isBackedUpFlow(walletId: String): Flow<Boolean> {
-        if (!isCloudBackupEnabled) return flowOf(false)
-
         return store.getBackedUpWalletIds().map { walletId in it }
     }
 
     override suspend fun setBackedUp(walletId: String, backedUp: Boolean) {
         store.setBackedUp(walletId, backedUp)
-    }
-
-    // legacy backups may miss the createdAt appProperty — fall back to the Drive file's createdTime
-    private fun DriveFile.resolveCreatedAtMillis(): Long {
-        appProperties?.get(KEY_CREATED_AT)?.toLongOrNull()?.let { return it }
-        return createdTime?.let { runCatching { Instant.parse(it).toEpochMilliseconds() }.getOrNull() } ?: 0L
     }
 
     private suspend fun <T> withAuthRetry(
@@ -287,7 +273,7 @@ internal class DefaultCloudBackupRepository(
     }
 
     private suspend fun Raise<CloudBackupError>.authHeader(interactive: Boolean = true): String {
-        val token = tokenProvider.getAccessToken(interactive = interactive).bind()
+        val token = tokenProvider.getAccessToken(interactive).mapLeft(GoogleAuthError::toDomainError).bind()
         return "Bearer $token"
     }
 
@@ -306,14 +292,14 @@ internal class DefaultCloudBackupRepository(
         walletId: String,
         walletName: String,
         createdAtMillis: Long,
-        existingNames: Set<String>,
+        fileName: String,
     ): String {
         val folderId = ensureBackupsFolder(auth)
         val file = execute(errorHandler = { CloudBackupError.WriteError(it) }) {
             api.createFile(
                 authorization = auth,
                 metadata = DriveFileMetadata(
-                    name = resolveUniqueBackupName(walletName, BACKUP_FILE_EXTENSION, existingNames),
+                    name = fileName,
                     parents = listOf(folderId),
                     appProperties = backupAppProperties(walletId, walletName, createdAtMillis),
                 ),
@@ -321,19 +307,6 @@ internal class DefaultCloudBackupRepository(
         }
         return ensureNotNull(file?.id) { CloudBackupError.WriteError() }
     }
-
-    /**
-     * Drive rejects the whole request when a single property exceeds [DRIVE_PROPERTY_MAX_BYTES] (key + value,
-     * UTF-8), so a long wallet name is stored here truncated — it is only the label of the backups list.
-     * The full name always travels inside the file itself ([CloudBackupFileData.name]).
-     */
-    private fun backupAppProperties(walletId: String, walletName: String, createdAtMillis: Long): Map<String, String> =
-        mapOf(
-            KEY_IS_TANGEM_BACKUP to "true",
-            KEY_WALLET_ID to walletId,
-            KEY_WALLET_NAME to walletName.truncateToUtf8Bytes(DRIVE_PROPERTY_MAX_BYTES - KEY_WALLET_NAME.utf8Size()),
-            KEY_CREATED_AT to createdAtMillis.toString(),
-        )
 
     /** Returns the id of the visible backups folder, creating it if needed */
     private suspend fun Raise<CloudBackupError>.ensureBackupsFolder(auth: String): String {
@@ -398,6 +371,25 @@ internal class DefaultCloudBackupRepository(
     }
 }
 
+// legacy backups may miss the createdAt appProperty — fall back to the Drive file's createdTime
+private fun DriveFile.resolveCreatedAtMillis(): Long {
+    appProperties?.get(KEY_CREATED_AT)?.toLongOrNull()?.let { return it }
+    return createdTime?.let { runCatching { Instant.parse(it).toEpochMilliseconds() }.getOrNull() } ?: 0L
+}
+
+/**
+ * Drive rejects the whole request when a single property exceeds [DRIVE_PROPERTY_MAX_BYTES] (key + value,
+ * UTF-8), so a long wallet name is stored here truncated — it is only the label of the backups list.
+ * The full name always travels inside the file itself ([CloudBackupFileData.name]).
+ */
+private fun backupAppProperties(walletId: String, walletName: String, createdAtMillis: Long): Map<String, String> =
+    mapOf(
+        KEY_IS_TANGEM_BACKUP to "true",
+        KEY_WALLET_ID to walletId,
+        KEY_WALLET_NAME to walletName.truncateToUtf8Bytes(DRIVE_PROPERTY_MAX_BYTES - KEY_WALLET_NAME.utf8Size()),
+        KEY_CREATED_AT to createdAtMillis.toString(),
+    )
+
 private const val BACKUPS_FOLDER_NAME = "Tangem"
 private const val BACKUP_FILE_EXTENSION = "backup.json"
 private const val DRIVE_ROOT = "root"
@@ -426,19 +418,22 @@ private const val UTF8_CONTINUATION_MARKER = 0x80
  *
  * A wallet name that doesn't fit into [DRIVE_FILE_NAME_MAX_BYTES] together with the suffix and the
  * extension is truncated — the full name is kept inside the file.
+ *
+ * Returns the name without the extension, because the same deduplicated name is reused as the username
+ * the backup password is stored under in the password manager.
  */
 internal fun resolveUniqueBackupName(walletName: String, extension: String, existingNames: Set<String>): String {
-    val base = buildBackupFileName(walletName, suffix = "", extension = extension)
-    if (base !in existingNames) return base
+    val base = buildBackupName(walletName, suffix = "", extension = extension)
+    if ("$base.$extension" !in existingNames) return base
 
     return generateSequence(1) { it + 1 }
-        .map { index -> buildBackupFileName(walletName, suffix = " ($index)", extension = extension) }
-        .first { it !in existingNames }
+        .map { index -> buildBackupName(walletName, suffix = " ($index)", extension = extension) }
+        .first { "$it.$extension" !in existingNames }
 }
 
-private fun buildBackupFileName(walletName: String, suffix: String, extension: String): String {
+private fun buildBackupName(walletName: String, suffix: String, extension: String): String {
     val tail = "$suffix.$extension"
-    return walletName.truncateToUtf8Bytes(DRIVE_FILE_NAME_MAX_BYTES - tail.utf8Size()) + tail
+    return walletName.truncateToUtf8Bytes(DRIVE_FILE_NAME_MAX_BYTES - tail.utf8Size()) + suffix
 }
 
 private fun String.utf8Size(): Int = encodeToByteArray().size
@@ -501,4 +496,13 @@ private suspend fun hasSupportedContent(
 private fun CloudBackupCryptoError.toDomainError(): CloudBackupError = when (this) {
     CloudBackupCryptoError.WrongPassword -> CloudBackupError.WrongPassword
     is CloudBackupCryptoError.InvalidFormat -> CloudBackupError.InvalidBackupFile
+}
+
+private fun GoogleAuthError.toDomainError(): CloudBackupError = when (this) {
+    GoogleAuthError.AuthCanceled -> CloudBackupError.AuthCanceled
+    GoogleAuthError.AuthRequired -> CloudBackupError.AuthRequired
+    GoogleAuthError.PermissionsMissing -> CloudBackupError.AuthPermissionsMissing
+    GoogleAuthError.Unavailable -> CloudBackupError.CloudUnavailable
+    GoogleAuthError.NetworkError -> CloudBackupError.NetworkError
+    is GoogleAuthError.Unknown -> CloudBackupError.Unknown(cause)
 }

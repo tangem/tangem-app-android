@@ -23,7 +23,6 @@ class GetAvailableFeeTokensUseCase(
     private val gaslessTransactionRepository: GaslessTransactionRepository,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
-    private val isYieldWithdrawEnabled: Boolean,
 ) {
 
     /**
@@ -51,7 +50,7 @@ class GetAvailableFeeTokensUseCase(
                     val accountStatusList = singleAccountStatusListSupplier.getSyncOrNull(userWallet.walletId)
                         ?: raiseIllegalStateError("AccountStatusList is null for ${userWallet.walletId}")
 
-                    val userCurrenciesStatuses = accountStatusList.flattenCurrencies()
+                    val userCurrenciesStatuses = accountStatusList.flattenPersonalCurrencies()
 
                     val nativeCurrencyStatus = accountStatusList.getCoinStatus(network).getOrElse {
                         raiseIllegalStateError("No native currency found: ${network.id}")
@@ -122,7 +121,7 @@ class GetAvailableFeeTokensUseCase(
             }.toSet()
         return userCurrenciesStatuses
             .asSequence()
-            .filter { isEligibleFeeToken(it, isYieldWithdrawEnabled) }
+            .filter { isEligibleFeeToken(it) }
             .filter { it.currency.network.id == network.id }
             .filter { currencyStatus ->
                 val token = currencyStatus.currency
@@ -161,9 +160,9 @@ class GetAvailableFeeTokensUseCase(
 
     internal companion object {
 
-        internal fun isEligibleFeeToken(status: CryptoCurrencyStatus, isYieldWithdrawEnabled: Boolean): Boolean {
+        internal fun isEligibleFeeToken(status: CryptoCurrencyStatus): Boolean {
             val yieldSupplyStatus = status.value.yieldSupplyStatus ?: return true
-            return isYieldWithdrawEnabled && yieldSupplyStatus.isActive
+            return yieldSupplyStatus.isActive
         }
 
         private fun hasSpendableBalance(status: CryptoCurrencyStatus): Boolean {

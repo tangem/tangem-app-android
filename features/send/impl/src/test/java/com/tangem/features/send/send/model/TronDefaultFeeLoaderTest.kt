@@ -18,7 +18,6 @@ import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
 import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
-import com.tangem.features.send.api.SendFeatureToggles
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -37,7 +36,6 @@ internal class TronDefaultFeeLoaderTest {
 
     private val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase = mockk()
     private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase = mockk()
-    private val sendFeatureToggles: SendFeatureToggles = mockk()
 
     private val currencyFactory = MockCryptoCurrencyFactory()
     private val usdt = currencyFactory.createToken(blockchain = Blockchain.Tron, id = "usdt", contractAddress = "TUsdt")
@@ -52,19 +50,17 @@ internal class TronDefaultFeeLoaderTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(getTronGaslessFeeUseCase, isTronGaslessSupportedUseCase, sendFeatureToggles)
-        every { sendFeatureToggles.isTronGaslessEnabled } returns true
+        clearMocks(getTronGaslessFeeUseCase, isTronGaslessSupportedUseCase)
         coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
         coEvery { getTronGaslessFeeUseCase(any(), any()) } returns gaslessFee(compensation = "2.41").right()
         nativeFeeStub.reset(nativeFee(value = "6.43").right())
-        loader = TronDefaultFeeLoader(getTronGaslessFeeUseCase, isTronGaslessSupportedUseCase, sendFeatureToggles)
+        loader = TronDefaultFeeLoader(getTronGaslessFeeUseCase, isTronGaslessSupportedUseCase)
     }
 
     @ParameterizedTest
     @ProvideTestModels
     fun decide(model: DecideModel) = runTest {
         // Arrange
-        every { sendFeatureToggles.isTronGaslessEnabled } returns model.isToggleEnabled
         coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns model.isSupported
         val sentCurrency = if (model.sendsCoin) trx else usdt
 
@@ -281,14 +277,12 @@ internal class TronDefaultFeeLoaderTest {
 
     internal data class DecideModel(
         val expectsGasless: Boolean,
-        val isToggleEnabled: Boolean = true,
         val isSupported: Boolean = true,
         val sendsCoin: Boolean = false,
     )
 
     private fun provideTestModels() = listOf(
         DecideModel(expectsGasless = true),
-        DecideModel(isToggleEnabled = false, expectsGasless = false),
         DecideModel(isSupported = false, expectsGasless = false),
         DecideModel(sendsCoin = true, expectsGasless = false),
     )

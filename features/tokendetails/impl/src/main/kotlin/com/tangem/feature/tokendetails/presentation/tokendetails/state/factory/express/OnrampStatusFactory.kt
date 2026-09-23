@@ -5,7 +5,7 @@ import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionsBlockState
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.datasource.local.swap.ExpressAnalyticsStatus
+import com.tangem.core.analytics.models.ExpressAnalyticsStatus
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus

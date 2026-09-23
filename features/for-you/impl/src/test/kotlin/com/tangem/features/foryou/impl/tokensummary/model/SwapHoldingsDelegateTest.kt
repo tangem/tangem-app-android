@@ -69,7 +69,7 @@ internal class SwapHoldingsDelegateTest {
 
     /** Cached so that the arranged portfolio and the expected [entry] refer to the very same fixtures. */
     private val wallets = mutableMapOf<UserWalletId, UserWallet>()
-    private val portfolios = mutableMapOf<UserWalletId, AccountStatus.CryptoPortfolio>()
+    private val portfolios = mutableMapOf<UserWalletId, AccountStatus.Personal>()
 
     private val delegateScopes = mutableListOf<CoroutineScope>()
 
@@ -395,7 +395,7 @@ internal class SwapHoldingsDelegateTest {
         MockUserWalletFactory.create().copy(walletId = id, isMultiCurrency = true)
     }
 
-    private fun portfolio(walletId: UserWalletId): AccountStatus.CryptoPortfolio = portfolios.getOrPut(walletId) {
+    private fun portfolio(walletId: UserWalletId): AccountStatus.Personal = portfolios.getOrPut(walletId) {
         // `account` is dereferenced while grouping the holdings, so it is a real model; only the token list is faked.
         mockk {
             every { account } returns MockAccounts.createAccount(derivationIndex = 1, userWalletId = walletId)

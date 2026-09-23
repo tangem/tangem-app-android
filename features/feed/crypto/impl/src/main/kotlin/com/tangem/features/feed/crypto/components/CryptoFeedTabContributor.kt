@@ -1,11 +1,16 @@
 package com.tangem.features.feed.crypto.components
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_coin_token_20
+import com.tangem.features.feed.crypto.CryptoFeedEmptySearchComponent
 import com.tangem.features.feed.crypto.CryptoFeedSearchTabComponent
 import com.tangem.features.feed.crypto.CryptoFeedTabComponent
 import com.tangem.features.feed.crypto.impl.R
+import com.tangem.features.feed.nav.FeedEmptySearchComponent
 import com.tangem.features.feed.nav.FeedTabComponent
 import com.tangem.features.feed.nav.FeedTabContributor
 import com.tangem.features.feed.nav.FeedTabId
@@ -15,11 +20,14 @@ import kotlinx.coroutines.flow.StateFlow
 internal class CryptoFeedTabContributor @Inject constructor(
     private val componentFactory: CryptoFeedTabComponent.Factory,
     private val searchComponentFactory: CryptoFeedSearchTabComponent.Factory,
+    private val emptySearchComponentFactory: CryptoFeedEmptySearchComponent.Factory,
 ) : FeedTabContributor {
 
     override val id: FeedTabId = FeedTabId.Crypto
 
     override val title: TextReference = resourceReference(id = R.string.feed_tab_crypto)
+
+    override val icon: ImageVector = Icons.ic_coin_token_20
 
     override val isAvailable: Boolean = true
 
@@ -32,5 +40,9 @@ internal class CryptoFeedTabContributor @Inject constructor(
             context = context,
             params = CryptoFeedSearchTabComponent.Params(query = query),
         )
+    }
+
+    override fun createEmptySearchPage(context: AppComponentContext): FeedEmptySearchComponent {
+        return emptySearchComponentFactory.create(context = context, params = Unit)
     }
 }

@@ -4,6 +4,7 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.earn.DefaultEarnErrorResolver
 import com.tangem.data.earn.datastore.EarnFilterStore
 import com.tangem.data.earn.datastore.EarnNetworksStore
+import com.tangem.data.earn.datastore.EarnTokensCatalogStore
 import com.tangem.data.earn.datastore.EarnTopTokensStore
 import com.tangem.data.earn.repository.DefaultEarnRepository
 import com.tangem.datasource.api.tangemTech.TangemTechApi
@@ -32,6 +33,7 @@ internal object EarnDataModule {
         userWalletsListRepository: UserWalletsListRepository,
         earnNetworksStore: EarnNetworksStore,
         earnTopTokensStore: EarnTopTokensStore,
+        earnTokensCatalogStore: EarnTokensCatalogStore,
         earnFilterStore: EarnFilterStore,
         earnErrorResolver: EarnErrorResolver,
         excludedBlockchains: ExcludedBlockchains,
@@ -42,6 +44,7 @@ internal object EarnDataModule {
             userWalletsListRepository = userWalletsListRepository,
             earnNetworksStore = earnNetworksStore,
             earnTopTokensStore = earnTopTokensStore,
+            earnTokensCatalogStore = earnTokensCatalogStore,
             earnErrorResolver = earnErrorResolver,
             excludedBlockchains = excludedBlockchains,
             earnFilterStore = earnFilterStore,

@@ -6,6 +6,7 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.toDecompressedPublicKey
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.lib.auth.session.WalletSignatureBundle
@@ -22,14 +23,15 @@ import kotlin.coroutines.resume
  * signature and, on COS 2.01+, the card signature over the wallet nonce. On older cards without a
  * card signature the wallet is registered with the wallet signature only (backend treats it as hot).
  */
-internal class ColdWalletRegistrationSigner @Inject constructor() {
+internal class ColdWalletRegistrationSigner @Inject constructor(
+    private val analyticsEventHandler: AnalyticsEventHandler,
+) {
 
     fun signerFor(session: CardSession, scanResponse: ScanResponse): WalletSigner =
         signerFor(session, scanResponse.card)
 
     fun signerFor(session: CardSession, card: CardDTO): WalletSigner = WalletSigner { nonceBytes ->
-        val walletPublicKey = card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 }?.publicKey
-            ?: error("No secp256k1 wallet on card ${card.cardId}")
+        val walletPublicKey = firstSecpWalletPublicKey(card)
 
         // nonceBytes are already the raw challenge bytes (decoded once in DefaultWalletRegistrar) —
         // exactly what AttestWalletKeyTask needs as the challenge and what the backend verifies over.
@@ -39,6 +41,24 @@ internal class ColdWalletRegistrationSigner @Inject constructor() {
             cardPublicKey = card.cardPublicKey,
             nonceBytes = nonceBytes,
         )
+    }
+
+    /**
+     * Cold registration signs the **first** wallet on the card, which is expected to be secp256k1.
+     * If it is not (an unexpected card layout), report it via analytics and abort — better than
+     * silently registering a key on the wrong curve.
+     */
+    internal fun firstSecpWalletPublicKey(card: CardDTO): ByteArray {
+        val wallet = card.wallets.firstOrNull()
+            ?: error("No wallets on card ${card.cardId}")
+
+        if (wallet.curve != EllipticCurve.Secp256k1) {
+            analyticsEventHandler.send(BackendAuthAnalyticsEvent.UnexpectedWalletCurve(cardId = card.cardId))
+            throw ColdWalletUnexpectedCurveException(card.cardId, wallet.curve)
+        }
+
+        return wallet.publicKey
+            ?: error("First wallet has no public key on card ${card.cardId}")
     }
 
     /**
@@ -112,3 +132,7 @@ internal class ColdWalletRegistrationSigner @Inject constructor() {
 /** `AttestWalletKeyTask` failed (NFC error, verification failure, user cancelled). */
 internal class ColdWalletAttestationException(message: String) :
     Exception("Cold wallet attestation failed: $message")
+
+/** The first wallet on the card is not secp256k1 — unexpected for cold registration; abort. */
+internal class ColdWalletUnexpectedCurveException(cardId: String, curve: EllipticCurve) :
+    Exception("Cold wallet registration aborted: first wallet curve is $curve, expected Secp256k1 (card $cardId)")

@@ -14,7 +14,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.notifications.SystemNotificationsStateProvider
 import com.tangem.core.ui.utils.parseBigDecimal
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
+import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
@@ -25,7 +27,9 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.assetsdiscovery.usecase.StartAssetsDiscoveryUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
 import com.tangem.domain.marketing.WarmUpMarketingCampaignsUseCase
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.wallet.*
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
@@ -79,6 +83,7 @@ import javax.inject.Inject
 private const val TANGEM_PAY_UPDATE_INTERVAL = 60_000L
 
 @Suppress("LongParameterList", "LargeClass")
+@OptIn(ExperimentalCoroutinesApi::class)
 @Stable
 @ModelScoped
 internal class WalletModel @Inject constructor(
@@ -116,9 +121,11 @@ internal class WalletModel @Inject constructor(
     private val getAppThemeModeUseCase: GetAppThemeModeUseCase,
     private val trackingContextProxy: TrackingContextProxy,
     private val singleAccountListSupplier: SingleAccountListSupplier,
+    private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
+    private val jointAccountPollingCoordinator: JointAccountPollingCoordinator,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val bindRefcodeWithWalletUseCase: BindRefcodeWithWalletUseCase,
-    private val appsFlyerStore: AppsFlyerStore,
+    private val appsFlyerRepository: AppsFlyerRepository,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getWalletIconUseCase: GetWalletIconUseCase,
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
@@ -163,6 +170,7 @@ internal class WalletModel @Inject constructor(
         subscribeToScreenBackgroundState()
         subscribeOnPushNotificationsPermission()
         subscribeTangemPayOnWalletState()
+        subscribeJointAccountPolling()
         subscribeToTangemPayTransactionDeepLink()
         subscribeToMainScreenQrScanning()
         applyPushFirstActivationIfNeeded()
@@ -286,7 +294,7 @@ internal class WalletModel @Inject constructor(
                             completedBackups = getCompletedBackupsUseCase(selectedWallet),
                             theme = theme.value,
                             isImported = selectedWallet.isImported(),
-                            referralId = appsFlyerStore.get()?.refcode,
+                            referralId = appsFlyerRepository.getConversionData()?.refcode,
                             appCurrency = appCurrency,
                         ),
                     )
@@ -412,6 +420,32 @@ internal class WalletModel @Inject constructor(
                     shouldRefreshWallet && !isBackground -> {
                         triggerRefreshWalletQuotes()
                     }
+                }
+            }
+            .launchIn(modelScope)
+    }
+
+    /**
+     * The backend won't silent-push joint-account state changes (a slot filling, activation, an operation awaiting
+     * a co-signature), so while the main screen is in the foreground, the selected wallet's joint account gets a
+     * 60-second poll to keep it fresh — the current status can't tell us whether it's stale, so it isn't used to
+     * gate this. Only the selected wallet is polled, since it's the only one actually visible in the pager. The
+     * coordinator paces itself — this only decides which wallet (if any) to collect for.
+     */
+    private fun subscribeJointAccountPolling() {
+        combine(
+            flow = screenLifecycleProvider.isBackgroundState,
+            flow2 = uiState.mapNotNull { it.wallets.getOrNull(it.selectedWalletIndex)?.walletCardState?.id }
+                .distinctUntilChanged(),
+            flow3 = multiAccountStatusListSupplier(),
+            transform = ::jointPollingTarget,
+        )
+            .distinctUntilChanged()
+            .flatMapLatest { walletId ->
+                if (walletId != null) {
+                    jointAccountPollingCoordinator.poll(walletId)
+                } else {
+                    emptyFlow()
                 }
             }
             .launchIn(modelScope)
@@ -949,4 +983,24 @@ internal class WalletModel @Inject constructor(
         const val REFRESH_WALLET_BACKGROUND_TIMER_MILLIS = 10000L
         const val EXPRESS_STATUS_UPDATE_DELAY = 10000L
     }
+}
+
+/**
+ * The wallet [subscribeJointAccountPolling][WalletModel.subscribeJointAccountPolling] should poll for, or `null`
+ * if there's nothing to poll — the screen is backgrounded, no wallet is selected, or the selected wallet has no
+ * joint account.
+ */
+internal fun jointPollingTarget(
+    isBackground: Boolean,
+    selectedWalletId: UserWalletId?,
+    accountStatusLists: List<AccountStatusList>,
+): UserWalletId? {
+    if (isBackground || selectedWalletId == null) return null
+
+    val hasJointAccount = accountStatusLists
+        .firstOrNull { it.userWalletId == selectedWalletId }
+        ?.accountStatuses
+        ?.any { it is AccountStatus.Joint } == true
+
+    return selectedWalletId.takeIf { hasJointAccount }
 }

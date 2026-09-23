@@ -1,8 +1,12 @@
 package com.tangem.core.ui.components.currency.icon
 
 import androidx.annotation.DrawableRes
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
+import arrow.core.Either
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.extensions.TextReference
@@ -102,11 +106,32 @@ sealed class CurrencyIconState {
         abstract val size: AccountIconSize
 
         data class Icon(
-            @DrawableRes val resId: Int,
+            internal val icon: Either<Int, ImageVector>,
             override val color: Color,
             override val isGrayscale: Boolean,
             override val size: AccountIconSize = AccountIconSize.Default,
-        ) : CryptoPortfolio()
+        ) : CryptoPortfolio() {
+
+            constructor(
+                @DrawableRes resId: Int,
+                color: Color,
+                isGrayscale: Boolean,
+                size: AccountIconSize = AccountIconSize.Default,
+            ) : this(Either.Left(resId), color, isGrayscale, size)
+
+            constructor(
+                imageVector: ImageVector,
+                color: Color,
+                isGrayscale: Boolean,
+                size: AccountIconSize = AccountIconSize.Default,
+            ) : this(Either.Right(imageVector), color, isGrayscale, size)
+
+            @Composable
+            fun imageVector(): ImageVector = icon.fold(
+                ifLeft = { resId -> ImageVector.vectorResource(resId) },
+                ifRight = { it },
+            )
+        }
 
         data class Letter(
             val char: TextReference,

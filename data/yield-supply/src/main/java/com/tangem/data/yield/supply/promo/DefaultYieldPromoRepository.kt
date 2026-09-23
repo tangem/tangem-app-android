@@ -5,8 +5,8 @@ import com.tangem.data.yield.supply.promo.converter.YieldBoostStatusConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.promotion.PromotionsSupplier
-import com.tangem.datasource.local.yieldsupply.promo.YieldBoostPromoStore
-import com.tangem.datasource.local.yieldsupply.promo.YieldBoostStatusStore
+import com.tangem.data.yield.supply.store.YieldBoostPromoStore
+import com.tangem.data.yield.supply.store.YieldBoostStatusStore
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.models.YieldBoostPromo
 import com.tangem.domain.yield.supply.models.YieldBoostStatus

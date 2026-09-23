@@ -29,7 +29,7 @@ import com.tangem.grow.datasource.stakekit.models.response.model.action.StakingA
 import com.tangem.grow.datasource.stakekit.models.response.model.transaction.tron.TronStakeKitTransaction
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.datasource.local.token.converter.StakingNetworkTypeConverter
-import com.tangem.datasource.local.txhistory.db.dao.StakingValidatorDao
+import com.tangem.store.datasource.txhistory.db.dao.StakingValidatorDao
 import com.tangem.datasource.local.token.converter.YieldTokenConverter
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network

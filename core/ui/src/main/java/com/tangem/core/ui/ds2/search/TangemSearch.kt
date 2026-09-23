@@ -175,6 +175,14 @@ private fun QueryTextField(state: TangemSearch.State, focusRequester: FocusReque
     var isInitialComposition by remember { mutableStateOf(true) }
     LaunchedEffect(Unit) { isInitialComposition = false }
 
+    var isFocused by remember { mutableStateOf(false) }
+    LaunchedEffect(state.isActive) {
+        if (!state.isActive && isFocused) {
+            keyboardController?.hide()
+            focusManager.clearFocus()
+        }
+    }
+
     val placeholder = state.placeholderText.resolveReference()
     val sharedTextStyle = TangemTheme.typography3.body.medium.copy(
         platformStyle = PlatformTextStyle(includeFontPadding = false),
@@ -185,6 +193,7 @@ private fun QueryTextField(state: TangemSearch.State, focusRequester: FocusReque
             .focusRequester(focusRequester)
             .semantics { contentDescription = placeholder }
             .onFocusChanged { focusState ->
+                isFocused = focusState.isFocused
                 if (!isInitialComposition) {
                     state.onActiveChange(focusState.isFocused)
                 }
