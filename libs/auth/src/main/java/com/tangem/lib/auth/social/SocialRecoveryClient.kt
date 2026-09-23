@@ -53,7 +53,9 @@ interface SocialRecoveryClient {
      * longer restore this wallet. Unbinding a wallet that has no binding is a success.
      *
      * There is no binding-only endpoint: the wallet registration is what carries the binding, so this
-     * unregisters the wallet. Fine for its only caller — the upgrade to a card replaces the wallet.
+     * unregisters the wallet. Fine for its only caller — the upgrade to a card keeps the wallet id, so
+     * the scan behind it found the hot registration's marker and skipped the cold one; dropping that
+     * marker here is what lets the next card tap register the wallet as cold.
      */
     suspend fun unbindWallet(walletId: String): Either<SocialRecoveryError, Unit>
 }

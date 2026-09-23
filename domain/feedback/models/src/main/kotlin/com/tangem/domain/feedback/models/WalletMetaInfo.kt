@@ -8,6 +8,7 @@ data class WalletMetaInfo(
     val userWalletId: UserWalletId?,
     val isHotWalletSeedPhraseBackedUp: Boolean? = null,
     val isHotWalletCloudBackedUp: Boolean? = null,
+    val isHotWalletSocialBackedUp: Boolean? = null,
     val cardId: String? = null,
     val firmwareVersion: String? = null,
     val cardsCount: String? = null,
