@@ -28,6 +28,7 @@ internal class TangemPayBankWithdrawRecipientsUMFactory(private val callbacks: C
         ),
         content = createContent(state),
         onBackClick = callbacks.onBackClick,
+        onCloseClick = callbacks.onCloseClick,
     )
 
     private fun createContent(state: RecipientsState): ContentUM {
@@ -55,6 +56,7 @@ internal class TangemPayBankWithdrawRecipientsUMFactory(private val callbacks: C
 
     data class Callbacks(
         val onBackClick: () -> Unit,
+        val onCloseClick: () -> Unit,
         val onQueryChange: (String) -> Unit,
         val onSearchActiveChange: (Boolean) -> Unit,
         val onSearchCloseClick: () -> Unit,

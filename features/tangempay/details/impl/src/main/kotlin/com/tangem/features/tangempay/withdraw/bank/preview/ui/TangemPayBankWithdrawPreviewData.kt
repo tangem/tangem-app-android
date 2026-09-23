@@ -21,6 +21,7 @@ internal object TangemPayBankWithdrawPreviewData {
     private val header = BankWithdrawHeaderUM(
         title = resourceReference(R.string.tangempay_withdraw_bank_confirm_title),
         subtitle = null,
+        onCloseClick = {},
     )
 
     private val transfer = TransferUM(
@@ -82,6 +83,7 @@ internal object TangemPayBankWithdrawPreviewData {
         ),
         isSending = false,
         isSendEnabled = true,
+        isColdWallet = true,
         onBackClick = {},
         onCloseClick = {},
         onSendClick = {},
@@ -99,6 +101,9 @@ internal object TangemPayBankWithdrawPreviewData {
     val summarySavedRecipient = summary.copy(
         recipientCards = summary.recipientCards.map { it.copy(onClick = null) }.toImmutableList(),
     )
+
+    /** A hot wallet signs without a card, so Send drops the Tangem logo. */
+    val summaryHotWallet = summary.copy(isColdWallet = false)
 
     val sending = summary.copy(isSending = true)
 

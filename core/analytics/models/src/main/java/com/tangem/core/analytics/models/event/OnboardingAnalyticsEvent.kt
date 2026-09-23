@@ -144,14 +144,8 @@ sealed class OnboardingAnalyticsEvent(
             params = mapOf(AnalyticsParam.BACKUP_COUNT to backupCount.toString()),
         )
 
-        /** @param userWalletId sha256 of the backed up wallet id, taken from the backup file */
-        class EnterCloudBackupPasswordScreen(
-            userWalletId: String?,
-        ) : Backup(
+        class EnterCloudBackupPasswordScreen : Backup(
             event = "Enter Cloud Backup Password Screen",
-            params = buildMap {
-                userWalletId?.let { put(AnalyticsParam.USER_WALLET_ID, it) }
-            },
         )
 
         class ImportCompletedScreenOpened(
@@ -161,16 +155,11 @@ sealed class OnboardingAnalyticsEvent(
             params = mapOf(AnalyticsParam.BACKUP_TYPE to backupType.value),
         )
 
-        /** @param userWalletId sha256 of the backed up wallet id, taken from the backup file */
         class ImportCloudBackupError(
-            userWalletId: String?,
             errorMessage: String,
         ) : Backup(
             event = "Import Cloud Backup Error",
-            params = buildMap {
-                userWalletId?.let { put(AnalyticsParam.USER_WALLET_ID, it) }
-                put(AnalyticsParam.ERROR_MESSAGE, errorMessage)
-            },
+            params = mapOf(AnalyticsParam.ERROR_MESSAGE to errorMessage),
         )
 
         class WrongCloudBackupPassword : Backup(
