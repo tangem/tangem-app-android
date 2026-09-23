@@ -113,6 +113,7 @@ balance only, as on iOS.
 - **Withdraw** pushes swap with the collateral as FROM (`AccountFlow.PredictionWithdraw`), available in
   read-only mode too.
 - **Awaiting-funds banner** follows `PredictionFundingWindow.isOpen`; the poller drops to 5 s while open.
+  Opened by `SwapRoute.Success` and a placed order, never by Receive (an external transfer's timing is unknown).
 - A position row opens `PositionResult` when resolved (`canOpenPositionResult`), `PositionDetails` when
   still open (`canOpenPositionDetails`), nothing otherwise.
 
