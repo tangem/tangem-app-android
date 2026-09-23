@@ -28,6 +28,9 @@ internal interface IntroductionVideoPlayer {
         /** Fires on every pass of the loop, not only on the first one. */
         fun onFirstFrameRendered()
 
+        /** The shape of the decoded frame, which the surface has to be given — see IntroductionScreen. */
+        fun onAspectRatioChanged(aspectRatio: Float)
+
         fun onError(error: Throwable)
     }
 
