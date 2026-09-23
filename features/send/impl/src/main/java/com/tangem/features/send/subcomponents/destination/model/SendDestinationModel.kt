@@ -209,7 +209,7 @@ internal class SendDestinationModel @Inject constructor(
 
     fun applySelectedContact(contact: SelectedContact) {
         addressSelectorNavigation.dismiss()
-        addressBookSendAnalytics.onAddressSubstitutedInSend(walletId = userWalletId, contactId = contact.contactId)
+        addressBookSendAnalytics.onAddressSubstitutedInSend(contactId = contact.contactId)
         _uiState.update(SendDestinationAddressTransformer(address = contact.address, isPasted = true))
         _uiState.update(SendDestinationContactTransformer(contactName = contact.name, contactIcon = contact.icon))
 
