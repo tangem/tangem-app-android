@@ -55,8 +55,6 @@ internal class PredictionAccountStatusStore(
 
     private val mutex = Mutex()
 
-    private val commitCounts = mutableMapOf<String, Long>()
-
     init {
         scope.launch {
             try {
@@ -109,35 +107,23 @@ internal class PredictionAccountStatusStore(
 
             val value = committed ?: return
 
-            commitCounts[userWalletId.stringValue] = commits(userWalletId) + 1
-
             storeInPersistence(userWalletId = userWalletId, value = value)
         }
     }
 
-    /** @return how many values have been committed for [userWalletId] since this store was created */
-    suspend fun commitCount(userWalletId: UserWalletId): Long = mutex.withLock { commits(userWalletId) }
-
     /**
-     * Records that a refresh failed. Runtime only, so it does not survive to the next launch. With nothing cached
-     * the failure itself is stored: an absent entry reads as [PredictionAccountStatusValue.Loading] and the row
-     * shimmers for nothing.
-     *
-     * @param since the commit count read when the refresh started; a value committed after that is newer than
-     *              anything this refresh could have learned, so it is left alone rather than flagged
+     * Records that a refresh failed. Runtime only and atomic, so it neither survives to the next launch nor
+     * overwrites a value a concurrent success has just written. With nothing cached the failure itself is stored:
+     * an absent entry reads as [PredictionAccountStatusValue.Loading] and the row shimmers for nothing.
      */
-    suspend fun markUnrefreshed(userWalletId: UserWalletId, since: Long) {
+    suspend fun markUnrefreshed(userWalletId: UserWalletId) {
         preloaded.await()
 
-        mutex.withLock {
-            if (commits(userWalletId) != since) return
+        runtimeStore.update(default = emptyMap()) { stored ->
+            val value = stored[userWalletId.stringValue]?.copySealed(source = StatusSource.ONLY_CACHE)
+                ?: PredictionAccountStatusValue.Error.Unavailable
 
-            runtimeStore.update(default = emptyMap()) { stored ->
-                val value = stored[userWalletId.stringValue]?.copySealed(source = StatusSource.ONLY_CACHE)
-                    ?: PredictionAccountStatusValue.Error.Unavailable
-
-                stored + (userWalletId.stringValue to value)
-            }
+            stored + (userWalletId.stringValue to value)
         }
     }
 
@@ -149,8 +135,6 @@ internal class PredictionAccountStatusStore(
             persistenceDataStore.updateData { it - userWalletId.stringValue }
         }
     }
-
-    private fun commits(userWalletId: UserWalletId): Long = commitCounts[userWalletId.stringValue] ?: 0
 
     /** A state the DTO cannot represent is one that must not outlive the session, so it leaves the disk copy alone. */
     private suspend fun storeInPersistence(userWalletId: UserWalletId, value: PredictionAccountStatusValue) {
