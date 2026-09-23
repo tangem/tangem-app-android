@@ -42,6 +42,10 @@ internal class DefaultAppLogsStore @Inject constructor(
         File(applicationContext.filesDir, PERMITTED_FILE_NAME_ZIP)
     }
 
+    private val infoLogsFile by lazy {
+        File(applicationContext.filesDir, INFO_LOGS_FILE_NAME)
+    }
+
     private val formatter = DateTimeFormatterBuilder()
         .appendDayOfMonth(2)
         .appendLiteral('.')
@@ -59,12 +63,21 @@ internal class DefaultAppLogsStore @Inject constructor(
     /** Get log file */
     override fun getFile(): File? = if (logFile.exists()) logFile else null
 
-    override suspend fun getZipFile(): File? {
+    override suspend fun getZipFile(infoLogs: String?): File? {
         return zipMutex.withLock {
-            if (logFile.exists()) {
-                zip(filesToCompress = listOf(logFile), outputZipFile = logFileZip)
-            } else {
-                null
+            withContext(dispatchers.io) {
+                val filesToCompress = buildList {
+                    if (logFile.exists()) add(logFile)
+                    if (infoLogs != null) add(infoLogsFile.apply { writeText(infoLogs) })
+                }
+
+                if (filesToCompress.isEmpty()) return@withContext null
+
+                try {
+                    zip(filesToCompress = filesToCompress, outputZipFile = logFileZip)
+                } finally {
+                    infoLogsFile.delete()
+                }
             }
         }
     }
@@ -171,5 +184,6 @@ internal class DefaultAppLogsStore @Inject constructor(
         // the only name that we allow to send as email to company addresses
         const val PERMITTED_FILE_NAME = "log.txt"
         const val PERMITTED_FILE_NAME_ZIP = "log.zip"
+        const val INFO_LOGS_FILE_NAME = "infoLogs.txt"
     }
 }
