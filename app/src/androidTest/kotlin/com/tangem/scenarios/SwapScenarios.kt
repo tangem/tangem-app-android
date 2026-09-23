@@ -522,7 +522,7 @@ fun BaseTestCase.openSwapAmountScreen(
         }
     }
     step("Click on token with name: '$fromTokenName'") {
-        onMainScreen { tokenWithTitleAndAddress(fromTokenName).clickWithAssertion() }
+        openTokenDetailsFromTokenList(fromTokenName)
     }
     step("Open 'Swap' screen") {
         openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = storiesExist)
