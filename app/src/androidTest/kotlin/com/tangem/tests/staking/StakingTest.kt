@@ -11,7 +11,6 @@ import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.pullToRefresh
 import com.tangem.common.extensions.swipeVertical
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.*
 import com.tangem.screens.*
 import dagger.hilt.android.testing.HiltAndroidTest

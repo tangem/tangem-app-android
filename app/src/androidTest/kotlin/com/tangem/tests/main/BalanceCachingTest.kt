@@ -1,7 +1,6 @@
 package com.tangem.tests.main
 
 import com.tangem.common.BaseTestCase
-import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.parseNumericBalance
 import com.tangem.common.extensions.pullToRefresh
