@@ -177,7 +177,7 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
             source = StatusSource.ACTUAL,
             balance = balance,
             positionsValue = when (mode) {
-                Mode.FULL -> positionsValue
+                Mode.FULL -> positionsValue ?: stored?.positionsValue
                 Mode.AVAILABLE_ONLY -> stored?.positionsValue
             },
             fiatRate = null,
