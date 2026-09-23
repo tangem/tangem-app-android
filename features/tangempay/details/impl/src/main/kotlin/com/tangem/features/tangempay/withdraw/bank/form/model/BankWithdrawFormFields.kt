@@ -37,3 +37,12 @@ internal object BankWithdrawFormFields {
     fun isUsRecipientCountry(values: Map<BankWithdrawFormField, String>): Boolean =
         values[BankWithdrawFormField.Country]?.trim().equals(US_COUNTRY_CODE, ignoreCase = true)
 }
+
+/**
+ * The geo API returns ISO 3166-2 ("US-NY"); Rain's address wants the bare subdivision ("NY"). The case of the
+ * country part is not part of the contract, so "us-NY" is stripped just the same.
+ */
+internal fun String.subdivisionCode(countryCode: String): String {
+    val prefix = "$countryCode-"
+    return if (startsWith(prefix = prefix, ignoreCase = true)) drop(n = prefix.length) else this
+}

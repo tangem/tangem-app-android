@@ -497,6 +497,20 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                 endIcon = UserWalletItemUM.EndIcon.Arrow,
                 onClick = {},
             ),
+            UserWalletItemUM(
+                id = "user_wallet_6",
+                name = stringReference("This is my second wallet"),
+                titleBadge = TangemBadgeUM(
+                    text = resourceReference(R.string.details_wallet_seed_badge),
+                    size = TangemBadge.Size.X4,
+                ),
+                information = UserWalletItemUM.Information.Loaded(resourceReference(R.string.hw_mobile_wallet)),
+                balance = UserWalletItemUM.Balance.Loaded(value = "$16.99", isFlickering = false),
+                imageState = UserWalletItemUM.ImageState.MobileWallet,
+                isEnabled = true,
+                endIcon = UserWalletItemUM.EndIcon.Arrow,
+                onClick = {},
+            ),
         )
 
     private fun getInformation(cardCount: Int): UserWalletItemUM.Information.Loaded {

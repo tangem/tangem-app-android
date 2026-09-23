@@ -11,7 +11,6 @@ import com.tangem.features.tangempay.withdraw.hub.model.OptionsState
 import com.tangem.features.tangempay.withdraw.hub.model.RecentsState
 import com.tangem.features.tangempay.withdraw.hub.model.WithdrawHubState
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.ActionCardUM
-import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.AvatarAccent
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.BankSectionUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.RecentRecipientUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.RecentsUM
@@ -78,7 +77,6 @@ internal class TangemPayWithdrawHubUMFactory(private val callbacks: Callbacks) {
         return RecentRecipientUM(
             id = account.id,
             initial = name.take(1).uppercase(),
-            accent = AvatarAccent.entries[account.id.hashCode().mod(AvatarAccent.entries.size)],
             name = name,
             accountNumber = account.details.accountNumber,
         )

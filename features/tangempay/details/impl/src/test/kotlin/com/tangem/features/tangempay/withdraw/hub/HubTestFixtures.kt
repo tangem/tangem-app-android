@@ -6,6 +6,12 @@ import com.tangem.domain.pay.model.bankofframp.BankAccountType
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
 import com.tangem.domain.pay.model.bankofframp.PostalAddress
+import com.tangem.domain.pay.model.bankofframp.RecentBankAccounts
+
+internal fun recentBankAccounts(
+    recents: List<BankAccount> = emptyList(),
+    hasSavedAccounts: Boolean = recents.isNotEmpty(),
+): RecentBankAccounts = RecentBankAccounts(recents = recents, hasSavedAccounts = hasSavedAccounts)
 
 internal fun bankAccount(
     id: String = "acc-1",

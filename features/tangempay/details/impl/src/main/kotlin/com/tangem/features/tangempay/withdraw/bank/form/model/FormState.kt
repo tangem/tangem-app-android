@@ -4,13 +4,15 @@ import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 
 /**
  * The user's local edits on this screen — the codes in [edits] and the names in [displayNameEdits] — plus the
- * errors shown under the fields; both edit maps are cleared once Continue commits them, so a field with no local
- * edit always reflects the draft's current value instead of a stale snapshot from construction time.
+ * errors shown under the fields and the [focusedField] the account-number suggestions are gated on; both edit maps
+ * are cleared once Continue commits them, so a field with no local edit always reflects the draft's current value
+ * instead of a stale snapshot from construction time.
  */
 internal data class FormState(
     val edits: Map<BankWithdrawFormField, String> = emptyMap(),
     val displayNameEdits: Map<BankWithdrawFormField, String> = emptyMap(),
     val errors: Map<BankWithdrawFormField, BankWithdrawFieldError> = emptyMap(),
+    val focusedField: BankWithdrawFormField? = null,
 ) {
 
     /** The value shown for [field]: the user's own typing on this screen, or the draft's current value. */

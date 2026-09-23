@@ -4,7 +4,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.withdraw.bank.form.model.BankAccountSuggestions
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFieldError
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFieldKind
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
@@ -12,10 +14,13 @@ import com.tangem.features.tangempay.withdraw.bank.form.model.FormState
 import com.tangem.features.tangempay.withdraw.bank.form.model.kindIn
 import com.tangem.features.tangempay.withdraw.bank.form.model.placeholderIn
 import com.tangem.features.tangempay.withdraw.bank.form.state.TangemPayBankWithdrawFormUM.FieldUM
+import com.tangem.features.tangempay.withdraw.bank.form.state.TangemPayBankWithdrawFormUM.SuggestionUM
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderFactory
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
+import com.tangem.features.tangempay.withdraw.toShortName
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 internal class TangemPayBankWithdrawFormUMFactory(
@@ -24,11 +29,15 @@ internal class TangemPayBankWithdrawFormUMFactory(
     private val callbacks: Callbacks,
 ) {
 
-    fun create(draft: BankWithdrawDraft, state: FormState): TangemPayBankWithdrawFormUM {
+    fun create(draft: BankWithdrawDraft, state: FormState, accounts: List<BankAccount>): TangemPayBankWithdrawFormUM {
         val values = state.values(fields, draft)
         val displayNames = state.displayNames(fields, draft)
         return TangemPayBankWithdrawFormUM(
-            header = BankWithdrawHeaderFactory.create(draft = draft, step = step),
+            header = BankWithdrawHeaderFactory.create(
+                draft = draft,
+                step = step,
+                onCloseClick = callbacks.onCloseClick,
+            ),
             fields = fields
                 .mapIndexed { index, field ->
                     createField(
@@ -40,10 +49,32 @@ internal class TangemPayBankWithdrawFormUMFactory(
                     )
                 }
                 .toImmutableList(),
+            suggestions = createSuggestions(values = values, state = state, accounts = accounts),
             isContinueEnabled = fields.all { field -> !values[field].isNullOrBlank() },
             onBackClick = callbacks.onBackClick,
             onContinueClick = callbacks.onContinueClick,
         )
+    }
+
+    private fun createSuggestions(
+        values: Map<BankWithdrawFormField, String>,
+        state: FormState,
+        accounts: List<BankAccount>,
+    ): ImmutableList<SuggestionUM> {
+        val field = BankWithdrawFormField.AccountNumber
+        if (field !in fields || state.focusedField != field) return persistentListOf()
+        val prefix = values[field].orEmpty().trim()
+        return BankAccountSuggestions.match(accounts = accounts, prefix = prefix)
+            .map { account ->
+                SuggestionUM(
+                    id = account.id,
+                    matchedPrefix = prefix,
+                    accountNumberSuffix = account.details.accountNumber.removePrefix(prefix),
+                    name = account.details.beneficiary.toShortName(),
+                    onClick = { callbacks.onSuggestionClick(account) },
+                )
+            }
+            .toImmutableList()
     }
 
     private fun createField(
@@ -88,9 +119,11 @@ internal class TangemPayBankWithdrawFormUMFactory(
 
     data class Callbacks(
         val onBackClick: () -> Unit,
+        val onCloseClick: () -> Unit,
         val onValueChange: (field: BankWithdrawFormField, value: String) -> Unit,
         val onFocusChange: (field: BankWithdrawFormField, isFocused: Boolean) -> Unit,
         val onSelectorClick: (field: BankWithdrawFormField) -> Unit,
+        val onSuggestionClick: (account: BankAccount) -> Unit,
         val onContinueClick: () -> Unit,
     )
 }
