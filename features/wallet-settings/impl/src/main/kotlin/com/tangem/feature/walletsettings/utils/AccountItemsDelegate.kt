@@ -4,6 +4,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.account.AccountJointItemUMConverter
 import com.tangem.common.ui.account.AccountPortfolioItemUMConverter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -134,7 +135,11 @@ internal class AccountItemsDelegate @Inject constructor(
                 isAddAccountEnabled = isAddAccountEnabled,
                 onAddAccountClick = {
                     if (isAddAccountEnabled) {
-                        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonAddAccount())
+                        analyticsEventHandler.send(
+                            WalletSettingsAnalyticEvents.ButtonAddAccount(
+                                source = AnalyticsParam.ScreensSources.Settings,
+                            ),
+                        )
                         onAddAccountClick(isAddCryptoAccountEnabled, isAddJointAccountEnabled)
                     } else {
                         canNotAddAccountDialog()
