@@ -75,7 +75,7 @@ onboarded. It must match iOS and the SDK byte for byte; `PolymarketDerivationCon
    settlement token every order spends and `getBalanceAllowance` reports. Deposits are made in native USDC
    on Polygon (`USDC_TOKEN_ADDRESS`, `0x3c499c…`); `PolymarketCollateralCurrencyFactory.createDepositTarget()`
    is that token, `create()` is pUSD. The bridge converts.
-6. **The region is read by the flow that commits, never carried on a route.** An unreadable region never
+6. **The region is read by the flow that commits, never supplied by its entry route.** An unreadable region never
    locks a user out of an existing account (browse, withdraw stay open), but it does refuse what would
    *commit* them: `CheckNewPolymarketAccountAllowedInteractor` answers `UNDETERMINED` (no new deploy) and
    the order flow keeps its gate shut as "unknown" rather than "restricted". The one fail-closed edge: that
@@ -83,7 +83,8 @@ onboarded. It must match iOS and the SDK byte for byte; `PolymarketDerivationCon
    the geoblock anyway — an existing account that has no local confirmation record is then gated like a new
    one until the BFF answers. The order flow reads the
    region when it is shown and re-reads on resume only while it is still unknown — there is no re-read
-   right before signing, so a region that changes while the screen is open is not caught. A new trading
+   right before signing; Amount passes its accepted state to Summary in an internal snapshot, so a region
+   that changes while the screen is open is not caught. A new trading
    flow needs its own read.
    `PolymarketAccessMode.READ_ONLY` (browse + withdraw only) is sourced from the geoblock alone — a second
    reason to restrict access needs its own signal, or the UI explains the restriction wrongly.
@@ -149,7 +150,8 @@ tracker uses to recover a persisted batch, submits it without that check — kno
 record, because the relayer recorded nothing; every other failure keeps it.
 
 Orders: `SignPredictionOrderInteractor` builds the draft from the quote (`BuildPredictionOrderDraftUseCase`),
-signs with a 52-bit random salt, then `ValidatePredictionOrderUseCase` re-checks the signed order against the
+checks the quote age before prompting, signs with a 52-bit random salt, then `ValidatePredictionOrderUseCase`
+re-checks the signed order against the
 draft, the deposit wallet, the market and the quote age before anything is sent. SELL side:
 `makerAmount = shares`, `takerAmount = collateral`; BUY the reverse.
 
