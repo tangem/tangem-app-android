@@ -2,7 +2,9 @@ package com.tangem.features.polymarket.impl.navigation
 
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.polymarket.model.PredictionOrderSide
+import com.tangem.domain.polymarket.model.PolymarketPositionId
+import com.tangem.domain.polymarket.model.PolymarketPosition
+import com.tangem.domain.polymarket.model.PolymarketPositionsTab
 
 /**
  * Internal navigation routes for the Polymarket feature stack.
@@ -29,6 +31,14 @@ internal sealed interface PolymarketRoute : Route {
      *  opened with — the user can choose among several eligible wallets.
      */
     data class Main(val userWalletId: UserWalletId) : PolymarketRoute
+
+    data class History(val userWalletId: UserWalletId) : PolymarketRoute
+
+    data class Positions(val userWalletId: UserWalletId, val initialTab: PolymarketPositionsTab) : PolymarketRoute
+
+    data class PositionDetails(val userWalletId: UserWalletId, val positionId: PolymarketPositionId) : PolymarketRoute
+
+    data class PositionResult(val userWalletId: UserWalletId, val position: PolymarketPosition.Open) : PolymarketRoute
 
     /**
      * Details of a single prediction event.
@@ -58,7 +68,18 @@ internal sealed interface PolymarketRoute : Route {
         val eventId: String,
         val marketId: String,
         val assetId: String,
-        val side: PredictionOrderSide,
+    ) : PolymarketRoute
+
+    /**
+     * Sell of a held position, served by the same flow as [PlacePrediction] with the side fixed to a sell.
+     *
+     * @property marketId the market the position's outcome belongs to — a position whose market lookup failed
+     *  has none and cannot be quoted, so such a row must not build this route
+     */
+    data class ClosePosition(
+        val userWalletId: UserWalletId,
+        val positionId: PolymarketPositionId,
+        val marketId: String,
     ) : PolymarketRoute
 
     /**

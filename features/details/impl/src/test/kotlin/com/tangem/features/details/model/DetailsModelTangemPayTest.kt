@@ -4,6 +4,8 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -62,6 +64,51 @@ internal class DetailsModelTangemPayTest : DetailsModelTestBase() {
                 onComplete = any(),
             )
         }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN residency step enabled AND suitable wallet WHEN init THEN item added without availability check`() =
+        runTest {
+            // GIVEN
+            every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
+            coEvery {
+                tangemPayEligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true)
+            } returns listOf(wallet1)
+
+            // WHEN
+            val model = createModel(this)
+            advanceUntilIdle()
+
+            // THEN
+            verify { itemsBuilder.addTangemPayItem(any(), any()) }
+            coVerify(exactly = 0) { tangemPayEligibilityManager.getEligibleWallets(any(), any()) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN residency step enabled WHEN item clicked THEN navigates without availability check`() = runTest {
+        // GIVEN
+        every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
+        coEvery {
+            tangemPayEligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true)
+        } returns listOf(wallet1)
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // WHEN
+        onTangemPaySlot.captured.invoke()
+        advanceUntilIdle()
+
+        // THEN
+        verify {
+            router.push(
+                route = AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.FromBannerInSettings),
+                onComplete = any(),
+            )
+        }
+        coVerify(exactly = 0) { tangemPayEligibilityManager.getTangemPayAvailability(any()) }
+        verify(exactly = 0) { itemsBuilder.removeTangemPayItem(any()) }
         model.onDestroy()
     }
 

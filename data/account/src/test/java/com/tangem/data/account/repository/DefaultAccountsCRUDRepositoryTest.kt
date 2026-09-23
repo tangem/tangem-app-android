@@ -344,6 +344,7 @@ class DefaultAccountsCRUDRepositoryTest {
                 derivationIndex = DerivationIndex.Main,
                 tokensCount = 0,
                 networksCount = 0,
+                type = ArchivedAccount.Type.CRYPTO,
             )
 
             archivedAccountsInnerStore.store(value = listOf(archivedAccount))
@@ -630,7 +631,7 @@ class DefaultAccountsCRUDRepositoryTest {
 
             // Assert
             Truth.assertThat(bodySlot.captured.accounts.map { it.type })
-                .containsExactly(WalletAccountDTO.Type.CRYPTO.value, WalletAccountDTO.Type.JOINT.value)
+                .containsExactly(WalletAccountDTO.Type.CRYPTO, WalletAccountDTO.Type.JOINT)
             Truth.assertThat(bodySlot.captured.accounts.map { it.id })
                 .containsExactly(
                     Personal.createMainAccount(userWalletId = userWalletId).accountId.value,

@@ -45,7 +45,6 @@ dependencies {
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.demo.models)
     implementation(projects.domain.feedback.models)
-    implementation(projects.domain.manageTokens.models)
     implementation(projects.domain.markets.models)
     implementation(projects.domain.models)
     implementation(projects.domain.offramp)
@@ -69,13 +68,15 @@ dependencies {
 
     /** Core modules */
     api(projects.core.configToggles)
-    api(projects.core.datasource)
+    implementation(projects.core.local)
+    implementation(projects.core.remote)
     implementation(projects.core.decompose)
     api(projects.core.navigation)
     api(projects.core.ui)
     api(projects.core.utils)
     implementation(projects.core.pagination)
     implementation(projects.grow.datasource)
+    implementation(projects.store.datasource)
 
     /** Feature Apis */
     api(projects.features.storiesV2.api)
@@ -96,4 +97,7 @@ dependencies {
     implementation(projects.libs.crypto)
     implementation(projects.libs.tangemSdkApi)
     implementation(projects.domain.staking)
+
+    /** Tests */
+    testImplementation(projects.test.core)
 }

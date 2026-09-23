@@ -8,9 +8,11 @@ import com.tangem.domain.models.earn.EarnTokenWithCurrency
 import com.tangem.domain.models.earn.EarnType
 import com.tangem.features.feed.earn.createEarnCurrency
 import com.tangem.features.feed.earn.createEarnToken
+import com.tangem.features.feed.earn.createEarnTokenCurrency
 import com.tangem.features.feed.earn.createEarnTokenWithCurrency
 import com.tangem.features.feed.earn.impl.R
 import org.junit.jupiter.api.Test
+import com.tangem.core.ui.R as CoreUiR
 
 /**
  * The row draws from two sources at once — the earn token and the currency behind it — so the assertions
@@ -32,12 +34,33 @@ internal class EarnTokenWithCurrencyToTokenRowConverterTest {
     )
 
     @Test
-    fun `GIVEN a token WHEN converted THEN the row id pairs the currency with the earn type`() {
+    fun `GIVEN a token WHEN converted THEN the row id is the raw token network and earn type`() {
         // Act
         val actual = converter.convert(token)
 
         // Assert
-        assertThat(actual.id).isEqualTo("coin-ethereum_STAKING")
+        assertThat(actual.id).isEqualTo("ethereum_ethereum_STAKING")
+    }
+
+    @Test
+    fun `GIVEN one token on three networks WHEN converted THEN the row ids are distinct`() {
+        // Arrange — the real catalogue lists usd-coin on base, ethereum and avalanche, and all three land
+        // in one list, where a repeated key is a crash
+        val rows = listOf("base", "ethereum", "avalanche").map { networkId ->
+            createEarnTokenWithCurrency(
+                earnToken = createEarnToken(tokenId = "usd-coin", networkId = networkId, type = EarnType.YIELD),
+            )
+        }
+
+        // Act
+        val actual = rows.map(converter::convert)
+
+        // Assert
+        assertThat(actual.map { it.id }).containsExactly(
+            "usd-coin_base_YIELD",
+            "usd-coin_ethereum_YIELD",
+            "usd-coin_avalanche_YIELD",
+        )
     }
 
     @Test
@@ -51,14 +74,33 @@ internal class EarnTokenWithCurrencyToTokenRowConverterTest {
     }
 
     @Test
-    fun `GIVEN a token WHEN converted THEN the icon points at the currency's image`() {
+    fun `GIVEN a native coin WHEN converted THEN the icon points at the currency's image without a badge`() {
         // Act
         val actual = converter.convert(token)
+
+        // Assert — the coin icon already is the network icon, so a badge on top of it is noise
+        assertThat(actual.icon).isEqualTo(
+            TangemTokenIcon.UiState.Token(
+                tokenState = TangemTokenIcon.State(url = "https://icons.tangem.com/eth.png"),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN a token WHEN converted THEN the icon carries the network badge`() {
+        // Arrange
+        val tether = createEarnTokenWithCurrency(cryptoCurrency = createEarnTokenCurrency())
+
+        // Act
+        val actual = converter.convert(tether)
 
         // Assert
         assertThat(actual.icon).isEqualTo(
             TangemTokenIcon.UiState.Token(
-                tokenState = TangemTokenIcon.State(url = "https://icons.tangem.com/eth.png"),
+                tokenState = TangemTokenIcon.State(
+                    url = "https://icons.tangem.com/usdt.png",
+                    topIcon = CoreUiR.drawable.img_eth_22,
+                ),
             ),
         )
     }
@@ -81,7 +123,7 @@ internal class EarnTokenWithCurrencyToTokenRowConverterTest {
         val actual = converter.convert(yieldToken)
 
         // Assert
-        assertThat(actual.id).isEqualTo("coin-ethereum_YIELD")
+        assertThat(actual.id).isEqualTo("ethereum_ethereum_YIELD")
         assertThat(actual.cryptoBalance).isEqualTo(TextReference.Res(R.string.common_yield_mode))
     }
 

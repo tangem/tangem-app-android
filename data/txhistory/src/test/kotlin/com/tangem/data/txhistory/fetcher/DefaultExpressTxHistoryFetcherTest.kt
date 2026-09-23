@@ -10,8 +10,8 @@ import com.tangem.grow.datasource.express.models.response.ExpressPagination
 import com.tangem.grow.datasource.express.models.response.ExpressPaginationDelta
 import com.tangem.grow.datasource.onramp.models.response.OnrampHistoryDeltaResponse
 import com.tangem.grow.datasource.onramp.models.response.OnrampHistoryResponse
-import com.tangem.datasource.local.txhistory.db.dao.ExpressSyncStateDao
-import com.tangem.datasource.local.txhistory.db.entity.express.ExpressSyncStateEntity
+import com.tangem.store.datasource.txhistory.db.dao.ExpressSyncStateDao
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressSyncStateEntity
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
 import com.tangem.test.mock.MockAccounts

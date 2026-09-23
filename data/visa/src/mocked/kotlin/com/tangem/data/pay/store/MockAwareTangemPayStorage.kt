@@ -56,11 +56,14 @@ internal class MockAwareTangemPayStorage @Inject constructor(
         return real.getAuthTokens(customerWalletAddress)
     }
 
-    override suspend fun storeOrderId(customerWalletAddress: String, orderId: String) =
-        real.storeOrderId(customerWalletAddress, orderId)
+    override suspend fun storeOrderId(customerWalletAddress: String, orderId: String, isCampaignOrder: Boolean) =
+        real.storeOrderId(customerWalletAddress, orderId, isCampaignOrder)
 
     override suspend fun getOrderId(customerWalletAddress: String): String? =
         real.getOrderId(customerWalletAddress)
+
+    override suspend fun isCampaignOrder(customerWalletAddress: String): Boolean =
+        real.isCampaignOrder(customerWalletAddress)
 
     override suspend fun getAddToWalletDone(customerWalletAddress: String): Boolean =
         real.getAddToWalletDone(customerWalletAddress)
@@ -119,7 +122,7 @@ internal class MockAwareTangemPayStorage @Inject constructor(
     override suspend fun storeTangemPayEligibility(eligibility: Set<String>) =
         real.storeTangemPayEligibility(eligibility)
 
-    override suspend fun getTangemPayEligibility(): Set<String> = real.getTangemPayEligibility()
+    override suspend fun getTangemPayEligibility(): Set<String>? = real.getTangemPayEligibility()
 
     override suspend fun storeIsTangemPayDeactivated(userWalletId: UserWalletId) =
         real.storeIsTangemPayDeactivated(userWalletId)

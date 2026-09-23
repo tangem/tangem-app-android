@@ -1,16 +1,16 @@
 package com.tangem.feature.swap
 
 import arrow.core.Either
+import com.tangem.store.datasource.config.StoreEnvironmentConfig
 import com.tangem.store.datasource.surveysparrow.SurveySparrowApi
 import com.tangem.store.datasource.surveysparrow.models.CreateSurveySparrowResponseBody
 import com.tangem.store.datasource.surveysparrow.models.SurveySparrowAnswerDto
-import com.tangem.datasource.local.config.environment.models.SurveySparrowSwapRatingConfig
 import com.tangem.feature.swap.domain.models.domain.SwapFeedbackParams
 import org.json.JSONObject
 
 internal class SurveySparrowSwapFeedbackRemoteSource(
     private val api: SurveySparrowApi,
-    private val config: SurveySparrowSwapRatingConfig,
+    private val config: StoreEnvironmentConfig.SurveySparrowSwapRating,
 ) : SwapFeedbackRemoteSource {
 
     override suspend fun getRating(txExternalId: String): Either<Throwable, Int?> {

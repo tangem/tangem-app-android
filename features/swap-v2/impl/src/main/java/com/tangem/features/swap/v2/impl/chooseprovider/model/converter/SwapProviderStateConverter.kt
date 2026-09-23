@@ -51,6 +51,7 @@ internal class SwapProviderStateConverter(
         }
 
         val additionalBadge = when {
+            isRestricted -> AdditionalBadge.Unavailable
             isNeedApplyFCARestrictions && provider.isRestrictedByFCA() -> AdditionalBadge.FCAWarningList
             isNeedBestRateBadge && isBestRate -> AdditionalBadge.BestTrade
             else -> AdditionalBadge.Empty
@@ -62,7 +63,7 @@ internal class SwapProviderStateConverter(
             type = provider.type.typeName,
             subtitle = toAmountValue,
             additionalBadge = additionalBadge,
-            diffPercent = diffPercent,
+            diffPercent = if (isRestricted) SwapQuoteUM.Content.DifferencePercent.Empty else diffPercent,
             isSelected = provider == selectedProvider,
         )
     }

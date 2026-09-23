@@ -24,6 +24,7 @@ dependencies {
 
     // region Other libraries
     api(deps.arrow.core)
+    implementation(deps.moshi)
     // endregion
 
     // region Tangem
@@ -36,6 +37,7 @@ dependencies {
     // region Core modules
     api(projects.core.analytics.models)
     implementation(projects.core.configToggles)
+    implementation(projects.core.local)
     // endregion
 
     // region Domain models

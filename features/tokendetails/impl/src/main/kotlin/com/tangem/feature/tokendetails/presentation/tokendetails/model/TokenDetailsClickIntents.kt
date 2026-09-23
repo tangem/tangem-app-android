@@ -20,6 +20,13 @@ interface TokenDetailsClickIntents {
 
     fun onSwapClick(unavailabilityReason: ScenarioUnavailabilityReason)
 
+    /**
+     * Swap tapped from the zero-balance Add-funds row: unlike [onSwapClick], the intent is to fund this token
+     * (TO), not to swap out of it, so a joint account's own [ScenarioUnavailabilityReason.JointAccount] hold-back
+     * doesn't apply here — it still gates every other unavailability reason.
+     */
+    fun onAddFundsSwapClick(unavailabilityReason: ScenarioUnavailabilityReason)
+
     fun onSwapAndSendClick(unavailabilityReason: ScenarioUnavailabilityReason)
 
     fun onBuyClick(unavailabilityReason: ScenarioUnavailabilityReason)
@@ -140,6 +147,8 @@ internal class EmptyTokenDetailsClickIntents : TokenDetailsClickIntents {
     override fun onSellClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
 
     override fun onSwapClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
+
+    override fun onAddFundsSwapClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
 
     override fun onSwapAndSendClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
 

@@ -215,7 +215,7 @@ fun ExpandedPortfolioHeader(
             when (val icon = state.iconState) {
                 is CurrencyIconState.PaymentAccount -> PaymentAccountIcon(size = icon.size)
                 is CurrencyIconState.CryptoPortfolio.Icon -> AccountResIcon(
-                    resId = icon.resId,
+                    imageVector = icon.imageVector(),
                     color = icon.color,
                     size = AccountIconSize.ExtraSmall,
                 )

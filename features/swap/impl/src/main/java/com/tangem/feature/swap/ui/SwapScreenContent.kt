@@ -434,7 +434,7 @@ private fun MainButton(state: SwapStateHolder) {
         state.swapButton.isHoldToConfirm -> {
             HoldToConfirmButton(
                 modifier = Modifier.fillMaxWidth(),
-                text = getButtonTitle(state.swapButton.mode),
+                text = getButtonTitle(state.swapButton),
                 enabled = state.swapButton.isEnabled,
                 onConfirm = state.swapButton.onClick,
                 isLoading = state.swapButton.isInProgress,
@@ -444,13 +444,19 @@ private fun MainButton(state: SwapStateHolder) {
         else -> {
             PrimaryButtonIconEnd(
                 modifier = Modifier.fillMaxWidth(),
-                text = getButtonTitle(state.swapButton.mode),
+                text = getButtonTitle(state.swapButton),
                 iconResId = state.swapButton.walletInteractionIcon,
                 enabled = state.swapButton.isEnabled,
                 onClick = state.swapButton.onClick,
             )
         }
     }
+}
+
+@Composable
+@ReadOnlyComposable
+private fun getButtonTitle(swapButton: SwapButton): String {
+    return swapButton.title?.resolveReference() ?: getButtonTitle(swapButton.mode)
 }
 
 @Composable
