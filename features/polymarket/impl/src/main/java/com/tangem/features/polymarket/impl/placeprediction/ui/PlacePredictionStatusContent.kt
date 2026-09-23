@@ -37,9 +37,7 @@ import com.tangem.features.polymarket.impl.common.formatPolymarketEnteredAmount
 import com.tangem.features.polymarket.impl.common.formatPolymarketShares
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
-import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionMarketBlock
-import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlacePredictionPreviewIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlaceResultPreviewProvider
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import org.joda.time.DateTime
@@ -52,7 +50,7 @@ internal fun PlacePredictionStatusContent(
     result: PlaceResultUM,
     market: MarketHeaderUM,
     side: PredictionOrderSide,
-    intents: PlacePredictionIntents,
+    onToMainClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     TangemStatusScreen(
@@ -73,7 +71,7 @@ internal fun PlacePredictionStatusContent(
                     .padding(all = 16.dp),
                 size = TangemButton.Size.X12,
                 text = resourceReference(R.string.prediction_place_result_to_main),
-                onClick = intents::onToMainClick,
+                onClick = onToMainClick,
             )
         },
     )
@@ -237,7 +235,7 @@ private fun PlacePredictionStatusContentPreview(
                 outcomePriceCents = 85,
                 resolutionDateMillis = 1_774_000_000_000L,
             ),
-            intents = PlacePredictionPreviewIntents,
+            onToMainClick = {},
         )
     }
 }
