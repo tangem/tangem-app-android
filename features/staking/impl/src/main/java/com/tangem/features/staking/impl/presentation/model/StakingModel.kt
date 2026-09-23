@@ -1260,11 +1260,20 @@ internal class StakingModel @Inject constructor(
         )
             .conflate()
             .distinctUntilChanged()
-            .filter { value.currentStep == StakingStep.InitialInfo || isTopHeatupCase() }
             .onEach { (maybeAccount, maybeStatus) ->
-                isAccountsModeEnabled = isAccountsModeEnabledUseCase.invokeSync()
-                account = maybeAccount
-                onDataLoaded(maybeStatus)
+                when {
+                    value.currentStep == StakingStep.InitialInfo || isTopHeatupCase() -> {
+                        isAccountsModeEnabled = isAccountsModeEnabledUseCase.invokeSync()
+                        account = maybeAccount
+                        onDataLoaded(maybeStatus)
+                    }
+                    // The balance refresh started on InitialInfo may complete after the user has already
+                    // reached Confirmation; its ACTUAL sources are what unlock the primary button
+                    isAssentState() -> {
+                        cryptoCurrencyStatus = maybeStatus
+                        updateNotifications()
+                    }
+                }
             }
             .flowOn(dispatchers.main)
             .launchIn(modelScope)

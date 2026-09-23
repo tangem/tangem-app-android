@@ -17,11 +17,13 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.SlippagePickerUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
-import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionIntents
+import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionAmountIntents
+import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionStatusIntents
+import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSummaryIntents
+import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSlippageIntents
 import com.tangem.features.polymarket.impl.placeprediction.model.recomputeGate
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
@@ -86,7 +88,11 @@ internal class PlaceResultPreviewProvider : PreviewParameterProvider<PlaceResult
         )
 }
 
-internal object PlacePredictionPreviewIntents : PlacePredictionIntents {
+internal object PlacePredictionPreviewIntents :
+    PlacePredictionAmountIntents,
+    PlacePredictionSummaryIntents,
+    PlacePredictionStatusIntents,
+    PlacePredictionSlippageIntents {
     override fun onAmountChange(value: String) = Unit
     override fun onSlippageClick() = Unit
     override fun onSlippageValueChange(value: String) = Unit
@@ -102,6 +108,7 @@ internal object PlacePredictionPreviewIntents : PlacePredictionIntents {
     override fun onBackClick() = Unit
     override fun onCloseClick() = Unit
     override fun onToMainClick() = Unit
+    override fun onViewPositionClick() = Unit
 }
 
 private fun previewState(
@@ -128,7 +135,6 @@ private fun previewState(
     tradingPermission = tradingPermission,
     minAmount = minAmount,
     notifications = persistentListOf(),
-    slippagePicker = SlippagePickerUM.empty(),
     submit = SubmitUM.Idle,
     isPrimaryButtonEnabled = false,
 ).recomputeGate()

@@ -22,6 +22,7 @@ import com.tangem.domain.account.status.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
+import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountActivationError
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
@@ -67,6 +68,7 @@ internal class JointAccountMembersModel @Inject constructor(
     private val pollingCoordinator: JointAccountPollingCoordinator,
     private val singleAccountSupplier: SingleAccountSupplier,
     private val getJointAccountInvitesUseCase: GetJointAccountInvitesUseCase,
+    private val ownerAddressResolver: JointOwnerAddressResolver,
     private val activateJointAccountUseCase: ActivateJointAccountUseCase,
     private val archiveCryptoPortfolioUseCase: ArchiveCryptoPortfolioUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
@@ -134,22 +136,27 @@ internal class JointAccountMembersModel @Inject constructor(
 
     private fun observeAccount() {
         resolvedAccountFlow
-            .map { account ->
-                account?.let { found ->
-                    found to getJointAccountInvitesUseCase(
-                        userWalletId = params.userWalletId,
-                        cryptoAccountId = found.cryptoAccountId,
-                    )
+            .flatMapLatest { account ->
+                if (account == null) return@flatMapLatest flowOf(null)
+
+                val invites = getJointAccountInvitesUseCase(
+                    userWalletId = params.userWalletId,
+                    cryptoAccountId = account.cryptoAccountId,
+                )
+
+                ownAddressFlow(cryptoAccountId = account.cryptoAccountId).map { ownAddress ->
+                    ResolvedAccount(account = account, invites = invites, ownAddress = ownAddress)
                 }
             }
-            .onEach { accountWithInvites ->
-                dismissStaleActivationConfirmation(resolvedAccountId = accountWithInvites?.first?.cryptoAccountId)
+            .onEach { resolved ->
+                dismissStaleActivationConfirmation(resolvedAccountId = resolved?.account?.cryptoAccountId)
 
-                val transformer = accountWithInvites
-                    ?.let { (account, invites) ->
+                val transformer = resolved
+                    ?.let { (account, invites, ownAddress) ->
                         UpdateMembersAccountTransformer(
                             account = account,
                             invites = invites,
+                            ownAddress = ownAddress,
                             callbacks = converterCallbacks,
                         )
                     }
@@ -158,6 +165,29 @@ internal class JointAccountMembersModel @Inject constructor(
                 stateController.update(transformer)
             }
             .launchIn(modelScope)
+    }
+
+    /**
+     * The wallet's own owner address in the account, derived from the key index its `/accounts` record carries.
+     * Starts with null so the screen renders before that record arrives (the create and join flows refresh the two
+     * lists concurrently) and settles once it does; the key is derived once per index.
+     */
+    private fun ownAddressFlow(cryptoAccountId: String): Flow<String?> {
+        val accountId = AccountId
+            .forJointAccount(userWalletId = params.userWalletId, value = cryptoAccountId)
+            .getOrNull()
+            ?: return flowOf(null)
+
+        return singleAccountSupplier.filterJointAccount(accountId = accountId)
+            .map { account -> account.ownerKeyIndex }
+            .distinctUntilChanged()
+            .map { ownerKeyIndex ->
+                ownerAddressResolver
+                    .resolve(userWalletId = params.userWalletId, ownerKeyIndex = ownerKeyIndex)
+                    .onLeft { TangemLogger.e("Unable to resolve the own owner address of the joint account", it) }
+                    .getOrNull()
+            }
+            .onStart { emit(null) }
     }
 
     /**
@@ -358,6 +388,8 @@ internal class JointAccountMembersModel @Inject constructor(
     private fun onCloseClick() {
         router.pop()
     }
+
+    private data class ResolvedAccount(val account: JointAccount, val invites: List<String>, val ownAddress: String?)
 
     private companion object {
         const val ACCOUNT_LOOKUP_TIMEOUT_MILLIS = 3_000L
