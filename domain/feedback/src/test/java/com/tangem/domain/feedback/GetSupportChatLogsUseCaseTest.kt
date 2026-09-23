@@ -59,6 +59,20 @@ internal class GetSupportChatLogsUseCaseTest {
         assertThat(infoLogs.captured).contains("Pixel 9")
     }
 
+    @Test
+    fun `GIVEN info collection fails WHEN invoke THEN archives logs without info`() = runTest {
+        // Arrange
+        val archive = File("log.zip")
+        coEvery { feedbackRepository.getBlockchainInfoList(any()) } throws IllegalStateException("No wallet managers")
+        coEvery { feedbackRepository.getZipLogFile(infoLogs = null) } returns archive
+
+        // Act
+        val actual = useCase(WalletMetaInfo(userWalletId = walletId))
+
+        // Assert
+        assertThat(actual).isEqualTo(archive)
+    }
+
     private companion object {
         val walletId = UserWalletId("011")
     }
