@@ -666,7 +666,7 @@ internal class AddAddressModelTest {
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 1) { analyticsSender.sendAddressInvalid(walletId = UserWalletId("aa"), contactId = "c-1") }
+            verify(exactly = 1) { analyticsSender.sendAddressInvalid(contactId = "c-1") }
         }
 
         @Test
@@ -682,7 +682,7 @@ internal class AddAddressModelTest {
                 advanceUntilIdle()
 
                 // Assert
-                verify(exactly = 1) { analyticsSender.sendAddressInvalid(walletId = UserWalletId("aa"), contactId = "") }
+                verify(exactly = 1) { analyticsSender.sendAddressInvalid(contactId = "") }
             }
 
         @Test
@@ -697,7 +697,7 @@ internal class AddAddressModelTest {
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 0) { analyticsSender.sendAddressInvalid(any(), any()) }
+            verify(exactly = 0) { analyticsSender.sendAddressInvalid(any()) }
         }
 
         @Test
@@ -711,7 +711,7 @@ internal class AddAddressModelTest {
             advanceUntilIdle()
 
             // Assert — a blank field is not a validation failure.
-            verify(exactly = 0) { analyticsSender.sendAddressInvalid(any(), any()) }
+            verify(exactly = 0) { analyticsSender.sendAddressInvalid(any()) }
         }
     }
 
