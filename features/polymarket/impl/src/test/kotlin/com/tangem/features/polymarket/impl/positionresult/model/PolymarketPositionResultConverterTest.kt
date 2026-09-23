@@ -116,7 +116,10 @@ internal class PolymarketPositionResultConverterTest {
             titleAmount = "$120.00",
             showProfit = true,
             footerRes = R.string.prediction_position_result_balance_note,
-            action = PolymarketPositionResultUM.Action.Claim(isInProgress = false),
+            action = PolymarketPositionResultUM.Action.Claim(
+                isInProgress = false,
+                label = resourceReference(R.string.prediction_position_result_claim_action),
+            ),
         ),
         ResultCase(
             result = PolymarketPositionResult.WON,
@@ -137,6 +140,20 @@ internal class PolymarketPositionResultConverterTest {
             titleRes = R.string.prediction_position_result_loss_title,
             titleAmount = "$100.00",
             showProfit = false,
+            footerRes = R.string.prediction_position_result_close_note,
+            action = PolymarketPositionResultUM.Action.Claim(
+                isInProgress = false,
+                label = resourceReference(R.string.prediction_position_result_close_action),
+            ),
+        ),
+        ResultCase(
+            result = PolymarketPositionResult.LOST,
+            currentValue = "0",
+            isRedeemable = false,
+            uiResult = PolymarketPositionResultUM.Result.Lost,
+            titleRes = R.string.prediction_position_result_loss_title,
+            titleAmount = "$100.00",
+            showProfit = false,
             footerRes = null,
             action = PolymarketPositionResultUM.Action.Dismiss,
         ),
@@ -149,7 +166,10 @@ internal class PolymarketPositionResultConverterTest {
             titleAmount = "$120.00",
             showProfit = true,
             footerRes = R.string.prediction_position_result_balance_note,
-            action = PolymarketPositionResultUM.Action.Claim(isInProgress = false),
+            action = PolymarketPositionResultUM.Action.Claim(
+                isInProgress = false,
+                label = resourceReference(R.string.prediction_position_result_claim_action),
+            ),
         ),
         ResultCase(
             result = PolymarketPositionResult.SPLIT,
@@ -171,7 +191,10 @@ internal class PolymarketPositionResultConverterTest {
             titleAmount = "$80.00",
             showProfit = false,
             footerRes = R.string.prediction_position_result_balance_note,
-            action = PolymarketPositionResultUM.Action.Claim(isInProgress = false),
+            action = PolymarketPositionResultUM.Action.Claim(
+                isInProgress = false,
+                label = resourceReference(R.string.prediction_position_result_claim_action),
+            ),
         ),
     )
 

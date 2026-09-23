@@ -82,7 +82,7 @@ internal class IntroductionMobileWalletCreatorCancellationTest {
         coEvery { tangemHotSdk.generateWallet(any(), any()) } coAnswers { awaitCancellation() }
 
         // Act
-        val job = launch { creator.createAndOpen(source = SOURCE, onFailed = onFailed) }
+        val job = launch { creator.createAndOpen(source = SOURCE, beforeOpen = {}, onFailed = onFailed) }
         runCurrent()
         job.cancelAndJoin()
 
@@ -105,7 +105,7 @@ internal class IntroductionMobileWalletCreatorCancellationTest {
         coEvery { tangemHotSdk.generateWallet(any(), any()) } throws IllegalStateException("boom")
 
         // Act
-        creator.createAndOpen(source = SOURCE, onFailed = onFailed)
+        creator.createAndOpen(source = SOURCE, beforeOpen = {}, onFailed = onFailed)
 
         // Assert
         verify(exactly = 1) { messageSender.send(any<DialogMessage>()) }
