@@ -650,6 +650,28 @@ internal class DexSwapFeeCalculatorTest {
         }
     }
 
+    @Test
+    fun `GIVEN fee estimation fails WHEN Solana DEX fee calculated THEN returns Left instead of throwing`() = runTest {
+        // Arrange
+        mockkStatic(Base64::class)
+        every { Base64.decode(any<String>(), any()) } returns ByteArray(64)
+        mockkObject(SolanaTransactionHelper)
+        every { SolanaTransactionHelper.removeSignaturesPlaceholders(any()) } returns ByteArray(64)
+
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = solanaNetwork, isCoin = true)
+        val transaction = buildDex(txData = "U29sYW5h")
+        val feeError = GetFeeError.DataError(IllegalStateException("rpc failed"))
+        coEvery {
+            getFeeUseCase.invoke(userWallet = any(), network = any(), transactionData = any())
+        } returns feeError.left()
+
+        // Act
+        val result = sut.calculate(fromStatus, transaction)
+
+        // Assert
+        assertThat(result).isEqualTo(feeError.left())
+    }
+
     // -------------------------------------------------------------------------
     // Bitcoin PSBT DEX path
     // -------------------------------------------------------------------------

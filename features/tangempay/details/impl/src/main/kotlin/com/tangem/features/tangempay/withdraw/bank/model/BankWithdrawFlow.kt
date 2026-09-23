@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.withdraw.bank.model
 
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
+import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTarget
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 
 /** Step order of the bank withdraw wizard per entry point; the header counts only the steps in [NUMBERED_STEPS]. */
@@ -69,11 +70,21 @@ internal object BankWithdrawFlow {
     fun stepCounter(draft: BankWithdrawDraft, step: TangemPayBankWithdrawInnerRoute): StepCounter? {
         if (!draft.entry.startsNewRecipient() || draft.recipient != null) return null
         val numbered = steps(draft.entry).filter { it in NUMBERED_STEPS }
-        val index = numbered.indexOf(step)
+        val index = numbered.indexOf(step.toNumberedStep())
         return if (index == -1) null else StepCounter(current = index + 1, total = numbered.size)
     }
 
     data class StepCounter(val current: Int, val total: Int)
+
+    /** Correcting an answer reopens a wizard step, so it is counted as the step it edits. */
+    private fun TangemPayBankWithdrawInnerRoute.toNumberedStep(): TangemPayBankWithdrawInnerRoute = when (this) {
+        is TangemPayBankWithdrawInnerRoute.Edit -> when (target) {
+            BankWithdrawEditTarget.Amount -> TangemPayBankWithdrawInnerRoute.Amount
+            BankWithdrawEditTarget.RecipientDetails -> TangemPayBankWithdrawInnerRoute.RecipientDetails
+            BankWithdrawEditTarget.BankDetails -> TangemPayBankWithdrawInnerRoute.BankDetails
+        }
+        else -> this
+    }
 
     private fun BankWithdrawEntry.startsNewRecipient(): Boolean =
         this == BankWithdrawEntry.NewPersonal || this == BankWithdrawEntry.NewBusiness
