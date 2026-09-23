@@ -124,7 +124,7 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      */
     data class CosignActionUM(
         val buttonText: TextReference,
-        val caption: TextReference,
+        val caption: TextReference?,
         val isEnabled: Boolean,
         val isLoading: Boolean = false,
         val iconEnd: TangemIconUM? = null,
