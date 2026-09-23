@@ -21,6 +21,8 @@ import com.tangem.common.extensions.assertVisibility
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.restartApp
+import com.tangem.common.utils.assertClipboardTextEquals
+import com.tangem.common.utils.clearClipboard
 import com.tangem.common.utils.decodeQrCode
 import com.tangem.common.utils.getWireMockRequestCount
 import com.tangem.common.utils.setWireMockScenarioState
@@ -973,5 +975,157 @@ fun BaseTestCase.assertTangemPayQrCodeEncodes(expectedAddress: String) {
         onTangemPayReceiveSheet {
             Assert.assertEquals(expectedAddress, decodeQrCode(captureQrCodeBitmap()))
         }
+    }
+}
+
+/** Opens Tangem Pay and taps the card tile at [index] to reach the card management page of that card. */
+fun BaseTestCase.openTangemPayCardPageAt(index: Int, expectedLastDigits: String) {
+    openTangemPay()
+    step("Click on the card tile at position $index") {
+        awaitSuccess { onTangemPayMainScreen { cardButtonAt(index).assertIsDisplayed() } }
+        onTangemPayMainScreen { cardButtonAt(index).performClick() }
+    }
+    step("Assert the card page of the card ending with '$expectedLastDigits' is displayed") {
+        awaitSuccess {
+            onTangemPayCardPageScreen { cardNumberShortWith(expectedLastDigits).assertIsDisplayed() }
+        }
+    }
+}
+
+/** From the card page, opens the more-actions menu and waits for its 'Close card' item. */
+fun BaseTestCase.openTangemPayCardMenu() {
+    step("Click on 'More' button") {
+        onTangemPayCardPageScreen { moreButton.clickWithAssertion() }
+    }
+    step("Assert 'Close card' menu item is displayed") {
+        awaitSuccess { onTangemPayCardPageScreen { closeCardMenuItem.assertIsDisplayed() } }
+    }
+}
+
+/** From the card page, asserts 'Close card' is active and opens the 'Close your card?' bottom sheet. */
+fun BaseTestCase.openTangemPayCloseCardSheet() {
+    openTangemPayCardMenu()
+    // The menu item has no disabled semantics — an active one is told apart by carrying a click action.
+    step("Assert 'Close card' menu item is clickable") {
+        onTangemPayCardPageScreen { closeCardMenuItem.assertHasClickAction() }
+    }
+    step("Click on 'Close card' menu item") {
+        onTangemPayCardPageScreen { closeCardMenuItem.performClick() }
+    }
+    step("Assert 'Close your card?' bottom sheet is displayed") {
+        awaitSuccess { onTangemPayCloseCardSheet { title.assertIsDisplayed() } }
+    }
+}
+
+/** On the open 'Close your card?' sheet, asserts every element the manual case lists. */
+fun BaseTestCase.assertTangemPayCloseCardSheetContent() {
+    val expectedTitle = getResourceString(CoreResR.string.tangem_pay_close_card_popup_title)
+    val expectedDescription = getResourceString(CoreResR.string.tangem_pay_close_card_popup_description)
+
+    step("Assert the warning icon is displayed") {
+        onTangemPayCloseCardSheet { icon.assertIsDisplayed() }
+    }
+    step("Assert the title is '$expectedTitle'") {
+        onTangemPayCloseCardSheet { title.assertTextEquals(expectedTitle) }
+    }
+    step("Assert the description is '$expectedDescription'") {
+        onTangemPayCloseCardSheet { description.assertTextEquals(expectedDescription) }
+    }
+    step("Assert 'Cancel', 'Close card' and the dismiss buttons are displayed") {
+        onTangemPayCloseCardSheet {
+            cancelButton.assertIsDisplayed()
+            closeCardButton.assertIsDisplayed()
+            dismissButton.assertIsDisplayed()
+        }
+    }
+}
+
+/** On the open 'Close your card?' sheet, confirms the closure and waits for the card page closing banner. */
+fun BaseTestCase.confirmTangemPayCardClose() {
+    step("Click on 'Close card' button") {
+        onTangemPayCloseCardSheet { closeCardButton.clickWithAssertion() }
+    }
+    step("Assert the card page shows the closing progress state") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onTangemPayCardPageScreen { closingInProgressBlock.assertIsDisplayed() }
+        }
+    }
+}
+
+/**
+ * Waits for the closed card to disappear, then returns to the payment account and asserts the closed card
+ * is gone from the card row while [remainingLastDigits] is still there.
+ */
+fun BaseTestCase.assertTangemPayCardClosed(closedLastDigits: String, remainingLastDigits: String) {
+    step("Assert the card page fell back to the card ending with '$remainingLastDigits'") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG) {
+            onTangemPayCardPageScreen {
+                cardNumberShortWith(closedLastDigits).assertVisibility(shouldBeDisplayed = false)
+                cardNumberShortWith(remainingLastDigits).assertIsDisplayed()
+            }
+        }
+    }
+    step("Return to the payment account screen") {
+        device.uiDevice.pressBack()
+        awaitSuccess { onTangemPayMainScreen { balance.assertIsDisplayed() } }
+    }
+    step("Assert the card ending with '$closedLastDigits' is not displayed on the payment account") {
+        onTangemPayMainScreen {
+            cardTileWithDigits(remainingLastDigits).assertIsDisplayed()
+            cardTileWithDigits(closedLastDigits).assertVisibility(shouldBeDisplayed = false)
+        }
+    }
+}
+
+/** From the open payment account screen, walks Add funds -> bank transfer -> Show details to the requisites. */
+fun BaseTestCase.openTangemPayVirtualAccountRequisites() {
+    openTangemPayBankTransferSheet()
+    step("Click on 'Show details' button") {
+        onTangemPayVirtualAccountDepositSheet { showDetailsButton.clickWithAssertion() }
+    }
+    step("Assert virtual account banking details are displayed") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onVirtualAccountRequisitesBottomSheet {
+                requisiteValue(VirtualAccountRequisitesBottomSheetPageObject.ACCOUNT_NUMBER).assertIsDisplayed()
+            }
+        }
+    }
+}
+
+/** On the open requisites sheet, asserts the [field] row shows [expectedValue]. */
+fun BaseTestCase.assertVirtualAccountRequisite(field: String, expectedValue: String) {
+    step("Assert '$field' equals '$expectedValue'") {
+        onVirtualAccountRequisitesBottomSheet {
+            requisiteValue(field).performScrollTo()
+            requisiteValue(field).assertTextEquals(expectedValue)
+        }
+    }
+}
+
+/** On the open requisites sheet, copies the [field] row and asserts [expectedValue] reached the clipboard. */
+fun BaseTestCase.copyVirtualAccountRequisite(field: String, expectedValue: String) {
+    step("Clear the clipboard") { clearClipboard() }
+    step("Click on the 'Copy' button of '$field'") {
+        onVirtualAccountRequisitesBottomSheet {
+            copyButton(field).performScrollTo()
+            copyButton(field).performClick()
+        }
+    }
+    step("Assert '$expectedValue' is copied to the clipboard") {
+        assertClipboardTextEquals(expectedValue)
+    }
+}
+
+/** From the open payment account screen, goes back to Main and opens the payment account again. */
+fun BaseTestCase.reopenTangemPayFromMain() {
+    step("Return to the Main screen") {
+        device.uiDevice.pressBack()
+        awaitSuccess { onTangemPayMainScreen { mainScreenTile.assertIsDisplayed() } }
+    }
+    step("Click on Tangem Pay tile") {
+        onTangemPayMainScreen { mainScreenTile.performClick() }
+    }
+    step("Assert payment account balance is displayed") {
+        awaitSuccess { onTangemPayMainScreen { balance.assertIsDisplayed() } }
     }
 }
