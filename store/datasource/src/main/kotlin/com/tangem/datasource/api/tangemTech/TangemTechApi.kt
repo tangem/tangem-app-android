@@ -5,6 +5,8 @@ import com.tangem.datasource.api.marketing.models.MarketingCampaignsResponse
 import com.tangem.datasource.api.promotion.models.CreatePromotionRegistrationBody
 import com.tangem.datasource.api.promotion.models.PromotionRegistrationResponse
 import com.tangem.datasource.api.promotion.models.PromotionsResponse
+import com.tangem.datasource.api.promotion.models.PromotionWalletType
+import com.tangem.datasource.api.promotion.models.PromotionsV3Response
 import com.tangem.datasource.api.promotion.models.YieldBoostStatusResponse
 import com.tangem.datasource.api.stories.models.StoryContentResponse
 import com.tangem.datasource.api.tangemTech.models.*
@@ -16,6 +18,7 @@ import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsV1R
 import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerRequest
 import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerResponse
 import com.tangem.datasource.api.tangemTech.models.promobanners.PromoBannerDisplaysResponse
+import com.tangem.lib.auth.api.RequiresSessionAuth
 import retrofit2.http.*
 
 /**
@@ -128,6 +131,15 @@ interface TangemTechApi {
         @Query("walletId") walletId: String,
         @Header("Cache-Control") cacheControl: String = "max-age=600",
     ): ApiResponse<PromotionsResponse>
+
+    @RequiresSessionAuth
+    @GET("/v3/promotion")
+    suspend fun getPromotionsV3(
+        @Query("walletId") walletId: String,
+        @Query("walletType") walletType: PromotionWalletType,
+        @Query("batchId") batchId: String?,
+        @Query("language") languageISOCode: String,
+    ): ApiResponse<PromotionsV3Response>
 
     @Suppress("FunctionSignature", "TrailingCommaOnDeclarationSite")
     @GET("/v2/promotion/yield-apr-boost/status")
