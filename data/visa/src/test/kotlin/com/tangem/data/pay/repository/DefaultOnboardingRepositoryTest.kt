@@ -7,11 +7,14 @@ import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.AccountFee
+import com.tangem.domain.pay.model.AccountFeeGroupType
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.request.OrderRequest
+import com.tangem.spend.datasource.pay.models.response.FeesResponse
 import com.tangem.spend.datasource.pay.models.response.OrderResponse
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -23,6 +26,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 
 internal class DefaultOnboardingRepositoryTest {
 
@@ -201,6 +205,139 @@ internal class DefaultOnboardingRepositoryTest {
                 assertThat(actual).isEqualTo(NEW_ORDER_ID.right())
                 coVerify(exactly = 1) { tangemPayApi.createOrder(any(), any()) }
             }
+    }
+
+    @Nested
+    inner class GetFees {
+
+        @Test
+        fun `GIVEN both groups WHEN getFees THEN converted and requested once for both`() = runTest {
+            // Arrange
+            val expectedGroups = listOf("ONRAMP", "OFFRAMP")
+            val response = FeesResponse(
+                result = listOf(
+                    fee(type = "ACH_ONRAMP", group = "ONRAMP", paymentMethodId = "ACH", amount = BigDecimal("1.00")),
+                    fee(type = "ACH_OFFRAMP", group = "OFFRAMP", paymentMethodId = "ACH", amount = BigDecimal("1.50")),
+                ),
+            )
+            coEvery { tangemPayApi.getFees(authHeader = AUTH_HEADER, groups = expectedGroups) } returns
+                ApiResponse.Success(response)
+
+            // Act
+            val actual = repository.getFees(
+                userWalletId = USER_WALLET_ID,
+                types = setOf(AccountFeeGroupType.ONRAMP, AccountFeeGroupType.OFFRAMP),
+            )
+
+            // Assert
+            val expected = listOf(
+                AccountFee(
+                    type = "ACH_ONRAMP",
+                    name = "ACH",
+                    paymentMethodId = "ACH",
+                    group = AccountFeeGroupType.ONRAMP,
+                    amount = BigDecimal("1.00"),
+                    currency = "USD",
+                ),
+                AccountFee(
+                    type = "ACH_OFFRAMP",
+                    name = "ACH",
+                    paymentMethodId = "ACH",
+                    group = AccountFeeGroupType.OFFRAMP,
+                    amount = BigDecimal("1.50"),
+                    currency = "USD",
+                ),
+            )
+            assertThat(actual).isEqualTo(expected.right())
+            coVerify(exactly = 1) { tangemPayApi.getFees(authHeader = AUTH_HEADER, groups = expectedGroups) }
+        }
+
+        @Test
+        fun `GIVEN incomplete entries WHEN getFees THEN they are dropped`() = runTest {
+            // Arrange
+            val response = FeesResponse(
+                result = listOf(
+                    fee(type = "ACH_ONRAMP", group = "ONRAMP", paymentMethodId = "ACH", amount = null),
+                    fee(type = "ACH_ONRAMP", group = "ONRAMP", paymentMethodId = "ACH", currency = " "),
+                ),
+            )
+            coEvery { tangemPayApi.getFees(authHeader = AUTH_HEADER, groups = any()) } returns
+                ApiResponse.Success(response)
+
+            // Act
+            val actual = repository.getFees(USER_WALLET_ID, setOf(AccountFeeGroupType.ONRAMP))
+
+            // Assert
+            assertThat(actual).isEqualTo(emptyList<AccountFee>().right())
+        }
+
+        @Test
+        fun `GIVEN lowercase group and no payment method WHEN getFees THEN group recognised and entry kept`() =
+            runTest {
+                // Arrange
+                val response = FeesResponse(
+                    result = listOf(fee(type = "ACH_ONRAMP", group = "onramp", paymentMethodId = null)),
+                )
+                coEvery { tangemPayApi.getFees(authHeader = AUTH_HEADER, groups = any()) } returns
+                    ApiResponse.Success(response)
+
+                // Act
+                val actual = repository.getFees(USER_WALLET_ID, setOf(AccountFeeGroupType.ONRAMP))
+
+                // Assert
+                val expected = AccountFee(
+                    type = "ACH_ONRAMP",
+                    name = "ACH",
+                    paymentMethodId = null,
+                    group = AccountFeeGroupType.ONRAMP,
+                    amount = BigDecimal.ONE,
+                    currency = "USD",
+                )
+                assertThat(actual).isEqualTo(listOf(expected).right())
+            }
+
+        @Test
+        fun `GIVEN response without result WHEN getFees THEN error`() = runTest {
+            // Arrange
+            coEvery { tangemPayApi.getFees(authHeader = AUTH_HEADER, groups = any()) } returns
+                ApiResponse.Success(FeesResponse(result = null))
+
+            // Act
+            val actual = repository.getFees(USER_WALLET_ID, setOf(AccountFeeGroupType.ONRAMP))
+
+            // Assert
+            assertThat(actual).isEqualTo(VisaApiError.UnknownWithoutCode.left())
+        }
+
+        @Test
+        fun `GIVEN failing request WHEN getFees THEN api error`() = runTest {
+            // Arrange
+            coEvery { tangemPayApi.getFees(authHeader = AUTH_HEADER, groups = any()) } returns
+                ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<FeesResponse>
+
+            // Act
+            val actual = repository.getFees(USER_WALLET_ID, setOf(AccountFeeGroupType.ONRAMP))
+
+            // Assert
+            assertThat(actual).isEqualTo(VisaApiError.Unspecified.left())
+        }
+
+        private fun fee(
+            type: String,
+            group: String?,
+            paymentMethodId: String?,
+            amount: BigDecimal? = BigDecimal.ONE,
+            currency: String? = "USD",
+        ) = FeesResponse.Fee(
+            type = type,
+            group = group,
+            name = "ACH",
+            paymentMethodId = paymentMethodId,
+            calculationType = "FIXED",
+            amount = amount,
+            currency = currency,
+            description = "fee",
+        )
     }
 
     private fun orderResponse(
