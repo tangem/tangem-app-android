@@ -27,6 +27,7 @@ import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.feature.walletsettings.component.AddAccountTypeComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.feed.analytics.FeedSectionAnalyticsEvent
+import com.tangem.features.feed.components.v2.blocks.analytics.FeedBlocksAnalytics
 import com.tangem.features.feed.components.v2.model.FeedHomeModel
 import com.tangem.features.feed.nav.*
 import com.tangem.features.feed.ui.v2.FeedV2Content
@@ -47,6 +48,7 @@ internal class FeedHomeComponent(
     portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
     addAccountTypeComponentFactory: AddAccountTypeComponent.Factory,
     analyticsEventHandler: AnalyticsEventHandler,
+    blocksAnalytics: FeedBlocksAnalytics,
     requestedTab: Flow<FeedTabId>,
 ) : FeedScreenComponent, AppComponentContext by context {
 
@@ -59,6 +61,7 @@ internal class FeedHomeComponent(
         params = FeedTopBlocksComponent.Params(callbacks = model.topBlocksCallbacks),
         portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
         addAccountTypeComponentFactory = addAccountTypeComponentFactory,
+        blocksAnalytics = blocksAnalytics,
     )
 
     private val pages: Value<ChildPages<FeedTabId, FeedTabComponent>> = childPages(
