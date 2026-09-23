@@ -5,17 +5,14 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.balance.BalanceContribution
-import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.quote.QuoteStatus
-import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
-import com.tangem.lib.crypto.BlockchainUtils
 import java.math.BigDecimal
 
 /**
- * Factory to create [CryptoCurrencyStatus] from [NetworkStatus], [QuoteStatus] and [StakingBalance].
+ * Factory to create [CryptoCurrencyStatus] from [NetworkStatus], [QuoteStatus] and balance contributions.
  *
 [REDACTED_AUTHOR]
  */
@@ -29,30 +26,27 @@ object CryptoCurrencyStatusFactory {
         get() = (this?.value as? QuoteStatus.Data)?.priceChange
 
     /**
-     * Creates [CryptoCurrencyStatus] from [NetworkStatus], [QuoteStatus] and [StakingBalance].
+     * Creates [CryptoCurrencyStatus] from [NetworkStatus], [QuoteStatus] and balance contributions.
      *
 
      * @param maybeNetworkStatus An optional network status containing blockchain information.
      * @param maybeQuoteStatus An optional quote status containing price information.
-     * @param maybeStakingBalance An optional staking balance containing staking information.
-     * @param contributionsInput Extra balances collected generically at the seam, and whether that path is on at
-     * all. See [BalanceContributionsInput].
+     * @param contributions Extra balances collected generically at the seam; the only source of staking and
+     * yield-supply balances.
      */
     fun create(
         currency: CryptoCurrency,
         maybeNetworkStatus: Option<NetworkStatus>,
         maybeQuoteStatus: Option<QuoteStatus>,
-        maybeStakingBalance: Option<StakingBalance>,
-        contributionsInput: BalanceContributionsInput,
+        contributions: List<BalanceContribution>,
     ): CryptoCurrencyStatus {
         return CryptoCurrencyStatus(
             currency = currency,
             value = createStatus(
                 currency = currency,
                 maybeNetworkStatus = maybeNetworkStatus,
-                maybeStakingBalance = maybeStakingBalance,
                 maybeQuoteStatus = maybeQuoteStatus,
-                contributionsInput = contributionsInput,
+                contributions = contributions,
             ),
         )
     }
@@ -61,8 +55,7 @@ object CryptoCurrencyStatusFactory {
         currency: CryptoCurrency,
         maybeNetworkStatus: Option<NetworkStatus>,
         maybeQuoteStatus: Option<QuoteStatus>,
-        maybeStakingBalance: Option<StakingBalance>,
-        contributionsInput: BalanceContributionsInput,
+        contributions: List<BalanceContribution>,
     ): CryptoCurrencyStatus.Value {
         val quoteStatus = maybeQuoteStatus.getOrNull()
 
@@ -74,8 +67,7 @@ object CryptoCurrencyStatusFactory {
                 currency = currency,
                 status = status,
                 quoteStatus = quoteStatus,
-                maybeStakingBalance = maybeStakingBalance,
-                contributionsInput = contributionsInput,
+                contributions = contributions,
             )
             null -> CryptoCurrencyStatus.Loading
         }
@@ -120,8 +112,7 @@ object CryptoCurrencyStatusFactory {
         currency: CryptoCurrency,
         status: NetworkStatus.Verified,
         quoteStatus: QuoteStatus?,
-        maybeStakingBalance: Option<StakingBalance>,
-        contributionsInput: BalanceContributionsInput,
+        contributions: List<BalanceContribution>,
     ): CryptoCurrencyStatus.Value {
         val amount = when (val amount = status.amounts[currency.id]) {
             is NetworkStatus.Amount.Loaded -> amount.value
@@ -133,23 +124,12 @@ object CryptoCurrencyStatusFactory {
             }
         }
 
-        val stakingBalance = maybeStakingBalance.getOrNull(
-            id = currency.id,
-            address = status.address,
-            isStakedIncludedInNetworkBalance = !BlockchainUtils.isIncludeStakingTotalBalance(
-                networkId = currency.network.rawId,
-            ),
-        ).takeUnless { contributionsInput.isEnabled }
-
-        val contributions = contributionsInput.contributions.takeIf { contributionsInput.isEnabled }.orEmpty()
-
         if (currency is CryptoCurrency.Token && currency.isCustom) {
             return createCustom(
                 id = currency.id,
                 status = status,
                 amount = amount,
                 quoteStatus = quoteStatus,
-                stakingBalance = stakingBalance,
                 contributions = contributions,
             )
         }
@@ -162,7 +142,6 @@ object CryptoCurrencyStatusFactory {
                     status = status,
                     amount = amount,
                     quoteStatus = quoteStatus,
-                    stakingBalance = stakingBalance,
                     contributions = contributions,
                 )
             }
@@ -172,7 +151,6 @@ object CryptoCurrencyStatusFactory {
                     status = status,
                     amount = amount,
                     quoteStatus = quoteValue,
-                    stakingBalance = stakingBalance,
                     contributions = contributions,
                 )
             }
@@ -192,7 +170,6 @@ object CryptoCurrencyStatusFactory {
         status: NetworkStatus.Verified,
         amount: BigDecimal,
         quoteStatus: QuoteStatus?,
-        stakingBalance: StakingBalance.Data?,
         contributions: List<BalanceContribution>,
     ): CryptoCurrencyStatus.Custom {
         return CryptoCurrencyStatus.Custom(
@@ -203,12 +180,11 @@ object CryptoCurrencyStatusFactory {
             hasCurrentNetworkTransactions = status.hasCurrentNetworkTransactions(),
             pendingTransactions = status.getCurrentTransactions(id),
             networkAddress = status.address,
-            stakingBalance = stakingBalance,
+            stakingBalance = null,
             yieldSupplyStatus = status.getYieldSupplyStatus(id),
             contributions = contributions,
             sources = CryptoCurrencyStatus.Sources(
                 networkSource = status.source,
-                stakingBalanceSource = stakingBalance?.source ?: StatusSource.ACTUAL,
                 contributionSources = contributions.map(BalanceContribution::source),
                 quoteSource = quoteStatus?.value?.source ?: StatusSource.ACTUAL,
             ),
@@ -220,7 +196,6 @@ object CryptoCurrencyStatusFactory {
         status: NetworkStatus.Verified,
         amount: BigDecimal,
         quoteStatus: QuoteStatus?,
-        stakingBalance: StakingBalance.Data?,
         contributions: List<BalanceContribution>,
     ): CryptoCurrencyStatus.NoQuote {
         return CryptoCurrencyStatus.NoQuote(
@@ -228,12 +203,11 @@ object CryptoCurrencyStatusFactory {
             hasCurrentNetworkTransactions = status.hasCurrentNetworkTransactions(),
             pendingTransactions = status.getCurrentTransactions(id),
             networkAddress = status.address,
-            stakingBalance = stakingBalance,
+            stakingBalance = null,
             yieldSupplyStatus = status.getYieldSupplyStatus(id),
             contributions = contributions,
             sources = CryptoCurrencyStatus.Sources(
                 networkSource = status.source,
-                stakingBalanceSource = stakingBalance?.source ?: StatusSource.ACTUAL,
                 contributionSources = contributions.map(BalanceContribution::source),
                 quoteSource = quoteStatus?.value?.source ?: StatusSource.ACTUAL,
             ),
@@ -245,7 +219,6 @@ object CryptoCurrencyStatusFactory {
         status: NetworkStatus.Verified,
         amount: BigDecimal,
         quoteStatus: QuoteStatus.Data,
-        stakingBalance: StakingBalance.Data?,
         contributions: List<BalanceContribution>,
     ): CryptoCurrencyStatus.Loaded {
         return CryptoCurrencyStatus.Loaded(
@@ -256,12 +229,11 @@ object CryptoCurrencyStatusFactory {
             hasCurrentNetworkTransactions = status.hasCurrentNetworkTransactions(),
             pendingTransactions = status.getCurrentTransactions(id),
             networkAddress = status.address,
-            stakingBalance = stakingBalance,
+            stakingBalance = null,
             yieldSupplyStatus = status.getYieldSupplyStatus(id),
             contributions = contributions,
             sources = CryptoCurrencyStatus.Sources(
                 networkSource = status.source,
-                stakingBalanceSource = stakingBalance?.source ?: StatusSource.ACTUAL,
                 contributionSources = contributions.map(BalanceContribution::source),
                 quoteSource = quoteStatus.source,
             ),
@@ -276,47 +248,6 @@ object CryptoCurrencyStatusFactory {
 
     private fun NetworkStatus.Verified.getYieldSupplyStatus(id: CryptoCurrency.ID): YieldSupplyStatus? {
         return yieldSupplyStatuses[id]
-    }
-
-    /**
-     * Returns the staking balance that belongs to [id] at [address], stamped with
-     * [isStakedIncludedInNetworkBalance] so it can report its own contribution to the total.
-     */
-    private fun Option<StakingBalance>.getOrNull(
-        id: CryptoCurrency.ID,
-        address: NetworkAddress,
-        isStakedIncludedInNetworkBalance: Boolean,
-    ): StakingBalance.Data? {
-        return when (val stakingBalance = this.getOrNull()) {
-            is StakingBalance.Data.StakeKit -> {
-                val isCurrentAddressStaking = stakingBalance.stakingId.address == address.defaultAddress.value
-                val filteredTokenBalances = stakingBalance.balance.items.filter {
-                    it.token.coinGeckoId == id.rawCurrencyId?.value
-                }
-
-                if (isCurrentAddressStaking && filteredTokenBalances.isNotEmpty()) {
-                    stakingBalance.copy(
-                        balance = stakingBalance.balance.copy(items = filteredTokenBalances),
-                        isStakedIncludedInNetworkBalance = isStakedIncludedInNetworkBalance,
-                    )
-                } else {
-                    null
-                }
-            }
-            is StakingBalance.Data.P2PEthPool -> {
-                val isCurrentAddressStaking = stakingBalance.stakingId.address == address.defaultAddress.value
-
-                if (isCurrentAddressStaking) {
-                    stakingBalance.copy(isStakedIncludedInNetworkBalance = isStakedIncludedInNetworkBalance)
-                } else {
-                    null
-                }
-            }
-            is StakingBalance.Empty,
-            is StakingBalance.Error,
-            null,
-            -> null
-        }
     }
 
     private fun calculateFiatAmount(amount: BigDecimal, fiatRate: BigDecimal): BigDecimal {

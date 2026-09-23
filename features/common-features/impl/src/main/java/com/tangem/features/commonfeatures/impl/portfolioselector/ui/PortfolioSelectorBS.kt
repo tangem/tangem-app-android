@@ -56,36 +56,28 @@ internal fun PortfolioSelectorBS(
             val bottomInset = LocalTangemBottomSheetContentBottomInset.current
             val listBottomPadding = PaddingValues(bottom = bottomInset.coerceAtLeast(16.dp))
 
-            if (state.isSelectorV3Enabled) {
-                val contentScrollable = LocalBottomSheetContentScrollable.current
-                val lazyListState = rememberLazyListState()
+            val contentScrollable = LocalBottomSheetContentScrollable.current
+            val lazyListState = rememberLazyListState()
 
-                if (contentScrollable != null) {
-                    val isScrollable by remember {
-                        derivedStateOf { lazyListState.canScrollForward || lazyListState.canScrollBackward }
-                    }
-
-                    LaunchedEffect(isScrollable) {
-                        contentScrollable.value = isScrollable
-                    }
+            if (contentScrollable != null) {
+                val isScrollable by remember {
+                    derivedStateOf { lazyListState.canScrollForward || lazyListState.canScrollBackward }
                 }
 
-                PortfolioSelectorContentV3(
-                    state = state,
-                    modifier = modifier.padding(horizontal = 16.dp),
-                    lazyListState = lazyListState,
-                    contentPadding = listBottomPadding,
-                )
-            } else {
-                PortfolioSelectorContentV2(
-                    state = state,
-                    modifier = modifier.padding(horizontal = 16.dp),
-                    contentPadding = listBottomPadding,
-                )
+                LaunchedEffect(isScrollable) {
+                    contentScrollable.value = isScrollable
+                }
             }
+
+            PortfolioSelectorContentV3(
+                state = state,
+                modifier = modifier.padding(horizontal = 16.dp),
+                lazyListState = lazyListState,
+                contentPadding = listBottomPadding,
+            )
         },
         footer = {
-            if (state.isSelectorV3Enabled && state.button != null) {
+            if (state.button != null) {
                 SecondaryButton(
                     text = state.button.text.resolveReference(),
                     onClick = state.button.onClick,
