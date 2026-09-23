@@ -19,9 +19,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -52,6 +56,7 @@ import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWit
 import com.tangem.features.tangempay.withdraw.bank.ui.BankFromRow
 import com.tangem.features.tangempay.withdraw.bank.ui.BankRouteRow
 import com.tangem.features.tangempay.withdraw.bank.ui.ChevronDownIcon
+import kotlinx.coroutines.delay
 
 @Composable
 internal fun TangemPayBankWithdrawAmountScreen(state: TangemPayBankWithdrawAmountUM, modifier: Modifier = Modifier) {
@@ -67,6 +72,7 @@ internal fun TangemPayBankWithdrawAmountScreen(state: TangemPayBankWithdrawAmoun
             contentAlign = TangemTopNavigation.ContentAlign.Center,
             blurBackground = false,
             onBack = state.onBackClick,
+            onClose = state.header.onCloseClick,
         )
         Column(
             modifier = Modifier
@@ -114,8 +120,16 @@ private fun AmountCard(amount: TangemPayBankWithdrawAmountUM.AmountFieldUM, sour
     }
 }
 
+// The keyboard is requested once the screen's entrance transition has settled, as on the Send amount field.
+private const val AMOUNT_FOCUS_DELAY_MILLIS = 200L
+
 @Composable
 private fun AmountInput(amount: TangemPayBankWithdrawAmountUM.AmountFieldUM, modifier: Modifier = Modifier) {
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) {
+        delay(AMOUNT_FOCUS_DELAY_MILLIS)
+        focusRequester.requestFocus()
+    }
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -147,6 +161,7 @@ private fun AmountInput(amount: TangemPayBankWithdrawAmountUM.AmountFieldUM, mod
                 ),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 isAutoResize = true,
+                modifier = Modifier.focusRequester(focusRequester),
             )
         }
         val error = amount.error

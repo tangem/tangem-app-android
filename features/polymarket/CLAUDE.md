@@ -99,6 +99,13 @@ a failed or empty first page is retried once silently), the balance header from
 positions preview (`PolymarketPositionsPreviewLoader`, polled every 20 s), and
 `PredictionBalancePoller.subscribe` for as long as the screen is shown. Pull-to-refresh refreshes status and requisites together.
 
+The header shows one of two figures, toggled by tapping its label (`PredictionBalanceMode`): **Available**
+(the CLOB collateral, `Active.balance`, the default) and **Total** (`Active.totalBalance` = collateral + the
+data-API value of the open positions). Total is offered only once a full refresh has read `positionsValue`;
+until then the header shows Available and the toggle is disabled, but the chosen mode is kept and comes back
+as soon as the value does. The wallet screen and the wallet total keep counting the available
+balance only, as on iOS.
+
 - **Add funds** is gated: `RequisitesState.Loading` ignores the tap, `Failed` shows a dialog, `Ready`
   opens the sheet — swap (`AccountFlow.PredictionTopUp`) or receive. Both need a confirmed address
   (`activeStatus.cryptoCurrencyStatus`); without it a snackbar reports an unknown error rather than
@@ -106,6 +113,7 @@ positions preview (`PolymarketPositionsPreviewLoader`, polled every 20 s), and
 - **Withdraw** pushes swap with the collateral as FROM (`AccountFlow.PredictionWithdraw`), available in
   read-only mode too.
 - **Awaiting-funds banner** follows `PredictionFundingWindow.isOpen`; the poller drops to 5 s while open.
+  Opened by `SwapRoute.Success` and a placed order, never by Receive (an external transfer's timing is unknown).
 - A position row opens `PositionResult` when resolved (`canOpenPositionResult`), `PositionDetails` when
   still open (`canOpenPositionDetails`), nothing otherwise.
 
@@ -117,9 +125,9 @@ positions preview (`PolymarketPositionsPreviewLoader`, polled every 20 s), and
   (`QUOTE_POLL_INTERVAL_MILLIS`) and decides on each turn whether to ask `GetPredictionOrderQuoteUseCase`
   for a quote or `GetPredictionPriceUseCase` for a price — a quote while the amount is quotable, a price
   while it is empty or below the minimum. The quote is never cached. Two independent gates decide whether
-  it is placeable: `quote.status.isPlaceable` (market state) and `isBelowMinAmount` (side-specific: BUY is
-  price-weighted, SELL is the flat `minOrderSize`, lifted when the sale closes the whole position —
-  `isFullClose`).
+  it is placeable: `quote.isPlaceable` (market state; a SELL also places on `BELOW_MIN_ORDER_SIZE`) and
+  `isBelowMinAmount` (BUY only, price-weighted — a SELL has no floor beyond one whole share or the whole
+  position).
 - **Shares.** `SharesCalculator`: the sellable size is the position floored to the 2-decimal exchange grid
   (`PolymarketConst.SHARES_DECIMALS`); presets and ± steps move in whole shares with a floor of one share
   (or the whole position when smaller), and 100 % is the position itself, so a full close reaches the
@@ -199,6 +207,6 @@ and [REDACTED_TASK_KEY] (the claim action on the result screen).
 |---|---|
 | Claim (redeem) of a won position: transaction and claim action | [REDACTED_TASK_KEY], [REDACTED_TASK_KEY] |
 | Drop L2 credentials on CLOB `401` and route to the gate | [REDACTED_TASK_KEY] |
-| Tradezone `/value` (In Bets / Total) and PnL | not ticketed |
+| Tradezone PnL (`/v1/leaderboard`) | not ticketed |
 | Withdraw beyond USDC · Polygon (phase 2), withdrawal tracker on cold start, explorer link on withdraw | not ticketed |
 | Prediction-withdraw analytics event | waiting for analysts |
