@@ -3,6 +3,7 @@ package com.tangem.features.jointaccount.deeplink
 import android.net.Uri
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.utils.pushIfAbsent
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
@@ -46,7 +47,7 @@ internal class DefaultJointAccountInviteDeepLinkHandler @AssistedInject construc
         }
 
         scope.launch {
-            appRouter.push(AppRoute.JointAccountJoin(inviteId = inviteId))
+            appRouter.pushIfAbsent(AppRoute.JointAccountJoin(inviteId = inviteId))
         }
     }
 
