@@ -12,7 +12,6 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
 import com.tangem.features.polymarket.impl.placeprediction.entity.isBelowMinAmount
-import com.tangem.features.polymarket.impl.placeprediction.entity.isFullClose
 import com.tangem.features.polymarket.impl.placeprediction.entity.payout
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
@@ -78,7 +77,7 @@ internal fun PlacePredictionUM.recomputeGate(): PlacePredictionUM {
 
     val priced = when (val order = order) {
         is OrderSideUM.Buy -> pricedBuy(order = order, entered = entered, isBelowMinAmount = isBelowMinAmount)
-        is OrderSideUM.Sell -> pricedSell(order = order, isBelowMinAmount = isBelowMinAmount)
+        is OrderSideUM.Sell -> pricedSell(order = order)
     }
     val notifications = PlacePredictionNotificationsFactory.build(state = priced)
 
@@ -86,12 +85,17 @@ internal fun PlacePredictionUM.recomputeGate(): PlacePredictionUM {
         notifications = notifications,
         isPrimaryButtonEnabled = notifications.none { it.isBlocking } &&
             quote is QuoteUM.Content &&
-            quote.status.isPlaceableForSell(isFullClose = isFullClose()) &&
+            priced.order.isPlaceable(status = quote.status) &&
             !isBelowMinAmount &&
             submit is SubmitUM.Idle &&
             tradingPermission == TradingPermissionUM.Allowed &&
             priced.order.allowsPlacing(entered = entered),
     )
+}
+
+private fun OrderSideUM.isPlaceable(status: PredictionQuoteStatus): Boolean = when (this) {
+    is OrderSideUM.Buy -> status.isPlaceable
+    is OrderSideUM.Sell -> status.isPlaceableForSell
 }
 
 private fun OrderSideUM.allowsPlacing(entered: BigDecimal?): Boolean = when (this) {
@@ -122,20 +126,15 @@ private fun PlacePredictionUM.pricedBuy(
     )
 }
 
-private fun PlacePredictionUM.pricedSell(order: OrderSideUM.Sell, isBelowMinAmount: Boolean): PlacePredictionUM = copy(
-    order = order.copy(proceeds = sharesProceeds(isBelowMinAmount = isBelowMinAmount)),
+private fun PlacePredictionUM.pricedSell(order: OrderSideUM.Sell): PlacePredictionUM = copy(
+    order = order.copy(proceeds = sharesProceeds()),
     amountCaption = null,
 )
 
-private fun PlacePredictionUM.sharesProceeds(isBelowMinAmount: Boolean): SharesProceedsUM {
-    val minAmount = minAmount
-
-    return when {
-        isBelowMinAmount && minAmount != null -> SharesProceedsUM.BelowMinimum(minShares = minAmount)
-        quote is QuoteUM.Loading -> SharesProceedsUM.Loading
-        quote is QuoteUM.Content -> SharesProceedsUM.Content(expected = quote.expected)
-        else -> SharesProceedsUM.Unavailable
-    }
+private fun PlacePredictionUM.sharesProceeds(): SharesProceedsUM = when (quote) {
+    is QuoteUM.Loading -> SharesProceedsUM.Loading
+    is QuoteUM.Content -> SharesProceedsUM.Content(expected = quote.expected)
+    else -> SharesProceedsUM.Unavailable
 }
 
 private fun PlacePredictionUM.buyCaption(
