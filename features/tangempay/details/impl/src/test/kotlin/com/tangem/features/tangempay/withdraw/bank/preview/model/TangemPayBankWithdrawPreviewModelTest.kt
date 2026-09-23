@@ -8,6 +8,7 @@ import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
@@ -17,6 +18,8 @@ import com.tangem.domain.pay.usecase.bankofframp.AwaitBankOfframpSignatureUseCas
 import com.tangem.domain.pay.usecase.bankofframp.CancelBankOfframpOrderUseCase
 import com.tangem.domain.pay.usecase.bankofframp.CreateBankOfframpOrderUseCase
 import com.tangem.domain.pay.usecase.bankofframp.SignBankOfframpOrderUseCase
+import com.tangem.domain.wallets.models.errors.GetUserWalletError
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
@@ -55,6 +58,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     private val awaitBankOfframpSignatureUseCase: AwaitBankOfframpSignatureUseCase = mockk()
     private val signBankOfframpOrderUseCase: SignBankOfframpOrderUseCase = mockk()
     private val cancelBankOfframpOrderUseCase: CancelBankOfframpOrderUseCase = mockk()
+    private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val created = mutableListOf<BankOfframpOrderResult>()
     private var signedCount = 0
@@ -68,9 +72,11 @@ internal class TangemPayBankWithdrawPreviewModelTest {
             awaitBankOfframpSignatureUseCase,
             signBankOfframpOrderUseCase,
             cancelBankOfframpOrderUseCase,
+            getUserWalletUseCase,
         )
         created.clear()
         signedCount = 0
+        every { getUserWalletUseCase(userWalletId) } returns mockk<UserWallet.Cold>().right()
         coEvery { cancelBankOfframpOrderUseCase(userWalletId, any()) } returns Unit.right()
         // The order sits in processing unless a test says otherwise, which keeps the screen in its sending state.
         coEvery { awaitBankOfframpSignatureUseCase(userWalletId, any(), any()) } coAnswers { awaitCancellation() }
@@ -481,6 +487,45 @@ internal class TangemPayBankWithdrawPreviewModelTest {
 
     internal data class UnavailableModel(val error: BankOfframpError, val titleRes: Int)
 
+    @Test
+    fun `GIVEN cold wallet WHEN model created THEN summary marks the nfc wallet`() {
+        // Arrange
+        every { getUserWalletUseCase(userWalletId) } returns mockk<UserWallet.Cold>().right()
+
+        // Act
+        val model = createModel()
+
+        // Assert
+        assertThat(summary(model).isColdWallet).isTrue()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN hot wallet WHEN model created THEN summary marks no nfc wallet`() {
+        // Arrange
+        every { getUserWalletUseCase(userWalletId) } returns mockk<UserWallet.Hot>().right()
+
+        // Act
+        val model = createModel()
+
+        // Assert
+        assertThat(summary(model).isColdWallet).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN wallet lookup fails WHEN model created THEN icon kept`() {
+        // Arrange
+        every { getUserWalletUseCase(userWalletId) } returns GetUserWalletError.UserWalletNotFound.left()
+
+        // Act
+        val model = createModel()
+
+        // Assert
+        assertThat(summary(model).isColdWallet).isTrue()
+        model.onDestroy()
+    }
+
     private fun summary(model: TangemPayBankWithdrawPreviewModel): Summary = model.uiState.value as Summary
 
     private fun completeDraft(recipient: BankAccount? = bankAccount(id = "acc-1")) = BankWithdrawDraft(
@@ -508,6 +553,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
             awaitBankOfframpSignatureUseCase = awaitBankOfframpSignatureUseCase,
             signBankOfframpOrderUseCase = signBankOfframpOrderUseCase,
             cancelBankOfframpOrderUseCase = cancelBankOfframpOrderUseCase,
+            getUserWalletUseCase = getUserWalletUseCase,
         )
 
     private companion object {

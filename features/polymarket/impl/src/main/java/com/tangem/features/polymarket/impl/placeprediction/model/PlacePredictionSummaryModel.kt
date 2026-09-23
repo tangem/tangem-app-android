@@ -128,14 +128,14 @@ internal class PlacePredictionSummaryModel @Inject constructor(
         if (uiState.value.submit !is SubmitUM.Idle || !uiState.value.isPrimaryButtonEnabled) return
 
         uiState.update(SetSubmitTransformer(submit = SubmitUM.Signing))
-        modelScope.launch { place(frozen = order.quote, isFullClose = order.isFullClose) }
+        modelScope.launch { place(frozen = order.quote) }
     }
 
     override fun onQuoteRetryClick() {
         if (!isSubmitting()) router.popTo(PlacePredictionRoute.Amount)
     }
 
-    private suspend fun place(frozen: SignableQuoteUM, isFullClose: Boolean) {
+    private suspend fun place(frozen: SignableQuoteUM) {
         val isNegRisk = order.isNegRisk
         val addresses = withContext(dispatchers.default) {
             derivePolymarketAddressesUseCase.stored(userWalletId = params.userWalletId)
@@ -170,7 +170,6 @@ internal class PlacePredictionSummaryModel @Inject constructor(
                     side = params.side,
                     isNegRisk = isNegRisk,
                     quoteReceivedAtMillis = frozen.receivedAtMillis,
-                    isFullClose = isFullClose,
                 ),
             )
         }.getOrElse { failure ->
@@ -384,6 +383,7 @@ internal class PlacePredictionSummaryModel @Inject constructor(
                 market = order.state.market,
                 side = params.side,
                 userWalletId = params.userWalletId,
+                positionId = order.positionId,
             ),
         )
     }
