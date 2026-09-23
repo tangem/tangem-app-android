@@ -10,6 +10,7 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
+import com.tangem.domain.wallets.hot.HotWalletAccessor
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.lib.auth.session.WalletNonce
@@ -31,6 +32,7 @@ class WalletRegistrationLauncher @Inject internal constructor(
     private val mobileSigner: MobileWalletRegistrationSigner,
     private val coldSigner: ColdWalletRegistrationSigner,
     private val authFeatureToggles: AuthFeatureToggles,
+    private val hotWalletAccessor: HotWalletAccessor,
     private val appCoroutineScope: AppCoroutineScope,
 ) {
 
@@ -48,6 +50,37 @@ class WalletRegistrationLauncher @Inject internal constructor(
                 signer = mobileSigner.signerFor(userWallet),
             ).onLeft { TangemLogger.e("Mobile wallet registration deferred: $it") }
         }.onFailure { TangemLogger.e("Mobile wallet registration failed", it) }
+    }
+
+    /**
+     * Catches up the registration of an already-saved MOBILE wallet at unlock time. A protected
+     * (Password/Biometry) wallet can only register by signing the nonce with its key, which needs an
+     * unlock context. Establish a short-lived contextual unlock (the single auth), register within it —
+     * so the nonce is requested AFTER the auth and signed immediately (no ~55s expiry) and no second
+     * prompt appears — then ALWAYS clear the context. Already-registered wallets are skipped before any
+     * auth, so a routine unlock never pops a needless prompt; a context established elsewhere is reused
+     * and left untouched.
+     */
+    suspend fun registerUnlockedMobileWallet(userWallet: UserWallet.Hot) {
+        if (!authFeatureToggles.isBackendAuthenticationEnabled) return
+        if (walletRegistrar.isRegistered(userWallet.walletId.toBase64())) return
+
+        if (hotWalletAccessor.getContextualUnlock(userWallet.hotWalletId) != null) {
+            // Another flow already holds a context — reuse it (no prompt) and leave it for its owner.
+            registerMobile(userWallet)
+            return
+        }
+
+        try {
+            runSuspendCatching { hotWalletAccessor.unlockContextual(userWallet.hotWalletId) }
+                .onFailure { error ->
+                    TangemLogger.e("Failed to establish an unlock context for mobile registration", error)
+                    return
+                }
+            registerMobile(userWallet)
+        } finally {
+            hotWalletAccessor.clearContextualUnlock(userWallet.hotWalletId)
+        }
     }
 
     /**

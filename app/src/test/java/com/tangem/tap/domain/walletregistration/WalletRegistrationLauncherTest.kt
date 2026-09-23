@@ -6,6 +6,7 @@ import com.tangem.common.card.Card
 import com.tangem.common.core.CardSession
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.hot.HotWalletAccessor
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.lib.auth.session.WalletNonce
@@ -20,6 +21,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -33,6 +35,7 @@ internal class WalletRegistrationLauncherTest {
     private val mobileSigner: MobileWalletRegistrationSigner = mockk()
     private val coldSigner: ColdWalletRegistrationSigner = mockk()
     private val authFeatureToggles: AuthFeatureToggles = mockk()
+    private val hotWalletAccessor: HotWalletAccessor = mockk(relaxed = true)
     private val appCoroutineScope: AppCoroutineScope = mockk(relaxed = true)
 
     private val launcher = WalletRegistrationLauncher(
@@ -40,12 +43,13 @@ internal class WalletRegistrationLauncherTest {
         mobileSigner = mobileSigner,
         coldSigner = coldSigner,
         authFeatureToggles = authFeatureToggles,
+        hotWalletAccessor = hotWalletAccessor,
         appCoroutineScope = appCoroutineScope,
     )
 
     @BeforeEach
     fun setup() {
-        clearMocks(walletRegistrar, mobileSigner, authFeatureToggles)
+        clearMocks(walletRegistrar, mobileSigner, authFeatureToggles, hotWalletAccessor)
         mockkStatic(android.util.Base64::class)
         every { android.util.Base64.encodeToString(any(), any()) } answers {
             java.util.Base64.getEncoder().encodeToString(firstArg())
@@ -92,6 +96,48 @@ internal class WalletRegistrationLauncherTest {
         )
 
         coVerify(exactly = 1) { walletRegistrar.register(any(), any()) }
+    }
+
+    @Test
+    fun `registerUnlockedMobileWallet establishes a context, registers, then clears the context`() = runTest {
+        every { authFeatureToggles.isBackendAuthenticationEnabled } returns true
+        val wallet = hotWallet(authType = HotWalletId.AuthType.Biometry)
+        val hotWalletId = wallet.hotWalletId
+        coEvery { walletRegistrar.isRegistered(any()) } returns false
+        every { hotWalletAccessor.getContextualUnlock(hotWalletId) } returns null
+        coEvery { hotWalletAccessor.unlockContextual(hotWalletId) } returns mockk()
+
+        launcher.registerUnlockedMobileWallet(wallet)
+
+        coVerify(exactly = 1) { hotWalletAccessor.unlockContextual(hotWalletId) }
+        coVerify(exactly = 1) { walletRegistrar.register(any(), any()) }
+        verify(exactly = 1) { hotWalletAccessor.clearContextualUnlock(hotWalletId) }
+    }
+
+    @Test
+    fun `registerUnlockedMobileWallet skips an already-registered wallet without any auth`() = runTest {
+        every { authFeatureToggles.isBackendAuthenticationEnabled } returns true
+        val wallet = hotWallet(authType = HotWalletId.AuthType.Biometry)
+        coEvery { walletRegistrar.isRegistered(any()) } returns true
+
+        launcher.registerUnlockedMobileWallet(wallet)
+
+        coVerify(exactly = 0) { hotWalletAccessor.unlockContextual(any()) }
+        coVerify(exactly = 0) { walletRegistrar.register(any(), any()) }
+    }
+
+    @Test
+    fun `registerUnlockedMobileWallet reuses an existing context and leaves it untouched`() = runTest {
+        every { authFeatureToggles.isBackendAuthenticationEnabled } returns true
+        val wallet = hotWallet(authType = HotWalletId.AuthType.Biometry)
+        coEvery { walletRegistrar.isRegistered(any()) } returns false
+        every { hotWalletAccessor.getContextualUnlock(wallet.hotWalletId) } returns mockk()
+
+        launcher.registerUnlockedMobileWallet(wallet)
+
+        coVerify(exactly = 1) { walletRegistrar.register(any(), any()) }
+        coVerify(exactly = 0) { hotWalletAccessor.unlockContextual(any()) }
+        verify(exactly = 0) { hotWalletAccessor.clearContextualUnlock(any<HotWalletId>()) }
     }
 
     @Test
