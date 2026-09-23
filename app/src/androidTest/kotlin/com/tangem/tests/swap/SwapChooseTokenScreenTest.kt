@@ -6,7 +6,6 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.annotations.ApiEnv
 import com.tangem.common.annotations.ApiEnvConfig
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
-import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.scenarios.openTokenDetailsFromTokenList

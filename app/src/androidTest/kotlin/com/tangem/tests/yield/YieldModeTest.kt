@@ -12,7 +12,6 @@ import com.tangem.common.extensions.pullToRefresh
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.openMainScreenWithExistingHotWallet
-import com.tangem.screens.onMainScreen
 import com.tangem.screens.onTokenDetailsScreen
 import com.tangem.screens.onTokenDetailsTopBar
 import com.tangem.screens.onTxHistoryScreen

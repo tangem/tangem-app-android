@@ -33,11 +33,6 @@ class MarketsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         useUnmergedTree = true
     }
 
-    val searchThroughMarketPlaceholder: KNode = child {
-        hasText(getResourceString(R.string.markets_search_title_placeholder))
-        useUnmergedTree = true
-    }
-
     val tokenDetailsContent: KNode = child {
         hasTestTag(MarketsTestTags.TOKEN_DETAILS_CONTENT)
         useUnmergedTree = true
@@ -55,11 +50,6 @@ class MarketsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
 
     val listedOnEmptyText: KNode = child {
         hasText(getResourceString(R.string.markets_token_details_empty_exchanges))
-        useUnmergedTree = true
-    }
-
-    val seeAllButton: KNode = child {
-        hasText(getResourceString(com.tangem.core.ui.R.string.common_see_all))
         useUnmergedTree = true
     }
 

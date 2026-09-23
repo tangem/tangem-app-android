@@ -15,7 +15,6 @@ import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R
 import com.tangem.core.ui.R as CoreUiR
 import com.tangem.domain.models.scan.ProductType
-import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.*
 import com.tangem.screens.*
 import com.tangem.tap.domain.sdk.mocks.content.Wallet2WithDerivationsMockContent
@@ -463,9 +462,8 @@ class SendViaSwapTest : BaseTestCase() {
             step("Click on 'Close' button") {
                 onSendSuccessScreen { closeButton.performClick() }
             }
-            // The swap lands in the transaction history, and the history only re-reads on a refresh,
-            // so pull it until the row shows up.
-            step("Assert the swap is in the transaction history as '$swapHistoryTitle'") {
+            // The history only re-reads on a refresh, so pull it until the swap row lands.
+            step("Assert '$swapHistoryTitle' transaction is displayed in the history") {
                 awaitAssert(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
                     pullToRefreshTokenDetails()
                     onTxHistoryScreen { transactionItem(swapHistoryTitle).assertIsDisplayed() }
@@ -546,9 +544,8 @@ class SendViaSwapTest : BaseTestCase() {
             step("Click on 'Close' button") {
                 onSendSuccessScreen { closeButton.performClick() }
             }
-            // The swap lands in the transaction history, and the history only re-reads on a refresh,
-            // so pull it until the row shows up.
-            step("Assert the swap is in the transaction history as '$swapHistoryTitle'") {
+            // The history only re-reads on a refresh, so pull it until the swap row lands.
+            step("Assert '$swapHistoryTitle' transaction is displayed in the history") {
                 awaitAssert(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
                     pullToRefreshTokenDetails()
                     onTxHistoryScreen { transactionItem(swapHistoryTitle).assertIsDisplayed() }
@@ -624,9 +621,8 @@ class SendViaSwapTest : BaseTestCase() {
             step("Click on 'Close' button") {
                 onSendSuccessScreen { closeButton.performClick() }
             }
-            // The swap lands in the transaction history, and the history only re-reads on a refresh,
-            // so pull it until the row shows up.
-            step("Assert the swap is in the transaction history as '$swapHistoryTitle'") {
+            // The history only re-reads on a refresh, so pull it until the swap row lands.
+            step("Assert '$swapHistoryTitle' transaction is displayed in the history") {
                 awaitAssert(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
                     pullToRefreshTokenDetails()
                     onTxHistoryScreen { transactionItem(swapHistoryTitle).assertIsDisplayed() }

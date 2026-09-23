@@ -4,7 +4,6 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
 import com.tangem.common.BaseTestCase
-import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.core.ui.test.TokenDetailsScreenTestTags
 import com.tangem.screens.onMainScreen
@@ -39,7 +38,7 @@ fun BaseTestCase.pullToRefreshTokenDetails() {
  * screen is up the row is gone, so the click throws and only the assertion decides the outcome.
  */
 fun BaseTestCase.openTokenDetailsFromTokenList(tokenTitle: String) {
-    awaitAssert(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+    awaitAssert {
         runCatching { onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() } }
         onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
     }
