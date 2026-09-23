@@ -206,6 +206,7 @@ internal class DefaultTangemSdkManager(
         mnemonic: String,
         passphrase: String?,
         shouldReset: Boolean,
+        shouldForceColdRegistration: Boolean,
     ): CompletionResult<CreateProductWalletTaskResponse> {
         // The card itself has no passphrase length limit, but a wallet the mobile wallet cannot reproduce
         // would break both the upgrade between them and importing the same seed phrase twice
@@ -230,7 +231,7 @@ internal class DefaultTangemSdkManager(
             },
         )
 
-        return runTaskAsync(
+        return startSessionAsync(
             runnable = CreateProductWalletTask(
                 cardTypesResolver = scanResponse.cardTypesResolver,
                 derivationsHelper = derivationsHelper,
@@ -245,7 +246,10 @@ internal class DefaultTangemSdkManager(
             } else {
                 Message(resources.getStringSafe(R.string.initial_message_create_wallet_body))
             },
+            accessCode = null,
+            iconScanRes = null,
             registerColdWallet = true,
+            shouldForceColdRegistration = shouldForceColdRegistration,
         )
             .doOnResult { tangemSdk.config.setupForProduct(ProductType.ANY) }
     }
@@ -392,9 +396,30 @@ internal class DefaultTangemSdkManager(
         accessCode: String?,
         @DrawableRes iconScanRes: Int?,
         registerColdWallet: Boolean,
+    ): CompletionResult<T> = startSessionAsync(
+        runnable = runnable,
+        preflightReadFilter = preflightReadFilter,
+        cardId = cardId,
+        initialMessage = initialMessage,
+        accessCode = accessCode,
+        iconScanRes = iconScanRes,
+        registerColdWallet = registerColdWallet,
+        shouldForceColdRegistration = false,
+    )
+
+    @Suppress("LongParameterList")
+    private suspend fun <T> startSessionAsync(
+        runnable: CardSessionRunnable<T>,
+        preflightReadFilter: PreflightReadFilter?,
+        cardId: String?,
+        initialMessage: Message?,
+        accessCode: String?,
+        @DrawableRes iconScanRes: Int?,
+        registerColdWallet: Boolean,
+        shouldForceColdRegistration: Boolean,
     ): CompletionResult<T> = coroutineScope {
         val actualRunnable = if (registerColdWallet && authFeatureToggles.isBackendAuthenticationEnabled) {
-            withColdWalletRegistration(runnable)
+            withColdWalletRegistration(runnable, shouldForceColdRegistration)
         } else {
             runnable
         }
@@ -439,8 +464,14 @@ internal class DefaultTangemSdkManager(
      * walletless cards are skipped inside [WalletRegistrationLauncher]. The registration is launched
      * on the card session's own scope (see [RegisterColdWalletRunnable]), so it can't outlive the tap.
      */
-    private fun <T> withColdWalletRegistration(runnable: CardSessionRunnable<T>): CardSessionRunnable<T> =
-        RegisterColdWalletRunnable(inner = runnable, launcher = walletRegistrationLauncher.get())
+    private fun <T> withColdWalletRegistration(
+        runnable: CardSessionRunnable<T>,
+        shouldForceRegistration: Boolean,
+    ): CardSessionRunnable<T> = RegisterColdWalletRunnable(
+        inner = runnable,
+        launcher = walletRegistrationLauncher.get(),
+        shouldForceRegistration = shouldForceRegistration,
+    )
 
     @Suppress("MagicNumber")
     override fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse?) {
