@@ -1040,7 +1040,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         sourceAddress: String = USER_ADDRESS,
         destinationAddress: String = USER_ADDRESS,
         sourceType: TxInfo.SourceType = TxInfo.SourceType.Single(address = sourceAddress),
-    ): TxInfo = TxInfo(
+    ): TxInfo.Single = TxInfo.Single(
         txHash = TX_HASH,
         timestampInMillis = TIMESTAMP,
         isOutgoing = isOutgoing,
