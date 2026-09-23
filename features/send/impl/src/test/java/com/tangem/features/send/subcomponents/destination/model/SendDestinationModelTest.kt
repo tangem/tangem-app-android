@@ -457,9 +457,7 @@ internal class SendDestinationModelTest {
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 1) {
-                addressBookSendAnalytics.onAddressSubstitutedInSend(walletId = testUserWalletId, contactId = "c1")
-            }
+            verify(exactly = 1) { addressBookSendAnalytics.onAddressSubstitutedInSend(contactId = "c1") }
         }
 
         @Test
