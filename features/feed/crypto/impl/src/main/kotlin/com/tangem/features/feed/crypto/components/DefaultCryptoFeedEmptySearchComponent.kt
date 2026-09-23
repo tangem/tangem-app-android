@@ -13,25 +13,30 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
-import com.tangem.features.feed.crypto.CryptoFeedEmptySearchTabComponent
-import com.tangem.features.feed.crypto.model.search.CryptoFeedEmptySearchTabModel
+import com.tangem.features.feed.crypto.CryptoFeedEmptySearchComponent
+import com.tangem.features.feed.crypto.model.search.CryptoFeedEmptySearchModel
 import com.tangem.features.feed.crypto.ui.CryptoEmptySearchContent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
 @Stable
-internal class DefaultCryptoFeedEmptySearchTabComponent @AssistedInject constructor(
+internal class DefaultCryptoFeedEmptySearchComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted params: Unit,
-) : CryptoFeedEmptySearchTabComponent, AppComponentContext by context {
+) : CryptoFeedEmptySearchComponent, AppComponentContext by context {
 
-    private val model: CryptoFeedEmptySearchTabModel = getOrCreateModel(params)
+    private val model: CryptoFeedEmptySearchModel = getOrCreateModel(params)
 
     private val listState = LazyListState()
 
     @Composable
-    override fun Content(bottomSheetState: State<BottomSheetState>, contentPadding: PaddingValues, modifier: Modifier) {
+    override fun Content(
+        bottomSheetState: State<BottomSheetState>,
+        contentPadding: PaddingValues,
+        modifier: Modifier,
+        header: @Composable () -> Unit,
+    ) {
         val state by model.uiState.collectAsStateWithLifecycle()
 
         val sheetState = bottomSheetState.value
@@ -51,11 +56,12 @@ internal class DefaultCryptoFeedEmptySearchTabComponent @AssistedInject construc
             listState = listState,
             contentPadding = contentPadding,
             modifier = modifier,
+            header = header,
         )
     }
 
     @AssistedFactory
-    interface Factory : CryptoFeedEmptySearchTabComponent.Factory {
-        override fun create(context: AppComponentContext, params: Unit): DefaultCryptoFeedEmptySearchTabComponent
+    interface Factory : CryptoFeedEmptySearchComponent.Factory {
+        override fun create(context: AppComponentContext, params: Unit): DefaultCryptoFeedEmptySearchComponent
     }
 }

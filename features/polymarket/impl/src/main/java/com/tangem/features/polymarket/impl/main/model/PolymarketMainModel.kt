@@ -204,6 +204,10 @@ internal class PolymarketMainModel @Inject constructor(
         router.push(PolymarketRoute.Search(userWalletId = params.userWalletId))
     }
 
+    fun onHistoryClick() {
+        router.push(PolymarketRoute.History(userWalletId = params.userWalletId))
+    }
+
     private fun openPositions(tab: PolymarketPositionsTab) {
         router.push(PolymarketRoute.Positions(userWalletId = params.userWalletId, initialTab = tab))
     }
