@@ -11,7 +11,6 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.cloudbackup.analytics.analyticsMessage
-import com.tangem.domain.cloudbackup.analytics.analyticsWalletId
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupInfo
 import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
@@ -123,11 +122,7 @@ internal class RestoreCloudBackupModel @Inject constructor(
     }
 
     private fun sendEnterPasswordScreenEvent() {
-        analyticsEventHandler.send(
-            event = OnboardingAnalyticsEvent.Backup.EnterCloudBackupPasswordScreen(
-                userWalletId = analyticsWalletId(selectedBackup?.walletId),
-            ),
-        )
+        analyticsEventHandler.send(event = OnboardingAnalyticsEvent.Backup.EnterCloudBackupPasswordScreen())
     }
 
     private fun buildBackupListUM(list: List<CloudBackupInfo>): RestoreCloudBackupUM.BackupList =
@@ -332,7 +327,6 @@ internal class RestoreCloudBackupModel @Inject constructor(
     private fun showError(error: CloudBackupError) {
         analyticsEventHandler.send(
             event = OnboardingAnalyticsEvent.Backup.ImportCloudBackupError(
-                userWalletId = analyticsWalletId(selectedBackup?.walletId),
                 errorMessage = error.analyticsMessage(),
             ),
         )

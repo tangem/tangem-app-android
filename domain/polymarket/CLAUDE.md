@@ -164,8 +164,12 @@ draft, the deposit wallet, the market and the quote age before anything is sent.
   onboarding reports zero forever. The sync is best-effort.
 - **Polling.** `PredictionBalancePoller` — one loop per wallet, reference-counted subscribers, runs on the
   app scope. `PredictionBalancePollingConfig`: 30 s base, 5 s while a `PredictionFundingWindow` is open
-  (2 min window, 10 min max age). The window opens when a top-up is sent (`PredictionFundingWindow.open`)
-  and closes when the balance settles or the window elapses.
+  (2 min window, 10 min max age). The window opens on a send this app made (`PredictionFundingWindow.open`)
+  and closes when the balance settles or the window elapses. `PredictionAccountStatusFetcher.Params.mode`
+  says how much a tick re-reads: `FULL` (main screen, pull-to-refresh, base poll ticks) also reads the
+  positions value from the data API (`PolymarketPositionsRepository.getPositionsValue`) into
+  `Active.positionsValue`; `AVAILABLE_ONLY` (wallet screen, onboarding, ticks inside the funding window)
+  carries the cached one over. A failed `/value` read keeps the cached value too and never fails the balance.
 - **Withdraw destinations.** `GetPredictionWithdrawDestinationsUseCase` matches bridge assets to the
   wallet's currencies but is filtered to USDC · Polygon (phase 1, owner decision 15.09.2026). Removing the
   filter is the phase-2 change.
@@ -187,7 +191,7 @@ The account type itself is `Account.Prediction` / `AccountId.forPredictionAccoun
 
 - Claiming a resolved position (redeem) — [REDACTED_TASK_KEY] / [REDACTED_TASK_KEY]; iOS has a claim transaction service.
 - Dropping L2 credentials on a CLOB `401` — [REDACTED_TASK_KEY], design done, not implemented.
-- Tradezone "In Bets"/"Total balance" (`/value`) and PnL (`/v1/leaderboard`).
+- Tradezone PnL (`/v1/leaderboard`).
 - Withdraw minimum — deliberately none (BFF client guide §7.1); `minCheckoutUsd` is deposit-only.
 
 ## Where the contract comes from

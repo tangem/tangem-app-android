@@ -17,6 +17,7 @@ internal object TangemPayBankWithdrawAmountPreviewData {
     private val header = BankWithdrawHeaderUM(
         title = resourceReference(R.string.tangempay_withdraw_hub_to_personal_account),
         subtitle = stringReference("1 of 5"),
+        onCloseClick = {},
     )
 
     private val amount = AmountFieldUM(

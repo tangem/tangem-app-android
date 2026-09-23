@@ -6,6 +6,8 @@ import com.tangem.common.routing.entity.AddressBookOpenMode
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.addressbook.usecase.IsAddressBookCompatibleUseCase
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
@@ -22,6 +24,7 @@ import com.tangem.domain.jointaccount.usecase.SignJointOperationUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.txhistory.joint.ownJointAccount
 import com.tangem.features.txhistory.model.ContactCandidate
@@ -51,7 +54,12 @@ internal class JointOperationDelegate @Inject constructor(
     private val rejectJointOperationUseCase: RejectJointOperationUseCase,
     private val isAddressBookCompatibleUseCase: IsAddressBookCompatibleUseCase,
     private val ownerLookupProducer: TxHistoryOwnerLookupProducer,
+    private val userWalletsListRepository: UserWalletsListRepository,
 ) {
+
+    fun isColdWallet(userWalletId: UserWalletId): Boolean {
+        return userWalletsListRepository.getSyncOrNull(id = userWalletId) is UserWallet.Cold
+    }
 
     /**
      * Creating a contact is offered for a foreign [recipient] this wallet has not saved yet — never for one of the
