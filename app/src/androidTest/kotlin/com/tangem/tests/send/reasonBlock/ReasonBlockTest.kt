@@ -4,6 +4,7 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.ui.R
+import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.onDialog
@@ -45,7 +46,7 @@ class ReasonBlockTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name $token") {
-                onMainScreen { tokenWithTitleAndAddress(token).clickWithAssertion() }
+                openTokenDetailsFromTokenList(token)
             }
             step("Click on 'Transfer' button") {
                 onTokenDetailsScreen { transferButton.clickWithAssertion() }
@@ -88,7 +89,7 @@ class ReasonBlockTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name $token") {
-                onMainScreen { tokenWithTitleAndAddress(token).clickWithAssertion() }
+                openTokenDetailsFromTokenList(token)
             }
             step("Assert 'Insufficient $feeCurrencySymbol for fee' notification is displayed") {
                 onTokenDetailsScreen {
