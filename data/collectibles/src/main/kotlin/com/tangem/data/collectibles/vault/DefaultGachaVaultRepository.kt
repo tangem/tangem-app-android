@@ -52,7 +52,7 @@ import java.math.BigDecimal
  * The provider only builds wire bytes; the manager's own `send` signs and broadcasts them. The wallet is therefore
  * both `cold_owner` and `payer` — rent and network fee come out of its SOL balance.
  */
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class DefaultGachaVaultRepository @Inject constructor(
     private val walletManagersFacade: WalletManagersFacade,
     private val networkProvider: CollectiblesOwnerNetworkProvider,
@@ -100,8 +100,14 @@ internal class DefaultGachaVaultRepository @Inject constructor(
         limits: GachaVaultLimits,
     ): Either<CollectiblesAccountError, Unit> = withContext(dispatchers.io) {
         when (userWallet) {
-            is UserWallet.Cold -> deriveAndInitInCardSession(userWallet, hotDelegate, limits)
-            is UserWallet.Hot -> deriveAndInitLocally(userWallet, hotDelegate, limits)
+            is UserWallet.Cold -> {
+                TangemLogger.d("vault: deriveOwnerAndSetUpVault -> Cold wallet, deriving in a card session (tap)")
+                deriveAndInitInCardSession(userWallet, hotDelegate, limits)
+            }
+            is UserWallet.Hot -> {
+                TangemLogger.d("vault: deriveOwnerAndSetUpVault -> Hot wallet, deriving locally (no tap)")
+                deriveAndInitLocally(userWallet, hotDelegate, limits)
+            }
         }
     }
 
@@ -179,7 +185,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
         val seedKey = userWallet.solanaSeedKey()
 
         if (seedKey == null) {
-            TangemLogger.d("GachaVaultRepository: deriveOwnerAndSetUpVault: the wallet has no Solana key")
+            TangemLogger.d("vault: the wallet has no Solana key -> WalletUnavailable")
             return@coroutineScope GachaVaultError.WalletUnavailable.asFailure().left()
         }
 
@@ -229,9 +235,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
         when (result) {
             is CompletionResult.Success -> vaultSetUpCompletion.await().toVaultResult()
             is CompletionResult.Failure -> result.error.toVaultFailure().left()
-        }.also {
-            TangemLogger.d(messageString = "GachaVaultRepository: deriveOwnerAndSetUpVault: done, result=$it")
-        }
+        }.also { TangemLogger.d("vault: one-tap session finished, result=$it") }
     }
 
     private fun CompletionResult<Unit>.toVaultResult(): Either<CollectiblesAccountError, Unit> = when (this) {
@@ -302,26 +306,48 @@ internal class DefaultGachaVaultRepository @Inject constructor(
         onSigned: () -> Unit,
     ): Either<BlockchainError, Unit> = either {
         val walletManager = vaultWalletManager(userWalletId = userWalletId, network = network).bind()
-        val existing = walletManager.getCollectiblesVault().toEither().bind()
+        val existing = walletManager.getCollectiblesVault().toEither()
+            .onLeft { TangemLogger.d("vault: getCollectiblesVault failed: ${it.customMessage}") }
+            .bind()
 
         when {
-            existing == null -> walletManager.sendVaultTransaction(signer, onSigned) {
-                buildInitCollectiblesVault(
-                    hotDelegate = hotDelegate.base58,
-                    perSpinCap = limits.perSpinCap,
-                    dailyCap = limits.dailyCap,
+            existing == null -> {
+                TangemLogger.d(
+                    "vault: does the User Account PDA exist on chain? -> " +
+                        "No, creating the User Account PDA (init_vault) (tap)",
                 )
-            }.bind()
+                walletManager.sendVaultTransaction(signer, onSigned) {
+                    buildInitCollectiblesVault(
+                        hotDelegate = hotDelegate.base58,
+                        perSpinCap = limits.perSpinCap,
+                        dailyCap = limits.dailyCap,
+                    )
+                }
+                    .onLeft { TangemLogger.d("vault: init_vault failed: ${it.customMessage}") }
+                    .onRight { TangemLogger.d("vault: init_vault sent") }
+                    .bind()
+            }
 
-            existing.hotDelegate != hotDelegate.base58 -> walletManager.sendVaultTransaction(signer, onSigned) {
-                buildUpdateCollectiblesVault(
-                    hotDelegate = hotDelegate.base58,
-                    perSpinCap = null,
-                    dailyCap = null,
+            existing.hotDelegate != hotDelegate.base58 -> {
+                TangemLogger.d(
+                    "vault: is the hot key the same as in the User Account PDA? -> " +
+                        "No, updating the key in the PDA (update_vault) (tap)",
                 )
-            }.bind()
+                walletManager.sendVaultTransaction(signer, onSigned) {
+                    buildUpdateCollectiblesVault(
+                        hotDelegate = hotDelegate.base58,
+                        perSpinCap = null,
+                        dailyCap = null,
+                    )
+                }
+                    .onLeft { TangemLogger.d("vault: update_vault failed: ${it.customMessage}") }
+                    .onRight { TangemLogger.d("vault: update_vault sent") }
+                    .bind()
+            }
 
-            else -> Unit
+            else -> TangemLogger.d(
+                "vault: is the hot key the same as in the User Account PDA? -> Yes, no transaction needed",
+            )
         }
     }
 

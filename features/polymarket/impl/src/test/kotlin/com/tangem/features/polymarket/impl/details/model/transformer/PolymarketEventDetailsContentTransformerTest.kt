@@ -384,6 +384,7 @@ internal class PolymarketEventDetailsContentTransformerTest {
         outcomes: List<PolymarketOutcome> = listOf(createOutcome()),
     ): PolymarketMarket = PolymarketMarket(
         id = id,
+        conditionId = null,
         eventId = "event-1",
         title = title,
         slug = "market-slug",

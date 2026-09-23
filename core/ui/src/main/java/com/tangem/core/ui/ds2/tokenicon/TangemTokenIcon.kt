@@ -1,6 +1,7 @@
 package com.tangem.core.ui.ds2.tokenicon
 
 import android.util.LruCache
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -31,10 +32,9 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -226,7 +226,7 @@ fun TangemTokenIcon(
                     .offset(x = -sizeTokens.topIconOffset, y = sizeTokens.topIconOffset)
                     .align(Alignment.TopEnd)
                     .size(size = sizeTokens.topIconSize),
-                imageVector = state.topIcon,
+                painter = painterResource(id = state.topIcon),
                 contentDescription = null,
                 colorFilter = colorFilter,
                 alpha = alpha,
@@ -303,14 +303,14 @@ object TangemTokenIcon {
      * Fully-resolved token-icon state.
      *
      * @param url Remote image URL. `null` renders the custom-token illustration; blank is treated as `null`.
-     * @param topIcon Optional overlay icon drawn at the top-end corner (e.g. a network badge), with a
-     * transparent cutout punched behind it.
+     * @param topIcon Optional overlay drawable drawn at the top-end corner (e.g. a network badge), with
+     * a transparent cutout punched behind it.
      * @param isGrayscale When `true`, the whole icon is desaturated and dimmed.
      * @param indicator Optional small status dot drawn at the bottom-end corner, with a cutout behind it.
      */
     data class State(
         val url: String?,
-        val topIcon: ImageVector? = null,
+        @DrawableRes val topIcon: Int? = null,
         val isGrayscale: Boolean = false,
         val indicator: Indicator? = null,
     ) {
@@ -403,7 +403,7 @@ private fun TangemTokenIconPreview() {
                     indicator = Indicator(
                         colorReference2 = { TangemTheme.colors3.icon.brand },
                     ),
-                    topIcon = ImageVector.vectorResource(R.drawable.img_btc_cash_22),
+                    topIcon = R.drawable.img_btc_cash_22,
                 ),
             )
             PreviewRow(

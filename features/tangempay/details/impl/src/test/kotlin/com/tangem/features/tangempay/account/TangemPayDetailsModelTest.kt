@@ -40,8 +40,12 @@ import com.tangem.domain.pay.usecase.GetCashbackSummaryUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.pay.model.CardIssueOffers
 import com.tangem.domain.pay.model.Offer
+import com.tangem.domain.pay.model.Order
+import com.tangem.domain.pay.model.OrderStatus
+import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
+import com.tangem.domain.pay.usecase.bankofframp.FindActiveBankOfframpOrderUseCase
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.TangemPayFeatureToggles
@@ -98,6 +102,7 @@ internal class TangemPayDetailsModelTest {
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
     private val tangemPayWithdrawRepository: TangemPayWithdrawRepository = mockk(relaxed = true)
+    private val findActiveBankOfframpOrderUseCase: FindActiveBankOfframpOrderUseCase = mockk()
 
     @BeforeEach
     fun resetCashbackMocks() {
@@ -109,7 +114,9 @@ internal class TangemPayDetailsModelTest {
             getBankCredentialsUseCase,
             sendFeedbackEmailUseCase,
             tangemPayWithdrawRepository,
+            findActiveBankOfframpOrderUseCase,
         )
+        coEvery { findActiveBankOfframpOrderUseCase(any()) } returns null.right()
     }
 
     @Test
@@ -804,6 +811,7 @@ internal class TangemPayDetailsModelTest {
         // Assert
         verify(exactly = 1) { router.push(TangemPayAccountDetailsInnerRoute.WithdrawHub) }
         verify(exactly = 0) { router.push(ofType<AppRoute.Swap>()) }
+        coVerify(exactly = 0) { tangemPayWithdrawRepository.hasWithdrawOrder(any()) }
         model.onDestroy()
     }
 
@@ -829,31 +837,52 @@ internal class TangemPayDetailsModelTest {
     }
 
     @Test
-    fun `GIVEN bank offramp channel not known yet WHEN withdraw clicked THEN hub screen pushed`() = runTest {
-        // Arrange
-        every { tangemPayFeatureToggles.isBankOfframpEnabled } returns true
-        val model = createModel(
-            testScope = this,
-            availableForWithdrawal = BigDecimal.TEN,
-            isBankOfframpAvailable = null,
-        )
-        advanceUntilIdle()
-
-        // Act
-        model.onClickWithdraw()
-        advanceUntilIdle()
-
-        // Assert
-        verify(exactly = 1) { router.push(TangemPayAccountDetailsInnerRoute.WithdrawHub) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN active withdrawal and bank offramp enabled WHEN withdraw clicked THEN hub pushed without in progress error`() =
+    fun `GIVEN bank offramp channel not known yet WHEN withdraw clicked THEN swap pushed instead of the hub`() =
         runTest {
             // Arrange
             every { tangemPayFeatureToggles.isBankOfframpEnabled } returns true
-            coEvery { tangemPayWithdrawRepository.hasWithdrawOrder(any()) } returns true
+            val model = createModel(
+                testScope = this,
+                availableForWithdrawal = BigDecimal.TEN,
+                isBankOfframpAvailable = null,
+            )
+            advanceUntilIdle()
+
+            // Act
+            model.onClickWithdraw()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { router.push(TangemPayAccountDetailsInnerRoute.WithdrawHub) }
+            verify(exactly = 1) { router.push(ofType<AppRoute.Swap>()) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN an active bank offramp order WHEN withdraw clicked THEN in progress error shown and nothing pushed`() =
+        runTest {
+            // Arrange
+            every { tangemPayFeatureToggles.isBankOfframpEnabled } returns true
+            coEvery { findActiveBankOfframpOrderUseCase(any()) } returns bankOfframpOrder().right()
+            val model = createModel(testScope = this, availableForWithdrawal = BigDecimal.TEN)
+            advanceUntilIdle()
+
+            // Act
+            model.onClickWithdraw()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { uiMessageSender.send(any<BottomSheetMessage>()) }
+            verify(exactly = 0) { router.push(any()) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN the active order lookup fails WHEN withdraw clicked THEN hub pushed without in progress error`() =
+        runTest {
+            // Arrange
+            every { tangemPayFeatureToggles.isBankOfframpEnabled } returns true
+            coEvery { findActiveBankOfframpOrderUseCase(any()) } returns VisaApiError.Unspecified.left()
             val model = createModel(testScope = this, availableForWithdrawal = BigDecimal.TEN)
             advanceUntilIdle()
 
@@ -1023,6 +1052,13 @@ internal class TangemPayDetailsModelTest {
         model.onDestroy()
     }
 
+    private val availableNetwork = PaymentNetworkStatus.Available(
+        network = mockk(relaxed = true),
+        depositAddress = "0xDEPOSIT",
+        chainId = 137L,
+        cryptoCurrencyStatuses = emptyList(),
+    )
+
     private fun plasticOffer() = Offer(
         type = Offer.Type.CARD_ISSUE_PLASTIC_RAIN,
         fee = Offer.Fee(amount = BigDecimal("5.00"), currency = Currency.getInstance("USD")),
@@ -1086,9 +1122,26 @@ internal class TangemPayDetailsModelTest {
             getBankCredentialsUseCase = getBankCredentialsUseCase,
             getCashbackDeactivationDismissedUseCase = mockk(relaxed = true),
             setCashbackDeactivationDismissedUseCase = mockk(relaxed = true),
+            findActiveBankOfframpOrderUseCase = findActiveBankOfframpOrderUseCase,
             tangemPayCurrencyFactory = mockk(relaxed = true),
         )
     }
+
+    private fun bankOfframpOrder(id: String = "order-1"): Order = Order(
+        id = id,
+        customerId = "customer-id",
+        type = OrderType.BANK_OFFRAMP_RAIN,
+        status = OrderStatus.PROCESSING,
+        step = OrderStep.UNKNOWN,
+        stepChangeCode = null,
+        productInstanceId = null,
+        paymentAccountId = null,
+        cardId = null,
+        toTariffPlanId = null,
+        withdrawTxHash = null,
+        createdAt = null,
+        updatedAt = null,
+    )
 
     private fun enabledCashbackSummary(
         displayMode: CashbackDisplayMode = CashbackDisplayMode.FULL,
@@ -1122,7 +1175,9 @@ internal class TangemPayDetailsModelTest {
         every { source } returns statusSource
         every { error } returns accountError
         every { customerId } returns "customer-id"
+        every { paymentAccountAddress } returns "address"
         every { networks } returns listOf(availableNetwork())
+        every { this@mockk.availableForWithdrawal } returns availableForWithdrawal
         every { this@mockk.virtualAccount } returns virtualAccount
         every { this@mockk.isBankOfframpAvailable } returns isBankOfframpAvailable
         every { cards } returns listOf(tangemPayCard(state = cardState))
@@ -1131,14 +1186,6 @@ internal class TangemPayDetailsModelTest {
                 availableBalance = BigDecimal.ZERO,
                 currency = "USD",
             ),
-            cryptoBalance = PaymentAccountStatusValue.CryptoBalance(
-                id = "id",
-                chainId = 1L,
-                depositAddress = "address",
-                tokenContractAddress = "contract",
-                balance = BigDecimal.ZERO,
-            ),
-            availableForWithdrawal = availableForWithdrawal,
         )
     }
 
@@ -1288,20 +1335,20 @@ internal class TangemPayDetailsModelTest {
         private fun deactivatedStatus(id: String): PaymentAccountStatusValue.Deactivated = mockk(relaxed = true) {
             every { source } returns StatusSource.ACTUAL
             every { customerId } returns id
+            every { networks } returns listOf(
+                PaymentNetworkStatus.Available(
+                    network = mockk(relaxed = true),
+                    depositAddress = "0xDEPOSIT",
+                    chainId = 137L,
+                    cryptoCurrencyStatuses = emptyList(),
+                ),
+            )
             every { networks } returns listOf(availableNetwork())
             every { balance } returns PaymentAccountStatusValue.Balance(
                 fiatBalance = PaymentAccountStatusValue.FiatBalance(
                     availableBalance = BigDecimal.ZERO,
                     currency = "USD",
                 ),
-                cryptoBalance = PaymentAccountStatusValue.CryptoBalance(
-                    id = "id",
-                    chainId = 1L,
-                    depositAddress = "address",
-                    tokenContractAddress = "contract",
-                    balance = BigDecimal.ZERO,
-                ),
-                availableForWithdrawal = BigDecimal.ZERO,
             )
         }
     }

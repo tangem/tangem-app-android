@@ -47,6 +47,7 @@ internal class DefaultWalletManagersFacadeSafeManagerTest {
         gaslessTransactionRepository = mockk(),
         jointAccountSafeAddressResolver = { safeAddressResolver },
         getCachedTokenInfoUseCase = mockk(),
+        txHistoryFeatureToggles = mockk(relaxed = true),
         blockchainSDKFactory = blockchainSDKFactory,
     )
 

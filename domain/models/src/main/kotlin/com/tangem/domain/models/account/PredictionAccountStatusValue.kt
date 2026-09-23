@@ -119,7 +119,9 @@ sealed class PredictionAccountStatusValue {
      * Represents a state where the prediction deposit wallet is ready and holds a collateral balance.
      *
      * @property source The source of the status information.
-     * @property balance The collateral balance of the deposit wallet.
+     * @property balance The collateral balance of the deposit wallet, which is what the wallet total counts.
+     * @property positionsValue The last value of the open positions a full refresh read, or `null` until one has.
+     *                           A failed read keeps the previous value, so it can be older than [source] says.
      * @property fiatRate Exchange rate of the collateral to the app's selected fiat currency, or `null` if the
      *                    quote has never been available. When `null`, [totalFiatBalance] resolves to
      *                    [TotalFiatBalance.Failed].
@@ -132,10 +134,15 @@ sealed class PredictionAccountStatusValue {
     data class Active(
         override val source: StatusSource,
         val balance: SerializedBigDecimal,
+        val positionsValue: SerializedBigDecimal?,
         val fiatRate: SerializedBigDecimal?,
         val depositCurrency: CryptoCurrency.Token,
         val depositAddress: String?,
     ) : PredictionAccountStatusValue() {
+
+        /** The collateral plus the open positions, or `null` while the positions value is unknown. */
+        val totalBalance: SerializedBigDecimal?
+            get() = positionsValue?.let(balance::add)
 
         /**
          * What the funding flows act on: the token a deposit is made in, at the bridge address that credits

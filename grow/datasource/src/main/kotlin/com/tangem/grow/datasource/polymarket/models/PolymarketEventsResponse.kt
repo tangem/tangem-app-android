@@ -44,6 +44,7 @@ data class PolymarketEventDto(
 @JsonClass(generateAdapter = true)
 data class PolymarketMarketDto(
     @Json(name = "id") val id: String,
+    @Json(name = "conditionId") val conditionId: String?,
     @Json(name = "eventId") val eventId: String,
     @Json(name = "question") val question: String,
     @Json(name = "slug") val slug: String,

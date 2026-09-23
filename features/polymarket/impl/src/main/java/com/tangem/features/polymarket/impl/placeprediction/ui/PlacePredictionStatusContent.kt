@@ -15,6 +15,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.button.TangemButtonGroup
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowText
@@ -37,9 +38,10 @@ import com.tangem.features.polymarket.impl.common.formatPolymarketEnteredAmount
 import com.tangem.features.polymarket.impl.common.formatPolymarketShares
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
-import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionIntents
-import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionMarketBlock
+import com.tangem.features.polymarket.impl.placeprediction.entity.ViewPositionUM
+import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionStatusIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlacePredictionPreviewIntents
+import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionMarketBlock
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlaceResultPreviewProvider
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import org.joda.time.DateTime
@@ -50,9 +52,10 @@ import com.tangem.domain.polymarket.model.PredictionOrderSide
 @Composable
 internal fun PlacePredictionStatusContent(
     result: PlaceResultUM,
+    viewPosition: ViewPositionUM,
     market: MarketHeaderUM,
     side: PredictionOrderSide,
-    intents: PlacePredictionIntents,
+    intents: PlacePredictionStatusIntents,
     modifier: Modifier = Modifier,
 ) {
     TangemStatusScreen(
@@ -66,17 +69,41 @@ internal fun PlacePredictionStatusContent(
             PredictionMarketBlock(state = market)
             ResultRows(result = result, market = market, side = side)
         },
-        footer = {
+        footer = { ResultFooter(viewPosition = viewPosition, intents = intents) },
+    )
+}
+
+@Composable
+private fun ResultFooter(viewPosition: ViewPositionUM, intents: PlacePredictionStatusIntents) {
+    val modifier = Modifier
+        .fillMaxWidth()
+        .padding(all = 16.dp)
+
+    when (viewPosition) {
+        ViewPositionUM.Hidden -> TangemButton(
+            modifier = modifier,
+            size = TangemButton.Size.X12,
+            text = resourceReference(R.string.prediction_place_result_to_main),
+            onClick = intents::onToMainClick,
+        )
+        ViewPositionUM.Awaiting,
+        ViewPositionUM.Available,
+        -> TangemButtonGroup(modifier = modifier, orientation = TangemButtonGroup.Orientation.Horizontal) {
             TangemButton(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(all = 16.dp),
+                variant = TangemButton.Variant.Secondary,
                 size = TangemButton.Size.X12,
                 text = resourceReference(R.string.prediction_place_result_to_main),
                 onClick = intents::onToMainClick,
             )
-        },
-    )
+            TangemButton(
+                size = TangemButton.Size.X12,
+                text = resourceReference(R.string.prediction_place_result_view_position),
+                isLoading = viewPosition == ViewPositionUM.Awaiting,
+                isEnabled = viewPosition == ViewPositionUM.Available,
+                onClick = intents::onViewPositionClick,
+            )
+        }
+    }
 }
 
 @Composable
@@ -229,6 +256,13 @@ private fun PlacePredictionStatusContentPreview(
     TangemThemePreviewRedesign {
         PlacePredictionStatusContent(
             result = result,
+            viewPosition = when (result) {
+                is PlaceResultUM.Filled -> ViewPositionUM.Available
+                is PlaceResultUM.PartiallyFilled -> ViewPositionUM.Awaiting
+                is PlaceResultUM.NotFilled,
+                is PlaceResultUM.Submitted,
+                -> ViewPositionUM.Hidden
+            },
             side = PredictionOrderSide.BUY,
             market = MarketHeaderUM(
                 title = "Will Uzbekistan win the 2026 FIFA World Cup?",

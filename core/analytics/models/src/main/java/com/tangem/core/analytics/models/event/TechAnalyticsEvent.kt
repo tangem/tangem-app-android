@@ -67,12 +67,4 @@ sealed class TechAnalyticsEvent(
             "Crash Count" to crashCount,
         ),
     )
-
-    class UnexpectedWalletCurve(userWalletId: String, cardId: String) : TechAnalyticsEvent(
-        event = "Unexpected Wallet Curve",
-        params = mapOf(
-            "User Wallet Id" to userWalletId,
-            "Card Id" to cardId,
-        ),
-    )
 }

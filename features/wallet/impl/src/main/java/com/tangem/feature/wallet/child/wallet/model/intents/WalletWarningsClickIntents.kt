@@ -13,6 +13,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.review.ReviewManager
 import com.tangem.core.navigation.url.AppStoreOpener
+import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.assetsdiscovery.usecase.AcknowledgeAssetsDiscoveryCompletionUseCase
 import com.tangem.domain.card.SetCardWasScannedUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -179,8 +180,13 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                 currencies = missedAddressCurrencies,
             ).fold(
                 ifLeft = { TangemLogger.e("Failed to derive public keys", it) },
-                ifRight = {
-                    fetchCryptoCurrencies(userWalletId = userWalletId, currencies = missedAddressCurrencies)
+                ifRight = { outcome ->
+                    when (outcome) {
+                        DerivationOutcome.NOTHING_DERIVED -> uiMessageSender.send(Dialogs.wrongWalletTapped())
+                        DerivationOutcome.DERIVED,
+                        DerivationOutcome.NOTHING_MISSING,
+                        -> fetchCryptoCurrencies(userWalletId = userWalletId, currencies = missedAddressCurrencies)
+                    }
                 },
             )
         }

@@ -3,8 +3,10 @@ package com.tangem.lib.auth.http
 import com.tangem.lib.auth.api.RequiresDpopProof
 import com.tangem.lib.auth.api.RequiresSessionAuth
 import com.tangem.lib.auth.dpop.DpopProofFactory
+import com.tangem.lib.auth.session.SessionTokenRefresher
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.utils.logging.TangemLogger
+import dagger.Lazy
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
@@ -26,6 +28,9 @@ import okhttp3.Response
 class DpopAuthorizationInterceptor(
     private val store: SessionTokensStore,
     private val proofFactory: DpopProofFactory,
+    // Lazy to break the interceptor → refresher → AuthApi → OkHttp cycle (the client already
+    // resolves this interceptor through a Provider, so this only ever runs at request time).
+    private val refresher: Lazy<SessionTokenRefresher>,
 ) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -33,7 +38,7 @@ class DpopAuthorizationInterceptor(
 
         if (!original.requiresDpopProof()) return chain.proceed(original)
 
-        val accessToken = runBlocking { store.get().getOrNull()?.accessToken }
+        val accessToken = runBlocking { resolveAccessToken(original.requiresSessionRefresh()) }
         if (accessToken == null) {
             // Annotated endpoint reached without a session — let the upstream HTTP layer surface
             // the resulting 401 so `SessionAuthenticator` can drive recovery.
@@ -51,5 +56,17 @@ class DpopAuthorizationInterceptor(
         }
 
         return chain.proceed(original.withDpopHeaders(accessToken, proof))
+    }
+
+    private suspend fun resolveAccessToken(requiresSessionRefresh: Boolean): String? = if (requiresSessionRefresh) {
+        // Session-protected endpoint: ensure the access token is valid before sending. ensureSession
+        // returns the current token if still valid, otherwise refreshes — joining any in-flight refresh
+        // via single-flight. This stops a request that started while /token/refresh was in flight from
+        // going out with the stale token (a guaranteed 401 that would trigger a second token rotation).
+        refresher.get().ensureSession().getOrNull()?.accessToken
+    } else {
+        // Refresh-flow endpoints (@RequiresDpopProof only, e.g. /refresh) must read the stored token
+        // directly — calling ensureSession here would re-enter the refresh single-flight and deadlock.
+        store.get().getOrNull()?.accessToken
     }
 }
