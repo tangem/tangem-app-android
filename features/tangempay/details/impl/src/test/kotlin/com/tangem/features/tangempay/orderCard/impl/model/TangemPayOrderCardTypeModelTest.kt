@@ -8,6 +8,7 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
@@ -20,11 +21,15 @@ import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.TangemPayFeatureToggles
+import com.tangem.features.tangempay.customerTariffPlan
 import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardTypeComponent
 import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderCardType
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardTypeUM
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardTypeUM.FeeState
 import com.tangem.features.tangempay.orderCard.impl.ui.state.imageUrlFor
+import com.tangem.features.tangempay.tariffPlan
+import com.tangem.features.tangempay.tariffPlanState
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.CountryNames
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -40,7 +45,10 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 import java.util.Currency
 import java.util.Locale
@@ -509,6 +517,61 @@ internal class TangemPayOrderCardTypeModelTest {
         assertThat(selectedPlasticEta).isEqualTo(EXPECTED_MAX_BUSINESS_DAYS)
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class PlanBackground {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a customer tariff plan WHEN the payment account emits THEN the plan background matches it`(
+            testModel: PlanBackgroundModel,
+        ) = runTest {
+            // Arrange
+            every { paymentAccountStatusSupplier(userWalletId) } returns flowOf(loadedStatus(testModel.planState))
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.state.value.isBasicPlan).isEqualTo(testModel.isBasicPlan)
+        }
+
+        @Test
+        fun `GIVEN a plus plan WHEN the payment account stops reporting a plan THEN the plus background is kept`() =
+            runTest {
+                // Arrange
+                val statuses = flowOf(loadedStatus(planState(isBasicTier = false)), loadedStatus(planState = null))
+                every { paymentAccountStatusSupplier(userWalletId) } returns statuses
+
+                // Act
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.state.value.isBasicPlan).isFalse()
+            }
+
+        private fun provideTestModels() = listOf(
+            PlanBackgroundModel(planState = planState(isBasicTier = true), isBasicPlan = true),
+            PlanBackgroundModel(planState = planState(isBasicTier = false), isBasicPlan = false),
+            PlanBackgroundModel(planState = null, isBasicPlan = true),
+        )
+    }
+
+    private fun planState(isBasicTier: Boolean) = tariffPlanState(
+        tariff = customerTariffPlan(
+            plan = tariffPlan(tierId = if (isBasicTier) "BASIC" else "PLUS", isBasicTier = isBasicTier),
+        ),
+    )
+
+    private fun loadedStatus(planState: TangemPayTariffPlanState?): AccountStatus.Payment {
+        val loaded = mockk<PaymentAccountStatusValue.Loaded>(relaxed = true) {
+            every { tariffPlan } returns planState
+        }
+        return mockk { every { value } returns loaded }
+    }
+
     private fun createModel(testScope: TestScope) = TangemPayOrderCardTypeModel(
         paramsContainer = MutableParamsContainer(
             TangemPayOrderCardTypeComponent.Params(
@@ -604,6 +667,13 @@ internal class TangemPayOrderCardTypeModelTest {
         mainImageUrl = mainImageUrl,
     )
 
+    internal data class PlanBackgroundModel(
+        val planState: TangemPayTariffPlanState?,
+        val isBasicPlan: Boolean,
+    ) {
+        override fun toString(): String = "plan=${planState?.tariff?.plan?.tierId ?: "none"}"
+    }
+
     private fun customerInfo(availableBalance: BigDecimal? = BigDecimal("100.00")) = CustomerInfo(
         customerId = "cust_1",
         paymentAccount = null,
@@ -614,8 +684,6 @@ internal class TangemPayOrderCardTypeModelTest {
         fiatBalance = availableBalance?.let {
             PaymentAccountStatusValue.FiatBalance(availableBalance = it, currency = "USD")
         },
-        cryptoBalance = null,
-        availableForWithdrawal = BigDecimal.ZERO,
         tariffPlan = null,
         country = "US",
         email = "j.silverhand@gmail.com",
