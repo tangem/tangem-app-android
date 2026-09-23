@@ -34,6 +34,7 @@ import com.tangem.core.ui.ds.button.action.ActionButtons
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalHazeState
@@ -54,11 +55,8 @@ import java.math.BigDecimal
 /** Scrolling header of the Discovery feed: the account balance, its actions, and the events section title. */
 @Composable
 internal fun PolymarketMainHeader(
-    balance: TextReference,
-    addFunds: TangemButtonUM,
-    withdraw: TangemButtonUM,
+    balance: PredictionBalanceUM,
     isAwaitingFunds: Boolean,
-    onBalanceClick: () -> Unit,
     modifier: Modifier = Modifier,
     positions: PolymarketPositionsPreviewUM = PolymarketPositionsPreviewUM.Content(persistentListOf()),
     onActivePositionsClick: (() -> Unit)? = null,
@@ -71,13 +69,12 @@ internal fun PolymarketMainHeader(
     ) {
         BalanceBlock(
             balance = balance,
-            onClick = onBalanceClick,
             modifier = Modifier.padding(top = 56.dp),
         )
 
         ActionsRow(
-            addFunds = addFunds,
-            withdraw = withdraw,
+            addFunds = balance.addFunds,
+            withdraw = balance.withdraw,
             modifier = Modifier.padding(top = 32.dp),
         )
 
@@ -106,7 +103,7 @@ internal fun PolymarketMainHeader(
 }
 
 @Composable
-private fun BalanceBlock(balance: TextReference, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun BalanceBlock(balance: PredictionBalanceUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -115,13 +112,13 @@ private fun BalanceBlock(balance: TextReference, onClick: () -> Unit, modifier: 
         Row(
             modifier = Modifier
                 .clip(CircleShape)
-                .clickable(role = Role.Button, onClick = onClick)
+                .clickable(enabled = balance.isSwitchEnabled, role = Role.Button, onClick = balance.onSwitchClick)
                 .padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
-                text = stringResourceSafe(R.string.prediction_main_total_balance),
+                text = balance.label.resolveReference(),
                 color = TangemTheme.colors3.text.primary,
                 style = TangemTheme.typography3.subheading.medium,
             )
@@ -135,7 +132,7 @@ private fun BalanceBlock(balance: TextReference, onClick: () -> Unit, modifier: 
         }
 
         Text(
-            text = balance.resolveAnnotatedReference(),
+            text = balance.balance.resolveAnnotatedReference(),
             color = TangemTheme.colors3.text.primary,
             style = TangemTheme.typography3.display.medium,
             maxLines = 1,
@@ -184,11 +181,8 @@ private fun PolymarketMainHeaderPreview(
         val state = previewPredictionBalance(balance)
 
         PolymarketMainHeader(
-            balance = state.balance,
-            addFunds = state.addFunds,
-            withdraw = state.withdraw,
+            balance = state,
             isAwaitingFunds = false,
-            onBalanceClick = {},
             modifier = Modifier.background(TangemTheme.colors3.bg.primary),
         )
     }
@@ -211,11 +205,8 @@ private fun PolymarketMainHeaderAwaitingFundsPreview() {
         val state = previewPredictionBalance(BigDecimal("1234.56"))
 
         PolymarketMainHeader(
-            balance = state.balance,
-            addFunds = state.addFunds,
-            withdraw = state.withdraw,
+            balance = state,
             isAwaitingFunds = true,
-            onBalanceClick = {},
             modifier = Modifier.background(TangemTheme.colors3.bg.primary),
         )
     }
@@ -225,6 +216,9 @@ internal fun previewPredictionBalance(balance: BigDecimal) = PredictionBalanceUM
     balance = balance.formatPolymarketMoneyStyled(
         fractionStyle = { TangemTheme.typography3.heading.medium.toSpanStyle() },
     ),
+    label = resourceReference(R.string.prediction_main_available_balance),
+    isSwitchEnabled = true,
+    onSwitchClick = {},
     addFunds = previewButton(
         text = resourceReference(R.string.common_add_funds),
         icon = Icons.ic_arrow_down_24,
