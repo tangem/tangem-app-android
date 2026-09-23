@@ -10,8 +10,7 @@ import kotlinx.coroutines.flow.Flow
  * Source of one kind of extra balance — staking, yield supply, and whatever comes next.
  *
  * Registered with Hilt `@Binds @IntoSet`, so introducing a balance type means adding a provider: neither the
- * status producer nor `domain/models` has to change. Gated by `TWI_1717_BALANCE_CONTRIBUTIONS`; while the toggle
- * is off the producer never collects these flows and keeps its legacy staking join.
+ * status producer nor `domain/models` has to change.
  *
  * A provider subscribes only to **its own** data source and emits a [ContributionResolver] per frame. It is the
  * producer — which already holds a consistent snapshot of network statuses — that asks the resolver about each

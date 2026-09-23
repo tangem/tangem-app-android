@@ -99,6 +99,13 @@ a failed or empty first page is retried once silently), the balance header from
 positions preview (`PolymarketPositionsPreviewLoader`, polled every 20 s), and
 `PredictionBalancePoller.subscribe` for as long as the screen is shown. Pull-to-refresh refreshes status and requisites together.
 
+The header shows one of two figures, toggled by tapping its label (`PredictionBalanceMode`): **Available**
+(the CLOB collateral, `Active.balance`, the default) and **Total** (`Active.totalBalance` = collateral + the
+data-API value of the open positions). Total is offered only once a full refresh has read `positionsValue`;
+until then the header shows Available and the toggle is disabled, but the chosen mode is kept and comes back
+as soon as the value does. The wallet screen and the wallet total keep counting the available
+balance only, as on iOS.
+
 - **Add funds** is gated: `RequisitesState.Loading` ignores the tap, `Failed` shows a dialog, `Ready`
   opens the sheet — swap (`AccountFlow.PredictionTopUp`) or receive. Both need a confirmed address
   (`activeStatus.cryptoCurrencyStatus`); without it a snackbar reports an unknown error rather than
@@ -106,27 +113,41 @@ positions preview (`PolymarketPositionsPreviewLoader`, polled every 20 s), and
 - **Withdraw** pushes swap with the collateral as FROM (`AccountFlow.PredictionWithdraw`), available in
   read-only mode too.
 - **Awaiting-funds banner** follows `PredictionFundingWindow.isOpen`; the poller drops to 5 s while open.
+  Opened by `SwapRoute.Success` and a placed order, never by Receive (an external transfer's timing is unknown).
 - A position row opens `PositionResult` when resolved (`canOpenPositionResult`), `PositionDetails` when
   still open (`canOpenPositionDetails`), nothing otherwise.
 
 ## Order flow (`placeprediction/`)
 
-`PlacePredictionModel` (~750 lines, the largest model) drives Amount → Slippage → Summary → Status:
+`PlacePredictionComponent` owns Amount → Slippage → Summary → Status. Each step has its own retained model.
+Status receives the result, market header and position id as route data and owns the position indexing wait.
+
+- **Confirmation boundary.** Amount creates `PreparedPrediction` synchronously on Next and cancels its
+  current quote request. The snapshot carries the displayed state, quote receipt time and signing
+  parameters. Summary displays and signs that snapshot; it has no price or quote use cases. Balance and
+  position validation can still update its eligibility to submit. Back returns to the retained Amount
+  model and immediately starts fresh spending-power and price reads.
 
 - **Quote loop.** Amount entry is debounced 500 ms, then one loop runs every 3 s
   (`QUOTE_POLL_INTERVAL_MILLIS`) and decides on each turn whether to ask `GetPredictionOrderQuoteUseCase`
   for a quote or `GetPredictionPriceUseCase` for a price — a quote while the amount is quotable, a price
-  while it is empty or below the minimum. The quote is never cached. Two independent gates decide whether
-  it is placeable: `quote.status.isPlaceable` (market state) and `isBelowMinAmount` (side-specific: BUY is
-  price-weighted, SELL is the flat `minOrderSize`, lifted when the sale closes the whole position —
-  `isFullClose`).
+  while it is empty or below the minimum. The quote is never cached. The loop is bound to the Amount step
+  (`PlacePredictionAmountComponent` `doOnResume` / `doOnPause`), so it runs only while that screen is on top
+  and in the foreground. Slippage returns an explicit result to Amount and invalidates its old quote
+  when the value changes; returning to Amount starts the next request immediately.
+  `ValidatePredictionOrderUseCase` refuses a quote older than 60 s after signing, before submission.
+  Summary shows the generic place-error dialog and stays on the same screen. Two independent gates decide whether
+  it is placeable: `quote.isPlaceable` (market state; a SELL also places on `BELOW_MIN_ORDER_SIZE`) and
+  `isBelowMinAmount` (BUY only, price-weighted — a SELL has no floor beyond one whole share or the whole
+  position).
 - **Shares.** `SharesCalculator`: the sellable size is the position floored to the 2-decimal exchange grid
   (`PolymarketConst.SHARES_DECIMALS`); presets and ± steps move in whole shares with a floor of one share
   (or the whole position when smaller), and 100 % is the position itself, so a full close reaches the
   last fraction.
 - **Slippage.** Default 3 %, range 0.1–30 % (`SlippagePickerUM`); a fill at the worst-case price counts as filled.
-- **Region.** Read by the flow itself when shown (`TradingPermissionUM`), re-read on resume only while
-  `Unknown`, never carried on the route and not re-read before signing. An unreadable region keeps the
+- **Region.** Read by Amount (`TradingPermissionUM`), re-read on its resume only while `Unknown`.
+  A permitted order carries that decision in its internal confirmation snapshot; external entry routes
+  do not supply it, and it is not re-read before signing. An unreadable region keeps the
   gate shut as `Unknown` — the order is refused, the user is not told they are restricted.
 - **Placing.** `SignPredictionOrderInteractor` (one signing session: card for Cold, unlock for Hot) →
   `PlacePredictionOrderUseCase`.
@@ -139,8 +160,17 @@ positions preview (`PolymarketPositionsPreviewLoader`, polled every 20 s), and
 - **Position reads.** `/positions/outcome` may answer `null` until the position is indexed.
   `PolymarketPositionDetailsModel` shows Unavailable at once when the first read is `null`; the retry loop
   (`POSITION_INDEXING_READS` reads, `POSITION_INDEXING_RETRY_MILLIS` apart) serves a position already shown
-  whose size has not caught up with the last order, and pops the screen if it disappears. The order flow itself does not re-read after a fill; the
-  sell flow reads the position on open and again at signing.
+  whose size has not caught up with the last order, and pops the screen if it disappears. The sell flow
+  reads the position on open and again at signing.
+- **View position.** After a buy fills (`Filled` / `PartiallyFilled`), the result screen reads the created
+  position back itself — `PolymarketPositionId(market.conditionId, assetId)`, so a market the BFF gave no
+  `conditionId` for offers no button. `ViewPositionUM` drives it: `Awaiting` shows the button with a loader
+  and keeps it disabled, `Available` enables it, `Hidden` leaves the single To main button — including when
+  the read comes back a position the details screen would refuse (`canOpenPositionDetails`). The wait is `CREATED_POSITION_READS`
+  (15, ~30 s) rather than the details screen's 5, because the index answers `null` for several seconds even
+  for an outcome the wallet already held — a read that fails is retried like a missing one. The button
+  replaces the whole stack with Main + the position details, so back from the position lands on the feed
+  rather than on the result of an order already placed.
 - **Sell** (`Params.Sell`) validates at signing time that the position still exists, the market accepts
   orders and enough shares remain after grid rounding. SELL legs: `makerAmount = shares`,
   `takerAmount = collateral`.
@@ -178,7 +208,7 @@ and [REDACTED_TASK_KEY] (the claim action on the result screen).
 - **Quotes (BFF `POST /orders/quote`) and prices (CLOB `GET price`) arrive as decimal strings.** Parse
   with `BigDecimal`, compare with `compareTo`, never `==`.
 - **Times are Eastern** (`PolymarketConst.EASTERN_TIME_ZONE`) for market end dates.
-- **`PolymarketMainModelTest` and `PlacePredictionModelTest` are the reference tests** for a model in this
+- **`PolymarketMainModelTest` and `PlacePredictionModelTestBase` are the reference tests** for a model in this
   module: `ParamsContainer` fed by hand, Turbine over `uiState`, relaxed mocks only for router, message
   sender and the flows the test is not about.
 - Pull-to-refresh on the feed refreshes the region, the account status and the requisites together; the
@@ -190,6 +220,6 @@ and [REDACTED_TASK_KEY] (the claim action on the result screen).
 |---|---|
 | Claim (redeem) of a won position: transaction and claim action | [REDACTED_TASK_KEY], [REDACTED_TASK_KEY] |
 | Drop L2 credentials on CLOB `401` and route to the gate | [REDACTED_TASK_KEY] |
-| Tradezone `/value` (In Bets / Total) and PnL | not ticketed |
+| Tradezone PnL (`/v1/leaderboard`) | not ticketed |
 | Withdraw beyond USDC · Polygon (phase 2), withdrawal tracker on cold start, explorer link on withdraw | not ticketed |
 | Prediction-withdraw analytics event | waiting for analysts |
