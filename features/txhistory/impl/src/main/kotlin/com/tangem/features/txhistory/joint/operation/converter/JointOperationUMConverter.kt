@@ -66,7 +66,7 @@ internal class JointOperationUMConverter(
                 onCopyClick = onCopyRecipientClick,
             ),
             rows = listOfNotNull(feeRow(state)).toImmutableList(),
-            cosign = if (state.isSending) null else cosignRow(state),
+            cosign = cosignRow(state),
             cosignAction = action(
                 state = state,
                 isSigning = value.isSigning,
@@ -155,7 +155,7 @@ internal class JointOperationUMConverter(
         // The model overlays a local answer into the state, so the answer alone says whether this member signed;
         // [hasAnswered] also covers a local decline and only blocks a second tap
         val hasSigned = state.ownAnswer == Answer.SIGNED || state.ownAnswer == Answer.CREATED
-        if (state.isSending) return sentAction(state = state, hasSigned = hasSigned)
+        if (state.isSending) return sentAction(hasSigned = hasSigned)
 
         val canSign = state.canSign && !hasAnswered && !isRefusing
 
@@ -180,15 +180,12 @@ internal class JointOperationUMConverter(
     }
 
     /** Nothing left to do once the threshold is reached: the button only records whether this member signed */
-    private fun sentAction(state: JointOperationState, hasSigned: Boolean): TxHistoryDetailsUM.CosignActionUM {
+    private fun sentAction(hasSigned: Boolean): TxHistoryDetailsUM.CosignActionUM {
         val buttonText = if (hasSigned) CoreUiR.string.joint_operation_signed else CoreUiR.string.common_sign
 
         return TxHistoryDetailsUM.CosignActionUM(
             buttonText = resourceReference(buttonText),
-            caption = resourceReference(
-                id = CoreUiR.string.joint_operation_sent_footer,
-                formatArgs = wrappedList(state.collected, state.membersCount),
-            ),
+            caption = null,
             isEnabled = false,
             onClick = onSignClick,
         )
