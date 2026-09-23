@@ -5,7 +5,6 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.data.cloudbackup.CloudBackupJson
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.cloudbackup.crypto.CloudBackupCipher
 import com.tangem.data.cloudbackup.crypto.CloudBackupCryptoError
 import com.tangem.data.cloudbackup.crypto.CloudBackupFileData
@@ -51,15 +50,12 @@ internal class DefaultCloudBackupRepositoryTest {
     // don't pay the Argon2 cost and stay focused on the Drive API orchestration + error mapping.
     private val cipher: CloudBackupCipher = mockk()
 
-    private val featureTogglesManager: FeatureTogglesManager = mockk()
-
     private val repository = DefaultCloudBackupRepository(
         api = api,
         tokenProvider = tokenProvider,
         store = store,
         cipher = cipher,
         dispatchers = TestingCoroutineDispatcherProvider(),
-        featureTogglesManager = featureTogglesManager,
     )
 
     private val secret = CloudBackupSecretData(mnemonic = "m".toCharArray(), isPassphraseRequired = false)
@@ -89,10 +85,9 @@ internal class DefaultCloudBackupRepositoryTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(api, tokenProvider, cipher, featureTogglesManager)
+        clearMocks(api, tokenProvider, cipher)
         coEvery { tokenProvider.getAccessToken(any()) } returns "token".right()
         every { cipher.encrypt(any(), any(), any(), any()) } returns fileData
-        every { featureTogglesManager.isFeatureEnabled(any()) } returns true
     }
 
     @Test
@@ -204,26 +199,13 @@ internal class DefaultCloudBackupRepositoryTest {
     }
 
     @Test
-    fun `GIVEN feature disabled WHEN isBackedUp THEN returns false despite the stored flag`() = runTest {
+    fun `GIVEN stored flag WHEN isBackedUp THEN returns true`() = runTest {
         // Arrange
-        every { featureTogglesManager.isFeatureEnabled(any()) } returns false
         store.setBackedUp(WALLET_ID, backedUp = true)
 
         // Act & Assert
-        assertThat(repository.isBackedUp(WALLET_ID)).isFalse()
-        assertThat(repository.isBackedUpFlow(WALLET_ID).first()).isFalse()
-    }
-
-    @Test
-    fun `GIVEN feature toggle WHEN isCloudBackupEnabled THEN mirrors the toggle`() {
-        // Arrange
-        every { featureTogglesManager.isFeatureEnabled(any()) } returns false
-
-        // Act & Assert
-        assertThat(repository.isCloudBackupEnabled).isFalse()
-
-        every { featureTogglesManager.isFeatureEnabled(any()) } returns true
-        assertThat(repository.isCloudBackupEnabled).isTrue()
+        assertThat(repository.isBackedUp(WALLET_ID)).isTrue()
+        assertThat(repository.isBackedUpFlow(WALLET_ID).first()).isTrue()
     }
 
     @Test

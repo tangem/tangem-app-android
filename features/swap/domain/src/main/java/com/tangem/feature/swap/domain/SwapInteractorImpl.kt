@@ -874,7 +874,7 @@ internal class SwapInteractorImpl @Inject constructor(
         val fromCurrency = fromSwapCurrencyStatus.currency
 
         // Non-null only on the TRON path, where `txData` is a serialized transaction to unpack.
-        val tronPayload = if (isTron(fromCurrency.network.rawId) && swapFeatureToggles.isTronDexSwapEnabled) {
+        val tronPayload = if (isTron(fromCurrency.network.rawId)) {
             dexTransaction.tronSwapPayload() ?: return SwapTransactionState.Error.UnknownError
         } else {
             null

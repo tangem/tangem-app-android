@@ -3,7 +3,6 @@ package com.tangem.features.yield.supply.impl.active.model
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.common.routing.AppRouter
@@ -56,7 +55,6 @@ class YieldSupplyActiveModelBoostBlockTest {
     private val getYieldBoostStatusUseCase: GetYieldBoostStatusUseCase = mockk(relaxed = true)
     private val boostStoryPreloader: YieldBoostStoryPreloader = mockk(relaxed = true)
     private val analyticsHandler: AnalyticsEventHandler = mockk(relaxed = true)
-    private val featureTogglesManager: FeatureTogglesManager = mockk(relaxed = true)
 
     private val userWalletId = UserWalletId(stringValue = "0123456789ABCDEF")
     private val userWallet: UserWallet.Hot = mockk(relaxed = true)
@@ -108,7 +106,6 @@ class YieldSupplyActiveModelBoostBlockTest {
         yieldSupplyGetDustMinAmountUseCase = yieldSupplyGetDustMinAmountUseCase,
         getYieldBoostStatusUseCase = getYieldBoostStatusUseCase,
         boostStoryPreloader = boostStoryPreloader,
-        featureTogglesManager = featureTogglesManager,
     )
 
     @Test

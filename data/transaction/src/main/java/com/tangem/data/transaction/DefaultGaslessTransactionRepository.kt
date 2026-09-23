@@ -30,7 +30,6 @@ import java.math.BigInteger
 class DefaultGaslessTransactionRepository(
     private val gaslessTxServiceApi: GaslessTxServiceApi,
     private val gaslessTxServiceApiV2: GaslessTxServiceApiV2,
-    private val isGaslessV2Enabled: Boolean,
     private val coroutineDispatcherProvider: CoroutineDispatcherProvider,
     private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
 ) : GaslessTransactionRepository {
@@ -39,7 +38,7 @@ class DefaultGaslessTransactionRepository(
     private val receiverAddressMutex = Mutex()
     private var feeReceiverAddress: String? = null
 
-    private val requestConverter = GaslessTxDataToGaslessRequestConverter(shouldIncludeGasLimit = isGaslessV2Enabled)
+    private val requestConverter = GaslessTxDataToGaslessRequestConverter(shouldIncludeGasLimit = true)
     private val gaslessTransactionRequestBuilder = GaslessTransactionRequestBuilder(requestConverter)
     private val gaslessBatchTransactionRequestBuilder = GaslessBatchTransactionRequestBuilder(requestConverter)
     private val signedTransactionResultConverter = GaslessSignedTransactionResultConverter()
@@ -117,11 +116,7 @@ class DefaultGaslessTransactionRepository(
             eip7702Auth = eip7702Auth,
         )
 
-        val response = if (isGaslessV2Enabled) {
-            gaslessTxServiceApiV2.signGaslessTransaction(transactionRequest)
-        } else {
-            gaslessTxServiceApi.signGaslessTransaction(transactionRequest)
-        }.getOrThrowGaslessError()
+        val response = gaslessTxServiceApiV2.signGaslessTransaction(transactionRequest).getOrThrowGaslessError()
 
         if (!response.isSuccess) {
             throw unsuccessfulResponseError()

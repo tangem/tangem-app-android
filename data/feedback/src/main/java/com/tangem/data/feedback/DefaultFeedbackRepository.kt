@@ -52,12 +52,7 @@ internal class DefaultFeedbackRepository(
         return userWallet?.let { wallet ->
             val metaInfo = WalletMetaInfoConverter.convert(wallet)
             if (wallet is UserWallet.Hot) {
-                // while the feature is disabled the cloud line must not leak into the support email
-                val isCloudBackedUp = if (cloudBackupRepository.isCloudBackupEnabled) {
-                    cloudBackupRepository.isBackedUp(wallet.walletId.stringValue)
-                } else {
-                    null
-                }
+                val isCloudBackedUp = cloudBackupRepository.isBackedUp(wallet.walletId.stringValue)
                 // while the feature is disabled the social line must not leak into the support email
                 val isSocialBackedUp = if (socialLoginFeatureToggles.isSocialLoginEnabled) {
                     isSocialBackupCompletedUseCase(wallet.walletId)

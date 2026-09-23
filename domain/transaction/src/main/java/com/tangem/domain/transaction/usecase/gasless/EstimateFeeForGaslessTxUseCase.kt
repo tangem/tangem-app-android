@@ -37,7 +37,6 @@ class EstimateFeeForGaslessTxUseCase(
     private val estimateFeeUseCase: EstimateFeeUseCase,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
-    private val isYieldWithdrawEnabled: Boolean,
 ) {
 
     private val tokenFeeCalculator = TokenFeeCalculator(
@@ -193,11 +192,11 @@ class EstimateFeeForGaslessTxUseCase(
             .filter { (it.currency as CryptoCurrency.Token).contractAddress.lowercase() in supportedGaslessTokens }
             .filter { status ->
                 val total = status.value.amount ?: BigDecimal.ZERO
-                total > BigDecimal.ZERO || isYieldWithdrawEnabled && status.value.yieldSupplyStatus?.isActive == true
+                total > BigDecimal.ZERO || status.value.yieldSupplyStatus?.isActive == true
             }.maxByOrNull { status -> status.value.amount ?: BigDecimal.ZERO }
             ?: raise(GaslessError.NoSupportedTokensFound)
 
-        val isYieldActive = isYieldWithdrawEnabled && tokenForPayFeeStatus.value.yieldSupplyStatus?.isActive == true
+        val isYieldActive = tokenForPayFeeStatus.value.yieldSupplyStatus?.isActive == true
         val tokenFeeExtended = tokenFeeCalculator.calculateTokenFee(
             walletManager = walletManager,
             tokenForPayFeeStatus = tokenForPayFeeStatus,
