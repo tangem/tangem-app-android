@@ -2,7 +2,6 @@ package com.tangem.domain.account.status.contribution
 
 import arrow.core.right
 import arrow.core.some
-import arrow.core.toOption
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.getExtraBalanceOrNull
@@ -28,10 +27,7 @@ import com.tangem.domain.models.staking.YieldBalanceItem
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.model.StakingIntegrationID
-import com.tangem.domain.staking.model.stakingBalanceData
 import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier
-import com.tangem.domain.staking.single.SingleStakingBalanceProducer.Companion.selectStakingBalance
-import com.tangem.domain.tokens.operations.BalanceContributionsInput
 import com.tangem.domain.tokens.operations.CryptoCurrencyStatusFactory
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
@@ -47,20 +43,16 @@ import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 /**
- * Old-vs-new parity at the **seam**, composed the way the producer composes it.
+ * The balance-contributions seam, composed the way the producer composes it: the real
+ * [StakingContributionProvider] / [YieldSupplyContributionProvider] resolve a currency, and
+ * [CryptoCurrencyStatusFactory] folds what they return into the status.
  *
- * Balances are critical, so the contributions architecture ships alongside the legacy staking join and must be
- * provably equivalent before the toggle is released. Each case builds the same currency twice — once through the
- * legacy path (`findStakingBalance`-equivalent → factory with [BalanceContributionsInput.Disabled]) and once
- * through the new path (real [StakingContributionProvider] / [YieldSupplyContributionProvider] → factory with
- * `enabled(...)`) — then compares what a reader can actually observe: the typed staking field, the freshness the
- * status reports, and the totals every UI surface computes through `:common`.
- *
- * `Value.contributions` itself is expected to differ (it is empty on the legacy path by design); everything a user
- * sees must not.
+ * Balances are critical, so what a reader can actually observe is pinned here end to end — the extra balance on top
+ * of the network amount, the totals every UI surface computes through `:common`, and the freshness the status
+ * reports.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class BalanceContributionSeamParityTest {
+internal class BalanceContributionSeamTest {
 
     private val stakingBalanceSupplier: MultiStakingBalanceSupplier = mockk()
     private val stakingIdFactory: StakingIdFactory = mockk()
@@ -79,73 +71,57 @@ internal class BalanceContributionSeamParityTest {
     private val wallet = MockUserWalletFactory.create()
 
     @Test
-    fun `GIVEN Solana staking WHEN built both ways THEN a reader observes the same balance`() = runTest {
-        assertParity(
-            currency = cryptoCurrencyFactory.createCoin(Blockchain.Solana),
-            stakingBalance = stakeKitBalance(cryptoCurrencyFactory.createCoin(Blockchain.Solana)),
-        )
-    }
-
-    @Test
-    fun `GIVEN Cardano staking WHEN built both ways THEN a reader observes the same balance`() = runTest {
-        // the per-network rule is resolved by the factory on one path and by the provider on the other
-        assertParity(
-            currency = cryptoCurrencyFactory.cardano,
-            stakingBalance = stakeKitBalance(cryptoCurrencyFactory.cardano),
-        )
-    }
-
-    @Test
-    fun `GIVEN cached staking balance WHEN built both ways THEN both report the same freshness`() = runTest {
+    fun `GIVEN a cached staking balance WHEN built at the seam THEN the status reports only-cache`() = runTest {
         // Arrange
         val currency = cryptoCurrencyFactory.cardano
 
         // Act
-        val (legacy, contributions) = buildBoth(
+        val status = buildStatus(
             currency = currency,
             stakingBalance = stakeKitBalance(currency).copy(source = StatusSource.ONLY_CACHE),
         )
 
-        // Assert — pinned, not just equal: a stale staking fetch must still degrade the status on both paths,
-        // otherwise "both report ACTUAL" would pass a purely differential check
-        assertThat(legacy.value.sources.total).isEqualTo(StatusSource.ONLY_CACHE)
-        assertThat(contributions.value.sources.total).isEqualTo(StatusSource.ONLY_CACHE)
-        assertParityOf(legacy, contributions)
+        // Assert — a stale staking fetch degrades the whole status, not just the contribution
+        assertThat(status.value.sources.contributionSources).containsExactly(StatusSource.ONLY_CACHE)
+        assertThat(status.value.sources.total).isEqualTo(StatusSource.ONLY_CACHE)
     }
 
     @Test
-    fun `GIVEN empty staking balance WHEN built both ways THEN neither attaches anything`() = runTest {
+    fun `GIVEN an empty staking balance WHEN built at the seam THEN nothing is contributed`() = runTest {
+        // Arrange
         val currency = cryptoCurrencyFactory.cardano
         val empty = StakingBalance.Empty(stakingId = stakingId(), source = StatusSource.ONLY_CACHE)
 
-        val (legacy, contributions) = buildBoth(currency = currency, stakingBalance = empty)
+        // Act
+        val status = buildStatus(currency = currency, stakingBalance = empty)
 
-        // Assert — Empty is not a Data balance, so the legacy factory drops it too: no divergence
-        assertThat(legacy.value.stakingBalance).isNull()
-        assertThat(contributions.value.stakingBalance).isNull()
-        assertParityOf(legacy, contributions)
+        // Assert — only Data balances ever reach a status
+        assertThat(status.value.contributions).isEmpty()
+        assertThat(status.getExtraBalanceOrNull()).isNull()
+        assertThat(status.value.stakingBalance).isNull()
     }
 
     @Test
-    fun `GIVEN staking balance of another address WHEN built both ways THEN neither attaches anything`() = runTest {
+    fun `GIVEN a staking balance of another address WHEN built at the seam THEN nothing is contributed`() = runTest {
+        // Arrange — the stake belongs to a different address of the same wallet than the one the status is built for
         val currency = cryptoCurrencyFactory.cardano
-        val foreign = stakeKitBalance(currency, stakingId = stakingId(address = "0xanother"))
+        val foreignId = stakingId(address = "0xanother")
 
-        val (legacy, contributions) = buildBoth(
+        // Act
+        val status = buildStatus(
             currency = currency,
-            stakingBalance = foreign,
-            stakingId = stakingId(address = "0xanother"),
+            stakingBalance = stakeKitBalance(currency, stakingId = foreignId),
+            stakingId = foreignId,
         )
 
         // Assert
-        assertThat(legacy.value.stakingBalance).isNull()
-        assertThat(contributions.value.stakingBalance).isNull()
-        assertParityOf(legacy, contributions)
+        assertThat(status.value.contributions).isEmpty()
+        assertThat(status.getExtraBalanceOrNull()).isNull()
     }
 
     @Test
-    fun `GIVEN yield supply WHEN built both ways THEN the extra contribution stays numerically inert`() = runTest {
-        // Arrange — the new path gains a zero-delta yield contribution the legacy path has no equivalent for
+    fun `GIVEN yield supply WHEN built at the seam THEN its contribution stays numerically inert`() = runTest {
+        // Arrange
         val currency = cryptoCurrencyFactory.ethereum
         val yieldStatus = YieldSupplyStatus(
             isActive = true,
@@ -154,37 +130,27 @@ internal class BalanceContributionSeamParityTest {
             effectiveProtocolBalance = BigDecimal(4),
         )
 
-        val (legacy, contributions) = buildBoth(
+        // Act
+        val status = buildStatus(
             currency = currency,
             stakingBalance = null,
             yieldSupplyStatuses = mapOf(currency.id to yieldStatus),
         )
 
-        // Assert — the lists differ on purpose, the numbers must not
-        assertThat(legacy.value.contributions).isEmpty()
-        assertThat(contributions.value.contributions).hasSize(1)
-        assertThat(contributions.value.contributions.single().totalDeltaCryptoAmount()).isEqualTo(BigDecimal.ZERO)
-        assertThat(contributions.getTotalCryptoAmount()).isEqualTo(legacy.getTotalCryptoAmount())
-        assertThat(contributions.getTotalFiatAmount()).isEqualTo(legacy.getTotalFiatAmount())
-        assertThat(contributions.value.sources.total).isEqualTo(legacy.value.sources.total)
+        // Assert — the yield-supply balance is already inside the network amount, so it may not be added on top
+        assertThat(status.value.contributions).hasSize(1)
+        assertThat(status.value.contributions.single().totalDeltaCryptoAmount()).isEqualTo(BigDecimal.ZERO)
+        assertThat(status.getTotalCryptoAmount()).isEqualTo(NETWORK_AMOUNT)
+        assertThat(status.getTotalFiatAmount()).isEqualTo(NETWORK_AMOUNT)
     }
 
     /**
-     * One case per **live** staking integration ([StakingIntegrationID.entries]).
-     *
-     * The generic cases above prove the two architectures agree on a representative balance; these prove it for
-     * every integration actually shipped, with the item types that integration really returns — TON's warm-up
-     * `PREPARING`, Tron's `LOCKED` votes, Solana's several validators, BSC's `UNSTAKING`, and P2PEthPool's
-     * account-shaped balance that has no items at all.
-     *
-     * Each case asserts twice on purpose:
-     * - a **pinned** expected extra balance, which keeps documenting the integration's rule after the legacy path
-     *   and its differential assertion are deleted in the toggle-cleanup phase;
-     * - **parity** with the legacy path, which is what guards the migration while both exist.
+     * One case per **live** staking integration ([StakingIntegrationID.entries]), with the item types that
+     * integration really returns — TON's warm-up `PREPARING`, Tron's `LOCKED` votes, Solana's several validators,
+     * BSC's `UNSTAKING`, and P2PEthPool's account-shaped balance that has no items at all.
      *
      * Cardano is the one that must differ: its stake is already inside the network balance, so only rewards may be
-     * added on top. The per-network rule is applied by the factory on one path and by the provider on the other,
-     * which is exactly the divergence a per-integration table is here to catch.
+     * added on top.
      */
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -192,19 +158,19 @@ internal class BalanceContributionSeamParityTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN a live integration WHEN built both ways THEN the extra balance is pinned and identical`(
+        fun `GIVEN a live integration WHEN built at the seam THEN the extra balance is pinned`(
             model: IntegrationTestModel,
         ) = runTest {
             // Act
-            val (legacy, contributions) = buildBoth(
+            val status = buildStatus(
                 currency = model.currency,
                 stakingBalance = model.balance,
                 stakingId = model.balance.stakingId,
             )
 
             // Assert
-            assertThat(contributions.getExtraBalanceOrNull()).isEqualTo(model.expectedExtraBalance)
-            assertParityOf(legacy, contributions)
+            assertThat(status.getExtraBalanceOrNull()).isEqualTo(model.expectedExtraBalance)
+            assertThat(status.getTotalCryptoAmount()).isEqualTo(NETWORK_AMOUNT + model.expectedExtraBalance)
         }
 
         @Suppress("LongMethod")
@@ -328,75 +294,28 @@ internal class BalanceContributionSeamParityTest {
         }
     }
 
-    private suspend fun assertParity(currency: CryptoCurrency, stakingBalance: StakingBalance?) {
-        val (legacy, contributions) = buildBoth(currency = currency, stakingBalance = stakingBalance)
-
-        assertParityOf(legacy, contributions)
-    }
-
-    /**
-     * Everything a reader can observe about extra balances, on both paths.
-     *
-     * The staking breakdown is compared through `stakingBalanceData`, not through the raw
-     * [CryptoCurrencyStatus.Value.stakingBalance] field: the factory stopped back-filling the typed field on the
-     * contributions path, so it is `null` there **by design** and every Axis-2 reader now goes through the
-     * accessor. Asserting on the raw field would only re-prove that the shim is gone.
-     */
-    private fun assertParityOf(legacy: CryptoCurrencyStatus, contributions: CryptoCurrencyStatus) {
-        assertThat(contributions.getExtraBalanceOrNull()).isEqualTo(legacy.getExtraBalanceOrNull())
-        assertThat(contributions.getTotalCryptoAmount()).isEqualTo(legacy.getTotalCryptoAmount())
-        assertThat(contributions.getTotalFiatAmount()).isEqualTo(legacy.getTotalFiatAmount())
-        assertThat(contributions.value.stakingBalanceData).isEqualTo(legacy.value.stakingBalanceData)
-        assertThat(contributions.value.sources.total).isEqualTo(legacy.value.sources.total)
-    }
-
-    /**
-     * Builds the same currency through both architectures. The legacy branch mirrors the producer's
-     * `findStakingBalance`; the contributions branch runs the real providers.
-     */
-    private suspend fun buildBoth(
+    /** Runs the registered providers over [currency] and folds what they resolve into a status, as the producer does. */
+    private suspend fun buildStatus(
         currency: CryptoCurrency,
         stakingBalance: StakingBalance?,
         stakingId: StakingID = stakingId(),
         yieldSupplyStatuses: Map<CryptoCurrency.ID, YieldSupplyStatus?> = emptyMap(),
-    ): Pair<CryptoCurrencyStatus, CryptoCurrencyStatus> {
+    ): CryptoCurrencyStatus {
         every { stakingBalanceSupplier(any()) } returns flowOf(setOfNotNull(stakingBalance))
         every { stakingIdFactory.create(currencyId = any(), defaultAddress = any()) } returns stakingId.right()
 
         val networkStatus = verifiedStatus(currency = currency, yieldSupplyStatuses = yieldSupplyStatuses)
-
-        // legacy: the producer's own join, then the factory resolves address/coinGeckoId narrowing and the stamp
-        val legacySelected = stakingBalance?.let {
-            selectStakingBalance(
-                currentStakingId = stakingId,
-                currentBalances = listOf(it),
-                analyticsExceptionHandler = analyticsExceptionHandler,
-            )
-        }
-        val legacy = CryptoCurrencyStatusFactory.create(
-            currency = currency,
-            maybeNetworkStatus = networkStatus.some(),
-            maybeQuoteStatus = quoteStatus(currency).some(),
-            maybeStakingBalance = legacySelected.toOption(),
-            contributionsInput = BalanceContributionsInput.Disabled,
-        )
-
-        // new: whatever the registered providers resolve for this currency
         val resolvers = listOf(
             stakingProvider.contributions(wallet).first(),
             yieldSupplyProvider.contributions(wallet).first(),
         )
-        val contributions = CryptoCurrencyStatusFactory.create(
+
+        return CryptoCurrencyStatusFactory.create(
             currency = currency,
             maybeNetworkStatus = networkStatus.some(),
             maybeQuoteStatus = quoteStatus(currency).some(),
-            maybeStakingBalance = arrow.core.none(),
-            contributionsInput = BalanceContributionsInput.enabled(
-                resolvers.mapNotNull { it.resolve(currency = currency, networkStatus = networkStatus) },
-            ),
+            contributions = resolvers.mapNotNull { it.resolve(currency = currency, networkStatus = networkStatus) },
         )
-
-        return legacy to contributions
     }
 
     // region Fixtures
@@ -502,7 +421,7 @@ internal class BalanceContributionSeamParityTest {
                         type = NetworkAddress.Address.Type.Primary,
                     ),
                 ),
-                amounts = mapOf(currency.id to NetworkStatus.Amount.Loaded(value = BigDecimal.TEN)),
+                amounts = mapOf(currency.id to NetworkStatus.Amount.Loaded(value = NETWORK_AMOUNT)),
                 pendingTransactions = emptyMap(),
                 yieldSupplyStatuses = yieldSupplyStatuses,
                 source = StatusSource.ACTUAL,
@@ -525,5 +444,6 @@ internal class BalanceContributionSeamParityTest {
 
         const val INTEGRATION_ID = "integration"
         const val ADDRESS = "0x1"
+        val NETWORK_AMOUNT: BigDecimal = BigDecimal.TEN
     }
 }

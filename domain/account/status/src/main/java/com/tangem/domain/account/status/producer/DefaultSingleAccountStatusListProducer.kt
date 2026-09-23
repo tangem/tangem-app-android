@@ -3,7 +3,6 @@ package com.tangem.domain.account.status.producer
 import arrow.core.Option
 import arrow.core.none
 import arrow.core.toOption
-import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.domain.account.models.AccountCurrencyId
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.AccountStatusList
@@ -28,15 +27,11 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkStatus
-import com.tangem.domain.models.network.getAddress
 import com.tangem.domain.models.quote.PriceChange
 import com.tangem.domain.models.quote.QuoteStatus
-import com.tangem.domain.models.staking.StakingBalance
-import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.repository.NetworksRepository
@@ -44,12 +39,6 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.isPredictionAccountSupported
 import com.tangem.domain.quotes.multi.MultiQuoteStatusSupplier
-import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.multi.MultiStakingBalanceProducer
-import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier
-import com.tangem.domain.staking.single.SingleStakingBalanceProducer.Companion.selectStakingBalance
-import com.tangem.domain.tokens.TokensFeatureToggles
-import com.tangem.domain.tokens.operations.BalanceContributionsInput
 import com.tangem.domain.tokens.operations.CryptoCurrencyStatusFactory
 import com.tangem.domain.tokens.operations.PriceChangeCalculator
 import com.tangem.domain.tokens.operations.TokenListFactory
@@ -81,9 +70,6 @@ import java.math.BigDecimal
  * @property dispatchers Coroutine dispatcher provider for managing threading.
  * @property networkStatusSupplier Supplier for getting network statuses.
  * @property quoteStatusSupplier Supplier for getting quote statuses.
- * @property stakingBalanceSupplier Supplier for getting staking balances.
- * @property stakingIdFactory Factory for creating staking IDs.
- * @property analyticsExceptionHandler Handler for analytics exceptions.
  *
 [REDACTED_AUTHOR]
  */
@@ -106,10 +92,6 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     private val dispatchers: CoroutineDispatcherProvider,
     private val networkStatusSupplier: MultiNetworkStatusSupplier,
     private val quoteStatusSupplier: MultiQuoteStatusSupplier,
-    private val stakingBalanceSupplier: MultiStakingBalanceSupplier,
-    private val stakingIdFactory: StakingIdFactory,
-    private val analyticsExceptionHandler: AnalyticsExceptionHandler,
-    private val tokensFeatureToggles: TokensFeatureToggles,
     private val balanceContributionProviders: Set<@JvmSuppressWildcards BalanceContributionProvider>,
 ) : SingleAccountStatusListProducer {
 
@@ -363,9 +345,6 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         val networkStatusFlow: SharedFlow<Map<Network.ID, NetworkStatus>> = networkStatusFlow(walletId)
             .onEach { logger.i("flattenCurrencyStatusFlow[$walletId]: networkStatuses emitted size=${it.size}") }
             .shareIn(this, started = SharingStarted.Eagerly, replay = 1)
-        val stakingBalanceFlow: SharedFlow<Map<StakingID, Set<StakingBalance>>> = stakingFlow(userWallet)
-            .onEach { logger.i("flattenCurrencyStatusFlow[$walletId]: stakingBalances emitted stakingIds=${it.size}") }
-            .shareIn(this, started = SharingStarted.Eagerly, replay = 1)
         val quoteStatusFlow: SharedFlow<Map<CryptoCurrency.RawID, QuoteStatus>> = quoteStatusFlow()
             .onEach { logger.i("flattenCurrencyStatusFlow[$walletId]: quoteStatuses emitted size=${it.size}") }
             .shareIn(this, started = SharingStarted.Eagerly, replay = 1)
@@ -379,15 +358,13 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
             .flatMapLatest { a ->
                 combine(
                     flow = networkStatusFlow,
-                    flow2 = stakingBalanceFlow,
-                    flow3 = quoteStatusFlow,
-                    flow4 = contributionResolversFlow,
-                    transform = { b, c, d, e -> Box(
+                    flow2 = quoteStatusFlow,
+                    flow3 = contributionResolversFlow,
+                    transform = { b, c, d -> Box(
                         flattenCurrencyMap = a,
                         networkStatusMap = b,
-                        stakingBalanceMap = c,
-                        quoteStatusMap = d,
-                        contributionResolvers = e,
+                        quoteStatusMap = c,
+                        contributionResolvers = d,
                     ) },
                 )
             }
@@ -397,26 +374,18 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                     "flattenCurrencyStatusFlow[$walletId]: box emitted " +
                         "currencies=${box.flattenCurrencyMap.size}, " +
                         "networks=${box.networkStatusMap.size}, " +
-                        "stakings=${box.stakingBalanceMap.size}, " +
                         "quotes=${box.quoteStatusMap.size}, " +
                         "contributors=${box.contributionResolvers.size}",
                 )
             }
-            .map { box -> box.toCurrencyStatuses(userWallet) }
+            .map { box -> box.toCurrencyStatuses() }
     }
 
-    private fun Box.toCurrencyStatuses(userWallet: UserWallet): Map<AccountCurrencyId, CryptoCurrencyStatus> {
+    private fun Box.toCurrencyStatuses(): Map<AccountCurrencyId, CryptoCurrencyStatus> {
         return flattenCurrencyMap.mapValues { (acId: AccountCurrencyId, currency) ->
             val (_, id) = acId
             val networkStatus: NetworkStatus? = networkStatusMap[currency.network.id]
             val quoteStatus: QuoteStatus? = id.rawCurrencyId?.let { rawID -> quoteStatusMap[rawID] }
-            // the two paths are mutually exclusive: whichever one is off yields nothing
-            val stakingBalance: StakingBalance? = findStakingBalance(
-                networkStatus = networkStatus,
-                id = id,
-                wallet = userWallet,
-                stakingBalanceMap = stakingBalanceMap,
-            )
             val contributions = contributionResolvers.mapNotNull { resolver ->
                 resolver.resolve(currency = currency, networkStatus = networkStatus)
             }
@@ -425,22 +394,14 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                 currency = currency,
                 maybeNetworkStatus = networkStatus.toOption(),
                 maybeQuoteStatus = quoteStatus.toOption(),
-                maybeStakingBalance = stakingBalance.toOption(),
-                contributionsInput = if (tokensFeatureToggles.isBalanceContributionsEnabled) {
-                    BalanceContributionsInput.enabled(contributions)
-                } else {
-                    BalanceContributionsInput.Disabled
-                },
+                contributions = contributions,
             )
         }
     }
 
-    /**
-     * Frames of every registered [BalanceContributionProvider], or nothing at all while the toggle is off — the
-     * legacy staking join stays the only source then, and no provider flow is even collected.
-     */
+    /** Frames of every registered [BalanceContributionProvider]. */
     private fun contributionResolversFlow(userWallet: UserWallet): Flow<List<ContributionResolver>> {
-        if (!tokensFeatureToggles.isBalanceContributionsEnabled || balanceContributionProviders.isEmpty()) {
+        if (balanceContributionProviders.isEmpty()) {
             return flowOf(emptyList())
         }
 
@@ -456,48 +417,8 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
             .mapLatest { statuses -> statuses.associateBy { status -> status.network.id } }
             .distinctUntilChanged()
 
-    private fun stakingFlow(wallet: UserWallet): Flow<Map<StakingID, Set<StakingBalance>>> =
-        // with contributions on, staking arrives through StakingContributionProvider — don't subscribe twice
-        if (!wallet.isMultiCurrency || tokensFeatureToggles.isBalanceContributionsEnabled) {
-            flowOf(emptyMap())
-        } else {
-            stakingBalanceSupplier(MultiStakingBalanceProducer.Params(wallet.walletId))
-                .map { balances ->
-                    val result = mutableMapOf<StakingID, MutableSet<StakingBalance>>()
-                    balances.forEach { balance ->
-                        val set = result[balance.stakingId] ?: mutableSetOf()
-                        set.add(balance)
-                        result[balance.stakingId] = set
-                    }
-                    result
-                }
-                .distinctUntilChanged()
-        }
-
     private fun quoteStatusFlow(): Flow<Map<CryptoCurrency.RawID, QuoteStatus>> = quoteStatusSupplier(Unit)
         .distinctUntilChanged()
-
-    private fun findStakingBalance(
-        networkStatus: NetworkStatus?,
-        id: CryptoCurrency.ID,
-        wallet: UserWallet,
-        stakingBalanceMap: Map<StakingID, Set<StakingBalance>>,
-    ): StakingBalance? {
-        if (!wallet.isMultiCurrency) {
-            return null
-        }
-        val stakingId = stakingIdFactory.create(
-            currencyId = id,
-            defaultAddress = networkStatus.getAddress(),
-        ).getOrNull() ?: return null
-        val stakingBalance = stakingBalanceMap[stakingId] ?: return null
-
-        return selectStakingBalance(
-            currentStakingId = stakingId,
-            currentBalances = stakingBalance.toList(),
-            analyticsExceptionHandler = analyticsExceptionHandler,
-        )
-    }
 
     private fun Account.Personal.toEmptyAccountStatus() = AccountStatus.Personal(
         account = this,
@@ -564,7 +485,6 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     private data class Box(
         val flattenCurrencyMap: Map<AccountCurrencyId, CryptoCurrency>,
         val networkStatusMap: Map<Network.ID, NetworkStatus>,
-        val stakingBalanceMap: Map<StakingID, Set<StakingBalance>>,
         val quoteStatusMap: Map<CryptoCurrency.RawID, QuoteStatus>,
         val contributionResolvers: List<ContributionResolver>,
     )
