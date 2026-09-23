@@ -85,6 +85,7 @@ internal class TangemPayBankWithdrawComponent(
                     model.onRecipientSelected(account)
                     pushNext(from = config)
                 },
+                onCloseFlow = ::closeFlow,
             ),
         )
         TangemPayBankWithdrawInnerRoute.Amount -> amountChild(
@@ -131,7 +132,7 @@ internal class TangemPayBankWithdrawComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayBankWithdrawSuccessComponent.Params(
                 draft = model.draft,
-                onDoneClick = ::onFlowFinished,
+                onDoneClick = ::closeFlow,
             ),
         )
         is TangemPayBankWithdrawInnerRoute.Edit -> editChild(step = config, componentContext = componentContext)
@@ -174,6 +175,7 @@ internal class TangemPayBankWithdrawComponent(
                 model.onAmountConfirmed(result)
                 onStepConfirmed(step = step, returnToPreview = returnToPreview)
             },
+            onCloseFlow = ::closeFlow,
         ),
     )
 
@@ -192,6 +194,7 @@ internal class TangemPayBankWithdrawComponent(
                 onSelected(selectedId)
                 pushNext(from = step)
             },
+            onCloseFlow = ::closeFlow,
         ),
     )
 
@@ -213,6 +216,7 @@ internal class TangemPayBankWithdrawComponent(
                 onStepConfirmed(step = step, returnToPreview = returnToPreview)
             },
             onSavedRecipientSelected = ::onSavedRecipientSelected,
+            onCloseFlow = ::closeFlow,
         ),
         countrySelectorFactory = countrySelectorFactory,
     )
@@ -231,7 +235,7 @@ internal class TangemPayBankWithdrawComponent(
         stackNavigation.pushNew(TangemPayBankWithdrawInnerRoute.Success)
     }
 
-    private fun onFlowFinished() {
+    private fun closeFlow() {
         router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails)
     }
 

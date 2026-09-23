@@ -44,8 +44,8 @@ dependencies {
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.visa.models)
+    implementation(projects.domain.wallets)
     runtimeOnly(projects.domain.txhistory)
-    runtimeOnly(projects.domain.wallets)
 
     /** Compose */
     api(deps.compose.coil)
