@@ -3,7 +3,11 @@ package com.tangem.features.collectibles.impl.main.ui.preview
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.buildAnnotatedString
 import com.tangem.core.ui.extensions.annotatedReference
+import com.tangem.core.ui.ds.button.TangemButtonType
+import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_24
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_24
@@ -25,16 +29,8 @@ internal object CollectiblesMainPreviewData {
             crypto = stringReference("2,500.52 USDC"),
         ),
         actions = persistentListOf(
-            CollectiblesMainUM.ActionUM(
-                icon = Icons.ic_arrow_down_24,
-                title = stringReference("Add funds"),
-                onClick = {},
-            ),
-            CollectiblesMainUM.ActionUM(
-                icon = Icons.ic_arrow_up_24,
-                title = stringReference("Withdrawal"),
-                onClick = {},
-            ),
+            actionButton(icon = Icons.ic_arrow_down_24, title = "Add funds", isEnabled = true),
+            actionButton(icon = Icons.ic_arrow_up_24, title = "Withdrawal", isEnabled = false),
         ),
         collection = CollectiblesMainUM.CollectionUM(
             subtitle = stringReference("My collection"),
@@ -73,6 +69,17 @@ internal object CollectiblesMainPreviewData {
         isShown = isShown,
         onMenuClick = {},
         onDismiss = {},
+    )
+
+    private fun actionButton(icon: ImageVector, title: String, isEnabled: Boolean) = TangemButtonUM(
+        text = stringReference(title),
+        tangemIconUM = TangemIconUM.Icon(
+            imageVector = icon,
+            tintReference = { TangemTheme.colors3.icon.primary },
+        ),
+        type = TangemButtonType.Secondary,
+        isEnabled = isEnabled,
+        onClick = {},
     )
 
     private fun menuItem(id: String, icon: ImageVector, title: String, hasDividerAbove: Boolean = false) =
