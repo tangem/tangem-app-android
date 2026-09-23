@@ -131,6 +131,7 @@ private fun SummaryScreen(state: TangemPayBankWithdrawPreviewUM.Summary, modifie
                 sendingSummary = state.transfer?.sendingSummary,
                 isSending = state.isSending,
                 isSendEnabled = state.isSendEnabled,
+                isColdWallet = state.isColdWallet,
                 onSendClick = state.onSendClick,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -247,6 +248,7 @@ private fun SendFooter(
     sendingSummary: TextReference?,
     isSending: Boolean,
     isSendEnabled: Boolean,
+    isColdWallet: Boolean,
     onSendClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -269,7 +271,7 @@ private fun SendFooter(
             modifier = Modifier.fillMaxWidth(),
             size = TangemButton.Size.X12,
             text = resourceReference(R.string.common_send),
-            iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24),
+            iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24).takeIf { isColdWallet },
             isLoading = isSending,
             isEnabled = isSendEnabled,
             onClick = onSendClick,
@@ -294,6 +296,7 @@ private class PreviewProvider : PreviewParameterProvider<TangemPayBankWithdrawPr
         TangemPayBankWithdrawPreviewData.summary,
         TangemPayBankWithdrawPreviewData.summaryBusiness,
         TangemPayBankWithdrawPreviewData.summarySavedRecipient,
+        TangemPayBankWithdrawPreviewData.summaryHotWallet,
         TangemPayBankWithdrawPreviewData.sending,
         TangemPayBankWithdrawPreviewData.failedGeneral,
         TangemPayBankWithdrawPreviewData.failedUnavailable,

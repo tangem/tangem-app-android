@@ -91,11 +91,31 @@ internal class DefaultSessionTokenRefresher(
     }
 
     override suspend fun ensureSession(): Either<SessionRefreshError, SessionTokens> = withContext(dispatchers.io) {
-        val current = store.get().getOrNull()
-        // Only treat the stored session as usable when its access token is still valid; otherwise
-        // refresh, so the caller doesn't immediately 401 on a stale token. refresh() then rotates via
-        // /refresh (valid refresh token) or /authenticate (none).
-        if (current != null && current.accessTokenExpiresAt > clock.now()) current.right() else refresh()
+        // Decide join / use-cached / refresh atomically under the mutex: if a refresh started between
+        // observing `inFlight == null` and reading the store, we'd otherwise hand back an about-to-be-
+        // rejected token while a server-401-triggered refresh is already running. Reading the (fast,
+        // local) store here closes that window; await()/refresh() run OUTSIDE the lock.
+        val decision = mutex.withLock {
+            val inFlightRefresh = inFlight
+            if (inFlightRefresh != null) {
+                EnsureDecision.Join(inFlightRefresh)
+            } else {
+                val current = store.get().getOrNull()
+                // Treat the stored session as usable only while its access token is still valid.
+                if (current != null && current.accessTokenExpiresAt > clock.now()) {
+                    EnsureDecision.UseCached(current)
+                } else {
+                    EnsureDecision.Refresh
+                }
+            }
+        }
+        when (decision) {
+            is EnsureDecision.Join -> decision.deferred.await()
+            is EnsureDecision.UseCached -> decision.tokens.right()
+            // No refresh was in flight and the token is unusable: refresh() (single-flight) rotates via
+            // /refresh (valid refresh token) or /authenticate (none), joining any refresh that starts meanwhile.
+            EnsureDecision.Refresh -> refresh()
+        }
     }
 
     private suspend fun runRefresh(current: SessionTokens?): Either<SessionRefreshError, SessionTokens> {
@@ -228,6 +248,12 @@ internal class DefaultSessionTokenRefresher(
         data object RefreshTokenInvalid : RefreshOutcome
         data object DeviceBlocked : RefreshOutcome
         data class Transient(val cause: AuthError) : RefreshOutcome
+    }
+
+    private sealed interface EnsureDecision {
+        data class Join(val deferred: CompletableDeferred<Either<SessionRefreshError, SessionTokens>>) : EnsureDecision
+        data class UseCached(val tokens: SessionTokens) : EnsureDecision
+        data object Refresh : EnsureDecision
     }
 
     private companion object {

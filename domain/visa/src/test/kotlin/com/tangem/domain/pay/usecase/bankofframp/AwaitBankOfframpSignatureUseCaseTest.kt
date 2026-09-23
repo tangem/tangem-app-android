@@ -69,18 +69,19 @@ internal class AwaitBankOfframpSignatureUseCaseTest {
     }
 
     @Test
-    fun `GIVEN order never leaves processing WHEN timeout elapses THEN polling timeout error`() = runTest {
-        // Arrange
-        coEvery { repository.getOrderState(TEST_USER_WALLET_ID, ORDER_ID) } returns
-            BankOfframpOrderState.Processing(OrderStep.UNKNOWN).right()
+    fun `GIVEN order never leaves processing WHEN timeout elapses THEN four polls and polling timeout error`() =
+        runTest {
+            // Arrange
+            coEvery { repository.getOrderState(TEST_USER_WALLET_ID, ORDER_ID) } returns
+                BankOfframpOrderState.Processing(OrderStep.UNKNOWN).right()
 
-        // Act
-        val actual = useCase(TEST_USER_WALLET_ID, ORDER_ID, timeout = 12.seconds)
+            // Act
+            val actual = useCase(TEST_USER_WALLET_ID, ORDER_ID, timeout = 12.seconds)
 
-        // Assert
-        assertThat(actual).isEqualTo(BankOfframpError.PollingTimeout.left())
-        coVerify(exactly = 3) { repository.getOrderState(TEST_USER_WALLET_ID, ORDER_ID) }
-    }
+            // Assert
+            assertThat(actual).isEqualTo(BankOfframpError.PollingTimeout.left())
+            coVerify(exactly = 4) { repository.getOrderState(TEST_USER_WALLET_ID, ORDER_ID) }
+        }
 
     private companion object {
         const val ORDER_ID = "order-1"

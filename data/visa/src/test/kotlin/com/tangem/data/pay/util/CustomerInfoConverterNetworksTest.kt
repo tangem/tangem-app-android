@@ -23,8 +23,6 @@ internal class CustomerInfoConverterNetworksTest {
 
     private fun balance(networks: List<BalanceResponse.NetworkResponse>?) = BalanceResponse(
         fiat = null,
-        crypto = null,
-        availableForWithdrawal = null,
         networks = networks,
     )
 

@@ -15,6 +15,8 @@ import com.tangem.domain.polymarket.model.PolymarketPositionsError
 import com.tangem.domain.polymarket.model.PolymarketPositionsPage
 import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
 import com.tangem.grow.datasource.polymarket.PolymarketApi
+import com.tangem.grow.datasource.polymarket.data.PolymarketDataApi
+import com.tangem.grow.datasource.polymarket.data.models.PolymarketPositionsValueResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketClosedPositionsResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketPositionResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketPositionsResponse
@@ -34,7 +36,8 @@ import java.time.Instant
 internal class DefaultPolymarketPositionsRepositoryTest {
 
     private val api: PolymarketApi = mockk()
-    private val repository = DefaultPolymarketPositionsRepository(api, TestingCoroutineDispatcherProvider())
+    private val dataApi: PolymarketDataApi = mockk()
+    private val repository = DefaultPolymarketPositionsRepository(api, dataApi, TestingCoroutineDispatcherProvider())
     private val moshi = Moshi.Builder().build()
     private val addresses: PolymarketAddresses = mockk {
         every { userWalletId } returns UserWalletId(WALLET_ID)
@@ -151,6 +154,46 @@ internal class DefaultPolymarketPositionsRepositoryTest {
             // Assert
             assertThat(result).isEqualTo(Either.Left(model.expected))
         }
+
+    @Test
+    fun `GIVEN a valued wallet WHEN reading the positions value THEN the first entry is returned`() = runTest {
+        // Arrange
+        coEvery { dataApi.getPositionsValue(user = any()) } returns ApiResponse.Success(
+            listOf(PolymarketPositionsValueResponse(user = "0xdw", value = BigDecimal("12.34"))),
+        )
+
+        // Act
+        val result = repository.getPositionsValue(addresses)
+
+        // Assert
+        assertThat(result).isEqualTo(Either.Right(BigDecimal("12.34")))
+    }
+
+    @Test
+    fun `GIVEN no holdings WHEN reading the positions value THEN zero is returned`() = runTest {
+        // Arrange
+        coEvery { dataApi.getPositionsValue(user = any()) } returns ApiResponse.Success(emptyList())
+
+        // Act
+        val result = repository.getPositionsValue(addresses)
+
+        // Assert
+        assertThat(result).isEqualTo(Either.Right(BigDecimal.ZERO))
+    }
+
+    @Test
+    fun `GIVEN the data API is unreachable WHEN reading the positions value THEN the failure is typed`() = runTest {
+        // Arrange
+        @Suppress("UNCHECKED_CAST")
+        coEvery { dataApi.getPositionsValue(user = any()) } returns
+            ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<List<PolymarketPositionsValueResponse>>
+
+        // Act
+        val result = repository.getPositionsValue(addresses)
+
+        // Assert
+        assertThat(result).isEqualTo(Either.Left(PolymarketPositionsError.Network))
+    }
 
     @Test
     fun `GIVEN request cancellation WHEN reading a position THEN cancellation propagates`() = runTest {

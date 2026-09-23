@@ -334,6 +334,7 @@ internal class DefaultPredictionFundingWindowTest {
     private fun createActive(balance: BigDecimal) = PredictionAccountStatusValue.Active(
         source = StatusSource.ACTUAL,
         balance = balance,
+        positionsValue = null,
         fiatRate = null,
         depositCurrency = COLLATERAL,
         depositAddress = null,
