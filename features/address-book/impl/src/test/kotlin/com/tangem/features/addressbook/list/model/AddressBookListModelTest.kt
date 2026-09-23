@@ -181,7 +181,7 @@ internal class AddressBookListModelTest {
 
             // Assert — count comes from the list's own contacts subscription.
             verify(exactly = 1) {
-                analyticsSender.sendContactListScreenOpened(source = Source.Settings, contactsCount = 2, scope = any())
+                analyticsSender.sendContactListScreenOpened(source = Source.Settings, contactsCount = 2)
             }
         }
 
@@ -196,7 +196,7 @@ internal class AddressBookListModelTest {
 
         // Assert — the "See all" list opened from Send reports send_flow, even with zero contacts.
         verify(exactly = 1) {
-            analyticsSender.sendContactListScreenOpened(source = Source.SendFlow, contactsCount = 0, scope = any())
+            analyticsSender.sendContactListScreenOpened(source = Source.SendFlow, contactsCount = 0)
         }
     }
 
@@ -216,7 +216,7 @@ internal class AddressBookListModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 1) { analyticsSender.sendContactSelectedInSend(contactId = "42", scope = any()) }
+        verify(exactly = 1) { analyticsSender.sendContactSelectedInSend(contactId = "42") }
     }
 
     private fun contact(id: String, name: String): Contact = Contact(
