@@ -1342,7 +1342,7 @@ internal class IntroductionModelTest {
             assertThat(options.importWallet.title)
                 .isEqualTo(resourceReference(CoreResR.string.hw_import_existing_wallet))
             assertThat(options.importWallet.description)
-                .isEqualTo(resourceReference(CoreResR.string.hw_import_existing_wallet_description))
+                .isEqualTo(resourceReference(CoreResR.string.introduction_create_wallet_seed_phrase_description))
         }
 
         private fun IntroductionModel.openHaveWallet(): HaveWalletUM.Step.Options {
