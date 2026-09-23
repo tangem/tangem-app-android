@@ -321,6 +321,41 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
+    fun `GIVEN categories failed WHEN retry is awaiting categories THEN loading is shown immediately`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns DataError.NetworkError.NoInternetConnection.left()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        batchState.value = BatchListState(
+            data = emptyList(),
+            status = PaginationStatus.InitialLoadingError(throwable = IllegalStateException("boom")),
+        )
+        advanceUntilIdle()
+        val categoriesReady = CompletableDeferred<Unit>()
+        coEvery { getCategoriesUseCase() } coAnswers {
+            categoriesReady.await()
+            categories().right()
+        }
+        dispatchedActions.clear()
+
+        // Act
+        (model.uiState.value.content as PolymarketMainUM.ContentUM.Error).onReloadClick()
+
+        // Assert
+        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Loading)
+        runCurrent()
+        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Loading)
+        assertThat(dispatchedActions).isEmpty()
+
+        categoriesReady.complete(Unit)
+        advanceUntilIdle()
+        assertThat(model.uiState.value.categories.map { it.id }).containsExactly(1, 2).inOrder()
+        assertThat(dispatchedActions).containsExactly(
+            BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = 1)),
+        )
+    }
+
+    @Test
     fun `GIVEN tabs WHEN another category tapped THEN the feed reloads for it`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returns categories().right()
