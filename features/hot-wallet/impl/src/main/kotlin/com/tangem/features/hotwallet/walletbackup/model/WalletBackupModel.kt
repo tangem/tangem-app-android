@@ -75,6 +75,7 @@ internal class WalletBackupModel @Inject constructor(
     private val isFirstResume: AtomicBoolean = AtomicBoolean(true)
 
     private var isManuallyBackedUp: Boolean? = null
+    private var isSocialBackup: Boolean? = null
     private var isCloudStatusResolved: Boolean = !hotWalletFeatureToggles.isGoogleDriveBackupEnabled
 
     private var cloudBackupInfo: CloudBackupInfo? = null
@@ -99,6 +100,8 @@ internal class WalletBackupModel @Inject constructor(
                 onGoogleDriveClick = ::onGoogleDriveBackupClick,
                 onHardwareWalletClick = ::onHardwareWalletClick,
                 isBackedUp = false,
+                // until the social status is read, or a social wallet could tap into the password flow
+                isGoogleDriveOptionShown = false,
             ),
         )
 
@@ -121,12 +124,9 @@ internal class WalletBackupModel @Inject constructor(
             }.launchIn(modelScope)
 
         isSocialBackupCompletedUseCase.flow(params.userWalletId)
-            .onEach { isSocialBackup -> uiState.update { it.copy(isGoogleDriveOptionShown = !isSocialBackup) } }
+            .distinctUntilChanged()
+            .onEach(::onSocialBackupStatusChanged)
             .launchIn(modelScope)
-
-        if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
-            refreshCloudBackupStatus()
-        }
     }
 
     override fun onDestroy() {
@@ -184,6 +184,20 @@ internal class WalletBackupModel @Inject constructor(
                 googleDriveStatus = BackupStatus.ComingSoon,
             )
         }
+    }
+
+    private fun onSocialBackupStatusChanged(isSocialBackup: Boolean) {
+        this.isSocialBackup = isSocialBackup
+        uiState.update { it.copy(isGoogleDriveOptionShown = !isSocialBackup) }
+
+        if (isSocialBackup) {
+            // the password cloud backup is not offered to this wallet, so there is nothing to look up
+            refreshStatusJob?.cancel()
+            isCloudStatusResolved = true
+        } else if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
+            refreshCloudBackupStatus()
+        }
+        sendScreenOpenedEventIfReady()
     }
 
     private fun refreshCloudBackupStatus() {
@@ -244,13 +258,14 @@ internal class WalletBackupModel @Inject constructor(
      */
     private fun sendScreenOpenedEventIfReady() {
         val isBackedUp = isManuallyBackedUp ?: return
+        val isSocialBackup = isSocialBackup ?: return
         if (!isCloudStatusResolved) return
         if (isScreenOpenedEventSent.getAndSet(true)) return
 
         analyticsEventHandler.send(
             event = WalletSettingsAnalyticEvents.BackupScreenOpened(
                 isBackedUp = isBackedUp,
-                cloudBackupState = uiState.value.googleDriveStatus.toAnalyticsState(),
+                cloudBackupState = uiState.value.googleDriveStatus.toAnalyticsState().takeUnless { isSocialBackup },
             ),
         )
     }
@@ -422,7 +437,7 @@ internal class WalletBackupModel @Inject constructor(
      */
     fun onScreenResumed() {
         if (isFirstResume.getAndSet(false)) return
-        if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
+        if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled && isSocialBackup == false) {
             refreshCloudBackupStatus()
         }
     }
