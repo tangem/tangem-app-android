@@ -113,32 +113,47 @@ class WalletRegistrationLauncher @Inject internal constructor(
      *
      * Twin and Visa cards are skipped: a twin's id is derived from both cards (can't be built here)
      * and Visa cards are not a cold-registration target.
+     *
+     * [shouldForce] is for a card that took over a mobile wallet's walletId (hot → cold upgrade): the
+     * local marker left by the mobile registration would skip it, so the marker is dropped first — even
+     * without a [nonce], letting a later scan register the card — and this tap registers regardless of it.
      */
-    suspend fun registerColdInSession(session: CardSession, card: Card, nonce: WalletNonce) {
+    suspend fun registerColdInSession(
+        session: CardSession,
+        card: Card,
+        nonce: WalletNonce?,
+        shouldForce: Boolean = false,
+    ) {
         if (!authFeatureToggles.isBackendAuthenticationEnabled) return
         val cardDto = CardDTO(card)
         if (cardDto.isTangemTwins || VisaUtilities.isVisaCard(cardDto)) return
-        registerCold(
-            session = session,
-            card = cardDto,
-            walletIdBuilder = UserWalletIdBuilder.card(cardDto),
-            nonce = nonce,
-        )
+        val walletId = UserWalletIdBuilder.card(cardDto).build()?.toBase64() ?: return
+
+        if (shouldForce) {
+            walletRegistrar.forgetRegistration(walletId)
+                .onLeft { TangemLogger.e("Failed to drop the cold wallet registration marker: $it") }
+        }
+        if (nonce == null) return
+
+        registerCold(session = session, card = cardDto, walletId = walletId, nonce = nonce, shouldForce = shouldForce)
     }
 
     private suspend fun registerCold(
         session: CardSession,
         card: CardDTO,
-        walletIdBuilder: UserWalletIdBuilder,
+        walletId: String,
         nonce: WalletNonce,
+        shouldForce: Boolean,
     ) {
-        val walletId = walletIdBuilder.build()?.toBase64() ?: return
-
-        val prepared = walletRegistrar.prepare(walletId, nonce, coldSigner.signerFor(session, card))
-            .getOrElse { error ->
-                TangemLogger.e("Cold wallet registration prepare deferred: $error")
-                return
-            }
+        val prepared = walletRegistrar.prepare(
+            walletId = walletId,
+            nonce = nonce,
+            signer = coldSigner.signerFor(session, card),
+            shouldForce = shouldForce,
+        ).getOrElse { error ->
+            TangemLogger.e("Cold wallet registration prepare deferred: $error")
+            return
+        }
         if (prepared == null) return // already registered
 
         appCoroutineScope.launch {
