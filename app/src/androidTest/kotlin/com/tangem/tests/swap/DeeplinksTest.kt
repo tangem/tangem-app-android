@@ -14,6 +14,7 @@ import com.tangem.common.extensions.enableMobileData
 import com.tangem.common.extensions.enableWiFi
 import com.tangem.common.extensions.stopApp
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.awaitCryptoPortfolioAccount
 import com.tangem.scenarios.closeFirstTimeSwapStoriesIfShown
 import com.tangem.scenarios.openAppByDeepLink
@@ -377,7 +378,7 @@ class DeeplinksTest : BaseTestCase() {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Open '$tokenDetailsTitle' token details") {
-                onMainScreen { tokenWithTitleAndAddress(tokenDetailsTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenDetailsTitle)
             }
             step("Assert the marketing banner is displayed") {
                 onTokenDetailsScreen {
