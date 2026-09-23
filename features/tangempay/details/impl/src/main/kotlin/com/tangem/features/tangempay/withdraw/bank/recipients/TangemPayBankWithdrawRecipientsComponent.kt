@@ -30,5 +30,6 @@ internal class TangemPayBankWithdrawRecipientsComponent(
     data class Params(
         val userWalletId: UserWalletId,
         val onRecipientSelected: (BankAccount) -> Unit,
+        val onCloseFlow: () -> Unit,
     )
 }
