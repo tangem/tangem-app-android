@@ -137,7 +137,7 @@ internal class TangemPayMainBlockConverterTest {
         return PaymentAccountStatusValue.Loaded(
             source = StatusSource.ACTUAL,
             customerId = "customer",
-            depositAddress = "0xdeposit",
+            paymentAccountAddress = "0xdeposit",
             balance = null,
             cryptoCurrency = accountToken(),
             networks = emptyList(),
