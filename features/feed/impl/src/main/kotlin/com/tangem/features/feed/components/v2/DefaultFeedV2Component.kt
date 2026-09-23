@@ -17,6 +17,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
@@ -44,6 +45,7 @@ import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 import com.tangem.core.ui.extensions.dropWhenNoRoom
 import com.tangem.feature.walletsettings.component.AddAccountTypeComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
+import com.tangem.features.feed.components.v2.blocks.analytics.FeedBlocksAnalytics
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedScreenComponent
 import com.tangem.features.feed.nav.FeedScreenFactory
@@ -84,6 +86,13 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
         field = MutableStateFlow(true)
 
     private val stackNavigation = StackNavigation<FeedRoute>()
+
+    private val shtorkaExpansion = MutableStateFlow(ShtorkaExpansion.PILL)
+
+    private val blocksAnalytics = FeedBlocksAnalytics(
+        analyticsEventHandler = analyticsEventHandler,
+        shtorkaExpansion = shtorkaExpansion,
+    )
 
     /**
      * Declared above [stack]: the child collecting it is built while [stack] initialises, so a later
@@ -144,6 +153,10 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
     @Composable
     override fun Header(sheetExpansion: State<ShtorkaExpansion>, onExpandSheet: () -> Unit, modifier: Modifier) {
         val stackState by stack.subscribeAsState()
+
+        LaunchedEffect(Unit) {
+            snapshotFlow { sheetExpansion.value }.collect { shtorkaExpansion.value = it }
+        }
         val active = stackState.active
 
         // Home and Search share the search bar as their navbar: they map to the same target (equal
@@ -226,6 +239,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
                 portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
                 addAccountTypeComponentFactory = addAccountTypeComponentFactory,
                 analyticsEventHandler = analyticsEventHandler,
+                blocksAnalytics = blocksAnalytics,
                 requestedTab = requestedTab,
             )
             else -> requireNotNull(screenFactories[route.javaClass]) { "No feed screen registered for $route" }
