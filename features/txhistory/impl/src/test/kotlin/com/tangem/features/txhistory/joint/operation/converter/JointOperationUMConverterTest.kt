@@ -99,6 +99,15 @@ internal class JointOperationUMConverterTest {
     }
 
     @Test
+    fun `GIVEN zero rate WHEN converted THEN the amount has no fiat line`() {
+        // Act
+        val actual = converter.convert(input(state(isSending = false), fiatRate = BigDecimal.ZERO))
+
+        // Assert
+        assertThat(actual.amountBlock.fiatAmount).isNull()
+    }
+
+    @Test
     fun `GIVEN no rate WHEN converted THEN the amount has no fiat line`() {
         // Act
         val actual = converter.convert(input(state(isSending = false), fiatRate = null))
