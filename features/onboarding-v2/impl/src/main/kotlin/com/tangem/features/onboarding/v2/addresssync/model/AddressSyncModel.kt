@@ -6,7 +6,9 @@ import com.arkivanov.decompose.router.stack.replaceCurrent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
@@ -16,6 +18,7 @@ import com.tangem.domain.settings.ShouldShowAskBiometryUseCase
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.tokens.MultiWalletAccountListFetcher
+import com.tangem.domain.wallets.usecase.DerivationOutcome
 import com.tangem.domain.wallets.usecase.DeriveCurrencyAndOwnerKeysUseCase
 import com.tangem.features.onboarding.v2.addresssync.navigation.AddressSyncStep
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
@@ -44,6 +47,7 @@ internal class AddressSyncModel @Inject constructor(
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
     private val stakingIdFactory: StakingIdFactory,
+    private val uiMessageSender: UiMessageSender,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -169,14 +173,24 @@ internal class AddressSyncModel @Inject constructor(
                     )
                     TangemLogger.e("Failed to derive public keys", throwable)
                 },
-                ifRight = {
-                    listOf(
-                        launch { fetchNetworks(cryptoCurrencies) },
-                        launch { fetchStaking(cryptoCurrencies) },
-                    ).joinAll()
-                    state.update { addressSyncState ->
-                        addressSyncState as AddressSyncState.Success
-                        addressSyncState.copy(shouldExit = true)
+                ifRight = { outcome ->
+                    when (outcome) {
+                        DerivationOutcome.NOTHING_DERIVED -> {
+                            state.value = successWithLoading.copy(isButtonLoading = false)
+                            uiMessageSender.send(Dialogs.wrongWalletTapped())
+                        }
+                        DerivationOutcome.DERIVED,
+                        DerivationOutcome.NOTHING_MISSING,
+                        -> {
+                            listOf(
+                                launch { fetchNetworks(cryptoCurrencies) },
+                                launch { fetchStaking(cryptoCurrencies) },
+                            ).joinAll()
+                            state.update { addressSyncState ->
+                                addressSyncState as AddressSyncState.Success
+                                addressSyncState.copy(shouldExit = true)
+                            }
+                        }
                     }
                 },
             )

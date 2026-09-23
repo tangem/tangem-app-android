@@ -394,7 +394,6 @@ sealed class AnalyticsParam {
         const val MANUAL_BACKUP = "Manual Backup"
         const val BACKUP_TYPE = "Backup Type"
         const val BACKUP_COUNT = "Backup Count"
-        const val USER_WALLET_ID = "User Wallet Id"
         const val MEMO = "Memo"
         const val VALUE = "Value"
     }
