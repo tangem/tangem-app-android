@@ -238,8 +238,6 @@ internal class TangemPayReissuePlasticCardModelTest {
             availableBalance = availableBalance,
             currency = "USD",
         ),
-        cryptoBalance = null,
-        availableForWithdrawal = BigDecimal.ZERO,
         tariffPlan = null,
         country = country,
         phoneMask = null,

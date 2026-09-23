@@ -38,24 +38,6 @@ internal class PaymentAccountStatusValueDMConverterTest {
             availableBalance = BigDecimal("12.34"),
             currency = "USD",
         ),
-        cryptoBalance = cryptoBalance(),
-        availableForWithdrawal = BigDecimal("10.00"),
-    )
-
-    private fun cryptoBalance() = PaymentAccountStatusValue.CryptoBalance(
-        id = "usd-coin",
-        chainId = 137,
-        depositAddress = "0xDEPOSIT",
-        tokenContractAddress = "0xCONTRACT",
-        balance = BigDecimal("10"),
-    )
-
-    private fun cryptoBalanceDM() = PaymentAccountStatusValueDM.CryptoBalanceDM(
-        id = "usd-coin",
-        chainId = 137,
-        depositAddress = "0xDEPOSIT",
-        tokenContractAddress = "0xCONTRACT",
-        balance = BigDecimal("10"),
     )
 
     @Nested
@@ -85,8 +67,6 @@ internal class PaymentAccountStatusValueDMConverterTest {
                         availableBalance = BigDecimal("100"),
                         currency = "USD",
                     ),
-                    cryptoBalance = cryptoBalance(),
-                    availableForWithdrawal = BigDecimal("7"),
                 ),
                 cryptoCurrency = cryptoCurrency,
                 networks = emptyList(),
@@ -103,7 +83,6 @@ internal class PaymentAccountStatusValueDMConverterTest {
             assertThat(dm.customerId).isEqualTo("customer-1")
             assertThat(dm.fiatBalance?.availableBalance).isEqualTo(BigDecimal("100"))
             assertThat(dm.fiatBalance?.currency).isEqualTo("USD")
-            assertThat(dm.availableForWithdrawal).isEqualTo(BigDecimal("7"))
             assertThat(dm.fiatRate).isEqualTo(BigDecimal("1.05"))
         }
 
@@ -171,7 +150,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
             val domain = PaymentAccountStatusValue.Loaded(
                 source = StatusSource.ACTUAL,
                 customerId = "customer-3",
-                depositAddress = null,
+                paymentAccountAddress = null,
                 balance = null,
                 cryptoCurrency = cryptoCurrency,
                 networks = emptyList(),
@@ -189,9 +168,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
             val dm = result as PaymentAccountStatusValueDM.ActiveAccount
             assertThat(dm.customerId).isEqualTo("customer-3")
             assertThat(dm.fiatBalance).isNull()
-            assertThat(dm.cryptoBalance).isNull()
             assertThat(dm.currencyCode).isNull()
-            assertThat(dm.availableForWithdrawal).isNull()
         }
 
         @Test
@@ -273,9 +250,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
                     availableBalance = BigDecimal("200"),
                     currency = "EUR",
                 ),
-                cryptoBalance = cryptoBalanceDM(),
                 fiatRate = BigDecimal("0.92"),
-                availableForWithdrawal = BigDecimal("5"),
             )
 
             // WHEN
@@ -288,7 +263,6 @@ internal class PaymentAccountStatusValueDMConverterTest {
             assertThat(deactivated.customerId).isEqualTo("customer-2")
             assertThat(deactivated.balance?.fiatBalance?.availableBalance).isEqualTo(BigDecimal("200"))
             assertThat(deactivated.balance?.fiatBalance?.currency).isEqualTo("EUR")
-            assertThat(deactivated.balance?.availableForWithdrawal).isEqualTo(BigDecimal("5"))
             assertThat(deactivated.fiatRate).isEqualTo(BigDecimal("0.92"))
         }
 
@@ -298,11 +272,9 @@ internal class PaymentAccountStatusValueDMConverterTest {
             val dm = PaymentAccountStatusValueDM.ActiveAccount(
                 customerId = "customer-4",
                 currencyCode = null,
-                depositAddress = null,
+                paymentAccountAddress = null,
                 fiatBalance = null,
-                cryptoBalance = null,
                 fiatRate = null,
-                availableForWithdrawal = null,
                 cards = emptyList(),
             )
 
@@ -393,14 +365,12 @@ internal class PaymentAccountStatusValueDMConverterTest {
     ) = PaymentAccountStatusValue.Loaded(
         source = StatusSource.ACTUAL,
         customerId = "cust_1",
-        depositAddress = "0xDEPOSIT",
+        paymentAccountAddress = "0xDEPOSIT",
         balance = PaymentAccountStatusValue.Balance(
             fiatBalance = PaymentAccountStatusValue.FiatBalance(
                 availableBalance = BigDecimal("10"),
                 currency = "USD",
             ),
-            cryptoBalance = cryptoBalance(),
-            availableForWithdrawal = BigDecimal("10"),
         ),
         cryptoCurrency = cryptoCurrency,
         cards = listOf(
