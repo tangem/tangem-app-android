@@ -6,6 +6,12 @@ import com.tangem.common.routing.entity.AddressBookOpenMode
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.addressbook.usecase.IsAddressBookCompatibleUseCase
+import kotlinx.coroutines.flow.map
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import arrow.core.getOrElse
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
@@ -51,7 +57,19 @@ internal class JointOperationDelegate @Inject constructor(
     private val rejectJointOperationUseCase: RejectJointOperationUseCase,
     private val isAddressBookCompatibleUseCase: IsAddressBookCompatibleUseCase,
     private val ownerLookupProducer: TxHistoryOwnerLookupProducer,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
 ) {
+
+    /** The rate of [currency] in the selected app currency; the rate is null while there is no quote for it */
+    fun fiat(userWalletId: UserWalletId, currency: CryptoCurrency): Flow<JointOperationFiat> = combine(
+        flow = singleAccountStatusListSupplier(userWalletId = userWalletId)
+            .map { statuses -> statuses.getCryptoCurrencyStatus(currency).getOrNull()?.value?.fiatRate }
+            .distinctUntilChanged(),
+        flow2 = getSelectedAppCurrencyUseCase().map { maybeAppCurrency ->
+            maybeAppCurrency.getOrElse { AppCurrency.Default }
+        },
+    ) { rate, appCurrency -> JointOperationFiat(rate = rate, appCurrency = appCurrency) }
 
     /**
      * Creating a contact is offered for a foreign [recipient] this wallet has not saved yet — never for one of the
