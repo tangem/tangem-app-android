@@ -53,15 +53,15 @@ internal class DefaultWalletRegistrationTriggerTest {
         )
         val walletA = mockk<UserWallet.Hot>()
         val walletB = mockk<UserWallet.Hot>()
-        coEvery { launcher.registerMobile(any()) } just Runs
+        coEvery { launcher.registerUnlockedMobileWallet(any()) } just Runs
 
         // Act
         trigger.onMobileWalletsUnlocked(listOf(walletA, walletB))
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 1) { launcher.registerMobile(walletA) }
-        coVerify(exactly = 1) { launcher.registerMobile(walletB) }
+        coVerify(exactly = 1) { launcher.registerUnlockedMobileWallet(walletA) }
+        coVerify(exactly = 1) { launcher.registerUnlockedMobileWallet(walletB) }
     }
 
     @Test
@@ -77,6 +77,6 @@ internal class DefaultWalletRegistrationTriggerTest {
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 0) { launcher.registerMobile(any()) }
+        coVerify(exactly = 0) { launcher.registerUnlockedMobileWallet(any()) }
     }
 }
