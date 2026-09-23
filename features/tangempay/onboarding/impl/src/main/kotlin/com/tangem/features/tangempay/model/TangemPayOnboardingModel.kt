@@ -11,6 +11,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
@@ -48,6 +49,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val eligibilityManager: TangemPayEligibilityManager,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
+    private val userWalletsListRepository: UserWalletsListRepository,
 ) : Model(), WalletSelectorListener {
 
     private val params = paramsContainer.require<TangemPayOnboardingComponent.Params>()
@@ -67,7 +69,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
             when (params) {
                 is TangemPayOnboardingComponent.Params.Deeplink -> {
                     repository.validateDeeplink(params.deeplink)
-                        .onRight { isValid -> if (isValid) showOnboarding() else showNotAvailable() }
+                        .onRight { isValid -> if (isValid) onDeeplinkValidated() else showNotAvailable() }
                         .onLeft { back() }
                 }
                 is TangemPayOnboardingComponent.Params.ContinueOnboarding -> {
@@ -100,6 +102,14 @@ internal class TangemPayOnboardingModel @Inject constructor(
 
     private fun showNotAvailable() {
         uiState.update { state -> TangemPayOnboardingScreenState.NotAvailable(onBack = state.onBack) }
+    }
+
+    private suspend fun onDeeplinkValidated() {
+        if (userWalletsListRepository.userWalletsSync().isEmpty()) {
+            router.replaceAll(AppRoute.TangemPayHotWalletOnboarding)
+            return
+        }
+        showOnboarding()
     }
 
     private fun checkCustomerInfo(userWalletId: UserWalletId) {

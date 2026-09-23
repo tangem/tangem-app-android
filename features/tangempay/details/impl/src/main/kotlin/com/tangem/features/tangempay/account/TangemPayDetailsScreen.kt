@@ -518,6 +518,7 @@ private fun CardsBlock(
                 isIssueInProgress = item.state != TangemPayCardUiState.Active,
                 lastDigits = item.lastDigits,
                 imageUrl = item.imageUrl,
+                cardType = item.cardType,
                 onClick = item.onClick,
                 isEnabled = item.isEnabled,
                 isFrozen = item.isFrozen,
