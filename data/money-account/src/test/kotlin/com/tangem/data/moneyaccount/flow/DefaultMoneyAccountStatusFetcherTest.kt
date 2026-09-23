@@ -29,7 +29,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultMoneyAccountStatusFetcherTest {
@@ -238,8 +237,6 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         kycStatus = kycStatus,
         state = CustomerInfo.State.ACTIVE,
         fiatBalance = null,
-        cryptoBalance = null,
-        availableForWithdrawal = BigDecimal.ZERO,
         tariffPlan = null,
     )
 
