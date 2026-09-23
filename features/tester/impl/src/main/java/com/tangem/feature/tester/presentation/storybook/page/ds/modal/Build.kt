@@ -9,17 +9,17 @@ internal fun StateUpdater<TangemModalStory>.build(): TangemModalStory {
     return TangemModalStory(
         isShown = false,
         isStackedShown = false,
-        isExpanded = false,
         isContentScrollable = true,
         isTallContent = false,
+        isInputVisible = false,
         presentation = TangemModal.Presentation.Auto,
         onShownChange = { shown ->
             updateStory { it.copy(isShown = shown, isStackedShown = it.isStackedShown && shown) }
         },
         onStackedShownChange = { shown -> updateStory { it.copy(isStackedShown = shown) } },
-        onExpandedToggle = { updateStory { it.copy(isExpanded = !it.isExpanded) } },
         onContentScrollableToggle = { updateStory { it.copy(isContentScrollable = !it.isContentScrollable) } },
         onTallContentToggle = { updateStory { it.copy(isTallContent = !it.isTallContent) } },
+        onInputToggle = { updateStory { it.copy(isInputVisible = !it.isInputVisible) } },
         onPresentationChange = { presentation -> updateStory { it.copy(presentation = presentation) } },
     )
 }

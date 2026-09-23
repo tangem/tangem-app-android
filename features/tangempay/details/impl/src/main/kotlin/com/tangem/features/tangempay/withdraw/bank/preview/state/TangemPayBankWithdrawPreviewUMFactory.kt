@@ -42,7 +42,11 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
         val failure = state.failure
         if (failure != null) return createFailed(failure)
         return TangemPayBankWithdrawPreviewUM.Summary(
-            header = BankWithdrawHeaderFactory.create(draft = draft, step = TangemPayBankWithdrawInnerRoute.Preview),
+            header = BankWithdrawHeaderFactory.create(
+                draft = draft,
+                step = TangemPayBankWithdrawInnerRoute.Preview,
+                onCloseClick = callbacks.onCloseClick,
+            ),
             transfer = createTransfer(draft = draft, isSending = state.isSending),
             recipientCards = draft.recipientDetails()?.let { details ->
                 createRecipientCards(
@@ -53,6 +57,7 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
             } ?: persistentListOf(),
             isSending = state.isSending,
             isSendEnabled = draft.toOrderRequest() != null,
+            isColdWallet = state.isColdWallet,
             onBackClick = callbacks.onBackClick,
             onCloseClick = callbacks.onCloseClick,
             onSendClick = callbacks.onSendClick,
@@ -64,7 +69,7 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
         val source = draft.source ?: return null
         val destination = draft.destination ?: return null
         val currency = Currency.getInstance(destination.fee.currency)
-        val railTitle = destination.rail.toTitleReference()
+        val railTitle = destination.toTitleReference()
         val fee = destination.fee.toText()
         return TransferUM(
             amount = AmountCardUM(
@@ -105,16 +110,19 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
             recipientFields.filterNot { it in ACCOUNT_FIELDS } to BankWithdrawEditTarget.RecipientDetails,
             BankWithdrawFormFields.bankDetails to BankWithdrawEditTarget.BankDetails,
         )
-        return cards.map { (fields, target) ->
+        return cards.mapNotNull { (fields, target) ->
+            val rows = fields.mapNotNull { field ->
+                // Only a recipient added here carries names; a saved one comes back with codes and keeps them.
+                val shown = displayNames[field]?.takeIf(String::isNotBlank) ?: values[field]
+                // A saved recipient can come back missing a value, and an empty row reads as missing data.
+                shown
+                    ?.takeIf(String::isNotBlank)
+                    ?.let { value -> DetailRowUM(label = field.label, value = value) }
+            }
+            // A saved recipient can miss every value of a card, and a rowless card only adds a gap to the screen.
+            if (rows.isEmpty()) return@mapNotNull null
             RecipientCardUM(
-                rows = fields.mapNotNull { field ->
-                    // Only a recipient added here carries names; a saved one comes back with codes and keeps them.
-                    val shown = displayNames[field]?.takeIf(String::isNotBlank) ?: values[field]
-                    // A saved recipient can come back missing a value, and an empty row reads as missing data.
-                    shown
-                        ?.takeIf(String::isNotBlank)
-                        ?.let { value -> DetailRowUM(label = field.label, value = value) }
-                }.toImmutableList(),
+                rows = rows.toImmutableList(),
                 onClick = if (isEditable) {
                     { callbacks.onEditClick(target) }
                 } else {
@@ -128,6 +136,8 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
         PreviewFailure.RecipientRegion -> unavailable(R.string.tangempay_withdraw_bank_error_recipient_region)
         PreviewFailure.SenderRegion -> unavailable(R.string.tangempay_withdraw_bank_error_sender_region)
         PreviewFailure.Business -> unavailable(R.string.tangempay_withdraw_bank_error_business)
+        PreviewFailure.UnsupportedConfiguration ->
+            unavailable(R.string.tangempay_withdraw_bank_error_unsupported_configuration)
         PreviewFailure.General -> TangemPayBankWithdrawPreviewUM.Failed(
             title = resourceReference(R.string.tangempay_withdraw_bank_error_general_title),
             onCloseClick = callbacks.onCloseClick,

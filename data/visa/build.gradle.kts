@@ -103,5 +103,6 @@ dependencies {
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
     testImplementation(deps.moshi.kotlin)
+    testImplementation(deps.web3j.core)
     // endregion
 }

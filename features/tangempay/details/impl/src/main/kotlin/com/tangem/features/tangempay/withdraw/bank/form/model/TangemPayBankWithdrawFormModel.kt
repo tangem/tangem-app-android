@@ -36,9 +36,11 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
         step = form.step,
         callbacks = TangemPayBankWithdrawFormUMFactory.Callbacks(
             onBackClick = ::onBackClick,
+            onCloseClick = form.onCloseFlow,
             onValueChange = ::onValueChange,
             onFocusChange = ::onFocusChange,
             onSelectorClick = ::onSelectorClick,
+            onSuggestionClick = form.onSavedRecipientSelected,
             onContinueClick = ::onContinueClick,
         ),
     )
@@ -46,10 +48,18 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
     private val state = MutableStateFlow(FormState())
 
     val uiState: StateFlow<TangemPayBankWithdrawFormUM>
-        field = MutableStateFlow(umFactory.create(draft = form.draft.value, state = state.value))
+        field = MutableStateFlow(
+            umFactory.create(
+                draft = form.draft.value,
+                state = state.value,
+                accounts = form.savedAccounts.value,
+            ),
+        )
 
     init {
-        combine(form.draft, state) { draft, formState -> umFactory.create(draft = draft, state = formState) }
+        combine(form.draft, state, form.savedAccounts) { draft, formState, accounts ->
+            umFactory.create(draft = draft, state = formState, accounts = accounts)
+        }
             .onEach { uiState.value = it }
             .launchIn(modelScope)
     }
@@ -59,11 +69,12 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
             BankWithdrawFormField.Country -> BankWithdrawFormField.Region
             else -> null
         }
+        val regionCode = region?.code?.subdivisionCode(country.code).orEmpty()
         val staleFields = BankWithdrawFormValidator.dependentFieldsOf(field) + field
         state.update { current ->
             current.copy(
                 edits = current.edits + (field to country.code) +
-                    listOfNotNull(regionField?.to(region?.code.orEmpty())),
+                    listOfNotNull(regionField?.to(regionCode)),
                 displayNameEdits = current.displayNameEdits + (field to country.name) +
                     listOfNotNull(regionField?.to(region?.name.orEmpty())),
                 errors = current.errors - staleFields.toSet(),
@@ -72,9 +83,10 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
     }
 
     fun onRegionSelected(field: BankWithdrawFormField, region: TangemPayRegion) {
+        val regionCode = region.code.subdivisionCode(countryCodeOf(field))
         state.update { current ->
             current.copy(
-                edits = current.edits + (field to region.code),
+                edits = current.edits + (field to regionCode),
                 displayNameEdits = current.displayNameEdits + (field to region.name),
                 errors = current.errors - field,
             )
@@ -104,7 +116,12 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
     }
 
     private fun onFocusChange(field: BankWithdrawFormField, isFocused: Boolean) {
-        if (isFocused) return
+        if (isFocused) {
+            state.update { it.copy(focusedField = field) }
+            return
+        }
+        // A blur can arrive after the next field has already reported focus, so only its own field is cleared.
+        state.update { if (it.focusedField == field) it.copy(focusedField = null) else it }
         val error = BankWithdrawFormValidator.validate(field = field, values = currentValues())
         // An empty field is only reported on Continue, so tabbing through the form stays quiet.
         if (error == null || error == BankWithdrawFieldError.Required) return
@@ -153,6 +170,12 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
         return currentValues()[countryField]
             ?.takeIf(String::isNotEmpty)
             ?.let { CountrySelectorConfig.Region(field = field, countryCode = it) }
+    }
+
+    /** Bank rails are US-only, so a bank state is always American; a recipient's state follows the country picked. */
+    private fun countryCodeOf(field: BankWithdrawFormField): String = when (field) {
+        BankWithdrawFormField.BankRegion -> BankWithdrawFormFields.US_COUNTRY_CODE
+        else -> state.value.value(BankWithdrawFormField.Country, form.draft.value)
     }
 
     data class Params(

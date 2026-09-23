@@ -15,7 +15,6 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.SlippagePickerUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
@@ -316,7 +315,6 @@ internal class PlacePredictionNotificationsFactoryTest {
             val state = createState(
                 amountValue = model.amountValue,
                 quote = model.quote,
-                minAmount = model.minAmount,
                 order = OrderSideUM.Sell(
                     position = SellPositionUM.Held(available = BigDecimal(model.available)),
                     proceeds = SharesProceedsUM.Unavailable,
@@ -373,15 +371,6 @@ internal class PlacePredictionNotificationsFactoryTest {
             SellGateModel(
                 amountValue = "3",
                 quote = createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE),
-                minAmount = BigDecimal("5"),
-                expectedProceeds = SharesProceedsUM.BelowMinimum(minShares = BigDecimal("5")),
-                expectedButtonEnabled = false,
-            ),
-            SellGateModel(
-                amountValue = "3",
-                available = "3",
-                quote = createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE),
-                minAmount = BigDecimal("5"),
                 expectedProceeds = SharesProceedsUM.Content(expected = BigDecimal("23.8")),
                 expectedButtonEnabled = true,
             ),
@@ -410,7 +399,6 @@ internal class PlacePredictionNotificationsFactoryTest {
         val amountValue: String,
         val quote: QuoteUM,
         val available: String = "51.23",
-        val minAmount: BigDecimal? = null,
         val expectedProceeds: SharesProceedsUM,
         val expectedButtonEnabled: Boolean,
     )
@@ -485,7 +473,6 @@ internal class PlacePredictionNotificationsFactoryTest {
         isMarketAcceptingOrders = isMarketAcceptingOrders,
         tradingPermission = tradingPermission,
         notifications = persistentListOf(),
-        slippagePicker = SlippagePickerUM.empty(),
         submit = submit,
         isPrimaryButtonEnabled = false,
     )
