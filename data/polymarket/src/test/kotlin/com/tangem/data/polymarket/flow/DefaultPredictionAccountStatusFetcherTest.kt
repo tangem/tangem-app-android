@@ -314,7 +314,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         }
 
     @Test
-    fun `GIVEN a refresh fails after a concurrent one succeeded WHEN it lands THEN only the source is flagged`() =
+    fun `GIVEN a refresh fails after a concurrent one succeeded WHEN it lands THEN it is not flagged`() =
         runTest {
             // Arrange
             val store = createStore(testScope = this)
@@ -341,7 +341,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
 
             // Assert
             val stored = store.getSyncOrNull(WALLET) as PredictionAccountStatusValue.Active
-            assertThat(stored.source).isEqualTo(StatusSource.ONLY_CACHE)
+            assertThat(stored.source).isEqualTo(StatusSource.ACTUAL)
             assertThat(stored.balance).isEqualTo(BigDecimal("40"))
             assertThat(stored.positionsValue).isEqualTo(BigDecimal("9"))
         }
