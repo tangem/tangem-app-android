@@ -117,9 +117,9 @@ positions preview (`PolymarketPositionsPreviewLoader`, polled every 20 s), and
   (`QUOTE_POLL_INTERVAL_MILLIS`) and decides on each turn whether to ask `GetPredictionOrderQuoteUseCase`
   for a quote or `GetPredictionPriceUseCase` for a price — a quote while the amount is quotable, a price
   while it is empty or below the minimum. The quote is never cached. Two independent gates decide whether
-  it is placeable: `quote.status.isPlaceable` (market state) and `isBelowMinAmount` (side-specific: BUY is
-  price-weighted, SELL is the flat `minOrderSize`, lifted when the sale closes the whole position —
-  `isFullClose`).
+  it is placeable: `quote.isPlaceable` (market state; a SELL also places on `BELOW_MIN_ORDER_SIZE`) and
+  `isBelowMinAmount` (BUY only, price-weighted — a SELL has no floor beyond one whole share or the whole
+  position).
 - **Shares.** `SharesCalculator`: the sellable size is the position floored to the 2-decimal exchange grid
   (`PolymarketConst.SHARES_DECIMALS`); presets and ± steps move in whole shares with a floor of one share
   (or the whole position when smaller), and 100 % is the position itself, so a full close reaches the

@@ -1781,19 +1781,17 @@ internal class PlacePredictionModelTest {
         }
 
         @Test
-        fun `GIVEN the whole position below the minimum WHEN quoted THEN it is priced AND signed as a full close`() =
+        fun `GIVEN a partial sale below the minimum order size WHEN quoted THEN it is priced AND signed`() =
             runTest {
                 // Arrange
-                coEvery { positionsRepository.getPosition(addresses = any(), id = any()) } returns
-                    createPosition(size = BigDecimal("3")).right()
                 coEvery { getQuoteUseCase(request = any()) } returns
                     createSellQuote(shares = BigDecimal("3")).copy(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE).right()
                 val model = createModel(testScope = this, params = SELL_PARAMS)
                 advanceUntilIdle()
                 model.onScreenShown()
+                model.onAmountChange(value = "3")
                 advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
-                val request = slot<PredictionSignRequest>()
-                coEvery { signOrderInteractor(request = capture(request)) } returns SIGNED_ORDER.right()
+                coEvery { signOrderInteractor(request = any()) } returns SIGNED_ORDER.right()
 
                 // Act
                 val quoted = model.uiState.value
@@ -1801,10 +1799,9 @@ internal class PlacePredictionModelTest {
                 advanceUntilIdle()
 
                 // Assert
-                assertThat(quoted.amountValue).isEqualTo("3.00")
                 assertThat(quoted.isPrimaryButtonEnabled).isTrue()
                 assertThat(quoted.market.outcomePriceCents).isEqualTo(42)
-                assertThat(request.captured.isFullClose).isTrue()
+                coVerify(exactly = 1) { signOrderInteractor(request = any()) }
 
                 model.onDestroy()
             }
