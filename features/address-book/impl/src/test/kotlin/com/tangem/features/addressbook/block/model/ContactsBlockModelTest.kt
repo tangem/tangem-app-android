@@ -66,7 +66,7 @@ internal class ContactsBlockModelTest {
         advanceUntilIdle()
 
         // Assert — reported once even though two contacts populate the block.
-        verify(exactly = 1) { analyticsSender.sendSendFlowWidgetShown(scope = any()) }
+        verify(exactly = 1) { analyticsSender.sendSendFlowWidgetShown() }
     }
 
     @Test
@@ -81,7 +81,7 @@ internal class ContactsBlockModelTest {
 
         // Assert — the widget is hidden, so nothing is reported.
         assertThat(model.state.value).isEqualTo(ContactsBlockUM.Hidden)
-        verify(exactly = 0) { analyticsSender.sendSendFlowWidgetShown(any()) }
+        verify(exactly = 0) { analyticsSender.sendSendFlowWidgetShown() }
     }
 
     @Test
@@ -97,7 +97,7 @@ internal class ContactsBlockModelTest {
         (model.state.value as ContactsBlockUM.Content).contacts.first().onClick()
 
         // Assert
-        verify(exactly = 1) { analyticsSender.sendContactSelectedInSend(contactId = "42", scope = any()) }
+        verify(exactly = 1) { analyticsSender.sendContactSelectedInSend(contactId = "42") }
         assertThat(clicked?.contactId).isEqualTo("42")
     }
 

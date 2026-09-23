@@ -31,6 +31,7 @@ internal class TangemPayBankWithdrawChoiceModel @Inject constructor(
         step = params.step,
         callbacks = TangemPayBankWithdrawChoiceUMFactory.Callbacks(
             onBackClick = router::pop,
+            onCloseClick = params.onCloseFlow,
             onOptionClick = ::onOptionClick,
             onContinueClick = ::onContinueClick,
         ),

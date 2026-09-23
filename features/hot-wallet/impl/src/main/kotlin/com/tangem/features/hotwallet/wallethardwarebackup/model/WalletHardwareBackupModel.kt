@@ -27,6 +27,7 @@ import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.analytics.toAnalyticsState
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.domain.wallets.usecase.UnlockHotWalletContextualUseCase
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.WalletHardwareBackupComponent
@@ -56,6 +57,7 @@ internal class WalletHardwareBackupModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val getCloudBackupStatusUseCase: GetCloudBackupStatusUseCase,
+    private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<WalletHardwareBackupComponent.Params>()
@@ -141,7 +143,9 @@ internal class WalletHardwareBackupModel @Inject constructor(
         if (userWallet is UserWallet.Hot) {
             analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonUpgradeCurrent())
             modelScope.launch {
-                if (!userWallet.backedUp) {
+                // Any backup will do, not the seed phrase alone: a wallet kept by a cloud backup or by
+                // social recovery is just as restorable after the upgrade (FR-15).
+                if (!isWalletBackedUpUseCase(userWallet)) {
                     messageSender.send(saveSeedPhraseBeforeUpgradeBS(resolveCloudBackupState()))
                 } else {
                     val hotWalletId = userWallet.hotWalletId
