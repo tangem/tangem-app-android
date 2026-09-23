@@ -8,8 +8,12 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
 import com.tangem.domain.sociallogin.usecase.GetAvailableSocialLoginProvidersUseCase
@@ -18,6 +22,7 @@ import com.tangem.features.hotwallet.SocialLoginOutcome
 import com.tangem.features.hotwallet.SocialLoginStage
 import com.tangem.features.introduction.impl.ui.state.SocialLoginProgressUM
 import com.tangem.features.introduction.impl.ui.state.WalletOptionUM
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -26,16 +31,19 @@ import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R as CoreUiR
 
 /** Turns the outcome of [SocialLoginUseCase.signIn] into UI — the create vs. restore choice is not made here */
+@Suppress("LongParameterList")
 @ModelScoped
 internal class IntroductionSocialLoginHandler @Inject constructor(
     private val getAvailableSocialLoginProvidersUseCase: GetAvailableSocialLoginProvidersUseCase,
     private val socialLoginUseCase: SocialLoginUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val appCoroutineScope: AppCoroutineScope,
     private val router: Router,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
 ) {
 
-    /** `null` hides the option — no Google services (FR-13), or the feature toggle is off */
+    /** `null` hides the option — no Google services, or the feature toggle is off */
     var provider: SocialLoginProvider? = null
         private set
 
@@ -61,10 +69,10 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
     }
 
     /**
-     * FR-02: the same call serves both sheets — the backend decides create vs. restore.
+     * The same call serves both sheets — the backend decides create vs. restore.
      *
      * Safe to interrupt: the flow resumes a partly finished creation on the next attempt rather than
-     * creating a second wallet (NFR-02).
+     * creating a second wallet.
      */
     fun start(scope: CoroutineScope, provider: SocialLoginProvider, host: Host) {
         scope.launch { signIn(provider, host) }
@@ -124,11 +132,57 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
      */
     private suspend fun onFailure(provider: SocialLoginProvider, error: SocialLoginError) {
         socialLoginUseCase.signOut(provider)
-        uiMessageSender.send(SnackbarMessage(error.toMessage()))
+
+        when (error) {
+            SocialLoginError.BackupNotFound,
+            SocialLoginError.InvalidBackupFile,
+            is SocialLoginError.UnsupportedBackupVersion,
+            is SocialLoginError.RecoveryKeyDecryptionFailed,
+            SocialLoginError.PassphraseNotSupported,
+            -> showRestoreFailedDialog(
+                // TODO [REDACTED_TASK_KEY]: waiting on social_login_error_restore_failed_message in Lokalise.
+                title = resourceReference(CoreResR.string.common_something_went_wrong),
+                message = stringReference(
+                    "We couldn't restore the wallet for this account. Try again or contact support",
+                ),
+            )
+            SocialLoginError.CloudUnavailable -> showRestoreFailedDialog(
+                // TODO [REDACTED_TASK_KEY]: waiting on social_login_error_cloud_access_* in Lokalise.
+                title = stringReference("Couldn't restore wallet"),
+                message = stringReference(
+                    "Make sure Tangem has access to your ${provider.cloudName()}, then try again.",
+                ),
+            )
+            else -> uiMessageSender.send(SnackbarMessage(error.toMessage()))
+        }
+    }
+
+    private fun showRestoreFailedDialog(title: TextReference, message: TextReference) {
+        uiMessageSender.send(
+            DialogMessage(
+                title = title,
+                message = message,
+                firstActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(CoreResR.string.common_contact_support),
+                        onClick = { sendSupportRequest() },
+                    )
+                },
+                secondActionBuilder = { cancelAction(onClick = {}) },
+            ),
+        )
+    }
+
+    private fun sendSupportRequest() {
+        appCoroutineScope.launch { sendFeedbackEmailUseCase(type = FeedbackEmailType.SocialLoginProblem) }
     }
 
     private fun SocialLoginProvider.displayName(): String = when (this) {
         SocialLoginProvider.Google -> "Google"
+    }
+
+    private fun SocialLoginProvider.cloudName(): String = when (this) {
+        SocialLoginProvider.Google -> "Google Drive"
     }
 
     // TODO [REDACTED_TASK_KEY]: social_login_verifying_account / _preparing_wallet / _creating_wallet /
@@ -152,29 +206,16 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         )
     }
 
-    /** Reuses UC-07's cloud-backup wording where the failure is the same shape; UC-08 has no copy yet */
+    // TODO [REDACTED_TASK_KEY]: the social_login_error_* texts below are not in Lokalise yet.
     private fun SocialLoginError.toMessage(): TextReference = when (this) {
-        SocialLoginError.CloudUnavailable -> resourceReference(CoreResR.string.hw_cloud_backup_no_access_title)
-        is SocialLoginError.BackupWriteFailed -> resourceReference(CoreResR.string.hw_cloud_backup_error_write)
         SocialLoginError.NetworkError -> resourceReference(CoreResR.string.hw_cloud_backup_error_network)
-        SocialLoginError.BackupNotFound,
-        SocialLoginError.InvalidBackupFile,
-        is SocialLoginError.UnsupportedBackupVersion,
-        is SocialLoginError.RecoveryKeyDecryptionFailed,
-        // a backup that asks for a passphrase reads the same here: one this app cannot open
-        SocialLoginError.PassphraseNotSupported,
-        // TODO [REDACTED_TASK_KEY]: waiting on social_login_error_backup_invalid in Lokalise.
-        -> stringReference("Couldn't restore your wallet — the backup is missing or damaged.")
-        // TODO [REDACTED_TASK_KEY]: waiting on social_login_error_account_linked in Lokalise.
+        SocialLoginError.SessionExpired -> stringReference("Session expired. Please try again")
+        is SocialLoginError.BackupWriteFailed ->
+            stringReference("Couldn't save backup — make sure your cloud storage is available and try again")
         SocialLoginError.BindingConflict -> stringReference("This Google account is already linked to another wallet.")
-        SocialLoginError.SignInCanceled,
-        is SocialLoginError.SignInFailed,
-        SocialLoginError.NoProviderAccount,
-        SocialLoginError.ProviderUnavailable,
-        SocialLoginError.BindingNotFound,
-        is SocialLoginError.ServerError,
-        is SocialLoginError.PersistenceFailed,
-        is SocialLoginError.Unknown,
-        -> resourceReference(CoreResR.string.common_unknown_error)
+        SocialLoginError.NoProviderAccount -> stringReference("Add a Google account to this device to continue.")
+        SocialLoginError.ProviderUnavailable ->
+            stringReference("Google sign-in is not available on this device.")
+        else -> stringReference("Something went wrong. Please try again")
     }
 }
