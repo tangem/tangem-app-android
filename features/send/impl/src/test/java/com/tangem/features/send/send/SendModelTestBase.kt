@@ -47,7 +47,6 @@ import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCa
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.api.SendComponent
-import com.tangem.features.send.api.SendFeatureToggles
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.entity.PredefinedValues
 import com.tangem.features.send.api.subcomponents.amount.SendAmountReduceTrigger
@@ -115,7 +114,6 @@ internal abstract class SendModelTestBase {
     protected val sendTransactionUseCase: SendTransactionUseCase = mockk(relaxed = true)
     protected val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase = mockk(relaxed = true)
     protected val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase = mockk(relaxed = true)
-    protected val sendFeatureToggles: SendFeatureToggles = mockk(relaxed = true)
 
     // SendConfirmModel-specific dependencies
     protected val isSendTapHelpEnabledUseCase: IsSendTapHelpEnabledUseCase = mockk(relaxed = true)
@@ -216,7 +214,6 @@ internal abstract class SendModelTestBase {
             tronDefaultFeeLoader = TronDefaultFeeLoader(
                 getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
                 isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
-                sendFeatureToggles = sendFeatureToggles,
             ),
         )
     }

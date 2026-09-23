@@ -46,6 +46,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
+import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.txhistory.models.TxHistoryStateError
@@ -77,6 +78,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     private val gaslessTransactionRepository: GaslessTransactionRepository,
     private val jointAccountSafeAddressResolver: Lazy<JointAccountSafeAddressResolver>,
     private val getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
+    private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
     blockchainSDKFactory: BlockchainSDKFactory,
 ) : WalletManagersFacade {
 
@@ -290,6 +292,8 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                     yieldSupplyAddresses = YIELD_SUPPLY_ADDRESSES,
                     gaslessFeeAddresses = gaslessFeeAddresses,
                     currency = currency,
+                    currencyAddresses = getAddresses(userWalletId, currency.network),
+                    txHistoryFeatureToggles = txHistoryFeatureToggles,
                     networkTokens = getCachedTokenInfoUseCase(
                         userWalletId = userWalletId,
                         networkId = currency.network.rawId,
