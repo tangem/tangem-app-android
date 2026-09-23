@@ -10,15 +10,15 @@ import java.math.BigDecimal
  */
 @JsonClass(generateAdapter = true)
 data class CustomerOffersResponse(
-    @Json(name = "result") val result: List<Offer>,
+    @Json(name = "result") val result: List<Offer>? = null,
 ) {
 
     @JsonClass(generateAdapter = true)
     data class Offer(
-        @Json(name = "type") val type: String,
-        @Json(name = "fee") val fee: Fee,
-        @Json(name = "data") val data: Data,
-        @Json(name = "images") val images: List<Image> = emptyList(),
+        @Json(name = "type") val type: String? = null,
+        @Json(name = "fee") val fee: Fee? = null,
+        @Json(name = "data") val data: Data? = null,
+        @Json(name = "images") val images: List<Image>? = null,
     )
 
     @JsonClass(generateAdapter = true)
@@ -30,14 +30,14 @@ data class CustomerOffersResponse(
     @JsonClass(generateAdapter = true)
     data class Data(
         @Json(name = "specification_name") val specificationName: String? = null,
-        @Json(name = "order_type") val orderType: String,
+        @Json(name = "order_type") val orderType: String? = null,
         @Json(name = "delivery_eta_min_days") val deliveryEtaMinDays: Int? = null,
         @Json(name = "delivery_eta_max_days") val deliveryEtaMaxDays: Int? = null,
     )
 
     @JsonClass(generateAdapter = true)
     data class Fee(
-        @Json(name = "amount") val amount: BigDecimal,
-        @Json(name = "currency") val currency: String,
+        @Json(name = "amount") val amount: BigDecimal? = null,
+        @Json(name = "currency") val currency: String? = null,
     )
 }

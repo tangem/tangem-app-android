@@ -37,6 +37,7 @@ data class CustomerInfo(
     val country: String? = null,
     val phoneMask: String? = null,
     val email: String? = null,
+    val embossName: String? = null,
 ) {
 
     /** Transitional single-card accessor — returns the first product instance, or null if none. */

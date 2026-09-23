@@ -11,7 +11,9 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.error.UniversalError
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.kyc.KycStatus
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.model.CustomerInfo
@@ -47,13 +49,23 @@ internal class TangemPayOnboardingModelTest {
     private val produceInitialDataUseCase: ProduceTangemPayInitialDataUseCase = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
+    private val userWalletsListRepository: UserWalletsListRepository = mockk()
 
     private val deeplink = "tangem://onboard-visa"
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(router, repository, eligibilityManager, analytics, produceInitialDataUseCase, urlOpener)
+        clearMocks(
+            router,
+            repository,
+            eligibilityManager,
+            analytics,
+            produceInitialDataUseCase,
+            urlOpener,
+            userWalletsListRepository,
+        )
         every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns false
+        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(mockk<UserWallet>())
     }
 
     @Test
@@ -68,8 +80,42 @@ internal class TangemPayOnboardingModelTest {
         // Assert
         assertThat(model.uiState.value).isInstanceOf(TangemPayOnboardingScreenState.Content::class.java)
         coVerify(exactly = 0) { eligibilityManager.getTangemPayAvailability(any()) }
+        verify(exactly = 0) { router.replaceAll(AppRoute.TangemPayHotWalletOnboarding, onComplete = any()) }
         model.onDestroy()
     }
+
+    @Test
+    fun `GIVEN valid deeplink AND no wallets WHEN model created THEN hot wallet onboarding opened`() = runTest {
+        // Arrange
+        coEvery { repository.validateDeeplink(deeplink) } returns true.right()
+        coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+
+        // Act
+        val model = createModel(TangemPayOnboardingComponent.Params.Deeplink(deeplink))
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { router.replaceAll(AppRoute.TangemPayHotWalletOnboarding, onComplete = any()) }
+        assertThat(model.uiState.value).isInstanceOf(TangemPayOnboardingScreenState.Loading::class.java)
+        verify(exactly = 0) { router.push(any(), any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN MobileOnboardingDeeplink AND no wallets WHEN model created THEN onboarding shown as before`() =
+        runTest {
+            // Arrange
+            coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+
+            // Act
+            val model = createModel(TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value).isInstanceOf(TangemPayOnboardingScreenState.Content::class.java)
+            verify(exactly = 0) { router.replaceAll(AppRoute.TangemPayHotWalletOnboarding, onComplete = any()) }
+            model.onDestroy()
+        }
 
     @Test
     fun `GIVEN invalid deeplink WHEN model created THEN sorry screen shown AND screen not closed`() = runTest {
@@ -235,6 +281,7 @@ internal class TangemPayOnboardingModelTest {
             urlOpener = urlOpener,
             eligibilityManager = eligibilityManager,
             tangemPayFeatureToggles = tangemPayFeatureToggles,
+            userWalletsListRepository = userWalletsListRepository,
         )
     }
 

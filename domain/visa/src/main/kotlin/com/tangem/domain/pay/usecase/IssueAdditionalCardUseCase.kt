@@ -48,6 +48,7 @@ class IssueAdditionalCardUseCase(
             block = {
                 customerOffersRepository.getOffers(userWalletId)
                     .bind()
+                    .orderable
                     .virtualOffer()
             },
             catch = { handleError(it) },
