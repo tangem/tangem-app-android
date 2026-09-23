@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.feed.components.v2.blocks.analytics.FeedBlocksAnalytics
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.ui.v2.FeedShortcutCard
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.StateFlow
 /** Shortcut into the For You screen. Always offered. */
 internal class ForYouBlockComponent(
     context: AppComponentContext,
+    private val blocksAnalytics: FeedBlocksAnalytics,
 ) : FeedBlockComponent(context = context, key = KEY) {
 
     override val size: FeedBlock.Size = FeedBlock.Size.Small
@@ -33,10 +35,15 @@ internal class ForYouBlockComponent(
     override fun Content(modifier: Modifier) {
         FeedShortcutCard(
             title = stringResourceSafe(R.string.for_you_title),
-            onClick = { router.push(FeedRoute.ForYou) },
+            onClick = ::onClick,
             modifier = modifier,
             icon = { PortfolioDonutIcon() },
         )
+    }
+
+    private fun onClick() {
+        blocksAnalytics.onForYouClicked()
+        router.push(FeedRoute.ForYou)
     }
 
     companion object {

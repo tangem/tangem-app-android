@@ -30,8 +30,15 @@ sealed class WalletSettingsAnalyticEvents(
         event = "Button - Backup",
     )
 
-    class ButtonAddAccount : WalletSettingsAnalyticEvents(
+    data class ButtonAddAccount(
+        private val source: AnalyticsParam.ScreensSources,
+        private val shtorkaState: AnalyticsParam.ShtorkaState? = null,
+    ) : WalletSettingsAnalyticEvents(
         event = "Button - Add Account",
+        params = buildMap {
+            put(AnalyticsParam.SOURCE, source.value)
+            shtorkaState?.let { put(AnalyticsParam.SHTORKA_STATE, it.value) }
+        },
     )
 
     class ButtonOpenExistingAccount : WalletSettingsAnalyticEvents(
