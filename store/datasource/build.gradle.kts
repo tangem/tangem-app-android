@@ -44,6 +44,8 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.txhistory.models)
 
+    implementation(projects.libs.auth)
+
     testImplementation(projects.test.core)
     testImplementation(deps.moshi.kotlin)
     testImplementation(deps.kotlin.coroutines)
