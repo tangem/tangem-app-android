@@ -9,6 +9,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
+import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
 import com.tangem.domain.polymarket.model.PredictionPriceError
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
@@ -87,6 +88,9 @@ internal class PlacePredictionAmountModel @Inject constructor(
     private val balanceJobHolder = JobHolder()
 
     private var isNegRiskMarket: Boolean? = null
+
+    private var positionId: PolymarketPositionId? = null
+
     private var isResumed = false
 
     init {
@@ -168,7 +172,7 @@ internal class PlacePredictionAmountModel @Inject constructor(
         val isNegRisk = isNegRiskMarket ?: return
         if (!state.isPrimaryButtonEnabled) return
 
-        val order = PreparedPrediction(params = params, state = state, isNegRisk = isNegRisk)
+        val order = PreparedPrediction(params = params, state = state, isNegRisk = isNegRisk, positionId = positionId)
         quoteJobHolder.cancel()
         router.push(PlacePredictionRoute.Summary(order = order))
     }
@@ -201,6 +205,7 @@ internal class PlacePredictionAmountModel @Inject constructor(
             val outcome = market.outcomes.firstOrNull { it.assetId == params.assetId } ?: return@launch
 
             isNegRiskMarket = market.isNegRisk
+            positionId = market.conditionId?.let { PolymarketPositionId(conditionId = it, assetId = params.assetId) }
 
             uiState.update(SetMarketTransformer(market = market, outcome = outcome))
 

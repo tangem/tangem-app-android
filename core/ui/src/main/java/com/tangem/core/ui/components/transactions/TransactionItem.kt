@@ -687,7 +687,8 @@ private fun AmountText(
         } else {
             TangemTheme.colors3.text.secondary
         },
-        textDecoration = if (status is Status.Failed) TextDecoration.LineThrough else null,
+        // Nothing to strike through once the amount is stars — the line would cross the mask, not a number.
+        textDecoration = if (status is Status.Failed && !isBalanceHidden) TextDecoration.LineThrough else null,
         style = TangemTheme.typography3.body.medium,
         maxLines = 1,
         modifier = modifier,

@@ -5,7 +5,6 @@ import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.isFullClose
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
@@ -25,7 +24,7 @@ internal class SetQuoteResultTransformer(
             quote = result.fold(ifLeft = ::toError, ifRight = ::toQuote),
             minAmount = result.fold(ifLeft = { prevState.minAmount }, ifRight = { it.minAmount }),
         )
-        val pricedQuote = result.getOrNull()?.takeIf { it.isPlaceable(isFullClose = updatedState.isFullClose()) }
+        val pricedQuote = result.getOrNull()?.takeIf { it.isPlaceable }
 
         return if (pricedQuote != null) {
             SetOutcomePriceTransformer(price = pricedQuote.averagePrice).transform(updatedState)

@@ -32,6 +32,8 @@ internal sealed interface PolymarketRoute : Route {
      */
     data class Main(val userWalletId: UserWalletId) : PolymarketRoute
 
+    data class History(val userWalletId: UserWalletId) : PolymarketRoute
+
     data class Positions(val userWalletId: UserWalletId, val initialTab: PolymarketPositionsTab) : PolymarketRoute
 
     data class PositionDetails(val userWalletId: UserWalletId, val positionId: PolymarketPositionId) : PolymarketRoute
