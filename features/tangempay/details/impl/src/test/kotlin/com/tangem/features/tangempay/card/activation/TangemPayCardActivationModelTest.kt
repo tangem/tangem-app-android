@@ -328,6 +328,46 @@ internal class TangemPayCardActivationModelTest {
             verify(exactly = 0) { router.pop() }
         }
 
+    @ParameterizedTest
+    @MethodSource("provideStatusRefreshingRejections")
+    fun `GIVEN a rejection that refreshes the account WHEN the refresh runs THEN the screen stays busy`(
+        error: VisaApiError,
+    ) = runTest {
+        // Arrange
+        coEvery { activatePlasticCard(any(), any(), any()) } returns error.left()
+        coEvery { paymentAccountStatusFetcher.invoke(WALLET_ID) } coAnswers { awaitCancellation() }
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        submit(model, "8252")
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.state().isLoading).isTrue()
+        verify(exactly = 0) { uiMessageSender.send(any()) }
+    }
+
+    private fun provideStatusRefreshingRejections() = listOf(
+        VisaApiError.CardActivationCardAlreadyActive,
+        VisaApiError.CardActivationActiveOrderExists,
+    )
+
+    @Test
+    fun `GIVEN a rejection shown in a sheet WHEN submitted THEN the hint returns to the description`() = runTest {
+        // Arrange
+        coEvery { activatePlasticCard(any(), any(), any()) } returns VisaApiError.ServerUnavailable.left()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        submit(model, "8252")
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.state().hint).isEqualTo(resourceReference(R.string.tangempay_card_activation_description))
+    }
+
     @Test
     fun `GIVEN a submit in flight WHEN state observed THEN Continue stays enabled and shows the loader`() = runTest {
         // Arrange
