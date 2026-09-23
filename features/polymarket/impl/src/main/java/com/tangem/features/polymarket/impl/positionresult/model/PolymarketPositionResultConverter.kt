@@ -33,7 +33,6 @@ internal class PolymarketPositionResultConverter(
             else -> error("Position result is unavailable")
         }
         val hasPayout = result != PolymarketPositionResultUM.Result.Lost
-        val isClaimable = hasPayout && value.isRedeemable
         val shouldShowProfit = result == PolymarketPositionResultUM.Result.Won ||
             result == PolymarketPositionResultUM.Result.Split && value.currentValue > value.initialValue
 
@@ -58,12 +57,8 @@ internal class PolymarketPositionResultConverter(
                 null
             },
             profit = if (shouldShowProfit) profit(value) else null,
-            footerNote = footerNote(isClaimable = isClaimable, hasPayout = hasPayout),
-            action = if (isClaimable) {
-                PolymarketPositionResultUM.Action.Claim(isInProgress = false)
-            } else {
-                PolymarketPositionResultUM.Action.Dismiss
-            },
+            footerNote = footerNote(isRedeemable = value.isRedeemable, hasPayout = hasPayout),
+            action = action(isRedeemable = value.isRedeemable, hasPayout = hasPayout),
         )
     }
 
@@ -83,10 +78,23 @@ internal class PolymarketPositionResultConverter(
             )
         }
 
-    private fun footerNote(isClaimable: Boolean, hasPayout: Boolean): TextReference? = when {
-        isClaimable -> resourceReference(R.string.prediction_position_result_balance_note)
+    private fun footerNote(isRedeemable: Boolean, hasPayout: Boolean): TextReference? = when {
+        isRedeemable && hasPayout -> resourceReference(R.string.prediction_position_result_balance_note)
+        isRedeemable -> resourceReference(R.string.prediction_position_result_close_note)
         hasPayout -> resourceReference(R.string.prediction_position_result_payout_pending_note)
         else -> null
+    }
+
+    private fun action(isRedeemable: Boolean, hasPayout: Boolean): PolymarketPositionResultUM.Action = when {
+        !isRedeemable -> PolymarketPositionResultUM.Action.Dismiss
+        hasPayout -> PolymarketPositionResultUM.Action.Claim(
+            isInProgress = false,
+            label = resourceReference(R.string.prediction_position_result_claim_action),
+        )
+        else -> PolymarketPositionResultUM.Action.Claim(
+            isInProgress = false,
+            label = resourceReference(R.string.prediction_position_result_close_action),
+        )
     }
 
     private fun profit(value: PolymarketPosition.Open): PolymarketPositionResultUM.Metric {
