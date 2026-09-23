@@ -36,6 +36,7 @@ internal class TangemPayBankWithdrawFormModelTest {
     private val onContinue: (BankWithdrawFormResult) -> Unit = mockk(relaxed = true)
     private val onOpenSelector: (CountrySelectorConfig) -> Unit = mockk(relaxed = true)
     private val onSavedRecipientSelected: (BankAccount) -> Unit = mockk(relaxed = true)
+    private val onCloseFlow: () -> Unit = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val draft = MutableStateFlow(BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal))
     private val savedAccounts = MutableStateFlow<List<BankAccount>>(emptyList())
@@ -48,7 +49,7 @@ internal class TangemPayBankWithdrawFormModelTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(router, onBack, onContinue, onOpenSelector, onSavedRecipientSelected)
+        clearMocks(router, onBack, onContinue, onOpenSelector, onSavedRecipientSelected, onCloseFlow)
         draft.value = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal)
         savedAccounts.value = emptyList()
     }
@@ -64,6 +65,7 @@ internal class TangemPayBankWithdrawFormModelTest {
             BankWithdrawHeaderUM(
                 title = resourceReference(R.string.tangempay_withdraw_hub_to_personal_account),
                 subtitle = resourceReference(R.string.tangempay_withdraw_bank_step_counter, wrappedList(4, 5)),
+                onCloseClick = onCloseFlow,
             ),
         )
         assertThat(state.fields.map { it.field }).containsExactlyElementsIn(fields).inOrder()
@@ -1034,6 +1036,7 @@ internal class TangemPayBankWithdrawFormModelTest {
                     onBack = onBack,
                     onContinue = onContinue,
                     onSavedRecipientSelected = onSavedRecipientSelected,
+                    onCloseFlow = onCloseFlow,
                 ),
                 onOpenSelector = onOpenSelector,
             ),
