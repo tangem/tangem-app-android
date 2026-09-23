@@ -85,6 +85,25 @@ internal class JointOperationUMConverterTest {
     }
 
     @Test
+    fun `GIVEN cold wallet can sign WHEN converted THEN the sign button carries the card icon`() {
+        // Act
+        val actual = converter.convert(input(state(isSending = false), isColdWallet = true))
+
+        // Assert
+        assertThat(actual.cosignAction?.iconEnd).isNotNull()
+    }
+
+    @Test
+    fun `GIVEN hot wallet can sign WHEN converted THEN the sign button has no icon`() {
+        // Act
+        val actual = converter.convert(input(state(isSending = false), isColdWallet = false))
+
+        // Assert
+        assertThat(actual.cosignAction?.isEnabled).isTrue()
+        assertThat(actual.cosignAction?.iconEnd).isNull()
+    }
+
+    @Test
     fun `GIVEN a rate WHEN converted THEN the amount is priced in the app currency and the fee is approximate`() {
         // Act
         val actual = converter.convert(input(state(isSending = false), fiatRate = BigDecimal("2000")))
@@ -119,6 +138,7 @@ internal class JointOperationUMConverterTest {
     private fun input(
         state: JointOperationState,
         hasAnswered: Boolean = false,
+        isColdWallet: Boolean = true,
         fiatRate: BigDecimal? = null,
     ) = JointOperationUMConverter.Input(
         state = state,
@@ -127,6 +147,7 @@ internal class JointOperationUMConverterTest {
         hasAnswered = hasAnswered,
         canCreateContact = true,
         isBalanceHidden = false,
+        isColdWallet = isColdWallet,
         fiat = JointOperationFiat(rate = fiatRate, appCurrency = AppCurrency(name = "US Dollar", code = "USD", symbol = "$")),
     )
 

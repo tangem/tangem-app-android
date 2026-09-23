@@ -1,7 +1,6 @@
 package com.tangem.features.tangempay.withdraw.hub.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +18,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,7 +40,6 @@ import com.tangem.core.ui.res.generated.icons.ic_heart_20
 import com.tangem.core.ui.utils.dashedBorder
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM
-import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.AvatarAccent
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.BankSectionUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.RecentsUM
 
@@ -167,7 +164,7 @@ private fun BankActionCard(state: TangemPayWithdrawHubUM.ActionCardUM) {
 @Composable
 private fun RecentRecipientCard(state: TangemPayWithdrawHubUM.RecentRecipientUM, onClick: () -> Unit) {
     RecentsCard(onClick = onClick) {
-        RecipientAvatar(initial = state.initial, accent = state.accent)
+        RecipientAvatar(initial = state.initial)
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 text = state.name,
@@ -263,18 +260,12 @@ private fun RecentsCard(
 }
 
 @Composable
-private fun RecipientAvatar(initial: String, accent: AvatarAccent) {
-    Box(
-        modifier = Modifier
-            .size(IconCircleSize)
-            .background(color = accent.toColor(), shape = CircleShape)
-            .border(width = 1.dp, color = TangemTheme.colors3.border.secondary, shape = CircleShape),
-        contentAlignment = Alignment.Center,
-    ) {
+private fun RecipientAvatar(initial: String) {
+    IconCircle(background = TangemTheme.colors3.bg.opaque.secondary) {
         Text(
             text = initial,
-            style = TangemTheme.typography3.subheading.medium,
-            color = TangemTheme.colors3.text.staticDark.primary,
+            style = TangemTheme.typography3.body.medium,
+            color = TangemTheme.colors3.text.secondary,
         )
     }
 }
@@ -301,19 +292,5 @@ private fun IconCircle(background: Color, content: @Composable () -> Unit) {
         contentAlignment = Alignment.Center,
     ) {
         content()
-    }
-}
-
-@Composable
-@ReadOnlyComposable
-private fun AvatarAccent.toColor(): Color {
-    val accent = TangemTheme.colors3.bg.accent
-    return when (this) {
-        AvatarAccent.BLUE -> accent.blue
-        AvatarAccent.VIOLET -> accent.violet
-        AvatarAccent.RED -> accent.red
-        AvatarAccent.ORANGE -> accent.orange
-        AvatarAccent.YELLOW -> accent.yellow
-        AvatarAccent.GREEN -> accent.green
     }
 }

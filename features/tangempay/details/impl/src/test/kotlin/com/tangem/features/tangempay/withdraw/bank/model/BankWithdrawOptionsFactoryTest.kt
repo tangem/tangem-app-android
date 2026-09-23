@@ -20,13 +20,23 @@ internal class BankWithdrawOptionsFactoryTest {
     private val usdcPolygon = paymentToken()
     private val usdcBase = paymentToken(networkId = "base", networkName = "Base", contractAddress = USDC_BASE)
     private val usdtPolygon = paymentToken(contractAddress = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F", symbol = "USDT")
+    private val usdtBase = paymentToken(
+        networkId = "base",
+        networkName = "Base",
+        contractAddress = "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2",
+        symbol = "USDT",
+    )
+    private val daiPolygon = paymentToken(
+        contractAddress = "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
+        symbol = "DAI",
+    )
 
     private val bothSources = offrampOptions(
         sources = listOf(offrampSource(), offrampSource("Base", BASE_CHAIN_ID, USDC_BASE)),
     )
 
     @Test
-    fun `GIVEN accepted tokens with balance WHEN create THEN kept in backend order`() {
+    fun `GIVEN accepted tokens with balance WHEN create THEN kept in the account's network order`() {
         // Arrange
         val networks = listOf(
             availableNetwork(token = usdcPolygon, fiatBalance = BigDecimal("2325.55")),
@@ -131,6 +141,66 @@ internal class BankWithdrawOptionsFactoryTest {
 
         // Assert
         assertThat(actual?.currency).isEqualTo(Currency.getInstance("USD"))
+    }
+
+    @Test
+    fun `GIVEN sources where USDC is not first WHEN resolved THEN USDC comes first`() {
+        // Arrange
+        val networks = listOf(
+            availableNetwork(
+                token = usdtPolygon,
+                extraStatuses = listOf(currencyStatus(usdcPolygon, fiatBalance = BigDecimal("100"))),
+            ),
+        )
+        val options = offrampOptions(
+            sources = listOf(offrampSource(contractAddress = usdtPolygon.contractAddress), offrampSource()),
+        )
+
+        // Act
+        val actual = BankWithdrawOptionsFactory.create(options, networks, balanceCurrencyCode = "USD")
+
+        // Assert
+        assertThat(actual?.sources?.map { it.token }).containsExactly(usdcPolygon, usdtPolygon).inOrder()
+    }
+
+    @Test
+    fun `GIVEN several symbols WHEN resolved THEN symbols keep first-seen order`() {
+        // Arrange
+        val networks = listOf(
+            availableNetwork(
+                token = usdtPolygon,
+                extraStatuses = listOf(currencyStatus(daiPolygon, fiatBalance = BigDecimal("100"))),
+            ),
+            availableNetwork(token = usdtBase, chainId = BASE_CHAIN_ID),
+        )
+        val options = offrampOptions(
+            sources = listOf(
+                offrampSource(contractAddress = usdtPolygon.contractAddress),
+                offrampSource(contractAddress = daiPolygon.contractAddress),
+                offrampSource("Base", BASE_CHAIN_ID, usdtBase.contractAddress),
+            ),
+        )
+
+        // Act
+        val actual = BankWithdrawOptionsFactory.create(options, networks, balanceCurrencyCode = "USD")
+
+        // Assert
+        assertThat(actual?.sources?.map { it.token }).containsExactly(usdtPolygon, usdtBase, daiPolygon).inOrder()
+    }
+
+    @Test
+    fun `GIVEN one symbol on several networks WHEN resolved THEN backend order kept`() {
+        // Arrange
+        val networks = listOf(
+            availableNetwork(token = usdcBase, chainId = BASE_CHAIN_ID),
+            availableNetwork(token = usdcPolygon),
+        )
+
+        // Act
+        val actual = BankWithdrawOptionsFactory.create(bothSources, networks, balanceCurrencyCode = "USD")
+
+        // Assert
+        assertThat(actual?.sources?.map { it.token }).containsExactly(usdcBase, usdcPolygon).inOrder()
     }
 
     @Test

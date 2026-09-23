@@ -84,6 +84,7 @@ import java.math.BigDecimal
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.StatusSource
 import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessage
@@ -637,7 +638,12 @@ internal class PolymarketMainModelTest {
             assertThat(model.uiState.value.balance.addFunds.isEnabled).isFalse()
             assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
             coVerify(exactly = 1) {
-                accountStatusFetcher(PredictionAccountStatusFetcher.Params(USER_WALLET_ID))
+                accountStatusFetcher(
+                    PredictionAccountStatusFetcher.Params(
+                        userWalletId = USER_WALLET_ID,
+                        mode = PredictionAccountStatusFetcher.Mode.FULL,
+                    ),
+                )
             }
         }
 
@@ -1154,11 +1160,89 @@ internal class PolymarketMainModelTest {
         model.onDestroy()
     }
 
-    private fun activeStatus(depositAddress: String?, balance: String = "12.5") =
+    @Test
+    fun `GIVEN a known positions value WHEN the balance label is tapped THEN the header switches to total`() = runTest {
+        // Arrange
+        statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS, positionsValue = "2.5")
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.balance.onSwitchClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.balance.label)
+            .isEqualTo(resourceReference(R.string.prediction_main_total_balance))
+        assertThat(model.uiState.value.balance.balance.plainText()).isEqualTo("$15.00")
+    }
+
+    @Test
+    fun `GIVEN the header shows total WHEN the label is tapped again THEN it switches back to available`() = runTest {
+        // Arrange
+        statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS, positionsValue = "2.5")
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.uiState.value.balance.onSwitchClick()
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.balance.onSwitchClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.balance.label)
+            .isEqualTo(resourceReference(R.string.prediction_main_available_balance))
+        assertThat(model.uiState.value.balance.balance.plainText()).isEqualTo("$12.50")
+    }
+
+    @Test
+    fun `GIVEN the header shows total WHEN the positions value becomes unknown THEN it falls back to available`() =
+        runTest {
+            // Arrange
+            statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS, positionsValue = "2.5")
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            model.uiState.value.balance.onSwitchClick()
+            advanceUntilIdle()
+
+            // Act
+            statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS, positionsValue = null)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.balance.label)
+                .isEqualTo(resourceReference(R.string.prediction_main_available_balance))
+            assertThat(model.uiState.value.balance.isSwitchEnabled).isFalse()
+        }
+
+    @Test
+    fun `GIVEN the positions value was lost and returns WHEN the header shows total THEN total comes back`() =
+        runTest {
+            // Arrange
+            statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS, positionsValue = "2.5")
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            model.uiState.value.balance.onSwitchClick()
+            advanceUntilIdle()
+            statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS, positionsValue = null)
+            advanceUntilIdle()
+
+            // Act
+            statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS, positionsValue = "3")
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.balance.label)
+                .isEqualTo(resourceReference(R.string.prediction_main_total_balance))
+            assertThat(model.uiState.value.balance.balance.plainText()).isEqualTo("$15.50")
+        }
+
+    private fun activeStatus(depositAddress: String?, balance: String = "12.5", positionsValue: String? = null) =
         PredictionAccountStatusValue.Active(
             source = StatusSource.ACTUAL,
             balance = BigDecimal(balance),
-            positionsValue = null,
+            positionsValue = positionsValue?.let(::BigDecimal),
             fiatRate = BigDecimal.ONE,
             depositCurrency = COLLATERAL,
             depositAddress = depositAddress,
@@ -1428,4 +1512,11 @@ internal class PolymarketMainModelTest {
             ),
         )
     }
+}
+
+private fun TextReference.plainText(): String = when (this) {
+    is TextReference.Combined -> refs.joinToString(separator = "") { it.plainText() }
+    is TextReference.Str -> value
+    is TextReference.StyledStr -> value
+    else -> error("Unexpected reference $this")
 }

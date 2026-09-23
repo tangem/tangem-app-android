@@ -50,6 +50,8 @@ internal class JointOperationModel @Inject constructor(
 
     private val params: JointOperationComponent.Params = paramsContainer.require()
 
+    private val isColdWallet = delegate.isColdWallet(userWalletId = params.userWalletId)
+
     private val operationState: SharedFlow<JointOperationState?> = delegate
         .observe(
             userWalletId = params.userWalletId,
@@ -140,6 +142,7 @@ internal class JointOperationModel @Inject constructor(
                     hasAnswered = actions.localAnswer != null,
                     canCreateContact = canCreateContact,
                     isBalanceHidden = isBalanceHidden,
+                    isColdWallet = isColdWallet,
                     fiat = fiat,
                 ),
             ),
