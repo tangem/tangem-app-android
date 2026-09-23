@@ -1,6 +1,7 @@
 package com.tangem.tap.di.domain
 
 import android.content.Context
+import com.tangem.domain.feedback.GetSupportChatLogsUseCase
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
@@ -48,5 +49,11 @@ internal object FeedbackDomainModule {
             getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
             sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetSupportChatLogsUseCase(feedbackRepository: FeedbackRepository): GetSupportChatLogsUseCase {
+        return GetSupportChatLogsUseCase(feedbackRepository = feedbackRepository)
     }
 }
