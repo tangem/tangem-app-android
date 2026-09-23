@@ -4,8 +4,10 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.card.Card
 import com.tangem.common.core.CardSession
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.hot.HotWalletAccessor
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.auth.AuthFeatureToggles
@@ -16,8 +18,10 @@ import com.tangem.utils.coroutines.AppCoroutineScope
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkAll
@@ -147,7 +151,56 @@ internal class WalletRegistrationLauncherTest {
 
         launcher.registerColdInSession(mockk<CardSession>(), mockk<Card>(), mockk<WalletNonce>())
 
-        coVerify(exactly = 0) { walletRegistrar.prepare(any(), any(), any()) }
+        coVerify(exactly = 0) { walletRegistrar.prepare(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN forced registration without nonce WHEN registerColdInSession THEN drops marker only`() = runTest {
+        // Arrange
+        every { authFeatureToggles.isBackendAuthenticationEnabled } returns true
+        stubColdCard()
+        coEvery { walletRegistrar.forgetRegistration(any()) } returns Unit.right()
+
+        // Act
+        launcher.registerColdInSession(mockk<CardSession>(), mockk<Card>(relaxed = true), null, shouldForce = true)
+
+        // Assert
+        coVerify(exactly = 1) { walletRegistrar.forgetRegistration(COLD_WALLET_ID_BASE64) }
+        coVerify(exactly = 0) { walletRegistrar.prepare(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN forced registration with nonce WHEN registerColdInSession THEN drops marker and prepares forced`() =
+        runTest {
+            // Arrange
+            every { authFeatureToggles.isBackendAuthenticationEnabled } returns true
+            stubColdCard()
+            val nonce = mockk<WalletNonce>()
+            coEvery { walletRegistrar.forgetRegistration(any()) } returns Unit.right()
+            coEvery { walletRegistrar.prepare(any(), any(), any(), any()) } returns null.right()
+
+            // Act
+            launcher.registerColdInSession(mockk<CardSession>(), mockk<Card>(relaxed = true), nonce, shouldForce = true)
+
+            // Assert
+            coVerifyOrder {
+                walletRegistrar.forgetRegistration(COLD_WALLET_ID_BASE64)
+                walletRegistrar.prepare(COLD_WALLET_ID_BASE64, nonce, any(), true)
+            }
+        }
+
+    @Test
+    fun `GIVEN regular registration without nonce WHEN registerColdInSession THEN keeps marker`() = runTest {
+        // Arrange
+        every { authFeatureToggles.isBackendAuthenticationEnabled } returns true
+        stubColdCard()
+
+        // Act
+        launcher.registerColdInSession(mockk<CardSession>(), mockk<Card>(relaxed = true), null)
+
+        // Assert
+        coVerify(exactly = 0) { walletRegistrar.forgetRegistration(any()) }
+        coVerify(exactly = 0) { walletRegistrar.prepare(any(), any(), any(), any()) }
     }
 
     @Test
@@ -201,5 +254,19 @@ internal class WalletRegistrationLauncherTest {
         every { wallet.walletId } returns UserWalletId(value = walletIdValue)
         every { wallet.hotWalletId } returns hotWalletId
         return wallet
+    }
+
+    private fun stubColdCard() {
+        mockkObject(UserWalletIdBuilder.Companion)
+        val walletIdBuilder = mockk<UserWalletIdBuilder> {
+            every { build() } returns UserWalletId(value = COLD_WALLET_ID)
+        }
+        every { UserWalletIdBuilder.card(any<CardDTO>()) } returns walletIdBuilder
+        every { coldSigner.signerFor(any(), any<CardDTO>()) } returns mockk()
+    }
+
+    private companion object {
+        val COLD_WALLET_ID = ByteArray(32) { 3 }
+        val COLD_WALLET_ID_BASE64: String = java.util.Base64.getEncoder().encodeToString(COLD_WALLET_ID)
     }
 }
