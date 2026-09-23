@@ -198,8 +198,9 @@ internal class JointOperationUMConverter(
         return "${StringsSigns.MINUS} $formatted"
     }
 
+    /** A missing quote reaches the status as a zero rate, so zero means "unpriced", not "worth nothing" */
     private fun fiatAmountOf(state: JointOperationState, fiat: JointOperationFiat): TextReference? {
-        val rate = fiat.rate ?: return null
+        val rate = fiat.rate?.takeIf { it.signum() > 0 } ?: return null
         val formatted = (amountValue(state) * rate).format {
             fiat(fiatCurrencyCode = fiat.appCurrency.code, fiatCurrencySymbol = fiat.appCurrency.symbol)
         }
