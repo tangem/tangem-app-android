@@ -81,7 +81,7 @@ class DexSwapFeeCalculator(
     ): Either<GetFeeError, DexFeeResult> = either {
         val networkRawId = fromSwapCurrencyStatus.currency.network.rawId
         val nativeCoinDecimals = Blockchain.fromNetworkId(networkRawId)?.decimals()
-            ?: error("Blockchain not found")
+            ?: raise(GetFeeError.UnknownError)
         val otherNativeFee = transaction.otherNativeFeeWei
             ?.movePointLeft(nativeCoinDecimals)
             ?: BigDecimal.ZERO
@@ -486,7 +486,7 @@ class DexSwapFeeCalculator(
         return TransactionFeeResult.Loaded(fee)
     }
 
-    private suspend fun getFeeDataForSolanaDexSwap(
+    private suspend fun Raise<GetFeeError>.getFeeDataForSolanaDexSwap(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         transactionBytes: ByteArray,
     ): TransactionFee {
@@ -498,7 +498,7 @@ class DexSwapFeeCalculator(
             transactionData = transactionData,
             network = fromSwapCurrencyStatus.currency.network,
             userWallet = fromSwapCurrencyStatus.userWallet,
-        ).getOrNull() ?: error("unable to calculate fee")
+        ).bind()
     }
 
     private fun createNativeAmountForDex(txValueAmount: String, network: Network): Amount {
