@@ -151,7 +151,7 @@ internal class SdkTransactionTypeConverter(
                 )
             }
             "supplyTopUp" -> TxInfo.TransactionType.YieldSupply.Topup
-            "gaslessTransaction" -> getTypeForGaslessMethod(destination)
+            "gaslessTransaction" -> getTypeForGaslessMethod(destination, source)
             null -> TxInfo.TransactionType.UnknownOperation
             else -> TxInfo.TransactionType.Operation(name = methodName.replaceFirstChar { it.titlecase() })
         } ?: TxInfo.TransactionType.Operation(name = methodName?.replaceFirstChar { it.titlecase() }.orEmpty())
@@ -222,17 +222,19 @@ internal class SdkTransactionTypeConverter(
 
     private fun String.toSelectorKey(): String = lowercase().formatHex()
 
-    private fun getTypeForGaslessMethod(destination: TransactionHistoryItem.DestinationType): TxInfo.TransactionType {
-        return when (destination) {
-            is TransactionHistoryItem.DestinationType.Multiple -> TxInfo.TransactionType.UnknownOperation
-            is TransactionHistoryItem.DestinationType.Single -> {
-                val address = destination.addressType.address.lowercase()
-                if (gaslessFeeAddressesLowercase.contains(address)) {
-                    TxInfo.TransactionType.GaslessFee
-                } else {
-                    TxInfo.TransactionType.UnknownOperation
-                }
-            }
+    private fun getTypeForGaslessMethod(
+        destination: TransactionHistoryItem.DestinationType,
+        source: TransactionHistoryItem.SourceType,
+    ): TxInfo.TransactionType {
+        return when {
+            destination is TransactionHistoryItem.DestinationType.Single &&
+                gaslessFeeAddressesLowercase.contains(destination.addressType.address.lowercase())
+            -> TxInfo.TransactionType.GaslessFee
+            source is TransactionHistoryItem.SourceType.Single &&
+                yieldSupplyAddresses.contains(source.address.lowercase())
+            -> TxInfo.TransactionType.YieldSupply.Send(isYieldSupplyWithdraw = true)
+
+            else -> TxInfo.TransactionType.UnknownOperation
         }
     }
 }

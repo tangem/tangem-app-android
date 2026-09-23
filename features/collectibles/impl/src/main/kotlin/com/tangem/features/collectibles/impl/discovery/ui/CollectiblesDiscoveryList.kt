@@ -14,6 +14,7 @@ import androidx.compose.ui.zIndex
 import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.collectibles.impl.common.ui.CollectiblesStatus
 import com.tangem.features.collectibles.impl.discovery.ui.state.CollectiblesDiscoveryUM
 
 internal object DiscoveryListKeys {
@@ -105,12 +106,12 @@ private fun LazyListScope.contentItems(content: CollectiblesDiscoveryUM.ContentU
         }
         is CollectiblesDiscoveryUM.ContentUM.Error -> {
             statusItem {
-                CollectiblesDiscoveryStatus(message = content.message, onReloadClick = content.onReloadClick)
+                CollectiblesStatus(message = content.message, onReloadClick = content.onReloadClick)
             }
         }
         is CollectiblesDiscoveryUM.ContentUM.Empty -> {
             statusItem {
-                CollectiblesDiscoveryStatus(message = content.message, onReloadClick = null)
+                CollectiblesStatus(message = content.message, onReloadClick = null)
             }
         }
     }

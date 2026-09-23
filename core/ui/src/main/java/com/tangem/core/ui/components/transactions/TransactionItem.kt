@@ -235,7 +235,7 @@ private fun StatusCircle(icon: TxIcon, status: Status, modifier: Modifier = Modi
 
 private val Status.backgroundColor: Color
     @Composable get() = when (this) {
-        is Status.Confirmed -> TangemTheme.colors3.bg.opaque.secondary
+        is Status.Confirmed, is Status.PendingSignature -> TangemTheme.colors3.bg.opaque.secondary
         is Status.Unconfirmed -> TangemTheme.colors3.bg.status.infoSubtle
         is Status.Failed -> TangemTheme.colors3.bg.status.errorSubtle
     }
@@ -243,6 +243,7 @@ private val Status.backgroundColor: Color
 private val Status.iconTint: Color
     @Composable get() = when (this) {
         is Status.Confirmed -> TangemTheme.colors3.icon.primary
+        is Status.PendingSignature -> TangemTheme.colors3.icon.secondary
         is Status.Unconfirmed -> TangemTheme.colors3.icon.brand
         is Status.Failed -> TangemTheme.colors3.icon.status.error
     }
@@ -250,6 +251,7 @@ private val Status.iconTint: Color
 private val Status.testTagSuffix: String
     get() = when (this) {
         is Status.Confirmed -> "CONFIRMED"
+        is Status.PendingSignature -> "PENDING_SIGNATURE"
         is Status.Unconfirmed -> "UNCONFIRMED"
         is Status.Failed -> "FAILED"
     }
@@ -296,7 +298,7 @@ private fun TitleText(title: TextReference, status: Status, modifier: Modifier =
 
 private val Status.titleColor: Color
     @Composable get() = when (this) {
-        is Status.Confirmed -> TangemTheme.colors3.text.primary
+        is Status.Confirmed, is Status.PendingSignature -> TangemTheme.colors3.text.primary
         is Status.Unconfirmed -> TangemTheme.colors3.text.brand
         is Status.Failed -> TangemTheme.colors3.text.status.error
     }
@@ -687,7 +689,8 @@ private fun AmountText(
         } else {
             TangemTheme.colors3.text.secondary
         },
-        textDecoration = if (status is Status.Failed) TextDecoration.LineThrough else null,
+        // Nothing to strike through once the amount is stars — the line would cross the mask, not a number.
+        textDecoration = if (status is Status.Failed && !isBalanceHidden) TextDecoration.LineThrough else null,
         style = TangemTheme.typography3.body.medium,
         maxLines = 1,
         modifier = modifier,
@@ -891,7 +894,7 @@ private fun Preview_TransactionItem_PendingSignature() {
                     txHash = "snd-pending",
                     icon = TxIcon.Vector(Icons.ic_arrow_up_20),
                     direction = Direction.OUTGOING,
-                    status = Status.Confirmed,
+                    status = Status.PendingSignature,
                     title = "Send",
                     subtitle = "to: 33BdfS...ga2B",
                     amount = "-0.3212",
