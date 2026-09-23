@@ -40,6 +40,18 @@ class DefaultHotWalletAccessor @Inject constructor(
             tangemHotSdk.signHashes(unlockHotWallet = unlock, dataToSign = dataToSign)
         }
 
+    override suspend fun signHashesReusingContextualUnlock(
+        hotWalletId: HotWalletId,
+        dataToSign: List<DataToSign>,
+    ): List<SignedData> {
+        val contextualUnlock = contextualUnlockHotWallet[hotWalletId]
+        return if (contextualUnlock != null) {
+            tangemHotSdk.signHashes(unlockHotWallet = contextualUnlock, dataToSign = dataToSign)
+        } else {
+            signHashes(hotWalletId, dataToSign)
+        }
+    }
+
     override suspend fun derivePublicKeys(
         hotWalletId: HotWalletId,
         request: DeriveWalletRequest,
