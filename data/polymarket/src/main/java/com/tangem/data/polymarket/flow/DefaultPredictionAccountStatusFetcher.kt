@@ -59,19 +59,17 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
 ) : PredictionAccountStatusFetcher {
 
     override suspend fun invoke(params: PredictionAccountStatusFetcher.Params): Either<Throwable, Unit> {
-        val since = statusStore.commitCount(userWalletId = params.userWalletId)
-
         return Either.catchOn(dispatchers.default) {
             val merge = resolve(userWalletId = params.userWalletId, mode = params.mode)
 
             if (merge == null) {
-                markUnrefreshed(userWalletId = params.userWalletId, since = since)
+                markUnrefreshed(userWalletId = params.userWalletId)
             } else {
                 statusStore.update(userWalletId = params.userWalletId, transform = merge)
             }
         }.onLeft { error ->
             logger.e("Failed to refresh the prediction account of ${params.userWalletId}", error)
-            markUnrefreshed(userWalletId = params.userWalletId, since = since)
+            markUnrefreshed(userWalletId = params.userWalletId)
         }
     }
 
@@ -211,8 +209,8 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
     private fun constant(value: PredictionAccountStatusValue): PredictionAccountStatusMerge = { value }
 
     /** Guarded: the likeliest reason to be here is that the store itself failed, and this asks it to write again. */
-    private suspend fun markUnrefreshed(userWalletId: UserWalletId, since: Long) {
-        runSuspendCatching { statusStore.markUnrefreshed(userWalletId = userWalletId, since = since) }
+    private suspend fun markUnrefreshed(userWalletId: UserWalletId) {
+        runSuspendCatching { statusStore.markUnrefreshed(userWalletId = userWalletId) }
             .onFailure { logger.e("Failed to mark the prediction account of $userWalletId as un-refreshed", it) }
     }
 
