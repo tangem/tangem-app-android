@@ -30,6 +30,7 @@ import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.components.TangemPayCampaignComponent
 import com.tangem.features.tangempay.model.TangemPayOnboardingStarter
+import com.tangem.features.tangempay.ui.TangemPayOnboardingNavigation
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.Called
 import io.mockk.clearMocks
@@ -211,8 +212,6 @@ internal class TangemPayCampaignModelTest {
                 // Assert
                 assertThat(model.uiState.value).isEqualTo(TangemPayCampaignUM.Loading)
                 assertThat(children.single()?.cardArtUrl).isEqualTo(CARD_ART_URL)
-                verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.CobrandOnboardingExistPay()) }
-                verify(exactly = 1) { analytics.send(any()) }
                 model.onDestroy()
             }
 
@@ -437,6 +436,30 @@ internal class TangemPayCampaignModelTest {
         }
 
         @Test
+        fun `GIVEN NoWallet landing WHEN get card retried after failed onboarding THEN hot wallet created once`() =
+            runTest {
+                // Arrange
+                val userWallet: UserWallet.Hot = mockk { every { walletId } returns WALLET_ID }
+                coEvery { onboardingStarter.createHotWallet(any()) } returns userWallet
+                coEvery { onboardingStarter.startOnboarding(any(), any(), any()) } answers {
+                    thirdArg<TangemPayOnboardingStarter.Callbacks>().onLoadingChange(false)
+                }
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+                (model.uiState.value as TangemPayCampaignUM.Landing).onGetCardClick()
+                advanceUntilIdle()
+
+                // Act
+                (model.uiState.value as TangemPayCampaignUM.Landing).onGetCardClick()
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 1) { onboardingStarter.createHotWallet(any()) }
+                coVerify(exactly = 2) { onboardingStarter.startOnboarding(WALLET_ID, CAMPAIGN_KEY, any()) }
+                model.onDestroy()
+            }
+
+        @Test
         fun `GIVEN NoPay landing WHEN get card THEN possible wallets passed to starter with campaign`() = runTest {
             // Arrange
             givenWallets(WALLET_ID)
@@ -482,6 +505,41 @@ internal class TangemPayCampaignModelTest {
                 verify(exactly = 1) { router.replaceAll(AppRoute.Wallet) }
                 model.onDestroy()
             }
+
+        @Test
+        fun `GIVEN NoPay landing WHEN wallet selector dismissed THEN get card can be tapped again`() = runTest {
+            // Arrange
+            givenWallets(WALLET_ID, OTHER_WALLET_ID)
+            coEvery {
+                eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false)
+            } returns listOf(WALLET_ID, OTHER_WALLET_ID)
+            coEvery { onboardingStarter.proceedWithWallets(any(), any(), any(), any()) } answers {
+                arg<TangemPayOnboardingStarter.Callbacks>(3).onWalletSelectorRequested(firstArg())
+            }
+            val model = createModel(testScope = this)
+            val sheets = model.trackBottomSheets()
+            advanceUntilIdle()
+            (model.uiState.value as TangemPayCampaignUM.Landing).onGetCardClick()
+            advanceUntilIdle()
+
+            // Act
+            model.onWalletSelectorDismiss()
+            (model.uiState.value as TangemPayCampaignUM.Landing).onGetCardClick()
+            advanceUntilIdle()
+
+            // Assert
+            val walletSelector = TangemPayOnboardingNavigation.WalletSelector(listOf(WALLET_ID, OTHER_WALLET_ID))
+            assertThat(sheets).containsExactly(walletSelector, null, walletSelector).inOrder()
+            coVerify(exactly = 2) {
+                onboardingStarter.proceedWithWallets(
+                    walletsIds = listOf(WALLET_ID, OTHER_WALLET_ID),
+                    mode = TangemPayOnboardingStarter.Mode.StartOnboarding,
+                    campaignKey = CAMPAIGN_KEY,
+                    callbacks = any(),
+                )
+            }
+            model.onDestroy()
+        }
 
         @Test
         fun `GIVEN NoWallet landing WHEN terms of service clicked THEN disclaimer opened`() = runTest {
@@ -565,20 +623,46 @@ internal class TangemPayCampaignModelTest {
         }
 
         @Test
-        fun `GIVEN approved customer reported by starter WHEN offer loaded THEN exist pay event sent`() = runTest {
+        fun `GIVEN issue card resolution WHEN model created THEN only exist pay event sent`() = runTest {
             // Arrange
             givenWallets(WALLET_ID)
-            givenCampaignOffer(campaignOffer())
+            givenResolution(
+                TangemPayCampaignResolution.IssueCard(
+                    userWalletId = WALLET_ID,
+                    campaign = CAMPAIGN,
+                    offer = campaignOffer(),
+                ),
+            )
+
+            // Act
             val model = createModel(testScope = this)
             advanceUntilIdle()
 
-            // Act
-            starterCallbacks(model).onCustomerAlreadyApproved?.invoke(WALLET_ID)
-
             // Assert
             verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.CobrandOnboardingExistPay()) }
+            verify(exactly = 1) { analytics.send(any()) }
             model.onDestroy()
         }
+
+        @Test
+        fun `GIVEN NoPay landing WHEN approved customer reported by starter THEN only not in pay event sent`() =
+            runTest {
+                // Arrange
+                givenWallets(WALLET_ID)
+                givenCampaignOffer(campaignOffer())
+                val model = createModel(testScope = this)
+                val children = model.trackChildren()
+                advanceUntilIdle()
+
+                // Act
+                starterCallbacks(model).onCustomerAlreadyApproved?.invoke(WALLET_ID)
+
+                // Assert
+                assertThat(children).hasSize(1)
+                verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.CobrandOnboardingNotInPay()) }
+                verify(exactly = 1) { analytics.send(any()) }
+                model.onDestroy()
+            }
 
         @Test
         fun `GIVEN unavailable resolution WHEN model created THEN no event sent`() = runTest {
@@ -647,6 +731,12 @@ internal class TangemPayCampaignModelTest {
         return children
     }
 
+    private fun TangemPayCampaignModel.trackBottomSheets(): List<TangemPayOnboardingNavigation?> {
+        val sheets = mutableListOf<TangemPayOnboardingNavigation?>()
+        bottomSheetNavigation.subscribe { event -> sheets += event.transformer(null) }
+        return sheets
+    }
+
     private fun createModel(testScope: TestScope): TangemPayCampaignModel {
         val testDispatcher = StandardTestDispatcher(testScope.testScheduler)
         return TangemPayCampaignModel(
@@ -678,6 +768,7 @@ internal class TangemPayCampaignModelTest {
         const val CARD_ART_URL = "https://example.com/oxford.png"
         const val OFFER_ART_URL = "https://example.com/oxford-offer.png"
         val WALLET_ID = UserWalletId("011")
+        val OTHER_WALLET_ID = UserWalletId("012")
         val CAMPAIGN = TangemPayCampaign(cardArtUrl = CARD_ART_URL)
         val UNIVERSAL_ERROR = object : UniversalError {
             override val errorCode: Int = 0
