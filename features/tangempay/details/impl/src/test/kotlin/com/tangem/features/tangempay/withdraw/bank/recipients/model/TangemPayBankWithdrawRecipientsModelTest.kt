@@ -40,6 +40,7 @@ internal class TangemPayBankWithdrawRecipientsModelTest {
     private val getBankAccountsUseCase: GetBankAccountsUseCase = mockk()
     private val markBankAccountUsedUseCase: MarkBankAccountUsedUseCase = mockk(relaxed = true)
     private val onRecipientSelected: (BankAccount) -> Unit = mockk(relaxed = true)
+    private val onCloseFlow: () -> Unit = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
     private val basit = bankAccount(
@@ -60,7 +61,14 @@ internal class TangemPayBankWithdrawRecipientsModelTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(router, uiMessageSender, getBankAccountsUseCase, markBankAccountUsedUseCase, onRecipientSelected)
+        clearMocks(
+            router,
+            uiMessageSender,
+            getBankAccountsUseCase,
+            markBankAccountUsedUseCase,
+            onRecipientSelected,
+            onCloseFlow,
+        )
         coEvery { getBankAccountsUseCase(userWalletId) } returns listOf(basit, raxanax, saburo).right()
     }
 
@@ -204,11 +212,25 @@ internal class TangemPayBankWithdrawRecipientsModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN model WHEN header close clicked THEN flow closed`() {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        model.uiState.value.onCloseClick()
+
+        // Assert
+        verify(exactly = 1) { onCloseFlow() }
+        model.onDestroy()
+    }
+
     private fun createModel(): TangemPayBankWithdrawRecipientsModel = TangemPayBankWithdrawRecipientsModel(
         paramsContainer = MutableParamsContainer(
             TangemPayBankWithdrawRecipientsComponent.Params(
                 userWalletId = userWalletId,
                 onRecipientSelected = onRecipientSelected,
+                onCloseFlow = onCloseFlow,
             ),
         ),
         dispatchers = dispatchers,

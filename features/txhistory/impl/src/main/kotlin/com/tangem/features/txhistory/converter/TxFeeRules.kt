@@ -1,0 +1,95 @@
+package com.tangem.features.txhistory.converter
+
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.models.network.TxInfo.TransactionType
+import com.tangem.domain.txhistory.model.ExpressTx
+import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
+import com.tangem.features.txhistory.impl.R
+import com.tangem.utils.StringsSigns
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
+import java.math.BigDecimal
+
+/*
+ * Every rule about the network fee of an on-chain transaction: whose fee it is, where its value comes from, and
+ * where it surfaces. Shared by the history list, the on-chain details card and the express card — which pulls the
+ * fee from its matched on-chain leg — so the three never disagree about what the user paid.
+ */
+
+// region Whose fee it is
+
+/**
+ * Whether the fee was paid by the counterparty, which drops the fee row: an incoming plain transfer. A non-withdraw
+ * [TransactionType.YieldSupply.Send] is a plain transfer too and follows the same rule.
+ */
+internal fun TxInfo.hasForeignFee(): Boolean = !isOutgoing && (
+    type is TransactionType.Transfer ||
+        (type as? TransactionType.YieldSupply.Send)?.isYieldSupplyWithdraw == false
+    )
+
+/** The amount of a fee-only transaction already shows the fee, so the card does not repeat it as an info row. */
+internal fun TxInfo.isFeeOnly(): Boolean = type is TransactionType.NetworkFee || type is TransactionType.GaslessFee
+
+/**
+ * Whether the matched on-chain leg is the one the user paid for. Only a swap viewed from its `from` token qualifies:
+ * that leg is the user's own pay-in tx. A payout leg — a swap viewed from its `to` token, or any onramp — is sent by
+ * the provider, so its on-chain fee is not the user's and must never surface as "Network fee".
+ */
+internal val ExpressTx.isPayInLeg: Boolean
+    get() = this is ExpressTx.Swap && isOutgoing
+
+// endregion
+
+// region The fee row
+
+/** The network-fee row of a details card, absent while the transaction carries no fee we can name. */
+internal fun TxInfo.feeRows(currency: CryptoCurrency): ImmutableList<TxHistoryDetailsUM.InfoRowUM> =
+    listOfNotNull(feeRow(currency)).toImmutableList()
+
+private fun TxInfo.feeRow(currency: CryptoCurrency): TxHistoryDetailsUM.InfoRowUM? {
+    val value = gaslessFeeText(currency) ?: nativeFeeText() ?: return null
+    return TxHistoryDetailsUM.InfoRowUM(
+        label = resourceReference(R.string.common_network_fee_title),
+        value = stringReference(value),
+        isValueHideable = true,
+    )
+}
+
+/**
+ * A gaslessly sent transaction was paid for with a transfer of [currency] itself, and the native fee in [TxInfo.fee]
+ * was paid by the relayer instead — so the gasless leg, when the group carries one, is the fee the user really paid.
+ */
+private fun TxInfo.gaslessFeeText(currency: CryptoCurrency): String? {
+    val gaslessFee = (this as? TxInfo.MultiTransfer)?.gaslessFee ?: return null
+    return gaslessFee.amount.format { crypto(cryptoCurrency = currency, ignoreSymbolPosition = true) }
+}
+
+private fun TxInfo.nativeFeeText(): String? {
+    val fee = fee ?: return null
+    val value = fee.value ?: return null
+    return value.format { crypto(symbol = fee.currencySymbol, decimals = fee.decimals, ignoreSymbolPosition = true) }
+}
+
+// endregion
+
+// region The fee as the row's own amount
+
+/** The value a row shows: a [TransactionType.NetworkFee] moved no coin of its own, so it shows the fee it paid. */
+internal fun TxInfo.amountOrFee(): BigDecimal = if (type is TransactionType.NetworkFee) fee?.value ?: amount else amount
+
+/** The same substitution for the details card, which renders the value as a signed [TextReference]. */
+internal fun TxInfo.feeAmountText(currency: CryptoCurrency): TextReference? {
+    if (type !is TransactionType.NetworkFee) return null
+    val feeValue = fee?.value ?: return null
+    val formatted = feeValue.format { crypto(cryptoCurrency = currency, ignoreSymbolPosition = true) }
+    val prefix = if (status is TxInfo.TransactionStatus.Failed) "" else "${StringsSigns.MINUS} "
+    return stringReference((prefix + formatted).trim())
+}
+
+// endregion
