@@ -32,8 +32,6 @@ data class CustomerInfo(
     val kycStatus: KycStatus,
     val state: State,
     val fiatBalance: PaymentAccountStatusValue.FiatBalance?,
-    val cryptoBalance: PaymentAccountStatusValue.CryptoBalance?,
-    val availableForWithdrawal: BigDecimal,
     val tariffPlan: TangemPayCustomerTariffPlan?,
     val networks: List<NetworkInfo> = emptyList(),
     val country: String? = null,
@@ -60,9 +58,6 @@ data class CustomerInfo(
             it.status == ProductInstance.Status.ACTIVE || it.status == ProductInstance.Status.BLOCKED
         }
 
-    /** Whether the response carried both balance dimensions. */
-    val hasBalances: Boolean get() = fiatBalance != null && cryptoBalance != null
-
     /**
      * Backend-side proof that the payment account exists: an enrolled card instance, a payment account, or
      * balances (only an existing account has them). Deliberately independent of the `cards[]` payload, which
@@ -71,7 +66,7 @@ data class CustomerInfo(
     val isEnrolled: Boolean
         get() = activeCardProductInstances.isNotEmpty() ||
             paymentAccount != null ||
-            hasBalances
+            fiatBalance != null
 
     /**
      * Payment account attached to the customer, as delivered by `customer/me`.payment_account.

@@ -16,6 +16,7 @@ import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanState
@@ -904,6 +905,13 @@ internal class TangemPayDetailsModelTest {
         model.onDestroy()
     }
 
+    private val availableNetwork = PaymentNetworkStatus.Available(
+        network = mockk(relaxed = true),
+        depositAddress = "0xDEPOSIT",
+        chainId = 137L,
+        cryptoCurrencyStatuses = emptyList(),
+    )
+
     private fun plasticOffer() = Offer(
         type = Offer.Type.CARD_ISSUE_PLASTIC_RAIN,
         fee = Offer.Fee(amount = BigDecimal("5.00"), currency = Currency.getInstance("USD")),
@@ -995,7 +1003,9 @@ internal class TangemPayDetailsModelTest {
         every { source } returns statusSource
         every { error } returns accountError
         every { customerId } returns "customer-id"
-        every { depositAddress } returns "address"
+        every { paymentAccountAddress } returns "address"
+        every { networks } returns listOf(availableNetwork)
+        every { this@mockk.availableForWithdrawal } returns availableForWithdrawal
         every { this@mockk.virtualAccount } returns virtualAccount
         every { cards } returns listOf(tangemPayCard(state = cardState))
         every { balance } returns PaymentAccountStatusValue.Balance(
@@ -1003,14 +1013,6 @@ internal class TangemPayDetailsModelTest {
                 availableBalance = BigDecimal.ZERO,
                 currency = "USD",
             ),
-            cryptoBalance = PaymentAccountStatusValue.CryptoBalance(
-                id = "id",
-                chainId = 1L,
-                depositAddress = "address",
-                tokenContractAddress = "contract",
-                balance = BigDecimal.ZERO,
-            ),
-            availableForWithdrawal = availableForWithdrawal,
         )
     }
 
@@ -1169,19 +1171,19 @@ internal class TangemPayDetailsModelTest {
         private fun deactivatedStatus(id: String): PaymentAccountStatusValue.Deactivated = mockk(relaxed = true) {
             every { source } returns StatusSource.ACTUAL
             every { customerId } returns id
+            every { networks } returns listOf(
+                PaymentNetworkStatus.Available(
+                    network = mockk(relaxed = true),
+                    depositAddress = "0xDEPOSIT",
+                    chainId = 137L,
+                    cryptoCurrencyStatuses = emptyList(),
+                ),
+            )
             every { balance } returns PaymentAccountStatusValue.Balance(
                 fiatBalance = PaymentAccountStatusValue.FiatBalance(
                     availableBalance = BigDecimal.ZERO,
                     currency = "USD",
                 ),
-                cryptoBalance = PaymentAccountStatusValue.CryptoBalance(
-                    id = "id",
-                    chainId = 1L,
-                    depositAddress = "address",
-                    tokenContractAddress = "contract",
-                    balance = BigDecimal.ZERO,
-                ),
-                availableForWithdrawal = BigDecimal.ZERO,
             )
         }
     }
