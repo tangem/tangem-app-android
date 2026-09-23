@@ -111,17 +111,25 @@ positions preview (`PolymarketPositionsPreviewLoader`, polled every 20 s), and
 
 ## Order flow (`placeprediction/`)
 
-`PlacePredictionModel` (~750 lines, the largest model) drives Amount → Slippage → Summary → Status:
+`PlacePredictionComponent` owns Amount → Slippage → Summary → Status. Amount, Slippage and Summary
+have their own retained models; Status receives the result and market header as route data.
+
+- **Confirmation boundary.** Amount creates `PreparedPrediction` synchronously on Next and cancels its
+  current quote request. The snapshot carries the displayed state, quote receipt time and signing
+  parameters. Summary displays and signs that snapshot; it has no price or quote use cases. Balance and
+  position validation can still update its eligibility to submit. Back returns to the retained Amount
+  model and immediately starts fresh spending-power and price reads.
 
 - **Quote loop.** Amount entry is debounced 500 ms, then one loop runs every 3 s
   (`QUOTE_POLL_INTERVAL_MILLIS`) and decides on each turn whether to ask `GetPredictionOrderQuoteUseCase`
   for a quote or `GetPredictionPriceUseCase` for a price — a quote while the amount is quotable, a price
   while it is empty or below the minimum. The quote is never cached. The loop is bound to the Amount step
   (`PlacePredictionAmountComponent` `doOnResume` / `doOnPause`), so it runs only while that screen is on top
-  and in the foreground: Slippage and Summary show the figures they were opened with, the summary signs that
-  same quote, and confirming a slippage requotes through the Amount resume after the pop.
-  `ValidatePredictionOrderUseCase` refuses a quote older than 60 s at signing, so a summary left open longer
-  than that fails with the generic place-error dialog. Two independent gates decide whether
+  and in the foreground. Slippage returns an explicit result to Amount and invalidates its old quote
+  when the value changes; returning to Amount starts the next request immediately.
+  `ValidatePredictionOrderUseCase` refuses a quote older than 60 s both before prompting for a signature
+  and after signing. Summary handles this with the price-changed dialog, whose action returns to Amount
+  to review fresh conditions. Two independent gates decide whether
   it is placeable: `quote.status.isPlaceable` (market state) and `isBelowMinAmount` (side-specific: BUY is
   price-weighted, SELL is the flat `minOrderSize`, lifted when the sale closes the whole position —
   `isFullClose`).
@@ -130,8 +138,9 @@ positions preview (`PolymarketPositionsPreviewLoader`, polled every 20 s), and
   (or the whole position when smaller), and 100 % is the position itself, so a full close reaches the
   last fraction.
 - **Slippage.** Default 3 %, range 0.1–30 % (`SlippagePickerUM`); a fill at the worst-case price counts as filled.
-- **Region.** Read by the flow itself when the Amount step is shown (`TradingPermissionUM`), re-read on its resume only while
-  `Unknown`, never carried on the route and not re-read before signing. An unreadable region keeps the
+- **Region.** Read by Amount (`TradingPermissionUM`), re-read on its resume only while `Unknown`.
+  A permitted order carries that decision in its internal confirmation snapshot; external entry routes
+  do not supply it, and it is not re-read before signing. An unreadable region keeps the
   gate shut as `Unknown` — the order is refused, the user is not told they are restricted.
 - **Placing.** `SignPredictionOrderInteractor` (one signing session: card for Cold, unlock for Hot) →
   `PlacePredictionOrderUseCase`.
@@ -183,7 +192,7 @@ and [REDACTED_TASK_KEY] (the claim action on the result screen).
 - **Quotes (BFF `POST /orders/quote`) and prices (CLOB `GET price`) arrive as decimal strings.** Parse
   with `BigDecimal`, compare with `compareTo`, never `==`.
 - **Times are Eastern** (`PolymarketConst.EASTERN_TIME_ZONE`) for market end dates.
-- **`PolymarketMainModelTest` and `PlacePredictionModelTest` are the reference tests** for a model in this
+- **`PolymarketMainModelTest` and `PlacePredictionModelTestBase` are the reference tests** for a model in this
   module: `ParamsContainer` fed by hand, Turbine over `uiState`, relaxed mocks only for router, message
   sender and the flows the test is not about.
 - Pull-to-refresh on the feed refreshes the region, the account status and the requisites together; the

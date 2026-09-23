@@ -35,6 +35,13 @@ class SignPredictionOrderInteractor(
             .bind()
 
         val timestampMillis = System.currentTimeMillis()
+        validateOrder.validateQuoteAge(
+            quoteReceivedAtMillis = request.quoteReceivedAtMillis,
+            nowMillis = timestampMillis,
+        )
+            .mapLeft(PredictionOrderFailure::Invalid)
+            .bind()
+
         val signedOrder = signer.signOrder(
             userWalletId = addresses.userWalletId,
             payload = PredictionOrderPayload(
