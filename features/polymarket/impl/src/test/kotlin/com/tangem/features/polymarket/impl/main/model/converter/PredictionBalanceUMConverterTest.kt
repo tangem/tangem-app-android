@@ -12,8 +12,8 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.features.polymarket.impl.common.funding.RequisitesState
 import com.tangem.features.polymarket.impl.main.model.PredictionBalanceMode
-import com.tangem.features.polymarket.impl.main.model.RequisitesState
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.EMPTY_BALANCE_SIGN
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.mockk
