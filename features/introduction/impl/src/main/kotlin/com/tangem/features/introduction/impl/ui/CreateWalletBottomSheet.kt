@@ -60,8 +60,8 @@ internal fun CreateWalletBottomSheet(config: TangemBottomSheetConfig?, prewarm: 
             )
         },
     ) { content ->
-        // The rows bring their own 16 dp of padding, which is the inset the design asks for, and they sit
-        // against each other with no gap.
+        // The rows bring their own 16 dp of padding, which is the inset the design asks for; the 4 dp on top
+        // of it is what the design leaves between them.
         Column(
             modifier = Modifier.padding(bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
