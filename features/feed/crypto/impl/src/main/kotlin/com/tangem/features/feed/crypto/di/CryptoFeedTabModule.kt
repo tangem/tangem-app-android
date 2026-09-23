@@ -1,12 +1,12 @@
 package com.tangem.features.feed.crypto.di
 
-import com.tangem.features.feed.crypto.CryptoFeedEmptySearchTabComponent
+import com.tangem.features.feed.crypto.CryptoFeedEmptySearchComponent
 import com.tangem.features.feed.crypto.CryptoFeedSearchTabComponent
 import com.tangem.features.feed.crypto.CryptoFeedTabComponent
 import com.tangem.features.feed.crypto.categories.MarketCategorySelectorRoute
 import com.tangem.features.feed.crypto.categories.components.MarketCategorySelectorScreenFactory
 import com.tangem.features.feed.crypto.components.CryptoFeedTabContributor
-import com.tangem.features.feed.crypto.components.DefaultCryptoFeedEmptySearchTabComponent
+import com.tangem.features.feed.crypto.components.DefaultCryptoFeedEmptySearchComponent
 import com.tangem.features.feed.crypto.components.DefaultCryptoFeedSearchTabComponent
 import com.tangem.features.feed.crypto.components.DefaultCryptoFeedTabComponent
 import com.tangem.features.feed.nav.FeedScreenFactory
@@ -32,9 +32,9 @@ internal interface CryptoFeedTabModule {
     ): CryptoFeedSearchTabComponent.Factory
 
     @Binds
-    fun bindCryptoFeedEmptySearchTabComponentFactory(
-        impl: DefaultCryptoFeedEmptySearchTabComponent.Factory,
-    ): CryptoFeedEmptySearchTabComponent.Factory
+    fun bindCryptoFeedEmptySearchComponentFactory(
+        impl: DefaultCryptoFeedEmptySearchComponent.Factory,
+    ): CryptoFeedEmptySearchComponent.Factory
 
     @Binds
     @IntoSet
