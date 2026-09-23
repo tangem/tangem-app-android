@@ -184,7 +184,11 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
                     walletId = userWallet.walletId,
                     secret = secret,
                     recoveryKey = recoveryKey,
-                ).getOrElse { return Either.Left(it) }
+                ).getOrElse { error ->
+                    return Either.Left(
+                        if (error == SocialLoginError.CloudUnavailable) SocialLoginError.BackupWriteFailed() else error,
+                    )
+                }
             } finally {
                 secret.wipe()
             }
