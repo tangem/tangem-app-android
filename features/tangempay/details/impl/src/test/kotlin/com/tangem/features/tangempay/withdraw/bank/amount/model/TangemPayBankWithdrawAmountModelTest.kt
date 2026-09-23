@@ -34,6 +34,7 @@ import java.util.Locale
 internal class TangemPayBankWithdrawAmountModelTest {
 
     private val router: Router = mockk(relaxed = true)
+    private val onCloseFlow: () -> Unit = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
     private val usdcPolygon = paymentToken()
@@ -51,7 +52,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(router)
+        clearMocks(router, onCloseFlow)
         confirmed.clear()
     }
 
@@ -356,12 +357,26 @@ internal class TangemPayBankWithdrawAmountModelTest {
     }
 
     @Test
-    fun `GIVEN edit step WHEN model created THEN header has no step counter`() {
+    fun `GIVEN edit step WHEN model created THEN header counts the edited step`() {
         // Act
         val model = createModel(step = TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.Amount))
 
         // Assert
-        assertThat(model.uiState.value.header.subtitle).isNull()
+        assertThat(model.uiState.value.header.subtitle)
+            .isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_step_counter, wrappedList(1, 5)))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN model WHEN header close clicked THEN flow closed`() {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        model.uiState.value.header.onCloseClick()
+
+        // Assert
+        verify(exactly = 1) { onCloseFlow() }
         model.onDestroy()
     }
 
@@ -416,6 +431,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
                     options = optionsFlow,
                     step = step,
                     onContinue = confirmed::add,
+                    onCloseFlow = onCloseFlow,
                 ),
             ),
             dispatchers = dispatchers,
