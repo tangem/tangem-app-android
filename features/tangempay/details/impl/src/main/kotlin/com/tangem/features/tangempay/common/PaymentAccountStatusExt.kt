@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.common
 
 import com.tangem.domain.models.account.*
 import com.tangem.domain.models.wallet.UserWalletId
+import java.math.BigDecimal
 
 internal val AccountStatus.Payment.userWalletId: UserWalletId
     get() = account.userWalletId
@@ -71,12 +72,22 @@ internal fun AccountStatus.Payment.networksOrNull(): List<PaymentNetworkStatus>?
     else -> null
 }
 
-internal val PaymentAccountStatusValue.Balance.hasWithdrawableAmount: Boolean
-    get() = availableForWithdrawal.signum() > 0
+internal val PaymentAccountStatusValue.availableForWithdrawalOrZero: BigDecimal
+    get() = when (this) {
+        is PaymentAccountStatusValue.Loaded -> availableForWithdrawal
+        is PaymentAccountStatusValue.Deactivated -> availableForWithdrawal
+        else -> BigDecimal.ZERO
+    }
+
+internal val PaymentAccountStatusValue.hasWithdrawableAmount: Boolean
+    get() = availableForWithdrawalOrZero.signum() > 0
+
+internal fun List<PaymentNetworkStatus>.firstDepositAddress(): String? =
+    filterIsInstance<PaymentNetworkStatus.Available>().firstOrNull()?.depositAddress
 
 internal val PaymentAccountStatusValue.canAddFunds: Boolean
     get() = when (this) {
-        is PaymentAccountStatusValue.Error.CardIssueFailed -> balance != null && networks.hasAvailableNetwork()
+        is PaymentAccountStatusValue.Error.CardIssueFailed -> networks.hasAvailableNetwork()
         is PaymentAccountStatusValue.Loaded -> networks.hasAvailableNetwork()
         is PaymentAccountStatusValue.Deactivated -> networks.hasAvailableNetwork()
         else -> false

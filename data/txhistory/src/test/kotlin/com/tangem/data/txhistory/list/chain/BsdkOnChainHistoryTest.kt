@@ -357,7 +357,7 @@ internal class BsdkOnChainHistoryTest {
         amount: BigDecimal = BigDecimal.ONE,
         isOutgoing: Boolean = true,
         type: TxInfo.TransactionType = TxInfo.TransactionType.Transfer,
-    ) = TxInfo(
+    ) = TxInfo.Single(
         txHash = txHash,
         timestampInMillis = 100,
         isOutgoing = isOutgoing,

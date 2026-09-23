@@ -133,7 +133,7 @@ internal class DefaultSocialBackupRepository(
      */
     override suspend fun deleteBackup(walletId: UserWalletId): Either<SocialLoginError, Unit> =
         withContext(dispatchers.io) {
-            withAuthRetry { authInteractive ->
+            withAuthRetry(interactive = false) { authInteractive ->
                 val auth = authHeader(interactive = authInteractive)
                 val owned = listBackupFiles(auth).filter { file ->
                     val data = readFileData(auth = auth, fileId = file.id)

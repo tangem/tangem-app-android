@@ -26,10 +26,12 @@ interface BankOfframpOrderRepository {
         orderId: String,
     ): Either<BankOfframpError, BankOfframpOrderState>
 
+    /** [idempotencyKey] is the one the order was created with, so a resubmitted signature settles the same order. */
     suspend fun submitSignature(
         userWalletId: UserWalletId,
         orderId: String,
         signature: String,
+        idempotencyKey: String,
     ): Either<BankOfframpError, Unit>
 
     suspend fun cancelOrder(userWalletId: UserWalletId, orderId: String): Either<BankOfframpError, Unit>
