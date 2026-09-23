@@ -5,6 +5,8 @@ package com.tangem.features.storiesv2.impl.storybook
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.storiesv2.impl.R
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.features.storiesv2.impl.content.StoryV2Haptic
 import com.tangem.features.storiesv2.impl.content.BundledStoryV2ContentSource
 import com.tangem.features.storiesv2.impl.content.StoryV2Action
 import com.tangem.features.storiesv2.impl.content.StoryV2Asset
@@ -14,6 +16,7 @@ import com.tangem.features.storiesv2.impl.content.StoryV2EndBehavior
 import com.tangem.features.storiesv2.impl.content.StoryV2MediaRef
 import com.tangem.features.storiesv2.impl.content.StoryV2Origin
 import com.tangem.features.storiesv2.impl.content.StoryV2Slide
+import com.tangem.core.res.R as CoreResR
 
 /**
  * Compositions the tester showcase can play, each making one behaviour of the engine visible. Compositions rather
@@ -59,7 +62,7 @@ internal enum class StoryV2Preset(val title: String, val description: String) {
 
         private val primaryAction = StoryV2Action(
             id = "scan_wallet",
-            label = resourceReference(R.string.stories_onboarding_action_scan),
+            label = resourceReference(CoreResR.string.introduction_stories_button_primary),
             style = StoryV2Action.Style.PRIMARY,
             target = StoryV2Action.Target.Screen(key = "scan_wallet"),
             icon = StoryV2MediaRef.DrawableResource(R.drawable.ic_tangem_24),
@@ -102,7 +105,20 @@ internal enum class StoryV2Preset(val title: String, val description: String) {
                 },
             )
             HAPTIC -> preview(
-                slides = videoSlides().map { it.copy(hapticAtMs = listOf(1_000L, 2_000L, 3_000L)) },
+                slides = videoSlides().map { slide ->
+                    slide.copy(
+                        haptics = listOf(
+                            StoryV2Haptic(atMs = 1_000, effect = TangemHapticEffect.OneTime.Tick),
+                            StoryV2Haptic(
+                                atMs = 2_000,
+                                effect = TangemHapticEffect.OneTime.Tick,
+                                pulses = 8,
+                                pulseIntervalMs = 30,
+                            ),
+                            StoryV2Haptic(atMs = 3_000, effect = TangemHapticEffect.OneTime.DoubleClick),
+                        ),
+                    )
+                },
             )
             BROKEN_ASSET -> preview(
                 slides = listOf(

@@ -39,6 +39,7 @@ internal class AddAndManageBottomSheetComponent(
                 portfolioFetcher = model.portfolioFetcher,
                 controller = model.portfolioSelectorController,
                 bsCallback = model.portfolioSelectorCallback,
+                settings = PortfolioSelectorComponent.Settings(isJointAccountsIncluded = true),
             ),
         )
 

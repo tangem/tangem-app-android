@@ -30,7 +30,9 @@ dependencies {
     // endregion
 
     // region Core modules
-    api(projects.core.datasource)
+    api(projects.core.configToggles)
+    implementation(projects.core.local)
+    implementation(projects.store.datasource)
     api(projects.core.utils)
     // endregion
 
@@ -40,5 +42,6 @@ dependencies {
 
     // region Test
     testImplementation(projects.test.core)
+    testImplementation(deps.moshi)
     // endregion
 }

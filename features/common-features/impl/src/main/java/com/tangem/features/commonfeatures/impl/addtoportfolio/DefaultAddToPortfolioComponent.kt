@@ -43,6 +43,7 @@ internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
         params = PortfolioSelectorComponent.Params(
             portfolioFetcher = model.addToPortfolioManager.portfolioFetcher,
             controller = model.portfolioSelectorController,
+            settings = PortfolioSelectorComponent.Settings(isJointAccountsIncluded = true),
         ),
     )
 
@@ -66,6 +67,7 @@ internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
                 data = model.tokenActionsData,
                 bottomAction = flowOf(BottomAction.GoToToken),
                 context = TokenActionsContext.AddFunds,
+                isRegionRestricted = params.isRegionRestricted,
             ),
         )
     }

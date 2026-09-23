@@ -28,6 +28,11 @@ data class TokenMarketListResponse(
         @Json(name = "staking_opportunities") val stakingOpportunities: List<StakingOpportunities>?,
         @Json(name = "max_yield_apy") val maxYieldApy: BigDecimal?,
         @Json(name = "networks") val networks: List<Network>? = null,
+        /**
+         * `true` when the token is restricted for the country the request was made from — it belongs to at
+         * least one visible category blocked there. Absent on older backends, which means unrestricted.
+         */
+        @Json(name = "restricted_for_country") val isRestrictedForCountry: Boolean? = null,
     ) {
 
         @JsonClass(generateAdapter = true)

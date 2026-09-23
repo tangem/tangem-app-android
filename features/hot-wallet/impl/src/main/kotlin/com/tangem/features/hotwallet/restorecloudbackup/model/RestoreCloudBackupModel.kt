@@ -11,16 +11,17 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.cloudbackup.analytics.analyticsMessage
-import com.tangem.domain.cloudbackup.analytics.analyticsWalletId
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupInfo
 import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
+import com.tangem.domain.cloudbackup.usecase.GetBackupPasswordUseCase
 import com.tangem.domain.cloudbackup.usecase.RestoreCloudBackupUseCase
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImportError
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImporter
-import com.tangem.features.hotwallet.restorecloudbackup.CloudRestoreResultHolder
+import com.tangem.domain.cloudbackup.restore.CloudRestoreResultHolder
 import com.tangem.features.hotwallet.restorecloudbackup.RestoreCloudBackupComponent
 import com.tangem.features.hotwallet.restorecloudbackup.entity.BackupRowUM
 import com.tangem.features.hotwallet.restorecloudbackup.entity.RestoreCloudBackupUM
@@ -55,6 +56,8 @@ internal class RestoreCloudBackupModel @Inject constructor(
     private val hotWalletImporter: HotWalletImporter,
     private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val getBackupPasswordUseCase: GetBackupPasswordUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<RestoreCloudBackupComponent.Params>()
@@ -75,6 +78,10 @@ internal class RestoreCloudBackupModel @Inject constructor(
 
     val uiState: StateFlow<RestoreCloudBackupUM>
         field = MutableStateFlow(resolveInitialState(cloudRestoreResultHolder))
+
+    init {
+        if (uiState.value is RestoreCloudBackupUM.EnterPassword) requestStoredPassword()
+    }
 
     override fun onDestroy() {
         wipeSecrets()
@@ -115,11 +122,7 @@ internal class RestoreCloudBackupModel @Inject constructor(
     }
 
     private fun sendEnterPasswordScreenEvent() {
-        analyticsEventHandler.send(
-            event = OnboardingAnalyticsEvent.Backup.EnterCloudBackupPasswordScreen(
-                userWalletId = analyticsWalletId(selectedBackup?.walletId),
-            ),
-        )
+        analyticsEventHandler.send(event = OnboardingAnalyticsEvent.Backup.EnterCloudBackupPasswordScreen())
     }
 
     private fun buildBackupListUM(list: List<CloudBackupInfo>): RestoreCloudBackupUM.BackupList =
@@ -140,6 +143,27 @@ internal class RestoreCloudBackupModel @Inject constructor(
         wipePassword()
         sendEnterPasswordScreenEvent()
         uiState.value = buildEnterPasswordUM()
+        requestStoredPassword()
+    }
+
+    private fun requestStoredPassword() {
+        if (!hotWalletFeatureToggles.isPasswordManagerEnabled) return
+
+        modelScope.launch {
+            val stored = getBackupPasswordUseCase() ?: return@launch
+
+            // the picker is modal and unhurried — by the time it answers the user may have typed the
+            // password or left the step
+            val isStillWaiting = uiState.value is RestoreCloudBackupUM.EnterPassword && password.isEmpty()
+            if (!isStillWaiting) {
+                stored.fill(' ')
+                return@launch
+            }
+
+            password = stored
+            isPasswordError = false
+            uiState.value = buildEnterPasswordUM()
+        }
     }
 
     private fun buildEnterPasswordUM(isLoading: Boolean = false): RestoreCloudBackupUM.EnterPassword =
@@ -303,7 +327,6 @@ internal class RestoreCloudBackupModel @Inject constructor(
     private fun showError(error: CloudBackupError) {
         analyticsEventHandler.send(
             event = OnboardingAnalyticsEvent.Backup.ImportCloudBackupError(
-                userWalletId = analyticsWalletId(selectedBackup?.walletId),
                 errorMessage = error.analyticsMessage(),
             ),
         )

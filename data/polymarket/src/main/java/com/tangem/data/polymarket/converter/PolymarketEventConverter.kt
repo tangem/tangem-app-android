@@ -1,8 +1,8 @@
 package com.tangem.data.polymarket.converter
 
-import com.tangem.datasource.api.polymarket.models.PolymarketEventDto
-import com.tangem.datasource.api.polymarket.models.PolymarketMarketDto
-import com.tangem.datasource.api.polymarket.models.PolymarketOutcomeDto
+import com.tangem.grow.datasource.polymarket.models.PolymarketEventDto
+import com.tangem.grow.datasource.polymarket.models.PolymarketMarketDto
+import com.tangem.grow.datasource.polymarket.models.PolymarketOutcomeDto
 import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
@@ -45,6 +45,7 @@ internal object PolymarketEventConverter : Converter<PolymarketEventDto, Polymar
     private fun convertMarket(dto: PolymarketMarketDto): PolymarketMarket {
         return PolymarketMarket(
             id = dto.id,
+            conditionId = dto.conditionId,
             eventId = dto.eventId,
             title = dto.question,
             slug = dto.slug,
@@ -54,6 +55,7 @@ internal object PolymarketEventConverter : Converter<PolymarketEventDto, Polymar
             imageUrl = dto.image,
             status = convertStatus(status = dto.status),
             isNegRisk = dto.isNegRisk,
+            isAcceptingOrders = dto.isAcceptingOrders != false,
             startDate = dto.startDate,
             endDate = dto.endDate,
             startDateIso = dto.startDateIso,

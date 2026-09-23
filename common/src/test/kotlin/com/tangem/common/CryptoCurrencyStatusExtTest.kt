@@ -155,14 +155,13 @@ internal class CryptoCurrencyStatusExtTest {
     }
 
     /**
-     * The migration gate at the read site: `getExtraBalanceOrNull` prefers
-     * [CryptoCurrencyStatus.Value.contributions] (filled only while `TWI_1717_BALANCE_CONTRIBUTIONS` is on) and
-     * otherwise falls back to the legacy typed field. Both modes must produce the same numbers — that is what
-     * makes the toggle safe to flip in either direction.
+     * `getExtraBalanceOrNull` prefers [CryptoCurrencyStatus.Value.contributions] and otherwise falls back to the
+     * legacy typed field, for statuses built by producers that do not report contributions. Both paths must
+     * produce the same numbers, so a reader never sees a different balance depending on which one answered.
      */
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class ToggleParity {
+    inner class ContributionsAndLegacyParity {
 
         @Test
         fun `GIVEN staking WHEN toggle on and off THEN every total is identical`() {

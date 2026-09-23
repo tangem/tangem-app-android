@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.ds.message.TangemMessageEffect
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
@@ -16,7 +17,11 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDeta
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.collections.immutable.persistentListOf
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 class UpdateNotificationsTransformerTest {
@@ -675,6 +680,127 @@ class UpdateNotificationsTransformerTest {
     }
 
     // endregion
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class BannerAppearance {
+
+        @ParameterizedTest
+        @MethodSource("provideTestModels")
+        fun appearance(model: AppearanceModel) {
+            // Arrange
+            val transformer = createTransformer(warnings = setOf(model.warning))
+
+            // Act
+            val result = transformer.transform(initialState())
+
+            // Assert
+            val notification = result.notifications.single()
+            assertThat(notification.variant).isEqualTo(model.expectedVariant)
+            assertThat(notification.shouldShowGlowRing).isEqualTo(model.expectedGlowRing)
+        }
+
+        /**
+         * Every token-details banner keeps the neutral [TangemMessageBanner.Variant.Default]
+         * background: in the Figma reference the coloured Error/Warning backgrounds are reserved for
+         * card-security banners, and the severity shows through the icon tint instead. The glow ring
+         * follows whether the banner carries action buttons.
+         */
+        private fun provideTestModels() = listOf(
+            AppearanceModel(CryptoCurrencyWarning.SomeNetworksUnreachable, expectedGlowRing = false),
+            AppearanceModel(CryptoCurrencyWarning.BeaconChainShutdown, expectedGlowRing = false),
+            AppearanceModel(CryptoCurrencyWarning.MigrationMaticToPol, expectedGlowRing = false),
+            AppearanceModel(CryptoCurrencyWarning.TopUpWithoutReserve, expectedGlowRing = false),
+            AppearanceModel(CryptoCurrencyWarning.UsedOutdatedDataWarning, expectedGlowRing = false),
+            AppearanceModel(DynamicAddressesWarnings.FundsFound, expectedGlowRing = true),
+            AppearanceModel(CryptoCurrencyWarning.MigrationClore, expectedGlowRing = true),
+            AppearanceModel(
+                warning = CryptoCurrencyWarning.ExistentialDeposit(
+                    currencyName = "Polkadot",
+                    edStringValueWithSymbol = "1 DOT",
+                ),
+                expectedGlowRing = false,
+            ),
+            AppearanceModel(
+                warning = CryptoCurrencyWarning.SomeNetworksNoAccount(
+                    amountToCreateAccount = BigDecimal("1"),
+                    amountCurrency = mockk(relaxed = true),
+                ),
+                expectedGlowRing = false,
+            ),
+            AppearanceModel(
+                warning = CryptoCurrencyWarning.FeeResourceInfo(
+                    amount = BigDecimal("50"),
+                    maxAmount = BigDecimal("100"),
+                ),
+                expectedGlowRing = false,
+            ),
+            AppearanceModel(
+                warning = CryptoCurrencyWarning.Rent(
+                    rent = BigDecimal("0.00001"),
+                    exemptionAmount = BigDecimal("0.01"),
+                    cryptoCurrency = mockk(relaxed = true),
+                ),
+                expectedGlowRing = true,
+            ),
+            AppearanceModel(
+                warning = HederaWarnings.AssociateWarning(currency = mockk(relaxed = true)),
+                expectedGlowRing = true,
+            ),
+            AppearanceModel(
+                warning = HederaWarnings.AssociateWarningWithFee(
+                    currency = mockk(relaxed = true),
+                    fee = BigDecimal("0.05"),
+                    feeCurrencySymbol = "HBAR",
+                    feeCurrencyDecimals = 8,
+                ),
+                expectedGlowRing = true,
+            ),
+            AppearanceModel(
+                warning = CryptoCurrencyWarning.RequiredTrustline(
+                    currency = mockk(relaxed = true),
+                    currencySymbol = "XLM",
+                    requiredAmount = BigDecimal("1.5"),
+                    currencyDecimals = 7,
+                ),
+                expectedGlowRing = true,
+            ),
+            AppearanceModel(
+                warning = KaspaWarnings.IncompleteTransaction(
+                    currency = mockk(relaxed = true),
+                    amount = BigDecimal("100"),
+                    currencySymbol = "KAS",
+                    currencyDecimals = 8,
+                ),
+                expectedGlowRing = true,
+            ),
+            // The fee warning only shows its Buy button when a fee currency is known, and the glow
+            // ring follows the buttons.
+            AppearanceModel(
+                warning = CryptoCurrencyWarning.BalanceNotEnoughForFee(
+                    tokenCurrency = mockk(relaxed = true),
+                    coinCurrency = mockk(relaxed = true),
+                ),
+                expectedGlowRing = true,
+            ),
+            AppearanceModel(
+                warning = CryptoCurrencyWarning.CustomTokenNotEnoughForFee(
+                    currency = mockk(relaxed = true),
+                    feeCurrency = null,
+                    networkName = "Ethereum",
+                    feeCurrencyName = "Ethereum",
+                    feeCurrencySymbol = "ETH",
+                ),
+                expectedGlowRing = false,
+            ),
+        )
+    }
+
+    data class AppearanceModel(
+        val warning: CryptoCurrencyWarning,
+        val expectedGlowRing: Boolean,
+        val expectedVariant: TangemMessageBanner.Variant = TangemMessageBanner.Variant.Default,
+    )
 
     private fun createTransformer(warnings: Set<CryptoCurrencyWarning>) = UpdateNotificationsTransformer(
         warnings = warnings,

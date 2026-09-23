@@ -23,9 +23,9 @@ import com.tangem.common.rules.ApiEnvironmentRule
 import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
-import com.tangem.datasource.local.walletmanager.WalletManagersStore
-import com.tangem.datasource.utils.WireMockRedirectInterceptor
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
+import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.datasource.remote.interceptors.WireMockRedirectInterceptor
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
@@ -60,8 +60,10 @@ abstract class BaseTestCase : TestCase(
     @Inject
     lateinit var appPreferencesStore: AppPreferencesStore
 
+    private val storePreferencesKeys = StorePreferencesKeys()
+
     @Inject
-    lateinit var walletManagersStore: WalletManagersStore
+    lateinit var walletManagersFacade: WalletManagersFacade
 
     @Inject
     lateinit var getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase
@@ -137,19 +139,27 @@ abstract class BaseTestCase : TestCase(
         runBlocking {
             appPreferencesStore.editData { mutablePreferences ->
                 mutablePreferences.set(
-                    key = PreferencesKeys.NOTIFICATIONS_USER_ALLOW_SEND_ADDRESSES_KEY,
+                    key = storePreferencesKeys.notificationsUserAllowSendAddressesKey,
                     value = false
                 )
             }
             appPreferencesStore.editData { mutablePreferences ->
                 mutablePreferences.set(
-                    key = PreferencesKeys.getShouldShowNotificationKey("EnablePushesReminderNotification"),
+                    key = storePreferencesKeys.getShouldShowNotificationKey("EnablePushesReminderNotification"),
                     value = false
                 )
             }
             appPreferencesStore.editData { mutablePreferences ->
                 mutablePreferences.set(
-                    key = PreferencesKeys.getShouldShowInitialPermissionScreen(PUSH_PERMISSION),
+                    key = storePreferencesKeys.getShouldShowInitialPermissionScreen(PUSH_PERMISSION),
+                    value = false
+                )
+            }
+            // Since [REDACTED_TASK_KEY] the ask also lives inside onboarding (AddressSyncStep.ASK_NOTIFICATIONS),
+            // which reads this key instead — without it the import flow stops on the Notifications step.
+            appPreferencesStore.editData { mutablePreferences ->
+                mutablePreferences.set(
+                    key = storePreferencesKeys.getShouldShowPermission(PUSH_PERMISSION),
                     value = false
                 )
             }
@@ -205,6 +215,14 @@ abstract class BaseTestCase : TestCase(
         composeTestRule.waitUntil(timeoutMillis = timeoutMillis) { runCatching(block).isSuccess }
     }
 
+    /**
+     * Like [awaitSuccess], but on timeout runs [block] once more so the failure carries its own assertion
+     * message ("expected X, was Y") instead of a bare `ComposeTimeoutException`.
+     */
+    fun awaitAssert(timeoutMillis: Long = WAIT_UNTIL_TIMEOUT, block: () -> Unit) {
+        runCatching { awaitSuccess(timeoutMillis, block) }.onFailure { block() }
+    }
+
     private fun applicationInjectionRule(): ApplicationInjectionExecutionRule {
         // Toggle states can be set from code here — base defaults for the UI-test build. Launch-time
         // overrides (the `feature_toggles` GitHub Actions input / Allure TestOps launch parameter, delivered
@@ -212,6 +230,8 @@ abstract class BaseTestCase : TestCase(
         // FeatureToggles rawNames; stale keys match nothing and are logged as ignored.
         val baseToggles = mapOf(
             "VISA_ONBOARDING_ENABLED" to true, // "undefined" on develop → forced on for tests
+            // The OTLP exporter has its own HTTP client, so it bypasses the WireMock redirect.
+            "TWI_1627_OTEL_METRICS_ENABLED" to false,
         )
         // Overrides supplied at launch time (GitHub Actions `feature_toggles` input / Allure TestOps launch
         // parameter, delivered via the `featureToggles` instrumentation arg) win over the base map. Empty

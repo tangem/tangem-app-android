@@ -3,6 +3,8 @@ package com.tangem.domain.staking.analytics
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
+import com.tangem.core.analytics.models.OtelIncludedEvent
+import com.tangem.core.analytics.models.OtelMetric
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.models.staking.action.StakingActionType
 
@@ -145,7 +147,11 @@ sealed class StakingAnalyticsEvent(
         params = buildMap {
             addIfValueIsNotNull(AnalyticsParam.ERROR_DESCRIPTION, stakeKitDomainError.message)
         },
-    )
+    ), OtelIncludedEvent {
+
+        // Token is injected by StakingParamsInterceptor
+        override val otelMetric = OtelMetric.Counter(allowedParams = setOf(AnalyticsParam.TOKEN_PARAM))
+    }
 
     data class TransactionError(
         val errorCode: String,
@@ -154,7 +160,13 @@ sealed class StakingAnalyticsEvent(
         params = mapOf(
             AnalyticsParam.ERROR_CODE to errorCode,
         ),
-    )
+    ), OtelIncludedEvent {
+
+        // Token is injected by StakingParamsInterceptor
+        override val otelMetric = OtelMetric.Counter(
+            allowedParams = setOf(AnalyticsParam.ERROR_CODE, AnalyticsParam.TOKEN_PARAM),
+        )
+    }
 
     data class UninitializedAddress(val token: String) : StakingAnalyticsEvent(
         event = "Notice - Uninitialized Address",

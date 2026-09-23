@@ -5,11 +5,13 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.DeepLinkRoute
 import com.tangem.common.routing.DeepLinkScheme
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.common.routing.entity.InitScreenLaunchMode
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.appsflyer.AppsFlyerDeeplink
 import com.tangem.domain.appsflyer.AppsFlyerDeeplinkTarget
 import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CoroutineScope
@@ -25,14 +27,16 @@ import javax.inject.Singleton
 /**
  * Reactively routes AppsFlyer deep links persisted by [AppsFlyerReferralParamsHandler].
  *
- * To add a deep link: add it to [AppsFlyerDeeplink] and a branch in [onDeeplinkPending] (the `when` is exhaustive).
+ * To add a deep link: add it to [AppsFlyerDeeplinkTarget] and a branch in [onDeeplinkPending]
+ * (the `when` is exhaustive).
  */
 @Singleton
 class AppsFlyerDeeplinkRouter @Inject constructor(
-    private val appsFlyerStore: AppsFlyerStore,
+    private val appsFlyerRepository: AppsFlyerRepository,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase,
     private val appRouter: AppRouter,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val onboardVisaDeepLink: OnboardVisaDeepLinkHandler.Factory,
 ) {
 
@@ -40,7 +44,7 @@ class AppsFlyerDeeplinkRouter @Inject constructor(
         val dispatchedUri = AtomicReference<String?>(null)
 
         combine(
-            appsFlyerStore.observeNavigationDeeplink(),
+            appsFlyerRepository.observeNavigationDeeplink(),
             currentRoute.distinctUntilChanged(),
         ) { deepLinkValue, route -> deepLinkValue to route }
             .onEach { (deepLinkValue, route) ->
@@ -63,6 +67,7 @@ class AppsFlyerDeeplinkRouter @Inject constructor(
                 AppsFlyerDeeplink.TangemPayMobileOnboarding -> routeTangemPayOnboarding(currentRoute)
                 AppsFlyerDeeplink.Referral -> routeReferral(currentRoute)
             }
+            is AppsFlyerDeeplinkTarget.TangemPayCampaign -> routeTangemPayCampaign(target.key, currentRoute)
             is AppsFlyerDeeplinkTarget.Direct -> routeDeferred(target.uri, currentRoute, dispatchedUri)
             null -> TangemLogger.i("Ignoring unknown AppsFlyer deep link value: $deepLinkValue")
         }
@@ -83,13 +88,11 @@ class AppsFlyerDeeplinkRouter @Inject constructor(
     }
 
     private suspend fun routeTangemPayOnboarding(currentRoute: AppRoute) {
-        // Not on an idle entry screen yet: keep the deep link pending, re-evaluate on next route change.
-        if (!isIdleEntryPoint(currentRoute)) return
+        // A flow is in progress: keep the deep link pending, re-evaluate on next route change.
+        if (isNavigationBlocked(currentRoute)) return
 
-        // No wallet yet: the user is on the intro stories, which this deep link must not skip. It stays pending
-        // and Home consumes it on "Get started", right after the stories (see HomeModel.onGetStartedClick).
         if (userWalletsListRepository.userWalletsSync().isEmpty()) {
-            TangemLogger.i("[TangemPay][HWO] No wallets yet, keeping the deep link until the stories are over")
+            routeTangemPayOnboardingOnFreshInstall(currentRoute)
             return
         }
 
@@ -100,16 +103,78 @@ class AppsFlyerDeeplinkRouter @Inject constructor(
         clearAppsFlyerDeeplinkUseCase()
     }
 
+    /**
+     * No wallet yet: the hot wallet onboarding creates one as part of the Tangem Pay flow, so it replaces the
+     * start screen instead of waiting for a tap on it.
+     */
+    private suspend fun routeTangemPayOnboardingOnFreshInstall(currentRoute: AppRoute) {
+        // Also the re-entry guard: the route this method installs is not an install entry, so the re-emission
+        // that `replaceAll` triggers cannot route a second time before the clear has landed.
+        if (!isFreshInstallEntry(currentRoute)) return
+
+        // An NFC launch already owns the screen; DeepLinkFactory defers to the card SDK for the same reason.
+        if (currentRoute is AppRoute.Home && currentRoute.launchMode == InitScreenLaunchMode.WithCardScan) {
+            TangemLogger.i("[TangemPay][HWO] Card scan is in progress, keeping the deep link")
+            return
+        }
+
+        TangemLogger.i("[TangemPay][HWO] Routing AppsFlyer deep link as the root")
+        // Consumed before navigating, not after: on a device without hot wallet support the onboarding falls back
+        // to Home, and a link still pending by then would route again from there, forever.
+        clearAppsFlyerDeeplinkUseCase()
+        // Root, not push: that same fallback uses `replaceCurrent`, which would otherwise stack a second Home.
+        appRouter.replaceAll(AppRoute.TangemPayHotWalletOnboarding)
+    }
+
+    private suspend fun routeTangemPayCampaign(campaignKey: String, currentRoute: AppRoute) {
+        if (!tangemPayFeatureToggles.isCustomCardsCobrandEnabled) return
+
+        if (userWalletsListRepository.userWalletsSync().isNotEmpty()) {
+            if (isNavigationBlocked(currentRoute)) return
+            TangemLogger.i("[TangemPay][Campaign] Routing campaign deep link over the current screen")
+            appRouter.push(AppRoute.TangemPayCampaign(campaignKey))
+        } else {
+            if (!isFreshInstallEntry(currentRoute)) return
+            TangemLogger.i("[TangemPay][Campaign] Routing campaign deep link as the root")
+            appRouter.replaceAll(AppRoute.TangemPayCampaign(campaignKey))
+        }
+    }
+
     private suspend fun routeReferral(currentRoute: AppRoute) {
-        // Referral targets fresh installs: from an idle entry screen, go straight to hot wallet creation
-        // (skips stories). The deep link is NOT cleared here — it stays as referral attribution (read by
-        // GetAppsFlyerDeeplinkUseCase, cleared on wallet creation); replaceAll keeps it off the back stack.
-        if (!isIdleEntryPoint(currentRoute)) return
+        // Referral targets fresh installs: go straight to hot wallet creation (skips stories). The deep link
+        // is NOT cleared here — it stays as referral attribution (read by GetAppsFlyerDeeplinkUseCase, cleared
+        // on wallet creation); replaceAll keeps it off the back stack.
+        if (!isFreshInstallEntry(currentRoute)) return
         if (userWalletsListRepository.userWalletsSync().isNotEmpty()) return
 
         TangemLogger.i("[Referral] Routing AppsFlyer referral deep link to hot wallet creation")
         appRouter.replaceAll(AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.HotWallet))
     }
+}
+
+internal fun isFreshInstallEntry(currentRoute: AppRoute?): Boolean = when (currentRoute) {
+    // A Home reached by forgetting the last wallet is a return, not an install entry: a link left pending by an
+    // earlier session must not hijack it.
+    is AppRoute.Home -> currentRoute.entryReason == AppRoute.Home.EntryReason.Launch
+    is AppRoute.Stories -> true
+    else -> false
+}
+
+// Mirrors DeepLinkFactory.checkRoutingReadiness (minus Home and Stories, which fresh-install links need) plus
+// the Tangem Pay flows these links open, so a pending link never stacks a second one on top of them.
+internal fun isNavigationBlocked(currentRoute: AppRoute?): Boolean = when (currentRoute) {
+    null,
+    is AppRoute.Initial,
+    is AppRoute.Welcome,
+    is AppRoute.PushNotification,
+    is AppRoute.Disclaimer,
+    is AppRoute.Onboarding,
+    is AppRoute.TangemPayCampaign,
+    is AppRoute.TangemPayOnboarding,
+    is AppRoute.TangemPayHotWalletOnboarding,
+    is AppRoute.Kyc,
+    -> true
+    else -> false
 }
 
 // Route only from idle entry screens so an in-progress flow (scan, KYC, onboarding…) isn't interrupted.

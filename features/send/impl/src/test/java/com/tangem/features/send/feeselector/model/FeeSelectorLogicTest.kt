@@ -22,7 +22,6 @@ import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetAvailableFeeTokensUseCase
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.features.send.api.SendFeatureToggles
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeExtraInfo
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
@@ -87,7 +86,6 @@ internal class FeeSelectorLogicTest {
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk(relaxed = true)
     private val getAvailableFeeTokensUseCase: GetAvailableFeeTokensUseCase = mockk(relaxed = true)
     private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork = mockk(relaxed = true)
-    private val sendFeatureToggles: SendFeatureToggles = mockk(relaxed = true)
 
     private val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee> = mockk()
     private val onLoadFeeExtended: suspend (CryptoCurrencyStatus?) -> Either<GetFeeError, TransactionFeeExtended> =
@@ -454,7 +452,6 @@ internal class FeeSelectorLogicTest {
     /** A Tron token transfer. */
     private fun TestScope.buildTronModel(isTronGaslessSupported: Boolean = false): FeeSelectorLogic {
         every { isGaslessFeeSupportedForNetwork(any()) } returns false
-        every { sendFeatureToggles.isTronGaslessEnabled } returns true
         val params = FeeSelectorParams.FeeSelectorBlockParams(
             state = FeeSelectorUM.Loading,
             userWalletId = testUserWalletId,
@@ -485,7 +482,6 @@ internal class FeeSelectorLogicTest {
         getUserWalletUseCase = getUserWalletUseCase,
         getAvailableFeeTokensUseCase = getAvailableFeeTokensUseCase,
         isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
-        sendFeatureToggles = sendFeatureToggles,
     )
 
     private fun contentState(

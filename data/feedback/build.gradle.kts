@@ -26,7 +26,7 @@ dependencies {
     // endregion
 
     // region Core modules
-    api(projects.core.datasource)
+    implementation(projects.core.local)
     api(projects.core.navigation)
     api(projects.core.utils)
     // endregion
@@ -39,6 +39,8 @@ dependencies {
     implementation(projects.domain.cloudBackup)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.models)
+    implementation(projects.domain.socialLogin)
+    implementation(projects.domain.walletManager)
     implementation(projects.domain.wallets)
     // endregion
 

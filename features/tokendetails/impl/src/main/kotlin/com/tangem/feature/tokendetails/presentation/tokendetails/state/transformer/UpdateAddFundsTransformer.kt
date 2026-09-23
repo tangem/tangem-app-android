@@ -1,7 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer
 
+import com.tangem.common.ui.tokens.rendersActionAsEnabled
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.isLoading
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
@@ -26,7 +26,7 @@ internal class UpdateAddFundsTransformer(
         val buyRow = buyAction?.let { action ->
             AddFundsUM.Row(
                 isLoading = action.unavailabilityReason.isLoading,
-                isEnabled = action.unavailabilityReason == ScenarioUnavailabilityReason.None,
+                isEnabled = action.unavailabilityReason.rendersActionAsEnabled(),
                 onClick = {
                     onActionDispatched()
                     clickIntents.onBuyClick(action.unavailabilityReason)
@@ -36,17 +36,17 @@ internal class UpdateAddFundsTransformer(
         val swapRow = swapAction?.let { action ->
             AddFundsUM.Row(
                 isLoading = action.unavailabilityReason.isLoading,
-                isEnabled = action.unavailabilityReason == ScenarioUnavailabilityReason.None,
+                isEnabled = action.unavailabilityReason.rendersActionAsEnabled(),
                 onClick = {
                     onActionDispatched()
-                    clickIntents.onSwapClick(action.unavailabilityReason)
+                    clickIntents.onAddFundsSwapClick(action.unavailabilityReason)
                 },
             )
         }
         val receiveRow = receiveAction?.let { action ->
             AddFundsUM.Row(
                 isLoading = action.unavailabilityReason.isLoading || networkSource == StatusSource.CACHE,
-                isEnabled = action.unavailabilityReason == ScenarioUnavailabilityReason.None,
+                isEnabled = action.unavailabilityReason.rendersActionAsEnabled(),
                 onClick = {
                     onActionDispatched()
                     clickIntents.onReceiveClick(action.unavailabilityReason)

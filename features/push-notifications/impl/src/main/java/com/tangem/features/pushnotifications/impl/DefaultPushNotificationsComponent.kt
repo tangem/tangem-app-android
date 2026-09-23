@@ -32,7 +32,9 @@ internal class DefaultPushNotificationsComponent @AssistedInject constructor(
         val activity = LocalContext.current.findActivity()
         val isDoubleAskSheetShown by model.isDoubleAskSheetShown.collectAsStateWithLifecycle()
 
-        BackHandler(onBack = { activity.finish() })
+        if (!params.isBackHandledByHost) {
+            BackHandler(onBack = { activity.finish() })
+        }
         NavigationBar3ButtonsScrim()
 
         PushNotificationsScreen(
