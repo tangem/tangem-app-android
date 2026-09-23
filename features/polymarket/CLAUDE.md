@@ -101,9 +101,9 @@ positions preview (`PolymarketPositionsPreviewLoader`, polled every 20 s), and
 
 The header shows one of two figures, toggled by tapping its label (`PredictionBalanceMode`): **Available**
 (the CLOB collateral, `Active.balance`, the default) and **Total** (`Active.totalBalance` = collateral + the
-data-API value of the open positions). Total is offered only while `positionsValue` is known; while it is
-not, the header shows Available and the toggle is disabled, but the chosen mode is kept, so a transient
-`/value` failure does not lose it. The wallet screen and the wallet total keep counting the available
+data-API value of the open positions). Total is offered only once a full refresh has read `positionsValue`;
+until then the header shows Available and the toggle is disabled, but the chosen mode is kept and comes back
+as soon as the value does. The wallet screen and the wallet total keep counting the available
 balance only, as on iOS.
 
 - **Add funds** is gated: `RequisitesState.Loading` ignores the tap, `Failed` shows a dialog, `Ready`

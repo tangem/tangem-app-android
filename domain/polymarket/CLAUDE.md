@@ -169,7 +169,7 @@ draft, the deposit wallet, the market and the quote age before anything is sent.
   says how much a tick re-reads: `FULL` (main screen, pull-to-refresh, base poll ticks) also reads the
   positions value from the data API (`PolymarketPositionsRepository.getPositionsValue`) into
   `Active.positionsValue`; `AVAILABLE_ONLY` (wallet screen, onboarding, ticks inside the funding window)
-  carries the cached one over. A failed `/value` read leaves the value unknown and never fails the balance.
+  carries the cached one over. A failed `/value` read keeps the cached value too and never fails the balance.
 - **Withdraw destinations.** `GetPredictionWithdrawDestinationsUseCase` matches bridge assets to the
   wallet's currencies but is filtered to USDC · Polygon (phase 1, owner decision 15.09.2026). Removing the
   filter is the phase-2 change.
