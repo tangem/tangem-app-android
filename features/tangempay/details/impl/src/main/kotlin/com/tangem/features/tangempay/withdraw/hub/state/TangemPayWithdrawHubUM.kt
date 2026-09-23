@@ -51,10 +51,7 @@ internal data class TangemPayWithdrawHubUM(
     data class RecentRecipientUM(
         val id: String,
         val initial: String,
-        val accent: AvatarAccent,
         val name: String,
         val accountNumber: String,
     )
-
-    enum class AvatarAccent { BLUE, VIOLET, RED, ORANGE, YELLOW, GREEN }
 }
