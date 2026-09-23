@@ -1,6 +1,7 @@
 package com.tangem.domain.wallets.registration
 
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.hot.sdk.model.HotAuth
 
 /**
  * Domain port for triggering Tangem Auth Service wallet registration.
@@ -29,4 +30,10 @@ interface WalletRegistrationTrigger {
      * call for every wallet unlocked in a batch.
      */
     fun onMobileWalletsUnlocked(userWallets: List<UserWallet.Hot>)
+
+    /**
+     * Same as [onMobileWalletsUnlocked] for a wallet unlocked with its [accessCode]: the code the user
+     * has just entered signs the registration, so it is not asked for a second time.
+     */
+    fun onMobileWalletUnlockedWithAccessCode(userWallet: UserWallet.Hot, accessCode: HotAuth.Password)
 }
