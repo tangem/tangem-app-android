@@ -36,7 +36,6 @@ import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedScreenComponent
 import com.tangem.features.feed.nav.expandingSheetClick
 import com.tangem.features.feed.ui.v2.FeedNavActionButton
-import com.tangem.features.foryou.ForYouFeatureToggles
 import com.tangem.features.foryou.TokenSummaryBlockComponent
 import com.tangem.features.foryou.TokenSummaryComponent
 import com.tangem.features.marketing.api.MarketingBannerComponent
@@ -60,7 +59,6 @@ internal class FeedMarketsTokenDetailsComponent @AssistedInject constructor(
     manageFundsComponentFactory: ManageFundsComponent.Factory,
     marketingBannerComponentFactory: MarketingBannerComponent.Factory,
     tokenSummaryBlockComponentFactory: TokenSummaryBlockComponent.Factory,
-    forYouFeatureToggles: ForYouFeatureToggles,
 ) : FeedScreenComponent, AppComponentContext by context {
 
     private val title = stringReference(params.token.name)
@@ -73,7 +71,7 @@ internal class FeedMarketsTokenDetailsComponent @AssistedInject constructor(
             token = params.token,
             appCurrency = params.appCurrency,
             shouldShowPortfolio = params.shouldShowPortfolio,
-            isTokenSummaryEnabled = forYouFeatureToggles.isForYouEnabled,
+            isTokenSummaryEnabled = true,
             analyticsParams = params.analyticsParams?.let { analyticsParams ->
                 DefaultMarketsTokenDetailsComponent.AnalyticsParams(
                     blockchain = analyticsParams.blockchain,

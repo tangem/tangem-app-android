@@ -11,7 +11,6 @@ data class PortfolioSelectorUM(
     val items: ImmutableList<PortfolioSelectorItemUM>,
     val button: PortfolioSelectorButtonUM?,
     val isMultiChoiceEnabled: Boolean,
-    val isSelectorV3Enabled: Boolean,
 )
 
 /**
