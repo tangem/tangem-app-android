@@ -15,6 +15,7 @@ import com.tangem.data.visa.config.VisaLibLoader
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.spend.datasource.pay.TangemPayApi
+import com.tangem.spend.datasource.pay.TangemPayProvisioningApi
 import com.tangem.spend.datasource.pay.models.request.CardDetailsRequest
 import com.tangem.spend.datasource.pay.models.request.FreezeUnfreezeCardRequest
 import com.tangem.spend.datasource.pay.models.request.UpdateCardRequest
@@ -30,6 +31,7 @@ import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.SetPinResult
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.model.TangemPayCardDetails
+import com.tangem.domain.pay.model.TangemPayCardProvisioningData
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.visa.error.VisaApiError
@@ -43,6 +45,7 @@ private const val TAG = "TangemPay: CardDetailsRepository"
 @Suppress("LongParameterList", "LargeClass")
 internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
     private val tangemPayApi: TangemPayApi,
+    private val tangemPayProvisioningApi: TangemPayProvisioningApi,
     private val requestHelper: TangemPayRequestPerformer,
     private val visaLibLoader: VisaLibLoader,
     private val apiConfigsManager: ApiConfigsManager,
@@ -168,6 +171,23 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
             },
             catch = ::catchException,
         )
+    }
+
+    override suspend fun getProvisioningData(
+        userWalletId: UserWalletId,
+        cardId: String,
+    ): Either<UniversalError, TangemPayCardProvisioningData> = either {
+        val response = requestHelper.performRequest(userWalletId) { authHeader ->
+            tangemPayProvisioningApi.getCardProcessorDetails(authHeader = authHeader, cardId = cardId)
+        }.bind()
+
+        val result = response.result ?: raise(VisaApiError.Unspecified)
+        val cardSecret = result.cardSecret?.takeIf(String::isNotBlank) ?: run {
+            TangemLogger.withTag(TAG).e("Processor details returned no card secret")
+            raise(VisaApiError.Unspecified)
+        }
+
+        TangemPayCardProvisioningData(processorCardId = result.cardId, cardSecret = cardSecret)
     }
 
     override suspend fun isAddToWalletDone(userWalletId: UserWalletId): Either<UniversalError, Boolean> {
