@@ -52,6 +52,7 @@ sealed interface TransactionItemUM {
             data object Failed : Status()
             data object Confirmed : Status()
             data object Unconfirmed : Status()
+            data object PendingSignature : Status()
         }
 
         enum class Direction {

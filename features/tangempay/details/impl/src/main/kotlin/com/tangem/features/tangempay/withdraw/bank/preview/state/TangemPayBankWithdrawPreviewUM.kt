@@ -20,6 +20,8 @@ internal sealed interface TangemPayBankWithdrawPreviewUM {
         val recipientCards: ImmutableList<RecipientCardUM>,
         val isSending: Boolean,
         val isSendEnabled: Boolean,
+        /** Whether Send announces the card tap that a cold wallet needs to sign the transfer. */
+        val isColdWallet: Boolean,
         override val onBackClick: () -> Unit,
         val onCloseClick: () -> Unit,
         val onSendClick: () -> Unit,

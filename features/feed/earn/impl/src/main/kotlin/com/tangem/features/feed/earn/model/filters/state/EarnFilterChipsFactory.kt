@@ -63,7 +63,7 @@ internal class EarnFilterChipsFactory(
         EarnFilterType.YIELD,
         -> TangemFilterItemUM.Active(
             id = TYPE_ID,
-            value = EarnFilterTypeConverter().convert(filter).text,
+            value = EarnFilterTypeConverter().convert(filter).title,
             onClick = onTypeClick,
             onClearClick = onTypeClear,
         )

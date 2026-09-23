@@ -6,11 +6,9 @@ import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorBridge
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
-import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorFeatureToggles
 import com.tangem.features.commonfeatures.impl.portfolioselector.DefaultPortfolioSelectorComponent
 import com.tangem.features.commonfeatures.impl.portfolioselector.DefaultPortfolioSelectorController
 import com.tangem.features.commonfeatures.impl.portfolioselector.PortfolioSelectorModel
-import com.tangem.features.commonfeatures.impl.portfolioselector.featuretoggles.DefaultPortfolioSelectorFeatureToggles
 import com.tangem.features.commonfeatures.impl.portfolioselector.fetcher.DefaultPortfolioFetcher
 import com.tangem.features.commonfeatures.impl.portfolioselector.fetcher.DefaultPortfolioSelectorBridge
 import dagger.Binds
@@ -19,7 +17,6 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.ClassKey
 import dagger.multibindings.IntoMap
-import javax.inject.Singleton
 
 @Module
 @InstallIn(ModelComponent::class)
@@ -50,10 +47,4 @@ internal interface PortfolioSelectorSingletonModule {
     fun bindPortfolioSelectorComponentFactory(
         impl: DefaultPortfolioSelectorComponent.Factory,
     ): PortfolioSelectorComponent.Factory
-
-    @Binds
-    @Singleton
-    fun bindPortfolioSelectorFeatureToggles(
-        impl: DefaultPortfolioSelectorFeatureToggles,
-    ): PortfolioSelectorFeatureToggles
 }

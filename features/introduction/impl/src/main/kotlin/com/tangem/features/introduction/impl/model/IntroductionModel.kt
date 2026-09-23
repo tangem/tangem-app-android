@@ -34,11 +34,15 @@ import com.tangem.features.storiesv2.StoriesV2Result
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R as CoreUiR
 import kotlinx.coroutines.withContext
@@ -98,10 +102,13 @@ internal class IntroductionModel @Inject constructor(
 
     val storiesNavigation: SlotNavigation<Unit> get() = stories.navigation
 
+    private val createWalletSheetCollapsed = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
     val uiState: StateFlow<IntroductionUM>
         field = MutableStateFlow(
             IntroductionUM(
                 isVideoReady = false,
+                videoAspectRatio = null,
                 isVideoFailed = false,
                 isVideoRunning = false,
                 isMotionEnabled = videoPlayer.isMotionEnabled,
@@ -110,7 +117,7 @@ internal class IntroductionModel @Inject constructor(
                 haveWalletBottomSheetConfig = null,
                 onCreateWalletClick = ::onCreateWalletClick,
                 onIHaveWalletClick = ::onIHaveWalletClick,
-                onCreateWalletSheetCollapsed = stories::onSheetCollapsed,
+                onCreateWalletSheetCollapsed = ::onCreateWalletSheetCollapsed,
                 onTermsOfServiceClick = legalLinks::openTermsOfService,
                 onPrivacyPolicyClick = legalLinks::openPrivacyPolicy,
             ),
@@ -137,8 +144,21 @@ internal class IntroductionModel @Inject constructor(
 
     override fun onFirstFrameRendered() {
         hasRenderedFrame = true
-        if (!videoPlayer.isSurfaceAttached || uiState.value.isVideoReady) return
-        uiState.update { it.copy(isVideoReady = true) }
+        updateVideoReady()
+    }
+
+    override fun onAspectRatioChanged(aspectRatio: Float) {
+        uiState.update { it.copy(videoAspectRatio = aspectRatio) }
+        updateVideoReady()
+    }
+
+    /**
+     * The shutter lifts on a frame the screen can already shape. The decoder reports the frame geometry before it
+     * renders anything, and uncovering a surface that is still the wrong shape is what shows a stretched picture.
+     */
+    private fun updateVideoReady() {
+        if (!hasRenderedFrame || !videoPlayer.isSurfaceAttached) return
+        uiState.update { if (it.videoAspectRatio == null) it else it.copy(isVideoReady = true) }
     }
 
     override fun onError(error: Throwable) {
@@ -247,6 +267,21 @@ internal class IntroductionModel @Inject constructor(
         uiState.update { it.copy(bottomSheetConfig = it.bottomSheetConfig?.copy(isShown = false)) }
     }
 
+    private fun onCreateWalletSheetCollapsed() {
+        stories.onSheetCollapsed()
+        createWalletSheetCollapsed.tryEmit(Unit)
+    }
+
+    /**
+     * The sheet is an overlay of the host window, so it outlives the composition of the screen that opened it and
+     * would hang over the wallet for the length of its collapse. The stack swaps once it is gone.
+     */
+    private suspend fun collapseCreateWalletSheet() {
+        if (!isCreateWalletSheetShown()) return
+        onBottomSheetDismissed()
+        withTimeoutOrNull(SHEET_COLLAPSE_TIMEOUT) { createWalletSheetCollapsed.first() }
+    }
+
     private fun onTangemCardOrRingClick() {
         if (!isCreateWalletSheetShown() || isCreatingMobileWallet) return
         analyticsEventHandler.send(IntroductionProcess.ButtonHardwareWallet())
@@ -296,6 +331,7 @@ internal class IntroductionModel @Inject constructor(
         modelScope.launch {
             mobileWalletCreator.createAndOpen(
                 source = AnalyticsParam.ScreensSources.CreateWalletIntro,
+                beforeOpen = ::collapseCreateWalletSheet,
                 onFailed = {
                     trackingContextProxy.removeContext()
                     setMobileWalletCreating(isCreating = false)
@@ -345,5 +381,9 @@ internal class IntroductionModel @Inject constructor(
         if (isHotWalletCreationSupported()) return true
         uiMessageSender.send(hotWalletCreationNotSupportedDialog(isHotWalletCreationSupported.getLeastVersionName()))
         return false
+    }
+
+    private companion object {
+        val SHEET_COLLAPSE_TIMEOUT = 600.milliseconds
     }
 }

@@ -34,7 +34,6 @@ class GetFeeForTokenUseCase(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
-    private val isYieldWithdrawEnabled: Boolean,
 ) {
 
     private val tokenFeeCalculator = TokenFeeCalculator(
@@ -86,8 +85,7 @@ class GetFeeForTokenUseCase(
                         raiseIllegalStateError("Token currency not found for network ${token.network.id}")
                     }
 
-                    val isYieldActive = isYieldWithdrawEnabled &&
-                        tokenCurrencyStatus.value.yieldSupplyStatus?.isActive == true
+                    val isYieldActive = tokenCurrencyStatus.value.yieldSupplyStatus?.isActive == true
 
                     val tokenFeeExtended = tokenFeeCalculator.calculateTokenFee(
                         walletManager = walletManager,

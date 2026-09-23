@@ -29,7 +29,10 @@ internal object PolymarketPositionResultStubData {
             value = stringReference("▲ $245.00 (2.08%)"),
         ),
         footerNote = resourceReference(R.string.prediction_position_result_balance_note),
-        action = PolymarketPositionResultUM.Action.Claim(isInProgress = false),
+        action = PolymarketPositionResultUM.Action.Claim(
+            isInProgress = false,
+            label = resourceReference(R.string.prediction_position_result_claim_action),
+        ),
     )
 
     val lost = won.copy(
@@ -37,6 +40,14 @@ internal object PolymarketPositionResultStubData {
         title = stringReference("Loss $4400.10"),
         invested = null,
         profit = null,
+        footerNote = resourceReference(R.string.prediction_position_result_close_note),
+        action = PolymarketPositionResultUM.Action.Claim(
+            isInProgress = false,
+            label = resourceReference(R.string.prediction_position_result_close_action),
+        ),
+    )
+
+    val lostAlreadyClosed = lost.copy(
         footerNote = null,
         action = PolymarketPositionResultUM.Action.Dismiss,
     )

@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.credentials.CredentialManager
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.decompose.utils.ForegroundActivityProvider
 import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.data.cloudbackup.crypto.CloudBackupCipher
@@ -52,7 +51,6 @@ internal object CloudBackupDataModule {
         tokenProvider: GoogleDriveTokenProvider,
         store: CloudBackupStore,
         dispatchers: CoroutineDispatcherProvider,
-        featureTogglesManager: FeatureTogglesManager,
     ): CloudBackupRepository {
         return DefaultCloudBackupRepository(
             api = api,
@@ -60,7 +58,6 @@ internal object CloudBackupDataModule {
             store = store,
             cipher = CloudBackupCipher(),
             dispatchers = dispatchers,
-            featureTogglesManager = featureTogglesManager,
         )
     }
 

@@ -331,7 +331,6 @@ internal class OnrampMainComponentModelTest {
             isDemoCardUseCase = mockk(relaxed = true),
             messageSender = mockk(relaxed = true),
             getCurrencyUSDQuoteUseCase = mockk(relaxed = true),
-            featureTogglesManager = mockk(relaxed = true),
             paramsContainer = MutableParamsContainer(value = params),
             getWalletsUseCase = getWalletsUseCase,
         )

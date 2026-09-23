@@ -43,7 +43,6 @@ class CreateAndSendGaslessTransactionUseCase(
     private val gaslessTransactionRepository: GaslessTransactionRepository,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val getHotWalletSigner: (UserWallet.Hot) -> TransactionSigner,
-    private val isGaslessV2Enabled: Boolean,
 ) {
 
     suspend operator fun invoke(
@@ -163,13 +162,13 @@ class CreateAndSendGaslessTransactionUseCase(
                 gaslessTransaction = payload.data,
                 chainId = context.chainId,
                 verifyingContract = transactionData.sourceAddress,
-                includeGasLimit = isGaslessV2Enabled,
+                includeGasLimit = true,
             )
             is GaslessPayload.Batch -> Eip712TypedDataBuilder.buildBatch(
                 gaslessBatch = payload.data,
                 chainId = context.chainId,
                 verifyingContract = transactionData.sourceAddress,
-                includeGasLimit = isGaslessV2Enabled,
+                includeGasLimit = true,
             )
         }
 
@@ -334,7 +333,7 @@ class CreateAndSendGaslessTransactionUseCase(
     private suspend fun getEIP7702DataForGasless(
         gaslessDataProvider: EthereumGaslessDataProvider,
     ): EIP7702AuthorizationData {
-        return when (val dataResult = gaslessDataProvider.prepareEIP7702AuthorizationData(isV2 = isGaslessV2Enabled)) {
+        return when (val dataResult = gaslessDataProvider.prepareEIP7702AuthorizationData(isV2 = true)) {
             is Result.Failure -> throw dataResult.error
             is Result.Success -> dataResult.data
         }
