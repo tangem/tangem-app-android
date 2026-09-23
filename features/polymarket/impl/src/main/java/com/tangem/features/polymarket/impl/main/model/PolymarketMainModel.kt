@@ -11,7 +11,6 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
 import com.tangem.domain.polymarket.model.PolymarketCategory
@@ -33,7 +32,9 @@ import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.features.polymarket.impl.common.funding.PredictionFundingRequisites
 import com.tangem.features.polymarket.impl.common.funding.RequisitesState
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketAddFundsComponent
+import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetConfig
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketReceiveConfigFactory
+import com.tangem.features.polymarket.impl.main.addfunds.dismissIfShown
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketCategoryTabUMConverter
 import com.tangem.features.polymarket.impl.main.model.converter.PredictionBalanceUMConverter
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
@@ -115,9 +116,7 @@ internal class PolymarketMainModel @Inject constructor(
 
     private val refreshJobHolder = JobHolder()
 
-    val addFundsNavigation = SlotNavigation<Unit>()
-
-    val receiveNavigation = SlotNavigation<TokenReceiveConfig>()
+    val fundingSheetNavigation = SlotNavigation<PolymarketFundingSheetConfig>()
 
     val uiState: StateFlow<PolymarketMainUM>
         field = MutableStateFlow(
@@ -422,7 +421,7 @@ internal class PolymarketMainModel @Inject constructor(
     private fun openAddFunds() {
         if (activeStatus.value?.cryptoCurrencyStatus == null) return reportUnconfirmedAddress()
 
-        addFundsNavigation.activate(Unit)
+        fundingSheetNavigation.activate(PolymarketFundingSheetConfig.AddFunds)
     }
 
     private fun onWithdrawClick() {
@@ -444,7 +443,7 @@ internal class PolymarketMainModel @Inject constructor(
 
     override fun onSwapClick() {
         val collateral = activeStatus.value?.cryptoCurrencyStatus?.currency ?: return
-        addFundsNavigation.dismiss()
+        fundingSheetNavigation.dismiss()
         router.push(
             AppRoute.Swap(
                 userWalletId = params.userWalletId,
@@ -459,17 +458,19 @@ internal class PolymarketMainModel @Inject constructor(
     override fun onReceiveClick() {
         val collateral = activeStatus.value?.cryptoCurrencyStatus?.currency ?: return
         val target = fundingRequisites.target ?: return
-        receiveNavigation.activate(
-            PolymarketReceiveConfigFactory.create(
-                cryptoCurrency = collateral,
-                userWalletId = params.userWalletId,
-                target = target,
+        fundingSheetNavigation.activate(
+            PolymarketFundingSheetConfig.Receive(
+                config = PolymarketReceiveConfigFactory.create(
+                    cryptoCurrency = collateral,
+                    userWalletId = params.userWalletId,
+                    target = target,
+                ),
             ),
         )
     }
 
     override fun onDismissAddFunds() {
-        addFundsNavigation.dismiss()
+        fundingSheetNavigation.dismissIfShown(PolymarketFundingSheetConfig.AddFunds)
     }
 
     private fun onOutcomeClick(eventId: String, marketId: String, assetId: String) {
