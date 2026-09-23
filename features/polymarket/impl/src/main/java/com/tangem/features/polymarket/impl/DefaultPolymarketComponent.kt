@@ -20,6 +20,7 @@ import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelecto
 import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.polymarket.impl.details.PolymarketEventDetailsComponent
 import com.tangem.features.polymarket.impl.entry.PolymarketEntryComponent
+import com.tangem.features.polymarket.impl.history.PolymarketHistoryComponent
 import com.tangem.features.polymarket.impl.main.PolymarketMainComponent
 import com.tangem.features.polymarket.impl.model.PolymarketModel
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
@@ -100,6 +101,10 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
             appComponentContext = factoryContext,
             userWalletId = configuration.userWalletId,
             tokenReceiveComponentFactory = tokenReceiveComponentFactory,
+        )
+        is PolymarketRoute.History -> PolymarketHistoryComponent(
+            appComponentContext = factoryContext,
+            params = PolymarketHistoryComponent.Params(userWalletId = configuration.userWalletId),
         )
         is PolymarketRoute.EventDetails -> PolymarketEventDetailsComponent(
             appComponentContext = factoryContext,

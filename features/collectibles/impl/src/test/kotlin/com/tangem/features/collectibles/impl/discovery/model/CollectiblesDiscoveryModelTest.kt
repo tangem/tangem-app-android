@@ -11,8 +11,10 @@ import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchingContext
 import com.tangem.domain.collectibles.models.CollectibleGachaMachinesBatch
 import com.tangem.domain.collectibles.models.CollectibleGachaMachinesListConfig
 import com.tangem.domain.collectibles.models.CollectiblesError
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.collectibles.usecase.GetCollectibleGachaMachineCategoriesUseCase
 import com.tangem.domain.collectibles.usecase.GetCollectibleGachaMachinesBatchFlowUseCase
+import com.tangem.features.collectibles.impl.CollectiblesRoute
 import com.tangem.features.collectibles.impl.createBatchListState
 import com.tangem.features.collectibles.impl.createCategories
 import com.tangem.features.collectibles.impl.createMachine
@@ -22,11 +24,26 @@ import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchUpdateResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
-import io.mockk.*
+import io.mockk.clearMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.*
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -35,6 +52,7 @@ import org.junit.jupiter.api.Test
 internal class CollectiblesDiscoveryModelTest {
 
     private val getCategoriesUseCase: GetCollectibleGachaMachineCategoriesUseCase = mockk()
+    private val router: Router = mockk(relaxed = true)
     private val getMachinesBatchFlowUseCase: GetCollectibleGachaMachinesBatchFlowUseCase = mockk()
 
     private val batchListState = MutableStateFlow(
@@ -370,6 +388,23 @@ internal class CollectiblesDiscoveryModelTest {
         assertThat(search.isActive).isTrue()
     }
 
+    @Test
+    fun `GIVEN a loaded pack WHEN it is clicked THEN the pack details screen is pushed`() = runTest {
+        // Arrange
+        val fixture = startModel()
+        batchListState.value = createBatchListState(
+            batches = listOf(listOf(createMachine(id = "machine_42", externalId = "pokemon_50"))),
+        )
+        advanceUntilIdle()
+
+        // Act
+        val content = fixture.model.uiState.value.content as CollectiblesDiscoveryUM.ContentUM.Content
+        content.rows.first().packs.first().onClick()
+
+        // Assert
+        verify(exactly = 1) { router.push(CollectiblesRoute.MachineDetails(externalId = "pokemon_50")) }
+    }
+
     /**
      * Builds the model and starts recording the actions it dispatches to the pagination.
      *
@@ -383,6 +418,7 @@ internal class CollectiblesDiscoveryModelTest {
         val model = CollectiblesDiscoveryModel(
             dispatchers = createTestingCoroutineDispatcherProvider(),
             getCategoriesUseCase = getCategoriesUseCase,
+            router = router,
             getMachinesBatchFlowUseCase = getMachinesBatchFlowUseCase,
         ).also { this@CollectiblesDiscoveryModelTest.model = it }
 

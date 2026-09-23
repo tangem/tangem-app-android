@@ -177,6 +177,18 @@ internal abstract class PlacePredictionModelTestBase {
             predictionFundingWindow = fundingWindow,
         ).also(models::add)
 
+    protected fun createStatusModel(
+        testScope: TestScope,
+        params: PlacePredictionRoute.Status,
+        router: Router = this.router,
+    ): PlacePredictionStatusModel = PlacePredictionStatusModel(
+        paramsContainer = MutableParamsContainer(value = params),
+        router = router,
+        dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
+        derivePolymarketAddressesUseCase = deriveAddressesUseCase,
+        positionsRepository = positionsRepository,
+    ).also(models::add)
+
     protected val getCollateralCurrencyUseCase: GetPolymarketCollateralCurrencyUseCase = mockk {
         every { this@mockk.invoke() } returns createCollateralCurrency()
     }
@@ -255,7 +267,7 @@ internal abstract class PlacePredictionModelTestBase {
         total = BigDecimal("10.48"),
     )
 
-    protected fun createEvent(isAcceptingOrders: Boolean = true): PolymarketEvent = PolymarketEvent(
+    protected fun createEvent(isAcceptingOrders: Boolean = true, conditionId: String? = null): PolymarketEvent = PolymarketEvent(
         id = EVENT_ID,
         slug = "event-slug",
         title = "Event title",
@@ -275,7 +287,7 @@ internal abstract class PlacePredictionModelTestBase {
         markets = listOf(
             PolymarketMarket(
                 id = MARKET_ID,
-                conditionId = null,
+                conditionId = conditionId,
                 eventId = EVENT_ID,
                 title = "Market question",
                 slug = "market-slug",
@@ -308,7 +320,8 @@ internal abstract class PlacePredictionModelTestBase {
         const val ASSET_ID = "asset-1"
         const val NETWORK_RAW_ID = "polygon-ecosystem-token"
         val USER_WALLET_ID = UserWalletId("011")
-        val POSITION_ID = PolymarketPositionId(conditionId = "condition-1", assetId = ASSET_ID)
+        const val CONDITION_ID = "condition-1"
+        val POSITION_ID = PolymarketPositionId(conditionId = CONDITION_ID, assetId = ASSET_ID)
         val SELL_PARAMS = PlacePredictionComponent.Params.Sell(
             userWalletId = USER_WALLET_ID,
             positionId = POSITION_ID,

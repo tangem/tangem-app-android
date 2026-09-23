@@ -49,7 +49,6 @@ internal class DefaultAddressBookComponent @AssistedInject constructor(
                     AddressBookOpenMode.ContactCreationSource.TransactionDetails ->
                         AddressBookEvents.AddContactTapped.Source.TransactionDetails
                 },
-                scope = componentScope,
             )
         }
     }
@@ -61,10 +60,7 @@ internal class DefaultAddressBookComponent @AssistedInject constructor(
         }
 
         override fun onAddContactClick() {
-            analyticsSender.sendAddContactTapped(
-                source = AddressBookEvents.AddContactTapped.Source.Settings,
-                scope = componentScope,
-            )
+            analyticsSender.sendAddContactTapped(source = AddressBookEvents.AddContactTapped.Source.Settings)
             navigation.pushNew(AddressBookRoute.EditContact())
         }
 

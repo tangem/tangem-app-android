@@ -21,6 +21,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionAmountIntents
+import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionStatusIntents
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSummaryIntents
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSlippageIntents
 import com.tangem.features.polymarket.impl.placeprediction.model.recomputeGate
@@ -90,6 +91,7 @@ internal class PlaceResultPreviewProvider : PreviewParameterProvider<PlaceResult
 internal object PlacePredictionPreviewIntents :
     PlacePredictionAmountIntents,
     PlacePredictionSummaryIntents,
+    PlacePredictionStatusIntents,
     PlacePredictionSlippageIntents {
     override fun onAmountChange(value: String) = Unit
     override fun onSlippageClick() = Unit
@@ -105,6 +107,8 @@ internal object PlacePredictionPreviewIntents :
     override fun onPlaceClick() = Unit
     override fun onBackClick() = Unit
     override fun onCloseClick() = Unit
+    override fun onToMainClick() = Unit
+    override fun onViewPositionClick() = Unit
 }
 
 private fun previewState(
