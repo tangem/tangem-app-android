@@ -16,8 +16,9 @@ internal class CustomerInfoConverterProfileTest {
         val info = CustomerInfoConverter.convert(result(profile = model.profile))
 
         // Assert
-        assertThat(ProfileFields(country = info.country, phoneMask = info.phoneMask, email = info.email))
-            .isEqualTo(model.expected)
+        assertThat(
+            ProfileFields(country = info.country, phoneMask = info.phoneMask, email = info.email),
+        ).isEqualTo(model.expected)
     }
 
     internal data class ProfileModel(
@@ -25,7 +26,11 @@ internal class CustomerInfoConverterProfileTest {
         val expected: ProfileFields,
     )
 
-    internal data class ProfileFields(val country: String?, val phoneMask: String?, val email: String?)
+    internal data class ProfileFields(
+        val country: String?,
+        val phoneMask: String?,
+        val email: String?,
+    )
 
     private fun provideTestModels() = listOf(
         ProfileModel(
@@ -56,9 +61,6 @@ internal class CustomerInfoConverterProfileTest {
         profile = profile,
     )
 
-    private fun profile(country: String?, phoneMask: String?, email: String?) = CustomerMeResponse.Profile(
-        country = country,
-        phoneMask = phoneMask,
-        email = email,
-    )
+    private fun profile(country: String?, phoneMask: String?, email: String?) =
+        CustomerMeResponse.Profile(country = country, phoneMask = phoneMask, email = email)
 }

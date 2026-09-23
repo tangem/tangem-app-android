@@ -33,7 +33,7 @@ class IssuePlasticCardUseCase(
         idempotencyKey: String,
     ): Either<VisaApiError, Order> = either {
         val offer = catch(
-            block = { customerOffersRepository.getOffers(userWalletId).bind().plasticOffer() },
+            block = { customerOffersRepository.getOffers(userWalletId).bind().orderable.plasticOffer() },
             catch = { handleError(it) },
         ) ?: raise(VisaApiError.CardIssueOfferNotAvailable)
 
