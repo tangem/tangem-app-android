@@ -28,6 +28,7 @@ import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionOrderFailure
+import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
 import com.tangem.domain.polymarket.model.PredictionPriceError
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
@@ -40,6 +41,7 @@ import com.tangem.domain.polymarket.usecase.GetPredictionPriceUseCase
 import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.DelayedPredictionOrderOutcome
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
+import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
@@ -55,6 +57,8 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.ViewPositionUM
+import com.tangem.features.polymarket.impl.positiondetails.model.canOpenPositionDetails
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
 import com.tangem.features.polymarket.impl.placeprediction.entity.feeBreakdownQuote
@@ -77,6 +81,7 @@ import com.tangem.features.polymarket.impl.placeprediction.model.transformers.Se
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetPriceErrorTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteResultTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetSubmitTransformer
+import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetViewPositionTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetTradingPermissionTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -103,7 +108,7 @@ internal const val QUOTE_DEBOUNCE_MILLIS = 500L
 
 internal const val QUOTE_POLL_INTERVAL_MILLIS = 3_000L
 
-@Suppress("LongParameterList", "LargeClass")
+@Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
 @ModelScoped
 internal class PlacePredictionModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -145,6 +150,10 @@ internal class PlacePredictionModel @Inject constructor(
     private val positionJobHolder = JobHolder()
 
     private var isNegRiskMarket: Boolean? = null
+
+    private var conditionId: String? = null
+
+    private var indexedPositionId: PolymarketPositionId? = null
 
     private var isScreenShown = false
 
@@ -502,6 +511,60 @@ internal class PlacePredictionModel @Inject constructor(
 
         uiState.update(SetSubmitTransformer(submit = SubmitUM.Result(result = result)))
         router.replaceAll(PlacePredictionRoute.Status)
+
+        awaitCreatedPosition(result = result)
+    }
+
+    /**
+
+     * until it appears. The index answers with no position for a while even when the outcome was already held,
+     * so the window is wider than the one the details screen uses. A read that fails is retried like a missing
+     * position; when the reads run out the button is withdrawn rather than left pointing at a screen that would
+     * say the position is unavailable. A market that resolved inside that window leads to the same dead end,
+     * so the button is withdrawn for a position the details screen would refuse.
+     */
+    private fun awaitCreatedPosition(result: PlaceResultUM) {
+        if (params.side != PredictionOrderSide.BUY) return
+        val isFilled = result is PlaceResultUM.Filled || result is PlaceResultUM.PartiallyFilled
+        if (!isFilled) return
+        val conditionId = conditionId ?: return
+        val positionId = PolymarketPositionId(conditionId = conditionId, assetId = params.assetId)
+
+        uiState.update(SetViewPositionTransformer(viewPosition = ViewPositionUM.Awaiting))
+
+        modelScope.launch {
+            val addresses = withContext(dispatchers.default) {
+                derivePolymarketAddressesUseCase.stored(userWalletId = params.userWalletId)
+            }
+            if (addresses == null) {
+                logger.e("Stored addresses unavailable, the created position cannot be read back")
+                uiState.update(SetViewPositionTransformer(viewPosition = ViewPositionUM.Hidden))
+                return@launch
+            }
+
+            repeat(PolymarketConst.CREATED_POSITION_READS) { read ->
+                val position = withContext(dispatchers.default) {
+                    positionsRepository.getPosition(addresses = addresses, id = positionId)
+                }.getOrNull()
+
+                if (position != null) {
+                    val canOpen = position.canOpenPositionDetails
+                    if (canOpen) indexedPositionId = positionId
+                    uiState.update(
+                        SetViewPositionTransformer(
+                            viewPosition = if (canOpen) ViewPositionUM.Available else ViewPositionUM.Hidden,
+                        ),
+                    )
+                    return@launch
+                }
+                if (read < PolymarketConst.CREATED_POSITION_READS - 1) {
+                    delay(PolymarketConst.POSITION_INDEXING_RETRY_MILLIS)
+                }
+            }
+
+            logger.i("The created position was not indexed after ${PolymarketConst.CREATED_POSITION_READS} reads")
+            uiState.update(SetViewPositionTransformer(viewPosition = ViewPositionUM.Hidden))
+        }
     }
 
     private fun PlaceResultUM.movesBalance(): Boolean = when (this) {
@@ -590,6 +653,15 @@ internal class PlacePredictionModel @Inject constructor(
         router.popTo(PolymarketRoute.Main(userWalletId = params.userWalletId))
     }
 
+    override fun onViewPositionClick() {
+        val positionId = indexedPositionId ?: return
+
+        router.replaceAll(
+            PolymarketRoute.Main(userWalletId = params.userWalletId),
+            PolymarketRoute.PositionDetails(userWalletId = params.userWalletId, positionId = positionId),
+        )
+    }
+
     fun isSubmitting(): Boolean = when (uiState.value.submit) {
         is SubmitUM.Signing,
         is SubmitUM.Posting,
@@ -610,6 +682,7 @@ internal class PlacePredictionModel @Inject constructor(
             val outcome = market.outcomes.firstOrNull { it.assetId == params.assetId } ?: return@launch
 
             isNegRiskMarket = market.isNegRisk
+            conditionId = market.conditionId
 
             uiState.update(SetMarketTransformer(market = market, outcome = outcome))
 
