@@ -98,6 +98,19 @@ internal class DeleteSocialRecoveryUseCaseTest {
     }
 
     @Test
+    fun `GIVEN unbind AND file deletion fail WHEN invoke THEN the unbind error is reported`() = runTest {
+        // Arrange
+        coEvery { socialRecoveryRepository.unbindWallet(walletId) } returns SocialLoginError.NetworkError.left()
+        coEvery { socialBackupRepository.deleteBackup(walletId) } returns SocialLoginError.CloudUnavailable.left()
+
+        // Act
+        val actual = useCase(walletId)
+
+        // Assert — a live binding matters more than a leftover file
+        assertThat(actual).isEqualTo(SocialLoginError.NetworkError.left())
+    }
+
+    @Test
     fun `GIVEN flag cannot be stored WHEN invoke THEN nothing is torn down`() = runTest {
         // Arrange — a flag stuck at `true` would outlive the key and keep claiming a backup
         coEvery {
@@ -128,22 +141,6 @@ internal class DeleteSocialRecoveryUseCaseTest {
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
         coVerify(exactly = 1) { socialRecoveryRepository.unbindWallet(walletId) }
-    }
-
-    @Test
-    fun `GIVEN unbind succeeds AND flag write fails WHEN invoke THEN the key is not destroyed`() = runTest {
-        // Arrange — the flag has to go first, or it would outlive the key it describes and keep the
-        // wallet counting as backed up with nothing left to restore from
-        coEvery {
-            socialBackupRepository.setSocialBackupCompleted(walletId, false)
-        } returns SocialLoginError.PersistenceFailed().left()
-
-        // Act
-        val actual = useCase(walletId)
-
-        // Assert
-        assertThat(actual).isEqualTo(SocialLoginError.PersistenceFailed().left())
-        coVerify(exactly = 0) { socialRecoveryRepository.unbindWallet(any()) }
     }
 
     @Test
