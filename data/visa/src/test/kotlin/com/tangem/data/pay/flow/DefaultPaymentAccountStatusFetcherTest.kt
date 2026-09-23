@@ -188,13 +188,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             availableBalance = BigDecimal.TEN,
             currency = "USD",
         ),
-        cryptoBalance: PaymentAccountStatusValue.CryptoBalance? = PaymentAccountStatusValue.CryptoBalance(
-            id = "usdc",
-            chainId = 137L,
-            depositAddress = "0xdeposit",
-            tokenContractAddress = "0xcontract",
-            balance = BigDecimal.TEN,
-        ),
         tariffPlan: TangemPayCustomerTariffPlan? = null,
         networks: List<CustomerInfo.NetworkInfo> = emptyList(),
     ) = CustomerInfo(
@@ -203,8 +196,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         kycStatus = KycStatus.APPROVED,
         state = CustomerInfo.State.ACTIVE,
         fiatBalance = fiatBalance,
-        cryptoBalance = cryptoBalance,
-        availableForWithdrawal = BigDecimal.TEN,
         cards = cards,
         productInstances = productInstances,
         tariffPlan = tariffPlan,
@@ -253,8 +244,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         clearMocks(paymentAccountStatusesStore, answers = false)
         // Tiers off by default — legacy auto-order-creation behavior. Individual tests override.
         every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns false
-        // Multichain off by default — legacy single-chain behavior. Individual tests override.
-        every { tangemPayFeatureToggles.isAccountMultichainEnabled } returns false
     }
 
     /**
@@ -274,6 +263,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         coEvery { paymentAccountStatusesStore.store(any(), any()) } just Runs
 
         every { tangemPayCurrencyFactory.create(userWalletId) } returns token
+        every { tangemPayCurrencyFactory.createNetworkStatuses(any(), any(), any()) } returns emptyList()
 
         coEvery { singleQuoteSupplier.getSyncOrNull(any()) } returns null
 
@@ -320,20 +310,12 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         return PaymentAccountStatusValue.Loaded(
             source = StatusSource.ACTUAL,
             customerId = "cust_1",
-            depositAddress = "0xdeposit",
+            paymentAccountAddress = "0xdeposit",
             balance = PaymentAccountStatusValue.Balance(
                 fiatBalance = PaymentAccountStatusValue.FiatBalance(
                     availableBalance = BigDecimal.TEN,
                     currency = "USD",
                 ),
-                cryptoBalance = PaymentAccountStatusValue.CryptoBalance(
-                    id = "usdc",
-                    chainId = 137L,
-                    depositAddress = "0xdeposit",
-                    tokenContractAddress = "0xcontract",
-                    balance = BigDecimal.TEN,
-                ),
-                availableForWithdrawal = BigDecimal.TEN,
             ),
             cryptoCurrency = token,
             cards = emptyList(),
@@ -720,7 +702,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 val customerInfo = buildCustomerInfo(
                     productInstances = emptyList(),
                     fiatBalance = null,
-                    cryptoBalance = null,
                     tariffPlan = customerTariffPlan,
                 )
                 stubHappyPath(customerInfo)
@@ -744,7 +725,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 val customerInfo = buildCustomerInfo(
                     productInstances = emptyList(),
                     fiatBalance = null,
-                    cryptoBalance = null,
                     tariffPlan = null,
                 )
                 stubHappyPath(customerInfo)
@@ -766,7 +746,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             val customerInfo = buildCustomerInfo(
                 productInstances = emptyList(),
                 fiatBalance = null,
-                cryptoBalance = null,
                 tariffPlan = customerTariffPlan,
             )
             stubHappyPath(customerInfo)
@@ -962,7 +941,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 customerId = customerId,
                 productInstances = emptyList(),
                 fiatBalance = null,
-                cryptoBalance = null,
                 tariffPlan = customerTariffPlan,
             )
             stubHappyPath(customerInfo)
@@ -1514,23 +1492,23 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         )
 
         @Test
-        fun `GIVEN multichain toggle OFF WHEN map loaded THEN networks empty`() = runTest {
+        fun `GIVEN no networks in response WHEN map loaded THEN networks empty`() = runTest {
             // Arrange
-            val customerInfo = buildCustomerInfo(networks = listOf(network))
+            val customerInfo = buildCustomerInfo(networks = emptyList())
             stubHappyPath(customerInfo)
-            every { tangemPayFeatureToggles.isAccountMultichainEnabled } returns false
+            every { tangemPayCurrencyFactory.createNetworkStatuses(any(), any(), any()) } returns emptyList()
             val storedStatuses = captureStoredStatuses()
 
             // Act
             fetcher.invoke(params)
 
-            // Assert — toggle gates population even though customerInfo carries a network
+            // Assert
             val loaded = storedStatuses.lastLoaded()
             assertThat(loaded.networks).isEmpty()
         }
 
         @Test
-        fun `GIVEN multichain toggle ON WHEN map loaded THEN networks populated from factory`() = runTest {
+        fun `GIVEN networks in response WHEN map loaded THEN networks populated from factory`() = runTest {
             // Arrange
             val networkStatus = PaymentNetworkStatus.Available(
                 network = mockk(),
@@ -1540,7 +1518,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             )
             val customerInfo = buildCustomerInfo(networks = listOf(network))
             stubHappyPath(customerInfo)
-            every { tangemPayFeatureToggles.isAccountMultichainEnabled } returns true
             every {
                 tangemPayCurrencyFactory.createNetworkStatuses(any(), any(), any())
             } returns listOf(networkStatus)
@@ -1567,7 +1544,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                     paymentAccount = paymentAccount,
                     cards = emptyList(),
                     fiatBalance = null,
-                    cryptoBalance = null,
                     tariffPlan = customerTariffPlan,
                 )
                 stubHappyPath(customerInfo)
@@ -1583,7 +1559,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 // Assert
                 val loaded = storedStatuses.lastLoaded()
                 assertThat(loaded.balance).isNull()
-                assertThat(loaded.depositAddress).isNull()
                 assertThat(loaded.source).isEqualTo(StatusSource.ACTUAL)
                 assertThat(loaded.cards.map { it.id }).containsExactly("card_1")
                 assertThat(loaded.cards.single().cardStatus).isEqualTo(TangemPayCard.Status.ACTIVE)
@@ -1598,7 +1573,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                     paymentAccount = paymentAccount,
                     cards = emptyList(),
                     fiatBalance = null,
-                    cryptoBalance = null,
                 )
                 stubHappyPath(customerInfo)
                 every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
@@ -1627,7 +1601,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                     paymentAccount = paymentAccount,
                     cards = emptyList(),
                     fiatBalance = null,
-                    cryptoBalance = null,
                     tariffPlan = customerTariffPlan,
                 )
                 stubHappyPath(customerInfo)
@@ -1656,7 +1629,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                     paymentAccount = paymentAccount,
                     cards = emptyList(),
                     fiatBalance = null,
-                    cryptoBalance = null,
                 )
                 stubHappyPath(customerInfo)
                 val storedStatuses = captureStoredStatuses()
@@ -1678,7 +1650,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                     productInstances = emptyList(),
                     cards = emptyList(),
                     fiatBalance = null,
-                    cryptoBalance = null,
                     tariffPlan = customerTariffPlan,
                 )
                 stubHappyPath(customerInfo)
@@ -1706,7 +1677,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 productInstances = emptyList(),
                 cards = emptyList(),
                 fiatBalance = null,
-                cryptoBalance = null,
                 tariffPlan = customerTariffPlan,
             )
             stubHappyPath(customerInfo)

@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.common
 
 import com.tangem.domain.models.account.*
 import com.tangem.domain.models.wallet.UserWalletId
+import java.math.BigDecimal
 
 internal val AccountStatus.Payment.userWalletId: UserWalletId
     get() = account.userWalletId
@@ -71,29 +72,22 @@ internal fun AccountStatus.Payment.networksOrNull(): List<PaymentNetworkStatus>?
     else -> null
 }
 
-internal val PaymentAccountStatusValue.Balance.hasWithdrawableAmount: Boolean
-    get() = availableForWithdrawal.signum() > 0
+internal val PaymentAccountStatusValue.availableForWithdrawalOrZero: BigDecimal
+    get() = when (this) {
+        is PaymentAccountStatusValue.Loaded -> availableForWithdrawal
+        is PaymentAccountStatusValue.Deactivated -> availableForWithdrawal
+        else -> BigDecimal.ZERO
+    }
 
-internal fun PaymentAccountStatusValue.canAddFunds(isMultichainEnabled: Boolean): Boolean = when (this) {
-    is PaymentAccountStatusValue.Error.CardIssueFailed -> {
-        val accountBalance = balance
-        accountBalance != null && if (isMultichainEnabled) {
-            networks.hasAvailableNetwork()
-        } else {
-            accountBalance.cryptoBalance.depositAddress.isNotEmpty()
-        }
-    }
-    is PaymentAccountStatusValue.Loaded -> if (isMultichainEnabled) {
-        networks.hasAvailableNetwork()
-    } else {
-        !depositAddress.isNullOrEmpty()
-    }
-    is PaymentAccountStatusValue.Deactivated -> if (isMultichainEnabled) {
-        networks.hasAvailableNetwork()
-    } else {
-        balance?.cryptoBalance?.depositAddress?.isNotEmpty() == true
-    }
-    else -> false
-}
+internal val PaymentAccountStatusValue.hasWithdrawableAmount: Boolean
+    get() = availableForWithdrawalOrZero.signum() > 0
 
-private fun List<PaymentNetworkStatus>.hasAvailableNetwork(): Boolean = any { it is PaymentNetworkStatus.Available }
+internal fun List<PaymentNetworkStatus>.firstDepositAddress(): String? =
+    filterIsInstance<PaymentNetworkStatus.Available>().firstOrNull()?.depositAddress
+
+internal fun PaymentAccountStatusValue.canAddFunds(): Boolean = when (this) {
+    is PaymentAccountStatusValue.Error.CardIssueFailed -> networks
+    is PaymentAccountStatusValue.Loaded -> networks
+    is PaymentAccountStatusValue.Deactivated -> networks
+    else -> emptyList()
+}.any { it is PaymentNetworkStatus.Available }
