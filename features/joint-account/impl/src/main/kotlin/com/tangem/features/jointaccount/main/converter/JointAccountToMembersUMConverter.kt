@@ -18,15 +18,22 @@ import kotlinx.collections.immutable.toImmutableList
  *
  * Every visual difference on the screen — title, progress line, the "Share invites safely" banner, the
  * archive menu, the activation CTA — is driven by two things only: [JointAccount.status] and whether this
- * device holds the account's invites (only the creating device ever does — see [MembersScreenPhase]). There
- * is no separate "mode": the wallet row, account settings and the deep link all push the same route, and
- * whichever phase the account's own data resolves to is what renders, regardless of entry point.
+ * wallet is the account's creator (see [MembersScreenPhase]). There is no separate "mode": the wallet row,
+ * account settings and the deep link all push the same route, and whichever phase the account's own data
+ * resolves to is what renders, regardless of entry point.
+ *
+ * The wallet recognises itself among the members by [Input.ownAddress], the owner address derived from the keys
+ * on the device: the backend lists every member the same way for everyone and marks nobody as "you".
  */
 internal class JointAccountToMembersUMConverter(
     private val callbacks: Callbacks,
 ) : Converter<JointAccountToMembersUMConverter.Input, JointAccountMembersUM> {
 
-    data class Input(val account: JointAccount, val invites: List<String>)
+    /**
+     * @property invites    the invites this device holds; only the creating device ever receives them
+     * @property ownAddress this wallet's owner address in the account, null while its key is not derived yet
+     */
+    data class Input(val account: JointAccount, val invites: List<String>, val ownAddress: String?)
 
     /** Every side effect the converted state can trigger. */
     data class Callbacks(
@@ -43,11 +50,17 @@ internal class JointAccountToMembersUMConverter(
     )
 
     override fun convert(value: Input): JointAccountMembersUM {
-        val (account, invites) = value
-        val phase = account.status.toPhase(isThisDeviceCreator = invites.isNotEmpty())
+        val (account, invites, ownAddress) = value
+        val phase = account.status.toPhase(
+            isThisDeviceCreator = account.isThisDeviceCreator(ownAddress = ownAddress, invites = invites),
+        )
 
         val joined = account.members.mapIndexed { index, member ->
-            joinedMember(index = index, member = member, phase = phase)
+            joinedMember(
+                index = index,
+                member = member,
+                isOwn = member.address.equals(ownAddress, ignoreCase = true),
+            )
         }
         val redeemedInvites = account.members
             .mapNotNull { member -> member.inviteId?.lowercase() }
@@ -124,7 +137,7 @@ internal class JointAccountToMembersUMConverter(
     private fun joinedMember(
         index: Int,
         member: JointAccount.Member,
-        phase: MembersScreenPhase,
+        isOwn: Boolean,
     ): JointAccountMembersUM.MemberUM.Joined {
         val avatar = avatar(member = member, index = index)
         val name = stringReference(member.name)
@@ -133,20 +146,21 @@ internal class JointAccountToMembersUMConverter(
             id = member.address,
             avatar = avatar,
             name = name,
-            role = role(member = member, isThisDeviceCreator = phase.isThisDeviceCreator),
+            role = role(member = member, isOwn = isOwn),
             onInfoClick = { callbacks.onMemberInfoClick(avatar, name, member.address) },
         )
     }
 
-    private fun role(member: JointAccount.Member, isThisDeviceCreator: Boolean): TextReference {
+    private fun role(member: JointAccount.Member, isOwn: Boolean): TextReference {
         val isCreator = member.role == JointAccount.Role.CREATOR
 
         return when {
-            isCreator && isThisDeviceCreator -> combinedReference(
+            isCreator && isOwn -> combinedReference(
                 resourceReference(CoreUiR.string.joint_account_members_role_you),
                 stringReference(" ${StringsSigns.DOT} "),
                 resourceReference(CoreUiR.string.joint_account_invite_members_creator),
             )
+            isOwn -> resourceReference(CoreUiR.string.joint_account_members_role_you)
             isCreator -> resourceReference(CoreUiR.string.joint_account_invite_members_creator)
             else -> resourceReference(CoreUiR.string.joint_account_members_role_joined)
         }
@@ -199,6 +213,20 @@ private data class MembersScreenPhase(val stage: Stage, val isThisDeviceCreator:
          * offered).
          */
         Completed,
+    }
+}
+
+/**
+ * The creator is the member whose address is this wallet's own owner address. Until that address is derived, the
+ * invites the device holds stand in for it: only the creating device ever receives them.
+ */
+private fun JointAccount.isThisDeviceCreator(ownAddress: String?, invites: List<String>): Boolean {
+    val creator = members.firstOrNull { it.role == JointAccount.Role.CREATOR }
+
+    return if (ownAddress != null && creator != null) {
+        creator.address.equals(ownAddress, ignoreCase = true)
+    } else {
+        invites.isNotEmpty()
     }
 }
 

@@ -149,28 +149,7 @@ internal class BuildPredictionOrderDraftUseCaseTest {
     }
 
     @Test
-    fun `GIVEN a sell below the minimum order size WHEN built as a full close THEN it is accepted`() {
-        // Arrange
-        val quote = createQuote(
-            status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE,
-            side = PredictionOrderSide.SELL,
-        )
-
-        // Act
-        val actual = useCase(
-            quote = quote,
-            assetId = ASSET_ID,
-            isNegRisk = false,
-            side = PredictionOrderSide.SELL,
-            isFullClose = true,
-        )
-
-        // Assert
-        assertThat(actual.getOrNull()).isNotNull()
-    }
-
-    @Test
-    fun `GIVEN a sell below the minimum order size WHEN built as a partial close THEN it is refused`() {
+    fun `GIVEN a sell below the minimum order size WHEN built THEN it is accepted`() {
         // Arrange
         val quote = createQuote(
             status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE,
@@ -179,6 +158,21 @@ internal class BuildPredictionOrderDraftUseCaseTest {
 
         // Act
         val actual = useCase(quote = quote, assetId = ASSET_ID, isNegRisk = false, side = PredictionOrderSide.SELL)
+
+        // Assert
+        assertThat(actual.getOrNull()).isNotNull()
+    }
+
+    @Test
+    fun `GIVEN a buy below the minimum order size WHEN built THEN it is refused`() {
+        // Arrange
+        val quote = createQuote(
+            status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE,
+            side = PredictionOrderSide.BUY,
+        )
+
+        // Act
+        val actual = useCase(quote = quote, assetId = ASSET_ID, isNegRisk = false, side = PredictionOrderSide.BUY)
 
         // Assert
         assertThat(actual).isEqualTo(

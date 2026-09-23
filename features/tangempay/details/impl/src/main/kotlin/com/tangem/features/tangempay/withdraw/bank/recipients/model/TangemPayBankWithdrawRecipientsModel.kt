@@ -41,6 +41,7 @@ internal class TangemPayBankWithdrawRecipientsModel @Inject constructor(
     private val umFactory = TangemPayBankWithdrawRecipientsUMFactory(
         callbacks = TangemPayBankWithdrawRecipientsUMFactory.Callbacks(
             onBackClick = router::pop,
+            onCloseClick = params.onCloseFlow,
             onQueryChange = ::onQueryChange,
             onSearchActiveChange = ::onSearchActiveChange,
             onSearchCloseClick = ::onSearchCloseClick,
