@@ -16,6 +16,7 @@ import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.account.status.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
@@ -25,6 +26,7 @@ import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.Account
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.domain.models.wallet.UserWallet
@@ -45,6 +47,7 @@ import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
@@ -76,6 +79,7 @@ internal class JointAccountMembersModelTest {
     private val jointAccountListFetcher: SingleJointAccountListFetcher = mockk(relaxed = true)
     private val pollingCoordinator: JointAccountPollingCoordinator = mockk()
     private val getInvitesUseCase: GetJointAccountInvitesUseCase = mockk()
+    private val ownerAddressResolver: JointOwnerAddressResolver = mockk()
     private val singleAccountSupplier: SingleAccountSupplier = mockk()
     private val activateUseCase: ActivateJointAccountUseCase = mockk()
     private val archiveCryptoPortfolioUseCase: ArchiveCryptoPortfolioUseCase = mockk()
@@ -92,6 +96,7 @@ internal class JointAccountMembersModelTest {
             jointAccountListFetcher,
             pollingCoordinator,
             getInvitesUseCase,
+            ownerAddressResolver,
             singleAccountSupplier,
             activateUseCase,
             archiveCryptoPortfolioUseCase,
@@ -102,6 +107,8 @@ internal class JointAccountMembersModelTest {
         }
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(coldWallet))
         every { pollingCoordinator.poll(walletId = any()) } returns emptyFlow()
+        every { singleAccountSupplier.filterJointAccount(accountId = any()) } returns emptyFlow()
+        coEvery { ownerAddressResolver.resolve(userWalletId = any(), ownerKeyIndex = any()) } returns null.right()
     }
 
     @Test
@@ -144,6 +151,54 @@ internal class JointAccountMembersModelTest {
             assertThat(model.uiState.value.header).isNotNull()
             assertThat(model.uiState.value.joined).isNotEmpty()
         }
+
+    @Test
+    fun `GIVEN own owner address of a joined member WHEN model created THEN own row is labelled You`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator, member)), invites = emptyList())
+        val jointAccount = MockAccounts.createJointAccount(userWalletId = USER_WALLET_ID)
+        every { singleAccountSupplier.filterJointAccount(accountId = any()) } returns flowOf(jointAccount)
+        coEvery {
+            ownerAddressResolver.resolve(userWalletId = USER_WALLET_ID, ownerKeyIndex = jointAccount.ownerKeyIndex)
+        } returns member.address.right()
+
+        // Act
+        val state = createModel().uiState.value
+
+        // Assert
+        assertThat(state.joined.map { it.role }).containsExactly(
+            resourceReference(CoreUiR.string.joint_account_invite_members_creator),
+            resourceReference(CoreUiR.string.joint_account_members_role_you),
+        ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN accounts record arrives late WHEN model created THEN own row turns into You once it does`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator, member)), invites = emptyList())
+        val jointAccount = MockAccounts.createJointAccount(userWalletId = USER_WALLET_ID)
+        val accounts = MutableSharedFlow<Account.Joint>()
+        every { singleAccountSupplier.filterJointAccount(accountId = any()) } returns accounts
+        coEvery {
+            ownerAddressResolver.resolve(userWalletId = USER_WALLET_ID, ownerKeyIndex = jointAccount.ownerKeyIndex)
+        } returns member.address.right()
+        val model = createModel()
+        val before = model.uiState.value.joined.map { it.role }
+
+        // Act
+        accounts.emit(jointAccount)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(before).containsExactly(
+            resourceReference(CoreUiR.string.joint_account_invite_members_creator),
+            resourceReference(CoreUiR.string.joint_account_members_role_joined),
+        ).inOrder()
+        assertThat(model.uiState.value.joined.map { it.role }).containsExactly(
+            resourceReference(CoreUiR.string.joint_account_invite_members_creator),
+            resourceReference(CoreUiR.string.joint_account_members_role_you),
+        ).inOrder()
+    }
 
     @Test
     fun `GIVEN another wallet's account in the list WHEN model created THEN it is ignored`() = runTest {
@@ -578,6 +633,7 @@ internal class JointAccountMembersModelTest {
             jointAccountListFetcher = jointAccountListFetcher,
             pollingCoordinator = pollingCoordinator,
             getJointAccountInvitesUseCase = getInvitesUseCase,
+            ownerAddressResolver = ownerAddressResolver,
             singleAccountSupplier = singleAccountSupplier,
             activateJointAccountUseCase = activateUseCase,
             archiveCryptoPortfolioUseCase = archiveCryptoPortfolioUseCase,

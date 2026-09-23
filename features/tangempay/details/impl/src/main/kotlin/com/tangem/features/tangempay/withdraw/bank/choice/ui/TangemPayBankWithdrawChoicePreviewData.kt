@@ -15,6 +15,7 @@ internal object TangemPayBankWithdrawChoicePreviewData {
 
     private val callbacks = TangemPayBankWithdrawChoiceUMFactory.Callbacks(
         onBackClick = {},
+        onCloseClick = {},
         onOptionClick = {},
         onContinueClick = {},
     )

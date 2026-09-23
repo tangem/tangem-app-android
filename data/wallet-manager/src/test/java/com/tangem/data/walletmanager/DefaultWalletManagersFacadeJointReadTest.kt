@@ -26,6 +26,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.jointaccount.address.JointAccountSafeAddressResolver
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.GaslessTransactionRepository
+import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.usecase.GetCachedTokenInfoUseCase
@@ -57,6 +58,7 @@ internal class DefaultWalletManagersFacadeJointReadTest {
     private val assetLoader: AssetLoader = mockk()
     private val gaslessTransactionRepository: GaslessTransactionRepository = mockk()
     private val getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase = mockk()
+    private val txHistoryFeatureToggles: TxHistoryFeatureToggles = mockk(relaxed = true)
 
     private val facade = DefaultWalletManagersFacade(
         walletManagersStore = walletManagersStore,
@@ -66,6 +68,7 @@ internal class DefaultWalletManagersFacadeJointReadTest {
         gaslessTransactionRepository = gaslessTransactionRepository,
         jointAccountSafeAddressResolver = { safeAddressResolver },
         getCachedTokenInfoUseCase = getCachedTokenInfoUseCase,
+        txHistoryFeatureToggles = txHistoryFeatureToggles,
         blockchainSDKFactory = blockchainSDKFactory,
     )
 

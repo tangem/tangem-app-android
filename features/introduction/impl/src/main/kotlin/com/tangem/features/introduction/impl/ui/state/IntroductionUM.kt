@@ -5,6 +5,8 @@ import kotlinx.collections.immutable.ImmutableList
 
 internal data class IntroductionUM(
     val isVideoReady: Boolean,
+    /** `null` until the decoder reports the geometry of the frames it is about to render. */
+    val videoAspectRatio: Float?,
     val isVideoFailed: Boolean,
     val isVideoRunning: Boolean,
     val isMotionEnabled: Boolean,
