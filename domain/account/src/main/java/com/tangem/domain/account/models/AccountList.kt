@@ -263,11 +263,12 @@ data class AccountList private constructor(
             val uniqueAccountIdsCount = accounts.map { it.accountId.value }.distinct().size
             ensure(accounts.size == uniqueAccountIdsCount) { Error.DuplicateAccountIds }
 
-            // Joint account names come from the backend, which does not guarantee their uniqueness — two accounts
-            // named "Family" from different creators are a legal response and must not invalidate the whole list
-            val customNames = accounts
-                .filter { it !is Account.Joint }
-                .map { (it.accountName as? AccountName.Custom)?.value }
+            // Uniqueness covers only the names a user picks for their own accounts. Joint account names come
+            // from the backend, which does not guarantee their uniqueness — two accounts named "Family" from
+            // different creators are a legal response. Special accounts (Payment, Virtual, ...) are named by the
+            // app itself, and a user is free to reuse those names — counting them here rejected the whole list
+            // and left the producer retrying the same failure forever
+            val customNames = personalAccounts.map { (it.accountName as? AccountName.Custom)?.value }
             val uniqueCustomNameCount = customNames.distinct().size
 
             ensure(customNames.size == uniqueCustomNameCount) {
