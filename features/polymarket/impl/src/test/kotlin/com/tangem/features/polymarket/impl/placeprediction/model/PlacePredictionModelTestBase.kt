@@ -7,6 +7,8 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
@@ -15,7 +17,14 @@ import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
+import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
+import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
+import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
+import com.tangem.domain.polymarket.model.PolymarketChainFamily
+import com.tangem.domain.polymarket.model.PolymarketDepositNetwork
+import com.tangem.domain.polymarket.model.PolymarketDepositRequisites
+import com.tangem.domain.polymarket.model.PolymarketDepositToken
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PolymarketAddresses
@@ -49,6 +58,8 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.TestScope
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -75,6 +86,12 @@ internal abstract class PlacePredictionModelTestBase {
     protected val awaitDelayedOrderUseCase: AwaitDelayedPredictionOrderUseCase = mockk()
     protected val positionsRepository: PolymarketPositionsRepository = mockk()
     protected val fundingWindow: PredictionFundingWindow = mockk(relaxed = true)
+    protected val statusSupplier: PredictionAccountStatusSupplier = mockk()
+    protected val balancePoller: PredictionBalancePoller = mockk()
+    protected val refreshRequisites: RefreshPredictionDepositRequisitesInteractor = mockk()
+
+    protected val statusFlow = MutableStateFlow<PredictionAccountStatusValue>(value = activeStatus())
+    protected val isFundingOpen = MutableStateFlow(false)
 
     protected val models = mutableListOf<Model>()
 
@@ -97,7 +114,17 @@ internal abstract class PlacePredictionModelTestBase {
             awaitDelayedOrderUseCase,
             positionsRepository,
             fundingWindow,
+            statusSupplier,
+            balancePoller,
+            refreshRequisites,
         )
+
+        statusFlow.value = activeStatus()
+        isFundingOpen.value = false
+        every { statusSupplier(userWalletId = USER_WALLET_ID) } returns statusFlow
+        every { balancePoller.subscribe(userWalletId = any()) } returns emptyFlow()
+        every { fundingWindow.isOpen(USER_WALLET_ID) } returns isFundingOpen
+        coEvery { refreshRequisites(USER_WALLET_ID) } returns REQUISITES.right()
 
         coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent().right()
         coEvery { deriveAddressesUseCase.stored(userWalletId = USER_WALLET_ID) } returns ADDRESSES
@@ -135,12 +162,28 @@ internal abstract class PlacePredictionModelTestBase {
         getPolymarketEventUseCase = getEventUseCase,
         getPolymarketCollateralCurrencyUseCase = getCollateralCurrencyUseCase,
         derivePolymarketAddressesUseCase = deriveAddressesUseCase,
-        getPolymarketBalanceInteractor = getBalanceInteractor,
         getPredictionOrderQuoteUseCase = getQuoteUseCase,
         getPredictionPriceUseCase = getPriceUseCase,
         checkPolymarketGeoblockUseCase = checkGeoblockUseCase,
         positionsRepository = positionsRepository,
+        predictionFundingWindow = fundingWindow,
+        predictionAccountStatusSupplier = statusSupplier,
+        predictionBalancePoller = balancePoller,
+        refreshPredictionDepositRequisitesInteractor = refreshRequisites,
     ).also(models::add)
+
+    protected fun activeStatus(
+        balance: BigDecimal = BigDecimal("100"),
+        depositAddress: String? = DEPOSIT_ADDRESS,
+        source: StatusSource = StatusSource.ACTUAL,
+    ) = PredictionAccountStatusValue.Active(
+        source = source,
+        balance = balance,
+        positionsValue = null,
+        fiatRate = BigDecimal.ONE,
+        depositCurrency = createCollateralCurrency(),
+        depositAddress = depositAddress,
+    )
 
     protected fun prepareOrder(amountModel: PlacePredictionAmountModel): PreparedPrediction {
         val route = slot<PlacePredictionRoute.Summary>()
@@ -331,6 +374,28 @@ internal abstract class PlacePredictionModelTestBase {
         val SIGNED_ORDER: PredictionSignedOrder = mockk(relaxed = true)
 
         const val ORDER_ID = "0x6b2e"
+
+        const val DEPOSIT_ADDRESS = "0xdeposit"
+        const val REQUISITES_ADDRESS = "0xbridge"
+
+        val REQUISITES = PolymarketDepositRequisites(
+            networks = listOf(
+                PolymarketDepositNetwork(
+                    chainId = PolymarketContracts.CHAIN_ID.toString(),
+                    chainName = "Polygon",
+                    family = PolymarketChainFamily.EVM,
+                    address = REQUISITES_ADDRESS,
+                    tokens = listOf(
+                        PolymarketDepositToken(
+                            symbol = "USDC",
+                            address = PolymarketContracts.USDC_TOKEN_ADDRESS,
+                            decimals = 6,
+                            minCheckoutUsd = BigDecimal(2),
+                        ),
+                    ),
+                ),
+            ),
+        )
 
         fun createPlaceResult(
             makingAmount: BigDecimal? = BigDecimal("10"),

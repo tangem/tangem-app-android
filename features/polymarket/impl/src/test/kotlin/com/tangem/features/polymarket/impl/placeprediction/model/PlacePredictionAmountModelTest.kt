@@ -3,6 +3,7 @@ package com.tangem.features.polymarket.impl.placeprediction.model
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketPositionsError
 import com.tangem.domain.polymarket.model.PolymarketAuthError
@@ -232,7 +233,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         @Test
         fun `GIVEN balance unavailable WHEN model created THEN balance stays unknown AND button disabled`() = runTest {
             // Arrange
-            coEvery { getBalanceInteractor(addresses = ADDRESSES) } returns PolymarketAuthError.KeyNotFound.left()
+            statusFlow.value = PredictionAccountStatusValue.Error.Unavailable
 
             // Act
             val model = createAmountModel(testScope = this)
