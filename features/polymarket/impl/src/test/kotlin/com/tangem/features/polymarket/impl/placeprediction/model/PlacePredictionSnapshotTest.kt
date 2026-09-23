@@ -11,6 +11,7 @@ import com.tangem.domain.polymarket.model.PredictionOrderFailure
 import com.tangem.domain.polymarket.model.PredictionOrderValidationError
 import com.tangem.features.polymarket.impl.common.FakeSlotHost
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
+import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -132,7 +133,7 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
     }
 
     @Test
-    fun `GIVEN an expired quote WHEN confirmed THEN the dialog returns to amount without posting`() = runTest {
+    fun `GIVEN an expired quote WHEN confirmed THEN the generic error keeps the snapshot on summary`() = runTest {
         // Arrange
         val amount = createAmountModel(this)
         advanceUntilIdle()
@@ -143,17 +144,23 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
         coEvery { signOrderInteractor(any()) } returns PredictionOrderFailure.Invalid(
             PredictionOrderValidationError.StaleQuote(ageMillis = 60_001),
         ).left()
+        val accepted = summary.uiState.value
         val dialog = slot<DialogMessage>()
         every { messageSender.send(capture(dialog)) } returns Unit
 
         // Act
         summary.onPlaceClick()
         advanceUntilIdle()
-        dialog.captured.firstAction.onClick()
+        dialog.captured.secondAction?.onClick?.invoke()
+        advanceTimeBy(QUOTE_POLL_INTERVAL_MILLIS * 3)
 
         // Assert
-        assertThat(dialog.captured.message).isEqualTo(resourceReference(R.string.prediction_place_price_changed_description))
-        verify { router.popTo(PlacePredictionRoute.Amount, any()) }
+        assertThat(dialog.captured.title).isEqualTo(resourceReference(R.string.common_something_went_wrong))
+        assertThat(dialog.captured.message).isEqualTo(resourceReference(R.string.prediction_place_error_description))
+        assertThat(dialog.captured.firstAction.title).isEqualTo(resourceReference(R.string.common_support))
+        assertThat(dialog.captured.secondAction).isNotNull()
+        assertThat(summary.uiState.value).isEqualTo(accepted.copy(submit = SubmitUM.Idle))
+        verify(exactly = 0) { router.popTo(any<PlacePredictionRoute>(), any()) }
         coVerify(exactly = 0) { placeOrderUseCase(any(), any(), any()) }
         coVerify(exactly = 1) { getQuoteUseCase(any()) }
     }

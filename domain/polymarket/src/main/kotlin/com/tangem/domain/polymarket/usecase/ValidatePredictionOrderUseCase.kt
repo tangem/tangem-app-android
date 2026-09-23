@@ -39,14 +39,9 @@ class ValidatePredictionOrderUseCase {
             PredictionOrderValidationError.SignatureNotWrapped(length = signatureLength)
         }
 
-        validateQuoteAge(quoteReceivedAtMillis = quoteReceivedAtMillis, nowMillis = nowMillis).bind()
+        val age = nowMillis - quoteReceivedAtMillis
+        ensure(age in 0..MAX_QUOTE_AGE_MILLIS) { PredictionOrderValidationError.StaleQuote(ageMillis = age) }
     }
-
-    fun validateQuoteAge(quoteReceivedAtMillis: Long, nowMillis: Long): Either<PredictionOrderValidationError, Unit> =
-        either {
-            val age = nowMillis - quoteReceivedAtMillis
-            ensure(age in 0..MAX_QUOTE_AGE_MILLIS) { PredictionOrderValidationError.StaleQuote(ageMillis = age) }
-        }
 
     private fun ValidationRaise.ensureMarket(draft: PredictionOrderDraft, marketTokenId: String, isNegRisk: Boolean) {
         ensure(draft.tokenId == marketTokenId && draft.isNegRisk == isNegRisk) {
