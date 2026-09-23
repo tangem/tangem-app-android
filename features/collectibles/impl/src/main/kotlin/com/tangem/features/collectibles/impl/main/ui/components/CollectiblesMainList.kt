@@ -1,20 +1,17 @@
 package com.tangem.features.collectibles.impl.main.ui.components
 
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.Dp
+import com.tangem.features.collectibles.impl.common.ui.CollectiblesLoadMoreEffect
 import com.tangem.features.collectibles.impl.discovery.CollectiblesDiscoveryComponent
 import com.tangem.features.collectibles.impl.discovery.ui.CollectiblesDiscoveryListContext
-import com.tangem.features.collectibles.impl.discovery.ui.CollectiblesLoadMoreEffect
 import com.tangem.features.collectibles.impl.discovery.ui.LocalCollectiblesDiscoveryListContext
 import com.tangem.features.collectibles.impl.discovery.ui.state.CollectiblesDiscoveryUM
 import com.tangem.features.collectibles.impl.main.ui.state.CollectiblesMainUM

@@ -59,6 +59,9 @@ import io.mockk.verify
 import io.mockk.verifyOrder
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -143,7 +146,7 @@ internal class IntroductionModelTest {
         // Act & Assert
         surfaceAttached(isAttached = true)
         model.attachSurface(surfaceView)
-        model.onFirstFrameRendered()
+        model.renderFrame()
         assertThat(model.uiState.value.isVideoReady).isTrue()
 
         surfaceAttached(isAttached = false)
@@ -154,8 +157,39 @@ internal class IntroductionModelTest {
         model.attachSurface(otherSurfaceView)
         assertThat(model.uiState.value.isVideoReady).isFalse()
 
-        model.onFirstFrameRendered()
+        model.renderFrame()
         assertThat(model.uiState.value.isVideoReady).isTrue()
+    }
+
+    @Test
+    fun `GIVEN the frame geometry is unknown WHEN a frame is rendered THEN the shutter stays down`() {
+        // Arrange
+        val model = createModel()
+        surfaceAttached(isAttached = true)
+        model.attachSurface(surfaceView)
+
+        // Act
+        model.onFirstFrameRendered()
+
+        // Assert
+        assertThat(model.uiState.value.isVideoReady).isFalse()
+        assertThat(model.uiState.value.videoAspectRatio).isNull()
+    }
+
+    @Test
+    fun `GIVEN a frame is rendered WHEN the geometry arrives THEN the shutter lifts on the shaped surface`() {
+        // Arrange
+        val model = createModel()
+        surfaceAttached(isAttached = true)
+        model.attachSurface(surfaceView)
+        model.onFirstFrameRendered()
+
+        // Act
+        model.onAspectRatioChanged(VIDEO_ASPECT_RATIO)
+
+        // Assert
+        assertThat(model.uiState.value.isVideoReady).isTrue()
+        assertThat(model.uiState.value.videoAspectRatio).isEqualTo(VIDEO_ASPECT_RATIO)
     }
 
     @Test
@@ -164,7 +198,7 @@ internal class IntroductionModelTest {
         val model = createModel()
         surfaceAttached(isAttached = true)
         model.attachSurface(surfaceView)
-        model.onFirstFrameRendered()
+        model.renderFrame()
         model.attachSurface(otherSurfaceView)
 
         // Act
@@ -198,7 +232,7 @@ internal class IntroductionModelTest {
         val model = createModel()
         surfaceAttached(isAttached = true)
         model.attachSurface(surfaceView)
-        model.onFirstFrameRendered()
+        model.renderFrame()
 
         // Act
         model.onError(PLAYBACK_ERROR)
@@ -215,7 +249,7 @@ internal class IntroductionModelTest {
         val model = createModel()
         surfaceAttached(isAttached = true)
         model.attachSurface(surfaceView)
-        model.onFirstFrameRendered()
+        model.renderFrame()
         surfaceAttached(isAttached = false)
         model.detachSurface(surfaceView)
         surfaceAttached(isAttached = true)
@@ -235,7 +269,7 @@ internal class IntroductionModelTest {
         val model = createModel()
         surfaceAttached(isAttached = true)
         model.attachSurface(surfaceView)
-        model.onFirstFrameRendered()
+        model.renderFrame()
         surfaceAttached(isAttached = false)
         model.detachSurface(surfaceView)
 
@@ -554,6 +588,7 @@ internal class IntroductionModelTest {
             coVerify(exactly = 1) {
                 mobileWalletCreator.createAndOpen(
                     source = AnalyticsParam.ScreensSources.CreateWalletIntro,
+                    beforeOpen = any(),
                     onFailed = any(),
                 )
             }
@@ -564,6 +599,34 @@ internal class IntroductionModelTest {
                 ),
             )
         }
+
+        @Test
+        fun `GIVEN the wallet is created WHEN it is about to open THEN the sheet collapses before the stack swaps`() =
+            runTest {
+                // Arrange
+                val model = createModel()
+                model.openSheet().seedPhrase.onClick()
+                val beforeOpen = slot<suspend () -> Unit>()
+                coVerify {
+                    mobileWalletCreator.createAndOpen(
+                        source = any(),
+                        beforeOpen = capture(beforeOpen),
+                        onFailed = any(),
+                    )
+                }
+
+                // Act
+                val settling = launch { beforeOpen.captured() }
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.bottomSheetConfig?.isShown).isFalse()
+                assertThat(settling.isCompleted).isFalse()
+
+                model.uiState.value.onCreateWalletSheetCollapsed()
+                runCurrent()
+                assertThat(settling.isCompleted).isTrue()
+            }
 
         @Test
         fun `GIVEN the wallet is being created WHEN the rows are tapped again THEN the taps are ignored`() {
@@ -577,7 +640,7 @@ internal class IntroductionModelTest {
             sheet.cardOrRing.onClick()
 
             // Assert
-            coVerify(exactly = 1) { mobileWalletCreator.createAndOpen(any(), any()) }
+            coVerify(exactly = 1) { mobileWalletCreator.createAndOpen(any(), any(), any()) }
             assertThat(model.uiState.value.bottomSheetConfig?.isShown).isTrue()
             assertThat(model.seedPhraseRow().isLoading).isTrue()
             assertThat(model.cardOrRingRow().isEnabled).isFalse()
@@ -586,7 +649,7 @@ internal class IntroductionModelTest {
         @Test
         fun `GIVEN the wallet is being created WHEN the sheet is closed and reopened THEN it still shows the creation`() {
             // Arrange
-            coEvery { mobileWalletCreator.createAndOpen(any(), any()) } coAnswers { awaitCancellation() }
+            coEvery { mobileWalletCreator.createAndOpen(any(), any(), any()) } coAnswers { awaitCancellation() }
             val model = createModel()
             model.openSheet().seedPhrase.onClick()
             model.closeCreateWalletSheet()
@@ -600,14 +663,14 @@ internal class IntroductionModelTest {
             assertThat(model.seedPhraseRow().isLoading).isTrue()
             assertThat(model.cardOrRingRow().isEnabled).isFalse()
             assertThat(model.uiState.value.haveWalletBottomSheetConfig).isNull()
-            coVerify(exactly = 1) { mobileWalletCreator.createAndOpen(any(), any()) }
+            coVerify(exactly = 1) { mobileWalletCreator.createAndOpen(any(), any(), any()) }
             model.onDestroy()
         }
 
         @Test
         fun `GIVEN the wallet is being created WHEN the sheet is closed and i have a wallet clicked THEN it stays closed`() {
             // Arrange
-            coEvery { mobileWalletCreator.createAndOpen(any(), any()) } coAnswers { awaitCancellation() }
+            coEvery { mobileWalletCreator.createAndOpen(any(), any(), any()) } coAnswers { awaitCancellation() }
             val model = createModel()
             model.openSheet().seedPhrase.onClick()
             model.closeCreateWalletSheet()
@@ -626,7 +689,7 @@ internal class IntroductionModelTest {
             val model = createModel()
             model.openSheet().seedPhrase.onClick()
             val onFailed = slot<() -> Unit>()
-            coVerify { mobileWalletCreator.createAndOpen(source = any(), onFailed = capture(onFailed)) }
+            coVerify { mobileWalletCreator.createAndOpen(source = any(), beforeOpen = any(), onFailed = capture(onFailed)) }
             model.closeCreateWalletSheet()
 
             // Act
@@ -646,7 +709,7 @@ internal class IntroductionModelTest {
             val model = createModel()
             model.openSheet().seedPhrase.onClick()
             val onFailed = slot<() -> Unit>()
-            coVerify { mobileWalletCreator.createAndOpen(source = any(), onFailed = capture(onFailed)) }
+            coVerify { mobileWalletCreator.createAndOpen(source = any(), beforeOpen = any(), onFailed = capture(onFailed)) }
 
             // Act
             onFailed.captured()
@@ -677,7 +740,7 @@ internal class IntroductionModelTest {
             assertThat(message.captured.title)
                 .isEqualTo(hotWalletCreationNotSupportedDialog(LEAST_OS_VERSION).title)
             assertThat(model.uiState.value.bottomSheetConfig?.isShown).isFalse()
-            coVerify(exactly = 0) { mobileWalletCreator.createAndOpen(any(), any()) }
+            coVerify(exactly = 0) { mobileWalletCreator.createAndOpen(any(), any(), any()) }
             // Nothing downstream opens, so the context added for the tap has to be given back here.
             verifyOrder {
                 trackingContextProxy.addHotWalletContext()
@@ -696,7 +759,7 @@ internal class IntroductionModelTest {
             sheet.seedPhrase.onClick()
 
             // Assert
-            coVerify(exactly = 0) { mobileWalletCreator.createAndOpen(any(), any()) }
+            coVerify(exactly = 0) { mobileWalletCreator.createAndOpen(any(), any(), any()) }
             assertThat(sentEvents.filterIsInstance<OnboardingAnalyticsEvent.Onboarding.ButtonMobileWallet>())
                 .isEmpty()
         }
@@ -1909,6 +1972,12 @@ internal class IntroductionModelTest {
 
     internal data class RunningModel(val isRunning: Boolean)
 
+    /** The decoder reports the frame geometry before it renders anything, and the shutter waits for both. */
+    private fun IntroductionModel.renderFrame() {
+        onAspectRatioChanged(VIDEO_ASPECT_RATIO)
+        onFirstFrameRendered()
+    }
+
     private fun IntroductionUM.renderedFields() = isVideoReady to isMotionEnabled
 
     private fun surfaceAttached(isAttached: Boolean) {
@@ -1941,6 +2010,7 @@ internal class IntroductionModelTest {
 
     private companion object {
         val PLAYBACK_ERROR = IllegalStateException("decoder failed")
+        const val VIDEO_ASPECT_RATIO = 1080f / 1920f
 
         val SCREEN_OPENED = IntroductionProcess.ScreenOpened(IntroductionProcess.ScreenOpened.EntryReason.NoWallets)
         val SHUTTER_DOWN = false to true
