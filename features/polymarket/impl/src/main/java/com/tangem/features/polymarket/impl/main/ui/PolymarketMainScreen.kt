@@ -65,6 +65,7 @@ import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedFooterUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedScrollPosition
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketOutcomeUM
+import com.tangem.features.polymarket.impl.main.ui.state.PolymarketPositionsPreviewUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.delay
@@ -293,13 +294,12 @@ private fun LazyListScope.eventsSection(content: PolymarketMainUM.ContentUM, sta
             }
         }
         is PolymarketMainUM.ContentUM.Error -> item(key = KEY_STATUS) {
-            Box(modifier = Modifier.fillParentMaxHeight(), contentAlignment = Alignment.TopCenter) {
-                PolymarketReloadPrompt(
-                    text = resourceReference(R.string.prediction_main_events_load_error),
-                    onReloadClick = content.onReloadClick,
-                    modifier = statusModifier,
-                )
-            }
+            PolymarketReloadPrompt(
+                text = resourceReference(R.string.prediction_main_events_load_error),
+                onReloadClick = content.onReloadClick,
+                modifier = Modifier.height(180.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp),
+            )
         }
         is PolymarketMainUM.ContentUM.Content -> {
             items(
@@ -529,22 +529,34 @@ private fun PolymarketMainScreenAwaitingFundsPreview() {
     }
 }
 
-@Preview(name = "Error Light", showBackground = true, widthDp = 360)
+@Preview(name = "Error Light", showBackground = true, widthDp = 360, heightDp = 800)
 @Preview(
     name = "Error Dark",
     showBackground = true,
     widthDp = 360,
+    heightDp = 800,
     uiMode = Configuration.UI_MODE_NIGHT_YES,
 )
+@Preview(name = "Error Compact", showBackground = true, widthDp = 360, heightDp = 640)
 @Composable
 private fun PolymarketMainScreenErrorPreview() {
     TangemThemePreviewRedesign {
-        Box(modifier = Modifier.background(TangemTheme.colors3.bg.primary)) {
-            PolymarketReloadPrompt(
-                text = resourceReference(R.string.prediction_main_events_load_error),
-                onReloadClick = {},
-            )
-        }
+        PolymarketMainScreen(
+            state = PolymarketMainUM(
+                balance = previewPredictionBalance(BigDecimal("1234.56")),
+                categories = previewCategories(),
+                content = PolymarketMainUM.ContentUM.Error(onReloadClick = {}),
+                positions = PolymarketPositionsPreviewUM.Content(persistentListOf()),
+                pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
+            ),
+            onBackClick = {},
+            onSearchClick = {},
+            onHistoryClick = {},
+            onLoadMore = {},
+            onVisibleEventsChange = {},
+            onScrollIdle = { _, _ -> },
+            onScrollPositionRestore = {},
+        )
     }
 }
 
