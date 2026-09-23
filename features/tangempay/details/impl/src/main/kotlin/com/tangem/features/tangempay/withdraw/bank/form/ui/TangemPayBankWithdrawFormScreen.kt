@@ -49,6 +49,7 @@ internal fun TangemPayBankWithdrawFormScreen(state: TangemPayBankWithdrawFormUM,
                 subtitle = state.header.subtitle,
                 contentAlign = TangemTopNavigation.ContentAlign.Center,
                 onBack = state.onBackClick,
+                onClose = state.header.onCloseClick,
             )
         },
         overlay = {

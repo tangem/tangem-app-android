@@ -8,7 +8,11 @@ import com.tangem.domain.polymarket.model.PolymarketChainFamily
 import com.tangem.domain.polymarket.model.PolymarketDepositNetwork
 import com.tangem.domain.polymarket.model.PolymarketDepositTarget
 import com.tangem.domain.polymarket.model.PolymarketDepositToken
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.features.polymarket.impl.main.model.PredictionBalanceMode
 import com.tangem.features.polymarket.impl.main.model.RequisitesState
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.EMPTY_BALANCE_SIGN
 import com.tangem.test.core.ProvideTestModels
@@ -24,6 +28,7 @@ internal class PredictionBalanceUMConverterTest {
     private val converter = PredictionBalanceUMConverter(
         onAddFundsClick = {},
         onWithdrawClick = {},
+        onBalanceModeClick = {},
     )
 
     @ParameterizedTest
@@ -38,6 +43,7 @@ internal class PredictionBalanceUMConverterTest {
                 status = status,
                 requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
                 isTradingAllowed = model.isTradingAllowed,
+                mode = PredictionBalanceMode.AVAILABLE,
             ),
         )
 
@@ -59,6 +65,7 @@ internal class PredictionBalanceUMConverterTest {
                 status = status,
                 requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
                 isTradingAllowed = true,
+                mode = PredictionBalanceMode.AVAILABLE,
             ),
         )
 
@@ -77,6 +84,7 @@ internal class PredictionBalanceUMConverterTest {
                 status = status,
                 requisites = RequisitesState.Failed,
                 isTradingAllowed = true,
+                mode = PredictionBalanceMode.AVAILABLE,
             ),
         )
 
@@ -91,11 +99,70 @@ internal class PredictionBalanceUMConverterTest {
 
         // Act
         val actual = converter.convert(
-            PredictionBalanceUMConverter.Input(status = status, requisites = RequisitesState.Loading, isTradingAllowed = true),
+            input(status = status, mode = PredictionBalanceMode.AVAILABLE),
         )
 
         // Assert
         assertThat(actual.balance).isNotEqualTo(stringReference(value = EMPTY_BALANCE_SIGN))
+    }
+
+    @Test
+    fun `GIVEN the total mode WHEN converted THEN the balance states the collateral plus the positions`() {
+        // Arrange
+        val status = active(balance = "12.5", positionsValue = "2.5")
+
+        // Act
+        val actual = converter.convert(input(status = status, mode = PredictionBalanceMode.TOTAL))
+
+        // Assert
+        assertThat(actual.balance.plainText()).isEqualTo("$15.00")
+        assertThat(actual.label).isEqualTo(resourceReference(R.string.prediction_main_total_balance))
+        assertThat(actual.isSwitchEnabled).isTrue()
+    }
+
+    @Test
+    fun `GIVEN the available mode WHEN converted THEN the balance states the collateral alone`() {
+        // Arrange
+        val status = active(balance = "12.5", positionsValue = "2.5")
+
+        // Act
+        val actual = converter.convert(input(status = status, mode = PredictionBalanceMode.AVAILABLE))
+
+        // Assert
+        assertThat(actual.balance.plainText()).isEqualTo("$12.50")
+        assertThat(actual.label).isEqualTo(resourceReference(R.string.prediction_main_available_balance))
+        assertThat(actual.isSwitchEnabled).isTrue()
+    }
+
+    @Test
+    fun `GIVEN an unknown positions value WHEN the total mode is converted THEN it falls back to available`() {
+        // Arrange
+        val status = active(balance = "12.5", positionsValue = null)
+
+        // Act
+        val actual = converter.convert(input(status = status, mode = PredictionBalanceMode.TOTAL))
+
+        // Assert
+        assertThat(actual.balance.plainText()).isEqualTo("$12.50")
+        assertThat(actual.label).isEqualTo(resourceReference(R.string.prediction_main_available_balance))
+        assertThat(actual.isSwitchEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN the switch is tapped WHEN converted THEN the mode click reaches the model`() {
+        // Arrange
+        var clicks = 0
+        val converter = PredictionBalanceUMConverter(
+            onAddFundsClick = {},
+            onWithdrawClick = {},
+            onBalanceModeClick = { clicks++ },
+        )
+
+        // Act
+        converter.convert(input(status = ACTIVE, mode = PredictionBalanceMode.AVAILABLE)).onSwitchClick()
+
+        // Assert
+        assertThat(clicks).isEqualTo(1)
     }
 
     @Test
@@ -105,7 +172,7 @@ internal class PredictionBalanceUMConverterTest {
 
         // Act
         val actual = converter.convert(
-            PredictionBalanceUMConverter.Input(status = status, requisites = RequisitesState.Loading, isTradingAllowed = true),
+            input(status = status, mode = PredictionBalanceMode.AVAILABLE),
         )
 
         // Assert
@@ -119,7 +186,7 @@ internal class PredictionBalanceUMConverterTest {
 
         // Act
         val actual = converter.convert(
-            PredictionBalanceUMConverter.Input(status = status, requisites = RequisitesState.Loading, isTradingAllowed = true),
+            input(status = status, mode = PredictionBalanceMode.AVAILABLE),
         )
 
         // Assert
@@ -133,6 +200,7 @@ internal class PredictionBalanceUMConverterTest {
             status = ACTIVE,
             requisites = RequisitesState.Loading,
             isTradingAllowed = true,
+            mode = PredictionBalanceMode.AVAILABLE,
         )
 
         // Act
@@ -151,6 +219,7 @@ internal class PredictionBalanceUMConverterTest {
             status = ACTIVE,
             requisites = RequisitesState.Failed,
             isTradingAllowed = true,
+            mode = PredictionBalanceMode.AVAILABLE,
         )
 
         // Act
@@ -168,6 +237,7 @@ internal class PredictionBalanceUMConverterTest {
             status = ACTIVE,
             requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
             isTradingAllowed = true,
+            mode = PredictionBalanceMode.AVAILABLE,
         )
 
         // Act
@@ -184,6 +254,7 @@ internal class PredictionBalanceUMConverterTest {
             status = ACTIVE,
             requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
             isTradingAllowed = true,
+            mode = PredictionBalanceMode.AVAILABLE,
         )
 
         // Act
@@ -200,6 +271,7 @@ internal class PredictionBalanceUMConverterTest {
             status = ACTIVE,
             requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
             isTradingAllowed = false,
+            mode = PredictionBalanceMode.AVAILABLE,
         )
 
         // Act
@@ -216,6 +288,7 @@ internal class PredictionBalanceUMConverterTest {
             status = ACTIVE.copy(depositAddress = null),
             requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
             isTradingAllowed = true,
+            mode = PredictionBalanceMode.AVAILABLE,
         )
 
         // Act
@@ -232,6 +305,7 @@ internal class PredictionBalanceUMConverterTest {
             status = ACTIVE.copy(depositAddress = null),
             requisites = RequisitesState.Failed,
             isTradingAllowed = true,
+            mode = PredictionBalanceMode.AVAILABLE,
         )
 
         // Act
@@ -249,6 +323,7 @@ internal class PredictionBalanceUMConverterTest {
             status = PredictionAccountStatusValue.NotOnboarded,
             requisites = RequisitesState.Failed,
             isTradingAllowed = true,
+            mode = PredictionBalanceMode.AVAILABLE,
         )
 
         // Act
@@ -325,12 +400,20 @@ internal class PredictionBalanceUMConverterTest {
         ),
     )
 
+    private fun input(status: PredictionAccountStatusValue, mode: PredictionBalanceMode) =
+        PredictionBalanceUMConverter.Input(
+            status = status,
+            requisites = RequisitesState.Loading,
+            isTradingAllowed = true,
+            mode = mode,
+        )
+
     private companion object {
 
-        fun active(balance: String) = PredictionAccountStatusValue.Active(
+        fun active(balance: String, positionsValue: String? = null) = PredictionAccountStatusValue.Active(
             source = StatusSource.ACTUAL,
             balance = BigDecimal(balance),
-            positionsValue = null,
+            positionsValue = positionsValue?.let(::BigDecimal),
             fiatRate = BigDecimal.ONE,
             depositCurrency = mockk(relaxed = true),
             depositAddress = "0xbridge",
@@ -354,4 +437,11 @@ internal class PredictionBalanceUMConverterTest {
             ),
         )
     }
+}
+
+private fun TextReference.plainText(): String = when (this) {
+    is TextReference.Combined -> refs.joinToString(separator = "") { it.plainText() }
+    is TextReference.Str -> value
+    is TextReference.StyledStr -> value
+    else -> error("Unexpected reference $this")
 }
