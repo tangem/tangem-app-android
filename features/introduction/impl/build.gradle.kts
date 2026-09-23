@@ -34,6 +34,8 @@ dependencies {
     implementation(projects.domain.card)
     implementation(projects.domain.cloudBackup)
     implementation(projects.domain.common)
+    implementation(projects.domain.feedback)
+    implementation(projects.domain.feedback.models)
     implementation(projects.domain.hotWallet)
     implementation(projects.domain.models)
     implementation(projects.domain.settings)
