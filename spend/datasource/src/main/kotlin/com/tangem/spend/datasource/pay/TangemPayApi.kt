@@ -224,8 +224,11 @@ interface TangemPayApi {
     @GET("v1/fees")
     suspend fun getFees(
         @Header("Authorization") authHeader: String,
-        @Query("groups") groups: String,
+        @Query("groups") groups: List<String>,
     ): ApiResponse<FeesResponse>
+
+    @GET("v1/payment-methods")
+    suspend fun getPaymentMethods(): ApiResponse<PaymentMethodsResponse>
 
     @POST("v1/customer/card/reissue")
     suspend fun reissueCard(
