@@ -2,6 +2,7 @@ package com.tangem.tests
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.*
@@ -26,7 +27,7 @@ class HideTokenTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details screen' open") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }

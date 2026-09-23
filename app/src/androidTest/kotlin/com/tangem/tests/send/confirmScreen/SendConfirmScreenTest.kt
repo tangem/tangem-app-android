@@ -9,6 +9,7 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.*
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.ui.R
+import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.*
 import com.tangem.screens.*
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -43,7 +44,7 @@ class SendConfirmScreenTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenName)
             }
             step("Click on 'Transfer' button") {
                 onTokenDetailsScreen { transferButton.clickWithAssertion() }
@@ -123,7 +124,7 @@ class SendConfirmScreenTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenName)
             }
             step("Click on 'Transfer' button") {
                 onTokenDetailsScreen { transferButton.clickWithAssertion() }

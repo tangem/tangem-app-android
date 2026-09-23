@@ -11,6 +11,7 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.ui.R as CoreUiR
+import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.*
 import com.tangem.screens.*
 import com.tangem.screens.tangempay.*
@@ -371,7 +372,7 @@ class AppTransfersTest : BaseTestCase() {
             step("Open 'Main' screen") { openMainScreen() }
             step("Synchronize addresses") { synchronizeAddresses() }
             step("Click on token with name: '$sourceToken'") {
-                onMainScreen { tokenWithTitleAndAddress(sourceToken).clickWithAssertion() }
+                openTokenDetailsFromTokenList(sourceToken)
             }
             step("Open 'Swap' screen") { openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = false) }
             step("Open receive token selector") {
