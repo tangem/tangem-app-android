@@ -26,6 +26,7 @@ import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.Account
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.domain.models.wallet.UserWallet
@@ -46,6 +47,7 @@ import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
@@ -165,6 +167,34 @@ internal class JointAccountMembersModelTest {
 
         // Assert
         assertThat(state.joined.map { it.role }).containsExactly(
+            resourceReference(CoreUiR.string.joint_account_invite_members_creator),
+            resourceReference(CoreUiR.string.joint_account_members_role_you),
+        ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN accounts record arrives late WHEN model created THEN own row turns into You once it does`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator, member)), invites = emptyList())
+        val jointAccount = MockAccounts.createJointAccount(userWalletId = USER_WALLET_ID)
+        val accounts = MutableSharedFlow<Account.Joint>()
+        every { singleAccountSupplier.filterJointAccount(accountId = any()) } returns accounts
+        coEvery {
+            ownerAddressResolver.resolve(userWalletId = USER_WALLET_ID, ownerKeyIndex = jointAccount.ownerKeyIndex)
+        } returns member.address.right()
+        val model = createModel()
+        val before = model.uiState.value.joined.map { it.role }
+
+        // Act
+        accounts.emit(jointAccount)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(before).containsExactly(
+            resourceReference(CoreUiR.string.joint_account_invite_members_creator),
+            resourceReference(CoreUiR.string.joint_account_members_role_joined),
+        ).inOrder()
+        assertThat(model.uiState.value.joined.map { it.role }).containsExactly(
             resourceReference(CoreUiR.string.joint_account_invite_members_creator),
             resourceReference(CoreUiR.string.joint_account_members_role_you),
         ).inOrder()
