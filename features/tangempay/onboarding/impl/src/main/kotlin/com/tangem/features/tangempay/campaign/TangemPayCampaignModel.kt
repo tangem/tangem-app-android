@@ -64,10 +64,13 @@ internal class TangemPayCampaignModel @Inject constructor(
 
     private var campaignCardArtUrl: String? = null
 
+    private var createdHotWalletId: UserWalletId? = null
+
     private val starterCallbacks = TangemPayOnboardingStarter.Callbacks(
         onLoadingChange = ::setCtaLoading,
         onExit = ::onClose,
         onWalletSelectorRequested = { walletsIds ->
+            setCtaLoading(false)
             bottomSheetNavigation.activate(TangemPayOnboardingNavigation.WalletSelector(walletsIds))
         },
         onCustomerAlreadyApproved = ::proceedToCampaignCard,
@@ -113,6 +116,7 @@ internal class TangemPayCampaignModel @Inject constructor(
                 ifRight = { resolution ->
                     when (resolution) {
                         is TangemPayCampaignResolution.IssueCard -> {
+                            analytics.send(TangemPayAnalyticsEvents.CobrandOnboardingExistPay())
                             campaignCardArtUrl = resolution.campaign.cardArtUrl
                             showIssueCard(resolution.userWalletId, resolution.offer)
                         }
@@ -143,7 +147,6 @@ internal class TangemPayCampaignModel @Inject constructor(
     }
 
     private fun showIssueCard(userWalletId: UserWalletId, offer: Offer) {
-        analytics.send(TangemPayAnalyticsEvents.CobrandOnboardingExistPay())
         childNavigation.activate(
             TangemPayCampaignChild.IssueCard(
                 userWalletId = userWalletId,
@@ -194,10 +197,12 @@ internal class TangemPayCampaignModel @Inject constructor(
         modelScope.launch {
             when (landing.mode) {
                 TangemPayCampaignUM.Landing.Mode.NoWallet -> {
-                    val userWallet = onboardingStarter.createHotWallet(onLoadingChange = ::setCtaLoading)
+                    val userWalletId = createdHotWalletId
+                        ?: onboardingStarter.createHotWallet(onLoadingChange = ::setCtaLoading)?.walletId
                         ?: return@launch
+                    createdHotWalletId = userWalletId
                     onboardingStarter.startOnboarding(
-                        userWalletId = userWallet.walletId,
+                        userWalletId = userWalletId,
                         campaignKey = params.campaignKey,
                         callbacks = starterCallbacks,
                     )
