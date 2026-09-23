@@ -449,6 +449,100 @@ class TangemPayTransactionsTest : BaseTestCase() {
         }
     }
 
+    @AllureId("9559")
+    @DisplayName("Tangem Pay: reopening the payment account loads the transaction that arrived meanwhile")
+    @Test
+    fun newTransactionLoadedWhenPaymentAccountReopenedTest() {
+        val emptyHistoryState = "InitialEmpty"
+        val spendCompletedState = "SpendCompleted"
+        val coffeeMerchant = "Tangem Coffee"
+
+        setupHooks(
+            additionalBeforeSection = {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
+                setWireMockScenarioState(balanceScenario, balanceInitialState)
+                setWireMockScenarioState(historyScenario, emptyHistoryState)
+            }
+        ).run {
+            step("Open Tangem Pay") { openTangemPay() }
+            step("Assert the transaction history is empty") {
+                onTangemPayMainScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) {
+                        scrollToHistoryStateBlock()
+                        emptyHistoryText.assertIsDisplayed()
+                    }
+                }
+            }
+            // The manual case spends from the card here; the mocked flow swaps the spend for a history state.
+            step("Switch WireMock scenario '$historyScenario' to '$spendCompletedState'") {
+                setWireMockScenarioState(historyScenario, spendCompletedState)
+            }
+            val requestsBefore = getWireMockRequestCount("GET", transactionsPath)
+            step("Reopen Tangem Pay from the Main screen") { reopenTangemPayFromMain() }
+            step("Assert the new '$coffeeMerchant' transaction is displayed") {
+                onTangemPayMainScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                        scrollToTransactionWithText(coffeeMerchant)
+                        transactionRowWithText(coffeeMerchant).assertIsDisplayed()
+                    }
+                }
+            }
+            step("Assert reopening the payment account requested the history again") {
+                val requestsAfter = getWireMockRequestCount("GET", transactionsPath)
+                assertTrue(
+                    "Reopening the payment account should request $transactionsPath again",
+                    requestsAfter > requestsBefore,
+                )
+            }
+        }
+    }
+
+    @AllureId("11477")
+    @DisplayName("Tangem Pay: the transaction details show the new card name after a rename")
+    @Test
+    fun renamedCardNameShownInTransactionDetailsTest() {
+        val spendCompletedState = "SpendCompleted"
+        val renameScenario = "tangem_pay_card_rename"
+        val renameStartedState = "Started"
+        val coffeeMerchant = "Tangem Coffee"
+        val newCardName = "Renamed Card"
+
+        // No balance scenario here: once the rename lands, its customer/me stub and the balance one would
+        // both claim the same priority.
+        setupHooks(
+            additionalBeforeSection = {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
+                setWireMockScenarioState(historyScenario, spendCompletedState)
+                setWireMockScenarioState(renameScenario, renameStartedState)
+            }
+        ).run {
+            step("Open the card rename screen") { openTangemPayCardRename() }
+            step("Enter new card name '$newCardName'") {
+                onTangemPayCardRenameScreen { nameField.performTextReplacement(newCardName) }
+            }
+            step("Click on 'Done' button") {
+                onTangemPayCardRenameScreen { doneButton.clickWithAssertion() }
+            }
+            step("Assert the card name contains '$newCardName'") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onTangemPayCardPageScreen {
+                        cardNameEditButton.assertTextContainsSafe(newCardName, substring = true)
+                    }
+                }
+            }
+            step("Return to the payment account screen") {
+                device.uiDevice.pressBack()
+                awaitSuccess { onTangemPayMainScreen { balance.assertIsDisplayed() } }
+            }
+            step("Open '$coffeeMerchant' transaction details") {
+                openTangemPayTransactionDetails(coffeeMerchant)
+            }
+            step("Assert the Card field shows the renamed card") {
+                assertTangemPayTransactionCardField(MASKED_CARD_NUMBER, newCardName)
+            }
+        }
+    }
+
     private companion object {
         // authorized_at shared by every mocked spend (2026-04-23T14:00:00Z).
         const val SPEND_TX_MILLIS = 1776952800000L
