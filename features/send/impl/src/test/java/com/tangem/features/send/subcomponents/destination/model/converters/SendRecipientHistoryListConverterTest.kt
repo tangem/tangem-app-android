@@ -49,7 +49,7 @@ internal class SendRecipientHistoryListConverterTest {
         sourceType: TxInfo.SourceType = TxInfo.SourceType.Single(SOURCE),
         amount: BigDecimal = BigDecimal.ONE,
         txHash: String = "hash",
-    ) = TxInfo(
+    ) = TxInfo.Single(
         txHash = txHash,
         timestampInMillis = 1_700_000_000_000L,
         isOutgoing = isOutgoing,

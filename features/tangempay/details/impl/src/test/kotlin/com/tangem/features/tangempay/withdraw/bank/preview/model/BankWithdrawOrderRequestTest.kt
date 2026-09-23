@@ -125,7 +125,7 @@ internal class BankWithdrawOrderRequestTest {
     }
 
     @Test
-    fun `GIVEN amount with more than two decimals WHEN toOrderRequest THEN cents rounded half up`() {
+    fun `GIVEN amount with more than two decimals WHEN toOrderRequest THEN cents rounded down`() {
         // Arrange
         val draft = savedDraft().copy(amount = BigDecimal("500.555"))
 
@@ -133,7 +133,7 @@ internal class BankWithdrawOrderRequestTest {
         val actual = requireNotNull(draft.toOrderRequest())
 
         // Assert
-        assertThat(actual.amountInCents).isEqualTo(50_056L)
+        assertThat(actual.amountInCents).isEqualTo(50_055L)
     }
 
     @ParameterizedTest

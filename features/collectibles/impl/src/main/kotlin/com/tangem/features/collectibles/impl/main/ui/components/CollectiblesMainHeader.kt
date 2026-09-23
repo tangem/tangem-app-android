@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -20,10 +19,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastForEach
+import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.core.ui.ds.button.action.ActionButtons
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowText
@@ -72,38 +71,13 @@ internal fun CollectiblesBalanceBlock(balance: CollectiblesMainUM.BalanceUM, mod
 }
 
 @Composable
-internal fun CollectiblesActionsBlock(
-    actions: ImmutableList<CollectiblesMainUM.ActionUM>,
-    modifier: Modifier = Modifier,
-) {
-    Row(
+internal fun CollectiblesActionsBlock(actions: ImmutableList<TangemButtonUM>, modifier: Modifier = Modifier) {
+    ActionButtons(
+        buttons = actions,
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 24.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.Top,
-    ) {
-        actions.fastForEach { action ->
-            Column(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                TangemButton(
-                    variant = TangemButton.Variant.Material,
-                    size = TangemButton.Size.X14,
-                    iconStart = TangemIconUM.Icon(imageVector = action.icon),
-                    onClick = action.onClick,
-                )
-                Text(
-                    text = action.title.resolveReference(),
-                    style = TangemTheme.typography3.subheading.medium,
-                    color = TangemTheme.colors3.text.primary,
-                    maxLines = 1,
-                )
-            }
-        }
-    }
+    )
 }
 
 @Composable

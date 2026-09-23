@@ -38,6 +38,8 @@ class DeeplinksTest : BaseTestCase() {
     private val assetsExchangeEnabledState = "BitcoinExchangeEnabled"
     private val pairsScenarioName = "ethereum_from_pairs"
     private val dexProviderState = "DexProvider"
+    private val quoteScenarioName = "exchange_quote_ethereum"
+    private val quoteUnreachableState = "Unreachable"
 
     @AllureId("10913")
     @DisplayName("Deeplinks: full set of valid params opens Swap prefilled")
@@ -424,6 +426,10 @@ class DeeplinksTest : BaseTestCase() {
             }
             step("Set WireMock scenario '$assetsScenarioName' to '$assetsExchangeEnabledState'") {
                 setWireMockScenarioState(scenarioName = assetsScenarioName, state = assetsExchangeEnabledState)
+            }
+            // adb reverse keeps WireMock up with the radios off; only the quote may fail, or the pair stops rendering.
+            step("Set WireMock scenario '$quoteScenarioName' to '$quoteUnreachableState'") {
+                setWireMockScenarioState(scenarioName = quoteScenarioName, state = quoteUnreachableState)
             }
             step("Open 'Main' screen with existing hot wallet") {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)

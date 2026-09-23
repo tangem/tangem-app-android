@@ -37,7 +37,7 @@ internal class CollectiblesDiscoveryPackConverter(
             } else {
                 null
             },
-            onClick = { onPackClick(value.id) },
+            onClick = { onPackClick(value.externalId) },
         )
     }
 }

@@ -31,6 +31,7 @@ internal fun CryptoEmptySearchContent(
     listState: LazyListState,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
+    header: @Composable () -> Unit,
 ) {
     val bottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 24.dp
 
@@ -42,6 +43,10 @@ internal fun CryptoEmptySearchContent(
             bottom = bottomPadding,
         ),
     ) {
+        item(key = "header") {
+            header()
+        }
+
         item(key = "marketHeader") {
             FeedSearchSectionHeader(
                 title = stringResourceSafe(R.string.markets_common_title),

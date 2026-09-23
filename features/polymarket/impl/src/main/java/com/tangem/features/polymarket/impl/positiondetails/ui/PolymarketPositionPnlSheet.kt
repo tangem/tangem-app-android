@@ -1,7 +1,6 @@
 package com.tangem.features.polymarket.impl.positiondetails.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -14,7 +13,7 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.ds2.modal.TangemModal
-import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
+import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.extensions.rememberLastNonNull
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -37,13 +36,7 @@ internal fun PolymarketPositionPnlSheet(pnl: Pnl?, onDismiss: () -> Unit) {
             content = TangemBottomSheetConfigContent.Empty,
         ),
         title = {
-            TangemTopNavigation(
-                title = resourceReference(title),
-                contentAlign = TangemTopNavigation.ContentAlign.Center,
-                windowInsets = WindowInsets(0),
-                fadeEnabled = false,
-                blurBackground = false,
-            )
+            TangemModal.TopNavigation(title = resourceReference(title))
         },
     ) {
         Text(

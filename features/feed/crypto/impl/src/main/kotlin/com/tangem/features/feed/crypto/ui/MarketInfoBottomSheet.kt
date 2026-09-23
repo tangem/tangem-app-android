@@ -1,7 +1,6 @@
 package com.tangem.features.feed.crypto.ui
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -12,8 +11,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.modal.TangemModal
-import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
-import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation.ContentAlign
+import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.feed.crypto.impl.R
@@ -27,10 +25,7 @@ internal fun MarketInfoBottomSheet(onDismiss: () -> Unit) {
             content = TangemBottomSheetConfigContent.Empty,
         ),
         title = {
-            TangemTopNavigation(
-                windowInsets = WindowInsets(0),
-                blurBackground = false,
-                contentAlign = ContentAlign.Center,
+            TangemModal.TopNavigation(
                 endButton = { TangemButton.Close(onClick = onDismiss) },
             )
         },

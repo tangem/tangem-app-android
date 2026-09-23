@@ -34,7 +34,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
-import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionIntents
+import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionAmountIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionAmountBlock
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionMarketBlock
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionNotificationsBlock
@@ -48,7 +48,7 @@ import com.tangem.features.polymarket.impl.placeprediction.ui.components.flowTit
 @Composable
 internal fun PlacePredictionAmountContent(
     state: PlacePredictionUM,
-    intents: PlacePredictionIntents,
+    intents: PlacePredictionAmountIntents,
     modifier: Modifier = Modifier,
 ) {
     var footerHeight by remember { mutableIntStateOf(0) }
@@ -109,7 +109,7 @@ internal fun PlacePredictionAmountContent(
 }
 
 @Composable
-private fun AmountBlock(state: PlacePredictionUM, intents: PlacePredictionIntents) {
+private fun AmountBlock(state: PlacePredictionUM, intents: PlacePredictionAmountIntents) {
     when (val order = state.order) {
         is OrderSideUM.Buy -> PredictionAmountBlock(
             amountValue = state.amountValue,

@@ -1,6 +1,11 @@
 package com.tangem.features.tangempay.withdraw.bank.form.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
@@ -27,8 +32,11 @@ import com.tangem.features.tangempay.common.TextInput
 import com.tangem.features.tangempay.common.TextInputState
 import com.tangem.features.tangempay.common.revealAboveFooter
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
 import com.tangem.features.tangempay.withdraw.bank.form.state.TangemPayBankWithdrawFormUM
 import com.tangem.features.tangempay.withdraw.bank.form.state.TangemPayBankWithdrawFormUM.FieldUM
+import com.tangem.features.tangempay.withdraw.bank.form.state.TangemPayBankWithdrawFormUM.SuggestionUM
+import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 internal fun TangemPayBankWithdrawFormScreen(state: TangemPayBankWithdrawFormUM, modifier: Modifier = Modifier) {
@@ -41,6 +49,7 @@ internal fun TangemPayBankWithdrawFormScreen(state: TangemPayBankWithdrawFormUM,
                 subtitle = state.header.subtitle,
                 contentAlign = TangemTopNavigation.ContentAlign.Center,
                 onBack = state.onBackClick,
+                onClose = state.header.onCloseClick,
             )
         },
         overlay = {
@@ -59,9 +68,44 @@ internal fun TangemPayBankWithdrawFormScreen(state: TangemPayBankWithdrawFormUM,
                 .padding(top = contentPadding.calculateTopPadding())
                 .padding(horizontal = 16.dp, vertical = 12.dp)
                 .padding(bottom = FooterHeight),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+            verticalArrangement = Arrangement.spacedBy(FieldSpacing),
         ) {
-            state.fields.fastForEach { field -> FormField(state = field) }
+            val accountNumberIndex = state.fields.indexOfFirst { it.field == BankWithdrawFormField.AccountNumber }
+            if (accountNumberIndex == -1) {
+                state.fields.fastForEach { field -> FormField(state = field) }
+            } else {
+                state.fields.subList(fromIndex = 0, toIndex = accountNumberIndex + 1)
+                    .fastForEach { field -> FormField(state = field) }
+                SuggestionsOrFields(
+                    suggestions = state.suggestions,
+                    fields = state.fields.subList(fromIndex = accountNumberIndex + 1, toIndex = state.fields.size),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SuggestionsOrFields(
+    suggestions: ImmutableList<SuggestionUM>,
+    fields: List<FieldUM>,
+    modifier: Modifier = Modifier,
+) {
+    // Keyed on emptiness so typing only updates the list in place, while the outgoing list keeps its items to fade.
+    AnimatedContent(
+        targetState = suggestions,
+        modifier = modifier,
+        transitionSpec = {
+            fadeIn(tween(FADE_DURATION_MILLIS)) togetherWith fadeOut(tween(FADE_DURATION_MILLIS))
+        },
+        contentKey = { it.isNotEmpty() },
+    ) { shownSuggestions ->
+        if (shownSuggestions.isNotEmpty()) {
+            BankAccountSuggestions(suggestions = shownSuggestions)
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(FieldSpacing)) {
+                fields.fastForEach { field -> FormField(state = field) }
+            }
         }
     }
 }
@@ -137,10 +181,13 @@ private fun FormFooter(isContinueEnabled: Boolean, onContinueClick: () -> Unit, 
 private fun footerInsets(): WindowInsets = WindowInsets.ime.union(WindowInsets.navigationBars)
 
 private val FooterHeight = 72.dp
+private val FieldSpacing = 20.dp
+private const val FADE_DURATION_MILLIS = 200
 
 private class FormPreviewProvider : PreviewParameterProvider<TangemPayBankWithdrawFormUM> {
     override val values: Sequence<TangemPayBankWithdrawFormUM> = sequenceOf(
         TangemPayBankWithdrawFormPreviewData.personalEmpty,
+        TangemPayBankWithdrawFormPreviewData.personalWithSuggestions,
         TangemPayBankWithdrawFormPreviewData.personalWithError,
         TangemPayBankWithdrawFormPreviewData.personalFreeTextRegion,
         TangemPayBankWithdrawFormPreviewData.personalUsRegion,

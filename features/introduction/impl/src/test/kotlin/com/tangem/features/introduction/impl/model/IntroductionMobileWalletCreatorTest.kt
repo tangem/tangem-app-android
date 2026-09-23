@@ -68,7 +68,7 @@ internal class IntroductionMobileWalletCreatorTest {
         } returns wallet.right()
 
         // Act
-        creator.createAndOpen(source = SOURCE, onFailed = onFailed)
+        creator.createAndOpen(source = SOURCE, beforeOpen = {}, onFailed = onFailed)
 
         // Assert
         assertThat(sentEvents).containsExactly(
@@ -84,12 +84,26 @@ internal class IntroductionMobileWalletCreatorTest {
     }
 
     @Test
+    fun `GIVEN the wallet is created WHEN invoked THEN the screen settles before the stack swaps`() = runTest {
+        // Arrange
+        coEvery { createHotWalletUseCase(any(), any()) } returns mockk<UserWallet.Hot>().right()
+        val order = mutableListOf<String>()
+        every { router.replaceAll(AppRoute.Wallet) } answers { order += "open" }
+
+        // Act
+        creator.createAndOpen(source = SOURCE, beforeOpen = { order += "settle" }, onFailed = onFailed)
+
+        // Assert
+        assertThat(order).containsExactly("settle", "open").inOrder()
+    }
+
+    @Test
     fun `GIVEN the creation fails WHEN invoked THEN the viewer is told and the caller notified`() = runTest {
         // Arrange
         coEvery { createHotWalletUseCase(any(), any()) } returns IllegalStateException("boom").left()
 
         // Act
-        creator.createAndOpen(source = SOURCE, onFailed = onFailed)
+        creator.createAndOpen(source = SOURCE, beforeOpen = {}, onFailed = onFailed)
 
         // Assert
         verify(exactly = 1) { messageSender.send(any<DialogMessage>()) }
@@ -111,7 +125,7 @@ internal class IntroductionMobileWalletCreatorTest {
         } returns AppsFlyerConversionData(refcode = "ref-42", campaign = null)
 
         // Act
-        creator.createAndOpen(source = SOURCE, onFailed = onFailed)
+        creator.createAndOpen(source = SOURCE, beforeOpen = {}, onFailed = onFailed)
 
         // Assert
         assertThat(sentEvents.last()).isEqualTo(walletCreated(referralId = "ref-42"))
@@ -124,7 +138,7 @@ internal class IntroductionMobileWalletCreatorTest {
         coEvery { appsFlyerRepository.getConversionData() } throws IllegalStateException("corrupt store")
 
         // Act
-        creator.createAndOpen(source = SOURCE, onFailed = onFailed)
+        creator.createAndOpen(source = SOURCE, beforeOpen = {}, onFailed = onFailed)
 
         // Assert
         assertThat(sentEvents.last()).isEqualTo(walletCreated(referralId = null))

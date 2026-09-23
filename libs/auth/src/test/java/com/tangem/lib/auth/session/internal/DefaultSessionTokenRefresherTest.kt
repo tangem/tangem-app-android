@@ -463,6 +463,47 @@ class DefaultSessionTokenRefresherTest {
     }
 
     @Test
+    fun `ensureSession joins an in-flight refresh instead of returning the still-valid cached token`() = runTest {
+        // The cached token is still locally valid, but a refresh (e.g. triggered by a server-side 401)
+        // is already in flight. ensureSession must join it, not hand back the about-to-be-rejected token.
+        val stored = SessionTokens(
+            accessToken = "old-access",
+            accessTokenExpiresAt = fixedClock.now().plus(60),
+            refreshToken = "rt-1",
+            refreshTokenExpiresAt = fixedClock.now().plus(3600),
+            walletIds = listOf("w1"),
+        )
+        coEvery { store.get() } returns Some(stored)
+
+        val networkGate = CompletableDeferred<Unit>()
+        coEvery { authApi.refresh(RefreshApiRequest("rt-1")) } coAnswers {
+            networkGate.await()
+            ApiResponse.Success(
+                data = TokenApiResponse(
+                    accessToken = "new-access",
+                    accessTokenExpiresAt = "2024-01-01T00:00:00Z",
+                    refreshToken = "rt-2",
+                    refreshTokenExpiresAt = "2024-02-01T00:00:00Z",
+                    walletIds = listOf("w1"),
+                ),
+            )
+        }
+
+        // Owner starts the refresh and suspends on the gate; the concurrent ensureSession joins it.
+        val owner = async(start = CoroutineStart.UNDISPATCHED) { refresher.refresh() }
+        val ensured = async(start = CoroutineStart.UNDISPATCHED) { refresher.ensureSession() }
+
+        networkGate.complete(Unit)
+
+        val ownerResult = owner.await()
+        val ensuredResult = ensured.await()
+
+        assertThat(ensuredResult.getOrNull()?.accessToken).isEqualTo("new-access")
+        assertThat(ensuredResult).isEqualTo(ownerResult)
+        coVerify(exactly = 1) { authApi.refresh(any()) }
+    }
+
+    @Test
     fun `ensureSession returns the stored session without refreshing when one exists`() = runTest {
         val stored = SessionTokens(
             accessToken = "stored-access",
