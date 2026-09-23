@@ -7,6 +7,7 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.ui.R
+import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.onMainScreen
@@ -42,7 +43,7 @@ class TokenDetailsMarketPriceTests : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenName)
             }
             step("Assert 'Token details' screen is displayed") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }

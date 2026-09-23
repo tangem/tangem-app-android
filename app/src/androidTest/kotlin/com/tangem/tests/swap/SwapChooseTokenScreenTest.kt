@@ -9,6 +9,7 @@ import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.SwapEntryPoint
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.openSwapScreen
@@ -50,7 +51,7 @@ class SwapChooseTokenScreenTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert title: '$tokenTitle' is displayed") {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
@@ -105,7 +106,7 @@ class SwapChooseTokenScreenTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert title: '$tokenTitle' is displayed") {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
