@@ -42,6 +42,10 @@ interface SocialBackupRepository {
     /**
      * A file belonging to another wallet is left alone and an already absent file is a success — either
      * way [walletId] ends up without a backup, which is what the caller asked for.
+     *
+     * Never shows an account picker — it runs as a side effect of the upgrade to a card, not on a user
+     * request. Without a grant that can be refreshed silently it fails with
+     * [SocialLoginError.CloudUnavailable].
      */
     suspend fun deleteBackup(walletId: UserWalletId): Either<SocialLoginError, Unit>
 

@@ -35,5 +35,6 @@ internal class TangemPayBankWithdrawAmountComponent(
         val options: StateFlow<BankWithdrawOptions>,
         val step: TangemPayBankWithdrawInnerRoute,
         val onContinue: (BankWithdrawAmountResult) -> Unit,
+        val onCloseFlow: () -> Unit,
     )
 }

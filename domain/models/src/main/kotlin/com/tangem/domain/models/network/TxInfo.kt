@@ -18,18 +18,57 @@ import kotlinx.serialization.Serializable
  * @property fee                    transaction fee
  */
 @Serializable
-data class TxInfo(
-    val txHash: String,
-    val timestampInMillis: Long,
-    val isOutgoing: Boolean,
-    val destinationType: DestinationType,
-    val sourceType: SourceType,
-    val interactionAddressType: InteractionAddressType?,
-    val status: TransactionStatus,
-    val type: TransactionType,
-    val amount: SerializedBigDecimal,
-    val fee: SdkAmount? = null,
-) {
+sealed interface TxInfo {
+
+    val txHash: String
+    val timestampInMillis: Long
+    val isOutgoing: Boolean
+    val destinationType: DestinationType
+    val sourceType: SourceType
+    val interactionAddressType: InteractionAddressType?
+    val status: TransactionStatus
+    val type: TransactionType
+    val amount: SerializedBigDecimal
+    val fee: SdkAmount?
+
+    @Serializable
+    data class Single(
+        override val txHash: String,
+        override val timestampInMillis: Long,
+        override val isOutgoing: Boolean,
+        override val destinationType: DestinationType,
+        override val sourceType: SourceType,
+        override val interactionAddressType: InteractionAddressType?,
+        override val status: TransactionStatus,
+        override val type: TransactionType,
+        override val amount: SerializedBigDecimal,
+        override val fee: SdkAmount? = null,
+    ) : TxInfo
+
+    @Serializable
+    data class MultiTransfer(
+        override val amount: SerializedBigDecimal,
+        override val isOutgoing: Boolean,
+        override val type: TransactionType,
+        override val destinationType: DestinationType,
+        override val sourceType: SourceType,
+        override val interactionAddressType: InteractionAddressType?,
+        val transfers: List<Single>,
+    ) : TxInfo {
+
+        init {
+            require(transfers.isNotEmpty()) { "A MultiTransfer must hold at least one transfer" }
+        }
+
+        private val first: Single get() = transfers.first()
+
+        override val txHash: String get() = first.txHash
+        override val timestampInMillis: Long get() = first.timestampInMillis
+        override val status: TransactionStatus get() = first.status
+        override val fee: SdkAmount? get() = first.fee
+
+        val gaslessFee: Single? get() = transfers.firstOrNull { it.type == TransactionType.GaslessFee }
+    }
 
     /** Destination type*/
     @Serializable

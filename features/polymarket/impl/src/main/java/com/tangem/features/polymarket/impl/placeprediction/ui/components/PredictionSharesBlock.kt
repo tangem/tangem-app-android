@@ -83,7 +83,6 @@ private fun ProceedsSection(selected: BigDecimal, position: SellPositionUM, proc
             color = TangemTheme.colors3.text.secondary,
         )
         ProceedsFigure(proceeds = proceeds)
-        ProceedsCaption(proceeds = proceeds)
         Text(
             modifier = Modifier.padding(top = CAPTION_GAP),
             text = stringResourceSafe(
@@ -121,41 +120,12 @@ private fun ProceedsFigure(proceeds: SharesProceedsUM) {
                 color = TangemTheme.colors3.text.status.success,
                 textAlign = TextAlign.Center,
             )
-            is SharesProceedsUM.Unavailable,
-            is SharesProceedsUM.BelowMinimum,
-            -> Text(
+            is SharesProceedsUM.Unavailable -> Text(
                 text = DASH_SIGN,
                 style = figureStyle,
                 color = TangemTheme.colors3.text.tertiary,
                 textAlign = TextAlign.Center,
             )
-        }
-    }
-}
-
-@Composable
-private fun ProceedsCaption(proceeds: SharesProceedsUM) {
-    AnimatedContent(
-        targetState = proceeds,
-        transitionSpec = { fadeIn() togetherWith fadeOut() using null },
-        contentAlignment = Alignment.Center,
-        label = "proceedsCaption",
-    ) { state ->
-        when (state) {
-            is SharesProceedsUM.BelowMinimum -> Text(
-                modifier = Modifier.padding(top = CAPTION_GAP),
-                text = stringResourceSafe(
-                    R.string.prediction_close_min_shares_error,
-                    state.minShares.formatPolymarketShares(),
-                ),
-                style = TangemTheme.typography3.caption.medium,
-                color = TangemTheme.colors3.text.status.error,
-                textAlign = TextAlign.Center,
-            )
-            is SharesProceedsUM.Content,
-            is SharesProceedsUM.Loading,
-            is SharesProceedsUM.Unavailable,
-            -> Unit
         }
     }
 }
@@ -249,11 +219,6 @@ private class PredictionSharesBlockPreviewProvider : PreviewParameterProvider<Pr
             selected = BigDecimal("0.00"),
             position = SellPositionUM.Held(available = BigDecimal("51.23")),
             proceeds = SharesProceedsUM.Unavailable,
-        ),
-        PredictionSharesBlockPreviewState(
-            selected = BigDecimal("3.00"),
-            position = SellPositionUM.Held(available = BigDecimal("51.23")),
-            proceeds = SharesProceedsUM.BelowMinimum(minShares = BigDecimal("5.00")),
         ),
         PredictionSharesBlockPreviewState(
             selected = BigDecimal("12.80"),
