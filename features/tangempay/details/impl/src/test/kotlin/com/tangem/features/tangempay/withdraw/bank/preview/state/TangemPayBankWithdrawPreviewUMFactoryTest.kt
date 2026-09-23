@@ -406,6 +406,24 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
             .inOrder()
     }
 
+    @Test
+    fun `GIVEN cold wallet WHEN preview created THEN send button carries the Tangem icon`() {
+        // Act
+        val actual = factory.create(draft = savedDraft(), state = PreviewState(isColdWallet = true)) as Summary
+
+        // Assert
+        assertThat(actual.isColdWallet).isTrue()
+    }
+
+    @Test
+    fun `GIVEN hot wallet WHEN preview created THEN send button has no icon`() {
+        // Act
+        val actual = factory.create(draft = savedDraft(), state = PreviewState(isColdWallet = false)) as Summary
+
+        // Assert
+        assertThat(actual.isColdWallet).isFalse()
+    }
+
     private fun savedDraft() = BankWithdrawDraft(
         entry = BankWithdrawEntry.Saved("acc-1"),
         recipient = bankAccount(id = "acc-1"),

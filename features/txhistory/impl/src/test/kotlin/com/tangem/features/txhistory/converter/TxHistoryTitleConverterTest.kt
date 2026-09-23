@@ -187,7 +187,7 @@ internal class TxHistoryTitleConverterTest {
         type: TransactionType,
         status: TransactionStatus = TransactionStatus.Confirmed,
         isOutgoing: Boolean = false,
-    ): TxInfo = TxInfo(
+    ): TxInfo.Single = TxInfo.Single(
         txHash = "0xtxhash",
         timestampInMillis = 1_700_000_000_000L,
         isOutgoing = isOutgoing,
