@@ -164,11 +164,17 @@ transform that ignores it, for the states that are facts about the whole account
 `Onboarding`, `Onboarded`, `Error`). One lock spans the runtime commit and the disk write, so the disk
 cannot end up holding a value the runtime already superseded. A refresh therefore carries over
 what it did not re-read instead of snapshotting it before the network, and two refreshes of one wallet run
-in parallel. What this accepts: the slower of two overlapping refreshes commits the older balance, and a
-failing one flags a value a concurrent success has just written as `ONLY_CACHE`. Both correct themselves
-on the next poll (30 s, 5 s in the funding window) and neither can touch a field its refresh did not read.
-Revisit if a write lands here that is visible to the user and does not self-heal — an optimistic debit
-after an order, say.
+in parallel.
+
+A failed refresh does not stamp a value a concurrent success has just written: `markUnrefreshed` takes the
+`commitCount` the refresh read before it started and does nothing if the wallet has been committed since.
+
+What this still accepts: the slower of two overlapping refreshes commits the older balance. Closing that
+needs per-field freshness, not a commit guard — dropping the losing commit wholesale would discard a full
+refresh's positions value in favour of the one an available-only refresh carried over, which is older.
+A balance is re-read every poll (30 s, 5 s in the funding window) and no field a refresh did not read can
+be touched, so the exposure is one tick on one number. Revisit if a write lands here that is visible to
+the user and does not self-heal — an optimistic debit after an order, say.
 
 ## DI
 
