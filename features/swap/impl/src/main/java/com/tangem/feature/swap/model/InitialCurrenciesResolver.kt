@@ -219,7 +219,9 @@ internal class InitialCurrenciesResolver @Inject constructor(
         )
         is AccountFlow.Withdraw, is AccountFlow.PredictionWithdraw ->
             mostFundedAccountCurrency(accountFlowAccounts) ?: from
-        is AccountFlow.PredictionTopUp -> from
+        is AccountFlow.PredictionTopUp,
+        is AccountFlow.CollectiblesTopUp,
+        -> from
         null -> from
     }
 
