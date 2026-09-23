@@ -30,7 +30,7 @@ import dev.chrisbanes.haze.HazeTint
 
 private const val HARD_ALPHA = 0.95f
 private const val SOFT_ALPHA = 0.6f
-private val HARD_SOLID_HEIGHT = 40.dp
+private val HARD_TOP_GRADIENT_HEIGHT = 40.dp
 private val HARD_BOTTOM_GRADIENT_HEIGHT = 24.dp
 private val BLUR_RADIUS = 20.dp
 
@@ -41,8 +41,8 @@ private val BLUR_RADIUS = 20.dp
  *
  * @param position which edge the fade is anchored to — controls the gradient direction.
  * @param variant [TangemFade.Variant.Hard] combines a short gradient band with an opaque block for
- *   a harder cut-off — 40dp opaque at the edge for [TangemFade.Position.Top], and for
- *   [TangemFade.Position.Bottom] a 24dp gradient band with the remaining height opaque;
+ *   a harder cut-off — the block fills the height up to the inner edge, where a gradient band
+ *   dissolves it (40dp for [TangemFade.Position.Top], 24dp for [TangemFade.Position.Bottom]);
  *   [TangemFade.Variant.Soft] is a gradient-only fade across the whole height, gentler.
  * @param blur when `true`, the content under the fade is blurred via Haze (radius 20dp,
  *   progressive intensity matching [position]).
@@ -85,7 +85,7 @@ fun TangemFade(
                     color = backgroundColor,
                     position = position,
                     variant = variant,
-                    solidRatio = edgeRatio(HARD_SOLID_HEIGHT),
+                    topGradientRatio = edgeRatio(HARD_TOP_GRADIENT_HEIGHT),
                     bottomGradientRatio = edgeRatio(HARD_BOTTOM_GRADIENT_HEIGHT),
                 )
                 onDrawBehind { drawRect(brush) }
@@ -103,7 +103,7 @@ private fun buildBrush(
     color: Color,
     position: TangemFade.Position,
     variant: TangemFade.Variant,
-    solidRatio: Float,
+    topGradientRatio: Float,
     bottomGradientRatio: Float,
 ): Brush {
     val opaque = color.copy(alpha = HARD_ALPHA)
@@ -115,7 +115,7 @@ private fun buildBrush(
             TangemFade.Position.Top -> Brush.verticalGradient(
                 colorStops = arrayOf(
                     0f to opaque,
-                    solidRatio to opaque,
+                    1f - topGradientRatio to opaque,
                     1f to transparent,
                 ),
             )

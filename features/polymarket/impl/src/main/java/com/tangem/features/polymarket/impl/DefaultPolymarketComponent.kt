@@ -20,12 +20,17 @@ import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelecto
 import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.polymarket.impl.details.PolymarketEventDetailsComponent
 import com.tangem.features.polymarket.impl.entry.PolymarketEntryComponent
+import com.tangem.features.polymarket.impl.history.PolymarketHistoryComponent
 import com.tangem.features.polymarket.impl.main.PolymarketMainComponent
 import com.tangem.features.polymarket.impl.model.PolymarketModel
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.onboarding.PolymarketOnboardingComponent
 import com.tangem.features.polymarket.impl.search.PolymarketSearchComponent
+import com.tangem.features.tokenreceive.TokenReceiveComponent
+import com.tangem.features.polymarket.impl.positions.PolymarketPositionsComponent
+import com.tangem.features.polymarket.impl.positiondetails.PolymarketPositionDetailsComponent
+import com.tangem.features.polymarket.impl.positionresult.PolymarketPositionResultComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -34,6 +39,7 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: PolymarketComponent.Params,
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
+    private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
 ) : PolymarketComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<PolymarketRoute>()
@@ -94,6 +100,11 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
         is PolymarketRoute.Main -> PolymarketMainComponent(
             appComponentContext = factoryContext,
             userWalletId = configuration.userWalletId,
+            tokenReceiveComponentFactory = tokenReceiveComponentFactory,
+        )
+        is PolymarketRoute.History -> PolymarketHistoryComponent(
+            appComponentContext = factoryContext,
+            params = PolymarketHistoryComponent.Params(userWalletId = configuration.userWalletId),
         )
         is PolymarketRoute.EventDetails -> PolymarketEventDetailsComponent(
             appComponentContext = factoryContext,
@@ -108,17 +119,36 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
         )
         is PolymarketRoute.PlacePrediction -> PlacePredictionComponent(
             appComponentContext = factoryContext,
-            params = PlacePredictionComponent.Params(
+            params = PlacePredictionComponent.Params.Buy(
                 userWalletId = configuration.userWalletId,
                 eventId = configuration.eventId,
                 marketId = configuration.marketId,
                 assetId = configuration.assetId,
-                side = configuration.side,
+            ),
+        )
+        is PolymarketRoute.ClosePosition -> PlacePredictionComponent(
+            appComponentContext = factoryContext,
+            params = PlacePredictionComponent.Params.Sell(
+                userWalletId = configuration.userWalletId,
+                positionId = configuration.positionId,
+                marketId = configuration.marketId,
             ),
         )
         is PolymarketRoute.Search -> PolymarketSearchComponent(
             appComponentContext = factoryContext,
             params = PolymarketSearchComponent.Params(userWalletId = configuration.userWalletId),
+        )
+        is PolymarketRoute.Positions -> PolymarketPositionsComponent(
+            appComponentContext = factoryContext,
+            params = PolymarketPositionsComponent.Params(configuration.userWalletId, configuration.initialTab),
+        )
+        is PolymarketRoute.PositionDetails -> PolymarketPositionDetailsComponent(
+            appComponentContext = factoryContext,
+            params = PolymarketPositionDetailsComponent.Params(configuration.userWalletId, configuration.positionId),
+        )
+        is PolymarketRoute.PositionResult -> PolymarketPositionResultComponent(
+            appComponentContext = factoryContext,
+            params = PolymarketPositionResultComponent.Params(configuration.userWalletId, configuration.position),
         )
     }
 

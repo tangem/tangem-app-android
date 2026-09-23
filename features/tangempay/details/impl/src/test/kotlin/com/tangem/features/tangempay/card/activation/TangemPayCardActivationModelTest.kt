@@ -24,7 +24,7 @@ import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.tangemPayCard
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -32,7 +32,6 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.awaitCancellation
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -329,6 +328,46 @@ internal class TangemPayCardActivationModelTest {
             verify(exactly = 0) { router.pop() }
         }
 
+    @ParameterizedTest
+    @MethodSource("provideStatusRefreshingRejections")
+    fun `GIVEN a rejection that refreshes the account WHEN the refresh runs THEN the screen stays busy`(
+        error: VisaApiError,
+    ) = runTest {
+        // Arrange
+        coEvery { activatePlasticCard(any(), any(), any()) } returns error.left()
+        coEvery { paymentAccountStatusFetcher.invoke(WALLET_ID) } coAnswers { awaitCancellation() }
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        submit(model, "8252")
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.state().isLoading).isTrue()
+        verify(exactly = 0) { uiMessageSender.send(any()) }
+    }
+
+    private fun provideStatusRefreshingRejections() = listOf(
+        VisaApiError.CardActivationCardAlreadyActive,
+        VisaApiError.CardActivationActiveOrderExists,
+    )
+
+    @Test
+    fun `GIVEN a rejection shown in a sheet WHEN submitted THEN the hint returns to the description`() = runTest {
+        // Arrange
+        coEvery { activatePlasticCard(any(), any(), any()) } returns VisaApiError.ServerUnavailable.left()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        submit(model, "8252")
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.state().hint).isEqualTo(resourceReference(R.string.tangempay_card_activation_description))
+    }
+
     @Test
     fun `GIVEN a submit in flight WHEN state observed THEN Continue stays enabled and shows the loader`() = runTest {
         // Arrange
@@ -489,17 +528,6 @@ internal class TangemPayCardActivationModelTest {
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
         uiMessageSender = uiMessageSender,
     ).also { model = it }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
-    }
 
     private companion object {
         val WALLET_ID = UserWalletId("1234567890ABCDEF")

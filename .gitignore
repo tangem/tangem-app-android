@@ -1,19 +1,8 @@
 *.iml
 
 # Built application files
-/build
+**/build/
 /buildSrc
-**/build/.transforms/**
-**/build/classes/**
-**/build/generated/**
-**/build/intermediates/**
-**/build/kspCaches/**
-**/build/kotlin/**
-**/build/libs/**
-**/build/outputs/**
-**/build/reports/**
-**/build/tmp/**
-**/test-results/**
 
 # Local configuration file (sdk path, etc)
 local.properties

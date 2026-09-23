@@ -2,7 +2,6 @@ package com.tangem.core.ui.utils
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalConfiguration
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -15,18 +14,24 @@ const val POINT_SEPARATOR = '.'
 const val COMMA_SEPARATOR = ','
 const val DECIMAL_SEPARATOR_LIMIT = 1
 
+/**
+ * [DecimalFormat] the amount input fields write their value with.
+ *
+ * Bound to [Locale.getDefault] — the very locale [parseToBigDecimal] and the `BigDecimalFormat` family read
+ * that value back with. Taking the separators from the resource configuration instead lets the two diverge
+ * whenever the system language is not among the app's supported ones: the field then stores "0.00000712"
+ * while the parser treats the point as a grouping separator and reads 712.
+ */
+internal fun createAmountDecimalFormat(): DecimalFormat = DecimalFormat().apply {
+    decimalFormatSymbols = DecimalFormatSymbols(Locale.getDefault())
+    isParseBigDecimal = true
+}
+
 @Composable
 fun rememberDecimalFormat(): DecimalFormat {
-    val locales = LocalConfiguration.current.locales
-    val locale = if (locales.isEmpty) Locale.getDefault() else locales[0]
-    val decimalSymbols = remember { DecimalFormatSymbols.getInstance(locale) }
+    val locale = Locale.getDefault()
 
-    return remember {
-        DecimalFormat().apply {
-            decimalFormatSymbols = decimalSymbols
-            isParseBigDecimal = true
-        }
-    }
+    return remember(locale) { createAmountDecimalFormat() }
 }
 
 /**
@@ -122,9 +127,7 @@ fun DecimalFormat.checkGroupingSeparator(text: String): Boolean {
 }
 
 fun String.parseToBigDecimal(decimals: Int): BigDecimal {
-    val decimalFormat = DecimalFormat().apply {
-        decimalFormatSymbols = DecimalFormatSymbols(Locale.getDefault())
-        isParseBigDecimal = true
+    val decimalFormat = createAmountDecimalFormat().apply {
         maximumFractionDigits = decimals
         minimumFractionDigits = decimals
     }
@@ -136,9 +139,7 @@ fun String.parseToBigDecimal(decimals: Int): BigDecimal {
 }
 
 fun BigDecimal.parseBigDecimal(decimals: Int, roundingMode: RoundingMode = RoundingMode.HALF_UP): String {
-    val decimalFormat = DecimalFormat().apply {
-        decimalFormatSymbols = DecimalFormatSymbols(Locale.getDefault())
-        isParseBigDecimal = true
+    val decimalFormat = createAmountDecimalFormat().apply {
         isGroupingUsed = false
         maximumFractionDigits = decimals
         minimumFractionDigits = 0

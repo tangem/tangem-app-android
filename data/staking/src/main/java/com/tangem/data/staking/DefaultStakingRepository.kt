@@ -1,6 +1,5 @@
 package com.tangem.data.staking
 
-import arrow.core.getOrElse
 import com.tangem.data.staking.store.StakeKitBalancesStore
 import com.tangem.domain.card.common.TapWorkarounds.isWallet2
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -107,9 +106,7 @@ internal class DefaultStakingRepository(
     }
 
     private fun checkForInvalidCardBatch(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Boolean {
-        val userWallet = getUserWalletUseCase(userWalletId).getOrElse {
-            error("Failed to get user wallet")
-        }
+        val userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: return true
 
         if (userWallet !is UserWallet.Cold) {
             return false

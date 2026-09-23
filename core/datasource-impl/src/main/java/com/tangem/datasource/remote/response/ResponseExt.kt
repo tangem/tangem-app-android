@@ -1,0 +1,79 @@
+package com.tangem.datasource.remote.response
+
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
+
+import com.tangem.core.analytics.api.AnalyticsErrorHandler
+import com.tangem.datasource.remote.response.analytics.ApiErrorEvent
+import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.TimeoutCancellationException
+import retrofit2.Response
+import java.io.IOException
+import java.net.ConnectException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
+import java.util.concurrent.TimeoutException
+import javax.net.ssl.SSLHandshakeException
+
+internal fun <T : Any> Response<T>.toSafeApiResponse(
+    analyticsErrorHandler: AnalyticsErrorHandler,
+    isBodyOptional: Boolean = false,
+): ApiResponse<T> {
+    val headers = headers().toMultimap()
+    val body = body()
+
+    val code = ApiResponseError.HttpException.Code.entries
+        .firstOrNull { it.numericCode == code() }
+
+    return if (isSuccessful && body != null) {
+        apiSuccess(data = body, code = code, headers = headers)
+    } else if (isSuccessful && isBodyOptional) {
+        apiSuccess(data = Unit as T, code = code, headers = headers)
+    } else {
+        val e = try {
+            if (code == null) {
+                ApiResponseError.UnknownException(IllegalArgumentException("Unknown error status code: ${code()}"))
+            } else {
+                val errorBody = errorBody()?.string().orEmpty() // !!!Beware!!! string() closes stream after invocation
+                sendHttpError(code, analyticsErrorHandler, errorBody)
+
+                ApiResponseError.HttpException(code, message(), errorBody)
+            }
+        } catch (e: Exception) {
+            TangemLogger.e("UnknownException occured", e)
+            ApiResponseError.UnknownException(e)
+        }
+
+        apiError(e, headers)
+    }
+}
+
+private fun <T : Any> Response<T>.sendHttpError(
+    code: ApiResponseError.HttpException.Code,
+    analyticsErrorHandler: AnalyticsErrorHandler,
+    errorBody: String,
+) {
+    val fullRequestUrl = raw().request.url.toUrl()
+    val shortUrl = fullRequestUrl.authority + fullRequestUrl.path
+    analyticsErrorHandler.sendErrorEvent(
+        ApiErrorEvent(
+            endpoint = shortUrl,
+            code = code.numericCode,
+            message = errorBody,
+        ),
+    )
+}
+
+internal fun Throwable.toApiError(): ApiResponseError = when (this) {
+    is ConnectException,
+    is UnknownHostException,
+    is SSLHandshakeException,
+    -> ApiResponseError.NetworkException()
+    is TimeoutException,
+    is TimeoutCancellationException,
+    is SocketTimeoutException,
+    -> ApiResponseError.TimeoutException()
+    is IOException,
+    -> ApiResponseError.NetworkException()
+    else -> ApiResponseError.UnknownException(cause = this)
+}

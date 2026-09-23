@@ -12,9 +12,9 @@ import com.tangem.data.common.txhistory.ExpressHistoryRepository
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.grow.datasource.express.models.response.TxDetails
 import com.tangem.grow.datasource.crypto.DataSignatureVerifier
-import com.tangem.datasource.exchangeservice.swap.ExpressUtils
+import com.tangem.grow.datasource.express.ExpressUtils
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
 import com.tangem.domain.express.models.ExpressOperationType
@@ -50,6 +50,8 @@ internal class DefaultSwapRepository(
     private val errorsDataConverter: ErrorsDataConverter,
     private val dataSignatureVerifier: DataSignatureVerifier,
     private val appPreferencesStore: AppPreferencesStore,
+    private val growPreferencesKeys: GrowPreferencesKeys,
+    private val expressUtils: ExpressUtils,
     private val expressHistoryRepository: ExpressHistoryRepository,
     private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
     private val swapFeatureToggles: SwapFeatureToggles,
@@ -98,10 +100,7 @@ internal class DefaultSwapRepository(
 
                 val providers = tangemExpressApi.getProviders(
                     userWalletId = userWallet.walletId.stringValue,
-                    refCode = ExpressUtils.getRefCode(
-                        userWallet = userWallet,
-                        appPreferencesStore = appPreferencesStore,
-                    ),
+                    refCode = expressUtils.getRefCode(userWallet = userWallet),
                 ).getOrThrow()
 
                 return@withContext swapPairInfoConverter.convert(
@@ -127,10 +126,7 @@ internal class DefaultSwapRepository(
     ): ApiResponse<List<SwapPair>> {
         return tangemExpressApi.getPairs(
             userWalletId = userWallet.walletId.stringValue,
-            refCode = ExpressUtils.getRefCode(
-                userWallet = userWallet,
-                appPreferencesStore = appPreferencesStore,
-            ),
+            refCode = expressUtils.getRefCode(userWallet = userWallet),
             body = PairsRequestBody(
                 from = from,
                 to = to,
@@ -150,10 +146,7 @@ internal class DefaultSwapRepository(
                         val response = tangemExpressApi
                             .getExchangeStatus(
                                 userWalletId = userWalletId.stringValue,
-                                refCode = ExpressUtils.getRefCode(
-                                    userWallet = userWallet,
-                                    appPreferencesStore = appPreferencesStore,
-                                ),
+                                refCode = expressUtils.getRefCode(userWallet = userWallet),
                                 txId = txId,
                             )
                             .getOrThrow()
@@ -198,10 +191,7 @@ internal class DefaultSwapRepository(
                     providerId = providerId,
                     rateType = rateType.name.lowercase(),
                     userWalletId = userWallet.walletId.stringValue,
-                    refCode = ExpressUtils.getRefCode(
-                        userWallet = userWallet,
-                        appPreferencesStore = appPreferencesStore,
-                    ),
+                    refCode = expressUtils.getRefCode(userWallet = userWallet),
                 ).getOrThrow()
 
                 QuoteModel(
@@ -255,10 +245,7 @@ internal class DefaultSwapRepository(
                     refundExtraId = refundExtraId,
                     partnerOperationType = expressOperationType.value,
                     userWalletId = userWallet.walletId.stringValue,
-                    refCode = ExpressUtils.getRefCode(
-                        userWallet = userWallet,
-                        appPreferencesStore = appPreferencesStore,
-                    ),
+                    refCode = expressUtils.getRefCode(userWallet = userWallet),
                     toExtraId = toExtraId?.ifEmpty { null },
                     quoteId = null, // TODO add when implementing fixed rate in swap
                 ).getOrThrow()
@@ -298,10 +285,7 @@ internal class DefaultSwapRepository(
         try {
             tangemExpressApi.exchangeSent(
                 userWalletId = userWallet.walletId.stringValue,
-                refCode = ExpressUtils.getRefCode(
-                    userWallet = userWallet,
-                    appPreferencesStore = appPreferencesStore,
-                ),
+                refCode = expressUtils.getRefCode(userWallet = userWallet),
                 body = ExchangeSentRequestBody(
                     txId = txId,
                     fromNetwork = fromNetwork,
@@ -335,10 +319,10 @@ internal class DefaultSwapRepository(
     }
 
     override suspend fun getStoredSwapUiMode(): SwapUIMode? {
-        return appPreferencesStore.getObjectSyncOrNull(PreferencesKeys.SWAP_UI_MODE_KEY)
+        return appPreferencesStore.getObjectSyncOrNull(growPreferencesKeys.swapUiModeKey)
     }
 
     override suspend fun storeSwapUiMode(mode: SwapUIMode) {
-        appPreferencesStore.storeObject(PreferencesKeys.SWAP_UI_MODE_KEY, mode)
+        appPreferencesStore.storeObject(growPreferencesKeys.swapUiModeKey, mode)
     }
 }

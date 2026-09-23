@@ -1,16 +1,15 @@
 package com.tangem.domain.polymarket.interactor
 
 import arrow.core.Either
-import arrow.core.getOrElse
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
+import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketOnboardingProgress
 import com.tangem.domain.polymarket.model.PolymarketSignedOnboarding
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
-import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DeployDepositWalletUseCase
 import com.tangem.domain.polymarket.usecase.DeriveApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
@@ -50,7 +49,7 @@ class RunPolymarketOnboardingInteractor(
     private val submitApprovals: SubmitApprovalsUseCase,
     private val syncBalanceAllowance: SyncBalanceAllowanceUseCase,
     private val polymarketOnboardedStore: PolymarketOnboardedStore,
-    private val checkGeoblock: CheckPolymarketGeoblockUseCase,
+    private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
 ) {
 
     operator fun invoke(userWalletId: UserWalletId): Flow<PolymarketOnboardingProgress> = flow {
@@ -81,36 +80,12 @@ class RunPolymarketOnboardingInteractor(
             return
         }
 
-        if (entry.needsDeploy() && !isRegionAllowed()) return
-
         val nonce = step { getRelayerNonce(addresses) } ?: return
 
         emit(PolymarketOnboardingProgress.AwaitingSignature)
         val signed = step { signOnboardingDigests(addresses, nonce) } ?: return
 
         settleWallet(addresses = addresses, entry = entry, signed = signed, credentials = credentials)
-    }
-
-    /**
-     * Whether the region permits opening a new account. Read fresh and fail-closed — an unknown region must
-     * not deploy. Existing accounts are untouched by it, so only [needsDeploy] runs are asked.
-     */
-    private suspend fun FlowCollector<PolymarketOnboardingProgress>.isRegionAllowed(): Boolean {
-        val isBlocked = checkGeoblock().getOrElse { error ->
-            TangemLogger.e("Onboarding: region check failed, deploy refused: $error")
-            true
-        }
-
-        if (isBlocked) {
-            emit(
-                PolymarketOnboardingProgress.Failed(
-                    error = PolymarketOnboardingError.RegionBlocked,
-                    isRetryable = false,
-                ),
-            )
-        }
-
-        return !isBlocked
     }
 
     private suspend fun FlowCollector<PolymarketOnboardingProgress>.settleWallet(
@@ -120,8 +95,9 @@ class RunPolymarketOnboardingInteractor(
         credentials: PolymarketApiCredentials?,
     ) {
         var current = entry
-        if (entry.needsDeploy()) {
+        if (current.needsDeploy()) {
             current = step { deployDepositWallet(addresses) } ?: return
+            if (reportFailure(current)) return
         }
 
         val activeCredentials = credentials ?: step {
@@ -133,11 +109,12 @@ class RunPolymarketOnboardingInteractor(
             )
         } ?: return
 
-        if (entry.owesApprovals()) {
-            if (!entry.isDeployComplete()) {
+        if (current.owesApprovals()) {
+            if (!current.isDeployComplete()) {
                 current = awaitStatus(addresses, PolymarketWalletStatus.DEPLOYED, from = current) ?: return
             }
             current = step { submitApprovals(addresses, signed) } ?: return
+            if (reportFailure(current)) return
         }
 
         awaitStatus(addresses, PolymarketWalletStatus.READY_TO_TRADE, from = current) ?: return
@@ -179,10 +156,7 @@ class RunPolymarketOnboardingInteractor(
             val status = state?.status
             if (status == target) return status
             if (status != null) {
-                status.toFailure()?.let { failure ->
-                    emit(PolymarketOnboardingProgress.Failed(failure, isRetryable = failure.isRetryable()))
-                    return null
-                }
+                if (reportFailure(status)) return null
                 if (status != reported) {
                     TangemLogger.v("Poll: status changed to $status")
                     emit(PolymarketOnboardingProgress.Working(status))
@@ -194,13 +168,32 @@ class RunPolymarketOnboardingInteractor(
         }
     }
 
+    private suspend fun FlowCollector<PolymarketOnboardingProgress>.reportFailure(
+        status: PolymarketWalletStatus,
+    ): Boolean {
+        val failure = status.toFailure() ?: return false
+        emit(PolymarketOnboardingProgress.Failed(error = failure, isRetryable = failure.isRetryable()))
+        return true
+    }
+
     private suspend fun FlowCollector<PolymarketOnboardingProgress>.finish(
         addresses: PolymarketAddresses,
         credentials: PolymarketApiCredentials,
     ) {
         polymarketOnboardedStore.markOnboarded(addresses.userWalletId)
         primeBalanceCache(addresses, credentials)
+        refreshAccountStatus(addresses.userWalletId)
         emit(PolymarketOnboardingProgress.Ready)
+    }
+
+    private suspend fun refreshAccountStatus(userWalletId: UserWalletId) {
+        predictionAccountStatusFetcher(
+            PredictionAccountStatusFetcher.Params(
+                userWalletId = userWalletId,
+                mode = PredictionAccountStatusFetcher.Mode.AVAILABLE_ONLY,
+            ),
+        )
+            .onLeft { error -> TangemLogger.e("Prediction account refresh after onboarding failed", error) }
     }
 
     /** Best-effort refresh of the CLOB's cached balance and allowance; onboarding is complete either way. */
@@ -231,9 +224,6 @@ class RunPolymarketOnboardingInteractor(
         -> false
         else -> true
     }
-
-    private fun PolymarketWalletStatus.needsDeploy(): Boolean = this == PolymarketWalletStatus.NOT_CREATED ||
-        this == PolymarketWalletStatus.DEPLOYMENT_FAILED
 
     private fun PolymarketWalletStatus.isDeployComplete(): Boolean =
         this == PolymarketWalletStatus.DEPLOYED || this == PolymarketWalletStatus.APPROVALS_FAILED

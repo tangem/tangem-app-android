@@ -19,6 +19,7 @@ import com.tangem.lib.auth.session.AuthPreferenceKeys
 import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
+import com.tangem.lib.auth.session.WalletNonce
 import com.tangem.lib.auth.session.WalletRegistrationError
 import com.tangem.lib.auth.session.WalletSignatureBundle
 import com.tangem.lib.auth.session.WalletSigner
@@ -37,7 +38,10 @@ import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mockk.verify
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Instant
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -63,6 +67,7 @@ class DefaultWalletRegistrarTest {
         preferencesDataStore = preferencesDataStore,
     )
 
+    private lateinit var locks: WalletRegistrationLocks
     private lateinit var registrar: DefaultWalletRegistrar
 
     private val mobileSigner = WalletSigner {
@@ -88,6 +93,8 @@ class DefaultWalletRegistrarTest {
     @BeforeEach
     fun setup() {
         clearMocks(authApi, store, deviceKeyManager, nonceDecryptor, attestationProvider)
+        // the store answers with the set that ends up in effect
+        coEvery { store.save(any()) } answers { firstArg() }
         preferencesDataStore.reset()
         mockkStatic(android.util.Base64::class)
         every { android.util.Base64.encodeToString(any(), any()) } answers {
@@ -97,6 +104,10 @@ class DefaultWalletRegistrarTest {
         // fakes ignore the bytes, so any fixed value works here.
         every { android.util.Base64.decode(any<String>(), any()) } returns ByteArray(size = 16) { 7 }
         coEvery { attestationProvider.getAttestationToken(any()) } returns null
+        // Default to an active session so the happy-path tests reach the nonce/register flow;
+        // the no-session tests override this with None.
+        coEvery { store.get() } returns Some(sessionTokens())
+        locks = WalletRegistrationLocks()
         registrar = DefaultWalletRegistrar(
             authApi = authApi,
             store = store,
@@ -106,6 +117,8 @@ class DefaultWalletRegistrarTest {
             attestationProvider = attestationProvider,
             errorConverter = errorConverter,
             appPreferencesStore = appPreferencesStore,
+            nonceRequestPerformanceTracker = { it() },
+            locks = locks,
             dispatchers = dispatchers,
         )
     }
@@ -133,6 +146,26 @@ class DefaultWalletRegistrarTest {
         assertThat(request.cardSignatureSalt).isNull()
         assertThat(request.walletStatus).isNull()
         assertThat(request.attestationToken).isNull()
+    }
+
+    @Test
+    fun `register holds off posting while another call is rotating the session tokens`() = runTest {
+        stubHappyPath()
+        coEvery { authApi.registerWallet(any()) } returns tokenSuccess()
+        // stands for a social binding (or another wallet's registration) already reissuing the session
+        locks.sessionRotation.lock()
+
+        val registration = launch { registrar.register(WALLET_ID, mobileSigner) }
+        runCurrent()
+
+        // the nonce is fetched meanwhile — only the token-rotating POST waits
+        coVerify { authApi.requestWalletNonce(any()) }
+        coVerify(exactly = 0) { authApi.registerWallet(any()) }
+
+        locks.sessionRotation.unlock()
+        registration.join()
+        coVerify(exactly = 1) { authApi.registerWallet(any()) }
+        coVerify(exactly = 1) { store.save(any()) }
     }
 
     @Test
@@ -299,18 +332,18 @@ class DefaultWalletRegistrarTest {
     fun `prepare returns null when walletId already registered`() = runTest {
         preferencesDataStore.edit { it[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID) }
 
-        val result = registrar.prepare(WALLET_ID, mobileSigner)
+        val result = registrar.prepare(WALLET_ID, walletNonce(), mobileSigner)
 
         assertThat(result.isRight()).isTrue()
         assertThat(result.getOrNull()).isNull()
-        coVerify(exactly = 0) { authApi.requestWalletNonce(any()) }
     }
 
     @Test
     fun `prepare builds the request without posting or persisting anything`() = runTest {
         stubHappyPath()
+        val nonce = registrar.requestNonce().getOrNull()!!
 
-        val result = registrar.prepare(WALLET_ID, mobileSigner)
+        val result = registrar.prepare(WALLET_ID, nonce, mobileSigner)
 
         assertThat(result.isRight()).isTrue()
         assertThat(result.getOrNull()).isNotNull()
@@ -323,7 +356,8 @@ class DefaultWalletRegistrarTest {
     fun `submit posts the prepared request, persists tokens and marks registered`() = runTest {
         stubHappyPath()
         coEvery { authApi.registerWallet(any()) } returns tokenSuccess()
-        val prepared = registrar.prepare(WALLET_ID, mobileSigner).getOrNull()!!
+        val nonce = registrar.requestNonce().getOrNull()!!
+        val prepared = registrar.prepare(WALLET_ID, nonce, mobileSigner).getOrNull()!!
 
         val result = registrar.submit(prepared)
 
@@ -335,7 +369,8 @@ class DefaultWalletRegistrarTest {
     @Test
     fun `submit treats 409 Conflict as success and marks registered without persisting tokens`() = runTest {
         stubHappyPath()
-        val prepared = registrar.prepare(WALLET_ID, mobileSigner).getOrNull()!!
+        val nonce = registrar.requestNonce().getOrNull()!!
+        val prepared = registrar.prepare(WALLET_ID, nonce, mobileSigner).getOrNull()!!
         @Suppress("UNCHECKED_CAST")
         coEvery { authApi.registerWallet(any()) } returns ApiResponse.Error(
             cause = ApiResponseError.HttpException(
@@ -451,6 +486,91 @@ class DefaultWalletRegistrarTest {
         assertThat(registeredIds()).contains(WALLET_ID)
     }
 
+    @Test
+    fun `register returns NoActiveSession and consumes no nonce when the store has no session`() = runTest {
+        // Arrange — device not authenticated yet; registerWallet is @RequiresSessionAuth.
+        stubHappyPath()
+        coEvery { store.get() } returns None
+
+        // Act
+        val result = registrar.register(WALLET_ID, mobileSigner)
+
+        // Assert — bail before the one-time wallet nonce is fetched, nothing persisted.
+        assertThat(result.leftOrNull()).isEqualTo(WalletRegistrationError.NoActiveSession)
+        coVerify(exactly = 0) { authApi.requestWalletNonce(any()) }
+        coVerify(exactly = 0) { authApi.registerWallet(any()) }
+        coVerify(exactly = 0) { store.save(any()) }
+        assertThat(registeredIds()).doesNotContain(WALLET_ID)
+    }
+
+    @Test
+    fun `isRegistered is true only for a stored wallet id`() = runTest {
+        preferencesDataStore.edit { it[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID) }
+
+        assertThat(registrar.isRegistered(WALLET_ID)).isTrue()
+        assertThat(registrar.isRegistered(OTHER_WALLET_ID)).isFalse()
+    }
+
+    @Test
+    fun `clearRegistrations drops every registration marker`() = runTest {
+        // Arrange
+        preferencesDataStore.edit {
+            it[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID, OTHER_WALLET_ID)
+        }
+
+        // Act
+        registrar.clearRegistrations()
+
+        // Assert
+        assertThat(registeredIds()).isEmpty()
+    }
+
+    @Test
+    fun `requestNonce returns NoActiveSession and consumes no nonce when the store has no session`() = runTest {
+        stubHappyPath()
+        coEvery { store.get() } returns None
+
+        val result = registrar.requestNonce()
+
+        assertThat(result.leftOrNull()).isEqualTo(WalletRegistrationError.NoActiveSession)
+        coVerify(exactly = 0) { authApi.requestWalletNonce(any()) }
+    }
+
+    @Test
+    fun `requestNonce returns DeviceKeyUnavailable when keystore has no key`() = runTest {
+        coEvery { deviceKeyManager.getPublicKeyEncoded() } returns None
+
+        val result = registrar.requestNonce()
+
+        assertThat(result.leftOrNull()).isEqualTo(WalletRegistrationError.DeviceKeyUnavailable)
+        coVerify(exactly = 0) { authApi.requestWalletNonce(any()) }
+    }
+
+    @Test
+    fun `requestNonce fetches, decrypts and decodes the wallet nonce`() = runTest {
+        stubHappyPath() // decryptNonce("abc") returns "decrypted"
+        val decoded = ByteArray(size = 16) { 42 }
+        every {
+            android.util.Base64.decode("decrypted", android.util.Base64.URL_SAFE or android.util.Base64.NO_WRAP)
+        } returns decoded
+
+        val result = registrar.requestNonce()
+
+        assertThat(result.isRight()).isTrue()
+        val nonce = result.getOrNull()!!
+        assertThat(nonce.nonce).isEqualTo("decrypted")
+        assertThat(nonce.nonceBytes).isEqualTo(decoded)
+        coVerify { nonceDecryptor.decryptNonce("abc") }
+    }
+
+    private fun sessionTokens() = SessionTokens(
+        accessToken = "access",
+        accessTokenExpiresAt = Instant.DISTANT_FUTURE,
+        refreshToken = "refresh",
+        refreshTokenExpiresAt = Instant.DISTANT_FUTURE,
+        walletIds = emptyList(),
+    )
+
     private fun stubHappyPath() {
         coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))
         coEvery { authApi.requestWalletNonce(any()) } returns nonceSuccess()
@@ -475,6 +595,9 @@ class DefaultWalletRegistrarTest {
         preferencesDataStore.current()[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY].orEmpty()
 
     private fun base64(bytes: ByteArray): String = java.util.Base64.getEncoder().encodeToString(bytes)
+
+    // A prefetched nonce to hand to prepare() in tests that short-circuit before signing.
+    private fun walletNonce() = WalletNonce(nonce = "decrypted", nonceBytes = ByteArray(size = 16) { 7 })
 
     private companion object {
         const val WALLET_ID = "wallet-1"

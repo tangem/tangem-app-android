@@ -13,6 +13,7 @@ import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.features.storiesv2.StoriesV2Component
+import com.tangem.features.storiesv2.StoriesV2PendingAction
 import com.tangem.features.storiesv2.StoriesV2Result
 import com.tangem.features.storiesv2.StoriesV2StorybookComponent
 import com.tangem.features.storiesv2.StoryV2ActionTarget
@@ -51,6 +52,8 @@ internal class DefaultStoriesV2StorybookComponent @AssistedInject constructor(
                 params = StoriesV2Component.Params(
                     type = StoryV2Type.ONBOARDING,
                     source = StoryV2Source.STORYBOOK,
+                    // Every action ends the story, so the result line shows what was tapped.
+                    onAction = StoriesV2PendingAction::end,
                     onResult = ::onResult,
                 ),
             )

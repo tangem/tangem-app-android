@@ -10,6 +10,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import com.tangem.domain.core.utils.lceLoading
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class AccountStatusListExtTest {
@@ -66,6 +67,8 @@ internal class AccountStatusListExtTest {
                         cryptoCurrencies = listOf(mockk(), mockk()),
                     ),
                     value = JointAccountStatusValue.Loading,
+                    tokenList = TokenList.Empty,
+                    priceChangeLce = lceLoading(),
                 ),
             ),
         )
@@ -85,6 +88,8 @@ internal class AccountStatusListExtTest {
                 AccountStatus.Joint(
                     account = MockAccounts.createJointAccount(cryptoCurrencies = listOf(mockk())),
                     value = JointAccountStatusValue.Loading,
+                    tokenList = TokenList.Empty,
+                    priceChangeLce = lceLoading(),
                 ),
             ),
         )
@@ -127,7 +132,7 @@ internal class AccountStatusListExtTest {
         }
     }
 
-    private fun cryptoPortfolioWithCurrencies(count: Int): AccountStatus.CryptoPortfolio {
+    private fun cryptoPortfolioWithCurrencies(count: Int): AccountStatus.Personal {
         val tokenList = mockk<TokenList> {
             every { flattenCurrencies() } returns List(count) { mockk<CryptoCurrencyStatus>() }
         }
@@ -135,4 +140,5 @@ internal class AccountStatusListExtTest {
             every { this@mockk.tokenList } returns tokenList
         }
     }
+
 }

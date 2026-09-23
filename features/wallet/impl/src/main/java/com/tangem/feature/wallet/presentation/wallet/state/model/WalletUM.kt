@@ -3,9 +3,10 @@ package com.tangem.feature.wallet.presentation.wallet.state.model
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockUM
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
-import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
+import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -28,9 +29,12 @@ internal sealed interface WalletUM {
 
     val tangemPayMainUM: TangemPayMainUM
 
-    val virtualAccountMainUM: VirtualAccountMainUM
+    val moneyAccountMainUM: MoneyAccountMainUM
 
     val polymarketWalletBlockUM: PolymarketWalletBlockUM
+
+    val collectiblesWalletBlockUM: CollectiblesWalletBlockUM
+    val jointOperationBanners: ImmutableList<JointOperationBannerUM>
 
     data class Content(
         override val pullToRefreshConfig: PullToRefreshConfig,
@@ -42,8 +46,10 @@ internal sealed interface WalletUM {
         override val nftState: WalletNFTItemUM,
         override val type: WalletType,
         override val tangemPayMainUM: TangemPayMainUM,
-        override val virtualAccountMainUM: VirtualAccountMainUM,
+        override val moneyAccountMainUM: MoneyAccountMainUM,
         override val polymarketWalletBlockUM: PolymarketWalletBlockUM,
+        override val collectiblesWalletBlockUM: CollectiblesWalletBlockUM,
+        override val jointOperationBanners: ImmutableList<JointOperationBannerUM> = persistentListOf(),
         val areActionsAvailable: Boolean = false,
     ) : WalletUM
 
@@ -58,7 +64,9 @@ internal sealed interface WalletUM {
         override val tokensListUM: WalletTokensListUM = WalletTokensListUM.Locked
         override val nftState: WalletNFTItemUM = WalletNFTItemUM.Hidden
         override val tangemPayMainUM: TangemPayMainUM = TangemPayMainUM.Empty
-        override val virtualAccountMainUM: VirtualAccountMainUM = VirtualAccountMainUM.Empty
+        override val moneyAccountMainUM: MoneyAccountMainUM = MoneyAccountMainUM.Empty
         override val polymarketWalletBlockUM: PolymarketWalletBlockUM = PolymarketWalletBlockUM.Hidden
+        override val collectiblesWalletBlockUM: CollectiblesWalletBlockUM = CollectiblesWalletBlockUM.Hidden
+        override val jointOperationBanners: ImmutableList<JointOperationBannerUM> = persistentListOf()
     }
 }

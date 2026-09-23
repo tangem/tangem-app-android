@@ -1,9 +1,11 @@
 package com.tangem.features.onramp.main.model
 
+import arrow.core.Either
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -14,15 +16,18 @@ import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.main.OnrampMainComponent
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
+import io.mockk.Runs
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -65,10 +70,14 @@ internal class OnrampMainComponentModelTest {
         every { walletId } returns USER_WALLET_ID
     }
 
+    private val sentEvents = mutableListOf<AnalyticsEvent>()
+
     @BeforeEach
     fun resetMocks() {
         clearMocks(analyticsEventHandler, getOnrampQuotesUseCase, getWalletsUseCase)
         every { getWalletsUseCase.invokeSync() } returns listOf(userWallet)
+        sentEvents.clear()
+        every { analyticsEventHandler.send(capture(sentEvents)) } just Runs
     }
 
     @Test
@@ -136,9 +145,135 @@ internal class OnrampMainComponentModelTest {
         model.onDestroy()
     }
 
-    private fun createQuote(isRestricted: Boolean) = mockk<OnrampQuote.Data> {
+    @Test
+    fun `GIVEN two restricted providers WHEN quotes arrive THEN one geo restriction event per provider`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val quotes = listOf(
+            createQuote(isRestricted = true, providerName = "Mercuryo"),
+            createQuote(isRestricted = true, providerName = "MoonPay"),
+        )
+
+        // Act
+        val model = createModel(scheduler = scheduler, quotes = quotes)
+        scheduler.runCurrent()
+
+        // Assert
+        assertThat(geoRestrictionEvents())
+            .containsExactly(geoRestrictionEvent("Mercuryo"), geoRestrictionEvent("MoonPay"))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN restricted and purchasable quotes WHEN quotes arrive THEN no geo restriction event`() {
+        // Arrange — the screen shows offers rather than the restriction error, so nothing is reported
+        val scheduler = TestCoroutineScheduler()
+        val quotes = listOf(
+            createQuote(isRestricted = true, providerName = "Mercuryo"),
+            createQuote(isRestricted = false, providerName = "MoonPay"),
+        )
+
+        // Act
+        val model = createModel(scheduler = scheduler, quotes = quotes)
+        scheduler.runCurrent()
+
+        // Assert
+        assertThat(geoRestrictionEvents()).isEmpty()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN restriction reported WHEN quotes are polled again THEN event not repeated`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val restricted = listOf(createQuote(isRestricted = true, providerName = "Mercuryo"))
+        val quotesFlow = quotesFlow()
+        val model = createModel(scheduler = scheduler, quotesFlow = quotesFlow)
+        quotesFlow.tryEmit(restricted.right())
+        scheduler.runCurrent()
+
+        // Act
+        quotesFlow.tryEmit(restricted.right())
+        scheduler.runCurrent()
+
+        // Assert
+        assertThat(geoRestrictionEvents()).containsExactly(geoRestrictionEvent("Mercuryo"))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN restriction cleared WHEN it appears again THEN event sent again`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val restricted = listOf(createQuote(isRestricted = true, providerName = "Mercuryo"))
+        val purchasable = listOf(createQuote(isRestricted = false, providerName = "MoonPay"))
+        val quotesFlow = quotesFlow()
+        val model = createModel(scheduler = scheduler, quotesFlow = quotesFlow)
+        quotesFlow.tryEmit(restricted.right())
+        scheduler.runCurrent()
+
+        // Act
+        quotesFlow.tryEmit(purchasable.right())
+        scheduler.runCurrent()
+        quotesFlow.tryEmit(restricted.right())
+        scheduler.runCurrent()
+
+        // Assert
+        val event = geoRestrictionEvent("Mercuryo")
+        assertThat(geoRestrictionEvents()).containsExactly(event, event)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN restriction reported WHEN quotes are resubscribed THEN event sent again`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val restricted = listOf(createQuote(isRestricted = true, providerName = "Mercuryo"))
+        val quotesFlow = quotesFlow()
+        val model = createModel(scheduler = scheduler, quotesFlow = quotesFlow)
+        quotesFlow.tryEmit(restricted.right())
+        scheduler.runCurrent()
+
+        // Act — a refresh tears the screen state down and subscribes again
+        model.handleOnrampAvailable()
+        scheduler.runCurrent()
+        quotesFlow.tryEmit(restricted.right())
+        scheduler.runCurrent()
+
+        // Assert
+        val event = geoRestrictionEvent("Mercuryo")
+        assertThat(geoRestrictionEvents()).containsExactly(event, event)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN restriction event sent WHEN inspected THEN it carries the agreed params`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val quotes = listOf(createQuote(isRestricted = true, providerName = "Mercuryo"))
+
+        // Act
+        val model = createModel(scheduler = scheduler, quotes = quotes)
+        scheduler.runCurrent()
+
+        // Assert
+        val event = geoRestrictionEvents().single()
+        assertThat(event.id).isEqualTo("[Onramp] Notice - Geo Restriction")
+        assertThat(event.params).containsExactlyEntriesIn(
+            mapOf("Token" to cryptoCurrency.symbol, "Provider" to "Mercuryo"),
+        )
+        model.onDestroy()
+    }
+
+    /** `replay = 1` so an emission made before the model's collector starts is still delivered. */
+    private fun quotesFlow() = MutableSharedFlow<Either<OnrampError, List<OnrampQuote>>>(
+        replay = 1,
+        extraBufferCapacity = 8,
+    )
+
+    private fun createQuote(isRestricted: Boolean, providerName: String = "Provider") = mockk<OnrampQuote.Data> {
         every { this@mockk.isRestricted } returns isRestricted
-        every { provider.info.name } returns "Provider"
+        every { provider.info.name } returns providerName
         every { paymentMethod.name } returns "Card"
         every { toAmount.value } returns BigDecimal.ONE
     }
@@ -156,8 +291,21 @@ internal class OnrampMainComponentModelTest {
         every { error } returns OnrampError.AmountError.TooSmallError(requiredAmount = BigDecimal.TEN)
     }
 
-    private fun createModel(scheduler: TestCoroutineScheduler, quotes: List<OnrampQuote>): OnrampMainComponentModel {
-        every { getOnrampQuotesUseCase.invoke() } returns flowOf(quotes.right())
+    private fun geoRestrictionEvents() = sentEvents.filterIsInstance<OnrampAnalyticsEvent.NoticeGeoRestriction>()
+
+    private fun geoRestrictionEvent(providerName: String) = OnrampAnalyticsEvent.NoticeGeoRestriction(
+        tokenSymbol = cryptoCurrency.symbol,
+        providerName = providerName,
+    )
+
+    private fun createModel(scheduler: TestCoroutineScheduler, quotes: List<OnrampQuote>) =
+        createModel(scheduler = scheduler, quotesFlow = flowOf(quotes.right()))
+
+    private fun createModel(
+        scheduler: TestCoroutineScheduler,
+        quotesFlow: Flow<Either<OnrampError, List<OnrampQuote>>>,
+    ): OnrampMainComponentModel {
+        every { getOnrampQuotesUseCase.invoke() } returns quotesFlow
         val params = OnrampMainComponent.Params(
             userWalletId = USER_WALLET_ID,
             cryptoCurrency = cryptoCurrency,
@@ -166,7 +314,7 @@ internal class OnrampMainComponentModelTest {
             openRedirectPage = {},
         )
         return OnrampMainComponentModel(
-            dispatchers = createTestingCoroutineDispatcherProvider(scheduler),
+            dispatchers = scheduler.createTestingCoroutineDispatcherProvider(),
             analyticsEventHandler = analyticsEventHandler,
             router = mockk(relaxed = true),
             checkOnrampAvailabilityUseCase = mockk(relaxed = true) {
@@ -183,22 +331,8 @@ internal class OnrampMainComponentModelTest {
             isDemoCardUseCase = mockk(relaxed = true),
             messageSender = mockk(relaxed = true),
             getCurrencyUSDQuoteUseCase = mockk(relaxed = true),
-            featureTogglesManager = mockk(relaxed = true),
             paramsContainer = MutableParamsContainer(value = params),
             getWalletsUseCase = getWalletsUseCase,
-        )
-    }
-
-    private fun createTestingCoroutineDispatcherProvider(
-        scheduler: TestCoroutineScheduler,
-    ): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(scheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
         )
     }
 

@@ -38,6 +38,7 @@ import com.tangem.core.ui.ds.button.TangemButtonShape
 import com.tangem.core.ui.ds.button.TangemButtonSize
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.ds.image.TangemDeviceIcon
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.formatStyled
@@ -67,6 +68,7 @@ internal fun TokenActionsContentV2(state: TokenActionsUM, modifier: Modifier = M
 @Composable
 private fun CompactLayout(state: TokenActionsUM, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxWidth()) {
+        RegionRestrictionBanner(state.regionRestriction)
         QuickActionsList(state)
         SpacerH24()
         BottomActionButton(state.bottomActionText, state.onBottomActionClick)
@@ -92,10 +94,21 @@ private fun FullLayout(state: TokenActionsUM, modifier: Modifier = Modifier) {
                 isBalanceHidden = state.isBalancesHidden,
             )
         }
+        RegionRestrictionBanner(state.regionRestriction)
         QuickActionsList(state)
         SpacerH24()
         BottomActionButton(state.bottomActionText, state.onBottomActionClick)
     }
+}
+
+@Composable
+private fun RegionRestrictionBanner(state: TangemMessageBanner.State?, modifier: Modifier = Modifier) {
+    state ?: return
+
+    TangemMessageBanner(
+        state = state,
+        modifier = modifier.padding(bottom = TangemTheme.dimens2.x2),
+    )
 }
 
 @Composable

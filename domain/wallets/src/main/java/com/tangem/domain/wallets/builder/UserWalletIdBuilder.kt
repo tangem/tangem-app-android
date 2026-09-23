@@ -53,6 +53,25 @@ class UserWalletIdBuilder private constructor(
             return UserWalletIdBuilder(findPublicKey(card.wallets))
         }
 
+        /**
+         * Builder for a physically read [card] that is expected to belong to the wallet described by
+         * [walletScanResponse]. Unlike [card], supports twin cards: a twin's ID is derived from both cards' keys,
+         * so the pair key is taken from the wallet's scan response. A card of another wallet yields a different ID.
+         */
+        fun card(card: CardDTO, walletScanResponse: ScanResponse): UserWalletIdBuilder {
+            val cardPublicKey = findPublicKey(card.wallets)
+            if (!card.isTangemTwins) return UserWalletIdBuilder(cardPublicKey)
+
+            val firstTwinPublicKey = findPublicKey(walletScanResponse.card.wallets)
+            val secondTwinPublicKey = walletScanResponse.secondTwinPublicKey?.hexToBytes()
+            val isFirstTwin = cardPublicKey != null && cardPublicKey.contentEquals(firstTwinPublicKey)
+
+            return UserWalletIdBuilder(
+                publicKey = cardPublicKey,
+                pairTwinPublicKey = if (isFirstTwin) secondTwinPublicKey else firstTwinPublicKey,
+            )
+        }
+
         fun scanResponse(scanResponse: ScanResponse): UserWalletIdBuilder {
             return UserWalletIdBuilder(
                 publicKey = findPublicKey(scanResponse.card.wallets),

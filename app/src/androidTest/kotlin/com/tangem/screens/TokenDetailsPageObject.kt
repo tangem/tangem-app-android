@@ -242,6 +242,12 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
         hasAnyDescendant(withTestTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_TO_AMOUNT))
         useUnmergedTree = true
     }
+
+    /** The marketing banner (`MarketingBanner`/`TangemMessageBanner`) carries no testTag — match by its text. */
+    fun marketingBanner(text: String): KNode = child {
+        hasText(text)
+        useUnmergedTree = true
+    }
 }
 
 internal fun BaseTestCase.onTokenDetailsScreen(function: TokenDetailsPageObject.() -> Unit) =

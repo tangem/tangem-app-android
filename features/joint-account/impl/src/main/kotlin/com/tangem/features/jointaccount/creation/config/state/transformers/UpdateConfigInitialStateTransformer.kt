@@ -5,7 +5,8 @@ import com.tangem.features.jointaccount.creation.config.ui.state.JointAccountCon
 import com.tangem.utils.transformer.Transformer
 
 internal class UpdateConfigInitialStateTransformer(
-    private val onNameChange: (String) -> Unit,
+    private val onNameChange: (String, isValuePasted: Boolean) -> Unit,
+    private val onValuePastedTriggerDismiss: () -> Unit,
     private val onColorClick: (CryptoPortfolioIcon.Color) -> Unit,
     private val onIconClick: (CryptoPortfolioIcon.Icon) -> Unit,
     private val onContinueClick: () -> Unit,
@@ -14,6 +15,7 @@ internal class UpdateConfigInitialStateTransformer(
 
     override fun transform(prevState: JointAccountConfigUM): JointAccountConfigUM = prevState.copy(
         onNameChange = onNameChange,
+        onValuePastedTriggerDismiss = onValuePastedTriggerDismiss,
         onColorClick = onColorClick,
         onIconClick = onIconClick,
         onContinueClick = onContinueClick,

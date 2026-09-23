@@ -2,6 +2,8 @@ package com.tangem.features.onboarding.v2.entry.impl.model
 
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.google.common.truth.Truth.assertThat
+import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -9,19 +11,20 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.features.onboarding.v2.common.ui.CantLeaveBackupDialog
 import com.tangem.features.onboarding.v2.done.api.OnboardingDoneComponent
 import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
 import com.tangem.features.onboarding.v2.entry.impl.routing.OnboardingRoute
+import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.twin.api.OnboardingTwinComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.OnboardingVisaAnalyticsEvent
 import com.tangem.sdk.api.TangemSdkManager
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -42,6 +45,7 @@ internal class OnboardingEntryModelTest {
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxUnitFun = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
+    private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase = mockk()
     private val paramsContainer: ParamsContainer = mockk()
 
     private val scanResponse: ScanResponse = mockk()
@@ -56,6 +60,7 @@ internal class OnboardingEntryModelTest {
         every { scanResponse.productType } returns ProductType.Wallet
         coEvery { tangemSdkManager.checkCanUseBiometry() } returns false
         coEvery { settingsRepository.shouldShowAskBiometry() } returns false
+        coEvery { shouldAskPermissionUseCase(any()) } returns false
     }
 
     @ParameterizedTest
@@ -161,6 +166,71 @@ internal class OnboardingEntryModelTest {
 
         Assertions.assertEquals(1, stack.size)
         Assertions.assertTrue(stack.first() is OnboardingRoute.Done)
+    }
+
+    @Test
+    fun `GIVEN push permission not asked yet WHEN onManageTokensDone THEN PushNotifications replaces stack`() =
+        runTest {
+            // Arrange
+            coEvery { tangemSdkManager.checkCanUseBiometry() } returns false
+            coEvery { shouldAskPermissionUseCase(any()) } returns true
+
+            val model = createModel(this)
+            val stack = model.stackNavigation.trackStack()
+
+            // Act
+            model.onManageTokensDone()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(stack.single()).isInstanceOf(OnboardingRoute.PushNotifications::class.java)
+        }
+
+    @ParameterizedTest
+    @MethodSource("provideBiometryOutcomes")
+    fun `GIVEN push permission not asked yet WHEN biometry is answered THEN PushNotifications replaces stack`(
+        outcome: (AskBiometryComponent.ModelCallbacks) -> Unit,
+    ) = runTest {
+        // Arrange
+        coEvery { tangemSdkManager.checkCanUseBiometry() } returns true
+        coEvery { settingsRepository.shouldShowAskBiometry() } returns true
+        coEvery { shouldAskPermissionUseCase(any()) } returns true
+
+        val model = createModel(this)
+        val stack = model.stackNavigation.trackStack()
+        model.onManageTokensDone()
+        advanceUntilIdle()
+        val biometry = stack.single() as OnboardingRoute.AskBiometry
+
+        // Act
+        outcome(biometry.modelCallbacks)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(stack.single()).isInstanceOf(OnboardingRoute.PushNotifications::class.java)
+    }
+
+    @ParameterizedTest
+    @MethodSource("providePushNotificationsOutcomes")
+    fun `GIVEN the push step WHEN its callback fires THEN Done replaces stack`(
+        outcome: (PushNotificationsModelCallbacks) -> Unit,
+    ) = runTest {
+        // Arrange
+        coEvery { tangemSdkManager.checkCanUseBiometry() } returns false
+        coEvery { shouldAskPermissionUseCase(any()) } returns true
+
+        val model = createModel(this)
+        val stack = model.stackNavigation.trackStack()
+        model.onManageTokensDone()
+        advanceUntilIdle()
+        val step = stack.single() as OnboardingRoute.PushNotifications
+
+        // Act
+        outcome(step.modelCallbacks)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(stack.single()).isInstanceOf(OnboardingRoute.Done::class.java)
     }
 
     @Test
@@ -272,21 +342,24 @@ internal class OnboardingEntryModelTest {
             analyticsEventHandler = analyticsEventHandler,
             uiMessageSender = uiMessageSender,
             userWalletsListRepository = userWalletsListRepository,
-        )
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
+            shouldAskPermissionUseCase = shouldAskPermissionUseCase,
         )
     }
 
     companion object {
+
+        @JvmStatic
+        fun provideBiometryOutcomes(): List<(AskBiometryComponent.ModelCallbacks) -> Unit> = listOf(
+            AskBiometryComponent.ModelCallbacks::onAllowed,
+            AskBiometryComponent.ModelCallbacks::onDenied,
+        )
+
+        @JvmStatic
+        fun providePushNotificationsOutcomes(): List<(PushNotificationsModelCallbacks) -> Unit> = listOf(
+            PushNotificationsModelCallbacks::onAllowSystemPermission,
+            PushNotificationsModelCallbacks::onDenySystemPermission,
+            PushNotificationsModelCallbacks::onDismiss,
+        )
 
         @JvmStatic
         fun provideStartRouteByProductType(): List<Arguments> = listOf(

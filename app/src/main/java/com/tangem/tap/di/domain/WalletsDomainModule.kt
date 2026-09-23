@@ -17,7 +17,6 @@ import com.tangem.domain.wallets.delegate.DefaultUserWalletsSyncDelegate
 import com.tangem.domain.wallets.delegate.UserWalletsSyncDelegate
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.wallets.hot.HotWalletAccessor
-import com.tangem.domain.wallets.registration.WalletRegistrationTrigger
 import com.tangem.domain.wallets.repository.WalletCardsBackupRepository
 import com.tangem.domain.wallets.repository.WalletNamesMigrationRepository
 import com.tangem.domain.wallets.repository.WalletsPromoRepository
@@ -102,13 +101,11 @@ internal object WalletsDomainModule {
         userWalletsListRepository: UserWalletsListRepository,
         walletsRepository: WalletsRepository,
         analyticsEventHandler: AnalyticsEventHandler,
-        walletRegistrationTrigger: WalletRegistrationTrigger,
     ): SaveWalletUseCase {
         return SaveWalletUseCase(
             userWalletsListRepository = userWalletsListRepository,
             walletsRepository = walletsRepository,
             analyticsEventHandler = analyticsEventHandler,
-            walletRegistrationTrigger = walletRegistrationTrigger,
         )
     }
 

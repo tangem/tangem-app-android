@@ -27,6 +27,11 @@ batchingStrategy:
 sortingStrategy:
   type: "no-sorting"
 
+# Caps re-runs of tests that never reported a result (killed by testOutputTimeoutMillis).
+# The default is Int.MAX_VALUE, and such tests are NOT covered by retryStrategy's quota,
+# so a single hanging test re-queues itself forever and the run dies on the CI job timeout.
+uncompletedTestRetryQuota: 2
+
 retryStrategy:
   type: "fixed-quota"
   totalAllowedRetryQuota: 30

@@ -54,22 +54,18 @@ internal class GetAvailableFeeTokensUseCaseTest {
             val status = createStatus(model.yieldSupplyStatus)
 
             // Act
-            val actual = isEligibleFeeToken(status, isYieldWithdrawEnabled = model.isYieldWithdrawEnabled)
+            val actual = isEligibleFeeToken(status)
 
             // Assert
             assertThat(actual).isEqualTo(model.expected)
         }
 
         private fun provideTestModels() = listOf(
-            // Plain token (no yield status) is always eligible, regardless of the toggle.
-            EligibilityModel(yieldSupplyStatus = null, isYieldWithdrawEnabled = false, expected = true),
-            EligibilityModel(yieldSupplyStatus = null, isYieldWithdrawEnabled = true, expected = true),
-            // Active yield: eligible only when gasless v2 (yield withdraw) is enabled.
-            EligibilityModel(yieldSupplyStatus = ACTIVE_YIELD, isYieldWithdrawEnabled = true, expected = true),
-            EligibilityModel(yieldSupplyStatus = ACTIVE_YIELD, isYieldWithdrawEnabled = false, expected = false),
-            // Inactive yield status: excluded either way (no module to withdraw from).
-            EligibilityModel(yieldSupplyStatus = INACTIVE_YIELD, isYieldWithdrawEnabled = true, expected = false),
-            EligibilityModel(yieldSupplyStatus = INACTIVE_YIELD, isYieldWithdrawEnabled = false, expected = false),
+            // Plain token (no yield status) is always eligible.
+            EligibilityModel(yieldSupplyStatus = null, expected = true),
+            EligibilityModel(yieldSupplyStatus = ACTIVE_YIELD, expected = true),
+            // Inactive yield status: excluded (no module to withdraw from).
+            EligibilityModel(yieldSupplyStatus = INACTIVE_YIELD, expected = false),
         )
 
         private fun createStatus(yieldSupplyStatus: YieldSupplyStatus?): CryptoCurrencyStatus {
@@ -356,7 +352,6 @@ internal class GetAvailableFeeTokensUseCaseTest {
             repository = tronGaslessTransactionRepository,
             walletManagersFacade = walletManagersFacade,
         ),
-        isYieldWithdrawEnabled = true,
     )
 
     private fun CryptoCurrency.status(balance: BigDecimal = BigDecimal.TEN) =
@@ -389,7 +384,7 @@ internal class GetAvailableFeeTokensUseCaseTest {
     private fun accountStatusList(statuses: List<CryptoCurrencyStatus>) = AccountStatusList(
         userWalletId = userWalletId,
         accountStatuses = listOf(
-            AccountStatus.CryptoPortfolio(
+            AccountStatus.Personal(
                 account = Account.Personal.createMainAccount(userWalletId),
                 tokenList = TokenList.Ungrouped(
                     totalFiatBalance = TotalFiatBalance.Loading,
@@ -514,7 +509,6 @@ internal class GetAvailableFeeTokensUseCaseTest {
 
     internal data class EligibilityModel(
         val yieldSupplyStatus: YieldSupplyStatus?,
-        val isYieldWithdrawEnabled: Boolean,
         val expected: Boolean,
     )
 

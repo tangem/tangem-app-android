@@ -41,12 +41,16 @@ interface ChooseTokenBridge : ChooseTokenBridgeInternal {
         val isShowSingleCurrencyWallets: Boolean = false,
         /** When `true`, the FROM selector shows the zero-balance filter (default HideZero). Swap FROM only. */
         val isHideZeroBalanceFilterEnabled: Boolean = false,
+        /** When `true`, active joint accounts and their tokens are listed */
+        val isJointAccountsShown: Boolean = false,
     ) {
         companion object {
             val SwapFrom = Settings(
                 title = resourceReference(R.string.swapping_from_title),
                 chooserBlock = ChooserBlock.Market,
                 paymentAccountTokens = PaymentAccountTokens.AccountCurrency,
+                isHideZeroBalanceFilterEnabled = true,
+                isJointAccountsShown = true,
             )
 
             /**
@@ -63,6 +67,7 @@ interface ChooseTokenBridge : ChooseTokenBridgeInternal {
                 title = resourceReference(R.string.swapping_to_title),
                 chooserBlock = ChooserBlock.Market,
                 paymentAccountTokens = PaymentAccountTokens.AccountCurrency,
+                isJointAccountsShown = true,
             )
             val AddFunds = Settings(
                 title = resourceReference(R.string.swapping_to_title),
@@ -70,6 +75,7 @@ interface ChooseTokenBridge : ChooseTokenBridgeInternal {
                 paymentAccountTokens = PaymentAccountTokens.Hidden,
                 isAppBarShown = false,
                 isShowSingleCurrencyWallets = true,
+                isJointAccountsShown = true,
             )
             val Transfer = Settings(
                 title = resourceReference(R.string.common_transfer),
@@ -77,6 +83,7 @@ interface ChooseTokenBridge : ChooseTokenBridgeInternal {
                 paymentAccountTokens = PaymentAccountTokens.Hidden,
                 isAppBarShown = false,
                 isShowSingleCurrencyWallets = true,
+                isJointAccountsShown = true,
             )
         }
     }

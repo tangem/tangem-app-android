@@ -72,6 +72,7 @@ internal class TokenActionsComponent @AssistedInject constructor(
         val isRedesignForced: Boolean = false,
         val isCompact: Boolean = false,
         val context: TokenActionsContext = TokenActionsContext.Markets,
+        val isRegionRestricted: Boolean = false,
     )
 
     interface Callbacks {

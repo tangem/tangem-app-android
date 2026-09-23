@@ -29,14 +29,51 @@ class TangemPayCardPagePageObject(semanticsProvider: SemanticsNodeInteractionsPr
         useUnmergedTree = true
     }
 
+    val closeCardMenuItem: KNode = child {
+        hasTestTag(TangemPayTestTags.CONTEXT_MENU_ITEM)
+        hasAnyDescendant(withText(getResourceString(CoreResR.string.tangem_pay_close_card_popup_primary_button_title)))
+        useUnmergedTree = true
+    }
+
+    val closeCardMenuItemLastCardHint: KNode = child {
+        hasAnyAncestor(withTestTag(TangemPayTestTags.CONTEXT_MENU_ITEM))
+        hasText(getResourceString(CoreResR.string.tangem_pay_close_card_disabled_last_card))
+        useUnmergedTree = true
+    }
+
+    // Title and description are one combinedReference text node, so the title only matches as a substring.
+    val closingInProgressBlock: KNode = child {
+        hasText(
+            text = getResourceString(CoreResR.string.tangempay_card_page_closing_banner_title),
+            substring = true,
+        )
+        useUnmergedTree = true
+    }
+
     val cardNumberShort: KNode = child {
         hasTestTag(TangemPayTestTags.CARD_NUMBER_SHORT)
+        useUnmergedTree = true
+    }
+
+    // Neighbouring pager pages stay composed, so a card is addressed by the digits printed on it.
+    fun cardNumberShortWith(lastDigits: String): KNode = child {
+        hasTestTag(TangemPayTestTags.CARD_NUMBER_SHORT)
+        hasText(text = lastDigits, substring = true)
         useUnmergedTree = true
     }
 
     val reissueInProgressBlock: KNode = child {
         hasText(
             text = getResourceString(CoreResR.string.tangempay_reissue_card_in_progress),
+            substring = true,
+        )
+        useUnmergedTree = true
+    }
+
+    // Title and description are one combinedReference text node, so the title only matches as a substring.
+    val issuingInProgressBlock: KNode = child {
+        hasText(
+            text = getResourceString(CoreResR.string.tangempay_issuing_new_digital_card_title),
             substring = true,
         )
         useUnmergedTree = true

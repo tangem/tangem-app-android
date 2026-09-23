@@ -85,9 +85,12 @@ internal val PaymentAccountStatusValue.hasWithdrawableAmount: Boolean
 internal fun List<PaymentNetworkStatus>.firstDepositAddress(): String? =
     filterIsInstance<PaymentNetworkStatus.Available>().firstOrNull()?.depositAddress
 
-internal fun PaymentAccountStatusValue.canAddFunds(): Boolean = when (this) {
-    is PaymentAccountStatusValue.Error.CardIssueFailed -> networks
-    is PaymentAccountStatusValue.Loaded -> networks
-    is PaymentAccountStatusValue.Deactivated -> networks
-    else -> emptyList()
-}.any { it is PaymentNetworkStatus.Available }
+internal val PaymentAccountStatusValue.canAddFunds: Boolean
+    get() = when (this) {
+        is PaymentAccountStatusValue.Error.CardIssueFailed -> networks.hasAvailableNetwork()
+        is PaymentAccountStatusValue.Loaded -> networks.hasAvailableNetwork()
+        is PaymentAccountStatusValue.Deactivated -> networks.hasAvailableNetwork()
+        else -> false
+    }
+
+private fun List<PaymentNetworkStatus>.hasAvailableNetwork(): Boolean = any { it is PaymentNetworkStatus.Available }

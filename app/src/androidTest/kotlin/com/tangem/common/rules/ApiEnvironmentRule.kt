@@ -4,7 +4,7 @@ import com.tangem.spend.datasource.config.TangemPay
 
 import com.tangem.store.datasource.config.News
 
-import com.tangem.datasource.api.common.config.TangemTech
+import com.tangem.core.remote.config.TangemGatewayApiConfig
 
 import com.tangem.grow.datasource.config.StakeKit
 
@@ -134,7 +134,7 @@ class ApiEnvironmentRule : TestRule {
         const val ENV_CONFIGS_ARGUMENT = "testEnvironmentConfigs"
 
         val DEFAULT_API_CONFIGS = listOf(
-            TangemTech.ID,
+            TangemGatewayApiConfig.TANGEM_TECH_ID,
             Express.ID,
             TangemPay.Bff.ID,
             StakeKit.ID,

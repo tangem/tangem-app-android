@@ -33,8 +33,6 @@ dependencies {
 
     // region Project - Domain
     api(projects.domain.feed.search)
-    implementation(projects.domain.markets.models)
-    implementation(projects.domain.models)
     // endregion
 
     // region Testing

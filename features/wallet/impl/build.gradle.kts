@@ -62,7 +62,6 @@ dependencies {
     /** Core modules */
     api(projects.core.analytics)
     api(projects.core.analytics.models)
-    api(projects.core.datasource)
     api(projects.core.decompose)
     api(projects.core.navigation)
     api(projects.core.ui)
@@ -74,6 +73,7 @@ dependencies {
 
     /** Domain modules */
     api(projects.domain.account)
+    implementation(projects.domain.appsflyer)
     api(projects.domain.account.status)
     api(projects.domain.addressBook)
     api(projects.domain.analytics)
@@ -130,9 +130,11 @@ dependencies {
 
     /** Feature Apis */
     api(projects.features.biometry.api)
+    api(projects.features.collectibles.api)
     api(projects.features.commonFeatures.api)
     api(projects.features.feed.api)
     api(projects.features.jointAccount.api)
+    implementation(projects.domain.jointAccount)
     api(projects.features.polymarket.api)
     api(projects.features.promoBanners.api)
     api(projects.features.pushNotifications.api)
@@ -140,7 +142,7 @@ dependencies {
     api(projects.features.tangempay.details.api)
     api(projects.features.tangempay.main.api)
     api(projects.features.tokenRecieve.api)
-    api(projects.features.virtualAccounts.main.api)
+    api(projects.features.moneyAccount.main.api)
     api(projects.features.wallet.api)
     api(projects.features.walletSettings.api)
     api(projects.features.yieldSupply.api)
@@ -158,4 +160,5 @@ dependencies {
     testImplementation(deps.kotlin.coroutines)
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
 }

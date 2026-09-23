@@ -3,7 +3,6 @@ package com.tangem.features.tangempay.account
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
-import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.pay.TangemPayCardState
@@ -15,8 +14,7 @@ internal data class TangemPayDetailsUM(
     val pullToRefreshConfig: PullToRefreshConfig,
     val balanceBlockState: TangemPayDetailsBalanceBlockState,
     val isBalanceHidden: Boolean,
-    val errorNotificationConfig: NotificationConfig?,
-    val statusBannerState: MessageBannerUM?,
+    val messageBanner: MessageBannerUM?,
     val cashbackBlockState: CashbackBlockUM? = null,
 )
 

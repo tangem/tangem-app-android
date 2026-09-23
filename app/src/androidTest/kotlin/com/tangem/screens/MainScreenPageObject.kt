@@ -278,6 +278,23 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         useUnmergedTree = true
     }
 
+    // The banner's buttons carry no tag of their own, and no matcher binds one to its own banner, so the
+    // CTA is told apart by its label — sound while no other Main banner offers a 'Learn more'.
+    val getTangemPayBannerLearnMoreButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasAnyDescendant(withText(getResourceString(CoreResR.string.common_learn_more)))
+        useUnmergedTree = true
+    }
+
+    val promoBannerButton: KNode = child {
+        hasText(getResourceString(CoreResR.string.wallet_promo_banner_button_title))
+        hasClickAction()
+    }
+
+    val promoBannerTitle: KNode = child {
+        hasText(getResourceString(CoreResR.string.wallet_promo_banner_title))
+    }
+
     val devCardNotificationIcon: KNode = child {
         hasAnySibling(withText(getResourceString(R.string.warning_developer_card_title)))
         hasTestTag(NotificationTestTags.ICON)
@@ -519,6 +536,22 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
     val marketsSheetDragHandle: KNode = child {
         hasTestTag(MainScreenTestTags.MARKETS_SHEET_DRAG_HANDLE)
         useUnmergedTree = true
+    }
+
+    /**
+     * The 'NFT collections' row on Main, shown once NFT is enabled in wallet settings. Gated on the click
+     * action: the row is also composed while the collections are still loading, and taps are dropped there.
+     */
+    val nftBlock: KNode = lazyList.child {
+        hasTestTag(MainScreenTestTags.NFT_BLOCK)
+        hasClickAction()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    fun scrollToNFTBlock() {
+        collapseHeader()
+        semanticsProvider.onNode(withTestTag(MainScreenTestTags.SCREEN_CONTAINER))
+            .performScrollToNode(withTestTag(MainScreenTestTags.NFT_BLOCK))
     }
 
     fun tokenNetworkGroupTitle(tokenNetwork: String): KNode {

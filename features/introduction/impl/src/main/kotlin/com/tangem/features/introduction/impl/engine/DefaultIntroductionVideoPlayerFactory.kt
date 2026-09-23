@@ -25,6 +25,7 @@ internal class DefaultIntroductionVideoPlayerFactory @Inject constructor(
             videoItem = MediaItem.fromUri(RawResourceDataSource.buildRawResourceUri(videoRes)),
             isMotionEnabled = isMotionEnabled(),
             listener = listener,
+            teardownScheduler = MainThreadVideoTeardownScheduler(),
         )
     }
 

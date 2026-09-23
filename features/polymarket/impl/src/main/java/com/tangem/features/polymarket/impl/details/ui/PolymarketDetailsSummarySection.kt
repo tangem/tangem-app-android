@@ -45,36 +45,28 @@ internal fun LazyListScope.summarySection(state: PolymarketEventDetailsUM.Conten
         }
     }
 
-    if (state.resolutionDate != null || state.marketOpenedDate != null) {
-        item(key = KEY_INFO) {
-            InfoSection(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                state = state,
-            )
-        }
+    item(key = KEY_INFO) {
+        InfoSection(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            state = state,
+        )
     }
 }
 
 @Composable
 private fun InfoSection(state: PolymarketEventDetailsUM.Content, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
-        state.resolutionDate?.let { resolutionDate ->
-            InfoRow(
-                label = stringResourceSafe(R.string.prediction_details_resolution_date),
-                value = resolutionDate.resolveReference(),
-            )
-        }
-        if (state.resolutionDate != null && state.marketOpenedDate != null) {
-            HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors3.border.secondary)
-        }
-        state.marketOpenedDate?.let { marketOpenedDate ->
-            InfoRow(
-                label = stringResourceSafe(R.string.prediction_details_market_opened),
-                value = marketOpenedDate.resolveReference(),
-            )
-        }
+        InfoRow(
+            label = stringResourceSafe(R.string.prediction_details_resolution_date),
+            value = state.resolutionDate.resolveReference(),
+        )
+        HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors3.border.secondary)
+        InfoRow(
+            label = stringResourceSafe(R.string.prediction_details_market_opened),
+            value = state.marketOpenedDate.resolveReference(),
+        )
     }
 }
 

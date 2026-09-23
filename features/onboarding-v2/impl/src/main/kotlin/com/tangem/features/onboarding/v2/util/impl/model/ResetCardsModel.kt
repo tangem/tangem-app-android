@@ -11,7 +11,6 @@ import com.tangem.domain.card.ResetCardUseCase
 import com.tangem.domain.card.ResetCardUserCodeParams
 import com.tangem.domain.card.common.util.getBackupCardsCount
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.util.ResetCardsComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -116,7 +115,7 @@ internal class ResetCardsModel @Inject constructor(
                                                 resetBackupCard(
                                                     cardNumber = index + 2,
                                                     params = userCodeParams,
-                                                    userWalletId = createdUserWallet.walletId,
+                                                    userWallet = createdUserWallet,
                                                 )
                                             }
                                             continuation.resume(Unit)
@@ -136,7 +135,7 @@ internal class ResetCardsModel @Inject constructor(
                                             resetBackupCard(
                                                 cardNumber = index + 2,
                                                 params = userCodeParams,
-                                                userWalletId = createdUserWallet.walletId,
+                                                userWallet = createdUserWallet,
                                             )
                                         }
 
@@ -250,12 +249,12 @@ internal class ResetCardsModel @Inject constructor(
     private suspend fun resetBackupCard(
         cardNumber: Int,
         params: ResetCardUserCodeParams,
-        userWalletId: UserWalletId,
+        userWallet: UserWallet.Cold,
     ): Boolean {
         return resetCardUseCase.invoke(
             cardNumber = cardNumber,
             params = params,
-            userWalletId = userWalletId,
+            userWallet = userWallet,
         ).getOrNull() == true
     }
 }

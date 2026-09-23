@@ -23,6 +23,7 @@ import com.tangem.domain.cloudbackup.models.CloudBackupInfo
 import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
 import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
 import com.tangem.domain.cloudbackup.usecase.CreateCloudBackupUseCase
+import com.tangem.domain.cloudbackup.usecase.SaveBackupPasswordUseCase
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -33,11 +34,12 @@ import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.UnlockHotWalletContextualUseCase
 import com.tangem.features.hotwallet.CreateCloudBackupComponent
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.createcloudbackup.entity.CreateCloudBackupUM
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.hot.sdk.model.SeedPhrasePrivateInfo
 import com.tangem.hot.sdk.model.UnlockHotWallet
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -48,7 +50,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -70,6 +71,10 @@ internal class CreateCloudBackupModelTest {
     private val createCloudBackupUseCase: CreateCloudBackupUseCase = mockk()
     private val setCloudBackupStateUseCase: SetCloudBackupStateUseCase = mockk(relaxed = true)
     private val cloudBackupRepository: CloudBackupRepository = mockk()
+    private val saveBackupPasswordUseCase: SaveBackupPasswordUseCase = mockk()
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles = mockk {
+        every { isPasswordManagerEnabled } returns true
+    }
     private val paramsContainer: ParamsContainer = mockk()
 
     private val walletId = UserWalletId("011")
@@ -91,6 +96,7 @@ internal class CreateCloudBackupModelTest {
 
     private val backupInfo = CloudBackupInfo(
         fileId = "file-1",
+        backupName = "My Wallet (1)",
         walletName = "My Wallet",
         createdAtMillis = 0L,
         walletId = "011",
@@ -111,6 +117,7 @@ internal class CreateCloudBackupModelTest {
             heldUnlock = unlockHotWallet
             unlockHotWallet.right()
         }
+        coEvery { saveBackupPasswordUseCase(any(), any()) } returns true
     }
 
     @Test
@@ -143,6 +150,82 @@ internal class CreateCloudBackupModelTest {
             verify(exactly = 1) { router.pop() }
             model.onDestroy()
         }
+
+    @Test
+    fun `GIVEN upload succeeds WHEN confirm clicked THEN password offered under the backup file name`() = runTest {
+        // Arrange
+        coEvery { createCloudBackupUseCase(any(), any(), any(), any()) } returns backupInfo.right()
+        val usernames = mutableListOf<String>()
+        val passwords = mutableListOf<String>()
+        coEvery { saveBackupPasswordUseCase(capture(usernames), any()) } answers {
+            // read inside the call: the model wipes its copy right after the offer
+            passwords += String(secondArg<CharArray>())
+            true
+        }
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Act
+        driveToConfirmAndSubmit(model)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(usernames).containsExactly("My Wallet (1)")
+        assertThat(passwords).containsExactly(STRONG_PASSWORD)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the password manager is off WHEN confirm clicked THEN the password is never offered`() = runTest {
+        // Arrange
+        every { hotWalletFeatureToggles.isPasswordManagerEnabled } returns false
+        coEvery { createCloudBackupUseCase(any(), any(), any(), any()) } returns backupInfo.right()
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Act
+        driveToConfirmAndSubmit(model)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value).isInstanceOf(CreateCloudBackupUM.Completed::class.java)
+        coVerify(exactly = 0) { saveBackupPasswordUseCase(any(), any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the password is not stored WHEN confirm clicked THEN state Completed anyway`() = runTest {
+        // Arrange
+        coEvery { createCloudBackupUseCase(any(), any(), any(), any()) } returns backupInfo.right()
+        coEvery { saveBackupPasswordUseCase(any(), any()) } returns false
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Act
+        driveToConfirmAndSubmit(model)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value).isInstanceOf(CreateCloudBackupUM.Completed::class.java)
+        verify(exactly = 0) { uiMessageSender.send(any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN upload fails WHEN confirm clicked THEN the password is not offered`() = runTest {
+        // Arrange
+        coEvery { createCloudBackupUseCase(any(), any(), any(), any()) } returns CloudBackupError.NetworkError.left()
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Act
+        driveToConfirmAndSubmit(model)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { saveBackupPasswordUseCase(any(), any()) }
+        model.onDestroy()
+    }
 
     @Test
     fun `GIVEN strong password AND upload fails WHEN confirm clicked THEN error sheet sent AND stays ConfirmPassword`() =
@@ -687,17 +770,8 @@ internal class CreateCloudBackupModelTest {
             createCloudBackupUseCase = createCloudBackupUseCase,
             setCloudBackupStateUseCase = setCloudBackupStateUseCase,
             cloudBackupRepository = cloudBackupRepository,
-        )
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
+            saveBackupPasswordUseCase = saveBackupPasswordUseCase,
+            hotWalletFeatureToggles = hotWalletFeatureToggles,
         )
     }
 

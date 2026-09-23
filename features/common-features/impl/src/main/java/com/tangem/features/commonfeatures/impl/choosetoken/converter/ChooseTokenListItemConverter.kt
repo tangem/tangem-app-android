@@ -21,6 +21,7 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
@@ -41,6 +42,7 @@ internal data class ConverterConfig(
     val tokenFilter: (AccountStatus, CryptoCurrencyStatus) -> Boolean,
     val paymentAccountTokens: PaymentAccountTokens,
     val balanceFilter: BalanceFilter,
+    val isJointAccountsShown: Boolean,
 )
 
 internal class ChooseTokenListItemConverter(
@@ -124,15 +126,26 @@ internal class ChooseTokenListItemConverter(
         is TokenConverterParams.Account ->
             params.accountList.accountStatuses.flatMap { account ->
                 when (account) {
-                    is AccountStatus.CryptoPortfolio -> account.tokenList.flattenCurrencies().map { account to it }
+                    is AccountStatus.Personal ->
+                        account.tokenList.flattenCurrencies().map { account to it }
                     is AccountStatus.Payment ->
                         account.paymentCryptoCurrencies().map { account to it }
-                    is AccountStatus.Virtual -> emptyList()
+                    is AccountStatus.Money -> emptyList()
                     is AccountStatus.Prediction -> emptyList()
-                    // Joint currencies belong to the Safe contract, never to a spendable EOA
-                    is AccountStatus.Joint -> emptyList()
+                    is AccountStatus.Collectibles -> emptyList()
+                    // Joint currencies belong to the Safe contract: only the flows that never spend from the
+                    // wallet's own keys opt in, and only an active account has anything to show
+                    is AccountStatus.Joint -> if (account.isShownInChooser()) {
+                        account.tokenList.flattenCurrencies().map { account to it }
+                    } else {
+                        emptyList()
+                    }
                 }
             }
+    }
+
+    private fun AccountStatus.Joint.isShownInChooser(): Boolean {
+        return config.isJointAccountsShown && value is JointAccountStatusValue.Active
     }
 
     private fun AccountStatus.Payment.paymentCryptoCurrencies(): List<CryptoCurrencyStatus> =
@@ -142,11 +155,7 @@ internal class ChooseTokenListItemConverter(
             is PaymentAccountTokens.IssuedTokens -> issuedCurrencies()
         }
 
-    private fun AccountStatus.Payment.accountCurrencyOrNull(): CryptoCurrencyStatus? = when (val status = value) {
-        is PaymentAccountStatusValue.Deactivated -> status.cryptoCurrencyStatus
-        is PaymentAccountStatusValue.Loaded -> status.cryptoCurrencyStatus
-        else -> null
-    }
+    private fun AccountStatus.Payment.accountCurrencyOrNull(): CryptoCurrencyStatus? = issuedCurrencies().firstOrNull()
 
     private fun AccountStatus.Payment.issuedCurrencies(): List<CryptoCurrencyStatus> = when (val status = value) {
         is PaymentAccountStatusValue.Deactivated -> status.cryptoCurrencyStatuses
@@ -159,11 +168,13 @@ internal class ChooseTokenListItemConverter(
         val accountItems = accountList.accountStatuses
             .mapNotNull { accountStatus ->
                 when (accountStatus) {
-                    is AccountStatus.CryptoPortfolio -> accountStatus.toPortfolioItem(params)
+                    is AccountStatus.Personal -> accountStatus.toPortfolioItem(params)
                     is AccountStatus.Payment -> accountStatus.createPaymentAccountItem(params.expandedAccounts)
-                    is AccountStatus.Virtual -> null
+                    is AccountStatus.Money -> null
                     is AccountStatus.Prediction -> null
-                    is AccountStatus.Joint -> null
+                    is AccountStatus.Collectibles -> null
+                    is AccountStatus.Joint ->
+                        accountStatus.takeIf { it.isShownInChooser() }?.toPortfolioItem(params)
                 }
             }
             .filter { portfolio -> portfolio.tokens.isNotEmpty() }
@@ -208,12 +219,17 @@ internal class ChooseTokenListItemConverter(
 
     private fun AccountStatus.CryptoPortfolio.filterForDisplay(): AccountStatus.CryptoPortfolio {
         val filteredTokenList = filterTokenList(tokenList, this)
-        return copy(
-            account = account.copySealed(
-                cryptoCurrencies = filteredTokenList.flattenCurrencies().map { it.currency },
-            ),
-            tokenList = filteredTokenList,
-        )
+        val filteredCurrencies = filteredTokenList.flattenCurrencies().map { it.currency }
+        return when (this) {
+            is AccountStatus.Personal -> copy(
+                account = account.copy(cryptoCurrencies = filteredCurrencies),
+                tokenList = filteredTokenList,
+            )
+            is AccountStatus.Joint -> copy(
+                account = account.copy(cryptoCurrencies = filteredCurrencies),
+                tokenList = filteredTokenList,
+            )
+        }
     }
 
     private fun TokenList.recalculateBalance(): TokenList {

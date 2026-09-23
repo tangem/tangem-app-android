@@ -8,8 +8,6 @@ import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.routing.deeplink.toContextualRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.core.configtoggle.FeatureToggles
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -70,7 +68,6 @@ internal class OnrampMainComponentModel @Inject constructor(
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val messageSender: UiMessageSender,
     private val getCurrencyUSDQuoteUseCase: GetCurrencyUSDQuoteUseCase,
-    private val featureTogglesManager: FeatureTogglesManager,
     paramsContainer: ParamsContainer,
     getWalletsUseCase: GetWalletsUseCase,
 ) : Model(), OnrampIntents {
@@ -179,6 +176,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     private val quotesTaskScheduler = SingleTaskScheduler<Unit>()
+    private var sentGeoRestrictionProviders: Set<String> = emptySet()
 
     val bottomSheetNavigation: SlotNavigation<OnrampMainBottomSheetConfig> = SlotNavigation()
     val userWallet = getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }
@@ -204,11 +202,7 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     fun onMarketingBannerDeeplink(deeplink: String): Boolean {
         val marketing = resolveMarketingDeeplink(deeplink)
-        if (marketing == MarketingDeeplink.SWAP &&
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1636_SWAP_DEEPLINK_ENABLED)
-        ) {
-            return false
-        }
+        if (marketing == MarketingDeeplink.SWAP) return false
         val route = marketing.toContextualRoute(
             userWalletId = params.userWalletId,
             currency = params.cryptoCurrency,
@@ -404,7 +398,13 @@ internal class OnrampMainComponentModel @Inject constructor(
             stateFactory.getReadyState(country.defaultCurrency, params.initialFiatAmount)
     }
 
+    /**
+     * Every re-subscription follows a teardown of the current screen state — a refresh, or the residency
+     * sheet being dismissed — so the restriction notice is gone by the time quotes arrive again and the
+     * next one is a new appearance rather than a repeat of the reported one.
+     */
     private fun subscribeToQuotesUpdate() {
+        sentGeoRestrictionProviders = emptySet()
         getOnrampQuotesUseCase.invoke()
             .conflate()
             .onEach { maybeQuotes ->
@@ -418,6 +418,10 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     private fun handleQuoteResult(quotes: List<OnrampQuote>) {
         sendOnrampQuotesErrorAnalytic(quotes)
+        val hasAvailableOffer = quotes.any { it is OnrampQuote.Data && !it.isRestricted }
+        val isRegionRestricted = !hasAvailableOffer && quotes.any(OnrampQuote::isRestricted)
+        sendGeoRestrictionAnalytic(if (isRegionRestricted) quotes else emptyList())
+
         when {
             quotes.isEmpty() -> {
                 state.update { stateFactory.getErrorState(onRefresh = ::onRetryQuotes) }
@@ -425,8 +429,8 @@ internal class OnrampMainComponentModel @Inject constructor(
             quotes.all { it is OnrampQuote.AmountError } -> {
                 state.update { amountStateFactory.getSecondaryFieldAmountErrorState(quotes) }
             }
-            quotes.none { it is OnrampQuote.Data && !it.isRestricted } -> {
-                if (quotes.any(OnrampQuote::isRestricted)) {
+            !hasAvailableOffer -> {
+                if (isRegionRestricted) {
                     state.update { amountStateFactory.getSecondaryFieldRestrictedErrorState() }
                 } else {
                     state.update { stateFactory.getErrorState(onRefresh = ::onRetryQuotes) }
@@ -520,6 +524,23 @@ internal class OnrampMainComponentModel @Inject constructor(
         val rawCurrencyId = params.cryptoCurrency.id.rawCurrencyId ?: return null
         val rate = getCurrencyUSDQuoteUseCase(rawCurrencyId) ?: return null
         return amount * rate
+    }
+
+    /** Reports every newly restricted provider once; an empty [quotes] re-arms the guard. */
+    private fun sendGeoRestrictionAnalytic(quotes: List<OnrampQuote>) {
+        val restrictedProviders = quotes.filter(OnrampQuote::isRestricted)
+            .map { it.provider.info.name }
+            .toSet()
+
+        (restrictedProviders - sentGeoRestrictionProviders).forEach { providerName ->
+            analyticsEventHandler.send(
+                OnrampAnalyticsEvent.NoticeGeoRestriction(
+                    tokenSymbol = params.cryptoCurrency.symbol,
+                    providerName = providerName,
+                ),
+            )
+        }
+        sentGeoRestrictionProviders = restrictedProviders
     }
 
     private fun sendOnrampQuotesErrorAnalytic(quotes: List<OnrampQuote>) {

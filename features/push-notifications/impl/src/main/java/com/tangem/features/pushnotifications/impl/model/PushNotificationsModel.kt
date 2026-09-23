@@ -3,6 +3,7 @@ package com.tangem.features.pushnotifications.impl.model
 import androidx.compose.runtime.Stable
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
@@ -48,7 +49,21 @@ internal class PushNotificationsModel @Inject constructor(
     val source = when (params.source) {
         AppRoute.PushNotification.Source.Stories -> AnalyticsParam.ScreensSources.Stories
         AppRoute.PushNotification.Source.Main -> AnalyticsParam.ScreensSources.Main
+        AppRoute.PushNotification.Source.Onboarding,
+        AppRoute.PushNotification.Source.ColdCreation,
+        AppRoute.PushNotification.Source.HotCreation,
+        AppRoute.PushNotification.Source.FirstSignIn,
+        -> AnalyticsParam.ScreensSources.Onboarding
+    }
+
+    // Permission Status names the exact point; the soft-ask events keep their coarser, long-standing values.
+    private val permissionStatusSource = when (params.source) {
+        AppRoute.PushNotification.Source.Stories -> AnalyticsParam.ScreensSources.Stories
+        AppRoute.PushNotification.Source.Main -> AnalyticsParam.ScreensSources.MainRequestSheet
         AppRoute.PushNotification.Source.Onboarding -> AnalyticsParam.ScreensSources.Onboarding
+        AppRoute.PushNotification.Source.ColdCreation -> AnalyticsParam.ScreensSources.ColdCreation
+        AppRoute.PushNotification.Source.HotCreation -> AnalyticsParam.ScreensSources.HotCreation
+        AppRoute.PushNotification.Source.FirstSignIn -> AnalyticsParam.ScreensSources.FirstSignIn
     }
 
     private val _isDoubleAskSheetShown = MutableStateFlow(false)
@@ -107,32 +122,46 @@ internal class PushNotificationsModel @Inject constructor(
     private suspend fun proceedAfterLater() {
         neverRequestPermissionUseCase(PUSH_PERMISSION)
         neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
+        // The wallet-screen reminder is meant for those who were never asked, and a "Later" leaves no other
+        // trace — the allow paths mark the answer by enabling the subscription.
+        notificationsRepository.setShouldShowNotifications(
+            key = NotificationId.EnablePushesReminderNotification.key,
+            value = false,
+        )
         if (params.isBottomSheet) {
             notificationsRepository.setUserAllowToSubscribeOnPushNotifications(false)
         } else {
-            params.nextRoute?.let { appRouter.push(it) }
+            params.nextRoute?.let { appRouter.replaceAll(it) }
         }
         params.modelCallbacks.onDenySystemPermission()
     }
 
     override fun onAllowPermission() {
         analyticHandler.send(
-            PushNotificationAnalyticEvents.PermissionStatus(isAllowed = true),
+            PushNotificationAnalyticEvents.PermissionStatus(
+                isAllowed = true,
+                source = permissionStatusSource,
+            ),
         )
+        // Enabling the categories is a network round trip per wallet, and the wallet screen retries it on its
+        // own — awaiting it here would hold an answered screen for the length of that request.
+        modelScope.launch { applyFirstActivationRule() }
         modelScope.launch {
             neverRequestPermissionUseCase(PUSH_PERMISSION)
             neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
-            applyFirstActivationRule()
             params.modelCallbacks.onAllowSystemPermission()
             if (!params.isBottomSheet) {
-                params.nextRoute?.let { appRouter.push(it) }
+                params.nextRoute?.let { appRouter.replaceAll(it) }
             }
         }
     }
 
     override fun onDenyPermission() {
         analyticHandler.send(
-            PushNotificationAnalyticEvents.PermissionStatus(isAllowed = false),
+            PushNotificationAnalyticEvents.PermissionStatus(
+                isAllowed = false,
+                source = permissionStatusSource,
+            ),
         )
         modelScope.launch {
             neverRequestPermissionUseCase(PUSH_PERMISSION)
@@ -141,7 +170,7 @@ internal class PushNotificationsModel @Inject constructor(
             markFirstActivationDoneForAllWallets()
             params.modelCallbacks.onDenySystemPermission()
             if (!params.isBottomSheet) {
-                params.nextRoute?.let { appRouter.push(it) }
+                params.nextRoute?.let { appRouter.replaceAll(it) }
             }
         }
     }

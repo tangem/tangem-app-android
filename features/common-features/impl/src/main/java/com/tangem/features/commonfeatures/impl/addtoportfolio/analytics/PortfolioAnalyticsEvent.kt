@@ -3,12 +3,33 @@ package com.tangem.features.commonfeatures.impl.addtoportfolio.analytics
 import com.tangem.common.ui.markets.action.TokenActionsBSContentUM
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.OtelIncludedEvent
+import com.tangem.core.analytics.models.OtelMetric
 
 internal class PortfolioAnalyticsEvent(
     event: String,
     params: Map<String, String> = emptyMap(),
     category: String,
 ) : AnalyticsEvent(category = category, event = event, params = params) {
+
+    internal class TokenAdded(
+        tokenSymbol: String,
+        blockchainName: String,
+        source: String?,
+        category: String,
+    ) : AnalyticsEvent(
+        category = category,
+        event = "Token Added",
+        params = buildMap {
+            put(AnalyticsParam.TOKEN_PARAM, tokenSymbol)
+            put(AnalyticsParam.BLOCKCHAIN, blockchainName)
+            if (source != null) put(AnalyticsParam.SOURCE, source)
+        },
+    ), OtelIncludedEvent {
+
+        // Source lets monitoring single out additions from Markets
+        override val otelMetric = OtelMetric.Counter(allowedParams = setOf(AnalyticsParam.SOURCE))
+    }
 
     data class EventBuilder(
         val tokenSymbol: String,
@@ -69,14 +90,11 @@ internal class PortfolioAnalyticsEvent(
             },
         )
 
-        fun tokenAdded(blockchainName: String) = PortfolioAnalyticsEvent(
-            event = "Token Added",
+        fun tokenAdded(blockchainName: String) = TokenAdded(
+            tokenSymbol = tokenSymbol,
+            blockchainName = blockchainName,
+            source = source,
             category = category,
-            params = buildMap {
-                put(AnalyticsParam.TOKEN_PARAM, tokenSymbol)
-                put(AnalyticsParam.BLOCKCHAIN, blockchainName)
-                if (source != null) put("Source", source)
-            },
         )
 
         fun getTokenActionClick(actionUM: TokenActionsBSContentUM.Action) = PortfolioAnalyticsEvent(

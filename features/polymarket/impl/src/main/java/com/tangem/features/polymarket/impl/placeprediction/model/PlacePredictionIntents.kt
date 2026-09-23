@@ -2,11 +2,9 @@ package com.tangem.features.polymarket.impl.placeprediction.model
 
 import java.math.BigDecimal
 
-internal interface PlacePredictionIntents {
+internal interface PlacePredictionAmountIntents {
 
     fun onAmountChange(value: String)
-
-    fun onSlippageSelected(percent: BigDecimal)
 
     fun onSlippageClick()
 
@@ -15,6 +13,17 @@ internal interface PlacePredictionIntents {
     fun onQuoteRetryClick()
 
     fun onNextClick()
+
+    fun onBackClick()
+
+    fun onCloseClick()
+}
+
+internal interface PlacePredictionSummaryIntents {
+
+    fun onFeeClick()
+
+    fun onQuoteRetryClick()
 
     fun onPlaceClick()
 
@@ -25,4 +34,22 @@ internal interface PlacePredictionIntents {
     fun onBackClick()
 
     fun onCloseClick()
+}
+
+internal interface PlacePredictionSlippageIntents {
+
+    fun onSlippageValueChange(value: String)
+
+    fun onSlippagePresetClick(percent: BigDecimal)
+
+    fun onSlippageConfirmClick()
+
+    fun onBackClick()
+}
+
+internal interface PlacePredictionStatusIntents {
+
+    fun onToMainClick()
+
+    fun onViewPositionClick()
 }

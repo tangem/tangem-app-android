@@ -11,10 +11,11 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.utils.TrackingContextProxy
+import com.tangem.core.res.R
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
-import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
+import com.tangem.domain.appsflyer.usecase.ClearReferralInstallUseCase
 import com.tangem.domain.common.wallets.UserWalletSelectedHandler
 import com.tangem.domain.common.wallets.UserWalletTransformAction
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -23,12 +24,15 @@ import com.tangem.domain.common.wallets.error.*
 import com.tangem.domain.hotwallet.repository.HotWalletRepository
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.models.wallet.*
-import com.tangem.domain.wallets.R
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isImported
+import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
+import com.tangem.domain.wallets.registration.WalletRegistrationTrigger
 import com.tangem.domain.wallets.usecase.GetCompletedBackupsUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.hot.sdk.TangemHotSdk
@@ -59,15 +63,17 @@ internal class DefaultUserWalletsListRepository(
     private val tangemSdkManagerProvider: Provider<TangemSdkManager>,
     private val savePersistentInformation: ProviderSuspend<Boolean>,
     private val appPreferencesStore: AppPreferencesStore,
+    private val storePreferencesKeys: StorePreferencesKeys,
     private val hotWalletAccessCodeAttemptsRepository: HotWalletAccessCodeAttemptsRepository,
     private val tangemHotSdk: TangemHotSdk,
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val hotWalletRepository: HotWalletRepository,
-    private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase,
+    private val clearReferralInstallUseCase: ClearReferralInstallUseCase,
     private val userWalletSelectedHandler: Lazy<UserWalletSelectedHandler>,
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
     private val getCompletedBackupsUseCase: GetCompletedBackupsUseCase,
+    private val walletRegistrationTrigger: Lazy<WalletRegistrationTrigger>,
 ) : UserWalletsListRepository {
 
     override val userWallets = MutableStateFlow<List<UserWallet>?>(null)
@@ -159,6 +165,12 @@ internal class DefaultUserWalletsListRepository(
         updateWallets { currentWallets ->
             val wallets = currentWallets.orEmpty()
             wallets.addOrReplace(userWallet) { it.walletId == userWallet.walletId }
+        }
+
+        if (oldUserWallet == null && userWallet is UserWallet.Hot) {
+            // A newly added hot wallet is registered with the Tangem Auth Service right away, while its
+            // unlock context is fresh (fire-and-forget, idempotent per walletId).
+            walletRegistrationTrigger.get().onMobileWalletCreated(userWallet)
         }
 
         if (isFirstWallet) {
@@ -303,6 +315,7 @@ internal class DefaultUserWalletsListRepository(
                     .doOnSuccess { sensitiveInfo ->
                         updateWallets { it?.updateWith(sensitiveInfo) }
                         trackSignInEvent(userWallet, AnalyticsParam.SignInType.AccessCode)
+                        registerUnlockedMobileWallets(listOf(userWallet.walletId))
                     }
                     .doOnFailure { error -> raise(UnlockWalletError.UnableToUnlock.RawException(error)) }
             }
@@ -386,6 +399,7 @@ internal class DefaultUserWalletsListRepository(
                 selectedUserWallet.value?.let {
                     trackSignInEvent(it, AnalyticsParam.SignInType.Biometric)
                 }
+                registerUnlockedMobileWallets(unlockedWalletsIds)
             }
             .doOnFailure { error -> raise(UnlockWalletError.UnableToUnlock.RawException(error)) }
     }
@@ -531,6 +545,21 @@ internal class DefaultUserWalletsListRepository(
         }
     }
 
+    /**
+     * Retries mobile registration for the now-unlocked hot wallets among [unlockedWalletIds]. Unlock
+     * is the only point where Password/Biometry wallets gain a silent signing context, so a
+     * registration that failed at creation is re-attempted here. Fire-and-forget, idempotent per wallet.
+     */
+    private fun registerUnlockedMobileWallets(unlockedWalletIds: Collection<UserWalletId>) {
+        val unlockedHotWallets = userWallets.value
+            ?.filterIsInstance<UserWallet.Hot>()
+            ?.filter { it.walletId in unlockedWalletIds && !it.isLocked }
+            .orEmpty()
+        if (unlockedHotWallets.isNotEmpty()) {
+            walletRegistrationTrigger.get().onMobileWalletsUnlocked(unlockedHotWallets)
+        }
+    }
+
     private suspend fun requestPasswordRecursive(
         hotWalletId: HotWalletId,
         block: suspend (CharArray) -> UserWalletEncryptionKey?,
@@ -576,7 +605,7 @@ internal class DefaultUserWalletsListRepository(
 
     private suspend fun hasBiometry(): Boolean {
         val isBiometricAuthenticationUsed = appPreferencesStore.getSyncOrDefault(
-            key = PreferencesKeys.USE_BIOMETRIC_AUTHENTICATION_KEY,
+            key = storePreferencesKeys.useBiometricAuthenticationKey,
             default = false,
         )
 
@@ -675,12 +704,12 @@ internal class DefaultUserWalletsListRepository(
 
     private suspend fun onFirstWalletCreated() {
         // reset the referral attribution (set from AF deeplink) after creating a new wallet
-        clearAppsFlyerDeeplinkUseCase()
+        clearReferralInstallUseCase()
     }
 
     private suspend fun onAllWalletsDeleted() {
         // reset the referral attribution (set from AF deeplink) after removing the last wallet
-        clearAppsFlyerDeeplinkUseCase()
-        appPreferencesStore.editData { it.remove(PreferencesKeys.USEDESK_CLIENT_ID_KEY) }
+        clearReferralInstallUseCase()
+        appPreferencesStore.editData { it.remove(storePreferencesKeys.usedeskClientIdKey) }
     }
 }

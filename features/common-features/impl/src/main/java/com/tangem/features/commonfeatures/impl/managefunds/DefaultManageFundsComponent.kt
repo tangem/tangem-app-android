@@ -14,9 +14,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.arkivanov.decompose.router.slot.childSlot
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.ui.markets.action.TokenActionsContext
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
+import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.*
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -33,6 +37,7 @@ import com.tangem.features.commonfeatures.impl.managefunds.model.ManageFundsMode
 import com.tangem.features.commonfeatures.impl.managefunds.model.uiSpec
 import com.tangem.features.commonfeatures.impl.tokenactions.TokenActionsComponent
 import com.tangem.features.commonfeatures.impl.userportfolio.UserPortfolioComponent
+import com.tangem.features.jointaccount.slotbusy.JointOperationSlotBusyComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -44,6 +49,7 @@ internal class DefaultManageFundsComponent @AssistedInject constructor(
     chooseTokenComponentFactory: ChooseTokenComponent.Factory,
     tokenActionsComponentFactory: TokenActionsComponent.Factory,
     userPortfolioComponentFactory: UserPortfolioComponent.Factory,
+    jointOperationSlotBusyComponentFactory: JointOperationSlotBusyComponent.Factory,
 ) : AppComponentContext by appComponentContext, ManageFundsComponent {
 
     private val model: ManageFundsModel = getOrCreateModel(params)
@@ -63,6 +69,7 @@ internal class DefaultManageFundsComponent @AssistedInject constructor(
                     ManageFundsComponent.FlowType.AddFunds -> TokenActionsContext.AddFunds
                     ManageFundsComponent.FlowType.Transfer -> TokenActionsContext.Transfer
                 },
+                isRegionRestricted = params.isRegionRestricted,
             ),
         )
     }
@@ -90,12 +97,29 @@ internal class DefaultManageFundsComponent @AssistedInject constructor(
         )
     }
 
+    private val jointSlotBusySlot = childSlot(
+        source = model.jointSlotBusyNavigation,
+        serializer = null,
+        handleBackButton = false,
+        key = "manageFundsJointSlotBusy",
+        childFactory = { networkName, componentContext ->
+            jointOperationSlotBusyComponentFactory.create(
+                context = childByContext(componentContext),
+                params = JointOperationSlotBusyComponent.Params(
+                    networkName = networkName,
+                    onDismiss = model.jointSlotBusyNavigation::dismiss,
+                ),
+            )
+        },
+    )
+
     override fun dismiss() = model.onDismiss()
 
     @Composable
     override fun BottomSheet() {
         val route by model.uiRoute.collectAsStateWithLifecycle()
         val canGoBack by model.canGoBack.collectAsStateWithLifecycle()
+        val jointSlotBusy by jointSlotBusySlot.subscribeAsState()
 
         LaunchedEffect(route) {
             if (route != ManageFundsModel.UiRoute.UserPortfolio) return@LaunchedEffect
@@ -155,6 +179,7 @@ internal class DefaultManageFundsComponent @AssistedInject constructor(
                     }
                 },
             )
+            jointSlotBusy.child?.instance?.BottomSheet()
         }
     }
 

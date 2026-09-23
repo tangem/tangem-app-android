@@ -1,6 +1,7 @@
 package com.tangem.core.ui.components.fields
 
 import androidx.annotation.FloatRange
+import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -131,7 +132,8 @@ data class AmountTextFieldColors(
     val backgroundColor: Color,
 )
 
-private fun prepareEnter(oldValue: String, newValue: String, decimalFormat: DecimalFormat, decimals: Int): String {
+@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+internal fun prepareEnter(oldValue: String, newValue: String, decimalFormat: DecimalFormat, decimals: Int): String {
     val decimalSymbol = decimalFormat.decimalFormatSymbols.decimalSeparator
     return if (decimalFormat.isValidSymbols(newValue)) {
         val parsedDecimal = newValue.parseBigDecimalOrNull()

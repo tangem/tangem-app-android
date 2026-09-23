@@ -116,6 +116,8 @@ internal class DefaultOnboardingEntryComponent @AssistedInject constructor(
                 val titleText = when (stack.active.configuration) {
                     is OnboardingRoute.ManageTokens -> resourceReference(R.string.main_manage_tokens)
                     is OnboardingRoute.AskBiometry -> resourceReference(R.string.onboarding_navbar_save_wallet)
+                    is OnboardingRoute.PushNotifications ->
+                        resourceReference(R.string.onboarding_title_notifications)
                     is OnboardingRoute.Done -> resourceReference(R.string.onboarding_done_header)
                     else -> error("Unsupported route")
                 }
@@ -124,10 +126,11 @@ internal class DefaultOnboardingEntryComponent @AssistedInject constructor(
                         currentStep = when (stack.active.configuration) {
                             is OnboardingRoute.ManageTokens -> 7
                             is OnboardingRoute.AskBiometry -> 8
-                            is OnboardingRoute.Done -> 9
+                            is OnboardingRoute.PushNotifications -> 9
+                            is OnboardingRoute.Done -> 10
                             else -> error("Unsupported route")
                         },
-                        steps = 9,
+                        steps = 10,
                         title = OnboardingTitle(titleText),
                         showProgress = true,
                     )

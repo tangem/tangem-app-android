@@ -172,6 +172,50 @@ internal class GetCustomerOffersUseCaseTest {
         assertThat(actual).isEqualTo(VisaApiError.ServerUnavailable.left())
     }
 
+    @Test
+    fun `GIVEN campaign offer among offers WHEN campaignOffer THEN it is returned AND deeplink passed to repository`() =
+        runTest {
+            // Arrange
+            coEvery {
+                customerOffersRepository.getOffers(USER_WALLET_ID, DEEPLINK_VALUE)
+            } returns customerOffers(virtualOffer(), deeplinkOffer()).right()
+
+            // Act
+            val actual = useCase.campaignOffer(USER_WALLET_ID, DEEPLINK_VALUE)
+
+            // Assert
+            assertThat(actual).isEqualTo(deeplinkOffer().right())
+            coVerify(exactly = 1) { customerOffersRepository.getOffers(USER_WALLET_ID, DEEPLINK_VALUE) }
+        }
+
+    @Test
+    fun `GIVEN only regular offers WHEN campaignOffer THEN it returns null`() = runTest {
+        // Arrange
+        coEvery {
+            customerOffersRepository.getOffers(USER_WALLET_ID, DEEPLINK_VALUE)
+        } returns customerOffers(virtualOffer(), plasticOffer()).right()
+
+        // Act
+        val actual = useCase.campaignOffer(USER_WALLET_ID, DEEPLINK_VALUE)
+
+        // Assert
+        assertThat(actual).isEqualTo(null.right())
+    }
+
+    @Test
+    fun `GIVEN the request fails WHEN campaignOffer THEN the error is propagated`() = runTest {
+        // Arrange
+        coEvery {
+            customerOffersRepository.getOffers(USER_WALLET_ID, DEEPLINK_VALUE)
+        } returns VisaApiError.ServerUnavailable.left()
+
+        // Act
+        val actual = useCase.campaignOffer(USER_WALLET_ID, DEEPLINK_VALUE)
+
+        // Assert
+        assertThat(actual).isEqualTo(VisaApiError.ServerUnavailable.left())
+    }
+
     private fun givenProductInstanceOffers(vararg offers: Offer) {
         coEvery {
             customerOffersRepository.getProductInstanceOffers(USER_WALLET_ID, PRODUCT_INSTANCE_ID)
@@ -188,6 +232,8 @@ internal class GetCustomerOffersUseCaseTest {
 
     private fun reissueOffer() = offer(type = Offer.Type.CARD_REISSUE_PLASTIC_RAIN)
 
+    private fun deeplinkOffer() = offer(type = Offer.Type.CARD_ISSUE_VIRTUAL_RAIN_DEEPLINK)
+
     private fun offer(type: Offer.Type) = Offer(
         type = type,
         fee = Offer.Fee(amount = BigDecimal("5.00"), currency = Currency.getInstance("USD")),
@@ -197,6 +243,7 @@ internal class GetCustomerOffersUseCaseTest {
     private companion object {
         val USER_WALLET_ID = UserWalletId("1234567890ABCDEF")
         const val PRODUCT_INSTANCE_ID = "pi_source_0001"
+        const val DEEPLINK_VALUE = "tpay_for_oxford"
     }
 }
 

@@ -12,11 +12,13 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.yield.supply.promo.usecase.GetBoostedApyUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyPromoComponent
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
+import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
 import com.tangem.features.yield.supply.impl.promo.YieldSupplyPromoConfig
 import com.tangem.features.yield.supply.impl.promo.entity.YieldSupplyPromoUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -34,6 +36,7 @@ internal class YieldSupplyPromoModel @Inject constructor(
     private val appRouter: AppRouter,
     private val getBoostedApyUseCase: GetBoostedApyUseCase,
     private val boostStoryPreloader: YieldBoostStoryPreloader,
+    private val alertFactory: YieldSupplyAlertFactory,
 ) : Model(), YieldSupplyPromoClickIntents {
 
     val params: YieldSupplyPromoComponent.Params = paramsContainer.require()
@@ -72,6 +75,10 @@ internal class YieldSupplyPromoModel @Inject constructor(
     }
 
     override fun onStartEarningClick() {
+        if (params.currency.network.derivationPath is Network.DerivationPath.Joint) {
+            alertFactory.showJointAccountComingSoon()
+            return
+        }
         bottomSheetNavigation.activate(YieldSupplyPromoConfig.Action)
     }
 

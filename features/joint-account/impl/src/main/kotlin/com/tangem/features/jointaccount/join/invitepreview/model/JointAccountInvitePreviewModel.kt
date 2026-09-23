@@ -13,16 +13,22 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
+import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitePreviewUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.jointaccount.join.confirmation.ui.state.JointAccountJoinConfirmationUM
 import com.tangem.features.jointaccount.join.invitepreview.state.JointAccountInvitePreviewStateController
+import com.tangem.features.jointaccount.join.invitepreview.state.transformers.SetContentTransformer
+import com.tangem.features.jointaccount.join.invitepreview.state.transformers.SetFailedTransformer
+import com.tangem.features.jointaccount.join.invitepreview.state.transformers.SetInvalidLinkTransformer
 import com.tangem.features.jointaccount.join.invitepreview.state.transformers.SetJoinConfirmationTransformer
-import com.tangem.features.jointaccount.join.invitepreview.state.transformers.UpdateInvitePreviewInitialStateTransformer
+import com.tangem.features.jointaccount.join.invitepreview.state.transformers.SetLoadingTransformer
 import com.tangem.features.jointaccount.join.invitepreview.state.transformers.UpdateInvitePreviewWalletsTransformer
 import com.tangem.features.jointaccount.join.invitepreview.ui.state.JointAccountInvitePreviewUM
 import com.tangem.features.jointaccount.join.model.JointAccountJoinChildParams
@@ -30,15 +36,17 @@ import com.tangem.features.jointaccount.main.JointAccountMembersUM
 import com.tangem.features.jointaccount.main.entity.MemberCardConfig
 import com.tangem.features.jointaccount.join.navigation.JointAccountJoinRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.tangem.core.ui.R as CoreUiR
 
@@ -50,7 +58,8 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val stateController: JointAccountInvitePreviewStateController,
-    userWalletsListRepository: UserWalletsListRepository,
+    private val getJointAccountInvitePreviewUseCase: GetJointAccountInvitePreviewUseCase,
+    private val userWalletsListRepository: UserWalletsListRepository,
     val portfolioSelectorController: PortfolioSelectorController,
     portfolioFetcherFactory: PortfolioFetcher.Factory,
     private val clipboardManager: ClipboardManager,
@@ -80,8 +89,9 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
             .map { it?.first }
             .stateIn(modelScope, SharingStarted.Eagerly, null)
 
-    private val unlockedWallets: Flow<List<UserWallet>> = userWalletsListRepository.userWallets
+    private val unlockedWallets: StateFlow<List<UserWallet>> = userWalletsListRepository.userWallets
         .map { wallets -> wallets.orEmpty().filterNot(UserWallet::isLocked) }
+        .stateIn(modelScope, SharingStarted.Eagerly, emptyList())
 
     /**
      * The wallet that joins the account. A pick in the selector always wins; with no pick yet it defaults to
@@ -102,20 +112,65 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     val uiState: StateFlow<JointAccountInvitePreviewUM>
         get() = stateController.uiState
 
+    private var loadJob: Job? = null
+
     init {
-        updateInitialState()
+        loadForSelectedWallet()
         observeWallets()
         dismissSelectorOnPick()
     }
 
-    private fun updateInitialState() {
-        stateController.update(
-            UpdateInvitePreviewInitialStateTransformer(
-                onCreatorInfoClick = ::onCreatorInfoClick,
-                onContinueClick = ::onContinueClick,
-                onCloseClick = ::onCloseClick,
-            ),
-        )
+    private fun loadForSelectedWallet() {
+        combine(
+            userWalletsListRepository.userWallets.filterNotNull(),
+            selectedWallet,
+        ) { _, selected -> selected?.walletId }
+            .distinctUntilChanged()
+            .onEach(::load)
+            .launchIn(modelScope)
+    }
+
+    private fun load(walletId: UserWalletId?) {
+        loadJob?.cancel()
+        loadJob = modelScope.launch {
+            stateController.update(SetLoadingTransformer(onCloseClick = ::onCloseClick))
+
+            if (walletId == null) {
+                stateController.update(SetFailedTransformer(onRetryClick = ::retry, onCloseClick = ::onCloseClick))
+                return@launch
+            }
+
+            getJointAccountInvitePreviewUseCase(walletId = walletId, inviteId = params.inviteId).fold(
+                ifLeft = { error ->
+                    when (error) {
+                        is JointAccountInvitePreviewError.InvalidLink ->
+                            stateController.update(SetInvalidLinkTransformer(onGotItClick = ::onCloseClick))
+                        is JointAccountInvitePreviewError.LoadFailed ->
+                            stateController.update(
+                                SetFailedTransformer(onRetryClick = ::retry, onCloseClick = ::onCloseClick),
+                            )
+                    }
+                },
+                ifRight = { preview ->
+                    params.draftHolder.setConfig(config = preview.config)
+                    stateController.update(
+                        SetContentTransformer(
+                            preview = preview,
+                            wallets = unlockedWallets.value,
+                            selectedWallet = selectedWallet.value,
+                            onCreatorInfoClick = ::onCreatorInfoClick,
+                            onContinueClick = ::onContinueClick,
+                            onWalletRowClick = ::onWalletRowClick,
+                            onCloseClick = ::onCloseClick,
+                        ),
+                    )
+                },
+            )
+        }
+    }
+
+    private fun retry() {
+        load(walletId = selectedWallet.value?.walletId)
     }
 
     private fun observeWallets() {
@@ -139,7 +194,7 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     }
 
     private fun onCreatorInfoClick() {
-        val state = uiState.value
+        val state = uiState.value as? JointAccountInvitePreviewUM.Content ?: return
 
         memberCardNavigation.activate(
             MemberCardConfig(
@@ -148,7 +203,7 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
                     color = state.accountIcon.color,
                 ),
                 name = stringReference(state.creatorName),
-                address = STUB_CREATOR_ADDRESS,
+                address = state.creatorAddress,
             ),
         )
     }
@@ -194,10 +249,5 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     /** The close icon does not join: the slot stays free and the invitation is not consumed */
     private fun onCloseClick() {
         router.pop()
-    }
-
-    private companion object {
-        // TODO: replace the stubbed creator address once the domain integration lands
-        const val STUB_CREATOR_ADDRESS = "0xBef7B368aac4e6752A9cE0xBef7B36A9cE"
     }
 }

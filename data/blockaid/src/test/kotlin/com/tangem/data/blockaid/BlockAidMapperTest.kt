@@ -137,6 +137,32 @@ class BlockAidMapperTest {
     }
 
     @Test
+    fun `when simulation failed without an account summary then returns failed to simulate`() {
+        val response = TransactionScanResponse(
+            validation = ValidationResponse(status = "Error", resultType = null, description = null),
+            simulation = SimulationResponse(status = "Error", accountSummary = null),
+        )
+
+        val result = mapper.mapToDomain(response)
+
+        Truth.assertThat(result.validation).isEqualTo(ValidationResult.FAILED_TO_VALIDATE)
+        Truth.assertThat(result.simulation).isEqualTo(SimulationResult.FailedToSimulate)
+    }
+
+    @Test
+    fun `when response carries no simulation then returns failed to simulate`() {
+        val response = TransactionScanResponse(
+            validation = ValidationResponse(status = "Success", resultType = "Benign", description = ""),
+            simulation = null,
+        )
+
+        val result = mapper.mapToDomain(response)
+
+        Truth.assertThat(result.validation).isEqualTo(ValidationResult.SAFE)
+        Truth.assertThat(result.simulation).isEqualTo(SimulationResult.FailedToSimulate)
+    }
+
+    @Test
     fun `when response simulation not success then returns simulation failed ro simulate`() {
         val response = TransactionScanResponse(
             validation = ValidationResponse(status = "Success", resultType = "Benign", description = ""),

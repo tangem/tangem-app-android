@@ -4,6 +4,7 @@ import androidx.annotation.VisibleForTesting
 import com.tangem.Message
 import com.tangem.TangemSdk
 import com.tangem.blockchain.common.TransactionSigner
+import com.tangem.common.core.CardSession
 import com.tangem.core.analytics.models.Basic.TransactionSent.WalletForm
 import com.tangem.core.analytics.store.LastSignedWalletFormStore
 import com.tangem.data.card.TransactionSignerFactory
@@ -12,15 +13,22 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.update
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.tap.domain.TangemSigner
 import com.tangem.tap.domain.TangemSignerResponse
+import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
 import com.tangem.utils.coroutines.AppCoroutineScope
+import dagger.Lazy
 import kotlinx.coroutines.launch
 
 internal class DefaultTransactionSignerFactory(
     private val lastSignedWalletFormStore: LastSignedWalletFormStore,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val coroutineScope: AppCoroutineScope,
+    // Lazy breaks a DI cycle: WalletRegistrationLauncher -> HotWalletAccessor -> LegacySettingsRepository
+    // -> TangemSdkManager -> CardSdkConfigRepository -> TransactionSignerFactory.
+    private val walletRegistrationLauncher: Lazy<WalletRegistrationLauncher>,
+    private val authFeatureToggles: AuthFeatureToggles,
 ) : TransactionSignerFactory {
 
     override fun createTransactionSigner(
@@ -28,15 +36,20 @@ internal class DefaultTransactionSignerFactory(
         sdk: TangemSdk,
         twinKey: TwinKey?,
         userWalletId: UserWalletId,
+        session: CardSession?,
     ): TransactionSigner {
         return TangemSigner(
             cardId = cardId,
             tangemSdk = sdk,
             initialMessage = Message(),
             twinKey = twinKey,
-        ) { signResponse ->
-            onSignerResponse(userWalletId, signResponse)
-        }
+            walletRegistrationLauncher = walletRegistrationLauncher.get(),
+            authFeatureToggles = authFeatureToggles,
+            signerCallback = { signResponse ->
+                onSignerResponse(userWalletId, signResponse)
+            },
+            session = session,
+        )
     }
 
     @VisibleForTesting

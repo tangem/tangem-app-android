@@ -3,7 +3,7 @@ package com.tangem.screens.accounts
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.accounts.AccountDetailsScreenTestTags
-import com.tangem.core.ui.test.TopAppBarTestTags
+import com.tangem.core.ui.test.TopNavigationTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
@@ -15,8 +15,10 @@ class AccountDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
         hasTestTag(AccountDetailsScreenTestTags.ACCOUNT_DETAILS_CONTAINER)
     }
 
+    // DS3 toolbar ([REDACTED_TASK_KEY]): the screen moved to TangemTopNavigation, so the back button is no longer
+    // the TopAppBar close icon.
     val topAppBarBackButton: KNode = child {
-        hasTestTag(TopAppBarTestTags.CLOSE_BUTTON)
+        hasTestTag(TopNavigationTestTags.BACK_BUTTON)
     }
 
     val manageTokensButton: KNode = child {

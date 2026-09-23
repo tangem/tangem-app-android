@@ -1,6 +1,6 @@
 package com.tangem.data.networks.converters
 
-import com.tangem.datasource.local.network.entity.NetworkStatusDM.CurrencyAmount
+import com.tangem.data.networks.entity.NetworkStatusDM.CurrencyAmount
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkStatus

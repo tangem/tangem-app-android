@@ -21,6 +21,7 @@ import com.tangem.domain.tokens.model.Amount
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.*
 import com.tangem.features.send.api.utils.formatFooterFiatFee
 import com.tangem.features.send.common.ui.state.ConfirmUM
+import com.tangem.features.send.common.ui.state.SendSignaturesUM
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.collections.immutable.persistentListOf
@@ -170,6 +171,116 @@ class SendConfirmationNotificationsTransformerV2Test {
     }
 
     @Test
+    fun `GIVEN joint signatures WHEN transform THEN footer describes the request and its threshold`() = runTest {
+        // GIVEN
+        val feeSelectorUM = createFiatConvertibleFeeSelectorUM(feeValue = BigDecimal("0.001"))
+        val transformer = SendConfirmationNotificationsTransformerV2(
+            feeSelectorUM = feeSelectorUM,
+            amountUM = createTestAmountUM(),
+            analyticsEventHandler = analyticsEventHandler,
+            cryptoCurrency = cryptoCurrency,
+            appCurrency = appCurrency,
+            analyticsCategoryName = analyticsCategoryName,
+            isFeeSubtractedFromAmount = false,
+            isFeeExceedingBalance = false,
+        )
+        val initialState = createTestConfirmUM().copy(signaturesUM = SendSignaturesUM(threshold = 2, membersCount = 3))
+
+        // WHEN
+        val result = transformer.transform(initialState)
+
+        // THEN: the total includes the fee, and the threshold and members are spelled out
+        val fee = feeSelectorUM.selectedFeeItem.fee
+        val fiatFeeValue = fee.amount.value!!.multiply(feeSelectorUM.feeFiatRateUM!!.rate)
+        val sending = (BigDecimal("50.00") + fiatFeeValue).format {
+            fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+        }
+        val feeText = formatFooterFiatFee(
+            amount = fee.amount.copy(value = fiatFeeValue),
+            isFeeConvertibleToFiat = true,
+            isFeeApproximate = feeSelectorUM.feeExtraInfo.isFeeApproximate,
+            appCurrency = appCurrency,
+        )
+        Truth.assertThat((result as ConfirmUM.Content).sendingFooter).isEqualTo(
+            resourceReference(
+                id = R.string.joint_account_send_footer_text,
+                formatArgs = wrappedList(sending, feeText, "2", "3"),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN joint signatures and total over balance WHEN transform THEN there is no footer`() = runTest {
+        // Arrange
+        val feeSelectorUM = createFiatConvertibleFeeSelectorUM(feeValue = BigDecimal("0.001"))
+        val transformer = SendConfirmationNotificationsTransformerV2(
+            feeSelectorUM = feeSelectorUM,
+            amountUM = createTestAmountUM(),
+            analyticsEventHandler = analyticsEventHandler,
+            cryptoCurrency = cryptoCurrency,
+            appCurrency = appCurrency,
+            analyticsCategoryName = analyticsCategoryName,
+            isFeeSubtractedFromAmount = true,
+            isFeeExceedingBalance = false,
+        )
+        val initialState = createTestConfirmUM().copy(signaturesUM = SendSignaturesUM(threshold = 2, membersCount = 3))
+
+        // Act
+        val actual = transformer.transform(initialState) as ConfirmUM.Content
+
+        // Assert
+        Truth.assertThat(actual.sendingFooter).isEqualTo(TextReference.EMPTY)
+    }
+
+    @Test
+    fun `GIVEN the first joint operation WHEN transform THEN the note names the deployment share of the fee`() = runTest {
+        // Arrange — 300 000 deployment gas at 2 gwei = 0.0006 ETH, worth $1.20 at $2000
+        val fee = Fee.Ethereum.Legacy(
+            amount = com.tangem.blockchain.common.Amount(
+                currencySymbol = "ETH",
+                value = BigDecimal("0.001"),
+                decimals = 18,
+            ),
+            gasLimit = BigInteger("500000"),
+            gasPrice = BigInteger("2000000000"),
+        )
+        val feeSelectorUM = createFiatConvertibleFeeSelectorUM(feeValue = BigDecimal("0.001")).copy(
+            fees = TransactionFee.Single(fee),
+            feeItems = persistentListOf(FeeItem.Market(fee)),
+            selectedFeeItem = FeeItem.Market(fee),
+            feeFiatRateUM = FeeFiatRateUM(rate = BigDecimal("2000"), appCurrency = appCurrency),
+        )
+        val initialState = createTestConfirmUM().copy(
+            signaturesUM = SendSignaturesUM(threshold = 2, membersCount = 3, isFirstOperation = true),
+        )
+
+        // Act
+        val actual = transformer(feeSelectorUM).transform(initialState) as ConfirmUM.Content
+
+        // Assert
+        // The symbol position follows the locale, like every other amount on the screen
+        val note = actual.setupFeeNote as TextReference.Res
+        Truth.assertThat(note.id).isEqualTo(R.string.joint_account_send_setup_fee_note)
+        val setupFeeText = note.formatArgs[1] as String
+        Truth.assertThat(setupFeeText).contains("$1.20")
+        Truth.assertThat(setupFeeText).contains("0.0006")
+        Truth.assertThat(setupFeeText).contains("ETH")
+    }
+
+    @Test
+    fun `GIVEN a joint operation on a deployed Safe WHEN transform THEN there is no setup fee note`() = runTest {
+        // Arrange
+        val feeSelectorUM = createFiatConvertibleFeeSelectorUM(feeValue = BigDecimal("0.001"))
+        val initialState = createTestConfirmUM().copy(signaturesUM = SendSignaturesUM(threshold = 2, membersCount = 3))
+
+        // Act
+        val actual = transformer(feeSelectorUM).transform(initialState) as ConfirmUM.Content
+
+        // Assert
+        Truth.assertThat(actual.setupFeeNote).isNull()
+    }
+
+    @Test
     fun `GIVEN fee exceeds balance WHEN transform THEN footer sending is zero`() = runTest {
         // GIVEN: the fee alone exceeds the balance → nothing can be sent.
         val feeSelectorUM = createFiatConvertibleFeeSelectorUM(feeValue = BigDecimal("0.001"))
@@ -307,6 +418,17 @@ class SendConfirmationNotificationsTransformerV2Test {
         Truth.assertThat(content.notifications.any { it is NotificationUM.Warning.TooHigh }).isTrue()
         Truth.assertThat(content.notifications.any { it is NotificationUM.Warning.FeeTooLow }).isTrue()
     }
+
+    private fun transformer(feeSelectorUM: FeeSelectorUM) = SendConfirmationNotificationsTransformerV2(
+        feeSelectorUM = feeSelectorUM,
+        amountUM = createTestAmountUM(),
+        analyticsEventHandler = analyticsEventHandler,
+        cryptoCurrency = cryptoCurrency,
+        appCurrency = appCurrency,
+        analyticsCategoryName = analyticsCategoryName,
+        isFeeSubtractedFromAmount = false,
+        isFeeExceedingBalance = false,
+    )
 
     private fun createTestConfirmUM(): ConfirmUM.Content {
         return ConfirmUM.Content(
