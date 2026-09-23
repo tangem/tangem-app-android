@@ -1,7 +1,7 @@
 package com.tangem.data.analytics
 
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectListSync
 import com.tangem.datasource.local.preferences.utils.getObjectMapSync
 import com.tangem.domain.analytics.model.WalletBalanceState
@@ -10,27 +10,28 @@ import com.tangem.domain.models.wallet.UserWalletId
 
 internal class DefaultAnalyticsRepository(
     private val appPreferencesStore: AppPreferencesStore,
+    private val storePreferencesKeys: StorePreferencesKeys,
 ) : AnalyticsRepository {
 
     override suspend fun checkIsEventSent(eventId: String): Boolean {
         val sentEvents = appPreferencesStore
-            .getObjectListSync<String>(PreferencesKeys.SENT_ONE_TIME_EVENTS_KEY)
+            .getObjectListSync<String>(storePreferencesKeys.sentOneTimeEventsKey)
 
         return eventId in sentEvents
     }
 
     override suspend fun setIsEventSent(eventId: String) {
         appPreferencesStore.editData { mutablePreferences ->
-            val sentEvents = mutablePreferences.getObjectList<String>(PreferencesKeys.SENT_ONE_TIME_EVENTS_KEY)
+            val sentEvents = mutablePreferences.getObjectList<String>(storePreferencesKeys.sentOneTimeEventsKey)
             val updatedSentEvents = sentEvents.orEmpty() + eventId
 
-            mutablePreferences.setObjectList(PreferencesKeys.SENT_ONE_TIME_EVENTS_KEY, updatedSentEvents)
+            mutablePreferences.setObjectList(storePreferencesKeys.sentOneTimeEventsKey, updatedSentEvents)
         }
     }
 
     override suspend fun getWalletBalanceState(userWalletId: UserWalletId): WalletBalanceState? {
         val walletsBalanceState = appPreferencesStore.getObjectMapSync<WalletBalanceState>(
-            key = PreferencesKeys.WALLETS_BALANCES_STATES_KEY,
+            key = storePreferencesKeys.walletsBalancesStatesKey,
         )
 
         return walletsBalanceState[userWalletId.stringValue]
@@ -39,12 +40,12 @@ internal class DefaultAnalyticsRepository(
     override suspend fun setWalletBalanceState(userWalletId: UserWalletId, balanceState: WalletBalanceState) {
         appPreferencesStore.editData { preferences ->
             val walletsBalanceState = preferences.getObjectMap<WalletBalanceState>(
-                key = PreferencesKeys.WALLETS_BALANCES_STATES_KEY,
+                key = storePreferencesKeys.walletsBalancesStatesKey,
             )
             val updatedWalletsBalanceState = walletsBalanceState
                 .plus(pair = userWalletId.stringValue to balanceState)
 
-            preferences.setObjectMap(PreferencesKeys.WALLETS_BALANCES_STATES_KEY, updatedWalletsBalanceState)
+            preferences.setObjectMap(storePreferencesKeys.walletsBalancesStatesKey, updatedWalletsBalanceState)
         }
     }
 }

@@ -1,12 +1,20 @@
 package com.tangem.features.collectibles.impl
 
 import com.tangem.core.decompose.navigation.Route
+import com.tangem.domain.models.wallet.UserWalletId
+import kotlinx.serialization.Serializable
 
+@Serializable
 internal sealed interface CollectiblesRoute : Route {
 
-    data object Onboarding : CollectiblesRoute
+    @Serializable
+    data class Onboarding(val userWalletId: UserWalletId) : CollectiblesRoute
 
+    @Serializable
     data object Stories : CollectiblesRoute
 
-    data object Main : CollectiblesRoute
+    @Serializable
+    data class Main(val userWalletId: UserWalletId) : CollectiblesRoute
+
+    data class MachineDetails(val externalId: String) : CollectiblesRoute
 }

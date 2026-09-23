@@ -52,16 +52,16 @@ sealed interface OnChainTx : TxHistoryInfo {
 }
 
 /**
- * Cross-batch identity of a tx: `txHash` alone is not enough because gasless flows surface several
- * events under the same on-chain hash (e.g. `GaslessFee` + `Transfer`). Pinning the [TxInfo.type]
- * keeps those legitimate sibling events apart while still collapsing the same event seen twice —
- * e.g. an Unconfirmed copy injected via `addRecentTransactions` and a Confirmed copy that arrives
- * in a later API batch.
+ * Cross-batch identity of a tx: `txHash` alone is not enough because one on-chain hash can surface as
+ * several rows — the events kept out of the merged group (`SdkTransactionHistoryItemConverter` decides
+ * which ones). Pinning the [TxInfo.type] and [TxInfo.destinationType] keeps those sibling rows apart while
+ * still collapsing the same event seen twice — e.g. an Unconfirmed copy injected via `addRecentTransactions`
+ * and a Confirmed copy that arrives in a later API batch.
  *
  * Single source of truth for tx identity, used both by [OnChainTx.BSDK.txId] and the on-chain de-duplication
  * in the history pipeline.
  */
-fun TxInfo.identityKey(): String = "$txHash|$type"
+fun TxInfo.identityKey(): String = "$txHash|$type|$destinationType"
 
 /**
  * Hash of the matched on-chain leg, used to open the row in a block explorer; `null` when there is no
@@ -85,16 +85,16 @@ val TxHistoryInfo.explorerHash: String?
     }
 
 /**
- * Human-meaningful transaction id to copy/display: the on-chain hash for an [OnChainTx], the express side's own
- * id otherwise — regardless of whether the deal is already matched to an on-chain leg. Support looks up an
- * express deal (and every on-chain leg tied to it) by this id, so a merged row must keep exposing it rather than
- * falling back to the matched leg's hash.
+ * Human-meaningful transaction id to copy/display: the on-chain hash for an [OnChainTx], the express deal's own
+ * [ExpressTx.txId] otherwise — regardless of whether the deal is already matched to an on-chain leg. Support looks up
+ * an express deal (and every on-chain leg tied to it) by that id, so a merged row must keep exposing it rather than
+ * falling back to the matched leg's hash or to the provider's [ExpressTx.externalTxId].
  */
 val TxHistoryInfo.idToCopy: String
     get() = when (this) {
         is OnChainTx.BSDK -> txInfo.txHash
         is OnChainTx.TangemPay -> explorerHash ?: txId
-        is ExpressTx -> externalTxId?.takeIf(String::isNotBlank) ?: txId
+        is ExpressTx -> txId
     }
 
 /**
@@ -129,9 +129,9 @@ sealed interface ExpressTx : TxHistoryInfo {
     val externalTxUrl: String?
 
     /**
-     * Provider-side id of this deal; `null` when the provider supplies none. This is the id support looks
-     * up an express deal by (and, through it, every on-chain leg tied to the deal) — it must be surfaced for
-     * copy/share even once the deal is matched to its on-chain leg.
+     * Provider-side id of this deal; `null` when the provider supplies none. It identifies the deal on the provider's
+     * side (their tracking page, the rating key); what the user copies and shares is the Tangem-side [txId] — see
+     * [idToCopy].
      */
     val externalTxId: String?
 

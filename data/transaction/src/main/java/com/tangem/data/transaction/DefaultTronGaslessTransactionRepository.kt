@@ -1,10 +1,10 @@
 package com.tangem.data.transaction
 
-import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.grow.datasource.gasless.TronGaslessApi
 import com.tangem.grow.datasource.gasless.models.tron.TronEstimateRequestBody
 import com.tangem.grow.datasource.gasless.models.tron.TronSubmitRequestBody
 import com.tangem.domain.transaction.TronGaslessTransactionRepository
+import com.tangem.domain.transaction.error.GaslessServiceException
 import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
 import com.tangem.domain.transaction.models.tron.TronGaslessSubmitResult
@@ -34,8 +34,8 @@ internal class DefaultTronGaslessTransactionRepository(
     }
 
     private suspend fun fetchSupportedTokens(): List<TronGaslessToken> {
-        val response = api.getSupportedTokens().getOrThrow()
-        check(response.isSuccess) { GASLESS_UNSUCCESSFUL }
+        val response = api.getSupportedTokens().getOrThrowGaslessError()
+        if (!response.isSuccess) throw GaslessServiceException(httpCode = null, message = GASLESS_UNSUCCESSFUL)
         return response.result.tokens.map {
             TronGaslessToken(contractAddress = it.address, symbol = it.symbol, decimals = it.decimals)
         }
@@ -50,8 +50,8 @@ internal class DefaultTronGaslessTransactionRepository(
                 amount = params.amount.toString(),
                 feeTokenContract = params.feeTokenContract,
             ),
-        ).getOrThrow()
-        check(response.isSuccess) { GASLESS_UNSUCCESSFUL }
+        ).getOrThrowGaslessError()
+        if (!response.isSuccess) throw GaslessServiceException(httpCode = null, message = GASLESS_UNSUCCESSFUL)
 
         val res = response.result
         TronGaslessQuote(
@@ -79,8 +79,8 @@ internal class DefaultTronGaslessTransactionRepository(
                 signedCompensationTx = signedCompensationTx,
                 signedOriginalTx = signedOriginalTx,
             ),
-        ).getOrThrow()
-        check(response.isSuccess) { GASLESS_UNSUCCESSFUL }
+        ).getOrThrowGaslessError()
+        if (!response.isSuccess) throw GaslessServiceException(httpCode = null, message = GASLESS_UNSUCCESSFUL)
 
         val res = response.result
         TronGaslessSubmitResult(

@@ -8,6 +8,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.DateTimeFormatters
@@ -21,6 +22,7 @@ import com.tangem.domain.pay.usecase.CancelTariffPlanPendingTransitionUseCase
 import com.tangem.domain.pay.usecase.CancelTariffTransitionUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.awaitingDepositOrder
 import com.tangem.features.tangempay.customerTariffPlan
 import com.tangem.features.tangempay.details.impl.R
@@ -52,10 +54,11 @@ internal class TangemPayCurrentPlanModelTest {
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
+    private val urlOpener: UrlOpener = mockk(relaxed = true)
 
     @BeforeEach
     fun setUp() {
-        clearMocks(router, cancelPendingTransition, cancelTariffTransition, uiMessageSender, analytics)
+        clearMocks(router, cancelPendingTransition, cancelTariffTransition, uiMessageSender, analytics, urlOpener)
         every { paymentAccountStatusSupplier(USER_WALLET_ID) } returns emptyFlow()
         // DateTimeFormatters.dateMMMd resolves the locale pattern through the Android framework,
         // which is unavailable on the JVM — pin it to a fixed joda pattern instead.
@@ -138,6 +141,18 @@ internal class TangemPayCurrentPlanModelTest {
 
         // THEN
         assertThat(model.state.value.onChangePlanClick).isNotNull()
+    }
+
+    @Test
+    fun `GIVEN markdown link WHEN onLinkClick THEN url is opened in app`() {
+        // GIVEN
+        val model = createModel(planState = tariffPlanState())
+
+        // WHEN
+        model.state.value.onLinkClick("https://tangem.com/visa-benefits")
+
+        // THEN
+        verify(exactly = 1) { urlOpener.openUrl("https://tangem.com/visa-benefits") }
     }
 
     @Test
@@ -224,6 +239,19 @@ internal class TangemPayCurrentPlanModelTest {
         assertThat(model.state.value.onChangePlanClick).isNotNull()
     }
 
+    @Test
+    fun `GIVEN any plan WHEN full terms clicked THEN analytics sent AND terms link opened`() {
+        // GIVEN
+        val model = createModel(planState = tariffPlanState())
+
+        // WHEN
+        model.state.value.onFullTermsClick()
+
+        // THEN
+        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.TermsAndLimitsClicked>()) }
+        verify(exactly = 1) { urlOpener.openUrl(match { it.startsWith(TangemPayConstants.TERMS_AND_LIMITS_URL) }) }
+    }
+
     private fun createModel(planState: TangemPayTariffPlanState): TangemPayCurrentPlanModel {
         return TangemPayCurrentPlanModel(
             paramsContainer = MutableParamsContainer(
@@ -239,6 +267,7 @@ internal class TangemPayCurrentPlanModelTest {
             paymentAccountStatusSupplier = paymentAccountStatusSupplier,
             uiMessageSender = uiMessageSender,
             analytics = analytics,
+            urlOpener = urlOpener,
         )
     }
 

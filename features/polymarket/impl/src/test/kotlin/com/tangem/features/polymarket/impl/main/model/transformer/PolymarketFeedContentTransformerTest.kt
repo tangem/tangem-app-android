@@ -9,8 +9,11 @@ import com.tangem.domain.polymarket.model.PolymarketEventsBatchListState
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
+import com.tangem.features.polymarket.impl.common.funding.RequisitesState
+import com.tangem.features.polymarket.impl.main.model.PredictionBalanceMode
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketCategoryTabUM
+import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedFooterUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchFetchResult
@@ -22,22 +25,29 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
+import com.tangem.domain.models.account.PredictionAccountStatusValue
+import com.tangem.features.polymarket.impl.main.model.converter.PredictionBalanceUMConverter
+import kotlin.reflect.KClass
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class PolymarketFeedContentTransformerTest {
 
     private var reloadClicks = 0
+    private var nextPageRetryClicks = 0
 
-    // The class is PER_CLASS, so the counter would leak between tests.
+    // The class is PER_CLASS, so the counters would leak between tests.
     @BeforeEach
     fun resetRecordedClicks() {
         reloadClicks = 0
+        nextPageRetryClicks = 0
     }
 
     private fun transform(state: PolymarketEventsBatchListState): PolymarketMainUM = PolymarketFeedContentTransformer(
         batchListState = state,
         eventUMConverter = PolymarketEventUMConverter(onEventClick = {}, onOutcomeClick = { _, _, _ -> }),
         onReloadClick = { reloadClicks++ },
+        onNextPageRetryClick = { nextPageRetryClicks++ },
     ).transform(prevState = PREV_STATE)
 
     @Nested
@@ -62,11 +72,11 @@ internal class PolymarketFeedContentTransformerTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class FooterLoader {
+    inner class Footer {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun transformFooterLoader(model: FooterLoaderModel) {
+        fun transformFooter(model: FooterModel) {
             // Arrange
             val state = PolymarketEventsBatchListState(
                 data = listOf(Batch(key = 0, data = batchOf(createEvent()))),
@@ -77,19 +87,39 @@ internal class PolymarketFeedContentTransformerTest {
             val actual = transform(state)
 
             // Assert
-            assertThat((actual.content as PolymarketMainUM.ContentUM.Content).isLoadingNextPage)
-                .isEqualTo(model.expected)
+            assertThat((actual.content as PolymarketMainUM.ContentUM.Content).footer)
+                .isInstanceOf(model.expected.java)
         }
 
-        private fun provideTestModels(): List<FooterLoaderModel> = listOf(
-            FooterLoaderModel(status = PaginationStatus.NextBatchLoading, expected = true),
-            FooterLoaderModel(
+        @Test
+        fun `GIVEN the next page failed WHEN the footer is clicked THEN the retry is delegated`() {
+            // Arrange
+            val state = PolymarketEventsBatchListState(
+                data = listOf(Batch(key = 0, data = batchOf(createEvent()))),
+                status = PaginationStatus.Paginating(lastResult = BatchFetchResult.Error(IllegalStateException("boom"))),
+            )
+
+            // Act
+            val footer = (transform(state).content as PolymarketMainUM.ContentUM.Content).footer
+            (footer as PolymarketFeedFooterUM.Error).onRetryClick()
+
+            // Assert
+            assertThat(nextPageRetryClicks).isEqualTo(1)
+        }
+
+        private fun provideTestModels(): List<FooterModel> = listOf(
+            FooterModel(status = PaginationStatus.NextBatchLoading, expected = PolymarketFeedFooterUM.Loading::class),
+            FooterModel(
                 status = PaginationStatus.Paginating(
                     lastResult = BatchFetchResult.Success(data = batchOf(createEvent()), empty = false, last = false),
                 ),
-                expected = false,
+                expected = PolymarketFeedFooterUM.None::class,
             ),
-            FooterLoaderModel(status = PaginationStatus.EndOfPagination, expected = false),
+            FooterModel(
+                status = PaginationStatus.Paginating(lastResult = BatchFetchResult.Error(IllegalStateException("boom"))),
+                expected = PolymarketFeedFooterUM.Error::class,
+            ),
+            FooterModel(status = PaginationStatus.EndOfPagination, expected = PolymarketFeedFooterUM.None::class),
         )
     }
 
@@ -162,9 +192,9 @@ internal class PolymarketFeedContentTransformerTest {
 
     internal data class InitialLoadingModel(val status: PaginationStatus<PolymarketEventsBatch>)
 
-    internal data class FooterLoaderModel(
+    internal data class FooterModel(
         val status: PaginationStatus<PolymarketEventsBatch>,
-        val expected: Boolean,
+        val expected: KClass<out PolymarketFeedFooterUM>,
     )
 
     private fun initialLoadingErrorState() = PolymarketEventsBatchListState(
@@ -197,6 +227,7 @@ internal class PolymarketFeedContentTransformerTest {
         markets = listOf(
             PolymarketMarket(
                 id = "market-1",
+                conditionId = null,
                 eventId = id,
                 title = "Market question",
                 slug = "market-slug",
@@ -206,6 +237,7 @@ internal class PolymarketFeedContentTransformerTest {
                 imageUrl = null,
                 status = PolymarketStatus.ACTIVE,
                 isNegRisk = false,
+                isAcceptingOrders = true,
                 startDate = null,
                 endDate = null,
                 startDateIso = null,
@@ -221,10 +253,20 @@ internal class PolymarketFeedContentTransformerTest {
 
     private companion object {
         val PREV_STATE = PolymarketMainUM(
+            balance = PredictionBalanceUMConverter(onAddFundsClick = {}, onWithdrawClick = {}, onBalanceModeClick = {})
+                .convert(
+                    PredictionBalanceUMConverter.Input(
+                        status = PredictionAccountStatusValue.Loading,
+                        requisites = RequisitesState.Loading,
+                        isTradingAllowed = false,
+                        mode = PredictionBalanceMode.AVAILABLE,
+                    ),
+                ),
             categories = persistentListOf(
                 PolymarketCategoryTabUM(id = 1, label = "Politics", isSelected = true, onClick = {}),
             ),
             content = PolymarketMainUM.ContentUM.Loading,
+            pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
         )
     }
 }

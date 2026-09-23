@@ -105,6 +105,11 @@ sealed class AnalyticsParam {
         Staking("Staking"),
         Earn("Earn"),
         ForYou("For You"),
+        Predictions("Predictions"),
+        HotCreation("Hot Creation"),
+        ColdCreation("Cold Creation"),
+        FirstSignIn("First Sign In"),
+        MainRequestSheet("Main Request Sheet"),
     }
 
     sealed class TxSentFrom(val value: String) {
@@ -321,6 +326,8 @@ sealed class AnalyticsParam {
         const val STATE = "State"
         const val BATCH = "Batch"
         const val TYPE = "Type"
+        const val SECTION = "Section"
+        const val CATEGORY = "Category"
         const val FEE_TYPE = "Fee Type"
         const val WALLET_FORM = "WalletForm"
         const val PERMISSION_TYPE = "Permission Type"
@@ -371,6 +378,11 @@ sealed class AnalyticsParam {
         const val SEARCHED = "Searched"
         const val RATE_TYPE = "Rate Type"
         const val SCREEN_TYPE = "Screen Type"
+        const val ENTRY_REASON = "Entry Reason"
+        const val SHEET = "Sheet"
+        const val DISMISS_REASON = "Dismiss Reason"
+        const val DOCUMENT = "Document"
+        const val STAGE = "Stage"
         const val FEE_ASSET_TYPE = "Fee Asset Type"
         const val SIGN_IN_TYPE = "Sign in type"
         const val WALLETS_COUNT = "Wallets Count"
@@ -382,7 +394,6 @@ sealed class AnalyticsParam {
         const val MANUAL_BACKUP = "Manual Backup"
         const val BACKUP_TYPE = "Backup Type"
         const val BACKUP_COUNT = "Backup Count"
-        const val USER_WALLET_ID = "User Wallet Id"
         const val MEMO = "Memo"
         const val VALUE = "Value"
     }

@@ -117,9 +117,9 @@ internal class TokenSelectorContentConverterTest {
         onEntryClick = onEntryClick,
     )
 
-    private fun entry(account: Account.CryptoPortfolio, currency: CryptoCurrency) = TokenSelectorEntry(
+    private fun entry(account: Account.Personal, currency: CryptoCurrency) = TokenSelectorEntry(
         wallet = wallet,
-        account = AccountStatus.CryptoPortfolio(
+        account = AccountStatus.Personal(
             account = account,
             tokenList = TokenList.Empty,
             priceChangeLce = lceLoading(),

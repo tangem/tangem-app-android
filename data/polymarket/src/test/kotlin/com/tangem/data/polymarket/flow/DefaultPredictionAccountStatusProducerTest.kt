@@ -3,6 +3,7 @@ package com.tangem.data.polymarket.flow
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.data.polymarket.converter.PredictionAccountStatusValueDTOConverter
 import com.tangem.data.polymarket.store.PredictionAccountStatusStore
 import com.tangem.data.polymarket.store.WalletIdWithPredictionStatusDTO
 import com.tangem.domain.core.flow.FlowProducerTools
@@ -152,6 +153,9 @@ internal class DefaultPredictionAccountStatusProducerTest {
     }
 
     private fun createStore(testScope: TestScope) = PredictionAccountStatusStore(
+        dtoConverter = PredictionAccountStatusValueDTOConverter(
+            collateralCurrencyFactory = mockk { every { createDepositTarget() } returns COLLATERAL },
+        ),
         runtimeStore = RuntimeSharedStore(),
         persistenceDataStore = MockStateDataStore<WalletIdWithPredictionStatusDTO>(default = emptyMap()),
         scope = TestAppCoroutineScope(testScope),
@@ -169,13 +173,17 @@ internal class DefaultPredictionAccountStatusProducerTest {
     )
 
     private companion object {
+        val COLLATERAL: CryptoCurrency.Token = mockk(relaxed = true)
+
         val WALLET = UserWalletId("011")
 
         val ACTIVE = PredictionAccountStatusValue.Active(
             source = StatusSource.ACTUAL,
             balance = BigDecimal("40"),
+            positionsValue = null,
             fiatRate = null,
-            isTradingAllowed = true,
+            depositCurrency = COLLATERAL,
+            depositAddress = "0xbridge0000000000000000000000000000000001",
         )
 
         val ONBOARDING = PredictionAccountStatusValue.Onboarding(

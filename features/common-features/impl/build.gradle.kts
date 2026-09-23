@@ -13,6 +13,7 @@ android {
 dependencies {
     /** Api */
     api(projects.features.commonFeatures.api)
+    implementation(projects.features.jointAccount.api)
     api(projects.features.tokenRecieve.api)
     api(projects.features.wallet.api)
 
@@ -32,6 +33,7 @@ dependencies {
     api(projects.domain.balanceHiding)
     api(projects.domain.manageTokens)
     api(projects.domain.markets)
+    implementation(projects.domain.jointAccount)
     api(projects.domain.markets.models)
     api(projects.domain.models)
     api(projects.domain.transaction)

@@ -5,7 +5,6 @@ import arrow.core.right
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.ParamsInterceptorHolder
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -41,15 +40,14 @@ import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.helpers.GetEffectiveStakingFee
 import com.tangem.features.staking.impl.presentation.state.helpers.StakingBalanceUpdater
 import com.tangem.features.staking.impl.presentation.state.helpers.StakingOperationsFactory
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.utils.coroutines.AppCoroutineScope
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import com.tangem.utils.transformer.Transformer
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import org.junit.jupiter.api.BeforeEach
 
@@ -114,7 +112,6 @@ internal abstract class StakingModelTestBase {
     private val coroutineScope: AppCoroutineScope = mockk()
     protected val innerRouter: InnerStakingRouter = mockk()
     protected val messageSender: UiMessageSender = mockk()
-    protected val featureTogglesManager: FeatureTogglesManager = mockk()
 
     @BeforeEach
     fun setUp() {
@@ -158,7 +155,6 @@ internal abstract class StakingModelTestBase {
         every {
             stakingBalanceUpdater.create(any(), any(), any())
         } returns mockBalanceUpdater
-        every { featureTogglesManager.isFeatureEnabled(any()) } returns false
     }
 
     @Suppress("LongParameterList")
@@ -208,18 +204,6 @@ internal abstract class StakingModelTestBase {
             innerRouter = innerRouter,
             messageSender = messageSender,
             appRouter = appRouter,
-            featureTogglesManager = featureTogglesManager,
-        )
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
         )
     }
 
