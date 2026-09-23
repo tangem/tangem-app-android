@@ -49,10 +49,19 @@ internal class DefaultCollectiblesHotDelegate @Inject constructor(
                 runSuspendCatching {
                     val stored = storedDelegate(accountId)
 
-                    if (stored != null) derivePublicKey(stored.hotWalletId) else create(accountId)
+                    if (stored != null) {
+                        TangemLogger.d("hotDelegate: is a hot session key stored on the phone -> Yes")
+                        derivePublicKey(stored.hotWalletId)
+                    } else {
+                        TangemLogger.d("hotDelegate: is a hot session key stored on the phone -> No")
+                        create(accountId)
+                    }
                 }.fold(
                     onSuccess = { it.right() },
-                    onFailure = { CollectiblesAccountError.DelegateKeyCreationFailed(it).left() },
+                    onFailure = { error ->
+                        TangemLogger.d("hotDelegate: provision failed, error=$error")
+                        CollectiblesAccountError.DelegateKeyCreationFailed(error).left()
+                    },
                 )
             }
         }

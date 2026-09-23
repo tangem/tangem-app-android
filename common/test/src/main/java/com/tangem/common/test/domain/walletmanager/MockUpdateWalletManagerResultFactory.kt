@@ -82,7 +82,7 @@ class MockUpdateWalletManagerResultFactory {
 
     private companion object {
 
-        val txInfo = TxInfo(
+        val txInfo = TxInfo.Single(
             txHash = "erroribus",
             timestampInMillis = 2771,
             isOutgoing = false,

@@ -277,8 +277,9 @@ internal class StoryPlaybackController(
         val slide = composition.slides[index]
         val isFirstView = viewedSlideIds.add(slide.id)
 
-        // An automatic loop round replays slides already reported: repeating their haptics and Slide Viewed would
-        // double-count a story nobody interacted with. A manual return is a genuine new view.
+        // An automatic loop round replays slides already reported, and counting Slide Viewed again would inflate
+        // a story nobody interacted with. A manual return is a genuine new view. Haptics are not reporting and
+        // play on every round.
         isRepeatAutoView = !isManual && !isFirstView
 
         slideWatchedMs = 0L
@@ -370,7 +371,7 @@ internal class StoryPlaybackController(
 
     private fun fireHapticsUpTo(positionMs: Long) {
         val markers = currentSlide.haptics
-        if (isRepeatAutoView || firedHapticCount >= markers.size) return
+        if (firedHapticCount >= markers.size) return
 
         while (firedHapticCount < markers.size && markers[firedHapticCount].atMs <= positionMs) {
             onHaptic(markers[firedHapticCount])

@@ -127,7 +127,7 @@ class UpdateZeroBalanceActionsTransformerTest {
         content.swap!!.onClick()
 
         // THEN
-        verify(exactly = 1) { clickIntents.onSwapClick(ScenarioUnavailabilityReason.UsedOutdatedData) }
+        verify(exactly = 1) { clickIntents.onAddFundsSwapClick(ScenarioUnavailabilityReason.UsedOutdatedData) }
     }
 
     @Test

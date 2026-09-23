@@ -80,7 +80,7 @@ internal fun TxHistoryDetailsAmountBlock(
             },
             style = TangemTheme.typography3.heading.medium,
             textAlign = TextAlign.Center,
-            textDecoration = if (amountBlock.isFailed) TextDecoration.LineThrough else null,
+            textDecoration = if (amountBlock.isFailed && !isBalanceHidden) TextDecoration.LineThrough else null,
         )
         amountBlock.fiatAmount?.let { fiatAmount ->
             SpacerH(4.dp)
