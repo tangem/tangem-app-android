@@ -20,8 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
@@ -73,7 +71,7 @@ private fun ComponentPreview(state: TangemTokenIconStory) {
             TangemTokenIconStory.UiStateVariant.Token -> TangemTokenIcon.UiState.Token(
                 tokenState = TangemTokenIcon.State(
                     url = if (state.hasUrl) SAMPLE_URL else null,
-                    topIcon = if (state.hasTopIcon) ImageVector.vectorResource(R.drawable.img_bsc_22) else null,
+                    topIcon = if (state.hasTopIcon) R.drawable.img_bsc_22 else null,
                     isGrayscale = state.isGrayscale,
                     indicator = when {
                         !state.hasIndicator -> null
