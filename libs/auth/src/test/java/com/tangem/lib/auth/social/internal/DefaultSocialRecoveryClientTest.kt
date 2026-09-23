@@ -197,6 +197,23 @@ internal class DefaultSocialRecoveryClientTest {
     }
 
     @Test
+    fun `GIVEN the nonce expired WHEN recoverKey THEN NonceExpired is returned rather than BindingNotFound`() =
+        runTest {
+            // Arrange
+            coEvery { api.recoverWallet(any()) } returns httpError(
+                code = ApiResponseError.HttpException.Code.NOT_FOUND,
+                message = "Not Found",
+                errorBody = """{"detail":"Nonce not found","status":404,"title":"Not Found","instance":"/recover"}""",
+            )
+
+            // Act
+            val result = client.recoverKey(nonce = NONCE, providerIdToken = ID_TOKEN)
+
+            // Assert
+            assertThat(result.leftOrNull()).isEqualTo(SocialRecoveryError.NonceExpired)
+        }
+
+    @Test
     fun `GIVEN the identity points at another wallet WHEN recoverKey THEN BindingConflict is returned`() = runTest {
         // Arrange
         coEvery { api.recoverWallet(any()) } returns httpError(
@@ -465,10 +482,13 @@ internal class DefaultSocialRecoveryClientTest {
     )
 
     @Suppress("UNCHECKED_CAST")
-    private fun <T : Any> httpError(code: ApiResponseError.HttpException.Code, message: String): ApiResponse<T> =
-        ApiResponse.Error(
-            cause = ApiResponseError.HttpException(code = code, message = message, errorBody = null),
-        ) as ApiResponse<T>
+    private fun <T : Any> httpError(
+        code: ApiResponseError.HttpException.Code,
+        message: String,
+        errorBody: String? = null,
+    ): ApiResponse<T> = ApiResponse.Error(
+        cause = ApiResponseError.HttpException(code = code, message = message, errorBody = errorBody),
+    ) as ApiResponse<T>
 
     private fun nonceSuccess() = ApiResponse.Success(
         data = NonceApiResponse(cipheredNonce = CIPHERED_NONCE, expiresAt = "2024-01-01T00:00:00Z"),
