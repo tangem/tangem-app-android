@@ -31,6 +31,7 @@ import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -126,6 +127,8 @@ private fun DetailsContent(content: MoneyAccountAddFundsUM.Content.Details, modi
         InfoNotification(
             title = stringReference("Available to deposit per day: ${content.dailyLimit}"),
             subtitle = stringReference("Limit is resetting every day"),
+            titleTestTag = VirtualAccountRequisitesBottomSheetTestTags.DEPOSIT_LIMIT_TITLE,
+            subtitleTestTag = VirtualAccountRequisitesBottomSheetTestTags.DEPOSIT_LIMIT_SUBTITLE,
             modifier = Modifier
                 .padding(horizontal = TangemTheme.dimens2.x4)
                 .padding(top = TangemTheme.dimens2.x3),
@@ -138,7 +141,8 @@ private fun DetailsContent(content: MoneyAccountAddFundsUM.Content.Details, modi
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = TangemTheme.dimens2.x4)
-                .padding(top = TangemTheme.dimens2.x4),
+                .padding(top = TangemTheme.dimens2.x4)
+                .testTag(VirtualAccountRequisitesBottomSheetTestTags.SHARE_BUTTON),
         )
     }
 }
@@ -166,6 +170,7 @@ private fun CopyableRow(item: MoneyAccountAddFundsUM.DetailItem, divider: Boolea
         },
         endSlot = {
             TangemButton(
+                modifier = Modifier.testTag(VirtualAccountRequisitesBottomSheetTestTags.copyButton(item.key)),
                 iconStart = TangemIconUM.Icon(imageVector = Icons.ic_copy_24),
                 onClick = item.onCopyClick,
                 size = TangemButton.Size.X9,
@@ -177,7 +182,13 @@ private fun CopyableRow(item: MoneyAccountAddFundsUM.DetailItem, divider: Boolea
 }
 
 @Composable
-private fun InfoNotification(title: TextReference, subtitle: TextReference, modifier: Modifier = Modifier) {
+private fun InfoNotification(
+    title: TextReference,
+    subtitle: TextReference,
+    modifier: Modifier = Modifier,
+    titleTestTag: String = "",
+    subtitleTestTag: String = "",
+) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -194,11 +205,19 @@ private fun InfoNotification(title: TextReference, subtitle: TextReference, modi
         )
         Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x0_5)) {
             Text(
+                modifier = Modifier.conditional(
+                    condition = titleTestTag.isNotEmpty(),
+                    modifier = { testTag(titleTestTag) },
+                ),
                 text = title.resolveReference(),
                 style = TangemTheme.typography3.subheading.medium,
                 color = TangemTheme.colors3.text.primary,
             )
             Text(
+                modifier = Modifier.conditional(
+                    condition = subtitleTestTag.isNotEmpty(),
+                    modifier = { testTag(subtitleTestTag) },
+                ),
                 text = subtitle.resolveReference(),
                 style = TangemTheme.typography3.caption.medium,
                 color = TangemTheme.colors3.text.secondary,

@@ -5,8 +5,6 @@ import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
-import com.tangem.core.configtoggle.FeatureToggles
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.cloudbackup.CloudBackupJson
 import com.tangem.data.cloudbackup.crypto.CloudBackupCipher
 import com.tangem.data.cloudbackup.crypto.CloudBackupCryptoError
@@ -30,7 +28,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
@@ -58,11 +55,7 @@ internal class DefaultCloudBackupRepository(
     private val store: CloudBackupStore,
     private val cipher: CloudBackupCipher,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val featureTogglesManager: FeatureTogglesManager,
 ) : CloudBackupRepository {
-
-    override val isCloudBackupEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_922_GOOGLE_DRIVE_BACKUP_ENABLED)
 
     override suspend fun uploadBackup(
         walletId: String,
@@ -256,18 +249,11 @@ internal class DefaultCloudBackupRepository(
         }
     }
 
-    /**
-     * The stored flag survives turning the feature off, so it is reported only while the feature is on —
-     * otherwise a wallet backed up earlier would keep counting as backed up with the whole cloud backup UI
-     * hidden, and nothing could clear the flag anymore (deletion is gated by the same toggle).
-     */
     override suspend fun isBackedUp(walletId: String): Boolean {
-        return isCloudBackupEnabled && walletId in store.getBackedUpWalletIds().first()
+        return walletId in store.getBackedUpWalletIds().first()
     }
 
     override fun isBackedUpFlow(walletId: String): Flow<Boolean> {
-        if (!isCloudBackupEnabled) return flowOf(false)
-
         return store.getBackedUpWalletIds().map { walletId in it }
     }
 

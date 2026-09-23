@@ -38,6 +38,7 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
         step = params.step,
         callbacks = TangemPayBankWithdrawAmountUMFactory.Callbacks(
             onBackClick = router::pop,
+            onCloseClick = params.onCloseFlow,
             onValueChange = ::onValueChange,
             onMaxClick = ::onMaxClick,
             onSourceClick = { openSheet(AmountSheet.TOKENS) },
