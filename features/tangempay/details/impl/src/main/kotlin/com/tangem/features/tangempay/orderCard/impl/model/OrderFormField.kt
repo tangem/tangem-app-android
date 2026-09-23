@@ -5,15 +5,19 @@ import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderFieldError
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM.FieldUM
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM.Form
 
+private const val EMBOSS_NAME_MAX_LENGTH = 26
+
 internal enum class OrderFormField(
     val read: (Form) -> FieldUM,
     val write: (Form, FieldUM) -> Form,
     val isRequired: Boolean = true,
-    val isContentValid: (String) -> Boolean = TangemPayFormCharset::isAddressCharsetValid,
+    val maxLength: Int = Int.MAX_VALUE,
+    val isContentValid: (String) -> Boolean = TangemPayFormCharset::isShippingCharsetValid,
 ) {
     EmbossName(
         read = { it.embossName },
         write = { form, field -> form.copy(embossName = field) },
+        maxLength = EMBOSS_NAME_MAX_LENGTH,
         isContentValid = TangemPayFormCharset::isEmbossCharsetValid,
     ),
     FirstName(read = { it.firstName }, write = { form, field -> form.copy(firstName = field) }),
@@ -38,10 +42,12 @@ internal fun Form.fieldError(field: OrderFormField): OrderFieldError? {
     return when {
         !fieldUM.isEditable -> null
         value.isEmpty() -> OrderFieldError.Required.takeIf { field.isRequired }
-        !field.isContentValid(value) -> OrderFieldError.NonLatin
-        else -> null
+        else -> field.charsetError(value)
     }
 }
+
+internal fun OrderFormField.charsetError(value: String): OrderFieldError? =
+    OrderFieldError.NonLatin.takeUnless { isContentValid(value.trim()) }
 
 internal fun Form.phoneError(): OrderFieldError? = when {
     phone.value.isEmpty() -> OrderFieldError.Required
