@@ -11,6 +11,7 @@ import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.pullToRefresh
 import com.tangem.common.extensions.swipeVertical
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.*
 import com.tangem.screens.*
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -49,7 +50,7 @@ class StakingTest : BaseTestCase() {
                 swipeVertical(SwipeDirection.UP)
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details screen' open") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -97,7 +98,7 @@ class StakingTest : BaseTestCase() {
                 swipeVertical(SwipeDirection.UP)
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details screen' open") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -152,7 +153,7 @@ class StakingTest : BaseTestCase() {
                 swipeVertical(SwipeDirection.UP)
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details screen' open") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -216,7 +217,7 @@ class StakingTest : BaseTestCase() {
                 openMainScreenWithExistingHotWallet(seedPhrase = SVS_SEED_PHRASE_12)
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details screen' open") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -298,7 +299,7 @@ class StakingTest : BaseTestCase() {
                 openMainScreenWithExistingHotWallet(seedPhrase = SVS_SEED_PHRASE_12)
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details screen' open") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -389,7 +390,7 @@ class StakingTest : BaseTestCase() {
                 openMainScreenWithExistingHotWallet(seedPhrase = SVS_SEED_PHRASE_12)
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details screen' open") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -477,7 +478,7 @@ class StakingTest : BaseTestCase() {
                 openMainScreenWithExistingHotWallet(seedPhrase = SVS_SEED_PHRASE_12)
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details screen' open") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
