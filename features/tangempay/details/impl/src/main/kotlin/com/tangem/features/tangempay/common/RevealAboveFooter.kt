@@ -26,16 +26,22 @@ internal fun Modifier.revealAboveFooter(footerHeight: Dp): Modifier {
     val scope = rememberCoroutineScope()
     val footerPx = with(LocalDensity.current) { footerHeight.toPx() }
     var size by remember { mutableStateOf(IntSize.Zero) }
+    var isFocused by remember { mutableStateOf(false) }
+    val reveal: (IntSize) -> Unit = { fieldSize ->
+        scope.launch {
+            requester.bringIntoView(
+                Rect(left = 0f, top = 0f, right = fieldSize.width.toFloat(), bottom = fieldSize.height + footerPx),
+            )
+        }
+    }
     return this
-        .onSizeChanged { size = it }
+        .onSizeChanged { newSize ->
+            if (isFocused && newSize.height > size.height) reveal(newSize)
+            size = newSize
+        }
         .bringIntoViewRequester(requester)
         .onFocusEvent { focusState ->
-            if (focusState.isFocused && size != IntSize.Zero) {
-                scope.launch {
-                    requester.bringIntoView(
-                        Rect(left = 0f, top = 0f, right = size.width.toFloat(), bottom = size.height + footerPx),
-                    )
-                }
-            }
+            isFocused = focusState.isFocused
+            if (focusState.isFocused && size != IntSize.Zero) reveal(size)
         }
 }
