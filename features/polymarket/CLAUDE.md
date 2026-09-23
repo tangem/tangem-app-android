@@ -134,9 +134,8 @@ Status receives the result, market header and position id as route data and owns
   (`PlacePredictionAmountComponent` `doOnResume` / `doOnPause`), so it runs only while that screen is on top
   and in the foreground. Slippage returns an explicit result to Amount and invalidates its old quote
   when the value changes; returning to Amount starts the next request immediately.
-  `ValidatePredictionOrderUseCase` refuses a quote older than 60 s both before prompting for a signature
-  and after signing. Summary handles this with the price-changed dialog, whose action returns to Amount
-  to review fresh conditions. Two independent gates decide whether
+  `ValidatePredictionOrderUseCase` refuses a quote older than 60 s after signing, before submission.
+  Summary shows the generic place-error dialog and stays on the same screen. Two independent gates decide whether
   it is placeable: `quote.isPlaceable` (market state; a SELL also places on `BELOW_MIN_ORDER_SIZE`) and
   `isBelowMinAmount` (BUY only, price-weighted — a SELL has no floor beyond one whole share or the whole
   position).
