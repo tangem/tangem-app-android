@@ -193,7 +193,7 @@ private fun LazyListScope.bestOpportunitiesItems(state: EarnBestOpportunitiesUM)
                 val lastIndex = state.items.lastIndex
                 itemsIndexed(
                     items = state.items,
-                    key = { _, item -> "${item.tokenName}-${item.network}" },
+                    key = { _, item -> item.id },
                 ) { index, item ->
                     EarnListItem(
                         item = item,
