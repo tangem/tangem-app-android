@@ -251,7 +251,7 @@ private fun Footer(isEnabled: Boolean, onContinueClick: () -> Unit, modifier: Mo
 private fun accountDisplayName(state: JointAccountConfigUM) = if (state.name.isBlank()) {
     state.namePlaceholder
 } else {
-    stringReference(value = state.name)
+    stringReference(value = state.name.trim())
 }
 
 @Preview(showBackground = true, heightDp = 874)
