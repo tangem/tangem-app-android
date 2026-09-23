@@ -1205,6 +1205,7 @@
   <string name="joint_account_onboarding_shared_description">Use it with your friends, family, or partners.</string>
   <string name="joint_account_onboarding_shared_title">Shared account.</string>
   <string name="joint_account_onboarding_subtitle">A simple way to manage crypto together — for personal or business needs.</string>
+  <string name="joint_account_pending_transaction_message">Review and sign the operation</string>
   <string name="joint_account_send_blocked_subtitle">Sending is blocked for security reasons. Please contact support</string>
   <string name="joint_account_send_blocked_title">Sending is blocked</string>
   <string name="joint_account_send_create_request">Create request</string>

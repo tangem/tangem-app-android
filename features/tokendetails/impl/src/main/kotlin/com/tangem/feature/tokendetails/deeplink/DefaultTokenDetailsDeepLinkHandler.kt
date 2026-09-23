@@ -200,20 +200,34 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
         val derivationPath = queryParams[DERIVATION_PATH_KEY]
         val isAccountScoped = !accountId.isNullOrBlank()
         val find = { currencies: List<CryptoCurrency> ->
-            currencies.firstOrNull { it.matches(networkId, tokenId, derivationPath) }
-                ?: if (isAccountScoped) {
-                    currencies.firstOrNull { it.matchesIgnoringDerivation(networkId, tokenId) }
-                } else {
-                    null
-                }
+            findCurrency(
+                currencies = currencies,
+                networkId = networkId,
+                tokenId = tokenId,
+                derivationPath = derivationPath,
+                isAccountScoped = isAccountScoped,
+            )
         }
 
         val cachedCurrencies = singleAccountListSupplier.getSyncOrNull(userWallet.walletId)?.currenciesFor(accountId)
-        return cachedCurrencies?.let(find)
-            // getSyncOrNull returns the stale SharedFlow replay just after a fetch; wait for the refreshed list.
-            // Only when a refresh actually ran and succeeded — otherwise a missing token would block for the full
-            // timeout before the fall-through redirect.
-            ?: if (awaitOnMiss) awaitCryptoCurrency(userWallet.walletId, accountId, find) else null
+        val cachedMatch = cachedCurrencies?.let(find)
+        if (cachedMatch != null) return cachedMatch
+
+        if (!awaitOnMiss) return null
+
+        return awaitCryptoCurrency(userWallet.walletId, accountId, find)
+    }
+
+    private fun findCurrency(
+        currencies: List<CryptoCurrency>,
+        networkId: String?,
+        tokenId: String?,
+        derivationPath: String?,
+        isAccountScoped: Boolean,
+    ): CryptoCurrency? {
+        val exactMatch = currencies.firstOrNull { it.matches(networkId, tokenId, derivationPath) }
+        if (exactMatch != null || !isAccountScoped) return exactMatch
+        return currencies.firstOrNull { it.matchesIgnoringDerivation(networkId, tokenId) }
     }
 
     private suspend fun awaitCryptoCurrency(
