@@ -316,7 +316,6 @@ internal class PlacePredictionNotificationsFactoryTest {
             val state = createState(
                 amountValue = model.amountValue,
                 quote = model.quote,
-                minAmount = model.minAmount,
                 order = OrderSideUM.Sell(
                     position = SellPositionUM.Held(available = BigDecimal(model.available)),
                     proceeds = SharesProceedsUM.Unavailable,
@@ -373,15 +372,6 @@ internal class PlacePredictionNotificationsFactoryTest {
             SellGateModel(
                 amountValue = "3",
                 quote = createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE),
-                minAmount = BigDecimal("5"),
-                expectedProceeds = SharesProceedsUM.BelowMinimum(minShares = BigDecimal("5")),
-                expectedButtonEnabled = false,
-            ),
-            SellGateModel(
-                amountValue = "3",
-                available = "3",
-                quote = createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE),
-                minAmount = BigDecimal("5"),
                 expectedProceeds = SharesProceedsUM.Content(expected = BigDecimal("23.8")),
                 expectedButtonEnabled = true,
             ),
@@ -410,7 +400,6 @@ internal class PlacePredictionNotificationsFactoryTest {
         val amountValue: String,
         val quote: QuoteUM,
         val available: String = "51.23",
-        val minAmount: BigDecimal? = null,
         val expectedProceeds: SharesProceedsUM,
         val expectedButtonEnabled: Boolean,
     )

@@ -7,6 +7,8 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.repository.FeedbackRepository
+import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
+import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
 import com.tangem.utils.info.AppInfoProvider
 import dagger.Module
 import dagger.Provides
@@ -27,6 +29,8 @@ internal object FeedbackModule {
         emailSender: EmailSender,
         appInfoProvider: AppInfoProvider,
         cloudBackupRepository: CloudBackupRepository,
+        isSocialBackupCompletedUseCase: IsSocialBackupCompletedUseCase,
+        socialLoginFeatureToggles: SocialLoginFeatureToggles,
     ): FeedbackRepository {
         return DefaultFeedbackRepository(
             appLogsStore = appLogsStore,
@@ -35,6 +39,8 @@ internal object FeedbackModule {
             appInfoProvider = appInfoProvider,
             userWalletsListRepository = userWalletsListRepository,
             cloudBackupRepository = cloudBackupRepository,
+            isSocialBackupCompletedUseCase = isSocialBackupCompletedUseCase,
+            socialLoginFeatureToggles = socialLoginFeatureToggles,
         )
     }
 }

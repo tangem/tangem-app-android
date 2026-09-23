@@ -6,6 +6,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.domain.models.wallet.isColdWallet
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.pay.model.bankofframp.BankOfframpSignResult
@@ -13,6 +14,7 @@ import com.tangem.domain.pay.usecase.bankofframp.AwaitBankOfframpSignatureUseCas
 import com.tangem.domain.pay.usecase.bankofframp.CancelBankOfframpOrderUseCase
 import com.tangem.domain.pay.usecase.bankofframp.CreateBankOfframpOrderUseCase
 import com.tangem.domain.pay.usecase.bankofframp.SignBankOfframpOrderUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
@@ -47,6 +49,7 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
     private val awaitBankOfframpSignatureUseCase: AwaitBankOfframpSignatureUseCase,
     private val signBankOfframpOrderUseCase: SignBankOfframpOrderUseCase,
     private val cancelBankOfframpOrderUseCase: CancelBankOfframpOrderUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankWithdrawPreviewComponent.Params>()
@@ -61,7 +64,7 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
         ),
     )
 
-    private val state = MutableStateFlow(PreviewState())
+    private val state = MutableStateFlow(PreviewState(isColdWallet = resolveIsColdWallet()))
 
     private val sendJobHolder = JobHolder()
 
@@ -81,6 +84,15 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
             .onEach { uiState.value = it }
             .launchIn(modelScope)
     }
+
+    /** The wallet cannot change while the wizard is open, and a lookup failure keeps the historic card icon. */
+    private fun resolveIsColdWallet(): Boolean = getUserWalletUseCase(params.userWalletId).fold(
+        ifLeft = { error ->
+            TangemLogger.withTag(TAG).e("Failed to resolve the wallet of a bank withdraw: $error")
+            true
+        },
+        ifRight = { wallet -> wallet.isColdWallet },
+    )
 
     private fun send() {
         if (state.value.isSending) return
