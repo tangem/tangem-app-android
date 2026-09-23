@@ -200,7 +200,7 @@ class YieldModeTest : BaseTestCase() {
     fun topUpActiveLandingTest() {
         val tokenTitle = "USDC"
         val topUpAmount = "600.00"
-        val incomingTransactionTitle = getResourceString(CoreResR.string.common_transferred)
+        val incomingTransactionTitle = getResourceString(CoreResR.string.common_received)
         val topUpTransactionTitle = getResourceString(CoreResR.string.yield_module_transaction_topup)
         val supplyingNotificationTitle = getResourceString(
             CoreResR.string.yield_module_amount_not_transfered_to_aave_title,
@@ -242,7 +242,7 @@ class YieldModeTest : BaseTestCase() {
                     onTokenDetailsScreen { earnBlockTitleIcon.assertIsDisplayed() }
                 }
             }
-            step("Assert 'Transferred' transaction is displayed in history") {
+            step("Assert 'Received' transaction is displayed in history") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     onTxHistoryScreen { transactionItem(incomingTransactionTitle).assertIsDisplayed() }
                 }
