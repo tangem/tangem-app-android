@@ -16,6 +16,7 @@ import com.tangem.domain.models.account.isPlanTransitioningState
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.domain.models.pay.isAwaitingActivation
 import com.tangem.domain.models.pay.isFrozen
 import com.tangem.domain.models.pay.thumbnailUrl
@@ -99,6 +100,7 @@ internal class TangemPayDetailsStateFactory(
                     TangemPayDetailsBalanceBlockState.Card(
                         lastDigits = if (isAwaitingActivation) "" else cardItem.lastDigits,
                         imageUrl = if (isAwaitingActivation) null else cardItem.thumbnailUrl,
+                        cardType = cardItem.cardType,
                         onClick = { intents.onCardClick(cardItem.id) },
                         isEnabled = status.error == null,
                         isFrozen = cardItem.isFrozen && !isAwaitingActivation,
@@ -237,6 +239,7 @@ internal class TangemPayDetailsStateFactory(
                         TangemPayDetailsBalanceBlockState.Card(
                             lastDigits = "",
                             imageUrl = null,
+                            cardType = TangemPayCardType.UNDEFINED,
                             onClick = {},
                             isEnabled = false,
                             isFrozen = false,

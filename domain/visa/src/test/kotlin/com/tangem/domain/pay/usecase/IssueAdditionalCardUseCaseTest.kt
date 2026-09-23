@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.CustomerOffers
 import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderStatus
@@ -46,7 +47,7 @@ internal class IssueAdditionalCardUseCaseTest {
 
     @Test
     fun `WHEN no additional-card offer is available THEN returns Unspecified error`() = runTest {
-        coEvery { offersRepository.getOffers(userWalletId) } returns emptyList<Offer>().right()
+        coEvery { offersRepository.getOffers(userWalletId) } returns customerOffers().right()
 
         val result = useCase(userWalletId)
 
@@ -61,7 +62,7 @@ internal class IssueAdditionalCardUseCaseTest {
     fun `GIVEN an offer without a spec name WHEN invoked THEN no order is created`() = runTest {
         // Arrange
         coEvery { offersRepository.getOffers(userWalletId) } returns
-            listOf(offer.copy(data = offer.data.copy(specificationName = null))).right()
+            customerOffers(offer.copy(data = offer.data.copy(specificationName = null))).right()
         coEvery {
             orderRepository.findOrders(userWalletId, types = any(), statuses = any())
         } returns emptyList<Order>().right()
@@ -83,7 +84,7 @@ internal class IssueAdditionalCardUseCaseTest {
             type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
             status = OrderStatus.PROCESSING,
         )
-        coEvery { offersRepository.getOffers(userWalletId) } returns listOf(offer).right()
+        coEvery { offersRepository.getOffers(userWalletId) } returns customerOffers(offer).right()
         coEvery {
             orderRepository.findOrders(
                 userWalletId,
@@ -108,7 +109,7 @@ internal class IssueAdditionalCardUseCaseTest {
 
     @Test
     fun `WHEN backend returns insufficient balance THEN propagates CardIssueInsufficientBalance`() = runTest {
-        coEvery { offersRepository.getOffers(userWalletId) } returns listOf(offer).right()
+        coEvery { offersRepository.getOffers(userWalletId) } returns customerOffers(offer).right()
         coEvery {
             orderRepository.findOrders(
                 userWalletId,
@@ -137,7 +138,7 @@ internal class IssueAdditionalCardUseCaseTest {
 
     @Test
     fun `WHEN no active order AND createOrder succeeds THEN returns the new order`() = runTest {
-        coEvery { offersRepository.getOffers(userWalletId) } returns listOf(offer).right()
+        coEvery { offersRepository.getOffers(userWalletId) } returns customerOffers(offer).right()
         coEvery {
             orderRepository.findOrders(
                 userWalletId,
@@ -186,3 +187,6 @@ internal class IssueAdditionalCardUseCaseTest {
         updatedAt = null,
     )
 }
+
+private fun customerOffers(vararg offers: Offer) =
+    CustomerOffers(orderable = offers.toList(), artwork = emptyMap())

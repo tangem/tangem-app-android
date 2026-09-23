@@ -53,6 +53,7 @@ internal class PaymentNetworkPresentationTest {
         // Arrange
         val status = PaymentNetworkStatus.NotIssued(
             network = network(networkName = "Ethereum", networkRawId = "ethereum"),
+            chainId = 1L,
         )
 
         // Act
@@ -75,6 +76,7 @@ internal class PaymentNetworkPresentationTest {
         val status = PaymentNetworkStatus.Disabled(
             network = network(networkName = "TRON", networkRawId = "tron"),
             cryptoCurrencies = listOf(currency("USDT")),
+            chainId = 1L,
         )
 
         // Act
@@ -148,6 +150,7 @@ internal class PaymentNetworkPresentationTest {
         val status = PaymentNetworkStatus.Disabled(
             network = network(networkName = "TRON", networkRawId = "tron"),
             cryptoCurrencies = emptyList(),
+            chainId = 1L,
         )
 
         // Act
