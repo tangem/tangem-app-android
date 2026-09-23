@@ -19,7 +19,6 @@ import com.tangem.scenarios.awaitCryptoPortfolioAccount
 import com.tangem.scenarios.closeFirstTimeSwapStoriesIfShown
 import com.tangem.scenarios.openAppByDeepLink
 import com.tangem.scenarios.openMainScreenWithExistingHotWallet
-import com.tangem.screens.onMainScreen
 import com.tangem.screens.onSwapTokenScreen
 import com.tangem.screens.onTokenDetailsScreen
 import dagger.hilt.android.testing.HiltAndroidTest
