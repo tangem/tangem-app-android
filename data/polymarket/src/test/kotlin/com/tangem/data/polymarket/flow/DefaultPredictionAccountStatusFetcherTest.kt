@@ -41,6 +41,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
@@ -194,7 +195,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
     }
 
     @Test
-    fun `GIVEN the positions value cannot be read WHEN a full refresh runs THEN the balance is stored alone`() =
+    fun `GIVEN the positions value cannot be read WHEN a full refresh runs THEN the stored one is kept`() =
         runTest {
             // Arrange
             stubReadyWallet(balance = BigDecimal("40"))
@@ -209,8 +210,26 @@ internal class DefaultPredictionAccountStatusFetcherTest {
             // Assert
             val stored = store.getSyncOrNull(WALLET) as PredictionAccountStatusValue.Active
             assertThat(stored.balance).isEqualTo(BigDecimal("40"))
-            assertThat(stored.positionsValue).isNull()
+            assertThat(stored.positionsValue).isEqualTo(BigDecimal("7"))
             coVerify(exactly = 1) { positionsRepository.getPositionsValue(ADDRESSES) }
+        }
+
+    @Test
+    fun `GIVEN the balance cannot be read WHEN a full refresh runs THEN the positions read is dropped and the value flagged`() =
+        runTest {
+            // Arrange
+            stubReadyWallet(balance = BigDecimal("40"))
+            coEvery { getBalance.invoke(ADDRESSES) } returns PolymarketAuthError.RateLimited.left()
+            coEvery { positionsRepository.getPositionsValue(ADDRESSES) } coAnswers { awaitCancellation() }
+            val store = createStore(testScope = this)
+            val cached = ACTIVE.copy(positionsValue = BigDecimal("7"))
+            store.store(userWalletId = WALLET, value = cached)
+
+            // Act
+            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.FULL))
+
+            // Assert
+            assertThat(store.getSyncOrNull(WALLET)).isEqualTo(cached.copy(source = StatusSource.ONLY_CACHE))
         }
 
     @Test
