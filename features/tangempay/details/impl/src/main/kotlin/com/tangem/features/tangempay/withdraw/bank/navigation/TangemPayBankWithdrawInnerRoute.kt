@@ -27,14 +27,14 @@ internal sealed class TangemPayBankWithdrawInnerRoute : Route {
     @Serializable
     data object Preview : TangemPayBankWithdrawInnerRoute()
 
-    /** Terminal screen of a signed order; like [Edit] it is outside the step order, so it carries no counter. */
+    /** Terminal screen of a signed order; it is outside the step order, so it carries no counter. */
     @Serializable
     data object Success : TangemPayBankWithdrawInnerRoute()
 
     /**
      * A step reopened from the confirm screen to correct one answer. It is deliberately absent from the
-     * wizard's step order, so it carries no step counter and Continue returns to the confirm screen
-     * instead of advancing the wizard.
+     * wizard's step order, so Continue returns to the confirm screen instead of advancing the wizard,
+     * while the header still numbers it as the step it edits.
      */
     @Serializable
     data class Edit(val target: BankWithdrawEditTarget) : TangemPayBankWithdrawInnerRoute()
