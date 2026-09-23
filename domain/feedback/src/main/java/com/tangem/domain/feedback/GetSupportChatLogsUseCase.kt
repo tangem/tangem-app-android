@@ -4,6 +4,8 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.feedback.repository.FeedbackRepository
 import com.tangem.domain.feedback.utils.EmailMessageBodyResolver
+import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.logging.TangemLogger
 import java.io.File
 
 /**
@@ -17,7 +19,12 @@ class GetSupportChatLogsUseCase(
     private val emailMessageBodyResolver = EmailMessageBodyResolver(feedbackRepository)
 
     suspend operator fun invoke(walletMetaInfo: WalletMetaInfo): File? {
-        val infoLogs = emailMessageBodyResolver.resolve(FeedbackEmailType.DirectUserRequest(walletMetaInfo))
+        val infoLogs = runSuspendCatching {
+            emailMessageBodyResolver.resolve(FeedbackEmailType.DirectUserRequest(walletMetaInfo))
+        }
+            .onFailure { TangemLogger.e("Failed to collect info logs for the support chat", it) }
+            .getOrNull()
+
         return feedbackRepository.getZipLogFile(infoLogs = infoLogs)
     }
 }

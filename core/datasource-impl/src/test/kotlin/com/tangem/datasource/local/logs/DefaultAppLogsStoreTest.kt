@@ -45,10 +45,27 @@ internal class DefaultAppLogsStoreTest {
         File(filesDir, LOG_FILE_NAME).writeText(LOG_CONTENT)
 
         // Act
-        store.getZipFile(infoLogs = INFO_CONTENT)
+        val archive = store.getZipFile(infoLogs = INFO_CONTENT)
 
         // Assert
-        assertThat(File(filesDir, INFO_LOGS_FILE_NAME).exists()).isFalse()
+        assertThat(archive?.parentFile?.listFiles()?.map(File::getName)).containsExactly(LOG_ZIP_FILE_NAME)
+    }
+
+    @Test
+    fun `GIVEN archive with info WHEN logs-only archive requested THEN archive with info is kept intact`() = runTest {
+        // Arrange
+        File(filesDir, LOG_FILE_NAME).writeText(LOG_CONTENT)
+        val archiveWithInfo = store.getZipFile(infoLogs = INFO_CONTENT)
+
+        // Act
+        val logsOnlyArchive = store.getZipFile()
+
+        // Assert
+        assertThat(logsOnlyArchive).isNotEqualTo(archiveWithInfo)
+        assertThat(archiveWithInfo?.readEntries()).isEqualTo(
+            mapOf(LOG_FILE_NAME to LOG_CONTENT, INFO_LOGS_FILE_NAME to INFO_CONTENT),
+        )
+        assertThat(archiveWithInfo?.name).isEqualTo(LOG_ZIP_FILE_NAME)
     }
 
     @Test
@@ -87,6 +104,7 @@ internal class DefaultAppLogsStoreTest {
 
     private companion object {
         const val LOG_FILE_NAME = "log.txt"
+        const val LOG_ZIP_FILE_NAME = "log.zip"
         const val INFO_LOGS_FILE_NAME = "infoLogs.txt"
         const val LOG_CONTENT = "12.09 10:00:00.000: Tag scan started"
         const val INFO_CONTENT = "Phone model: Pixel 9"
