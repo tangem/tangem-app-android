@@ -164,7 +164,7 @@ draft, the deposit wallet, the market and the quote age before anything is sent.
   onboarding reports zero forever. The sync is best-effort.
 - **Polling.** `PredictionBalancePoller` — one loop per wallet, reference-counted subscribers, runs on the
   app scope. `PredictionBalancePollingConfig`: 30 s base, 5 s while a `PredictionFundingWindow` is open
-  (2 min window, 10 min max age). The window opens when a top-up is sent (`PredictionFundingWindow.open`)
+  (2 min window, 10 min max age). The window opens on a send this app made (`PredictionFundingWindow.open`)
   and closes when the balance settles or the window elapses. `PredictionAccountStatusFetcher.Params.mode`
   says how much a tick re-reads: `FULL` (main screen, pull-to-refresh, base poll ticks) also reads the
   positions value from the data API (`PolymarketPositionsRepository.getPositionsValue`) into
