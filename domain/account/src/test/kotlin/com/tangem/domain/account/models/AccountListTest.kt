@@ -250,6 +250,29 @@ internal class AccountListTest {
             Truth.assertThat(actual).isEqualTo(expected)
         }
 
+        @Test
+        fun `GIVEN accounts named like the special ones WHEN invoke THEN list is created`() {
+            // Arrange
+            val accounts = listOf(
+                Account.Personal.createMainAccount(userWalletId),
+                createAccount(name = "Payment", derivationIndex = 1),
+                createAccount(name = "Virtual", derivationIndex = 2),
+                Account.Payment(userWalletId),
+                Account.Virtual(userWalletId),
+            )
+
+            // Act
+            val actual = AccountList(
+                userWalletId = userWalletId,
+                accounts = accounts,
+                totalAccounts = 3,
+                totalArchivedAccounts = 0,
+            )
+
+            // Assert
+            Truth.assertThat(actual.getOrNull()?.accounts).containsExactlyElementsIn(accounts).inOrder()
+        }
+
         @ParameterizedTest
         @ProvideTestModels
         fun invoke(model: CreateTestModel) {
@@ -371,6 +394,28 @@ internal class AccountListTest {
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class Plus {
+
+        @Test
+        fun `GIVEN account named Payment WHEN plus payment account THEN list is created`() {
+            // Arrange
+            val mainAccount = Account.Personal.createMainAccount(userWalletId)
+            val userNamedPayment = createAccount(name = "Payment", derivationIndex = 1)
+            val paymentAccount = Account.Payment(userWalletId)
+            val initial = AccountList(
+                userWalletId = userWalletId,
+                accounts = listOf(mainAccount, userNamedPayment),
+                totalAccounts = 2,
+                totalArchivedAccounts = 0,
+            ).getOrNull()!!
+
+            // Act
+            val actual = initial + paymentAccount
+
+            // Assert
+            Truth.assertThat(actual.getOrNull()?.accounts)
+                .containsExactly(mainAccount, userNamedPayment, paymentAccount)
+                .inOrder()
+        }
 
         @ParameterizedTest
         @ProvideTestModels
