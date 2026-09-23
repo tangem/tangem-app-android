@@ -273,7 +273,6 @@ internal class TxHistoryDetailsModel @Inject constructor(
     private fun onCopyAddress(address: String, txInfo: TxHistoryInfo) {
         analyticsEventHandler.send(
             TokenScreenAnalyticsEvent.ButtonCopyAddress(
-                walletId = params.userWalletId.stringValue,
                 token = params.currency.symbol,
                 blockchain = params.currency.network.name,
                 type = txInfo.toAnalyticsType(),
@@ -293,7 +292,6 @@ internal class TxHistoryDetailsModel @Inject constructor(
     private fun onCopyTxId(id: String, txInfo: TxHistoryInfo) {
         analyticsEventHandler.send(
             TxHistoryAnalyticsEvent.ButtonCopyTransactionId(
-                walletId = params.userWalletId.stringValue,
                 token = params.currency.symbol,
                 blockchain = params.currency.network.name,
                 type = txInfo.toAnalyticsType(),
@@ -312,7 +310,6 @@ internal class TxHistoryDetailsModel @Inject constructor(
     private fun onShare(text: String, txInfo: TxHistoryInfo) {
         analyticsEventHandler.send(
             TokenScreenAnalyticsEvent.ButtonShare(
-                walletId = params.userWalletId.stringValue,
                 token = params.currency.symbol,
                 blockchain = params.currency.network.name,
                 type = txInfo.toAnalyticsType(),
@@ -330,7 +327,6 @@ internal class TxHistoryDetailsModel @Inject constructor(
                 source = TokenScreenAnalyticsEvent.ButtonExplore.ExploreActionSource.TransactionDetail,
                 blockchain = params.currency.network.name,
                 type = txInfo.toAnalyticsType(),
-                walletId = params.userWalletId.stringValue,
             ),
         )
         getExplorerTransactionUrlUseCase(txHash = txHash, currency = params.currency).fold(
@@ -370,7 +366,6 @@ internal class TxHistoryDetailsModel @Inject constructor(
         val status = txInfo.toAnalyticsStatus()
         analyticsEventHandler.send(
             TxHistoryAnalyticsEvent.TransactionDetailScreenOpened(
-                walletId = params.userWalletId.stringValue,
                 token = params.currency.symbol,
                 blockchain = params.currency.network.name,
                 type = type,

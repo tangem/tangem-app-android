@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.withdraw.bank.model
 
 import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
 import com.tangem.domain.pay.model.bankofframp.OfframpSource
 import com.tangem.utils.extensions.isPositive
@@ -37,7 +38,10 @@ internal object BankWithdrawOptionsFactory {
         )
     }
 
-    /** Payment-account tokens in backend order, keeping only what the off-ramp accepts and the user can actually send. */
+    /**
+     * Payment-account tokens the off-ramp accepts and the user can actually send, grouped by symbol: USDC first, then
+     * every other symbol in the order it first appears among the account's networks, and inside a group that order.
+     */
     private fun resolveSources(
         networks: List<PaymentNetworkStatus>,
         sources: List<OfframpSource>,
@@ -61,6 +65,18 @@ internal object BankWithdrawOptionsFactory {
                     )
                 }
             }
+            .sortedBySymbol()
+    }
+
+    private fun List<BankWithdrawSource>.sortedBySymbol(): List<BankWithdrawSource> {
+        val symbolOrder = mutableMapOf<String, Int>()
+        forEach { source -> symbolOrder.getOrPut(source.token.symbol) { symbolOrder.size } }
+        return sortedWith(
+            compareBy(
+                { source -> !source.token.symbol.equals(TangemPayCurrencyFactory.TOKEN_NAME, ignoreCase = true) },
+                { source -> symbolOrder.getValue(source.token.symbol) },
+            ),
+        )
     }
 
     private fun currencyOrNull(code: String?): Currency? =
