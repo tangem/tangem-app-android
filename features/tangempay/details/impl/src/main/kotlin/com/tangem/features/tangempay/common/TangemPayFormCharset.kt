@@ -9,15 +9,18 @@ internal object TangemPayFormCharset {
     private const val RIGHT_SINGLE_QUOTE = '’'
     private const val LEFT_SINGLE_QUOTE = '‘'
 
-    private val EMBOSS_ALLOWED = Regex("^[A-Za-z0-9 .,/#'()&\\-]*$")
+    private val EMBOSS_ALLOWED = Regex("^[A-Za-z0-9 .\\-]*$")
+    private val SHIPPING_ALLOWED = Regex("^[A-Za-z0-9 /.,'():\\-]*$")
     private val ADDRESS_ALLOWED = Regex("^[\\p{IsLatin}\\p{M}0-9 .,/#'()&\\-]*$")
 
-    fun isEmbossCharsetValid(value: String): Boolean = EMBOSS_ALLOWED.matches(value.normalizeForValidation())
+    fun isEmbossCharsetValid(value: String): Boolean = EMBOSS_ALLOWED.matches(normalize(value))
 
-    fun isAddressCharsetValid(value: String): Boolean = ADDRESS_ALLOWED.matches(value.normalizeForValidation())
+    fun isShippingCharsetValid(value: String): Boolean = SHIPPING_ALLOWED.matches(normalize(value))
 
-    private fun String.normalizeForValidation(): String = Normalizer
-        .normalize(this, Normalizer.Form.NFC)
+    fun isAddressCharsetValid(value: String): Boolean = ADDRESS_ALLOWED.matches(normalize(value))
+
+    fun normalize(value: String): String = Normalizer
+        .normalize(value, Normalizer.Form.NFC)
         .replace(RIGHT_SINGLE_QUOTE, '\'')
         .replace(LEFT_SINGLE_QUOTE, '\'')
         .replace(StringsSigns.NON_BREAKING_SPACE, ' ')
