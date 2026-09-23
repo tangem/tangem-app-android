@@ -90,6 +90,7 @@ class SendFeedbackEmailUseCase(
     private fun StringBuilder.appendDisclaimerIfNeeded(type: FeedbackEmailType): StringBuilder {
         return when (type) {
             is FeedbackEmailType.ScanningProblem,
+            is FeedbackEmailType.SocialLoginProblem,
             is FeedbackEmailType.CurrencyDescriptionError,
             is FeedbackEmailType.PreActivatedWallet,
             is FeedbackEmailType.CardAttestationFailed,
