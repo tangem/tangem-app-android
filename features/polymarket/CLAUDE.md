@@ -99,6 +99,13 @@ a failed or empty first page is retried once silently), the balance header from
 positions preview (`PolymarketPositionsPreviewLoader`, polled every 20 s), and
 `PredictionBalancePoller.subscribe` for as long as the screen is shown. Pull-to-refresh refreshes status and requisites together.
 
+The header shows one of two figures, toggled by tapping its label (`PredictionBalanceMode`): **Available**
+(the CLOB collateral, `Active.balance`, the default) and **Total** (`Active.totalBalance` = collateral + the
+data-API value of the open positions). Total is offered only once a full refresh has read `positionsValue`;
+until then the header shows Available and the toggle is disabled, but the chosen mode is kept and comes back
+as soon as the value does. The wallet screen and the wallet total keep counting the available
+balance only, as on iOS.
+
 - **Add funds** is gated: `RequisitesState.Loading` ignores the tap, `Failed` shows a dialog, `Ready`
   opens the sheet — swap (`AccountFlow.PredictionTopUp`) or receive. Both need a confirmed address
   (`activeStatus.cryptoCurrencyStatus`); without it a snackbar reports an unknown error rather than
@@ -199,6 +206,6 @@ and [REDACTED_TASK_KEY] (the claim action on the result screen).
 |---|---|
 | Claim (redeem) of a won position: transaction and claim action | [REDACTED_TASK_KEY], [REDACTED_TASK_KEY] |
 | Drop L2 credentials on CLOB `401` and route to the gate | [REDACTED_TASK_KEY] |
-| Tradezone `/value` (In Bets / Total) and PnL | not ticketed |
+| Tradezone PnL (`/v1/leaderboard`) | not ticketed |
 | Withdraw beyond USDC · Polygon (phase 2), withdrawal tracker on cold start, explorer link on withdraw | not ticketed |
 | Prediction-withdraw analytics event | waiting for analysts |

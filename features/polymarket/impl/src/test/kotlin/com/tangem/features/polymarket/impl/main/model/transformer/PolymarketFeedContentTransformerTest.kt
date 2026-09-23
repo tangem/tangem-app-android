@@ -9,6 +9,7 @@ import com.tangem.domain.polymarket.model.PolymarketEventsBatchListState
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
+import com.tangem.features.polymarket.impl.main.model.PredictionBalanceMode
 import com.tangem.features.polymarket.impl.main.model.RequisitesState
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketCategoryTabUM
@@ -252,12 +253,13 @@ internal class PolymarketFeedContentTransformerTest {
 
     private companion object {
         val PREV_STATE = PolymarketMainUM(
-            balance = PredictionBalanceUMConverter(onAddFundsClick = {}, onWithdrawClick = {})
+            balance = PredictionBalanceUMConverter(onAddFundsClick = {}, onWithdrawClick = {}, onBalanceModeClick = {})
                 .convert(
                     PredictionBalanceUMConverter.Input(
                         status = PredictionAccountStatusValue.Loading,
                         requisites = RequisitesState.Loading,
                         isTradingAllowed = false,
+                        mode = PredictionBalanceMode.AVAILABLE,
                     ),
                 ),
             categories = persistentListOf(
