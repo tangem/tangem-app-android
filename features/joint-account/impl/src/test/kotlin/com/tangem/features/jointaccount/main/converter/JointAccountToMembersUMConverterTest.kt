@@ -3,6 +3,8 @@ package com.tangem.features.jointaccount.main.converter
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.utils.StringsSigns
+import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.jointaccount.model.JointAccount
@@ -21,7 +23,8 @@ import com.tangem.core.ui.R as CoreUiR
 
 /**
  * The screen reads its title/progress/share-safely/archive/activation entirely from [JointAccount.status]
- * and whether this device holds the account's invites — only the creating device ever does. There is no
+ * and whether this wallet is the creator: its own owner address matches the creator's, or, while that address
+ * is not derived yet, it holds the account's invites — only the creating device ever does. There is no
  * "mode": every combination below is reachable from any entry point once the account's own data matches it.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -317,8 +320,79 @@ internal class JointAccountToMembersUMConverterTest {
         private fun provideTestModels() = listOf(JointAccount.Status.CANCELLED, JointAccount.Status.UNKNOWN)
     }
 
-    private fun input(account: JointAccount, invites: List<String>) =
-        JointAccountToMembersUMConverter.Input(account = account, invites = invites)
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class OwnAddress {
+
+        @Test
+        fun `GIVEN own address of a joined member WHEN convert THEN own row is You and creator stays Creator`() {
+            // Arrange
+            val input = input(
+                account = pendingAccount(members = listOf(creator, member)),
+                invites = emptyList(),
+                ownAddress = member.address.lowercase(),
+            )
+
+            // Act
+            val state = converter.convert(input)
+
+            // Assert
+            assertThat(state.joined.map { it.role }).containsExactly(
+                resourceReference(CoreUiR.string.joint_account_invite_members_creator),
+                resourceReference(CoreUiR.string.joint_account_members_role_you),
+            ).inOrder()
+            val topBar = state.topBar as JointAccountMembersUM.TopBarUM.Dismissible
+            assertThat(topBar.canArchive).isFalse()
+        }
+
+        @Test
+        fun `GIVEN own address of the creator without invites WHEN convert THEN creator rights and You Creator`() {
+            // Arrange
+            val input = input(
+                account = pendingAccount(members = listOf(creator, member)),
+                invites = emptyList(),
+                ownAddress = creator.address,
+            )
+
+            // Act
+            val state = converter.convert(input)
+
+            // Assert
+            assertThat(state.joined.first().role).isEqualTo(
+                combinedReference(
+                    resourceReference(CoreUiR.string.joint_account_members_role_you),
+                    stringReference(" ${StringsSigns.DOT} "),
+                    resourceReference(CoreUiR.string.joint_account_invite_members_creator),
+                ),
+            )
+            assertThat(state.joined[1].role).isEqualTo(resourceReference(CoreUiR.string.joint_account_members_role_joined))
+            assertThat(state.header?.title).isEqualTo(resourceReference(CoreUiR.string.joint_account_invite_members_title))
+            val topBar = state.topBar as JointAccountMembersUM.TopBarUM.Dismissible
+            assertThat(topBar.canArchive).isTrue()
+        }
+
+        @Test
+        fun `GIVEN own address of a member but invites on this device WHEN convert THEN the address wins`() {
+            // Arrange
+            val input = input(
+                account = pendingAccount(members = listOf(creator, member)),
+                invites = listOf(INVITE_A),
+                ownAddress = member.address,
+            )
+
+            // Act
+            val state = converter.convert(input)
+
+            // Assert
+            assertThat(state.header?.title).isEqualTo(
+                resourceReference(CoreUiR.string.joint_account_invite_members_waiting_title),
+            )
+            assertThat(state.freeSlots.none { it.canInvite }).isTrue()
+        }
+    }
+
+    private fun input(account: JointAccount, invites: List<String>, ownAddress: String? = null) =
+        JointAccountToMembersUMConverter.Input(account = account, invites = invites, ownAddress = ownAddress)
 
     private fun pendingAccount(members: List<JointAccount.Member>) = JointAccount(
         cryptoAccountId = ACCOUNT_ID,
