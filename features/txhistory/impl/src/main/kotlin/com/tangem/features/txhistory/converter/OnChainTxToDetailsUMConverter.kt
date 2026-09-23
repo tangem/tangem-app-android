@@ -79,7 +79,10 @@ internal class OnChainTxToDetailsUMConverter(
     fun convert(value: TxInfo): TxHistoryDetailsUM.SingleAsset {
         // An unrecognized contract call between the user's own portfolios reads as a Transfer, not a raw operation —
         // mirrors the history list so the two never disagree.
-        val tx = value.reclassifyOwnOperationAsTransfer(lookup, currency.network.id.rawId)
+        val tx = when (value) {
+            is TxInfo.Single -> value.reclassifyOwnOperationAsTransfer(lookup, currency.network.id.rawId)
+            is TxInfo.MultiTransfer -> value
+        }
         return TxHistoryDetailsUM.SingleAsset(
             header = tx.toHeaderUM(),
             isBalanceHidden = isBalanceHidden,
@@ -89,7 +92,7 @@ internal class OnChainTxToDetailsUMConverter(
             rows = buildList {
                 tx.validatorRow()?.let(::add)
                 tx.protocolRow()?.let(::add)
-                if (!tx.hasForeignFee() && !tx.isFeeOnly()) addAll(tx.toInfoRows())
+                if (!tx.hasForeignFee() && !tx.isFeeOnly()) addAll(tx.feeRows(currency))
             }.toImmutableList(),
             statusBanner = tx.approveRiskBanner(),
         )
@@ -182,15 +185,6 @@ internal class OnChainTxToDetailsUMConverter(
     }
 
     /**
-     * Whether the fee was paid by the counterparty, which drops the fee row: an incoming plain transfer. A non-withdraw
-     * [TxInfo.TransactionType.YieldSupply.Send] is a plain transfer too and follows the same rule.
-     */
-    private fun TxInfo.hasForeignFee(): Boolean = !isOutgoing && (
-        type is TransactionType.Transfer ||
-            (type as? TransactionType.YieldSupply.Send)?.isYieldSupplyWithdraw == false
-        )
-
-    /**
      * The counterparty resolved against the user's portfolios on the viewed currency's network, so the title and the
      * counterparty card never disagree with the list. [interactionAddressType] already carries the correct counterparty
      * for every type — including an incoming [TxInfo.TransactionType.Transfer], whose interaction address the mapper
@@ -223,19 +217,10 @@ internal class OnChainTxToDetailsUMConverter(
 
     private fun TxInfo.toAmountBlockUM(): TxHistoryDetailsUM.AmountBlockUM = TxHistoryDetailsUM.AmountBlockUM(
         icon = amountIcon(),
-        amount = feeAmountText() ?: approveAmountText() ?: stringReference(signedAmount(currency)),
+        amount = feeAmountText(currency) ?: approveAmountText() ?: stringReference(signedAmount(currency)),
         label = amountLabel(),
         isFailed = status is TxInfo.TransactionStatus.Failed,
     )
-
-    /** A [TransactionType.NetworkFee] moved no coin of its own, so the card shows the fee it paid instead. */
-    private fun TxInfo.feeAmountText(): TextReference? {
-        if (type !is TransactionType.NetworkFee) return null
-        val feeValue = fee?.value ?: return null
-        val formatted = feeValue.format { crypto(cryptoCurrency = currency, ignoreSymbolPosition = true) }
-        val prefix = if (status is TxInfo.TransactionStatus.Failed) "" else "${StringsSigns.MINUS} "
-        return stringReference((prefix + formatted).trim())
-    }
 
     /**
      * The card of a fee-only transaction, standing in for the counterparty one: the asset the fee was paid for, over
@@ -452,9 +437,6 @@ private fun TxInfo.signedAmount(currency: CryptoCurrency): String {
     }
     return (prefix + formatted).trim()
 }
-
-/** The amount of a fee-only transaction already shows the fee, so the card does not repeat it as an info row. */
-private fun TxInfo.isFeeOnly(): Boolean = type is TransactionType.NetworkFee || type is TransactionType.GaslessFee
 
 /** Type glyph. Unlike the history list, the failed state keeps the type glyph (only the color changes). */
 private fun TxInfo.headerIcon(): TxIcon = when (val type = type) {

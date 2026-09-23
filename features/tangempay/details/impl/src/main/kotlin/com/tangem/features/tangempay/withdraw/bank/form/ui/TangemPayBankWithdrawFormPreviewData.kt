@@ -20,6 +20,7 @@ internal object TangemPayBankWithdrawFormPreviewData {
 
     private val callbacks = TangemPayBankWithdrawFormUMFactory.Callbacks(
         onBackClick = {},
+        onCloseClick = {},
         onValueChange = { _, _ -> },
         onFocusChange = { _, _ -> },
         onSelectorClick = {},
