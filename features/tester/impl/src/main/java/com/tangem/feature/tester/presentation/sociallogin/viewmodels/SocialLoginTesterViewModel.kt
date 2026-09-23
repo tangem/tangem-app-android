@@ -17,6 +17,7 @@ import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
 import com.tangem.feature.tester.presentation.sociallogin.state.SocialLoginTesterUM
 import com.tangem.feature.tester.presentation.sociallogin.state.SocialLoginTesterUM.Action
 import com.tangem.feature.tester.presentation.sociallogin.state.SocialLoginTesterUM.StatusRow
+import com.tangem.features.hotwallet.SocialLoginConsent
 import com.tangem.features.hotwallet.SocialLoginOutcome
 import com.tangem.features.hotwallet.SocialLoginStage
 import com.tangem.features.hotwallet.SocialLoginUseCase
@@ -124,7 +125,11 @@ internal class SocialLoginTesterViewModel @Inject constructor(
 
     private suspend fun signIn(provider: SocialLoginProvider): String {
         val stages = mutableListOf<SocialLoginStage>()
-        val result = socialLoginUseCase.signIn(provider = provider, onStageChanged = { stages += it })
+        val result = socialLoginUseCase.signIn(
+            provider = provider,
+            onStageChanged = { stages += it },
+            requestConsent = { SocialLoginConsent(isEmailSharingAllowed = false) },
+        )
         val outcome = result.fold(
             ifLeft = { "failed: $it" },
             ifRight = { outcome ->

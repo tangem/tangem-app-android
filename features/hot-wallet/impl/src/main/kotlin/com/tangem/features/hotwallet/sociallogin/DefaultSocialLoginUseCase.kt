@@ -24,9 +24,10 @@ import com.tangem.domain.wallets.builder.HotUserWalletBuilder
 import com.tangem.domain.wallets.usecase.ExportSeedPhraseUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.hotwallet.MnemonicRepository
-import com.tangem.features.hotwallet.SocialLoginUseCase
+import com.tangem.features.hotwallet.SocialLoginConsent
 import com.tangem.features.hotwallet.SocialLoginOutcome
 import com.tangem.features.hotwallet.SocialLoginStage
+import com.tangem.features.hotwallet.SocialLoginUseCase
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImportError
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImporter
 import com.tangem.hot.sdk.TangemHotSdk
@@ -59,7 +60,6 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
     private val appCoroutineScope: AppCoroutineScope,
 ) : SocialLoginUseCase {
 
-    /** Serializes the whole flow, so a double tap cannot run two creations against the same identity */
     private val mutex = Mutex()
 
     /** Wallets created and saved but not backed up yet, kept so a retry resumes one (see [PendingCreate]) */
@@ -68,16 +68,16 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
     override suspend fun signIn(
         provider: SocialLoginProvider,
         onStageChanged: (SocialLoginStage) -> Unit,
+        requestConsent: suspend () -> SocialLoginConsent?,
     ): Either<SocialLoginError, SocialLoginOutcome> = mutex.withLock {
         onStageChanged(SocialLoginStage.SigningIn)
 
         val idToken = signInWithSocialProviderUseCase(provider)
             .getOrElse { return@withLock Either.Left(it) }
 
-        resolve(idToken, onStageChanged)
+        resolve(idToken, onStageChanged, requestConsent)
     }
 
-    /** Same lock as [signIn]: clearing the provider mid-flow would strand it on a gone authorization */
     override suspend fun signOut(provider: SocialLoginProvider) = mutex.withLock {
         signOutFromSocialProviderUseCase(provider)
     }
@@ -86,12 +86,13 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
     private suspend fun resolve(
         idToken: SocialProviderIdToken,
         onStageChanged: (SocialLoginStage) -> Unit,
+        requestConsent: suspend () -> SocialLoginConsent?,
     ): Either<SocialLoginError, SocialLoginOutcome> {
         onStageChanged(SocialLoginStage.VerifyingAccount)
 
         val recoveryKey = getSocialRecoveryKeyUseCase(idToken).getOrElse { error ->
             return if (error == SocialLoginError.BindingNotFound) {
-                create(idToken, onStageChanged)
+                create(idToken, onStageChanged, requestConsent)
             } else {
                 Either.Left(error)
             }
@@ -136,7 +137,11 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
     private suspend fun create(
         idToken: SocialProviderIdToken,
         onStageChanged: (SocialLoginStage) -> Unit,
+        requestConsent: suspend () -> SocialLoginConsent?,
     ): Either<SocialLoginError, SocialLoginOutcome> {
+        // TODO [REDACTED_TASK_KEY]: the email-sharing opt-in has no sink yet, in analytics or in the backend contract.
+        requestConsent() ?: return Either.Left(SocialLoginError.ConsentDeclined)
+
         onStageChanged(SocialLoginStage.CreatingWallet)
 
         // Taken over only if no registration was ever attempted on it. An attempt that failed still may
