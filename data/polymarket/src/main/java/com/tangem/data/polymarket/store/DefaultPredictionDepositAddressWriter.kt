@@ -13,10 +13,8 @@ internal class DefaultPredictionDepositAddressWriter @Inject constructor(
 ) : PredictionDepositAddressWriter {
 
     override suspend fun store(userWalletId: UserWalletId, address: String?) = withContext(dispatchers.io) {
-        val active = statusStore.getSyncOrNull(userWalletId = userWalletId)
-            as? PredictionAccountStatusValue.Active
-            ?: return@withContext
-
-        statusStore.store(userWalletId = userWalletId, value = active.copy(depositAddress = address))
+        statusStore.update(userWalletId = userWalletId) { current ->
+            (current as? PredictionAccountStatusValue.Active)?.copy(depositAddress = address)
+        }
     }
 }
