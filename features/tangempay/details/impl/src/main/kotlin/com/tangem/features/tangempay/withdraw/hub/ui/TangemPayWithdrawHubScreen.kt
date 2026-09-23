@@ -41,7 +41,6 @@ import com.tangem.core.ui.res.generated.icons.ic_chevron_left_20
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.hub.model.WithdrawHubState
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM
-import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.AvatarAccent
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.BankSectionUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.RecentRecipientUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.RecentsUM
@@ -163,14 +162,12 @@ private class BankSectionPreviewProvider : PreviewParameterProvider<BankSectionU
                     RecentRecipientUM(
                         id = "1",
                         initial = "A",
-                        accent = AvatarAccent.VIOLET,
                         name = "Andrei M.",
                         accountNumber = "0000000000",
                     ),
                     RecentRecipientUM(
                         id = "2",
                         initial = "J",
-                        accent = AvatarAccent.YELLOW,
                         name = "Johnny S.",
                         accountNumber = "0000000000",
                     ),

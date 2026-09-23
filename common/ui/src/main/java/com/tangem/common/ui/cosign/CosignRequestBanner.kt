@@ -61,8 +61,8 @@ fun CosignRequestBanner(state: CosignRequestBannerUM, modifier: Modifier = Modif
 private fun SignatureProgressRing(progress: SignatureProgressUM, modifier: Modifier = Modifier) {
     val total = progress.total.coerceIn(1, MAX_COSIGN_SIGNERS)
     val collected = progress.collected.coerceIn(0, total)
-    val trackColor = TangemTheme.colors3.icon.tertiary
-    val progressColor = TangemTheme.colors3.icon.status.warning
+    val trackColor = TangemTheme.colors3.border.secondary
+    val progressColor = TangemTheme.colors3.border.status.warning
     Box(
         modifier = modifier.size(RingSize),
         contentAlignment = Alignment.Center,

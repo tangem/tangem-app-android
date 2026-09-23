@@ -35,7 +35,11 @@ internal class TangemPayBankWithdrawAmountUMFactory(
         sheet: AmountSheet?,
     ): TangemPayBankWithdrawAmountUM {
         return TangemPayBankWithdrawAmountUM(
-            header = BankWithdrawHeaderFactory.create(draft = draft, step = step),
+            header = BankWithdrawHeaderFactory.create(
+                draft = draft,
+                step = step,
+                onCloseClick = callbacks.onCloseClick,
+            ),
             amount = createAmountField(selection = selection),
             source = createSourceRow(source = selection.source, currency = selection.currency),
             route = createRouteRow(selection = selection),
@@ -84,7 +88,7 @@ internal class TangemPayBankWithdrawAmountUMFactory(
 
     private fun createRouteRow(selection: AmountSelection): RouteRowUM = RouteRowUM(
         rail = selection.destination.rail,
-        title = selection.destination.rail.toTitleReference(),
+        title = selection.destination.toTitleReference(),
         eta = selection.destination.eta.toTextReference(),
         fee = selection.destination.fee.toText(),
         onClick = callbacks.onRouteClick.takeIf { selection.destinations.size > 1 },
@@ -109,7 +113,7 @@ internal class TangemPayBankWithdrawAmountUMFactory(
             items = selection.destinations.map { destination ->
                 RouteItemUM(
                     rail = destination.rail,
-                    title = destination.rail.toTitleReference(),
+                    title = destination.toTitleReference(),
                     eta = destination.eta.toTextReference(),
                     fee = destination.fee.toText(),
                     isSelected = destination.rail == selection.destination.rail,
@@ -122,6 +126,7 @@ internal class TangemPayBankWithdrawAmountUMFactory(
 
     data class Callbacks(
         val onBackClick: () -> Unit,
+        val onCloseClick: () -> Unit,
         val onValueChange: (String) -> Unit,
         val onMaxClick: () -> Unit,
         val onSourceClick: () -> Unit,
