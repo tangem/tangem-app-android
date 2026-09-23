@@ -1,6 +1,6 @@
 # Polymarket — data
 
-Implementations behind the `domain/polymarket` interfaces: five remote services, the signer that talks to
+Implementations behind the `domain/polymarket` interfaces: six remote services, the signer that talks to
 the card / hot wallet, the stores, and the error resolvers that turn HTTP into typed domain errors. One
 Android-library module (`:data:polymarket`), Hilt, Moshi via `grow/datasource`.
 
@@ -15,7 +15,7 @@ signing) and `features/polymarket/CLAUDE.md` (screens, routes, flows).
 Retrofit interfaces and DTOs are **not** here — they live in `grow/datasource`
 (`com.tangem.grow.datasource.polymarket.*`), base URLs in `grow/datasource/.../config/Polymarket*.kt`.
 
-## The five remote services
+## The six remote services
 
 | Service | Retrofit interface | Base URL | Auth | Repository |
 |---|---|---|---|---|
@@ -24,6 +24,7 @@ Retrofit interfaces and DTOs are **not** here — they live in `grow/datasource`
 | **Bridge** (`bridge.polymarket.com`) | `PolymarketBridgeApi` | `PolymarketBridge` | none | `DefaultPolymarketBridgeRepository` |
 | **Relayer** (`relayer-v2.polymarket.com`) | `PolymarketRelayerApi` | `PolymarketRelayer` | none | `DefaultPolymarketRepository.getRelayerNonce` |
 | **Web** (`polymarket.com/api/geoblock`) | `PolymarketGeoApi` | `PolymarketWeb` | none | `DefaultPolymarketRepository.checkGeoblock` |
+| **Data API** (`data-api.polymarket.com/value`) | `PolymarketDataApi` | `PolymarketData` | none | `DefaultPolymarketPositionsRepository.getPositionsValue` |
 
 Who owns what: the BFF owns onboarding (`/wallet`, `/wallet/deploy`, `/wallet/approvals`), discovery
 (`/categories`, `/events`, `/search`, `/events/{id}`), quoting (`POST /orders/quote`), positions
@@ -46,7 +47,7 @@ date here; when you ingest a change, update this table in the same PR.
 | [Mobile Order Placement Flow](https://app.notion.com/p/3c35d34eb6788044b0eed0781c44ef18) | Order screen rules | 01.09.2026 |
 | [Deposit & Withdraw client guide](https://app.notion.com/p/3cd5d34eb6788087b7f2c748c6b24a46) | Bridge, `/withdraw`, minimums | 17.09.2026 (§6.1/§7.1) |
 | [Deposit flow Use Cases](https://app.notion.com/p/3d55d34eb6788088b536d7d22b5143cc) | Add-funds cases | 08.09.2026 |
-| [Tradezone Balance — API & Display Rules](https://app.notion.com/p/3dc5d34eb6788099b050dd757a787996) | Polling, `/value`, PnL | 16.09.2026 — `/value` and PnL not implemented |
+| [Tradezone Balance — API & Display Rules](https://app.notion.com/p/3dc5d34eb6788099b050dd757a787996) | Polling, `/value`, PnL | 21.09.2026 — `/value` implemented ([REDACTED_TASK_KEY]), PnL not |
 | [Positions & Rewards client guide](https://app.notion.com/p/3c15d34eb67880859ea2f883ac086d02) | Positions, claim | 17.09.2026 — claim not implemented ([REDACTED_TASK_KEY]) |
 | [Close Position Flow](https://app.notion.com/p/3dd5d34eb6788087a944c0d8a60af953) | Sell rules | 17.09.2026 — cases 5/7/8 not implemented ([REDACTED_TASK_KEY] partial) |
 
@@ -155,6 +156,20 @@ status but has no credentials, so it yields no balance. It maps `PolymarketWalle
 un-refreshed — it never writes "empty" on the strength of a failed question.
 `DefaultPredictionAccountStatusProducer` mixes the fiat rate in on every emission, starting with
 `Pending` so the combined account list is never stalled by this account.
+
+`PredictionAccountStatusValue.Active` is written by two parties — the fetcher owns the balance and the
+positions value, `DefaultPredictionDepositAddressWriter` owns the deposit address — so neither writes a
+whole value it read earlier. Both commit through `PredictionAccountStatusStore.update`, whose
+non-suspending transform receives the value current at that moment; `store` is the same call with a
+transform that ignores it, for the states that are facts about the whole account (`NotOnboarded`,
+`Onboarding`, `Onboarded`, `Error`). One lock spans the runtime commit and the disk write, so the disk
+cannot end up holding a value the runtime already superseded. A refresh therefore carries over
+what it did not re-read instead of snapshotting it before the network, and two refreshes of one wallet run
+in parallel. What this accepts: the slower of two overlapping refreshes commits the older balance, and a
+failing one flags a value a concurrent success has just written as `ONLY_CACHE`. Both correct themselves
+on the next poll (30 s, 5 s in the funding window) and neither can touch a field its refresh did not read.
+Revisit if a write lands here that is visible to the user and does not self-heal — an optimistic debit
+after an order, say.
 
 ## DI
 

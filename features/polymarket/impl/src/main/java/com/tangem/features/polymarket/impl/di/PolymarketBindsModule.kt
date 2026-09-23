@@ -23,6 +23,7 @@ import com.tangem.features.polymarket.impl.DefaultPolymarketComponent
 import com.tangem.features.polymarket.impl.details.model.PolymarketEventDetailsModel
 import com.tangem.features.polymarket.impl.entry.model.PolymarketEntryModel
 import com.tangem.features.polymarket.impl.featuretoggles.DefaultPolymarketFeatureToggles
+import com.tangem.features.polymarket.impl.history.model.PolymarketHistoryModel
 import com.tangem.features.polymarket.impl.walletblock.DefaultPolymarketWalletBlockComponent
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketAddFundsModel
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainModel
@@ -32,6 +33,7 @@ import com.tangem.features.polymarket.impl.positiondetails.model.PolymarketPosit
 import com.tangem.features.polymarket.impl.positionresult.model.PolymarketPositionResultModel
 import com.tangem.features.polymarket.impl.model.PolymarketModel
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionAmountModel
+import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionStatusModel
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSummaryModel
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSlippageModel
 import com.tangem.features.polymarket.impl.onboarding.model.PolymarketOnboardingModel
@@ -71,6 +73,11 @@ internal interface PolymarketModelModule {
     @IntoMap
     @ClassKey(PolymarketMainModel::class)
     fun bindPolymarketMainModel(impl: PolymarketMainModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(PolymarketHistoryModel::class)
+    fun bindPolymarketHistoryModel(impl: PolymarketHistoryModel): Model
 
     @Binds
     @IntoMap
@@ -126,6 +133,11 @@ internal interface PolymarketModelModule {
     @IntoMap
     @ClassKey(PlacePredictionSlippageModel::class)
     fun bindPlacePredictionSlippageModel(impl: PlacePredictionSlippageModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(PlacePredictionStatusModel::class)
+    fun bindPlacePredictionStatusModel(impl: PlacePredictionStatusModel): Model
 }
 
 @Module
