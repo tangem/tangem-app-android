@@ -1,6 +1,6 @@
 # Polymarket — data
 
-Implementations behind the `domain/polymarket` interfaces: five remote services, the signer that talks to
+Implementations behind the `domain/polymarket` interfaces: six remote services, the signer that talks to
 the card / hot wallet, the stores, and the error resolvers that turn HTTP into typed domain errors. One
 Android-library module (`:data:polymarket`), Hilt, Moshi via `grow/datasource`.
 
@@ -15,7 +15,7 @@ signing) and `features/polymarket/CLAUDE.md` (screens, routes, flows).
 Retrofit interfaces and DTOs are **not** here — they live in `grow/datasource`
 (`com.tangem.grow.datasource.polymarket.*`), base URLs in `grow/datasource/.../config/Polymarket*.kt`.
 
-## The five remote services
+## The six remote services
 
 | Service | Retrofit interface | Base URL | Auth | Repository |
 |---|---|---|---|---|
@@ -24,6 +24,7 @@ Retrofit interfaces and DTOs are **not** here — they live in `grow/datasource`
 | **Bridge** (`bridge.polymarket.com`) | `PolymarketBridgeApi` | `PolymarketBridge` | none | `DefaultPolymarketBridgeRepository` |
 | **Relayer** (`relayer-v2.polymarket.com`) | `PolymarketRelayerApi` | `PolymarketRelayer` | none | `DefaultPolymarketRepository.getRelayerNonce` |
 | **Web** (`polymarket.com/api/geoblock`) | `PolymarketGeoApi` | `PolymarketWeb` | none | `DefaultPolymarketRepository.checkGeoblock` |
+| **Data API** (`data-api.polymarket.com/value`) | `PolymarketDataApi` | `PolymarketData` | none | `DefaultPolymarketPositionsRepository.getPositionsValue` |
 
 Who owns what: the BFF owns onboarding (`/wallet`, `/wallet/deploy`, `/wallet/approvals`), discovery
 (`/categories`, `/events`, `/search`, `/events/{id}`), quoting (`POST /orders/quote`), positions
@@ -46,7 +47,7 @@ date here; when you ingest a change, update this table in the same PR.
 | [Mobile Order Placement Flow](https://app.notion.com/p/3c35d34eb6788044b0eed0781c44ef18) | Order screen rules | 01.09.2026 |
 | [Deposit & Withdraw client guide](https://app.notion.com/p/3cd5d34eb6788087b7f2c748c6b24a46) | Bridge, `/withdraw`, minimums | 17.09.2026 (§6.1/§7.1) |
 | [Deposit flow Use Cases](https://app.notion.com/p/3d55d34eb6788088b536d7d22b5143cc) | Add-funds cases | 08.09.2026 |
-| [Tradezone Balance — API & Display Rules](https://app.notion.com/p/3dc5d34eb6788099b050dd757a787996) | Polling, `/value`, PnL | 16.09.2026 — `/value` and PnL not implemented |
+| [Tradezone Balance — API & Display Rules](https://app.notion.com/p/3dc5d34eb6788099b050dd757a787996) | Polling, `/value`, PnL | 21.09.2026 — `/value` implemented ([REDACTED_TASK_KEY]), PnL not |
 | [Positions & Rewards client guide](https://app.notion.com/p/3c15d34eb67880859ea2f883ac086d02) | Positions, claim | 17.09.2026 — claim not implemented ([REDACTED_TASK_KEY]) |
 | [Close Position Flow](https://app.notion.com/p/3dd5d34eb6788087a944c0d8a60af953) | Sell rules | 17.09.2026 — cases 5/7/8 not implemented ([REDACTED_TASK_KEY] partial) |
 
