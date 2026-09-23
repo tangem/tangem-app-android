@@ -25,6 +25,7 @@ import com.tangem.domain.tokens.repository.YieldSupplyWarningsViewedRepository
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.tap.domain.tokens.DefaultTokensFeatureToggles
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
@@ -46,6 +47,10 @@ internal object TokensDomainModule {
     ): FetchPendingTransactionsUseCase {
         return FetchPendingTransactionsUseCase(networksRepository)
     }
+
+    @Provides
+    @Singleton
+    fun provideTokensFeatureToggles(): TokensFeatureToggles = DefaultTokensFeatureToggles()
 
     @Provides
     @Singleton
