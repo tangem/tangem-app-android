@@ -641,7 +641,9 @@ internal class WalletSettingsModel @Inject constructor(
                         }
                     }
                 }
-                if (isBackedUp) {
+                // The seed phrase itself only when it was saved: a social-only wallet has no phrase the user
+                // has seen, so it goes to the backup options instead.
+                if (userWallet.backedUp) {
                     primaryButton {
                         text = resourceReference(R.string.hw_remove_wallet_notification_action_backup_view_v2)
                         onClick {
