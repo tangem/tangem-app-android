@@ -27,6 +27,7 @@ internal class JointCosignRequestConverter(
         val operationId = value.operation.operationId
         val recipient = value.transfer.intent.recipient
         val startedAt = value.operation.startedAtMillis()
+        val isPendingSignature = value.operation.status == JointOperation.Status.AWAITING_SIGNATURES
 
         return TransactionItemUM.Content(
             txHash = operationId,
@@ -37,7 +38,11 @@ internal class JointCosignRequestConverter(
                 .trim(),
             currencySymbol = currency.symbol,
             time = startedAt?.toTimeFormat().orEmpty(),
-            status = TransactionItemUM.Content.Status.Unconfirmed,
+            status = if (isPendingSignature) {
+                TransactionItemUM.Content.Status.PendingSignature
+            } else {
+                TransactionItemUM.Content.Status.Unconfirmed
+            },
             direction = TransactionItemUM.Content.Direction.OUTGOING,
             icon = TxIcon.Vector(Icons.ic_arrow_up_20),
             title = resourceReference(R.string.common_sending),
@@ -47,7 +52,7 @@ internal class JointCosignRequestConverter(
                 briefAddress = recipient.toBriefAddressFormat(),
             ),
             timestamp = startedAt ?: 0L,
-            isPendingSignature = value.operation.status == JointOperation.Status.AWAITING_SIGNATURES,
+            isPendingSignature = isPendingSignature,
             onClick = { onClick(operationId) },
         )
     }

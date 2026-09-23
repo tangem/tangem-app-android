@@ -174,13 +174,13 @@ internal class ExpressTxToTransactionItemUMConverter(
         amount?.let { prefix + it.format { crypto(symbol = "", decimals = currency.displayDecimals) }.trim() }
 
     private fun swapTitle(status: Status): TextReference = when (status) {
-        is Status.Confirmed -> resourceReference(R.string.common_swapped)
+        is Status.Confirmed, is Status.PendingSignature -> resourceReference(R.string.common_swapped)
         is Status.Unconfirmed -> resourceReference(R.string.common_swapping)
         is Status.Failed -> resourceReference(R.string.transaction_history_status_swap_failed)
     }
 
     private fun onrampTitle(status: Status): TextReference = when (status) {
-        is Status.Confirmed -> resourceReference(R.string.tx_history_onramp_topped_up)
+        is Status.Confirmed, is Status.PendingSignature -> resourceReference(R.string.tx_history_onramp_topped_up)
         is Status.Unconfirmed -> resourceReference(R.string.transaction_history_status_topping_up)
         is Status.Failed -> resourceReference(R.string.transaction_history_status_top_up_failed)
     }
