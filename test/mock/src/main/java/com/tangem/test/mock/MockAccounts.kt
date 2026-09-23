@@ -144,7 +144,6 @@ object MockAccounts {
                                 value = depositAddress,
                             ),
                         ),
-                        stakingBalance = null,
                         yieldSupplyStatus = null,
                         hasCurrentNetworkTransactions = false,
                         pendingTransactions = emptySet(),

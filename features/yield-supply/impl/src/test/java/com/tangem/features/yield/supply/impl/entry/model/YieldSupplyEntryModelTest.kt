@@ -221,7 +221,6 @@ internal class YieldSupplyEntryModelTest {
             fiatAmount = BigDecimal.ZERO,
             fiatRate = BigDecimal.ONE,
             priceChange = BigDecimal.ZERO,
-            stakingBalance = null,
             yieldSupplyStatus = YieldSupplyStatus(
                 isActive = isActive,
                 isInitialized = true,
