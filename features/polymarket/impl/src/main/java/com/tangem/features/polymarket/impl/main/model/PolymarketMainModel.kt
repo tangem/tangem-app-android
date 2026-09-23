@@ -285,13 +285,14 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     private fun loadCategories() {
+        uiState.update { it.copy(isCategoriesLoading = true) }
         modelScope.launch {
             val result = withContext(dispatchers.default) { getPolymarketCategoriesUseCase() }
             val loadedCategories = result.getOrNull().orEmpty()
 
             categories = loadedCategories
             selectedCategoryId = loadedCategories.firstOrNull()?.id
-            uiState.update { it.copy(categories = buildTabs()) }
+            uiState.update { it.copy(categories = buildTabs(), isCategoriesLoading = false) }
 
             selectFeed(categoryId = selectedCategoryId, reloadVisited = true)
         }.saveIn(categoriesJob)
