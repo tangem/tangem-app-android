@@ -50,7 +50,7 @@ internal fun Status.statusAwareTitle(
         resourceReference(R.string.common_action_failed, wrappedList(resourceReference(pending)))
     }
     is Status.Unconfirmed -> resourceReference(pending)
-    is Status.Confirmed -> resourceReference(confirmed)
+    is Status.Confirmed, is Status.PendingSignature -> resourceReference(confirmed)
 }
 
 /** [statusAwareTitle] keyed off an on-chain [TxInfo]'s status. */
