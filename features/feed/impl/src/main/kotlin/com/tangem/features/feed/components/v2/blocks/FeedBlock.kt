@@ -2,6 +2,7 @@ package com.tangem.features.feed.components.v2.blocks
 
 import androidx.compose.runtime.Composable
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.feed.components.v2.blocks.analytics.ProductCard
 import com.tangem.features.feed.nav.FeedTabId
 import kotlinx.coroutines.flow.StateFlow
 
@@ -20,6 +21,9 @@ internal interface FeedBlock : ComposableContentComponent {
 
     /** Stable identity, used both for the block's child context and for the row's item key. */
     val key: String
+
+    val productCard: ProductCard?
+        get() = null
 
     /** How much room the card takes. */
     val size: Size
