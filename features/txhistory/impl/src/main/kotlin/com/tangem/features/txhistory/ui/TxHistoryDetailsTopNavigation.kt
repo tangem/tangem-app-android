@@ -234,21 +234,21 @@ private fun StatusActionIcon(icon: TxIcon, status: Status, modifier: Modifier = 
 
 private val Status.circleBackground: Color
     @Composable get() = when (this) {
-        is Status.Confirmed -> TangemTheme.colors3.bg.tertiary
+        is Status.Confirmed, is Status.PendingSignature -> TangemTheme.colors3.bg.tertiary
         is Status.Unconfirmed -> TangemTheme.colors3.bg.status.infoSubtle
         is Status.Failed -> TangemTheme.colors3.bg.status.errorSubtle
     }
 
 private val Status.iconTint: Color
     @Composable get() = when (this) {
-        is Status.Confirmed -> TangemTheme.colors3.icon.primary
+        is Status.Confirmed, is Status.PendingSignature -> TangemTheme.colors3.icon.primary
         is Status.Unconfirmed -> TangemTheme.colors3.icon.accent.blue
         is Status.Failed -> TangemTheme.colors3.icon.accent.red
     }
 
 private val Status.titleColor: Color
     @Composable get() = when (this) {
-        is Status.Confirmed -> TangemTheme.colors3.text.primary
+        is Status.Confirmed, is Status.PendingSignature -> TangemTheme.colors3.text.primary
         is Status.Unconfirmed -> TangemTheme.colors3.text.brand
         is Status.Failed -> TangemTheme.colors3.text.status.error
     }

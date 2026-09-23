@@ -54,7 +54,7 @@ internal fun TxHistoryInfo.toAnalyticsStatus(): String = when (this) {
 }.toAnalyticsStatusString()
 
 private fun Status?.toAnalyticsStatusString(): String = when (this) {
-    is Status.Confirmed -> "Confirmed"
+    is Status.Confirmed, is Status.PendingSignature -> "Confirmed"
     is Status.Failed -> "Failed"
     is Status.Unconfirmed -> "Pending"
     null -> "Unknown"
