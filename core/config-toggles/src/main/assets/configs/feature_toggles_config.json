@@ -1,19 +1,11 @@
 [
     {
-        "name": "TWI_1741_TOP_UP_WARNING_ENABLED",
-        "version": "6.3"
-    },
-    {
         "name": "TWI_1627_OTEL_METRICS_ENABLED",
         "version": "6.4"
     },
     {
         "name": "TWI_1640_COLLECTIBLES_PHASE_ONE_ENABLED",
         "version": "undefined"
-    },
-    {
-        "name": "TWI_1636_SWAP_DEEPLINK_ENABLED",
-        "version": "6.3"
     },
     {
         "name": "AND_16359_ONRAMP_THEMED_PAYMENT_METHOD_IMAGES",
@@ -32,10 +24,6 @@
         "version": "undefined"
     },
     {
-        "name": "TWI_1602_STAKING_TRANSACTION_VALIDATION",
-        "version": "6.2"
-    },
-    {
         "name": "TWI_1525_MONEY_ACCOUNTS_ENABLED",
         "version": "undefined"
     },
@@ -48,10 +36,6 @@
         "version": "undefined"
     },
     {
-        "name": "TWI_1749_XRP_TX_HISTORY_ENABLED",
-        "version": "6.3"
-    },
-    {
         "name": "ADDRESS_SYNC_ENABLED",
         "version": "undefined"
     },
@@ -60,24 +44,12 @@
         "version": "undefined"
     },
     {
-        "name": "TWI_1327_GASLESS_YIELD_WITHDRAW_ENABLED",
-        "version": "6.2"
-    },
-    {
         "name": "AND_15767_NEW_TX_HISTORY_ENABLED",
         "version": "undefined"
     },
     {
         "name": "AND_14829_WARNINGS_REFACTORING_ENABLED",
         "version": "undefined"
-    },
-    {
-        "name": "TWI_1469_FOR_YOU_ENABLED",
-        "version": "6.3"
-    },
-    {
-        "name": "AND_16080_TRON_DEX_SWAP_ENABLED",
-        "version": "6.2"
     },
     {
         "name": "AND_16204_POLYMARKET_ENABLED",
@@ -92,20 +64,8 @@
         "version": "6.4"
     },
     {
-        "name": "AND_16358_HIDE_ZERO_BALANCE_SWAP_SOURCE",
-        "version": "6.3"
-    },
-    {
-        "name": "TWI_1259_TRON_GASLESS_ENABLED",
-        "version": "6.3"
-    },
-    {
         "name": "TWI_1586_CARD_LINKED_STATUS_UPDATE",
         "version": "undefined"
-    },
-    {
-        "name": "TWI_922_GOOGLE_DRIVE_BACKUP_ENABLED",
-        "version": "6.3"
     },
     {
         "name": "TWI_1766_PASSWORD_MANAGER_ENABLED",
@@ -122,14 +82,6 @@
     {
         "name": "TWI_1608_NEW_SHTORKA_ENABLED",
         "version": "undefined"
-    },
-    {
-        "name": "TWI_1717_BALANCE_CONTRIBUTIONS",
-        "version": "6.3"
-    },
-    {
-        "name": "AND_16356_ACCOUNT_SWAP_FLOW",
-        "version": "6.3"
     },
     {
         "name": "TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED",
