@@ -17,6 +17,7 @@ import com.tangem.domain.pay.usecase.IssuePlasticCardUseCase
 import com.tangem.domain.pay.usecase.ReissuePlasticCardUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.features.tangempay.common.TangemPayFormCharset
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardIntent
@@ -107,7 +108,8 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
             is TangemPayOrderCardIntent.ReissuePlastic -> info?.sourceCardEmbossName(intent.sourceProductInstanceId)
         }
 
-        val embossable = prefill?.takeIf(OrderFormField.EmbossName.isContentValid)
+        val nameField = OrderFormField.EmbossName
+        val embossable = prefill?.takeIf { it.length <= nameField.maxLength && nameField.isContentValid(it) }
 
         return emptyField(OrderFormField.EmbossName).copy(value = embossable.orEmpty())
     }
@@ -136,7 +138,8 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
     }
 
     private fun onFieldChange(field: OrderFormField, value: String) {
-        updateForm { form -> form.updateField(field) { copy(value = value, error = null) } }
+        val input = value.take(field.maxLength)
+        updateForm { form -> form.updateField(field) { copy(value = input, error = field.charsetError(input)) } }
     }
 
     private fun onFieldFocusChange(field: OrderFormField, isFocused: Boolean) {
@@ -272,15 +275,17 @@ private fun CustomerInfo.sourceCardEmbossName(productInstanceId: String): String
         ?.embossName
 
 private fun Form.toPlasticCardOrder() = PlasticCardOrder(
-    embossName = embossName.value.trim(),
+    embossName = embossName.normalizedValue(),
     shippingAddress = ShippingAddress(
-        firstName = firstName.value.trim(),
-        lastName = lastName.value.trim(),
-        region = region.value.trim(),
-        city = city.value.trim(),
-        line1 = addressLine1.value.trim(),
-        line2 = addressLine2.value.trim().ifBlank { null },
-        postalCode = postalCode.value.trim(),
+        firstName = firstName.normalizedValue(),
+        lastName = lastName.normalizedValue(),
+        region = region.normalizedValue(),
+        city = city.normalizedValue(),
+        line1 = addressLine1.normalizedValue(),
+        line2 = addressLine2.normalizedValue().ifBlank { null },
+        postalCode = postalCode.normalizedValue(),
         phone = PhoneMaskFormatter.toE164(phone.value, phoneMask),
     ),
 )
+
+private fun FieldUM.normalizedValue(): String = TangemPayFormCharset.normalize(value.trim())
