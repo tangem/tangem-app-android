@@ -32,7 +32,7 @@ internal class TransactionDataToTxHistoryItemConverter(
         val amount = getTransactionAmountValue(value.amount, value.fee?.amount) ?: return null
         val isOutgoing = value.sourceAddress in walletAddresses.map(Address::value)
 
-        return TxInfo(
+        return TxInfo.Single(
             txHash = hash,
             timestampInMillis = millis,
             isOutgoing = isOutgoing,

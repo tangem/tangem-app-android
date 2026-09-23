@@ -11,6 +11,8 @@ internal class DefaultHotWalletFeatureToggles(
 ) : HotWalletFeatureToggles {
 
     override val isGoogleDriveBackupEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_922_GOOGLE_DRIVE_BACKUP_ENABLED) &&
-            GoogleServicesHelper.checkGoogleServicesAvailability(context)
+        get() = GoogleServicesHelper.checkGoogleServicesAvailability(context)
+
+    override val isPasswordManagerEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1766_PASSWORD_MANAGER_ENABLED)
 }

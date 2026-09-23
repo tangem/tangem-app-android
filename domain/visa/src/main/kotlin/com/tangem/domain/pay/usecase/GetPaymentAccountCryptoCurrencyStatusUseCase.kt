@@ -33,10 +33,8 @@ class GetPaymentAccountCryptoCurrencyStatusUseCase(
 
     operator fun invoke(userWalletId: UserWalletId): Flow<Pair<AccountStatus.Payment, CryptoCurrencyStatus>> {
         return paymentAccountStatusSupplier(userWalletId).mapNotNull { accountStatus ->
-            val cryptoCurrencyStatus = when (val statusValue = accountStatus.value) {
-                is PaymentAccountStatusValue.Loaded -> statusValue.currencyStatusOrNull() ?: return@mapNotNull null
-                else -> return@mapNotNull null
-            }
+            val statusValue = accountStatus.value as? PaymentAccountStatusValue.Loaded ?: return@mapNotNull null
+            val cryptoCurrencyStatus = statusValue.cryptoCurrencyStatuses.firstOrNull() ?: return@mapNotNull null
             accountStatus to cryptoCurrencyStatus
         }
     }
@@ -56,16 +54,13 @@ class GetPaymentAccountCryptoCurrencyStatusUseCase(
 
     suspend fun invokeSync(userWalletId: UserWalletId): Option<Pair<AccountStatus.Payment, CryptoCurrencyStatus>> {
         val accountStatus = paymentAccountStatusSupplier.invoke(userWalletId).firstOrNull() ?: return none()
-        val cryptoCurrencyStatus = when (val statusValue = accountStatus.value) {
-            is PaymentAccountStatusValue.Loaded -> statusValue.currencyStatusOrNull() ?: return none()
-            else -> return none()
-        }
+        val statusValue = accountStatus.value as? PaymentAccountStatusValue.Loaded ?: return none()
+        val cryptoCurrencyStatus = statusValue.cryptoCurrencyStatuses.firstOrNull() ?: return none()
         return (accountStatus to cryptoCurrencyStatus).some()
     }
 
     /**
-     * Every currency the payment account holds — one per token per issued network. Collapses to the single
-     * legacy currency while the account is not multichain, so callers get the same shape either way.
+     * Every currency the payment account holds — one per token per issued network.
      */
     suspend fun invokeSyncCurrencies(userWalletId: UserWalletId): List<CryptoCurrencyStatus> {
         val accountStatus = paymentAccountStatusSupplier.invoke(userWalletId).firstOrNull() ?: return emptyList()
@@ -74,13 +69,4 @@ class GetPaymentAccountCryptoCurrencyStatusUseCase(
             else -> emptyList()
         }
     }
-
-    /**
-     * Currency status of the payment account: the account-level one when its balances are known, otherwise the
-     * first of the per-network statuses. Without the fallback a multichain response that carries no
-     * account-level balances would silently stop feeding swap / tx history, even though per-network data is
-     * available.
-     */
-    private fun PaymentAccountStatusValue.Loaded.currencyStatusOrNull(): CryptoCurrencyStatus? =
-        cryptoCurrencyStatus ?: cryptoCurrencyStatuses.firstOrNull()
 }

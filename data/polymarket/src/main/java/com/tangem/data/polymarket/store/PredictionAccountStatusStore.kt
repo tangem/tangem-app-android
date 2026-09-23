@@ -11,9 +11,10 @@ import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 internal typealias WalletIdWithPredictionStatus = Map<String, PredictionAccountStatusValue>
 internal typealias WalletIdWithPredictionStatusDTO = Map<String, PredictionAccountStatusValueDTO>
@@ -37,6 +38,7 @@ internal typealias WalletIdWithPredictionStatusDTO = Map<String, PredictionAccou
 internal class PredictionAccountStatusStore(
     private val runtimeStore: RuntimeSharedStore<WalletIdWithPredictionStatus>,
     private val persistenceDataStore: DataStore<WalletIdWithPredictionStatusDTO>,
+    private val dtoConverter: PredictionAccountStatusValueDTOConverter,
     scope: AppCoroutineScope,
 ) {
 
@@ -51,6 +53,8 @@ internal class PredictionAccountStatusStore(
      */
     private val preloaded = CompletableDeferred<Unit>()
 
+    private val mutex = Mutex()
+
     init {
         scope.launch {
             try {
@@ -59,7 +63,7 @@ internal class PredictionAccountStatusStore(
                     .getOrDefault(emptyMap())
 
                 runtimeStore.store(
-                    cached.mapValues { (_, dto) -> PredictionAccountStatusValueDTOConverter.convertBack(dto) },
+                    cached.mapValues { (_, dto) -> dtoConverter.convertBack(dto) },
                 )
             } finally {
                 preloaded.complete(Unit)
@@ -78,12 +82,32 @@ internal class PredictionAccountStatusStore(
         return runtimeStore.getSyncOrNull()?.get(userWalletId.stringValue)
     }
 
-    suspend fun store(userWalletId: UserWalletId, value: PredictionAccountStatusValue) {
+    suspend fun store(userWalletId: UserWalletId, value: PredictionAccountStatusValue) =
+        update(userWalletId = userWalletId) { value }
+
+    /**
+     * @param userWalletId the wallet whose entry is merged
+     * @param transform    applied to the value held at the moment of the commit; `null` leaves the entry alone
+     */
+    suspend fun update(
+        userWalletId: UserWalletId,
+        transform: (PredictionAccountStatusValue?) -> PredictionAccountStatusValue?,
+    ) {
         preloaded.await()
 
-        coroutineScope {
-            launch { storeInRuntime(userWalletId = userWalletId, value = value) }
-            launch { storeInPersistence(userWalletId = userWalletId, value = value) }
+        mutex.withLock {
+            var committed: PredictionAccountStatusValue? = null
+
+            runtimeStore.update(default = emptyMap()) { stored ->
+                val updated = transform(stored[userWalletId.stringValue]) ?: return@update stored
+                committed = updated
+
+                stored + (userWalletId.stringValue to updated)
+            }
+
+            val value = committed ?: return
+
+            storeInPersistence(userWalletId = userWalletId, value = value)
         }
     }
 
@@ -106,21 +130,15 @@ internal class PredictionAccountStatusStore(
     suspend fun clear(userWalletId: UserWalletId) {
         preloaded.await()
 
-        coroutineScope {
-            launch { runtimeStore.update(default = emptyMap()) { it - userWalletId.stringValue } }
-            launch { persistenceDataStore.updateData { it - userWalletId.stringValue } }
-        }
-    }
-
-    private suspend fun storeInRuntime(userWalletId: UserWalletId, value: PredictionAccountStatusValue) {
-        runtimeStore.update(default = emptyMap()) { stored ->
-            stored + (userWalletId.stringValue to value)
+        mutex.withLock {
+            runtimeStore.update(default = emptyMap()) { it - userWalletId.stringValue }
+            persistenceDataStore.updateData { it - userWalletId.stringValue }
         }
     }
 
     /** A state the DTO cannot represent is one that must not outlive the session, so it leaves the disk copy alone. */
     private suspend fun storeInPersistence(userWalletId: UserWalletId, value: PredictionAccountStatusValue) {
-        val dto = PredictionAccountStatusValueDTOConverter.convert(value) ?: return
+        val dto = dtoConverter.convert(value) ?: return
 
         persistenceDataStore.updateData { stored ->
             stored + (userWalletId.stringValue to dto)

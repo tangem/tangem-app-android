@@ -103,8 +103,9 @@ internal class WalletSettingsModel @Inject constructor(
     val dialogNavigation = SlotNavigation<DialogConfig>()
     val bottomSheetNavigation: SlotNavigation<WalletSettingsBSConfig> = SlotNavigation()
 
-    val isJointAccountCreationEnabled: Boolean
-        get() = jointAccountFeatureToggles.isJointAccountCreationEnabled
+    private val isJointAccountEnabled: Boolean
+        get() = jointAccountFeatureToggles.isJointAccountEnabled
+
     private val walletCardItemDelegate = walletCardItemDelegateFactory.create(
         dialogNavigation = dialogNavigation,
         onUpgradeHotWalletClick = ::onUpgradeWalletClick,
@@ -161,7 +162,9 @@ internal class WalletSettingsModel @Inject constructor(
                         accountList = accountList,
                     ),
                     accountReorderUM = AccountReorderUM(
-                        isDragEnabled = accountList.count { it is WalletSettingsAccountsUM.Account } > 1,
+                        isDragEnabled = accountList.count {
+                            it is WalletSettingsAccountsUM.Account || it is WalletSettingsAccountsUM.JointAccount
+                        } > 1,
                         onMove = ::onAccountReorder,
                         onDragStopped = ::onAccountDragStopped,
                     ),
@@ -265,7 +268,7 @@ internal class WalletSettingsModel @Inject constructor(
         if (hasUserWallets) {
             router.pop()
         } else {
-            router.replaceAll(AppRoute.Home())
+            router.replaceAll(AppRoute.Home(entryReason = AppRoute.Home.EntryReason.LastWalletForgotten))
         }
     }
 
@@ -300,7 +303,12 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onPushNotificationPermissionGranted(isGranted: Boolean) {
-        analyticsEventHandler.send(PushNotificationAnalyticEvents.PermissionStatus(isGranted))
+        analyticsEventHandler.send(
+            PushNotificationAnalyticEvents.PermissionStatus(
+                isAllowed = isGranted,
+                source = AnalyticsParam.ScreensSources.WalletSettings,
+            ),
+        )
         state.update { value ->
             value.copy(
                 hasRequestPushNotificationsPermission = false,
@@ -442,22 +450,35 @@ internal class WalletSettingsModel @Inject constructor(
         }
     }
 
-    private fun onAddAccountClick() {
-        if (isJointAccountCreationEnabled) {
-            bottomSheetNavigation.activate(WalletSettingsBSConfig.AddAccountType)
+    private fun onAddAccountClick(isAddCryptoAccountEnabled: Boolean, isAddJointAccountEnabled: Boolean) {
+        if (isJointAccountEnabled) {
+            bottomSheetNavigation.activate(
+                WalletSettingsBSConfig.AddAccountType(
+                    isCryptoAccountEnabled = isAddCryptoAccountEnabled,
+                    isJointAccountEnabled = isAddJointAccountEnabled,
+                ),
+            )
         } else {
             openCreateCryptoAccount()
         }
     }
 
-    fun onAddCryptoAccountClick() {
+    fun onAddCryptoAccountClick(isEnabled: Boolean) {
         bottomSheetNavigation.dismiss()
-        openCreateCryptoAccount()
+        if (isEnabled) {
+            openCreateCryptoAccount()
+        } else {
+            accountItemsDelegate.canNotAddAccountDialog()
+        }
     }
 
-    fun onAddJointAccountClick() {
+    fun onAddJointAccountClick(isEnabled: Boolean) {
         bottomSheetNavigation.dismiss()
-        router.push(AppRoute.JointAccountCreation(params.userWalletId))
+        if (isEnabled) {
+            router.push(AppRoute.JointAccountCreation(params.userWalletId))
+        } else {
+            accountItemsDelegate.canNotAddAccountDialog()
+        }
     }
 
     private fun openCreateCryptoAccount() {
@@ -476,10 +497,15 @@ internal class WalletSettingsModel @Inject constructor(
 
     private fun onAccountDragStopped() {
         val accountIds = state.value.items.mapNotNull { itemUM ->
-            val id = (itemUM as? WalletSettingsAccountsUM.Account)?.state?.id
-                ?: return@mapNotNull null
-
-            AccountId.forCryptoPortfolio(userWalletId = params.userWalletId, value = id).getOrNull()
+            when (itemUM) {
+                is WalletSettingsAccountsUM.Account ->
+                    AccountId.forCryptoPortfolio(userWalletId = params.userWalletId, value = itemUM.state.id)
+                        .getOrNull()
+                is WalletSettingsAccountsUM.JointAccount ->
+                    AccountId.forJointAccount(userWalletId = params.userWalletId, value = itemUM.state.id)
+                        .getOrNull()
+                else -> null
+            }
         }
 
         accountListSortingSaver.save(accountIds = accountIds)
@@ -568,7 +594,11 @@ internal class WalletSettingsModel @Inject constructor(
 
     @Suppress("LongMethod")
     private fun sendForgetSeedBackupSheet(userWallet: UserWallet.Hot) {
-        if (!userWallet.backedUp) {
+        // Any backup, not the seed phrase alone: a wallet kept by social recovery survives being
+        // forgotten, so it must not be offered the "forget anyway" wording (FR-11, FR-15).
+        val isBackedUp = state.value.isWalletBackedUp
+
+        if (!isBackedUp) {
             analyticsEventHandler.send(
                 event = WalletSettingsAnalyticEvents.NoticeBackupFirst(
                     source = AnalyticsParam.ScreensSources.WalletSettings.value,
@@ -588,13 +618,13 @@ internal class WalletSettingsModel @Inject constructor(
                         backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
                     }
                     title = resourceReference(R.string.hw_remove_wallet_notification_title_v2)
-                    body = if (userWallet.backedUp) {
+                    body = if (isBackedUp) {
                         resourceReference(R.string.hw_remove_wallet_notification_description_has_backup_v2)
                     } else {
                         resourceReference(R.string.hw_remove_wallet_notification_description_without_backup)
                     }
                 }
-                if (userWallet.backedUp) {
+                if (isBackedUp) {
                     secondaryButton {
                         text = resourceReference(R.string.hw_remove_wallet_notification_action_forget)
                         onClick {
@@ -611,6 +641,8 @@ internal class WalletSettingsModel @Inject constructor(
                         }
                     }
                 }
+                // The seed phrase itself only when it was saved: a social-only wallet has no phrase the user
+                // has seen, so it goes to the backup options instead.
                 if (userWallet.backedUp) {
                     primaryButton {
                         text = resourceReference(R.string.hw_remove_wallet_notification_action_backup_view_v2)

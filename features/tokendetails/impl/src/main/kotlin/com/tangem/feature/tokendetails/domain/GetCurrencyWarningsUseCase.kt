@@ -23,7 +23,6 @@ import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.features.send.api.SendFeatureToggles
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
@@ -40,7 +39,6 @@ internal class GetCurrencyWarningsUseCase @Inject constructor(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val dynamicAddressesRepository: DynamicAddressesRepository,
     private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
-    private val sendFeatureToggles: SendFeatureToggles,
 ) {
 
     suspend operator fun invoke(
@@ -86,6 +84,15 @@ internal class GetCurrencyWarningsUseCase @Inject constructor(
         currency: CryptoCurrency,
         existentialDeposit: BigDecimal?,
     ): Flow<List<CryptoCurrencyWarning>> {
+        // A joint currency lives on a Safe: the wallet pays no fee of its own, so the coin pairing and the fee
+        // warnings do not apply, and a joint portfolio without the network coin is not an outage
+        if (currency.network.derivationPath is Network.DerivationPath.Joint) {
+            return singleAccountStatusListSupplier(userWalletId)
+                .map { accountStatusList -> accountStatusList.getCryptoCurrencyStatus(currency).getOrNull() }
+                .distinctUntilChanged()
+                .map { tokenStatus -> listOfNotNull(tokenStatus?.let(::getUsedOutdatedDataWarning)) }
+        }
+
         return singleAccountStatusListSupplier(userWalletId)
             .map { accountStatusList ->
                 val coin = accountStatusList.getCoinStatus(currency).getOrNull()
@@ -157,11 +164,10 @@ internal class GetCurrencyWarningsUseCase @Inject constructor(
     ): Boolean {
         if (currencyChecksRepository.isNetworkSupportedForGaslessTx(coinStatus.currency.network)) return true
 
-        return sendFeatureToggles.isTronGaslessEnabled &&
-            isTronGaslessSupportedUseCase.isTokenSupported(
-                network = tokenStatus.currency.network,
-                currency = tokenStatus.currency,
-            )
+        return isTronGaslessSupportedUseCase.isTokenSupported(
+            network = tokenStatus.currency.network,
+            currency = tokenStatus.currency,
+        )
     }
 
     private fun getUsedOutdatedDataWarning(status: CryptoCurrencyStatus): CryptoCurrencyWarning? {

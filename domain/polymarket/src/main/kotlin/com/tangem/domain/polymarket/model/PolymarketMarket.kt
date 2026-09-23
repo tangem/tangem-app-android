@@ -6,6 +6,8 @@ import java.math.BigDecimal
  * A single Polymarket prediction market nested inside a [PolymarketEvent] (BFF `Market`).
  *
  * @property id unique market id
+ * @property conditionId on-chain condition the market settles on; with an outcome's asset id it names the
+ *  position a filled order creates, so it is known before the position exists
  * @property eventId id of the [PolymarketEvent] the market belongs to
  * @property title the market question (e.g. "Will X happen by 2026?")
  * @property slug url-friendly market identifier
@@ -16,6 +18,8 @@ import java.math.BigDecimal
  * @property imageUrl optional market image
  * @property status lifecycle status of the market
  * @property isNegRisk whether the market belongs to a mutually exclusive group
+ * @property isAcceptingOrders whether the book takes an order right now; a market can be [status] active and
+ *  still refuse one
  * @property startDate raw upstream start date, if known. The format is not confirmed yet, so it is kept as reported
  * @property endDate raw upstream end date, if known. The format is not confirmed yet, so it is kept as reported
  * @property startDateIso upstream start date in a separate representation, if known
@@ -28,6 +32,7 @@ import java.math.BigDecimal
  */
 data class PolymarketMarket(
     val id: String,
+    val conditionId: String?,
     val eventId: String,
     val title: String,
     val slug: String,
@@ -37,6 +42,7 @@ data class PolymarketMarket(
     val imageUrl: String?,
     val status: PolymarketStatus,
     val isNegRisk: Boolean,
+    val isAcceptingOrders: Boolean,
     val startDate: String?,
     val endDate: String?,
     val startDateIso: String?,
