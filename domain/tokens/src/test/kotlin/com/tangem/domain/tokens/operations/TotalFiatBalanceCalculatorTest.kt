@@ -453,26 +453,6 @@ class TotalFiatBalanceCalculatorTest {
         }
 
         @Test
-        fun `Solana staking as a contribution is fully added to total`() {
-            // Arrange — toggle-on shape: the typed field is null and the balance arrives as a contribution
-            val statuses = nonEmptyListOf(
-                createLoaded(
-                    currency = cryptoCurrencyFactory.createCoin(Blockchain.Solana),
-                    fiatAmount = BigDecimal.ZERO,
-                    stakingBalance = createStakeKitBalance(amount = BigDecimal(7), balanceType = BalanceType.STAKED),
-                    useContributions = true,
-                ),
-            )
-
-            // Act
-            val actual = TotalFiatBalanceCalculator.calculate(statuses)
-
-            // Assert
-            val expected = TotalFiatBalance.Loaded(amount = BigDecimal(7), source = StatusSource.ACTUAL)
-            Truth.assertThat(actual).isEqualTo(expected)
-        }
-
-        @Test
         fun `Cardano staking as a contribution adds rewards only`() {
             // Arrange — the per-network rule now travels on the contribution as a stamped flag rather than being
             // resolved at call time, so this is the case that catches a contribution reaching the list unstamped
@@ -481,7 +461,6 @@ class TotalFiatBalanceCalculatorTest {
                     currency = cryptoCurrencyFactory.cardano,
                     fiatAmount = BigDecimal.ZERO,
                     stakingBalance = createStakeKitBalance(amount = BigDecimal(3), balanceType = BalanceType.REWARDS),
-                    useContributions = true,
                 ),
             )
 
@@ -502,7 +481,6 @@ class TotalFiatBalanceCalculatorTest {
                     fiatAmount = BigDecimal.ZERO,
                     stakingBalance = createStakeKitBalance(amount = BigDecimal(3), balanceType = BalanceType.STAKED),
                     fiatRate = BigDecimal(2),
-                    useContributions = true,
                 ),
             )
 
@@ -523,7 +501,6 @@ class TotalFiatBalanceCalculatorTest {
                     currency = cryptoCurrencyFactory.createCoin(Blockchain.Solana),
                     fiatAmount = BigDecimal.ZERO,
                     stakingBalance = createStakeKitBalance(amount = BigDecimal(5), balanceType = BalanceType.STAKED),
-                    useContributions = true,
                 ),
             )
 
@@ -533,112 +510,6 @@ class TotalFiatBalanceCalculatorTest {
             // Assert
             val expected = TotalFiatBalance.Loaded(amount = BigDecimal(5), source = StatusSource.ACTUAL)
             Truth.assertThat(actual).isEqualTo(expected)
-        }
-    }
-
-    /**
-     * Dual-run gate for `TWI_1717_BALANCE_CONTRIBUTIONS`: the same portfolio must total the same whether extra
-     * balances arrive through `Value.contributions` (toggle on) or through the legacy typed field (toggle off).
-     *
-     * Each case is asserted against the *other* mode rather than a literal, which alone cannot catch "both wrong
-     * the same way" — the literal-asserted contribution cases in [CalculateCurrenciesComputable] are the anchor
-     * that makes these meaningful. The fixtures null the typed field on the toggle-on side, exactly as
-     * `CryptoCurrencyStatusFactory` does; keeping it populated would let a dead contributions path pass here.
-     */
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class ToggleParity {
-
-        @Test
-        fun `GIVEN Cardano staking rewards WHEN toggle on and off THEN totals match`() {
-            // Arrange — Cardano stakes are already inside the network balance, so only rewards may be added
-            assertParity(
-                currency = cryptoCurrencyFactory.cardano,
-                stakingBalance = createStakeKitBalance(amount = BigDecimal(20), balanceType = BalanceType.REWARDS),
-            )
-        }
-
-        @Test
-        fun `GIVEN Solana staking WHEN toggle on and off THEN totals match`() {
-            // Arrange — everything counts for Solana
-            assertParity(
-                currency = cryptoCurrencyFactory.createCoin(Blockchain.Solana),
-                stakingBalance = createStakeKitBalance(amount = BigDecimal(7), balanceType = BalanceType.STAKED),
-            )
-        }
-
-        @Test
-        fun `GIVEN P2PEthPool staking WHEN toggle on and off THEN totals match`() {
-            // Arrange
-            assertParity(
-                currency = cryptoCurrencyFactory.ethereum,
-                stakingBalance = createP2PEthPoolBalance(staked = 5, unstaking = 2, withdrawable = 1, rewards = 3),
-            )
-        }
-
-        @Test
-        fun `GIVEN no staking WHEN toggle on and off THEN totals match`() {
-            // Arrange — nothing outside the network balance in either mode
-            assertParity(currency = cryptoCurrencyFactory.ethereum, stakingBalance = null)
-        }
-
-        @Test
-        fun `GIVEN a custom token WHEN toggle on and off THEN totals match`() {
-            // Arrange — the Custom overload has its own fiat-rate handling, so it needs its own parity case
-            val currency = cryptoCurrencyFactory.createCoin(Blockchain.Solana)
-            val staking = createStakeKitBalance(amount = BigDecimal(6), balanceType = BalanceType.STAKED)
-
-            // Act
-            val legacy = TotalFiatBalanceCalculator.calculate(
-                nonEmptyListOf(
-                    createCustom(
-                        currency = currency,
-                        fiatAmount = BigDecimal.TEN,
-                        stakingBalance = staking,
-                        useContributions = false,
-                    ),
-                ),
-            )
-            val contributions = TotalFiatBalanceCalculator.calculate(
-                nonEmptyListOf(
-                    createCustom(
-                        currency = currency,
-                        fiatAmount = BigDecimal.TEN,
-                        stakingBalance = staking,
-                        useContributions = true,
-                    ),
-                ),
-            )
-
-            // Assert
-            Truth.assertThat(contributions).isEqualTo(legacy)
-        }
-
-        private fun assertParity(currency: CryptoCurrency, stakingBalance: StakingBalance.Data?) {
-            // Act
-            val legacy = TotalFiatBalanceCalculator.calculate(
-                nonEmptyListOf(
-                    createLoaded(
-                        currency = currency,
-                        fiatAmount = BigDecimal.TEN,
-                        stakingBalance = stakingBalance,
-                        useContributions = false,
-                    ),
-                ),
-            )
-            val contributions = TotalFiatBalanceCalculator.calculate(
-                nonEmptyListOf(
-                    createLoaded(
-                        currency = currency,
-                        fiatAmount = BigDecimal.TEN,
-                        stakingBalance = stakingBalance,
-                        useContributions = true,
-                    ),
-                ),
-            )
-
-            // Assert
-            Truth.assertThat(contributions).isEqualTo(legacy)
         }
     }
 
@@ -762,7 +633,6 @@ class TotalFiatBalanceCalculatorTest {
             currency = currency,
             value = CryptoCurrencyStatus.NoQuote(
                 amount = BigDecimal.ONE,
-                stakingBalance = null,
                 yieldSupplyStatus = null,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),
@@ -813,10 +683,7 @@ class TotalFiatBalanceCalculatorTest {
         stakingBalance: StakingBalance.Data? = null,
         yieldSupplyStatus: YieldSupplyStatus? = null,
         fiatRate: BigDecimal = BigDecimal.ONE,
-        useContributions: Boolean = false,
     ): CryptoCurrencyStatus {
-        val balance = stakingBalance?.takeIf { !useContributions } ?: stakingBalance?.stampFor(currency)
-
         return CryptoCurrencyStatus(
             currency = currency,
             value = CryptoCurrencyStatus.Custom(
@@ -824,15 +691,12 @@ class TotalFiatBalanceCalculatorTest {
                 fiatAmount = fiatAmount,
                 fiatRate = fiatRate,
                 priceChange = BigDecimal.ZERO,
-                // the factory nulls the typed field whenever contributions are on, so a status carrying BOTH
-                // cannot occur in production — and would let every parity assertion pass off the legacy fallback
-                stakingBalance = balance.takeIf { !useContributions },
                 yieldSupplyStatus = yieldSupplyStatus,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),
                 networkAddress = createNetworkAddress(),
                 sources = CryptoCurrencyStatus.Sources(),
-                contributions = if (useContributions) listOfNotNull(balance) else emptyList(),
+                contributions = listOfNotNull(stakingBalance?.stampFor(currency)),
             ),
         )
     }
@@ -844,10 +708,7 @@ class TotalFiatBalanceCalculatorTest {
         yieldSupplyStatus: YieldSupplyStatus? = null,
         source: StatusSource = StatusSource.ACTUAL,
         fiatRate: BigDecimal = BigDecimal.ONE,
-        useContributions: Boolean = false,
     ): CryptoCurrencyStatus {
-        val balance = stakingBalance?.takeIf { !useContributions } ?: stakingBalance?.stampFor(currency)
-
         return CryptoCurrencyStatus(
             currency = currency,
             value = CryptoCurrencyStatus.Loaded(
@@ -855,14 +716,12 @@ class TotalFiatBalanceCalculatorTest {
                 fiatAmount = fiatAmount,
                 fiatRate = fiatRate,
                 priceChange = BigDecimal.ZERO,
-                // see createCustom: a hybrid (typed field + contributions) status is not producible by the factory
-                stakingBalance = balance.takeIf { !useContributions },
                 yieldSupplyStatus = yieldSupplyStatus,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),
                 networkAddress = createNetworkAddress(),
                 sources = CryptoCurrencyStatus.Sources(source, source, source),
-                contributions = if (useContributions) listOfNotNull(balance) else emptyList(),
+                contributions = listOfNotNull(stakingBalance?.stampFor(currency)),
             ),
         )
     }

@@ -201,7 +201,6 @@ private fun buildCryptoCurrencyStatusValue(
             networkAddress = networkAddress,
             sources = CryptoCurrencyStatus.Sources(),
             pendingTransactions = emptySet(),
-            stakingBalance = null,
             yieldSupplyStatus = null,
             hasCurrentNetworkTransactions = false,
         )
@@ -209,7 +208,6 @@ private fun buildCryptoCurrencyStatusValue(
         CryptoCurrencyStatus.NoQuote(
             amount = amount,
             networkAddress = networkAddress,
-            stakingBalance = null,
             yieldSupplyStatus = null,
             hasCurrentNetworkTransactions = false,
             pendingTransactions = emptySet(),
