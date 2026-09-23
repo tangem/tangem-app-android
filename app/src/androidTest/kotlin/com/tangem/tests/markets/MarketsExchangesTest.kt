@@ -9,6 +9,7 @@ import com.tangem.common.annotations.ApiEnvConfig
 import com.tangem.common.extensions.*
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.scenarios.searchTokenInMarkets
 import com.tangem.scenarios.assertMarketsExchangesScreen
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.openMarketsExchangesScreen
@@ -32,7 +33,7 @@ class MarketsExchangesTest : BaseTestCase() {
         val tokenName = "Solana"
         setupHooks().run {
             step("Open 'Markets Exhanges Screen with token: $tokenName'") {
-                openMarketsExchangesScreen(tokenName = tokenName, shouldClickSeeAllButton = true)
+                openMarketsExchangesScreen(tokenName = tokenName)
             }
             step("Assert 'Exchanges' list screen is displayed") {
                 assertMarketsExchangesScreen()
@@ -57,6 +58,9 @@ class MarketsExchangesTest : BaseTestCase() {
             step("Open 'Markets' screen") {
                 onMainScreen { marketsSheetDragHandle.clickWithAssertion() }
                 waitForIdle()
+            }
+            step("Search for '$tokenName' token") {
+                searchTokenInMarkets(tokenName)
             }
             step("Click on '$tokenName' token") {
                 onMarketsScreen { tokenWithTitle(tokenName).clickWithAssertion() }
