@@ -209,7 +209,7 @@ internal class SendDestinationModel @Inject constructor(
 
     fun applySelectedContact(contact: SelectedContact) {
         addressSelectorNavigation.dismiss()
-        addressBookSendAnalytics.onAddressSubstitutedInSend(walletId = userWalletId, contactId = contact.contactId)
+        addressBookSendAnalytics.onAddressSubstitutedInSend(contactId = contact.contactId)
         _uiState.update(SendDestinationAddressTransformer(address = contact.address, isPasted = true))
         _uiState.update(SendDestinationContactTransformer(contactName = contact.name, contactIcon = contact.icon))
 
@@ -427,8 +427,8 @@ internal class SendDestinationModel @Inject constructor(
         val contractAddress = (cryptoCurrency as? CryptoCurrency.Token)?.contractAddress ?: return null
         val (paymentAccountAddress, currency) = when (val status = this.value) {
             is PaymentAccountStatusValue.Loaded -> {
-                val balance = status.balance ?: return null
-                balance.cryptoBalance.depositAddress to status.cryptoCurrency
+                val address = status.paymentAccountAddress ?: return null
+                address to status.cryptoCurrency
             }
             else -> return null
         }

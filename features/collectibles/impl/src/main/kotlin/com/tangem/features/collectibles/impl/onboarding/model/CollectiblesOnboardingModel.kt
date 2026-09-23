@@ -78,7 +78,12 @@ internal class CollectiblesOnboardingModel @Inject constructor(
     }
 
     private fun onCreateAccountClick() {
-        if (uiState.value.isCreatingAccount) return
+        TangemLogger.d("onboarding: Create Packs account button tapped, walletId=${params.userWalletId}")
+
+        if (uiState.value.isCreatingAccount) {
+            TangemLogger.d("onboarding: creation is already in progress, the repeated tap is ignored")
+            return
+        }
 
         // Raised before the launch: two taps within a frame would otherwise both get past the guard
         uiState.update { it.copy(isCreatingAccount = true) }
@@ -95,13 +100,18 @@ internal class CollectiblesOnboardingModel @Inject constructor(
 
     private suspend fun prepareAccount(): Either<CollectiblesAccountError, Unit> {
         val userWallet = userWalletsListRepository.getSyncOrNull(params.userWalletId)
-            ?: return CollectiblesAccountError.Unsupported.left()
+            ?: run {
+                TangemLogger.d("onboarding: wallet not found -> Unsupported")
+                return CollectiblesAccountError.Unsupported.left()
+            }
 
         // TODO([REDACTED_TASK_KEY]): also check the geo block and whether the user is allowed to create a gacha account
         return createOrReactivateCollectiblesAccountUseCase(userWallet)
     }
 
     private fun onPrepared() {
+        TangemLogger.d("onboarding: the gacha account is ready to use, going to Main")
+
         val main = CollectiblesRoute.Main(userWalletId = params.userWalletId)
 
         if (isStoryReady()) {
@@ -112,6 +122,8 @@ internal class CollectiblesOnboardingModel @Inject constructor(
     }
 
     private fun onPrepareFailed(error: CollectiblesAccountError) {
+        TangemLogger.d("onboarding: account creation failed: $error")
+
         // A card refusal is already on the NFC sheet, and a cancellation is the user's own choice: neither needs a dialog
         if (error is CollectiblesAccountError.CardError || error is CollectiblesAccountError.Cancelled) return
 
