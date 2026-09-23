@@ -66,7 +66,6 @@ internal class CustomerInfoConverterEmbossNameTest {
         createdAt = "2026-01-01T00:00:00Z",
         paymentAccount = null,
         kyc = null,
-        depositAddress = null,
         balance = null,
         productInstances = emptyList(),
         cards = cards,

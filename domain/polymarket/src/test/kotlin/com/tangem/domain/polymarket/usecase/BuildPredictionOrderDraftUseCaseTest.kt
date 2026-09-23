@@ -81,6 +81,46 @@ internal class BuildPredictionOrderDraftUseCaseTest {
     }
 
     @Test
+    fun `GIVEN a buy quote stating shares to four decimals WHEN built THEN the taker quantum is that scale`() {
+        // Arrange
+        val quote = createQuote(notional = BigDecimal("4.91"), shares = BigDecimal("5.0102"))
+
+        // Act
+        val actual = useCase(quote = quote, assetId = ASSET_ID, isNegRisk = false, side = PredictionOrderSide.BUY)
+
+        // Assert
+        assertThat(requireNotNull(actual.getOrNull()).takerAmountQuantum).isEqualTo(BigInteger("100"))
+    }
+
+    @Test
+    fun `GIVEN a buy quote stating shares to the on-chain scale WHEN built THEN the taker quantum is one unit`() {
+        // Arrange
+        val quote = createQuote(notional = BigDecimal("72.00"), shares = BigDecimal("97.959180"))
+
+        // Act
+        val actual = useCase(quote = quote, assetId = ASSET_ID, isNegRisk = false, side = PredictionOrderSide.BUY)
+
+        // Assert
+        assertThat(requireNotNull(actual.getOrNull()).takerAmountQuantum).isEqualTo(BigInteger.ONE)
+    }
+
+    @Test
+    fun `GIVEN a sell quote WHEN built THEN the taker quantum follows the proceeds scale and not the shares`() {
+        // Arrange
+        val quote = createQuote(
+            side = PredictionOrderSide.SELL,
+            notional = BigDecimal("70.00000"),
+            shares = BigDecimal("100.00"),
+        )
+
+        // Act
+        val actual = useCase(quote = quote, assetId = ASSET_ID, isNegRisk = false, side = PredictionOrderSide.SELL)
+
+        // Assert
+        assertThat(requireNotNull(actual.getOrNull()).takerAmountQuantum).isEqualTo(BigInteger.TEN)
+    }
+
+    @Test
     fun `GIVEN a leg finer than the collateral scale WHEN built THEN it is refused rather than rounded`() {
         // Arrange — seven decimals cannot be represented in the 6-decimal on-chain unit
         val quote = createQuote(notional = BigDecimal("72.0000001"), shares = BigDecimal("97.95918"))
@@ -105,6 +145,38 @@ internal class BuildPredictionOrderDraftUseCaseTest {
         // Assert
         assertThat(actual).isEqualTo(
             PredictionOrderDraftError.NotPlaceable(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY).left(),
+        )
+    }
+
+    @Test
+    fun `GIVEN a sell below the minimum order size WHEN built THEN it is accepted`() {
+        // Arrange
+        val quote = createQuote(
+            status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE,
+            side = PredictionOrderSide.SELL,
+        )
+
+        // Act
+        val actual = useCase(quote = quote, assetId = ASSET_ID, isNegRisk = false, side = PredictionOrderSide.SELL)
+
+        // Assert
+        assertThat(actual.getOrNull()).isNotNull()
+    }
+
+    @Test
+    fun `GIVEN a buy below the minimum order size WHEN built THEN it is refused`() {
+        // Arrange
+        val quote = createQuote(
+            status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE,
+            side = PredictionOrderSide.BUY,
+        )
+
+        // Act
+        val actual = useCase(quote = quote, assetId = ASSET_ID, isNegRisk = false, side = PredictionOrderSide.BUY)
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            PredictionOrderDraftError.NotPlaceable(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE).left(),
         )
     }
 
@@ -164,6 +236,7 @@ internal class BuildPredictionOrderDraftUseCaseTest {
         total = BigDecimal("74.80800"),
         builderCode = BUILDER_CODE,
         minOrderSize = BigDecimal("7"),
+        minOrderAmount = BigDecimal.ONE,
         tickSize = BigDecimal("0.001"),
         isLive = false,
     )

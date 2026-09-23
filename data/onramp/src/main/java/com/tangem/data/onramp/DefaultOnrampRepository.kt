@@ -24,7 +24,7 @@ import com.tangem.grow.datasource.onramp.models.response.model.OnrampCountryDTO
 import com.tangem.grow.datasource.onramp.models.response.model.OnrampPairDTO
 import com.tangem.grow.datasource.onramp.models.response.model.PaymentMethodDTO
 import com.tangem.grow.datasource.crypto.DataSignatureVerifier
-import com.tangem.datasource.exchangeservice.swap.ExpressUtils
+import com.tangem.grow.datasource.express.ExpressUtils
 import com.tangem.datasource.local.converter.toEntity
 import com.tangem.datasource.local.onramp.countries.OnrampCountriesStore
 import com.tangem.datasource.local.onramp.country.OnrampCurrentCountryByIPStore
@@ -33,11 +33,11 @@ import com.tangem.datasource.local.onramp.pairs.OnrampPairsStore
 import com.tangem.datasource.local.onramp.paymentmethods.OnrampPaymentMethodsStore
 import com.tangem.datasource.local.onramp.quotes.OnrampQuotesStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObject
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
-import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
+import com.tangem.store.datasource.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
@@ -69,6 +69,8 @@ internal class DefaultOnrampRepository(
     private val expressApi: TangemExpressApi,
     private val dispatchers: CoroutineDispatcherProvider,
     private val appPreferencesStore: AppPreferencesStore,
+    private val growPreferencesKeys: GrowPreferencesKeys,
+    private val expressUtils: ExpressUtils,
     private val paymentMethodsStore: OnrampPaymentMethodsStore,
     private val onrampCurrentCountryByIPStore: OnrampCurrentCountryByIPStore,
     private val pairsStore: OnrampPairsStore,
@@ -99,10 +101,7 @@ internal class DefaultOnrampRepository(
 
         val response = onrampApi.getCurrencies(
             userWalletId = userWallet.walletId.stringValue,
-            refCode = ExpressUtils.getRefCode(
-                userWallet = userWallet,
-                appPreferencesStore = appPreferencesStore,
-            ),
+            refCode = expressUtils.getRefCode(userWallet = userWallet),
         )
             .getOrThrow()
 
@@ -125,10 +124,7 @@ internal class DefaultOnrampRepository(
 
         val response = onrampApi.getCountries(
             userWalletId = userWallet.walletId.stringValue,
-            refCode = ExpressUtils.getRefCode(
-                userWallet = userWallet,
-                appPreferencesStore = appPreferencesStore,
-            ),
+            refCode = expressUtils.getRefCode(userWallet = userWallet),
         )
             .getOrThrow()
 
@@ -150,10 +146,7 @@ internal class DefaultOnrampRepository(
 
             val response = onrampApi.getCountryByIp(
                 userWalletId = userWallet.walletId.stringValue,
-                refCode = ExpressUtils.getRefCode(
-                    userWallet = userWallet,
-                    appPreferencesStore = appPreferencesStore,
-                ),
+                refCode = expressUtils.getRefCode(userWallet = userWallet),
             )
                 .getOrThrow()
 
@@ -167,10 +160,7 @@ internal class DefaultOnrampRepository(
     override suspend fun getStatus(userWallet: UserWallet, txId: String): OnrampStatus = withContext(dispatchers.io) {
         val response = onrampApi.getStatus(
             userWalletId = userWallet.walletId.stringValue,
-            refCode = ExpressUtils.getRefCode(
-                userWallet = userWallet,
-                appPreferencesStore = appPreferencesStore,
-            ),
+            refCode = expressUtils.getRefCode(userWallet = userWallet),
             txId = txId,
         )
             .getOrThrow()
@@ -185,39 +175,39 @@ internal class DefaultOnrampRepository(
     override suspend fun saveDefaultCurrency(currency: OnrampCurrency) = withContext(dispatchers.io) {
         val country = getDefaultCountrySync() ?: return@withContext
         appPreferencesStore.storeObject<OnrampCountryDTO>(
-            key = PreferencesKeys.ONRAMP_DEFAULT_COUNTRY,
+            key = growPreferencesKeys.onrampDefaultCountryKey,
             value = countryConverter.convertBack(country.copy(defaultCurrency = currency)),
         )
     }
 
     override suspend fun getDefaultCurrencySync(): OnrampCurrency? = withContext(dispatchers.io) {
         appPreferencesStore
-            .getObjectSyncOrNull<OnrampCountryDTO>(PreferencesKeys.ONRAMP_DEFAULT_COUNTRY)
+            .getObjectSyncOrNull<OnrampCountryDTO>(growPreferencesKeys.onrampDefaultCountryKey)
             ?.let(countryConverter::convert)?.defaultCurrency
     }
 
     override fun getDefaultCurrency(): Flow<OnrampCurrency?> {
         return appPreferencesStore
-            .getObject<OnrampCountryDTO>(PreferencesKeys.ONRAMP_DEFAULT_COUNTRY)
+            .getObject<OnrampCountryDTO>(growPreferencesKeys.onrampDefaultCountryKey)
             .map { it?.let(countryConverter::convert)?.defaultCurrency }
     }
 
     override suspend fun saveDefaultCountry(country: OnrampCountry) = withContext(dispatchers.io) {
         appPreferencesStore.storeObject<OnrampCountryDTO>(
-            key = PreferencesKeys.ONRAMP_DEFAULT_COUNTRY,
+            key = growPreferencesKeys.onrampDefaultCountryKey,
             value = countryConverter.convertBack(country),
         )
     }
 
     override suspend fun getDefaultCountrySync(): OnrampCountry? = withContext(dispatchers.io) {
         appPreferencesStore
-            .getObjectSyncOrNull<OnrampCountryDTO>(PreferencesKeys.ONRAMP_DEFAULT_COUNTRY)
+            .getObjectSyncOrNull<OnrampCountryDTO>(growPreferencesKeys.onrampDefaultCountryKey)
             ?.let(countryConverter::convert)
     }
 
     override fun getDefaultCountry(): Flow<OnrampCountry?> {
         return appPreferencesStore
-            .getObject<OnrampCountryDTO>(PreferencesKeys.ONRAMP_DEFAULT_COUNTRY)
+            .getObject<OnrampCountryDTO>(growPreferencesKeys.onrampDefaultCountryKey)
             .map { it?.let(countryConverter::convert) }
     }
 
@@ -228,10 +218,7 @@ internal class DefaultOnrampRepository(
             call = {
                 onrampApi.getPaymentMethods(
                     userWalletId = userWallet.walletId.stringValue,
-                    refCode = ExpressUtils.getRefCode(
-                        userWallet = userWallet,
-                        appPreferencesStore = appPreferencesStore,
-                    ),
+                    refCode = expressUtils.getRefCode(userWallet = userWallet),
                 ).bind()
             },
             onError = { error ->
@@ -253,10 +240,7 @@ internal class DefaultOnrampRepository(
                 call = {
                     onrampApi.getPairs(
                         userWalletId = userWallet.walletId.stringValue,
-                        refCode = ExpressUtils.getRefCode(
-                            userWallet = userWallet,
-                            appPreferencesStore = appPreferencesStore,
-                        ),
+                        refCode = expressUtils.getRefCode(userWallet = userWallet),
                         body = OnrampPairsRequest(
                             fromCurrencyCode = currency.code,
                             countryCode = country.code,
@@ -280,10 +264,7 @@ internal class DefaultOnrampRepository(
                 call = {
                     expressApi.getProviders(
                         userWalletId = userWallet.walletId.stringValue,
-                        refCode = ExpressUtils.getRefCode(
-                            userWallet = userWallet,
-                            appPreferencesStore = appPreferencesStore,
-                        ),
+                        refCode = expressUtils.getRefCode(userWallet = userWallet),
                     ).bind()
                 },
                 onError = { error ->
@@ -328,10 +309,7 @@ internal class DefaultOnrampRepository(
                                         toDecimals = cryptoCurrency.decimals,
                                         providerId = provider.id,
                                         userWalletId = userWallet.walletId.stringValue,
-                                        refCode = ExpressUtils.getRefCode(
-                                            userWallet = userWallet,
-                                            appPreferencesStore = appPreferencesStore,
-                                        ),
+                                        refCode = expressUtils.getRefCode(userWallet = userWallet),
                                     ).bind()
                                     OnrampQuote.Data(
                                         fromAmount = fromOnrampAmount,
@@ -408,10 +386,7 @@ internal class DefaultOnrampRepository(
                         theme = getTheme(isDarkTheme),
                         requestId = requestId,
                         userWalletId = userWallet.walletId.stringValue,
-                        refCode = ExpressUtils.getRefCode(
-                            userWallet = userWallet,
-                            appPreferencesStore = appPreferencesStore,
-                        ),
+                        refCode = expressUtils.getRefCode(userWallet = userWallet),
                     ).bind()
                 },
                 onError = { e ->

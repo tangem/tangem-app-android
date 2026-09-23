@@ -163,7 +163,10 @@ internal class DefaultMarketsTokenDetailsComponent(
     ): ComposableBottomSheetComponent {
         return addToPortfolioComponentFactory.create(
             context = childByContext(componentContext),
-            params = AddToPortfolioComponent.Params(addToPortfolioManager = model.addToPortfolioManager),
+            params = AddToPortfolioComponent.Params(
+                addToPortfolioManager = model.addToPortfolioManager,
+                isRegionRestricted = params.token.isRestrictedForCountry,
+            ),
         )
     }
 
@@ -177,6 +180,7 @@ internal class DefaultMarketsTokenDetailsComponent(
             params = ManageFundsComponent.Params(
                 launchMode = launchMode,
                 onDismiss = { model.addFundsSheetNavigation.dismiss() },
+                isRegionRestricted = params.token.isRestrictedForCountry,
             ),
         )
     }

@@ -1,6 +1,7 @@
 package com.tangem.tap.common.analytics.handlers.opentelemetry
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.api.EventLogger
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.OtelIncludedEvent
 import com.tangem.core.analytics.models.OtelMetric
@@ -51,6 +52,15 @@ internal class OpenTelemetryAnalyticsHandlerTest {
     ) : AnalyticsEvent(category = "Swap", event = "Express Duration", params = params), OtelIncludedEvent {
 
         override val otelMetric = OtelMetric.Histogram(valueParam = "Duration", allowedParams = setOf("Provider"))
+    }
+
+    private class CustomTokenSentEvent(
+        params: Map<String, String> = emptyMap(),
+    ) : AnalyticsEvent(category = "Basic", event = "Transaction sent", params = params), OtelIncludedEvent {
+
+        override val otelMetric = OtelMetric.Counter(allowedParams = setOf("Token"))
+
+        override val otelParamOverrides = mapOf("Token" to "Custom")
     }
 
     @Test
@@ -134,6 +144,68 @@ internal class OpenTelemetryAnalyticsHandlerTest {
 
         // Assert
         verify(exactly = 0) { histogram.record(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN marked event WHEN sendErrorEvent THEN counter incremented as for send`() {
+        // Arrange
+        val event = TransactionSentEvent(params = mapOf("Blockchain" to "Bitcoin"))
+
+        // Act
+        handler.sendErrorEvent(event)
+
+        // Assert
+        verify(exactly = 1) { meter.counterBuilder("transaction_sent") }
+        verify(exactly = 1) { counter.add(1, any()) }
+    }
+
+    @Test
+    fun `GIVEN param override WHEN send THEN override replaces the raw param value`() {
+        // Arrange
+        val event = CustomTokenSentEvent(params = mapOf("Token" to "WEIRDCOIN"))
+        val expectedAttributes = Attributes.of(
+            AttributeKey.stringKey("token"), "Custom",
+            AttributeKey.stringKey("category"), "basic",
+        )
+
+        // Act
+        handler.send(event)
+
+        // Assert
+        verify(exactly = 1) { counter.add(1, expectedAttributes) }
+    }
+
+    @Test
+    fun `GIVEN logger attached WHEN counter event sent THEN exported attributes are logged`() {
+        // Arrange
+        val logger: EventLogger = mockk(relaxed = true)
+        val loggingHandler = OpenTelemetryAnalyticsHandler(metricsHolder = metricsHolder, logger = logger)
+        val event = TransactionSentEvent(params = mapOf("Blockchain" to "Bitcoin", "Token" to "BTC"))
+
+        // Act
+        loggingHandler.send(event)
+
+        // Assert
+        verify(exactly = 1) {
+            logger.logEvent(
+                event = "transaction_sent",
+                params = mapOf("blockchain" to "Bitcoin", "category" to "basic"),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN pipeline not initialized WHEN send with logger THEN nothing is logged`() {
+        // Arrange
+        every { metricsHolder.getMeter() } returns null
+        val logger: EventLogger = mockk(relaxed = true)
+        val loggingHandler = OpenTelemetryAnalyticsHandler(metricsHolder = metricsHolder, logger = logger)
+
+        // Act
+        loggingHandler.send(TransactionSentEvent())
+
+        // Assert
+        verify(exactly = 0) { logger.logEvent(any(), any()) }
     }
 
     @Test

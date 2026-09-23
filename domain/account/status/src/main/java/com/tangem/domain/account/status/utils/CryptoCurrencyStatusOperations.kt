@@ -81,7 +81,7 @@ object CryptoCurrencyStatusOperations {
     fun AccountStatusList.getCoinStatus(networkId: Network.ID): Option<CryptoCurrencyStatus> {
         return getExpectedAccountStatuses(networkId)
             .flatMap { accountStatus ->
-                (accountStatus as? AccountStatus.CryptoPortfolio)
+                (accountStatus as? AccountStatus.Personal)
                     ?.flattenCurrencies().orEmpty()
                     .filter { it.currency is CryptoCurrency.Coin }
             }

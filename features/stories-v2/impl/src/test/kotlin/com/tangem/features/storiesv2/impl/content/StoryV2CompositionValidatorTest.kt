@@ -1,5 +1,7 @@
 package com.tangem.features.storiesv2.impl.content
 
+import com.tangem.features.storiesv2.impl.content.StoryV2Haptic
+import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.stringReference
 import org.junit.jupiter.api.Test
@@ -87,14 +89,14 @@ internal class StoryV2CompositionValidatorTest {
         // Arrange
         val markers = listOf(2_000L, -1L, 2_000L, 5_000L, 6_000L, 1_000L)
         val composition = composition(
-            slides = listOf(videoSlide(id = "slide", durationMs = 5_000L).copy(hapticAtMs = markers)),
+            slides = listOf(videoSlide(id = "slide", durationMs = 5_000L).copy(haptics = markers.map(::haptic))),
         )
 
         // Act
         val actual = StoryV2CompositionValidator.validate(composition)
 
         // Assert — a marker at or past the duration is never reached, and a duplicate would fire twice on one frame.
-        assertThat(actual?.slides?.first()?.hapticAtMs).containsExactly(1_000L, 2_000L).inOrder()
+        assertThat(actual?.slides?.first()?.haptics?.map(StoryV2Haptic::atMs)).containsExactly(1_000L, 2_000L).inOrder()
     }
 
     @Test
@@ -108,14 +110,14 @@ internal class StoryV2CompositionValidatorTest {
                 source = StoryV2MediaRef.DrawableResource(id = 1),
                 durationMs = 4_000L,
             ),
-            hapticAtMs = listOf(1_000L),
+            haptics = listOf(haptic(1_000L)),
         )
 
         // Act
         val actual = StoryV2CompositionValidator.validate(composition(slides = listOf(slide)))
 
         // Assert — an image has no timeline to hang a marker on.
-        assertThat(actual?.slides?.first()?.hapticAtMs).isEmpty()
+        assertThat(actual?.slides?.first()?.haptics).isEmpty()
     }
 
     private fun composition(slides: List<StoryV2Slide>, actions: List<StoryV2Action> = emptyList()) =
@@ -145,4 +147,6 @@ internal class StoryV2CompositionValidatorTest {
         style = style,
         target = StoryV2Action.Target.Close,
     )
+
+    private fun haptic(atMs: Long) = StoryV2Haptic(atMs = atMs, effect = TangemHapticEffect.OneTime.Tick)
 }

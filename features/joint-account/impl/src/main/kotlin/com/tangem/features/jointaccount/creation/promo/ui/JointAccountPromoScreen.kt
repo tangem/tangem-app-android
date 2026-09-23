@@ -2,19 +2,18 @@ package com.tangem.features.jointaccount.creation.promo.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -33,18 +32,15 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_lightning_24
-import com.tangem.core.ui.res.generated.icons.ic_shield_checkmark_24
+import com.tangem.core.ui.res.generated.icons.ic_shield_checkmark_20
+import com.tangem.core.ui.res.generated.icons.ic_user_plus_20
+import com.tangem.core.ui.res.generated.icons.ic_users_20
 import com.tangem.features.jointaccount.impl.R
 import com.tangem.features.jointaccount.creation.promo.ui.state.JointAccountPromoUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 private const val HERO_ASPECT_RATIO = 402f / 568f
-private const val HERO_TINT_START = 0.5f
-private const val HERO_TINT_MIDDLE = 0.75f
-private const val HERO_TINT_END = 0.9f
-private const val HERO_TINT_MIDDLE_ALPHA = 0.5f
 
 @Composable
 internal fun JointAccountPromoScreen(state: JointAccountPromoUM, modifier: Modifier = Modifier) {
@@ -52,7 +48,10 @@ internal fun JointAccountPromoScreen(state: JointAccountPromoUM, modifier: Modif
         modifier = modifier,
         containerColor = TangemTheme.colors3.bg.primary,
         topBar = {
-            TangemTopNavigation(endButton = { TangemButton.Close(onClick = state.onCloseClick) })
+            TangemTopNavigation(
+                endButton = { TangemButton.Close(onClick = state.onCloseClick) },
+                fadeEnabled = false,
+            )
         },
     ) { contentPadding ->
         Content(state = state, contentPadding = contentPadding)
@@ -63,7 +62,7 @@ internal fun JointAccountPromoScreen(state: JointAccountPromoUM, modifier: Modif
 private fun BoxScope.Content(state: JointAccountPromoUM, contentPadding: PaddingValues) {
     Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
         Hero(state = state)
-        Benefits(benefits = state.benefits)
+        Points(points = state.points)
         SpacerH(96.dp + contentPadding.calculateBottomPadding())
     }
 
@@ -90,23 +89,6 @@ private fun Hero(state: JointAccountPromoUM, modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxSize(),
         )
 
-        val background = TangemTheme.colors3.bg.primary
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colorStops = arrayOf(
-                            0f to background.copy(alpha = 0f),
-                            HERO_TINT_START to background.copy(alpha = 0f),
-                            HERO_TINT_MIDDLE to background.copy(alpha = HERO_TINT_MIDDLE_ALPHA),
-                            HERO_TINT_END to background,
-                            1f to background,
-                        ),
-                    ),
-                ),
-        )
-
         Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)
@@ -129,65 +111,43 @@ private fun Hero(state: JointAccountPromoUM, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Benefits(benefits: ImmutableList<JointAccountPromoUM.BenefitUM>, modifier: Modifier = Modifier) {
-    if (benefits.isEmpty()) return
-
+private fun Points(points: ImmutableList<JointAccountPromoUM.PointUM>, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 16.dp)
+            .padding(top = 12.dp)
             .padding(horizontal = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        benefits.chunked(size = 2).forEach { row ->
-            Row(
-                modifier = Modifier.height(IntrinsicSize.Min),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                row.forEach { benefit ->
-                    BenefitCard(
-                        benefit = benefit,
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight(),
-                    )
-                }
-                if (row.size == 1) Spacer(modifier = Modifier.weight(1f))
-            }
+        points.forEach { point ->
+            Point(point = point)
         }
     }
 }
 
 @Composable
-private fun BenefitCard(benefit: JointAccountPromoUM.BenefitUM, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .heightIn(min = 132.dp)
-            .clip(RoundedCornerShape(24.dp))
-            .background(TangemTheme.colors3.bg.secondary)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.SpaceBetween,
+private fun Point(point: JointAccountPromoUM.PointUM, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         TangemIcon(
-            tangemIconUM = benefit.icon,
-            modifier = Modifier.size(24.dp),
+            tangemIconUM = point.icon,
+            modifier = Modifier.size(20.dp),
         )
 
-        Column(
-            modifier = Modifier.padding(top = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            Text(
-                text = benefit.title.resolveReference(),
-                style = TangemTheme.typography3.subheading.medium,
-                color = TangemTheme.colors3.text.primary,
-            )
-            Text(
-                text = benefit.subtitle.resolveReference(),
-                style = TangemTheme.typography3.caption.medium,
-                color = TangemTheme.colors3.text.secondary,
-            )
-        }
+        Text(
+            text = buildAnnotatedString {
+                withStyle(SpanStyle(color = TangemTheme.colors3.text.primary)) {
+                    append(point.lead.resolveReference())
+                }
+                append(' ')
+                withStyle(SpanStyle(color = TangemTheme.colors3.text.secondary)) {
+                    append(point.description.resolveReference())
+                }
+            },
+            style = TangemTheme.typography3.subheading.medium,
+        )
     }
 }
 
@@ -228,18 +188,24 @@ private class JointAccountPromoStateProvider : CollectionPreviewParameterProvide
         JointAccountPromoUM(
             title = resourceReference(R.string.common_joint_account),
             subtitle = resourceReference(R.string.joint_account_onboarding_subtitle),
-            benefits = persistentListOf(
-                JointAccountPromoUM.BenefitUM(
+            points = persistentListOf(
+                JointAccountPromoUM.PointUM(
                     id = "members",
-                    icon = TangemIconUM.Icon(imageVector = Icons.ic_lightning_24),
-                    title = stringReference(value = "Up to 5 members"),
-                    subtitle = stringReference(value = "Everyone shares one balance and history"),
+                    icon = TangemIconUM.Icon(imageVector = Icons.ic_user_plus_20),
+                    lead = stringReference(value = "Up to 5 members."),
+                    description = stringReference(value = "Each joins with their own wallet."),
                 ),
-                JointAccountPromoUM.BenefitUM(
-                    id = "control",
-                    icon = TangemIconUM.Icon(imageVector = Icons.ic_shield_checkmark_24),
-                    title = stringReference(value = "No single point of control"),
-                    subtitle = stringReference(value = "Funds move only with enough signatures"),
+                JointAccountPromoUM.PointUM(
+                    id = "shared",
+                    icon = TangemIconUM.Icon(imageVector = Icons.ic_users_20),
+                    lead = stringReference(value = "Shared account."),
+                    description = stringReference(value = "Use it with your friends, family, or partners."),
+                ),
+                JointAccountPromoUM.PointUM(
+                    id = "approvals",
+                    icon = TangemIconUM.Icon(imageVector = Icons.ic_shield_checkmark_20),
+                    lead = stringReference(value = "Required approvals."),
+                    description = stringReference(value = "Choose how many members must approve each transaction."),
                 ),
             ),
             onContinueClick = {},

@@ -27,7 +27,6 @@ import com.tangem.feature.swap.domain.buildSwapCurrencyStatus
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
 import com.tangem.feature.swap.domain.models.ui.PermissionDataState
-import com.tangem.features.swap.SwapFeatureToggles
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
@@ -60,7 +59,6 @@ internal class DexSwapFeeCalculatorTest {
     private val createTransactionExtrasUseCase: CreateTransactionDataExtrasUseCase = mockk(relaxed = true)
     private val walletManagersFacade: WalletManagersFacade = mockk(relaxed = true)
     private val wrapYieldSwapCallDataWithUpgradeUseCase: WrapYieldSwapCallDataWithUpgradeUseCase = mockk(relaxed = true)
-    private val swapFeatureToggles: SwapFeatureToggles = mockk(relaxed = true)
 
     private val dexBump = PatchEthGasLimitForSwap(percentage = PatchEthGasLimitForSwap.DEX_PERCENTAGE)
 
@@ -73,7 +71,6 @@ internal class DexSwapFeeCalculatorTest {
             walletManagersFacade = walletManagersFacade,
             patchEthGasLimitForSwap = dexBump,
             wrapYieldSwapCallDataWithUpgradeUseCase = wrapYieldSwapCallDataWithUpgradeUseCase,
-            swapFeatureToggles = swapFeatureToggles,
         )
     }
 
@@ -650,6 +647,28 @@ internal class DexSwapFeeCalculatorTest {
         }
     }
 
+    @Test
+    fun `GIVEN fee estimation fails WHEN Solana DEX fee calculated THEN returns Left instead of throwing`() = runTest {
+        // Arrange
+        mockkStatic(Base64::class)
+        every { Base64.decode(any<String>(), any()) } returns ByteArray(64)
+        mockkObject(SolanaTransactionHelper)
+        every { SolanaTransactionHelper.removeSignaturesPlaceholders(any()) } returns ByteArray(64)
+
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = solanaNetwork, isCoin = true)
+        val transaction = buildDex(txData = "U29sYW5h")
+        val feeError = GetFeeError.DataError(IllegalStateException("rpc failed"))
+        coEvery {
+            getFeeUseCase.invoke(userWallet = any(), network = any(), transactionData = any())
+        } returns feeError.left()
+
+        // Act
+        val result = sut.calculate(fromStatus, transaction)
+
+        // Assert
+        assertThat(result).isEqualTo(feeError.left())
+    }
+
     // -------------------------------------------------------------------------
     // Bitcoin PSBT DEX path
     // -------------------------------------------------------------------------
@@ -958,13 +977,12 @@ internal class DexSwapFeeCalculatorTest {
     )
 
     // -------------------------------------------------------------------------
-    // TRON ([REDACTED_TASK_KEY]) — gated by SwapFeatureToggles.isTronDexSwapEnabled
+    // TRON
     // -------------------------------------------------------------------------
 
     @Test
-    fun `GIVEN tron toggle ON WHEN calculate THEN tron fee path estimates fee with no evm gas`() = runTest {
+    fun `GIVEN tron network WHEN calculate THEN tron fee path estimates fee with no evm gas`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isTronDexSwapEnabled } returns true
         val fromStatus = buildSwapCurrencyStatus(networkRawId = tronNetwork, isCoin = true)
         val transaction = buildDex(
             txValue = "5000000", // 5 TRX
@@ -995,32 +1013,6 @@ internal class DexSwapFeeCalculatorTest {
                 gasLimit = any(),
                 gasPrice = any(),
             )
-        }
-    }
-
-    @Test
-    fun `GIVEN tron toggle OFF WHEN calculate THEN evm path is used and carries gas`() = runTest {
-        // Arrange
-        every { swapFeatureToggles.isTronDexSwapEnabled } returns false
-        val fromStatus = buildSwapCurrencyStatus(networkRawId = tronNetwork, isCoin = true)
-        val transaction = buildDex(
-            txValue = "5000000",
-            txTo = "TRouterAddress",
-            txFrom = "TSenderAddress",
-            txData = "a9059cbb",
-        )
-        coEvery {
-            getFeeUseCase.invoke(userWallet = any(), network = any(), transactionData = any())
-        } returns mockk<TransactionFee.Single>(relaxed = true).right()
-
-        // Act
-        val result = sut.calculate(fromStatus, transaction)
-
-        // Assert
-        assertThat(result.isRight()).isTrue()
-        result.onRight { dexFeeResult ->
-            // Toggle off → TRON falls through to the EVM branch, which carries the tx gas.
-            assertThat(dexFeeResult.gas).isEqualTo(transaction.gas)
         }
     }
 

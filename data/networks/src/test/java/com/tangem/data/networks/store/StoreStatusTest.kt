@@ -8,7 +8,7 @@ import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.data.networks.toDataModel
 import com.tangem.data.networks.toSimple
 import com.tangem.core.local.datastore.RuntimeSharedStore
-import com.tangem.datasource.local.network.entity.NetworkStatusDM
+import com.tangem.data.networks.entity.NetworkStatusDM
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.mockk

@@ -15,7 +15,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.datasource.local.nft.converter.NFTSdkAssetConverter
+import com.tangem.data.nft.converter.NFTSdkAssetConverter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase

@@ -58,7 +58,6 @@ internal fun JointAccountShareSafelyBS(onDismiss: () -> Unit, modifier: Modifier
             TangemTopNavigation(
                 title = resourceReference(CoreUiR.string.joint_account_invite_members_safety_sheet_title),
                 contentAlign = TangemTopNavigation.ContentAlign.Center,
-                blurBackground = false,
                 onClose = onDismiss,
             )
         },
@@ -92,7 +91,10 @@ private fun Content(modifier: Modifier = Modifier) {
         }
     }
 
-    Column(modifier = modifier.fillMaxWidth().verticalScroll(scrollState)) {
+    Column(modifier = modifier.fillMaxWidth().padding(
+        horizontal = 8.dp,
+        vertical = 10.dp,
+    ).verticalScroll(scrollState)) {
         ShareSafelyPointRow(
             icon = Icons.ic_lightning_24,
             title = resourceReference(CoreUiR.string.joint_account_invite_members_safety_first_point_title),
@@ -149,7 +151,7 @@ private fun ShareSafelyPointIcon(icon: ImageVector, modifier: Modifier = Modifie
             imageVector = icon,
             tint = TangemTheme.colors3.icon.status.info,
             contentDescription = null,
-            modifier = Modifier.size(24.dp),
+            modifier = Modifier.size(20.dp),
         )
     }
 }

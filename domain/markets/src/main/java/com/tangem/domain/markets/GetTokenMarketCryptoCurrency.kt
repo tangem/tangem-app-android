@@ -1,7 +1,7 @@
 package com.tangem.domain.markets
 
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
-import com.tangem.domain.models.account.DerivationIndex
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 
@@ -12,13 +12,13 @@ class GetTokenMarketCryptoCurrency(
         userWalletId: UserWalletId,
         tokenMarketParams: RawMarketToken,
         network: TokenMarketInfo.Network,
-        accountIndex: DerivationIndex,
+        account: Account.CryptoPortfolio,
     ): CryptoCurrency? {
         return marketsTokenRepository.createCryptoCurrency(
             userWalletId = userWalletId,
             token = tokenMarketParams,
             network = network,
-            accountIndex = accountIndex,
+            account = account,
         )
     }
 }

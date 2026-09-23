@@ -1,21 +1,25 @@
 package com.tangem.domain.qrscanning.usecases
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.qrscanning.models.ClassifiedQrContent
 import com.tangem.domain.qrscanning.models.QrSendTarget
 import com.tangem.domain.qrscanning.repository.QrScanningEventsRepository
+import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.mock.MockAccounts
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import com.tangem.test.core.ProvideTestModels
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class ResolveQrSendTargetsUseCaseTest {
@@ -108,6 +112,35 @@ internal class ResolveQrSendTargetsUseCaseTest {
 
         // Assert — with an empty portfolio it resolves to AddressSameAsWallet, but never to an error
         assertThat(actual).isNotInstanceOf(QrSendTarget.Error::class.java)
+    }
+
+    @Test
+    fun `GIVEN a joint account with a currency WHEN resolve THEN its currency is a send target`() = runTest {
+        // Arrange
+        val jointCurrency: CryptoCurrency = mockk(relaxed = true)
+        val accounts = listOf(
+            Account.Personal.createMainAccount(MockAccounts.userWalletId),
+            MockAccounts.createJointAccount(cryptoCurrencies = listOf(jointCurrency)),
+        )
+        val accountList = AccountList(
+            userWalletId = MockAccounts.userWalletId,
+            accounts = accounts,
+            totalAccounts = accounts.size,
+            totalArchivedAccounts = 0,
+            totalJointAccounts = 1,
+        ).getOrNull()!!
+        coEvery { multiAccountListSupplier.getSyncOrNull(Unit) } returns listOf(accountList)
+        coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+        every { qrScanningEventsRepository.classify(RECIPIENT, any()) } returns ClassifiedQrContent.PlainAddress(
+            address = RECIPIENT,
+            matchingCurrencies = emptyList(),
+        )
+
+        // Act
+        useCase(RECIPIENT)
+
+        // Assert — a transfer from the Safe is a co-signed operation, so its currency is offered like a personal one
+        verify { qrScanningEventsRepository.classify(RECIPIENT, listOf(jointCurrency)) }
     }
 
     private companion object {

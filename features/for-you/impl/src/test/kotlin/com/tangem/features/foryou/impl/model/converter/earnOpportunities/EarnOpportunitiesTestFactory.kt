@@ -215,7 +215,7 @@ internal fun createStatus(
 
 internal fun createEarnOpportunities(
     userWalletId: UserWalletId = MockAccounts.userWalletId,
-    account: Account.CryptoPortfolio = MockAccounts.createAccount(derivationIndex = 1),
+    account: Account.Personal = MockAccounts.createAccount(derivationIndex = 1),
     earnCurrencies: Map<CryptoCurrencyStatus, EarnApyInfo> = mapOf(
         createStatus(createEarnCurrency()) to createEarnApyInfo(),
     ),
@@ -236,8 +236,8 @@ internal fun createEarnApyInfo(
 
 internal fun createPortfolioStatus(
     currencies: List<CryptoCurrencyStatus>,
-    account: Account.CryptoPortfolio = MockAccounts.createAccount(derivationIndex = 1),
-): AccountStatus.CryptoPortfolio = mockk {
+    account: Account.Personal = MockAccounts.createAccount(derivationIndex = 1),
+): AccountStatus.Personal = mockk {
     every { flattenCurrencies() } returns currencies
     every { this@mockk.account } returns account
     every { accountId } returns account.accountId
