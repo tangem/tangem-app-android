@@ -17,15 +17,11 @@ import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.staking.BalanceItem
 import com.tangem.domain.models.staking.BalanceType
-import com.tangem.domain.models.staking.P2PEthPoolExitQueue
-import com.tangem.domain.models.staking.P2PEthPoolStake
-import com.tangem.domain.models.staking.P2PEthPoolStakingAccount
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.staking.YieldBalanceItem
 import com.tangem.domain.models.yield.supply.YieldSupplyContribution
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
-import com.tangem.domain.staking.model.StakingIntegrationID
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Nested
@@ -64,8 +60,6 @@ class CryptoCurrencyStatusFactoryTest {
     inner class MissedDerivation {
 
         private val networkStatus = NetworkStatus.MissedDerivation.toStatus()
-        private val maybeStakingBalance = none<StakingBalance>() // not relevant for this test
-
         @Test
         fun `network is MissedDerivation and QuoteStatus is Data`() {
             // Act
@@ -73,8 +67,7 @@ class CryptoCurrencyStatusFactoryTest {
                 currency = currency,
                 maybeNetworkStatus = networkStatus.some(),
                 maybeQuoteStatus = fullQuote.toStatus().some(),
-                maybeStakingBalance = maybeStakingBalance,
-                contributionsInput = BalanceContributionsInput.Disabled,
+                contributions = emptyList(),
             )
 
             // Assert
@@ -93,8 +86,7 @@ class CryptoCurrencyStatusFactoryTest {
                 currency = currency,
                 maybeNetworkStatus = networkStatus.some(),
                 maybeQuoteStatus = emptyQuoteStatus.some(),
-                maybeStakingBalance = maybeStakingBalance,
-                contributionsInput = BalanceContributionsInput.Disabled,
+                contributions = emptyList(),
             )
 
             // Assert
@@ -109,8 +101,7 @@ class CryptoCurrencyStatusFactoryTest {
                 currency = currency,
                 maybeNetworkStatus = networkStatus.some(),
                 maybeQuoteStatus = none(),
-                maybeStakingBalance = maybeStakingBalance,
-                contributionsInput = BalanceContributionsInput.Disabled,
+                contributions = emptyList(),
             )
 
             // Assert
@@ -125,8 +116,6 @@ class CryptoCurrencyStatusFactoryTest {
 
         private val networkStatus = NetworkStatus.Unreachable(address = networkAddress).toStatus()
 
-        private val maybeStakingBalance = none<StakingBalance>() // not relevant for this test
-
         @Test
         fun `network is Unreachable and QuoteStatus is Data`() {
             // Act
@@ -134,8 +123,7 @@ class CryptoCurrencyStatusFactoryTest {
                 currency = currency,
                 maybeNetworkStatus = networkStatus.some(),
                 maybeQuoteStatus = fullQuote.toStatus().some(),
-                maybeStakingBalance = maybeStakingBalance,
-                contributionsInput = BalanceContributionsInput.Disabled,
+                contributions = emptyList(),
             )
 
             // Assert
@@ -155,8 +143,7 @@ class CryptoCurrencyStatusFactoryTest {
                 currency = currency,
                 maybeNetworkStatus = networkStatus.some(),
                 maybeQuoteStatus = emptyQuoteStatus.some(),
-                maybeStakingBalance = maybeStakingBalance,
-                contributionsInput = BalanceContributionsInput.Disabled,
+                contributions = emptyList(),
             )
 
             // Assert
@@ -176,8 +163,7 @@ class CryptoCurrencyStatusFactoryTest {
                 currency = currency,
                 maybeNetworkStatus = networkStatus.some(),
                 maybeQuoteStatus = none(),
-                maybeStakingBalance = maybeStakingBalance,
-                contributionsInput = BalanceContributionsInput.Disabled,
+                contributions = emptyList(),
             )
 
             // Assert
@@ -201,8 +187,6 @@ class CryptoCurrencyStatusFactoryTest {
             source = StatusSource.ACTUAL,
         ).toStatus()
 
-        private val maybeStakingBalance = none<StakingBalance>() // not relevant for this test
-
         @Test
         fun `network is NoAccount and QuoteStatus is Data`() {
             // Act
@@ -210,8 +194,7 @@ class CryptoCurrencyStatusFactoryTest {
                 currency = currency,
                 maybeNetworkStatus = networkStatus.some(),
                 maybeQuoteStatus = fullQuote.toStatus().some(),
-                maybeStakingBalance = maybeStakingBalance,
-                contributionsInput = BalanceContributionsInput.Disabled,
+                contributions = emptyList(),
             )
 
             // Assert
@@ -234,8 +217,7 @@ class CryptoCurrencyStatusFactoryTest {
                 currency = currency,
                 maybeNetworkStatus = networkStatus.some(),
                 maybeQuoteStatus = emptyQuoteStatus.some(),
-                maybeStakingBalance = maybeStakingBalance,
-                contributionsInput = BalanceContributionsInput.Disabled,
+                contributions = emptyList(),
             )
 
             // Assert
@@ -257,8 +239,7 @@ class CryptoCurrencyStatusFactoryTest {
                 currency = currency,
                 maybeNetworkStatus = networkStatus.some(),
                 maybeQuoteStatus = none(),
-                maybeStakingBalance = maybeStakingBalance,
-                contributionsInput = BalanceContributionsInput.Disabled,
+                contributions = emptyList(),
             )
 
             // Assert
@@ -280,8 +261,6 @@ class CryptoCurrencyStatusFactoryTest {
 
         private val networkStatus = createVerified(amounts = mapOf(currency.id to Amount.NotFound)).toStatus()
 
-        private val maybeStakingBalance = none<StakingBalance>() // not relevant for this test
-
         @Test
         fun `network is Verified with Amount is NotFound and QuoteStatus is Data`() {
             // Act
@@ -289,8 +268,7 @@ class CryptoCurrencyStatusFactoryTest {
                 currency = currency,
                 maybeNetworkStatus = networkStatus.some(),
                 maybeQuoteStatus = fullQuote.toStatus().some(),
-                maybeStakingBalance = maybeStakingBalance,
-                contributionsInput = BalanceContributionsInput.Disabled,
+                contributions = emptyList(),
             )
 
             // Assert
@@ -309,8 +287,7 @@ class CryptoCurrencyStatusFactoryTest {
                 currency = currency,
                 maybeNetworkStatus = networkStatus.some(),
                 maybeQuoteStatus = emptyQuoteStatus.some(),
-                maybeStakingBalance = maybeStakingBalance,
-                contributionsInput = BalanceContributionsInput.Disabled,
+                contributions = emptyList(),
             )
 
             // Assert
@@ -325,8 +302,7 @@ class CryptoCurrencyStatusFactoryTest {
                 currency = currency,
                 maybeNetworkStatus = networkStatus.some(),
                 maybeQuoteStatus = none(),
-                maybeStakingBalance = maybeStakingBalance,
-                contributionsInput = BalanceContributionsInput.Disabled,
+                contributions = emptyList(),
             )
 
             // Assert
@@ -339,8 +315,6 @@ class CryptoCurrencyStatusFactoryTest {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class Loading {
 
-        private val maybeStakingBalance = none<StakingBalance>() // not relevant for this test
-
         @Test
         fun `network is null`() {
             // Act
@@ -348,8 +322,7 @@ class CryptoCurrencyStatusFactoryTest {
                 currency = currency,
                 maybeNetworkStatus = none(),
                 maybeQuoteStatus = none(), // not relevant for this test,
-                maybeStakingBalance = maybeStakingBalance,
-                contributionsInput = BalanceContributionsInput.Disabled,
+                contributions = emptyList(),
             )
 
             // Assert
@@ -367,8 +340,7 @@ class CryptoCurrencyStatusFactoryTest {
                 currency = currency,
                 maybeNetworkStatus = networkStatus.some(),
                 maybeQuoteStatus = none(), // not relevant for this test,
-                maybeStakingBalance = maybeStakingBalance,
-                contributionsInput = BalanceContributionsInput.Disabled,
+                contributions = emptyList(),
             )
 
             // Assert
@@ -388,8 +360,7 @@ class CryptoCurrencyStatusFactoryTest {
                 currency = currency,
                 maybeNetworkStatus = networkStatus.some(),
                 maybeQuoteStatus = none(),
-                maybeStakingBalance = maybeStakingBalance,
-                contributionsInput = BalanceContributionsInput.Disabled,
+                contributions = emptyList(),
             )
 
             // Assert
@@ -409,18 +380,16 @@ class CryptoCurrencyStatusFactoryTest {
         ).toStatus()
 
         @Test
-        fun `network is Verified, QuoteStatus is null, YieldBalance is null`() {
+        fun `GIVEN network is Verified and no quote WHEN create THEN Custom carries no extra balance`() {
             // Arrange
             val maybeQuoteStatus = none<QuoteStatus>()
-            val maybeStakingBalance = none<StakingBalance>()
 
             // Act
             val actual = CryptoCurrencyStatusFactory.create(
                 currency = currency,
                 maybeNetworkStatus = networkStatus.some(),
                 maybeQuoteStatus = maybeQuoteStatus,
-                maybeStakingBalance = maybeStakingBalance,
-                contributionsInput = BalanceContributionsInput.Disabled,
+                contributions = emptyList(),
             )
 
             // Assert
@@ -432,63 +401,6 @@ class CryptoCurrencyStatusFactoryTest {
                     fiatRate = null,
                     priceChange = null,
                     stakingBalance = null,
-                    yieldSupplyStatus = null,
-                    hasCurrentNetworkTransactions = false,
-                    pendingTransactions = emptySet(),
-                    networkAddress = networkAddress,
-                    sources = CryptoCurrencyStatus.Sources(),
-                ),
-            )
-
-            Truth.assertThat(actual).isEqualTo(expected)
-        }
-
-        @Test
-        fun `network is Verified, QuoteStatus is Data, YieldBalance is Data`() {
-            // Arrange
-            val stakeKitBalance = StakingBalance.Data.StakeKit(
-                stakingId = StakingID(
-                    integrationId = StakingIntegrationID.StakeKit.Coin.Cardano.value,
-                    address = networkAddress.defaultAddress.value,
-                ),
-                source = StatusSource.ACTUAL,
-                balance = YieldBalanceItem(
-                    items = listOf(
-                        mockk<BalanceItem>(relaxed = true) {
-                            every { this@mockk.token.coinGeckoId } returns currency.id.rawCurrencyId?.value
-                        },
-                        mockk<BalanceItem>(relaxed = true) {
-                            every { this@mockk.token.coinGeckoId } returns "unknown"
-                        },
-                    ),
-                    integrationId = StakingIntegrationID.StakeKit.Coin.Cardano.value,
-                ),
-            )
-
-            // Act
-            val actual = CryptoCurrencyStatusFactory.create(
-                currency = currency,
-                maybeNetworkStatus = networkStatus.some(),
-                maybeQuoteStatus = fullQuote.toStatus().some(),
-                maybeStakingBalance = stakeKitBalance.some(),
-                contributionsInput = BalanceContributionsInput.Disabled,
-            )
-
-            // Assert
-            val expected = CryptoCurrencyStatus(
-                currency = currency,
-                value = CryptoCurrencyStatus.Custom(
-                    amount = BigDecimal.TEN,
-                    fiatAmount = BigDecimal.TEN * fullQuote.fiatRate,
-                    fiatRate = fullQuote.fiatRate,
-                    priceChange = fullQuote.priceChange,
-                    // the factory also stamps the per-network rule — Cardano keeps its stake in the network balance
-                    stakingBalance = stakeKitBalance.copy(
-                        balance = stakeKitBalance.balance.copy(
-                            items = stakeKitBalance.balance.items.subList(0, 1),
-                        ),
-                        isStakedIncludedInNetworkBalance = true,
-                    ),
                     yieldSupplyStatus = null,
                     hasCurrentNetworkTransactions = false,
                     pendingTransactions = emptySet(),
@@ -517,74 +429,19 @@ class CryptoCurrencyStatusFactoryTest {
         private val maybeQuoteStatus = emptyQuoteStatus.some()
 
         @Test
-        fun `network is Verified and YieldBalance is null`() {
-            // Arrange
-            val maybeStakingBalance = none<StakingBalance>()
-
+        fun `GIVEN network is Verified and no contributions WHEN create THEN NoQuote has no extra balance`() {
             // Act
             val actual = CryptoCurrencyStatusFactory.create(
                 currency = currency,
                 maybeNetworkStatus = networkStatus.some(),
                 maybeQuoteStatus = maybeQuoteStatus,
-                maybeStakingBalance = maybeStakingBalance,
-                contributionsInput = BalanceContributionsInput.Disabled,
+                contributions = emptyList(),
             )
 
             // Assert
             val expected = CryptoCurrencyStatus.NoQuote(
                 amount = BigDecimal.TEN,
                 stakingBalance = null,
-                yieldSupplyStatus = yieldSupplyStatuses[currency.id]!!,
-                hasCurrentNetworkTransactions = true,
-                pendingTransactions = pendingTransactions[currency.id]!!,
-                networkAddress = networkAddress,
-                sources = CryptoCurrencyStatus.Sources(),
-            ).toStatus()
-
-            Truth.assertThat(actual).isEqualTo(expected)
-        }
-
-        @Test
-        fun `network is Verified and YieldBalance is Data`() {
-            // Arrange
-            val stakeKitBalance = StakingBalance.Data.StakeKit(
-                stakingId = StakingID(
-                    integrationId = StakingIntegrationID.StakeKit.Coin.Cardano.value,
-                    address = networkAddress.defaultAddress.value,
-                ),
-                source = StatusSource.ACTUAL,
-                balance = YieldBalanceItem(
-                    items = listOf(
-                        mockk<BalanceItem>(relaxed = true) {
-                            every { this@mockk.token.coinGeckoId } returns currency.id.rawCurrencyId?.value
-                        },
-                        mockk<BalanceItem>(relaxed = true) {
-                            every { this@mockk.token.coinGeckoId } returns "unknown"
-                        },
-                    ),
-                    integrationId = StakingIntegrationID.StakeKit.Coin.Cardano.value,
-                ),
-            )
-
-            // Act
-            val actual = CryptoCurrencyStatusFactory.create(
-                currency = currency,
-                maybeNetworkStatus = networkStatus.some(),
-                maybeQuoteStatus = maybeQuoteStatus,
-                maybeStakingBalance = stakeKitBalance.some(),
-                contributionsInput = BalanceContributionsInput.Disabled,
-            )
-
-            // Assert
-            val expected = CryptoCurrencyStatus.NoQuote(
-                amount = BigDecimal.TEN,
-                // the factory also stamps the per-network rule — Cardano keeps its stake in the network balance
-                stakingBalance = stakeKitBalance.copy(
-                    balance = stakeKitBalance.balance.copy(
-                        items = stakeKitBalance.balance.items.subList(0, 1),
-                    ),
-                    isStakedIncludedInNetworkBalance = true,
-                ),
                 yieldSupplyStatus = yieldSupplyStatuses[currency.id]!!,
                 hasCurrentNetworkTransactions = true,
                 pendingTransactions = pendingTransactions[currency.id]!!,
@@ -607,17 +464,13 @@ class CryptoCurrencyStatusFactoryTest {
         private val maybeQuoteStatus = fullQuote.toStatus().some()
 
         @Test
-        fun `network is Verified and YieldBalance is null`() {
-            // Arrange
-            val maybeStakingBalance = none<StakingBalance>()
-
+        fun `GIVEN network is Verified and no contributions WHEN create THEN Loaded has no extra balance`() {
             // Act
             val actual = CryptoCurrencyStatusFactory.create(
                 currency = currency,
                 maybeNetworkStatus = networkStatus.some(),
                 maybeQuoteStatus = maybeQuoteStatus,
-                maybeStakingBalance = maybeStakingBalance,
-                contributionsInput = BalanceContributionsInput.Disabled,
+                contributions = emptyList(),
             )
 
             // Assert
@@ -636,229 +489,12 @@ class CryptoCurrencyStatusFactoryTest {
 
             Truth.assertThat(actual).isEqualTo(expected)
         }
-
-        @Test
-        fun `network is Verified and YieldBalance is Data`() {
-            // Arrange
-            val stakeKitBalance = StakingBalance.Data.StakeKit(
-                stakingId = StakingID(
-                    integrationId = StakingIntegrationID.StakeKit.Coin.Cardano.value,
-                    address = networkAddress.defaultAddress.value,
-                ),
-                source = StatusSource.ACTUAL,
-                balance = YieldBalanceItem(
-                    items = listOf(
-                        mockk<BalanceItem>(relaxed = true) {
-                            every { this@mockk.token.coinGeckoId } returns currency.id.rawCurrencyId?.value
-                        },
-                        mockk<BalanceItem>(relaxed = true) {
-                            every { this@mockk.token.coinGeckoId } returns "unknown"
-                        },
-                    ),
-                    integrationId = StakingIntegrationID.StakeKit.Coin.Cardano.value,
-                ),
-            )
-
-            // Act
-            val actual = CryptoCurrencyStatusFactory.create(
-                currency = currency,
-                maybeNetworkStatus = networkStatus.some(),
-                maybeQuoteStatus = fullQuote.toStatus().some(),
-                maybeStakingBalance = stakeKitBalance.some(),
-                contributionsInput = BalanceContributionsInput.Disabled,
-            )
-
-            // Assert
-            val expected = CryptoCurrencyStatus.Loaded(
-                amount = BigDecimal.TEN,
-                fiatAmount = BigDecimal.TEN * fullQuote.fiatRate,
-                fiatRate = fullQuote.fiatRate,
-                priceChange = fullQuote.priceChange,
-                // the factory also stamps the per-network rule — Cardano keeps its stake in the network balance
-                stakingBalance = stakeKitBalance.copy(
-                    balance = stakeKitBalance.balance.copy(
-                        items = stakeKitBalance.balance.items.subList(0, 1),
-                    ),
-                    isStakedIncludedInNetworkBalance = true,
-                ),
-                yieldSupplyStatus = null,
-                hasCurrentNetworkTransactions = false,
-                pendingTransactions = emptySet(),
-                networkAddress = networkAddress,
-                sources = CryptoCurrencyStatus.Sources(),
-            ).toStatus()
-
-            Truth.assertThat(actual).isEqualTo(expected)
-        }
     }
 
     /**
-     * Legacy path (toggle off): the factory itself resolves the per-network "is the stake already inside the
-     * network balance?" rule from the currency and stamps it on the attached balance, and `contributions` stays
-     * empty so every reader falls back to the typed field.
-     */
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class ContributionStamp {
-
-        @Test
-        fun `GIVEN Cardano currency WHEN create THEN stake is marked as included in the network balance`() {
-            // Arrange
-            val cardano = cryptoCurrencyFactory.cardano
-
-            // Act
-            val actual = createWithStaking(currency = cardano)
-
-            // Assert
-            val stakingBalance = actual.value.stakingBalance as StakingBalance.Data
-            Truth.assertThat(stakingBalance.isStakedIncludedInNetworkBalance).isTrue()
-            Truth.assertThat(stakingBalance.totalDeltaCryptoAmount()).isEqualTo(REWARDS_AMOUNT)
-            Truth.assertThat(actual.value.contributions).isEmpty()
-        }
-
-        @Test
-        fun `GIVEN Solana currency WHEN create THEN stake is not marked as included`() {
-            // Arrange
-            val solana = cryptoCurrencyFactory.createCoin(Blockchain.Solana)
-
-            // Act
-            val actual = createWithStaking(currency = solana)
-
-            // Assert
-            val stakingBalance = actual.value.stakingBalance as StakingBalance.Data
-            Truth.assertThat(stakingBalance.isStakedIncludedInNetworkBalance).isFalse()
-            Truth.assertThat(stakingBalance.totalDeltaCryptoAmount()).isEqualTo(STAKED_AMOUNT + REWARDS_AMOUNT)
-            Truth.assertThat(actual.value.contributions).isEmpty()
-        }
-
-        @Test
-        fun `GIVEN no staking balance WHEN create THEN there is no staking balance and no contributions`() {
-            // Act
-            val actual = createWithStaking(
-                currency = cryptoCurrencyFactory.cardano,
-                maybeStakingBalance = none(),
-            )
-
-            // Assert
-            Truth.assertThat(actual.value.stakingBalance).isNull()
-            Truth.assertThat(actual.value.contributions).isEmpty()
-        }
-
-        @Test
-        fun `GIVEN P2PEthPool balance on Cardano WHEN create THEN the stake counts as already included`() {
-            // Act
-            val actual = createWithStaking(
-                currency = cryptoCurrencyFactory.cardano,
-                maybeStakingBalance = p2pEthPoolBalance().some(),
-            )
-
-            // Assert
-            val stakingBalance = actual.value.stakingBalance as StakingBalance.Data
-            Truth.assertThat(stakingBalance.isStakedIncludedInNetworkBalance).isTrue()
-            Truth.assertThat(stakingBalance.totalDeltaCryptoAmount()).isEqualTo(REWARDS_AMOUNT)
-        }
-
-        @Test
-        fun `GIVEN P2PEthPool balance on Ethereum WHEN create THEN stake is not marked as included`() {
-            // Act
-            val actual = createWithStaking(
-                currency = cryptoCurrencyFactory.ethereum,
-                maybeStakingBalance = p2pEthPoolBalance().some(),
-            )
-
-            // Assert
-            val stakingBalance = actual.value.stakingBalance as StakingBalance.Data
-            Truth.assertThat(stakingBalance.isStakedIncludedInNetworkBalance).isFalse()
-            Truth.assertThat(stakingBalance.totalDeltaCryptoAmount()).isEqualTo(STAKED_AMOUNT + REWARDS_AMOUNT)
-        }
-
-        @Test
-        fun `GIVEN StakeKit balance staked from another address WHEN create THEN nothing is attached`() {
-            // Arrange
-            val cardano = cryptoCurrencyFactory.cardano
-            val elsewhere = stakeKitBalance(cardano).copy(
-                stakingId = StakingID(integrationId = "integration", address = "0xanother"),
-            )
-
-            // Act
-            val actual = createWithStaking(currency = cardano, maybeStakingBalance = elsewhere.some())
-
-            // Assert — the stake belongs to a different address of the same wallet, not to this status
-            Truth.assertThat(actual.value.stakingBalance).isNull()
-        }
-
-        @Test
-        fun `GIVEN P2PEthPool balance staked from another address WHEN create THEN nothing is attached`() {
-            // Act
-            val actual = createWithStaking(
-                currency = cryptoCurrencyFactory.ethereum,
-                maybeStakingBalance = p2pEthPoolBalance(address = "0xanother").some(),
-            )
-
-            // Assert
-            Truth.assertThat(actual.value.stakingBalance).isNull()
-        }
-
-        @Test
-        fun `GIVEN StakeKit balance with no items of this currency WHEN create THEN nothing is attached`() {
-            // Arrange — a balance whose every item belongs to another token, so the coinGeckoId filter empties it
-            val cardano = cryptoCurrencyFactory.cardano
-            val foreign = stakeKitBalance(currency = cryptoCurrencyFactory.createCoin(Blockchain.Solana))
-
-            // Act
-            val actual = createWithStaking(currency = cardano, maybeStakingBalance = foreign.some())
-
-            // Assert
-            Truth.assertThat(actual.value.stakingBalance).isNull()
-        }
-
-        @Test
-        fun `GIVEN an empty staking balance WHEN create THEN nothing is attached`() {
-            // Act
-            val actual = createWithStaking(
-                currency = cryptoCurrencyFactory.cardano,
-                maybeStakingBalance = StakingBalance.Empty(
-                    stakingId = StakingID(integrationId = "integration", address = "0x123"),
-                    source = StatusSource.ACTUAL,
-                ).some(),
-            )
-
-            // Assert — only Data variants ever reach a status; this is what `stakingBalanceData` relies on
-            Truth.assertThat(actual.value.stakingBalance).isNull()
-        }
-
-        @Test
-        fun `GIVEN a failed staking balance WHEN create THEN nothing is attached`() {
-            // Act
-            val actual = createWithStaking(
-                currency = cryptoCurrencyFactory.cardano,
-                maybeStakingBalance = StakingBalance.Error(
-                    stakingId = StakingID(integrationId = "integration", address = "0x123"),
-                ).some(),
-            )
-
-            // Assert
-            Truth.assertThat(actual.value.stakingBalance).isNull()
-        }
-
-        private fun createWithStaking(
-            currency: CryptoCurrency,
-            maybeStakingBalance: Option<StakingBalance> = stakeKitBalance(currency).some(),
-        ): CryptoCurrencyStatus {
-            return create(
-                currency = currency,
-                maybeStakingBalance = maybeStakingBalance,
-                useContributions = false,
-                contributions = emptyList(),
-            )
-        }
-    }
-
-    /**
-     * Contributions path (toggle on): the extra balances arrive already resolved from the seam's
-     * `BalanceContributionProvider`s, so the factory neither matches nor stamps anything — it stores the list, and
-     * back-fills the typed `stakingBalance` from it so the Axis-2 readers keep working until they downcast
-     * contributions themselves.
+     * The extra balances arrive already resolved from the seam's `BalanceContributionProvider`s, so the factory
+     * neither matches nor stamps anything — it stores the list and reports one source per contribution. The typed
+     * `stakingBalance` field is never written; readers resolve the staking balance out of the contributions.
      */
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -873,13 +509,11 @@ class CryptoCurrencyStatusFactoryTest {
             // Act
             val actual = create(
                 currency = currency,
-                maybeStakingBalance = none(),
-                useContributions = true,
                 contributions = listOf(contribution),
             )
 
-            // Assert — the two paths are mutually exclusive: on this one the contribution is the only source, and
-            // Axis-2 readers reach it through `stakingBalanceData` rather than through the typed field
+            // Assert — the contribution is the only source; readers reach it through `stakingBalanceData` rather
+            // than through the typed field
             Truth.assertThat(actual.value.contributions).containsExactly(contribution)
             Truth.assertThat(actual.value.stakingBalance).isNull()
         }
@@ -901,8 +535,6 @@ class CryptoCurrencyStatusFactoryTest {
             // Act
             val actual = create(
                 currency = currency,
-                maybeStakingBalance = none(),
-                useContributions = true,
                 contributions = listOf(contribution),
             )
 
@@ -920,8 +552,6 @@ class CryptoCurrencyStatusFactoryTest {
             // Act
             val actual = create(
                 currency = currency,
-                maybeStakingBalance = none(),
-                useContributions = true,
                 contributions = listOf(contribution),
             )
 
@@ -939,8 +569,6 @@ class CryptoCurrencyStatusFactoryTest {
             // Act
             val actual = create(
                 currency = custom,
-                maybeStakingBalance = none(),
-                useContributions = true,
                 contributions = listOf(contribution),
             )
 
@@ -960,8 +588,6 @@ class CryptoCurrencyStatusFactoryTest {
             // Act
             val actual = create(
                 currency = currency,
-                maybeStakingBalance = none(),
-                useContributions = true,
                 contributions = listOf(contribution),
                 maybeQuoteStatus = emptyQuoteStatus.some(),
             )
@@ -982,8 +608,6 @@ class CryptoCurrencyStatusFactoryTest {
             // Act
             val actual = create(
                 currency = currency,
-                maybeStakingBalance = none(),
-                useContributions = true,
                 contributions = listOf(contribution),
             )
 
@@ -1002,8 +626,6 @@ class CryptoCurrencyStatusFactoryTest {
             // Act
             val actual = create(
                 currency = currency,
-                maybeStakingBalance = none(),
-                useContributions = true,
                 contributions = listOf(fresh, stale),
             )
 
@@ -1015,20 +637,13 @@ class CryptoCurrencyStatusFactoryTest {
         }
 
         @Test
-        fun `GIVEN a legacy staking balance WHEN toggle is on THEN it is ignored`() {
-            // Arrange — with the toggle on, only what the seam supplies counts
-            val currency = cryptoCurrencyFactory.cardano
-
+        fun `GIVEN no contributions WHEN create THEN nothing is attached`() {
             // Act
-            val actual = create(
-                currency = currency,
-                maybeStakingBalance = stakeKitBalance(currency).some(),
-                useContributions = true,
-                contributions = emptyList(),
-            )
+            val actual = create(currency = cryptoCurrencyFactory.cardano, contributions = emptyList())
 
             // Assert
             Truth.assertThat(actual.value.contributions).isEmpty()
+            Truth.assertThat(actual.value.sources.contributionSources).isEmpty()
             Truth.assertThat(actual.value.stakingBalance).isNull()
         }
 
@@ -1043,8 +658,6 @@ class CryptoCurrencyStatusFactoryTest {
             // Act
             val actual = create(
                 currency = currency,
-                maybeStakingBalance = none(),
-                useContributions = true,
                 contributions = listOf(stakeKitBalance(currency)),
                 maybeNetworkStatus = model.networkStatus,
             )
@@ -1100,11 +713,9 @@ class CryptoCurrencyStatusFactoryTest {
         override fun toString(): String = description
     }
 
-    // region Extra-balance fixtures shared by both paths
+    // region Extra-balance fixtures
     private fun create(
         currency: CryptoCurrency,
-        maybeStakingBalance: Option<StakingBalance>,
-        useContributions: Boolean,
         contributions: List<BalanceContribution>,
         maybeQuoteStatus: Option<QuoteStatus> =
             QuoteStatus(rawCurrencyId = currency.id.rawCurrencyId!!, value = fullQuote).some(),
@@ -1117,36 +728,7 @@ class CryptoCurrencyStatusFactoryTest {
             currency = currency,
             maybeNetworkStatus = maybeNetworkStatus,
             maybeQuoteStatus = maybeQuoteStatus,
-            maybeStakingBalance = maybeStakingBalance,
-            contributionsInput = if (useContributions) {
-                BalanceContributionsInput.enabled(contributions)
-            } else {
-                BalanceContributionsInput.Disabled
-            },
-        )
-    }
-
-    /**
-     * Staked / rewards only — the unstaking and withdrawable buckets are derived from the exit queue, and the
-     * arithmetic over all four is already pinned in `:domain:models` by `StakingBalanceContributionTest`. Here only
-     * the factory's *stamping* of the per-network rule is under test.
-     */
-    private fun p2pEthPoolBalance(
-        address: String = networkAddress.defaultAddress.value,
-    ): StakingBalance.Data.P2PEthPool {
-        return StakingBalance.Data.P2PEthPool(
-            stakingId = StakingID(integrationId = "integration", address = address),
-            source = StatusSource.ACTUAL,
-            accounts = listOf(
-                P2PEthPoolStakingAccount(
-                    delegatorAddress = "0xdelegator",
-                    vaultAddress = "0xvault",
-                    stake = P2PEthPoolStake(assets = STAKED_AMOUNT, totalEarnedAssets = REWARDS_AMOUNT),
-                    availableToUnstake = BigDecimal.ZERO,
-                    availableToWithdraw = BigDecimal.ZERO,
-                    exitQueue = P2PEthPoolExitQueue(total = BigDecimal.ZERO, requests = emptyList()),
-                ),
-            ),
+            contributions = contributions,
         )
     }
 
