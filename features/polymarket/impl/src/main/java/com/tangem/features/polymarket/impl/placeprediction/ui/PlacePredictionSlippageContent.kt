@@ -49,7 +49,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SLIPPAGE_PRESE
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippagePickerUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippagePresetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.label
-import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionIntents
+import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSlippageIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlacePredictionPreviewIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlacePredictionPreviewProvider
 
@@ -61,8 +61,8 @@ private val ChipsToDescriptionGap = 32.dp
 
 @Composable
 internal fun PlacePredictionSlippageContent(
-    state: PlacePredictionUM,
-    intents: PlacePredictionIntents,
+    state: SlippagePickerUM,
+    intents: PlacePredictionSlippageIntents,
     modifier: Modifier = Modifier,
 ) {
     TangemTopBarScaffold(
@@ -85,7 +85,7 @@ internal fun PlacePredictionSlippageContent(
                     modifier = Modifier.fillMaxWidth(),
                     size = TangemButton.Size.X12,
                     text = resourceReference(R.string.common_confirm),
-                    isEnabled = state.slippagePicker.isConfirmEnabled,
+                    isEnabled = state.isConfirmEnabled,
                     onClick = intents::onSlippageConfirmClick,
                 )
             }
@@ -93,7 +93,7 @@ internal fun PlacePredictionSlippageContent(
     ) { contentPadding ->
         Column(modifier = Modifier.padding(contentPadding)) {
             Spacer(modifier = Modifier.height(TitleToValueGap))
-            ValueSection(state = state.slippagePicker, onValueChange = intents::onSlippageValueChange)
+            ValueSection(state = state, onValueChange = intents::onSlippageValueChange)
             Spacer(modifier = Modifier.height(ValueToChipsGap))
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 16.dp),
@@ -201,6 +201,9 @@ private fun PlacePredictionSlippageContentPreview(
     @PreviewParameter(PlacePredictionPreviewProvider::class) state: PlacePredictionUM,
 ) {
     TangemThemePreviewRedesign {
-        PlacePredictionSlippageContent(state = state, intents = PlacePredictionPreviewIntents)
+        PlacePredictionSlippageContent(
+            state = SlippagePickerUM.of(state.slippage.percent.toPlainString()),
+            intents = PlacePredictionPreviewIntents,
+        )
     }
 }
