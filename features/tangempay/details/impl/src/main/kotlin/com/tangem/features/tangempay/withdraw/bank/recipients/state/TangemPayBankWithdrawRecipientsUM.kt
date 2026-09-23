@@ -10,6 +10,7 @@ internal data class TangemPayBankWithdrawRecipientsUM(
     val search: TangemSearch.State,
     val content: ContentUM,
     val onBackClick: () -> Unit,
+    val onCloseClick: () -> Unit,
 ) {
 
     @Immutable

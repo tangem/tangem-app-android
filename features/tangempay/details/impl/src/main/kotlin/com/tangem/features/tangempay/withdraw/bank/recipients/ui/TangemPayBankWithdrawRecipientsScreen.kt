@@ -62,6 +62,7 @@ internal fun TangemPayBankWithdrawRecipientsScreen(
                 title = resourceReference(R.string.tangempay_withdraw_bank_recipients_title),
                 contentAlign = TangemTopNavigation.ContentAlign.Center,
                 onBack = state.onBackClick,
+                onClose = state.onCloseClick,
             )
         },
         overlay = {

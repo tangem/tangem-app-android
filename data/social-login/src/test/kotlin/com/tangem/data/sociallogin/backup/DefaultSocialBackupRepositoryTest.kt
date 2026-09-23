@@ -299,6 +299,20 @@ internal class DefaultSocialBackupRepositoryTest {
     }
 
     @Test
+    fun `GIVEN no cached grant WHEN deleteBackup THEN the cloud is reported unavailable without a picker`() =
+        runTest {
+            // Arrange
+            coEvery { tokenProvider.getAccessToken(any()) } returns Either.Left(GoogleAuthError.AuthRequired)
+
+            // Act
+            val result = repository.deleteBackup(UserWalletId(stringValue = WALLET_ID))
+
+            // Assert
+            assertThat(result.leftOrNull()).isEqualTo(SocialLoginError.CloudUnavailable)
+            coVerify(exactly = 0) { tokenProvider.getAccessToken(interactive = true) }
+        }
+
+    @Test
     fun `GIVEN the token expired WHEN getBackupInfo THEN it is invalidated and the call is retried silently`() =
         runTest {
             // Arrange
