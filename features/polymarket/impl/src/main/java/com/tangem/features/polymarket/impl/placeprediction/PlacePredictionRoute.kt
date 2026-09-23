@@ -2,6 +2,7 @@ package com.tangem.features.polymarket.impl.placeprediction
 
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
@@ -27,5 +28,6 @@ internal sealed interface PlacePredictionRoute : Route {
         val market: MarketHeaderUM,
         val side: PredictionOrderSide,
         val userWalletId: UserWalletId,
+        val positionId: PolymarketPositionId?,
     ) : PlacePredictionRoute
 }

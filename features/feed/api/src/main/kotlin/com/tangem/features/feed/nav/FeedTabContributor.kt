@@ -76,5 +76,5 @@ interface FeedTabContributor {
      */
     fun createSearchTab(context: AppComponentContext, query: StateFlow<String>): FeedTabComponent? = null
 
-    fun createEmptySearchTab(context: AppComponentContext): FeedTabComponent? = null
+    fun createEmptySearchPage(context: AppComponentContext): FeedEmptySearchComponent? = null
 }

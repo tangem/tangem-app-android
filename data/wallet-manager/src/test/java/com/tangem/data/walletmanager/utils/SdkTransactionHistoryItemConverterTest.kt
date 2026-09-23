@@ -7,6 +7,7 @@ import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.test.core.ProvideTestModels
+import io.mockk.mockk
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
@@ -20,6 +21,8 @@ internal class SdkTransactionHistoryItemConverterTest {
         gaslessFeeAddresses = emptySet(),
         currency = MockCryptoCurrencyFactory().createCoin(Blockchain.Ethereum),
         networkTokens = emptySet(),
+        currencyAddresses = emptyList(),
+        txHistoryFeatureToggles = mockk(relaxed = true),
     )
 
     @ParameterizedTest

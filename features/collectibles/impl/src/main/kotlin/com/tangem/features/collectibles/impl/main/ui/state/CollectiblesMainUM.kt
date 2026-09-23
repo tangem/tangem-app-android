@@ -1,13 +1,14 @@
 package com.tangem.features.collectibles.impl.main.ui.state
 
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class CollectiblesMainUM(
     val title: TextReference,
     val balance: BalanceUM,
-    val actions: ImmutableList<ActionUM>,
+    val actions: ImmutableList<TangemButtonUM>,
     val collection: CollectionUM?,
     val menu: MenuUM,
     val isBalanceRefreshing: Boolean,
@@ -18,12 +19,6 @@ internal data class CollectiblesMainUM(
         val fiatStyled: TextReference,
         val fiatPlain: TextReference,
         val crypto: TextReference,
-    )
-
-    data class ActionUM(
-        val icon: ImageVector,
-        val title: TextReference,
-        val onClick: () -> Unit,
     )
 
     data class CollectionUM(
