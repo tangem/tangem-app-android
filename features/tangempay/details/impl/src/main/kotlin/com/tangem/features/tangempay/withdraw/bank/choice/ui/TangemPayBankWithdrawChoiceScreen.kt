@@ -49,6 +49,7 @@ internal fun TangemPayBankWithdrawChoiceScreen(state: TangemPayBankWithdrawChoic
             contentAlign = TangemTopNavigation.ContentAlign.Center,
             blurBackground = false,
             onBack = state.onBackClick,
+            onClose = state.header.onCloseClick,
         )
         Column(
             modifier = Modifier

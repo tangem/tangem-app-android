@@ -1,6 +1,7 @@
 package com.tangem.features.polymarket.impl.placeprediction
 
 import arrow.core.left
+import arrow.core.right
 import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.backhandler.BackDispatcher
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
@@ -22,6 +23,8 @@ import com.tangem.domain.polymarket.model.PredictionOrderFailure
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionAmountModel
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionModelTestBase
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSlippageModel
+import com.tangem.features.polymarket.impl.placeprediction.entity.ViewPositionUM
+import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionStatusModel
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSummaryModel
 import com.tangem.features.polymarket.impl.placeprediction.model.QUOTE_DEBOUNCE_MILLIS
 import com.tangem.features.polymarket.impl.placeprediction.model.QUOTE_POLL_INTERVAL_MILLIS
@@ -111,8 +114,13 @@ internal class PlacePredictionComponentTest : PlacePredictionModelTestBase() {
     }
 
     @Test
-    fun `GIVEN a submitted order WHEN status replaces the stack THEN polling stays stopped`() = runTest {
+    fun `GIVEN a submitted order WHEN status replaces the stack THEN position indexing continues without quote polling`() = runTest {
         // Arrange
+        coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
+        coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returnsMany listOf(
+            null.right(),
+            createPosition().right(),
+        )
         createComponent(this)
         runCurrent()
         val amount = models.filterIsInstance<PlacePredictionAmountModel>().single()
@@ -124,12 +132,16 @@ internal class PlacePredictionComponentTest : PlacePredictionModelTestBase() {
         // Act
         summary.onPlaceClick()
         runCurrent()
+        val status = models.filterIsInstance<PlacePredictionStatusModel>().single()
+        assertThat(status.viewPosition.value).isEqualTo(ViewPositionUM.Awaiting)
         lifecycle.pause()
         lifecycle.resume()
         advanceTimeBy(QUOTE_POLL_INTERVAL_MILLIS * 3)
         backDispatcher.back()
 
         // Assert
+        assertThat(status.viewPosition.value).isEqualTo(ViewPositionUM.Available)
+        coVerify(exactly = 2) { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) }
         coVerify(exactly = 1) { placeOrderUseCase(any(), any(), any()) }
         coVerify(exactly = 1) { getQuoteUseCase(any()) }
         verify(exactly = 1) { router.pop(any()) }
@@ -187,6 +199,9 @@ internal class PlacePredictionComponentTest : PlacePredictionModelTestBase() {
                 },
                 PlacePredictionSummaryModel::class.java to Provider<Model> {
                     createSummaryModel(scope, modelParams.require(), modelRouter)
+                },
+                PlacePredictionStatusModel::class.java to Provider<Model> {
+                    createStatusModel(scope, modelParams.require(), modelRouter)
                 },
                 PlacePredictionSlippageModel::class.java to Provider<Model> {
                     PlacePredictionSlippageModel(
