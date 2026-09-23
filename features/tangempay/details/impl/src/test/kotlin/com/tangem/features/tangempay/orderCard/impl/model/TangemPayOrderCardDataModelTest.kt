@@ -1000,8 +1000,6 @@ internal class TangemPayOrderCardDataModelTest {
         kycStatus = KycStatus.APPROVED,
         state = CustomerInfo.State.ACTIVE,
         fiatBalance = null,
-        cryptoBalance = null,
-        availableForWithdrawal = BigDecimal.ZERO,
         tariffPlan = null,
         country = country,
         phoneMask = phoneMask,
