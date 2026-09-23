@@ -3,6 +3,7 @@ package com.tangem.features.collectibles.impl.di
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.collectibles.impl.discovery.model.CollectiblesDiscoveryModel
+import com.tangem.features.collectibles.impl.machinedetails.model.CollectiblesMachineDetailsModel
 import com.tangem.features.collectibles.impl.main.model.CollectiblesMainModel
 import com.tangem.features.collectibles.impl.onboarding.model.CollectiblesOnboardingModel
 import com.tangem.features.collectibles.impl.stories.model.CollectiblesStoriesModel
@@ -35,4 +36,9 @@ internal interface CollectiblesModelModule {
     @IntoMap
     @ClassKey(CollectiblesDiscoveryModel::class)
     fun bindCollectiblesDiscoveryModel(impl: CollectiblesDiscoveryModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(CollectiblesMachineDetailsModel::class)
+    fun bindCollectiblesMachineDetailsModel(impl: CollectiblesMachineDetailsModel): Model
 }

@@ -139,8 +139,17 @@ positions preview (`PolymarketPositionsPreviewLoader`, polled every 20 s), and
 - **Position reads.** `/positions/outcome` may answer `null` until the position is indexed.
   `PolymarketPositionDetailsModel` shows Unavailable at once when the first read is `null`; the retry loop
   (`POSITION_INDEXING_READS` reads, `POSITION_INDEXING_RETRY_MILLIS` apart) serves a position already shown
-  whose size has not caught up with the last order, and pops the screen if it disappears. The order flow itself does not re-read after a fill; the
-  sell flow reads the position on open and again at signing.
+  whose size has not caught up with the last order, and pops the screen if it disappears. The sell flow
+  reads the position on open and again at signing.
+- **View position.** After a buy fills (`Filled` / `PartiallyFilled`), the result screen reads the created
+  position back itself — `PolymarketPositionId(market.conditionId, assetId)`, so a market the BFF gave no
+  `conditionId` for offers no button. `ViewPositionUM` drives it: `Awaiting` shows the button with a loader
+  and keeps it disabled, `Available` enables it, `Hidden` leaves the single To main button — including when
+  the read comes back a position the details screen would refuse (`canOpenPositionDetails`). The wait is `CREATED_POSITION_READS`
+  (15, ~30 s) rather than the details screen's 5, because the index answers `null` for several seconds even
+  for an outcome the wallet already held — a read that fails is retried like a missing one. The button
+  replaces the whole stack with Main + the position details, so back from the position lands on the feed
+  rather than on the result of an order already placed.
 - **Sell** (`Params.Sell`) validates at signing time that the position still exists, the market accepts
   orders and enough shares remain after grid rounding. SELL legs: `makerAmount = shares`,
   `takerAmount = collateral`.
