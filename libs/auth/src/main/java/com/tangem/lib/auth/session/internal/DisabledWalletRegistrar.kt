@@ -24,7 +24,11 @@ internal object DisabledWalletRegistrar : WalletRegistrar {
         walletId: String,
         nonce: WalletNonce,
         signer: WalletSigner,
+        shouldForce: Boolean,
     ): Either<WalletRegistrationError, PreparedWalletRegistration?> = WalletRegistrationError.Disabled.left()
+
+    override suspend fun forgetRegistration(walletId: String): Either<WalletRegistrationError, Unit> =
+        WalletRegistrationError.Disabled.left()
 
     override suspend fun submit(prepared: PreparedWalletRegistration): Either<WalletRegistrationError, Unit> =
         WalletRegistrationError.Disabled.left()
