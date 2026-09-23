@@ -42,6 +42,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -144,6 +145,44 @@ internal class WalletBackupModelTest {
         // Assert
         Assertions.assertEquals(false, model.uiState.value.isGoogleDriveOptionShown)
     }
+
+    @Test
+    fun `GIVEN social status not read yet WHEN model created THEN the google drive option is hidden`() = runTest {
+        // Arrange
+        every { isSocialBackupCompletedUseCase.flow(walletId) } returns emptyFlow()
+
+        // Act
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Assert
+        Assertions.assertEquals(false, model.uiState.value.isGoogleDriveOptionShown)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN social backup AND toggle on WHEN screen opened and resumed THEN the cloud is not looked up`() =
+        runTest {
+            // Arrange
+            every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+            every { isSocialBackupCompletedUseCase.flow(walletId) } returns flowOf(true)
+
+            // Act
+            val model = createModel(this)
+            advanceUntilIdle()
+            model.onScreenResumed()
+            model.onScreenResumed()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) { cloudBackupRepository.findBackups(any(), any()) }
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    WalletSettingsAnalyticEvents.BackupScreenOpened(isBackedUp = false, cloudBackupState = null),
+                )
+            }
+            model.onDestroy()
+        }
 
     @Test
     fun `GIVEN social backup dropped WHEN it clears THEN the google drive option comes back`() = runTest {

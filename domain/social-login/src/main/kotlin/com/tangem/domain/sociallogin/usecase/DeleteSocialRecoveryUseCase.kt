@@ -47,12 +47,12 @@ class DeleteSocialRecoveryUseCase @Inject constructor(
 
         // Runs even when the unbind did not: the backend may be unreachable, or its authentication
         // switched off entirely, and a wallet with no file has nothing left to restore from either.
-        // Deleting authorizes the hidden Drive folder interactively, so an unguarded call would put an
-        // account picker in front of everyone upgrading to a card.
-        socialBackupRepository.deleteBackup(walletId).bind()
+        // Guarded by the flag because even a silent Drive authorization is a network round-trip that
+        // every upgrade to a card would otherwise pay for.
+        val deleteError = socialBackupRepository.deleteBackup(walletId).fold(ifLeft = { it }, ifRight = { null })
 
-        // Reported last: the identity keeps a live binding, which the caller has to know about, but not
-        // at the price of the steps above.
-        unbindError?.let { raise(it) }
+        // The unbind error wins: a live binding is what the caller has to know about, a leftover file
+        // without it is the lesser problem.
+        (unbindError ?: deleteError)?.let { raise(it) }
     }
 }
