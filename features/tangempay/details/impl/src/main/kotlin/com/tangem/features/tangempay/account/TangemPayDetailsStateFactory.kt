@@ -81,8 +81,8 @@ internal class TangemPayDetailsStateFactory(
         val isAddCardEnabled = isFresh && !hasIssuingCard
         val areActionButtonsEnabled = isFresh && hasUnfrozenCard
         val balance = status.balance
-        val hasWithdrawableBalance = balance?.hasWithdrawableAmount == true
-        val canAddFunds = status.canAddFunds(isMultichainEnabled)
+        val hasWithdrawableBalance = status.hasWithdrawableAmount
+        val canAddFunds = status.canAddFunds()
         val errorNotification = notificationFactory.createErrorConfig(status.error)
         val tiersNotification = notificationFactory.createTiersConfig(status.tariffPlan)
         val tiersNotificationType = status.tariffPlan?.let { plan ->
@@ -186,7 +186,7 @@ internal class TangemPayDetailsStateFactory(
 
     fun getDeactivatedState(status: PaymentAccountStatusValue.Deactivated): TangemPayDetailsUM {
         val balance = status.balance
-        val hasWithdrawableBalance: Boolean = balance?.hasWithdrawableAmount == true
+        val hasWithdrawableBalance = status.hasWithdrawableAmount
         val accountDeactivatedBanner = notificationFactory.createAccountDeactivatedBannerState()
         val fiatBalance = balance?.fiatBalance
         return TangemPayDetailsUM(
@@ -204,7 +204,7 @@ internal class TangemPayDetailsStateFactory(
                 fiatBalance = fiatBalance,
                 cardsBlockState = null,
                 isMuted = status.source != StatusSource.ACTUAL,
-                isAddFundsEnabled = status.canAddFunds(isMultichainEnabled),
+                isAddFundsEnabled = status.canAddFunds(),
                 isWithdrawEnabled = hasWithdrawableBalance,
             ),
             isBalanceHidden = false,
@@ -278,7 +278,7 @@ internal class TangemPayDetailsStateFactory(
             ),
             balanceBlockState = TangemPayDetailsBalanceBlockState.Content(
                 actionButtons = getActionButtonsConfig(
-                    isAddFundsEnabled = status.canAddFunds(isMultichainEnabled),
+                    isAddFundsEnabled = status.canAddFunds(),
                     isWithdrawEnabled = false,
                 ),
                 cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(

@@ -116,7 +116,7 @@ private fun OrderTypeContent(
             .background(TangemTheme.colors3.bg.primary),
     ) {
         Image(
-            painter = painterResource(id = R.drawable.ill_tangempay_order_card_bg),
+            painter = painterResource(id = state.backgroundRes()),
             contentDescription = null,
             contentScale = ContentScale.FillWidth,
             modifier = Modifier
@@ -507,7 +507,7 @@ private fun NoDataRow(title: TextReference, divider: Boolean) {
 }
 
 @Composable
-private fun RowValueText(
+internal fun RowValueText(
     text: TextReference,
     modifier: Modifier = Modifier,
     color: Color = TangemTheme.colors3.text.secondary,
@@ -615,6 +615,12 @@ private fun TangemPayOrderCardTypeUM.DeliveryEta.asTextReference(): TextReferenc
     }
 }
 
+private fun TangemPayOrderCardTypeUM.backgroundRes(): Int = if (isBasicPlan) {
+    R.drawable.ill_tangempay_order_card_bg_basic
+} else {
+    R.drawable.ill_tangempay_order_card_bg_plus
+}
+
 private fun OrderCardType.titleRes(): Int = when (this) {
     OrderCardType.Virtual -> R.string.tangempay_order_type_segment_virtual
     OrderCardType.Plastic -> R.string.tangempay_order_type_segment_plastic
@@ -649,6 +655,7 @@ private fun previewOrderTypeState(
     isPlasticEnabled: Boolean = true,
     isVirtualAvailable: Boolean = true,
     cardImageUrl: String? = null,
+    isBasicPlan: Boolean = true,
     issueFee: String = "$5",
     plastic: Plastic = previewPlasticAvailable(),
 ) = TangemPayOrderCardTypeUM(
@@ -656,6 +663,7 @@ private fun previewOrderTypeState(
     isError = isError,
     availableTypes = availableTypesOf(isPlasticEnabled, isVirtualAvailable),
     cardImageUrl = cardImageUrl,
+    isBasicPlan = isBasicPlan,
     virtual = TangemPayOrderCardTypeUM.Virtual(issueFee = issueFee),
     plastic = plastic,
     onBackClick = {},
@@ -695,6 +703,7 @@ private fun TangemPayOrderCardTypeScreenPreview(
 private class OrderCardTypePreviewProvider : CollectionPreviewParameterProvider<TangemPayOrderCardTypeUM>(
     collection = listOf(
         previewOrderTypeState(),
+        previewOrderTypeState(isBasicPlan = false),
         previewOrderTypeState(plastic = previewPlasticAvailable(minBusinessDays = null, maxBusinessDays = 20)),
         previewOrderTypeState(
             plastic = previewPlasticAvailable(deliveryFee = null, feeState = FeeState.FreeDelivery),
