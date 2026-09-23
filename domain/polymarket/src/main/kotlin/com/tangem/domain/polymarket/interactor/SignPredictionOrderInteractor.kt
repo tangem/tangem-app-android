@@ -29,7 +29,6 @@ class SignPredictionOrderInteractor(
             assetId = request.assetId,
             isNegRisk = request.isNegRisk,
             side = request.side,
-            isFullClose = request.isFullClose,
         )
             .mapLeft(PredictionOrderFailure::Draft)
             .bind()
@@ -79,5 +78,4 @@ data class PredictionSignRequest(
     val side: PredictionOrderSide,
     val isNegRisk: Boolean,
     val quoteReceivedAtMillis: Long,
-    val isFullClose: Boolean = false,
 )

@@ -32,7 +32,7 @@ internal class PredictionOrderQuoteTest {
         val worstCasePrice: BigDecimal,
         val minOrderSize: BigDecimal,
         val minOrderAmount: BigDecimal?,
-        val expected: BigDecimal,
+        val expected: BigDecimal?,
         val side: PredictionOrderSide = PredictionOrderSide.BUY,
     )
 
@@ -60,14 +60,14 @@ internal class PredictionOrderQuoteTest {
             worstCasePrice = BigDecimal("0.90"),
             minOrderSize = BigDecimal("5"),
             minOrderAmount = BigDecimal("1.00"),
-            expected = BigDecimal("5"),
+            expected = null,
         ),
         MinAmountModel(
             side = PredictionOrderSide.SELL,
             worstCasePrice = BigDecimal("0.10"),
             minOrderSize = BigDecimal("5"),
             minOrderAmount = null,
-            expected = BigDecimal("5"),
+            expected = null,
         ),
     )
 
@@ -77,7 +77,7 @@ internal class PredictionOrderQuoteTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN a quote WHEN isPlaceable THEN only a full close lifts the minimum order size`(
+        fun `GIVEN a quote WHEN isPlaceable THEN only a sell lifts the minimum order size`(
             model: PlaceableModel,
         ) {
             // Arrange
@@ -90,43 +90,28 @@ internal class PredictionOrderQuoteTest {
             )
 
             // Act
-            val actual = quote.isPlaceable(isFullClose = model.isFullClose)
+            val actual = quote.isPlaceable
 
             // Assert
             assertThat(actual).isEqualTo(model.expected)
         }
 
         private fun provideTestModels() = listOf(
-            PlaceableModel(status = PredictionQuoteStatus.FULL, isFullClose = false, expected = true),
-            PlaceableModel(status = PredictionQuoteStatus.PARTIAL, isFullClose = false, expected = true),
+            PlaceableModel(status = PredictionQuoteStatus.FULL, expected = true),
+            PlaceableModel(status = PredictionQuoteStatus.PARTIAL, expected = true),
+            PlaceableModel(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE, expected = true),
             PlaceableModel(
                 status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE,
-                isFullClose = false,
-                expected = false,
-            ),
-            PlaceableModel(
-                status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE,
-                isFullClose = true,
-                expected = true,
-            ),
-            PlaceableModel(
-                status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE,
-                isFullClose = true,
                 side = PredictionOrderSide.BUY,
                 expected = false,
             ),
-            PlaceableModel(
-                status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY,
-                isFullClose = true,
-                expected = false,
-            ),
-            PlaceableModel(status = PredictionQuoteStatus.MARKET_CLOSED, isFullClose = true, expected = false),
+            PlaceableModel(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY, expected = false),
+            PlaceableModel(status = PredictionQuoteStatus.MARKET_CLOSED, expected = false),
         )
     }
 
     internal data class PlaceableModel(
         val status: PredictionQuoteStatus,
-        val isFullClose: Boolean,
         val expected: Boolean,
         val side: PredictionOrderSide = PredictionOrderSide.SELL,
     )
