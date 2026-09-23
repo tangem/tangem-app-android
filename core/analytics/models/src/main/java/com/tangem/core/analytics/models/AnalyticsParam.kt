@@ -69,6 +69,12 @@ sealed class AnalyticsParam {
         data object BlockchainSdk : Error("Blockchain Sdk Error")
     }
 
+    enum class ShtorkaState(val value: String) {
+        Collapsed("Collapsed"),
+        Half("Half"),
+        Full("Full"),
+    }
+
     @Serializable
     enum class ScreensSources(val value: String) {
         Settings("Settings"),
@@ -327,6 +333,7 @@ sealed class AnalyticsParam {
         const val BATCH = "Batch"
         const val TYPE = "Type"
         const val SECTION = "Section"
+        const val SHTORKA_STATE = "Shtorka State"
         const val CATEGORY = "Category"
         const val FEE_TYPE = "Fee Type"
         const val WALLET_FORM = "WalletForm"
