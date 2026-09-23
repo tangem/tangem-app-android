@@ -721,7 +721,7 @@ internal class TxHistoryInfoMergerTest {
         destinationAddress: String = "addr",
         amount: BigDecimal = BigDecimal.ONE,
         type: TxInfo.TransactionType = TxInfo.TransactionType.Transfer,
-    ) = TxInfo(
+    ) = TxInfo.Single(
         txHash = txHash,
         timestampInMillis = timestamp,
         isOutgoing = isOutgoing,

@@ -1,4 +1,4 @@
-package com.tangem.features.polymarket.impl.main.model
+package com.tangem.features.polymarket.impl.common.funding
 
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
