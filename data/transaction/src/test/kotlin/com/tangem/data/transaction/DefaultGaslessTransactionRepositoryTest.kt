@@ -32,7 +32,6 @@ internal class DefaultGaslessTransactionRepositoryTest {
     private fun createRepository() = DefaultGaslessTransactionRepository(
         gaslessTxServiceApi = gaslessTxServiceApi,
         gaslessTxServiceApiV2 = gaslessTxServiceApiV2,
-        isGaslessV2Enabled = true,
         coroutineDispatcherProvider = TestingCoroutineDispatcherProvider(),
         responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
     )

@@ -21,8 +21,6 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.ParamsInterceptorHolder
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
-import com.tangem.core.configtoggle.FeatureToggles
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -160,7 +158,6 @@ internal class StakingModel @Inject constructor(
     private val innerRouter: InnerStakingRouter,
     private val messageSender: UiMessageSender,
     private val appRouter: AppRouter,
-    private val featureTogglesManager: FeatureTogglesManager,
 ) : Model(), StakingClickIntents {
 
     val uiState: StateFlow<StakingUiState> = stateController.uiState
@@ -338,11 +335,7 @@ internal class StakingModel @Inject constructor(
 
     fun onMarketingBannerDeeplink(deeplink: String): Boolean {
         val marketing = resolveMarketingDeeplink(deeplink)
-        if (marketing == MarketingDeeplink.SWAP &&
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1636_SWAP_DEEPLINK_ENABLED)
-        ) {
-            return false
-        }
+        if (marketing == MarketingDeeplink.SWAP) return false
         val route = marketing.toContextualRoute(
             userWalletId = params.userWalletId,
             currency = params.cryptoCurrency,
