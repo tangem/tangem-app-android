@@ -165,6 +165,7 @@ Also process any direct `FeatureTogglesManager.isFeatureEnabled()` call sites th
    - If **no** (all properties removed) → the interface and implementation are now empty. Check the **protected list** below — if the interface is protected, keep it and skip deletion. Otherwise, delete them:
 
 **Protected interfaces (never delete even if empty):**
+- `TokensFeatureToggles`
 - `BlockchainSDKFeatureToggles`
 - `StakingFeatureToggles`
 - `CardSdkFeatureToggles`
