@@ -88,14 +88,27 @@ internal class DefaultWalletRegistrar(
         walletId: String,
         nonce: WalletNonce,
         signer: WalletSigner,
+        shouldForce: Boolean,
     ): Either<WalletRegistrationError, PreparedWalletRegistration?> = withContext(dispatchers.io) {
         locks.forWallet(walletId).withLock {
             either {
-                if (isAlreadyRegistered(walletId)) return@either null
+                if (!shouldForce && isAlreadyRegistered(walletId)) return@either null
                 assemble(walletId, nonce, signer)
             }
         }
     }
+
+    override suspend fun forgetRegistration(walletId: String): Either<WalletRegistrationError, Unit> =
+        locks.forWallet(walletId).withLock {
+            either {
+                try {
+                    markUnregistered(walletId)
+                } catch (e: Exception) {
+                    TangemLogger.e("Failed to drop the wallet-registration marker", e)
+                    raise(WalletRegistrationError.PersistenceFailed(e))
+                }
+            }
+        }
 
     override suspend fun submit(prepared: PreparedWalletRegistration): Either<WalletRegistrationError, Unit> =
         withContext(dispatchers.io) {
