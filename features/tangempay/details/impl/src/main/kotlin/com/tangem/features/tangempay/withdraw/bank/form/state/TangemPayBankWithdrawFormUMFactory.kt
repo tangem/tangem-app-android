@@ -33,7 +33,11 @@ internal class TangemPayBankWithdrawFormUMFactory(
         val values = state.values(fields, draft)
         val displayNames = state.displayNames(fields, draft)
         return TangemPayBankWithdrawFormUM(
-            header = BankWithdrawHeaderFactory.create(draft = draft, step = step),
+            header = BankWithdrawHeaderFactory.create(
+                draft = draft,
+                step = step,
+                onCloseClick = callbacks.onCloseClick,
+            ),
             fields = fields
                 .mapIndexed { index, field ->
                     createField(
@@ -115,6 +119,7 @@ internal class TangemPayBankWithdrawFormUMFactory(
 
     data class Callbacks(
         val onBackClick: () -> Unit,
+        val onCloseClick: () -> Unit,
         val onValueChange: (field: BankWithdrawFormField, value: String) -> Unit,
         val onFocusChange: (field: BankWithdrawFormField, isFocused: Boolean) -> Unit,
         val onSelectorClick: (field: BankWithdrawFormField) -> Unit,
