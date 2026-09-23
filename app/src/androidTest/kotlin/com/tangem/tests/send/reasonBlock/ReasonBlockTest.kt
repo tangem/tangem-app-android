@@ -8,7 +8,6 @@ import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.onDialog
-import com.tangem.screens.onMainScreen
 import com.tangem.screens.onTokenDetailsScreen
 import com.tangem.screens.onTransferBottomSheet
 import dagger.hilt.android.testing.HiltAndroidTest
