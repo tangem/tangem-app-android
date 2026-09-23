@@ -32,7 +32,10 @@ import com.tangem.features.polymarket.impl.positions.model.PolymarketPositionsMo
 import com.tangem.features.polymarket.impl.positiondetails.model.PolymarketPositionDetailsModel
 import com.tangem.features.polymarket.impl.positionresult.model.PolymarketPositionResultModel
 import com.tangem.features.polymarket.impl.model.PolymarketModel
-import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionModel
+import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionAmountModel
+import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionStatusModel
+import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSummaryModel
+import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSlippageModel
 import com.tangem.features.polymarket.impl.onboarding.model.PolymarketOnboardingModel
 import dagger.Binds
 import dagger.Module
@@ -118,8 +121,23 @@ internal interface PolymarketModelModule {
 
     @Binds
     @IntoMap
-    @ClassKey(PlacePredictionModel::class)
-    fun bindPlacePredictionModel(impl: PlacePredictionModel): Model
+    @ClassKey(PlacePredictionAmountModel::class)
+    fun bindPlacePredictionAmountModel(impl: PlacePredictionAmountModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(PlacePredictionSummaryModel::class)
+    fun bindPlacePredictionSummaryModel(impl: PlacePredictionSummaryModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(PlacePredictionSlippageModel::class)
+    fun bindPlacePredictionSlippageModel(impl: PlacePredictionSlippageModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(PlacePredictionStatusModel::class)
+    fun bindPlacePredictionStatusModel(impl: PlacePredictionStatusModel): Model
 }
 
 @Module
