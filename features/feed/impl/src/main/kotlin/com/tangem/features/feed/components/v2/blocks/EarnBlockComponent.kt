@@ -14,6 +14,8 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chart_line_vertical_24
+import com.tangem.features.feed.components.v2.blocks.analytics.FeedBlocksAnalytics
+import com.tangem.features.feed.components.v2.blocks.analytics.ProductCard
 import com.tangem.features.feed.components.v2.blocks.model.EarnBlockModel
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.v2.FeedBlockIconBadge
@@ -26,11 +28,14 @@ import kotlinx.coroutines.flow.StateFlow
 internal class EarnBlockComponent(
     context: AppComponentContext,
     callbacks: FeedBlockModalCallbacks,
+    private val blocksAnalytics: FeedBlocksAnalytics,
 ) : FeedBlockComponent(context = context, key = KEY) {
 
     private val model: EarnBlockModel = getOrCreateModel(params = callbacks)
 
     override val size: FeedBlock.Size = FeedBlock.Size.Large
+
+    override val productCard: ProductCard = ProductCard.Earn
 
     override val isVisible: StateFlow<Boolean> = MutableStateFlow(true)
 
@@ -54,10 +59,15 @@ internal class EarnBlockComponent(
             title = stringResourceSafe(R.string.feed_promo_earn_title),
             description = description,
             ambientVariant = TangemAmbientBackground.Variant.Blue,
-            onClick = model::onClick,
+            onClick = ::onClick,
             modifier = modifier,
             icon = { EarnIcon() },
         )
+    }
+
+    private fun onClick() {
+        blocksAnalytics.onProductCardClicked(productCard)
+        model.onClick()
     }
 
     companion object {
