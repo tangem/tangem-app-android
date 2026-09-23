@@ -12,6 +12,7 @@ import com.tangem.domain.card.ScanFailsRequester
 import com.tangem.domain.models.scan.ProductType
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.checkFailedTransactionDialog
 import com.tangem.scenarios.checkScanWarningDialog
 import com.tangem.scenarios.openMainScreen
@@ -98,7 +99,7 @@ class FeedbackTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenName)
             }
             step("Click on 'Transfer' button") {
                 onTokenDetailsScreen { transferButton.clickWithAssertion() }

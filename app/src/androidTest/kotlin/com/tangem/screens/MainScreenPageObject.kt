@@ -533,8 +533,16 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         useUnmergedTree = true
     }
 
+    /**
+     * Tap target that raises the markets sheet. The legacy sheet exposes its grabber; the DS3
+     * shtorka (TWI_1608) drags instead of clicking, so it tags the transparent overlay over the
+     * collapsed search bar. Both builds ship until the toggle is retired — match either.
+     */
     val marketsSheetDragHandle: KNode = child {
-        hasTestTag(MainScreenTestTags.MARKETS_SHEET_DRAG_HANDLE)
+        addSemanticsMatcher(
+            withTestTag(MainScreenTestTags.MARKETS_SHEET_DRAG_HANDLE) or
+                withTestTag(MainScreenTestTags.MARKETS_SHEET_EXPAND_AREA),
+        )
         useUnmergedTree = true
     }
 
