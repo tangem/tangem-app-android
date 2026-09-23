@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -26,6 +27,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 
 @Composable
@@ -43,6 +45,7 @@ internal fun TangemPayCloseCardContent(state: TangemPayCloseCardUM) {
                 type = TangemTopBarType.BottomSheet,
                 endContent = {
                     TangemButton(
+                        modifier = Modifier.testTag(TangemPayTestTags.CLOSE_CARD_SHEET_DISMISS_BUTTON),
                         iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_close_24),
                         onClick = state.onDismissRequest,
                         size = TangemButton.Size.X11,
@@ -70,6 +73,7 @@ private fun Content(state: TangemPayCloseCardUM) {
         Box(
             modifier = Modifier
                 .size(80.dp)
+                .testTag(TangemPayTestTags.CLOSE_CARD_SHEET_ICON)
                 .clip(CircleShape)
                 .background(TangemTheme.colors3.bg.status.warningSubtle),
             contentAlignment = Alignment.Center,
@@ -89,7 +93,9 @@ private fun Content(state: TangemPayCloseCardUM) {
             style = TangemTheme.typography3.heading.small,
             color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(TangemPayTestTags.CLOSE_CARD_SHEET_TITLE),
         )
 
         Spacer(modifier = Modifier.height(TangemTheme.dimens2.x2))
@@ -99,13 +105,17 @@ private fun Content(state: TangemPayCloseCardUM) {
             style = TangemTheme.typography3.subheading.medium,
             color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(TangemPayTestTags.CLOSE_CARD_SHEET_DESCRIPTION),
         )
 
         Spacer(modifier = Modifier.height(TangemTheme.dimens2.x12))
 
         TangemButton(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(TangemPayTestTags.CLOSE_CARD_SHEET_CANCEL_BUTTON),
             variant = TangemButton.Variant.Secondary,
             size = TangemButton.Size.X12,
             text = resourceReference(R.string.common_cancel),
@@ -116,7 +126,9 @@ private fun Content(state: TangemPayCloseCardUM) {
         Spacer(modifier = Modifier.height(TangemTheme.dimens2.x2))
 
         TangemButton(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(TangemPayTestTags.CLOSE_CARD_SHEET_CONFIRM_BUTTON),
             variant = TangemButton.Variant.Primary,
             size = TangemButton.Size.X12,
             text = resourceReference(R.string.tangem_pay_close_card_popup_primary_button_title),
