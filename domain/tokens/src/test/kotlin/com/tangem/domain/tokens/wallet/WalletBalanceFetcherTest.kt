@@ -917,7 +917,12 @@ internal class WalletBalanceFetcherTest {
         // Assert
         assertEither(actual, Unit.right())
         coVerify(exactly = 1) {
-            predictionAccountStatusFetcher(params = PredictionAccountStatusFetcher.Params(userWalletId))
+            predictionAccountStatusFetcher(
+                params = PredictionAccountStatusFetcher.Params(
+                    userWalletId = userWalletId,
+                    mode = PredictionAccountStatusFetcher.Mode.AVAILABLE_ONLY,
+                ),
+            )
         }
     }
 
