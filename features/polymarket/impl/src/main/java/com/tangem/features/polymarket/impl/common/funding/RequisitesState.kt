@@ -1,4 +1,4 @@
-package com.tangem.features.polymarket.impl.main.model
+package com.tangem.features.polymarket.impl.common.funding
 
 import com.tangem.domain.polymarket.model.PolymarketDepositTarget
 
