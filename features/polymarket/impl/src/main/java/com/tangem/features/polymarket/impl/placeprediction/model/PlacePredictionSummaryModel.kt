@@ -10,80 +10,51 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
-import com.tangem.core.ui.R
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.polymarket.PolymarketPositionsRepository
+import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.interactor.PredictionSignRequest
 import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
-import com.tangem.domain.polymarket.PolymarketPositionsRepository
-import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionOrderFailure
-import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
-import com.tangem.domain.polymarket.model.PredictionPriceError
+import com.tangem.domain.polymarket.model.PredictionOrderValidationError
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
-import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
-import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
-import com.tangem.domain.polymarket.usecase.GetPolymarketCollateralCurrencyUseCase
-import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
-import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
-import com.tangem.domain.polymarket.usecase.GetPredictionPriceUseCase
 import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.DelayedPredictionOrderOutcome
+import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
 import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
-import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
-import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.PriceErrorUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.SlippagePickerUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPrediction
 import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
-import com.tangem.features.polymarket.impl.placeprediction.entity.feeBreakdownQuote
-import com.tangem.features.polymarket.impl.placeprediction.entity.isFullClose
-import com.tangem.features.polymarket.impl.placeprediction.entity.isQuotable
-import com.tangem.features.polymarket.impl.placeprediction.entity.canPollPrice
 import com.tangem.features.polymarket.impl.placeprediction.entity.canShowFeeBreakdown
-import com.tangem.features.polymarket.impl.placeprediction.entity.isMarketClosed
+import com.tangem.features.polymarket.impl.placeprediction.entity.feeBreakdownQuote
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceOutcome
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceResultUMConverter
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PredictionFeeSheetUMConverter
-import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAmountTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetBalanceTransformer
-import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetCollateralTransformer
-import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetMarketTransformer
-import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetOutcomePriceTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetPositionTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetSellPositionStateTransformer
-import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteLoadingTransformer
-import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetPriceErrorTransformer
-import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteResultTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetSubmitTransformer
-import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetTradingPermissionTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.JobHolder
-import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -92,20 +63,14 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 import javax.inject.Inject
 
-internal const val QUOTE_DEBOUNCE_MILLIS = 500L
-
-internal const val QUOTE_POLL_INTERVAL_MILLIS = 3_000L
-
 @Suppress("LongParameterList", "LargeClass")
 @ModelScoped
-internal class PlacePredictionModel @Inject constructor(
+internal class PlacePredictionSummaryModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val router: Router,
     private val urlOpener: UrlOpener,
@@ -113,115 +78,29 @@ internal class PlacePredictionModel @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val messageSender: UiMessageSender,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val getPolymarketEventUseCase: GetPolymarketEventUseCase,
-    private val getPolymarketCollateralCurrencyUseCase: GetPolymarketCollateralCurrencyUseCase,
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
     private val getPolymarketBalanceInteractor: GetPolymarketBalanceInteractor,
-    private val getPredictionOrderQuoteUseCase: GetPredictionOrderQuoteUseCase,
-    private val getPredictionPriceUseCase: GetPredictionPriceUseCase,
-    private val checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
     private val signPredictionOrderInteractor: SignPredictionOrderInteractor,
     private val placePredictionOrderUseCase: PlacePredictionOrderUseCase,
     private val awaitDelayedPredictionOrderUseCase: AwaitDelayedPredictionOrderUseCase,
     private val positionsRepository: PolymarketPositionsRepository,
     private val predictionFundingWindow: PredictionFundingWindow,
-) : Model(), PlacePredictionIntents {
+) : Model(), PlacePredictionSummaryIntents {
 
-    private val params = paramsContainer.require<PlacePredictionComponent.Params>()
+    private val order = paramsContainer.require<PreparedPrediction>()
+    private val params = order.params
 
     val uiState: StateFlow<PlacePredictionUM>
-        field = MutableStateFlow(PlacePredictionUM.initial(side = params.side))
+        field = MutableStateFlow(order.state)
 
     val feeSheetNavigation = SlotNavigation<Unit>()
 
     val feeSheetState: StateFlow<PredictionFeeSheetUM?> = uiState
         .map(::createFeeSheet)
-        .stateIn(scope = modelScope, started = SharingStarted.Eagerly, initialValue = null)
-
-    private val quoteJobHolder = JobHolder()
-
-    private val tradingAllowanceJobHolder = JobHolder()
-
-    private val positionJobHolder = JobHolder()
-
-    private var isNegRiskMarket: Boolean? = null
-
-    private var isAmountShown = false
+        .stateIn(scope = modelScope, started = SharingStarted.Eagerly, initialValue = createFeeSheet(order.state))
 
     init {
-        uiState.update(SetCollateralTransformer(currency = getPolymarketCollateralCurrencyUseCase()))
-        when (val params = params) {
-            is PlacePredictionComponent.Params.Buy -> loadMarket(params = params)
-            is PlacePredictionComponent.Params.Sell -> loadPosition(params = params)
-        }
-        loadBalance()
-        loadTradingAllowance()
         dismissFeeSheetWhenUnavailable()
-    }
-
-    /**
-     * Whether the region allows trading — read here rather than carried in on the route, because a route
-     * cannot know it and a screen that assumes it would be confidently wrong. An unreadable region keeps the
-     * gate shut, but as [TradingPermissionUM.Unknown]: refusing the order is this gate's job, claiming the
-     * user is restricted is not.
-     */
-    private fun loadTradingAllowance() {
-        if (tradingAllowanceJobHolder.isActive) return
-
-        modelScope.launch {
-            val permission = withContext(dispatchers.default) {
-                checkPolymarketGeoblockUseCase().fold(
-                    ifLeft = { TradingPermissionUM.Unknown },
-                    ifRight = { isBlocked ->
-                        if (isBlocked) TradingPermissionUM.Restricted else TradingPermissionUM.Allowed
-                    },
-                )
-            }
-
-            uiState.update(SetTradingPermissionTransformer(permission = permission))
-        }.saveIn(tradingAllowanceJobHolder)
-    }
-
-    /**
-     * The quote loop lives with the amount step, not with the flow: every step after it shows the figures it was
-     * opened with, and the summary signs that same quote.
-     */
-    fun onAmountShown() {
-        isAmountShown = true
-        if (uiState.value.tradingPermission == TradingPermissionUM.Unknown) loadTradingAllowance()
-        if (reloadPositionIfLost()) return
-
-        restartQuoteLoop(withDebounce = false)
-    }
-
-    fun onAmountHidden() {
-        isAmountShown = false
-        quoteJobHolder.cancel()
-    }
-
-    override fun onAmountChange(value: String) {
-        uiState.update(SetAmountTransformer(value = value))
-        restartQuoteLoop(withDebounce = true)
-    }
-
-    override fun onSlippageClick() {
-        uiState.update { it.copy(slippagePicker = SlippagePickerUM.of(value = it.slippage.percent.toPlainString())) }
-        router.push(PlacePredictionRoute.Slippage)
-    }
-
-    override fun onSlippageValueChange(value: String) {
-        uiState.update { it.copy(slippagePicker = SlippagePickerUM.of(value = value)) }
-    }
-
-    override fun onSlippagePresetClick(percent: BigDecimal) {
-        uiState.update { it.copy(slippagePicker = SlippagePickerUM.of(value = percent.toPlainString())) }
-    }
-
-    override fun onSlippageConfirmClick() {
-        val percent = uiState.value.slippagePicker.value.toBigDecimalOrNull() ?: return
-
-        uiState.update { it.copy(slippage = SlippageUM.of(percent = percent)) }
-        router.pop()
     }
 
     override fun onFeeClick() {
@@ -245,41 +124,24 @@ internal class PlacePredictionModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    override fun onAddFundsClick() {
-        showComingLater(part = "Adding funds")
+    override fun onPlaceClick() {
+        if (uiState.value.submit !is SubmitUM.Idle || !uiState.value.isPrimaryButtonEnabled) return
+
+        uiState.update(SetSubmitTransformer(submit = SubmitUM.Signing))
+        modelScope.launch { place(frozen = order.quote, isFullClose = order.isFullClose) }
     }
 
     override fun onQuoteRetryClick() {
-        if (reloadPositionIfLost()) return
-
-        restartQuoteLoop(withDebounce = false)
-    }
-
-    override fun onNextClick() {
-        router.push(PlacePredictionRoute.Summary)
-    }
-
-    override fun onPlaceClick() {
-        val state = uiState.value
-        if (state.submit !is SubmitUM.Idle) return
-
-        val frozen = (state.quote as? QuoteUM.Content)?.signable
-        if (frozen == null) {
-            showPlaceFailure(reason = "Place tapped without a priced quote")
-            return
-        }
-
-        uiState.update(SetSubmitTransformer(submit = SubmitUM.Signing))
-        modelScope.launch { place(frozen = frozen, isFullClose = state.isFullClose()) }
+        if (!isSubmitting()) router.popTo(PlacePredictionRoute.Amount)
     }
 
     private suspend fun place(frozen: SignableQuoteUM, isFullClose: Boolean) {
-        val isNegRisk = isNegRiskMarket
+        val isNegRisk = order.isNegRisk
         val addresses = withContext(dispatchers.default) {
             derivePolymarketAddressesUseCase.stored(userWalletId = params.userWalletId)
         }
-        if (addresses == null || isNegRisk == null) {
-            showPlaceFailure(reason = "No stored addresses or unknown market kind")
+        if (addresses == null) {
+            showPlaceFailure(reason = "No stored addresses")
             return
         }
 
@@ -405,6 +267,22 @@ internal class PlacePredictionModel @Inject constructor(
     }
 
     private fun onSignFailure(failure: PredictionOrderFailure) {
+        if (failure is PredictionOrderFailure.Invalid && failure.error is PredictionOrderValidationError.StaleQuote) {
+            returnToIdle()
+            messageSender.send(
+                DialogMessage(
+                    message = resourceReference(R.string.prediction_place_price_changed_description),
+                    firstActionBuilder = {
+                        EventMessageAction(
+                            title = resourceReference(R.string.common_ok),
+                            onClick = ::onQuoteRetryClick,
+                        )
+                    },
+                ),
+            )
+            return
+        }
+
         val isCancelled = failure is PredictionOrderFailure.Signing &&
             failure.error == PolymarketSigningError.UserCancelled
 
@@ -500,7 +378,14 @@ internal class PlacePredictionModel @Inject constructor(
         if (result.movesBalance()) predictionFundingWindow.open(userWalletId = params.userWalletId)
 
         uiState.update(SetSubmitTransformer(submit = SubmitUM.Result(result = result)))
-        router.replaceAll(PlacePredictionRoute.Status)
+        router.replaceAll(
+            PlacePredictionRoute.Status(
+                result = result,
+                market = order.state.market,
+                side = params.side,
+                userWalletId = params.userWalletId,
+            ),
+        )
     }
 
     private fun PlaceResultUM.movesBalance(): Boolean = when (this) {
@@ -553,15 +438,6 @@ internal class PlacePredictionModel @Inject constructor(
         }
     }
 
-    private fun showComingLater(part: String) {
-        messageSender.send(
-            DialogMessage(
-                title = stringReference(value = "Not implemented"),
-                message = stringReference(value = "$part arrives in a later part of this flow."),
-            ),
-        )
-    }
-
     override fun onPolymarketTermsClick() {
         urlOpener.openUrl(PolymarketLegalUrls.polymarketTerms)
     }
@@ -583,10 +459,6 @@ internal class PlacePredictionModel @Inject constructor(
         router.pop()
     }
 
-    override fun onToMainClick() {
-        router.popTo(PolymarketRoute.Main(userWalletId = params.userWalletId))
-    }
-
     fun isSubmitting(): Boolean = when (uiState.value.submit) {
         is SubmitUM.Signing,
         is SubmitUM.Posting,
@@ -597,180 +469,7 @@ internal class PlacePredictionModel @Inject constructor(
         -> false
     }
 
-    private fun loadMarket(params: PlacePredictionComponent.Params.Buy) {
-        modelScope.launch {
-            val event = withContext(dispatchers.default) {
-                getPolymarketEventUseCase(eventId = params.eventId).getOrNull()
-            } ?: return@launch
-
-            val market = event.markets.firstOrNull { it.id == params.marketId } ?: return@launch
-            val outcome = market.outcomes.firstOrNull { it.assetId == params.assetId } ?: return@launch
-
-            isNegRiskMarket = market.isNegRisk
-
-            uiState.update(SetMarketTransformer(market = market, outcome = outcome))
-
-            restartQuoteLoop(withDebounce = false)
-        }
-    }
-
-    /**
-     * The CLOB serves a balance it recomputes only when asked, so the read behind this refreshes it first: the
-     * account status cached for the wallet screen is not honest spending power at the moment of an order.
-     *
-     * A read that fails leaves the balance unknown rather than zero. Zero is an answer — it says the money is
-     * spent — and the screen would repeat it as one, refusing the order and blaming the user's funds for what
-     * is our own failure to read them.
-     */
-    private fun loadBalance() {
-        modelScope.launch {
-            val balance = withContext(dispatchers.default) {
-                val addresses = derivePolymarketAddressesUseCase.stored(userWalletId = params.userWalletId)
-                    ?: return@withContext null
-
-                getPolymarketBalanceInteractor(addresses = addresses).getOrNull()
-            }
-
-            if (balance == null) logger.e("Spending power could not be read; the screen keeps it unknown")
-
-            uiState.update(SetBalanceTransformer(balance = balance?.balance))
-        }
-    }
-
-    /** @return whether a fresh read was started, in which case it — not the caller — restarts the loop. */
-    private fun reloadPositionIfLost(): Boolean {
-        val params = params as? PlacePredictionComponent.Params.Sell ?: return false
-        val position = (uiState.value.order as? OrderSideUM.Sell)?.position ?: return false
-
-        if (position is SellPositionUM.Loading || position is SellPositionUM.Held) return false
-
-        uiState.update(SetSellPositionStateTransformer(position = SellPositionUM.Loading))
-        loadPosition(params = params)
-        return true
-    }
-
-    private fun failPosition(position: SellPositionUM) {
-        uiState.update(SetSellPositionStateTransformer(position = position))
-        restartQuoteLoop(withDebounce = false)
-    }
-
-    private fun loadPosition(params: PlacePredictionComponent.Params.Sell) {
-        modelScope.launch {
-            val addresses = withContext(dispatchers.default) {
-                derivePolymarketAddressesUseCase.stored(userWalletId = params.userWalletId)
-            }
-            if (addresses == null) {
-                logger.e("No stored addresses; the screen keeps nothing sellable")
-                failPosition(position = SellPositionUM.Unreadable)
-                return@launch
-            }
-
-            val position = withContext(dispatchers.default) {
-                positionsRepository.getPosition(addresses = addresses, id = params.positionId)
-            }.fold(
-                ifLeft = { error ->
-                    logger.e("Position could not be read, the screen keeps nothing sellable: $error")
-                    failPosition(position = SellPositionUM.Unreadable)
-                    return@launch
-                },
-                ifRight = { position ->
-                    position ?: run {
-                        logger.e("Position is not held or not indexed yet; the screen keeps nothing sellable")
-                        failPosition(position = SellPositionUM.NotHeld)
-                        return@launch
-                    }
-                },
-            )
-
-            isNegRiskMarket = position.isNegRisk
-
-            uiState.update(SetPositionTransformer(position = position))
-
-            restartQuoteLoop(withDebounce = false)
-        }.saveIn(positionJobHolder)
-    }
-
-    private fun restartQuoteLoop(withDebounce: Boolean) {
-        quoteJobHolder.cancel()
-
-        if (!isAmountShown || !uiState.value.isMarketAcceptingOrders || !uiState.value.canPollPrice()) return
-
-        modelScope.launch {
-            if (withDebounce && uiState.value.isQuotable()) delay(timeMillis = QUOTE_DEBOUNCE_MILLIS)
-
-            while (isActive && uiState.value.submit is SubmitUM.Idle) {
-                val canKeepPolling = if (uiState.value.isQuotable()) {
-                    requestQuote()
-                    !uiState.value.quote.isMarketClosed()
-                } else {
-                    requestPrice()
-                }
-                if (!canKeepPolling) return@launch
-                delay(timeMillis = QUOTE_POLL_INTERVAL_MILLIS)
-            }
-        }.saveIn(quoteJobHolder)
-    }
-
-    private suspend fun requestPrice(): Boolean {
-        val result = withContext(dispatchers.default) {
-            getPredictionPriceUseCase(assetId = params.assetId, side = params.side.opposite())
-        }
-
-        return result.fold(
-            ifLeft = { error ->
-                when (error) {
-                    PredictionPriceError.MarketClosed -> {
-                        uiState.update(SetPriceErrorTransformer(error = PriceErrorUM.MarketClosed))
-                        false
-                    }
-                    PredictionPriceError.InvalidAsset -> {
-                        uiState.update(SetPriceErrorTransformer(error = PriceErrorUM.Unknown))
-                        false
-                    }
-                    PredictionPriceError.EmptyBook -> {
-                        uiState.update(SetPriceErrorTransformer(error = PriceErrorUM.EmptyBook))
-                        true
-                    }
-                    PredictionPriceError.Network,
-                    is PredictionPriceError.Unknown,
-                    -> true
-                }
-            },
-            ifRight = { price ->
-                uiState.update(SetOutcomePriceTransformer(price = price))
-                true
-            },
-        )
-    }
-
-    private suspend fun requestQuote() {
-        val state = uiState.value
-        val amount = state.enteredAmount() ?: return
-        if (state.submit !is SubmitUM.Idle || !state.isQuotable()) return
-
-        uiState.update(SetQuoteLoadingTransformer)
-
-        val result = withContext(dispatchers.default) {
-            getPredictionOrderQuoteUseCase(
-                request = PredictionOrderQuoteRequest(
-                    marketId = params.marketId,
-                    assetId = params.assetId,
-                    side = params.side,
-                    amount = amount,
-                    slippagePercent = state.slippage.percent,
-                ),
-            )
-        }
-
-        if (uiState.value.submit is SubmitUM.Idle) {
-            uiState.update(
-                SetQuoteResultTransformer(result = result, receivedAtMillis = System.currentTimeMillis()),
-            )
-        }
-    }
-
     private companion object {
-
-        val logger = TangemLogger.withTag(tag = "PlacePredictionModel")
+        val logger = TangemLogger.withTag(tag = "PlacePredictionSummaryModel")
     }
 }
