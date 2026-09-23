@@ -2,6 +2,7 @@ package com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.model
 
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
+import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.toHexString
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -14,6 +15,9 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.onboarding.repository.OnboardingRepository
+import arrow.core.right
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.derivations.DerivationsHelper
 import com.tangem.domain.wallets.models.backup.CardBackupStatus
@@ -23,6 +27,7 @@ import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.domain.wallets.usecase.SyncWalletWithRemoteUseCase
 import com.tangem.domain.wallets.usecase.UpdateWalletUseCase
+import com.tangem.domain.sociallogin.usecase.DeleteSocialRecoveryUseCase
 import com.tangem.features.onboarding.v2.common.ui.CantLeaveBackupDialog
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
@@ -70,7 +75,17 @@ internal class MultiWalletFinalizeModelTest {
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
     private val walletCardsBackupReporter: WalletCardsBackupReporter = mockk(relaxUnitFun = true)
     private val derivationsHelper: DerivationsHelper = mockk(relaxUnitFun = true)
+    private val deleteSocialRecoveryUseCase: DeleteSocialRecoveryUseCase = mockk(relaxed = true)
     private val paramsContainer: ParamsContainer = mockk()
+
+    private val coldUserWallet: UserWallet.Cold = mockk(relaxed = true) {
+        every { walletId } returns UPGRADED_WALLET_ID
+    }
+    private val coldUserWalletBuilder: ColdUserWalletBuilder = mockk {
+        every { backupCardsIds(any()) } returns this@mockk
+        every { hasBackupError(any()) } returns this@mockk
+        coEvery { build() } returns coldUserWallet
+    }
 
     private val primaryCardDto: CardDTO = mockk {
         every { cardId } returns "primary-id-aaaa"
@@ -116,6 +131,8 @@ internal class MultiWalletFinalizeModelTest {
 
     @BeforeEach
     fun setUp() {
+        every { parentParams.mode } returns OnboardingMultiWalletComponent.Mode.Onboarding
+        multiWalletStateFlow.value = multiWalletStateFlow.value.copy(startFromFinalize = null)
         every { paramsContainer.require<MultiWalletChildParams>() } returns params
         every { backupServiceHolder.backupService } returns backupServiceWeakRef
         every { backupService.primaryCardId } returns "primary-id-aaaa"
@@ -625,6 +642,72 @@ internal class MultiWalletFinalizeModelTest {
             Assertions.assertTrue(events.contains(MultiWalletFinalizeComponent.Event.TwoBackupCardsAdded))
         }
 
+    @Test
+    fun `GIVEN hot wallet upgrade WHEN backup finishes THEN social recovery is dropped after the upgrade`() =
+        runTest {
+            // Arrange
+            arrangeHotWalletUpgrade()
+            coEvery { walletsRepository.upgradeWallet(UPGRADED_WALLET_ID) } just Runs
+
+            // Act
+            finishBackupAsUpgrade()
+
+            // Assert — FR-16, and only once the wallet is recorded as upgraded
+            coVerifyOrder {
+                walletsRepository.upgradeWallet(UPGRADED_WALLET_ID)
+                deleteSocialRecoveryUseCase(UPGRADED_WALLET_ID)
+            }
+        }
+
+    @Test
+    fun `GIVEN the upgrade fails WHEN backup finishes THEN social recovery is kept`() = runTest {
+        // Arrange — the wallet is still hot as far as the app knows, so its recovery must stay
+        arrangeHotWalletUpgrade()
+        coEvery { walletsRepository.upgradeWallet(UPGRADED_WALLET_ID) } throws IllegalStateException("boom")
+
+        // Act
+        finishBackupAsUpgrade()
+
+        // Assert
+        coVerify(exactly = 0) { deleteSocialRecoveryUseCase(any()) }
+    }
+
+    private fun arrangeHotWalletUpgrade() {
+        multiWalletStateFlow.value = multiWalletStateFlow.value.copy(
+            startFromFinalize = OnboardingMultiWalletState.FinalizeStage.ScanBackupFirstCard,
+        )
+        every { parentParams.mode } returns OnboardingMultiWalletComponent.Mode.UpgradeHotWallet(UPGRADED_WALLET_ID)
+        every { backupValidator.isValidFull(any()) } returns true
+        every { backupService.currentState } returns BackupService.State.Finished
+        every { coldUserWalletBuilderFactory.create(any()) } returns coldUserWalletBuilder
+        coEvery { updateWalletUseCase.invoke(eq(UPGRADED_WALLET_ID), any()) } returns coldUserWallet.right()
+        coEvery { syncWalletWithRemoteUseCase(any()) } returns mockk(relaxed = true)
+        coEvery { cardRepository.finishCardActivation(any(), any()) } just Runs
+        every { backupService.discardSavedBackup() } just Runs
+    }
+
+    private fun TestScope.finishBackupAsUpgrade() {
+        val callbackSlot = slot<(CompletionResult<Card>) -> Unit>()
+        every {
+            backupService.proceedBackup(iconScanRes = null, callback = capture(callbackSlot))
+        } just Runs
+
+        val model = createModel(this)
+        backgroundScope.launch(context = Dispatchers.Unconfined, start = CoroutineStart.UNDISPATCHED) {
+            model.onEvent.collect {}
+        }
+        advanceUntilIdle()
+
+        model.uiState.value.onScanClick.invoke()
+        advanceUntilIdle()
+        // below v8, so finalizing does not pull the scan response through the derivation update
+        val finalizedCard: Card = mockk(relaxed = true) {
+            every { firmwareVersion } returns FirmwareVersion(major = 6, minor = 33)
+        }
+        callbackSlot.captured.invoke(CompletionResult.Success(finalizedCard))
+        advanceUntilIdle()
+    }
+
     private fun String.lastMaskedExpected(): String {
         val space = ' '
         val last4 = takeLast(4)
@@ -652,6 +735,7 @@ internal class MultiWalletFinalizeModelTest {
             analyticsEventHandler = analyticsEventHandler,
             walletCardsBackupReporter = walletCardsBackupReporter,
             derivationsHelper = derivationsHelper,
+            deleteSocialRecoveryUseCase = deleteSocialRecoveryUseCase,
         )
     }
 
@@ -667,5 +751,6 @@ internal class MultiWalletFinalizeModelTest {
         private val BACKUP_CARD_PUBLIC_KEY = byteArrayOf(0x0A, 0x0B)
         private const val NON_RING_BATCH_ID = "AC02"
         private const val RING_BATCH_ID_AC17 = "AC17"
+        private val UPGRADED_WALLET_ID = UserWalletId("0a0b")
     }
 }

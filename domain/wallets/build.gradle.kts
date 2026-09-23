@@ -39,6 +39,7 @@ dependencies {
     api(projects.domain.cloudBackup)
     api(projects.domain.common)
     api(projects.domain.hotWallet)
+    api(projects.domain.socialLogin)
     api(projects.domain.walletManager)
     api(projects.domain.core)
     implementation(projects.domain.jointAccount)
