@@ -120,7 +120,8 @@ sealed class PredictionAccountStatusValue {
      *
      * @property source The source of the status information.
      * @property balance The collateral balance of the deposit wallet, which is what the wallet total counts.
-     * @property positionsValue The current value of the open positions, or `null` when it could not be read.
+     * @property positionsValue The last value of the open positions a full refresh read, or `null` until one has.
+     *                           A failed read keeps the previous value, so it can be older than [source] says.
      * @property fiatRate Exchange rate of the collateral to the app's selected fiat currency, or `null` if the
      *                    quote has never been available. When `null`, [totalFiatBalance] resolves to
      *                    [TotalFiatBalance.Failed].
