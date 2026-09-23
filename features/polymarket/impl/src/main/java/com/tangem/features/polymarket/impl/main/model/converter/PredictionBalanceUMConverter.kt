@@ -13,8 +13,8 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_down_24
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_24
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoneyStyled
+import com.tangem.features.polymarket.impl.common.funding.RequisitesState
 import com.tangem.features.polymarket.impl.main.model.PredictionBalanceMode
-import com.tangem.features.polymarket.impl.main.model.RequisitesState
 import com.tangem.features.polymarket.impl.main.ui.state.PredictionBalanceUM
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
