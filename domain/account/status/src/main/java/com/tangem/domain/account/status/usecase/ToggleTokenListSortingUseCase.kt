@@ -47,7 +47,7 @@ class ToggleTokenListSortingUseCase(
             accountStatuses = accountStatusList.accountStatuses.map { account ->
                 if (account !is AccountStatus.CryptoPortfolio) return@map account
 
-                account.copy(tokenList = account.tokenList.sortByBalance())
+                account.copySealed(tokenList = account.tokenList.sortByBalance())
             },
             sortType = TokensSortType.BALANCE,
         )

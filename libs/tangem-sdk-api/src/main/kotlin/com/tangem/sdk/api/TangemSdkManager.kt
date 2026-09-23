@@ -17,10 +17,10 @@ import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.visa.model.TangemPayInitialCredentials
-import com.tangem.domain.visa.model.VirtualAccountActivationData
+import com.tangem.domain.visa.model.MoneyAccountActivationData
 import com.tangem.domain.visa.model.VisaActivationInput
 import com.tangem.domain.visa.model.VisaDataForApprove
 import com.tangem.domain.visa.model.VisaSignedDataByCustomerWallet
@@ -92,7 +92,7 @@ interface TangemSdkManager {
         allowsRequestAccessCodeFromRepository: Boolean,
     ): CompletionResult<Boolean>
 
-    suspend fun resetBackupCard(cardNumber: Int, userWalletId: UserWalletId): CompletionResult<Boolean>
+    suspend fun resetBackupCard(cardNumber: Int, userWallet: UserWallet.Cold): CompletionResult<Boolean>
 
     suspend fun deleteSavedUserCodes(cardsIds: Set<String>): CompletionResult<Unit>
 
@@ -122,7 +122,7 @@ interface TangemSdkManager {
         initialMessage: Message? = null,
         accessCode: String? = null,
         @DrawableRes iconScanRes: Int? = null,
-        registerColdWallet: Boolean = true,
+        registerColdWallet: Boolean,
     ): CompletionResult<T>
 
     @Suppress("MagicNumber")
@@ -175,9 +175,9 @@ interface TangemSdkManager {
         preflightReadFilter: PreflightReadFilter,
     ): Either<Throwable, TangemPayInitialCredentials>
 
-    suspend fun tangemPayProduceVirtualAccountData(
+    suspend fun tangemPayProduceMoneyAccountData(
         preflightReadFilter: PreflightReadFilter,
-    ): Either<Throwable, VirtualAccountActivationData>
+    ): Either<Throwable, MoneyAccountActivationData>
 
     suspend fun getWithdrawalSignature(
         hash: String,

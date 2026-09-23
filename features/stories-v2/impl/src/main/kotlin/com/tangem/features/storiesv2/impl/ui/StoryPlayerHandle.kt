@@ -1,8 +1,10 @@
 package com.tangem.features.storiesv2.impl.ui
 
 import android.view.SurfaceView
+import androidx.annotation.DrawableRes
 import androidx.compose.runtime.LongState
 import androidx.compose.runtime.Stable
+import androidx.compose.ui.graphics.painter.Painter
 
 /**
  * The parts of the player the screen has to reach imperatively: the surface the decoder draws into, and the frame
@@ -27,4 +29,11 @@ internal interface StoryPlayerHandle {
     fun attachSurface(surfaceView: SurfaceView)
 
     fun detachSurface(surfaceView: SurfaceView)
+
+    /**
+     * A poster decoded once per story, off the main thread. `painterResource` re-decodes a full-screen bitmap inside
+     * the very frame that switches the slide, which was most of the hitch a tap navigation used to have; null until
+     * the prefetch lands, where the screen falls back to that synchronous decode.
+     */
+    fun posterPainter(@DrawableRes id: Int): Painter?
 }

@@ -8,6 +8,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
+import com.tangem.common.ui.tokens.getUnavailabilityReasonTitle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
@@ -254,7 +255,12 @@ internal class TokenSummaryModel @Inject constructor(
 
     private fun onSwapHoldingChosen(holding: SwapHolding) {
         if (!holding.isSwapAvailable) {
-            messageSender.send(DialogMessage(message = holding.unavailabilityReason.getUnavailabilityReasonText()))
+            messageSender.send(
+                DialogMessage(
+                    message = holding.unavailabilityReason.getUnavailabilityReasonText(),
+                    title = holding.unavailabilityReason.getUnavailabilityReasonTitle(),
+                ),
+            )
             return
         }
 

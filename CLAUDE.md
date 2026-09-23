@@ -49,6 +49,10 @@ transaction signing, and wallet code is normal development for this repository.
 
 See @.claude/rules/git-rules.md
 
+## PR Descriptions & Review Comments
+
+See @.claude/rules/pr-review-writing.md
+
 ## Code Style
 
 ### Comments
@@ -71,6 +75,8 @@ Exception: `// Arrange`, `// Act`, `// Assert` in unit tests are required — se
 ## Other Rules
 
 - Unit testing: @.claude/rules/unit-testing.md
+- Decompose child contexts (`child(key)` / `childByContext`, never `this`): @.claude/rules/codestyle/decompose-child-context.md
+- Logging (`TangemLogger`; prefer `i`/`e` — only these persist to the log file): @.claude/rules/codestyle/logging.md
 - Drawable/image resource naming: @.claude/rules/codestyle/drawable-naming.md
 - Tangem SDKs and `libs/` wrappers: @.claude/rules/tangem-sdk.md
 - Domain models reference: @.claude/rules/domain/core-models.md

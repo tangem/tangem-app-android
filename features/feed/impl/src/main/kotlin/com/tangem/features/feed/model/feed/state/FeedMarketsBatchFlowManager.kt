@@ -29,7 +29,7 @@ internal class FeedMarketsBatchFlowManager(
     private val currentAppCurrency: Provider<AppCurrency>,
     private val modelScope: CoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
-    orders: List<TokenMarketListConfig.Order> = TokenMarketListConfig.Order.entries,
+    orders: List<TokenMarketListConfig.Order> = USER_FACING_SORTS,
 ) {
     private val managersByOrder = orders.associateWith { order ->
         createManagerForOrder(order)
@@ -336,6 +336,19 @@ internal class FeedMarketsBatchFlowManager(
             TokenMarketListConfig.Order.Buyers -> SortByTypeUM.ExperiencedBuyers
             TokenMarketListConfig.Order.TopGainers -> SortByTypeUM.TopGainers
             TokenMarketListConfig.Order.TopLosers -> SortByTypeUM.TopLosers
+            TokenMarketListConfig.Order.ByCategory -> error("$this is not a sort offered to the user")
         }
     }
 }
+
+/**
+
+ * order without a [SortByTypeUM] would cost a request nothing renders.
+ */
+private val USER_FACING_SORTS = listOf(
+    TokenMarketListConfig.Order.ByRating,
+    TokenMarketListConfig.Order.Trending,
+    TokenMarketListConfig.Order.Buyers,
+    TokenMarketListConfig.Order.TopGainers,
+    TokenMarketListConfig.Order.TopLosers,
+)

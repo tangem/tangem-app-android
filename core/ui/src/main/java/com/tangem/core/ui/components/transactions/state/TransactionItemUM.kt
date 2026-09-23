@@ -26,9 +26,10 @@ sealed interface TransactionItemUM {
     /**
      * Content state.
      *
-     * @property amount         signed numeric value, e.g. "+0.500913" / "-350.31"; no currency symbol embedded.
-     *                          `null` hides the numeric value while [currencySymbol] still shows.
-     * @property currencySymbol currency symbol shown alongside [amount], e.g. "BTC", "USDT"
+     * @property amount             signed numeric value, e.g. "+0.500913" / "-350.31"; no currency symbol embedded.
+     *                              `null` hides the numeric value while [currencySymbol] still shows.
+     * @property currencySymbol     currency symbol shown alongside [amount], e.g. "BTC", "USDT"
+     * @property isPendingSignature awaiting other co-signers (Joint account); shows a clock badge + "Pending" pill
      */
     data class Content(
         override val txHash: String,
@@ -43,6 +44,7 @@ sealed interface TransactionItemUM {
         val subtitle: ContentSubtitle,
         val timestamp: Long,
         val warning: TextReference? = null,
+        val isPendingSignature: Boolean = false,
     ) : TransactionItemUM {
 
         @Immutable
@@ -50,6 +52,7 @@ sealed interface TransactionItemUM {
             data object Failed : Status()
             data object Confirmed : Status()
             data object Unconfirmed : Status()
+            data object PendingSignature : Status()
         }
 
         enum class Direction {
@@ -108,6 +111,28 @@ sealed interface TransactionItemUM {
         ) : ContentSubtitle
 
         /**
+         * Counterparty saved in one of the user's address books — renders as "to: <avatar> <contactName>" in place of
+         * the address. Outgoing transfers only; an incoming transfer's sender keeps showing its address.
+         */
+        data class Contact(
+            val direction: Direction,
+            val contactName: String,
+            val avatar: ContactAvatar,
+        ) : ContentSubtitle
+
+        /**
+
+         * app carries a letter [Monogram], while an icon picked in the contact editor renders as [Resource].
+         */
+        @Immutable
+        sealed interface ContactAvatar {
+
+            data class Monogram(val char: Char, val color: Color) : ContactAvatar
+
+            data class Resource(@DrawableRes val resId: Int, val color: Color) : ContactAvatar
+        }
+
+        /**
          * Counterparty asset ticker — renders as "to/from: <icon> <SYMBOL>", optionally followed by the counterparty
          * portfolio it settled in ("… in <owner>"). Used for express rows (swap counterparty currency / onramp fiat),
          * e.g. "to: ◎ POL", "from: 🇸🇪 SEK", or the cross-portfolio "to: ◎ POL in 🟦 Main".
@@ -142,6 +167,14 @@ sealed interface TransactionItemUM {
 
             data class Wallet(val name: String, val deviceIconUM: DeviceIconUM) : AssetOwner
         }
+
+        /**
+         * What a fee-only row was paid for — "Send <token icon> USDT"; its amount is the fee itself, not anything
+         * [symbol] moved. A row that cannot name its asset falls back to [Plain].
+         *
+         * @property icon token avatar drawn before the ticker; `null` renders the ticker alone.
+         */
+        data class FeeFor(val symbol: String, val icon: CurrencyIconState?) : ContentSubtitle
 
         /**
          * DeFi provider counterparty — renders as "to/from: <provider icon> <name>", e.g. "from: 🟣 Aave".

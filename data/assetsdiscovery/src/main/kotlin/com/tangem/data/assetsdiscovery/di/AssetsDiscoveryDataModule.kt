@@ -9,6 +9,7 @@ import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.domain.assetsdiscovery.AssetsDiscoveryFacade
 import com.tangem.domain.assetsdiscovery.repository.AssetsDiscoveryRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -43,6 +44,7 @@ internal object AssetsDiscoveryDataModule {
         userWalletsListRepository: UserWalletsListRepository,
         networkFactory: NetworkFactory,
         appPreferencesStore: AppPreferencesStore,
+        storePreferencesKeys: StorePreferencesKeys,
         assetsDiscoveryStoreFactory: AssetsDiscoveryStoreFactory,
         responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
         dispatchers: CoroutineDispatcherProvider,
@@ -53,6 +55,7 @@ internal object AssetsDiscoveryDataModule {
         userWalletsListRepository = userWalletsListRepository,
         networkFactory = networkFactory,
         appPreferencesStore = appPreferencesStore,
+        storePreferencesKeys = storePreferencesKeys,
         assetsDiscoveryStoreFactory = assetsDiscoveryStoreFactory,
         responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
         dispatchers = dispatchers,

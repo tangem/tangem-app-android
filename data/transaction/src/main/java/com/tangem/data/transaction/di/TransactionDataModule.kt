@@ -4,13 +4,10 @@ import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.transaction.*
 import com.tangem.data.transaction.error.DefaultFeeErrorResolver
 import com.tangem.blockchainsdk.BlockchainSDKFactory
-import com.tangem.core.configtoggle.FeatureToggles
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.grow.datasource.gasless.GaslessTxServiceApi
 import com.tangem.grow.datasource.gasless.GaslessTxServiceApiV2
 import com.tangem.grow.datasource.gasless.TronGaslessApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.transaction.*
 import com.tangem.domain.transaction.error.FeeErrorResolver
@@ -31,13 +28,11 @@ internal object TransactionDataModule {
     fun providesTransactionRepository(
         tangemTechApi: TangemTechApi,
         walletManagersFacade: WalletManagersFacade,
-        walletManagersStore: WalletManagersStore,
         dispatchers: CoroutineDispatcherProvider,
     ): TransactionRepository {
         return DefaultTransactionRepository(
             tangemTechApi = tangemTechApi,
             walletManagersFacade = walletManagersFacade,
-            walletManagersStore = walletManagersStore,
             dispatchers = dispatchers,
         )
     }
@@ -89,16 +84,11 @@ internal object TransactionDataModule {
         responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
         gaslessTxServiceApi: GaslessTxServiceApi,
         gaslessTxServiceApiV2: GaslessTxServiceApiV2,
-        featureTogglesManager: FeatureTogglesManager,
         coroutineDispatcherProvider: CoroutineDispatcherProvider,
     ): GaslessTransactionRepository {
         return DefaultGaslessTransactionRepository(
             gaslessTxServiceApi = gaslessTxServiceApi,
             gaslessTxServiceApiV2 = gaslessTxServiceApiV2,
-            // Single master toggle for the whole gasless v2 protocol (+ yield-withdraw batch).
-            isGaslessV2Enabled = featureTogglesManager.isFeatureEnabled(
-                toggle = FeatureToggles.TWI_1327_GASLESS_YIELD_WITHDRAW_ENABLED,
-            ),
             coroutineDispatcherProvider = coroutineDispatcherProvider,
             responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
         )

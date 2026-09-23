@@ -2,13 +2,13 @@ package com.tangem.tests.accounts
 
 import androidx.compose.ui.test.longClick
 import com.tangem.common.BaseTestCase
-import com.tangem.core.res.R
 import com.tangem.common.extensions.clickAndWaitFor
 import com.tangem.common.extensions.clickOnSystemButton
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.DerivationPathHelper
 import com.tangem.common.utils.setClipboardText
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.core.res.R
 import com.tangem.scenarios.*
 import com.tangem.screens.*
 import com.tangem.screens.accounts.onAccountInfoEditorScreen

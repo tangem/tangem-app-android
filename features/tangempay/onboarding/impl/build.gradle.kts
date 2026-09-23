@@ -27,11 +27,14 @@ dependencies {
     /** Features api */
     api(projects.features.tangempay.onboarding.api)
     api(projects.features.wallet.api)
+    implementation(projects.features.tangempay.commonUi)
     implementation(projects.features.tangempay.details.api)
+    implementation(projects.features.tangempay.eligibility.api)
 
     /** Domain */
     api(projects.domain.common)
     api(projects.domain.hotWallet)
+    implementation(projects.domain.appsflyer)
     api(projects.domain.visa)
     api(projects.domain.visa.models)
     api(projects.domain.wallets)
@@ -51,6 +54,7 @@ dependencies {
     implementation(deps.decompose.ext.compose)
 
     /** AndroidX */
+    implementation(deps.androidx.activity.compose)
     implementation(deps.androidx.annotation)
     implementation(deps.androidx.appCompat)
     implementation(deps.lifecycle.compose)
@@ -64,13 +68,8 @@ dependencies {
     api(deps.kotlin.coroutines)
     implementation(deps.arrow.core)
     implementation(deps.jodatime)
-    implementation(deps.kotlin.immutable.collections)
     implementation(deps.kotlin.serialization.core)
 
     /** Test */
     testImplementation(projects.test.core)
-    testImplementation(deps.test.junit5)
-    testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
-    testImplementation(deps.test.coroutine)
 }

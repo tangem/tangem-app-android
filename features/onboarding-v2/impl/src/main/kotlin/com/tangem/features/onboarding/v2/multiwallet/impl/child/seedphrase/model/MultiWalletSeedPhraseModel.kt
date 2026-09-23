@@ -22,7 +22,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.crypto.bip39.Mnemonic
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -69,7 +69,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
     private val isWalletAlreadySavedUseCase: IsWalletAlreadySavedUseCase,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val appsFlyerStore: AppsFlyerStore,
+    private val appsFlyerRepository: AppsFlyerRepository,
     private val walletCardsBackupReporter: WalletCardsBackupReporter,
 ) : Model() {
 
@@ -259,7 +259,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
                             } else {
                                 AnalyticsParam.EmptyFull.Full
                             },
-                            referralId = appsFlyerStore.get()?.refcode,
+                            referralId = appsFlyerRepository.getConversionData()?.refcode,
                         ),
                     )
 

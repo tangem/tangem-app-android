@@ -42,7 +42,6 @@ internal fun LazyListScope.marketTokenItems(
         MarketPulseItem(
             item = item,
             modifier = Modifier
-                .animateItem()
                 .padding(horizontal = horizontalPadding)
                 .groupedBackground(enabled = hasGroupedBackground, index = index, lastIndex = items.lastIndex),
         )

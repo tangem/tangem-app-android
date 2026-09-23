@@ -139,6 +139,7 @@ internal fun TangemPayTxHistoryDetailsContent(state: TangemPayTxHistoryDetailsUM
 private fun TransactionIcon(iconState: TangemIconUM, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
+            .testTag(TangemPayTestTags.TRANSACTION_DETAILS_ICON)
             .size(80.dp)
             .clip(CircleShape)
             .background(TangemTheme.colors3.bg.opaque.primary),
@@ -228,6 +229,7 @@ internal fun TransactionLabel(label: TransactionLabelUM, modifier: Modifier = Mo
 
     Row(
         modifier = modifier
+            .testTag(TangemPayTestTags.TRANSACTION_DETAILS_STATUS)
             .background(
                 color = backgroundColor,
                 shape = RoundedCornerShape(20.dp),
@@ -260,7 +262,9 @@ internal fun TransactionLabel(label: TransactionLabelUM, modifier: Modifier = Mo
 
         TangemIcon(
             tangemIconUM = label.icon,
-            modifier = Modifier.size(TangemTheme.dimens2.x5),
+            modifier = Modifier
+                .testTag(TangemPayTestTags.TRANSACTION_DETAILS_STATUS_ICON)
+                .size(TangemTheme.dimens2.x5),
         )
     }
 }
@@ -275,10 +279,12 @@ private fun TransactionDetailsBlock(state: TangemPayTxHistoryDetailsUM, modifier
                 title = resourceReference(R.string.tangempay_common_card),
                 value = detail.cardNumber,
                 subvalue = detail.cardName,
+                modifier = Modifier.testTag(TangemPayTestTags.TRANSACTION_DETAILS_CARD_ROW),
             )
             is TransactionDetailUM.Error -> DetailRowError(
                 title = resourceReference(R.string.tangempay_common_card),
                 onRefreshClick = detail.onRefreshClick,
+                modifier = Modifier.testTag(TangemPayTestTags.TRANSACTION_DETAILS_CARD_ROW),
             )
         }
         when (val cashback = state.cashbackDetail) {

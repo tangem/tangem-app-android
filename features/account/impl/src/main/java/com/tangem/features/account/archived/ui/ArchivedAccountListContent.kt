@@ -22,6 +22,8 @@ import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
+import com.tangem.core.ui.ds2.badge.TangemBadge
+import com.tangem.core.ui.ds2.badge.TangemBadgeUM
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -145,6 +147,7 @@ private fun ArchivedAccountRow(item: ArchivedAccountUM, modifier: Modifier = Mod
             title = item.accountName,
             subtitle = stringReference(subtitle),
             icon = item.accountIconUM,
+            titleBadge = item.titleBadge,
             modifier = Modifier.weight(1f),
         )
 
@@ -179,6 +182,11 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountA
                 accountId = id.toString(),
                 accountName = accountName,
                 accountIconUM = portfolioIcon(),
+                titleBadge = if (id == 0) {
+                    TangemBadgeUM(text = stringReference("Joint"), size = TangemBadge.Size.X4)
+                } else {
+                    null
+                },
                 tokensInfo = stringReference("10 tokens"),
                 networksInfo = stringReference("2 networks"),
                 onClick = {},

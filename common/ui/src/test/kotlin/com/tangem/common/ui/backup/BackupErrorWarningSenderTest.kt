@@ -24,14 +24,12 @@ internal class BackupErrorWarningSenderTest {
     private val getBackupProblematicWalletForAddressUseCase: GetBackupProblematicWalletForAddressUseCase = mockk()
     private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
-    private val backupErrorFeatureToggles: BackupErrorFeatureToggles = mockk()
 
     private val warning = BackupErrorWarningSender(
         messageSender = messageSender,
         isWalletBackupProblematicUseCase = isWalletBackupProblematicUseCase,
         getBackupProblematicWalletForAddressUseCase = getBackupProblematicWalletForAddressUseCase,
         sendBackupProblemEmailUseCase = sendBackupProblemEmailUseCase,
-        backupErrorFeatureToggles = backupErrorFeatureToggles,
     )
 
     private val problematicWalletId = UserWalletId("1234567890ABCDEF")
@@ -46,10 +44,8 @@ internal class BackupErrorWarningSenderTest {
             getBackupProblematicWalletForAddressUseCase,
             sendBackupProblemEmailUseCase,
             messageSender,
-            backupErrorFeatureToggles,
             answers = false,
         )
-        every { backupErrorFeatureToggles.isTopUpWarningEnabled } returns true
     }
 
     private fun capturedDialog(): DialogMessage {
@@ -121,22 +117,6 @@ internal class BackupErrorWarningSenderTest {
             coVerify(exactly = 1) { sendBackupProblemEmailUseCase(problematicWalletId) }
         }
 
-        @Test
-        fun `GIVEN toggle off AND problematic backup WHEN forWallet THEN block the top up`() = runTest {
-            // Arrange
-            every { backupErrorFeatureToggles.isTopUpWarningEnabled } returns false
-            every { isWalletBackupProblematicUseCase(userWallet) } returns true
-            var proceeded = false
-
-            // Act
-            warning.forWallet(scope = this, userWallet = userWallet) { proceeded = true }
-            capturedDialog().firstAction.onClick()
-            advanceUntilIdle()
-
-            // Assert
-            assertThat(proceeded).isFalse()
-            coVerify(exactly = 1) { sendBackupProblemEmailUseCase(problematicWalletId) }
-        }
     }
 
     @Nested
@@ -233,20 +213,5 @@ internal class BackupErrorWarningSenderTest {
             coVerify(exactly = 1) { getBackupProblematicWalletForAddressUseCase("healthy") }
         }
 
-        @Test
-        fun `GIVEN toggle off WHEN forAddress THEN proceed without a lookup`() = runTest {
-            // Arrange
-            every { backupErrorFeatureToggles.isTopUpWarningEnabled } returns false
-            var proceeded = false
-
-            // Act
-            warning.forAddress(scope = this, address = { "addr" }) { proceeded = true }
-            advanceUntilIdle()
-
-            // Assert
-            assertThat(proceeded).isTrue()
-            coVerify(exactly = 0) { getBackupProblematicWalletForAddressUseCase(any()) }
-            verify(exactly = 0) { messageSender.send(any()) }
-        }
     }
 }

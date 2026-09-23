@@ -37,6 +37,8 @@ import kotlinx.collections.immutable.ImmutableList
 @Suppress("LongMethod")
 @Composable
 internal fun MultiWalletSeedPhraseImport(state: MultiWalletSeedPhraseUM.Import, modifier: Modifier = Modifier) {
+    DisableAutofillEffect()
+
     if (state.dialog != null) {
         BasicDialog(
             title = state.dialog.title.resolveReference(),
@@ -53,8 +55,6 @@ internal fun MultiWalletSeedPhraseImport(state: MultiWalletSeedPhraseUM.Import, 
             onDismissDialog = state.dialog.onDismiss,
         )
     }
-
-    DisableAutofillEffect()
 
     Box(modifier.fillMaxSize()) {
         Column(

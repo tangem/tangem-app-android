@@ -54,7 +54,7 @@ dependencies {
 
     /** Core modules */
     api(projects.core.abTests)
-    api(projects.core.datasource)
+    implementation(projects.store.datasource)
     api(projects.core.ui)
     implementation(projects.core.utils)
     implementation(projects.core.error)
@@ -80,5 +80,4 @@ dependencies {
     testRuntimeOnly(projects.domain.wallets)
     testImplementation(deps.test.junit)
     testImplementation(projects.test.core)
-    testImplementation(projects.test.mock)
 }

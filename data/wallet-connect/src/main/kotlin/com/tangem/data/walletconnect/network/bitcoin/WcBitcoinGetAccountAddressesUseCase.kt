@@ -10,7 +10,7 @@ import com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.AccountAdd
 import com.tangem.blockchain.extensions.Result as SdkResult
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
-import com.tangem.datasource.di.SdkMoshi
+import com.tangem.core.local.moshi.SdkMoshi
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletconnect.model.HandleMethodError
 import com.tangem.domain.walletconnect.model.WcBitcoinMethod

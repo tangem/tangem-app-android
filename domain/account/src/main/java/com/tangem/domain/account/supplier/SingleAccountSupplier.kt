@@ -29,4 +29,12 @@ abstract class SingleAccountSupplier(
     fun filterCryptoPortfolioAccount(accountId: AccountId): Flow<Account.CryptoPortfolio> {
         return invoke(accountId).filterIsInstance()
     }
+
+    fun filterPersonalAccount(accountId: AccountId): Flow<Account.Personal> {
+        return invoke(accountId).filterIsInstance()
+    }
+
+    fun filterJointAccount(accountId: AccountId): Flow<Account.Joint> {
+        return invoke(accountId).filterIsInstance()
+    }
 }
