@@ -51,7 +51,7 @@ internal class JointAccountCreationModel @Inject constructor(
         createJointAccount(
             userWalletId = config.walletId,
             config = JointAccountConfig(
-                name = config.name,
+                name = config.name.trim(),
                 icon = config.icon.name,
                 iconColor = config.color.name,
                 membersCount = composition.totalMembers,
