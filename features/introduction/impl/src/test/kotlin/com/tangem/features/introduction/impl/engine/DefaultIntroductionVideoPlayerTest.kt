@@ -19,6 +19,7 @@ internal class DefaultIntroductionVideoPlayerTest {
     private val listener: IntroductionVideoPlayer.Listener = mockk(relaxed = true)
     private val surfaceView: SurfaceView = mockk(relaxed = true)
     private val otherSurfaceView: SurfaceView = mockk(relaxed = true)
+    private val scheduler = FakeTeardownScheduler()
 
     @BeforeEach
     fun resetMocks() {
@@ -179,6 +180,38 @@ internal class DefaultIntroductionVideoPlayerTest {
     }
 
     @Test
+    fun `GIVEN a surface is detached WHEN the teardown is still pending THEN the surface is kept until it runs`() {
+        // Arrange
+        val pending = FakeTeardownScheduler(runsImmediately = false)
+        val videoPlayer = createPlayer(teardownScheduler = pending)
+        videoPlayer.attachSurface(surfaceView)
+
+        // Act
+        videoPlayer.detachSurface(surfaceView)
+
+        // Assert
+        verify(exactly = 0) { player.clearVideoSurfaceView(any()) }
+        pending.scheduled?.invoke()
+        verify(exactly = 1) { player.clearVideoSurfaceView(surfaceView) }
+    }
+
+    @Test
+    fun `GIVEN a pending teardown WHEN a surface is attached again THEN the teardown is dropped`() {
+        // Arrange
+        val pending = FakeTeardownScheduler(runsImmediately = false)
+        val videoPlayer = createPlayer(teardownScheduler = pending)
+        videoPlayer.attachSurface(surfaceView)
+        videoPlayer.detachSurface(surfaceView)
+
+        // Act
+        videoPlayer.attachSurface(otherSurfaceView)
+
+        // Assert
+        assertThat(pending.scheduled).isNull()
+        verify(exactly = 0) { player.clearVideoSurfaceView(any()) }
+    }
+
+    @Test
     fun `GIVEN playback under way WHEN the position is read THEN it is the player position within the pass`() {
         // Arrange
         every { player.currentPosition } returns 4_200L
@@ -203,10 +236,34 @@ internal class DefaultIntroductionVideoPlayerTest {
         verify(exactly = 1) { player.seekTo(0L) }
     }
 
-    private fun createPlayer(isMotionEnabled: Boolean = true) = DefaultIntroductionVideoPlayer(
+    private fun createPlayer(
+        isMotionEnabled: Boolean = true,
+        teardownScheduler: VideoTeardownScheduler = scheduler,
+    ) = DefaultIntroductionVideoPlayer(
         player = player,
         videoItem = videoItem,
         isMotionEnabled = isMotionEnabled,
         listener = listener,
+        teardownScheduler = teardownScheduler,
     )
+
+    /** Stands in for the main thread the teardown is handed to; runs it on the spot unless asked to hold it. */
+    private class FakeTeardownScheduler(private val runsImmediately: Boolean = true) : VideoTeardownScheduler {
+
+        var scheduled: (() -> Unit)? = null
+            private set
+
+        var cancelCount = 0
+            private set
+
+        override fun schedule(action: () -> Unit) {
+            scheduled = action
+            if (runsImmediately) action()
+        }
+
+        override fun cancel() {
+            scheduled = null
+            cancelCount++
+        }
+    }
 }

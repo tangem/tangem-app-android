@@ -171,26 +171,3 @@ internal fun headerSubtitle(timestampMillis: Long): TextReference {
 }
 
 // endregion
-
-// region Network-fee row
-
-/**
- * Detail rows of an on-chain tx: the network-fee row when a fee with a value is present (rate is not surfaced). Shared
- * by the on-chain details card and the express card (which pulls the fee from its matched on-chain leg).
- */
-internal fun TxInfo.toInfoRows(): ImmutableList<TxHistoryDetailsUM.InfoRowUM> =
-    listOfNotNull(feeRow()).toImmutableList()
-
-private fun TxInfo.feeRow(): TxHistoryDetailsUM.InfoRowUM? {
-    val fee = fee ?: return null
-    val value = fee.value ?: return null
-    return TxHistoryDetailsUM.InfoRowUM(
-        label = resourceReference(R.string.common_network_fee_title),
-        value = stringReference(
-            value.format { crypto(symbol = fee.currencySymbol, decimals = fee.decimals, ignoreSymbolPosition = true) },
-        ),
-        isValueHideable = true,
-    )
-}
-
-// endregion
