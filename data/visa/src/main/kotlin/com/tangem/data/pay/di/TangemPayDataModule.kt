@@ -576,9 +576,9 @@ internal interface TangemPayDataModule {
 
         @Provides
         @Singleton
-        fun provideMoneyAccountFeesRepository(
-            repository: DefaultMoneyAccountRepository,
-        ): MoneyAccountRepository = repository
+        fun provideMoneyAccountFeesRepository(repository: DefaultMoneyAccountRepository): MoneyAccountRepository {
+            return repository
+        }
 
         @Provides
         @Singleton

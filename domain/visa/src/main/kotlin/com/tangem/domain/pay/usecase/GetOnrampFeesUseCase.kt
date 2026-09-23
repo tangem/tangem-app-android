@@ -12,7 +12,7 @@ class GetOnrampFeesUseCase(
     suspend operator fun invoke(userWalletId: UserWalletId): Either<VisaApiError, List<AccountFee>> {
         return getAccountFeesUseCase(
             userWalletId = userWalletId,
-            types = setOf(AccountFeeGroupType.ONRAMP)
+            types = setOf(AccountFeeGroupType.ONRAMP),
         )
     }
 }
