@@ -30,7 +30,7 @@ internal class PredictionAccountStatusValueDTOSerializationTest {
         val original = mapOf(
             "wallet-active" to PredictionAccountStatusValueDTO.Active(
                 balance = BigDecimal("12.50"),
-                isTradingAllowed = false,
+                positionsValue = BigDecimal("3.25"),
             ),
             "wallet-onboarding" to PredictionAccountStatusValueDTO.Onboarding(
                 stage = PredictionAccountStatusValueDTO.Stage.APPROVING,
@@ -52,7 +52,6 @@ internal class PredictionAccountStatusValueDTOSerializationTest {
         val value = mapOf(
             "wallet-1" to PredictionAccountStatusValueDTO.Active(
                 balance = BigDecimal("40"),
-                isTradingAllowed = true,
             ),
             "wallet-2" to PredictionAccountStatusValueDTO.Onboarding(
                 stage = PredictionAccountStatusValueDTO.Stage.DEPLOYING,
@@ -67,7 +66,8 @@ internal class PredictionAccountStatusValueDTOSerializationTest {
         assertThat(encoded).contains("\"__type\":\"active\"")
         assertThat(encoded).contains("\"__type\":\"onboarding\"")
         assertThat(encoded).contains("\"__type\":\"not_onboarded\"")
-        assertThat(encoded).contains("\"is_trading_allowed\":true")
+        assertThat(encoded).contains("\"deposit_address\":null")
+        assertThat(encoded).contains("\"positions_value\":null")
         assertThat(encoded).contains("\"stage\":\"deploying\"")
         assertThat(encoded).doesNotContain("com.tangem")
     }
@@ -78,7 +78,6 @@ internal class PredictionAccountStatusValueDTOSerializationTest {
         val value = mapOf(
             "wallet-1" to PredictionAccountStatusValueDTO.Active(
                 balance = BigDecimal("0.000001"),
-                isTradingAllowed = true,
             ),
         )
 
@@ -88,6 +87,22 @@ internal class PredictionAccountStatusValueDTOSerializationTest {
         // Assert
         val balance = (restored.getValue("wallet-1") as PredictionAccountStatusValueDTO.Active).balance
         assertThat(balance).isEqualTo(BigDecimal("0.000001"))
+    }
+
+    @Test
+    fun `GIVEN a file written before the positions value WHEN decoded THEN the value is unknown`() {
+        // Arrange
+        val encoded = """{"wallet-1":{"__type":"active","balance":"40","deposit_address":"0xbridge"}}"""
+
+        // Act
+        val restored = json.decodeFromString(serializer, encoded)
+
+        // Assert
+        assertThat(restored).containsExactly(
+            "wallet-1",
+            PredictionAccountStatusValueDTO.Active(balance = BigDecimal("40"), depositAddress = "0xbridge"),
+        )
+        assertThat((restored.getValue("wallet-1") as PredictionAccountStatusValueDTO.Active).positionsValue).isNull()
     }
 
     @Test
@@ -101,7 +116,7 @@ internal class PredictionAccountStatusValueDTOSerializationTest {
         // Assert
         assertThat(restored).containsExactly(
             "wallet-1",
-            PredictionAccountStatusValueDTO.Active(balance = BigDecimal("40"), isTradingAllowed = true),
+            PredictionAccountStatusValueDTO.Active(balance = BigDecimal("40")),
         )
     }
 }

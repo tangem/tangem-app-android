@@ -18,8 +18,7 @@ import kotlin.time.Duration.Companion.seconds
  * The stock [com.tangem.pagination.fetcher.CursorBatchFetcher] derives the next cursor from the last item of a
  * page, which this endpoint does not support: the cursor is a keyset token served alongside the events.
  *
- * Every page keeps the cursor it was requested with, so it can be asked for again — that is what
- * [PolymarketEventsUpdateFetcher] refreshes it by.
+ * Every page keeps the cursor it was requested with, which is what [PolymarketEventsUpdateFetcher] refreshes by.
  *
  * Failures are retried once, silently, after [retryDelay] — the caller keeps its loader up meanwhile, so a single
  * hiccup never surfaces as an error state. An empty **first** page is retried the same way and, if it stays empty,

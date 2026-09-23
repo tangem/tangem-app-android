@@ -7,6 +7,7 @@ import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.Wallet
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
+import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.card.repository.CardSdkConfigRepository
@@ -69,6 +70,27 @@ class SignUseCase(
             is CompletionResult.Failure -> SignHashesError.SigningFailed(
                 message = result.error.message ?: "Unknown error",
             ).left()
+        }
+    }
+
+    suspend operator fun invoke(
+        hashes: List<ByteArray>,
+        publicKey: Wallet.PublicKey,
+        userWallet: UserWallet,
+    ): Either<SignHashesError, List<ByteArray>> {
+        if (hashes.isEmpty()) return emptyList<ByteArray>().right()
+
+        val signer = when (userWallet) {
+            is UserWallet.Hot -> getHotTransactionSigner(userWallet)
+            is UserWallet.Cold -> getColdSigner(userWallet)
+        }
+
+        return when (val result = signer.sign(hashes, publicKey)) {
+            is CompletionResult.Success -> result.data.right()
+            is CompletionResult.Failure -> when (result.error) {
+                is TangemSdkError.UserCancelled -> SignHashesError.Cancelled.left()
+                else -> SignHashesError.SigningFailed(message = result.error.message ?: "Unknown error").left()
+            }
         }
     }
 

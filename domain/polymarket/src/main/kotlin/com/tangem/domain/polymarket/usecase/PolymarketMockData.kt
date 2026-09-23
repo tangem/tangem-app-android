@@ -258,6 +258,7 @@ internal object PolymarketMockData {
         outcomes: List<PolymarketOutcome> = emptyList(),
     ): PolymarketMarket = PolymarketMarket(
         id = id,
+        conditionId = null,
         eventId = eventId,
         title = title,
         slug = slug,
@@ -267,6 +268,7 @@ internal object PolymarketMockData {
         imageUrl = imageUrl,
         status = status,
         isNegRisk = isNegRisk,
+        isAcceptingOrders = true,
         startDate = startDate,
         endDate = endDate,
         startDateIso = startDateIso,

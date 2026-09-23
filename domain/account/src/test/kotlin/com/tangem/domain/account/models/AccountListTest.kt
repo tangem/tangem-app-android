@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import io.mockk.every
 
 /**
 [REDACTED_AUTHOR]
@@ -49,6 +50,26 @@ internal class AccountListTest {
         // Act & Assert
         Truth.assertThat(accountList.canAddMoreCryptoAccounts).isTrue()
         Truth.assertThat(fullAccountList.canAddMoreCryptoAccounts).isFalse()
+    }
+
+    @Test
+    fun `GIVEN personal cap reached WHEN canAddMoreJointAccounts THEN joint cap is unaffected`() {
+        // Arrange
+        val accountList = MockAccounts.fullAccountList
+
+        // Act & Assert
+        Truth.assertThat(accountList.canAddMoreCryptoAccounts).isFalse()
+        Truth.assertThat(accountList.canAddMoreJointAccounts).isTrue()
+    }
+
+    @Test
+    fun `GIVEN joint cap reached WHEN canAddMoreCryptoAccounts THEN personal cap is unaffected`() {
+        // Arrange
+        val accountList = MockAccounts.fullJointAccountList
+
+        // Act & Assert
+        Truth.assertThat(accountList.canAddMoreJointAccounts).isFalse()
+        Truth.assertThat(accountList.canAddMoreCryptoAccounts).isTrue()
     }
 
     @Test
@@ -206,6 +227,49 @@ internal class AccountListTest {
     }
 
     @Test
+    fun `GIVEN collectibles account WHEN flattenCurrencies THEN it contributes no currencies`() {
+        // Arrange
+        val currency = mockk<CryptoCurrency>()
+        val accounts = listOf(
+            Account.Personal.createMainAccount(userWalletId, cryptoCurrencies = listOf(currency)),
+            Account.Collectibles(userWalletId),
+        )
+        val accountList = AccountList(
+            userWalletId = userWalletId,
+            accounts = accounts,
+            totalAccounts = accounts.size,
+            totalArchivedAccounts = 0,
+        ).getOrNull()!!
+
+        // Act
+        val actual = accountList.flattenCurrencies()
+
+        // Assert
+        Truth.assertThat(actual).containsExactly(currency)
+    }
+
+    @Test
+    fun `GIVEN joint account with currencies WHEN flattenMapCurrencies THEN joint currencies are keyed by its account`() {
+        // Arrange
+        val jointCurrency = mockk<CryptoCurrency> { every { id } returns mockk() }
+        val joint = MockAccounts.createJointAccount(ownerKeyIndex = 0, cryptoCurrencies = listOf(jointCurrency))
+        val accounts = listOf(Account.Personal.createMainAccount(userWalletId), joint)
+        val accountList = AccountList(
+            userWalletId = userWalletId,
+            accounts = accounts,
+            totalAccounts = accounts.size,
+            totalArchivedAccounts = 0,
+            totalJointAccounts = 1,
+        ).getOrNull()!!
+
+        // Act
+        val actual = accountList.flattenMapCurrencies()
+
+        // Assert
+        Truth.assertThat(actual).containsExactly(joint.accountId to jointCurrency.id, jointCurrency)
+    }
+
+    @Test
     fun empty() {
         // Act
         val actual = AccountList.empty(userWalletId)
@@ -256,9 +320,9 @@ internal class AccountListTest {
             val accounts = listOf(
                 Account.Personal.createMainAccount(userWalletId),
                 createAccount(name = "Payment", derivationIndex = 1),
-                createAccount(name = "Virtual", derivationIndex = 2),
+                createAccount(name = "Money", derivationIndex = 2),
                 Account.Payment(userWalletId),
-                Account.Virtual(userWalletId),
+                Account.Money(userWalletId),
             )
 
             // Act
@@ -301,10 +365,10 @@ internal class AccountListTest {
             CreateTestModel(
                 accounts = listOf(
                     Account.Personal.createMainAccount(userWalletId),
-                    Account.Virtual(userWalletId),
-                    Account.Virtual(userWalletId),
+                    Account.Money(userWalletId),
+                    Account.Money(userWalletId),
                 ),
-                expected = AccountList.Error.ExceedsMaxVirtualAccountsCount.left(),
+                expected = AccountList.Error.ExceedsMaxMoneyAccountsCount.left(),
             ),
             CreateTestModel(
                 accounts = listOf(
@@ -313,6 +377,14 @@ internal class AccountListTest {
                     Account.Prediction(userWalletId),
                 ),
                 expected = AccountList.Error.ExceedsMaxPredictionAccountsCount.left(),
+            ),
+            CreateTestModel(
+                accounts = listOf(
+                    Account.Personal.createMainAccount(userWalletId),
+                    Account.Collectibles(userWalletId),
+                    Account.Collectibles(userWalletId),
+                ),
+                expected = AccountList.Error.ExceedsMaxCollectiblesAccountsCount.left(),
             ),
             CreateTestModel(
                 accounts = listOf(
@@ -539,6 +611,20 @@ internal class AccountListTest {
                 ).getOrNull()!!,
                 toAdd = createAccount(derivationIndex = 21),
                 expected = AccountList.Error.ExceedsMaxAccountsCount.left(),
+            ),
+            // endregion
+            // region ExceedsMaxJointAccountsCount
+            PlusTestModel(
+                initial = AccountList(
+                    userWalletId = userWalletId,
+                    accounts = listOf(Account.Personal.createMainAccount(userWalletId)) +
+                        MockAccounts.createJointAccounts(count = 20),
+                    totalAccounts = 1,
+                    totalArchivedAccounts = 0,
+                    totalJointAccounts = 20,
+                ).getOrNull()!!,
+                toAdd = MockAccounts.createJointAccount(ownerKeyIndex = 20),
+                expected = AccountList.Error.ExceedsMaxJointAccountsCount.left(),
             ),
             // endregion
         )

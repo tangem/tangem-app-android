@@ -38,20 +38,30 @@ internal class DefaultPolymarketCollateralCurrencyFactory @Inject constructor() 
         )
     }
 
-    override fun create(): CryptoCurrency.Token {
-        return CryptoCurrency.Token(
-            id = getTokenId(
-                network = network,
-                rawTokenId = PredictionCollateral.RAW_ID,
-                contractAddress = PolymarketContracts.COLLATERAL,
-            ),
+    override fun create(): CryptoCurrency.Token = token(
+        contractAddress = PolymarketContracts.COLLATERAL.lowercase(),
+        name = PolymarketCollateralCurrencyFactory.COLLATERAL_NAME,
+        symbol = PolymarketCollateralCurrencyFactory.COLLATERAL_SYMBOL,
+    )
+
+    override fun createDepositTarget(): CryptoCurrency.Token = token(
+        contractAddress = PolymarketContracts.USDC_TOKEN_ADDRESS,
+        name = PolymarketCollateralCurrencyFactory.DEPOSIT_NAME,
+        symbol = PolymarketCollateralCurrencyFactory.DEPOSIT_SYMBOL,
+    )
+
+    private fun token(contractAddress: String, name: String, symbol: String) = CryptoCurrency.Token(
+        id = getTokenId(
             network = network,
-            name = PolymarketCollateralCurrencyFactory.TOKEN_NAME,
-            symbol = PolymarketCollateralCurrencyFactory.TOKEN_SYMBOL,
-            decimals = PolymarketContracts.COLLATERAL_DECIMALS,
-            iconUrl = getTokenIconUrlFromDefaultHost(PredictionCollateral.RAW_ID),
-            isCustom = false,
-            contractAddress = PolymarketContracts.COLLATERAL,
-        )
-    }
+            rawTokenId = PredictionCollateral.RAW_ID,
+            contractAddress = contractAddress,
+        ),
+        network = network,
+        name = name,
+        symbol = symbol,
+        decimals = PolymarketContracts.COLLATERAL_DECIMALS,
+        iconUrl = getTokenIconUrlFromDefaultHost(PredictionCollateral.RAW_ID),
+        isCustom = false,
+        contractAddress = contractAddress,
+    )
 }

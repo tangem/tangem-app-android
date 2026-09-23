@@ -1,7 +1,6 @@
 package com.tangem.features.tangempay.account
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.tangempay.awaitingDepositOrder
 import com.tangem.features.tangempay.customerTariffPlan
@@ -18,10 +17,7 @@ internal class TangemPayDetailsNotificationFactoryTest {
 
     private val intents: TangemPayDetailIntents = mockk(relaxed = true)
 
-    private val factory = TangemPayDetailsNotificationFactory(
-        intents = intents,
-        isTiersPlusPlanEnabled = true,
-    )
+    private val factory = TangemPayDetailsNotificationFactory(intents = intents)
 
     @BeforeEach
     fun resetMocks() {
@@ -37,7 +33,7 @@ internal class TangemPayDetailsNotificationFactoryTest {
         val config = factory.createTiersConfig(planState)
 
         // THEN
-        val button = config?.buttonsState as? NotificationConfig.ButtonsState.SecondaryButtonConfig
+        val button = config?.secondaryButton
         assertThat(button?.text).isEqualTo(resourceReference(R.string.tangempay_card_details_add_funds))
         button?.onClick?.invoke()
         verify(exactly = 1) { intents.onClickAddFunds() }
@@ -53,21 +49,6 @@ internal class TangemPayDetailsNotificationFactoryTest {
 
         // WHEN
         val config = factory.createTiersConfig(planState)
-
-        // THEN
-        assertThat(config).isNull()
-    }
-
-    @Test
-    fun `GIVEN tiers toggle disabled WHEN createTiersConfig THEN no banner`() {
-        // GIVEN
-        val disabledFactory = TangemPayDetailsNotificationFactory(
-            intents = intents,
-            isTiersPlusPlanEnabled = false,
-        )
-
-        // WHEN
-        val config = disabledFactory.createTiersConfig(tariffPlanState(order = awaitingDepositOrder()))
 
         // THEN
         assertThat(config).isNull()
