@@ -36,6 +36,7 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
         step = form.step,
         callbacks = TangemPayBankWithdrawFormUMFactory.Callbacks(
             onBackClick = ::onBackClick,
+            onCloseClick = form.onCloseFlow,
             onValueChange = ::onValueChange,
             onFocusChange = ::onFocusChange,
             onSelectorClick = ::onSelectorClick,

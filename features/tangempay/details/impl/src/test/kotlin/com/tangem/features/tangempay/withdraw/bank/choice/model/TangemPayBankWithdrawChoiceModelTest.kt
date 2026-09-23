@@ -24,12 +24,13 @@ internal class TangemPayBankWithdrawChoiceModelTest {
 
     private val router: Router = mockk(relaxed = true)
     private val onContinue: (String) -> Unit = mockk(relaxed = true)
+    private val onCloseFlow: () -> Unit = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val draft = MutableStateFlow(BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal))
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(router, onContinue)
+        clearMocks(router, onContinue, onCloseFlow)
         draft.value = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal)
     }
 
@@ -47,6 +48,7 @@ internal class TangemPayBankWithdrawChoiceModelTest {
             BankWithdrawHeaderUM(
                 title = resourceReference(R.string.tangempay_withdraw_hub_to_personal_account),
                 subtitle = resourceReference(R.string.tangempay_withdraw_bank_step_counter, wrappedList(2, 5)),
+                onCloseClick = onCloseFlow,
             ),
         )
         assertThat(state.sectionTitle).isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_transfer_type_title))
@@ -101,6 +103,7 @@ internal class TangemPayBankWithdrawChoiceModelTest {
             BankWithdrawHeaderUM(
                 title = resourceReference(R.string.tangempay_withdraw_bank_account_type_screen_title),
                 subtitle = resourceReference(R.string.tangempay_withdraw_bank_step_counter, wrappedList(2, 4)),
+                onCloseClick = onCloseFlow,
             ),
         )
         model.onDestroy()
@@ -179,6 +182,7 @@ internal class TangemPayBankWithdrawChoiceModelTest {
                 step = step,
                 config = config,
                 onContinue = onContinue,
+                onCloseFlow = onCloseFlow,
             ),
         ),
         dispatchers = dispatchers,

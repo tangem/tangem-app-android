@@ -142,12 +142,10 @@ internal class TangemPayWithdrawHubUMFactoryTest {
         val actual = createRecents(accounts = listOf(account)) as RecentsUM.Content
 
         // Assert
-        val recipient = actual.recipients.single()
-        assertThat(recipient).isEqualTo(
+        assertThat(actual.recipients.single()).isEqualTo(
             RecentRecipientUM(
                 id = "acc-1",
                 initial = model.expectedInitial,
-                accent = recipient.accent,
                 name = model.expectedName,
                 accountNumber = "1234567890",
             ),
@@ -186,19 +184,6 @@ internal class TangemPayWithdrawHubUMFactoryTest {
 
         // Assert
         assertThat(actual.recipients.map { it.id }).containsExactly("acc-2", "acc-1").inOrder()
-    }
-
-    @Test
-    fun `GIVEN same account id WHEN createRecents twice THEN same avatar accent`() {
-        // Arrange
-        val account = bankAccount(id = "acc-42")
-
-        // Act
-        val first = createRecents(accounts = listOf(account)) as RecentsUM.Content
-        val second = createRecents(accounts = listOf(account)) as RecentsUM.Content
-
-        // Assert
-        assertThat(first.recipients.single().accent).isEqualTo(second.recipients.single().accent)
     }
 
     @Test

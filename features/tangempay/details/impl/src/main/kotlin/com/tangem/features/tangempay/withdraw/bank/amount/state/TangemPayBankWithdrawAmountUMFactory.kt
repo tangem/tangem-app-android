@@ -35,7 +35,11 @@ internal class TangemPayBankWithdrawAmountUMFactory(
         sheet: AmountSheet?,
     ): TangemPayBankWithdrawAmountUM {
         return TangemPayBankWithdrawAmountUM(
-            header = BankWithdrawHeaderFactory.create(draft = draft, step = step),
+            header = BankWithdrawHeaderFactory.create(
+                draft = draft,
+                step = step,
+                onCloseClick = callbacks.onCloseClick,
+            ),
             amount = createAmountField(selection = selection),
             source = createSourceRow(source = selection.source, currency = selection.currency),
             route = createRouteRow(selection = selection),
@@ -122,6 +126,7 @@ internal class TangemPayBankWithdrawAmountUMFactory(
 
     data class Callbacks(
         val onBackClick: () -> Unit,
+        val onCloseClick: () -> Unit,
         val onValueChange: (String) -> Unit,
         val onMaxClick: () -> Unit,
         val onSourceClick: () -> Unit,

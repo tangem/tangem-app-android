@@ -77,13 +77,37 @@ internal class JointOperationUMConverterTest {
         assertThat(actual.cosignAction?.buttonText).isEqualTo(resourceReference(CoreUiR.string.common_sign))
     }
 
-    private fun input(state: JointOperationState, hasAnswered: Boolean = false) = JointOperationUMConverter.Input(
+    @Test
+    fun `GIVEN cold wallet can sign WHEN converted THEN the sign button carries the card icon`() {
+        // Act
+        val actual = converter.convert(input(state(isSending = false), isColdWallet = true))
+
+        // Assert
+        assertThat(actual.cosignAction?.iconEnd).isNotNull()
+    }
+
+    @Test
+    fun `GIVEN hot wallet can sign WHEN converted THEN the sign button has no icon`() {
+        // Act
+        val actual = converter.convert(input(state(isSending = false), isColdWallet = false))
+
+        // Assert
+        assertThat(actual.cosignAction?.isEnabled).isTrue()
+        assertThat(actual.cosignAction?.iconEnd).isNull()
+    }
+
+    private fun input(
+        state: JointOperationState,
+        hasAnswered: Boolean = false,
+        isColdWallet: Boolean = true,
+    ) = JointOperationUMConverter.Input(
         state = state,
         isSigning = false,
         isRefusing = false,
         hasAnswered = hasAnswered,
         canCreateContact = true,
         isBalanceHidden = false,
+        isColdWallet = isColdWallet,
     )
 
     private fun state(isSending: Boolean, ownAnswer: Answer = Answer.WAITING) = JointOperationState(
