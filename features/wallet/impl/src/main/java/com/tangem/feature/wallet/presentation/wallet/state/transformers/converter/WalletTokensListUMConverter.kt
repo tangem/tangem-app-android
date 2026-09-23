@@ -14,6 +14,8 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.JointAccountStatusValue
+import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -38,8 +40,18 @@ internal class WalletTokensListUMConverter(
     private val isAccountsModeEnabled: Boolean,
     private val expandedAccounts: Set<AccountId>,
     private val stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability>,
+    private val accountIdsWithInvites: Set<String>,
     shouldShowMainPromo: Boolean,
 ) : Converter<AccountStatusList, WalletTokensListUM> {
+
+    private val jointAccountRowConverter by lazy(LazyThreadSafetyMode.NONE) {
+        WalletJointAccountItemConverter(
+            appCurrency = appCurrency,
+            userWalletId = selectedWallet.walletId,
+            accountIdsWithInvites = accountIdsWithInvites,
+            onAccountClick = clickIntents::onJointAccountClick,
+        )
+    }
 
     private val accountRowConverter by lazy(LazyThreadSafetyMode.NONE) {
         WalletTokenAccountItemConverter(
@@ -73,30 +85,23 @@ internal class WalletTokensListUMConverter(
 
     override fun convert(value: AccountStatusList): WalletTokensListUM {
         val promoCryptoCurrency = yieldSupplyPromoBannerConverter.convert2(value = value)
-        return if (value.flattenCurrencies().isEmpty()) {
+        // A joint account carries a row of its own even while it holds nothing, so an otherwise empty wallet
+        // must not fall into the empty state and hide it
+        val hasJointAccount = value.accountStatuses.any { it is AccountStatus.Joint }
+        return if (value.flattenPersonalCurrencies().isEmpty() && !hasJointAccount) {
             WalletTokensListUM.Empty(
                 onEmptyClick = { clickIntents.onManageTokensClick(value.mainAccount.accountId) },
             )
         } else {
+            // In the order the domain sorted the accounts: a joint account is an account, and appending its row
+            // after everything else would move it away from where its list position says it belongs
             val tokenListUM = value.accountStatuses
-                .filterIsInstance<AccountStatus.CryptoPortfolio>()
+                .filterCryptoPortfolio()
                 .asSequence()
                 .flatMap { accountStatus ->
-                    if (isAccountsModeEnabled) {
-                        sequenceOf(
-                            TokensListItemUM2.Portfolio(
-                                tokenRowUM = accountRowConverter.convert(accountStatus),
-                                isExpanded = expandedAccounts.contains(accountStatus.account.accountId),
-                                isCollapsable = true,
-                                onEmptyClick = { clickIntents.onManageTokensClick(accountStatus.account.accountId) },
-                                tokenList = getTokenListItems(
-                                    accountStatus,
-                                    promoCryptoCurrency,
-                                ).toPersistentList(),
-                            ),
-                        )
-                    } else {
-                        getTokenListItems(accountStatus, promoCryptoCurrency)
+                    when (accountStatus) {
+                        is AccountStatus.Personal -> personalItems(accountStatus, promoCryptoCurrency)
+                        is AccountStatus.Joint -> jointItems(accountStatus, promoCryptoCurrency)
                     }
                 }.toPersistentList()
 
@@ -105,6 +110,38 @@ internal class WalletTokensListUMConverter(
                 organizeButtonUM = getOrganizeButtonUM(value),
             )
         }
+    }
+
+    private fun personalItems(
+        accountStatus: AccountStatus.Personal,
+        promoCryptoCurrency: CryptoCurrencyStatus?,
+    ): Sequence<TokensListItemUM2> {
+        if (!isAccountsModeEnabled) return getTokenListItems(accountStatus, promoCryptoCurrency)
+        return sequenceOf(portfolioItem(accountStatus, promoCryptoCurrency))
+    }
+
+    private fun jointItems(
+        accountStatus: AccountStatus.Joint,
+        promoCryptoCurrency: CryptoCurrencyStatus?,
+    ): Sequence<TokensListItemUM2> {
+        return if (accountStatus.value is JointAccountStatusValue.Active) {
+            sequenceOf(portfolioItem(accountStatus, promoCryptoCurrency))
+        } else {
+            sequenceOf(jointAccountRowConverter.convert(accountStatus))
+        }
+    }
+
+    private fun portfolioItem(
+        accountStatus: AccountStatus.CryptoPortfolio,
+        promoCryptoCurrency: CryptoCurrencyStatus?,
+    ): TokensListItemUM2.Portfolio {
+        return TokensListItemUM2.Portfolio(
+            tokenRowUM = accountRowConverter.convert(accountStatus),
+            isExpanded = expandedAccounts.contains(accountStatus.account.accountId),
+            isCollapsable = true,
+            onEmptyClick = { clickIntents.onManageTokensClick(accountStatus.account.accountId) },
+            tokenList = getTokenListItems(accountStatus, promoCryptoCurrency).toPersistentList(),
+        )
     }
 
     private fun getTokenListItems(

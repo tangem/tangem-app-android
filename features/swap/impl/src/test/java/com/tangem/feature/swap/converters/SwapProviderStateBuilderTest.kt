@@ -133,6 +133,26 @@ internal class SwapProviderStateBuilderTest {
     }
 
     @Test
+    fun `GIVEN region restricted quote WHEN buildContentSelectable THEN percent difference is dropped`() {
+        // Arrange
+        val provider = provider(id = "1inch")
+        val info = tokenInfo(symbol = "USDT", decimals = 6, amount = BigDecimal("100"))
+
+        // Act
+        val result = SwapProviderStateBuilder.buildContentSelectable(
+            provider = provider,
+            state = quoteState(toTokenInfo = info, isRestricted = true),
+            pricesLowerBest = mapOf("1inch" to 0.5f),
+            selectionType = ProviderState.SelectionType.SELECT,
+            additionalBadge = ProviderState.AdditionalBadge.Unavailable,
+            onProviderClick = onProviderClick,
+        )
+
+        // Assert
+        assertThat(result.percentLowerThenBest).isEqualTo(PercentDifference.Empty)
+    }
+
+    @Test
     fun `GIVEN a badge WHEN buildContentSelectable THEN it is rendered`() {
         val provider = provider(id = "any")
         val info = tokenInfo(symbol = "USDT", decimals = 6, amount = BigDecimal("100"))
@@ -206,10 +226,12 @@ internal class SwapProviderStateBuilderTest {
         toTokenInfo: TokenSwapInfo,
         fromTokenInfo: TokenSwapInfo = toTokenInfo,
         permissionState: PermissionDataState = PermissionDataState.Empty,
+        isRestricted: Boolean = false,
     ): SwapState.QuotesLoadedState = mockk {
         every { this@mockk.fromTokenInfo } returns fromTokenInfo
         every { this@mockk.toTokenInfo } returns toTokenInfo
         every { this@mockk.permissionState } returns permissionState
+        every { this@mockk.isRestricted } returns isRestricted
     }
 
     private fun tokenInfo(symbol: String, decimals: Int, amount: BigDecimal): TokenSwapInfo {

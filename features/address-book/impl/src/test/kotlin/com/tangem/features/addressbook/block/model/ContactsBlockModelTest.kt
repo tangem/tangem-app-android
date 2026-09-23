@@ -14,7 +14,7 @@ import com.tangem.features.addressbook.MatchedContact
 import com.tangem.features.addressbook.block.state.ContactsBlockStateController
 import com.tangem.features.addressbook.block.ui.state.ContactsBlockUM
 import com.tangem.features.addressbook.common.AddressBookAnalyticsSender
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -22,7 +22,6 @@ import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -67,7 +66,7 @@ internal class ContactsBlockModelTest {
         advanceUntilIdle()
 
         // Assert — reported once even though two contacts populate the block.
-        verify(exactly = 1) { analyticsSender.sendSendFlowWidgetShown(scope = any()) }
+        verify(exactly = 1) { analyticsSender.sendSendFlowWidgetShown() }
     }
 
     @Test
@@ -82,7 +81,7 @@ internal class ContactsBlockModelTest {
 
         // Assert — the widget is hidden, so nothing is reported.
         assertThat(model.state.value).isEqualTo(ContactsBlockUM.Hidden)
-        verify(exactly = 0) { analyticsSender.sendSendFlowWidgetShown(any()) }
+        verify(exactly = 0) { analyticsSender.sendSendFlowWidgetShown() }
     }
 
     @Test
@@ -98,7 +97,7 @@ internal class ContactsBlockModelTest {
         (model.state.value as ContactsBlockUM.Content).contacts.first().onClick()
 
         // Assert
-        verify(exactly = 1) { analyticsSender.sendContactSelectedInSend(contactId = "42", scope = any()) }
+        verify(exactly = 1) { analyticsSender.sendContactSelectedInSend(contactId = "42") }
         assertThat(clicked?.contactId).isEqualTo("42")
     }
 
@@ -141,17 +140,6 @@ internal class ContactsBlockModelTest {
             getVerifiedContactsInteractor = getVerifiedContactsInteractor,
             getWalletsUseCase = getWalletsUseCase,
         ).also { model = it }
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
     }
 
     private companion object {

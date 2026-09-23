@@ -41,6 +41,7 @@ dependencies {
     api(projects.domain.appTheme)
     api(projects.domain.balanceHiding)
     api(projects.domain.demo)
+    implementation(projects.domain.jointAccount)
     api(projects.domain.legacy)
     api(projects.domain.models)
     api(projects.domain.offramp)
@@ -94,4 +95,5 @@ dependencies {
     /** Tests */
     testImplementation(projects.test.core)
     testImplementation(projects.common.test)
+    testImplementation(projects.test.mock)
 }

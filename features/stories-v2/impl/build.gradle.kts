@@ -16,6 +16,7 @@ dependencies {
     api(projects.core.utils)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
+    implementation(projects.core.res)
     implementation(projects.core.ui)
 
     /** Api */

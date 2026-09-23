@@ -18,22 +18,22 @@ import com.tangem.data.markets.converters.*
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncStrict
+import com.tangem.domain.jointaccount.derivation.toNetworkDerivationPath
 import com.tangem.domain.markets.*
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
-import com.tangem.domain.models.account.DerivationIndex
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.pagination.*
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
 import com.tangem.store.datasource.markets.TangemTechMarketsApi
-import com.tangem.store.datasource.markets.models.response.CoinCategoriesResponse
 import com.tangem.store.datasource.markets.models.response.TokenMarketExchangesResponse
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class DefaultMarketsTokenRepository(
     private val marketsApi: TangemTechMarketsApi,
     private val quotesFetcher: QuotesFetcher,
@@ -42,7 +42,6 @@ internal class DefaultMarketsTokenRepository(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val cacheRegistry: CacheRegistry,
     private val tokenExchangesStore: RuntimeStateStore<List<TokenMarketExchangesResponse.Exchange>>,
-    private val coinCategoriesStore: RuntimeStateStore<List<CoinCategoriesResponse.Category>>,
     private val networkFactory: NetworkFactory,
     excludedBlockchains: ExcludedBlockchains,
 ) : MarketsTokenRepository {
@@ -77,6 +76,8 @@ internal class DefaultMarketsTokenRepository(
                         showNetworks = request.params.shouldNetworks,
                         categoryId = request.params.categoryId,
                         sectorId = request.params.sectorId,
+                        geckoCategoryId = request.params.geckoCategoryId,
+                        country = request.params.country,
                     ).getOrThrow()
                 }
 
@@ -252,26 +253,28 @@ internal class DefaultMarketsTokenRepository(
         userWalletId: UserWalletId,
         token: RawMarketToken,
         network: TokenMarketInfo.Network,
-        accountIndex: DerivationIndex?,
+        account: Account.CryptoPortfolio,
     ): CryptoCurrency? {
         val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
         val blockchain = Blockchain.fromNetworkId(network.networkId) ?: error("Unknown network [${network.networkId}]")
 
-        return if (network.contractAddress == null) {
-            cryptoCurrencyFactory.createCoin(
+        val currencyNetwork = when (account) {
+            is Account.Personal -> networkFactory.create(
                 blockchain = blockchain,
                 extraDerivationPath = null,
                 userWallet = userWallet,
-                accountIndex = accountIndex,
+                accountIndex = account.derivationIndex,
             )
-        } else {
-            val currencyNetwork = networkFactory.create(
+            is Account.Joint -> networkFactory.create(
                 blockchain = blockchain,
-                extraDerivationPath = null,
+                derivationPath = account.ownerKeyIndex.toNetworkDerivationPath(),
                 userWallet = userWallet,
-                accountIndex = accountIndex,
-            ) ?: return null
+            )
+        } ?: return null
 
+        return if (network.contractAddress == null) {
+            cryptoCurrencyFactory.createCoin(currencyNetwork)
+        } else {
             cryptoCurrencyFactory.createToken(
                 network = currencyNetwork,
                 rawId = token.id,
@@ -295,16 +298,75 @@ internal class DefaultMarketsTokenRepository(
         }
     }
 
-    override suspend fun getCoinCategories(): List<CoinCategory> {
+    override suspend fun getCoinCategories(country: String?): List<CoinCategory> {
         return withContext(dispatcherProvider.io) {
-            cacheRegistry.invokeOnExpire(key = "coins/categories", skipCache = false) {
-                val response = marketsApi.getCoinCategories().getOrThrow()
+            val response = marketsApi.getCoinCategories(country = country).getOrThrow()
 
-                coinCategoriesStore.store(value = response.categories)
-            }
-
-            CoinCategoryConverter.convertList(input = coinCategoriesStore.get().value)
+            CoinCategoryConverter.convertList(input = response.categories)
         }
+    }
+
+    override suspend fun getMarketCategories(
+        currency: String,
+        offset: Int,
+        limit: Int,
+        timestamp: Long?,
+        featured: Boolean?,
+    ): MarketCategoryPage {
+        return withContext(dispatcherProvider.io) {
+            val response = marketsApi.getMarketCategories(
+                currency = currency,
+                offset = offset,
+                limit = limit,
+                timestamp = timestamp,
+                featured = featured,
+            ).getOrThrow()
+
+            MarketCategoryConverter.convert(value = response)
+        }
+    }
+
+    private fun createMarketCategoriesFetcher(
+        firstBatchSize: Int,
+        nextBatchSize: Int,
+    ): LimitOffsetBatchFetcher<MarketCategoryListConfig, List<MarketCategory>> = LimitOffsetBatchFetcher(
+        prefetchDistance = firstBatchSize,
+        batchSize = nextBatchSize,
+        subFetcher = { request, _, _ ->
+            val response = marketsApi.getMarketCategories(
+                currency = request.params.fiatCurrencySymbol,
+                offset = request.offset,
+                limit = request.limit,
+                timestamp = request.params.timestamp,
+                featured = request.params.featuredFilter.isFeatured,
+                search = request.params.searchText?.takeIf(String::isNotBlank),
+            ).getOrThrow()
+
+            BatchFetchResult.Success(
+                data = MarketCategoryConverter.convert(value = response).categories,
+                empty = response.categories.isEmpty(),
+                last = response.categories.size < request.limit,
+                total = response.total,
+            )
+        },
+    )
+
+    override fun getMarketCategoryListFlow(
+        batchingContext: MarketCategoryListBatchingContext,
+        firstBatchSize: Int,
+        nextBatchSize: Int,
+    ): MarketCategoryListBatchFlow {
+        val atomicInteger = AtomicInteger(0)
+
+        return BatchListSource(
+            fetchDispatcher = dispatcherProvider.io,
+            context = batchingContext,
+            generateNewKey = { atomicInteger.getAndIncrement() },
+            batchFetcher = createMarketCategoriesFetcher(
+                firstBatchSize = firstBatchSize,
+                nextBatchSize = nextBatchSize,
+            ),
+        ).toBatchFlow()
     }
 
     inline fun <T> catchListErrorAndSendEvent(block: () -> T): T {

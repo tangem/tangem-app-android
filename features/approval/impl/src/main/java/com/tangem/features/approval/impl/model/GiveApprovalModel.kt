@@ -289,6 +289,8 @@ internal class GiveApprovalModel @Inject constructor(
             Basic.TransactionSent(
                 sentFrom = event,
                 memoType = Basic.TransactionSent.MemoType.Null,
+                isCustomToken = currency.isCustom,
+                isCustomFeeToken = feeCurrency.isCustom,
             ),
         )
     }

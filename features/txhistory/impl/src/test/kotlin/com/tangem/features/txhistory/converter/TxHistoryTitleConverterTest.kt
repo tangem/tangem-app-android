@@ -36,6 +36,16 @@ internal class TxHistoryTitleConverterTest {
             expected = resRef(R.string.common_approved),
         ),
         TitleModel(
+            tx = txInfo(
+                type = TransactionType.Approve(
+                    amount = SdkAmount(currencySymbol = "USDT", value = null, decimals = 6),
+                    address = "0xspender",
+                ),
+                status = TransactionStatus.Failed,
+            ),
+            expected = resRef(R.string.transaction_history_status_approve_failed),
+        ),
+        TitleModel(
             tx = txInfo(TransactionType.Staking.Stake),
             expected = resRef(R.string.common_staked),
         ),
@@ -154,7 +164,16 @@ internal class TxHistoryTitleConverterTest {
         ),
         TitleModel(
             tx = txInfo(TransactionType.GaslessFee),
-            expected = resRef(R.string.gasless_transaction_fee),
+            expected = resRef(R.string.common_network_fee_title),
+        ),
+        TitleModel(
+            tx = txInfo(
+                TransactionType.NetworkFee(
+                    amount = null,
+                    address = "0x3333333333333333333333333333333333333333",
+                ),
+            ),
+            expected = resRef(R.string.common_network_fee_title),
         ),
     )
 
@@ -168,7 +187,7 @@ internal class TxHistoryTitleConverterTest {
         type: TransactionType,
         status: TransactionStatus = TransactionStatus.Confirmed,
         isOutgoing: Boolean = false,
-    ): TxInfo = TxInfo(
+    ): TxInfo.Single = TxInfo.Single(
         txHash = "0xtxhash",
         timestampInMillis = 1_700_000_000_000L,
         isOutgoing = isOutgoing,

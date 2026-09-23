@@ -7,8 +7,7 @@ import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.grow.datasource.express.TangemExpressApi
 import com.tangem.grow.datasource.express.models.request.AssetsRequestBody
 import com.tangem.grow.datasource.express.models.request.LeastTokenInfo
-import com.tangem.datasource.exchangeservice.swap.ExpressUtils.getRefCode
-import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.grow.datasource.express.ExpressUtils
 import com.tangem.datasource.local.token.ExpressAssetsStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncStrict
@@ -42,7 +41,7 @@ typealias InitializationStatusFlow = MutableStateFlow<Lce<Throwable, List<Expres
 internal class DefaultExpressServiceFetcher @Inject constructor(
     private val tangemExpressApi: TangemExpressApi,
     private val expressAssetsStore: ExpressAssetsStore,
-    private val appPreferencesStore: AppPreferencesStore,
+    private val expressUtils: ExpressUtils,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ExpressServiceFetcher {
@@ -72,7 +71,7 @@ internal class DefaultExpressServiceFetcher @Inject constructor(
 
                     val response = tangemExpressApi.getAssets(
                         userWalletId = userWallet.walletId.stringValue,
-                        refCode = getRefCode(userWallet, appPreferencesStore),
+                        refCode = expressUtils.getRefCode(userWallet),
                         body = AssetsRequestBody(tokensList = tokenList),
                     ).getOrThrow()
 

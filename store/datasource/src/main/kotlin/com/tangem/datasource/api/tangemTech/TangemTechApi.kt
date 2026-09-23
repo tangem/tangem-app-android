@@ -1,0 +1,288 @@
+package com.tangem.datasource.api.tangemTech
+
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.datasource.api.marketing.models.MarketingCampaignsResponse
+import com.tangem.datasource.api.promotion.models.CreatePromotionRegistrationBody
+import com.tangem.datasource.api.promotion.models.PromotionRegistrationResponse
+import com.tangem.datasource.api.promotion.models.PromotionsResponse
+import com.tangem.datasource.api.promotion.models.YieldBoostStatusResponse
+import com.tangem.datasource.api.stories.models.StoryContentResponse
+import com.tangem.datasource.api.tangemTech.models.*
+import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
+import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsV2Response
+import com.tangem.datasource.api.tangemTech.models.account.GetWalletArchivedAccountsResponse
+import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
+import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsV1Request
+import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerRequest
+import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerResponse
+import com.tangem.datasource.api.tangemTech.models.promobanners.PromoBannerDisplaysResponse
+import retrofit2.http.*
+
+/**
+ * Interface of Tangem Tech API
+ *
+[REDACTED_AUTHOR]
+ */
+@Suppress("TooManyFunctions")
+interface TangemTechApi {
+
+    @GET("v1/coins")
+    suspend fun getCoins(
+        @Header("Cache-Control") cacheControl: String = "max-age=600",
+        @Query("contractAddress") contractAddress: String? = null,
+        @Query("contractAddresses") contractAddresses: String? = null,
+        @Query("exchangeable") exchangeable: Boolean? = null,
+        @Query("networkIds") networkIds: String? = null,
+        @Query("networkId") networkId: String? = null,
+        @Query("active") active: Boolean? = null,
+        @Query("searchText") searchText: String? = null,
+        @Query("offset") offset: Int? = null,
+        @Query("limit") limit: Int? = null,
+    ): ApiResponse<CoinsResponse>
+
+    @GET("v1/currencies")
+    suspend fun getCurrencyList(
+        @Header("Cache-Control") cacheControl: String = "max-age=600",
+    ): ApiResponse<CurrenciesResponse>
+
+    @GET("v1/geo")
+    suspend fun getUserCountryCode(): GeoResponse
+
+    @GET("v1/application/versions")
+    suspend fun getApplicationVersions(): ApiResponse<ApplicationVersionsResponse>
+
+    @PUT("/v1/wallets/{walletId}/tokens")
+    suspend fun saveTokens(
+        @Path(value = "walletId") userId: String,
+        @Body userTokens: UserTokensResponse,
+        @Header("If-Match") eTag: String? = null,
+    ): ApiResponse<Unit>
+
+    @GET("/api/v1/notification-preferences/{wallet_id}")
+    suspend fun getPushNotificationPreferences(
+        @Path("wallet_id") walletId: String,
+    ): ApiResponse<PushNotificationPreferencesResponse>
+
+    @PUT("/api/v1/notification-preferences/{wallet_id}")
+    suspend fun updatePushNotificationPreferences(
+        @Path("wallet_id") walletId: String,
+        @Body body: PushNotificationPreferencesBody,
+    ): ApiResponse<PushNotificationPreferencesResponse>
+
+    // region Referral
+    /** Returns referral status by [walletId] */
+    @GET("v1/referral/{walletId}")
+    suspend fun getReferralStatus(@Path("walletId") walletId: String): ApiResponse<ReferralResponse>
+
+    /** Make user referral, requires [StartReferralBody] */
+    @POST("v1/referral")
+    suspend fun startReferral(@Body startReferralBody: StartReferralBody): ApiResponse<ReferralResponse>
+
+    @POST("v1/referral/bind-wallets-by-code")
+    suspend fun bindWalletsByReferralCode(@Body body: BindWalletsByReferralCodeBody): ApiResponse<Unit>
+    // endregion
+
+    @GET("v1/quotes")
+    suspend fun getQuotes(
+        @Query("currencyId") currencyId: String,
+        @Query("coinIds") coinIds: String,
+        @Query("fields") fields: String,
+    ): ApiResponse<QuotesResponse>
+
+    @POST("v1/user-network-account")
+    suspend fun createUserNetworkAccount(
+        @Body body: CreateUserNetworkAccountBody,
+    ): ApiResponse<CreateUserNetworkAccountResponse>
+
+    @GET("v1/seedphrase-notification/{wallet_id}")
+    suspend fun getSeedPhraseNotificationStatus(
+        @Path("wallet_id") walletId: String,
+    ): ApiResponse<SeedPhraseNotificationDTO>
+
+    @PUT("v1/seedphrase-notification/{wallet_id}")
+    suspend fun updateSeedPhraseNotificationStatus(
+        @Path("wallet_id") walletId: String,
+        @Body body: SeedPhraseNotificationDTO,
+    ): ApiResponse<Unit>
+
+    @GET("v1/seedphrase-notification/{wallet_id}/confirmed")
+    suspend fun getSeedPhraseSecondNotificationStatus(
+        @Path("wallet_id") walletId: String,
+    ): ApiResponse<SeedPhraseNotificationDTO>
+
+    @PUT("v1/seedphrase-notification/{wallet_id}/confirmed")
+    suspend fun updateSeedPhraseSecondNotificationStatus(
+        @Path("wallet_id") walletId: String,
+        @Body body: SeedPhraseNotificationDTO,
+    ): ApiResponse<Unit>
+
+    @GET("v1/hot_crypto")
+    suspend fun getHotCrypto(@Query("currency") currencyId: String): ApiResponse<HotCryptoResponse>
+
+    @GET("v1/stories/{story_id}")
+    suspend fun getStoryById(@Path("story_id") storyId: String): ApiResponse<StoryContentResponse>
+
+    // region promotions
+    @GET("/v2/promotion")
+    suspend fun getPromotions(
+        @Query("walletId") walletId: String,
+        @Header("Cache-Control") cacheControl: String = "max-age=600",
+    ): ApiResponse<PromotionsResponse>
+
+    @Suppress("FunctionSignature", "TrailingCommaOnDeclarationSite")
+    @GET("/v2/promotion/yield-apr-boost/status")
+    suspend fun getYieldBoostStatus(@Query("walletId") walletId: String): ApiResponse<YieldBoostStatusResponse>
+
+    @POST("/v2/promotion/registrations")
+    suspend fun createPromotionRegistration(
+        @Body body: CreatePromotionRegistrationBody,
+    ): ApiResponse<PromotionRegistrationResponse>
+    // endregion
+
+    // region push notifications
+    @GET("v1/notification/push_notifications_eligible_networks")
+    suspend fun getEligibleNetworksForPushNotifications(): ApiResponse<List<CryptoNetworkResponse>>
+
+    @POST("v1/user-wallets/applications/")
+    suspend fun createApplicationId(
+        @Body
+        body: NotificationApplicationCreateBody,
+    ): ApiResponse<NotificationApplicationIdResponse>
+
+    @PATCH("v1/user-wallets/applications/{application_id}")
+    suspend fun updatePushTokenForApplicationId(
+        @Path("application_id") applicationId: String,
+        @Body body: NotificationApplicationCreateBody,
+    ): ApiResponse<Unit>
+    // endregion
+
+    // region user-wallets
+    @PATCH("v1/user-wallets/wallets/{wallet_id}")
+    suspend fun updateWallet(@Path("wallet_id") walletId: String, @Body body: WalletBody): ApiResponse<Unit>
+
+    @PUT("/v1/user-wallets/applications/{application_id}/wallets")
+    suspend fun associateApplicationIdWithWallets(
+        @Path("application_id") applicationId: String,
+        @Body body: AssociateApplicationIdWithWalletsBody,
+    ): ApiResponse<Unit>
+
+    @GET("v1/user-wallets/wallets/{wallet_id}")
+    suspend fun getWalletById(@Path("wallet_id") walletId: String): ApiResponse<WalletResponse>
+
+    @GET("v1/user-wallets/wallets/by-app/{app_id}")
+    suspend fun getWallets(@Path("app_id") appId: String): ApiResponse<List<WalletResponse>>
+
+    @POST("v1/user-wallets/wallets")
+    suspend fun createWallet(@Body body: WalletIdBody): ApiResponse<Unit>
+
+    /** Sends the cards of the wallet [walletId] and the state of its backup */
+    @POST("api/v1/wallets/{wallet_id}/card-backups")
+    suspend fun saveWalletCards(@Path("wallet_id") walletId: String, @Body body: WalletCardsBody): ApiResponse<Unit>
+
+    /** Returns the cards of the wallet [walletId] and the state of its backup */
+    @GET("api/v1/wallets/{wallet_id}/card-backups")
+    suspend fun getWalletCards(@Path("wallet_id") walletId: String): ApiResponse<WalletCardsResponse>
+    // endregion
+
+    // promo
+    @POST("promo/v1/promo-codes/activate")
+    suspend fun activatePromoCode(@Body body: PromocodeActivationBody): ApiResponse<PromocodeActivationResponse>
+    // endregion
+
+    // region account
+    /**
+     * The accounts endpoints exist in two versions: legacy `v1` and `api/v2`, which carries the type of every record
+     * and counts the wallet's own accounts as `totalCryptoAccounts` where `v1` says `totalAccounts` — hence a
+     * document shape per version. The archived document is the same in both, so [version] — `v1` or `api/v2` — is
+     * a path prefix chosen by the caller.
+     */
+    @GET("/v1/wallets/{walletId}/accounts")
+    suspend fun getWalletAccountsV1(
+        @Path("walletId") walletId: String,
+        @Header("If-None-Match") eTag: String? = null,
+    ): ApiResponse<GetWalletAccountsResponse>
+
+    @GET("/api/v2/wallets/{walletId}/accounts")
+    suspend fun getWalletAccountsV2(
+        @Path("walletId") walletId: String,
+        @Header("If-None-Match") eTag: String? = null,
+    ): ApiResponse<GetWalletAccountsV2Response>
+
+    /** `v1` accepts no record type, so its body is a separate shape; goes away with `v1` itself. */
+    @PUT("/v1/wallets/{walletId}/accounts")
+    suspend fun saveWalletAccountsV1(
+        @Path("walletId") walletId: String,
+        @Header("If-Match") eTag: String,
+        @Body body: SaveWalletAccountsV1Request,
+    ): ApiResponse<GetWalletAccountsResponse>
+
+    @PUT("/api/v2/wallets/{walletId}/accounts")
+    suspend fun saveWalletAccountsV2(
+        @Path("walletId") walletId: String,
+        @Header("If-Match") eTag: String,
+        @Body body: SaveWalletAccountsResponse,
+    ): ApiResponse<GetWalletAccountsV2Response>
+
+    @GET("/{version}/wallets/{walletId}/accounts/archived")
+    suspend fun getWalletArchivedAccounts(
+        @Path(value = "version", encoded = true) version: String,
+        @Path("walletId") walletId: String,
+        @Header("If-None-Match") eTag: String? = null,
+    ): ApiResponse<GetWalletArchivedAccountsResponse>
+    // endregion
+
+    // region promo banners
+    @GET("v1/banner/displays")
+    suspend fun getPromoBannerDisplays(
+        @Query("walletId") walletId: String,
+        @Query("placeholder") placeholder: String,
+        @Query("language") languageISOCode: String,
+    ): ApiResponse<PromoBannerDisplaysResponse>
+
+    @PATCH("v1/banner/displays/{displayId}")
+    suspend fun dismissPromoBannerDisplay(
+        @Path("displayId") displayId: Int,
+        @Body body: DismissPromoBannerRequest,
+    ): ApiResponse<DismissPromoBannerResponse>
+    // endregion
+
+    /**
+     * Stores transaction hash in cache to prevent duplicate push
+     * notifications for yield operations (deposit, withdraw, send).
+     * Used when yield operations generate intermediate transactions
+     * that should not trigger notifications.
+     */
+    @POST("v2/transaction-events")
+    suspend fun transactionEvents(@Body name: TransactionEventBody): ApiResponse<Unit>
+
+    @GET("v1/coins/settings")
+    suspend fun getCoinsSettings(): ApiResponse<CoinsSettingsResponse>
+
+    // region Earn
+    @GET("v1/earn/markets")
+    suspend fun getEarnTokens(
+        @Query("isForEarn") isForEarn: Boolean?,
+        @Query("page") page: String? = null,
+        @Query("limit") limit: Int? = null,
+        @Query("type") type: String? = null,
+        @Query("networkIds") networks: List<String>? = null,
+    ): ApiResponse<EarnListResponse>
+
+    @GET("v1/earn/networks")
+    suspend fun getEarnNetworks(@Query("type") type: String? = null): ApiResponse<EarnNetworkListResponse>
+    // endregion
+
+    // region marketing
+    @GET("api/v1/marketing/campaigns")
+    suspend fun getMarketingCampaigns(
+        @Query("type") type: String,
+        @Query("language") language: String? = null,
+        @Query("fromNetwork") fromNetwork: String? = null,
+        @Query("fromContractAddress") fromContractAddress: String? = null,
+        @Query("toNetwork") toNetwork: String? = null,
+        @Query("toContractAddress") toContractAddress: String? = null,
+        @Query("fromFiat") fromFiat: String? = null,
+        @Header("If-None-Match") eTag: String? = null,
+    ): ApiResponse<MarketingCampaignsResponse>
+    // endregion
+}

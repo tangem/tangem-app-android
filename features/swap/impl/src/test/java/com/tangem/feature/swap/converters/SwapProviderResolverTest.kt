@@ -80,6 +80,52 @@ internal class SwapProviderResolverTest {
         assertThat(best).isEqualTo(dexBridge)
     }
 
+    @Test
+    fun `GIVEN best rated provider is region restricted WHEN findBest THEN best available provider`() {
+        // Arrange
+        val states = mapOf(
+            cex1 to quote(fromFiat = "100", toFiat = "120", restricted = true), // best rate
+            cex2 to quote(fromFiat = "100", toFiat = "110"),
+        )
+
+        // Act
+        val best = SwapProviderResolver.findBest(states)
+
+        // Assert
+        assertThat(best).isEqualTo(cex2)
+    }
+
+    @Test
+    fun `GIVEN best DEX is region restricted WHEN findBest THEN best available DEX`() {
+        // Arrange
+        val states = mapOf(
+            cex1 to quote(fromFiat = "100", toFiat = "130"),
+            dex1 to quote(fromFiat = "100", toFiat = "115", restricted = true), // best DEX
+            dexBridge to quote(fromFiat = "100", toFiat = "108"),
+        )
+
+        // Act
+        val best = SwapProviderResolver.findBest(states)
+
+        // Assert
+        assertThat(best).isEqualTo(dexBridge)
+    }
+
+    @Test
+    fun `GIVEN every provider is region restricted WHEN findBest THEN best rated restricted provider`() {
+        // Arrange
+        val states = mapOf(
+            cex1 to quote(fromFiat = "100", toFiat = "120", restricted = true),
+            cex2 to quote(fromFiat = "100", toFiat = "110", restricted = true),
+        )
+
+        // Act
+        val best = SwapProviderResolver.findBest(states)
+
+        // Assert
+        assertThat(best).isEqualTo(cex1)
+    }
+
     // endregion
 
     // region resolveBadge
@@ -397,6 +443,149 @@ internal class SwapProviderResolverTest {
     }
 
     @Test
+    fun `GIVEN region restricted provider WHEN resolveListBadge for it THEN Unavailable`() {
+        // Arrange
+        val states = mapOf(
+            cex1 to quote(fromFiat = "100", toFiat = "120", restricted = true),
+            cex2 to quote(fromFiat = "100", toFiat = "110"),
+        )
+
+        // Act
+        val badge = SwapProviderResolver.resolveListBadge(
+            states = states,
+            provider = cex1,
+            needApplyFCARestrictions = false,
+            state = states.getValue(cex1),
+        )
+
+        // Assert
+        assertThat(badge).isEqualTo(ProviderState.AdditionalBadge.Unavailable)
+    }
+
+    @Test
+    fun `GIVEN region restricted FCA provider WHEN resolveListBadge THEN Unavailable wins over FCAWarningList`() {
+        // Arrange
+        val restricted = provider(id = "changelly", type = ExchangeProviderType.CEX)
+        val states = mapOf(
+            restricted to quote(fromFiat = "100", toFiat = "110", restricted = true),
+            cex2 to quote(fromFiat = "100", toFiat = "120"),
+        )
+
+        // Act
+        val badge = SwapProviderResolver.resolveListBadge(
+            states = states,
+            provider = restricted,
+            needApplyFCARestrictions = true,
+            state = states.getValue(restricted),
+        )
+
+        // Assert
+        assertThat(badge).isEqualTo(ProviderState.AdditionalBadge.Unavailable)
+    }
+
+    @Test
+    fun `GIVEN region restricted recommended provider WHEN resolveListBadge THEN Unavailable wins over Recommended`() {
+        // Arrange
+        val recommended = provider(id = "cex1", type = ExchangeProviderType.CEX, isRecommended = true)
+        val states = mapOf(
+            recommended to quote(fromFiat = "100", toFiat = "110", restricted = true),
+            cex2 to quote(fromFiat = "100", toFiat = "120"),
+        )
+
+        // Act
+        val badge = SwapProviderResolver.resolveListBadge(
+            states = states,
+            provider = recommended,
+            needApplyFCARestrictions = false,
+            state = states.getValue(recommended),
+        )
+
+        // Assert
+        assertThat(badge).isEqualTo(ProviderState.AdditionalBadge.Unavailable)
+    }
+
+    @Test
+    fun `GIVEN region restricted provider WHEN resolveListBadge on an error row THEN Empty`() {
+        // Arrange
+        val states = mapOf(
+            cex1 to quote(fromFiat = "100", toFiat = "120", restricted = true),
+            cex2 to quote(fromFiat = "100", toFiat = "110"),
+        )
+
+        // Act
+        val badge = SwapProviderResolver.resolveListBadge(
+            states = states,
+            provider = cex1,
+            needApplyFCARestrictions = false,
+            state = null,
+        )
+
+        // Assert
+        assertThat(badge).isEqualTo(ProviderState.AdditionalBadge.Empty)
+    }
+
+    @Test
+    fun `GIVEN region restricted provider WHEN resolveBadge for the form block THEN no Unavailable badge`() {
+        // Arrange
+        val states = mapOf(
+            cex1 to quote(fromFiat = "100", toFiat = "120", restricted = true),
+            cex2 to quote(fromFiat = "100", toFiat = "110"),
+        )
+
+        // Act
+        val badge = SwapProviderResolver.resolveBadge(
+            states = states,
+            provider = cex1,
+            needApplyFCARestrictions = false,
+            state = states.getValue(cex1),
+        )
+
+        // Assert
+        assertThat(badge).isEqualTo(ProviderState.AdditionalBadge.Empty)
+    }
+
+    @Test
+    fun `GIVEN best rated provider is region restricted WHEN resolveBadge for the available one THEN BestTrade`() {
+        // Arrange
+        val states = mapOf(
+            cex1 to quote(fromFiat = "100", toFiat = "120", restricted = true),
+            cex2 to quote(fromFiat = "100", toFiat = "110"),
+        )
+
+        // Act
+        val badge = SwapProviderResolver.resolveBadge(
+            states = states,
+            provider = cex2,
+            needApplyFCARestrictions = false,
+            state = states.getValue(cex2),
+        )
+
+        // Assert
+        assertThat(badge).isEqualTo(ProviderState.AdditionalBadge.BestTrade)
+    }
+
+    @Test
+    fun `GIVEN overall best is region restricted WHEN resolveBadge for the best available DEX THEN BestDexRate`() {
+        // Arrange
+        val states = mapOf(
+            cex1 to quote(fromFiat = "100", toFiat = "130", restricted = true),
+            cex2 to quote(fromFiat = "100", toFiat = "120"), // best available overall
+            dex1 to quote(fromFiat = "100", toFiat = "110"), // best available DEX
+        )
+
+        // Act
+        val badge = SwapProviderResolver.resolveBadge(
+            states = states,
+            provider = dex1,
+            needApplyFCARestrictions = false,
+            state = states.getValue(dex1),
+        )
+
+        // Assert
+        assertThat(badge).isEqualTo(ProviderState.AdditionalBadge.BestDexRate)
+    }
+
+    @Test
     fun `GIVEN no quote state (error row) WHEN resolveBadge THEN Empty`() {
         val states = mapOf(
             cex1 to quote(fromFiat = "100", toFiat = "120"),
@@ -430,6 +619,7 @@ internal class SwapProviderResolverTest {
         toFiat: String,
         priceImpactWarning: Boolean = false,
         permission: PermissionDataState = PermissionDataState.Empty,
+        restricted: Boolean = false,
     ): SwapState.QuotesLoadedState {
         val currency = mockk<CryptoCurrency.Coin> {
             every { decimals } returns 6
@@ -448,6 +638,7 @@ internal class SwapProviderResolverTest {
             every { fromTokenInfo } returns fromInfo
             every { toTokenInfo } returns toInfo
             every { permissionState } returns permission
+            every { isRestricted } returns restricted
             every { priceImpact } returns mockk<PriceImpact> { every { shouldShowWarning() } returns priceImpactWarning }
         }
     }
