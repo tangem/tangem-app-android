@@ -25,7 +25,7 @@ internal class DefaultWalletRegistrationTrigger @Inject constructor(
         // Same application-scope dispatch as creation: unlock happens from a screen model whose scope
         // dies on navigation. registerMobile is idempotent, so already-registered wallets are skipped.
         appCoroutineScope.launch {
-            userWallets.forEach { launcher.registerMobile(it) }
+            userWallets.forEach { launcher.registerUnlockedMobileWallet(it) }
         }
     }
 }
