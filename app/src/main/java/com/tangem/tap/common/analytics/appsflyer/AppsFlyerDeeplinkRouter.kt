@@ -1,7 +1,10 @@
 package com.tangem.tap.common.analytics.appsflyer
 
+import androidx.core.net.toUri
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.DeepLinkRoute
+import com.tangem.common.routing.DeepLinkScheme
 import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.appsflyer.AppsFlyerDeeplink
@@ -9,14 +12,15 @@ import com.tangem.domain.appsflyer.AppsFlyerDeeplinkTarget
 import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.features.tangempay.TangemPayFeatureToggles
+import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -33,29 +37,54 @@ class AppsFlyerDeeplinkRouter @Inject constructor(
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase,
     private val appRouter: AppRouter,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
+    private val onboardVisaDeepLink: OnboardVisaDeepLinkHandler.Factory,
 ) {
 
     fun observe(scope: CoroutineScope, currentRoute: Flow<AppRoute?>) {
+        val dispatchedUri = AtomicReference<String?>(null)
+
         combine(
             appsFlyerRepository.observeNavigationDeeplink(),
             currentRoute.distinctUntilChanged(),
-        ) { deepLinkValue, route ->
-            if (deepLinkValue != null && route != null) deepLinkValue to route else null
-        }
-            .filterNotNull()
-            .onEach { (deepLinkValue, route) -> onDeeplinkPending(deepLinkValue, route) }
+        ) { deepLinkValue, route -> deepLinkValue to route }
+            .onEach { (deepLinkValue, route) ->
+                if (deepLinkValue == null) {
+                    dispatchedUri.set(null)
+                    return@onEach
+                }
+                if (route != null) onDeeplinkPending(deepLinkValue, route, dispatchedUri)
+            }
             .launchIn(scope)
     }
 
-    private suspend fun onDeeplinkPending(deepLinkValue: String, currentRoute: AppRoute) {
+    private suspend fun onDeeplinkPending(
+        deepLinkValue: String,
+        currentRoute: AppRoute,
+        dispatchedUri: AtomicReference<String?>,
+    ) {
         when (val target = AppsFlyerDeeplinkTarget.from(deepLinkValue)) {
             is AppsFlyerDeeplinkTarget.Known -> when (target.deeplink) {
                 AppsFlyerDeeplink.TangemPayMobileOnboarding -> routeTangemPayOnboarding(currentRoute)
                 AppsFlyerDeeplink.Referral -> routeReferral(currentRoute)
             }
             is AppsFlyerDeeplinkTarget.TangemPayCampaign -> routeTangemPayCampaign(target.key, currentRoute)
+            is AppsFlyerDeeplinkTarget.Direct -> routeDeferred(target.uri, currentRoute, dispatchedUri)
             null -> TangemLogger.i("Ignoring unknown AppsFlyer deep link value: $deepLinkValue")
         }
+    }
+
+    private suspend fun routeDeferred(uri: String, currentRoute: AppRoute, dispatchedUri: AtomicReference<String?>) {
+        if (!isSupportedDeferredDeeplink(uri)) {
+            TangemLogger.i("[Deferred] Ignoring unsupported AppsFlyer deep link URI: $uri")
+            return
+        }
+        if (!isIdleEntryPoint(currentRoute)) return
+
+        if (dispatchedUri.getAndSet(uri) != uri) {
+            TangemLogger.i("[Deferred] Dispatching AppsFlyer deep link URI: $uri")
+            onboardVisaDeepLink.create(uri.toUri())
+        }
+        clearAppsFlyerDeeplinkUseCase()
     }
 
     private suspend fun routeTangemPayOnboarding(currentRoute: AppRoute) {
@@ -147,3 +176,13 @@ internal fun isNavigationBlocked(currentRoute: AppRoute?): Boolean = when (curre
     -> true
     else -> false
 }
+
+// Route only from idle entry screens so an in-progress flow (scan, KYC, onboarding…) isn't interrupted.
+internal fun isIdleEntryPoint(currentRoute: AppRoute?): Boolean =
+    currentRoute is AppRoute.Home || currentRoute is AppRoute.Stories || currentRoute is AppRoute.Wallet
+
+private val ONBOARD_VISA_DEEPLINK = "${DeepLinkScheme.Tangem.scheme}://${DeepLinkRoute.OnboardVisa.host}"
+
+internal fun isSupportedDeferredDeeplink(uri: String): Boolean = uri == ONBOARD_VISA_DEEPLINK ||
+    uri.startsWith("$ONBOARD_VISA_DEEPLINK?") ||
+    uri.startsWith("$ONBOARD_VISA_DEEPLINK/")
