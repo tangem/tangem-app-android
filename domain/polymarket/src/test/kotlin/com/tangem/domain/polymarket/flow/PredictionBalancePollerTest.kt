@@ -52,13 +52,13 @@ internal class PredictionBalancePollerTest {
         runCurrent()
 
         // Assert
-        coVerify(exactly = 1) { fetcher(PredictionAccountStatusFetcher.Params(WALLET_ID)) }
+        coVerify(exactly = 1) { fetcher(full(WALLET_ID)) }
         advanceTimeBy(30.seconds)
         runCurrent()
-        coVerify(exactly = 2) { fetcher(PredictionAccountStatusFetcher.Params(WALLET_ID)) }
+        coVerify(exactly = 2) { fetcher(full(WALLET_ID)) }
         advanceTimeBy(29.seconds)
         runCurrent()
-        coVerify(exactly = 2) { fetcher(PredictionAccountStatusFetcher.Params(WALLET_ID)) }
+        coVerify(exactly = 2) { fetcher(full(WALLET_ID)) }
 
         subscription.cancel()
         runCurrent()
@@ -76,7 +76,7 @@ internal class PredictionBalancePollerTest {
         runCurrent()
 
         // Assert
-        coVerify(exactly = 2) { fetcher(PredictionAccountStatusFetcher.Params(WALLET_ID)) }
+        coVerify(exactly = 2) { fetcher(full(WALLET_ID)) }
 
         first.cancel()
         second.cancel()
@@ -100,14 +100,14 @@ internal class PredictionBalancePollerTest {
         runCurrent()
 
         // Assert
-        coVerify(exactly = 2) { fetcher(PredictionAccountStatusFetcher.Params(WALLET_ID)) }
+        coVerify(exactly = 2) { fetcher(full(WALLET_ID)) }
     }
 
     @Test
     fun `GIVEN fetch hangs WHEN interval passes THEN next tick waits for it`() = runTest {
         // Arrange
         val gate = CompletableDeferred<Unit>()
-        coEvery { fetcher(PredictionAccountStatusFetcher.Params(WALLET_ID)) } coAnswers { gate.await(); Unit.right() }
+        coEvery { fetcher(full(WALLET_ID)) } coAnswers { gate.await(); Unit.right() }
         val poller = createPoller()
 
         // Act
@@ -116,7 +116,7 @@ internal class PredictionBalancePollerTest {
         runCurrent()
 
         // Assert
-        coVerify(exactly = 1) { fetcher(PredictionAccountStatusFetcher.Params(WALLET_ID)) }
+        coVerify(exactly = 1) { fetcher(full(WALLET_ID)) }
 
         gate.complete(Unit)
         subscription.cancel()
@@ -134,8 +134,8 @@ internal class PredictionBalancePollerTest {
         runCurrent()
 
         // Assert
-        coVerify(exactly = 1) { fetcher(PredictionAccountStatusFetcher.Params(WALLET_ID)) }
-        coVerify(exactly = 1) { fetcher(PredictionAccountStatusFetcher.Params(OTHER_WALLET_ID)) }
+        coVerify(exactly = 1) { fetcher(full(WALLET_ID)) }
+        coVerify(exactly = 1) { fetcher(full(OTHER_WALLET_ID)) }
 
         first.cancel()
         second.cancel()
@@ -146,7 +146,7 @@ internal class PredictionBalancePollerTest {
     fun `GIVEN loop died on a throwing fetch WHEN a new subscriber arrives THEN a fresh loop starts`() = runTest {
         // Arrange
         coEvery {
-            fetcher(PredictionAccountStatusFetcher.Params(WALLET_ID))
+            fetcher(full(WALLET_ID))
         } throws IllegalStateException("boom") andThen Unit.right()
         val poller = PredictionBalancePoller(
             fetcher = fetcher,
@@ -166,7 +166,7 @@ internal class PredictionBalancePollerTest {
         runCurrent()
 
         // Assert
-        coVerify(exactly = 2) { fetcher(PredictionAccountStatusFetcher.Params(WALLET_ID)) }
+        coVerify(exactly = 2) { fetcher(full(WALLET_ID)) }
 
         first.cancel()
         second.cancel()
@@ -178,7 +178,7 @@ internal class PredictionBalancePollerTest {
         runTest {
             // Arrange
             coEvery {
-                fetcher(PredictionAccountStatusFetcher.Params(WALLET_ID))
+                fetcher(full(WALLET_ID))
             } throws IllegalStateException("boom") andThen Unit.right()
             val poller = PredictionBalancePoller(
                 fetcher = fetcher,
@@ -198,13 +198,13 @@ internal class PredictionBalancePollerTest {
             runCurrent()
 
             // Assert
-            coVerify(exactly = 2) { fetcher(PredictionAccountStatusFetcher.Params(WALLET_ID)) }
+            coVerify(exactly = 2) { fetcher(full(WALLET_ID)) }
 
             stale.cancel()
             runCurrent()
             advanceTimeBy(30.seconds)
             runCurrent()
-            coVerify(exactly = 3) { fetcher(PredictionAccountStatusFetcher.Params(WALLET_ID)) }
+            coVerify(exactly = 3) { fetcher(full(WALLET_ID)) }
 
             fresh.cancel()
             runCurrent()
@@ -214,7 +214,7 @@ internal class PredictionBalancePollerTest {
     fun `GIVEN fetch returns a Left WHEN interval passes THEN the loop keeps ticking`() = runTest {
         // Arrange
         coEvery {
-            fetcher(PredictionAccountStatusFetcher.Params(WALLET_ID))
+            fetcher(full(WALLET_ID))
         } returns IllegalStateException("x").left()
         val poller = createPoller()
 
@@ -224,7 +224,7 @@ internal class PredictionBalancePollerTest {
         runCurrent()
 
         // Assert
-        coVerify(exactly = 2) { fetcher(PredictionAccountStatusFetcher.Params(WALLET_ID)) }
+        coVerify(exactly = 2) { fetcher(full(WALLET_ID)) }
 
         subscription.cancel()
         runCurrent()
@@ -243,10 +243,11 @@ internal class PredictionBalancePollerTest {
         runCurrent()
 
         // Assert
-        coVerify(exactly = 2) { fetcher(PredictionAccountStatusFetcher.Params(WALLET_ID)) }
+        coVerify(exactly = 1) { fetcher(full(WALLET_ID)) }
+        coVerify(exactly = 1) { fetcher(availableOnly(WALLET_ID)) }
         advanceTimeBy(5.seconds)
         runCurrent()
-        coVerify(exactly = 3) { fetcher(PredictionAccountStatusFetcher.Params(WALLET_ID)) }
+        coVerify(exactly = 2) { fetcher(availableOnly(WALLET_ID)) }
 
         subscription.cancel()
         runCurrent()
@@ -267,10 +268,11 @@ internal class PredictionBalancePollerTest {
         runCurrent()
 
         // Assert
-        coVerify(exactly = 2) { fetcher(PredictionAccountStatusFetcher.Params(WALLET_ID)) }
+        coVerify(exactly = 1) { fetcher(availableOnly(WALLET_ID)) }
+        coVerify(exactly = 1) { fetcher(full(WALLET_ID)) }
         advanceTimeBy(1.seconds)
         runCurrent()
-        coVerify(exactly = 3) { fetcher(PredictionAccountStatusFetcher.Params(WALLET_ID)) }
+        coVerify(exactly = 2) { fetcher(full(WALLET_ID)) }
 
         subscription.cancel()
         runCurrent()
@@ -307,6 +309,16 @@ internal class PredictionBalancePollerTest {
         fundingWindow = fundingWindow,
         config = config,
         appScope = TestAppCoroutineScope(coroutineContext = StandardTestDispatcher(testScheduler)),
+    )
+
+    private fun full(userWalletId: UserWalletId) = PredictionAccountStatusFetcher.Params(
+        userWalletId = userWalletId,
+        mode = PredictionAccountStatusFetcher.Mode.FULL,
+    )
+
+    private fun availableOnly(userWalletId: UserWalletId) = PredictionAccountStatusFetcher.Params(
+        userWalletId = userWalletId,
+        mode = PredictionAccountStatusFetcher.Mode.AVAILABLE_ONLY,
     )
 
     private companion object {

@@ -31,7 +31,6 @@ internal data class PlacePredictionUM(
     val amountCaption: AmountCaptionUM? = null,
     val minAmount: BigDecimal? = null,
     val priceError: PriceErrorUM? = null,
-    val slippagePicker: SlippagePickerUM,
     val submit: SubmitUM,
     val isPrimaryButtonEnabled: Boolean,
 ) {
@@ -61,7 +60,6 @@ internal data class PlacePredictionUM(
             isMarketAcceptingOrders = true,
             tradingPermission = TradingPermissionUM.Unknown,
             notifications = persistentListOf(),
-            slippagePicker = SlippagePickerUM.empty(),
             submit = SubmitUM.Idle,
             isPrimaryButtonEnabled = false,
         )
@@ -111,19 +109,11 @@ internal fun PlacePredictionUM.feeBreakdownQuote(): QuoteUM.Content? =
 
 internal fun PlacePredictionUM.canShowFeeBreakdown(): Boolean = feeBreakdownQuote() != null
 
-internal fun PlacePredictionUM.isFullClose(): Boolean {
-    val order = order as? OrderSideUM.Sell ?: return false
-    val available = (order.position as? SellPositionUM.Held)?.available ?: return false
-    val entered = enteredAmount() ?: return false
-
-    return entered.compareTo(available) == 0
-}
-
 internal fun PlacePredictionUM.isBelowMinAmount(): Boolean {
     val entered = enteredAmount() ?: return false
     val minAmount = minAmount ?: return false
 
-    return entered < minAmount && !isFullClose()
+    return entered < minAmount
 }
 
 @Immutable

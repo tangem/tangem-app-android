@@ -15,7 +15,11 @@ internal class TangemPayBankWithdrawChoiceUMFactory(
 
     fun create(draft: BankWithdrawDraft, selectedId: String?): TangemPayBankWithdrawChoiceUM =
         TangemPayBankWithdrawChoiceUM(
-            header = BankWithdrawHeaderFactory.create(draft = draft, step = step),
+            header = BankWithdrawHeaderFactory.create(
+                draft = draft,
+                step = step,
+                onCloseClick = callbacks.onCloseClick,
+            ),
             sectionTitle = config.sectionTitle,
             options = config.options
                 .map { option ->
@@ -33,6 +37,7 @@ internal class TangemPayBankWithdrawChoiceUMFactory(
 
     data class Callbacks(
         val onBackClick: () -> Unit,
+        val onCloseClick: () -> Unit,
         val onOptionClick: (id: String) -> Unit,
         val onContinueClick: () -> Unit,
     )
