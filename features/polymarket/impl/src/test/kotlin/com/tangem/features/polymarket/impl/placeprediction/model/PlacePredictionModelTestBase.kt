@@ -179,7 +179,6 @@ internal abstract class PlacePredictionModelTestBase {
     ) = PredictionAccountStatusValue.Active(
         source = source,
         balance = balance,
-        positionsValue = null,
         fiatRate = BigDecimal.ONE,
         depositCurrency = createCollateralCurrency(),
         depositAddress = depositAddress,
