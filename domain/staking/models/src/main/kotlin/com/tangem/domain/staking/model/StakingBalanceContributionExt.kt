@@ -9,7 +9,7 @@ import com.tangem.domain.models.staking.StakingBalance
  * Staking balance of this currency, or `null` when it has none.
  */
 val CryptoCurrencyStatus.Value.stakingBalanceData: StakingBalance.Data?
-    get() = contributionOrNull<StakingBalance.Data>() ?: stakingBalance as? StakingBalance.Data
+    get() = contributionOrNull<StakingBalance.Data>()
 
 /**
  * The source half of [stakingBalanceData].
