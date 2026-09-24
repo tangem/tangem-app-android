@@ -93,6 +93,7 @@ class MockTangemSdkManager(
         mnemonic: String,
         passphrase: String?,
         shouldReset: Boolean,
+        shouldForceColdRegistration: Boolean,
     ): CompletionResult<CreateProductWalletTaskResponse> {
         return MockProvider.getImportWalletResponse()
     }
