@@ -18,6 +18,12 @@ class TxHistoryDetailsBottomSheetPageObject(semanticsProvider: SemanticsNodeInte
         useUnmergedTree = true
     }
 
+    /** Value of an info row (the fee amount reads "<amount> <SYMBOL>"). */
+    fun feeAmount(amount: String): KNode = child {
+        hasText(text = amount, substring = true)
+        useUnmergedTree = true
+    }
+
     /** The provider row reads "<name> • <CEX|DEX>", so match the name as a substring. */
     fun providerName(name: String): KNode = child {
         hasText(text = name, substring = true)
