@@ -58,12 +58,14 @@ internal sealed interface TangemPayBankWithdrawPreviewUM {
         val onClick: (() -> Unit)?,
     )
 
+    /** [onClick] is null while sending; otherwise it reopens the step the rail is picked on. */
     @Immutable
     data class RouteUM(
         val rail: BankRail,
         val title: TextReference,
         val eta: TextReference,
         val fee: String,
+        val onClick: (() -> Unit)? = null,
     )
 
     @Immutable

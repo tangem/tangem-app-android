@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.withdraw.bank.preview.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -14,6 +15,7 @@ import com.tangem.domain.pay.usecase.bankofframp.AwaitBankOfframpSignatureUseCas
 import com.tangem.domain.pay.usecase.bankofframp.CancelBankOfframpOrderUseCase
 import com.tangem.domain.pay.usecase.bankofframp.CreateBankOfframpOrderUseCase
 import com.tangem.domain.pay.usecase.bankofframp.SignBankOfframpOrderUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
@@ -50,6 +52,7 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
     private val signBankOfframpOrderUseCase: SignBankOfframpOrderUseCase,
     private val cancelBankOfframpOrderUseCase: CancelBankOfframpOrderUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val analytics: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankWithdrawPreviewComponent.Params>()
@@ -58,9 +61,10 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
         callbacks = TangemPayBankWithdrawPreviewUMFactory.Callbacks(
             onBackClick = ::onBackClick,
             onCloseClick = ::onCloseClick,
-            onSendClick = ::send,
+            onSendClick = ::onSendClick,
             onRetryClick = ::onRetryClick,
             onEditClick = ::onEditClick,
+            onRailClick = ::onRailClick,
         ),
     )
 
@@ -76,6 +80,8 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
      */
     private var idempotencyKey: String? = null
 
+    private val isSending: Boolean get() = state.value.isSending
+
     val uiState: StateFlow<TangemPayBankWithdrawPreviewUM>
         field = MutableStateFlow(umFactory.create(draft = params.draft.value, state = state.value))
 
@@ -83,6 +89,7 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
         combine(params.draft, state) { draft, previewState -> umFactory.create(draft = draft, state = previewState) }
             .onEach { uiState.value = it }
             .launchIn(modelScope)
+        analytics.send(TangemPayAnalyticsEvents.Offramp.ConfirmationScreenOpened())
     }
 
     /** The wallet cannot change while the wizard is open, and a lookup failure keeps the historic card icon. */
@@ -94,8 +101,14 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
         ifRight = { wallet -> wallet.isColdWallet },
     )
 
+    private fun onSendClick() {
+        if (isSending) return
+        analytics.send(TangemPayAnalyticsEvents.Offramp.SendOnConfirmationClicked())
+        send()
+    }
+
     private fun send() {
-        if (state.value.isSending) return
+        if (isSending) return
         val request = params.draft.value.toOrderRequest() ?: return
         val key = idempotencyKey ?: UUID.randomUUID().toString().also { idempotencyKey = it }
         state.update { it.copy(send = SendState.CreatingOrder, failure = null, resumableOrderId = null) }
@@ -186,27 +199,45 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
 
     private fun fail(failure: PreviewFailure, resumableOrderId: String?) {
         state.update { it.copy(send = SendState.Idle, failure = failure, resumableOrderId = resumableOrderId) }
+        analytics.send(TangemPayAnalyticsEvents.Offramp.SendErrorScreenOpened())
     }
 
     private fun onRetryClick() {
-        if (state.value.isSending) return
+        if (isSending) return
         val orderId = state.value.resumableOrderId ?: return send()
         modelScope.launch { awaitSignature(orderId = orderId) }.saveIn(sendJobHolder)
     }
 
     private fun onBackClick() {
-        if (state.value.isSending) return
+        if (isSending) return
         router.pop()
     }
 
     private fun onCloseClick() {
-        if (state.value.isSending) return
+        if (isSending) return
         router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails)
     }
 
     private fun onEditClick(target: BankWithdrawEditTarget) {
-        if (state.value.isSending) return
+        if (isSending) return
+        editEvent(target)?.let(analytics::send)
         router.push(TangemPayBankWithdrawInnerRoute.Edit(target))
+    }
+
+    /** The rail is picked on the amount step, so the row reopens it. */
+    private fun onRailClick() {
+        if (isSending) return
+        analytics.send(TangemPayAnalyticsEvents.Offramp.RailSelectorClicked())
+        onEditClick(BankWithdrawEditTarget.Amount)
+    }
+
+    /** The amount step has no event of its own: the rail row reports its own tap, and the amount card none. */
+    private fun editEvent(target: BankWithdrawEditTarget): TangemPayAnalyticsEvents? = when (target) {
+        BankWithdrawEditTarget.RecipientDetails ->
+            TangemPayAnalyticsEvents.Offramp.RecipientDetailsOnConfirmationClicked()
+        BankWithdrawEditTarget.BankDetails ->
+            TangemPayAnalyticsEvents.Offramp.RecipientBankDetailsOnConfirmationClicked()
+        BankWithdrawEditTarget.Amount -> null
     }
 }
 
