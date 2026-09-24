@@ -388,25 +388,29 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     private fun onRefresh() {
+        if (uiState.value.pullToRefreshConfig.isRefreshing) return
         setRefreshing(isRefreshing = true)
 
         modelScope.launch {
-            listOf(
-                async { tradingAllowance.refresh() },
-                async {
-                    predictionAccountStatusFetcher(
-                        PredictionAccountStatusFetcher.Params(userWalletId = params.userWalletId),
-                    )
-                },
-                async {
-                    predictionPositionsValueFetcher(
-                        PredictionPositionsValueFetcher.Params(userWalletId = params.userWalletId),
-                    )
-                },
-            ).awaitAll()
-            fundingRequisites.refresh()
-
-            setRefreshing(isRefreshing = false)
+            try {
+                listOf(
+                    async { tradingAllowance.refresh() },
+                    async { positionsPreviewLoader.refresh(modelScope, params.userWalletId, ::openPosition) },
+                    async {
+                        predictionAccountStatusFetcher(
+                            PredictionAccountStatusFetcher.Params(userWalletId = params.userWalletId),
+                        )
+                    },
+                    async {
+                        predictionPositionsValueFetcher(
+                            PredictionPositionsValueFetcher.Params(userWalletId = params.userWalletId),
+                        )
+                    },
+                ).awaitAll()
+                fundingRequisites.refresh()
+            } finally {
+                setRefreshing(isRefreshing = false)
+            }
         }.saveIn(refreshJobHolder)
     }
 
