@@ -210,7 +210,6 @@ private fun buildCollateralStatusValue(
             networkAddress = networkAddress,
             sources = sources,
             pendingTransactions = emptySet(),
-            stakingBalance = null,
             yieldSupplyStatus = null,
             hasCurrentNetworkTransactions = false,
         )
@@ -218,7 +217,6 @@ private fun buildCollateralStatusValue(
         CryptoCurrencyStatus.NoQuote(
             amount = amount,
             networkAddress = networkAddress,
-            stakingBalance = null,
             yieldSupplyStatus = null,
             sources = sources,
             pendingTransactions = emptySet(),
