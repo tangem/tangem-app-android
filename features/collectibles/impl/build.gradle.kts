@@ -51,6 +51,7 @@ dependencies {
 
     /** Other */
     api(deps.compose.coil)
+    implementation(deps.androidx.annotation)
     implementation(deps.androidx.appCompat)
     implementation(deps.arrow.core)
     implementation(deps.decompose)

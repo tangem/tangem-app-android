@@ -24,6 +24,12 @@ interface HotWalletAccessor {
 
     suspend fun unlockContextual(hotWalletId: HotWalletId): UnlockHotWallet
 
+    /**
+     * Establishes the contextual unlock for [hotWalletId] with an [auth] the user has already given (e.g.
+     * the access code just entered to unlock the app), so no auth prompt is shown.
+     */
+    suspend fun unlockContextual(hotWalletId: HotWalletId, auth: HotAuth): UnlockHotWallet
+
     fun getContextualUnlock(hotWalletId: HotWalletId): UnlockHotWallet?
 
     fun clearContextualUnlock(hotWalletId: HotWalletId)
