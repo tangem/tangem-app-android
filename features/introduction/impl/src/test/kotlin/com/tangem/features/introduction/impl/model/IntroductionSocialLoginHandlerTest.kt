@@ -124,6 +124,25 @@ internal class IntroductionSocialLoginHandlerTest {
     }
 
     @Test
+    fun `GIVEN sign-in failed WHEN signIn THEN the progress stays up until the sign-out finishes`() = runTest {
+        // Arrange
+        val onStageChanged = slot<(SocialLoginStage) -> Unit>()
+        coEvery { socialLoginUseCase.signIn(PROVIDER, capture(onStageChanged)) } answers {
+            onStageChanged.captured(SocialLoginStage.VerifyingAccount)
+            SocialLoginError.NetworkError.left()
+        }
+        var progressDuringSignOut: SocialLoginProgressUM? = null
+        coEvery { socialLoginUseCase.signOut(PROVIDER) } answers { progressDuringSignOut = host.progress.last() }
+
+        // Act
+        handler.signIn(PROVIDER, host)
+
+        // Assert
+        assertThat(progressDuringSignOut).isNotNull()
+        assertThat(host.progress.last()).isNull()
+    }
+
+    @Test
     fun `GIVEN stages reported WHEN signIn THEN progress is shown and then cleared`() = runTest {
         // Arrange
         val onStageChanged = slot<(SocialLoginStage) -> Unit>()

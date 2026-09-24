@@ -124,7 +124,8 @@ internal fun IntroductionScreen(
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
                         .padding(horizontal = 16.dp)
-                        .padding(bottom = 12.dp),
+                        .padding(bottom = 12.dp)
+                        .then(if (state.isSocialLoginShown) HiddenFromAccessibility else Modifier),
                 ) {
                     WelcomeTextScenes(
                         scenes = state.scenes,
@@ -279,9 +280,7 @@ private fun rememberBottomScrimBrush(): Brush {
 @Composable
 private fun BottomActions(state: IntroductionUM, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .then(if (state.isSocialLoginShown) HiddenFromAccessibility else Modifier),
+        modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         TangemButton(
