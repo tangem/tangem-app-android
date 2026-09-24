@@ -37,9 +37,18 @@ fun BaseTestCase.pullToRefreshTokenDetails() {
  * tap that lands mid-relayout is dropped, leaving the test on Main. Retry the tap — once the details
  * screen is up the row is gone, so the click throws and only the assertion decides the outcome.
  */
-fun BaseTestCase.openTokenDetailsFromTokenList(tokenTitle: String) {
+fun BaseTestCase.openTokenDetailsFromTokenList(tokenTitle: String) = openTokenDetailsByTapping {
+    onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+}
+
+/** Same as [openTokenDetailsFromTokenList], for a token nested under an expanded account section. */
+fun BaseTestCase.openTokenDetailsFromAccountSection(tokenTitle: String) = openTokenDetailsByTapping {
+    onMainScreen { findTokenInAnyAccountByName(tokenTitle).clickWithAssertion() }
+}
+
+private fun BaseTestCase.openTokenDetailsByTapping(tap: () -> Unit) {
     awaitAssert {
-        runCatching { onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() } }
+        runCatching(tap)
         onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
     }
 }
