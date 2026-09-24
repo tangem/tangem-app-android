@@ -220,6 +220,9 @@ fun BaseTestCase.openMarketsAddToPortfolioSelector(tokenName: String) {
         onMainScreen { marketsSheetDragHandle.clickWithAssertion() }
         waitForIdle()
     }
+    step("Search for '$tokenName' token") {
+        searchTokenInMarkets(tokenName)
+    }
     step("Click on '$tokenName' token") {
         awaitSuccess { onMarketsScreen { tokenWithTitle(tokenName).assertIsDisplayed() } }
         onMarketsScreen { tokenWithTitle(tokenName).performClick() }
