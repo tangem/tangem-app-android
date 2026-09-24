@@ -158,8 +158,8 @@ un-refreshed — it never writes "empty" on the strength of a failed question.
 `DefaultPredictionAccountStatusProducer` mixes the fiat rate in on every emission, starting with
 `Pending` so the combined account list is never stalled by this account.
 
-`PredictionAccountStatusValue.Active` is written by two parties — the fetcher owns the balance and the
-positions value, `DefaultPredictionDepositAddressWriter` owns the deposit address — so neither writes a
+`PredictionAccountStatusValue.Active` is written by two parties — the fetcher owns the balance,
+`DefaultPredictionDepositAddressWriter` owns the deposit address — so neither writes a
 whole value it read earlier. Both commit through `PredictionAccountStatusStore.update`, whose
 non-suspending transform receives the value current at that moment; `store` is the same call with a
 transform that ignores it, for the states that are facts about the whole account (`NotOnboarded`,
