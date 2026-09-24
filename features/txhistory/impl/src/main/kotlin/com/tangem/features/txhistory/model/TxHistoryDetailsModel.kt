@@ -204,7 +204,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
             lookup = lookup,
             targetsByAddress = stakingTargets,
             isBalanceHidden = isBalanceHidden,
-            onOpenValidator = urlOpener::openUrl,
+            onExploreProvider = urlOpener::openUrl,
             onAddContact = contactCandidate?.let { candidate -> { openContactCreation(candidate) } },
             networkTokens = networkTokens,
         ).convert(txInfo)
