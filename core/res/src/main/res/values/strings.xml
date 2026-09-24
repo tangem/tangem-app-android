@@ -289,7 +289,9 @@
   <string name="collectibles_account_withdraw">Withdrawal</string>
   <string name="collectibles_confirm_order_approve_button">Approve</string>
   <string name="collectibles_confirm_order_not_enough_funds_button">Not enough funds</string>
+  <string name="collectibles_confirm_order_platform_fee">Platform fee</string>
   <string name="collectibles_confirm_order_screen_title">Confirm order</string>
+  <string name="collectibles_confirm_order_total">Total</string>
   <string name="collectibles_entrance_card_subtitle">Open packs of graded collectible cards</string>
   <string name="collectibles_entrance_card_title">Explore collections</string>
   <string name="collectibles_machine_buyback_value">%s of value</string>
@@ -300,6 +302,7 @@
   <string name="collectibles_machine_load_error">Failed to load pack details.\nTap to reload</string>
   <string name="collectibles_machine_open_button">Open for %s</string>
   <string name="collectibles_machine_powered_by">Powered by %s</string>
+  <string name="collectibles_machine_prize_pool_load_error">Failed to load prize pool.\nTap to reload</string>
   <string name="collectibles_machine_prize_pool_section">In prize pool</string>
   <string name="collectibles_machine_tier_common">Common</string>
   <string name="collectibles_machine_tier_epic">Epic</string>
