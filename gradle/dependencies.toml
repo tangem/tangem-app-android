@@ -118,6 +118,9 @@ haze = "1.7.2"
 kotlinpoet = "1.18.1"
 customerio = "4.6.3"
 surveysparrow = "1.2.9"
+meawalletMpp = "2.2.0"
+meawalletMppDebug = "2.2.0-debug"
+playServicesTapAndPay = "18.10.0"
 # endregion Other libraries
 
 # region Tools
@@ -291,6 +294,7 @@ kotlin-immutable-collections = { module = "org.jetbrains.kotlinx:kotlinx-collect
 googlePlay-review = { module = "com.google.android.play:review", version.ref = "googlePlayReview" }
 googlePlay-review-ktx = { module = "com.google.android.play:review-ktx", version.ref = "googlePlayReviewKtx" }
 googlePlay-services-wallet = { module = "com.google.android.gms:play-services-wallet", version.ref = "googlePlayServicesWallet" }
+googlePlay-services-tapAndPay = { module = "com.google.android.gms:play-services-tapandpay", version.ref = "playServicesTapAndPay" }
 googlePlay-services = { module = "com.google.android.gms:play-services-base", version.ref = "playServices" }
 googlePlay-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
 googlePlay-advertising = { module = "com.google.android.gms:play-services-ads-identifier", version.ref = "playServicesAds" }
@@ -359,4 +363,7 @@ haze-materials = { module = "dev.chrisbanes.haze:haze-materials", version.ref = 
 customerio-analytics = { module = "io.customer.android:datapipelines", version.ref = "customerio" }
 customerio-messaging = { module = "io.customer.android:messaging-push-fcm", version.ref = "customerio" }
 surveysparrow = { module = "com.github.surveysparrow:surveysparrow-android-sdk", version.ref = "surveysparrow" }
+meawallet-mpp-test = { module = "com.meawallet:mpp-test", version.ref = "meawalletMpp" }
+meawallet-mpp-test-debug = { module = "com.meawallet:mpp-test", version.ref = "meawalletMppDebug" }
+meawallet-mpp-prod = { module = "com.meawallet:mpp-prod", version.ref = "meawalletMpp" }
 # endregion Other
