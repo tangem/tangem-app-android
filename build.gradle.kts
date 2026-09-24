@@ -275,6 +275,11 @@ dependencyAnalysis {
                 // Feature `impl` modules are wired in per build type purely so Hilt picks up their
                 // @Module bindings; dropping them removes the feature from the built app at runtime.
                 exclude(":features:kyc:impl")
+                exclude(
+                    ":spend:push-provisioning:impl",
+                    ":spend:push-provisioning:mock",
+                    ":spend:push-provisioning:no-op",
+                )
                 // Same reason: :data:social-login only contributes Hilt bindings (feature toggle,
                 // provider repository). Nothing references it by type until the UC-08 feature
                 // modules land.
@@ -427,41 +432,60 @@ val unitTest by tasks.registering {
     description = "Run unit tests for debug/googleDebug variant and all JVM modules"
 }
 
-// :core:datasource-impl is the implementation module for :core:local / :core:remote and is wired in
-// only by :app (like a feature `impl`). This guard keeps it out of every other module's dependencies,
-// so modules keep compiling against the contracts and never against the implementation.
-val verifyDatasourceImplIsolation by tasks.registering {
-    group = "verification"
-    description = "Fails if any module other than :app depends on :core:datasource-impl"
+// Implementation modules such as :core:datasource-impl are wired in only by :app (like a feature `impl`).
+// This guard keeps them out of every other module's dependencies, so modules keep compiling against the
+// contracts and never against an implementation.
+fun registerAppOnlyDependencyCheck(taskName: String, targets: Set<String>, contractHint: String) =
+    tasks.register(taskName) {
+        group = "verification"
+        description = "Fails if any module other than :app depends on ${targets.joinToString()}"
+        notCompatibleWithConfigurationCache("Reads the declared dependencies of every project")
 
-    doLast {
-        val target = ":core:datasource-impl"
-        val allowedDependents = setOf(":app")
+        doLast {
+            val allowedDependents = setOf(":app")
 
-        val offenders = rootProject.subprojects
-            .filter { it.path != target && it.path !in allowedDependents }
-            .filter { module ->
-                module.configurations.any { configuration ->
-                    configuration.dependencies.any { dependency ->
-                        dependency is ProjectDependency && dependency.path == target
+            targets.forEach { target ->
+                val offenders = rootProject.subprojects
+                    .filter { it.path !in targets && it.path !in allowedDependents }
+                    .filter { module ->
+                        module.configurations.any { configuration ->
+                            configuration.dependencies.any { dependency ->
+                                dependency is ProjectDependency && dependency.path == target
+                            }
+                        }
                     }
+                    .map { it.path }
+                    .sorted()
+
+                if (offenders.isNotEmpty()) {
+                    throw GradleException(
+                        buildString {
+                            appendLine("$target is an implementation module — only :app may depend on it.")
+                            appendLine(contractHint)
+                            appendLine("Offending modules:")
+                            offenders.forEach { appendLine("  - $it") }
+                        }.trim(),
+                    )
                 }
             }
-            .map { it.path }
-            .sorted()
-
-        if (offenders.isNotEmpty()) {
-            throw GradleException(
-                buildString {
-                    appendLine("$target is an implementation module — only :app may depend on it.")
-                    appendLine("Depend on the contracts in :core:local / :core:remote instead.")
-                    appendLine("Offending modules:")
-                    offenders.forEach { appendLine("  - $it") }
-                }.trim(),
-            )
         }
     }
-}
+
+registerAppOnlyDependencyCheck(
+    taskName = "verifyDatasourceImplIsolation",
+    targets = setOf(":core:datasource-impl"),
+    contractHint = "Depend on the contracts in :core:local / :core:remote instead.",
+)
+
+registerAppOnlyDependencyCheck(
+    taskName = "verifyPushProvisioningIsolation",
+    targets = setOf(
+        ":spend:push-provisioning:impl",
+        ":spend:push-provisioning:mock",
+        ":spend:push-provisioning:no-op",
+    ),
+    contractHint = "Depend on :spend:push-provisioning:api instead.",
+)
 
 /**
  * Fails if a name in [dagpIgnoredSourceSets] is not a real Android source set of this module.
