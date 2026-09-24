@@ -15,7 +15,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
-import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher.Mode
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketAuthError
@@ -23,11 +22,9 @@ import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletError
-import com.tangem.domain.polymarket.model.PolymarketPositionsError
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.RecordPolymarketConfirmationUseCase
-import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.test.core.ProvideTestModels
@@ -41,7 +38,6 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
@@ -63,7 +59,6 @@ internal class DefaultPredictionAccountStatusFetcherTest {
     private val getBalance: GetPolymarketBalanceInteractor = mockk()
     private val recordConfirmation: RecordPolymarketConfirmationUseCase = mockk(relaxUnitFun = true)
     private val polymarketRepository: PolymarketRepository = mockk()
-    private val positionsRepository: PolymarketPositionsRepository = mockk()
 
     @BeforeEach
     fun resetMocks() {
@@ -75,7 +70,6 @@ internal class DefaultPredictionAccountStatusFetcherTest {
             getBalance,
             recordConfirmation,
             polymarketRepository,
-            positionsRepository,
         )
         every { userWallet.isLocked } returns false
         every { userWalletsListRepository.userWallets } returns MutableStateFlow<List<UserWallet>?>(listOf(userWallet))
@@ -95,7 +89,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         val store = createStore(testScope = this)
 
         // Act
-        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.AVAILABLE_ONLY))
+        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
         // Assert
         assertThat(store.getSyncOrNull(WALLET)).isEqualTo(PredictionAccountStatusValue.NotOnboarded)
@@ -112,7 +106,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         val store = createStore(testScope = this)
 
         // Act
-        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.AVAILABLE_ONLY))
+        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
         // Assert
         assertThat(store.getSyncOrNull(WALLET)).isEqualTo(model.expected)
@@ -128,7 +122,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         val store = createStore(testScope = this)
 
         // Act
-        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.AVAILABLE_ONLY))
+        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
         // Assert
         assertThat((store.getSyncOrNull(WALLET) as PredictionAccountStatusValue.Active).depositAddress).isNull()
@@ -145,7 +139,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         store.store(userWalletId = WALLET, value = ACTIVE.copy(depositAddress = BRIDGE_ADDRESS))
 
         // Act
-        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.AVAILABLE_ONLY))
+        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
         // Assert
         val stored = store.getSyncOrNull(WALLET) as PredictionAccountStatusValue.Active
@@ -163,14 +157,13 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         val store = createStore(testScope = this)
 
         // Act
-        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.AVAILABLE_ONLY))
+        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
         // Assert — the rate itself is not stored, it belongs to the currency the user may switch at any time
         assertThat(store.getSyncOrNull(WALLET)).isEqualTo(
             PredictionAccountStatusValue.Active(
                 source = StatusSource.ACTUAL,
                 balance = BigDecimal("40"),
-                positionsValue = null,
                 fiatRate = null,
                 depositCurrency = COLLATERAL,
                 depositAddress = null,
@@ -179,97 +172,40 @@ internal class DefaultPredictionAccountStatusFetcherTest {
     }
 
     @Test
-    fun `GIVEN a full refresh WHEN invoke THEN the positions value is stored next to the balance`() = runTest {
+    fun `GIVEN the balance cannot be read WHEN invoke THEN the cached value is flagged`() = runTest {
         // Arrange
         stubReadyWallet(balance = BigDecimal("40"))
-        coEvery { positionsRepository.getPositionsValue(ADDRESSES) } returns BigDecimal("7").right()
+        coEvery { getBalance.invoke(ADDRESSES) } returns PolymarketAuthError.RateLimited.left()
         val store = createStore(testScope = this)
+        store.store(userWalletId = WALLET, value = ACTIVE)
 
         // Act
-        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.FULL))
+        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
         // Assert
-        val stored = store.getSyncOrNull(WALLET) as PredictionAccountStatusValue.Active
-        assertThat(stored.balance).isEqualTo(BigDecimal("40"))
-        assertThat(stored.positionsValue).isEqualTo(BigDecimal("7"))
+        assertThat(store.getSyncOrNull(WALLET)).isEqualTo(ACTIVE.copy(source = StatusSource.ONLY_CACHE))
     }
 
     @Test
-    fun `GIVEN the positions value cannot be read WHEN a full refresh runs THEN the stored one is kept`() =
-        runTest {
-            // Arrange
-            stubReadyWallet(balance = BigDecimal("40"))
-            coEvery { positionsRepository.getPositionsValue(ADDRESSES) } returns
-                PolymarketPositionsError.Network.left()
-            val store = createStore(testScope = this)
-            store.store(userWalletId = WALLET, value = ACTIVE.copy(positionsValue = BigDecimal("7")))
-
-            // Act
-            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.FULL))
-
-            // Assert
-            val stored = store.getSyncOrNull(WALLET) as PredictionAccountStatusValue.Active
-            assertThat(stored.balance).isEqualTo(BigDecimal("40"))
-            assertThat(stored.positionsValue).isEqualTo(BigDecimal("7"))
-            coVerify(exactly = 1) { positionsRepository.getPositionsValue(ADDRESSES) }
+    fun `GIVEN an address confirmed mid-fetch WHEN the refresh commits THEN the address is carried`() = runTest {
+        // Arrange
+        val store = createStore(testScope = this)
+        store.store(userWalletId = WALLET, value = ACTIVE.copy(depositAddress = null))
+        coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
+        coEvery { getWalletStatus.invoke(ADDRESSES) } returns walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
+        coEvery { getBalance.invoke(ADDRESSES) } coAnswers {
+            store.store(userWalletId = WALLET, value = ACTIVE.copy(depositAddress = BRIDGE_ADDRESS))
+            PolymarketBalanceAllowance(balance = BigDecimal("41"), allowances = null).right()
         }
 
-    @Test
-    fun `GIVEN the balance cannot be read WHEN a full refresh runs THEN the positions read is dropped and the value flagged`() =
-        runTest {
-            // Arrange
-            stubReadyWallet(balance = BigDecimal("40"))
-            coEvery { getBalance.invoke(ADDRESSES) } returns PolymarketAuthError.RateLimited.left()
-            coEvery { positionsRepository.getPositionsValue(ADDRESSES) } coAnswers { awaitCancellation() }
-            val store = createStore(testScope = this)
-            val cached = ACTIVE.copy(positionsValue = BigDecimal("7"))
-            store.store(userWalletId = WALLET, value = cached)
+        // Act
+        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
-            // Act
-            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.FULL))
-
-            // Assert
-            assertThat(store.getSyncOrNull(WALLET)).isEqualTo(cached.copy(source = StatusSource.ONLY_CACHE))
-        }
-
-    @Test
-    fun `GIVEN a stored positions value WHEN an available-only refresh runs THEN it is carried over unread`() =
-        runTest {
-            // Arrange
-            stubReadyWallet(balance = BigDecimal("40"))
-            val store = createStore(testScope = this)
-            store.store(userWalletId = WALLET, value = ACTIVE.copy(positionsValue = BigDecimal("7")))
-
-            // Act
-            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.AVAILABLE_ONLY))
-
-            // Assert
-            val stored = store.getSyncOrNull(WALLET) as PredictionAccountStatusValue.Active
-            assertThat(stored.positionsValue).isEqualTo(BigDecimal("7"))
-            coVerify(exactly = 0) { positionsRepository.getPositionsValue(any()) }
-        }
-
-    @Test
-    fun `GIVEN a full refresh lands mid-fetch WHEN an available-only refresh completes THEN the newer value is carried`() =
-        runTest {
-            // Arrange
-            val store = createStore(testScope = this)
-            store.store(userWalletId = WALLET, value = ACTIVE.copy(positionsValue = BigDecimal("7")))
-            coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
-            coEvery { getWalletStatus.invoke(ADDRESSES) } returns
-                walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
-            coEvery { getBalance.invoke(ADDRESSES) } coAnswers {
-                store.store(userWalletId = WALLET, value = ACTIVE.copy(positionsValue = BigDecimal("9")))
-                PolymarketBalanceAllowance(balance = BigDecimal("40"), allowances = null).right()
-            }
-
-            // Act
-            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.AVAILABLE_ONLY))
-
-            // Assert
-            val stored = store.getSyncOrNull(WALLET) as PredictionAccountStatusValue.Active
-            assertThat(stored.positionsValue).isEqualTo(BigDecimal("9"))
-        }
+        // Assert
+        val stored = store.getSyncOrNull(WALLET) as PredictionAccountStatusValue.Active
+        assertThat(stored.balance).isEqualTo(BigDecimal("41"))
+        assertThat(stored.depositAddress).isEqualTo(BRIDGE_ADDRESS)
+    }
 
     @Test
     fun `GIVEN a refresh in flight WHEN another one starts for the same wallet THEN neither waits for the other`() =
@@ -277,7 +213,6 @@ internal class DefaultPredictionAccountStatusFetcherTest {
             // Arrange
             val store = createStore(testScope = this)
             stubReadyWallet(balance = BigDecimal("40"))
-            coEvery { positionsRepository.getPositionsValue(ADDRESSES) } returns BigDecimal("9").right()
             val inFlight = CompletableDeferred<Unit>()
             coEvery { getBalance.invoke(ADDRESSES) } coAnswers {
                 inFlight.await()
@@ -288,10 +223,10 @@ internal class DefaultPredictionAccountStatusFetcherTest {
             val fetcher = createFetcher(store)
 
             // Act
-            val first = async { fetcher.invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.FULL)) }
+            val first = async { fetcher.invoke(PredictionAccountStatusFetcher.Params(WALLET)) }
             runCurrent()
             val second = async {
-                fetcher.invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.AVAILABLE_ONLY))
+                fetcher.invoke(PredictionAccountStatusFetcher.Params(WALLET))
             }
             runCurrent()
 
@@ -306,33 +241,6 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         }
 
     @Test
-    fun `GIVEN an address confirmed while the positions value loads WHEN it lands THEN the address survives`() =
-        runTest {
-            // Arrange
-            val store = createStore(testScope = this)
-            store.store(userWalletId = WALLET, value = ACTIVE.copy(depositAddress = null))
-            stubReadyWallet(balance = BigDecimal("40"))
-            val loading = CompletableDeferred<Unit>()
-            coEvery { positionsRepository.getPositionsValue(ADDRESSES) } coAnswers {
-                loading.await()
-                BigDecimal("9").right()
-            }
-            val fetcher = createFetcher(store)
-
-            // Act
-            val refresh = async { fetcher.invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.FULL)) }
-            runCurrent()
-            store.store(userWalletId = WALLET, value = ACTIVE.copy(depositAddress = BRIDGE_ADDRESS))
-            loading.complete(Unit)
-            refresh.await()
-
-            // Assert
-            val stored = store.getSyncOrNull(WALLET) as PredictionAccountStatusValue.Active
-            assertThat(stored.depositAddress).isEqualTo(BRIDGE_ADDRESS)
-            assertThat(stored.positionsValue).isEqualTo(BigDecimal("9"))
-        }
-
-    @Test
     fun `GIVEN a refresh fails after a concurrent one succeeded WHEN it lands THEN only the source is flagged`() =
         runTest {
             // Arrange
@@ -341,7 +249,6 @@ internal class DefaultPredictionAccountStatusFetcherTest {
                 walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
             coEvery { getBalance.invoke(ADDRESSES) } returns
                 PolymarketBalanceAllowance(balance = BigDecimal("40"), allowances = null).right()
-            coEvery { positionsRepository.getPositionsValue(ADDRESSES) } returns BigDecimal("9").right()
             val failing = CompletableDeferred<Unit>()
             coEvery { deriveAddresses.stored(WALLET) } coAnswers {
                 failing.await()
@@ -350,9 +257,9 @@ internal class DefaultPredictionAccountStatusFetcherTest {
             val fetcher = createFetcher(store)
 
             // Act
-            val first = async { fetcher.invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.FULL)) }
+            val first = async { fetcher.invoke(PredictionAccountStatusFetcher.Params(WALLET)) }
             runCurrent()
-            val second = async { fetcher.invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.FULL)) }
+            val second = async { fetcher.invoke(PredictionAccountStatusFetcher.Params(WALLET)) }
             runCurrent()
             failing.complete(Unit)
             first.await()
@@ -362,7 +269,6 @@ internal class DefaultPredictionAccountStatusFetcherTest {
             val stored = store.getSyncOrNull(WALLET) as PredictionAccountStatusValue.Active
             assertThat(stored.source).isEqualTo(StatusSource.ONLY_CACHE)
             assertThat(stored.balance).isEqualTo(BigDecimal("40"))
-            assertThat(stored.positionsValue).isEqualTo(BigDecimal("9"))
         }
 
     @Test
@@ -378,7 +284,6 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
         coEvery { deriveAddresses.stored(OTHER_WALLET) } returns OTHER_ADDRESSES
         coEvery { getWalletStatus.invoke(any()) } returns walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
-        coEvery { positionsRepository.getPositionsValue(any()) } returns BigDecimal("9").right()
         val inFlight = CompletableDeferred<Unit>()
         coEvery { getBalance.invoke(ADDRESSES) } coAnswers {
             inFlight.await()
@@ -389,9 +294,9 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         val fetcher = createFetcher(store)
 
         // Act
-        val blocked = async { fetcher.invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.FULL)) }
+        val blocked = async { fetcher.invoke(PredictionAccountStatusFetcher.Params(WALLET)) }
         runCurrent()
-        fetcher.invoke(PredictionAccountStatusFetcher.Params(OTHER_WALLET, mode = Mode.FULL))
+        fetcher.invoke(PredictionAccountStatusFetcher.Params(OTHER_WALLET))
 
         // Assert
         assertThat(store.getSyncOrNull(OTHER_WALLET)).isInstanceOf(PredictionAccountStatusValue.Active::class.java)
@@ -410,7 +315,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         val store = createStore(testScope = this)
 
         // Act
-        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.AVAILABLE_ONLY))
+        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
         // Assert
         assertThat(store.getSyncOrNull(WALLET))
@@ -426,7 +331,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         val store = createStore(testScope = this)
 
         // Act
-        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.AVAILABLE_ONLY))
+        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
         // Assert
         assertThat(store.getSyncOrNull(WALLET)?.totalFiatBalance)
@@ -441,7 +346,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         coEvery { deriveAddresses.stored(WALLET) } throws IllegalStateException("no connection")
 
         // Act
-        val actual = createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.AVAILABLE_ONLY))
+        val actual = createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
         // Assert
         assertThat(actual.isLeft()).isTrue()
@@ -456,7 +361,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         coEvery { getWalletStatus.invoke(ADDRESSES) } returns PolymarketOnboardingError.Unknown.left()
 
         // Act
-        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.AVAILABLE_ONLY))
+        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
         // Assert
         assertThat(store.getSyncOrNull(WALLET)).isEqualTo(PredictionAccountStatusValue.Error.Unavailable)
@@ -509,7 +414,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
             coEvery { getWalletStatus.invoke(ADDRESSES) } returns PolymarketOnboardingError.Unknown.left()
 
             // Act
-            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.AVAILABLE_ONLY))
+            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
             // Assert
             assertThat(store.getSyncOrNull(WALLET)).isEqualTo(ACTIVE.copy(source = StatusSource.ONLY_CACHE))
@@ -525,7 +430,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         coEvery { getBalance.invoke(ADDRESSES) } returns PolymarketAuthError.Network.left()
 
         // Act
-        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.AVAILABLE_ONLY))
+        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
         // Assert — throttled or offline means the balance is unknown, not zero
         assertThat(store.getSyncOrNull(WALLET)).isEqualTo(ACTIVE.copy(source = StatusSource.ONLY_CACHE))
@@ -543,7 +448,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         every { userWallet.isLocked } returns true
 
         // Act
-        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.AVAILABLE_ONLY))
+        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
         // Assert
         assertThat(store.getSyncOrNull(WALLET)).isEqualTo(ACTIVE.copy(source = StatusSource.ONLY_CACHE))
@@ -559,7 +464,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         coEvery { getWalletStatus.invoke(ADDRESSES) } returns walletState(PolymarketWalletStatus.UNKNOWN).right()
 
         // Act
-        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.AVAILABLE_ONLY))
+        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
         // Assert — the BFF contract calls UNKNOWN "not ready, keep polling", not an error
         assertThat(store.getSyncOrNull(WALLET)).isEqualTo(ACTIVE.copy(source = StatusSource.ONLY_CACHE))
@@ -592,7 +497,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
                 walletState(PolymarketWalletStatus.APPROVALS_FAILED).right()
 
             // Act
-            createFetcher(createStore(testScope = this)).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.AVAILABLE_ONLY))
+            createFetcher(createStore(testScope = this)).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
             // Assert
             coVerify(exactly = 1) {
@@ -610,7 +515,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
                 PolymarketBalanceAllowance(balance = BigDecimal("40"), allowances = null).right()
 
             // Act
-            createFetcher(createStore(testScope = this)).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.AVAILABLE_ONLY))
+            createFetcher(createStore(testScope = this)).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
             // Assert
             coVerify(exactly = 1) {
@@ -626,7 +531,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
             coEvery { getWalletStatus.invoke(ADDRESSES) } returns PolymarketOnboardingError.Unknown.left()
 
             // Act
-            createFetcher(createStore(testScope = this)).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.AVAILABLE_ONLY))
+            createFetcher(createStore(testScope = this)).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
             // Assert
             coVerify(exactly = 0) { recordConfirmation.invoke(any(), any()) }
@@ -651,7 +556,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
             val store = createStore(testScope = this)
 
             // Act
-            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.AVAILABLE_ONLY))
+            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
             // Assert — no local credentials, so there is no amount to show, only the account itself
             assertThat(store.getSyncOrNull(WALLET)).isEqualTo(PredictionAccountStatusValue.Onboarded(source = StatusSource.ACTUAL))
@@ -670,7 +575,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
             val store = createStore(testScope = this)
 
             // Act
-            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.AVAILABLE_ONLY))
+            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
             // Assert
             assertThat(store.getSyncOrNull(WALLET)).isEqualTo(PredictionAccountStatusValue.NotOnboarded)
@@ -690,7 +595,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
             store.store(userWalletId = WALLET, value = ACTIVE)
 
             // Act
-            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.AVAILABLE_ONLY))
+            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
             // Assert
             assertThat(store.getSyncOrNull(WALLET)).isEqualTo(ACTIVE.copy(source = StatusSource.ONLY_CACHE))
@@ -712,7 +617,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
                 coEvery { getBalance.invoke(ADDRESSES) } returns PolymarketAuthError.RateLimited.left()
 
                 // Act
-                createFetcher(createStore(testScope = this)).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.AVAILABLE_ONLY))
+                createFetcher(createStore(testScope = this)).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
                 // Assert
                 coVerify(exactly = 1) {
@@ -734,7 +639,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
             store.store(userWalletId = WALLET, value = ACTIVE)
 
             // Act
-            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.AVAILABLE_ONLY))
+            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
             // Assert
             assertThat(store.getSyncOrNull(WALLET)).isEqualTo(ACTIVE.copy(source = StatusSource.ONLY_CACHE))
@@ -753,7 +658,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
             val store = createStore(testScope = this)
 
             // Act
-            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET, mode = Mode.AVAILABLE_ONLY))
+            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
             // Assert
             assertThat(store.getSyncOrNull(WALLET)).isEqualTo(
@@ -780,7 +685,6 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         getPolymarketBalanceInteractor = getBalance,
         recordPolymarketConfirmation = recordConfirmation,
         polymarketRepository = polymarketRepository,
-        positionsRepository = positionsRepository,
         collateralCurrencyFactory = mockk { every { createDepositTarget() } returns COLLATERAL },
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
@@ -795,7 +699,6 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         val ACTIVE = PredictionAccountStatusValue.Active(
             source = StatusSource.ACTUAL,
             balance = BigDecimal("40"),
-            positionsValue = null,
             fiatRate = null,
             depositCurrency = COLLATERAL,
             depositAddress = BRIDGE_ADDRESS,
