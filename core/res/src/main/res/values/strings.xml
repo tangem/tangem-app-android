@@ -329,6 +329,8 @@
   <string name="collectibles_stories_security_title">High security, tapless design</string>
   <string name="collectibles_stories_transparency_subtitle">Browse every card before you buy and watch live openings from the blockchain, with each collector\'s wallet and card value. All in-app</string>
   <string name="collectibles_stories_transparency_title">Nothing behind the curtain</string>
+  <string name="collectibles_turbo_mode_bottomsheet_message">Turbo Mode automatically sells back any Common card. Hunt grails at maximum speed</string>
+  <string name="collectibles_turbo_mode_bottomsheet_title">Turbo Mode</string>
   <string name="collectibles_welcome_benefit_cold_wallet_subtitle">Only your card can move them</string>
   <string name="collectibles_welcome_benefit_cold_wallet_title">Cards go to your cold wallet</string>
   <string name="collectibles_welcome_benefit_sell_offers_subtitle">85–93% of insured value, in USDC</string>
