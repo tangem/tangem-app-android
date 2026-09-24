@@ -10,8 +10,8 @@ import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.isDisplayedSafely
 import com.tangem.common.extensions.pullToRefresh
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.openMainScreenWithExistingHotWallet
-import com.tangem.screens.onMainScreen
 import com.tangem.screens.onTokenDetailsScreen
 import com.tangem.screens.onTokenDetailsTopBar
 import com.tangem.screens.onTxHistoryScreen
@@ -63,7 +63,7 @@ class YieldModeTest : BaseTestCase() {
             }
 
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details' screen is displayed") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -140,7 +140,7 @@ class YieldModeTest : BaseTestCase() {
             }
 
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details' screen is displayed") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -232,7 +232,7 @@ class YieldModeTest : BaseTestCase() {
             }
 
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details' screen is displayed") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -294,7 +294,7 @@ class YieldModeTest : BaseTestCase() {
             }
 
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details' screen is displayed") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -377,7 +377,7 @@ class YieldModeTest : BaseTestCase() {
             }
 
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details' screen is displayed") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -431,7 +431,7 @@ class YieldModeTest : BaseTestCase() {
                 onTokenDetailsTopBar { backButton.clickWithAssertion() }
             }
             step("Click on native coin with name: '$nativeCoinTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(nativeCoinTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(nativeCoinTitle)
             }
             step("Assert 'Token details' screen is displayed") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -479,7 +479,7 @@ class YieldModeTest : BaseTestCase() {
             }
 
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details' screen is displayed") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -522,7 +522,7 @@ class YieldModeTest : BaseTestCase() {
                 onTokenDetailsTopBar { backButton.clickWithAssertion() }
             }
             step("Click on native coin with name: '$nativeCoinTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(nativeCoinTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(nativeCoinTitle)
             }
             step("Assert 'Token details' screen is displayed") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
