@@ -37,8 +37,8 @@ internal class MoneyAccountOnboardingModel @Inject constructor(
     init {
         when (params) {
             is MoneyAccountOnboardingComponent.Params.Deeplink -> validateDeeplinkAndShow(params.deeplink)
-            is MoneyAccountOnboardingComponent.Params.FromMain,
-            is MoneyAccountOnboardingComponent.Params.FromDetailsScreen,
+            MoneyAccountOnboardingComponent.Params.FromMain,
+            MoneyAccountOnboardingComponent.Params.FromDetailsScreen,
             -> showOnboarding()
         }
     }
