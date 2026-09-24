@@ -65,10 +65,16 @@ class DefaultHotWalletAccessor @Inject constructor(
     }
 
     override suspend fun unlockContextual(hotWalletId: HotWalletId): UnlockHotWallet = hotSdkRequest(hotWalletId) {
-        tangemHotSdk.getContextUnlock(it).also { unlockHotWallet ->
-            contextualUnlockHotWallet[hotWalletId] = unlockHotWallet
-        }
+        storeContextUnlock(it)
     }
+
+    override suspend fun unlockContextual(hotWalletId: HotWalletId, auth: HotAuth): UnlockHotWallet =
+        storeContextUnlock(UnlockHotWallet(hotWalletId, auth))
+
+    private suspend fun storeContextUnlock(unlock: UnlockHotWallet): UnlockHotWallet =
+        tangemHotSdk.getContextUnlock(unlock).also { unlockHotWallet ->
+            contextualUnlockHotWallet[unlock.walletId] = unlockHotWallet
+        }
 
     override fun getContextualUnlock(hotWalletId: HotWalletId): UnlockHotWallet? =
         contextualUnlockHotWallet[hotWalletId]

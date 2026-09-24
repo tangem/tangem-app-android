@@ -75,6 +75,14 @@ internal class DefaultWalletRegistrar(
             }
     }
 
+    override suspend fun hasActiveSession(): Boolean = withContext(dispatchers.io) {
+        runSuspendCatching { store.get().getOrNull() != null }
+            .getOrElse { e ->
+                TangemLogger.e("Failed to read session tokens", e)
+                false
+            }
+    }
+
     override suspend fun requestNonce(): Either<WalletRegistrationError, WalletNonce> = withContext(dispatchers.io) {
         // No per-wallet lock: the nonce request is card- and wallet-independent (device-scoped),
         // so it can be prefetched before the wallet id is known.
