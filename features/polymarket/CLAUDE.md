@@ -34,7 +34,8 @@ adding any screen that can sign, prompt or move funds.
   `SwapTransferStateBuilder`). Withdraw is signed there through `SubmitPredictionWithdrawalInteractor` and
   ends on `SwapRoute.Success` with `PredictionWithdrawalTracker` polling in the background — there is no
   status screen. A top-up sent from swap opens `PredictionFundingWindow`.
-- **Receive** — `TokenReceiveComponent` (`features/token-recieve`, package `tokenreceive`) in a slot of `PolymarketMainComponent`,
+- **Receive** — `TokenReceiveComponent` (`features/token-recieve`, package `tokenreceive`) in
+  `polymarketFundingSheetSlot`, one sheet at a time (Receive replaces AddFunds),
   configured by `PolymarketReceiveConfigFactory` with the bridge deposit address and the `minCheckoutUsd`
   limits notification.
 - **DI** — `di/PolymarketBindsModule.kt` holds four modules: `PolymarketBindsModule` (component
@@ -54,7 +55,7 @@ factory) with `childByContext(componentContext, router = innerRouter)`.
 ```
 Entry                       PolymarketEntryComponent      settles the wallet (PortfolioSelector sheet when none given)
 └─ Onboarding(wallet)       PolymarketOnboardingComponent the gate: Welcome screen, onboarding run, region restrictions
-   └─ Main(wallet)          PolymarketMainComponent       feed + balance header + positions preview; slots: AddFunds, Receive
+   └─ Main(wallet)          PolymarketMainComponent       feed + balance header + positions preview; slot: funding sheet
       ├─ Search             PolymarketSearchComponent     search-as-you-type, 500 ms debounce, min length
       ├─ EventDetails       PolymarketEventDetailsComponent all markets of one event
       │  └─ PlacePrediction PlacePredictionComponent      Params.Buy — its own childStack: Amount → Slippage? → Summary → Status
@@ -109,11 +110,12 @@ balance only, as on iOS.
 - **Add funds** is gated: `RequisitesState.Loading` ignores the tap, `Failed` shows a dialog, `Ready`
   opens the sheet — swap (`AccountFlow.PredictionTopUp`) or receive. Both need a confirmed address
   (`activeStatus.cryptoCurrencyStatus`); without it a snackbar reports an unknown error rather than
-  offering an address that may be wrong.
+  offering an address that may be wrong. The buy amount step offers the same sheet (`PlacePredictionAddFunds`),
+  shut until the region check answers, and shows the account-status balance only once `ACTUAL`.
 - **Withdraw** pushes swap with the collateral as FROM (`AccountFlow.PredictionWithdraw`), available in
   read-only mode too.
 - **Awaiting-funds banner** follows `PredictionFundingWindow.isOpen`; the poller drops to 5 s while open.
-  Opened by `SwapRoute.Success` and a placed order, never by Receive (an external transfer's timing is unknown).
+  Opened by a completed prediction top-up swap or a sent order, never by Receive (an external transfer's timing is unknown).
 - A position row opens `PositionResult` when resolved (`canOpenPositionResult`), `PositionDetails` when
   still open (`canOpenPositionDetails`), nothing otherwise.
 
