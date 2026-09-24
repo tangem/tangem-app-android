@@ -329,6 +329,35 @@ class DefaultWalletRegistrarTest {
     }
 
     @Test
+    fun `GIVEN stored session tokens WHEN hasActiveSession THEN true`() = runTest {
+        assertThat(registrar.hasActiveSession()).isTrue()
+    }
+
+    @Test
+    fun `GIVEN no session tokens WHEN hasActiveSession THEN false`() = runTest {
+        // Arrange
+        coEvery { store.get() } returns None
+
+        // Act
+        val hasSession = registrar.hasActiveSession()
+
+        // Assert
+        assertThat(hasSession).isFalse()
+    }
+
+    @Test
+    fun `GIVEN unreadable token store WHEN hasActiveSession THEN false`() = runTest {
+        // Arrange
+        coEvery { store.get() } throws IllegalStateException("corrupted")
+
+        // Act
+        val hasSession = registrar.hasActiveSession()
+
+        // Assert
+        assertThat(hasSession).isFalse()
+    }
+
+    @Test
     fun `prepare returns null when walletId already registered`() = runTest {
         preferencesDataStore.edit { it[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID) }
 
