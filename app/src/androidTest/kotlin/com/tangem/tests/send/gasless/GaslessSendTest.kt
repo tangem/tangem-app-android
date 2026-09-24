@@ -168,8 +168,8 @@ class GaslessSendTest : BaseTestCase() {
             step("Assert the gasless '$gaslessFeeTitle' of '$gaslessFeeAmount' is displayed in the details") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) {
                     onTxHistoryDetailsBottomSheet {
-                        title(gaslessFeeTitle).assertIsDisplayed()
-                        feeAmount(gaslessFeeAmount).assertIsDisplayed()
+                        rowLabel(gaslessFeeTitle).assertIsDisplayed()
+                        rowValueContaining(gaslessFeeAmount).assertIsDisplayed()
                     }
                 }
             }
