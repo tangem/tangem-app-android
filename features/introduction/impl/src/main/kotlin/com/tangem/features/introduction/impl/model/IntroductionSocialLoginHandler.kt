@@ -76,16 +76,16 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
             onStageChanged = { stage -> host.onProgress(stage.toProgressUM(provider)) },
         )
 
-        host.onProgress(null)
-
         // Only after the result is processed: a failure signs the provider out, and a tap accepted
-        // before that finishes lets the next attempt read the account it is still clearing.
+        // before that finishes lets the next attempt read the account it is still clearing. The
+        // progress stays up until then too, or the screen would sit locked with nothing on it.
         try {
             result.fold(
                 ifLeft = { error -> onFailure(provider, error) },
                 ifRight = { outcome -> onSuccess(outcome) },
             )
         } finally {
+            host.onProgress(null)
             host.onFinished()
         }
     }
