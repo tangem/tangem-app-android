@@ -84,7 +84,6 @@ dependencies {
     implementation(projects.features.swap.domain)
 
     /** Feature Apis */
-    implementation(projects.features.send.api)
     implementation(projects.features.tokendetails.api)
     implementation(projects.features.wallet.api)
     implementation(projects.features.markets.api)
@@ -118,5 +117,4 @@ dependencies {
     api(projects.domain.common)
     api(projects.domain.visa)
     api(projects.domain.walletManager)
-    api(projects.features.swap.api)
 }
