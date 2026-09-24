@@ -315,6 +315,7 @@ internal class SdkTransactionTypeConverterTest {
         gaslessFeeAddresses = setOf(FEE_RECIPIENT),
         currency = currency,
         networkTokens = networkTokens,
+        getCachedTokenInfoUseCase = mockk(relaxed = true),
     )
 
     private fun item(

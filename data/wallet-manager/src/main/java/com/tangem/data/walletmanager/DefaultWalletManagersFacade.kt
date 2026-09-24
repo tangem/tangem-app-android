@@ -294,6 +294,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                     currency = currency,
                     currencyAddresses = getAddresses(userWalletId, currency.network),
                     txHistoryFeatureToggles = txHistoryFeatureToggles,
+                    getCachedTokenInfoUseCase = getCachedTokenInfoUseCase,
                     networkTokens = getCachedTokenInfoUseCase(
                         userWalletId = userWalletId,
                         networkId = currency.network.rawId,
