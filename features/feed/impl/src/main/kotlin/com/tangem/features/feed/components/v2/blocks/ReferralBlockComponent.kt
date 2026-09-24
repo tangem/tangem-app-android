@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
@@ -25,11 +26,12 @@ import com.tangem.features.feed.components.v2.blocks.model.ReferralBlockModel
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.v2.FeedBlockIconBadge
 import com.tangem.features.feed.ui.v2.FeedPromoCard
+import com.tangem.features.feed.ui.v2.FeedPromoCardSkeleton
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * Invitation into the referral programme, and the wallet chooser it opens when more than one wallet
- * can still be invited — see [ReferralBlockModel] for which wallets those are.
+ * Invitation into the referral programme, and the wallet chooser it opens when the programme is open to
+ * more than one wallet — see [ReferralBlockModel] for which wallets those are.
  */
 internal class ReferralBlockComponent(
     context: AppComponentContext,
@@ -57,14 +59,24 @@ internal class ReferralBlockComponent(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        FeedPromoCard(
-            title = stringResourceSafe(R.string.feed_promo_referral_title),
-            description = stringResourceSafe(R.string.feed_promo_referral_description, REFERRAL_AWARD),
-            ambientVariant = TangemAmbientBackground.Variant.Red,
-            onClick = ::onClick,
-            modifier = modifier,
-            icon = { ReferralIcon() },
-        )
+        val isLoading by model.isLoading.collectAsStateWithLifecycle()
+
+        if (isLoading) {
+            FeedPromoCardSkeleton(
+                ambientVariant = TangemAmbientBackground.Variant.Red,
+                modifier = modifier,
+                icon = { ReferralIcon() },
+            )
+        } else {
+            FeedPromoCard(
+                title = stringResourceSafe(R.string.feed_promo_referral_title),
+                description = stringResourceSafe(R.string.feed_promo_referral_description, REFERRAL_AWARD),
+                ambientVariant = TangemAmbientBackground.Variant.Red,
+                onClick = ::onClick,
+                modifier = modifier,
+                icon = { ReferralIcon() },
+            )
+        }
     }
 
     @Composable
