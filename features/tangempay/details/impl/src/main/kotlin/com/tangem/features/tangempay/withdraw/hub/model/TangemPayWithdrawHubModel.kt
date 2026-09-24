@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.withdraw.hub.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -16,6 +17,7 @@ import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.pay.usecase.bankofframp.GetBankOfframpOptionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetRecentBankAccountsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.common.balanceOrNull
@@ -56,6 +58,7 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
     private val markBankAccountUsedUseCase: MarkBankAccountUsedUseCase,
     private val getBankOfframpOptionsUseCase: GetBankOfframpOptionsUseCase,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+    private val analytics: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<Params>()
@@ -66,10 +69,19 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
         callbacks = TangemPayWithdrawHubUMFactory.Callbacks(
             onBackClick = ::onBackClick,
             onWithinPortfolioClick = ::onWithinPortfolioClick,
-            onToPersonalAccountClick = { openBankWithdraw(entry = BankWithdrawEntry.NewPersonal) },
-            onToBusinessAccountClick = { openBankWithdraw(entry = BankWithdrawEntry.NewBusiness) },
+            onToPersonalAccountClick = {
+                analytics.send(TangemPayAnalyticsEvents.Offramp.ToPersonalAccountClicked())
+                openBankWithdraw(entry = BankWithdrawEntry.NewPersonal)
+            },
+            onToBusinessAccountClick = {
+                analytics.send(TangemPayAnalyticsEvents.Offramp.ToBusinessAccountClicked())
+                openBankWithdraw(entry = BankWithdrawEntry.NewBusiness)
+            },
             onRecentRecipientClick = ::onRecentRecipientClick,
-            onSeeAllClick = { openBankWithdraw(entry = BankWithdrawEntry.SeeAll) },
+            onSeeAllClick = {
+                analytics.send(TangemPayAnalyticsEvents.Offramp.SavedContactsSeeAllClicked())
+                openBankWithdraw(entry = BankWithdrawEntry.SeeAll)
+            },
             onRetryRecentsClick = ::loadRecents,
             onRetryBankSectionClick = ::onRetryBankSection,
         ),
@@ -84,6 +96,7 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
         field = MutableStateFlow(umFactory.create(state.value))
 
     init {
+        analytics.send(TangemPayAnalyticsEvents.Offramp.BankTransferSheetOpened())
         state
             .onEach { uiState.value = umFactory.create(it) }
             .launchIn(modelScope)
@@ -164,6 +177,7 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
     }
 
     private fun onRecentRecipientClick(bankAccountId: String) {
+        analytics.send(TangemPayAnalyticsEvents.Offramp.SavedContactClicked())
         modelScope.launch {
             markBankAccountUsedUseCase(userWalletId = params.userWalletId, bankAccountId = bankAccountId)
             openBankWithdraw(entry = BankWithdrawEntry.Saved(bankAccountId = bankAccountId))
