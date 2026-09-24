@@ -27,7 +27,6 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
     implementation(projects.core.analytics)
-    implementation(projects.core.configToggles)
     implementation(projects.core.navigation)
     implementation(projects.data.nft)
     implementation(projects.core.utils)
