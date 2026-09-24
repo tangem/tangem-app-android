@@ -905,6 +905,8 @@
   <string name="force_update_warning_title">Atualização necessária</string>
   <string name="gasless_not_enough_funds_to_cover_token_fee">Fundos insuficientes</string>
   <string name="gasless_transaction_fee">Taxa de transação</string>
+  <string name="gasless_tron_activation_attempts_limit">Você fez várias tentativas. Tente novamente mais tarde.</string>
+  <string name="gasless_tron_activation_min_balance_description">Seu saldo deve ser superior a %s.</string>
   <string name="generic_error">Ocorreu um erro.</string>
   <string name="generic_error_code">Ocorreu um erro. Código: %s.</string>
   <string name="generic_requires_memo_error">Requer memorando</string>
@@ -1133,14 +1135,14 @@
   <string name="introduction_stories_three_title">Suas chaves, suas criptomoedas</string>
   <string name="introduction_stories_two_subtitle">Use qualquer um dos seus cartões para acessar sua carteira</string>
   <string name="introduction_stories_two_title">Uma carteira, vários cartões</string>
-  <string name="introduction_subtitle">O único aplicativo de que você precisa\npara gerenciar suas finanças</string>
+  <string name="introduction_subtitle">Um só lugar seguro para tudo o que é seu</string>
   <string name="introduction_terms_of_service">Termos de serviço</string>
   <string name="introduction_title">Armazene todos os seus ativos</string>
   <string name="joint_account_activated_snackbar">Conta ativada</string>
   <string name="joint_account_activation_account_button_title">Ativar conta</string>
   <string name="joint_account_activation_subtitle">Todos os membros desta conta compartilham o mesmo saldo. Qualquer membro pode gastar ou sacar os fundos a qualquer momento — inclusive sem a sua aprovação</string>
   <string name="joint_account_activation_title">Você está ativando uma conta compartilhada</string>
-  <string name="joint_account_coming_soon_description">Esta ação ainda não é compatível com contas conjuntas. Estamos trabalhando para disponibilizá-la.</string>
+  <string name="joint_account_coming_soon_description">Esta ação ainda não é compatível com contas conjuntas. Estamos trabalhando para disponibilizá-la</string>
   <string name="joint_account_coming_soon_title">Em breve nas contas conjuntas</string>
   <string name="joint_account_invite_invalid_subtitle">Verifique se você abriu o link completo ou peça ao proprietário da conta para enviá-lo novamente</string>
   <string name="joint_account_invite_invalid_title">O link de convite não é válido</string>

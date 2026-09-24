@@ -990,7 +990,7 @@
   <string name="introduction_stories_three_title">您的密钥，您的加密资产</string>
   <string name="introduction_stories_two_subtitle">用任意一张卡片访问您的钱包</string>
   <string name="introduction_stories_two_title">一个钱包，多张卡片</string>
-  <string name="introduction_subtitle">您只需要一个应用程序</string>
+  <string name="introduction_subtitle">您所有资产的安全之所</string>
   <string name="introduction_terms_of_service">服务条款</string>
   <string name="introduction_title">存储您的所有资产</string>
   <string name="key_invalidated_warning_description">您的生物识别信息已更新，请扫描您的卡片或使用指环进入。</string>
