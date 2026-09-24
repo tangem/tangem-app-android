@@ -83,8 +83,11 @@ history row.
 6. **The yield-enter history row is a `TransactionItemUM.Pill`** (converter maps `YieldSupply.Enter` →
    Pill, like Approve/Staking), rendered by `TransactionStatusPill`. It now carries
    `TransactionHistoryItemTestTags.ITEM` (added for parity with `ContentItem`) so `transactionItem(title)`
-   finds it. Title string = `yield_module_transaction_enter` ("Yield Mode enabled" / "Режим доходности
-   подключен"). The row opens the explorer on click.
+   finds it. A **settled** pill renders `PillSpec.confirmedSplit` — label + end state as one text node,
+   `common_yield_mode_inline` + `common_enabled` / `common_disabled` ("Yield mode Enabled") — so match that,
+   not `yield_module_transaction_enter`, which now only titles the details card. While pending it reads
+   `transaction_history_enabling_yield_mode` ("Enabling Yield mode"). A top-up is an ordinary row titled
+   `transaction_history_supplied` ("Supplied"). The row opens the explorer on click.
 7. **"Nothing to add to TxHistory"** in logs is NOT an error — it refers to recent/pending txs, separate
    from the API history.
 

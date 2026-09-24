@@ -8,6 +8,7 @@ import com.tangem.common.constants.TestConstants.SOLANA_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.XRP_ACTIVATED_RECIPIENT_ADDRESS
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.clickWithAssertion
@@ -257,6 +258,12 @@ class SendViaSwapTest : BaseTestCase() {
             }
             step("Type '$inputAmount' in text field") {
                 onSendScreen { amountInputTextField.performTextInput(inputAmount) }
+            }
+            // The typed amount reaches the model asynchronously — leaving the screen first drops it.
+            step("Assert amount '$inputAmount' is displayed before leaving the screen") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    onSendScreen { amountInputTextField.assertTextContains(inputAmount) }
+                }
             }
             step("Click on 'Swap to another token' button") {
                 onSendScreen { swapToAnotherTokenButton.performClick() }
