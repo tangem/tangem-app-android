@@ -160,12 +160,14 @@ internal interface PolymarketDataModule {
         @Provides
         @Singleton
         fun providePredictionBalancePoller(
-            fetcher: PredictionAccountStatusFetcher,
+            statusFetcher: PredictionAccountStatusFetcher,
+            positionsValueFetcher: PredictionPositionsValueFetcher,
             fundingWindow: PredictionFundingWindow,
             config: PredictionBalancePollingConfig,
             appScope: AppCoroutineScope,
         ): PredictionBalancePoller = PredictionBalancePoller(
-            fetcher = fetcher,
+            statusFetcher = statusFetcher,
+            positionsValueFetcher = positionsValueFetcher,
             fundingWindow = fundingWindow,
             config = config,
             appScope = appScope,
