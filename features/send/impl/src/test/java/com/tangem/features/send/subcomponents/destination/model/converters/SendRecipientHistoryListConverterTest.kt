@@ -88,6 +88,15 @@ internal class SendRecipientHistoryListConverterTest {
                 txInfo(destinationType = TxInfo.DestinationType.Multiple(listOf(TxInfo.AddressType.User(RECIPIENT)))),
             ),
             FilterModel("zero amount", txInfo(amount = BigDecimal.ZERO)),
+            FilterModel(
+                "tron gasless fee recipient",
+                txInfo(
+                    interactionAddressType = TxInfo.InteractionAddressType.User(TRON_GASLESS_FEE_RECIPIENT),
+                    destinationType = TxInfo.DestinationType.Single(
+                        TxInfo.AddressType.User(TRON_GASLESS_FEE_RECIPIENT),
+                    ),
+                ),
+            ),
         )
     }
 
@@ -130,5 +139,6 @@ internal class SendRecipientHistoryListConverterTest {
     private companion object {
         private const val RECIPIENT = "0xRecipientAddress"
         private const val SOURCE = "0xSourceAddress"
+        private const val TRON_GASLESS_FEE_RECIPIENT = "TSWsmaEDgWaE2VsP9tCBGh5GbBRbrdHSuZ"
     }
 }
