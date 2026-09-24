@@ -14,11 +14,11 @@ import com.tangem.common.extensions.enableMobileData
 import com.tangem.common.extensions.enableWiFi
 import com.tangem.common.extensions.stopApp
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.awaitCryptoPortfolioAccount
 import com.tangem.scenarios.closeFirstTimeSwapStoriesIfShown
 import com.tangem.scenarios.openAppByDeepLink
 import com.tangem.scenarios.openMainScreenWithExistingHotWallet
-import com.tangem.screens.onMainScreen
 import com.tangem.screens.onSwapTokenScreen
 import com.tangem.screens.onTokenDetailsScreen
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -377,7 +377,7 @@ class DeeplinksTest : BaseTestCase() {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Open '$tokenDetailsTitle' token details") {
-                onMainScreen { tokenWithTitleAndAddress(tokenDetailsTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenDetailsTitle)
             }
             step("Assert the marketing banner is displayed") {
                 onTokenDetailsScreen {
