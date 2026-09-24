@@ -77,7 +77,7 @@ fun BaseTestCase.searchTokenInMarkets(tokenName: String) {
 }
 
 @OptIn(ExperimentalTestApi::class)
-fun BaseTestCase.openMarketsExchangesScreen(tokenName: String) {
+fun BaseTestCase.openMarketsTokenDetails(tokenName: String) {
     openMarketsScreen()
     step("Search for '$tokenName' token") {
         searchTokenInMarkets(tokenName)
@@ -90,6 +90,10 @@ fun BaseTestCase.openMarketsExchangesScreen(tokenName: String) {
         onMarketsScreen { scrollToListedOnBlock() }
         waitForIdle()
     }
+}
+
+fun BaseTestCase.openMarketsExchangesScreen(tokenName: String) {
+    openMarketsTokenDetails(tokenName)
     // The block settles into place while the token details load, so a tap can land on the 'Add token'
     // button below it — retry until the exchanges screen is up.
     step("Click on 'Listed on exchanges' block") {
