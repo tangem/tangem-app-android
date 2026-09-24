@@ -127,17 +127,25 @@ internal class DefaultWalletRegistrar(
             }
         }
 
-    override suspend fun unregister(walletId: String): Either<WalletRegistrationError, Unit> =
-        withContext(dispatchers.io) {
-            locks.forWallet(walletId).withLock {
-                locks.sessionRotation.withLock {
-                    either { unregisterWallet(walletId) }
-                }
+    override suspend fun unregister(
+        walletId: String,
+        shouldDeleteSocialRecovery: Boolean,
+    ): Either<WalletRegistrationError, Unit> = withContext(dispatchers.io) {
+        locks.forWallet(walletId).withLock {
+            locks.sessionRotation.withLock {
+                either { unregisterWallet(walletId, shouldDeleteSocialRecovery) }
             }
         }
+    }
 
-    private suspend fun Raise<WalletRegistrationError>.unregisterWallet(walletId: String) {
-        val request = WalletUnregisterRequest(walletId = walletId)
+    private suspend fun Raise<WalletRegistrationError>.unregisterWallet(
+        walletId: String,
+        shouldDeleteSocialRecovery: Boolean,
+    ) {
+        val request = WalletUnregisterRequest(
+            walletId = walletId,
+            shouldDeleteSocialRecovery = true.takeIf { shouldDeleteSocialRecovery },
+        )
         when (val response = authApi.unregisterWallet(request)) {
             is ApiResponse.Success -> {
                 try {
