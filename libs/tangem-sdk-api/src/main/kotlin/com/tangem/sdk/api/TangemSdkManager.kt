@@ -68,11 +68,16 @@ interface TangemSdkManager {
     ): CompletionResult<CreateProductWalletTaskResponse>
 
     // Wallet2 specific
+    /**
+     * [shouldForceColdRegistration] re-registers the card with the backend even if its walletId is
+     * already marked registered — set when the card takes over an existing mobile wallet (upgrade).
+     */
     suspend fun importWallet(
         scanResponse: ScanResponse,
         mnemonic: String,
         passphrase: String?,
         shouldReset: Boolean,
+        shouldForceColdRegistration: Boolean = false,
     ): CompletionResult<CreateProductWalletTaskResponse>
 
     suspend fun derivePublicKeys(

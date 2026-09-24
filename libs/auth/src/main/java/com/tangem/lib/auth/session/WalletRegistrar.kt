@@ -50,12 +50,22 @@ interface WalletRegistrar {
      * wallets this must run while the card session is open (the signer taps the card). Returns the
      * assembled registration to hand to [submit] later, or `null` if the wallet is already
      * registered (no-op). Performs NO network write — pair it with [submit] after the session closes.
+     *
+     * [shouldForce] skips the idempotency check, for a wallet whose local marker no longer reflects its
+     * server-side binding (e.g. a mobile wallet upgraded to a card keeps the same walletId).
      */
     suspend fun prepare(
         walletId: String,
         nonce: WalletNonce,
         signer: WalletSigner,
+        shouldForce: Boolean = false,
     ): Either<WalletRegistrationError, PreparedWalletRegistration?>
+
+    /**
+     * Drops the local registration marker of [walletId] (no network), so the next registration attempt
+     * is no longer skipped. The server-side binding is left as is.
+     */
+    suspend fun forgetRegistration(walletId: String): Either<WalletRegistrationError, Unit>
 
     /**
      * Phase 2: sends the [prepared] registration, persists the reissued tokens, and marks the wallet

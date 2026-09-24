@@ -597,7 +597,7 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
     @Test
     fun `GIVEN account_id matches joint account WHEN handle deeplink THEN push new route`() = runTest {
         val userWalletId = UserWalletId("011")
-        val cryptoCurrency = mockCryptoCurrency()
+        val cryptoCurrency = mockCryptoCurrency(derivation = Network.DerivationPath.Joint(value = "888888"))
         val jointAccount = MockAccounts.createJointAccount(
             cryptoCurrencies = listOf(cryptoCurrency),
             userWalletId = userWalletId,
@@ -612,7 +612,7 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
 
         createHandler(
             scope = this,
-            defaultQueryParams() + (ACCOUNT_ID_KEY to jointAccount.accountId.value),
+            defaultQueryParams() - DERIVATION_PATH_KEY + (ACCOUNT_ID_KEY to jointAccount.accountId.value),
             isFromOnNewIntent = true,
         )
         advanceUntilIdle()
@@ -645,10 +645,12 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
         DERIVATION_PATH_KEY to "777",
     )
 
-    private fun mockCryptoCurrency() = mockk<CryptoCurrency> {
+    private fun mockCryptoCurrency(
+        derivation: Network.DerivationPath = Network.DerivationPath.Card(value = "777"),
+    ) = mockk<CryptoCurrency> {
         every { network } returns mockk {
             every { rawId } returns "123"
-            every { derivationPath } returns Network.DerivationPath.Card(value = "777")
+            every { derivationPath } returns derivation
         }
         every { id } returns CryptoCurrency.ID(
             prefix = CryptoCurrency.ID.Prefix.TOKEN_PREFIX,

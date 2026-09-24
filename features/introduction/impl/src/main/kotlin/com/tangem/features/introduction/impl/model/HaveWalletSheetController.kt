@@ -54,7 +54,7 @@ internal class HaveWalletSheetController(
 
     private fun optionsStep() = HaveWalletUM.Step.Options(
         cardOrRing = WalletOptionUM(
-            iconRes = CoreUiR.drawable.ic_tangem_card_24,
+            iconRes = CoreUiR.drawable.ic_tangem_24,
             title = resourceReference(CoreResR.string.introduction_create_wallet_hardware_title),
             description = resourceReference(CoreResR.string.introduction_i_have_wallet_hardware_description),
             onClick = ::onSignInWithCardClick,
@@ -73,7 +73,9 @@ internal class HaveWalletSheetController(
         importWallet = WalletOptionUM(
             iconRes = CoreUiR.drawable.ic_arrow_down_24,
             title = resourceReference(CoreResR.string.hw_import_existing_wallet),
-            description = resourceReference(CoreResR.string.hw_import_existing_wallet_description),
+            // The sheet's own wording: the hw_ description belongs to the mobile-wallet screens and reads
+            // differently there.
+            description = resourceReference(CoreResR.string.introduction_create_wallet_seed_phrase_description),
             onClick = ::onImportWalletClick,
         ),
     )
