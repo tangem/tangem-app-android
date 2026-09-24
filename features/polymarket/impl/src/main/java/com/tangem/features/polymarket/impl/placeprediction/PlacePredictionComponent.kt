@@ -24,9 +24,11 @@ import com.tangem.features.polymarket.impl.placeprediction.amount.PlacePredictio
 import com.tangem.features.polymarket.impl.placeprediction.slippage.PlacePredictionSlippageComponent
 import com.tangem.features.polymarket.impl.placeprediction.status.PlacePredictionStatusComponent
 import com.tangem.features.polymarket.impl.placeprediction.summary.PlacePredictionSummaryComponent
+import com.tangem.features.tokenreceive.TokenReceiveComponent
 
 internal class PlacePredictionComponent(
     appComponentContext: AppComponentContext,
+    private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val params: Params,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
@@ -74,7 +76,11 @@ internal class PlacePredictionComponent(
         configuration: PlacePredictionRoute,
         factoryContext: AppComponentContext,
     ): ComposableContentComponent = when (configuration) {
-        is PlacePredictionRoute.Amount -> PlacePredictionAmountComponent(factoryContext, params)
+        is PlacePredictionRoute.Amount -> PlacePredictionAmountComponent(
+            appComponentContext = factoryContext,
+            params = params,
+            tokenReceiveComponentFactory = tokenReceiveComponentFactory,
+        )
         is PlacePredictionRoute.Slippage -> PlacePredictionSlippageComponent(factoryContext, configuration)
         is PlacePredictionRoute.Summary -> PlacePredictionSummaryComponent(factoryContext, configuration.order)
         is PlacePredictionRoute.Status -> PlacePredictionStatusComponent(factoryContext, configuration)
