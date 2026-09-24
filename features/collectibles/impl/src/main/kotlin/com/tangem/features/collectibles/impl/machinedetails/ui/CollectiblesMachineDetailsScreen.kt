@@ -8,7 +8,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.withLink
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.ds2.loader.TangemLoader
@@ -18,6 +21,7 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.collectibles.impl.R
 import com.tangem.features.collectibles.impl.common.ui.CollectiblesLoadMoreEffect
+import com.tangem.features.collectibles.impl.common.ui.CollectiblesPackImage
 import com.tangem.features.collectibles.impl.common.ui.CollectiblesStatus
 import com.tangem.features.collectibles.impl.machinedetails.ui.components.*
 import com.tangem.features.collectibles.impl.machinedetails.ui.state.CollectiblesMachineDetailsUM
@@ -98,59 +102,78 @@ private fun MachineDetailsInfoList(
         contentPadding = contentPadding,
     ) {
         item(key = PackDetailsKeys.HERO) {
-            CollectiblesPackHero(imageUrl = state.imageUrl)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 48.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                CollectiblesPackImage(
+                    imageUrl = state.imageUrl,
+                    glowRadius = 48.dp,
+                    modifier = Modifier.size(width = 204.dp, height = 294.dp),
+                )
+            }
         }
         item(key = PackDetailsKeys.TIERS) {
             Column {
-                SpacerH(32.dp)
                 CollectiblesSectionHeading(
                     title = resourceReference(R.string.collectibles_machine_value_and_odds_section),
                 )
                 CardGrid(items = state.tiers) { tier -> CollectiblesTierCard(state = tier) }
             }
         }
+
         item(key = PackDetailsKeys.DETAILS) {
             Column {
-                SpacerH(32.dp)
+                SpacerH(24.dp)
                 CollectiblesSectionHeading(title = resourceReference(R.string.collectibles_machine_details_section))
                 CardGrid(items = state.details) { detail -> CollectiblesDetailCard(state = detail) }
-                PoweredBy()
+                PoweredBy(onClick = state.onPoweredByClick)
             }
         }
-        item(key = PackDetailsKeys.PRIZE_POOL_HEADING) {
-            SpacerH(32.dp)
-            CollectiblesSectionHeading(title = resourceReference(R.string.collectibles_machine_prize_pool_section))
-        }
 
-        prizePool(state = state.prizePool)
+        prizePool(state = state)
     }
 }
 
-private fun LazyListScope.prizePool(state: CollectiblesMachineDetailsUM.PrizePoolUM) {
-    when (state) {
+private fun LazyListScope.prizePool(state: CollectiblesMachineDetailsUM.Content) {
+    if (state.prizePool is CollectiblesMachineDetailsUM.PrizePoolUM.Error) {
+        item(key = PackDetailsKeys.PRIZE_POOL_HEADING) { SpacerH(24.dp) }
+    } else {
+        item(key = PackDetailsKeys.PRIZE_POOL_HEADING) {
+            SpacerH(24.dp)
+            CollectiblesSectionHeading(title = resourceReference(R.string.collectibles_machine_prize_pool_section))
+        }
+    }
+
+    when (val prizePool = state.prizePool) {
         is CollectiblesMachineDetailsUM.PrizePoolUM.Loading -> item(key = PackDetailsKeys.PRIZE_POOL_STATUS) {
             CollectiblesPrizeGridSkeleton()
         }
+
         is CollectiblesMachineDetailsUM.PrizePoolUM.Error -> item(key = PackDetailsKeys.PRIZE_POOL_STATUS) {
             CollectiblesStatus(
-                message = state.message,
-                onReloadClick = state.onReloadClick,
-                modifier = Modifier.padding(vertical = 24.dp),
+                message = prizePool.message,
+                onReloadClick = prizePool.onReloadClick,
+                modifier = Modifier.padding(top = 118.dp, bottom = 88.dp),
             )
         }
+
         is CollectiblesMachineDetailsUM.PrizePoolUM.Empty -> item(key = PackDetailsKeys.PRIZE_POOL_STATUS) {
             CollectiblesStatus(
-                message = state.message,
+                message = prizePool.message,
                 onReloadClick = null,
-                modifier = Modifier.padding(vertical = 24.dp),
+                modifier = Modifier.padding(top = 118.dp, bottom = 88.dp),
             )
         }
+
         is CollectiblesMachineDetailsUM.PrizePoolUM.Content -> {
-            items(items = state.rows, key = { row -> row.id }, contentType = { row -> row::class.java }) { row ->
+            items(items = prizePool.rows, key = { row -> row.id }, contentType = { row -> row::class.java }) { row ->
                 PrizeRow(row = row)
             }
 
-            if (state.isLoadingNextPage) {
+            if (prizePool.isLoadingNextPage) {
                 item(key = PackDetailsKeys.PRIZE_POOL_NEXT_PAGE) {
                     Box(
                         modifier = Modifier
@@ -204,15 +227,16 @@ private fun <T> CardGrid(items: ImmutableList<T>, modifier: Modifier = Modifier,
 }
 
 @Composable
-private fun PoweredBy(modifier: Modifier = Modifier) {
+private fun PoweredBy(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Text(
         text = resourceReference(
             id = R.string.collectibles_machine_powered_by,
             formatArgs = wrappedList(
-                styledStringReference(
-                    value = "Collector Crypt",
-                    spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.primary) },
-                ),
+                annotatedReference {
+                    withLink(LinkAnnotation.Clickable(tag = PROVIDER_NAME, linkInteractionListener = { onClick() })) {
+                        withStyle(SpanStyle(color = TangemTheme.colors3.text.primary)) { append(PROVIDER_NAME) }
+                    }
+                },
             ),
         ).resolveAnnotatedReference(),
         style = TangemTheme.typography3.caption.medium,
@@ -221,6 +245,7 @@ private fun PoweredBy(modifier: Modifier = Modifier) {
     )
 }
 
+private const val PROVIDER_NAME = "Collector Crypt"
 private const val CARDS_PER_ROW = 2
 private const val PRIZES_PER_ROW = 2
 
