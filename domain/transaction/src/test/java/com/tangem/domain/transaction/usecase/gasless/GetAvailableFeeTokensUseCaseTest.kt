@@ -406,7 +406,6 @@ internal class GetAvailableFeeTokensUseCaseTest {
         fiatAmount = amount,
         fiatRate = BigDecimal.ONE,
         priceChange = BigDecimal.ZERO,
-        stakingBalance = null,
         yieldSupplyStatus = null,
         hasCurrentNetworkTransactions = false,
         pendingTransactions = emptySet(),

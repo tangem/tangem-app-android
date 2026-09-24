@@ -370,7 +370,6 @@ class YieldSupplyEnterStatusUseCaseTest {
                 fiatAmount = BigDecimal.ZERO,
                 fiatRate = BigDecimal.ONE,
                 priceChange = BigDecimal.ZERO,
-                stakingBalance = null,
                 yieldSupplyStatus = yieldSupplyStatus,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),

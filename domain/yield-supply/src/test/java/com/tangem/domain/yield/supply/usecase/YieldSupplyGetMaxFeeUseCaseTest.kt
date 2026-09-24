@@ -385,7 +385,6 @@ internal class YieldSupplyGetMaxFeeUseCaseTest {
         fiatAmount = BigDecimal.ZERO,
         fiatRate = fiatRate,
         priceChange = BigDecimal.ZERO,
-        stakingBalance = null,
         yieldSupplyStatus = null,
         hasCurrentNetworkTransactions = false,
         pendingTransactions = emptySet(),
