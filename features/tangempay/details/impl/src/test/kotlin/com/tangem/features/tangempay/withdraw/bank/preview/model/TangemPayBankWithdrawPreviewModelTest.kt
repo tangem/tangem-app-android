@@ -3,6 +3,7 @@ package com.tangem.features.tangempay.withdraw.bank.preview.model
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
@@ -11,6 +12,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.bankofframp.BankAccount
+import com.tangem.domain.pay.model.bankofframp.BankAccountType
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.pay.model.bankofframp.BankOfframpSignResult
@@ -18,6 +20,7 @@ import com.tangem.domain.pay.usecase.bankofframp.AwaitBankOfframpSignatureUseCas
 import com.tangem.domain.pay.usecase.bankofframp.CancelBankOfframpOrderUseCase
 import com.tangem.domain.pay.usecase.bankofframp.CreateBankOfframpOrderUseCase
 import com.tangem.domain.pay.usecase.bankofframp.SignBankOfframpOrderUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
@@ -25,9 +28,11 @@ import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawSource
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
+import com.tangem.features.tangempay.withdraw.bank.model.NewRecipientDraft
 import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTarget
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import com.tangem.features.tangempay.withdraw.bank.offrampDestination
+import com.tangem.features.tangempay.withdraw.bank.personalFormValues
 import com.tangem.features.tangempay.withdraw.bank.preview.TangemPayBankWithdrawPreviewComponent
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.Failed
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.Summary
@@ -59,6 +64,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     private val signBankOfframpOrderUseCase: SignBankOfframpOrderUseCase = mockk()
     private val cancelBankOfframpOrderUseCase: CancelBankOfframpOrderUseCase = mockk()
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
+    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val created = mutableListOf<BankOfframpOrderResult>()
     private var signedCount = 0
@@ -73,6 +79,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
             signBankOfframpOrderUseCase,
             cancelBankOfframpOrderUseCase,
             getUserWalletUseCase,
+            analytics,
         )
         created.clear()
         signedCount = 0
@@ -526,7 +533,252 @@ internal class TangemPayBankWithdrawPreviewModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN complete draft WHEN model created THEN ConfirmationScreenOpened is sent`() {
+        // Act
+        val model = createModel()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.ConfirmationScreenOpened()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN new recipient WHEN recipient card tapped THEN RecipientDetailsOnConfirmationClicked is sent`() {
+        // Arrange
+        val model = createModel(draft = newRecipientDraft())
+
+        // Act
+        summary(model).recipientCards.first().onClick?.invoke()
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(TangemPayAnalyticsEvents.Offramp.RecipientDetailsOnConfirmationClicked())
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN new recipient WHEN bank card tapped THEN RecipientBankDetailsOnConfirmationClicked is sent`() {
+        // Arrange
+        val model = createModel(draft = newRecipientDraft())
+
+        // Act
+        summary(model).recipientCards.last().onClick?.invoke()
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(TangemPayAnalyticsEvents.Offramp.RecipientBankDetailsOnConfirmationClicked())
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN summary WHEN amount card tapped THEN no offramp event is sent`() {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        summary(model).transfer?.amount?.onClick?.invoke()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.ConfirmationScreenOpened()) }
+        verify(exactly = 1) { analytics.send(any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN request in flight WHEN edit requested THEN no offramp event is sent`() {
+        // Arrange
+        coEvery { createBankOfframpOrderUseCase(userWalletId, any(), any()) } coAnswers { awaitCancellation() }
+        val model = createModel(draft = newRecipientDraft())
+        val summary = summary(model)
+        summary.onSendClick()
+
+        // Act
+        summary.recipientCards.first().onClick?.invoke()
+
+        // Assert
+        verify(exactly = 0) {
+            analytics.send(TangemPayAnalyticsEvents.Offramp.RecipientDetailsOnConfirmationClicked())
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN summary WHEN send tapped THEN SendOnConfirmationClicked is sent and the order is created`() {
+        // Arrange
+        orderCreated()
+        val model = createModel()
+
+        // Act
+        summary(model).onSendClick()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.SendOnConfirmationClicked()) }
+        coVerify(exactly = 1) { createBankOfframpOrderUseCase(userWalletId, any(), any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN request in flight WHEN send tapped again THEN SendOnConfirmationClicked is sent once`() {
+        // Arrange
+        coEvery { createBankOfframpOrderUseCase(userWalletId, any(), any()) } coAnswers { awaitCancellation() }
+        val model = createModel()
+
+        // Act
+        summary(model).onSendClick()
+        summary(model).onSendClick()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.SendOnConfirmationClicked()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN order creation fails WHEN send THEN SendErrorScreenOpened is sent`() {
+        // Arrange
+        coEvery { createBankOfframpOrderUseCase(userWalletId, any(), any()) }
+            .returns(BankOfframpError.Unknown(null).left())
+        val model = createModel()
+
+        // Act
+        summary(model).onSendClick()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.SendErrorScreenOpened()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN unsupported configuration WHEN send THEN SendErrorScreenOpened is sent`() {
+        // Arrange
+        coEvery { createBankOfframpOrderUseCase(userWalletId, any(), any()) }
+            .returns(BankOfframpError.UnsupportedConfiguration.left())
+        val model = createModel()
+
+        // Act
+        summary(model).onSendClick()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.SendErrorScreenOpened()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN polling times out WHEN awaiting the signature THEN SendErrorScreenOpened is sent`() {
+        // Arrange
+        orderCreated()
+        coEvery { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any()) } returns
+            BankOfframpError.PollingTimeout.left()
+        val model = createModel()
+
+        // Act
+        summary(model).onSendClick()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.SendErrorScreenOpened()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN failed send WHEN retry fails too THEN only the first tap reported and the error screen twice`() {
+        // Arrange
+        coEvery { createBankOfframpOrderUseCase(userWalletId, any(), any()) }
+            .returns(BankOfframpError.Unknown(null).left())
+        val model = createModel()
+        summary(model).onSendClick()
+
+        // Act
+        requireNotNull((model.uiState.value as Failed).onRetryClick).invoke()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.SendOnConfirmationClicked()) }
+        verify(exactly = 2) { analytics.send(TangemPayAnalyticsEvents.Offramp.SendErrorScreenOpened()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN withdrawal in progress WHEN send THEN no SendErrorScreenOpened is sent`() {
+        // Arrange
+        coEvery { createBankOfframpOrderUseCase(userWalletId, any(), any()) }
+            .returns(BankOfframpError.WithdrawalInProgress.left())
+        val model = createModel()
+
+        // Act
+        summary(model).onSendClick()
+
+        // Assert
+        verify(exactly = 0) { analytics.send(TangemPayAnalyticsEvents.Offramp.SendErrorScreenOpened()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN card prompt aborted WHEN signing THEN no SendErrorScreenOpened is sent`() {
+        // Arrange
+        orderCreated()
+        coEvery { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any()) } returns PAYLOAD_HASH.right()
+        coEvery { signBankOfframpOrderUseCase(userWalletId, ORDER_ID, PAYLOAD_HASH, any()) } returns
+            BankOfframpSignResult.Cancelled.right()
+        val model = createModel()
+
+        // Act
+        summary(model).onSendClick()
+
+        // Assert
+        verify(exactly = 0) { analytics.send(TangemPayAnalyticsEvents.Offramp.SendErrorScreenOpened()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN summary WHEN rail row tapped THEN RailSelectorClicked is sent and the amount step opened`() {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        summary(model).transfer?.route?.onClick?.invoke()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.RailSelectorClicked()) }
+        verify(exactly = 1) {
+            router.push(TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.Amount), any())
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN request in flight WHEN rail row tapped THEN no RailSelectorClicked is sent`() {
+        // Arrange
+        coEvery { createBankOfframpOrderUseCase(userWalletId, any(), any()) } coAnswers { awaitCancellation() }
+        val model = createModel()
+        val onRailClick = requireNotNull(summary(model).transfer?.route?.onClick)
+        summary(model).onSendClick()
+
+        // Act
+        onRailClick()
+
+        // Assert
+        verify(exactly = 0) { analytics.send(TangemPayAnalyticsEvents.Offramp.RailSelectorClicked()) }
+        verify(exactly = 0) {
+            router.push(TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.Amount), any())
+        }
+        model.onDestroy()
+    }
+
     private fun summary(model: TangemPayBankWithdrawPreviewModel): Summary = model.uiState.value as Summary
+
+    private fun newRecipientDraft() = BankWithdrawDraft(
+        entry = BankWithdrawEntry.NewPersonal,
+        recipient = null,
+        newRecipient = NewRecipientDraft(
+            isThirdParty = false,
+            accountType = BankAccountType.CHECKING,
+            fields = personalFormValues,
+        ),
+        amount = BigDecimal("500"),
+        source = bankWithdrawSource(),
+        destination = offrampDestination(),
+    )
 
     private fun completeDraft(recipient: BankAccount? = bankAccount(id = "acc-1")) = BankWithdrawDraft(
         entry = BankWithdrawEntry.Saved("acc-1"),
@@ -554,6 +806,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
             signBankOfframpOrderUseCase = signBankOfframpOrderUseCase,
             cancelBankOfframpOrderUseCase = cancelBankOfframpOrderUseCase,
             getUserWalletUseCase = getUserWalletUseCase,
+            analytics = analytics,
         )
 
     private companion object {

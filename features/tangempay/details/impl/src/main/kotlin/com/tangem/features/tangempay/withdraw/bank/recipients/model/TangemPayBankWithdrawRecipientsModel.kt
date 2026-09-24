@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.withdraw.bank.recipients.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -10,6 +11,7 @@ import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.withdraw.bank.recipients.TangemPayBankWithdrawRecipientsComponent
@@ -25,6 +27,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPayBankWithdrawRecipientsModel @Inject constructor(
@@ -34,6 +37,7 @@ internal class TangemPayBankWithdrawRecipientsModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val getBankAccountsUseCase: GetBankAccountsUseCase,
     private val markBankAccountUsedUseCase: MarkBankAccountUsedUseCase,
+    private val analytics: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankWithdrawRecipientsComponent.Params>()
@@ -55,6 +59,7 @@ internal class TangemPayBankWithdrawRecipientsModel @Inject constructor(
         field = MutableStateFlow(umFactory.create(state.value))
 
     init {
+        analytics.send(TangemPayAnalyticsEvents.Offramp.SavedContactsScreenOpened())
         state
             .onEach { uiState.value = umFactory.create(it) }
             .launchIn(modelScope)
@@ -83,7 +88,15 @@ internal class TangemPayBankWithdrawRecipientsModel @Inject constructor(
     }
 
     private fun onSearchActiveChange(isActive: Boolean) {
+        sendSearchBarClickedOnActivation(isActive)
         state.update { it.copy(isSearchActive = isActive) }
+    }
+
+    /** The search bar re-reports an already active state, so only the transition into it counts as a tap. */
+    private fun sendSearchBarClickedOnActivation(isActive: Boolean) {
+        if (isActive && !state.value.isSearchActive) {
+            analytics.send(TangemPayAnalyticsEvents.Offramp.SearchBarClicked())
+        }
     }
 
     private fun onSearchCloseClick() {
@@ -91,6 +104,7 @@ internal class TangemPayBankWithdrawRecipientsModel @Inject constructor(
     }
 
     private fun onRecipientClick(account: BankAccount) {
+        analytics.send(TangemPayAnalyticsEvents.Offramp.SavedContactOnContactsScreenClicked())
         modelScope.launch {
             markBankAccountUsedUseCase(userWalletId = params.userWalletId, bankAccountId = account.id)
             params.onRecipientSelected(account)

@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.withdraw.bank.form.model
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
@@ -9,6 +10,7 @@ import com.tangem.domain.models.pay.TangemPayCountry
 import com.tangem.domain.models.pay.TangemPayRegion
 import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.form.TangemPayBankWithdrawFormComponent
@@ -23,6 +25,7 @@ import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.mockk
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +40,7 @@ internal class TangemPayBankWithdrawFormModelTest {
     private val onOpenSelector: (CountrySelectorConfig) -> Unit = mockk(relaxed = true)
     private val onSavedRecipientSelected: (BankAccount) -> Unit = mockk(relaxed = true)
     private val onCloseFlow: () -> Unit = mockk(relaxed = true)
+    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val draft = MutableStateFlow(BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal))
     private val savedAccounts = MutableStateFlow<List<BankAccount>>(emptyList())
@@ -49,7 +53,7 @@ internal class TangemPayBankWithdrawFormModelTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(router, onBack, onContinue, onOpenSelector, onSavedRecipientSelected, onCloseFlow)
+        clearMocks(router, onBack, onContinue, onOpenSelector, onSavedRecipientSelected, onCloseFlow, analytics)
         draft.value = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal)
         savedAccounts.value = emptyList()
     }
@@ -966,6 +970,256 @@ internal class TangemPayBankWithdrawFormModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN recipient details step WHEN model created THEN RecipientDetailsScreenOpened is sent`() {
+        // Act
+        val model = createModel(step = TangemPayBankWithdrawInnerRoute.RecipientDetails)
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.RecipientDetailsScreenOpened()) }
+        verify(exactly = 0) {
+            analytics.send(ofType<TangemPayAnalyticsEvents.Offramp.RecipientBankDetailsScreenOpened>())
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN recipient details edit step WHEN model created THEN RecipientDetailsScreenOpened is sent`() {
+        // Act
+        val model = createModel(
+            step = TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.RecipientDetails),
+        )
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.RecipientDetailsScreenOpened()) }
+        verify(exactly = 0) {
+            analytics.send(ofType<TangemPayAnalyticsEvents.Offramp.RecipientBankDetailsScreenOpened>())
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN bank details step WHEN model created THEN RecipientBankDetailsScreenOpened is sent`() {
+        // Act
+        val model = createModel(
+            formFields = bankAddressFields,
+            step = TangemPayBankWithdrawInnerRoute.BankDetails,
+        )
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.RecipientBankDetailsScreenOpened()) }
+        verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Offramp.RecipientDetailsScreenOpened>()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN bank details edit step WHEN model created THEN RecipientBankDetailsScreenOpened is sent`() {
+        // Act
+        val model = createModel(
+            formFields = bankAddressFields,
+            step = TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.BankDetails),
+        )
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.RecipientBankDetailsScreenOpened()) }
+        verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Offramp.RecipientDetailsScreenOpened>()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN filled city WHEN field blurred twice THEN RecipientDetailsFieldFilled is sent once`() {
+        // Arrange
+        val model = createModel(formFields = cityFields)
+        fill(model, BankWithdrawFormField.City, "Berlin")
+
+        // Act
+        textField(model, BankWithdrawFormField.City).onFocusChange(false)
+        textField(model, BankWithdrawFormField.City).onFocusChange(false)
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(TangemPayAnalyticsEvents.Offramp.RecipientDetailsFieldFilled(field = "City"))
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN whitespace city WHEN field blurred THEN no field filled event is sent`() {
+        // Arrange
+        val model = createModel(formFields = cityFields)
+        fill(model, BankWithdrawFormField.City, "   ")
+
+        // Act
+        textField(model, BankWithdrawFormField.City).onFocusChange(false)
+
+        // Assert
+        verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Offramp.RecipientDetailsFieldFilled>()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN typed city WHEN field keeps focus THEN no field filled event is sent`() {
+        // Arrange
+        val model = createModel(formFields = cityFields)
+
+        // Act
+        focus(model, BankWithdrawFormField.City)
+        fill(model, BankWithdrawFormField.City, "Berlin")
+
+        // Assert
+        verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Offramp.RecipientDetailsFieldFilled>()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN country without region WHEN country selected THEN RecipientDetailsFieldFilled Country is sent`() {
+        // Arrange
+        val model = createModel(formFields = addressFields)
+
+        // Act
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = monaco, region = null)
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(TangemPayAnalyticsEvents.Offramp.RecipientDetailsFieldFilled(field = "Country"))
+        }
+        verify(exactly = 0) {
+            analytics.send(TangemPayAnalyticsEvents.Offramp.RecipientDetailsFieldFilled(field = "Region"))
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN country with region WHEN country selected THEN RecipientDetailsFieldFilled Country and Region sent`() {
+        // Arrange
+        val model = createModel(formFields = addressFields)
+
+        // Act
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = usa, region = california)
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(TangemPayAnalyticsEvents.Offramp.RecipientDetailsFieldFilled(field = "Country"))
+            analytics.send(TangemPayAnalyticsEvents.Offramp.RecipientDetailsFieldFilled(field = "Region"))
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN picked country WHEN same country selected again THEN RecipientDetailsFieldFilled is sent once`() {
+        // Arrange
+        val model = createModel(formFields = addressFields)
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = usa, region = california)
+
+        // Act
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = usa, region = california)
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(TangemPayAnalyticsEvents.Offramp.RecipientDetailsFieldFilled(field = "Country"))
+            analytics.send(TangemPayAnalyticsEvents.Offramp.RecipientDetailsFieldFilled(field = "Region"))
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN another country picked WHEN region selected THEN RecipientDetailsFieldFilled Region is sent twice`() {
+        // Arrange
+        val model = createModel(formFields = addressFields)
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = usa, region = california)
+
+        // Act
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = greatBritain, region = null)
+        model.onRegionSelected(field = BankWithdrawFormField.Region, region = texas)
+
+        // Assert
+        verify(exactly = 2) {
+            analytics.send(TangemPayAnalyticsEvents.Offramp.RecipientDetailsFieldFilled(field = "Region"))
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN bank details step WHEN bank region selected THEN RecipientBankDetailsFieldFilled is sent`() {
+        // Arrange
+        val model = createModel(
+            formFields = bankAddressFields,
+            step = TangemPayBankWithdrawInnerRoute.BankDetails,
+        )
+
+        // Act
+        model.onRegionSelected(field = BankWithdrawFormField.BankRegion, region = newYork)
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(TangemPayAnalyticsEvents.Offramp.RecipientBankDetailsFieldFilled(field = "Bank Region"))
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN focused field WHEN continue clicked THEN RecipientDetailsContinueClicked is sent after fill`() {
+        // Arrange
+        val model = createModel()
+        fill(model, BankWithdrawFormField.AccountNumber, "4830019271")
+        fill(model, BankWithdrawFormField.RoutingNumber, "021000021")
+        fill(model, BankWithdrawFormField.FirstName, "Basit")
+        focus(model, BankWithdrawFormField.FirstName)
+
+        // Act
+        model.uiState.value.onContinueClick()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.RecipientDetailsContinueClicked()) }
+        verifyOrder {
+            analytics.send(TangemPayAnalyticsEvents.Offramp.RecipientDetailsFieldFilled(field = "First Name"))
+            analytics.send(TangemPayAnalyticsEvents.Offramp.RecipientDetailsContinueClicked())
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN invalid form WHEN continue clicked THEN focused field is filled and no continue event is sent`() {
+        // Arrange
+        val model = createModel()
+        fill(model, BankWithdrawFormField.AccountNumber, "4830019271")
+        focus(model, BankWithdrawFormField.AccountNumber)
+
+        // Act
+        model.uiState.value.onContinueClick()
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(TangemPayAnalyticsEvents.Offramp.RecipientDetailsFieldFilled(field = "Account Number"))
+        }
+        verify(exactly = 0) {
+            analytics.send(ofType<TangemPayAnalyticsEvents.Offramp.RecipientDetailsContinueClicked>())
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN bank details step WHEN continue clicked THEN RecipientBankDetailsContinueClicked is sent`() {
+        // Arrange
+        val model = createModel(
+            formFields = bankAddressFields,
+            step = TangemPayBankWithdrawInnerRoute.BankDetails,
+        )
+        model.onRegionSelected(field = BankWithdrawFormField.BankRegion, region = newYork)
+
+        // Act
+        model.uiState.value.onContinueClick()
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(TangemPayAnalyticsEvents.Offramp.RecipientBankDetailsContinueClicked())
+        }
+        verify(exactly = 0) {
+            analytics.send(ofType<TangemPayAnalyticsEvents.Offramp.RecipientDetailsContinueClicked>())
+        }
+        model.onDestroy()
+    }
+
     private fun fill(model: TangemPayBankWithdrawFormModel, field: BankWithdrawFormField, value: String) {
         textField(model, field).onValueChange(value)
     }
@@ -1043,6 +1297,7 @@ internal class TangemPayBankWithdrawFormModelTest {
         ),
         dispatchers = dispatchers,
         router = router,
+        analytics = analytics,
     )
 
     private companion object {
