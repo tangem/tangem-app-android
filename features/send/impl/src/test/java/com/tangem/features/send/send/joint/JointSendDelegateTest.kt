@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
 import com.tangem.domain.jointaccount.model.JointAccount
@@ -72,7 +73,7 @@ internal class JointSendDelegateTest {
         val actual = delegate.createOperation(
             account = account,
             currency = fixtureCoin,
-            amountUM = createAmountData(crypto = BigDecimal.ONE),
+            amount = BigDecimal.ONE,
             destinationUM = createDestinationContent(),
         )
 
@@ -88,8 +89,8 @@ internal class JointSendDelegateTest {
             val actual = delegate.createOperation(
                 account = mockk(),
                 currency = fixtureCoin,
-                amountUM = AmountState.Empty,
-                destinationUM = createDestinationContent(),
+                amount = BigDecimal.ONE,
+                destinationUM = DestinationUM.Empty(),
             )
 
             // Assert
