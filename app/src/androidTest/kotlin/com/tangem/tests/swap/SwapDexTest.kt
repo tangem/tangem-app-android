@@ -15,7 +15,6 @@ import com.tangem.screens.onSwapSuccessScreen
 import com.tangem.screens.onTxHistoryDetailsBottomSheet
 import com.tangem.screens.onTxHistoryScreen
 import com.tangem.screens.onSwapTokenScreen
-import com.tangem.screens.onTokenDetailsScreen
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
@@ -103,7 +102,7 @@ class SwapDexTest : BaseTestCase() {
             }
             step("Assert the DEX provider '$providerName' is displayed in the transaction details") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) {
-                    onTxHistoryDetailsBottomSheet { providerName(providerName).assertIsDisplayed() }
+                    onTxHistoryDetailsBottomSheet { rowValueContaining(providerName).assertIsDisplayed() }
                 }
             }
         }
