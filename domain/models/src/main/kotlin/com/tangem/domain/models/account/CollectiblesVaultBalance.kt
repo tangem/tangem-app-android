@@ -63,7 +63,6 @@ data class CollectiblesVaultBalance(
                 networkAddress = networkAddress,
                 sources = sources,
                 pendingTransactions = emptySet(),
-                stakingBalance = null,
                 yieldSupplyStatus = null,
                 hasCurrentNetworkTransactions = false,
             )
@@ -71,7 +70,6 @@ data class CollectiblesVaultBalance(
             CryptoCurrencyStatus.NoQuote(
                 amount = usdcAmount,
                 networkAddress = networkAddress,
-                stakingBalance = null,
                 yieldSupplyStatus = null,
                 sources = sources,
                 pendingTransactions = emptySet(),
