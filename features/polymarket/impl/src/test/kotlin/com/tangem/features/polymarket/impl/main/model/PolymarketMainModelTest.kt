@@ -25,6 +25,7 @@ import com.tangem.domain.polymarket.model.PolymarketPositionsTab
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionResult
 import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
+import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetConfig
 import com.tangem.features.polymarket.impl.positions.model.createPolymarketPosition
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
@@ -653,14 +654,14 @@ internal class PolymarketMainModelTest {
             // Arrange
             statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS)
             val model = createModel(testScope = this)
-            val slot = FakeSlotHost(model.addFundsNavigation)
+            val slot = FakeSlotHost(model.fundingSheetNavigation)
             advanceUntilIdle()
 
             // Act
             model.uiState.value.balance.addFunds.onClick()
 
             // Assert
-            assertThat(slot.configuration).isEqualTo(Unit)
+            assertThat(slot.configuration).isEqualTo(PolymarketFundingSheetConfig.AddFunds)
             model.onDestroy()
         }
 
@@ -670,7 +671,7 @@ internal class PolymarketMainModelTest {
             // Arrange
             statusFlow.value = activeStatus(depositAddress = null)
             val model = createModel(testScope = this)
-            val slot = FakeSlotHost(model.addFundsNavigation)
+            val slot = FakeSlotHost(model.fundingSheetNavigation)
             advanceUntilIdle()
 
             // Act
@@ -764,18 +765,35 @@ internal class PolymarketMainModelTest {
     fun `GIVEN requisites ready WHEN receive row tapped THEN limits notification states the minimum`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
-        val host = FakeSlotHost(model.receiveNavigation)
+        val host = FakeSlotHost(model.fundingSheetNavigation)
         advanceUntilIdle()
 
         // Act
         model.onReceiveClick()
 
         // Assert
-        val config = host.configuration!!
+        val config = (host.configuration as PolymarketFundingSheetConfig.Receive).config
         assertThat(config.receiveAddress.single().value).isEqualTo(REQUISITES_ADDRESS)
         assertThat(config.tokenReceiveNotification.single().formatArgs).containsExactly("$2")
         model.onDestroy()
     }
+
+    @Test
+    fun `GIVEN receive replaced the sheet WHEN the add funds sheet reports its exit THEN receive stays open`() =
+        runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            val host = FakeSlotHost(model.fundingSheetNavigation)
+            advanceUntilIdle()
+            model.onReceiveClick()
+
+            // Act
+            model.onDismissAddFunds()
+
+            // Assert
+            assertThat(host.configuration).isInstanceOf(PolymarketFundingSheetConfig.Receive::class.java)
+            model.onDestroy()
+        }
 
     @Test
     fun `GIVEN requisites ready WHEN add funds clicked THEN no request is made`() = runTest {
@@ -813,7 +831,7 @@ internal class PolymarketMainModelTest {
         // Arrange
         coEvery { refreshRequisites(USER_WALLET_ID) } returns PolymarketBridgeError.Network.left()
         val model = createModel(testScope = this)
-        val slot = FakeSlotHost(model.addFundsNavigation)
+        val slot = FakeSlotHost(model.fundingSheetNavigation)
         advanceUntilIdle()
         val message = slot<EventMessage>()
         every { messageSender.send(capture(message)) } returns Unit
