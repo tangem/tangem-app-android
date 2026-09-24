@@ -108,9 +108,9 @@ internal class JointOperationUMConverter(
     private fun cosignRow(state: JointOperationState) = CosignRequestRowUM(
         title = resourceReference(
             id = CoreUiR.string.joint_operation_signatures_progress,
-            formatArgs = wrappedList(state.collected, state.membersCount),
+            formatArgs = wrappedList(state.collected, state.threshold),
         ),
-        progress = SignatureProgressUM(collected = state.collected, total = state.membersCount),
+        progress = SignatureProgressUM(collected = state.collected, total = state.threshold),
         onInfoClick = onSignersClick,
     )
 
