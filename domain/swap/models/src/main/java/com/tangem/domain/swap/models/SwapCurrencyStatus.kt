@@ -45,5 +45,6 @@ data class SwapCurrencyStatus(
  *
  * @param isPredictionWithdraw whether the swap screen was opened to withdraw from the prediction account
  */
-fun Account.isSwapTargetOnly(isPredictionWithdraw: Boolean): Boolean =
-    this is Account.Joint || this is Account.Prediction && !isPredictionWithdraw
+fun Account.isSwapTargetOnly(isPredictionWithdraw: Boolean): Boolean = this is Account.Joint ||
+    this is Account.Collectibles ||
+    this is Account.Prediction && !isPredictionWithdraw
