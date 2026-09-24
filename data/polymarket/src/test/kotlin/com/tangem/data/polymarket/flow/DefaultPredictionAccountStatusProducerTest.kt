@@ -180,7 +180,6 @@ internal class DefaultPredictionAccountStatusProducerTest {
         val ACTIVE = PredictionAccountStatusValue.Active(
             source = StatusSource.ACTUAL,
             balance = BigDecimal("40"),
-            positionsValue = null,
             fiatRate = null,
             depositCurrency = COLLATERAL,
             depositAddress = "0xbridge0000000000000000000000000000000001",
