@@ -98,11 +98,12 @@ a failed or empty first page is retried once silently), the balance header from
 `PredictionAccountStatusSupplier` (`PredictionBalanceUMConverter`), the deposit requisites
 (`PredictionFundingRequisites` wrapper over `RefreshPredictionDepositRequisitesInteractor`), the
 positions preview (`PolymarketPositionsPreviewLoader`, polled every 20 s), and
-`PredictionBalancePoller.subscribe` for as long as the screen is shown. Pull-to-refresh refreshes status and requisites together.
+`PredictionBalancePoller.subscribe` for as long as the screen is shown. Pull-to-refresh refreshes status,
+positions value and requisites together.
 
 The header shows one of two figures, toggled by tapping its label (`PredictionBalanceMode`): **Available**
-(the CLOB collateral, `Active.balance`, the default) and **Total** (`Active.totalBalance` = collateral + the
-data-API value of the open positions). Total is offered only once a full refresh has read `positionsValue`;
+(the CLOB collateral, `Active.balance`, the default) and **Total** (`PredictionTotalBalance.of` = collateral
++ `PredictionPositionsValueSupplier`). Total is offered only once the positions value has been read;
 until then the header shows Available and the toggle is disabled, but the chosen mode is kept and comes back
 as soon as the value does. The wallet screen and the wallet total keep counting the available
 balance only, as on iOS.
