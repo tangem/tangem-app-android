@@ -1030,9 +1030,10 @@
   <string name="introduction_stories_three_title">Ваши ключи, ваша крипта</string>
   <string name="introduction_stories_two_subtitle">Используйте любую карту для доступа к кошельку</string>
   <string name="introduction_stories_two_title">Один кошелёк, несколько карт</string>
-  <string name="introduction_subtitle">В одном приложении для всего</string>
+  <string name="introduction_subtitle">Одно безопасное место для всех ваших активов</string>
   <string name="introduction_terms_of_service">Условиями использования</string>
   <string name="introduction_title">Храните все свои активы</string>
+  <string name="joint_account_coming_soon_description">Это действие пока недоступно для совместных аккаунтов. Мы работаем над этим</string>
   <string name="key_invalidated_warning_description">Вы обновили данные биометрии, отсканируйте свою карту или кольцо для входа</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Ваш баланс должен быть выше суммы комиссии для осуществления перевода</string>
   <string name="koinos_insufficient_balance_to_send_koin_title">Недостаточно средств</string>
