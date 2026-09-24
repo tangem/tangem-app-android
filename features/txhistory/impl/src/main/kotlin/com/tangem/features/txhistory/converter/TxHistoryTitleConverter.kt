@@ -52,11 +52,21 @@ internal class TxHistoryTitleConverter {
             confirmed = R.string.transaction_history_status_rewards_claimed,
             failed = R.string.transaction_history_status_rewards_claim_failed,
         )
-        is TransactionType.YieldSupply.Topup -> resourceReference(R.string.yield_module_transaction_topup)
+        // A topup is the mirror of a withdraw — funds into the Aave position — and reads as the same kind of
+        // status-aware verb.
+        is TransactionType.YieldSupply.Topup -> tx.statusAwareTitle(
+            pending = R.string.common_supplying,
+            confirmed = R.string.transaction_history_supplied,
+            failed = R.string.transaction_history_status_supply_failed,
+        )
         // Send routes through the yield provider (never the user's own account), so "Transfer" is impossible:
         // a withdraw (funds out of Aave) → Withdrawn, everything else → Receive/Send by direction.
         is TransactionType.YieldSupply.Send -> if (type.isYieldSupplyWithdraw) {
-            tx.statusAwareTitle(R.string.common_withdrawing, R.string.transaction_history_withdrawn)
+            tx.statusAwareTitle(
+                pending = R.string.common_withdrawing,
+                confirmed = R.string.transaction_history_withdrawn,
+                failed = R.string.transaction_history_status_withdraw_failed,
+            )
         } else {
             tx.sendReceiveTitle()
         }

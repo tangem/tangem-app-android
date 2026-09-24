@@ -89,8 +89,9 @@ private fun Pill(state: TransactionItemUM.Pill, isBalanceHidden: Boolean) {
 }
 
 /**
- * The pill body as a single line: the action label in the label color, the value pieces — amount, currency symbol,
- * counterparty address — in the value color, and the address' identicon as inline content.
+ * The pill body as a single line: the action label in the label color, the amount and currency symbol in the value
+ * color, then the address tail — "to:" secondary, the address itself primary, neither of them status-dependent — with
+ * the address' identicon as inline content.
  *
  * One [Text] rather than a row of them, so the capsule ellipsizes as a whole instead of letting a long address push
  * it past the screen edge, and the gaps are plain spaces as the design has them. The amount is masked before it
@@ -98,11 +99,11 @@ private fun Pill(state: TransactionItemUM.Pill, isBalanceHidden: Boolean) {
  */
 @Composable
 private fun PillText(state: TransactionItemUM.Pill, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
-    val labelStyle = SpanStyle(color = state.status.labelColor())
-    val valueStyle = SpanStyle(color = state.status.valueColor())
+    val spans = state.status.pillSpans()
     val isFailed = state.status is Status.Failed
     val label = state.label.resolveReference()
     val amount = state.amount?.orMaskWithStars(isBalanceHidden)?.resolveReference()
+    val symbol = state.currencySymbol
     // A failed pill with an amount reads "<action> <amount> <symbol> failed" — the template wraps the whole body,
     // which the failed state paints in one color anyway, so it needs no span split.
     val failedBody = if (isFailed && amount != null) {
@@ -122,19 +123,19 @@ private fun PillText(state: TransactionItemUM.Pill, isBalanceHidden: Boolean, mo
             placeholderVerticalAlign = PlaceholderVerticalAlign.Center,
         )
     }
-    val text = remember(label, amount, state.currencySymbol, failedBody, addressTemplate, labelStyle, valueStyle) {
+    val text = remember(label, amount, symbol, failedBody, addressTemplate, spans) {
         buildAnnotatedString {
             if (failedBody != null) {
-                withStyle(labelStyle) { append(failedBody) }
+                withStyle(spans.label) { append(failedBody) }
             } else {
-                withStyle(labelStyle) { append(label) }
-                amount?.let { withStyle(valueStyle) { append(" $it") } }
-                state.currencySymbol?.let { withStyle(valueStyle) { append(" $it") } }
+                withStyle(spans.label) { append(label) }
+                amount?.let { withStyle(spans.value) { append(" $it") } }
+                symbol?.let { withStyle(spans.value) { append(" $it") } }
                 addressTemplate?.let { template ->
                     // The template keeps its own spacing around the marker, e.g. "to: %image% 33Bd...ga2B"
-                    withStyle(labelStyle) { append(" " + template.substringBefore(INLINE_IMAGE_PLACEHOLDER)) }
+                    withStyle(spans.addressLabel) { append(" " + template.substringBefore(INLINE_IMAGE_PLACEHOLDER)) }
                     appendInlineContent(IDENTICON_INLINE_ID, INLINE_IMAGE_PLACEHOLDER)
-                    withStyle(valueStyle) {
+                    withStyle(spans.address) {
                         append(template.substringAfter(INLINE_IMAGE_PLACEHOLDER, missingDelimiterValue = ""))
                     }
                 }
@@ -212,6 +213,26 @@ private fun Status.valueColor(): Color = when (this) {
     is Status.Unconfirmed -> TangemTheme.colors3.text.status.info
     is Status.Failed -> TangemTheme.colors3.text.status.error
 }
+
+private data class PillSpans(
+    val label: SpanStyle,
+    val value: SpanStyle,
+    val addressLabel: SpanStyle,
+    val address: SpanStyle,
+)
+
+/**
+ * Span colors of the pill body. Only the action label and its amount follow the status — the "to: <address>" tail is
+ * always secondary + primary, whatever the state.
+ */
+@Composable
+@ReadOnlyComposable
+private fun Status.pillSpans(): PillSpans = PillSpans(
+    label = SpanStyle(color = labelColor()),
+    value = SpanStyle(color = valueColor()),
+    addressLabel = SpanStyle(color = TangemTheme.colors3.text.secondary),
+    address = SpanStyle(color = TangemTheme.colors3.text.primary),
+)
 
 /** The leading icon always carries the label color of its state, so the pill reads as one piece. */
 @Composable
