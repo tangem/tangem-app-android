@@ -13,20 +13,15 @@ import io.github.kakaocup.compose.node.element.KNode
 class TxHistoryDetailsBottomSheetPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<TxHistoryDetailsBottomSheetPageObject>(semanticsProvider = semanticsProvider) {
 
-    fun title(text: String): KNode = child {
-        hasText(text)
+    /** Label of an info row, e.g. the 'Network fee' the gasless transaction paid. */
+    fun rowLabel(label: String): KNode = child {
+        hasText(label)
         useUnmergedTree = true
     }
 
-    /** Value of an info row (the fee amount reads "<amount> <SYMBOL>"). */
-    fun feeAmount(amount: String): KNode = child {
-        hasText(text = amount, substring = true)
-        useUnmergedTree = true
-    }
-
-    /** The provider row reads "<name> • <CEX|DEX>", so match the name as a substring. */
-    fun providerName(name: String): KNode = child {
-        hasText(text = name, substring = true)
+    /** Value of an info row: amounts read "<amount> <SYMBOL>" and the provider "<name> • <CEX|DEX>". */
+    fun rowValueContaining(value: String): KNode = child {
+        hasText(text = value, substring = true)
         useUnmergedTree = true
     }
 }
