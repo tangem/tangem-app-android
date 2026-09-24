@@ -21,6 +21,8 @@ if (propertiesFile.exists()) {
     )
 }
 
+val meaWalletSdkRegistry = "https://maven.pkg.github.com/tangem-developments/tangem-app-android"
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
 
@@ -141,6 +143,21 @@ dependencyResolutionManagement {
         }
         maven("https://jitpack.io")
         maven("https://maven.sumsub.com/repository/maven-public/")
+        exclusiveContent {
+            forRepository {
+                maven {
+                    url = uri(meaWalletSdkRegistry)
+                    credentials {
+                        username = properties.getProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+                        password = properties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+                    }
+                }
+            }
+            filter {
+                includeGroupAndSubgroups("com.meawallet")
+                includeModule("com.google.android.gms", "play-services-tapandpay")
+            }
+        }
     }
 
     versionCatalogs {
