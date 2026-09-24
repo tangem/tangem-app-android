@@ -5,7 +5,6 @@ import com.tangem.domain.collectibles.delegate.HotDelegatePublicKey
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.vault.GachaVaultLimits
 import com.tangem.domain.models.account.CollectiblesVaultBalance
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 
 /**
@@ -46,12 +45,12 @@ interface GachaVaultRepository {
 
      * with the vault.
      *
-     * @param cachedToken the token a previous read answered with. Working it out costs a request for the
-     * program config, and the mint cannot change while the program is deployed.
+     * @param cached what a previous read answered with. Its token and token account spare a request for the
+     * program config: neither can change while the program is deployed.
      */
     suspend fun getVaultBalance(
         userWallet: UserWallet,
-        cachedToken: CryptoCurrency.Token? = null,
+        cached: CollectiblesVaultBalance? = null,
     ): Either<CollectiblesAccountError, CollectiblesVaultBalance>
 
     /**
