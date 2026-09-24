@@ -2,6 +2,7 @@ package com.tangem.tap.domain.walletregistration
 
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.registration.WalletRegistrationTrigger
+import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.utils.coroutines.AppCoroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -26,6 +27,12 @@ internal class DefaultWalletRegistrationTrigger @Inject constructor(
         // dies on navigation. registerMobile is idempotent, so already-registered wallets are skipped.
         appCoroutineScope.launch {
             userWallets.forEach { launcher.registerUnlockedMobileWallet(it) }
+        }
+    }
+
+    override fun onMobileWalletUnlockedWithAccessCode(userWallet: UserWallet.Hot, accessCode: HotAuth.Password) {
+        appCoroutineScope.launch {
+            launcher.registerUnlockedMobileWallet(userWallet, accessCode)
         }
     }
 }

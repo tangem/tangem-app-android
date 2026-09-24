@@ -23,7 +23,6 @@ configurations.all {
 dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.local)
-    implementation(projects.core.configToggles)
     // for ForegroundActivityProvider: the credential provider UI can only be launched from an activity
     implementation(projects.core.decompose)
 
