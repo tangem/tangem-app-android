@@ -57,7 +57,7 @@
     },
     {
         "name": "TWI_1157_PLASTIC_CARD_ORDER_ENABLED",
-        "version": "6.4"
+        "version": "6.3.3"
     },
     {
         "name": "AND_16357_CHOOSE_TOKEN_PULSE_ANIMATION",
@@ -81,7 +81,7 @@
     },
     {
         "name": "TWI_1608_NEW_SHTORKA_ENABLED",
-        "version": "undefined"
+        "version": "6.4"
     },
     {
         "name": "TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED",

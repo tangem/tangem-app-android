@@ -39,9 +39,9 @@ import com.tangem.features.polymarket.impl.common.formatPolymarketShares
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.ViewPositionUM
-import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionIntents
-import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionMarketBlock
+import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionStatusIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlacePredictionPreviewIntents
+import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionMarketBlock
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlaceResultPreviewProvider
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import org.joda.time.DateTime
@@ -55,7 +55,7 @@ internal fun PlacePredictionStatusContent(
     viewPosition: ViewPositionUM,
     market: MarketHeaderUM,
     side: PredictionOrderSide,
-    intents: PlacePredictionIntents,
+    intents: PlacePredictionStatusIntents,
     modifier: Modifier = Modifier,
 ) {
     TangemStatusScreen(
@@ -74,7 +74,7 @@ internal fun PlacePredictionStatusContent(
 }
 
 @Composable
-private fun ResultFooter(viewPosition: ViewPositionUM, intents: PlacePredictionIntents) {
+private fun ResultFooter(viewPosition: ViewPositionUM, intents: PlacePredictionStatusIntents) {
     val modifier = Modifier
         .fillMaxWidth()
         .padding(all = 16.dp)

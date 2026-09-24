@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -32,8 +31,8 @@ import com.tangem.core.ui.ds2.button.Back
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.modal.TangemModal
+import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
-import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
@@ -54,13 +53,13 @@ internal fun HaveWalletBottomSheet(config: TangemBottomSheetConfig) {
         // Flat card for the same reason as the Create wallet sheet: the glass material would sample the
         // video behind the screen, and a dialog window costs half a second before the sheet can animate.
         isMaterialEnabled = false,
+        // The overlay composes in the host, outside this screen's forced palette, so the modal forces its own.
+        forceDarkTheme = true,
+        containerColor = TangemTheme.colors3.bg.secondary,
         // Back steps inside the sheet; on the first step it falls through to dismissing it.
         onBack = (step as? HaveWalletUM.Step.Import)?.onBack,
         title = { content ->
-            TangemTopNavigation(
-                contentAlign = TangemTopNavigation.ContentAlign.Center,
-                windowInsets = WindowInsets(0.dp),
-                fadeEnabled = false,
+            TangemModal.TopNavigation(
                 startButton = (content.step as? HaveWalletUM.Step.Import)?.onBack?.let {
                     { TangemButton.Back(onClick = it) }
                 },
@@ -111,9 +110,11 @@ private fun ColumnScope.StepTitle(step: HaveWalletUM.Step) {
 
 @Composable
 private fun OptionsStep(step: HaveWalletUM.Step.Options) {
+    // The rows bring their own 16 dp of padding, which is the inset the design asks for; the 4 dp on top of it
+    // is what the design leaves between them.
     Column(
-        modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.padding(bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         WalletOptionCard(option = step.cardOrRing)
         step.socialLogin?.let { WalletOptionCard(option = it) }
