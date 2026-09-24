@@ -4,6 +4,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
 import com.tangem.domain.polymarket.model.PolymarketPositionsFilter
 import com.tangem.domain.polymarket.model.PolymarketPosition
@@ -49,6 +50,7 @@ internal class PolymarketPositionsModel @Inject constructor(
                 onBackClick = ::onBack,
                 onFinishedPositionDismiss = ::dismissFinishedPosition,
                 onFilterSelect = ::selectFilter,
+                pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = { refresh() }),
             ),
         )
 
@@ -79,6 +81,8 @@ internal class PolymarketPositionsModel @Inject constructor(
                 selectedFilter = PolymarketPositionsFilter.ALL,
                 content = feed.state.value.content,
                 finishedPosition = null,
+                pullToRefreshConfig = state.pullToRefreshConfig.copy(isRefreshing = false),
+                onRefreshRetry = null,
             )
         }
         observeTab()
@@ -89,7 +93,11 @@ internal class PolymarketPositionsModel @Inject constructor(
         if (uiState.value.selectedTab != Tab.Active || filter == uiState.value.selectedFilter) return
         feed.selectFilter(filter)
         val content = feed.state.value.takeIf { it.filter == filter }?.content ?: PolymarketPositionsUM.Content.Loading
-        uiState.update { it.copy(selectedFilter = filter, content = content) }
+        uiState.update { it.copy(selectedFilter = filter, content = content, onRefreshRetry = null) }
+    }
+
+    private fun refresh() {
+        if (isResumed) feed.refresh()
     }
 
     private fun createFeed(tab: Tab): PolymarketPositionsLoader.Feed = loader.createFeed(
@@ -111,6 +119,8 @@ internal class PolymarketPositionsModel @Inject constructor(
                     if (state.selectedTab == tab && state.selectedFilter == value.filter) {
                         state.copy(
                             content = value.content,
+                            pullToRefreshConfig = state.pullToRefreshConfig.copy(isRefreshing = value.isRefreshing),
+                            onRefreshRetry = value.onRefreshRetry,
                         )
                     } else {
                         state

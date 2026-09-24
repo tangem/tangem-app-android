@@ -31,6 +31,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
+import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
 import com.tangem.core.ui.components.haze.ProvideHaze
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
@@ -63,23 +64,40 @@ internal fun PolymarketPositionsScreen(state: PolymarketPositionsUM, modifier: M
         ) { contentPadding ->
             key(state.selectedTab, state.selectedFilter) {
                 val listState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() }
-                when (val content = state.content) {
-                    is Content.Data -> PositionsList(content, listState, contentPadding)
-                    else -> Box(
-                        modifier = Modifier.fillMaxSize().padding(contentPadding).padding(horizontal = 16.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        when (content) {
-                            Content.Loading -> PolymarketLoadingState()
-                            Content.Empty -> EmptyPositions(state.selectedTab, state.selectedFilter)
-                            is Content.Error -> PositionsRetry(content.onRetry)
-                            is Content.Data -> Unit
+                TangemPullToRefreshSlidingContainer(
+                    config = state.pullToRefreshConfig,
+                    indicatorOffset = contentPadding.calculateTopPadding(),
+                ) {
+                    when (val content = state.content) {
+                        is Content.Data -> PositionsList(content, listState, contentPadding, state.onRefreshRetry)
+                        else -> LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = contentPadding,
+                        ) {
+                            item {
+                                PositionsPlaceholder(state, Modifier.fillParentMaxSize().padding(horizontal = 16.dp))
+                            }
                         }
                     }
                 }
             }
         }
         PolymarketFinishedPositionSheet(state = state.finishedPosition, onDismiss = state.onFinishedPositionDismiss)
+    }
+}
+
+@Composable
+private fun PositionsPlaceholder(state: PolymarketPositionsUM, modifier: Modifier = Modifier) {
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            when (val content = state.content) {
+                Content.Loading -> PolymarketLoadingState()
+                Content.Empty -> EmptyPositions(state.selectedTab, state.selectedFilter)
+                is Content.Error -> PositionsRetry(content.onRetry)
+                is Content.Data -> Unit
+            }
+            state.onRefreshRetry?.let { PositionsRetry(it) }
+        }
     }
 }
 
@@ -129,7 +147,12 @@ private fun PositionsTabs(state: PolymarketPositionsUM, modifier: Modifier = Mod
 }
 
 @Composable
-private fun PositionsList(content: Content.Data, listState: LazyListState, contentPadding: PaddingValues) {
+private fun PositionsList(
+    content: Content.Data,
+    listState: LazyListState,
+    contentPadding: PaddingValues,
+    onRefreshRetry: (() -> Unit)?,
+) {
     val layoutDirection = LocalLayoutDirection.current
     val nextPage = content.nextPage
     if (nextPage is NextPage.Ready) {
@@ -150,6 +173,9 @@ private fun PositionsList(content: Content.Data, listState: LazyListState, conte
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        if (onRefreshRetry != null) {
+            item(key = "refresh_error", contentType = "retry") { PositionsRetry(onRefreshRetry) }
+        }
         items(items = content.positions, key = { "position:${it.id}" }, contentType = { "position" }) { position ->
             PolymarketPositionCard(state = position, modifier = Modifier.fillMaxWidth())
         }
