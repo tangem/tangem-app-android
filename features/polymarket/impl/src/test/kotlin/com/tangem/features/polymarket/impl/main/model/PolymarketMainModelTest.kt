@@ -36,6 +36,9 @@ import com.tangem.domain.polymarket.model.PolymarketDepositRequisites
 import com.tangem.domain.polymarket.model.PolymarketDepositToken
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
+import com.tangem.domain.polymarket.flow.PredictionPositionsValueFetcher
+import com.tangem.domain.polymarket.flow.PredictionPositionsValueSupplier
+import com.tangem.domain.polymarket.model.PredictionPositionsValue
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
@@ -109,12 +112,16 @@ internal class PolymarketMainModelTest {
     private val refreshRequisites: RefreshPredictionDepositRequisitesInteractor = mockk()
     private val checkGeoblock: CheckPolymarketGeoblockUseCase = mockk()
     private val accountStatusFetcher: PredictionAccountStatusFetcher = mockk(relaxed = true)
+    private val positionsValueSupplier: PredictionPositionsValueSupplier = mockk()
+    private val positionsValueFetcher: PredictionPositionsValueFetcher = mockk(relaxed = true)
     private val balancePoller: PredictionBalancePoller = mockk()
     private val fundingWindow: PredictionFundingWindow = mockk(relaxed = true)
 
     private val statusFlow = MutableStateFlow<PredictionAccountStatusValue>(
         value = activeStatus(depositAddress = DEPOSIT_ADDRESS),
     )
+
+    private val positionsFlow = MutableStateFlow<PredictionPositionsValue>(value = PredictionPositionsValue.Unknown)
 
     private val positionsPreviewLoader: PolymarketPositionsPreviewLoader = mockk(relaxed = true)
     private val positionsState = MutableStateFlow<PolymarketPositionsPreviewUM>(PolymarketPositionsPreviewUM.Loading)
@@ -642,9 +649,12 @@ internal class PolymarketMainModelTest {
                 accountStatusFetcher(
                     PredictionAccountStatusFetcher.Params(
                         userWalletId = USER_WALLET_ID,
-                        mode = PredictionAccountStatusFetcher.Mode.FULL,
+                        mode = PredictionAccountStatusFetcher.Mode.AVAILABLE_ONLY,
                     ),
                 )
+            }
+            coVerify(exactly = 1) {
+                positionsValueFetcher(PredictionPositionsValueFetcher.Params(userWalletId = USER_WALLET_ID))
             }
         }
 
@@ -1181,7 +1191,8 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN a known positions value WHEN the balance label is tapped THEN the header switches to total`() = runTest {
         // Arrange
-        statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS, positionsValue = "2.5")
+        statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS)
+        positionsFlow.value = positions(amount = "2.5")
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -1198,7 +1209,8 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN the header shows total WHEN the label is tapped again THEN it switches back to available`() = runTest {
         // Arrange
-        statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS, positionsValue = "2.5")
+        statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS)
+        positionsFlow.value = positions(amount = "2.5")
         val model = createModel(testScope = this)
         advanceUntilIdle()
         model.uiState.value.balance.onSwitchClick()
@@ -1215,17 +1227,18 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
-    fun `GIVEN the header shows total WHEN the positions value becomes unknown THEN it falls back to available`() =
+    fun `GIVEN the header shows total WHEN the positions value is gone THEN it falls back to available`() =
         runTest {
             // Arrange
-            statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS, positionsValue = "2.5")
+            statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS)
+            positionsFlow.value = positions(amount = "2.5")
             val model = createModel(testScope = this)
             advanceUntilIdle()
             model.uiState.value.balance.onSwitchClick()
             advanceUntilIdle()
 
             // Act
-            statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS, positionsValue = null)
+            positionsFlow.value = PredictionPositionsValue.Unknown
             advanceUntilIdle()
 
             // Assert
@@ -1238,16 +1251,18 @@ internal class PolymarketMainModelTest {
     fun `GIVEN the positions value was lost and returns WHEN the header shows total THEN total comes back`() =
         runTest {
             // Arrange
-            statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS, positionsValue = "2.5")
+            statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS)
+            positionsFlow.value = positions(amount = "2.5")
             val model = createModel(testScope = this)
             advanceUntilIdle()
             model.uiState.value.balance.onSwitchClick()
             advanceUntilIdle()
-            statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS, positionsValue = null)
+            positionsFlow.value = PredictionPositionsValue.Unknown
             advanceUntilIdle()
 
             // Act
-            statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS, positionsValue = "3")
+            statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS)
+            positionsFlow.value = positions(amount = "3")
             advanceUntilIdle()
 
             // Assert
@@ -1256,11 +1271,13 @@ internal class PolymarketMainModelTest {
             assertThat(model.uiState.value.balance.balance.plainText()).isEqualTo("$15.50")
         }
 
-    private fun activeStatus(depositAddress: String?, balance: String = "12.5", positionsValue: String? = null) =
+    private fun positions(amount: String) = PredictionPositionsValue.Known(amount = BigDecimal(amount), source = StatusSource.ACTUAL)
+
+    private fun activeStatus(depositAddress: String?, balance: String = "12.5") =
         PredictionAccountStatusValue.Active(
             source = StatusSource.ACTUAL,
             balance = BigDecimal(balance),
-            positionsValue = positionsValue?.let(::BigDecimal),
+            positionsValue = null,
             fiatRate = BigDecimal.ONE,
             depositCurrency = COLLATERAL,
             depositAddress = depositAddress,
@@ -1358,6 +1375,7 @@ internal class PolymarketMainModelTest {
 
     private fun createModel(testScope: TestScope): PolymarketMainModel {
         every { predictionAccountStatusSupplier(any<UserWalletId>()) } returns statusFlow
+        every { positionsValueSupplier(any<UserWalletId>()) } returns positionsFlow
         every { positionsPreviewLoader.state } returns positionsState
 
         every { getEventsBatchFlowUseCase(capture(contextSlot), any()) } answers {
@@ -1413,6 +1431,8 @@ internal class PolymarketMainModelTest {
             refreshPredictionDepositRequisitesInteractor = refreshRequisites,
             checkPolymarketGeoblockUseCase = checkGeoblock,
             predictionAccountStatusFetcher = accountStatusFetcher,
+            predictionPositionsValueSupplier = positionsValueSupplier,
+            predictionPositionsValueFetcher = positionsValueFetcher,
             positionsPreviewLoader = positionsPreviewLoader,
             predictionBalancePoller = balancePoller,
             predictionFundingWindow = fundingWindow,
