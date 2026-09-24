@@ -165,7 +165,7 @@ duplication for new code. References: `ScanFailsModel`, `AppSettingsModel`.
 - **Convention plugin:** `plugins/configuration/` — applies Detekt, configures test settings, generates environment configs and feature toggles
 - **Custom Detekt rules:** `plugins/detekt-rules/`. Detekt configuration is in the `tangem-android-tools` git submodule. Key rule: `UnsafeStringResourceUsage` — prevents direct `stringResource()` / `pluralStringResource()` calls; use the `Safe`-suffixed variants instead
 - **Localization:** Managed via [Lokalise](https://lokalise.com). Update strings by running `python3 lokalize.py`. Adding/changing string keys — use the `lokalise-strings` skill (`.claude/skills/lokalise-strings/SKILL.md`)
-- **GitHub Packages auth:** Requires `gpr.user` and `gpr.key` in `local.properties` for Tangem SDK dependencies
+- **GitHub Packages auth:** Requires `gpr.user` and `gpr.key` in `local.properties` for Tangem SDK dependencies. The MeaWallet SDK is read with the same token from `tangem-developments`, so it also needs `read:packages` and SAML SSO for that org; without them Google Wallet push provisioning builds as a no-op (see `.claude/rules/tangem-sdk.md`)
 
 ### Testing
 
