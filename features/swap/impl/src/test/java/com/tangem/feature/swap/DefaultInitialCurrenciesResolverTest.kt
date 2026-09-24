@@ -1698,6 +1698,35 @@ internal class DefaultInitialCurrenciesResolverTest {
     }
 
     @Test
+    fun `GIVEN the gacha vault WHEN the top-up flow opens THEN it lands as TO with a portfolio FROM`() = runTest {
+        // Arrange
+        val walletCurrency = mockCryptoCurrency()
+        val walletStatus = createCurrencyStatus(walletCurrency, fiatAmount = BigDecimal("100"))
+        val vaultCurrency = mockCryptoCurrency()
+        val vaultStatus = createCurrencyStatus(vaultCurrency, fiatAmount = BigDecimal.ZERO)
+        setupSupplier(
+            listOf(
+                createCryptoPortfolioAccountStatus(listOf(walletStatus)),
+                createCollectiblesAccountStatus(vaultStatus),
+            ),
+        )
+        setupAvailability(linkedMapOf(walletCurrency to true))
+        setupAvailability(linkedMapOf(vaultCurrency to true))
+
+        // Act
+        val (from, to) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = vaultCurrency,
+            swapCurrencyPosition = CurrencyPosition.TO,
+            accountFlow = AccountFlow.CollectiblesTopUp,
+        )
+
+        // Assert
+        assertThat(to?.status).isSameInstanceAs(vaultStatus)
+        assertThat(from?.status).isSameInstanceAs(walletStatus)
+    }
+
+    @Test
     fun `GIVEN the prediction collateral WHEN it is the initial currency THEN it lands as TO with a portfolio FROM`() =
         runTest {
             // Arrange
@@ -1926,6 +1955,13 @@ internal class DefaultInitialCurrenciesResolverTest {
             assertThat(from?.status).isSameInstanceAs(walletStatus)
             assertThat(to).isNull()
         }
+
+    private fun createCollectiblesAccountStatus(vaultStatus: CryptoCurrencyStatus?): AccountStatus.Collectibles {
+        val statusValue = mockk<CollectiblesAccountStatusValue.Onboarded>(relaxed = true) {
+            every { cryptoCurrencyStatus } returns vaultStatus
+        }
+        return AccountStatus.Collectibles(account = Account.Collectibles(userWalletId), value = statusValue)
+    }
 
     private fun createPredictionAccountStatus(collateralStatus: CryptoCurrencyStatus?): AccountStatus.Prediction {
         val statusValue = mockk<PredictionAccountStatusValue.Active>(relaxed = true) {
