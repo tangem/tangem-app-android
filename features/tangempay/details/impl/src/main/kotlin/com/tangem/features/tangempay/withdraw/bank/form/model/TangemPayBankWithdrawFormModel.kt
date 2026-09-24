@@ -1,15 +1,18 @@
 package com.tangem.features.tangempay.withdraw.bank.form.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.pay.TangemPayCountry
 import com.tangem.domain.models.pay.TangemPayRegion
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.withdraw.bank.form.TangemPayBankWithdrawFormComponent
 import com.tangem.features.tangempay.withdraw.bank.form.state.TangemPayBankWithdrawFormUM
 import com.tangem.features.tangempay.withdraw.bank.form.state.TangemPayBankWithdrawFormUMFactory
+import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTarget
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,10 +29,18 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
+    private val analytics: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<Params>()
     private val form = params.form
+
+    private val screen = when (form.step) {
+        TangemPayBankWithdrawInnerRoute.BankDetails,
+        TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.BankDetails),
+        -> FormScreen.BankDetails
+        else -> FormScreen.RecipientDetails
+    }
 
     private val umFactory = TangemPayBankWithdrawFormUMFactory(
         fields = form.fields,
@@ -47,6 +58,8 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
 
     private val state = MutableStateFlow(FormState())
 
+    private val fieldsReportedAsFilled = mutableSetOf<BankWithdrawFormField>()
+
     val uiState: StateFlow<TangemPayBankWithdrawFormUM>
         field = MutableStateFlow(
             umFactory.create(
@@ -57,6 +70,7 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
         )
 
     init {
+        analytics.send(screenOpenedEvent())
         combine(form.draft, state, form.savedAccounts) { draft, formState, accounts ->
             umFactory.create(draft = draft, state = formState, accounts = accounts)
         }
@@ -71,6 +85,7 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
         }
         val regionCode = region?.code?.subdivisionCode(country.code).orEmpty()
         val staleFields = BankWithdrawFormValidator.dependentFieldsOf(field) + field
+        val isCountryChanged = currentValues()[field] != country.code
         state.update { current ->
             current.copy(
                 edits = current.edits + (field to country.code) +
@@ -79,6 +94,14 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
                     listOfNotNull(regionField?.to(region?.name.orEmpty())),
                 errors = current.errors - staleFields.toSet(),
             )
+        }
+        // A new country wipes the region, so the region the user picks next is a fill of its own.
+        if (isCountryChanged && regionField != null) {
+            fieldsReportedAsFilled -= regionField
+        }
+        reportFieldFilled(field)
+        if (regionField != null && region != null) {
+            reportFieldFilled(regionField)
         }
     }
 
@@ -91,6 +114,7 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
                 errors = current.errors - field,
             )
         }
+        reportFieldFilled(field)
     }
 
     private fun onBackClick() {
@@ -122,6 +146,7 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
         }
         // A blur can arrive after the next field has already reported focus, so only its own field is cleared.
         state.update { if (it.focusedField == field) it.copy(focusedField = null) else it }
+        reportFieldFilled(field)
         val error = BankWithdrawFormValidator.validate(field = field, values = currentValues())
         // An empty field is only reported on Continue, so tabbing through the form stays quiet.
         if (error == null || error == BankWithdrawFieldError.Required) return
@@ -145,11 +170,14 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
     }
 
     private fun onContinueClick() {
+        // The field being typed in never blurs before Continue, so its fill is reported here instead.
+        state.value.focusedField?.let(::reportFieldFilled)
         val values = currentValues()
         val errors = BankWithdrawFormValidator.validateAll(fields = form.fields, values = values)
         if (errors.isNotEmpty()) {
             state.update { it.copy(errors = errors) }
         } else {
+            analytics.send(continueClickedEvent())
             form.onContinue(result())
             state.update { it.copy(edits = emptyMap(), displayNameEdits = emptyMap(), errors = emptyMap()) }
         }
@@ -177,6 +205,34 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
         BankWithdrawFormField.BankRegion -> BankWithdrawFormFields.US_COUNTRY_CODE
         else -> state.value.value(BankWithdrawFormField.Country, form.draft.value)
     }
+
+    /** A field counts as filled the first time it holds a value, so a re-entered answer is reported only once. */
+    private fun reportFieldFilled(field: BankWithdrawFormField) {
+        if (field in fieldsReportedAsFilled || currentValues()[field].orEmpty().isBlank()) return
+        fieldsReportedAsFilled += field
+        analytics.send(fieldFilledEvent(field))
+    }
+
+    private fun screenOpenedEvent(): TangemPayAnalyticsEvents = when (screen) {
+        FormScreen.RecipientDetails -> TangemPayAnalyticsEvents.Offramp.RecipientDetailsScreenOpened()
+        FormScreen.BankDetails -> TangemPayAnalyticsEvents.Offramp.RecipientBankDetailsScreenOpened()
+    }
+
+    private fun fieldFilledEvent(field: BankWithdrawFormField): TangemPayAnalyticsEvents {
+        val name = field.toAnalyticsName()
+        return when (screen) {
+            FormScreen.RecipientDetails -> TangemPayAnalyticsEvents.Offramp.RecipientDetailsFieldFilled(name)
+            FormScreen.BankDetails -> TangemPayAnalyticsEvents.Offramp.RecipientBankDetailsFieldFilled(name)
+        }
+    }
+
+    private fun continueClickedEvent(): TangemPayAnalyticsEvents = when (screen) {
+        FormScreen.RecipientDetails -> TangemPayAnalyticsEvents.Offramp.RecipientDetailsContinueClicked()
+        FormScreen.BankDetails -> TangemPayAnalyticsEvents.Offramp.RecipientBankDetailsContinueClicked()
+    }
+
+    /** The two form steps this model serves, each reporting its own family of events. */
+    private enum class FormScreen { RecipientDetails, BankDetails }
 
     data class Params(
         val form: TangemPayBankWithdrawFormComponent.Params,

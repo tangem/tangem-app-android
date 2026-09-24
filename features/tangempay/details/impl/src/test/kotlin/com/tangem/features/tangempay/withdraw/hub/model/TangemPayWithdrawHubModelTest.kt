@@ -6,6 +6,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -26,6 +27,7 @@ import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.pay.usecase.bankofframp.GetBankOfframpOptionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetRecentBankAccountsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.availableNetwork
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
@@ -62,6 +64,7 @@ internal class TangemPayWithdrawHubModelTest {
     private val markBankAccountUsedUseCase: MarkBankAccountUsedUseCase = mockk(relaxed = true)
     private val getBankOfframpOptionsUseCase: GetBankOfframpOptionsUseCase = mockk()
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
+    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
     private val statusFlow = MutableSharedFlow<AccountStatus.Payment>(replay = 1)
@@ -83,6 +86,7 @@ internal class TangemPayWithdrawHubModelTest {
             markBankAccountUsedUseCase,
             getBankOfframpOptionsUseCase,
             paymentAccountStatusSupplier,
+            analytics,
         )
         statusFlow.resetReplayCache()
         opened.clear()
@@ -395,6 +399,88 @@ internal class TangemPayWithdrawHubModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN hub WHEN model created THEN BankTransferSheetOpened is sent`() {
+        // Act
+        val model = createModel()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.BankTransferSheetOpened()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN model WHEN to personal account clicked THEN ToPersonalAccountClicked is sent`() {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        model.bankContent().toPersonalAccount.onClick()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.ToPersonalAccountClicked()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN model WHEN to business account clicked THEN ToBusinessAccountClicked is sent`() {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        model.bankContent().toBusinessAccount.onClick()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.ToBusinessAccountClicked()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN recents content WHEN see all clicked THEN SavedContactsSeeAllClicked is sent`() {
+        // Arrange
+        coEvery { getRecentBankAccountsUseCase(userWalletId) } returns
+            recentBankAccounts(recents = listOf(bankAccount(id = "acc-1"))).right()
+        val model = createModel()
+
+        // Act
+        (model.recents() as RecentsUM.Content).onSeeAllClick()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.SavedContactsSeeAllClicked()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN recents content WHEN recipient clicked THEN SavedContactClicked is sent`() {
+        // Arrange
+        coEvery { getRecentBankAccountsUseCase(userWalletId) } returns
+            recentBankAccounts(recents = listOf(bankAccount(id = "acc-1"))).right()
+        val model = createModel()
+
+        // Act
+        (model.recents() as RecentsUM.Content).onRecipientClick("acc-1")
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.SavedContactClicked()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN options no longer ready WHEN to personal account clicked THEN ToPersonalAccountClicked is sent`() {
+        // Arrange
+        val model = createModel()
+        val toPersonalAccount = model.bankContent().toPersonalAccount
+
+        // Act
+        emitStatus(balance = BigDecimal.ZERO)
+        toPersonalAccount.onClick()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.ToPersonalAccountClicked()) }
+        assertThat(opened).isEmpty()
+        model.onDestroy()
+    }
+
     private fun emitStatusValue(value: PaymentAccountStatusValue) {
         statusFlow.resetReplayCache()
         val status = AccountStatus.Payment(account = Account.Payment(userWalletId), value = value)
@@ -430,5 +516,6 @@ internal class TangemPayWithdrawHubModelTest {
         markBankAccountUsedUseCase = markBankAccountUsedUseCase,
         getBankOfframpOptionsUseCase = getBankOfframpOptionsUseCase,
         paymentAccountStatusSupplier = paymentAccountStatusSupplier,
+        analytics = analytics,
     )
 }
