@@ -760,6 +760,7 @@
   <string name="fee_selector_choose_token_title">Обрати токен</string>
   <string name="feed_market_and_news">Ринок та Новини</string>
   <string name="feed_promo_earn_active_description">Отримуйте до %1$s APY на %2$s</string>
+  <string name="feed_promo_earn_active_title">Залучіть більше коштів</string>
   <string name="feed_promo_earn_description">Змусьте криптовалюту працювати й отримуйте до %1$s APY</string>
   <string name="feed_promo_earn_title">Почніть заробляти</string>
   <string name="feed_promo_referral_description">Отримуйте %1$s за кожного друга</string>
@@ -804,6 +805,9 @@
   <string name="force_update_warning_title">Потрібне оновлення</string>
   <string name="gasless_not_enough_funds_to_cover_token_fee">Недостатньо коштів</string>
   <string name="gasless_transaction_fee">Комісія за транзакцію</string>
+  <string name="gasless_tron_activation_attempts_limit">Ви зробили кілька спроб. Будь ласка, спробуйте пізніше.</string>
+  <string name="gasless_tron_activation_min_balance_description">Ваш баланс має перевищувати %s.</string>
+  <string name="gasless_tron_activation_try_again_later">Будь ласка, спробуйте пізніше.</string>
   <string name="generic_error">Виникла помилка</string>
   <string name="generic_error_code">Виникла помилка. Код: %s.</string>
   <string name="generic_requires_memo_error">Вимагається memo</string>
@@ -1076,6 +1080,7 @@
   <string name="market_chart_can_not_load_data">Не вдалося завантажити дані</string>
   <string name="market_chart_no_amount">Немає токенів або їхня вартість невідома</string>
   <string name="market_chart_top_holding">%s вашого портфеля</string>
+  <string name="market_crypto_total_market_cap_title">Загальна капіталізація ринку</string>
   <string name="markets_about_coin_header">Про монету</string>
   <string name="markets_add_to_my_portfolio_description">Щоб купити, обміняти або отримати цей актив, додайте його до свого портфоліо</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">Цей актив наразі не підтримується в гаманці</string>
