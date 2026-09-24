@@ -488,7 +488,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
         ),
         UnavailableModel(
             error = BankOfframpError.UnsupportedConfiguration,
-            titleRes = R.string.tangempay_withdraw_bank_error_unsupported_configuration,
+            titleRes = R.string.tangempay_withdraw_bank_error_region_title,
         ),
     )
 

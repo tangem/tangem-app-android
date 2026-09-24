@@ -154,15 +154,24 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
     }
 
     private fun onSelectorClick(field: BankWithdrawFormField) {
+        val values = currentValues()
         val config = when (field) {
             BankWithdrawFormField.Country -> {
-                CountrySelectorConfig.Country(field)
+                CountrySelectorConfig.Country(
+                    field = field,
+                    selectedCountryCode = values.pickedCode(BankWithdrawFormField.Country),
+                    selectedRegionCode = values.pickedCode(BankWithdrawFormField.Region),
+                )
             }
             BankWithdrawFormField.Region -> {
-                regionConfig(field, countryField = BankWithdrawFormField.Country)
+                regionConfig(field, values = values, countryField = BankWithdrawFormField.Country)
             }
             BankWithdrawFormField.BankRegion -> {
-                CountrySelectorConfig.Region(field = field, countryCode = BankWithdrawFormFields.US_COUNTRY_CODE)
+                CountrySelectorConfig.Region(
+                    field = field,
+                    countryCode = BankWithdrawFormFields.US_COUNTRY_CODE,
+                    selectedRegionCode = values.pickedCode(field),
+                )
             }
             else -> null
         }
@@ -193,12 +202,21 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
 
     private fun regionConfig(
         field: BankWithdrawFormField,
+        values: Map<BankWithdrawFormField, String>,
         countryField: BankWithdrawFormField,
     ): CountrySelectorConfig? {
-        return currentValues()[countryField]
-            ?.takeIf(String::isNotEmpty)
-            ?.let { CountrySelectorConfig.Region(field = field, countryCode = it) }
+        return values.pickedCode(countryField)?.let { countryCode ->
+            CountrySelectorConfig.Region(
+                field = field,
+                countryCode = countryCode,
+                selectedRegionCode = values.pickedCode(field),
+            )
+        }
     }
+
+    /** An untouched field holds an empty string, which the picker reads as "nothing picked yet". */
+    private fun Map<BankWithdrawFormField, String>.pickedCode(field: BankWithdrawFormField): String? =
+        get(field)?.takeIf(String::isNotEmpty)
 
     /** Bank rails are US-only, so a bank state is always American; a recipient's state follows the country picked. */
     private fun countryCodeOf(field: BankWithdrawFormField): String = when (field) {

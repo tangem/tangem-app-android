@@ -460,7 +460,13 @@ internal class TangemPayBankWithdrawFormModelTest {
 
         // THEN
         verify(exactly = 1) {
-            onOpenSelector(CountrySelectorConfig.Region(field = BankWithdrawFormField.Region, countryCode = "US"))
+            onOpenSelector(
+                CountrySelectorConfig.Region(
+                    field = BankWithdrawFormField.Region,
+                    countryCode = "US",
+                    selectedRegionCode = "CA",
+                ),
+            )
         }
         model.onDestroy()
     }
@@ -479,6 +485,28 @@ internal class TangemPayBankWithdrawFormModelTest {
     }
 
     @Test
+    fun `GIVEN picked country and region WHEN country selector clicked THEN picker carries the selection`() {
+        // GIVEN
+        setDraftWithPickedCalifornia()
+        val model = createModel(formFields = addressFields)
+
+        // WHEN
+        selectorField(model, BankWithdrawFormField.Country).onClick()
+
+        // THEN
+        verify(exactly = 1) {
+            onOpenSelector(
+                CountrySelectorConfig.Country(
+                    field = BankWithdrawFormField.Country,
+                    selectedCountryCode = "US",
+                    selectedRegionCode = "CA",
+                ),
+            )
+        }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN bank details WHEN bank region selector clicked THEN us region picker opened`() {
         // GIVEN
         val model = createModel(formFields = bankAddressFields)
@@ -490,6 +518,28 @@ internal class TangemPayBankWithdrawFormModelTest {
         verify(exactly = 1) {
             onOpenSelector(
                 CountrySelectorConfig.Region(field = BankWithdrawFormField.BankRegion, countryCode = "US"),
+            )
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN picked bank region WHEN bank region selector clicked THEN picker carries the selection`() {
+        // GIVEN
+        val model = createModel(formFields = bankAddressFields)
+        model.onRegionSelected(field = BankWithdrawFormField.BankRegion, region = newYorkIso)
+
+        // WHEN
+        selectorField(model, BankWithdrawFormField.BankRegion).onClick()
+
+        // THEN
+        verify(exactly = 1) {
+            onOpenSelector(
+                CountrySelectorConfig.Region(
+                    field = BankWithdrawFormField.BankRegion,
+                    countryCode = "US",
+                    selectedRegionCode = "NY",
+                ),
             )
         }
         model.onDestroy()
