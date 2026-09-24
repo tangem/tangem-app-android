@@ -156,7 +156,22 @@ internal class TxHistoryTitleConverterTest {
         ),
         TitleModel(
             tx = txInfo(TransactionType.YieldSupply.Topup),
-            expected = resRef(R.string.yield_module_transaction_topup),
+            expected = resRef(R.string.transaction_history_supplied),
+        ),
+        TitleModel(
+            tx = txInfo(TransactionType.YieldSupply.Topup, status = TransactionStatus.Unconfirmed),
+            expected = resRef(R.string.common_supplying),
+        ),
+        TitleModel(
+            tx = txInfo(TransactionType.YieldSupply.Topup, status = TransactionStatus.Failed),
+            expected = resRef(R.string.transaction_history_status_supply_failed),
+        ),
+        TitleModel(
+            tx = txInfo(
+                type = TransactionType.YieldSupply.Send(address = "0xdest", isYieldSupplyWithdraw = true),
+                status = TransactionStatus.Failed,
+            ),
+            expected = resRef(R.string.transaction_history_status_withdraw_failed),
         ),
         TitleModel(
             tx = txInfo(TransactionType.UnknownOperation),

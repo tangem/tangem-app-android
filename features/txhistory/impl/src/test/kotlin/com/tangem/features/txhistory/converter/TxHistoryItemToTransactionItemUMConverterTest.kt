@@ -610,12 +610,12 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     // region Content — YieldSupply
 
     @Test
-    fun `GIVEN YieldSupply Topup WHEN convert THEN topup title`() {
+    fun `GIVEN YieldSupply Topup WHEN convert THEN supplied title`() {
         val tx = txInfo(type = TransactionType.YieldSupply.Topup)
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.title).isEqualTo(resRef(R.string.yield_module_transaction_topup))
+        assertThat(result.title).isEqualTo(resRef(R.string.transaction_history_supplied))
     }
 
     @Test
@@ -773,14 +773,18 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
-    fun `GIVEN YieldSupply Topup Token WHEN convert THEN amount-formatted topup subtitle`() {
+    fun `GIVEN YieldSupply Topup Token WHEN convert THEN Aave provider subtitle`() {
         val tx = txInfo(type = TransactionType.YieldSupply.Topup, amount = BigDecimal("3.0"))
 
         val result = tokenConverter.convert(tx) as TransactionItemUM.Content
 
-        val subtitle = result.subtitle as ContentSubtitle.Plain
-        val res = subtitle.text as TextReference.Res
-        assertThat(res.id).isEqualTo(R.string.yield_module_transaction_topup_subtitle)
+        assertThat(result.subtitle).isEqualTo(
+            ContentSubtitle.Provider(
+                direction = ContentSubtitle.Direction.TO,
+                name = resRef(R.string.yield_module_provider),
+                iconResId = R.drawable.img_aave_22,
+            ),
+        )
     }
 
     @Test
@@ -802,7 +806,8 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
-    fun `GIVEN YieldSupply Topup Coin WHEN convert THEN address-based subtitle`() {
+    fun `GIVEN YieldSupply Topup Coin WHEN convert THEN Aave provider subtitle`() {
+        // Arrange — a coin topup names the provider too: the row mirrors a withdraw, which never shows the address.
         val tx = txInfo(
             type = TransactionType.YieldSupply.Topup,
             interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
@@ -811,9 +816,13 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        val subtitle = result.subtitle as ContentSubtitle.Plain
-        val res = subtitle.text as TextReference.Res
-        assertThat(res.id).isEqualTo(R.string.transaction_history_transaction_for_address)
+        assertThat(result.subtitle).isEqualTo(
+            ContentSubtitle.Provider(
+                direction = ContentSubtitle.Direction.TO,
+                name = resRef(R.string.yield_module_provider),
+                iconResId = R.drawable.img_aave_22,
+            ),
+        )
     }
 
     // endregion
