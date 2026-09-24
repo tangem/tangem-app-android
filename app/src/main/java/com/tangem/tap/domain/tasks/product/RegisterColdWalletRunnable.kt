@@ -31,6 +31,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 internal class RegisterColdWalletRunnable<T>(
     private val inner: CardSessionRunnable<T>,
     private val launcher: WalletRegistrationLauncher,
+    private val shouldForceRegistration: Boolean = false,
 ) : CardSessionRunnable<T> by inner {
 
     @Volatile
@@ -81,15 +82,24 @@ internal class RegisterColdWalletRunnable<T>(
         val prefetchedNonce = nonce
         // Register only when the nonce prefetched in prepare() is ready; otherwise skip (the card binds
         // on a later tap). The card is never held waiting for the nonce here — that wait already happened
-        // before the tap, in prepare().
-        if (card == null || prefetchedNonce == null) {
+        // before the tap, in prepare(). A forced registration still goes through without a nonce, since it
+        // must drop the stale local marker for that later tap to register.
+        val hasRegistrationWork = prefetchedNonce != null || shouldForceRegistration
+        if (card == null || !hasRegistrationWork) {
             callback(result)
             return
         }
         // Launch on the card session's own scope so the in-session registration is bound to the tap
         // (cancelled when the session ends) and can't outlive it.
         val job = session.scope.launch {
-            runSuspendCatching { launcher.registerColdInSession(session, card, prefetchedNonce) }
+            runSuspendCatching {
+                launcher.registerColdInSession(
+                    session = session,
+                    card = card,
+                    nonce = prefetchedNonce,
+                    shouldForce = shouldForceRegistration,
+                )
+            }
                 .onFailure { TangemLogger.e("Cold wallet registration failed", it) }
         }
         // invokeOnCompletion fires even if the job was cancelled or never started (e.g. the session

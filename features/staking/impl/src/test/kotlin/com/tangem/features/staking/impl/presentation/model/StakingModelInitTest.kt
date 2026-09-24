@@ -2,7 +2,9 @@ package com.tangem.features.staking.impl.presentation.model
 
 import arrow.core.Either
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.balancehiding.BalanceHidingSettings
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.YieldBalanceItem
 import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
@@ -17,6 +19,7 @@ import com.tangem.features.staking.impl.presentation.state.helpers.StakingFeeLoa
 import com.tangem.features.staking.impl.presentation.state.transformers.HideBalanceStateTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.SetConfirmationStateLoadingTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.SetInitialDataStateTransformer
+import com.tangem.features.staking.impl.presentation.state.transformers.notifications.AddStakingNotificationsTransformer
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.Transformer
 import io.mockk.*
@@ -314,6 +317,131 @@ internal class StakingModelInitTest : StakingModelTestBase() {
 
         model.onDestroy()
     }
+
+    @Test
+    fun `GIVEN assent confirmation WHEN refreshed status emitted THEN notifications recomputed with refreshed status`() =
+        runTest {
+            // Arrange
+            val statusFlow = MutableSharedFlow<AccountCryptoCurrencyStatus>()
+            val uiStateFlow = MutableStateFlow(initialUiState)
+            val (cachedStatus, cachedAccountStatus) = createMockedAccountCurrencyStatus()
+            val (refreshedStatus, refreshedAccountStatus) = createMockedAccountCurrencyStatus()
+            arrangeStatusRefreshOnConfirmation(statusFlow, uiStateFlow, cachedStatus)
+
+            val model = createModel(testScope = this)
+            statusFlow.emit(cachedAccountStatus)
+            advanceUntilIdle()
+            uiStateFlow.value = createConfirmationUiState(InnerConfirmationStakingState.ASSENT)
+            advanceUntilIdle()
+
+            // Act
+            statusFlow.emit(refreshedAccountStatus)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify {
+                getCurrencyCheckUseCase(
+                    userWalletId = any(),
+                    currencyStatus = refreshedStatus,
+                    feeCurrencyStatus = any(),
+                    amount = any(),
+                    fee = any(),
+                    feeCurrencyBalanceAfterTransaction = any(),
+                    recipientAddress = any(),
+                )
+            }
+            verify {
+                stateController.update(
+                    match<Transformer<StakingUiState>> { it is AddStakingNotificationsTransformer }
+                )
+            }
+            coVerify(exactly = 0) { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), refreshedStatus) }
+
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN confirmation in progress WHEN refreshed status emitted THEN status update ignored`() = runTest {
+        // Arrange
+        val statusFlow = MutableSharedFlow<AccountCryptoCurrencyStatus>()
+        val uiStateFlow = MutableStateFlow(initialUiState)
+        val (cachedStatus, cachedAccountStatus) = createMockedAccountCurrencyStatus()
+        val (refreshedStatus, refreshedAccountStatus) = createMockedAccountCurrencyStatus()
+        arrangeStatusRefreshOnConfirmation(statusFlow, uiStateFlow, cachedStatus)
+
+        val model = createModel(testScope = this)
+        statusFlow.emit(cachedAccountStatus)
+        advanceUntilIdle()
+        uiStateFlow.value = createConfirmationUiState(InnerConfirmationStakingState.IN_PROGRESS)
+        advanceUntilIdle()
+
+        // Act
+        statusFlow.emit(refreshedAccountStatus)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) {
+            getCurrencyCheckUseCase(
+                userWalletId = any(),
+                currencyStatus = refreshedStatus,
+                feeCurrencyStatus = any(),
+                amount = any(),
+                fee = any(),
+                feeCurrencyBalanceAfterTransaction = any(),
+                recipientAddress = any(),
+            )
+        }
+        coVerify(exactly = 0) { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), refreshedStatus) }
+
+        model.onDestroy()
+    }
+
+    private fun arrangeStatusRefreshOnConfirmation(
+        statusFlow: MutableSharedFlow<AccountCryptoCurrencyStatus>,
+        uiStateFlow: MutableStateFlow<StakingUiState>,
+        cachedStatus: CryptoCurrencyStatus,
+    ) {
+        every { getAccountCurrencyStatusUseCase(testUserWalletId, testCryptoCurrency) } returns statusFlow
+        every { stateController.uiState } returns uiStateFlow
+        coEvery {
+            getFeePaidCryptoCurrencyStatusSyncUseCase(testUserWalletId, cachedStatus)
+        } returns Either.Right(mockk(relaxed = true))
+        coEvery {
+            getMinimumTransactionAmountSyncUseCase(testUserWalletId, cachedStatus)
+        } returns Either.Left(mockk())
+        coEvery {
+            getBalanceNotEnoughForFeeWarningUseCase(
+                fee = any(),
+                userWalletId = any(),
+                tokenStatus = any(),
+                feeStatus = any(),
+            )
+        } returns Either.Right(null)
+        coEvery {
+            getCurrencyCheckUseCase(
+                userWalletId = any(),
+                currencyStatus = any(),
+                feeCurrencyStatus = any(),
+                amount = any(),
+                fee = any(),
+                feeCurrencyBalanceAfterTransaction = any(),
+                recipientAddress = any(),
+            )
+        } returns mockk(relaxed = true)
+        every {
+            stakingOperationsFactory.createFeeLoader(any(), any(), any())
+        } returns mockk<StakingFeeLoader> {
+            coEvery { getFee(any(), any(), any(), any()) } just Runs
+        }
+    }
+
+    private fun createConfirmationUiState(confirmationInnerState: InnerConfirmationStakingState): StakingUiState =
+        mockk(relaxed = true) {
+            every { currentStep } returns StakingStep.Confirmation
+            every { confirmationState } returns mockk<StakingStates.ConfirmationState.Data>(relaxed = true) {
+                every { innerState } returns confirmationInnerState
+            }
+        }
 
     @Test
     fun `WHEN onDestroy THEN params interceptor removed`() = runTest {
