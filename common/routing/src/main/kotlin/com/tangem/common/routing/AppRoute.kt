@@ -514,6 +514,7 @@ sealed class AppRoute(val path: String) : Route {
     data class ForgetWallet(
         val userWalletId: UserWalletId,
         val shouldDeleteCloudBackup: Boolean = false,
+        val shouldDeleteSocialRecovery: Boolean = false,
     ) : AppRoute(path = "/forget_wallet/${userWalletId.stringValue}")
 
     @Serializable
