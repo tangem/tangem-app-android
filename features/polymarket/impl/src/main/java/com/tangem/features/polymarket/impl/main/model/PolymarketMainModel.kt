@@ -393,10 +393,7 @@ internal class PolymarketMainModel @Inject constructor(
                 async { tradingAllowance.refresh() },
                 async {
                     predictionAccountStatusFetcher(
-                        PredictionAccountStatusFetcher.Params(
-                            userWalletId = params.userWalletId,
-                            mode = PredictionAccountStatusFetcher.Mode.AVAILABLE_ONLY,
-                        ),
+                        PredictionAccountStatusFetcher.Params(userWalletId = params.userWalletId),
                     )
                 },
                 async {
