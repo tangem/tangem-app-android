@@ -29,6 +29,7 @@ private val RowHorizontalPadding = 16.dp
 private val LargeBlockHeight = FeedV2Component.TopBlocksHeight
 private val SmallBlockHeight = (LargeBlockHeight - BlockGap) / 2
 private val SmallBlockWidth = 120.dp
+private val LargeBlockWidth = 216.dp
 
 /** How many small blocks share a column before the next one starts a new one. */
 private const val SMALL_BLOCKS_PER_COLUMN = 2
@@ -93,7 +94,7 @@ private fun BlocksOnScreenTracker(listState: LazyListState, onBlocksOnScreenChan
 @Composable
 private fun rememberLargeBlockWidth(columns: List<List<FeedBlock>>, rowWidth: Dp): Dp = remember(columns, rowWidth) {
     val largeColumns = columns.count { column -> column.first().size == FeedBlock.Size.Large }
-    if (largeColumns != 1) return@remember 186.dp
+    if (largeColumns != 1) return@remember LargeBlockWidth
 
     val smallColumns = columns.size - largeColumns
     val takenBySmall = (SmallBlockWidth + BlockGap) * smallColumns

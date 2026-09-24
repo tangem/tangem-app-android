@@ -43,8 +43,8 @@ internal class EarnBlockComponent(
     override fun Content(modifier: Modifier) {
         val state by model.state.collectAsStateWithLifecycle()
 
-        // Every pitch opens the same way; only the line under it follows what the user already earns,
-        // and it is left out entirely until a rate is known — it cannot be phrased without one.
+        // The line under the title is left out entirely until a rate is known — it cannot be phrased
+        // without one.
         val description = when (val pitch = state.pitch) {
             is EarnBlockUM.Pitch.Growth -> stringResourceSafe(
                 id = R.string.feed_promo_earn_active_description,
@@ -55,8 +55,15 @@ internal class EarnBlockComponent(
             EarnBlockUM.Pitch.Plain -> null
         }
 
+        val title = when (state.pitch) {
+            is EarnBlockUM.Pitch.Growth -> stringResourceSafe(R.string.feed_promo_earn_active_title)
+            is EarnBlockUM.Pitch.Onboarding,
+            EarnBlockUM.Pitch.Plain,
+            -> stringResourceSafe(R.string.feed_promo_earn_title)
+        }
+
         FeedPromoCard(
-            title = stringResourceSafe(R.string.feed_promo_earn_title),
+            title = title,
             description = description,
             ambientVariant = TangemAmbientBackground.Variant.Blue,
             onClick = ::onClick,
