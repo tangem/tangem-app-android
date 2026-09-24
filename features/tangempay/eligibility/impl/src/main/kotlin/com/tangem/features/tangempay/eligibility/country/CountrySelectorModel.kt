@@ -6,6 +6,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.search.TangemSearch
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.pay.TangemPayCountry
 import com.tangem.domain.models.pay.TangemPayRegion
@@ -36,7 +37,11 @@ internal class CountrySelectorModel @Inject constructor(
 
     private var step: Step = when (val params = params) {
         is Params.Countries -> Step.Countries
-        is Params.Regions -> Step.Regions(country = null, countryCode = params.countryCode)
+        is Params.Regions -> Step.Regions(
+            country = null,
+            countryCode = params.countryCode,
+            selectedRegionCode = params.selectedRegionCode,
+        )
     }
     private var data: ResidencyListData = ResidencyListData.Loading
     private var countries: List<TangemPayCountry> = emptyList()
@@ -57,11 +62,15 @@ internal class CountrySelectorModel @Inject constructor(
         load()
     }
 
-    private fun showRegions(country: TangemPayCountry) {
-        step = Step.Regions(country = country, countryCode = country.code)
+    private fun showRegions(country: TangemPayCountry, selectedRegionCode: String?) {
+        step = Step.Regions(
+            country = country,
+            countryCode = country.code,
+            selectedRegionCode = selectedRegionCode,
+        )
         uiState.update { state ->
             state.copy(
-                title = resourceReference(R.string.tangempay_order_data_region),
+                title = resourceReference(R.string.tangempay_withdraw_bank_geo_state_title),
                 search = state.search.copy(query = "", isActive = false),
                 onBackClick = ::showCountries,
             )
@@ -103,13 +112,17 @@ internal class CountrySelectorModel @Inject constructor(
 
     private fun onCountryClick(country: TangemPayCountry) {
         val params = params as? Params.Countries ?: return
-        if (country.hasRegions && params.shouldIncludeRegions) {
-            showRegions(country)
+        if (country.hasRegions) {
+            showRegions(country = country, selectedRegionCode = params.selectedRegionCodeOf(country))
         } else {
             params.onSelected(country, null)
             params.onDismiss()
         }
     }
+
+    /** A region survives the jump to the region step only under the country it was picked in. */
+    private fun Params.Countries.selectedRegionCodeOf(country: TangemPayCountry): String? =
+        selectedRegionCode?.takeIf { country.code == selectedCountryCode }
 
     private fun onRegionClick(region: TangemPayRegion) {
         when (val params = params) {
@@ -123,20 +136,33 @@ internal class CountrySelectorModel @Inject constructor(
     }
 
     private fun setCountriesLoaded() {
+        val items = countries.map(::toItem).sortedByName()
+        val selectedCountryCode = (params as? Params.Countries)?.selectedCountryCode
         data = ResidencyListData.Loaded(
-            suggested = emptyList(),
-            all = countries.map(::toItem).sortedByName(),
+            suggested = items.highlighted { it == selectedCountryCode },
+            all = items,
         )
         updateContent()
     }
 
     private fun setRegionsLoaded(regions: List<TangemPayRegion>) {
+        val items = regions.map(::toItem).sortedByName()
+        val selectedRegionCode = (step as? Step.Regions)?.selectedRegionCode
         data = ResidencyListData.Loaded(
-            suggested = emptyList(),
-            all = regions.map(::toItem).sortedByName(),
+            suggested = items.highlighted { code -> code.isSameSubdivisionAs(selectedRegionCode) },
+            all = items,
         )
         updateContent()
     }
+
+    /** The picked item leads the list in a section of its own, and the full list below it keeps it too. */
+    private fun List<ResidencyListUM.ItemUM>.highlighted(
+        isSelected: (code: String) -> Boolean,
+    ): List<ResidencyListUM.ItemUM> = listOfNotNull(firstOrNull { item -> isSelected(item.id) })
+
+    /** The address form stores a bare subdivision ("CA") while the geo API returns ISO 3166-2 ("US-CA"). */
+    private fun String.isSameSubdivisionAs(other: String?): Boolean = other != null &&
+        substringAfterLast(delimiter = '-').equals(other.substringAfterLast(delimiter = '-'), ignoreCase = true)
 
     /** Names come localized, so a [Collator] keeps "Åland" and "Türkiye" in the alphabet instead of after "Z". */
     private fun List<ResidencyListUM.ItemUM>.sortedByName(): List<ResidencyListUM.ItemUM> =
@@ -157,16 +183,27 @@ internal class CountrySelectorModel @Inject constructor(
     }
 
     private fun updateContent() {
+        // Without a pick the picker is one plain list, so the headers that name the two sections stay off.
+        val hasHighlighted = (data as? ResidencyListData.Loaded)?.suggested?.isNotEmpty() == true
         uiState.update { state ->
             state.copy(
                 content = data.toContent(
                     query = state.search.query,
-                    // The address picker is one plain list: no Suggested block and no section headers
-                    suggestedTitle = null,
-                    allTitle = null,
+                    suggestedTitle = if (hasHighlighted) selectedSectionTitle() else null,
+                    allTitle = if (hasHighlighted) allSectionTitle() else null,
                 ),
             )
         }
+    }
+
+    private fun selectedSectionTitle(): TextReference = when (step) {
+        Step.Countries -> resourceReference(R.string.tangempay_withdraw_bank_geo_country_selected)
+        is Step.Regions -> resourceReference(R.string.tangempay_withdraw_bank_geo_state_selected)
+    }
+
+    private fun allSectionTitle(): TextReference = when (step) {
+        Step.Countries -> resourceReference(R.string.tangempay_residency_all_country)
+        is Step.Regions -> resourceReference(R.string.tangempay_residency_all_state)
     }
 
     private fun toItem(country: TangemPayCountry): ResidencyListUM.ItemUM = ResidencyListUM.ItemUM(
@@ -188,7 +225,7 @@ internal class CountrySelectorModel @Inject constructor(
     private fun getInitialState(): ResidencyListUM = ResidencyListUM(
         title = when (params) {
             is Params.Countries -> resourceReference(R.string.tangempay_order_data_country)
-            is Params.Regions -> resourceReference(R.string.tangempay_order_data_region)
+            is Params.Regions -> resourceReference(R.string.tangempay_withdraw_bank_geo_state_title)
         },
         search = TangemSearch.State(
             placeholderText = resourceReference(R.string.common_search),
@@ -207,6 +244,10 @@ internal class CountrySelectorModel @Inject constructor(
 
         data object Countries : Step
 
-        data class Regions(val country: TangemPayCountry?, val countryCode: String) : Step
+        data class Regions(
+            val country: TangemPayCountry?,
+            val countryCode: String,
+            val selectedRegionCode: String?,
+        ) : Step
     }
 }
