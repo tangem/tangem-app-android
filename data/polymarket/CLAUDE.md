@@ -119,6 +119,7 @@ order may have been placed.
 | `DefaultPolymarketOnboardedStore` | `DataStore<Set<String>>` | yes — an optimisation over asking the BFF; every read degrades to "not recorded" | yes |
 | `DefaultPredictionWithdrawalStore` | `RuntimeSharedStore` + `DataStore` | yes — the signed batch awaiting the relayer | yes |
 | `DefaultPredictionDepositRequisitesStore` | runtime | no | yes |
+| `PredictionPositionsValueStore` | runtime | no | yes |
 | `DefaultPolymarketBridgeAssetsStore` | runtime | no | n/a |
 
 `PolymarketUserWalletDataCleaner` is why the last column exists: `UserWalletId` is derived from the wallet
