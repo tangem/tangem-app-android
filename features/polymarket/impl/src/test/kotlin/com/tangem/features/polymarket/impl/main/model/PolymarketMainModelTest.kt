@@ -167,6 +167,31 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
+    fun `GIVEN categories pending WHEN model created THEN category loading ends before event loading`() = runTest {
+        // Arrange
+        val categoriesReady = CompletableDeferred<Unit>()
+        coEvery { getCategoriesUseCase() } coAnswers {
+            categoriesReady.await()
+            categories().right()
+        }
+
+        // Act
+        val model = createModel(testScope = this)
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.isCategoriesLoading).isTrue()
+        assertThat(model.uiState.value.categories).isEmpty()
+        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Loading)
+
+        categoriesReady.complete(Unit)
+        advanceUntilIdle()
+        assertThat(model.uiState.value.isCategoriesLoading).isFalse()
+        assertThat(model.uiState.value.categories.map { it.id }).containsExactly(1, 2).inOrder()
+        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Loading)
+    }
+
+    @Test
     fun `GIVEN categories load WHEN model created THEN tabs are built with the first one selected`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returns categories().right()
@@ -195,6 +220,8 @@ internal class PolymarketMainModelTest {
 
         // Assert
         assertThat(model.uiState.value.categories).isEmpty()
+        assertThat(model.uiState.value.isCategoriesLoading).isFalse()
+        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Loading)
         assertThat(dispatchedActions).containsExactly(
             BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = null)),
         )
@@ -294,12 +321,15 @@ internal class PolymarketMainModelTest {
         )
         advanceUntilIdle()
         dispatchedActions.clear()
+        val loadedCategories = model.uiState.value.categories
 
         // Act
         (model.uiState.value.content as PolymarketMainUM.ContentUM.Error).onReloadClick()
         advanceUntilIdle()
 
         // Assert
+        assertThat(model.uiState.value.isCategoriesLoading).isFalse()
+        assertThat(model.uiState.value.categories).isEqualTo(loadedCategories)
         assertThat(dispatchedActions).containsExactly(
             BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = 1)),
         )
@@ -351,12 +381,14 @@ internal class PolymarketMainModelTest {
 
         // Assert
         assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Loading)
+        assertThat(model.uiState.value.isCategoriesLoading).isTrue()
         runCurrent()
         assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Loading)
         assertThat(dispatchedActions).isEmpty()
 
         categoriesReady.complete(Unit)
         advanceUntilIdle()
+        assertThat(model.uiState.value.isCategoriesLoading).isFalse()
         assertThat(model.uiState.value.categories.map { it.id }).containsExactly(1, 2).inOrder()
         assertThat(dispatchedActions).containsExactly(
             BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = 1)),
