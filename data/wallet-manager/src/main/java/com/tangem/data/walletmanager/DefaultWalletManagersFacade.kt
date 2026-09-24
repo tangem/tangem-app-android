@@ -851,12 +851,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         )
 
         return this
-            .filter { transaction ->
-                when (currency) {
-                    is CryptoCurrency.Coin -> transaction.amount.type is AmountType.Coin
-                    is CryptoCurrency.Token -> transaction.contractAddress == currency.contractAddress
-                }
-            }
+            .filter { transaction -> transaction.belongsToHistoryOf(currency) }
             .mapNotNull(transactionDataConverter::convert)
     }
 
