@@ -9,9 +9,11 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.confirmSwapByHolding
+import com.tangem.scenarios.pullToRefreshTokenDetails
 import com.tangem.scenarios.openSwapAmountScreen
-import com.tangem.screens.onExpressStatusBottomSheet
 import com.tangem.screens.onSwapSuccessScreen
+import com.tangem.screens.onTxHistoryDetailsBottomSheet
+import com.tangem.screens.onTxHistoryScreen
 import com.tangem.screens.onSwapTokenScreen
 import com.tangem.screens.onTokenDetailsScreen
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -19,7 +21,7 @@ import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Test
-import com.tangem.core.res.R as CommonR
+import com.tangem.core.ui.R as CoreUiR
 
 @HiltAndroidTest
 class SwapDexTest : BaseTestCase() {
@@ -41,7 +43,7 @@ class SwapDexTest : BaseTestCase() {
     @DisplayName("Swap: after a DEX swap the token details show the DEX exchange block with statuses and data")
     @Test
     fun checkDexSwapStatusBlockTest() {
-        val expressStatusItemTitle = getResourceString(CommonR.string.express_exchange_by, providerName)
+        val swapHistoryTitle = getResourceString(CoreUiR.string.common_swapping)
 
         setupHooks().run {
             step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$userTokensState'") {
@@ -89,21 +91,20 @@ class SwapDexTest : BaseTestCase() {
             step("Click on 'Close' button") {
                 onSwapSuccessScreen { closeButton.performClick() }
             }
-            step("Assert the DEX exchange block '$expressStatusItemTitle' is displayed on token details") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onTokenDetailsScreen { expressStatusItem(expressStatusItemTitle).assertIsDisplayed() }
+            // The history only re-reads on a refresh, so pull it until the swap row lands.
+            step("Assert '$swapHistoryTitle' transaction is displayed in the history") {
+                awaitAssert(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+                    pullToRefreshTokenDetails()
+                    onTxHistoryScreen { transactionItem(swapHistoryTitle).assertIsDisplayed() }
                 }
             }
-            step("Open the DEX exchange block") {
-                onTokenDetailsScreen { expressStatusItem(expressStatusItemTitle).clickWithAssertion() }
+            step("Open the transaction details") {
+                onTxHistoryScreen { transactionItem(swapHistoryTitle).clickWithAssertion() }
             }
-            step("Assert the exchange status details are displayed") {
-                onExpressStatusBottomSheet {
-                    flakySafely(WAIT_UNTIL_TIMEOUT) { title.assertIsDisplayed() }
+            step("Assert the DEX provider '$providerName' is displayed in the transaction details") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    onTxHistoryDetailsBottomSheet { providerName(providerName).assertIsDisplayed() }
                 }
-            }
-            step("Assert the DEX provider '$providerName' is shown in the status details") {
-                onExpressStatusBottomSheet { providerName(providerName).assertIsDisplayed() }
             }
         }
     }

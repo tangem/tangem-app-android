@@ -19,6 +19,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -33,6 +34,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.test.RatingTestTags
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -87,7 +89,9 @@ internal fun RatingFeedbackBottomSheetRedesign(config: TangemBottomSheetConfig) 
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 TangemButton(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(RatingTestTags.FEEDBACK_SUBMIT_BUTTON),
                     variant = TangemButton.Variant.Primary,
                     text = resourceReference(R.string.swapping_rate_feedback_submit),
                     isLoading = content.isSubmitting,
@@ -116,6 +120,7 @@ private fun FeedbackTextField(value: String, onValueChange: (String) -> Unit) {
         onValueChange = onValueChange,
         modifier = Modifier
             .fillMaxWidth()
+            .testTag(RatingTestTags.FEEDBACK_INPUT)
             .heightIn(min = 104.dp)
             .clip(RoundedCornerShape(24.dp))
             .background(TangemTheme.colors3.bg.opaque.primary)
