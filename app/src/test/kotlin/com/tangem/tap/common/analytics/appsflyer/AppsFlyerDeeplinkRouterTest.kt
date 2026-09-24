@@ -1,5 +1,6 @@
 package com.tangem.tap.common.analytics.appsflyer
 
+import android.net.Uri
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
@@ -10,12 +11,15 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.tangempay.TangemPayFeatureToggles
+import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,6 +27,8 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -38,6 +44,9 @@ internal class AppsFlyerDeeplinkRouterTest {
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase = mockk(relaxed = true)
     private val appRouter: AppRouter = mockk(relaxed = true)
     private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
+    private val onboardVisaDeepLink: OnboardVisaDeepLinkHandler.Factory = mockk(relaxed = true)
+    private val urisByString = listOf(DIRECT_URI, UNSUPPORTED_URI).associateWith { mockk<Uri>() }
+    private val directUri: Uri = urisByString.getValue(DIRECT_URI)
 
     private val router = AppsFlyerDeeplinkRouter(
         appsFlyerRepository = appsFlyerRepository,
@@ -45,7 +54,19 @@ internal class AppsFlyerDeeplinkRouterTest {
         clearAppsFlyerDeeplinkUseCase = clearAppsFlyerDeeplinkUseCase,
         appRouter = appRouter,
         tangemPayFeatureToggles = tangemPayFeatureToggles,
+        onboardVisaDeepLink = onboardVisaDeepLink,
     )
+
+    @BeforeAll
+    fun mockUriParsing() {
+        mockkStatic(Uri::class)
+        every { Uri.parse(any()) } answers { urisByString.getValue(firstArg()) }
+    }
+
+    @AfterAll
+    fun unmockUriParsing() {
+        unmockkStatic(Uri::class)
+    }
 
     @BeforeEach
     fun setup() {
@@ -55,6 +76,7 @@ internal class AppsFlyerDeeplinkRouterTest {
             clearAppsFlyerDeeplinkUseCase,
             appRouter,
             tangemPayFeatureToggles,
+            onboardVisaDeepLink,
         )
         // Happy baseline: deep link pending, authorized.
         every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf("tpay_mobileonboard")
@@ -114,6 +136,30 @@ internal class AppsFlyerDeeplinkRouterTest {
         BlockedRouteModel(AppRoute.AppSettings, expected = false),
         BlockedRouteModel(
             AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.HotWallet),
+            expected = false,
+        ),
+        BlockedRouteModel(currentRoute = null, expected = false),
+    )
+
+    @ParameterizedTest
+    @MethodSource("provideIdleEntryPointModels")
+    fun isIdleEntryPoint(model: BlockedRouteModel) {
+        assertThat(isIdleEntryPoint(model.currentRoute)).isEqualTo(model.expected)
+    }
+
+    private fun provideIdleEntryPointModels(): List<BlockedRouteModel> = listOf(
+        BlockedRouteModel(AppRoute.Home(), expected = true),
+        BlockedRouteModel(AppRoute.Stories(storyId = "id", screenSource = "src"), expected = true),
+        BlockedRouteModel(AppRoute.Wallet, expected = true),
+        BlockedRouteModel(AppRoute.Initial, expected = false),
+        BlockedRouteModel(AppRoute.Disclaimer(isTosAccepted = true), expected = false),
+        BlockedRouteModel(
+            AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.HotWallet),
+            expected = false,
+        ),
+        BlockedRouteModel(AppRoute.TangemPayHotWalletOnboarding, expected = false),
+        BlockedRouteModel(
+            AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.MobileOnboardingDeeplink),
             expected = false,
         ),
         BlockedRouteModel(currentRoute = null, expected = false),
@@ -434,8 +480,130 @@ internal class AppsFlyerDeeplinkRouterTest {
 
     // endregion
 
+    // region deferred direct deeplink
+
+    @Test
+    fun `GIVEN direct uri deeplink and wallet on Wallet WHEN observe THEN onboard visa handler created`() =
+        runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf(DIRECT_URI)
+            val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Wallet)
+
+            // Act
+            router.observe(backgroundScope, currentRoute)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { onboardVisaDeepLink.create(directUri) }
+            verify(exactly = 0) { appRouter.push(any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN direct uri deeplink and empty wallets WHEN observe THEN handled without consulting wallets`() =
+        runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf(DIRECT_URI)
+            coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+            val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Home())
+
+            // Act
+            router.observe(backgroundScope, currentRoute)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { onboardVisaDeepLink.create(directUri) }
+            coVerify(exactly = 0) { userWalletsListRepository.userWalletsSync() }
+            verify(exactly = 0) { appRouter.replaceAll(routes = anyVararg(), onComplete = any()) }
+        }
+
+    @Test
+    fun `GIVEN unsupported direct uri in store WHEN observe THEN not handled and not cleared`() =
+        runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf(UNSUPPORTED_URI)
+            val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Wallet)
+
+            // Act
+            router.observe(backgroundScope, currentRoute)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { onboardVisaDeepLink.create(any()) }
+            coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase() }
+        }
+
+    @Test
+    fun `GIVEN direct uri deeplink on non-idle route WHEN observe THEN not handled`() =
+        runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf(DIRECT_URI)
+            val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Initial)
+
+            // Act
+            router.observe(backgroundScope, currentRoute)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { onboardVisaDeepLink.create(any()) }
+        }
+
+    @Test
+    fun `GIVEN direct uri deeplink WHEN route changes twice THEN handled once`() =
+        runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf(DIRECT_URI)
+            val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Wallet)
+
+            // Act
+            router.observe(backgroundScope, currentRoute)
+            currentRoute.value = AppRoute.Home()
+            currentRoute.value = AppRoute.Wallet
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { onboardVisaDeepLink.create(directUri) }
+        }
+
+    @Test
+    fun `GIVEN direct uri deeplink WHEN handled THEN stored deeplink cleared`() =
+        runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf(DIRECT_URI)
+            val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Wallet)
+
+            // Act
+            router.observe(backgroundScope, currentRoute)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { clearAppsFlyerDeeplinkUseCase() }
+        }
+
+    @Test
+    fun `GIVEN direct uri stored again after clear WHEN observe THEN dispatched again`() =
+        runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            val stored = MutableStateFlow<String?>(DIRECT_URI)
+            every { appsFlyerRepository.observeNavigationDeeplink() } returns stored
+            val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Wallet)
+
+            // Act
+            router.observe(backgroundScope, currentRoute)
+            stored.value = null
+            stored.value = DIRECT_URI
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 2) { onboardVisaDeepLink.create(directUri) }
+            coVerify(exactly = 2) { clearAppsFlyerDeeplinkUseCase() }
+        }
+
+    // endregion
+
     private companion object {
         const val CAMPAIGN_VALUE = "tpay_for_oxford"
+        const val DIRECT_URI = "tangem://onboard-visa"
+        const val UNSUPPORTED_URI = "https://tangem.com/pay-app"
         val WALLET_ID = UserWalletId("0011")
     }
 }

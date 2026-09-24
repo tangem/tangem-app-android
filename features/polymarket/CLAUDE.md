@@ -119,12 +119,24 @@ balance only, as on iOS.
 
 ## Order flow (`placeprediction/`)
 
-`PlacePredictionModel` (~750 lines, the largest model) drives Amount → Slippage → Summary → Status:
+`PlacePredictionComponent` owns Amount → Slippage → Summary → Status. Each step has its own retained model.
+Status receives the result, market header and position id as route data and owns the position indexing wait.
+
+- **Confirmation boundary.** Amount creates `PreparedPrediction` synchronously on Next and cancels its
+  current quote request. The snapshot carries the displayed state, quote receipt time and signing
+  parameters. Summary displays and signs that snapshot; it has no price or quote use cases. Balance and
+  position validation can still update its eligibility to submit. Back returns to the retained Amount
+  model and immediately starts fresh spending-power and price reads.
 
 - **Quote loop.** Amount entry is debounced 500 ms, then one loop runs every 3 s
   (`QUOTE_POLL_INTERVAL_MILLIS`) and decides on each turn whether to ask `GetPredictionOrderQuoteUseCase`
   for a quote or `GetPredictionPriceUseCase` for a price — a quote while the amount is quotable, a price
-  while it is empty or below the minimum. The quote is never cached. Two independent gates decide whether
+  while it is empty or below the minimum. The quote is never cached. The loop is bound to the Amount step
+  (`PlacePredictionAmountComponent` `doOnResume` / `doOnPause`), so it runs only while that screen is on top
+  and in the foreground. Slippage returns an explicit result to Amount and invalidates its old quote
+  when the value changes; returning to Amount starts the next request immediately.
+  `ValidatePredictionOrderUseCase` refuses a quote older than 60 s after signing, before submission.
+  Summary shows the generic place-error dialog and stays on the same screen. Two independent gates decide whether
   it is placeable: `quote.isPlaceable` (market state; a SELL also places on `BELOW_MIN_ORDER_SIZE`) and
   `isBelowMinAmount` (BUY only, price-weighted — a SELL has no floor beyond one whole share or the whole
   position).
@@ -133,8 +145,9 @@ balance only, as on iOS.
   (or the whole position when smaller), and 100 % is the position itself, so a full close reaches the
   last fraction.
 - **Slippage.** Default 3 %, range 0.1–30 % (`SlippagePickerUM`); a fill at the worst-case price counts as filled.
-- **Region.** Read by the flow itself when shown (`TradingPermissionUM`), re-read on resume only while
-  `Unknown`, never carried on the route and not re-read before signing. An unreadable region keeps the
+- **Region.** Read by Amount (`TradingPermissionUM`), re-read on its resume only while `Unknown`.
+  A permitted order carries that decision in its internal confirmation snapshot; external entry routes
+  do not supply it, and it is not re-read before signing. An unreadable region keeps the
   gate shut as `Unknown` — the order is refused, the user is not told they are restricted.
 - **Placing.** `SignPredictionOrderInteractor` (one signing session: card for Cold, unlock for Hot) →
   `PlacePredictionOrderUseCase`.
@@ -195,7 +208,7 @@ and [REDACTED_TASK_KEY] (the claim action on the result screen).
 - **Quotes (BFF `POST /orders/quote`) and prices (CLOB `GET price`) arrive as decimal strings.** Parse
   with `BigDecimal`, compare with `compareTo`, never `==`.
 - **Times are Eastern** (`PolymarketConst.EASTERN_TIME_ZONE`) for market end dates.
-- **`PolymarketMainModelTest` and `PlacePredictionModelTest` are the reference tests** for a model in this
+- **`PolymarketMainModelTest` and `PlacePredictionModelTestBase` are the reference tests** for a model in this
   module: `ParamsContainer` fed by hand, Turbine over `uiState`, relaxed mocks only for router, message
   sender and the flows the test is not about.
 - Pull-to-refresh on the feed refreshes the region, the account status and the requisites together; the

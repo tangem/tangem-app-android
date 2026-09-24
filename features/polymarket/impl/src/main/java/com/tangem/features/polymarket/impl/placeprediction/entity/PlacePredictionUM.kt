@@ -31,7 +31,6 @@ internal data class PlacePredictionUM(
     val amountCaption: AmountCaptionUM? = null,
     val minAmount: BigDecimal? = null,
     val priceError: PriceErrorUM? = null,
-    val slippagePicker: SlippagePickerUM,
     val submit: SubmitUM,
     val isPrimaryButtonEnabled: Boolean,
 ) {
@@ -61,7 +60,6 @@ internal data class PlacePredictionUM(
             isMarketAcceptingOrders = true,
             tradingPermission = TradingPermissionUM.Unknown,
             notifications = persistentListOf(),
-            slippagePicker = SlippagePickerUM.empty(),
             submit = SubmitUM.Idle,
             isPrimaryButtonEnabled = false,
         )
@@ -259,8 +257,5 @@ internal sealed interface SubmitUM {
 
     data object AwaitingFill : SubmitUM
 
-    data class Result(
-        val result: PlaceResultUM,
-        val viewPosition: ViewPositionUM = ViewPositionUM.Hidden,
-    ) : SubmitUM
+    data class Result(val result: PlaceResultUM) : SubmitUM
 }

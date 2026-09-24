@@ -130,7 +130,9 @@ private fun SignatureAvatar(isCollected: Boolean, hasCutout: Boolean, modifier: 
                     }
             }
             .clip(CircleShape)
-            .background(if (isCollected) TangemTheme.colors3.bg.status.warning else TangemTheme.colors3.icon.tertiary),
+            .background(
+                if (isCollected) TangemTheme.colors3.bg.status.warning else TangemTheme.colors3.bg.opaque.secondary,
+            ),
         contentAlignment = Alignment.Center,
     ) {
         val isCheckmarkVisible = isCollected && !hasCutout

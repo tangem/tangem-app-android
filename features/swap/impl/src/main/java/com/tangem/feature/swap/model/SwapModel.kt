@@ -197,13 +197,13 @@ internal class SwapModel @Inject constructor(
     private val accountUnderlyingCurrencies: AccountUnderlyingCurrencies,
     private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
     private val getPredictionWithdrawDestinationsUseCase: GetPredictionWithdrawDestinationsUseCase,
-    private val polymarketCollateralCurrencyFactory: PolymarketCollateralCurrencyFactory,
+    polymarketCollateralCurrencyFactory: PolymarketCollateralCurrencyFactory,
     private val submitPredictionWithdrawalInteractor: SubmitPredictionWithdrawalInteractor,
     private val predictionWithdrawalTracker: PredictionWithdrawalTracker,
     private val predictionFundingWindow: PredictionFundingWindow,
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
     private val allowPermissionsHandler: AllowPermissionsHandler,
-    private val swapFeatureToggles: SwapFeatureToggles,
+    swapFeatureToggles: SwapFeatureToggles,
     private val getSwapUiModeUseCase: GetSwapUiModeUseCase,
     private val setSwapUiModeUseCase: SetSwapUiModeUseCase,
     private val calculateAmountUseCase: CalculateAmountUseCase,
@@ -255,6 +255,7 @@ internal class SwapModel @Inject constructor(
             // Withdrawal draws from the account itself, so the selector lists all of its issued tokens.
             isTangemPayWithdrawFlow ->
                 ChooseTokenBridge.Settings.WithdrawFrom.copy(
+                    isHideZeroBalanceFilterEnabled = true,
                     paymentAccountTokens = PaymentAccountTokens.IssuedTokens,
                 )
             // Funding the account from itself is not an operation the user can make.

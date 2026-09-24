@@ -26,6 +26,7 @@ import com.tangem.core.ui.res.generated.icons.ic_sign_plus_16
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.walletsettings.component.AddAccountTypeComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
+import com.tangem.features.feed.components.v2.blocks.analytics.FeedBlocksAnalytics
 import com.tangem.features.feed.components.v2.blocks.model.AddAccountBlockModel
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.v2.FeedShortcutCard
@@ -40,6 +41,7 @@ internal class AddAccountBlockComponent(
     context: AppComponentContext,
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
     private val addAccountTypeComponentFactory: AddAccountTypeComponent.Factory,
+    private val blocksAnalytics: FeedBlocksAnalytics,
 ) : FeedBlockComponent(context = context, key = KEY) {
 
     private val model: AddAccountBlockModel = getOrCreateModel()
@@ -63,7 +65,7 @@ internal class AddAccountBlockComponent(
     override fun Content(modifier: Modifier) {
         FeedShortcutCard(
             title = stringResourceSafe(R.string.account_form_title_create),
-            onClick = model::onClick,
+            onClick = ::onClick,
             modifier = modifier,
             icon = { AddAccountIcon() },
         )
@@ -74,6 +76,11 @@ internal class AddAccountBlockComponent(
         val bottomSheet by bottomSheetSlot.subscribeAsState()
 
         bottomSheet.child?.instance?.BottomSheet()
+    }
+
+    private fun onClick() {
+        blocksAnalytics.onAddAccountClicked()
+        model.onClick()
     }
 
     private fun walletSelectorChild(componentContext: ComponentContext): ComposableBottomSheetComponent =

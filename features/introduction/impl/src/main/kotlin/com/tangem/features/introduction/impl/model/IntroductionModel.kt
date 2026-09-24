@@ -221,7 +221,6 @@ internal class IntroductionModel @Inject constructor(
         uiState.update { it.copy(bottomSheetConfig = createWalletBottomSheetConfig()) }
     }
 
-    // TODO [REDACTED_TASK_KEY]: the icons of both sheets are placeholders until the design hands over the assets.
     private fun createWalletBottomSheetConfig() = TangemBottomSheetConfig(
         isShown = true,
         onDismissRequest = ::onCreateWalletSheetDismissRequested,
@@ -234,7 +233,7 @@ internal class IntroductionModel @Inject constructor(
                 onClick = ::onTangemCardOrRingClick,
             ),
             seedPhrase = WalletOptionUM(
-                iconRes = CoreUiR.drawable.ic_seed_phrase_24,
+                iconRes = CoreUiR.drawable.ic_wallet_plus_20,
                 title = resourceReference(CoreResR.string.introduction_create_wallet_seed_phrase_title),
                 description = resourceReference(CoreResR.string.introduction_create_wallet_seed_phrase_description),
                 isLoading = isCreatingMobileWallet,

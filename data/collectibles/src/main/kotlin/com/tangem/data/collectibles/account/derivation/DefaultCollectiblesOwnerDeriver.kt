@@ -40,17 +40,17 @@ internal class DefaultCollectiblesOwnerDeriver @Inject constructor(
             if (userWallet is UserWallet.Cold &&
                 userWallet.scanResponse.card.firmwareVersion < FirmwareVersion.HDWalletAvailable
             ) {
-                log("deriveOwner: firmware has no HD wallet support")
+                TangemLogger.d("ownerDeriver: firmware has no HD wallet support")
                 return@catchOn GachaVaultError.WalletUnavailable.asFailure().left()
             }
 
             val seedKey = userWallet.solanaSeedKey() ?: run {
-                log("deriveOwner: wallet has no Solana seed key")
+                TangemLogger.d("ownerDeriver: wallet has no Solana seed key")
                 return@catchOn GachaVaultError.WalletUnavailable.asFailure().left()
             }
 
             val owner = ownerKey(userWalletId = userWalletId, seedKey = ByteArrayKey(seedKey)) ?: run {
-                log("deriveOwner: derivation returned no key for the path")
+                TangemLogger.d("ownerDeriver: derivation returned no key for the path")
                 return@catchOn GachaVaultError.Unexpected(
                     cause = IllegalStateException("No key derived for $COLLECTIBLES_OWNER_DERIVATION_PATH"),
                 ).asFailure().left()
@@ -58,10 +58,11 @@ internal class DefaultCollectiblesOwnerDeriver @Inject constructor(
 
             owner.publicKey
                 .encodeBase58()
+                .also { TangemLogger.d("ownerDeriver: Solana address was derived") }
                 .right()
         }
         .getOrElse { throwable ->
-            log("deriveOwner: failed, error=$throwable")
+            TangemLogger.d("ownerDeriver: failed, error=$throwable")
             throwable.toAccountError().left()
         }
 
@@ -90,10 +91,6 @@ internal class DefaultCollectiblesOwnerDeriver @Inject constructor(
         is TangemSdkError.UserCancelled -> CollectiblesAccountError.Cancelled
         is TangemSdkError -> CollectiblesAccountError.CardError(code = code, message = customMessage)
         else -> GachaVaultError.Unexpected(cause = this).asFailure()
-    }
-
-    private fun log(message: String) {
-        TangemLogger.d(messageString = "CollectiblesOwnerDeriver: $message")
     }
 
     private companion object {

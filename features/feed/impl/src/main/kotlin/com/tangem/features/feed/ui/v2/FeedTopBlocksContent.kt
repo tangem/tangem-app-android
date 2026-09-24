@@ -5,9 +5,16 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -34,13 +41,21 @@ private const val SMALL_BLOCKS_PER_COLUMN = 2
  * on they take their fixed width and the row scrolls.
  */
 @Composable
-internal fun FeedTopBlocksContent(blocks: ImmutableList<FeedBlock>, modifier: Modifier = Modifier) {
+internal fun FeedTopBlocksContent(
+    blocks: ImmutableList<FeedBlock>,
+    onBlocksOnScreenChange: (Set<String>) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val columns = remember(blocks) { blocks.toColumns() }
+    val listState = rememberLazyListState()
+
+    BlocksOnScreenTracker(listState = listState, onBlocksOnScreenChange = onBlocksOnScreenChange)
 
     BoxWithConstraints(modifier = modifier) {
         val largeBlockWidth = rememberLargeBlockWidth(columns = columns, rowWidth = maxWidth)
 
         LazyRow(
+            state = listState,
             contentPadding = PaddingValues(horizontal = RowHorizontalPadding),
             horizontalArrangement = Arrangement.spacedBy(space = BlockGap),
         ) {
@@ -55,6 +70,20 @@ internal fun FeedTopBlocksContent(blocks: ImmutableList<FeedBlock>, modifier: Mo
             }
         }
     }
+}
+
+@Composable
+private fun BlocksOnScreenTracker(listState: LazyListState, onBlocksOnScreenChange: (Set<String>) -> Unit) {
+    val keysOnScreen by remember(listState) {
+        derivedStateOf {
+            listState.layoutInfo.visibleItemsInfo.mapNotNullTo(destination = mutableSetOf()) { it.key as? String }
+        }
+    }
+    val onChange by rememberUpdatedState(onBlocksOnScreenChange)
+
+    LaunchedEffect(keysOnScreen) { onChange(keysOnScreen) }
+
+    DisposableEffect(listState) { onDispose { onChange(emptySet()) } }
 }
 
 /**

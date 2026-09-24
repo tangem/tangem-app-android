@@ -198,23 +198,31 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
         }
 
         val derivationPath = queryParams[DERIVATION_PATH_KEY]
-        val matches = { currency: CryptoCurrency -> currency.matches(networkId, tokenId, derivationPath) }
+        val isAccountScoped = !accountId.isNullOrBlank()
+        val find = { currencies: List<CryptoCurrency> ->
+            currencies.firstOrNull { it.matches(networkId, tokenId, derivationPath) }
+                ?: if (isAccountScoped) {
+                    currencies.firstOrNull { it.matchesIgnoringDerivation(networkId, tokenId) }
+                } else {
+                    null
+                }
+        }
 
         val cachedCurrencies = singleAccountListSupplier.getSyncOrNull(userWallet.walletId)?.currenciesFor(accountId)
-        return cachedCurrencies?.firstOrNull(matches)
+        return cachedCurrencies?.let(find)
             // getSyncOrNull returns the stale SharedFlow replay just after a fetch; wait for the refreshed list.
             // Only when a refresh actually ran and succeeded — otherwise a missing token would block for the full
             // timeout before the fall-through redirect.
-            ?: if (awaitOnMiss) awaitCryptoCurrency(userWallet.walletId, accountId, matches) else null
+            ?: if (awaitOnMiss) awaitCryptoCurrency(userWallet.walletId, accountId, find) else null
     }
 
     private suspend fun awaitCryptoCurrency(
         userWalletId: UserWalletId,
         accountId: String?,
-        matches: (CryptoCurrency) -> Boolean,
+        find: (List<CryptoCurrency>) -> CryptoCurrency?,
     ): CryptoCurrency? = withTimeoutOrNull(TOKEN_APPEARANCE_TIMEOUT_MILLIS) {
         singleAccountListSupplier(userWalletId)
-            .mapNotNull { accountList -> accountList.currenciesFor(accountId).firstOrNull(matches) }
+            .mapNotNull { accountList -> find(accountList.currenciesFor(accountId)) }
             .firstOrNull()
     }
 
@@ -231,11 +239,15 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
     }
 
     private fun CryptoCurrency.matches(networkId: String?, tokenId: String?, derivationPath: String?): Boolean {
-        val isNetwork = network.rawId.equals(networkId, ignoreCase = true)
-        val isCurrency = id.rawCurrencyId?.value?.equals(tokenId, ignoreCase = true) == true
         val isDefaultDerivation = network.derivationPath is Network.DerivationPath.Card
         val isCustomDerivation = derivationPath?.equals(network.derivationPath.value) == true
-        return isNetwork && isCurrency && (isDefaultDerivation || isCustomDerivation)
+        return matchesIgnoringDerivation(networkId, tokenId) && (isDefaultDerivation || isCustomDerivation)
+    }
+
+    private fun CryptoCurrency.matchesIgnoringDerivation(networkId: String?, tokenId: String?): Boolean {
+        val isNetwork = network.rawId.equals(networkId, ignoreCase = true)
+        val isCurrency = id.rawCurrencyId?.value?.equals(tokenId, ignoreCase = true) == true
+        return isNetwork && isCurrency
     }
 
     @AssistedFactory

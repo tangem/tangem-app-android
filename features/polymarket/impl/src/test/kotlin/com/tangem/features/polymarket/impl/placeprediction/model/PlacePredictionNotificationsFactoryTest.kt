@@ -15,7 +15,6 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.SlippagePickerUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
@@ -474,7 +473,6 @@ internal class PlacePredictionNotificationsFactoryTest {
         isMarketAcceptingOrders = isMarketAcceptingOrders,
         tradingPermission = tradingPermission,
         notifications = persistentListOf(),
-        slippagePicker = SlippagePickerUM.empty(),
         submit = submit,
         isPrimaryButtonEnabled = false,
     )

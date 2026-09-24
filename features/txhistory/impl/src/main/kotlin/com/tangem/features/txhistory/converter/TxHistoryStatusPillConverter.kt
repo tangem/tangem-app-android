@@ -173,7 +173,9 @@ private fun TxInfo.buildPillSubtitle(status: TransactionItemUM.Content.Status): 
 }
 
 internal fun PillLabels.resolve(status: TransactionItemUM.Content.Status): TextReference = when (status) {
-    is TransactionItemUM.Content.Status.Confirmed -> resourceReference(confirmed)
+    is TransactionItemUM.Content.Status.Confirmed,
+    is TransactionItemUM.Content.Status.PendingSignature,
+    -> resourceReference(confirmed)
     is TransactionItemUM.Content.Status.Unconfirmed -> resourceReference(pending)
     is TransactionItemUM.Content.Status.Failed -> if (hasFailedTemplate) {
         resourceReference(R.string.common_action_failed, wrappedList(resourceReference(failedBase)))
