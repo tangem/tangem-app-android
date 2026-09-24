@@ -270,7 +270,6 @@ internal class EstimateFeeForTokenUseCaseTest {
         fiatAmount = amount * fiatRate,
         fiatRate = fiatRate,
         priceChange = BigDecimal.ZERO,
-        stakingBalance = null,
         yieldSupplyStatus = yieldSupplyStatus,
         hasCurrentNetworkTransactions = false,
         pendingTransactions = emptySet(),
