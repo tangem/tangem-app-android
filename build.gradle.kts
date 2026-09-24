@@ -265,11 +265,6 @@ dependencyAnalysis {
                 // one of those ends up referencing haze in bytecode without importing it, so the advice
                 // would reappear for each new screen that uses a bottom sheet.
                 exclude("dev.chrisbanes.haze:haze")
-                // Many modules still reach core:local / core:remote types transitively (via
-                // core:datasource-impl's `api` re-export, or via another core module) without declaring
-                // them, so this silences the "declare directly" advice across them. Candidate for removal
-                // once every consumer declares these directly — tracked as a separate decoupling step.
-                exclude(":core:local", ":core:remote")
             }
         }
         // Everything excluded here is reachable only at runtime, so DAGP cannot see a reference and

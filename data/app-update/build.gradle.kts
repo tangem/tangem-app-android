@@ -11,6 +11,7 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.remote)
 
     implementation(projects.core.local)
     implementation(projects.store.datasource)
