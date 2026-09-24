@@ -341,6 +341,7 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     private fun reload() {
+        uiState.update { it.copy(content = PolymarketMainUM.ContentUM.Loading) }
         if (categories.isEmpty()) loadCategories() else activeFeed.value?.let(::reloadEvents)
     }
 
