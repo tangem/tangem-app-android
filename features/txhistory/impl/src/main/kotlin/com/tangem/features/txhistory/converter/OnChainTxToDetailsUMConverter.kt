@@ -6,6 +6,7 @@ import com.tangem.common.ui.account.getResId
 import com.tangem.common.ui.account.getUiColor
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -17,7 +18,9 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
+import com.tangem.core.ui.res.generated.icons.ic_chart_line_vertical_20
 import com.tangem.core.ui.res.generated.icons.ic_document_20
+import com.tangem.core.ui.res.generated.icons.ic_globe_24
 import com.tangem.core.ui.res.generated.icons.ic_lightning_20
 import com.tangem.core.ui.res.generated.icons.ic_percent_20
 import com.tangem.core.ui.res.generated.icons.ic_stack_20
@@ -41,7 +44,7 @@ import com.tangem.utils.toBriefAddressFormat
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
-/** Website the yield-supply protocol row links to — the hard-wired Aave integration's home page. */
+/** Website the "Explore Aave" menu row opens — the hard-wired Aave integration's home page. */
 private const val AAVE_WEBSITE = "https://aave.com/"
 
 /**
@@ -55,9 +58,9 @@ internal class OnChainTxToDetailsUMConverter(
     private val currency: CryptoCurrency,
     private val onCopyAddress: (String) -> Unit,
     private val menu: ImmutableList<TxHistoryDetailsUM.MenuItemUM>,
-    /** Known staking targets (validators and vaults) keyed by on-chain address; resolves the validator row's name/link. */
+    /** Known staking targets (validators and vaults) keyed by on-chain address; resolves the validator row's name. */
     private val targetsByAddress: Map<String, StakingTarget>,
-    private val onOpenValidator: (String) -> Unit,
+    private val onExploreProvider: (String) -> Unit,
     /** Resolves a transfer counterparty to one of the user's own accounts/wallets — the same lookup the list uses. */
     private val lookup: TxHistoryLookupContext,
     private val isBalanceHidden: Boolean,
@@ -88,10 +91,9 @@ internal class OnChainTxToDetailsUMConverter(
             isBalanceHidden = isBalanceHidden,
             amountBlock = tx.toAmountBlockUM(),
             counterparty = tx.toTransferredAssetUM() ?: tx.toCounterpartyUM(),
-            // Validator (staking) / protocol (yield-supply), then the network fee from the tx; rate is not surfaced.
+            // The validator of a staking tx, then the network fee from the tx; rate is not surfaced.
             rows = buildList {
                 tx.validatorRow()?.let(::add)
-                tx.protocolRow()?.let(::add)
                 if (!tx.hasForeignFee() && !tx.isFeeOnly()) addAll(tx.feeRows(currency))
             }.toImmutableList(),
             statusBanner = tx.approveRiskBanner(),
@@ -99,40 +101,35 @@ internal class OnChainTxToDetailsUMConverter(
     }
 
     /**
-     * Protocol row of a yield-supply tx: the DeFi protocol the funds are supplied to. The yield-supply product is a
-     * single hard-wired integration across the app (Aave — the [yield_module_provider][R.string.yield_module_provider]
-     * name), so the value is that constant provider rather than a per-tx resolved name, and the tap opens the
-     * constant [AAVE_WEBSITE]. Mutually exclusive with [validatorRow] — a tx is either staking or yield-supply,
-     * never both.
+     * The menu with a trailing "Explore Aave" row for a yield-supply tx — the DeFi protocol the funds are supplied to.
+     * The yield-supply product is a single hard-wired integration across the app (Aave), so the row opens the constant
+     * [AAVE_WEBSITE] rather than a per-tx resolved link, and every yield-supply transaction offers it.
      */
-    private fun TxInfo.protocolRow(): TxHistoryDetailsUM.InfoRowUM? {
-        // Send is a plain transfer, not a protocol interaction — no "Validator: Aave" row.
-        if (type !is TransactionType.YieldSupply || type is TransactionType.YieldSupply.Send) return null
-        return TxHistoryDetailsUM.InfoRowUM(
-            label = resourceReference(R.string.staking_validator),
-            value = resourceReference(R.string.yield_module_provider),
-            trailingIconRes = R.drawable.ic_arrow_top_right_24,
-            onClick = { onOpenValidator(AAVE_WEBSITE) },
+    private fun ImmutableList<TxHistoryDetailsUM.MenuItemUM>.withExploreProvider(
+        tx: TxInfo,
+    ): ImmutableList<TxHistoryDetailsUM.MenuItemUM> {
+        if (tx.type !is TransactionType.YieldSupply) return this
+        val exploreProvider = TxHistoryDetailsUM.MenuItemUM(
+            icon = Icons.ic_globe_24,
+            title = resourceReference(R.string.yield_module_explore_sheet_explore_aave_button_title),
+            action = TxHistoryDetailsUM.MenuItemUM.Action.Direct { onExploreProvider(AAVE_WEBSITE) },
         )
+        return (this + exploreProvider).toImmutableList()
     }
 
     /**
-     * Validator row of a staking tx: the target's display [name][StakingTarget.name] and a link to its page. Present
-     * only for a tx that [may carry a target][mayCarryStakingTarget] and one of whose
-     * [candidate addresses][validatorAddressCandidates] resolves in [targetsByAddress]; otherwise `null` — an unknown
-     * address, or a chain that omits the validator address entirely (Solana unstake/withdraw and Tron
+     * Validator row of a staking tx: the target's display [name][StakingTarget.name] as plain text — the row carries
+     * no link to the target's page. Present only for a tx that [may carry a target][mayCarryStakingTarget] and one of
+     * whose [candidate addresses][validatorAddressCandidates] resolves in [targetsByAddress]; otherwise `null` — an
+     * unknown address, or a chain that omits the validator address entirely (Solana unstake/withdraw and Tron
      * freeze/unfreeze/claim carry no validator field in the SDK at all).
-     * The trailing arrow-link and tap are offered only when the target has a [website][StakingTarget.website].
      */
     private fun TxInfo.validatorRow(): TxHistoryDetailsUM.InfoRowUM? {
         if (!mayCarryStakingTarget()) return null
         val target = validatorAddressCandidates().firstNotNullOfOrNull(::resolveTarget) ?: return null
-        val website = target.website?.ifBlank { null }
         return TxHistoryDetailsUM.InfoRowUM(
             label = resourceReference(R.string.staking_validator),
             value = stringReference(target.name),
-            trailingIconRes = website?.let { R.drawable.ic_arrow_top_right_24 },
-            onClick = website?.let { url -> { onOpenValidator(url) } },
         )
     }
 
@@ -175,7 +172,7 @@ internal class OnChainTxToDetailsUMConverter(
         status = status.toUiStatus(),
         title = titleConverter.convert(this, isOwnTransfer = isOwnTransfer()),
         subtitle = headerSubtitle(timestampInMillis),
-        menu = menu.withCopyAddress(copyableAddress(), onCopyAddress),
+        menu = menu.withCopyAddress(copyableAddress(), onCopyAddress).withExploreProvider(this),
     )
 
     /** A transfer whose counterparty resolves to one of the user's own accounts/wallets reads "Transfer". */
@@ -238,7 +235,7 @@ internal class OnChainTxToDetailsUMConverter(
             label = resourceReference(R.string.common_send),
             title = stringReference(amount ?: symbol),
             avatar = TxHistoryDetailsUM.CounterpartyAvatar.Glyph(icon = TxIcon.Vector(Icons.ic_arrow_up_20)),
-            titleIcon = networkFee.resolveToken(networkTokens)?.let(iconStateConverter::convert),
+            titleIcon = networkFee.amount.resolveToken(networkTokens)?.let(iconStateConverter::convert),
         )
     }
 
@@ -264,22 +261,37 @@ internal class OnChainTxToDetailsUMConverter(
     }
 
     /**
-     * Amount icon. Yield-supply enter/exit shows the asset paired with the hard-wired Aave protocol icon, ordered by
-     * direction (Aave leads on "Supplied"/enter, the asset leads on "Returned"/exit — mirroring the two states in the
-     * design); every other type shows the single token avatar. Only enter/exit are paired for now — the remaining
-     * yield-supply variants (topup / withdraw) can adopt the same pair later.
+     * Amount icon. A yield-supply operation shows the asset paired with the hard-wired Aave protocol icon, ordered by
+     * direction (Aave leads on "Supplied"/enter, the asset leads on "Returned"/exit and on a withdraw — mirroring the
+     * states in the design); an approval shows the approved token, which in a coin's history is not the viewed
+     * currency — the same distinction [approveAmountText] draws for the amount; every other type shows the single
+     * token avatar. A non-withdraw yield Send is a plain transfer and stays unpaired.
      */
     private fun TxInfo.amountIcon(): TxHistoryDetailsUM.AmountIconUM {
         val asset = TxHistoryDetailsUM.AmountIconUM.Item.Currency(iconStateConverter.convert(currency))
         val aave = TxHistoryDetailsUM.AmountIconUM.Item.Resource(R.drawable.img_aave_22)
-        return when (type) {
+        return when (val type = type) {
             is TransactionType.YieldSupply.Enter ->
                 TxHistoryDetailsUM.AmountIconUM.OverlappingPair(leading = aave, trailing = asset)
-            is TransactionType.YieldSupply.Exit ->
+            is TransactionType.YieldSupply.Exit,
+            is TransactionType.YieldSupply.Topup,
+            -> TxHistoryDetailsUM.AmountIconUM.OverlappingPair(leading = asset, trailing = aave)
+            is TransactionType.YieldSupply.Send -> if (type.isYieldSupplyWithdraw) {
                 TxHistoryDetailsUM.AmountIconUM.OverlappingPair(leading = asset, trailing = aave)
+            } else {
+                TxHistoryDetailsUM.AmountIconUM.Single(iconStateConverter.convert(currency))
+            }
+            is TransactionType.Approve -> TxHistoryDetailsUM.AmountIconUM.Single(type.approvedTokenIcon())
             else -> TxHistoryDetailsUM.AmountIconUM.Single(iconStateConverter.convert(currency))
         }
     }
+
+    /**
+     * Avatar of the token the allowance was granted in, falling back to the viewed currency — which is also what the
+     * data layer denominates the allowance in when the wallet does not track the approved token.
+     */
+    private fun TransactionType.Approve.approvedTokenIcon(): CurrencyIconState =
+        amount.resolveToken(networkTokens)?.let(iconStateConverter::convert) ?: iconStateConverter.convert(currency)
 
     /**
      * "Supplied"/"Returned" label above the amount for yield-supply enter/exit, "Approved amount" for an approval;
@@ -448,6 +460,9 @@ private fun TxInfo.headerIcon(): TxIcon = when (val type = type) {
     is TransactionType.Staking.Unstake,
     is TransactionType.Staking.Restake,
     -> TxIcon.Vector(Icons.ic_stack_20)
+    is TransactionType.YieldSupply.Enter,
+    is TransactionType.YieldSupply.Exit,
+    -> TxIcon.Vector(Icons.ic_chart_line_vertical_20)
     // A non-withdraw Send is a plain transfer — directional arrow. A withdraw stays a yield operation and keeps the
     // yield lightning glyph (falls through to the YieldSupply branch below); it only drops the validator/counterparty.
     is TransactionType.YieldSupply.Send -> if (type.isYieldSupplyWithdraw) {

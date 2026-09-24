@@ -36,7 +36,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
         walletInfoById = emptyMap(),
     ),
     targetsByAddress: Map<String, StakingTarget> = emptyMap(),
-    onOpenValidator: (String) -> Unit = {},
+    onExploreProvider: (String) -> Unit = {},
     onAddContact: (() -> Unit)? = null,
     networkTokens: Set<CryptoCurrency.Token> = emptySet(),
 ) : Converter<TxHistoryInfo, TxHistoryDetailsUM> {
@@ -54,7 +54,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
         onCopyAddress = onCopyAddress,
         menu = menu,
         targetsByAddress = targetsByAddress,
-        onOpenValidator = onOpenValidator,
+        onExploreProvider = onExploreProvider,
         isBalanceHidden = isBalanceHidden,
         lookup = lookup,
         networkTokens = networkTokens,
