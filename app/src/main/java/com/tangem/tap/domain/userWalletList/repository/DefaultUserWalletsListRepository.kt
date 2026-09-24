@@ -36,6 +36,7 @@ import com.tangem.domain.wallets.registration.WalletRegistrationTrigger
 import com.tangem.domain.wallets.usecase.GetCompletedBackupsUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.hot.sdk.TangemHotSdk
+import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
@@ -291,6 +292,7 @@ internal class DefaultUserWalletsListRepository(
                     raise(UnlockWalletError.UnableToUnlock.Empty)
                 }
 
+                var accessCode: CharArray? = null
                 val encryptionKey = requestPasswordRecursive(
                     hotWalletId = userWallet.hotWalletId,
                     block = { password ->
@@ -299,6 +301,7 @@ internal class DefaultUserWalletsListRepository(
                         }.onFailure { error ->
                             raise(UnlockWalletError.UnableToUnlock.RawException(error))
                         }.getOrNull()
+                            ?.also { accessCode = password.copyOf() }
                     },
                     biometryFallback = {
                         unlock(userWalletId, UserWalletsListRepository.UnlockMethod.Biometric)
@@ -315,7 +318,7 @@ internal class DefaultUserWalletsListRepository(
                     .doOnSuccess { sensitiveInfo ->
                         updateWallets { it?.updateWith(sensitiveInfo) }
                         trackSignInEvent(userWallet, AnalyticsParam.SignInType.AccessCode)
-                        registerUnlockedMobileWallets(listOf(userWallet.walletId))
+                        registerUnlockedMobileWallet(userWallet.walletId, accessCode)
                     }
                     .doOnFailure { error -> raise(UnlockWalletError.UnableToUnlock.RawException(error)) }
             }
@@ -558,6 +561,21 @@ internal class DefaultUserWalletsListRepository(
         if (unlockedHotWallets.isNotEmpty()) {
             walletRegistrationTrigger.get().onMobileWalletsUnlocked(unlockedHotWallets)
         }
+    }
+
+    private fun registerUnlockedMobileWallet(unlockedWalletId: UserWalletId, accessCode: CharArray?) {
+        if (accessCode == null) {
+            registerUnlockedMobileWallets(listOf(unlockedWalletId))
+            return
+        }
+        val unlockedHotWallet = userWallets.value
+            ?.filterIsInstance<UserWallet.Hot>()
+            ?.find { it.walletId == unlockedWalletId && !it.isLocked }
+            ?: return
+        walletRegistrationTrigger.get().onMobileWalletUnlockedWithAccessCode(
+            userWallet = unlockedHotWallet,
+            accessCode = HotAuth.Password(accessCode),
+        )
     }
 
     private suspend fun requestPasswordRecursive(
