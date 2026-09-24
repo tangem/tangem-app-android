@@ -646,12 +646,7 @@ internal class PolymarketMainModelTest {
             assertThat(model.uiState.value.balance.addFunds.isEnabled).isFalse()
             assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
             coVerify(exactly = 1) {
-                accountStatusFetcher(
-                    PredictionAccountStatusFetcher.Params(
-                        userWalletId = USER_WALLET_ID,
-                        mode = PredictionAccountStatusFetcher.Mode.AVAILABLE_ONLY,
-                    ),
-                )
+                accountStatusFetcher(PredictionAccountStatusFetcher.Params(userWalletId = USER_WALLET_ID))
             }
             coVerify(exactly = 1) {
                 positionsValueFetcher(PredictionPositionsValueFetcher.Params(userWalletId = USER_WALLET_ID))
@@ -1277,7 +1272,6 @@ internal class PolymarketMainModelTest {
         PredictionAccountStatusValue.Active(
             source = StatusSource.ACTUAL,
             balance = BigDecimal(balance),
-            positionsValue = null,
             fiatRate = BigDecimal.ONE,
             depositCurrency = COLLATERAL,
             depositAddress = depositAddress,
