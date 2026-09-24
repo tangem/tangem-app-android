@@ -25,6 +25,8 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 
+internal val PolymarketCardIconSize = 40.dp
+
 /**
  * The chrome every Polymarket card shares: a surface with a title, a round icon on the right, an optional
  * [meta] line under the title and an arbitrary [content] block below the header. The card itself carries no
@@ -83,7 +85,7 @@ internal fun PolymarketEventCardFrame(
 internal fun PolymarketCardIcon(iconUrl: String?, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .size(40.dp)
+            .size(PolymarketCardIconSize)
             .clip(CircleShape)
             .background(TangemTheme.colors3.bg.tertiary),
     ) {
