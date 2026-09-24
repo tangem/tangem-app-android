@@ -2,7 +2,9 @@ package com.tangem.features.txhistory.converter
 
 import androidx.compose.ui.graphics.Color
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.ui.account.AccountIconUM
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.common.ui.account.getResId
 import com.tangem.common.ui.account.getUiColor
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
@@ -16,10 +18,13 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
 import com.tangem.core.ui.res.generated.icons.ic_copy_24
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
+import com.tangem.core.ui.res.generated.icons.ic_chart_line_vertical_20
 import com.tangem.core.ui.res.generated.icons.ic_document_20
+import com.tangem.core.ui.res.generated.icons.ic_globe_24
 import com.tangem.core.ui.res.generated.icons.ic_lightning_20
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.network.SdkAmount
+import com.tangem.domain.models.network.SdkAmountType
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
@@ -488,6 +493,60 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
                 subtitle = resourceReference(R.string.transaction_history_approve_high_risk_subtitle),
                 isLoading = false,
             ),
+        )
+    }
+
+    @Test
+    fun `GIVEN Approve of a tracked token WHEN convert THEN amount icon is the approved token, not the viewed coin`() {
+        // Arrange — an approval in the coin's history: the allowance is granted in USDC, the open history is Ethereum's.
+        val usdc = mockCurrencyFactory.createToken(
+            blockchain = Blockchain.Ethereum,
+            contractAddress = USDC_CONTRACT,
+            symbol = "USDC",
+            decimals = 6,
+        )
+        val tx = txInfo(
+            type = TransactionType.Approve(
+                amount = SdkAmount(
+                    currencySymbol = "USDC",
+                    value = null,
+                    decimals = 6,
+                    type = SdkAmountType.Token(contractAddress = USDC_CONTRACT),
+                ),
+                address = USER_ADDRESS,
+            ),
+        )
+
+        // Act
+        val icon = onChainConverter(networkTokens = setOf(usdc)).convert(tx).amountBlock.icon
+
+        // Assert
+        assertThat(icon).isEqualTo(
+            TxHistoryDetailsUM.AmountIconUM.Single(CryptoCurrencyToIconStateConverter().convert(usdc)),
+        )
+    }
+
+    @Test
+    fun `GIVEN Approve of an untracked token WHEN convert THEN amount icon falls back to the viewed currency`() {
+        // Arrange — the wallet does not track the approved token, so its contract matches nothing.
+        val tx = txInfo(
+            type = TransactionType.Approve(
+                amount = SdkAmount(
+                    currencySymbol = "USDC",
+                    value = null,
+                    decimals = 6,
+                    type = SdkAmountType.Token(contractAddress = USDC_CONTRACT),
+                ),
+                address = USER_ADDRESS,
+            ),
+        )
+
+        // Act
+        val icon = converter.convert(tx).amountBlock.icon
+
+        // Assert
+        assertThat(icon).isEqualTo(
+            TxHistoryDetailsUM.AmountIconUM.Single(CryptoCurrencyToIconStateConverter().convert(currency)),
         )
     }
 
@@ -976,20 +1035,20 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     // region Validator row
 
     @Test
-    fun `GIVEN Vote tx with resolved validator having website WHEN convert THEN validator row links to the website`() {
+    fun `GIVEN Vote tx with resolved validator having website WHEN convert THEN validator row is plain text`() {
         // Arrange — the Vote type carries the validator address; the yield resolves it to name + website.
         val tx = txInfo(type = TransactionType.Staking.Vote(validatorAddress = VALIDATOR_ADDRESS))
 
         // Act
         val rows = onChainConverter(validators = listOf(validator())).convert(tx).rows
 
-        // Assert
-        val validatorRow = rows.single()
-        assertThat(validatorRow.label).isEqualTo(resourceReference(R.string.staking_validator))
-        assertThat(validatorRow.value.resolveString()).isEqualTo("Lido Finance")
-        assertThat(validatorRow.trailingIconRes).isEqualTo(R.drawable.ic_arrow_top_right_24)
-        validatorRow.onClick?.invoke()
-        assertThat(openedUrls).containsExactly(VALIDATOR_URL)
+        // Assert — the website is never surfaced: no trailing link icon, no tap.
+        assertThat(rows.single()).isEqualTo(
+            TxHistoryDetailsUM.InfoRowUM(
+                label = resourceReference(R.string.staking_validator),
+                value = stringReference("Lido Finance"),
+            ),
+        )
     }
 
     @Test
@@ -1022,21 +1081,6 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
         // Assert
         assertThat(rows.single().value.resolveString()).isEqualTo("Lido Finance")
-    }
-
-    @Test
-    fun `GIVEN resolved validator without website WHEN convert THEN validator row has no link`() {
-        // Arrange
-        val tx = txInfo(type = TransactionType.Staking.Vote(validatorAddress = VALIDATOR_ADDRESS))
-
-        // Act
-        val rows = onChainConverter(validators = listOf(validator(website = null))).convert(tx).rows
-
-        // Assert
-        val validatorRow = rows.single()
-        assertThat(validatorRow.value.resolveString()).isEqualTo("Lido Finance")
-        assertThat(validatorRow.trailingIconRes).isNull()
-        assertThat(validatorRow.onClick).isNull()
     }
 
     @Test
@@ -1192,26 +1236,98 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
     // endregion
 
-    // region Protocol row (yield-supply)
+    // region Yield-supply rows
 
-    @Test
-    fun `GIVEN yield-supply tx WHEN convert THEN protocol row shows the hard-wired Aave protocol with its link`() {
-        // Arrange — yield-supply is a single hard-wired integration (Aave), so the value and link are constant.
-        val tx = txInfo(type = TransactionType.YieldSupply.Enter(address = USER_ADDRESS))
-
+    @ParameterizedTest
+    @MethodSource("provideYieldSupplyTypes")
+    fun `GIVEN yield-supply tx WHEN convert THEN no validator row`(type: TransactionType.YieldSupply) {
         // Act
-        val row = converter.convert(tx).rows.single()
+        val rows = converter.convert(txInfo(type = type)).rows
+
+        // Assert — the Validator field belongs to staking; a yield-supply card names no protocol at all.
+        assertThat(rows.map { it.label }).doesNotContain(resourceReference(R.string.staking_validator))
+    }
+
+    private fun provideYieldSupplyTypes() = listOf(
+        TransactionType.YieldSupply.Enter(address = USER_ADDRESS),
+        TransactionType.YieldSupply.Exit(address = USER_ADDRESS),
+        TransactionType.YieldSupply.Topup,
+        TransactionType.YieldSupply.DeployContract(address = USER_ADDRESS),
+        TransactionType.YieldSupply.InitializeToken(address = USER_ADDRESS),
+        TransactionType.YieldSupply.ReactivateToken(address = USER_ADDRESS),
+        TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = true),
+    )
+
+    @ParameterizedTest
+    @MethodSource("provideYieldSupplyTypes")
+    fun `GIVEN yield-supply tx WHEN convert THEN Explore Aave closes the header menu`(
+        type: TransactionType.YieldSupply,
+    ) {
+        // Act
+        val menu = converter.convert(txInfo(type = type)).header.menu
 
         // Assert
-        assertThat(row.label).isEqualTo(resourceReference(R.string.staking_validator))
-        assertThat(row.value).isEqualTo(resourceReference(R.string.yield_module_provider))
-        assertThat(row.trailingIconRes).isEqualTo(R.drawable.ic_arrow_top_right_24)
-        row.onClick?.invoke()
+        val exploreAave = menu.last()
+        assertThat(exploreAave.icon).isEqualTo(Icons.ic_globe_24)
+        assertThat(exploreAave.title)
+            .isEqualTo(resourceReference(R.string.yield_module_explore_sheet_explore_aave_button_title))
+        (exploreAave.action as TxHistoryDetailsUM.MenuItemUM.Action.Direct).onClick()
         assertThat(openedUrls).containsExactly("https://aave.com/")
     }
 
+    @ParameterizedTest
+    @MethodSource("provideYieldModeTypes")
+    fun `GIVEN yield mode enabled or disabled WHEN convert THEN header shows the bars glyph`(
+        type: TransactionType.YieldSupply,
+    ) {
+        // Act
+        val icon = converter.convert(txInfo(type = type)).header.icon
+
+        // Assert
+        assertThat(icon).isEqualTo(TxIcon.Vector(Icons.ic_chart_line_vertical_20))
+    }
+
+    private fun provideYieldModeTypes() = listOf(
+        TransactionType.YieldSupply.Enter(address = USER_ADDRESS),
+        TransactionType.YieldSupply.Exit(address = USER_ADDRESS),
+    )
+
     @Test
-    fun `GIVEN yield-supply tx with network fee WHEN convert THEN protocol row precedes the fee row`() {
+    fun `GIVEN yield-supply topup WHEN convert THEN header keeps the lightning glyph`() {
+        // Act
+        val icon = converter.convert(txInfo(type = TransactionType.YieldSupply.Topup)).header.icon
+
+        // Assert
+        assertThat(icon).isEqualTo(TxIcon.Vector(Icons.ic_lightning_20))
+    }
+
+    @Test
+    fun `GIVEN yield-supply topup WHEN convert THEN asset-leading Aave pair and no label`() {
+        // Act
+        val amountBlock = converter.convert(txInfo(type = TransactionType.YieldSupply.Topup)).amountBlock
+
+        // Assert — a topup mirrors a withdraw: the pair without the "Supplied"/"Returned" caption of enter/exit.
+        val pair = amountBlock.icon as TxHistoryDetailsUM.AmountIconUM.OverlappingPair
+        assertThat(pair.leading).isInstanceOf(TxHistoryDetailsUM.AmountIconUM.Item.Currency::class.java)
+        assertThat(pair.trailing).isEqualTo(TxHistoryDetailsUM.AmountIconUM.Item.Resource(R.drawable.img_aave_22))
+        assertThat(amountBlock.label).isNull()
+    }
+
+    @Test
+    fun `GIVEN non yield-supply tx WHEN convert THEN no Explore Aave row`() {
+        // Arrange
+        val tx = txInfo(type = TransactionType.Transfer)
+
+        // Act
+        val menu = converter.convert(tx).header.menu
+
+        // Assert
+        assertThat(menu.map { it.title })
+            .doesNotContain(resourceReference(R.string.yield_module_explore_sheet_explore_aave_button_title))
+    }
+
+    @Test
+    fun `GIVEN yield-supply tx with network fee WHEN convert THEN the fee row is the only one`() {
         // Arrange
         val tx = txInfo(
             type = TransactionType.YieldSupply.Topup,
@@ -1222,10 +1338,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val rows = converter.convert(tx).rows
 
         // Assert
-        assertThat(rows.map { it.label }).containsExactly(
-            resourceReference(R.string.staking_validator),
-            resourceReference(R.string.common_network_fee_title),
-        ).inOrder()
+        assertThat(rows.map { it.label }).containsExactly(resourceReference(R.string.common_network_fee_title))
     }
 
     // endregion
@@ -1278,8 +1391,8 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
-    fun `GIVEN yield Send withdraw WHEN convert THEN withdrawn title, yield lightning icon, no counterparty, no validator row`() {
-        // Arrange — a withdraw stays a yield operation in details: lightning glyph, no counterparty card, no validator row.
+    fun `GIVEN yield Send withdraw WHEN convert THEN withdrawn title, lightning icon, asset-leading Aave pair, no counterparty`() {
+        // Arrange — a withdraw stays a yield operation in details: lightning glyph, Aave-paired icon, no counterparty.
         val tx = txInfo(
             type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = true),
             isOutgoing = false,
@@ -1294,7 +1407,9 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_lightning_20))
         assertThat(result.amountBlock.amount.resolveString()).startsWith("+ ")
         assertThat(result.amountBlock.label).isNull()
-        assertThat(result.amountBlock.icon).isInstanceOf(TxHistoryDetailsUM.AmountIconUM.Single::class.java)
+        val pair = result.amountBlock.icon as TxHistoryDetailsUM.AmountIconUM.OverlappingPair
+        assertThat(pair.leading).isInstanceOf(TxHistoryDetailsUM.AmountIconUM.Item.Currency::class.java)
+        assertThat(pair.trailing).isEqualTo(TxHistoryDetailsUM.AmountIconUM.Item.Resource(R.drawable.img_aave_22))
         assertThat(result.counterparty).isNull()
         assertThat(result.rows.map { it.label })
             .doesNotContain(resourceReference(R.string.staking_validator))
@@ -1321,4 +1436,8 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     // endregion
+
+    private companion object {
+        const val USDC_CONTRACT = "0xA0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+    }
 }

@@ -81,7 +81,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
             is TransactionType.Swap -> swapContent(value, uiStatus)
             is TransactionType.Transfer -> transferContent(value, uiStatus)
             is TransactionType.Staking.ClaimRewards -> claimRewardsContent(value, uiStatus)
-            is TransactionType.YieldSupply.Topup -> yieldTopupContent(value, uiStatus, type)
+            is TransactionType.YieldSupply.Topup -> yieldTopupContent(value, uiStatus)
             is TransactionType.YieldSupply.Send -> yieldSendContent(value, uiStatus, type)
             is TransactionType.YieldSupply.DeployContract -> yieldDeployContractContent(value, uiStatus, type)
             is TransactionType.YieldSupply.InitializeToken -> yieldInitializeTokenContent(value, uiStatus, type)
@@ -176,17 +176,14 @@ internal class TxHistoryItemToTransactionItemUMConverter(
             subtitle = ContentSubtitle.Plain(resourceReference(R.string.transaction_history_earned_from_stake)),
         )
 
-    private fun yieldTopupContent(
-        tx: TxInfo,
-        uiStatus: TransactionItemUM.Content.Status,
-        type: TransactionType.YieldSupply.Topup,
-    ): TransactionItemUM.Content = buildContent(
-        tx = tx,
-        uiStatus = uiStatus,
-        title = titleConverter.convert(tx),
-        icon = tx.directionalIcon(),
-        subtitle = tx.yieldSupplySubtitle(currency, type),
-    )
+    private fun yieldTopupContent(tx: TxInfo, uiStatus: TransactionItemUM.Content.Status): TransactionItemUM.Content =
+        buildContent(
+            tx = tx,
+            uiStatus = uiStatus,
+            title = titleConverter.convert(tx),
+            icon = tx.directionalIcon(),
+            subtitle = yieldProviderSubtitle(ContentSubtitle.Direction.TO),
+        )
 
     private fun yieldDeployContractContent(
         tx: TxInfo,
@@ -234,7 +231,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
             uiStatus = uiStatus,
             title = titleConverter.convert(tx),
             icon = tx.directionalIcon(),
-            subtitle = yieldSendSubtitle(),
+            subtitle = yieldProviderSubtitle(ContentSubtitle.Direction.FROM),
         )
     } else {
         // A non-withdraw Send is an ordinary transfer — resolve the counterparty against the user's own
@@ -271,7 +268,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
 
         return ContentSubtitle.FeeFor(
             symbol = symbol,
-            icon = networkFee.resolveToken(networkTokens)?.let(iconStateConverter::convert),
+            icon = networkFee.amount.resolveToken(networkTokens)?.let(iconStateConverter::convert),
         )
     }
 
@@ -396,8 +393,6 @@ private fun TxInfo.yieldSupplySubtitle(currency: CryptoCurrency, type: Transacti
     return when (type) {
         is TransactionType.YieldSupply.Enter ->
             amountSubtitle(currency, R.string.yield_module_transaction_enter_subtitle)
-        TransactionType.YieldSupply.Topup ->
-            amountSubtitle(currency, R.string.yield_module_transaction_topup_subtitle)
         is TransactionType.YieldSupply.Exit ->
             amountSubtitle(currency, R.string.yield_module_transaction_exit_subtitle)
         else -> extractAddressSubtitle()
@@ -405,12 +400,12 @@ private fun TxInfo.yieldSupplySubtitle(currency: CryptoCurrency, type: Transacti
 }
 
 /**
- * Subtitle for a yield withdraw [TransactionType.YieldSupply.Send] (funds leaving the Aave position): the provider as
- * the counterparty — "from: <Aave avatar> Aave". A non-withdraw Send is an ordinary transfer, rendered by
- * [transferContent] instead.
+ * Subtitle of a yield transfer in or out of the Aave position, naming the provider as the counterparty: "to: <Aave
+ * avatar> Aave" on a topup, "from: …" on a withdraw. A non-withdraw
+ * [Send][TransactionType.YieldSupply.Send] is an ordinary transfer, rendered by [transferContent] instead.
  */
-private fun yieldSendSubtitle(): ContentSubtitle = ContentSubtitle.Provider(
-    direction = ContentSubtitle.Direction.FROM,
+private fun yieldProviderSubtitle(direction: ContentSubtitle.Direction): ContentSubtitle = ContentSubtitle.Provider(
+    direction = direction,
     name = resourceReference(R.string.yield_module_provider),
     iconResId = R.drawable.img_aave_22,
 )
