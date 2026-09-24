@@ -7,11 +7,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds2.ambient.TangemAmbientBackground
 import com.tangem.core.ui.ds2.surface.TangemSurface
@@ -20,9 +24,6 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_sign_plus_16
 
 private val FeedBlockShape = RoundedCornerShape(size = 20.dp)
-
-private const val TITLE_MAX_LINES = 2
-private const val DESCRIPTION_MAX_LINES = 3
 
 /**
  * Half-height shortcut card: icon at the top start, title at the bottom start.
@@ -49,12 +50,14 @@ internal fun FeedShortcutCard(
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
             icon()
-            Text(
-                text = title,
-                style = TangemTheme.typography3.caption.medium,
-                color = TangemTheme.colors3.text.primary,
-                maxLines = 1,
-            )
+            FixedFontScale {
+                Text(
+                    text = title,
+                    style = TangemTheme.typography3.caption.medium,
+                    color = TangemTheme.colors3.text.primary,
+                    maxLines = 1,
+                )
+            }
         }
     }
 }
@@ -103,22 +106,24 @@ internal fun FeedPromoCard(
                     icon()
                     PlusAffordance()
                 }
-                Column(verticalArrangement = Arrangement.spacedBy(space = 2.dp)) {
-                    Text(
-                        text = title,
-                        style = TangemTheme.typography3.subheading.medium,
-                        color = TangemTheme.colors3.text.secondary,
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = TITLE_MAX_LINES,
-                    )
-                    if (description != null) {
+                FixedFontScale {
+                    Column(verticalArrangement = Arrangement.spacedBy(space = 2.dp)) {
                         Text(
-                            text = description,
-                            style = TangemTheme.typography3.body.medium,
-                            color = TangemTheme.colors3.text.primary,
+                            text = title,
+                            style = TangemTheme.typography3.subheading.medium,
+                            color = TangemTheme.colors3.text.secondary,
                             overflow = TextOverflow.Ellipsis,
-                            maxLines = DESCRIPTION_MAX_LINES,
+                            maxLines = 2,
                         )
+                        if (description != null) {
+                            Text(
+                                text = description,
+                                style = TangemTheme.typography3.body.medium,
+                                color = TangemTheme.colors3.text.primary,
+                                overflow = TextOverflow.Ellipsis,
+                                maxLines = 3,
+                            )
+                        }
                     }
                 }
             }
@@ -147,6 +152,16 @@ internal fun FeedTitleCard(title: String, onClick: () -> Unit, modifier: Modifie
             )
         }
     }
+}
+
+@Composable
+private fun FixedFontScale(content: @Composable () -> Unit) {
+    val density = LocalDensity.current
+    val fixedFontScaleDensity = remember(density) {
+        Density(density = density.density, fontScale = 1f)
+    }
+
+    CompositionLocalProvider(LocalDensity provides fixedFontScaleDensity, content = content)
 }
 
 /** Rounded-square badge every promo card puts its product icon in. */
