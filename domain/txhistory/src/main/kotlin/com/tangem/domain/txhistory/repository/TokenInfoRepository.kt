@@ -23,7 +23,7 @@ interface TokenInfoRepository {
      */
     suspend fun getCachedTokensForNetwork(userWalletId: UserWalletId, networkId: String): Set<CryptoCurrency.Token>
 
-    suspend fun fetchMissing(ids: Set<ExpressAsset.ID>)
+    fun fetchMissing(ids: Set<ExpressAsset.ID>)
 
     /** Writes through the metadata of known (portfolio) tokens, so it's cached even after a token is removed. */
     suspend fun save(currencies: Collection<CryptoCurrency>)
