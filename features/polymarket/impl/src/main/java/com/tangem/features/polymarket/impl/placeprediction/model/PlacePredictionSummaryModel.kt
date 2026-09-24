@@ -20,6 +20,7 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
+import com.tangem.domain.polymarket.flow.PredictionPositionsUpdateEmitter
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.interactor.PredictionSignRequest
 import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
@@ -84,6 +85,7 @@ internal class PlacePredictionSummaryModel @Inject constructor(
     private val awaitDelayedPredictionOrderUseCase: AwaitDelayedPredictionOrderUseCase,
     private val positionsRepository: PolymarketPositionsRepository,
     private val predictionFundingWindow: PredictionFundingWindow,
+    private val positionsUpdateEmitter: PredictionPositionsUpdateEmitter,
 ) : Model(), PlacePredictionSummaryIntents {
 
     private val order = paramsContainer.require<PreparedPrediction>()
@@ -357,7 +359,10 @@ internal class PlacePredictionSummaryModel @Inject constructor(
     }
 
     private fun showResult(result: PlaceResultUM) {
-        if (result.movesBalance()) predictionFundingWindow.open(userWalletId = params.userWalletId)
+        if (result.movesBalance()) {
+            predictionFundingWindow.open(userWalletId = params.userWalletId)
+            positionsUpdateEmitter.triggerUpdate(userWalletId = params.userWalletId)
+        }
 
         uiState.update(SetSubmitTransformer(submit = SubmitUM.Result(result = result)))
         router.replaceAll(
