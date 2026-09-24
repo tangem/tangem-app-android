@@ -22,7 +22,10 @@ internal class DefaultMoneyAccountOnboardingComponent @AssistedInject constructo
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
-        MoneyAccountOnboardingScreen(modifier = modifier, state = state)
+        MoneyAccountOnboardingScreen(
+            modifier = modifier,
+            state = state,
+        )
     }
 
     @AssistedFactory
