@@ -19,6 +19,9 @@ dependencies {
     implementation(projects.common.routing)
     implementation(projects.common.ui)
 
+    /** Project - Features */
+    implementation(projects.features.tokenRecieve.api)
+
     /** Project - Core */
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
@@ -51,6 +54,7 @@ dependencies {
 
     /** Other */
     api(deps.compose.coil)
+    implementation(deps.androidx.annotation)
     implementation(deps.androidx.appCompat)
     implementation(deps.arrow.core)
     implementation(deps.decompose)
