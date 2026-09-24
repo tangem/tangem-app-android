@@ -10,10 +10,12 @@ import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldS
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyInitTokenCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyReactivateTokenCallData
 import com.tangem.common.extensions.hexToBytes
+import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.SdkAmountType
 import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.txhistory.usecase.GetCachedTokenInfoUseCase
 import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
@@ -24,6 +26,7 @@ internal class SdkTransactionTypeConverter(
     gaslessFeeAddresses: Set<String>,
     private val currency: CryptoCurrency,
     private val networkTokens: Set<CryptoCurrency.Token> = emptySet(),
+    private val getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
 ) : Converter<TransactionHistoryItem, TxInfo.TransactionType> {
 
     /** The SDK reports a selector prefixed or bare depending on the source; the asset is keyed prefixed. */
@@ -210,7 +213,15 @@ internal class SdkTransactionTypeConverter(
     private fun TransactionHistoryItem.DestinationType.resolveToken(): CryptoCurrency.Token? {
         val contractAddress = (this as? TransactionHistoryItem.DestinationType.Single)?.addressType?.address
             ?: return null
-        return networkTokens.find { it.contractAddress.equals(contractAddress, ignoreCase = true) }
+        val result = networkTokens.find { it.contractAddress.equals(contractAddress, ignoreCase = true) }
+        if (result == null) {
+            val tokenId = ExpressAsset.ID(
+                networkId = currency.network.rawId,
+                contractAddress = contractAddress,
+            )
+            getCachedTokenInfoUseCase.fetchMissing(setOf(tokenId))
+        }
+        return result
     }
 
     private fun CryptoCurrency.Token.toSdkAmount(rawValue: BigDecimal?): SdkAmount = SdkAmount(
