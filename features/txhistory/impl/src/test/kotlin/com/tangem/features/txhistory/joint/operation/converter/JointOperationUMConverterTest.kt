@@ -58,8 +58,9 @@ internal class JointOperationUMConverterTest {
             resourceReference(CoreUiR.string.common_copy_address),
             resourceReference(CoreUiR.string.address_book_add_contact),
         )
-        assertThat(actual.cosign).isNull()
+        assertThat(actual.cosign).isNotNull()
         assertThat(actual.cosignAction?.isEnabled).isFalse()
+        assertThat(actual.cosignAction?.caption).isNull()
         assertThat(actual.cosignAction?.buttonText).isEqualTo(resourceReference(CoreUiR.string.common_sign))
     }
 
