@@ -1,7 +1,6 @@
 package com.tangem.domain.polymarket.flow
 
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher.Mode
 import com.tangem.domain.polymarket.model.PredictionBalancePollingConfig
 import com.tangem.utils.coroutines.AppCoroutineScope
 import kotlinx.coroutines.Job
@@ -70,11 +69,7 @@ class PredictionBalancePoller(
     }
 
     private suspend fun refresh(userWalletId: UserWalletId, isFundingWindowOpen: Boolean) = coroutineScope {
-        launch {
-            statusFetcher(
-                PredictionAccountStatusFetcher.Params(userWalletId = userWalletId, mode = Mode.AVAILABLE_ONLY),
-            )
-        }
+        launch { statusFetcher(PredictionAccountStatusFetcher.Params(userWalletId = userWalletId)) }
 
         if (!isFundingWindowOpen) {
             launch { positionsValueFetcher(PredictionPositionsValueFetcher.Params(userWalletId = userWalletId)) }

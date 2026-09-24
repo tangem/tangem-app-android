@@ -855,7 +855,6 @@ internal class RunPolymarketOnboardingInteractorTest {
                 syncBalanceAllowance(OWNER, CREDENTIALS)
                 predictionAccountStatusFetcher(PredictionAccountStatusFetcher.Params(
                     userWalletId = USER_WALLET_ID,
-                    mode = PredictionAccountStatusFetcher.Mode.AVAILABLE_ONLY,
                 ))
             }
         }
@@ -875,7 +874,6 @@ internal class RunPolymarketOnboardingInteractorTest {
             }
             coVerify(exactly = 1) { predictionAccountStatusFetcher(PredictionAccountStatusFetcher.Params(
                     userWalletId = USER_WALLET_ID,
-                    mode = PredictionAccountStatusFetcher.Mode.AVAILABLE_ONLY,
                 )) }
         }
 
