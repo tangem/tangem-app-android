@@ -6,10 +6,12 @@ import com.tangem.common.ui.cosign.SignatureProgressUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
@@ -22,11 +24,13 @@ import com.tangem.domain.jointaccount.model.JointOperationSignerState.Answer
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
+import com.tangem.features.txhistory.joint.operation.model.JointOperationFiat
 import com.tangem.features.txhistory.joint.operation.model.JointOperationState
 import com.tangem.features.txhistory.joint.operation.model.JointOperationState.Role
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.toBriefAddressFormat
+import java.math.BigDecimal
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import com.tangem.core.ui.R as CoreUiR
@@ -52,6 +56,7 @@ internal class JointOperationUMConverter(
             amountBlock = TxHistoryDetailsUM.AmountBlockUM(
                 icon = TxHistoryDetailsUM.AmountIconUM.Single(iconStateConverter.convert(currency)),
                 amount = stringReference(amountOf(state)),
+                fiatAmount = fiatAmountOf(state = state, fiat = value.fiat),
                 isFailed = false,
             ),
             counterparty = TxHistoryDetailsUM.CounterpartyUM(
@@ -190,21 +195,33 @@ internal class JointOperationUMConverter(
     }
 
     private fun amountOf(state: JointOperationState): String {
-        val formatted = state.displayed.amountWei
-            .toBigDecimal()
-            .movePointLeft(currency.decimals)
-            .format { crypto(cryptoCurrency = currency, ignoreSymbolPosition = true) }
+        val formatted = amountValue(state).format { crypto(cryptoCurrency = currency, ignoreSymbolPosition = true) }
 
         return "${StringsSigns.MINUS} $formatted"
     }
 
+    /** A missing quote reaches the status as a zero rate, so zero means "unpriced", not "worth nothing" */
+    private fun fiatAmountOf(state: JointOperationState, fiat: JointOperationFiat): TextReference? {
+        val rate = fiat.rate?.takeIf { it.signum() > 0 } ?: return null
+        val formatted = (amountValue(state) * rate).format {
+            fiat(fiatCurrencyCode = fiat.appCurrency.code, fiatCurrencySymbol = fiat.appCurrency.symbol)
+        }
+
+        return stringReference(formatted)
+    }
+
+    private fun amountValue(state: JointOperationState): BigDecimal =
+        state.displayed.amountWei.toBigDecimal().movePointLeft(currency.decimals)
+
+    /** The fee is the refund cap the Safe pays the relayer, the actual gas comes in lower, hence the tilde */
     private fun feeRow(state: JointOperationState): TxHistoryDetailsUM.InfoRowUM? {
         val coin = state.feeCoin ?: return null
         val fee = state.feeWei.toBigDecimal().movePointLeft(coin.decimals)
+        val formatted = fee.format { crypto(cryptoCurrency = coin, ignoreSymbolPosition = true) }
 
         return TxHistoryDetailsUM.InfoRowUM(
             label = resourceReference(R.string.common_network_fee_title),
-            value = stringReference(fee.format { crypto(cryptoCurrency = coin, ignoreSymbolPosition = true) }),
+            value = stringReference("${StringsSigns.TILDE_SIGN}$formatted"),
             isValueHideable = true,
         )
     }
@@ -217,5 +234,6 @@ internal class JointOperationUMConverter(
         val canCreateContact: Boolean,
         val isBalanceHidden: Boolean,
         val isColdWallet: Boolean,
+        val fiat: JointOperationFiat,
     )
 }
