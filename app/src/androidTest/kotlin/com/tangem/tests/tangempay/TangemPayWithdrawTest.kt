@@ -422,7 +422,6 @@ class TangemPayWithdrawTest : BaseTestCase() {
 
     @AllureId("11385")
     @DisplayName("Tangem Pay: the withdraw source selector hides zero-balance payment-account tokens")
-    @Ignore("[REDACTED_JIRA]")
     @Test
     fun withdrawSourceSelectorHidesZeroBalanceTokensTest() {
         val initialBalanceText = "17.00"

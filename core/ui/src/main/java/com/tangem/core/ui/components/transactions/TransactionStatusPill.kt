@@ -179,7 +179,7 @@ private fun LeadingIcon(kind: PillKind, status: Status) {
             PillKind.YIELD_MODE -> ImageVector.vectorResource(R.drawable.ic_yield_mode_16)
             PillKind.APPROVE -> null
         }
-        is Status.Unconfirmed -> null
+        is Status.Unconfirmed, is Status.PendingSignature -> null
     } ?: return
     Icon(
         imageVector = icon,
@@ -192,7 +192,7 @@ private fun LeadingIcon(kind: PillKind, status: Status) {
 @Composable
 @ReadOnlyComposable
 private fun Status.backgroundColor(): Color = when (this) {
-    is Status.Confirmed -> TangemTheme.colors3.bg.opaque.secondary
+    is Status.Confirmed, is Status.PendingSignature -> TangemTheme.colors3.bg.opaque.secondary
     is Status.Unconfirmed -> TangemTheme.colors3.bg.status.infoSubtle
     is Status.Failed -> TangemTheme.colors3.bg.status.errorSubtle
 }
@@ -200,7 +200,7 @@ private fun Status.backgroundColor(): Color = when (this) {
 @Composable
 @ReadOnlyComposable
 private fun Status.labelColor(): Color = when (this) {
-    is Status.Confirmed -> TangemTheme.colors3.text.secondary
+    is Status.Confirmed, is Status.PendingSignature -> TangemTheme.colors3.text.secondary
     is Status.Unconfirmed -> TangemTheme.colors3.text.status.info
     is Status.Failed -> TangemTheme.colors3.text.status.error
 }
@@ -208,7 +208,7 @@ private fun Status.labelColor(): Color = when (this) {
 @Composable
 @ReadOnlyComposable
 private fun Status.valueColor(): Color = when (this) {
-    is Status.Confirmed -> TangemTheme.colors3.text.primary
+    is Status.Confirmed, is Status.PendingSignature -> TangemTheme.colors3.text.primary
     is Status.Unconfirmed -> TangemTheme.colors3.text.status.info
     is Status.Failed -> TangemTheme.colors3.text.status.error
 }
@@ -217,7 +217,7 @@ private fun Status.valueColor(): Color = when (this) {
 @Composable
 @ReadOnlyComposable
 private fun Status.iconTint(): Color = when (this) {
-    is Status.Confirmed -> TangemTheme.colors3.icon.secondary
+    is Status.Confirmed, is Status.PendingSignature -> TangemTheme.colors3.icon.secondary
     is Status.Unconfirmed -> TangemTheme.colors3.icon.status.info
     is Status.Failed -> TangemTheme.colors3.icon.status.error
 }

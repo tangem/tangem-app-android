@@ -12,6 +12,7 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.remote)
     /** Project - API */
     api(projects.features.promoBanners.api)
     implementation(projects.features.commonFeatures.api)

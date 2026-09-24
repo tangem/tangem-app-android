@@ -10,6 +10,7 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
+import com.tangem.domain.wallets.hot.HotWalletAccessor
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.lib.auth.session.WalletNonce
@@ -31,6 +32,7 @@ class WalletRegistrationLauncher @Inject internal constructor(
     private val mobileSigner: MobileWalletRegistrationSigner,
     private val coldSigner: ColdWalletRegistrationSigner,
     private val authFeatureToggles: AuthFeatureToggles,
+    private val hotWalletAccessor: HotWalletAccessor,
     private val appCoroutineScope: AppCoroutineScope,
 ) {
 
@@ -48,6 +50,37 @@ class WalletRegistrationLauncher @Inject internal constructor(
                 signer = mobileSigner.signerFor(userWallet),
             ).onLeft { TangemLogger.e("Mobile wallet registration deferred: $it") }
         }.onFailure { TangemLogger.e("Mobile wallet registration failed", it) }
+    }
+
+    /**
+     * Catches up the registration of an already-saved MOBILE wallet at unlock time. A protected
+     * (Password/Biometry) wallet can only register by signing the nonce with its key, which needs an
+     * unlock context. Establish a short-lived contextual unlock (the single auth), register within it —
+     * so the nonce is requested AFTER the auth and signed immediately (no ~55s expiry) and no second
+     * prompt appears — then ALWAYS clear the context. Already-registered wallets are skipped before any
+     * auth, so a routine unlock never pops a needless prompt; a context established elsewhere is reused
+     * and left untouched.
+     */
+    suspend fun registerUnlockedMobileWallet(userWallet: UserWallet.Hot) {
+        if (!authFeatureToggles.isBackendAuthenticationEnabled) return
+        if (walletRegistrar.isRegistered(userWallet.walletId.toBase64())) return
+
+        if (hotWalletAccessor.getContextualUnlock(userWallet.hotWalletId) != null) {
+            // Another flow already holds a context — reuse it (no prompt) and leave it for its owner.
+            registerMobile(userWallet)
+            return
+        }
+
+        try {
+            runSuspendCatching { hotWalletAccessor.unlockContextual(userWallet.hotWalletId) }
+                .onFailure { error ->
+                    TangemLogger.e("Failed to establish an unlock context for mobile registration", error)
+                    return
+                }
+            registerMobile(userWallet)
+        } finally {
+            hotWalletAccessor.clearContextualUnlock(userWallet.hotWalletId)
+        }
     }
 
     /**
@@ -80,32 +113,47 @@ class WalletRegistrationLauncher @Inject internal constructor(
      *
      * Twin and Visa cards are skipped: a twin's id is derived from both cards (can't be built here)
      * and Visa cards are not a cold-registration target.
+     *
+     * [shouldForce] is for a card that took over a mobile wallet's walletId (hot → cold upgrade): the
+     * local marker left by the mobile registration would skip it, so the marker is dropped first — even
+     * without a [nonce], letting a later scan register the card — and this tap registers regardless of it.
      */
-    suspend fun registerColdInSession(session: CardSession, card: Card, nonce: WalletNonce) {
+    suspend fun registerColdInSession(
+        session: CardSession,
+        card: Card,
+        nonce: WalletNonce?,
+        shouldForce: Boolean = false,
+    ) {
         if (!authFeatureToggles.isBackendAuthenticationEnabled) return
         val cardDto = CardDTO(card)
         if (cardDto.isTangemTwins || VisaUtilities.isVisaCard(cardDto)) return
-        registerCold(
-            session = session,
-            card = cardDto,
-            walletIdBuilder = UserWalletIdBuilder.card(cardDto),
-            nonce = nonce,
-        )
+        val walletId = UserWalletIdBuilder.card(cardDto).build()?.toBase64() ?: return
+
+        if (shouldForce) {
+            walletRegistrar.forgetRegistration(walletId)
+                .onLeft { TangemLogger.e("Failed to drop the cold wallet registration marker: $it") }
+        }
+        if (nonce == null) return
+
+        registerCold(session = session, card = cardDto, walletId = walletId, nonce = nonce, shouldForce = shouldForce)
     }
 
     private suspend fun registerCold(
         session: CardSession,
         card: CardDTO,
-        walletIdBuilder: UserWalletIdBuilder,
+        walletId: String,
         nonce: WalletNonce,
+        shouldForce: Boolean,
     ) {
-        val walletId = walletIdBuilder.build()?.toBase64() ?: return
-
-        val prepared = walletRegistrar.prepare(walletId, nonce, coldSigner.signerFor(session, card))
-            .getOrElse { error ->
-                TangemLogger.e("Cold wallet registration prepare deferred: $error")
-                return
-            }
+        val prepared = walletRegistrar.prepare(
+            walletId = walletId,
+            nonce = nonce,
+            signer = coldSigner.signerFor(session, card),
+            shouldForce = shouldForce,
+        ).getOrElse { error ->
+            TangemLogger.e("Cold wallet registration prepare deferred: $error")
+            return
+        }
         if (prepared == null) return // already registered
 
         appCoroutineScope.launch {
