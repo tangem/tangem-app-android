@@ -79,5 +79,4 @@ dependencies {
     /** Test */
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
-    testImplementation(projects.domain.wallets.models)
 }
