@@ -214,7 +214,14 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             window.setHideOverlayWindows(true)
         }
 
-        splashScreen.setKeepOnScreenCondition { viewModel.isSplashScreenShown }
+        splashScreen.setKeepOnScreenCondition {
+            val shouldKeepOnScreen = viewModel.isSplashScreenShown
+            // Marks the moment the app is actually usable — Macrobenchmark reads it as timeToFullDisplay
+            // and Play Vitals as fully drawn. Reporting it from setOnExitAnimationListener instead does
+            // not reach the system.
+            if (!shouldKeepOnScreen) reportFullyDrawn()
+            shouldKeepOnScreen
+        }
         splashScreen.setOnExitAnimationListener { provider ->
             provider.remove()
             applyEdgeToEdge()
