@@ -11,6 +11,7 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.remote)
 
     // region Kotlin
     implementation(deps.kotlin.coroutines)

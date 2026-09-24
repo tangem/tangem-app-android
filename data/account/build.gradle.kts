@@ -10,6 +10,7 @@ android {
     namespace = "com.tangem.data.account"
 }
 dependencies {
+    implementation(projects.core.remote)
 
     // region Kotlin
     implementation(deps.kotlin.coroutines)
