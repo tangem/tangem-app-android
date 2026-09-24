@@ -207,7 +207,7 @@ internal class DefaultSocialRecoveryClient(
      */
     override suspend fun unbindWallet(walletId: String): Either<SocialRecoveryError, Unit> =
         withContext(dispatchers.io) {
-            walletRegistrar.unregister(walletId).fold(
+            walletRegistrar.unregister(walletId = walletId, shouldDeleteSocialRecovery = true).fold(
                 ifRight = { Either.Right(Unit) },
                 ifLeft = { error ->
                     when (error) {
@@ -221,8 +221,11 @@ internal class DefaultSocialRecoveryClient(
                         WalletRegistrationError.NoActiveSession -> Either.Left(SocialRecoveryError.NoActiveSession)
                         is WalletRegistrationError.SigningFailed ->
                             Either.Left(SocialRecoveryError.SigningFailed(error.cause))
-                        is WalletRegistrationError.PersistenceFailed ->
-                            Either.Left(SocialRecoveryError.Unknown(error.cause))
+                        // only raised once the server has already dropped the wallet and its recovery key
+                        is WalletRegistrationError.PersistenceFailed -> {
+                            TangemLogger.e("Unbound on the server, but the local state was not saved", error.cause)
+                            Either.Right(Unit)
+                        }
                         is WalletRegistrationError.NonceDecodingFailed ->
                             Either.Left(SocialRecoveryError.Unknown(error.cause))
                         is WalletRegistrationError.NonceDecryptionFailed ->
