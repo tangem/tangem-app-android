@@ -320,10 +320,7 @@ internal class PredictionBalancePollerTest {
         appScope = TestAppCoroutineScope(coroutineContext = StandardTestDispatcher(testScheduler)),
     )
 
-    private fun status(userWalletId: UserWalletId) = PredictionAccountStatusFetcher.Params(
-        userWalletId = userWalletId,
-        mode = PredictionAccountStatusFetcher.Mode.AVAILABLE_ONLY,
-    )
+    private fun status(userWalletId: UserWalletId) = PredictionAccountStatusFetcher.Params(userWalletId = userWalletId)
 
     private fun positions(userWalletId: UserWalletId) = PredictionPositionsValueFetcher.Params(userWalletId = userWalletId)
 
