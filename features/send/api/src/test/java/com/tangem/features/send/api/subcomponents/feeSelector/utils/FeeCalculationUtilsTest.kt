@@ -169,7 +169,6 @@ class FeeCalculationUtilsTest {
                 fiatAmount = BigDecimal.ZERO,
                 fiatRate = BigDecimal.ZERO,
                 priceChange = BigDecimal.ZERO,
-                stakingBalance = null,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),
                 networkAddress = mockk(relaxed = true),
