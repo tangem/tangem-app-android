@@ -21,6 +21,7 @@ internal class SdkTransactionHistoryItemConverterTest {
         gaslessFeeAddresses = emptySet(),
         currency = MockCryptoCurrencyFactory().createCoin(Blockchain.Ethereum),
         networkTokens = emptySet(),
+        getCachedTokenInfoUseCase = mockk(relaxed = true),
         currencyAddresses = emptyList(),
         txHistoryFeatureToggles = mockk(relaxed = true),
     )
