@@ -116,6 +116,7 @@ private fun AmountBlock(state: PlacePredictionUM, intents: PlacePredictionAmount
             amountCaption = state.amountCaption,
             collateral = state.collateral,
             balance = order.balance,
+            isAddFundsEnabled = order.isAddFundsEnabled,
             onAmountChange = intents::onAmountChange,
             onAddFundsClick = intents::onAddFundsClick,
         )

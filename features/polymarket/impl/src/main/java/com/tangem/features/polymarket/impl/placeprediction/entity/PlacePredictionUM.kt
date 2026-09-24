@@ -33,6 +33,7 @@ internal data class PlacePredictionUM(
     val priceError: PriceErrorUM? = null,
     val submit: SubmitUM,
     val isPrimaryButtonEnabled: Boolean,
+    val isAwaitingFunds: Boolean = false,
 ) {
 
     companion object {
@@ -149,7 +150,11 @@ internal data class CollateralUM(val tokenSymbol: String, val iconState: Currenc
 @Immutable
 internal sealed interface OrderSideUM {
 
-    data class Buy(val balance: BigDecimal?, val hasSufficientBalance: Boolean) : OrderSideUM
+    data class Buy(
+        val balance: BigDecimal?,
+        val hasSufficientBalance: Boolean,
+        val isAddFundsEnabled: Boolean = false,
+    ) : OrderSideUM
 
     data class Sell(
         val position: SellPositionUM,
