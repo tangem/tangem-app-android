@@ -2,8 +2,10 @@ package com.tangem.features.polymarket.impl.common.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -72,13 +74,19 @@ internal fun PolymarketNextPageLoader(modifier: Modifier = Modifier) {
 
 /** A list that could not be served: [text] under a refresh mark, the whole area tappable to retry. */
 @Composable
-internal fun PolymarketReloadPrompt(text: TextReference, onReloadClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun PolymarketReloadPrompt(
+    text: TextReference,
+    onReloadClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(vertical = 48.dp),
+) {
     Column(
         modifier = modifier
             .fillMaxWidth()
             .clickable(role = Role.Button, onClick = onReloadClick)
-            .padding(vertical = 48.dp),
+            .padding(contentPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
     ) {
         Box(
             modifier = Modifier
