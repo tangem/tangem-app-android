@@ -969,11 +969,11 @@
   <string name="initial_wallet_sync_restore_progress">%d%%を復元中</string>
   <string name="introduction_button_create_wallet">ウォレットを作成</string>
   <string name="introduction_button_i_have_a_wallet">ウォレットを持っている</string>
-  <string name="introduction_create_wallet_hardware_description">Tangem Walletをお持ちの場合</string>
-  <string name="introduction_create_wallet_hardware_title">Tangem CardまたはRing</string>
-  <string name="introduction_create_wallet_seed_phrase_description">ハードウェアウォレットなしで開始</string>
+  <string name="introduction_create_wallet_hardware_description">Tangemウォレットをお持ちの場合</string>
+  <string name="introduction_create_wallet_hardware_title">TangemカードまたはRing</string>
+  <string name="introduction_create_wallet_seed_phrase_description">ハードウェアウォレットなしで始める</string>
   <string name="introduction_create_wallet_seed_phrase_title">シードフレーズでウォレットを作成</string>
-  <string name="introduction_i_have_wallet_hardware_description">Tangem Walletでアプリに入る</string>
+  <string name="introduction_i_have_wallet_hardware_description">Tangemウォレットを使ってアプリに入る</string>
   <string name="introduction_import_icloud_not_found">iCloudバックアップが見つかりません</string>
   <string name="introduction_import_icloud_restore">iCloudバックアップを復元</string>
   <string name="introduction_import_icloud_retry">iCloudバックアップを再試行</string>
@@ -983,9 +983,9 @@
   <string name="introduction_scene_two_subtitle">手数料ゼロで暗号資産や株式を購入</string>
   <string name="introduction_scene_two_title">資産をもっと増やそう</string>
   <string name="introduction_stories_button_primary">ウォレットをスキャン</string>
-  <string name="introduction_stories_button_secondary">詳細を見る・購入する</string>
+  <string name="introduction_stories_button_secondary">詳しく見る・購入する</string>
   <string name="introduction_stories_four_subtitle">世界中で使われているセルフカストディウォレットへ</string>
-  <string name="introduction_stories_four_title">数百万人に選ばれています</string>
+  <string name="introduction_stories_four_title">数百万人に信頼されています</string>
   <string name="introduction_stories_one_subtitle">すべての操作をTangemで承認</string>
   <string name="introduction_stories_one_title">ワンタップで暗号資産を管理</string>
   <string name="introduction_stories_three_subtitle">秘密鍵がカードから外に出ることはありません。</string>
