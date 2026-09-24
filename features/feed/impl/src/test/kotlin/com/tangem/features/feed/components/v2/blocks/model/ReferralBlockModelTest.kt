@@ -27,9 +27,11 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -51,6 +53,7 @@ internal class ReferralBlockModelTest {
 
     private lateinit var wallets: MutableStateFlow<List<UserWallet>?>
     private lateinit var selection: MutableStateFlow<Pair<UserWallet, AccountStatus.CryptoPortfolio>?>
+    private lateinit var isWalletEnabled: MutableStateFlow<(UserWallet, AccountStatus) -> Boolean>
 
     @BeforeEach
     fun setUp() {
@@ -65,7 +68,9 @@ internal class ReferralBlockModelTest {
         mockkStatic(ScanResponse::cardTypesResolver)
         wallets = MutableStateFlow(emptyList())
         selection = MutableStateFlow(null)
+        isWalletEnabled = MutableStateFlow { _, _ -> true }
         every { userWalletsListRepository.userWallets } returns wallets
+        every { portfolioSelectorController.isEnabled } returns isWalletEnabled
         every { portfolioFetcherFactory.create(any(), any()) } returns mockk(relaxed = true)
         every { portfolioSelectorController.selectedAccountWithData(any()) } returns selection
         every { portfolioSelectorController.selectAccount(accountId = null) } answers { selection.value = null }
@@ -306,19 +311,21 @@ internal class ReferralBlockModelTest {
     }
 
     @Test
-    fun `GIVEN one of two wallets joined WHEN returning THEN only that wallet leaves the invitable set`() = runTest {
+    fun `GIVEN one of two wallets joined WHEN returning THEN it is offered as a disabled row`() = runTest {
         // Arrange
-        wallets.value = listOf(hotWallet(walletAId), hotWallet(walletBId))
+        val walletA = hotWallet(walletAId)
+        val walletB = hotWallet(walletBId)
+        wallets.value = listOf(walletA, walletB)
         val model = createModel(testScope = this)
         val openedSheets = model.bottomSheetNavigation.trackSlot()
         advanceUntilIdle()
         model.onClick()
-        selection.value = hotWallet(walletAId) to accountStatus
+        selection.value = walletA to accountStatus
         advanceUntilIdle()
         coEvery { referralRepository.getReferralStatus(walletAId.stringValue) } returns
             referralStatus(isActive = true)
 
-        // Act — back from A's referral screen, B is still worth inviting, so the card opens straight for it
+        // Act — back from A's referral screen, where it joined
         model.onResume()
         advanceUntilIdle()
         model.onClick()
@@ -326,12 +333,88 @@ internal class ReferralBlockModelTest {
 
         // Assert
         assertThat(model.isVisible.value).isTrue()
-        verify(exactly = 1) {
-            router.push(route = AppRoute.ReferralProgram(userWalletId = walletBId), onComplete = any())
-        }
+        assertThat(isWalletEnabled.value(walletA, accountStatus)).isFalse()
+        assertThat(isWalletEnabled.value(walletB, accountStatus)).isTrue()
         assertThat(openedSheets)
-            .containsExactly(ReferralBlockComponent.WalletSelectorConfig, null)
+            .containsExactly(
+                ReferralBlockComponent.WalletSelectorConfig,
+                null,
+                ReferralBlockComponent.WalletSelectorConfig,
+            )
             .inOrder()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN one of two wallets has joined WHEN the block is tapped THEN the joined one opens disabled`() = runTest {
+        // Arrange
+        val walletA = hotWallet(walletAId)
+        val walletB = hotWallet(walletBId)
+        wallets.value = listOf(walletA, walletB)
+        coEvery { referralRepository.getReferralStatus(walletBId.stringValue) } returns
+            referralStatus(isActive = true)
+        val model = createModel(testScope = this)
+        val openedSheets = model.bottomSheetNavigation.trackSlot()
+        advanceUntilIdle()
+
+        // Act
+        model.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(openedSheets).containsExactly(ReferralBlockComponent.WalletSelectorConfig)
+        assertThat(isWalletEnabled.value(walletA, accountStatus)).isTrue()
+        assertThat(isWalletEnabled.value(walletB, accountStatus)).isFalse()
+        verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the join statuses are still being read WHEN the card is built THEN it shows as a skeleton`() = runTest {
+        // Arrange
+        wallets.value = listOf(hotWallet(walletAId))
+        coEvery { referralRepository.getReferralStatus(any()) } coAnswers {
+            delay(timeMillis = STATUS_DELAY_MS)
+            referralStatus(isActive = false)
+        }
+
+        // Act
+        val model = createModel(testScope = this)
+        runCurrent()
+
+        // Assert
+        assertThat(model.isVisible.value).isTrue()
+        assertThat(model.isLoading.value).isTrue()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the join statuses have been read WHEN the card is built THEN the skeleton is gone`() = runTest {
+        // Arrange
+        wallets.value = listOf(hotWallet(walletAId))
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.isVisible.value).isTrue()
+        assertThat(model.isLoading.value).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN no wallet the programme is open to WHEN the card is built THEN no skeleton is shown`() = runTest {
+        // Arrange
+        wallets.value = listOf(coldWallet(walletAId, isTangemWallet = false))
+
+        // Act
+        val model = createModel(testScope = this)
+        runCurrent()
+
+        // Assert
+        assertThat(model.isVisible.value).isFalse()
+        assertThat(model.isLoading.value).isFalse()
         model.onDestroy()
     }
 
@@ -407,5 +490,6 @@ internal class ReferralBlockModelTest {
 
     private companion object {
         const val CARD_ID = "card-1"
+        const val STATUS_DELAY_MS = 1_000L
     }
 }
