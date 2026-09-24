@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds2.ambient.TangemAmbientBackground
 import com.tangem.core.ui.ds2.surface.TangemSurface
@@ -19,6 +20,9 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_sign_plus_16
 
 private val FeedBlockShape = RoundedCornerShape(size = 20.dp)
+
+private const val TITLE_MAX_LINES = 2
+private const val DESCRIPTION_MAX_LINES = 3
 
 /**
  * Half-height shortcut card: icon at the top start, title at the bottom start.
@@ -104,13 +108,16 @@ internal fun FeedPromoCard(
                         text = title,
                         style = TangemTheme.typography3.subheading.medium,
                         color = TangemTheme.colors3.text.secondary,
-                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = TITLE_MAX_LINES,
                     )
                     if (description != null) {
                         Text(
                             text = description,
                             style = TangemTheme.typography3.body.medium,
                             color = TangemTheme.colors3.text.primary,
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = DESCRIPTION_MAX_LINES,
                         )
                     }
                 }
