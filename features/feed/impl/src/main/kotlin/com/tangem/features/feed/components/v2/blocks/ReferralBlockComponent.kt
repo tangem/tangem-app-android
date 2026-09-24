@@ -19,6 +19,8 @@ import com.tangem.core.ui.ds2.ambient.TangemAmbientBackground
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
+import com.tangem.features.feed.components.v2.blocks.analytics.FeedBlocksAnalytics
+import com.tangem.features.feed.components.v2.blocks.analytics.ProductCard
 import com.tangem.features.feed.components.v2.blocks.model.ReferralBlockModel
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.v2.FeedBlockIconBadge
@@ -32,11 +34,14 @@ import kotlinx.coroutines.flow.StateFlow
 internal class ReferralBlockComponent(
     context: AppComponentContext,
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
+    private val blocksAnalytics: FeedBlocksAnalytics,
 ) : FeedBlockComponent(context = context, key = KEY) {
 
     private val model: ReferralBlockModel = getOrCreateModel()
 
     override val size: FeedBlock.Size = FeedBlock.Size.Large
+
+    override val productCard: ProductCard = ProductCard.ReferAFriend
 
     override val isVisible: StateFlow<Boolean> = model.isVisible
 
@@ -56,7 +61,7 @@ internal class ReferralBlockComponent(
             title = stringResourceSafe(R.string.feed_promo_referral_title),
             description = stringResourceSafe(R.string.feed_promo_referral_description, REFERRAL_AWARD),
             ambientVariant = TangemAmbientBackground.Variant.Red,
-            onClick = model::onClick,
+            onClick = ::onClick,
             modifier = modifier,
             icon = { ReferralIcon() },
         )
@@ -67,6 +72,11 @@ internal class ReferralBlockComponent(
         val bottomSheet by bottomSheetSlot.subscribeAsState()
 
         bottomSheet.child?.instance?.BottomSheet()
+    }
+
+    private fun onClick() {
+        blocksAnalytics.onProductCardClicked(productCard)
+        model.onClick()
     }
 
     private fun walletSelectorChild(componentContext: ComponentContext): ComposableBottomSheetComponent =

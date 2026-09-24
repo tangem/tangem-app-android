@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.multichain.receive
 
 import androidx.compose.runtime.Stable
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -11,6 +12,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.common.networksOrNull
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.multichain.receivableCurrencies
@@ -21,6 +23,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class PaymentReceiveModel @Inject constructor(
@@ -29,10 +32,13 @@ internal class PaymentReceiveModel @Inject constructor(
     private val clipboardManager: ClipboardManager,
     private val shareManager: ShareManager,
     private val uiMessageSender: UiMessageSender,
+    private val analytics: AnalyticsEventHandler,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
     private val params = paramsContainer.require<PaymentReceiveComponent.Params>()
+
+    private var isAddressShownReported = false
 
     private val converter = PaymentReceiveUMConverter(
         onCopy = ::onCopy,
@@ -60,6 +66,7 @@ internal class PaymentReceiveModel @Inject constructor(
                     .filterIsInstance<PaymentNetworkStatus.Available>()
                     .firstOrNull { it.network.rawId == params.networkRawId }
                     ?: return@onEach
+                reportAddressShown(available)
                 uiState.value = converter.convert(
                     PaymentReceiveUMConverter.Input(
                         networkName = available.network.name,
@@ -73,6 +80,22 @@ internal class PaymentReceiveModel @Inject constructor(
 
     fun onDismiss() {
         params.onDismiss()
+    }
+
+    /**
+     * The sheet opens before its data arrives, so "the address popup was shown" is the first status emission
+     * that actually resolves the network. Later emissions are balance refreshes of a sheet already on screen,
+     * hence the latch. Emissions are collected on [modelScope]'s single thread, so a plain flag is enough.
+     */
+    private fun reportAddressShown(status: PaymentNetworkStatus.Available) {
+        if (isAddressShownReported) return
+        isAddressShownReported = true
+        analytics.send(
+            TangemPayAnalyticsEvents.Multichain.FastWayNetworkAddressPopupShowed(
+                blockchain = status.network.name,
+                chainId = status.chainId,
+            ),
+        )
     }
 
     private fun onCopy() {

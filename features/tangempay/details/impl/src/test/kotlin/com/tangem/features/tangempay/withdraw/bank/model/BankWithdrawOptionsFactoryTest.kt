@@ -116,8 +116,12 @@ internal class BankWithdrawOptionsFactoryTest {
     fun `GIVEN disabled and not issued networks WHEN create THEN null`() {
         // Arrange
         val networks: List<PaymentNetworkStatus> = listOf(
-            PaymentNetworkStatus.Disabled(network = usdcBase.network, cryptoCurrencies = listOf(usdcBase)),
-            PaymentNetworkStatus.NotIssued(network = mockk()),
+            PaymentNetworkStatus.Disabled(
+                network = usdcBase.network,
+                chainId = BASE_CHAIN_ID,
+                cryptoCurrencies = listOf(usdcBase),
+            ),
+            PaymentNetworkStatus.NotIssued(network = mockk(), chainId = BASE_CHAIN_ID),
         )
 
         // Act
