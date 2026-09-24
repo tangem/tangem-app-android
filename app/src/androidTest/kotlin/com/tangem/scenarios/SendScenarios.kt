@@ -35,7 +35,7 @@ fun BaseTestCase.openSendScreen(
         synchronizeAddresses()
     }
     step("Click on token with name: '$tokenName'") {
-        onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+        openTokenDetailsFromTokenList(tokenName)
     }
     step("Click on 'Transfer' button") {
         onTokenDetailsScreen { transferButton.clickWithAssertion() }
@@ -99,7 +99,7 @@ fun BaseTestCase.openSendAddressScreen(
     inputAmount: String
 ) {
     step("Click on token with name: '$tokenName'") {
-        onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+        openTokenDetailsFromTokenList(tokenName)
     }
     step("Click on 'Transfer' button") {
         onTokenDetailsScreen { transferButton.clickWithAssertion() }
@@ -286,7 +286,7 @@ fun BaseTestCase.openSendScreenWithHotWallet(seedPhrase: String, tokenName: Stri
         openMainScreenWithExistingHotWallet(seedPhrase)
     }
     step("Click on token with name: '$tokenName'") {
-        onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+        openTokenDetailsFromTokenList(tokenName)
     }
     openSendFromTokenDetails()
 }

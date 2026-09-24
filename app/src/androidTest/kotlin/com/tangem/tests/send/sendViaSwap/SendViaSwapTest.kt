@@ -13,6 +13,7 @@ import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R
+import com.tangem.core.ui.R as CoreUiR
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.scenarios.*
 import com.tangem.screens.*
@@ -383,8 +384,7 @@ class SendViaSwapTest : BaseTestCase() {
         val swapTokenName = "Ethereum"
         val main = "MAIN"
         val inputAmount = "0.001"
-        val providerName = "SimpleSwap"
-        val expressStatusItemTitle = getResourceString(R.string.express_exchange_by, providerName)
+        val swapHistoryTitle = getResourceString(CoreUiR.string.common_swapping)
         val bitcoinBalanceScenarioName = "bitcoin_utxo"
         val bitcoinBalanceScenarioState = "BalanceHotWalletSvS"
         val assetsScenarioName = "express_api_assets"
@@ -415,7 +415,7 @@ class SendViaSwapTest : BaseTestCase() {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenName)
             }
             step("Select token to Send via Swap") {
                 selectTokenToSendViaSwap(swapTokenName = swapTokenName, networkName = swapTokenName, networkType = main)
@@ -462,9 +462,11 @@ class SendViaSwapTest : BaseTestCase() {
             step("Click on 'Close' button") {
                 onSendSuccessScreen { closeButton.performClick() }
             }
-            step("Assert 'Express status' item is displayed with title: '$expressStatusItemTitle'") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onTokenDetailsScreen { expressStatusItem(expressStatusItemTitle).assertIsDisplayed() }
+            // The history only re-reads on a refresh, so pull it until the swap row lands.
+            step("Assert '$swapHistoryTitle' transaction is displayed in the history") {
+                awaitAssert(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+                    pullToRefreshTokenDetails()
+                    onTxHistoryScreen { transactionItem(swapHistoryTitle).assertIsDisplayed() }
                 }
             }
         }
@@ -483,8 +485,7 @@ class SendViaSwapTest : BaseTestCase() {
         val hotWalletScenarioState = "USDTHotWalletSvS"
         val ethNetworkBalanceScenarioName = "eth_network_balance"
         val ethNetworkBalanceScenarioState = "Started"
-        val providerName = "Changelly"
-        val expressStatusItemTitle = getResourceString(R.string.express_exchange_by, providerName)
+        val swapHistoryTitle = getResourceString(CoreUiR.string.common_swapping)
 
         setupHooks().run {
 
@@ -505,7 +506,7 @@ class SendViaSwapTest : BaseTestCase() {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenName)
             }
             step("Select token to Send via Swap") {
                 selectTokenToSendViaSwap(swapTokenName = swapTokenName, networkName = networkName)
@@ -543,9 +544,11 @@ class SendViaSwapTest : BaseTestCase() {
             step("Click on 'Close' button") {
                 onSendSuccessScreen { closeButton.performClick() }
             }
-            step("Assert 'Express status' item is displayed with title: '$expressStatusItemTitle'") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onTokenDetailsScreen { expressStatusItem(expressStatusItemTitle).assertIsDisplayed() }
+            // The history only re-reads on a refresh, so pull it until the swap row lands.
+            step("Assert '$swapHistoryTitle' transaction is displayed in the history") {
+                awaitAssert(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+                    pullToRefreshTokenDetails()
+                    onTxHistoryScreen { transactionItem(swapHistoryTitle).assertIsDisplayed() }
                 }
             }
         }
@@ -559,8 +562,7 @@ class SendViaSwapTest : BaseTestCase() {
         val swapTokenName = "Ethereum"
         val main = "MAIN"
         val inputAmount = "0.001"
-        val providerName = "Changelly"
-        val expressStatusItemTitle = getResourceString(R.string.express_exchange_by, providerName)
+        val swapHistoryTitle = getResourceString(CoreUiR.string.common_swapping)
         val hotWalletScenarioState = "XRPHotWalletSvS"
         val xrpExchangeQuoteScenarioName = "xrp_exchange_quote"
         val xrpExchangeDataScenarioName = "xrp_exchange_data"
@@ -584,7 +586,7 @@ class SendViaSwapTest : BaseTestCase() {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenName)
             }
             step("Select token to Send via Swap") {
                 selectTokenToSendViaSwap(swapTokenName = swapTokenName, networkName = swapTokenName, networkType = main)
@@ -619,9 +621,11 @@ class SendViaSwapTest : BaseTestCase() {
             step("Click on 'Close' button") {
                 onSendSuccessScreen { closeButton.performClick() }
             }
-            step("Assert 'Express status' item is displayed with title: '$expressStatusItemTitle'") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onTokenDetailsScreen { expressStatusItem(expressStatusItemTitle).assertIsDisplayed() }
+            // The history only re-reads on a refresh, so pull it until the swap row lands.
+            step("Assert '$swapHistoryTitle' transaction is displayed in the history") {
+                awaitAssert(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+                    pullToRefreshTokenDetails()
+                    onTxHistoryScreen { transactionItem(swapHistoryTitle).assertIsDisplayed() }
                 }
             }
         }
@@ -674,7 +678,7 @@ class SendViaSwapTest : BaseTestCase() {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenName)
             }
             step("Click on 'Transfer' button") {
                 onTokenDetailsScreen { transferButton.clickWithAssertion() }
