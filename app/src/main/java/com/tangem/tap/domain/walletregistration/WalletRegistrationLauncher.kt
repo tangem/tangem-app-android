@@ -11,6 +11,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.hot.HotWalletAccessor
+import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.lib.auth.session.WalletNonce
@@ -60,10 +61,17 @@ class WalletRegistrationLauncher @Inject internal constructor(
      * prompt appears — then ALWAYS clear the context. Already-registered wallets are skipped before any
      * auth, so a routine unlock never pops a needless prompt; a context established elsewhere is reused
      * and left untouched.
+     *
+     * Without a device session the registration can't be sent, so the auth is not asked for at all.
+     * An [accessCode] the user has just unlocked the wallet with establishes the context without a prompt.
      */
-    suspend fun registerUnlockedMobileWallet(userWallet: UserWallet.Hot) {
+    suspend fun registerUnlockedMobileWallet(userWallet: UserWallet.Hot, accessCode: HotAuth.Password? = null) {
         if (!authFeatureToggles.isBackendAuthenticationEnabled) return
         if (walletRegistrar.isRegistered(userWallet.walletId.toBase64())) return
+        if (!walletRegistrar.hasActiveSession()) {
+            TangemLogger.i("No active session — deferring mobile registration to the next unlock")
+            return
+        }
 
         if (hotWalletAccessor.getContextualUnlock(userWallet.hotWalletId) != null) {
             // Another flow already holds a context — reuse it (no prompt) and leave it for its owner.
@@ -72,7 +80,13 @@ class WalletRegistrationLauncher @Inject internal constructor(
         }
 
         try {
-            runSuspendCatching { hotWalletAccessor.unlockContextual(userWallet.hotWalletId) }
+            runSuspendCatching {
+                if (accessCode != null) {
+                    hotWalletAccessor.unlockContextual(userWallet.hotWalletId, accessCode)
+                } else {
+                    hotWalletAccessor.unlockContextual(userWallet.hotWalletId)
+                }
+            }
                 .onFailure { error ->
                     TangemLogger.e("Failed to establish an unlock context for mobile registration", error)
                     return
