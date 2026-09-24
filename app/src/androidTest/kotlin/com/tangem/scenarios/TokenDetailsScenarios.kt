@@ -41,9 +41,12 @@ fun BaseTestCase.openTokenDetailsFromTokenList(tokenTitle: String) = openTokenDe
     onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
 }
 
-/** Same as [openTokenDetailsFromTokenList], for a token nested under an expanded account section. */
+/**
+ * Same as [openTokenDetailsFromTokenList], for a token nested under an account section. The same token
+ * can sit in several accounts (and on the pager's neighbouring page), so tap the copy that is on screen.
+ */
 fun BaseTestCase.openTokenDetailsFromAccountSection(tokenTitle: String) = openTokenDetailsByTapping {
-    onMainScreen { findTokenInAnyAccountByName(tokenTitle).clickWithAssertion() }
+    onMainScreen { clickDisplayedToken(tokenTitle) }
 }
 
 private fun BaseTestCase.openTokenDetailsByTapping(tap: () -> Unit) {

@@ -13,6 +13,7 @@ import com.tangem.scenarios.searchTokenInMarkets
 import com.tangem.scenarios.assertMarketsExchangesScreen
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.openMarketsExchangesScreen
+import com.tangem.scenarios.openMarketsTokenDetails
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.onMainScreen
 import com.tangem.screens.onMarketsExchangesScreen
@@ -153,8 +154,8 @@ class MarketsExchangesTest : BaseTestCase() {
                 setWireMockScenarioState(scenarioName = scenarioName, state = "EmptyExchanges")
             }
         ).run {
-            step("Open 'Markets Exhanges Screen with token: $tokenName'") {
-                openMarketsExchangesScreen(tokenName)
+            step("Open '$tokenName' token details in Markets") {
+                openMarketsTokenDetails(tokenName)
             }
             step("Assert 'Listed on exchanges' block shows no exchanges") {
                 onMarketsScreen { listedOnEmptyText.assertIsDisplayed() }
