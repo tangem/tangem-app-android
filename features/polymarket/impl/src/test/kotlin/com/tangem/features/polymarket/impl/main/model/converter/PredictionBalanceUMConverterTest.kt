@@ -434,7 +434,6 @@ internal class PredictionBalanceUMConverterTest {
         fun active(balance: String) = PredictionAccountStatusValue.Active(
             source = StatusSource.ACTUAL,
             balance = BigDecimal(balance),
-            positionsValue = null,
             fiatRate = BigDecimal.ONE,
             depositCurrency = mockk(relaxed = true),
             depositAddress = "0xbridge",

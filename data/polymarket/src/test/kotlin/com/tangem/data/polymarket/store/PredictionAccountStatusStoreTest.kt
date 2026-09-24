@@ -318,7 +318,6 @@ internal class PredictionAccountStatusStoreTest {
         val ACTIVE = PredictionAccountStatusValue.Active(
             source = StatusSource.ACTUAL,
             balance = BigDecimal("12.5"),
-            positionsValue = BigDecimal("3"),
             fiatRate = null,
             depositCurrency = COLLATERAL,
             depositAddress = "0xbridge0000000000000000000000000000000001",
@@ -327,7 +326,6 @@ internal class PredictionAccountStatusStoreTest {
         val ACTIVE_DTO = PredictionAccountStatusValueDTO.Active(
             balance = BigDecimal("12.5"),
             depositAddress = "0xbridge0000000000000000000000000000000001",
-            positionsValue = BigDecimal("3"),
         )
     }
 }

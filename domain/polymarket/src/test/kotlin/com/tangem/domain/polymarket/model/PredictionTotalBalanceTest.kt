@@ -60,7 +60,6 @@ internal class PredictionTotalBalanceTest {
     private fun active(source: StatusSource) = PredictionAccountStatusValue.Active(
         source = source,
         balance = BigDecimal("10.5"),
-        positionsValue = null,
         fiatRate = null,
         depositCurrency = COLLATERAL,
         depositAddress = null,
