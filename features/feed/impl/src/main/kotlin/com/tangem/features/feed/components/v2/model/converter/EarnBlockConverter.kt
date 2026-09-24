@@ -7,6 +7,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.staking.earn.ResolveEarnRateUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.features.feed.ui.v2.state.EarnBlockUM
+import com.tangem.utils.StringsSigns.PERCENT
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.isNullOrZero
@@ -67,5 +68,5 @@ internal class EarnBlockConverter(
     }
 
     /** Fraction to the app-wide percent rendering, e.g. `0.1264` → `12.64%`. */
-    private fun BigDecimal.formatPercent(): String = format { percent() }
+    private fun BigDecimal.formatPercent(): String = format { percent(withPercentSign = false) } + PERCENT
 }
