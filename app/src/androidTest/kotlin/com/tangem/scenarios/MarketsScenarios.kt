@@ -88,9 +88,14 @@ fun BaseTestCase.openMarketsExchangesScreen(tokenName: String) {
     }
     step("Scroll to 'Listed on exchanges' block") {
         onMarketsScreen { scrollToListedOnBlock() }
-    }
-    step("Click on 'Listed on exchanges' block") {
-        onMarketsScreen { listedOnBlockContainer.performClick() }
         waitForIdle()
+    }
+    // The block settles into place while the token details load, so a tap can land on the 'Add token'
+    // button below it — retry until the exchanges screen is up.
+    step("Click on 'Listed on exchanges' block") {
+        awaitAssert {
+            runCatching { onMarketsScreen { listedOnBlockContainer.clickWithAssertion() } }
+            onMarketsExchangesScreen { exchangesTitle.assertIsDisplayed() }
+        }
     }
 }
