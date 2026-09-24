@@ -2902,6 +2902,7 @@
   <string name="tangempay_withdraw_bank_error_business">Transfers are not available for this type of business</string>
   <string name="tangempay_withdraw_bank_error_general_title">Unable to perform the operation</string>
   <string name="tangempay_withdraw_bank_error_recipient_region">Transfers to recipient\'s region currently unavailable</string>
+  <string name="tangempay_withdraw_bank_error_region_title">Transfers are not available</string>
   <string name="tangempay_withdraw_bank_error_sender_region">Transfers from your region currently unavailable</string>
   <string name="tangempay_withdraw_bank_error_unsupported_configuration">Transfers are not available. Please try again later</string>
   <plurals name="tangempay_withdraw_bank_eta_business_days">
@@ -2941,9 +2942,7 @@
   <string name="tangempay_withdraw_bank_sending_summary">You are sending %1$s including a %2$s fee of %3$s</string>
   <string name="tangempay_withdraw_bank_source_subtitle">%1$s · %2$s</string>
   <string name="tangempay_withdraw_bank_step_counter">%1$d of %2$d</string>
-  <string name="tangempay_withdraw_bank_success_description">The transfer is on its way to the recipient\'s bank account.</string>
   <string name="tangempay_withdraw_bank_success_title">Sending %s</string>
-  <string name="tangempay_withdraw_bank_title_to_recipient">To %s</string>
   <string name="tangempay_withdraw_bank_transfer_type_own">Your account</string>
   <string name="tangempay_withdraw_bank_transfer_type_third_party">3rd-party account</string>
   <string name="tangempay_withdraw_bank_transfer_type_title">Type of transfer</string>

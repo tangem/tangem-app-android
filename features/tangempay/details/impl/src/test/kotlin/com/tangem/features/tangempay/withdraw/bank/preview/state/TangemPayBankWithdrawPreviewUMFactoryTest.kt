@@ -287,7 +287,7 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
         UnavailableModel(PreviewFailure.Business, R.string.tangempay_withdraw_bank_error_business),
         UnavailableModel(
             failure = PreviewFailure.UnsupportedConfiguration,
-            titleRes = R.string.tangempay_withdraw_bank_error_unsupported_configuration,
+            titleRes = R.string.tangempay_withdraw_bank_error_region_title,
         ),
     )
 
