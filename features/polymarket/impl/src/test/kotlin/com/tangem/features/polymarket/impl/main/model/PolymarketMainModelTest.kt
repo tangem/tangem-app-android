@@ -62,6 +62,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -719,6 +720,49 @@ internal class PolymarketMainModelTest {
                 positionsValueFetcher(PredictionPositionsValueFetcher.Params(userWalletId = USER_WALLET_ID))
             }
         }
+
+    @Test
+    fun `GIVEN a slow positions read WHEN pulled twice THEN one refresh runs and the indicator waits`() = runTest {
+        // Arrange
+        val positionsRead = CompletableDeferred<Unit>()
+        coEvery { positionsPreviewLoader.refresh(any(), USER_WALLET_ID, any()) } coAnswers { positionsRead.await() }
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        runCurrent()
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isTrue()
+        coVerify(exactly = 1) { positionsPreviewLoader.refresh(any(), USER_WALLET_ID, any()) }
+
+        // Act
+        positionsRead.complete(Unit)
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a manual refresh WHEN the positions read is cancelled THEN the indicator stops`() = runTest {
+        // Arrange
+        coEvery { positionsPreviewLoader.refresh(any(), USER_WALLET_ID, any()) } throws CancellationException()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
+        model.onDestroy()
+    }
 
     @Test
     fun `GIVEN an account with a confirmed address WHEN add funds tapped THEN the sheet opens`() =
