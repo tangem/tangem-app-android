@@ -25,7 +25,7 @@ signs, deploys or moves funds.
 | `model` | 64 value types; the ones that carry a decision are documented in their KDoc |
 | `usecase` | One network or store operation each |
 | `interactor` | Use cases composed of use cases (project rule: a use case that injects use cases is an Interactor, package `interactor/`) |
-| `flow` | Long-lived processes: `PredictionAccountStatusSupplier`/`Producer`/`Fetcher`, `PredictionBalancePoller`, `PredictionFundingWindow`, `PredictionWithdrawalTracker` |
+| `flow` | Long-lived processes: `PredictionAccountStatusSupplier`/`Producer`/`Fetcher`, `PredictionPositionsValueSupplier`/`Producer`/`Fetcher`, `PredictionBalancePoller`, `PredictionFundingWindow`, `PredictionWithdrawalTracker` |
 | `session` | `PolymarketPositionsSession` — one visit of the positions list |
 | `amount` | `PredictionCollateralAmount` — decimal ↔ base-unit conversion of pUSD (6 decimals) |
 
@@ -171,6 +171,13 @@ draft, the deposit wallet, the market and the quote age before anything is sent.
   positions value from the data API (`PolymarketPositionsRepository.getPositionsValue`) into
   `Active.positionsValue`; `AVAILABLE_ONLY` (wallet screen, onboarding, ticks inside the funding window)
   carries the cached one over. A failed `/value` read keeps the cached value too and never fails the balance.
+- **Positions value.** Kept apart from the account status: it needs only the deposit-wallet address (public
+  data API, `PolymarketPositionsRepository.getPositionsValue`), not credentials or the wallet status, and a
+  failed read must not touch the balance. `PredictionPositionsValueFetcher` / `PredictionPositionsValueSupplier`
+  hold it per wallet as `PredictionPositionsValue` — `Unknown` until first read, `Known(amount, source)` after,
+  `ONLY_CACHE` after a failed re-read; the fetcher is a no-op without stored addresses. `PredictionTotalBalance.of(status, positions)` is the one
+  place collateral and positions are added; its `source` is the less fresh of the two, `null` while the
+  positions value was never read. Runtime only — add persistence when the wallet total starts counting it.
 - **Withdraw destinations.** `GetPredictionWithdrawDestinationsUseCase` matches bridge assets to the
   wallet's currencies but is filtered to USDC · Polygon (phase 1, owner decision 15.09.2026). Removing the
   filter is the phase-2 change.
