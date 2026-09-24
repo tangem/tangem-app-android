@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<verification-metadata xmlns="https://schema.gradle.org/dependency-verification"
+                       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                       xsi:schemaLocation="https://schema.gradle.org/dependency-verification https://schema.gradle.org/dependency-verification/dependency-verification-1.3.xsd">
+   <configuration>
+      <verify-metadata>true</verify-metadata>
+      <verify-signatures>false</verify-signatures>
+      <trusted-artifacts>
+         <trust group="^(?!com[.]meawallet([.].*)?$|com[.]google[.]android[.]gms$).*$" regex="true"/>
+         <trust group="^com[.]google[.]android[.]gms$" name="^(?!play-services-tapandpay$).*$" regex="true"/>
+      </trusted-artifacts>
+   </configuration>
+   <components>
+      <component group="com.google.android.gms" name="play-services-tapandpay" version="18.10.0">
+         <artifact name="play-services-tapandpay-18.10.0.aar">
+            <sha256 value="dc469af18a326845fae2f32ff1729f3b8ae582eb3ad4d1ece4d4c3f39bb80f11" origin="MeaWallet Nexus"/>
+         </artifact>
+         <artifact name="play-services-tapandpay-18.10.0.pom">
+            <sha256 value="f6d64fc793c524c6f6928a8c4de6e06c512a40c4fa078dc38dbc61c839a493fd" origin="MeaWallet Nexus"/>
+         </artifact>
+      </component>
+      <component group="com.meawallet" name="mpp-prod" version="2.2.0">
+         <artifact name="mpp-prod-2.2.0.aar">
+            <sha256 value="fd5e456f8435b604d622a65f8368158d7284485444a7dad927d73b96fc5bd1c1" origin="MeaWallet Nexus"/>
+         </artifact>
+         <artifact name="mpp-prod-2.2.0.pom">
+            <sha256 value="4fcb6a23befc0cc1c70b78713899221f5f03ce52d2f8e1281b6bebf2d2eef129" origin="MeaWallet Nexus"/>
+         </artifact>
+      </component>
+      <component group="com.meawallet" name="mpp-test" version="2.2.0">
+         <artifact name="mpp-test-2.2.0.aar">
+            <sha256 value="43aadd0adb205a80922b56c7c8f8f1008012c7e353eef81ed586b9320884dba2" origin="MeaWallet Nexus"/>
+         </artifact>
+         <artifact name="mpp-test-2.2.0.pom">
+            <sha256 value="6dad5f942f1894a73ce41c77bd2a75a1708fe1eeadaacbc910b9ec5035117694" origin="MeaWallet Nexus"/>
+         </artifact>
+      </component>
+      <component group="com.meawallet" name="mpp-test" version="2.2.0-debug">
+         <artifact name="mpp-test-2.2.0-debug.aar">
+            <sha256 value="0436bde2bb5013bc2d2b1125b443f0793510912761bcdc45276271155d64919d" origin="MeaWallet Nexus"/>
+         </artifact>
+         <artifact name="mpp-test-2.2.0-debug.pom">
+            <sha256 value="97b337211180e1c4a9963a3c1a8d3bbb2522c02b0ff5fcd3e86ccd0db7705ca4" origin="MeaWallet Nexus"/>
+         </artifact>
+      </component>
+   </components>
+</verification-metadata>
