@@ -29,7 +29,6 @@ import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.vault.GachaVaultError
 import com.tangem.domain.collectibles.vault.GachaVaultLimits
 import com.tangem.domain.models.account.CollectiblesVaultBalance
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -113,7 +112,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
 
     override suspend fun getVaultBalance(
         userWallet: UserWallet,
-        cachedToken: CryptoCurrency.Token?,
+        cached: CollectiblesVaultBalance?,
     ): Either<CollectiblesAccountError, CollectiblesVaultBalance> = withContext(dispatchers.io) {
         either {
             val network = networkProvider.create(userWallet).mapLeft { it.asFailure() }.bind()
@@ -125,10 +124,11 @@ internal class DefaultGachaVaultRepository @Inject constructor(
                 .mapLeft { it.toVaultFailure(userWallet) }
                 .bind()
 
-            val token = cachedToken ?: walletManager.getCollectiblesVaultUsdc().toEither()
-                .map { usdc -> currencyFactory.create(mint = usdc.mint) }
-                .mapLeft { it.toVaultFailure(userWallet) }
-                .bind()
+            val (token, ata) = cached?.let { it.usdcToken to it.ataAddress }
+                ?: walletManager.getCollectiblesVaultUsdc().toEither()
+                    .map { usdc -> currencyFactory.create(mint = usdc.mint) to usdc.address }
+                    .mapLeft { it.toVaultFailure(userWallet) }
+                    .bind()
 
             // TODO find out the right way to get vault balance
             val balances = walletManagersFacade.getTokenBalances(
@@ -142,6 +142,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
                 // The provider lists only the accounts holding something, so an absent entry is an empty one
                 usdcAmount = balances.firstOrNull { it.contractAddress == token.contractAddress }?.amount
                     ?: BigDecimal.ZERO,
+                ataAddress = ata,
             )
         }
     }
