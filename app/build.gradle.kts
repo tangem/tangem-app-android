@@ -199,6 +199,7 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.datasourceImpl)
     implementation(projects.core.local)
+    implementation(projects.core.remote)
     implementation(projects.spend.datasource)
     implementation(projects.store.datasource)
     implementation(projects.grow.datasource)
