@@ -18,7 +18,7 @@ class CreateTransactionDataExtrasUseCase(
             catch(
                 {
                     transactionRepository.createTransactionDataExtras(
-                        callData = CompiledSmartContractCallData(data.hexToBytes()),
+                        callData = CompiledSmartContractCallData(data.toCallDataBytes()),
                         network = network,
                         nonce = nonce,
                         gasLimit = gasLimit,
@@ -28,6 +28,18 @@ class CreateTransactionDataExtrasUseCase(
                 raise(it)
             }
         }
+
+    /**
+     * Call data arrives as a hex string from an external service (Express `txData`). [hexToBytes] sizes the
+     * result as `length / 2` and would silently drop the last nibble of an odd-length string, so truncated call
+     * data would be signed and sent as if it were complete. Require `0x` + an even number of hex digits instead.
+     */
+    private fun String.toCallDataBytes(): ByteArray {
+        val digits = removePrefix(HEX_PREFIX)
+        require(digits.length % 2 == 0) { "Call data has an odd number of hex digits" }
+        require(digits.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }) { "Call data is not hex" }
+        return digits.hexToBytes()
+    }
 
     operator fun invoke(
         callData: SmartContractCallData,
@@ -47,5 +59,9 @@ class CreateTransactionDataExtrasUseCase(
         ) {
             raise(it)
         }
+    }
+
+    private companion object {
+        const val HEX_PREFIX = "0x"
     }
 }
