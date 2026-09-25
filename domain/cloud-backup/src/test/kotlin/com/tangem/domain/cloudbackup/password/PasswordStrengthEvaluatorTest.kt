@@ -45,6 +45,13 @@ internal class PasswordStrengthEvaluatorTest {
             EvaluateModel(password = "Abcde1!x", expected = PasswordStrength.STRONG),
             // > 8 with all four classes -> STRONG
             EvaluateModel(password = "Str0ng!Passw0rd", expected = PasswordStrength.STRONG),
+            // decomposed "Passworde" + U+0301: raw form is 10 chars with a "special" combining mark, but the
+            // cipher derives the key from NFC "Passwordé" (9 chars, no digit, no special) -> MEDIUM, not STRONG
+            EvaluateModel(password = "Passworde\u0301", expected = PasswordStrength.MEDIUM),
+            // decomposed "Aa1e" + U+0301: 5 raw chars, 4 after NFC -> WEAK
+            EvaluateModel(password = "Aa1e\u0301", expected = PasswordStrength.WEAK),
+            // precomposed form rates the same as its decomposed spelling
+            EvaluateModel(password = "Passwordé", expected = PasswordStrength.MEDIUM),
         )
     }
 
@@ -107,6 +114,8 @@ internal class PasswordStrengthEvaluatorTest {
             HintModel(password = "Aa1!bc2", expected = PasswordStrengthHint.ALMOST_LONG),
             // >= 8 with all classes -> STRONG
             HintModel(password = "Abcde1!x", expected = PasswordStrengthHint.STRONG),
+            // decomposed "Abcde1e" + U+0301: the combining mark is not a symbol once NFC-normalized -> ADD_SYMBOL
+            HintModel(password = "Abcde1e\u0301", expected = PasswordStrengthHint.ADD_SYMBOL),
         )
     }
 
