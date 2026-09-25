@@ -13,15 +13,22 @@ import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketPositionsPreviewUM
 import com.tangem.features.polymarket.impl.positions.model.createPolymarketPosition
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.job
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -557,13 +564,83 @@ internal class PolymarketPositionsPreviewLoaderTest {
         }
     }
 
-    private fun TestScope.createLoader(): PolymarketPositionsPreviewLoader {
+    @Nested
+    inner class PollingRestarts {
+
+        @Test
+        fun `GIVEN a pending read WHEN resumed repeatedly with eager dispatch THEN cancels before each new read`() =
+            runTest {
+                // Arrange
+                val immediateDispatcher = UnconfinedTestDispatcher(testScheduler)
+                val dispatchers = object : CoroutineDispatcherProvider by createTestingCoroutineDispatcherProvider() {
+                    override val default = immediateDispatcher
+                }
+                val loader = createLoader(dispatchers)
+                val scope = CoroutineScope(backgroundScope.coroutineContext + immediateDispatcher)
+                val requests = mutableListOf<Job>()
+                val previousRequestActive = mutableListOf<Boolean>()
+                coEvery { repository.getOpenPositions(addresses, 3, 0) } coAnswers {
+                    requests.lastOrNull()?.let { previousRequestActive += it.isActive }
+                    requests += currentCoroutineContext().job
+                    awaitCancellation()
+                }
+
+                // Act
+                repeat(3) { loader.resume(scope, userWalletId) }
+
+                // Assert
+                assertThat(requests).hasSize(3)
+                assertThat(previousRequestActive).containsExactly(false, false)
+
+                // Act
+                loader.pause()
+                passPollInterval()
+
+                // Assert
+                assertThat(requests.all { it.isCancelled }).isTrue()
+                coVerify(exactly = 3) { repository.getOpenPositions(addresses, 3, 0) }
+            }
+
+        @Test
+        fun `GIVEN repeated resumes and manual refresh WHEN a trade arrives THEN keeps a single polling loop`() = runTest {
+            // Arrange
+            val loader = createLoader()
+            val readTimes = mutableListOf<Long>()
+            coEvery { repository.getOpenPositions(addresses, 3, 0) } coAnswers {
+                readTimes += testScheduler.currentTime
+                page.right()
+            }
+            repeat(3) {
+                loader.resume(backgroundScope, userWalletId)
+                runCurrent()
+            }
+            val refresh = backgroundScope.async { loader.refresh(backgroundScope, userWalletId) }
+            runCurrent()
+            refresh.await()
+
+            // Act
+            positionsUpdater.triggerUpdate(userWalletId)
+            runCurrent()
+            advanceTimeBy(50.seconds)
+            runCurrent()
+            loader.pause()
+            advanceTimeBy(60.seconds)
+            runCurrent()
+
+            // Assert
+            assertThat(readTimes).containsExactly(0L, 0L, 0L, 0L, 0L, 2_000L, 6_000L, 14_000L, 30_000L, 50_000L).inOrder()
+        }
+    }
+
+    private fun TestScope.createLoader(
+        dispatchers: CoroutineDispatcherProvider = createTestingCoroutineDispatcherProvider(),
+    ): PolymarketPositionsPreviewLoader {
         coEvery { deriveAddresses.stored(userWalletId) } returns addresses
         return PolymarketPositionsPreviewLoader(
             repository = repository,
             deriveAddresses = deriveAddresses,
             updateListener = positionsUpdater,
-            dispatchers = createTestingCoroutineDispatcherProvider(),
+            dispatchers = dispatchers,
         )
     }
 
