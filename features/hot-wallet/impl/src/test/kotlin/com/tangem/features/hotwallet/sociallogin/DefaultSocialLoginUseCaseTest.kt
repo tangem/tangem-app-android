@@ -26,6 +26,7 @@ import com.tangem.domain.wallets.usecase.ExportSeedPhraseUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.hotwallet.SocialLoginOutcome
+import com.tangem.features.hotwallet.SocialLoginStage
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImportError
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImporter
 import com.tangem.hot.sdk.TangemHotSdk
@@ -48,7 +49,7 @@ import org.junit.jupiter.api.TestInstance
  * completion flag only once the wallet is actually restorable.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class DefaultSocialLoginFlowTest {
+internal class DefaultSocialLoginUseCaseTest {
 
     private val signInWithSocialProviderUseCase: SignInWithSocialProviderUseCase = mockk()
     private val getSocialRecoveryKeyUseCase: GetSocialRecoveryKeyUseCase = mockk()
@@ -65,9 +66,9 @@ internal class DefaultSocialLoginFlowTest {
     private val hotWalletImporter: HotWalletImporter = mockk()
 
     /** Recreated per test: the flow keeps a half-finished creation in a field, to be resumed by a retry */
-    private lateinit var flow: DefaultSocialLoginFlow
+    private lateinit var useCase: DefaultSocialLoginUseCase
 
-    private fun createFlow() = DefaultSocialLoginFlow(
+    private fun createUseCase() = DefaultSocialLoginUseCase(
         signInWithSocialProviderUseCase = signInWithSocialProviderUseCase,
         signOutFromSocialProviderUseCase = mockk<SignOutFromSocialProviderUseCase>(relaxed = true),
         getSocialRecoveryKeyUseCase = getSocialRecoveryKeyUseCase,
@@ -103,7 +104,7 @@ internal class DefaultSocialLoginFlowTest {
             hotWalletImporter,
         )
 
-        flow = createFlow()
+        useCase = createUseCase()
 
         val hotWalletId: HotWalletId = mockk()
         val userWallet: UserWallet.Hot = mockk {
@@ -148,7 +149,7 @@ internal class DefaultSocialLoginFlowTest {
         coEvery { writeSocialBackupUseCase(any(), any(), any()) } returns Either.Right(Unit)
 
         // Act
-        val actual = flow.signIn(PROVIDER) {}
+        val actual = useCase.signIn(PROVIDER) {}
 
         // Assert
         assertThat(actual).isEqualTo(SocialLoginOutcome.WalletCreated(WALLET_ID).right())
@@ -165,7 +166,7 @@ internal class DefaultSocialLoginFlowTest {
         coEvery { registerSocialRecoveryUseCase(any(), any(), any()) } returns error.left()
 
         // Act
-        val actual = flow.signIn(PROVIDER) {}
+        val actual = useCase.signIn(PROVIDER) {}
 
         // Assert
         assertThat(actual).isEqualTo(error.left())
@@ -179,7 +180,7 @@ internal class DefaultSocialLoginFlowTest {
         coEvery { writeSocialBackupUseCase(any(), any(), any()) } returns SocialLoginError.CloudUnavailable.left()
 
         // Act
-        val actual = flow.signIn(PROVIDER) {}
+        val actual = useCase.signIn(PROVIDER) {}
 
         // Assert — NFR-01: bound but with no file in the cloud is not a finished setup
         assertThat(actual).isEqualTo(SocialLoginError.CloudUnavailable.left())
@@ -191,7 +192,7 @@ internal class DefaultSocialLoginFlowTest {
         // Arrange — the first attempt registers the binding and then fails to write
         coEvery { registerSocialRecoveryUseCase(any(), any(), any()) } returns Either.Right(Unit)
         coEvery { writeSocialBackupUseCase(any(), any(), any()) } returns SocialLoginError.CloudUnavailable.left()
-        flow.signIn(PROVIDER) {}
+        useCase.signIn(PROVIDER) {}
 
         // the backend now answers with the key it was given, as it would for any bound identity
         val boundKey = RecoveryKey(ByteArray(RecoveryKey.SIZE_BYTES) { 7 })
@@ -199,7 +200,7 @@ internal class DefaultSocialLoginFlowTest {
         coEvery { writeSocialBackupUseCase(any(), any(), any()) } returns Either.Right(Unit)
 
         // Act
-        val actual = flow.signIn(PROVIDER) {}
+        val actual = useCase.signIn(PROVIDER) {}
 
         // Assert — resumed, not restored from a file that was never written
         assertThat(actual).isEqualTo(SocialLoginOutcome.WalletCreated(WALLET_ID).right())
@@ -212,14 +213,14 @@ internal class DefaultSocialLoginFlowTest {
     fun `GIVEN the registration timed out WHEN signing in again THEN the binding it left is recognised`() = runTest {
         // Arrange — the backend persisted the binding and the answer was lost on the way back
         coEvery { registerSocialRecoveryUseCase(any(), any(), any()) } returns SocialLoginError.NetworkError.left()
-        flow.signIn(PROVIDER) {}
+        useCase.signIn(PROVIDER) {}
 
         val boundKey = RecoveryKey(ByteArray(RecoveryKey.SIZE_BYTES) { 7 })
         coEvery { getSocialRecoveryKeyUseCase(ID_TOKEN) } returns boundKey.right()
         coEvery { writeSocialBackupUseCase(any(), any(), any()) } returns Either.Right(Unit)
 
         // Act
-        val actual = flow.signIn(PROVIDER) {}
+        val actual = useCase.signIn(PROVIDER) {}
 
         // Assert — the same wallet is finished, not left stranded behind a file that was never written
         assertThat(actual).isEqualTo(SocialLoginOutcome.WalletCreated(WALLET_ID).right())
@@ -231,14 +232,14 @@ internal class DefaultSocialLoginFlowTest {
     fun `GIVEN the registration timed out WHEN another identity creates THEN that wallet is left alone`() = runTest {
         // Arrange — the answer was lost, so the binding may exist and the wallet is nobody's to give away
         coEvery { registerSocialRecoveryUseCase(any(), any(), any()) } returns SocialLoginError.NetworkError.left()
-        flow.signIn(PROVIDER) {}
+        useCase.signIn(PROVIDER) {}
 
         coEvery { registerSocialRecoveryUseCase(any(), any(), any()) } returns Either.Right(Unit)
         coEvery { writeSocialBackupUseCase(any(), any(), any()) } returns Either.Right(Unit)
         every { generateRecoveryKeyUseCase() } returns RecoveryKey(ByteArray(RecoveryKey.SIZE_BYTES) { 9 })
 
         // Act — another identity, with no binding of its own
-        flow.signIn(PROVIDER) {}
+        useCase.signIn(PROVIDER) {}
 
         // Assert — a wallet of its own, rather than a second key over a binding that may already hold one
         coVerify(exactly = 2) { tangemHotSdk.generateWallet(any(), any()) }
@@ -250,11 +251,11 @@ internal class DefaultSocialLoginFlowTest {
             // Arrange — the first identity binds a wallet and then fails to write
             coEvery { registerSocialRecoveryUseCase(any(), any(), any()) } returns Either.Right(Unit)
             coEvery { writeSocialBackupUseCase(any(), any(), any()) } returns SocialLoginError.CloudUnavailable.left()
-            flow.signIn(PROVIDER) {}
+            useCase.signIn(PROVIDER) {}
 
             // another identity, with no binding of its own, goes through the create branch
             every { generateRecoveryKeyUseCase() } returns RecoveryKey(ByteArray(RecoveryKey.SIZE_BYTES) { 9 })
-            flow.signIn(PROVIDER) {}
+            useCase.signIn(PROVIDER) {}
 
             // the first identity comes back
             val boundKey = RecoveryKey(ByteArray(RecoveryKey.SIZE_BYTES) { 7 })
@@ -262,7 +263,7 @@ internal class DefaultSocialLoginFlowTest {
             coEvery { writeSocialBackupUseCase(any(), any(), any()) } returns Either.Right(Unit)
 
             // Act
-            val actual = flow.signIn(PROVIDER) {}
+            val actual = useCase.signIn(PROVIDER) {}
 
             // Assert — its creation is still resumable, not replaced by the second one
             assertThat(actual).isEqualTo(SocialLoginOutcome.WalletCreated(WALLET_ID).right())
@@ -274,7 +275,7 @@ internal class DefaultSocialLoginFlowTest {
         // Arrange — the first identity registers a binding and then fails to write
         coEvery { registerSocialRecoveryUseCase(any(), any(), any()) } returns Either.Right(Unit)
         coEvery { writeSocialBackupUseCase(any(), any(), any()) } returns SocialLoginError.CloudUnavailable.left()
-        flow.signIn(PROVIDER) {}
+        useCase.signIn(PROVIDER) {}
 
         // another identity, with a wallet and so a key of its own
         val otherKey = RecoveryKey(ByteArray(RecoveryKey.SIZE_BYTES) { 9 })
@@ -282,7 +283,7 @@ internal class DefaultSocialLoginFlowTest {
         coEvery { readSocialBackupUseCase(any()) } returns SocialLoginError.BackupNotFound.left()
 
         // Act
-        val actual = flow.signIn(PROVIDER) {}
+        val actual = useCase.signIn(PROVIDER) {}
 
         // Assert — the restore branch, not the pending wallet
         assertThat(actual).isEqualTo(SocialLoginError.BackupNotFound.left())
@@ -298,7 +299,7 @@ internal class DefaultSocialLoginFlowTest {
             coEvery { readSocialBackupUseCase(any()) } returns restoredBackup().right()
 
             // Act
-            val actual = flow.signIn(PROVIDER) {}
+            val actual = useCase.signIn(PROVIDER) {}
 
             // Assert
             assertThat(actual).isEqualTo(SocialLoginOutcome.WalletRestored(RESTORED_WALLET_ID).right())
@@ -316,7 +317,7 @@ internal class DefaultSocialLoginFlowTest {
         coEvery { readSocialBackupUseCase(any()) } returns SocialLoginError.InvalidBackupFile.left()
 
         // Act
-        val actual = flow.signIn(PROVIDER) {}
+        val actual = useCase.signIn(PROVIDER) {}
 
         // Assert
         assertThat(actual).isEqualTo(SocialLoginError.InvalidBackupFile.left())
@@ -334,7 +335,7 @@ internal class DefaultSocialLoginFlowTest {
         coEvery { readSocialBackupUseCase(any()) } returns restoredBackup().copy(secret = secret).right()
 
         // Act
-        val actual = flow.signIn(PROVIDER) {}
+        val actual = useCase.signIn(PROVIDER) {}
 
         // Assert
         assertThat(actual).isEqualTo(SocialLoginError.PassphraseNotSupported.left())
@@ -354,11 +355,48 @@ internal class DefaultSocialLoginFlowTest {
             HotWalletImportError.Unknown(cause).left()
 
         // Act
-        val actual = flow.signIn(PROVIDER) {}
+        val actual = useCase.signIn(PROVIDER) {}
 
         // Assert
         assertThat(actual).isEqualTo(SocialLoginError.Unknown(cause).left())
         coVerify(exactly = 0) { setSocialBackupCompletedUseCase(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN the create branch WHEN signIn THEN the stages are reported in order`() = runTest {
+        // Arrange
+        coEvery { registerSocialRecoveryUseCase(any(), any(), any()) } returns Either.Right(Unit)
+        coEvery { writeSocialBackupUseCase(any(), any(), any()) } returns Either.Right(Unit)
+        val stages = mutableListOf<SocialLoginStage>()
+
+        // Act
+        useCase.signIn(provider = PROVIDER, onStageChanged = { stages += it })
+
+        // Assert
+        assertThat(stages).containsExactly(
+            SocialLoginStage.SigningIn,
+            SocialLoginStage.VerifyingAccount,
+            SocialLoginStage.CreatingWallet,
+        ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN the restore branch WHEN signIn THEN the download and the import are separate stages`() = runTest {
+        // Arrange
+        bindIdentity()
+        coEvery { readSocialBackupUseCase(any()) } returns restoredBackup().right()
+        val stages = mutableListOf<SocialLoginStage>()
+
+        // Act
+        useCase.signIn(provider = PROVIDER, onStageChanged = { stages += it })
+
+        // Assert
+        assertThat(stages).containsExactly(
+            SocialLoginStage.SigningIn,
+            SocialLoginStage.VerifyingAccount,
+            SocialLoginStage.PreparingWallet,
+            SocialLoginStage.RestoringWallet,
+        ).inOrder()
     }
 
     private companion object {
