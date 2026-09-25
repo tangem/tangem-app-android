@@ -2,6 +2,7 @@ package com.tangem.data.walletmanager.utils
 
 import com.tangem.blockchain.blockchains.ethereum.tokenmethods.ApprovalERC20TokenCallData
 import com.tangem.blockchain.blockchains.ethereum.tokenmethods.TransferERC20TokenCallData
+import com.tangem.blockchain.common.HEX_PREFIX
 import com.tangem.blockchain.extensions.formatHex
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem.TransactionType
@@ -11,7 +12,10 @@ import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldS
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyReactivateTokenCallData
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.domain.express.models.ExpressAsset
+import com.tangem.domain.jointaccount.model.SafeTx
+import com.tangem.domain.jointaccount.safe.SafeExecTransactionDecoder
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.SdkAmountType
 import com.tangem.domain.models.network.TxInfo
@@ -29,6 +33,8 @@ internal class SdkTransactionTypeConverter(
     private val networkTokens: Set<CryptoCurrency.Token> = emptySet(),
     private val getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
 ) : Converter<TransactionHistoryItem, TxInfo.TransactionType> {
+
+    private val isJointAccount = currency.network.derivationPath is Network.DerivationPath.Joint
 
     /** The SDK reports a selector prefixed or bare depending on the source; the asset is keyed prefixed. */
     private val smartContractMethods: Map<String, SmartContractMethod> =
@@ -138,6 +144,9 @@ internal class SdkTransactionTypeConverter(
             }
             "supplyTopUp" -> TxInfo.TransactionType.YieldSupply.Topup
             "gaslessTransaction" -> getTypeForGaslessMethod(destination, source, methodName)
+            "execTransaction",
+            "aggregate3",
+            -> decodeSafeExecution(callData)
             else -> fallbackOperation(methodName)
         } ?: fallbackOperation(methodName)
 
@@ -247,6 +256,49 @@ internal class SdkTransactionTypeConverter(
     )
 
     private fun String.toSelectorKey(): String = lowercase().formatHex()
+
+    /** Only a joint account reads its Safe calls; anyone else calling a Safe keeps the plain contract call */
+    private fun decodeSafeExecution(callData: String?): TxInfo.TransactionType.Joint? {
+        if (!isJointAccount) return null
+        val execution = SafeExecTransactionDecoder.decode(callData ?: return null) ?: return null
+        if (execution.operation != SafeTx.OPERATION_CALL) return null
+
+        val call = execution.call
+        val tokenTransfer = TransferERC20TokenCallData(compiledData = call.data)
+        val refundCapWei = execution.refund.maxPayment.toBigDecimal()
+        val isNativeTransfer = call.data.removePrefix(HEX_PREFIX).isEmpty() && call.value.signum() > 0
+        return when {
+            currency is CryptoCurrency.Token -> tokenTransfer?.let { transfer ->
+                TxInfo.TransactionType.Joint.Transfer(
+                    recipient = transfer.destination,
+                    amount = transfer.amount.value?.movePointLeft(currency.decimals) ?: return null,
+                    refundCapWei = refundCapWei,
+                    signaturesCount = execution.signaturesCount,
+                )
+            }
+            isNativeTransfer -> TxInfo.TransactionType.Joint.Transfer(
+                recipient = call.to,
+                amount = call.value.toBigDecimal().movePointLeft(currency.decimals),
+                refundCapWei = refundCapWei,
+                signaturesCount = execution.signaturesCount,
+            )
+            tokenTransfer != null && call.value.signum() == 0 -> TxInfo.TransactionType.Joint.TokenFee(
+                tokenContract = call.to,
+                tokenAmount = networkTokens
+                    .firstOrNull { it.contractAddress.equals(call.to, ignoreCase = true) }
+                    ?.toSdkAmount(rawValue = tokenTransfer.amount.value),
+                recipient = tokenTransfer.destination,
+                refundCapWei = refundCapWei,
+                signaturesCount = execution.signaturesCount,
+            )
+            else -> TxInfo.TransactionType.Joint.Call(
+                contract = call.to,
+                value = call.value.toBigDecimal().movePointLeft(currency.decimals),
+                refundCapWei = refundCapWei,
+                signaturesCount = execution.signaturesCount,
+            )
+        }
+    }
 
     private fun getTypeForGaslessMethod(
         destination: TransactionHistoryItem.DestinationType,

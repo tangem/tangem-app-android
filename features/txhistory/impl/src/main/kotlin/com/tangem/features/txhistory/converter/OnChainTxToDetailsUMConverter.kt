@@ -250,8 +250,7 @@ internal class OnChainTxToDetailsUMConverter(
      * the "Send" label. An untracked token can be neither named nor denominated, so the card is dropped altogether.
      */
     private fun TxInfo.toTransferredAssetUM(): TxHistoryDetailsUM.CounterpartyUM? {
-        val networkFee = type as? TransactionType.NetworkFee ?: return null
-        val transferred = networkFee.amount ?: return null
+        val transferred = feeForAmount() ?: return null
         val symbol = transferred.currencySymbol.ifBlank { null } ?: return null
         val amount = transferred.value?.format {
             crypto(symbol = symbol, decimals = transferred.decimals, ignoreSymbolPosition = true)
@@ -261,7 +260,7 @@ internal class OnChainTxToDetailsUMConverter(
             label = resourceReference(R.string.common_send),
             title = stringReference(amount ?: symbol),
             avatar = TxHistoryDetailsUM.CounterpartyAvatar.Glyph(icon = TxIcon.Vector(Icons.ic_arrow_up_20)),
-            titleIcon = networkFee.amount.resolveToken(networkTokens)?.let(iconStateConverter::convert),
+            titleIcon = feeForToken(networkTokens)?.let(iconStateConverter::convert),
         )
     }
 
