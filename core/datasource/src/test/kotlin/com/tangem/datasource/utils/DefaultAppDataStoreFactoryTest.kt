@@ -84,6 +84,10 @@ internal class DefaultAppDataStoreFactoryTest {
         assertThat(event.exception).isInstanceOf(DataStoreCorruptionException::class.java)
         assertThat(event.params["file"]).isEqualTo("corrupted_list")
         assertThat(event.params["kind"]).isEqualTo("non_json")
+        // the report carries a digest of the file, never its content
+        assertThat(event.params).doesNotContainKey("head")
+        assertThat(event.params["sha256"]).matches("[0-9a-f]{16}")
+        assertThat(event.params.values.none { it.contains("definitely not json") }).isTrue()
     }
 
     @Test

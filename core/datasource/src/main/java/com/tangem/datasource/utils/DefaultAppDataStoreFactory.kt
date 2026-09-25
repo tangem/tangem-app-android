@@ -15,6 +15,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.KSerializer
 import java.io.File
+import java.security.MessageDigest
 import javax.inject.Inject
 
 /**
@@ -60,7 +61,9 @@ internal class DefaultAppDataStoreFactory @Inject constructor(
                 "file" to file.name,
                 "size" to (bytes?.size ?: -1).toString(),
                 "kind" to bytes.classifyCorruption(),
-                "head" to bytes?.take(HEAD_SAMPLE_BYTES)?.toByteArray()?.decodeToString().orEmpty(),
+                // A digest lets identical corruption patterns be correlated across reports without shipping the
+                // file content itself: DataStore files hold user data (wallet names, addresses, preferences).
+                "sha256" to bytes?.sha256Prefix().orEmpty(),
                 "tmp_exists" to File(file.path + ".tmp").exists().toString(),
             ),
         )
@@ -84,8 +87,14 @@ internal class DefaultAppDataStoreFactory @Inject constructor(
         else -> "malformed_json"
     }
 
+    private fun ByteArray.sha256Prefix(): String {
+        return MessageDigest.getInstance("SHA-256").digest(this)
+            .take(DIGEST_PREFIX_BYTES)
+            .joinToString(separator = "") { "%02x".format(it) }
+    }
+
     private companion object {
-        const val HEAD_SAMPLE_BYTES = 32
+        const val DIGEST_PREFIX_BYTES = 8
         const val ZERO_BYTE: Byte = 0
     }
 }
