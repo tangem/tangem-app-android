@@ -1304,6 +1304,9 @@ internal class TangemPayDetailsModelTest {
             beneficiaryBankAddress = "Bank address",
             accountNumber = "123456",
             routingNumber = "654321",
+            transferMessage = null,
+            depositFee = null,
+            depositLimit = null,
         )
 
         @JvmStatic
