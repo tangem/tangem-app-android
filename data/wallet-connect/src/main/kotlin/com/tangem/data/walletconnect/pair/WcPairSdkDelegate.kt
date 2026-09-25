@@ -48,7 +48,8 @@ internal class WcPairSdkDelegate(
     suspend fun pair(
         url: String,
     ): Either<WcPairError, Pair<Wallet.Model.SessionProposal, Wallet.Model.VerifyContext>> = coroutineScope {
-        val proposalCallback = async { withTimeout(CALLBACK_TIMEOUT.seconds) { proposalCallback() } }
+        val pairingTopic = WcPairingUri.topicOf(url)
+        val proposalCallback = async { withTimeout(CALLBACK_TIMEOUT.seconds) { proposalCallback(pairingTopic) } }
         val pairCall = async { sdkPair(url) }
         pairCall.await().onLeft {
             proposalCallback.cancel()
@@ -57,10 +58,15 @@ internal class WcPairSdkDelegate(
         proposalCallback.await()
     }
 
-    private suspend fun proposalCallback() = callbackFlow {
-        // wait first onSessionProposal callback
+    private suspend fun proposalCallback(pairingTopic: String?) = callbackFlow {
+        // wait for the onSessionProposal callback that belongs to the URI being paired: the SDK delivers every
+        // proposal of every live pairing through the same callback, so a proposal from another dApp arriving
+        // inside the timeout window must not be taken for this one
         launch {
-            val sessionProposal = onSessionProposal.receiveAsFlow().first()
+            val sessionProposal = onSessionProposal.receiveAsFlow()
+                .first { (proposal, _) ->
+                    pairingTopic == null || proposal.pairingTopic.equals(pairingTopic, ignoreCase = true)
+                }
             trySend(sessionProposal.right())
             channel.close()
         }
