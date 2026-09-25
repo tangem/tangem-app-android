@@ -42,7 +42,7 @@ internal class TangemPayBlockModelTest {
     }
 
     @Test
-    fun `GIVEN no wallet carries a payment account WHEN the model is created THEN the pitch is shown`() = runTest {
+    fun `GIVEN no wallet carries a payment account WHEN the model is created THEN the pitch is hidden`() = runTest {
         // Arrange
         accountLists.value = listOf(accountList(walletAId, mockk<Account.Personal>()))
 
@@ -51,7 +51,7 @@ internal class TangemPayBlockModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.isVisible.value).isTrue()
+        assertThat(model.isVisible.value).isFalse()
         model.onDestroy()
     }
 
@@ -103,12 +103,60 @@ internal class TangemPayBlockModelTest {
     }
 
     @Test
+    fun `GIVEN Tangem Pay is unavailable for the wallet WHEN the model is created THEN the pitch is hidden`() =
+        runTest {
+            // Arrange
+            accountLists.value = listOf(accountList(walletAId, mockk<Account.Payment>()))
+            every { paymentAccountStatusSupplier(walletAId) } returns
+                MutableStateFlow(paymentStatus(PaymentAccountStatusValue.Empty))
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.isVisible.value).isFalse()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN no status has arrived yet WHEN the model is created THEN the pitch is hidden`() = runTest {
+        // Arrange
+        accountLists.value = listOf(accountList(walletAId, mockk<Account.Payment>()))
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.isVisible.value).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN a wallet whose account was never created WHEN the model is created THEN the pitch is shown`() =
         runTest {
             // Arrange
             accountLists.value = listOf(accountList(walletAId, mockk<Account.Payment>()))
             every { paymentAccountStatusSupplier(walletAId) } returns
                 MutableStateFlow(paymentStatus(PaymentAccountStatusValue.NotCreated))
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.isVisible.value).isTrue()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a wallet whose customer is still in KYC WHEN the model is created THEN the pitch is shown`() =
+        runTest {
+            // Arrange
+            accountLists.value = listOf(accountList(walletAId, mockk<Account.Payment>()))
+            every { paymentAccountStatusSupplier(walletAId) } returns
+                MutableStateFlow(paymentStatus(mockk<PaymentAccountStatusValue.UnderReview>()))
 
             // Act
             val model = createModel(testScope = this)
@@ -143,7 +191,7 @@ internal class TangemPayBlockModelTest {
 
     @Test
     fun `GIVEN a status arrives late WHEN it reports an account THEN the pitch disappears`() = runTest {
-        // Arrange — until the first status lands the answer is "no account", so the pitch starts visible
+        // Arrange
         val status = MutableStateFlow(paymentStatus(PaymentAccountStatusValue.NotCreated))
         accountLists.value = listOf(accountList(walletAId, mockk<Account.Payment>()))
         every { paymentAccountStatusSupplier(walletAId) } returns status
@@ -152,7 +200,7 @@ internal class TangemPayBlockModelTest {
         assertThat(model.isVisible.value).isTrue()
 
         // Act
-        status.value = paymentStatus(mockk<PaymentAccountStatusValue.UnderReview>())
+        status.value = paymentStatus(mockk<PaymentAccountStatusValue.IssuingCard>())
         advanceUntilIdle()
 
         // Assert
