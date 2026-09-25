@@ -33,11 +33,13 @@ data class UserWalletId(
 
         /**
          * Parses an externally supplied id (deep link, push payload) without throwing: the primary constructor
-         * decodes [stringValue] eagerly and `hexToBytes` throws on non-hex input.
+         * decodes [stringValue] eagerly and `hexToBytes` throws on non-hex input. An input that decodes to
+         * zero bytes (e.g. a bare `0x`) is not a wallet id either.
          */
         fun fromStringOrNull(stringValue: String?): UserWalletId? {
             if (stringValue.isNullOrBlank()) return null
-            return stringValue.hexToBytesOrNull()?.let { UserWalletId(stringValue = stringValue) }
+            val bytes = stringValue.hexToBytesOrNull() ?: return null
+            return if (bytes.isEmpty()) null else UserWalletId(stringValue = stringValue)
         }
     }
 }
