@@ -36,6 +36,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.isHotWallet
+import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSendUseCase
 import com.tangem.domain.quotes.IsHighNetworkFeeUseCase
 import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
 import com.tangem.domain.settings.NeverShowTapHelpUseCase
@@ -120,6 +121,7 @@ internal class SendConfirmModel @Inject constructor(
     private val createAndSendTronGaslessTransactionUseCase: CreateAndSendTronGaslessTransactionUseCase,
     private val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase,
     private val jointSendDelegate: JointSendDelegate,
+    private val recordTokenTransferFromSendUseCase: RecordTokenTransferFromSendUseCase,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
 ) : Model(), SendConfirmClickIntents, FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
 
@@ -549,6 +551,12 @@ internal class SendConfirmModel @Inject constructor(
                         sendUM = uiState.value,
                         account = params.accountFlow.value,
                         feeToken = feeToken,
+                    )
+                    recordTokenTransferFromSendUseCase(
+                        userWalletId = userWallet.walletId,
+                        sourceAccount = params.accountFlow.value,
+                        currency = cryptoCurrency,
+                        destinationAddress = confirmData.enteredDestination.orEmpty(),
                     )
                 }
                 params.callback.onResult(uiState.value)
