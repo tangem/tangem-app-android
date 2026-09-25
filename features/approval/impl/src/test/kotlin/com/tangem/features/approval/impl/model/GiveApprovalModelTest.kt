@@ -237,6 +237,32 @@ class GiveApprovalModelTest {
         }
 
     @Test
+    fun `GIVEN allowance reset needed WHEN loadFeeExtended THEN returns GaslessError and does not quote a fee`() =
+        runTest {
+            coEvery {
+                getAllowanceInfoUseCase(
+                    userWalletId = any(),
+                    cryptoCurrency = any(),
+                    spenderAddress = any(),
+                    requiredAmount = any(),
+                )
+            } returns AllowanceInfo.ResetNeeded(allowance = BigDecimal.ONE, requiredAmount = BigDecimal.TEN).right()
+            val model = createModel(amount = "10")
+
+            val result = model.loadFeeExtended(maybeToken = null)
+
+            // a GaslessError (other than NotEnoughFunds) makes the fee selector fall back to the native fee,
+            // where the revoke + approve pair is supported
+            assertThat(result.leftOrNull()).isInstanceOf(GetFeeError.GaslessError::class.java)
+            coVerify(exactly = 0) {
+                getFeeForGaslessUseCase(transactionData = any(), userWallet = any(), network = any())
+            }
+            coVerify(exactly = 0) {
+                getFeeForTokenUseCase(transactionData = any(), userWallet = any(), token = any())
+            }
+        }
+
+    @Test
     fun `GIVEN comma decimal amount and LIMITED approveType WHEN loadFee THEN creates approval tx with parsed amount`() =
         runTest {
             val model = createModel(amount = "2,5")
