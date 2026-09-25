@@ -12,6 +12,8 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.ds2.ambient.TangemAmbientBackground
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.feed.components.v2.blocks.analytics.FeedBlocksAnalytics
+import com.tangem.features.feed.components.v2.blocks.analytics.ProductCard
 import com.tangem.features.feed.components.v2.blocks.model.TangemPayBlockModel
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.v2.FeedBlockIconBadge
@@ -21,11 +23,14 @@ import kotlinx.coroutines.flow.StateFlow
 /** Tangem Pay pitch, offered while the user has no spending account — see [TangemPayBlockModel]. */
 internal class TangemPayBlockComponent(
     context: AppComponentContext,
+    private val blocksAnalytics: FeedBlocksAnalytics,
 ) : FeedBlockComponent(context = context, key = KEY) {
 
     private val model: TangemPayBlockModel = getOrCreateModel()
 
     override val size: FeedBlock.Size = FeedBlock.Size.Large
+
+    override val productCard: ProductCard = ProductCard.TangemPay
 
     override val isVisible: StateFlow<Boolean> = model.isVisible
 
@@ -42,6 +47,7 @@ internal class TangemPayBlockComponent(
     }
 
     private fun onClick() {
+        blocksAnalytics.onProductCardClicked(productCard)
         router.push(AppRoute.TangemPayOnboarding(mode = AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain))
     }
 

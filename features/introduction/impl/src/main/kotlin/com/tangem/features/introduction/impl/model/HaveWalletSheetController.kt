@@ -7,10 +7,11 @@ import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.cloudbackup.usecase.ResolveCloudRestoreBackupsUseCase
-import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
+import com.tangem.domain.sociallogin.models.SocialLoginProvider
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.cloudrestore.CloudRestoreErrorMessage
 import com.tangem.features.introduction.impl.ui.state.HaveWalletUM
@@ -27,9 +28,11 @@ internal class HaveWalletSheetController(
     private val scope: CoroutineScope,
     private val router: Router,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val socialLoginFeatureToggles: SocialLoginFeatureToggles,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val resolveCloudRestoreBackups: ResolveCloudRestoreBackupsUseCase,
+    private val socialLoginProvider: () -> SocialLoginProvider?,
+    private val isSigningInSocially: () -> Boolean,
+    private val onSocialLoginClick: (SocialLoginProvider) -> Unit,
 ) {
 
     interface Host {
@@ -52,28 +55,33 @@ internal class HaveWalletSheetController(
 
     fun open() = showStep(::optionsStep)
 
+    // Every row is gated, not just its own: the others would start a scan on top of a flow about to navigate away.
     private fun optionsStep() = HaveWalletUM.Step.Options(
         cardOrRing = WalletOptionUM(
-            iconRes = CoreUiR.drawable.ic_tangem_card_24,
+            iconRes = CoreUiR.drawable.ic_tangem_24,
             title = resourceReference(CoreResR.string.introduction_create_wallet_hardware_title),
             description = resourceReference(CoreResR.string.introduction_i_have_wallet_hardware_description),
+            isEnabled = !isSigningInSocially(),
             onClick = ::onSignInWithCardClick,
         ),
-        socialLogin = if (socialLoginFeatureToggles.isSocialLoginEnabled) {
+        socialLogin = socialLoginProvider()?.let { provider ->
             WalletOptionUM(
                 iconRes = CoreUiR.drawable.ic_user_24,
                 title = resourceReference(CoreResR.string.introduction_i_have_wallet_sign_in_google_title),
-                description = resourceReference(CoreResR.string.introduction_create_wallet_seed_phrase_description),
-                // TODO TWI-1555: social login belongs to another team; the row stays inert until it lands.
-                onClick = {},
+                // TODO [REDACTED_TASK_KEY]: waiting on introduction_i_have_wallet_google_description in Lokalise.
+                description = stringReference("Restore the wallet stored in your Google account"),
+                isEnabled = !isSigningInSocially(),
+                isLoading = isSigningInSocially(),
+                onClick = { onSocialLoginOptionClick(provider) },
             )
-        } else {
-            null
         },
         importWallet = WalletOptionUM(
             iconRes = CoreUiR.drawable.ic_arrow_down_24,
             title = resourceReference(CoreResR.string.hw_import_existing_wallet),
-            description = resourceReference(CoreResR.string.hw_import_existing_wallet_description),
+            // The sheet's own wording: the hw_ description belongs to the mobile-wallet screens and reads
+            // differently there.
+            description = resourceReference(CoreResR.string.introduction_create_wallet_seed_phrase_description),
+            isEnabled = !isSigningInSocially(),
             onClick = ::onImportWalletClick,
         ),
     )
@@ -83,14 +91,24 @@ internal class HaveWalletSheetController(
      * under the sheet's dialog window.
      */
     private fun onSignInWithCardClick() {
-        if (!isShown) return
+        if (!isShown || isSigningInSocially()) return
         analyticsEventHandler.send(IntroductionProcess.ButtonSignInWithCard())
         dismiss()
         host.scanCardForExistingWallet()
     }
 
+    /** The sheet stays up: the row spins here until the flow has a screen of its own to show */
+    private fun onSocialLoginOptionClick(provider: SocialLoginProvider) {
+        if (!isShown || isSigningInSocially()) return
+        onSocialLoginClick(provider)
+    }
+
+    fun refreshOptions() {
+        if (isShown && currentStep() is HaveWalletUM.Step.Options) showStep(::optionsStep)
+    }
+
     private fun onImportWalletClick() {
-        if (!isShown) return
+        if (!isShown || isSigningInSocially()) return
         if (currentStep() is HaveWalletUM.Step.Import) return
         analyticsEventHandler.send(OnboardingAnalyticsEvent.SeedPhrase.ButtonImportWallet())
         analyticsEventHandler.send(
@@ -217,7 +235,7 @@ internal class HaveWalletSheetController(
         dismiss()
     }
 
-    private fun dismiss() {
+    fun dismiss() {
         cancelCloudResolve()
         host.updateHaveWalletSheetConfig { it?.copy(isShown = false) }
     }

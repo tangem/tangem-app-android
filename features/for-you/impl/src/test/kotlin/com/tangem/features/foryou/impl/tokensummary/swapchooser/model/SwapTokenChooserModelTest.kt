@@ -202,7 +202,6 @@ internal class SwapTokenChooserModelTest {
             fiatAmount = BigDecimal.ONE,
             fiatRate = BigDecimal.ONE,
             priceChange = BigDecimal.ZERO,
-            stakingBalance = null,
             yieldSupplyStatus = null,
             hasCurrentNetworkTransactions = false,
             pendingTransactions = emptySet(),
