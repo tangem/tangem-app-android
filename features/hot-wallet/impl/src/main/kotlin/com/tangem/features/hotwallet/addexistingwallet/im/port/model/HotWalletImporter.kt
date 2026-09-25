@@ -18,6 +18,7 @@ import com.tangem.domain.wallets.usecase.SyncWalletWithRemoteUseCase
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.exception.PassphraseTooLongException
 import com.tangem.hot.sdk.model.HotAuth
+import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
@@ -71,9 +72,8 @@ internal class HotWalletImporter @Inject constructor(
         name: String? = null,
         isSeedPhraseBackedUp: Boolean,
     ): Either<HotWalletImportError, UserWalletId> = either {
-        val userWallet = runSuspendCatching {
-            val hotWalletId = tangemHotSdk.importWallet(mnemonic, passphrase, HotAuth.NoAuth)
-            hotUserWalletBuilderFactory.create(hotWalletId).build(name = name)
+        val hotWalletId = runSuspendCatching {
+            tangemHotSdk.importWallet(mnemonic, passphrase, HotAuth.NoAuth)
         }.getOrElse { error ->
             TangemLogger.e("Unable to import the wallet", error)
             when (error) {
@@ -84,7 +84,18 @@ internal class HotWalletImporter @Inject constructor(
             }
         }
 
-        save(userWallet, isSeedPhraseBackedUp).bind()
+        // importWallet stored the seed under a NoAuth key. Until save() succeeds this copy belongs to no wallet in
+        // the list, so any failure past this point (incl. "already saved") must remove it again — otherwise an
+        // unprotected copy of an access-code-protected wallet's seed stays in the SDK store forever.
+        val userWallet = runSuspendCatching {
+            hotUserWalletBuilderFactory.create(hotWalletId).build(name = name)
+        }.getOrElse { error ->
+            TangemLogger.e("Unable to build the wallet", error)
+            deleteOrphanedHotWallet(hotWalletId)
+            raise(HotWalletImportError.Unknown(error))
+        }
+
+        save(userWallet, isSeedPhraseBackedUp).onLeft { deleteOrphanedHotWallet(hotWalletId) }.bind()
         startRemoteSync(scope, userWallet.walletId)
         sendWalletCreatedEvents(mnemonic, passphrase)
 
@@ -104,6 +115,11 @@ internal class HotWalletImporter @Inject constructor(
                 is SaveWalletError.WalletAlreadySaved -> HotWalletImportError.AlreadySaved
             }
         }.map { }
+
+    private suspend fun deleteOrphanedHotWallet(hotWalletId: HotWalletId) {
+        runSuspendCatching { tangemHotSdk.delete(hotWalletId) }
+            .onFailure { TangemLogger.e("Unable to delete the orphaned hot wallet", it) }
+    }
 
     private fun startRemoteSync(scope: CoroutineScope, userWalletId: UserWalletId) {
         scope.launch(dispatchers.main + NonCancellable) {
