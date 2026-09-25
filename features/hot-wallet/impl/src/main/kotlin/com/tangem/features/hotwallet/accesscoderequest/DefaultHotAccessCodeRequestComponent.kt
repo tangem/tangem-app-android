@@ -2,6 +2,8 @@ package com.tangem.features.hotwallet.accesscoderequest
 
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.SecureFlagPolicy
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -47,7 +49,11 @@ internal class DefaultHotAccessCodeRequestComponent @AssistedInject constructor(
         var isShownIfProxy by remember { mutableStateOf(state.isShown) }
 
         if (isShownIfProxy) {
-            DialogFullScreen(onDismissRequest = state.onDismiss) {
+            DialogFullScreen(
+                onDismissRequest = state.onDismiss,
+                // A Dialog is its own window: the activity-level FLAG_SECURE does not cover the access-code entry.
+                properties = DialogProperties(securePolicy = SecureFlagPolicy.SecureOn),
+            ) {
                 HotAccessCodeRequestFullScreenContent(
                     state = state.copy(isShown = isShownProxy),
                     modifier = modifier,
