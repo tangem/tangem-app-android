@@ -69,6 +69,7 @@ import com.tangem.tap.features.main.MainViewModel
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.utils.DeepLinkFactory
+import com.tangem.tap.routing.utils.redactedForLog
 import com.tangem.tap.routing.utils.DeeplinkSource
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -190,7 +191,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     private val onActivityResultCallbacks = mutableListOf<OnActivityResultCallback>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        TangemLogger.i("onCreate: data=${intent?.data}, extras=${intent?.extras?.keySet()}")
+        TangemLogger.i("onCreate: data=${intent?.data.redactedForLog()}, extras=${intent?.extras?.keySet()}")
         // We need to call it before onCreate to prevent unnecessary activity recreation
         installAppTheme()
 
@@ -239,7 +240,11 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             testerMenuLauncher.registerTesterMenuShortcut()
         }
 
-        if (intent != null) {
+        // The singleInstance task keeps the launching deep link as its root intent, so a recreation (process death,
+        // return from Recents, configuration change) would re-dispatch a link that was already handled.
+        val isRelaunch = savedInstanceState != null ||
+            intent?.flags?.and(Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0
+        if (intent != null && !isRelaunch) {
             handleDeepLink(intent = intent, isFromOnNewIntent = false)
         }
     }
@@ -405,7 +410,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        TangemLogger.i("onNewIntent: data=${intent.data}, extras=${intent.extras?.keySet()}")
+        TangemLogger.i("onNewIntent: data=${intent.data.redactedForLog()}, extras=${intent.extras?.keySet()}")
 
         // Warm start: let the AppsFlyer SDK resolve a OneLink delivered while the app is already running.
         AppsFlyerLib.getInstance().performOnDeepLinking(intent, this)
