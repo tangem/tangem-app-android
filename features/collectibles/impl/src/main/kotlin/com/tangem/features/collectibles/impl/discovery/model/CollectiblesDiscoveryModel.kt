@@ -95,7 +95,12 @@ internal class CollectiblesDiscoveryModel @Inject constructor(
 
     private fun loadCategories() {
         modelScope.launch {
-            uiState.update { it.copy(tabs = CollectiblesDiscoveryUM.TabsUM.Loading) }
+            uiState.update { state ->
+                state.copy(
+                    tabs = CollectiblesDiscoveryUM.TabsUM.Loading,
+                    content = CollectiblesDiscoveryUM.ContentUM.Loading,
+                )
+            }
 
             getCategoriesUseCase()
                 .onRight { loaded ->
