@@ -69,6 +69,7 @@ object SafeExecTransactionDecoder {
             arguments.bytesAt(offset = callDataOffset)
                 .takeIf { callData -> callData.startsWith(EXEC_TRANSACTION_SELECTOR) }
                 ?.let { callData -> decodeExecTransaction(AbiArguments(callData.drop(SELECTOR_HEX_LENGTH))) }
+                ?.copy(safe = arguments.addressAt(offset = tupleOffset))
         }
     }.getOrNull()
 
@@ -89,7 +90,9 @@ object SafeExecTransactionDecoder {
 
         fun uintAt(offset: BigInteger): BigInteger = BigInteger(wordAt(offset), HEX_RADIX)
 
-        fun addressAt(word: Int): String = HEX_PREFIX + wordAt(WORD_BYTES.times(word)).takeLast(ADDRESS_HEX_LENGTH)
+        fun addressAt(word: Int): String = addressAt(offset = WORD_BYTES.times(word))
+
+        fun addressAt(offset: BigInteger): String = HEX_PREFIX + wordAt(offset).takeLast(ADDRESS_HEX_LENGTH)
 
         fun bytesAt(offset: BigInteger): String {
             val length = uintAt(offset).toIntExact() * HEX_CHARS_PER_BYTE
