@@ -12,10 +12,10 @@ interface WcInitializeUseCase {
     suspend fun ensureInitialized()
 
     /**
-     * Applies the startup policy: with on-demand init enabled the SDK starts only for a user who already
-     * has sessions — without it their dApps could not reach the wallet until they opened a WalletConnect
-     * screen — and a user with no sessions never pays its ~400 ms. With the toggle off the SDK starts
-     * unconditionally, as it did before.
+     * Applies the startup policy: with on-demand init enabled the SDK starts only for a user who has live
+     * work — a saved session or an approval awaiting settlement — because otherwise their dApps could not
+     * reach the wallet until they opened a WalletConnect screen. A user with neither never pays its
+     * ~400 ms. With the toggle off the SDK starts unconditionally, as it did before.
      */
     suspend fun initializeOnAppStart()
 }

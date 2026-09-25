@@ -4,6 +4,7 @@ import com.tangem.data.walletconnect.sdk.WcSdk
 import com.tangem.data.walletconnect.store.WalletConnectStore
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletconnect.featuretoggle.WalletConnectFeatureToggles
+import com.tangem.domain.walletconnect.model.WcPendingApprovalSessionDTO
 import com.tangem.domain.walletconnect.model.WcSessionDTO
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -39,6 +40,7 @@ internal class DefaultWcInitializeUseCaseTest {
     fun `GIVEN no saved sessions WHEN initializeOnAppStart THEN sdk stays down`() = runTest {
         // Arrange
         coEvery { store.sessions } returns flowOf(emptySet())
+        coEvery { store.pendingApproval } returns flowOf(emptySet())
 
         // Act
         useCase.initializeOnAppStart()
@@ -51,6 +53,20 @@ internal class DefaultWcInitializeUseCaseTest {
     fun `GIVEN saved session WHEN initializeOnAppStart THEN sdk is initialized`() = runTest {
         // Arrange
         coEvery { store.sessions } returns flowOf(setOf(createSession()))
+        coEvery { store.pendingApproval } returns flowOf(emptySet())
+
+        // Act
+        useCase.initializeOnAppStart()
+
+        // Assert
+        coVerify(exactly = 1) { wcSdk.ensureInitialized() }
+    }
+
+    @Test
+    fun `GIVEN pending approval WHEN initializeOnAppStart THEN sdk is initialized`() = runTest {
+        // Arrange
+        coEvery { store.sessions } returns flowOf(emptySet())
+        coEvery { store.pendingApproval } returns flowOf(setOf(mockk<WcPendingApprovalSessionDTO>()))
 
         // Act
         useCase.initializeOnAppStart()
