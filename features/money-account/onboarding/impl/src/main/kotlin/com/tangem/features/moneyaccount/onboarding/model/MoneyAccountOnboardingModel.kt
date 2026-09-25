@@ -1,24 +1,24 @@
 package com.tangem.features.moneyaccount.onboarding.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.features.moneyaccount.onboarding.component.MoneyAccountOnboardingComponent
 import com.tangem.features.moneyaccount.onboarding.impl.R
 import com.tangem.features.moneyaccount.onboarding.ui.MoneyAccountOnboardingUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 
 @Stable
 @ModelScoped
@@ -78,17 +78,13 @@ internal class MoneyAccountOnboardingModel @Inject constructor(
         // TODO v_rodionov: #[REDACTED_TASK_KEY] open the provider Terms of Use link.
     }
 
-    // TODO v_rodionov: #[REDACTED_TASK_KEY] provide start button behavior
     private fun onGetStartedClick() {
-        modelScope.launch {
-            setLoading(isLoading = true)
-            delay(5.seconds)
-            setLoading(isLoading = false)
-        }
-    }
-
-    private fun setLoading(isLoading: Boolean) {
-        updateContent { it.copy(isLoading = isLoading) }
+        router.push(
+            AppRoute.TangemPayEligibility(
+                product = TangemPayProduct.BANKING_ACCOUNT,
+                userWalletId = null,
+            ),
+        )
     }
 
     private fun updateContent(block: (MoneyAccountOnboardingUM.Content) -> MoneyAccountOnboardingUM.Content) {
