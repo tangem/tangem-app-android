@@ -27,7 +27,7 @@ internal class CustomTabsUrlOpener : UrlOpener {
 
     override fun openUrlExternalBrowser(url: String) {
         foregroundActivityObserver.withForegroundActivity { context ->
-            if (url.isEmpty()) return@withForegroundActivity
+            if (!url.isWebUrl()) return@withForegroundActivity
             val browserIntent = Intent(Intent.ACTION_VIEW, url.toUri())
             runCatching {
                 context.startActivity(browserIntent)
@@ -38,7 +38,7 @@ internal class CustomTabsUrlOpener : UrlOpener {
     }
 
     private fun openUrl(url: String, context: Context) {
-        if (url.isEmpty()) return
+        if (!url.isWebUrl()) return
         val browserIntent = Intent(Intent.ACTION_VIEW, url.trim().toUri())
         runCatching {
             if (checkCustomTabsAvailability(context, browserIntent)) {
@@ -61,6 +61,19 @@ internal class CustomTabsUrlOpener : UrlOpener {
         }.onFailure {
             TangemLogger.e("Error", it)
         }
+    }
+
+    /**
+     * Callers pass strings from providers, the backend and third-party metadata (Express `externalTxUrl`, onramp
+     * widget URLs, token "website" links, news). An implicit ACTION_VIEW would dispatch any scheme — including
+     * `tangem://`, which resolves back to MainActivity and enters the deep-link handlers ungated.
+     */
+    private fun String.isWebUrl(): Boolean {
+        if (isBlank()) return false
+        val scheme = trim().toUri().scheme?.lowercase()
+        val isWeb = scheme == "http" || scheme == "https"
+        if (!isWeb) TangemLogger.e("Refusing to open a non-web URL (scheme=$scheme)")
+        return isWeb
     }
 
     /**
