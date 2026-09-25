@@ -194,7 +194,7 @@ internal class SdkTransactionHistoryItemConverter(
             )
             is TransactionType.Joint.TokenFee -> fromSafe.copy(
                 destinationType = TxInfo.DestinationType.Single(TxInfo.AddressType.Contract(type.tokenContract)),
-                interactionAddressType = TxInfo.InteractionAddressType.User(type.recipient),
+                interactionAddressType = TxInfo.InteractionAddressType.Contract(type.tokenContract),
                 amount = BigDecimal.ZERO,
             )
             is TransactionType.Joint.Call -> fromSafe.copy(

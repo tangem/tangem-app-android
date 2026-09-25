@@ -93,6 +93,31 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
+    fun `GIVEN joint token fee for an untracked token WHEN convert THEN there is no counterparty card`() {
+        // Arrange — like a personal NetworkFee, the row talks to the token contract, which is not a counterparty
+        val tx = txInfo(
+            type = TransactionType.Joint.TokenFee(
+                tokenContract = "0xtoken",
+                tokenAmount = null,
+                recipient = USER_ADDRESS,
+                refundCapWei = BigDecimal("500000000000000"),
+                signaturesCount = 2,
+            ),
+            isOutgoing = true,
+            amount = BigDecimal.ZERO,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract("0xtoken"),
+            destinationType = TxInfo.DestinationType.Single(addressType = TxInfo.AddressType.Contract("0xtoken")),
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
+        )
+
+        // Act
+        val actual = converter.convert(tx)
+
+        // Assert
+        assertThat(actual.counterparty).isNull()
+    }
+
+    @Test
     fun `GIVEN outgoing personal transfer WHEN convert THEN the fee is exact`() {
         // Arrange
         val tx = txInfo(
