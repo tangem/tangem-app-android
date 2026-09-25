@@ -18,19 +18,17 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 /**
  * Tests [stakingBalanceData] — the single accessor every staking-breakdown reader goes through.
  *
- * It is the gate between the two architectures: `contributions` first, legacy typed field as the fallback, which is
- * what lets a call site stay ignorant of `TWI_1717_BALANCE_CONTRIBUTIONS`. Both directions are asserted here, plus
- * the parity between them, because a wrong answer here silently empties a staking block rather than failing.
+ * It resolves the staking balance out of `contributions`, which is what lets a call site stay ignorant of which
+ * provider reported it. A wrong answer here silently empties a staking block rather than failing.
  *
- * **Both** halves narrow to [StakingBalance.Data]: `Empty` and `Error` are `BalanceContribution`s in their own right,
- * so an un-narrowed lookup on either side could hand a caller a variant with no breakdown to show. The two models
- * ending in `-> null` are what pin that.
+ * The accessor narrows to [StakingBalance.Data]: `Empty` and `Error` are `BalanceContribution`s in their own right,
+ * so an un-narrowed lookup could hand a caller a variant with no breakdown to show. The models ending in `-> null`
+ * are what pin that.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class StakingBalanceContributionExtTest {
@@ -47,8 +45,8 @@ internal class StakingBalanceContributionExtTest {
 
     /**
      * [stakingSource] is the freshness half of the same accessor, and it exists because
-     * `CryptoCurrencyStatus.Sources.stakingBalanceSource` lies under the toggle: the factory nulls the typed
-     * field and stamps that source a fixed `ACTUAL`, moving the real staleness onto the contribution.
+     * `CryptoCurrencyStatus.Sources.stakingBalanceSource` no longer carries the staking staleness: the real
+     * freshness rides on the contribution itself.
      */
     @Nested
     inner class StakingSourceTest {
@@ -61,7 +59,7 @@ internal class StakingBalanceContributionExtTest {
 
         @Test
         fun `GIVEN a cached contribution WHEN stakingSource THEN cache`() {
-            // Arrange — the toggle-on shape
+            // Arrange
             val cached = StakingBalance.Data.P2PEthPool(
                 stakingId = STAKING_ID,
                 source = StatusSource.CACHE,
@@ -70,19 +68,6 @@ internal class StakingBalanceContributionExtTest {
 
             // Act & Assert — reading Sources.stakingBalanceSource here would report a false "fresh"
             assertThat(value(contributions = listOf(cached)).stakingSource).isEqualTo(StatusSource.CACHE)
-        }
-
-        @Test
-        fun `GIVEN a cached legacy field WHEN stakingSource THEN cache`() {
-            // Arrange — the toggle-off shape must keep behaving exactly as before
-            val cached = StakingBalance.Data.P2PEthPool(
-                stakingId = STAKING_ID,
-                source = StatusSource.CACHE,
-                accounts = emptyList(),
-            )
-
-            // Act & Assert
-            assertThat(value(stakingBalance = cached).stakingSource).isEqualTo(StatusSource.CACHE)
         }
 
         @Test
@@ -98,27 +83,11 @@ internal class StakingBalanceContributionExtTest {
         }
 
         @Test
-        fun `GIVEN a non-Data legacy variant WHEN stakingSource THEN actual`() {
+        fun `GIVEN a non-Data contribution WHEN stakingSource THEN actual`() {
             // Arrange — Empty carries a source of its own, but the accessor narrows it away, as the factory does
             // Act & Assert
-            assertThat(value(stakingBalance = EMPTY).stakingSource).isEqualTo(StatusSource.ACTUAL)
+            assertThat(value(contributions = listOf(EMPTY)).stakingSource).isEqualTo(StatusSource.ACTUAL)
         }
-    }
-
-    @ParameterizedTest
-    @MethodSource("provideParityTestModels")
-    fun `GIVEN the same balance WHEN reached either way THEN both paths agree`(model: ParityTestModel) {
-        // Arrange — the same balance reached through each architecture
-        val viaContributions = value(contributions = listOf(model.balance))
-        val viaLegacyField = value(stakingBalance = model.balance)
-
-        // Act
-        val fromContributions = viaContributions.stakingBalanceData
-        val fromLegacy = viaLegacyField.stakingBalanceData
-
-        // Assert
-        assertThat(fromContributions).isEqualTo(fromLegacy)
-        assertThat(fromContributions).isEqualTo(model.balance)
     }
 
     private fun provideTestModels() = listOf(
@@ -128,27 +97,12 @@ internal class StakingBalanceContributionExtTest {
             expected = STAKE_KIT,
         ),
         AccessorTestModel(
-            description = "contributions empty, legacy field set -> falls back to the legacy field",
-            value = value(stakingBalance = STAKE_KIT),
-            expected = STAKE_KIT,
-        ),
-        AccessorTestModel(
-            description = "both present -> the contribution wins, never the legacy field",
-            value = value(contributions = listOf(STAKE_KIT), stakingBalance = P2P_ETH_POOL),
-            expected = STAKE_KIT,
-        ),
-        AccessorTestModel(
-            description = "neither present -> null",
+            description = "no contributions -> null",
             value = value(),
             expected = null,
         ),
         AccessorTestModel(
-            description = "only a non-staking contribution -> still falls back, does not stop at the first entry",
-            value = value(contributions = listOf(YIELD_SUPPLY), stakingBalance = STAKE_KIT),
-            expected = STAKE_KIT,
-        ),
-        AccessorTestModel(
-            description = "only a non-staking contribution and no legacy field -> null",
+            description = "only a non-staking contribution -> null",
             value = value(contributions = listOf(YIELD_SUPPLY)),
             expected = null,
         ),
@@ -158,25 +112,15 @@ internal class StakingBalanceContributionExtTest {
             expected = P2P_ETH_POOL,
         ),
         AccessorTestModel(
-            description = "legacy field holds a non-Data variant -> null, matching what the factory stores",
-            value = value(stakingBalance = EMPTY),
-            expected = null,
-        ),
-        AccessorTestModel(
-            description = "contribution is a non-Data variant -> null, the contributions half narrows too",
+            description = "contribution is a non-Data variant -> null, the accessor narrows",
             value = value(contributions = listOf(EMPTY)),
             expected = null,
         ),
         AccessorTestModel(
-            description = "non-Data contribution over a Data legacy field -> the legacy Data one, not the Empty",
-            value = value(contributions = listOf(EMPTY), stakingBalance = STAKE_KIT),
+            description = "a non-Data staking entry first -> the Data one, the scan does not stop at the first entry",
+            value = value(contributions = listOf(EMPTY, STAKE_KIT)),
             expected = STAKE_KIT,
         ),
-    )
-
-    private fun provideParityTestModels() = listOf(
-        ParityTestModel(description = "StakeKit", balance = STAKE_KIT),
-        ParityTestModel(description = "P2PEthPool", balance = P2P_ETH_POOL),
     )
 
     internal data class AccessorTestModel(
@@ -188,22 +132,13 @@ internal class StakingBalanceContributionExtTest {
         override fun toString(): String = description
     }
 
-    internal data class ParityTestModel(val description: String, val balance: StakingBalance.Data) {
-
-        override fun toString(): String = description
-    }
-
     // region Fixtures
-    private fun value(
-        contributions: List<BalanceContribution> = emptyList(),
-        stakingBalance: StakingBalance? = null,
-    ): CryptoCurrencyStatus.Value {
+    private fun value(contributions: List<BalanceContribution> = emptyList()): CryptoCurrencyStatus.Value {
         return CryptoCurrencyStatus.Loaded(
             amount = BigDecimal.TEN,
             fiatAmount = BigDecimal.TEN,
             fiatRate = BigDecimal.ONE,
             priceChange = BigDecimal.ZERO,
-            stakingBalance = stakingBalance,
             yieldSupplyStatus = null,
             hasCurrentNetworkTransactions = false,
             pendingTransactions = emptySet(),
@@ -247,7 +182,7 @@ internal class StakingBalanceContributionExtTest {
             source = StatusSource.ACTUAL,
         )
 
-        /** A staking [BalanceContribution] with no breakdown — the variant both halves of the accessor must reject. */
+        /** A staking [BalanceContribution] with no breakdown — the variant the accessor must reject. */
         val EMPTY = StakingBalance.Empty(stakingId = STAKING_ID, source = StatusSource.ACTUAL)
     }
     // endregion

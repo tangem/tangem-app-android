@@ -20,7 +20,7 @@ import com.tangem.core.ui.message.dialog.Dialogs.hotWalletCreationNotSupportedDi
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.cloudbackup.usecase.ResolveCloudRestoreBackupsUseCase
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
-import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
+import com.tangem.domain.sociallogin.models.SocialLoginProvider
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.introduction.IntroductionComponent
@@ -29,6 +29,7 @@ import com.tangem.features.introduction.impl.engine.IntroductionVideoPlayer
 import com.tangem.features.introduction.impl.ui.state.CreateWalletUM
 import com.tangem.features.introduction.impl.ui.state.WalletOptionUM
 import com.tangem.features.introduction.impl.ui.state.IntroductionUM
+import com.tangem.features.introduction.impl.ui.state.SocialLoginProgressUM
 import com.tangem.features.storiesv2.StoriesV2PendingAction
 import com.tangem.features.storiesv2.StoriesV2Result
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -47,7 +48,9 @@ import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R as CoreUiR
 import kotlinx.coroutines.withContext
 
-@Suppress("LongParameterList")
+// TODO [REDACTED_TASK_KEY]: already at the LargeClass limit before social login. The fix is a
+//  CreateWalletSheetController mirroring HaveWalletSheetController, too wide a refactor to carry here.
+@Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class IntroductionModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
@@ -58,7 +61,7 @@ internal class IntroductionModel @Inject constructor(
     private val entryReasonTracker: IntroductionEntryReasonTracker,
     private val router: Router,
     private val isHotWalletCreationSupported: IsHotWalletCreationSupported,
-    private val socialLoginFeatureToggles: SocialLoginFeatureToggles,
+    private val socialLoginHandler: IntroductionSocialLoginHandler,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val resolveCloudRestoreBackups: ResolveCloudRestoreBackupsUseCase,
     private val trackingContextProxy: TrackingContextProxy,
@@ -75,6 +78,8 @@ internal class IntroductionModel @Inject constructor(
     private var isScreenResumed = false
     private var isVideoRestartPendingResume = false
     private var isCreatingMobileWallet = false
+
+    private var isSigningInSocially = false
     private var hasRenderedFrame = false
 
     private val videoPlayer = videoPlayerFactory.create(
@@ -87,9 +92,11 @@ internal class IntroductionModel @Inject constructor(
         scope = modelScope,
         router = router,
         analyticsEventHandler = analyticsEventHandler,
-        socialLoginFeatureToggles = socialLoginFeatureToggles,
         hotWalletFeatureToggles = hotWalletFeatureToggles,
         resolveCloudRestoreBackups = resolveCloudRestoreBackups,
+        socialLoginProvider = socialLoginHandler::provider,
+        isSigningInSocially = { isSigningInSocially },
+        onSocialLoginClick = ::onSocialLoginClick,
     )
 
     private val stories = IntroductionStories(
@@ -115,6 +122,7 @@ internal class IntroductionModel @Inject constructor(
                 scenes = welcomeScenes,
                 bottomSheetConfig = null,
                 haveWalletBottomSheetConfig = null,
+                socialLoginProgress = null,
                 onCreateWalletClick = ::onCreateWalletClick,
                 onIHaveWalletClick = ::onIHaveWalletClick,
                 onCreateWalletSheetCollapsed = ::onCreateWalletSheetCollapsed,
@@ -127,6 +135,13 @@ internal class IntroductionModel @Inject constructor(
 
     init {
         reportScreenOpened()
+
+        // A sheet opened before availability resolves captured no social row, so refresh brings it in.
+        modelScope.launch {
+            socialLoginHandler.resolveProvider()
+            refreshOpenSheets()
+        }
+
         if (params.launchMode == InitScreenLaunchMode.WithCardScan) {
             launchCardScan(onNavigatedAway = ::onTerminalFlowEntered, onFailed = {})
         }
@@ -210,7 +225,7 @@ internal class IntroductionModel @Inject constructor(
     }
 
     private fun onCreateWalletClick() {
-        if (isAnySheetShown() || stories.isOpening) return
+        if (isAnySheetShown() || stories.isOpening || isSigningInSocially) return
         analyticsEventHandler.send(IntroductionProcess.ButtonCreateNewWallet())
         modelScope.launch {
             val referralId = referral.readId()
@@ -221,7 +236,6 @@ internal class IntroductionModel @Inject constructor(
         uiState.update { it.copy(bottomSheetConfig = createWalletBottomSheetConfig()) }
     }
 
-    // TODO [REDACTED_TASK_KEY]: the icons of both sheets are placeholders until the design hands over the assets.
     private fun createWalletBottomSheetConfig() = TangemBottomSheetConfig(
         isShown = true,
         onDismissRequest = ::onCreateWalletSheetDismissRequested,
@@ -230,13 +244,22 @@ internal class IntroductionModel @Inject constructor(
                 iconRes = CoreUiR.drawable.ic_tangem_24,
                 title = resourceReference(CoreResR.string.introduction_create_wallet_hardware_title),
                 description = resourceReference(CoreResR.string.introduction_create_wallet_hardware_description),
-                isEnabled = !isCreatingMobileWallet,
+                isEnabled = !isCreatingMobileWallet && !isSigningInSocially,
                 onClick = ::onTangemCardOrRingClick,
             ),
+            socialLogin = socialLoginHandler.createWalletOption(
+                isEnabled = !isCreatingMobileWallet && !isSigningInSocially,
+                isLoading = isSigningInSocially,
+            ) { provider ->
+                if (isCreateWalletSheetShown() && !isCreatingMobileWallet && !isSigningInSocially) {
+                    onSocialLoginClick(provider)
+                }
+            },
             seedPhrase = WalletOptionUM(
-                iconRes = CoreUiR.drawable.ic_seed_phrase_24,
+                iconRes = CoreUiR.drawable.ic_wallet_plus_20,
                 title = resourceReference(CoreResR.string.introduction_create_wallet_seed_phrase_title),
                 description = resourceReference(CoreResR.string.introduction_create_wallet_seed_phrase_description),
+                isEnabled = !isSigningInSocially,
                 isLoading = isCreatingMobileWallet,
                 onClick = ::onCreateSeedPhraseWalletClick,
             ),
@@ -283,8 +306,48 @@ internal class IntroductionModel @Inject constructor(
         withTimeoutOrNull(SHEET_COLLAPSE_TIMEOUT) { createWalletSheetCollapsed.first() }
     }
 
+    private fun onSocialLoginClick(provider: SocialLoginProvider) {
+        // Checked before the account chooser: failing later ends a whole sign-in on a generic error.
+        if (!ensureHotWalletCreationSupported()) {
+            onBottomSheetDismissed()
+            haveWalletSheet.dismiss()
+            return
+        }
+        setSigningInSocially(isSigningIn = true)
+        socialLoginHandler.start(modelScope, provider, SocialLoginHost())
+    }
+
+    private fun setSigningInSocially(isSigningIn: Boolean) {
+        isSigningInSocially = isSigningIn
+        refreshOpenSheets()
+    }
+
+    private fun refreshOpenSheets() {
+        uiState.update { state ->
+            val config = state.bottomSheetConfig?.let { createWalletBottomSheetConfig().copy(isShown = it.isShown) }
+            state.copy(bottomSheetConfig = config)
+        }
+        haveWalletSheet.refreshOptions()
+    }
+
+    private inner class SocialLoginHost : IntroductionSocialLoginHandler.Host {
+
+        /** The sheet steps aside for the first surface, but the flag holds the welcome screen shut */
+        override fun onProgress(progress: SocialLoginProgressUM?) {
+            if (progress != null && isAnySheetShown()) {
+                onBottomSheetDismissed()
+                haveWalletSheet.dismiss()
+            }
+            uiState.update { it.copy(socialLoginProgress = progress) }
+        }
+
+        override fun onFinished() {
+            if (isSigningInSocially) setSigningInSocially(isSigningIn = false)
+        }
+    }
+
     private fun onTangemCardOrRingClick() {
-        if (!isCreateWalletSheetShown() || isCreatingMobileWallet) return
+        if (!isCreateWalletSheetShown() || isCreatingMobileWallet || isSigningInSocially) return
         analyticsEventHandler.send(IntroductionProcess.ButtonHardwareWallet())
         onBottomSheetDismissed()
         stories.openAfterSheetCollapse()
@@ -315,7 +378,7 @@ internal class IntroductionModel @Inject constructor(
     }
 
     private fun onCreateSeedPhraseWalletClick() {
-        if (!isCreateWalletSheetShown() || isCreatingMobileWallet) return
+        if (!isCreateWalletSheetShown() || isCreatingMobileWallet || isSigningInSocially) return
         // Released only if no wallet gets saved: a saved wallet installs its own context in place of this one.
         trackingContextProxy.addHotWalletContext()
         analyticsEventHandler.send(
@@ -350,12 +413,14 @@ internal class IntroductionModel @Inject constructor(
     }
 
     private fun onIHaveWalletClick() {
-        if (isAnySheetShown() || isCreatingMobileWallet || stories.isOpening) return
+        if (isAnySheetShown() || stories.isOpening || isWalletFlowRunning()) return
         analyticsEventHandler.send(IntroductionProcess.ButtonIHaveWallet())
         haveWalletSheet.open()
     }
 
     private fun isAnySheetShown(): Boolean = isCreateWalletSheetShown() || isHaveWalletSheetShown()
+
+    private fun isWalletFlowRunning(): Boolean = isCreatingMobileWallet || isSigningInSocially
 
     /**
      * A dismissed sheet keeps its dialog composed and interactive until the collapse ends, so a tap landing on a

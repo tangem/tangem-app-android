@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.multichain.choosenetwork
 
 import com.tangem.domain.models.account.PaymentNetworkStatus
+import com.tangem.features.tangempay.multichain.isOtherWay
 import com.tangem.features.tangempay.multichain.toRowData
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toPersistentList
@@ -8,27 +9,21 @@ import kotlinx.collections.immutable.toPersistentList
 /**
  * Maps the multichain networks of a payment account into the Choose-network bottom sheet sections:
  * **Fast way** ([PaymentNetworkStatus.Available] + [PaymentNetworkStatus.NotIssued], input order preserved) and
- * **Other ways** ([PaymentNetworkStatus.Disabled]). Wires each row's click to the matching [listener] callback,
- * except [PaymentNetworkStatus.NotIssued] rows, which are routed to [onSelectNotIssued] instead — contract
- * creation is owned by [com.tangem.features.tangempay.multichain.choosenetwork.PaymentChooseNetworkModel] itself, since it needs
- * to drive that row's own Loading/Error state.
+ * **Other ways** ([PaymentNetworkStatus.Disabled]), see [isOtherWay]. Every row tap is handed back as the
+ * tapped status via [onNetworkClick]; routing it — and reporting it to analytics — is owned by
+ * [PaymentChooseNetworkModel], which alone knows the destinations and holds the per-row Loading/Error state.
  */
 internal class PaymentChooseNetworkUMConverter(
-    private val listener: ChooseNetworkListener,
-    private val onSelectNotIssued: (PaymentNetworkStatus.NotIssued) -> Unit,
+    private val onNetworkClick: (PaymentNetworkStatus) -> Unit,
+    private val onDismiss: () -> Unit,
 ) : Converter<List<PaymentNetworkStatus>, PaymentChooseNetworkUM> {
 
     override fun convert(value: List<PaymentNetworkStatus>): PaymentChooseNetworkUM {
+        val (otherWays, fastWay) = value.partition(PaymentNetworkStatus::isOtherWay)
         return PaymentChooseNetworkUM(
-            fastWay = value
-                .filter { it !is PaymentNetworkStatus.Disabled }
-                .mapNotNull(::toItemUM)
-                .toPersistentList(),
-            otherWays = value
-                .filterIsInstance<PaymentNetworkStatus.Disabled>()
-                .mapNotNull(::toItemUM)
-                .toPersistentList(),
-            dismiss = listener::onDismiss,
+            fastWay = fastWay.mapNotNull(::toItemUM).toPersistentList(),
+            otherWays = otherWays.mapNotNull(::toItemUM).toPersistentList(),
+            dismiss = onDismiss,
         )
     }
 
@@ -42,13 +37,5 @@ internal class PaymentChooseNetworkUMConverter(
             state = PaymentNetworkItemUM.State.Idle,
             onClick = { onNetworkClick(status) },
         )
-    }
-
-    private fun onNetworkClick(status: PaymentNetworkStatus) {
-        when (status) {
-            is PaymentNetworkStatus.Available -> listener.onSelectAvailable(networkRawId = status.network.rawId)
-            is PaymentNetworkStatus.NotIssued -> onSelectNotIssued(status)
-            is PaymentNetworkStatus.Disabled -> listener.onSelectDisabled()
-        }
     }
 }
