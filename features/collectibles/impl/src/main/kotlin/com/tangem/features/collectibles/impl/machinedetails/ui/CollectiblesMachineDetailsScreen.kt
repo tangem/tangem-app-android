@@ -8,9 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
@@ -129,7 +127,7 @@ private fun MachineDetailsInfoList(
                 SpacerH(24.dp)
                 CollectiblesSectionHeading(title = resourceReference(R.string.collectibles_machine_details_section))
                 CardGrid(items = state.details) { detail -> CollectiblesDetailCard(state = detail) }
-                PoweredBy(onClick = state.onPoweredByClick)
+                PoweredBy()
             }
         }
 
@@ -156,6 +154,7 @@ private fun LazyListScope.prizePool(state: CollectiblesMachineDetailsUM.Content)
             CollectiblesStatus(
                 message = prizePool.message,
                 onReloadClick = prizePool.onReloadClick,
+                isReloading = prizePool.isReloading,
                 modifier = Modifier.padding(top = 118.dp, bottom = 88.dp),
             )
         }
@@ -227,15 +226,13 @@ private fun <T> CardGrid(items: ImmutableList<T>, modifier: Modifier = Modifier,
 }
 
 @Composable
-private fun PoweredBy(onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun PoweredBy(modifier: Modifier = Modifier) {
     Text(
         text = resourceReference(
             id = R.string.collectibles_machine_powered_by,
             formatArgs = wrappedList(
                 annotatedReference {
-                    withLink(LinkAnnotation.Clickable(tag = PROVIDER_NAME, linkInteractionListener = { onClick() })) {
-                        withStyle(SpanStyle(color = TangemTheme.colors3.text.primary)) { append(PROVIDER_NAME) }
-                    }
+                    withStyle(SpanStyle(color = TangemTheme.colors3.text.primary)) { append(PROVIDER_NAME) }
                 },
             ),
         ).resolveAnnotatedReference(),
