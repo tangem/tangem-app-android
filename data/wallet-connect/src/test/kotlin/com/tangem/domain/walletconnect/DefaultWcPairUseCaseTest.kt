@@ -150,6 +150,26 @@ internal class DefaultWcPairUseCaseTest {
     }
 
     @Test
+    fun `unknown validation shows the dApp metadata url, not the verify service host`() = runTest {
+        val unknownContext = sdkVerifyContext.copy(
+            origin = "",
+            validation = Wallet.Model.Validation.UNKNOWN,
+            verifyUrl = "https://verify.walletconnect.org",
+        )
+        coEvery { sdkDelegate.pair(url) } returns (sdkProposal to unknownContext).right()
+
+        val useCase = useCaseFactory()
+        useCase.invoke().test {
+            assertEquals(loading, awaitItem())
+            val proposal = awaitItem() as WcPairState.Proposal
+            assertEquals(sdkProposal.url, proposal.dAppSession.dAppMetaData.url)
+            assertEquals(CheckDAppResult.FAILED_TO_VERIFY, proposal.dAppSession.securityStatus)
+            coVerify(inverse = true) { blockAidVerifier.verifyDApp(any()) }
+            expectNoEvents()
+        }
+    }
+
+    @Test
     fun `verifyDApp uses verifyContext origin when sessionProposal url is spoofed`() = runTest {
         val spoofedProposal = sdkProposal.copy(url = "https://evil-spoofed.example/")
         coEvery { sdkDelegate.pair(url) } returns (spoofedProposal to sdkVerifyContext).right()
