@@ -42,7 +42,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
     @Suppress("LongMethod")
     override operator fun invoke(): Flow<WcPairState> {
         return flow {
-            TangemLogger.withTag(WC_TAG).i("start pair flow $pairRequest")
+            TangemLogger.withTag(WC_TAG).i("start pair flow ${pairRequest.forLog()}")
             analytics.send(
                 WcAnalyticEvents.NewPairInitiated(
                     source = pairRequest.source,
@@ -53,7 +53,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
 
             val pairResult = sdkDelegate.pair(pairRequest.uri)
                 .onLeft { error ->
-                    TangemLogger.withTag(WC_TAG).e("Failed to call pair $pairRequest", error)
+                    TangemLogger.withTag(WC_TAG).e("Failed to call pair ${pairRequest.forLog()}", error)
                     analytics.send(
                         WcAnalyticEvents.PairFailed(
                             errorCode = error.code,
@@ -160,9 +160,9 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
             }
             .onCompletion { throwable ->
                 if (throwable != null) {
-                    TangemLogger.withTag(WC_TAG).e("Completed with error $pairRequest", throwable)
+                    TangemLogger.withTag(WC_TAG).e("Completed with error ${pairRequest.forLog()}", throwable)
                 } else {
-                    TangemLogger.withTag(WC_TAG).i("Completed successfully $pairRequest")
+                    TangemLogger.withTag(WC_TAG).i("Completed successfully ${pairRequest.forLog()}")
                 }
             }
     }
@@ -191,7 +191,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
         )
         sdkDelegate.approve(pendingSessionForSave, sessionApprove)
     } catch (e: Throwable) {
-        TangemLogger.withTag(WC_TAG).e("Failed to sdk approve session $pairRequest", e)
+        TangemLogger.withTag(WC_TAG).e("Failed to sdk approve session ${pairRequest.forLog()}", e)
         WcPairError.ApprovalFailed(e.message.orEmpty()).left()
     }
 
@@ -283,6 +283,11 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
     private sealed interface TerminalAction {
         data class Approve(val sessionForApprove: WcSessionApprove) : TerminalAction
         data object Reject : TerminalAction
+    }
+
+    /** The pairing URI carries the relay symmetric key; log only where the request came from. */
+    private fun WcPairRequest.forLog(): String {
+        return "WcPairRequest(source=$source, screen=$screen, userWalletId=$userWalletId)"
     }
 
     @AssistedFactory

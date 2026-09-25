@@ -337,7 +337,7 @@ internal class SwapInteractorImpl @Inject constructor(
                |---- walletId: ${fromSwapCurrencyStatus.userWalletId}
                |---- accountId: ${fromSwapCurrencyStatus.account.accountId}
                |---- currencyId: ${fromSwapCurrencyStatus.currency.id}
-               |- toSwapCurrencyStatus: $toSwapCurrencyStatus
+               |- toSwapCurrencyStatus:
                |---- walletId: ${toSwapCurrencyStatus.userWalletId}
                |---- accountId: ${toSwapCurrencyStatus.account.accountId}
                |---- currencyId: ${toSwapCurrencyStatus.currency.id}
@@ -767,7 +767,7 @@ internal class SwapInteractorImpl @Inject constructor(
                |---- walletId: ${fromSwapCurrencyStatus.userWalletId}
                |---- accountId: ${fromSwapCurrencyStatus.account.accountId}
                |---- currencyId: ${fromSwapCurrencyStatus.currency.id}
-               |- toSwapCurrencyStatus: $toSwapCurrencyStatus
+               |- toSwapCurrencyStatus:
                |---- walletId: ${toSwapCurrencyStatus.userWalletId}
                |---- accountId: ${toSwapCurrencyStatus.account.accountId}
                |---- currencyId: ${toSwapCurrencyStatus.currency.id}
