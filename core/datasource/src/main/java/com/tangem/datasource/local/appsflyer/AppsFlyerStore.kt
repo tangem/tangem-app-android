@@ -13,6 +13,8 @@ interface AppsFlyerStore {
 
     suspend fun storeIfAbsent(value: AppsFlyerConversionData)
 
+    suspend fun clearConversionData()
+
     suspend fun storeUIDIfAbsent(value: String)
 
     fun observeNavigationDeeplink(): Flow<String?>

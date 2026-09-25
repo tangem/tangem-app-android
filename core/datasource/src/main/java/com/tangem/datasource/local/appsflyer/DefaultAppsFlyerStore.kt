@@ -47,6 +47,11 @@ internal class DefaultAppsFlyerStore(
         }
     }
 
+    override suspend fun clearConversionData() {
+        TangemLogger.i("Clearing conversion data")
+        appPreferencesStore.editData { preferences -> preferences.remove(CONVERSION_DATA_KEY) }
+    }
+
     override suspend fun storeUIDIfAbsent(value: String) {
         TangemLogger.i("Storing UID to store if absent: $value")
         appPreferencesStore.editData { preferences ->
