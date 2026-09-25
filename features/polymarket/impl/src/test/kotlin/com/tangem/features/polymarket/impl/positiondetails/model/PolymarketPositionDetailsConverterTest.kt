@@ -41,7 +41,7 @@ internal class PolymarketPositionDetailsConverterTest {
         assertThat(actual.metrics).isEqualTo(
             PolymarketPositionDetailsUM.Metrics(
                 quantity = stringReference("28.09"),
-                priceChanges = stringReference("35.59¢ → 35.5¢"),
+                priceChanges = stringReference("35.6¢ → 35.5¢"),
                 unrealizedPnl = stringReference("-$0.03"),
                 realizedPnl = stringReference("+$12.00"),
             ),
@@ -61,7 +61,11 @@ internal class PolymarketPositionDetailsConverterTest {
     @ProvideTestModels
     fun `GIVEN resolution state and past end date WHEN converted THEN uses backend state`(case: StatusCase) {
         // Arrange
-        val position = createPolymarketPosition(resolutionStatus = case.status).copy(endDate = LocalDate.of(2000, 1, 1))
+        val position = createPolymarketPosition(resolutionStatus = case.status).copy(
+            endDate = LocalDate.of(2000, 1, 1),
+            avgPrice = BigDecimal("0.0004"),
+            curPrice = BigDecimal("0.9995"),
+        )
 
         // Act
         val actual = converter.convert(PolymarketPositionDetailsConverter.Input(position = position))
@@ -70,6 +74,7 @@ internal class PolymarketPositionDetailsConverterTest {
         assertThat(actual.notice).isEqualTo(case.notice)
         assertThat(actual.information.status).isEqualTo(resourceReference(case.label))
         assertThat(position.canOpenPositionDetails).isEqualTo(case.canOpen)
+        assertThat(actual.metrics.priceChanges).isEqualTo(stringReference(case.expectedPriceChanges))
     }
 
     @ParameterizedTest
@@ -124,7 +129,13 @@ internal class PolymarketPositionDetailsConverterTest {
         StatusCase(PolymarketResolutionStatus.PROPOSED, Notice.Pending, R.string.prediction_positions_pending),
         StatusCase(PolymarketResolutionStatus.DISPUTED, Notice.Disputed, R.string.prediction_positions_disputed),
         StatusCase(PolymarketResolutionStatus.UNKNOWN, null, R.string.prediction_positions_unknown),
-        StatusCase(PolymarketResolutionStatus.RESOLVED, null, R.string.prediction_positions_unknown, canOpen = false),
+        StatusCase(
+            PolymarketResolutionStatus.RESOLVED,
+            null,
+            R.string.prediction_positions_unknown,
+            canOpen = false,
+            expectedPriceChanges = "0¢ → 100¢",
+        ),
     )
 
     data class StatusCase(
@@ -132,5 +143,6 @@ internal class PolymarketPositionDetailsConverterTest {
         val notice: Notice?,
         val label: Int,
         val canOpen: Boolean = true,
+        val expectedPriceChanges: String = "0.1¢ → 99.9¢",
     )
 }
