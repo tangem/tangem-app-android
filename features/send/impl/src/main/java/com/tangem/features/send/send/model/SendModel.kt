@@ -185,6 +185,22 @@ internal class SendModel @Inject constructor(
 
     override fun onDestinationResult(destinationUM: DestinationUM) {
         uiState.update { it.copy(destinationUM = destinationUM) }
+        syncPredefinedDestination(destinationUM)
+    }
+
+    /**
+     * A QR-scanned destination is kept in [predefinedValues] and used by [prepareTransferTransaction] to build the
+     * transaction the fee is estimated for. When the user edits the recipient afterwards, the fee must follow the
+     * address that will actually be signed (SendConfirmModel sends to the displayed recipient), not the scanned one.
+     */
+    private fun syncPredefinedDestination(destinationUM: DestinationUM) {
+        val content = destinationUM as? DestinationUM.Content ?: return
+        val qrValues = predefinedValues as? PredefinedValues.Content.QrCode ?: return
+        val enteredAddress = content.addressTextField.actualAddress
+        if (enteredAddress.isBlank()) return
+        val enteredMemo = content.memoTextField?.value
+        if (enteredAddress == qrValues.address && enteredMemo == qrValues.memo) return
+        predefinedValues = qrValues.copy(address = enteredAddress, memo = enteredMemo)
     }
 
     override fun onAmountResult(amountUM: AmountState, isResetPredefined: Boolean) {
@@ -537,13 +553,20 @@ internal class SendModel @Inject constructor(
 
     private fun onQrCodeScanned(address: String) {
         val parsedQrCode = parseQrCodeUseCase(address, cryptoCurrency).getOrNull()
+        // A scan the parser rejected (wrong network, foreign chain id, non-transfer URI, unreadable code) carries
+        // nothing to apply. Overwriting the predefined values with an empty address would make the fee estimation
+        // build a transfer to "" and drop the recipient the user already had.
+        if (parsedQrCode == null || parsedQrCode.address.isBlank()) {
+            TangemLogger.i("Scanned QR code has no usable destination for ${cryptoCurrency.network.name}; ignored")
+            return
+        }
         // Decompose component can be active or inactive depending on its state and navigation stack
         // If it is in inactive state use parameter to pass value to amount component
-        val amount = parsedQrCode?.amount?.parseBigDecimal(cryptoCurrency.decimals)
+        val amount = parsedQrCode.amount?.parseBigDecimal(cryptoCurrency.decimals)
         predefinedValues = PredefinedValues.Content.QrCode(
             amount = amount.orEmpty(),
-            address = parsedQrCode?.address.orEmpty(),
-            memo = parsedQrCode?.memo,
+            address = parsedQrCode.address,
+            memo = parsedQrCode.memo,
             source = PredefinedValues.Source.SEND_SCREEN,
         )
         // If it is in active state use flow to update value in amount component
