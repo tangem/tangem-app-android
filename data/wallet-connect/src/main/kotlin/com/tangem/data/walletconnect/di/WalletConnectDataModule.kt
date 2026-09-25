@@ -66,10 +66,12 @@ internal object WalletConnectDataModule {
     fun wcInitializeUseCase(
         wcSdk: WcSdk,
         store: WalletConnectStore,
+        featureToggles: WalletConnectFeatureToggles,
         dispatchers: CoroutineDispatcherProvider,
     ): WcInitializeUseCase = DefaultWcInitializeUseCase(
         wcSdk = wcSdk,
         store = store,
+        featureToggles = featureToggles,
         dispatchers = dispatchers,
     )
 
