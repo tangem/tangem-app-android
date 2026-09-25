@@ -44,7 +44,7 @@ internal class DefaultWalletsPromoRepository(
     override suspend fun retryBindRefcodeWithWallets() {
         val savedBindingData = getSavedBindingData()
 
-        if (savedBindingData != null) {
+        if (savedBindingData != null && !savedBindingData.isDone) {
             bind(refcode = savedBindingData.refcode, campaign = savedBindingData.campaign)
         } else {
             TangemLogger.i("retryBindRefcodeWithWallets: Binding data isn't required")

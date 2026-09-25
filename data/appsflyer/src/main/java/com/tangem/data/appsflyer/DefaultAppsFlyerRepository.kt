@@ -15,4 +15,8 @@ internal class DefaultAppsFlyerRepository @Inject constructor(
     override suspend fun clearDeeplink() {
         appsFlyerStore.clearNavigationDeeplink()
     }
+
+    override suspend fun clearReferralAttribution() {
+        appsFlyerStore.clearConversionData()
+    }
 }
