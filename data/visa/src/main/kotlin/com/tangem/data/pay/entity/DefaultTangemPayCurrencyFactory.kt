@@ -177,7 +177,6 @@ internal class DefaultTangemPayCurrencyFactory @Inject constructor(
                 networkAddress = networkAddress,
                 sources = CryptoCurrencyStatus.Sources(),
                 pendingTransactions = emptySet(),
-                stakingBalance = null,
                 yieldSupplyStatus = null,
                 hasCurrentNetworkTransactions = false,
             )
@@ -185,7 +184,6 @@ internal class DefaultTangemPayCurrencyFactory @Inject constructor(
             CryptoCurrencyStatus.NoQuote(
                 amount = amount,
                 networkAddress = networkAddress,
-                stakingBalance = null,
                 yieldSupplyStatus = null,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),

@@ -6,7 +6,7 @@ import com.domain.blockaid.models.transaction.simultation.AmountInfo
 import com.domain.blockaid.models.transaction.simultation.ApproveInfo
 import com.domain.blockaid.models.transaction.simultation.SimulationData
 import com.domain.blockaid.models.transaction.simultation.TokenInfo
-import com.tangem.blockchain.extensions.hexToBigDecimal
+import com.tangem.blockchain.extensions.hexToBigInteger
 import com.tangem.store.datasource.blockaid.models.request.EvmTransactionScanRequest
 import com.tangem.store.datasource.blockaid.models.request.RpcData
 import com.tangem.store.datasource.blockaid.models.request.SolanaTransactionScanRequest
@@ -14,6 +14,7 @@ import com.tangem.store.datasource.blockaid.models.response.*
 import org.json.JSONArray
 import org.json.JSONObject
 import org.json.JSONTokener
+import java.math.BigInteger
 
 private const val SUCCESS_STATUS = "Success"
 private const val DOMAIN_CHECKED_STATUS = "hit"
@@ -22,6 +23,8 @@ private const val VALIDATION_WARNING_STATUS = "Warning"
 private const val VALIDATION_MALICIOUS_STATUS = "Malicious"
 
 private const val SOL_ASSET_SYMBOL = "SOL"
+
+private val UINT256_MAX = BigInteger.valueOf(2).pow(256) - BigInteger.ONE
 
 internal object BlockAidMapper {
 
@@ -190,11 +193,13 @@ internal object BlockAidMapper {
             decimals = exposure.asset.decimals ?: 0,
         )
         return exposure.spenders.flatMap { (_, spender) ->
-            val isUnlimited = spender.isApprovedForAll == true
-            val approval = spender.approval?.hexToBigDecimal()
+            val rawApproval = spender.approval?.hexToBigInteger()
+            val isUnlimited = spender.isApprovedForAll == true || rawApproval == UINT256_MAX
+            // Exposure is the balance currently at risk, not the allowance, so it's only a fallback
+            val approval = rawApproval?.toBigDecimal()?.movePointLeft(tokenInfo.decimals)
             spender.exposure.map { detail ->
                 ApproveInfo.Amount(
-                    approvedAmount = detail.value?.toBigDecimalOrNull() ?: approval ?: 1.toBigDecimal(),
+                    approvedAmount = approval ?: detail.value?.toBigDecimalOrNull() ?: 1.toBigDecimal(),
                     isUnlimited = isUnlimited,
                     tokenInfo = tokenInfo,
                 )
