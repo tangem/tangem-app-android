@@ -25,6 +25,7 @@ import com.tangem.domain.polymarket.model.PolymarketPositionsTab
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionResult
 import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
+import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetConfig
 import com.tangem.features.polymarket.impl.positions.model.createPolymarketPosition
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
@@ -35,6 +36,9 @@ import com.tangem.domain.polymarket.model.PolymarketDepositRequisites
 import com.tangem.domain.polymarket.model.PolymarketDepositToken
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
+import com.tangem.domain.polymarket.flow.PredictionPositionsValueFetcher
+import com.tangem.domain.polymarket.flow.PredictionPositionsValueSupplier
+import com.tangem.domain.polymarket.model.PredictionPositionsValue
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
@@ -108,12 +112,16 @@ internal class PolymarketMainModelTest {
     private val refreshRequisites: RefreshPredictionDepositRequisitesInteractor = mockk()
     private val checkGeoblock: CheckPolymarketGeoblockUseCase = mockk()
     private val accountStatusFetcher: PredictionAccountStatusFetcher = mockk(relaxed = true)
+    private val positionsValueSupplier: PredictionPositionsValueSupplier = mockk()
+    private val positionsValueFetcher: PredictionPositionsValueFetcher = mockk(relaxed = true)
     private val balancePoller: PredictionBalancePoller = mockk()
     private val fundingWindow: PredictionFundingWindow = mockk(relaxed = true)
 
     private val statusFlow = MutableStateFlow<PredictionAccountStatusValue>(
         value = activeStatus(depositAddress = DEPOSIT_ADDRESS),
     )
+
+    private val positionsFlow = MutableStateFlow<PredictionPositionsValue>(value = PredictionPositionsValue.Unknown)
 
     private val positionsPreviewLoader: PolymarketPositionsPreviewLoader = mockk(relaxed = true)
     private val positionsState = MutableStateFlow<PolymarketPositionsPreviewUM>(PolymarketPositionsPreviewUM.Loading)
@@ -159,6 +167,31 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
+    fun `GIVEN categories pending WHEN model created THEN category loading ends before event loading`() = runTest {
+        // Arrange
+        val categoriesReady = CompletableDeferred<Unit>()
+        coEvery { getCategoriesUseCase() } coAnswers {
+            categoriesReady.await()
+            categories().right()
+        }
+
+        // Act
+        val model = createModel(testScope = this)
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.isCategoriesLoading).isTrue()
+        assertThat(model.uiState.value.categories).isEmpty()
+        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Loading)
+
+        categoriesReady.complete(Unit)
+        advanceUntilIdle()
+        assertThat(model.uiState.value.isCategoriesLoading).isFalse()
+        assertThat(model.uiState.value.categories.map { it.id }).containsExactly(1, 2).inOrder()
+        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Loading)
+    }
+
+    @Test
     fun `GIVEN categories load WHEN model created THEN tabs are built with the first one selected`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returns categories().right()
@@ -187,6 +220,8 @@ internal class PolymarketMainModelTest {
 
         // Assert
         assertThat(model.uiState.value.categories).isEmpty()
+        assertThat(model.uiState.value.isCategoriesLoading).isFalse()
+        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Loading)
         assertThat(dispatchedActions).containsExactly(
             BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = null)),
         )
@@ -286,12 +321,15 @@ internal class PolymarketMainModelTest {
         )
         advanceUntilIdle()
         dispatchedActions.clear()
+        val loadedCategories = model.uiState.value.categories
 
         // Act
         (model.uiState.value.content as PolymarketMainUM.ContentUM.Error).onReloadClick()
         advanceUntilIdle()
 
         // Assert
+        assertThat(model.uiState.value.isCategoriesLoading).isFalse()
+        assertThat(model.uiState.value.categories).isEqualTo(loadedCategories)
         assertThat(dispatchedActions).containsExactly(
             BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = 1)),
         )
@@ -318,6 +356,43 @@ internal class PolymarketMainModelTest {
 
         // Assert
         assertThat(model.uiState.value.categories.map { it.id }).containsExactly(1, 2).inOrder()
+    }
+
+    @Test
+    fun `GIVEN categories failed WHEN retry is awaiting categories THEN loading is shown immediately`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns DataError.NetworkError.NoInternetConnection.left()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        batchState.value = BatchListState(
+            data = emptyList(),
+            status = PaginationStatus.InitialLoadingError(throwable = IllegalStateException("boom")),
+        )
+        advanceUntilIdle()
+        val categoriesReady = CompletableDeferred<Unit>()
+        coEvery { getCategoriesUseCase() } coAnswers {
+            categoriesReady.await()
+            categories().right()
+        }
+        dispatchedActions.clear()
+
+        // Act
+        (model.uiState.value.content as PolymarketMainUM.ContentUM.Error).onReloadClick()
+
+        // Assert
+        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Loading)
+        assertThat(model.uiState.value.isCategoriesLoading).isTrue()
+        runCurrent()
+        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Loading)
+        assertThat(dispatchedActions).isEmpty()
+
+        categoriesReady.complete(Unit)
+        advanceUntilIdle()
+        assertThat(model.uiState.value.isCategoriesLoading).isFalse()
+        assertThat(model.uiState.value.categories.map { it.id }).containsExactly(1, 2).inOrder()
+        assertThat(dispatchedActions).containsExactly(
+            BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = 1)),
+        )
     }
 
     @Test
@@ -638,12 +713,10 @@ internal class PolymarketMainModelTest {
             assertThat(model.uiState.value.balance.addFunds.isEnabled).isFalse()
             assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
             coVerify(exactly = 1) {
-                accountStatusFetcher(
-                    PredictionAccountStatusFetcher.Params(
-                        userWalletId = USER_WALLET_ID,
-                        mode = PredictionAccountStatusFetcher.Mode.FULL,
-                    ),
-                )
+                accountStatusFetcher(PredictionAccountStatusFetcher.Params(userWalletId = USER_WALLET_ID))
+            }
+            coVerify(exactly = 1) {
+                positionsValueFetcher(PredictionPositionsValueFetcher.Params(userWalletId = USER_WALLET_ID))
             }
         }
 
@@ -653,14 +726,14 @@ internal class PolymarketMainModelTest {
             // Arrange
             statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS)
             val model = createModel(testScope = this)
-            val slot = FakeSlotHost(model.addFundsNavigation)
+            val slot = FakeSlotHost(model.fundingSheetNavigation)
             advanceUntilIdle()
 
             // Act
             model.uiState.value.balance.addFunds.onClick()
 
             // Assert
-            assertThat(slot.configuration).isEqualTo(Unit)
+            assertThat(slot.configuration).isEqualTo(PolymarketFundingSheetConfig.AddFunds)
             model.onDestroy()
         }
 
@@ -670,7 +743,7 @@ internal class PolymarketMainModelTest {
             // Arrange
             statusFlow.value = activeStatus(depositAddress = null)
             val model = createModel(testScope = this)
-            val slot = FakeSlotHost(model.addFundsNavigation)
+            val slot = FakeSlotHost(model.fundingSheetNavigation)
             advanceUntilIdle()
 
             // Act
@@ -764,18 +837,35 @@ internal class PolymarketMainModelTest {
     fun `GIVEN requisites ready WHEN receive row tapped THEN limits notification states the minimum`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
-        val host = FakeSlotHost(model.receiveNavigation)
+        val host = FakeSlotHost(model.fundingSheetNavigation)
         advanceUntilIdle()
 
         // Act
         model.onReceiveClick()
 
         // Assert
-        val config = host.configuration!!
+        val config = (host.configuration as PolymarketFundingSheetConfig.Receive).config
         assertThat(config.receiveAddress.single().value).isEqualTo(REQUISITES_ADDRESS)
         assertThat(config.tokenReceiveNotification.single().formatArgs).containsExactly("$2")
         model.onDestroy()
     }
+
+    @Test
+    fun `GIVEN receive replaced the sheet WHEN the add funds sheet reports its exit THEN receive stays open`() =
+        runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            val host = FakeSlotHost(model.fundingSheetNavigation)
+            advanceUntilIdle()
+            model.onReceiveClick()
+
+            // Act
+            model.onDismissAddFunds()
+
+            // Assert
+            assertThat(host.configuration).isInstanceOf(PolymarketFundingSheetConfig.Receive::class.java)
+            model.onDestroy()
+        }
 
     @Test
     fun `GIVEN requisites ready WHEN add funds clicked THEN no request is made`() = runTest {
@@ -813,7 +903,7 @@ internal class PolymarketMainModelTest {
         // Arrange
         coEvery { refreshRequisites(USER_WALLET_ID) } returns PolymarketBridgeError.Network.left()
         val model = createModel(testScope = this)
-        val slot = FakeSlotHost(model.addFundsNavigation)
+        val slot = FakeSlotHost(model.fundingSheetNavigation)
         advanceUntilIdle()
         val message = slot<EventMessage>()
         every { messageSender.send(capture(message)) } returns Unit
@@ -1163,7 +1253,8 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN a known positions value WHEN the balance label is tapped THEN the header switches to total`() = runTest {
         // Arrange
-        statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS, positionsValue = "2.5")
+        statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS)
+        positionsFlow.value = positions(amount = "2.5")
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -1180,7 +1271,8 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN the header shows total WHEN the label is tapped again THEN it switches back to available`() = runTest {
         // Arrange
-        statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS, positionsValue = "2.5")
+        statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS)
+        positionsFlow.value = positions(amount = "2.5")
         val model = createModel(testScope = this)
         advanceUntilIdle()
         model.uiState.value.balance.onSwitchClick()
@@ -1197,17 +1289,18 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
-    fun `GIVEN the header shows total WHEN the positions value becomes unknown THEN it falls back to available`() =
+    fun `GIVEN the header shows total WHEN the positions value is gone THEN it falls back to available`() =
         runTest {
             // Arrange
-            statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS, positionsValue = "2.5")
+            statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS)
+            positionsFlow.value = positions(amount = "2.5")
             val model = createModel(testScope = this)
             advanceUntilIdle()
             model.uiState.value.balance.onSwitchClick()
             advanceUntilIdle()
 
             // Act
-            statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS, positionsValue = null)
+            positionsFlow.value = PredictionPositionsValue.Unknown
             advanceUntilIdle()
 
             // Assert
@@ -1220,16 +1313,18 @@ internal class PolymarketMainModelTest {
     fun `GIVEN the positions value was lost and returns WHEN the header shows total THEN total comes back`() =
         runTest {
             // Arrange
-            statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS, positionsValue = "2.5")
+            statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS)
+            positionsFlow.value = positions(amount = "2.5")
             val model = createModel(testScope = this)
             advanceUntilIdle()
             model.uiState.value.balance.onSwitchClick()
             advanceUntilIdle()
-            statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS, positionsValue = null)
+            positionsFlow.value = PredictionPositionsValue.Unknown
             advanceUntilIdle()
 
             // Act
-            statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS, positionsValue = "3")
+            statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS)
+            positionsFlow.value = positions(amount = "3")
             advanceUntilIdle()
 
             // Assert
@@ -1238,11 +1333,12 @@ internal class PolymarketMainModelTest {
             assertThat(model.uiState.value.balance.balance.plainText()).isEqualTo("$15.50")
         }
 
-    private fun activeStatus(depositAddress: String?, balance: String = "12.5", positionsValue: String? = null) =
+    private fun positions(amount: String) = PredictionPositionsValue.Known(amount = BigDecimal(amount), source = StatusSource.ACTUAL)
+
+    private fun activeStatus(depositAddress: String?, balance: String = "12.5") =
         PredictionAccountStatusValue.Active(
             source = StatusSource.ACTUAL,
             balance = BigDecimal(balance),
-            positionsValue = positionsValue?.let(::BigDecimal),
             fiatRate = BigDecimal.ONE,
             depositCurrency = COLLATERAL,
             depositAddress = depositAddress,
@@ -1340,6 +1436,7 @@ internal class PolymarketMainModelTest {
 
     private fun createModel(testScope: TestScope): PolymarketMainModel {
         every { predictionAccountStatusSupplier(any<UserWalletId>()) } returns statusFlow
+        every { positionsValueSupplier(any<UserWalletId>()) } returns positionsFlow
         every { positionsPreviewLoader.state } returns positionsState
 
         every { getEventsBatchFlowUseCase(capture(contextSlot), any()) } answers {
@@ -1395,6 +1492,8 @@ internal class PolymarketMainModelTest {
             refreshPredictionDepositRequisitesInteractor = refreshRequisites,
             checkPolymarketGeoblockUseCase = checkGeoblock,
             predictionAccountStatusFetcher = accountStatusFetcher,
+            predictionPositionsValueSupplier = positionsValueSupplier,
+            predictionPositionsValueFetcher = positionsValueFetcher,
             positionsPreviewLoader = positionsPreviewLoader,
             predictionBalancePoller = balancePoller,
             predictionFundingWindow = fundingWindow,

@@ -117,7 +117,11 @@ private fun previewState(
     balance: BigDecimal = BigDecimal("30000"),
     tradingPermission: TradingPermissionUM = TradingPermissionUM.Allowed,
     minAmount: BigDecimal? = null,
-    order: OrderSideUM = OrderSideUM.Buy(balance = balance, hasSufficientBalance = false),
+    order: OrderSideUM = OrderSideUM.Buy(
+        balance = balance,
+        hasSufficientBalance = false,
+        isAddFundsEnabled = tradingPermission != TradingPermissionUM.Restricted,
+    ),
 ): PlacePredictionUM = PlacePredictionUM(
     market = MarketHeaderUM(
         title = "Will Uzbekistan win the 2026 FIFA World Cup?",

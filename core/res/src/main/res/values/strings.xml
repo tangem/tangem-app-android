@@ -287,6 +287,9 @@
   <string name="collectibles_account_collection_empty">No cards</string>
   <string name="collectibles_account_collection_row_subtitle">My collection</string>
   <string name="collectibles_account_withdraw">Withdrawal</string>
+  <string name="collectibles_confirm_order_approve_button">Approve</string>
+  <string name="collectibles_confirm_order_not_enough_funds_button">Not enough funds</string>
+  <string name="collectibles_confirm_order_screen_title">Confirm order</string>
   <string name="collectibles_entrance_card_subtitle">Open packs of graded collectible cards</string>
   <string name="collectibles_entrance_card_title">Explore collections</string>
   <string name="collectibles_machine_buyback_value">%s of value</string>
@@ -329,6 +332,8 @@
   <string name="collectibles_stories_security_title">High security, tapless design</string>
   <string name="collectibles_stories_transparency_subtitle">Browse every card before you buy and watch live openings from the blockchain, with each collector\'s wallet and card value. All in-app</string>
   <string name="collectibles_stories_transparency_title">Nothing behind the curtain</string>
+  <string name="collectibles_turbo_mode_bottomsheet_message">Turbo Mode automatically sells back any Common card. Hunt grails at maximum speed</string>
+  <string name="collectibles_turbo_mode_bottomsheet_title">Turbo Mode</string>
   <string name="collectibles_welcome_benefit_cold_wallet_subtitle">Only your card can move them</string>
   <string name="collectibles_welcome_benefit_cold_wallet_title">Cards go to your cold wallet</string>
   <string name="collectibles_welcome_benefit_sell_offers_subtitle">85–93% of insured value, in USDC</string>
@@ -906,6 +911,9 @@
   <string name="force_update_warning_title">Update required</string>
   <string name="gasless_not_enough_funds_to_cover_token_fee">Not enough funds</string>
   <string name="gasless_transaction_fee">Transaction fee</string>
+  <string name="gasless_tron_activation_attempts_limit">You\'ve made several attempts. Try again later.</string>
+  <string name="gasless_tron_activation_min_balance_description">Your balance should be higher than %s.</string>
+  <string name="gasless_tron_activation_try_again_later">Try again later.</string>
   <string name="generic_error">An error occurred</string>
   <string name="generic_error_code">An error occurred. Code: %s.</string>
   <string name="generic_requires_memo_error">Requires memo</string>
@@ -1135,14 +1143,14 @@
   <string name="introduction_stories_three_title">Your keys, your crypto</string>
   <string name="introduction_stories_two_subtitle">Use any of your cards to access your wallet</string>
   <string name="introduction_stories_two_title">One wallet, multiple cards</string>
-  <string name="introduction_subtitle">In the only app you need</string>
+  <string name="introduction_subtitle">One secure place for everything you own</string>
   <string name="introduction_terms_of_service">Terms of service</string>
   <string name="introduction_title">Store all your assets</string>
   <string name="joint_account_activated_snackbar">Account activated</string>
   <string name="joint_account_activation_account_button_title">Activate account</string>
   <string name="joint_account_activation_subtitle">Everyone in this account shares one balance. Any member can spend or withdraw the funds at any time — including without your approval</string>
   <string name="joint_account_activation_title">You\'re activating a shared account</string>
-  <string name="joint_account_coming_soon_description">This action isn\'t supported for joint accounts yet. We\'re working on it.</string>
+  <string name="joint_account_coming_soon_description">This action isn\'t supported for joint accounts yet. We\'re working on it</string>
   <string name="joint_account_coming_soon_title">Coming soon to joint accounts</string>
   <string name="joint_account_invite_invalid_subtitle">Check that you opened the full link, or ask the account owner to send it again</string>
   <string name="joint_account_invite_invalid_title">Invitation link isn\'t valid</string>
@@ -1205,6 +1213,7 @@
   <string name="joint_account_onboarding_shared_description">Use it with your friends, family, or partners.</string>
   <string name="joint_account_onboarding_shared_title">Shared account.</string>
   <string name="joint_account_onboarding_subtitle">A simple way to manage crypto together — for personal or business needs.</string>
+  <string name="joint_account_pending_transaction_message">Review and sign the operation</string>
   <string name="joint_account_send_blocked_subtitle">Sending is blocked for security reasons. Please contact support</string>
   <string name="joint_account_send_blocked_title">Sending is blocked</string>
   <string name="joint_account_send_create_request">Create request</string>
@@ -1742,6 +1751,7 @@
   <string name="prediction_account_open_detailed_view">Open detailed view</string>
   <string name="prediction_account_subtitle">Add funds &amp; start predict</string>
   <string name="prediction_account_title">Prediction account</string>
+  <string name="prediction_account_unavailable">Couldn\'t connect to your prediction account. Refresh or reopen this screen.</string>
   <string name="prediction_add_funds_error_description">Couldn\'t load deposit details. Refresh or re-enter this screen.</string>
   <string name="prediction_add_funds_notification_limits_description">The deposit amount must be at least %1$s. Deposits above $50,000 are not recommended — split a larger amount into several smaller deposits.</string>
   <string name="prediction_add_funds_notification_limits_title">Deposit limits</string>
@@ -1796,6 +1806,8 @@
   <string name="prediction_main_available_balance">Available Balance</string>
   <string name="prediction_main_data_outdated">Data may be outdated.</string>
   <string name="prediction_main_empty_events">No events yet</string>
+  <string name="prediction_main_empty_positions_subtitle">Explore new events</string>
+  <string name="prediction_main_empty_positions_title">You don’t have active predictions</string>
   <string name="prediction_main_events_load_error">Failed to load events.\nTap to reload</string>
   <string name="prediction_main_explore_events">Explore Events</string>
   <string name="prediction_main_subtitle">USDC on Polygon network</string>
@@ -1939,9 +1951,17 @@
   <string name="prediction_search_initial_subtitle">Search events or your predictions</string>
   <string name="prediction_search_initial_title">Start typing to search</string>
   <string name="prediction_search_results_title">Search results</string>
+  <string name="prediction_withdraw_balance_unavailable">Couldn\'t load your prediction account balance. Refresh or reopen this screen.</string>
   <string name="prediction_withdraw_confirm_fee_footer">No network fee is charged for this withdrawal. The amount you receive may differ slightly due to bridge conversion.</string>
   <string name="prediction_withdraw_confirm_title">Confirm withdrawal</string>
+  <string name="prediction_withdraw_empty_balance">There\'s nothing to withdraw yet. Add funds to your prediction account first.</string>
+  <string name="prediction_withdraw_error_address_unavailable">Couldn\'t get a withdrawal address. Try again</string>
+  <string name="prediction_withdraw_error_asset_unavailable">Withdrawals to USDC on Polygon are paused. Try again later</string>
+  <string name="prediction_withdraw_error_foreign_account">This prediction account isn\'t linked to this wallet. Contact support</string>
+  <string name="prediction_withdraw_error_generic">Couldn\'t send the withdrawal. Check your connection and try again</string>
+  <string name="prediction_withdraw_error_rejected">Polymarket rejected the withdrawal. Try again</string>
   <string name="prediction_withdraw_in_progress_message">Your previous withdrawal is still being processed. Wait for it to finish before starting a new one.</string>
+  <string name="prediction_withdraw_min_amount">The minimum withdrawal is %@. Add funds to reach it.</string>
   <string name="prediction_withdraw_status_failed_description">Something went wrong while processing your withdrawal. Please try again or contact support.</string>
   <string name="prediction_withdraw_status_failed_title">Withdrawal failed</string>
   <string name="prediction_withdraw_status_sent_description">Delivery may take up to %1$d minutes</string>
@@ -2902,8 +2922,8 @@
   <string name="tangempay_withdraw_bank_error_business">Transfers are not available for this type of business</string>
   <string name="tangempay_withdraw_bank_error_general_title">Unable to perform the operation</string>
   <string name="tangempay_withdraw_bank_error_recipient_region">Transfers to recipient\'s region currently unavailable</string>
+  <string name="tangempay_withdraw_bank_error_region_title">Transfers are not available</string>
   <string name="tangempay_withdraw_bank_error_sender_region">Transfers from your region currently unavailable</string>
-  <string name="tangempay_withdraw_bank_error_unsupported_configuration">Transfers are not available. Please try again later</string>
   <plurals name="tangempay_withdraw_bank_eta_business_days">
     <item quantity="one">%d business day</item>
     <item quantity="other">%d business days</item>
@@ -2941,9 +2961,7 @@
   <string name="tangempay_withdraw_bank_sending_summary">You are sending %1$s including a %2$s fee of %3$s</string>
   <string name="tangempay_withdraw_bank_source_subtitle">%1$s · %2$s</string>
   <string name="tangempay_withdraw_bank_step_counter">%1$d of %2$d</string>
-  <string name="tangempay_withdraw_bank_success_description">The transfer is on its way to the recipient\'s bank account.</string>
   <string name="tangempay_withdraw_bank_success_title">Sending %s</string>
-  <string name="tangempay_withdraw_bank_title_to_recipient">To %s</string>
   <string name="tangempay_withdraw_bank_transfer_type_own">Your account</string>
   <string name="tangempay_withdraw_bank_transfer_type_third_party">3rd-party account</string>
   <string name="tangempay_withdraw_bank_transfer_type_title">Type of transfer</string>
@@ -3034,6 +3052,8 @@
   <string name="transaction_history_empty_transactions">You don\'t have any transactions yet</string>
   <string name="transaction_history_enabling_yield_mode">Enabling Yield mode</string>
   <string name="transaction_history_error_failed_to_load">Failed to load transaction history.\nClick on reload button to update the information.</string>
+  <string name="transaction_history_fee_for_operation">For operation</string>
+  <string name="transaction_history_fee_for_operation_name">For %s</string>
   <string name="transaction_history_fee_for_sending">For sending</string>
   <string name="transaction_history_fee_sending_asset">Send %%image%% %s</string>
   <string name="transaction_history_from_inline_address">from: %%image%% %s</string>

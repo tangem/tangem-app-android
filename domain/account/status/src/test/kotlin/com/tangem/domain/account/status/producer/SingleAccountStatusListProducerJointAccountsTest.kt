@@ -24,14 +24,11 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.quote.QuoteStatus
-import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusSupplier
-import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier
-import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.test.core.getEmittedValues
 import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -192,15 +189,6 @@ internal class SingleAccountStatusListProducerJointAccountsTest {
                     mapOf(jointEthereum.id.rawCurrencyId!! to quoteStatus()),
                 )
             },
-            stakingBalanceSupplier = mockk<MultiStakingBalanceSupplier> {
-                every { this@mockk.invoke(any()) } returns flowOf(emptySet())
-            },
-            stakingIdFactory = mockk {
-                every { create(currencyId = any(), defaultAddress = any()) } returns
-                    StakingID(integrationId = "integration", address = "0x1").right()
-            },
-            analyticsExceptionHandler = mockk(relaxed = true),
-            tokensFeatureToggles = mockk<TokensFeatureToggles> { every { isBalanceContributionsEnabled } returns false },
             balanceContributionProviders = emptySet(),
         )
     }

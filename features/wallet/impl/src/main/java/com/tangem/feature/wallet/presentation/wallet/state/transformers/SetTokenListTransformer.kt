@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.common.ui.tokens.TokenConverterParams
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.jointaccount.model.JointPendingOperation
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.AccountStatus
@@ -32,6 +33,7 @@ internal class SetTokenListTransformer(
     private val isAccountsModeEnabled: Boolean,
     private val isHotBackedUp: Boolean? = null,
     private val accountIdsWithInvites: Set<String> = emptySet(),
+    private val jointPendingOperations: List<JointPendingOperation> = emptyList(),
 ) : WalletStateTransformer(userWallet.walletId) {
 
     private val tangemPayConverter by lazy {
@@ -217,6 +219,7 @@ internal class SetTokenListTransformer(
             isAccountsModeEnabled = isAccountsModeEnabled,
             expandedAccounts = params.expandedAccounts,
             accountIdsWithInvites = accountIdsWithInvites,
+            jointPendingOperations = jointPendingOperations,
         ).convert(value = params.accountList)
     }
 }
