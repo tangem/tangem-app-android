@@ -334,7 +334,7 @@ internal class DefaultTransactionRepository(
     @Suppress("CyclomaticComplexMethod")
     private fun getMemoExtras(networkId: Network.RawID, memo: String?): TransactionExtras? {
         val blockchain = networkId.toBlockchain()
-        if (memo == null) return null
+        if (memo.isNullOrEmpty()) return null
         return when (blockchain) {
             Blockchain.Stellar -> {
                 val xmlMemo = when {
@@ -344,7 +344,7 @@ internal class DefaultTransactionRepository(
                 StellarTransactionExtras(xmlMemo)
             }
             Blockchain.Binance -> BinanceTransactionExtras(memo)
-            Blockchain.XRP -> memo.toLongOrNull()?.let { XrpTransactionBuilder.XrpTransactionExtras(it) }
+            Blockchain.XRP -> XrpTransactionBuilder.XrpTransactionExtras(memo.toNumericMemo(blockchain))
             Blockchain.Cosmos,
             Blockchain.Gonka,
             Blockchain.Sei,
@@ -354,10 +354,20 @@ internal class DefaultTransactionRepository(
             Blockchain.TON -> TonTransactionExtras(memo)
             Blockchain.Hedera -> HederaTransactionExtras(memo)
             Blockchain.Algorand -> AlgorandTransactionExtras(memo)
-            Blockchain.InternetComputer -> memo.toLongOrNull()?.let { ICPTransactionExtras(it) }
-            Blockchain.Casper -> memo.toLongOrNull()?.let { CasperTransactionExtras(it) }
+            Blockchain.InternetComputer -> ICPTransactionExtras(memo.toNumericMemo(blockchain))
+            Blockchain.Casper -> CasperTransactionExtras(memo.toNumericMemo(blockchain))
             else -> null
         }
+    }
+
+    /**
+     * A memo the user typed but that cannot be represented must stop the send, not be dropped: with
+     * `toLongOrNull()?.let { … }` a non-numeric memo produced `null` extras and the transfer was signed without it
+     * while the confirmation screen still showed it.
+     */
+    private fun String.toNumericMemo(blockchain: Blockchain): Long {
+        return toLongOrNull()?.takeIf { it >= 0 }
+            ?: throw IllegalArgumentException("Memo for ${blockchain.fullName} must be a non-negative integer")
     }
 
     override suspend fun prepareForSend(
