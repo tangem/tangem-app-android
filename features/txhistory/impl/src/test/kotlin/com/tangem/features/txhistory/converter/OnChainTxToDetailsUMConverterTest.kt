@@ -1196,9 +1196,62 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
-    fun `GIVEN staking tx with address absent from yield WHEN convert THEN no validator row`() {
+    fun `GIVEN Vote tx with address absent from yield WHEN convert THEN row shows the shortened address`() {
         // Arrange — the tx carries a validator address, but the current yield does not list it.
-        val tx = txInfo(type = TransactionType.Staking.Vote(validatorAddress = "0xunknown"))
+        val tx = txInfo(type = TransactionType.Staking.Vote(validatorAddress = UNKNOWN_VALIDATOR_ADDRESS))
+
+        // Act
+        val rows = onChainConverter(validators = listOf(validator())).convert(tx).rows
+
+        // Assert
+        assertThat(rows.single()).isEqualTo(
+            TxHistoryDetailsUM.InfoRowUM(
+                label = resourceReference(R.string.staking_validator),
+                value = stringReference("BbM5kJ...mt2x"),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN Stake tx with validator address absent from yield WHEN convert THEN row shows the shortened address`() {
+        // Arrange — a validator dropped from the StakeKit yield must not make the row of an old tx disappear.
+        val tx = txInfo(
+            type = TransactionType.Staking.Stake,
+            interactionAddressType = TxInfo.InteractionAddressType.Validator(UNKNOWN_VALIDATOR_ADDRESS),
+        )
+
+        // Act
+        val rows = onChainConverter(validators = listOf(validator())).convert(tx).rows
+
+        // Assert
+        assertThat(rows.single().value.resolveString()).isEqualTo("BbM5kJ...mt2x")
+    }
+
+    @Test
+    fun `GIVEN staking tx with validator destination absent from yield WHEN convert THEN shortened address shown`() {
+        // Arrange — the validator can also arrive as the destination address type.
+        val tx = txInfo(
+            type = TransactionType.Staking.Stake,
+            destinationType = TxInfo.DestinationType.Single(
+                addressType = TxInfo.AddressType.Validator(UNKNOWN_VALIDATOR_ADDRESS),
+            ),
+        )
+
+        // Act
+        val rows = onChainConverter(validators = listOf(validator())).convert(tx).rows
+
+        // Assert
+        assertThat(rows.single().value.resolveString()).isEqualTo("BbM5kJ...mt2x")
+    }
+
+    @Test
+    fun `GIVEN staking tx with unknown contract address WHEN convert THEN no validator row`() {
+        // Arrange — a Contract address is a target only when the lookup confirms it; falling back to it would label
+        // an arbitrary counterparty "Validator".
+        val tx = txInfo(
+            type = TransactionType.Staking.Stake,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(UNKNOWN_VALIDATOR_ADDRESS),
+        )
 
         // Act
         val rows = onChainConverter(validators = listOf(validator())).convert(tx).rows
@@ -1439,5 +1492,6 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
     private companion object {
         const val USDC_CONTRACT = "0xA0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+        const val UNKNOWN_VALIDATOR_ADDRESS = "BbM5kJgrwEj3tYFfBPnjcARB54wDUHkXmLUTkazUmt2x"
     }
 }
