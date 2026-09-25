@@ -1,6 +1,5 @@
 package com.tangem.data.swap
 
-import arrow.core.none
 import arrow.core.some
 import arrow.core.toOption
 import com.squareup.moshi.Moshi
@@ -25,7 +24,6 @@ import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.models.*
-import com.tangem.domain.tokens.operations.BalanceContributionsInput
 import com.tangem.domain.tokens.operations.CryptoCurrencyStatusFactory
 import com.tangem.grow.datasource.crypto.DataSignatureVerifier
 import com.tangem.grow.datasource.express.ExpressUtils
@@ -488,10 +486,8 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                 value = NetworkStatus.MissedDerivation, // Caution!!! Do not change this status
             ).some(),
             maybeQuoteStatus = quoteStatus.toOption(),
-            maybeStakingBalance = none(),
-            // MissedDerivation carries no balance, so the factory ignores contributions entirely on this path —
-            // reading TWI_1717_BALANCE_CONTRIBUTIONS here would change nothing
-            contributionsInput = BalanceContributionsInput.Disabled,
+            // MissedDerivation carries no balance, so the factory ignores contributions entirely on this path
+            contributions = emptyList(),
         )
     }
 

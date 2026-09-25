@@ -193,4 +193,12 @@ private fun BoxScope.ContentIconContainer(
                 .testTag(TokenElementsTestTags.TOKEN_CUSTOM_DERIVATION_ICON),
         )
     }
+
+    if (icon is CurrencyIconState.CryptoPortfolio && icon.hasPendingOperation) {
+        CurrencyIconPendingOperationBadge(
+            modifier = Modifier
+                .offset(x = networkBadgeOffset, y = networkBadgeOffset)
+                .align(Alignment.BottomEnd),
+        )
+    }
 }
