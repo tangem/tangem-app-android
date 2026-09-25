@@ -1,6 +1,8 @@
 package com.tangem.features.txhistory.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.WrappedList
 import com.tangem.domain.models.network.SdkAmount
@@ -16,7 +18,9 @@ import java.math.BigDecimal
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TxHistoryTitleConverterTest {
 
-    private val converter = TxHistoryTitleConverter()
+    private val coin = MockCryptoCurrencyFactory().createCoin(Blockchain.Ethereum)
+
+    private val converter = TxHistoryTitleConverter(coin)
 
     @ParameterizedTest
     @ProvideTestModels
@@ -190,6 +194,24 @@ internal class TxHistoryTitleConverterTest {
             ),
             expected = resRef(R.string.common_network_fee_title),
         ),
+        // An outgoing coin call that moved nothing is titled by the fee it cost, named method or not
+        TitleModel(
+            tx = txInfo(
+                type = TransactionType.Operation(name = "YieldSend"),
+                isOutgoing = true,
+                amount = BigDecimal.ZERO,
+            ),
+            expected = resRef(R.string.common_network_fee_title),
+        ),
+        TitleModel(
+            tx = txInfo(TransactionType.UnknownOperation, isOutgoing = true, amount = BigDecimal.ZERO),
+            expected = resRef(R.string.common_network_fee_title),
+        ),
+        // The same call incoming was paid for by its sender, so it keeps the operation title
+        TitleModel(
+            tx = txInfo(TransactionType.Operation(name = "YieldSend"), amount = BigDecimal.ZERO),
+            expected = TextReference.Str("YieldSend"),
+        ),
     )
 
     internal data class TitleModel(
@@ -202,6 +224,7 @@ internal class TxHistoryTitleConverterTest {
         type: TransactionType,
         status: TransactionStatus = TransactionStatus.Confirmed,
         isOutgoing: Boolean = false,
+        amount: BigDecimal = BigDecimal.ONE,
     ): TxInfo.Single = TxInfo.Single(
         txHash = "0xtxhash",
         timestampInMillis = 1_700_000_000_000L,
@@ -211,7 +234,7 @@ internal class TxHistoryTitleConverterTest {
         interactionAddressType = null,
         status = status,
         type = type,
-        amount = BigDecimal.ONE,
+        amount = amount,
     )
 
     private fun resRef(id: Int): TextReference = TextReference.Res(id = id)

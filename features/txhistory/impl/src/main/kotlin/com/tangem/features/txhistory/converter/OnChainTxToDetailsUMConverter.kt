@@ -69,7 +69,7 @@ internal class OnChainTxToDetailsUMConverter(
 ) {
 
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
-    private val titleConverter = TxHistoryTitleConverter()
+    private val titleConverter = TxHistoryTitleConverter(currency)
 
     /**
      * [targetsByAddress] re-keyed by lowercase address, for the case-insensitive fallback in [resolveTarget]. Built
@@ -82,9 +82,11 @@ internal class OnChainTxToDetailsUMConverter(
     fun convert(value: TxInfo): TxHistoryDetailsUM.SingleAsset {
         // An unrecognized contract call between the user's own portfolios reads as a Transfer, not a raw operation —
         // mirrors the history list so the two never disagree.
-        val tx = when (value) {
-            is TxInfo.Single -> value.reclassifyOwnOperationAsTransfer(lookup, currency.network.id.rawId)
-            is TxInfo.MultiTransfer -> value
+        val tx = when {
+            // A call that moved no coin is the fee it cost, never a transfer between the user's own portfolios.
+            value.isFeeOnlyOperation(currency) -> value
+            value is TxInfo.Single -> value.reclassifyOwnOperationAsTransfer(lookup, currency.network.id.rawId)
+            else -> value
         }
         return TxHistoryDetailsUM.SingleAsset(
             header = tx.toHeaderUM(),
@@ -94,7 +96,7 @@ internal class OnChainTxToDetailsUMConverter(
             // The validator of a staking tx, then the network fee from the tx; rate is not surfaced.
             rows = buildList {
                 tx.validatorRow()?.let(::add)
-                if (!tx.hasForeignFee() && !tx.isFeeOnly()) addAll(tx.feeRows(currency))
+                if (!tx.hasForeignFee() && !tx.isFeeOnly(currency)) addAll(tx.feeRows(currency))
             }.toImmutableList(),
             statusBanner = tx.approveRiskBanner(),
         )
@@ -192,7 +194,7 @@ internal class OnChainTxToDetailsUMConverter(
     }
 
     private fun TxInfo.toHeaderUM(): TxHistoryDetailsUM.HeaderUM = TxHistoryDetailsUM.HeaderUM(
-        icon = headerIcon(),
+        icon = headerIcon(currency),
         status = status.toUiStatus(),
         title = titleConverter.convert(this, isOwnTransfer = isOwnTransfer()),
         subtitle = headerSubtitle(timestampInMillis),
@@ -402,6 +404,7 @@ internal class OnChainTxToDetailsUMConverter(
      * keeps its recipient card. A withdraw Send stays a yield operation, so it gets none (no "from: Aave" in details).
      */
     private fun TxInfo.hasCounterpartyCard(): Boolean {
+        if (isFeeOnlyOperation(currency)) return false
         val isPlainSend = (type as? TransactionType.YieldSupply.Send)?.isYieldSupplyWithdraw == false
         val isProtocolType = type is TransactionType.YieldSupply ||
             type is TransactionType.Staking ||
@@ -475,29 +478,33 @@ private fun TxInfo.signedAmount(currency: CryptoCurrency): String {
 }
 
 /** Type glyph. Unlike the history list, the failed state keeps the type glyph (only the color changes). */
-private fun TxInfo.headerIcon(): TxIcon = when (val type = type) {
-    is TransactionType.Approve -> TxIcon.Vector(Icons.ic_success_20)
-    is TransactionType.GaslessFee,
-    is TransactionType.NetworkFee,
-    -> TxIcon.Vector(Icons.ic_percent_20)
-    is TransactionType.Staking.Stake,
-    is TransactionType.Staking.Unstake,
-    is TransactionType.Staking.Restake,
-    -> TxIcon.Vector(Icons.ic_stack_20)
-    is TransactionType.YieldSupply.Enter,
-    is TransactionType.YieldSupply.Exit,
-    -> TxIcon.Vector(Icons.ic_chart_line_vertical_20)
-    // A non-withdraw Send is a plain transfer — directional arrow. A withdraw stays a yield operation and keeps the
-    // yield lightning glyph (falls through to the YieldSupply branch below); it only drops the validator/counterparty.
-    is TransactionType.YieldSupply.Send -> if (type.isYieldSupplyWithdraw) {
-        TxIcon.Vector(Icons.ic_lightning_20)
-    } else {
-        TxIcon.Vector(if (isOutgoing) Icons.ic_arrow_up_20 else Icons.ic_arrow_down_20)
+private fun TxInfo.headerIcon(currency: CryptoCurrency): TxIcon {
+    if (isFeeOnlyOperation(currency)) return TxIcon.Vector(Icons.ic_percent_20)
+    return when (val type = type) {
+        is TransactionType.Approve -> TxIcon.Vector(Icons.ic_success_20)
+        is TransactionType.GaslessFee,
+        is TransactionType.NetworkFee,
+        -> TxIcon.Vector(Icons.ic_percent_20)
+        is TransactionType.Staking.Stake,
+        is TransactionType.Staking.Unstake,
+        is TransactionType.Staking.Restake,
+        -> TxIcon.Vector(Icons.ic_stack_20)
+        is TransactionType.YieldSupply.Enter,
+        is TransactionType.YieldSupply.Exit,
+        -> TxIcon.Vector(Icons.ic_chart_line_vertical_20)
+        // A non-withdraw Send is a plain transfer — directional arrow. A withdraw stays a yield operation and
+        // keeps the yield lightning glyph (falls through to the YieldSupply branch below); it only drops the
+        // validator/counterparty.
+        is TransactionType.YieldSupply.Send -> if (type.isYieldSupplyWithdraw) {
+            TxIcon.Vector(Icons.ic_lightning_20)
+        } else {
+            TxIcon.Vector(if (isOutgoing) Icons.ic_arrow_up_20 else Icons.ic_arrow_down_20)
+        }
+        is TransactionType.YieldSupply -> TxIcon.Vector(Icons.ic_lightning_20)
+        is TransactionType.Operation -> TxIcon.Vector(Icons.ic_document_20)
+        is TransactionType.Swap -> TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20)
+        else -> TxIcon.Vector(if (isOutgoing) Icons.ic_arrow_up_20 else Icons.ic_arrow_down_20)
     }
-    is TransactionType.YieldSupply -> TxIcon.Vector(Icons.ic_lightning_20)
-    is TransactionType.Operation -> TxIcon.Vector(Icons.ic_document_20)
-    is TransactionType.Swap -> TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20)
-    else -> TxIcon.Vector(if (isOutgoing) Icons.ic_arrow_up_20 else Icons.ic_arrow_down_20)
 }
 
 // endregion
