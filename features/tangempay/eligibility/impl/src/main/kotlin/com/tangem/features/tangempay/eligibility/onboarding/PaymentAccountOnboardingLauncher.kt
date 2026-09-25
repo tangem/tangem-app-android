@@ -22,8 +22,18 @@ internal class PaymentAccountOnboardingLauncher @Inject constructor(
     private val eligibilityManager: TangemPayEligibilityManager,
     private val onboardingRepository: OnboardingRepository,
     private val produceInitialDataUseCase: ProduceTangemPayInitialDataUseCase,
-) {
-    suspend fun start(onWalletSelectionRequired: (List<UserWalletId>) -> Unit, onFailed: () -> Unit) {
+) : OnboardingLauncher {
+
+    override suspend fun start(
+        userWalletId: UserWalletId?,
+        onWalletSelectionRequired: (List<UserWalletId>) -> Unit,
+        onFailed: () -> Unit,
+    ) {
+        if (userWalletId != null) {
+            openKyc(userWalletId)
+            return
+        }
+
         val walletsIds = eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true)
 
         when (walletsIds.size) {
@@ -33,7 +43,7 @@ internal class PaymentAccountOnboardingLauncher @Inject constructor(
         }
     }
 
-    suspend fun continueWith(userWalletId: UserWalletId, onFailed: () -> Unit) {
+    override suspend fun continueWith(userWalletId: UserWalletId, onFailed: () -> Unit) {
         produceInitialDataUseCase(userWalletId).onLeft { _ ->
             showError(onFailed)
             return
@@ -51,7 +61,7 @@ internal class PaymentAccountOnboardingLauncher @Inject constructor(
         )
     }
 
-    fun openKyc(userWalletId: UserWalletId) {
+    private fun openKyc(userWalletId: UserWalletId) {
         router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(userWalletId = userWalletId))
     }
 
