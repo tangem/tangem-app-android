@@ -91,7 +91,14 @@ internal class WcPairSdkDelegate(
 
     fun rejectSession(proposerPublicKey: String) {
         TangemLogger.withTag(WC_TAG).i("reject session proposerPublicKey = $proposerPublicKey")
-        wcSdk.rejectSession(proposerPublicKey)
+        wcSdk.rejectSessionNonBlocking(
+            params = Wallet.Params.SessionReject(
+                proposerPublicKey = proposerPublicKey,
+                reason = "",
+            ),
+            onSuccess = {},
+            onError = {},
+        )
     }
 
     override fun onError(error: Wallet.Model.Error) {

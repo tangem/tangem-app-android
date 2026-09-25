@@ -132,12 +132,12 @@ internal class WcSdk(
     }
 
     /** Rejecting answers a proposal the SDK has just delivered, so it is already running. */
-    fun rejectSession(proposerPublicKey: String) {
-        WalletKit.rejectSession(
-            params = Wallet.Params.SessionReject(proposerPublicKey = proposerPublicKey, reason = ""),
-            onSuccess = {},
-            onError = {},
-        )
+    fun rejectSessionNonBlocking(
+        params: Wallet.Params.SessionReject,
+        onSuccess: (Wallet.Params.SessionReject) -> Unit,
+        onError: (Wallet.Model.Error) -> Unit,
+    ) {
+        WalletKit.rejectSession(params = params, onSuccess = onSuccess, onError = onError)
     }
 
     /** Read failures propagate on purpose — see [com.tangem.data.walletconnect.respond.DefaultWcRespondService]. */
