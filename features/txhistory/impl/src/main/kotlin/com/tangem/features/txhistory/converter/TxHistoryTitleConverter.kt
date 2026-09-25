@@ -53,7 +53,9 @@ internal class TxHistoryTitleConverter(private val currency: CryptoCurrency) {
             confirmed = R.string.common_swapped,
             failed = R.string.transaction_history_status_swap_failed,
         )
-        is TransactionType.Transfer -> tx.transferTitle(isOwnTransfer)
+        is TransactionType.Transfer,
+        is TransactionType.Joint.Transfer,
+        -> tx.transferTitle(isOwnTransfer)
         is TransactionType.Staking.ClaimRewards -> tx.statusAwareTitle(
             pending = R.string.transaction_history_status_claiming_rewards,
             confirmed = R.string.transaction_history_status_rewards_claimed,
@@ -83,9 +85,12 @@ internal class TxHistoryTitleConverter(private val currency: CryptoCurrency) {
             resourceReference(R.string.yield_module_transaction_initialize)
         is TransactionType.YieldSupply.ReactivateToken ->
             resourceReference(R.string.yield_module_transaction_reactivate)
-        is TransactionType.UnknownOperation -> resourceReference(R.string.transaction_history_operation)
+        is TransactionType.UnknownOperation,
+        is TransactionType.Joint.Call,
+        -> resourceReference(R.string.transaction_history_operation)
         is TransactionType.GaslessFee,
         is TransactionType.NetworkFee,
+        is TransactionType.Joint.TokenFee,
         -> resourceReference(R.string.common_network_fee_title)
         // endregion
     }
