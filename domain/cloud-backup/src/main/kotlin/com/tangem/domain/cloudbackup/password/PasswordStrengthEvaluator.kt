@@ -1,6 +1,7 @@
 package com.tangem.domain.cloudbackup.password
 
 import java.nio.CharBuffer
+import java.text.Normalizer
 
 /**
  * Evaluates the [PasswordStrength] of a backup password.
@@ -31,21 +32,25 @@ object PasswordStrengthEvaluator {
      */
     fun evaluateRated(password: CharArray): PasswordStrength? = evaluateRated(CharBuffer.wrap(password))
 
-    fun evaluateRated(password: CharSequence): PasswordStrength? =
-        if (password.length <= SHORT_MAX_LENGTH) null else evaluate(password)
+    fun evaluateRated(password: CharSequence): PasswordStrength? {
+        val normalized = password.nfc()
+        return if (normalized.length <= SHORT_MAX_LENGTH) null else evaluate(normalized)
+    }
 
     fun evaluate(password: CharSequence): PasswordStrength {
-        val classes = classesOf(password)
+        val normalized = password.nfc()
+        val classes = classesOf(normalized)
         return when {
-            password.length >= MIN_LENGTH && classes.count == ALL_CLASSES -> PasswordStrength.STRONG
-            password.length >= MEDIUM_MIN_LENGTH && classes.count >= MEDIUM_MIN_CLASSES -> PasswordStrength.MEDIUM
+            normalized.length >= MIN_LENGTH && classes.count == ALL_CLASSES -> PasswordStrength.STRONG
+            normalized.length >= MEDIUM_MIN_LENGTH && classes.count >= MEDIUM_MIN_CLASSES -> PasswordStrength.MEDIUM
             else -> PasswordStrength.WEAK
         }
     }
 
     fun hint(password: CharArray): PasswordStrengthHint = hint(CharBuffer.wrap(password))
 
-    fun hint(password: CharSequence): PasswordStrengthHint {
+    fun hint(rawPassword: CharSequence): PasswordStrengthHint {
+        val password = rawPassword.nfc()
         val length = password.length
         if (length <= SHORT_MAX_LENGTH) return PasswordStrengthHint.USE_ALL_CRITERIA
         if (length <= MEDIUM_MIN_LENGTH) return PasswordStrengthHint.KEEP_GOING
@@ -59,6 +64,17 @@ object PasswordStrengthEvaluator {
             length < MIN_LENGTH -> PasswordStrengthHint.ALMOST_LONG
             else -> PasswordStrengthHint.STRONG
         }
+    }
+
+    /**
+     * The cipher NFC-normalizes the password before deriving the key (CPR-06), so the strength must be rated on
+     * the same form: a decomposed `e` + U+0301 counts as two characters — one of them "special" — while the key
+     * is derived from the single precomposed `é`. Already-normalized input (every ASCII password) is returned as
+     * is, so the zero-copy path is kept; only denormalized input materializes a short-lived String.
+     */
+    private fun CharSequence.nfc(): CharSequence {
+        val form = Normalizer.Form.NFC
+        return if (Normalizer.isNormalized(this, form)) this else Normalizer.normalize(this, form)
     }
 
     private fun classesOf(password: CharSequence): CharClasses {
