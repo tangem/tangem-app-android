@@ -805,6 +805,9 @@
   <string name="force_update_warning_title">Требуется обновление</string>
   <string name="gasless_not_enough_funds_to_cover_token_fee">Недостаточно средств</string>
   <string name="gasless_transaction_fee">Комиссия за транзакцию</string>
+  <string name="gasless_tron_activation_attempts_limit">Вы сделали несколько попыток. Пожалуйста, попробуйте позже.</string>
+  <string name="gasless_tron_activation_min_balance_description">Ваш баланс должен превышать %s.</string>
+  <string name="gasless_tron_activation_try_again_later">Пожалуйста, попробуйте позже.</string>
   <string name="generic_error">Произошла ошибка</string>
   <string name="generic_error_code">Произошла ошибка. Код: %s.</string>
   <string name="generic_requires_memo_error">Требуется memo</string>
