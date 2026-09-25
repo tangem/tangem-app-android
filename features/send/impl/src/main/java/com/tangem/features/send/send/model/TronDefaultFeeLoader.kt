@@ -49,22 +49,20 @@ internal class TronDefaultFeeLoader @Inject constructor(
         }
 
         return loadGaslessFee(
-            token = sentToken,
+            quoteGaslessFee = { getTronGaslessFeeUseCase(userWalletId, transactionData, sentToken) },
             sentStatus = sentStatus,
             nativeStatus = nativeStatus,
-            transactionData = transactionData,
             loadNativeFee = loadNativeFee,
         )
     }
 
     private suspend fun loadGaslessFee(
-        token: CryptoCurrency.Token,
+        quoteGaslessFee: suspend () -> Either<GetFeeError, TransactionFeeExtended>,
         sentStatus: CryptoCurrencyStatus,
         nativeStatus: CryptoCurrencyStatus,
-        transactionData: TransactionData,
         loadNativeFee: suspend () -> Either<GetFeeError, TransactionFeeExtended>,
     ): Either<GetFeeError, TransactionFeeExtended> {
-        val gaslessFee = getTronGaslessFeeUseCase(transactionData, token).getOrElse { error ->
+        val gaslessFee = quoteGaslessFee().getOrElse { error ->
             TangemLogger.i("Tron gasless quote unavailable ($error), falling back to the native fee")
             return loadNativeFee().onRight { pinToNativeIfPayable(nativeStatus, it) }
         }

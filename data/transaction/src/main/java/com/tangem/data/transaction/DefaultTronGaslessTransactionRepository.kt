@@ -1,5 +1,6 @@
 package com.tangem.data.transaction
 
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.grow.datasource.gasless.TronGaslessApi
 import com.tangem.grow.datasource.gasless.models.tron.TronEstimateRequestBody
 import com.tangem.grow.datasource.gasless.models.tron.TronSubmitRequestBody
@@ -43,7 +44,8 @@ internal class DefaultTronGaslessTransactionRepository(
 
     override suspend fun estimate(params: TronGaslessEstimateParams): TronGaslessQuote = withContext(dispatchers.io) {
         val response = api.estimate(
-            TronEstimateRequestBody(
+            userWalletId = params.userWalletId.stringValue,
+            body = TronEstimateRequestBody(
                 fromAddress = params.fromAddress,
                 toAddress = params.toAddress,
                 tokenContract = params.tokenContract,
@@ -69,12 +71,14 @@ internal class DefaultTronGaslessTransactionRepository(
     }
 
     override suspend fun submit(
+        userWalletId: UserWalletId,
         quoteId: String,
         signedCompensationTx: String,
         signedOriginalTx: String,
     ): TronGaslessSubmitResult = withContext(dispatchers.io) {
         val response = api.submit(
-            TronSubmitRequestBody(
+            userWalletId = userWalletId.stringValue,
+            body = TronSubmitRequestBody(
                 quoteId = quoteId,
                 signedCompensationTx = signedCompensationTx,
                 signedOriginalTx = signedOriginalTx,

@@ -2,6 +2,8 @@ package com.tangem.data.transaction
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.grow.datasource.gasless.TronGaslessApi
 import com.tangem.grow.datasource.gasless.models.GaslessServiceResponse
 import com.tangem.grow.datasource.gasless.models.tron.TronEstimateBreakdown
@@ -24,9 +26,14 @@ import java.time.Instant
 internal class DefaultTronGaslessTransactionRepositoryTest {
 
     private val api: TronGaslessApi = mockk()
-    private val repository = DefaultTronGaslessTransactionRepository(api, TestingCoroutineDispatcherProvider())
+    private val repository = DefaultTronGaslessTransactionRepository(
+        api = api,
+        dispatchers = TestingCoroutineDispatcherProvider(),
+    )
 
+    private val userWalletId = UserWalletId("011")
     private val params = TronGaslessEstimateParams(
+        userWalletId = userWalletId,
         fromAddress = "TFrom",
         toAddress = "TTo",
         tokenContract = "TUSDT",
@@ -37,7 +44,7 @@ internal class DefaultTronGaslessTransactionRepositoryTest {
     @Test
     fun `GIVEN estimate response WHEN estimate THEN maps to domain quote`() = runTest {
         // Arrange
-        coEvery { api.estimate(any()) } returns ApiResponse.Success(
+        coEvery { api.estimate(any(), any()) } returns ApiResponse.Success(
             GaslessServiceResponse(
                 result = TronEstimateResponse(
                     quoteId = "q_1",
@@ -72,7 +79,7 @@ internal class DefaultTronGaslessTransactionRepositoryTest {
     @Test
     fun `GIVEN unsuccessful estimate WHEN estimate THEN throws`() = runTest {
         // Arrange
-        coEvery { api.estimate(any()) } returns ApiResponse.Success(
+        coEvery { api.estimate(any(), any()) } returns ApiResponse.Success(
             GaslessServiceResponse(
                 result = TronEstimateResponse(
                     quoteId = "q_1",
@@ -155,7 +162,7 @@ internal class DefaultTronGaslessTransactionRepositoryTest {
     @Test
     fun `GIVEN submit response WHEN submit THEN maps to domain result`() = runTest {
         // Arrange
-        coEvery { api.submit(any()) } returns ApiResponse.Success(
+        coEvery { api.submit(any(), any()) } returns ApiResponse.Success(
             GaslessServiceResponse(
                 result = TronSubmitResponse(
                     compensationTxHash = "hComp",
@@ -168,13 +175,34 @@ internal class DefaultTronGaslessTransactionRepositoryTest {
         )
 
         // Act
-        val result = repository.submit("q_1", "signedComp", "signedOrig")
+        val result = repository.submit(userWalletId, "q_1", "signedComp", "signedOrig")
 
         // Assert
         assertThat(result.compensationTxHash).isEqualTo("hComp")
         assertThat(result.originalTxHash).isEqualTo("hOrig")
         assertThat(result.status).isEqualTo("BROADCAST")
+        coVerify { api.submit(userWalletId.stringValue, any()) }
     }
+
+    @Test
+    fun `GIVEN estimate WHEN estimate THEN wallet id is sent to the service`() = runTest {
+        // Arrange
+        coEvery { api.estimate(any(), any()) } returns httpError(
+            code = ApiResponseError.HttpException.Code.BAD_REQUEST,
+            errorBody = null,
+        )
+
+        // Act
+        runCatching { repository.estimate(params) }
+
+        // Assert
+        coVerify { api.estimate(userWalletId.stringValue, any()) }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun httpError(code: ApiResponseError.HttpException.Code, errorBody: String?) = ApiResponse.Error(
+        ApiResponseError.HttpException(code = code, message = null, errorBody = errorBody),
+    ) as ApiResponse<GaslessServiceResponse<TronEstimateResponse>>
 
     private fun tokensResponse(isSuccess: Boolean) = ApiResponse.Success(
         GaslessServiceResponse(

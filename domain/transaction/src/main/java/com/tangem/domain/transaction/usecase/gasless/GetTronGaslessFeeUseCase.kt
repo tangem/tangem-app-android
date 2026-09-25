@@ -9,6 +9,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.TronGaslessTransactionRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
@@ -31,6 +32,7 @@ class GetTronGaslessFeeUseCase(
 ) {
 
     suspend operator fun invoke(
+        userWalletId: UserWalletId,
         transactionData: TransactionData,
         feeToken: CryptoCurrency.Token,
     ): Either<GetFeeError, TransactionFeeExtended> = either {
@@ -42,6 +44,7 @@ class GetTronGaslessFeeUseCase(
 
                 val quote = tronGaslessTransactionRepository.estimate(
                     TronGaslessEstimateParams(
+                        userWalletId = userWalletId,
                         fromAddress = uncompiled.sourceAddress,
                         toAddress = uncompiled.destinationAddress,
                         tokenContract = uncompiled.contractAddress ?: feeToken.contractAddress,
