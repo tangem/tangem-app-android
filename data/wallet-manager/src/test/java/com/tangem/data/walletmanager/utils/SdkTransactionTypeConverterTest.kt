@@ -1,6 +1,7 @@
 package com.tangem.data.walletmanager.utils
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
@@ -37,9 +38,10 @@ internal class SdkTransactionTypeConverterTest {
         }
 
         private fun provideTestModels() = listOf(
+            // The method is recognized, only its destination is not — the row falls back to the method's own name
             GaslessModel(
                 destination = singleUser(RECIPIENT),
-                expected = TxInfo.TransactionType.UnknownOperation,
+                expected = TxInfo.TransactionType.Operation(name = "GaslessTransaction"),
             ),
             GaslessModel(
                 destination = singleUser(FEE_RECIPIENT),
@@ -56,7 +58,7 @@ internal class SdkTransactionTypeConverterTest {
                         TransactionHistoryItem.AddressType.User(FEE_RECIPIENT),
                     ),
                 ),
-                expected = TxInfo.TransactionType.UnknownOperation,
+                expected = TxInfo.TransactionType.Operation(name = "GaslessTransaction"),
             ),
             // The asset is keyed with the 0x prefix; a selector parsed out of the raw call data arrives without one
             GaslessModel(
@@ -302,6 +304,60 @@ internal class SdkTransactionTypeConverterTest {
         }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class YieldSend {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun convert(model: YieldSendModel) {
+            // Arrange
+            val converter = createConverter(currency = model.currency)
+
+            // Act
+            val actual = converter.convert(yieldSendItem(amount = model.amount))
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels(): List<YieldSendModel> {
+            val coin = currencyFactory.createCoin(Blockchain.Ethereum)
+            val token = currencyFactory.createToken(Blockchain.Ethereum, contractAddress = USDT_CONTRACT)
+            return listOf(
+                // A send that moved no coin only cost the fee — left unrecognized, so the history shows a fee row
+                YieldSendModel(
+                    currency = coin,
+                    amount = BigDecimal.ZERO,
+                    expected = TxInfo.TransactionType.Operation(name = "YieldSend"),
+                ),
+                YieldSendModel(
+                    currency = coin,
+                    amount = BigDecimal.ONE,
+                    expected = TxInfo.TransactionType.YieldSupply.Send(isYieldSupplyWithdraw = false),
+                ),
+                // The token history is the transfer itself, whatever the coin side of it moved
+                YieldSendModel(
+                    currency = token,
+                    amount = BigDecimal.ZERO,
+                    expected = TxInfo.TransactionType.YieldSupply.Send(isYieldSupplyWithdraw = false),
+                ),
+            )
+        }
+
+        private fun yieldSendItem(amount: BigDecimal) = TransactionHistoryItem(
+            txHash = "0xhash",
+            timestamp = 0L,
+            isOutgoing = true,
+            destinationType = singleContract(RECIPIENT),
+            sourceType = TransactionHistoryItem.SourceType.Single(SENDER),
+            status = TransactionHistoryItem.TransactionStatus.Confirmed,
+            type = TransactionHistoryItem.TransactionType.ContractMethodName(name = "yieldSend"),
+            amount = Amount(currencySymbol = "ETH", value = amount, decimals = 18),
+            fee = mockk(),
+        )
+    }
+
     private fun createConverter(
         currency: CryptoCurrency,
         networkTokens: Set<CryptoCurrency.Token> = emptySet(),
@@ -322,6 +378,7 @@ internal class SdkTransactionTypeConverterTest {
         destination: TransactionHistoryItem.DestinationType,
         methodId: String,
         callData: String? = null,
+        amount: BigDecimal = BigDecimal.ONE,
     ) = TransactionHistoryItem(
         txHash = "0xhash",
         timestamp = 0L,
@@ -330,7 +387,7 @@ internal class SdkTransactionTypeConverterTest {
         sourceType = TransactionHistoryItem.SourceType.Single(SENDER),
         status = TransactionHistoryItem.TransactionStatus.Confirmed,
         type = TransactionHistoryItem.TransactionType.ContractMethod(id = methodId, callData = callData),
-        amount = mockk(),
+        amount = Amount(currencySymbol = "ETH", value = amount, decimals = 18),
         fee = mockk(),
     )
 
@@ -340,6 +397,12 @@ internal class SdkTransactionTypeConverterTest {
 
     private fun singleContract(address: String) = TransactionHistoryItem.DestinationType.Single(
         addressType = TransactionHistoryItem.AddressType.Contract(address),
+    )
+
+    internal data class YieldSendModel(
+        val currency: CryptoCurrency,
+        val amount: BigDecimal,
+        val expected: TxInfo.TransactionType,
     )
 
     internal data class GaslessModel(

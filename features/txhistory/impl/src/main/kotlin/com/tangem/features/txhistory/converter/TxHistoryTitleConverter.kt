@@ -3,6 +3,7 @@ package com.tangem.features.txhistory.converter
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.features.txhistory.impl.R
@@ -15,15 +16,21 @@ import com.tangem.features.txhistory.impl.R
  * text only — the same wording shown in the list pill, without its trailing amount (e.g. "Staking", "Restaking",
  * "Yield mode"); Approve is the exception, see its branch. Content types reproduce the per-type row titles.
  */
-internal class TxHistoryTitleConverter {
+internal class TxHistoryTitleConverter(private val currency: CryptoCurrency) {
 
     /**
      * @param tx            transaction whose title to resolve.
      * @param isOwnTransfer for a [TransactionType.Transfer] only — whether the counterparty is one of the user's own
      *                      accounts/wallets, which selects the "Transfer" title over "Send" / "Receive".
      */
+    fun convert(tx: TxInfo, isOwnTransfer: Boolean = false): TextReference {
+        // An unrecognized call that moved no coin is titled by what it really was — the fee it cost.
+        if (tx.isFeeOnlyOperation(currency)) return resourceReference(R.string.common_network_fee_title)
+        return convertByType(tx, isOwnTransfer)
+    }
+
     @Suppress("CyclomaticComplexMethod", "LongMethod")
-    fun convert(tx: TxInfo, isOwnTransfer: Boolean = false): TextReference = when (val type = tx.type) {
+    private fun convertByType(tx: TxInfo, isOwnTransfer: Boolean): TextReference = when (val type = tx.type) {
         // region Pills — the label text only (no amount), matching what the list pill shows
         is TransactionType.Approve -> tx.statusAwareTitle(
             pending = R.string.common_approving,
