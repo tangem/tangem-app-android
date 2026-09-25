@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,8 +38,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.layout
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
@@ -47,15 +46,17 @@ import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
+import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadMoreEffect
+import com.tangem.features.polymarket.impl.common.ui.PolymarketEventCardSkeleton
+import com.tangem.features.polymarket.impl.common.ui.PolymarketEventCardSkeletonHeight
 import com.tangem.features.polymarket.impl.common.ui.PolymarketSearchBar
 import com.tangem.features.polymarket.impl.common.ui.PolymarketSearchBarClearance
-import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadingState
 import com.tangem.features.polymarket.impl.common.ui.PolymarketNextPageLoader
 import com.tangem.features.polymarket.impl.common.ui.PolymarketReloadPrompt
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketCategoryTabUM
@@ -65,6 +66,7 @@ import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedFooterUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedScrollPosition
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketOutcomeUM
+import com.tangem.features.polymarket.impl.main.ui.state.PolymarketPositionsPreviewUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.delay
@@ -74,9 +76,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlin.math.ceil
 import java.math.BigDecimal
 
-// Feed layout: the scrolling header is item 0, the tab band — when there are categories — is item 1.
+// Feed layout: the scrolling header is item 0, the tab band — while loading or with categories — is item 1.
 private const val TAB_BAND_INDEX = 1
 private const val KEY_HEADER = "header"
 private const val KEY_TAB_BAND = "tab_band"
@@ -88,6 +91,8 @@ private val ScrollRestoreTimeout = 2.seconds
 
 /** Fixed height of the category tab band: 40dp pills + 8dp vertical padding. */
 private val TabBandHeight = 56.dp
+
+private val FeedItemSpacing = 12.dp
 
 private val TabShape = RoundedCornerShape(percent = 50)
 
@@ -114,10 +119,10 @@ internal fun PolymarketMainScreen(
     // Shared by the inline and the pinned band, so its horizontal scroll survives docking.
     val tabRowState = rememberLazyListState()
 
-    val hasCategories = state.categories.isNotEmpty()
+    val hasTabBand = state.isCategoriesLoading || state.categories.isNotEmpty()
 
-    val isTabBandPinned by remember(listState, hasCategories) {
-        derivedStateOf { hasCategories && listState.isTabBandPinned() }
+    val isTabBandPinned by remember(listState, hasTabBand) {
+        derivedStateOf { hasTabBand && listState.isTabBandPinned() }
     }
 
     val selectedCategoryId = state.categories.firstOrNull { it.isSelected }?.id
@@ -137,27 +142,29 @@ internal fun PolymarketMainScreen(
         onScrollPositionRestore = onScrollPositionRestore,
     )
 
-    // The feature lives in its own window: a local haze provider keeps the source and the glass together.
-    ProvideHaze {
-        Box(modifier = modifier.fillMaxSize()) {
-            PolymarketMainScaffold(
-                state = state,
-                listState = listState,
-                tabRowState = tabRowState,
-                isTabBandPinned = isTabBandPinned,
-                onBackClick = onBackClick,
-                onHistoryClick = onHistoryClick,
-            )
+    ProvideTangemShimmer {
+        // The feature lives in its own window: a local haze provider keeps the source and the glass together.
+        ProvideHaze {
+            Box(modifier = modifier.fillMaxSize()) {
+                PolymarketMainScaffold(
+                    state = state,
+                    listState = listState,
+                    tabRowState = tabRowState,
+                    isTabBandPinned = isTabBandPinned,
+                    onBackClick = onBackClick,
+                    onHistoryClick = onHistoryClick,
+                )
 
-            // Outside the scaffold: glass inside its own haze source has nothing to sample.
-            PolymarketSearchBar(
-                placeholder = resourceReference(R.string.common_search),
-                onClick = onSearchClick,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .navigationBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-            )
+                // Outside the scaffold: glass inside its own haze source has nothing to sample.
+                PolymarketSearchBar(
+                    placeholder = resourceReference(R.string.common_search),
+                    onClick = onSearchClick,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .navigationBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+            }
         }
     }
 }
@@ -202,6 +209,7 @@ private fun PolymarketMainScaffold(
             if (isTabBandPinned) {
                 CategoryTabBar(
                     categories = state.categories,
+                    isLoading = state.isCategoriesLoading,
                     state = tabRowState,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -238,68 +246,57 @@ private fun FeedList(
     val topPadding = contentPadding.calculateTopPadding()
     // The feed scrolls under the floating search bar; the clearance keeps the last card visible.
     val bottomPadding = contentPadding.calculateBottomPadding() + PolymarketSearchBarClearance
-    val verticalPaddingPx = with(LocalDensity.current) { (topPadding + bottomPadding).roundToPx() }
 
-    val isAtTop by remember(listState) {
-        derivedStateOf { listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0 }
-    }
-    val isFeedLoading = state.content is PolymarketMainUM.ContentUM.Loading
-    val hasPositions = state.positions.isVisible || state.onFinishedPositionsClick != null
+    BoxWithConstraints(modifier = modifier) {
+        val skeletonCount = ceil(maxHeight / (PolymarketEventCardSkeletonHeight + FeedItemSpacing)).toInt()
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            state = listState,
+            contentPadding = PaddingValues(top = topPadding, bottom = bottomPadding),
+            verticalArrangement = Arrangement.spacedBy(FeedItemSpacing),
+        ) {
+            item(key = KEY_HEADER) {
+                PolymarketMainHeader(
+                    balance = state.balance,
+                    isAwaitingFunds = state.isAwaitingFunds,
+                    positions = state.positions,
+                    onActivePositionsClick = state.onActivePositionsClick,
+                    onFinishedPositionsClick = state.onFinishedPositionsClick,
+                )
+            }
 
-    LazyColumn(
-        modifier = modifier,
-        state = listState,
-        contentPadding = PaddingValues(top = topPadding, bottom = bottomPadding),
-        userScrollEnabled = !isFeedLoading || hasPositions || !isAtTop,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        item(key = KEY_HEADER) {
-            PolymarketMainHeader(
-                balance = state.balance,
-                isAwaitingFunds = state.isAwaitingFunds,
-                positions = state.positions,
-                onActivePositionsClick = state.onActivePositionsClick,
-                onFinishedPositionsClick = state.onFinishedPositionsClick,
-            )
-        }
-
-        if (state.categories.isNotEmpty()) {
-            // While pinned the overlay draws the band; the spacer keeps the feed's geometry.
-            item(key = KEY_TAB_BAND) {
-                if (isTabBandPinned) {
-                    Spacer(modifier = Modifier.height(TabBandHeight))
-                } else {
-                    CategoryTabBar(categories = state.categories, state = tabRowState)
+            if (state.isCategoriesLoading || state.categories.isNotEmpty()) {
+                // While pinned the overlay draws the band; the spacer keeps the feed's geometry.
+                item(key = KEY_TAB_BAND) {
+                    if (isTabBandPinned) {
+                        Spacer(modifier = Modifier.height(TabBandHeight))
+                    } else {
+                        CategoryTabBar(
+                            categories = state.categories,
+                            isLoading = state.isCategoriesLoading,
+                            state = tabRowState,
+                        )
+                    }
                 }
             }
-        }
 
-        eventsSection(
-            content = state.content,
-            statusModifier = Modifier.centerInVisibleFeedArea(
-                listState = listState,
-                verticalPaddingPx = verticalPaddingPx,
-            ),
-        )
+            eventsSection(content = state.content, skeletonCount = skeletonCount)
+        }
     }
 }
 
-private fun LazyListScope.eventsSection(content: PolymarketMainUM.ContentUM, statusModifier: Modifier) {
+private fun LazyListScope.eventsSection(content: PolymarketMainUM.ContentUM, skeletonCount: Int) {
     when (content) {
-        // Viewport-tall: a shorter list could not stay scrolled and the header would spring back.
-        is PolymarketMainUM.ContentUM.Loading -> item(key = KEY_STATUS) {
-            Box(modifier = Modifier.fillParentMaxHeight(), contentAlignment = Alignment.TopCenter) {
-                PolymarketLoadingState(modifier = statusModifier)
-            }
+        is PolymarketMainUM.ContentUM.Loading -> items(count = skeletonCount, key = { it }) {
+            PolymarketEventCardSkeleton(modifier = Modifier.padding(horizontal = 16.dp))
         }
         is PolymarketMainUM.ContentUM.Error -> item(key = KEY_STATUS) {
-            Box(modifier = Modifier.fillParentMaxHeight(), contentAlignment = Alignment.TopCenter) {
-                PolymarketReloadPrompt(
-                    text = resourceReference(R.string.prediction_main_events_load_error),
-                    onReloadClick = content.onReloadClick,
-                    modifier = statusModifier,
-                )
-            }
+            PolymarketReloadPrompt(
+                text = resourceReference(R.string.prediction_main_events_load_error),
+                onReloadClick = content.onReloadClick,
+                modifier = Modifier.height(180.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp),
+            )
         }
         is PolymarketMainUM.ContentUM.Content -> {
             items(
@@ -327,28 +324,6 @@ private fun LazyListScope.eventsSection(content: PolymarketMainUM.ContentUM, sta
                 }
             }
         }
-    }
-}
-
-/**
- * Centres the content in the visible part of the viewport-tall status item, not in the item: with the header on
- * screen the item's own centre is below the fold.
- */
-private fun Modifier.centerInVisibleFeedArea(listState: LazyListState, verticalPaddingPx: Int): Modifier {
-    return layout { measurable, constraints ->
-        val placeable = measurable.measure(constraints)
-
-        val layoutInfo = listState.layoutInfo
-        val itemTop = layoutInfo.visibleItemsInfo.firstOrNull { it.key == KEY_STATUS }?.offset ?: 0
-        val visibleHeight = layoutInfo.viewportSize.height - verticalPaddingPx - itemTop
-        val y = ((visibleHeight - placeable.height) / 2).coerceAtLeast(0)
-        val height = if (constraints.hasBoundedHeight) {
-            minOf(placeable.height + y, constraints.maxHeight)
-        } else {
-            placeable.height + y
-        }
-
-        layout(placeable.width, height) { placeable.placeRelative(x = 0, y = y) }
     }
 }
 
@@ -423,9 +398,14 @@ private fun LazyListState.isTabBandPinned(): Boolean {
 @Composable
 private fun CategoryTabBar(
     categories: ImmutableList<PolymarketCategoryTabUM>,
+    isLoading: Boolean,
     state: LazyListState,
     modifier: Modifier = Modifier,
 ) {
+    if (isLoading) {
+        PolymarketCategoryTabsSkeleton(modifier = modifier.fillMaxWidth().height(TabBandHeight))
+        return
+    }
     LazyRow(
         modifier = modifier.height(TabBandHeight),
         state = state,
@@ -529,22 +509,68 @@ private fun PolymarketMainScreenAwaitingFundsPreview() {
     }
 }
 
-@Preview(name = "Error Light", showBackground = true, widthDp = 360)
+@Preview(name = "Error Light", showBackground = true, widthDp = 360, heightDp = 800)
 @Preview(
     name = "Error Dark",
     showBackground = true,
     widthDp = 360,
+    heightDp = 800,
     uiMode = Configuration.UI_MODE_NIGHT_YES,
 )
+@Preview(name = "Error Compact", showBackground = true, widthDp = 360, heightDp = 640)
 @Composable
 private fun PolymarketMainScreenErrorPreview() {
     TangemThemePreviewRedesign {
-        Box(modifier = Modifier.background(TangemTheme.colors3.bg.primary)) {
-            PolymarketReloadPrompt(
-                text = resourceReference(R.string.prediction_main_events_load_error),
-                onReloadClick = {},
-            )
-        }
+        PolymarketMainScreen(
+            state = PolymarketMainUM(
+                balance = previewPredictionBalance(BigDecimal("1234.56")),
+                categories = previewCategories(),
+                content = PolymarketMainUM.ContentUM.Error(onReloadClick = {}),
+                positions = PolymarketPositionsPreviewUM.Content(persistentListOf()),
+                pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
+            ),
+            onBackClick = {},
+            onSearchClick = {},
+            onHistoryClick = {},
+            onLoadMore = {},
+            onVisibleEventsChange = {},
+            onScrollIdle = { _, _ -> },
+            onScrollPositionRestore = {},
+        )
+    }
+}
+
+@Preview(name = "Loading Light", showBackground = true, widthDp = 360, heightDp = 800)
+@Preview(
+    name = "Loading Dark",
+    showBackground = true,
+    widthDp = 360,
+    heightDp = 800,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
+@Preview(name = "Loading Compact", showBackground = true, widthDp = 320, heightDp = 640)
+@Composable
+private fun PolymarketMainScreenLoadingPreview() {
+    TangemThemePreviewRedesign {
+        PolymarketMainScreen(
+            state = PolymarketMainUM(
+                balance = previewPredictionBalance(BigDecimal("1234.56")),
+                categories = persistentListOf(),
+                isCategoriesLoading = true,
+                content = PolymarketMainUM.ContentUM.Loading,
+                positions = PolymarketPositionsPreviewUM.Loading,
+                onActivePositionsClick = {},
+                onFinishedPositionsClick = {},
+                pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
+            ),
+            onBackClick = {},
+            onSearchClick = {},
+            onHistoryClick = {},
+            onLoadMore = {},
+            onVisibleEventsChange = {},
+            onScrollIdle = { _, _ -> },
+            onScrollPositionRestore = {},
+        )
     }
 }
 

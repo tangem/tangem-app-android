@@ -47,6 +47,9 @@ import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
+import com.tangem.domain.polymarket.flow.PredictionPositionsValueFetcher
+import com.tangem.domain.polymarket.flow.PredictionPositionsValueSupplier
+import com.tangem.domain.polymarket.model.PredictionPositionsValue
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -86,6 +89,8 @@ internal class PolymarketMainModel @Inject constructor(
     private val refreshPredictionDepositRequisitesInteractor: RefreshPredictionDepositRequisitesInteractor,
     private val checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
     private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
+    private val predictionPositionsValueSupplier: PredictionPositionsValueSupplier,
+    private val predictionPositionsValueFetcher: PredictionPositionsValueFetcher,
     private val positionsPreviewLoader: PolymarketPositionsPreviewLoader,
     private val predictionBalancePoller: PredictionBalancePoller,
     private val predictionFundingWindow: PredictionFundingWindow,
@@ -124,6 +129,7 @@ internal class PolymarketMainModel @Inject constructor(
                 balance = balanceConverter.convert(
                     PredictionBalanceUMConverter.Input(
                         status = PredictionAccountStatusValue.Loading,
+                        positions = PredictionPositionsValue.Unknown,
                         requisites = RequisitesState.Loading,
                         isTradingAllowed = false,
                         mode = PredictionBalanceMode.AVAILABLE,
@@ -149,15 +155,17 @@ internal class PolymarketMainModel @Inject constructor(
     init {
         combine(
             flow = predictionAccountStatusSupplier(userWalletId = params.userWalletId),
-            flow2 = fundingRequisites.state,
-            flow3 = tradingAllowance.isAllowed,
-            flow4 = balanceMode,
-            transform = { status, requisites, isTradingAllowed, mode ->
+            flow2 = predictionPositionsValueSupplier(userWalletId = params.userWalletId),
+            flow3 = fundingRequisites.state,
+            flow4 = tradingAllowance.isAllowed,
+            flow5 = balanceMode,
+            transform = { status, positions, requisites, isTradingAllowed, mode ->
                 activeStatus.value = status as? PredictionAccountStatusValue.Active
 
                 balanceConverter.convert(
                     PredictionBalanceUMConverter.Input(
                         status = status,
+                        positions = positions,
                         requisites = requisites,
                         isTradingAllowed = isTradingAllowed,
                         mode = mode,
@@ -277,13 +285,14 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     private fun loadCategories() {
+        uiState.update { it.copy(isCategoriesLoading = true) }
         modelScope.launch {
             val result = withContext(dispatchers.default) { getPolymarketCategoriesUseCase() }
             val loadedCategories = result.getOrNull().orEmpty()
 
             categories = loadedCategories
             selectedCategoryId = loadedCategories.firstOrNull()?.id
-            uiState.update { it.copy(categories = buildTabs()) }
+            uiState.update { it.copy(categories = buildTabs(), isCategoriesLoading = false) }
 
             selectFeed(categoryId = selectedCategoryId, reloadVisited = true)
         }.saveIn(categoriesJob)
@@ -333,6 +342,7 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     private fun reload() {
+        uiState.update { it.copy(content = PolymarketMainUM.ContentUM.Loading) }
         if (categories.isEmpty()) loadCategories() else activeFeed.value?.let(::reloadEvents)
     }
 
@@ -385,10 +395,12 @@ internal class PolymarketMainModel @Inject constructor(
                 async { tradingAllowance.refresh() },
                 async {
                     predictionAccountStatusFetcher(
-                        PredictionAccountStatusFetcher.Params(
-                            userWalletId = params.userWalletId,
-                            mode = PredictionAccountStatusFetcher.Mode.FULL,
-                        ),
+                        PredictionAccountStatusFetcher.Params(userWalletId = params.userWalletId),
+                    )
+                },
+                async {
+                    predictionPositionsValueFetcher(
+                        PredictionPositionsValueFetcher.Params(userWalletId = params.userWalletId),
                     )
                 },
             ).awaitAll()

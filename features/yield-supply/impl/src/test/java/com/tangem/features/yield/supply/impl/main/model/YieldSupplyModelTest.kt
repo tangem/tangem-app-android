@@ -595,7 +595,6 @@ internal class YieldSupplyModelTest {
             fiatAmount = amount,
             fiatRate = fiatRate,
             priceChange = BigDecimal.ZERO,
-            stakingBalance = null,
             yieldSupplyStatus = YieldSupplyStatus(
                 isActive = isActive,
                 isInitialized = true,
