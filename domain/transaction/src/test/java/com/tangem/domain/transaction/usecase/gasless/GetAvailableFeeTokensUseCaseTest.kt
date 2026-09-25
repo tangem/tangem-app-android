@@ -217,6 +217,7 @@ internal class GetAvailableFeeTokensUseCaseTest {
         @BeforeEach
         fun resetMocks() {
             clearMocks(singleAccountStatusListSupplier, tronGaslessTransactionRepository, walletManagersFacade)
+            isAccountActivationSponsored = true
 
             coEvery { tronGaslessTransactionRepository.getSupportedTokens() } returns listOf(
                 TronGaslessToken(contractAddress = USDT_TRON_CONTRACT, symbol = "USDT", decimals = 6),
@@ -231,10 +232,7 @@ internal class GetAvailableFeeTokensUseCaseTest {
         }
 
         @Test
-        fun `GIVEN activated tron account WHEN invoke THEN supported token is offered for the fee`() = runTest {
-            // Arrange
-            coEvery { walletManagersFacade.isTronAccountActivated(userWalletId, tronNetwork) } returns true
-
+        fun `GIVEN a supported tron token WHEN invoke THEN it is offered for the fee`() = runTest {
             // Act
             val actual = createUseCase().invoke(
                 userWallet = userWallet,
@@ -247,11 +245,36 @@ internal class GetAvailableFeeTokensUseCaseTest {
             assertThat(actual.notEnoughForFeeIds()).isEmpty()
         }
 
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN account activation state WHEN invoke THEN token is offered only when gasless can pay`(
+            model: ActivationModel,
+        ) = runTest {
+            // Arrange
+            isAccountActivationSponsored = model.isActivationSponsored
+            coEvery {
+                walletManagersFacade.isTronAccountActivated(userWalletId, tronNetwork)
+            } returns model.isActivated
+
+            // Act
+            val actual = createUseCase().invoke(
+                userWallet = userWallet,
+                network = tronNetwork,
+                sentCurrencyStatus = usdtTron.status(),
+            )
+
+            // Assert
+            assertThat(actual.offeredCurrencies()).containsExactlyElementsIn(model.expected).inOrder()
+        }
+
+        private fun provideTestModels() = listOf(
+            ActivationModel(isActivationSponsored = true, isActivated = false, expected = listOf(trx, usdtTron)),
+            ActivationModel(isActivationSponsored = false, isActivated = true, expected = listOf(trx, usdtTron)),
+            ActivationModel(isActivationSponsored = false, isActivated = false, expected = listOf(trx)),
+        )
+
         @Test
         fun `GIVEN a non-gasless token is sent WHEN invoke THEN only native coin is offered`() = runTest {
-            // Arrange
-            coEvery { walletManagersFacade.isTronAccountActivated(userWalletId, tronNetwork) } returns true
-
             // Act
             val actual = createUseCase().invoke(
                 userWallet = userWallet,
@@ -265,27 +288,7 @@ internal class GetAvailableFeeTokensUseCaseTest {
         }
 
         @Test
-        fun `GIVEN not activated tron account WHEN invoke THEN only native coin is offered`() = runTest {
-            // Arrange
-            coEvery { walletManagersFacade.isTronAccountActivated(userWalletId, tronNetwork) } returns false
-
-            // Act
-            val actual = createUseCase().invoke(
-                userWallet = userWallet,
-                network = tronNetwork,
-                sentCurrencyStatus = usdtTron.status(),
-            )
-
-            // Assert
-            assertThat(actual.offeredCurrencies()).containsExactly(trx)
-            assertThat(actual.notEnoughForFeeIds()).isEmpty()
-        }
-
-        @Test
         fun `GIVEN a fresher status in the account list WHEN invoke THEN the offered token carries it`() = runTest {
-            // Arrange
-            coEvery { walletManagersFacade.isTronAccountActivated(userWalletId, tronNetwork) } returns true
-
             // Act
             val actual = createUseCase().invoke(
                 userWallet = userWallet,
@@ -301,7 +304,6 @@ internal class GetAvailableFeeTokensUseCaseTest {
         fun `GIVEN the sent token is missing from the account list WHEN invoke THEN the given status is offered`() =
             runTest {
                 // Arrange
-                coEvery { walletManagersFacade.isTronAccountActivated(userWalletId, tronNetwork) } returns true
                 coEvery { singleAccountStatusListSupplier.getSyncOrNull(userWalletId) } returns accountStatusList(
                     listOf(CryptoCurrencyStatus(currency = trx, value = loadedValue(BigDecimal.ZERO))),
                 )
@@ -320,9 +322,6 @@ internal class GetAvailableFeeTokensUseCaseTest {
 
         @Test
         fun `GIVEN the native coin is sent WHEN invoke THEN only native coin is offered`() = runTest {
-            // Arrange
-            coEvery { walletManagersFacade.isTronAccountActivated(userWalletId, tronNetwork) } returns true
-
             // Act
             val actual = createUseCase().invoke(
                 userWallet = userWallet,
@@ -339,10 +338,11 @@ internal class GetAvailableFeeTokensUseCaseTest {
     // region Fixtures
 
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
-    private val walletManagersFacade: WalletManagersFacade = mockk()
     private val gaslessTransactionRepository: GaslessTransactionRepository = mockk()
     private val tronGaslessTransactionRepository: TronGaslessTransactionRepository = mockk()
     private val currencyChecksRepository: CurrencyChecksRepository = mockk()
+    private val walletManagersFacade: WalletManagersFacade = mockk()
+    private var isAccountActivationSponsored = true
 
     private fun createUseCase() = GetAvailableFeeTokensUseCase(
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
@@ -351,6 +351,7 @@ internal class GetAvailableFeeTokensUseCaseTest {
         isTronGaslessSupportedUseCase = IsTronGaslessSupportedUseCase(
             repository = tronGaslessTransactionRepository,
             walletManagersFacade = walletManagersFacade,
+            isAccountActivationSponsored = { isAccountActivationSponsored },
         ),
     )
 
@@ -510,6 +511,12 @@ internal class GetAvailableFeeTokensUseCaseTest {
     internal data class EligibilityModel(
         val yieldSupplyStatus: YieldSupplyStatus?,
         val expected: Boolean,
+    )
+
+    internal data class ActivationModel(
+        val isActivationSponsored: Boolean,
+        val isActivated: Boolean,
+        val expected: List<CryptoCurrency>,
     )
 
     // endregion
