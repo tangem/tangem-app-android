@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.reown.walletkit.client.Wallet
-import com.reown.walletkit.client.WalletKit
+import com.tangem.data.walletconnect.sdk.WcSdk
 import com.tangem.domain.walletconnect.WC_TAG
 import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.data.walletconnect.store.WalletConnectStore
@@ -17,12 +17,12 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
-import kotlin.coroutines.resume
 import kotlin.time.Duration.Companion.seconds
 
 internal class WcPairSdkDelegate(
     private val scope: AppCoroutineScope,
     private val store: WalletConnectStore,
+    private val wcSdk: WcSdk,
 ) : WcSdkObserver {
 
     private val onSessionProposal = Channel<Pair<Wallet.Model.SessionProposal, Wallet.Model.VerifyContext>>()
@@ -91,14 +91,7 @@ internal class WcPairSdkDelegate(
 
     fun rejectSession(proposerPublicKey: String) {
         TangemLogger.withTag(WC_TAG).i("reject session proposerPublicKey = $proposerPublicKey")
-        WalletKit.rejectSession(
-            params = Wallet.Params.SessionReject(
-                proposerPublicKey = proposerPublicKey,
-                reason = "",
-            ),
-            onSuccess = {},
-            onError = {},
-        )
+        wcSdk.rejectSession(proposerPublicKey)
     }
 
     override fun onError(error: Wallet.Model.Error) {
@@ -121,23 +114,11 @@ internal class WcPairSdkDelegate(
     }
 
     private suspend fun sdkApprove(sessionApprove: Wallet.Params.SessionApprove): Either<WcPairError, Unit> {
-        return suspendCancellableCoroutine { continuation ->
-            WalletKit.approveSession(
-                params = sessionApprove,
-                onSuccess = { if (continuation.isActive) continuation.resume(Unit.right()) },
-                onError = { if (continuation.isActive) continuation.resume(it.throwable.toApproveError()) },
-            )
-        }
+        return wcSdk.approveSession(sessionApprove).mapLeft { it.toApproveErrorValue() }
     }
 
     private suspend fun sdkPair(uri: String): Either<WcPairError, Unit> {
-        return suspendCancellableCoroutine { continuation ->
-            WalletKit.pair(
-                params = Wallet.Params.Pair(uri),
-                onSuccess = { if (continuation.isActive) continuation.resume(Unit.right()) },
-                onError = { if (continuation.isActive) continuation.resume(it.throwable.toPairError().left()) },
-            )
-        }
+        return wcSdk.pair(uri).mapLeft { it.toPairError() }
     }
 
     private fun Throwable.toPairError() = when {
@@ -145,7 +126,7 @@ internal class WcPairSdkDelegate(
         else -> WcPairError.PairingFailed(this.localizedMessage.orEmpty())
     }
 
-    private fun Throwable.toApproveError() = ApprovalFailed(this.localizedMessage.orEmpty()).left()
+    private fun Throwable.toApproveErrorValue(): WcPairError = ApprovalFailed(this.localizedMessage.orEmpty())
 
     companion object {
         private const val CALLBACK_TIMEOUT = 15
