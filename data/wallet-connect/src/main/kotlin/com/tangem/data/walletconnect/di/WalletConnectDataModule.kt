@@ -84,11 +84,13 @@ internal object WalletConnectDataModule {
         sessionsManager: Provider<DefaultWcSessionsManager>,
         networkService: Provider<DefaultWcRequestService>,
         pairSdkDelegate: Provider<WcPairSdkDelegate>,
+        appScope: AppCoroutineScope,
         dispatchers: CoroutineDispatcherProvider,
     ): WcSdk = WcSdk(
         application = application,
         config = config,
         observers = { setOf(sessionsManager.get(), networkService.get(), pairSdkDelegate.get()) },
+        scope = appScope,
         dispatchers = dispatchers,
     )
 
