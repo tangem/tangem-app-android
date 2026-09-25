@@ -144,8 +144,11 @@ internal class DefaultTangemPayCurrencyFactory @Inject constructor(
     ): CryptoCurrency.Token? {
         val symbol = token.symbol.takeIf(String::isNotBlank) ?: return null
         // The backend returns EIP-55 checksummed addresses; Express and the account's own legacy currency both
-        // carry plain lowercase ones, and swap pairs are matched by exact string comparison.
-        val contractAddress = token.contractAddress?.takeIf(String::isNotBlank)?.lowercase(Locale.US) ?: return null
+        // carry plain lowercase ones, and swap pairs are matched by exact string comparison. Only EVM addresses
+        // are case-insensitive hex, though: a Tron (Base58Check) contract address is case-sensitive and would be
+        // corrupted by lowercasing, so non-EVM addresses are kept verbatim.
+        val rawContractAddress = token.contractAddress?.takeIf(String::isNotBlank) ?: return null
+        val contractAddress = if (blockchain.isEvm()) rawContractAddress.lowercase(Locale.US) else rawContractAddress
         return cryptoCurrencyFactory.createToken(
             network = network,
             rawId = rawIdFor(symbol),
