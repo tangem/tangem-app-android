@@ -1191,7 +1191,9 @@ internal class SwapModel @Inject constructor(
                     )
 
                     if (providersState.isNotEmpty()) {
-                        val restoredStates = providersState.withRememberedApproveTypes()
+                        val restoredStates = providersState
+                            .withRememberedApproveTypes()
+                            .withCarriedIntegratedApprovals()
                         val (provider, state) = applyDeeplinkProviderOverride(
                             selected = updateLoadedQuotes(restoredStates),
                             loadedStates = restoredStates,
@@ -1478,6 +1480,29 @@ internal class SwapModel @Inject constructor(
         }
     }
 
+    /**
+     * [IntegratedApprovalData] is produced by the fee selector ([loadAndStoreIntegratedApproval]) and stored on
+     * the [SwapState.QuotesLoadedState] of the selected provider. A quote refresh replaces that state with a
+     * freshly built one where the field is `null`, while the fee selector keeps showing the combined
+     * approve + swap fee. [performSwap] then reads `null` and would submit the swap without the approve.
+     * Carry the data over as long as the approval it was built for (spender, approve type) is unchanged.
+     */
+    internal fun Map<SwapProvider, SwapState>.withCarriedIntegratedApprovals(): Map<SwapProvider, SwapState> {
+        return mapValues { (provider, state) ->
+            if (state !is SwapState.QuotesLoadedState || state.integratedApprovalData != null) return@mapValues state
+            val permission = state.permissionState as? PermissionDataState.PermissionSettings
+                ?: return@mapValues state
+            val previous = dataState.lastLoadedSwapStates[provider] as? SwapState.QuotesLoadedState
+                ?: return@mapValues state
+            val previousPermission = previous.permissionState as? PermissionDataState.PermissionSettings
+                ?: return@mapValues state
+            val carried = previous.integratedApprovalData ?: return@mapValues state
+            val isSameApproval = previousPermission.spenderAddress == permission.spenderAddress &&
+                carried.approveType == permission.type
+            if (isSameApproval) state.copy(integratedApprovalData = carried) else state
+        }
+    }
+
     private fun updateLoadedQuotes(state: Map<SwapProvider, SwapState>): Pair<SwapProvider, SwapState> {
         val nonEmptyStates = state.filter { entry -> entry.value !is SwapState.EmptyAmountState }
         val selectedSwapProvider = if (nonEmptyStates.isNotEmpty()) {
@@ -1561,6 +1586,20 @@ internal class SwapModel @Inject constructor(
 
         if (swapFee == null && !isTangemPayWithdrawal) {
             TangemLogger.e("onSwapClick: fee is null and isTangemPayWithdrawal is $isTangemPayWithdrawal")
+            showAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
+            modelScope.launch {
+                delay(SWAP_IN_PROGRESS_DELAY)
+                startLoadingQuotesFromLastState()
+            }
+            return
+        }
+
+        // The quote says the swap needs an integrated approve, but the approve transaction is not there (the fee
+        // selector has not stored it yet, or a refresh dropped it). Sending the swap alone would revert on-chain
+        // with the fee lost — reload instead of guessing.
+        val needsIntegratedApproval = lastLoadedQuotesState.permissionState is PermissionDataState.PermissionSettings
+        if (needsIntegratedApproval && lastLoadedQuotesState.integratedApprovalData == null) {
+            TangemLogger.e("onSwapClick: integrated approval is required but its transaction data is missing")
             showAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
             modelScope.launch {
                 delay(SWAP_IN_PROGRESS_DELAY)
