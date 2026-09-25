@@ -20,7 +20,6 @@ import com.tangem.data.walletconnect.sdk.WcSdk
 import com.tangem.data.walletconnect.sessions.DefaultWcSessionsManager
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
-import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.core.local.moshi.SdkMoshi
 import com.tangem.data.walletconnect.store.WalletConnectStore
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
@@ -79,23 +78,17 @@ internal object WalletConnectDataModule {
     fun wcSdk(
         application: Application,
         config: WalletConnectConfig,
-        // A Provider breaks the cycle: the observers are the very classes that call back into the SDK.
-        observers: Provider<Set<@JvmSuppressWildcards WcSdkObserver>>,
+        // Providers break the cycle: these observers are the very classes that call back into the SDK.
+        sessionsManager: Provider<DefaultWcSessionsManager>,
+        networkService: Provider<DefaultWcRequestService>,
+        pairSdkDelegate: Provider<WcPairSdkDelegate>,
         dispatchers: CoroutineDispatcherProvider,
     ): WcSdk = WcSdk(
         application = application,
         config = config,
-        observers = observers,
+        observers = { setOf(sessionsManager.get(), networkService.get(), pairSdkDelegate.get()) },
         dispatchers = dispatchers,
     )
-
-    @Provides
-    @Singleton
-    fun wcSdkObservers(
-        sessionsManager: DefaultWcSessionsManager,
-        networkService: DefaultWcRequestService,
-        pairSdkDelegate: WcPairSdkDelegate,
-    ): Set<@JvmSuppressWildcards WcSdkObserver> = setOf(sessionsManager, networkService, pairSdkDelegate)
 
     @Provides
     @Singleton
