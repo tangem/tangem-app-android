@@ -17,6 +17,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.models.pay.TangemPayCountry
 import com.tangem.domain.models.pay.TangemPayEligibility
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.pay.TangemPayRegion
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.usecase.CheckTangemPayEligibilityUseCase
@@ -25,6 +26,8 @@ import com.tangem.domain.pay.usecase.GetTangemPayRegionsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.eligibility.EligibilityInnerRoute
 import com.tangem.features.tangempay.eligibility.TangemPayEligibilityComponent
+import com.tangem.features.tangempay.eligibility.onboarding.MoneyAccountOnboardingLauncher
+import com.tangem.features.tangempay.eligibility.onboarding.OnboardingLauncher
 import com.tangem.features.tangempay.eligibility.onboarding.PaymentAccountOnboardingLauncher
 import com.tangem.features.tangempay.eligibility.TangemPayWalletSelectorComponent
 import com.tangem.features.tangempay.eligibility.country.ResidencyListUM.Content
@@ -44,13 +47,19 @@ internal class ResidencyListModel @Inject constructor(
     private val getCountriesUseCase: GetTangemPayCountriesUseCase,
     private val getRegionsUseCase: GetTangemPayRegionsUseCase,
     private val checkEligibilityUseCase: CheckTangemPayEligibilityUseCase,
-    private val onboardingLauncher: PaymentAccountOnboardingLauncher,
+    paymentAccountOnboardingLauncher: PaymentAccountOnboardingLauncher,
+    moneyAccountOnboardingLauncher: MoneyAccountOnboardingLauncher,
     private val uiMessageSender: UiMessageSender,
     private val analytics: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model(), TangemPayWalletSelectorComponent.Listener {
 
     private val params = paramsContainer.require<TangemPayEligibilityComponent.Params>()
+
+    private val onboardingLauncher: OnboardingLauncher = when (params.product) {
+        TangemPayProduct.PAYMENT_ACCOUNT -> paymentAccountOnboardingLauncher
+        TangemPayProduct.BANKING_ACCOUNT -> moneyAccountOnboardingLauncher
+    }
 
     val bottomSheetNavigation: SlotNavigation<ResidencyBottomSheetConfig> = SlotNavigation()
 
@@ -202,15 +211,11 @@ internal class ResidencyListModel @Inject constructor(
     private suspend fun continueOnboarding(itemId: String) {
         continuingItemId = itemId
         updateContent()
-        val userWalletId = params.userWalletId
-        if (userWalletId != null) {
-            onboardingLauncher.openKyc(userWalletId)
-        } else {
-            onboardingLauncher.start(
-                onWalletSelectionRequired = ::openWalletSelector,
-                onFailed = ::releaseContinuing,
-            )
-        }
+        onboardingLauncher.start(
+            userWalletId = params.userWalletId,
+            onWalletSelectionRequired = ::openWalletSelector,
+            onFailed = ::releaseContinuing,
+        )
     }
 
     private fun openWalletSelector(walletsIds: List<UserWalletId>) {
