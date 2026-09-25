@@ -10,9 +10,11 @@ package com.tangem.domain.transaction.error
  * @property httpCode HTTP status of the failed call, `null` when there is none to report — the service
  * answered with an unsuccessful result, the request never got a response (no connectivity, timeout), or
  * the status was not recognised.
+ * @property tronActivationRefusal set when the service refused to sponsor a Tron account activation.
  */
 class GaslessServiceException(
     val httpCode: Int?,
     message: String?,
     cause: Throwable? = null,
+    val tronActivationRefusal: TronActivationRefusal? = null,
 ) : Exception(message, cause)

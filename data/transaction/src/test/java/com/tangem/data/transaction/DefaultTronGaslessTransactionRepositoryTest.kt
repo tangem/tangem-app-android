@@ -1,10 +1,12 @@
 package com.tangem.data.transaction
 
 import com.google.common.truth.Truth.assertThat
+import com.squareup.moshi.Moshi
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.grow.datasource.gasless.TronGaslessApi
+import com.tangem.grow.datasource.gasless.models.GaslessErrorResponse
 import com.tangem.grow.datasource.gasless.models.GaslessServiceResponse
 import com.tangem.grow.datasource.gasless.models.tron.TronEstimateBreakdown
 import com.tangem.grow.datasource.gasless.models.tron.TronEstimateResponse
@@ -12,6 +14,7 @@ import com.tangem.grow.datasource.gasless.models.tron.TronSubmitResponse
 import com.tangem.grow.datasource.gasless.models.tron.TronTokenDto
 import com.tangem.grow.datasource.gasless.models.tron.TronTokensResponse
 import com.tangem.domain.transaction.error.GaslessServiceException
+import com.tangem.domain.transaction.error.TronActivationRefusal
 import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -19,6 +22,8 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.Instant
@@ -28,6 +33,7 @@ internal class DefaultTronGaslessTransactionRepositoryTest {
     private val api: TronGaslessApi = mockk()
     private val repository = DefaultTronGaslessTransactionRepository(
         api = api,
+        errorAdapter = Moshi.Builder().build().adapter(GaslessErrorResponse::class.java),
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
@@ -199,6 +205,41 @@ internal class DefaultTronGaslessTransactionRepositoryTest {
         coVerify { api.estimate(userWalletId.stringValue, any()) }
     }
 
+    @ParameterizedTest
+    @MethodSource("provideTestModels")
+    fun `GIVEN service error body WHEN estimate THEN refusal and message are carried`(model: ErrorBodyModel) = runTest {
+        // Arrange
+        coEvery { api.estimate(any(), any()) } returns httpError(
+            code = ApiResponseError.HttpException.Code.UNPROCESSABLE_ENTITY,
+            errorBody = model.errorBody,
+        )
+
+        // Act
+        val error = runCatching { repository.estimate(params) }.exceptionOrNull() as GaslessServiceException
+
+        // Assert
+        assertThat(error.httpCode).isEqualTo(422)
+        assertThat(error.message).isEqualTo(model.expectedMessage)
+        assertThat(error.tronActivationRefusal).isEqualTo(model.expectedRefusal)
+    }
+
+    @Test
+    fun `GIVEN non-JSON error body WHEN estimate THEN http error without a code`() = runTest {
+        // Arrange
+        coEvery { api.estimate(any(), any()) } returns httpError(
+            code = ApiResponseError.HttpException.Code.BAD_GATEWAY,
+            errorBody = "<html>Bad gateway</html>",
+        )
+
+        // Act
+        val error = runCatching { repository.estimate(params) }.exceptionOrNull() as GaslessServiceException
+
+        // Assert
+        assertThat(error.httpCode).isEqualTo(502)
+        assertThat(error.message).isEqualTo("Bad Gateway")
+        assertThat(error.tronActivationRefusal).isNull()
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun httpError(code: ApiResponseError.HttpException.Code, errorBody: String?) = ApiResponse.Error(
         ApiResponseError.HttpException(code = code, message = null, errorBody = errorBody),
@@ -220,4 +261,58 @@ internal class DefaultTronGaslessTransactionRepositoryTest {
             timestamp = "t",
         ),
     )
+
+    companion object {
+        data class ErrorBodyModel(
+            val case: String,
+            val errorBody: String,
+            val expectedMessage: String,
+            val expectedRefusal: TronActivationRefusal?,
+        ) {
+            override fun toString(): String = case
+        }
+
+        @JvmStatic
+        fun provideTestModels() = listOf(
+            ErrorBodyModel(
+                case = "balance too low, minimum as a string",
+                errorBody = errorBody(code = "TRON_ACTIVATION_BALANCE_TOO_LOW", details = """{"minimum":"5000000"}"""),
+                expectedMessage = "refused",
+                expectedRefusal = TronActivationRefusal.BalanceTooLow(minimumAmountRaw = BigInteger("5000000")),
+            ),
+            ErrorBodyModel(
+                case = "balance too low, minimum as a number",
+                errorBody = errorBody(code = "TRON_ACTIVATION_BALANCE_TOO_LOW", details = """{"minimum":5000000}"""),
+                expectedMessage = "refused",
+                expectedRefusal = TronActivationRefusal.BalanceTooLow(minimumAmountRaw = BigInteger("5000000")),
+            ),
+            ErrorBodyModel(
+                case = "balance too low without a minimum",
+                errorBody = errorBody(code = "TRON_ACTIVATION_BALANCE_TOO_LOW", details = "{}"),
+                expectedMessage = "refused",
+                expectedRefusal = null,
+            ),
+            ErrorBodyModel(
+                case = "rate limited per wallet",
+                errorBody = errorBody(code = "TRON_ACTIVATION_RATE_LIMITED", details = """{"scope":"wallet"}"""),
+                expectedMessage = "refused",
+                expectedRefusal = TronActivationRefusal.RateLimited(isPerWallet = true),
+            ),
+            ErrorBodyModel(
+                case = "rate limited service-wide",
+                errorBody = errorBody(code = "TRON_ACTIVATION_RATE_LIMITED", details = """{"scope":"global"}"""),
+                expectedMessage = "refused",
+                expectedRefusal = TronActivationRefusal.RateLimited(isPerWallet = false),
+            ),
+            ErrorBodyModel(
+                case = "sponsorship off",
+                errorBody = errorBody(code = "TRON_ACCOUNT_NOT_ACTIVATED", details = "{}"),
+                expectedMessage = "refused",
+                expectedRefusal = null,
+            ),
+        )
+
+        private fun errorBody(code: String, details: String) =
+            """{"success":false,"error":{"code":"$code","message":"refused","details":$details},"statusCode":422}"""
+    }
 }
