@@ -57,6 +57,7 @@ import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.domain.walletmanager.model.TokenInfo
 import com.tangem.domain.walletmanager.utils.SdkPageConverter
 import com.tangem.domain.wallets.extension.hasDerivation
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import dagger.Lazy
@@ -544,6 +545,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         }
     }
 
+    @RemoveWithToggle("TWI_1783_TRON_GASLESS_ACCOUNT_ACTIVATION_ENABLED")
     override suspend fun isTronAccountActivated(userWalletId: UserWalletId, network: Network): Boolean =
         withContext(dispatchers.io) {
             val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
