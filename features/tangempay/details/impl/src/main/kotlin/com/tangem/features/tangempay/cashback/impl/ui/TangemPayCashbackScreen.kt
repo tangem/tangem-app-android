@@ -46,6 +46,7 @@ import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.core.ui.res.generated.icons.ic_percent_backward_20
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayAdditionalCashbackUM
@@ -150,7 +151,7 @@ private fun CashbackError(onReloadClick: () -> Unit, modifier: Modifier = Modifi
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                painter = painterResource(CoreUiR.drawable.ic_refresh_24),
+                imageVector = Icons.ic_arrow_refresh_20,
                 contentDescription = resourceReference(CoreUiR.string.common_reload).resolveReference(),
                 tint = TangemTheme.colors3.icon.inverse,
                 modifier = Modifier.size(20.dp),
