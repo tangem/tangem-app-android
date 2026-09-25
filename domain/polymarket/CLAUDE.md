@@ -166,11 +166,8 @@ draft, the deposit wallet, the market and the quote age before anything is sent.
 - **Polling.** `PredictionBalancePoller` — one loop per wallet, reference-counted subscribers, runs on the
   app scope. `PredictionBalancePollingConfig`: 30 s base, 5 s while a `PredictionFundingWindow` is open
   (2 min window, 10 min max age). The window opens on a send this app made (`PredictionFundingWindow.open`)
-  and closes when the balance settles or the window elapses. `PredictionAccountStatusFetcher.Params.mode`
-  says how much a tick re-reads: `FULL` (main screen, pull-to-refresh, base poll ticks) also reads the
-  positions value from the data API (`PolymarketPositionsRepository.getPositionsValue`) into
-  `Active.positionsValue`; `AVAILABLE_ONLY` (wallet screen, onboarding, ticks inside the funding window)
-  carries the cached one over. A failed `/value` read keeps the cached value too and never fails the balance.
+  and closes when the balance settles or the window elapses. Every tick refreshes the account status; ticks
+  outside the funding window also run `PredictionPositionsValueFetcher`.
 - **Positions value.** Kept apart from the account status: it needs only the deposit-wallet address (public
   data API, `PolymarketPositionsRepository.getPositionsValue`), not credentials or the wallet status, and a
   failed read must not touch the balance. `PredictionPositionsValueFetcher` / `PredictionPositionsValueSupplier`
