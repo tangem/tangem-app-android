@@ -16,6 +16,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
@@ -23,10 +24,12 @@ import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
 import com.tangem.domain.pay.model.bankofframp.RecentBankAccounts
+import com.tangem.domain.pay.model.recents.RecentTokenTransfer
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.pay.usecase.bankofframp.GetBankOfframpOptionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetRecentBankAccountsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
+import com.tangem.domain.pay.usecase.recents.GetRecentTokenTransfersUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.availableNetwork
@@ -37,6 +40,7 @@ import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import com.tangem.features.tangempay.withdraw.hub.recentBankAccounts
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.BankSectionUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.RecentsUM
+import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.TokenRecentsUM
 import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -47,6 +51,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -61,6 +66,7 @@ internal class TangemPayWithdrawHubModelTest {
     private val withdrawRepository: TangemPayWithdrawRepository = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val getRecentBankAccountsUseCase: GetRecentBankAccountsUseCase = mockk()
+    private val getRecentTokenTransfersUseCase: GetRecentTokenTransfersUseCase = mockk()
     private val markBankAccountUsedUseCase: MarkBankAccountUsedUseCase = mockk(relaxed = true)
     private val getBankOfframpOptionsUseCase: GetBankOfframpOptionsUseCase = mockk()
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
@@ -68,6 +74,7 @@ internal class TangemPayWithdrawHubModelTest {
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
     private val statusFlow = MutableSharedFlow<AccountStatus.Payment>(replay = 1)
+    private val tokenRecentsFlow = MutableStateFlow<List<RecentTokenTransfer>>(emptyList())
     private val opened = mutableListOf<Pair<BankWithdrawEntry, StateFlow<BankWithdrawOptions>>>()
 
     private val loadFailure: Either<BankOfframpError, RecentBankAccounts> =
@@ -83,18 +90,21 @@ internal class TangemPayWithdrawHubModelTest {
             withdrawRepository,
             uiMessageSender,
             getRecentBankAccountsUseCase,
+            getRecentTokenTransfersUseCase,
             markBankAccountUsedUseCase,
             getBankOfframpOptionsUseCase,
             paymentAccountStatusSupplier,
             analytics,
         )
         statusFlow.resetReplayCache()
+        tokenRecentsFlow.value = emptyList()
         opened.clear()
         every { currencyFactory.create(userWalletId) } returns token
         coEvery { withdrawRepository.hasWithdrawOrder(userWalletId) } returns false
         coEvery { getRecentBankAccountsUseCase(userWalletId) } returns recentBankAccounts().right()
         coEvery { getBankOfframpOptionsUseCase(userWalletId) } returns offrampOptions().right()
         every { paymentAccountStatusSupplier(userWalletId) } returns statusFlow
+        every { getRecentTokenTransfersUseCase(userWalletId) } returns tokenRecentsFlow
         emitStatus()
     }
 
@@ -147,6 +157,90 @@ internal class TangemPayWithdrawHubModelTest {
         verify(exactly = 1) { uiMessageSender.send(any<BottomSheetMessage>()) }
         verify(exactly = 0) { router.pop() }
         verify(exactly = 0) { router.push(any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN no recent tokens WHEN model created THEN swap recents empty`() {
+        // Act
+        val model = createModel()
+
+        // Assert
+        assertThat(model.uiState.value.swapSection.recents).isEqualTo(TokenRecentsUM.Empty)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN recent tokens emitted WHEN model created THEN swap recents content`() {
+        // Arrange
+        tokenRecentsFlow.value = listOf(recentTransfer())
+
+        // Act
+        val model = createModel()
+
+        // Assert
+        val recents = model.uiState.value.swapSection.recents
+        assertThat(recents).isInstanceOf(TokenRecentsUM.Content::class.java)
+        assertThat((recents as TokenRecentsUM.Content).tokens.map { it.id })
+            .containsExactly(RECENT_CURRENCY_ID_VALUE)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a recent token WHEN it is clicked THEN hub popped and swap pushed with that token as TO`() {
+        // Arrange
+        val transfer = recentTransfer()
+        tokenRecentsFlow.value = listOf(transfer)
+        val model = createModel()
+        val expectedRoute = AppRoute.Swap(
+            userWalletId = userWalletId,
+            fromCryptoCurrency = token,
+            screenSource = AnalyticsParam.ScreensSources.TangemPay.value,
+            fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.FROM,
+            accountFlow = AccountFlow.Withdraw,
+            toCryptoCurrency = transfer.currency,
+        )
+
+        // Act
+        model.tokenRecents().onTokenClick(RECENT_CURRENCY_ID_VALUE)
+
+        // Assert
+        verifyOrder {
+            router.pop()
+            router.push(expectedRoute)
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN an active withdrawal WHEN a recent token is clicked THEN in progress message shown and no push`() {
+        // Arrange
+        coEvery { withdrawRepository.hasWithdrawOrder(userWalletId) } returns true
+        tokenRecentsFlow.value = listOf(recentTransfer())
+        val model = createModel()
+
+        // Act
+        model.tokenRecents().onTokenClick(RECENT_CURRENCY_ID_VALUE)
+
+        // Assert
+        verify(exactly = 1) { uiMessageSender.send(any<BottomSheetMessage>()) }
+        verify(exactly = 0) { router.pop() }
+        verify(exactly = 0) { router.push(any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a recent token WHEN it is clicked THEN the recents feed is not reordered`() {
+        // Arrange
+        tokenRecentsFlow.value = listOf(recentTransfer())
+        val model = createModel()
+        val before = model.tokenRecents().tokens
+
+        // Act
+        model.tokenRecents().onTokenClick(RECENT_CURRENCY_ID_VALUE)
+
+        // Assert
+        assertThat(model.tokenRecents().tokens).isEqualTo(before)
         model.onDestroy()
     }
 
@@ -500,6 +594,42 @@ internal class TangemPayWithdrawHubModelTest {
 
     private fun TangemPayWithdrawHubModel.recents(): RecentsUM = bankContent().recents
 
+    private fun TangemPayWithdrawHubModel.tokenRecents(): TokenRecentsUM.Content =
+        uiState.value.swapSection.recents as TokenRecentsUM.Content
+
+    private fun recentTransfer(): RecentTokenTransfer {
+        val currency = CryptoCurrency.Coin(
+            id = CryptoCurrency.ID(
+                prefix = CryptoCurrency.ID.Prefix.COIN_PREFIX,
+                body = CryptoCurrency.ID.Body.NetworkId(rawId = "polygon-pos"),
+                suffix = CryptoCurrency.ID.Suffix.RawID(rawId = "matic-network"),
+            ),
+            network = Network(
+                id = Network.ID(value = "polygon-pos", derivationPath = Network.DerivationPath.None),
+                name = "Polygon",
+                currencySymbol = "POL",
+                derivationPath = Network.DerivationPath.None,
+                isTestnet = false,
+                standardType = Network.StandardType.ERC20,
+                hasFiatFeeRate = true,
+                canHandleTokens = true,
+                transactionExtrasType = Network.TransactionExtrasType.NONE,
+                nameResolvingType = Network.NameResolvingType.NONE,
+            ),
+            name = "Polygon",
+            symbol = "POL",
+            decimals = 18,
+            iconUrl = null,
+            isCustom = false,
+        )
+        val account = MockAccounts.createAccount(
+            derivationIndex = 1,
+            userWalletId = userWalletId,
+            cryptoCurrencies = listOf(currency),
+        )
+        return RecentTokenTransfer(account = account, currency = currency)
+    }
+
     private fun createModel(): TangemPayWithdrawHubModel = TangemPayWithdrawHubModel(
         paramsContainer = MutableParamsContainer(
             TangemPayWithdrawHubModel.Params(
@@ -513,9 +643,14 @@ internal class TangemPayWithdrawHubModelTest {
         tangemPayWithdrawRepository = withdrawRepository,
         uiMessageSender = uiMessageSender,
         getRecentBankAccountsUseCase = getRecentBankAccountsUseCase,
+        getRecentTokenTransfersUseCase = getRecentTokenTransfersUseCase,
         markBankAccountUsedUseCase = markBankAccountUsedUseCase,
         getBankOfframpOptionsUseCase = getBankOfframpOptionsUseCase,
         paymentAccountStatusSupplier = paymentAccountStatusSupplier,
         analytics = analytics,
     )
+
+    private companion object {
+        const val RECENT_CURRENCY_ID_VALUE = "coin⟨polygon-pos⟩matic-network"
+    }
 }
