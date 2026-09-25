@@ -1,13 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    android:allowBackup="false" switches cloud backup off, but on Android 12+ it does NOT cover
+    device-to-device transfer: without explicit rules every file of the app is copied to the new
+    phone. All wallet secrets are bound to this device's Keystore and are unusable elsewhere, while
+    the rest (wallet list and names, address book, transaction history, preferences) is personal
+    data that a new device should start without. Exclude everything from both mechanisms.
+-->
 <data-extraction-rules>
     <cloud-backup>
-        <exclude
-            domain="sharedpref"
-            path="appsflyer-data" />
+        <exclude domain="root" path="." />
+        <exclude domain="file" path="." />
+        <exclude domain="database" path="." />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="external" path="." />
+        <exclude domain="device_file" path="." />
+        <exclude domain="device_database" path="." />
+        <exclude domain="device_sharedpref" path="." />
+        <exclude domain="device_root" path="." />
     </cloud-backup>
     <device-transfer>
-        <exclude
-            domain="sharedpref"
-            path="appsflyer-data" />
+        <exclude domain="root" path="." />
+        <exclude domain="file" path="." />
+        <exclude domain="database" path="." />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="external" path="." />
+        <exclude domain="device_file" path="." />
+        <exclude domain="device_database" path="." />
+        <exclude domain="device_sharedpref" path="." />
+        <exclude domain="device_root" path="." />
     </device-transfer>
 </data-extraction-rules>
