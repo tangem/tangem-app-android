@@ -77,10 +77,9 @@ internal val ExpressTx.isPayInLeg: Boolean
 internal fun TxInfo.feeRows(currency: CryptoCurrency): ImmutableList<TxHistoryDetailsUM.InfoRowUM> =
     listOfNotNull(feeRow(currency)).toImmutableList()
 
-/** A joint account's fee is the refund cap the operation was signed with, not what was paid: hence the tilde */
 private fun TxInfo.feeRow(currency: CryptoCurrency): TxHistoryDetailsUM.InfoRowUM? {
     val text = gaslessFeeText(currency) ?: nativeFeeText() ?: return null
-    val value = if (type is TransactionType.Joint) "${StringsSigns.TILDE_SIGN}$text" else text
+    val value = approximateMark() + text
     return TxHistoryDetailsUM.InfoRowUM(
         label = resourceReference(R.string.common_network_fee_title),
         value = stringReference(value),
@@ -117,10 +116,13 @@ internal fun TxInfo.feeAmountText(currency: CryptoCurrency): TextReference? {
     val feeValue = fee?.value ?: return null
     val formatted = feeValue.format { crypto(cryptoCurrency = currency, ignoreSymbolPosition = true) }
     val prefix = if (status is TxInfo.TransactionStatus.Failed) "" else "${StringsSigns.MINUS} "
-    return stringReference((prefix + formatted).trim())
+    return stringReference((prefix + approximateMark() + formatted).trim())
 }
 
 private fun TxInfo.showsFeeAsAmount(currency: CryptoCurrency): Boolean =
     isTokenFee() || isFeeOnlyOperation(currency)
+
+/** A joint account's fee is the refund cap the operation was signed with, not what was paid */
+internal fun TxInfo.approximateMark(): String = if (type is TransactionType.Joint) StringsSigns.TILDE_SIGN else ""
 
 // endregion

@@ -22,6 +22,7 @@ import com.tangem.core.ui.res.generated.icons.ic_chart_line_vertical_20
 import com.tangem.core.ui.res.generated.icons.ic_document_20
 import com.tangem.core.ui.res.generated.icons.ic_globe_24
 import com.tangem.core.ui.res.generated.icons.ic_lightning_20
+import com.tangem.core.ui.res.generated.icons.ic_percent_20
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.SdkAmountType
@@ -31,6 +32,7 @@ import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.model.TestContacts
 import com.tangem.test.mock.MockAccounts
+import com.tangem.utils.StringsSigns
 import com.tangem.test.core.ProvideTestModels
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Test
@@ -64,6 +66,30 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
         // Assert
         assertThat(feeRow.value.resolveString()).startsWith("~")
+    }
+
+    @Test
+    fun `GIVEN joint token fee WHEN convert THEN the header carries the fee icon and an approximate amount`() {
+        // Arrange
+        val tx = txInfo(
+            type = TransactionType.Joint.TokenFee(
+                tokenContract = "0xtoken",
+                tokenAmount = null,
+                recipient = USER_ADDRESS,
+                refundCapWei = BigDecimal("500000000000000"),
+                signaturesCount = 2,
+            ),
+            isOutgoing = true,
+            amount = BigDecimal.ZERO,
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
+        )
+
+        // Act
+        val actual = converter.convert(tx)
+
+        // Assert
+        assertThat(actual.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_percent_20))
+        assertThat(actual.amountBlock.amount.resolveString()).contains(StringsSigns.TILDE_SIGN)
     }
 
     @Test

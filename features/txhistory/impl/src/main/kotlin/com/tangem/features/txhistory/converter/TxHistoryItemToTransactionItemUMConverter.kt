@@ -336,7 +336,8 @@ private fun TxInfo.formatContentAmount(currency: CryptoCurrency): String {
         type is TransactionType.Staking.ClaimRewards -> ""
         else -> if (isOutgoing) StringsSigns.MINUS else StringsSigns.PLUS
     }
-    return prefix + value.format { crypto(symbol = "", decimals = currency.displayDecimals) }.trim()
+    val approximateMark = if (isTokenFee()) approximateMark() else ""
+    return prefix + approximateMark + value.format { crypto(symbol = "", decimals = currency.displayDecimals) }.trim()
 }
 
 // endregion
