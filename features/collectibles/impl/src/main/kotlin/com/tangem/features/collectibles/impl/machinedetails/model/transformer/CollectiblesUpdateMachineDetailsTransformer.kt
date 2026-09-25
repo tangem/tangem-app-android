@@ -1,11 +1,8 @@
 package com.tangem.features.collectibles.impl.machinedetails.model.transformer
 
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.core.ui.format.bigdecimal.simple
-import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.collectibles.models.CollectibleGachaMachine
 import com.tangem.features.collectibles.impl.machinedetails.model.converter.CollectiblesMachineDetailRowsConverter
 import com.tangem.features.collectibles.impl.machinedetails.model.converter.CollectiblesMachineTiersConverter
@@ -18,6 +15,7 @@ internal class CollectiblesUpdateMachineDetailsTransformer(
     val onBuyClick: () -> Unit,
     val onTurboCheckedChange: (Boolean) -> Unit,
     val onTurboInfoClick: () -> Unit,
+    val onPoweredByClick: () -> Unit,
 ) : Transformer<CollectiblesMachineDetailsUM> {
     override fun transform(prevState: CollectiblesMachineDetailsUM): CollectiblesMachineDetailsUM {
         val previousContent = prevState as? CollectiblesMachineDetailsUM.Content
@@ -28,19 +26,13 @@ internal class CollectiblesUpdateMachineDetailsTransformer(
             imageUrl = machine.imageUrl,
             tiers = CollectiblesMachineTiersConverter.convert(machine),
             details = CollectiblesMachineDetailRowsConverter.convert(machine),
+            onPoweredByClick = onPoweredByClick,
             prizePool = previousContent?.prizePool ?: CollectiblesMachineDetailsUM.PrizePoolUM.Loading,
             footer = CollectiblesMachineDetailsUM.FooterUM(
                 isTurboEnabled = previousContent?.footer?.isTurboEnabled == true,
                 onTurboCheckedChange = onTurboCheckedChange,
                 onTurboInfoClick = onTurboInfoClick,
-                expectedValue = stringReference(
-                    machine.expectedValue.format {
-                        fiat(
-                            fiatCurrencyCode = AppCurrency.Default.code,
-                            fiatCurrencySymbol = AppCurrency.Default.symbol,
-                        ).optionalDecimals()
-                    },
-                ),
+                expectedValue = machine.formatExpectedValue(),
                 buyButtonText = stringReference(
                     // TODO replace with actual text when settled
                     "Open for ${machine.price.format { simple(decimals = 2) }} USDC",
