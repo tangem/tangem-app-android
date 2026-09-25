@@ -51,10 +51,10 @@ private fun <T : Any> Response<T>.sendHttpError(
     val fullRequestUrl = raw().request.url.toUrl()
     val shortUrl = fullRequestUrl.authority + fullRequestUrl.path
     analyticsErrorHandler.sendErrorEvent(
-        ApiErrorEvent(
+        ApiErrorEvent.fromErrorBody(
             endpoint = shortUrl,
             code = code.numericCode,
-            message = errorBody,
+            errorBody = errorBody,
         ),
     )
 }
