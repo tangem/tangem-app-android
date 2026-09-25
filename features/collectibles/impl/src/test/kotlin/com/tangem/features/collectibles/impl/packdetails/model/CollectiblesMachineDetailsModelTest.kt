@@ -6,7 +6,10 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchAction
 import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchFlow
 import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchListState
@@ -120,7 +123,9 @@ internal class CollectiblesMachineDetailsModelTest {
 
         // Assert
         val footer = (fixture.model.uiState.value as CollectiblesMachineDetailsUM.Content).footer
-        assertThat(footer.buyButtonText).isEqualTo(stringReference("Open for 50 USDC"))
+        assertThat(footer.buyButtonText).isEqualTo(
+            resourceReference(R.string.collectibles_machine_open_button, wrappedList("50 USDC")),
+        )
         assertThat(footer.expectedValue).isEqualTo(stringReference("$53.95"))
     }
 
