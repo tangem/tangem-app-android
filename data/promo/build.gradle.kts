@@ -26,7 +26,12 @@ dependencies {
 
     // region Core
     implementation(projects.store.datasource)
+    implementation(projects.core.local)
     api(projects.core.utils)
+    // endregion
+
+    // region Data
+    implementation(projects.data.common)
     // endregion
 
     // region Domain
@@ -45,5 +50,7 @@ dependencies {
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     testImplementation(deps.moshi.kotlin)
+    testImplementation(projects.test.core)
+    testImplementation(projects.common.test)
     // endregion
 }
