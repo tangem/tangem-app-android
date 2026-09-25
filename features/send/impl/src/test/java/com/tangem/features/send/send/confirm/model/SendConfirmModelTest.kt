@@ -21,6 +21,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationRecipientListUM
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
@@ -248,6 +249,70 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             // Assert
             verify(exactly = 1) { sendConfirmAlertFactory.getGenericErrorState(any(), any()) }
             coVerify(exactly = 0) { sendTransactionUseCase(any(), any(), any()) }
+        }
+    }
+
+    @Nested
+    inner class RecordPaymentAccountTransfer {
+
+        @Test
+        fun `GIVEN a successful send WHEN it completes THEN the transfer is recorded`() = runTest {
+            // Arrange
+            val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+            every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
+            coEvery { sendTransactionUseCase(any(), any(), any()) } returns "txHash".right()
+            val account = Account.Personal.createMainAccount(testUserWalletId)
+            val walletId = testUserWallet.walletId
+            val params = MutableParamsContainer(
+                defaultSendConfirmParams(
+                    state = normalFeeState(),
+                    cryptoCurrencyStatus = loadedFeeStatus,
+                    feeCryptoCurrencyStatus = loadedFeeStatus,
+                ).copy(accountFlow = MutableStateFlow(account)),
+            )
+            createSendConfirmModel(this, params)
+            advanceUntilIdle()
+
+            // Act
+            resultFlow.tryEmit(true)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) {
+                recordTokenTransferFromSendUseCase(
+                    userWalletId = walletId,
+                    sourceAccount = account,
+                    currency = loadedFeeStatus.currency,
+                    destinationAddress = DESTINATION_ADDRESS,
+                )
+            }
+        }
+
+        @Test
+        fun `GIVEN a failing send WHEN it completes THEN nothing is recorded`() = runTest {
+            // Arrange
+            val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+            every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
+            coEvery { sendTransactionUseCase(any(), any(), any()) } returns
+                mockk<SendTransactionError>(relaxed = true).left()
+            val params = MutableParamsContainer(
+                defaultSendConfirmParams(
+                    state = normalFeeState(),
+                    cryptoCurrencyStatus = loadedFeeStatus,
+                    feeCryptoCurrencyStatus = loadedFeeStatus,
+                ),
+            )
+            createSendConfirmModel(this, params)
+            advanceUntilIdle()
+
+            // Act
+            resultFlow.tryEmit(true)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) {
+                recordTokenTransferFromSendUseCase(any(), any(), any(), any())
+            }
         }
     }
 
