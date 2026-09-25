@@ -5,6 +5,15 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.common.ui.cosign.SignatureProgressUM
+import java.math.BigDecimal
+import com.tangem.features.txhistory.joint.operation.model.JointOperationFiat
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperationSignerState
 import com.tangem.domain.jointaccount.model.JointOperationSignerState.Answer
@@ -51,8 +60,9 @@ internal class JointOperationUMConverterTest {
             resourceReference(CoreUiR.string.common_copy_address),
             resourceReference(CoreUiR.string.address_book_add_contact),
         )
-        assertThat(actual.cosign).isNull()
+        assertThat(actual.cosign).isNotNull()
         assertThat(actual.cosignAction?.isEnabled).isFalse()
+        assertThat(actual.cosignAction?.caption).isNull()
         assertThat(actual.cosignAction?.buttonText).isEqualTo(resourceReference(CoreUiR.string.common_sign))
     }
 
@@ -96,10 +106,56 @@ internal class JointOperationUMConverterTest {
         assertThat(actual.cosignAction?.iconEnd).isNull()
     }
 
+    @Test
+    fun `GIVEN threshold below the roster WHEN converted THEN the signatures counter runs to the threshold`() {
+        // Act
+        val actual = converter.convert(input(state(isSending = false)))
+
+        // Assert
+        val row = actual.cosign!!
+        assertThat(row.title).isEqualTo(
+            resourceReference(CoreUiR.string.joint_operation_signatures_progress, wrappedList(1, 2)),
+        )
+        assertThat(row.progress).isEqualTo(SignatureProgressUM(collected = 1, total = 2))
+    }
+
+    @Test
+    fun `GIVEN a rate WHEN converted THEN the amount is priced in the app currency and the fee is approximate`() {
+        // Act
+        val actual = converter.convert(input(state(isSending = false), fiatRate = BigDecimal("2000")))
+
+        // Assert
+        assertThat(actual.amountBlock.fiatAmount).isEqualTo(
+            stringReference(BigDecimal("2000").format { fiat(fiatCurrencyCode = "USD", fiatCurrencySymbol = "$") }),
+        )
+        assertThat(actual.rows.single().value).isEqualTo(
+            stringReference("~" + BigDecimal.ZERO.format { crypto(cryptoCurrency = feeCoin, ignoreSymbolPosition = true) }),
+        )
+    }
+
+    @Test
+    fun `GIVEN zero rate WHEN converted THEN the amount has no fiat line`() {
+        // Act
+        val actual = converter.convert(input(state(isSending = false), fiatRate = BigDecimal.ZERO))
+
+        // Assert
+        assertThat(actual.amountBlock.fiatAmount).isNull()
+    }
+
+    @Test
+    fun `GIVEN no rate WHEN converted THEN the amount has no fiat line`() {
+        // Act
+        val actual = converter.convert(input(state(isSending = false), fiatRate = null))
+
+        // Assert
+        assertThat(actual.amountBlock.fiatAmount).isNull()
+    }
+
     private fun input(
         state: JointOperationState,
         hasAnswered: Boolean = false,
         isColdWallet: Boolean = true,
+        fiatRate: BigDecimal? = null,
     ) = JointOperationUMConverter.Input(
         state = state,
         isSigning = false,
@@ -108,13 +164,14 @@ internal class JointOperationUMConverterTest {
         canCreateContact = true,
         isBalanceHidden = false,
         isColdWallet = isColdWallet,
+        fiat = JointOperationFiat(rate = fiatRate, appCurrency = AppCurrency(name = "US Dollar", code = "USD", symbol = "$")),
     )
 
     private fun state(isSending: Boolean, ownAnswer: Answer = Answer.WAITING) = JointOperationState(
         account = MockAccounts.createJointAccount(),
         displayed = JointTransferIntent.Native(recipient = OTHER, amountWei = BigInteger.TEN.pow(18)),
         feeWei = BigInteger.ZERO,
-        feeCoin = null,
+        feeCoin = feeCoin,
         threshold = 2,
         membersCount = 3,
         signers = listOf(
@@ -132,6 +189,8 @@ internal class JointOperationUMConverterTest {
         answer = answer,
         at = null,
     )
+
+    private val feeCoin = MockCryptoCurrencyFactory().createCoin(Blockchain.Ethereum)
 
     private companion object {
         const val OWN = "0xowner"

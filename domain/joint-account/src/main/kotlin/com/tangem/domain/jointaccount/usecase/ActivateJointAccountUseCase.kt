@@ -111,6 +111,9 @@ class ActivateJointAccountUseCase(
      * trusted. Which Safe singleton the backend deploys is undecided (alignment №21), so the address is
      * computed under every supported singleton and the backend's value picks the matching one; no match means
      * the composition does not resolve to the announced address, and activation is blocked.
+     *
+     * Once confirmed, the backend's own spelling is what gets signed: the activation config is compared with the
+     * stored one character by character, and a checksummed copy of a lowercase address would not match it.
      */
     private fun Raise<JointAccountActivationError>.confirmedSafeAddress(jointAccount: JointAccount): String {
         val backendAddress = jointAccount.safeAddress
@@ -141,9 +144,9 @@ class ActivateJointAccountUseCase(
                     .bind()
             }
 
-        val match = computed.firstOrNull { it.equals(backendAddress, ignoreCase = true) }
+        val isConfirmed = computed.any { it.equals(backendAddress, ignoreCase = true) }
 
-        return ensureNotNull(match) {
+        ensure(isConfirmed) {
             refused(
                 error = JointAccountActivationError.AddressMismatch,
                 reason = "the announced Safe address $backendAddress is none of ${computed.joinToString()}, " +
@@ -153,6 +156,8 @@ class ActivateJointAccountUseCase(
                 shouldSanitize = false,
             )
         }
+
+        return backendAddress
     }
 
     private fun Raise<JointAccountActivationError>.createPayload(

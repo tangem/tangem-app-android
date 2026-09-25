@@ -629,15 +629,15 @@ internal data class TangemFilterGroupStory(
 internal data class TangemModalStory(
     val isShown: Boolean,
     val isStackedShown: Boolean,
-    val isExpanded: Boolean,
     val isContentScrollable: Boolean,
     val isTallContent: Boolean,
+    val isInputVisible: Boolean,
     val presentation: TangemModal.Presentation,
     val onShownChange: (Boolean) -> Unit,
     val onStackedShownChange: (Boolean) -> Unit,
-    val onExpandedToggle: () -> Unit,
     val onContentScrollableToggle: () -> Unit,
     val onTallContentToggle: () -> Unit,
+    val onInputToggle: () -> Unit,
     val onPresentationChange: (TangemModal.Presentation) -> Unit,
 ) : DsStoryBookPage
 

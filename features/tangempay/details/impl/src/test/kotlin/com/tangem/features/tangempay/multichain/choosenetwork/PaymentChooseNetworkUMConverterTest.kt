@@ -19,9 +19,9 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class PaymentChooseNetworkUMConverterTest {
 
-    private val listener: ChooseNetworkListener = mockk(relaxed = true)
-    private val onSelectNotIssued: (PaymentNetworkStatus.NotIssued) -> Unit = mockk(relaxed = true)
-    private val converter = PaymentChooseNetworkUMConverter(listener = listener, onSelectNotIssued = onSelectNotIssued)
+    private val onNetworkClick: (PaymentNetworkStatus) -> Unit = mockk(relaxed = true)
+    private val onDismiss: () -> Unit = mockk(relaxed = true)
+    private val converter = PaymentChooseNetworkUMConverter(onNetworkClick = onNetworkClick, onDismiss = onDismiss)
 
     @BeforeEach
     fun setUp() {
@@ -55,6 +55,7 @@ internal class PaymentChooseNetworkUMConverterTest {
         // so it is kept and labeled with the fixed set of payment stablecoins.
         val base = PaymentNetworkStatus.NotIssued(
             network = network(networkName = "Base", networkRawId = "base"),
+            chainId = 1L,
         )
         val polygon = available(networkName = "Polygon", networkRawId = "polygon", address = "0xPOLY")
 
@@ -72,6 +73,7 @@ internal class PaymentChooseNetworkUMConverterTest {
         val empty = PaymentNetworkStatus.Disabled(
             network = network(networkName = "Empty", networkRawId = "empty"),
             cryptoCurrencies = emptyList(),
+            chainId = 1L,
         )
         val tron = disabled(networkName = "TRON", networkRawId = "tron")
 
@@ -101,7 +103,7 @@ internal class PaymentChooseNetworkUMConverterTest {
     }
 
     @Test
-    fun `GIVEN Available item WHEN onClick THEN listener onSelectAvailable is invoked with the network rawId`() {
+    fun `GIVEN Fast way item WHEN onClick THEN the tapped status is handed back untouched`() {
         // Arrange
         val status = available(networkName = "Polygon", networkRawId = "polygon", address = "0xPOLY")
 
@@ -110,24 +112,11 @@ internal class PaymentChooseNetworkUMConverterTest {
         result.fastWay.single().onClick()
 
         // Assert
-        verify { listener.onSelectAvailable(networkRawId = "polygon") }
+        verify { onNetworkClick(status) }
     }
 
     @Test
-    fun `GIVEN NotIssued item WHEN onClick THEN onSelectNotIssued callback is invoked with the status`() {
-        // Arrange
-        val status = notIssued(networkName = "Ethereum", networkRawId = "ethereum")
-
-        // Act
-        val result = converter.convert(listOf(status))
-        result.fastWay.single().onClick()
-
-        // Assert
-        verify { onSelectNotIssued(status) }
-    }
-
-    @Test
-    fun `GIVEN Disabled item WHEN onClick THEN listener onSelectDisabled is invoked`() {
+    fun `GIVEN Other ways item WHEN onClick THEN the tapped status is handed back untouched`() {
         // Arrange
         val status = disabled(networkName = "TRON", networkRawId = "tron")
 
@@ -136,17 +125,17 @@ internal class PaymentChooseNetworkUMConverterTest {
         result.otherWays.single().onClick()
 
         // Assert
-        verify { listener.onSelectDisabled() }
+        verify { onNetworkClick(status) }
     }
 
     @Test
-    fun `WHEN convert THEN dismiss delegates to listener onDismiss`() {
+    fun `WHEN convert THEN dismiss delegates to the callback`() {
         // Act
         val result = converter.convert(emptyList())
         result.dismiss()
 
         // Assert
-        verify { listener.onDismiss() }
+        verify { onDismiss() }
     }
 
     private fun network(networkName: String, networkRawId: String): Network {
@@ -184,13 +173,14 @@ internal class PaymentChooseNetworkUMConverterTest {
     }
 
     private fun notIssued(networkName: String, networkRawId: String): PaymentNetworkStatus.NotIssued {
-        return PaymentNetworkStatus.NotIssued(network = network(networkName, networkRawId))
+        return PaymentNetworkStatus.NotIssued(network = network(networkName, networkRawId), chainId = 1L)
     }
 
     private fun disabled(networkName: String, networkRawId: String): PaymentNetworkStatus.Disabled {
         return PaymentNetworkStatus.Disabled(
             network = network(networkName, networkRawId),
             cryptoCurrencies = listOf(currency("USDT")),
+            chainId = 1L,
         )
     }
 
