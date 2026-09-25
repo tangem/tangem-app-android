@@ -33,6 +33,8 @@ object NotificationsFactory {
             is GetFeeError.BlockchainErrors.TronActivationError -> add(
                 NotificationUM.Warning.TronAccountNotActivated(tokenName),
             )
+            is GetFeeError.GaslessError.TronActivationNotEnoughFunds -> add(feeError.toNotification())
+            is GetFeeError.GaslessError.TronActivationRateLimited -> addActivationRateLimited(feeError, onReload)
             is GetFeeError.DataError,
             is GetFeeError.UnknownError,
             -> add(
@@ -57,6 +59,7 @@ object NotificationsFactory {
             is GetFeeError.BlockchainErrors.TronActivationError -> add(
                 NotificationUM.Warning.TronAccountNotActivated(coinStatus.currency.name),
             )
+            is GetFeeError.GaslessError.TronActivationNotEnoughFunds -> add(feeError.toNotification())
             is GetFeeError.BlockchainErrors.KaspaZeroUtxo -> add(
                 NotificationUM.Error.TokenExceedsBalance(
                     networkIconId = coinStatus.currency.networkIconResId,
@@ -87,8 +90,8 @@ object NotificationsFactory {
                     NotificationUM.Warning.NetworkFeeUnreachable(onReload),
                 )
             }
-            is GetFeeError.UnknownError,
-            -> add(
+            is GetFeeError.GaslessError.TronActivationRateLimited -> addActivationRateLimited(feeError, onReload)
+            is GetFeeError.UnknownError -> add(
                 NotificationUM.Warning.NetworkFeeUnreachable(onReload),
             )
             else -> {
@@ -96,6 +99,23 @@ object NotificationsFactory {
             }
         }
     }
+
+    /**
+     * The fee row already explains the refusal. Reload is offered only for the service-wide limit, which can lift
+     * at any moment; a wallet over its own hourly limit would just be refused again.
+     */
+    private fun MutableList<NotificationUM>.addActivationRateLimited(
+        error: GetFeeError.GaslessError.TronActivationRateLimited,
+        onReload: () -> Unit,
+    ) {
+        if (!error.isPerWallet) add(NotificationUM.Warning.NetworkFeeUnreachable(onReload))
+    }
+
+    private fun GetFeeError.GaslessError.TronActivationNotEnoughFunds.toNotification() =
+        NotificationUM.Error.TronActivationNotEnoughFunds(
+            minimumAmount = minimumAmount.toPlainString(),
+            tokenSymbol = tokenSymbol,
+        )
 
     fun MutableList<NotificationUM>.addExceedBalanceNotification(
         feeAmount: BigDecimal,

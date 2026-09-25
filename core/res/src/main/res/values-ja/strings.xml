@@ -770,6 +770,9 @@
   <string name="force_update_warning_title">アップデートが必要です</string>
   <string name="gasless_not_enough_funds_to_cover_token_fee">残高不足</string>
   <string name="gasless_transaction_fee">取引手数料</string>
+  <string name="gasless_tron_activation_attempts_limit">複数回試行されました。しばらくしてからもう一度お試しください。</string>
+  <string name="gasless_tron_activation_min_balance_description">残高は%sより多くする必要があります。</string>
+  <string name="gasless_tron_activation_try_again_later">しばらくしてからもう一度お試しください。</string>
   <string name="generic_error">エラーが発生しました</string>
   <string name="generic_error_code">エラーが発生しました。コード: %s 。</string>
   <string name="generic_requires_memo_error">メモが必要</string>
