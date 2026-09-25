@@ -44,6 +44,44 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
     private val converter = onChainConverter()
 
+    @Test
+    fun `GIVEN joint transfer WHEN convert THEN the fee is shown approximate`() {
+        // Arrange — the fee of a joint operation is the refund cap it was signed with, not what was really paid
+        val refundCap = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18)
+        val tx = txInfo(
+            type = TransactionType.Joint.Transfer(
+                recipient = USER_ADDRESS,
+                amount = BigDecimal.ONE,
+                refundCapWei = BigDecimal("500000000000000"),
+                signaturesCount = 2,
+            ),
+            isOutgoing = true,
+            fee = refundCap,
+        )
+
+        // Act
+        val feeRow = converter.convert(tx).rows.single { it.label == resourceReference(R.string.common_network_fee_title) }
+
+        // Assert
+        assertThat(feeRow.value.resolveString()).startsWith("~")
+    }
+
+    @Test
+    fun `GIVEN outgoing personal transfer WHEN convert THEN the fee is exact`() {
+        // Arrange
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
+        )
+
+        // Act
+        val feeRow = converter.convert(tx).rows.single { it.label == resourceReference(R.string.common_network_fee_title) }
+
+        // Assert
+        assertThat(feeRow.value.resolveString()).doesNotContain("~")
+    }
+
     // region Header
 
     @ParameterizedTest
