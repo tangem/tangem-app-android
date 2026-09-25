@@ -48,6 +48,11 @@ internal class DefaultWcRequestService(
         _wcRequest.trySend(name to sr)
     }
 
+    override fun rejectNonBlock(request: WcSdkSessionRequest) {
+        TangemLogger.withTag(WC_TAG).i("reject request ${request.request.id} (UI dismissed by navigation)")
+        respondService.rejectRequestNonBlock(request)
+    }
+
     private fun filterDuplicateRequest(request: WcSdkSessionRequest): Boolean {
         val hash = respondService.sessionRequestHash(request)
         val now = DateTime.now().millis
