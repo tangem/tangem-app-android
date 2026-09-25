@@ -12,9 +12,12 @@ import com.reown.walletkit.client.WalletKit
 import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.domain.walletconnect.WC_TAG
 import com.tangem.domain.walletconnect.config.WalletConnectConfig
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -37,10 +40,15 @@ internal class WcSdk(
     private val application: Application,
     private val config: WalletConnectConfig,
     private val observers: () -> Set<WcSdkObserver>,
+    private val scope: AppCoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
     private val mutex = Mutex()
+
+    // Held on a scope of its own so that a cancelled caller leaves the in-flight start-up running: the SDK
+    // callback is already registered, and starting a second one would register the observers twice.
+    private var initialization: Deferred<Unit>? = null
 
     @Volatile
     var isInitialized: Boolean = false
@@ -49,11 +57,16 @@ internal class WcSdk(
     suspend fun ensureInitialized() {
         if (isInitialized) return
 
-        mutex.withLock {
-            if (isInitialized) return
-
-            initialize()
+        val inFlight = mutex.withLock {
+            initialization ?: scope.async { initialize() }.also { initialization = it }
         }
+
+        runSuspendCatching { inFlight.await() }
+            .onFailure { error ->
+                // Forget the failed attempt so the next caller starts a new one.
+                mutex.withLock { if (initialization === inFlight) initialization = null }
+                throw error
+            }
     }
 
     suspend fun pair(uri: String): Either<Throwable, Unit> = withStartedSdk {
