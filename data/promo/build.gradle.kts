@@ -18,6 +18,10 @@ dependencies {
     implementation(deps.kotlin.datetime)
     // endregion
 
+    // region Other libraries
+    implementation(deps.arrow.core)
+    // endregion
+
     // region DI
     implementation(deps.hilt.android)
     runtimeOnly(deps.room.runtime)

@@ -172,6 +172,7 @@ dependencies {
     implementation(projects.domain.notifications.models)
     implementation(projects.domain.feed.search)
     implementation(projects.domain.swap)
+    implementation(projects.domain.swap.models)
     implementation(projects.domain.walletManager)
     implementation(projects.domain.yieldSupply)
     implementation(projects.domain.polymarket)
