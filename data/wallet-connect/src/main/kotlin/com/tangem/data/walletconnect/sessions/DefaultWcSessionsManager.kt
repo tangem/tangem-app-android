@@ -21,6 +21,7 @@ import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
@@ -50,7 +51,13 @@ internal class DefaultWcSessionsManager(
     )
         .transformLatest { triple ->
             val (wallets, inStore, allWalletsAccounts) = triple
-            val inSdk: List<Wallet.Model.Session> = wcSdk.activeSessions()
+            // Skipping the update keeps this shared flow alive so a later emission retries. Treating a
+            // failure as "no sessions in the SDK" would make removeUnknownSessions drop the stored ones.
+            val inSdk: List<Wallet.Model.Session> = runSuspendCatching { wcSdk.getActiveSessions() }
+                .getOrElse { error ->
+                    TangemLogger.withTag(WC_TAG).e("Unable to read active sessions from the SDK", error)
+                    return@transformLatest
+                }
             val associatedSessions: List<WcSession> = associate(
                 inSdk = inSdk,
                 inStore = inStore,
@@ -173,7 +180,12 @@ internal class DefaultWcSessionsManager(
 
     private fun extendSessions() {
         scope.launch(dispatchers.io) {
-            val topics: List<String> = wcSdk.activeSessions().map { it.topic }
+            val topics: List<String> = runSuspendCatching { wcSdk.getActiveSessions() }
+                .getOrElse { error ->
+                    TangemLogger.withTag(WC_TAG).e("Unable to extend sessions", error)
+                    return@launch
+                }
+                .map { it.topic }
             val jobs = topics.map { topic -> launch { sdkSessionExtend(topic) } }
             jobs.joinAll()
         }

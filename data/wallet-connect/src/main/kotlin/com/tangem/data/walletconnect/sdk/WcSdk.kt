@@ -76,7 +76,7 @@ internal class WcSdk(
         }
     }
 
-    suspend fun activeSessions(): List<Wallet.Model.Session> {
+    suspend fun getActiveSessions(): List<Wallet.Model.Session> {
         ensureInitialized()
         return WalletKit.getListOfActiveSessions()
     }
@@ -101,9 +101,7 @@ internal class WcSdk(
         }
     }
 
-    suspend fun updateSession(
-        params: Wallet.Params.SessionUpdate,
-    ): Either<Throwable, Wallet.Params.SessionUpdate> = withStartedSdk {
+    suspend fun updateSession(params: Wallet.Params.SessionUpdate) = withStartedSdk {
         suspendCancellableCoroutine { continuation ->
             WalletKit.updateSession(
                 params = params,
@@ -113,9 +111,7 @@ internal class WcSdk(
         }
     }
 
-    suspend fun respondSessionRequest(
-        params: Wallet.Params.SessionRequestResponse,
-    ): Either<Throwable, Wallet.Params.SessionRequestResponse> = withStartedSdk {
+    suspend fun respondSessionRequest(params: Wallet.Params.SessionRequestResponse) = withStartedSdk {
         suspendCancellableCoroutine { continuation ->
             WalletKit.respondSessionRequest(
                 params = params,
@@ -145,13 +141,17 @@ internal class WcSdk(
     }
 
     /** Read failures propagate on purpose — see [com.tangem.data.walletconnect.respond.DefaultWcRespondService]. */
-    fun activeSessionByTopic(topic: String): Wallet.Model.Session? = WalletKit.getActiveSessionByTopic(topic)
+    fun getActiveSessionByTopic(topic: String): Wallet.Model.Session? = WalletKit.getActiveSessionByTopic(topic)
 
-    fun pendingSessionRequests(topic: String): List<Wallet.Model.SessionRequest> =
+    fun getPendingSessionRequests(topic: String): List<Wallet.Model.SessionRequest> =
         WalletKit.getPendingListOfSessionRequests(topic)
 
-    fun respondSessionRequestNonBlocking(params: Wallet.Params.SessionRequestResponse) {
-        WalletKit.respondSessionRequest(params = params, onSuccess = {}, onError = {})
+    fun respondSessionRequestNonBlocking(
+        params: Wallet.Params.SessionRequestResponse,
+        onSuccess: (Wallet.Params.SessionRequestResponse) -> Unit,
+        onError: (Wallet.Model.Error) -> Unit,
+    ) {
+        WalletKit.respondSessionRequest(params = params, onSuccess = onSuccess, onError = onError)
     }
 
     // Reown builds its Koin graph and Android components here, so it stays on the main thread the way the
