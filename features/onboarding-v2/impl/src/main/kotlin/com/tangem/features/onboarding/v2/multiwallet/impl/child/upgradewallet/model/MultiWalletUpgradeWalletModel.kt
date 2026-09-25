@@ -102,6 +102,9 @@ internal class MultiWalletUpgradeWalletModel @Inject constructor(
                         shouldReset = shouldReset,
                         mnemonic = privateInfo.mnemonic.mnemonicComponents.joinToString(" "),
                         passphrase = privateInfo.passphrase?.concatToString(),
+                        // The card takes over the mobile wallet's walletId, whose local registration
+                        // marker would otherwise skip the card's own registration.
+                        shouldForceColdRegistration = true,
                     )
 
                     when (result) {

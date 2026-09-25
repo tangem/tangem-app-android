@@ -21,10 +21,10 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chevron_right_16
-import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadingState
 import com.tangem.features.polymarket.impl.common.ui.PolymarketReloadPrompt
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketPositionsPreviewUM
 import com.tangem.features.polymarket.impl.positions.ui.PolymarketPositionCard
+import com.tangem.features.polymarket.impl.positions.ui.PolymarketPositionCardSkeleton
 
 @Composable
 internal fun PolymarketPositionsPreview(
@@ -61,7 +61,7 @@ internal fun PolymarketPositionsPreview(
             }
         }
         when (state) {
-            PolymarketPositionsPreviewUM.Loading -> PolymarketLoadingState()
+            PolymarketPositionsPreviewUM.Loading -> PolymarketPositionCardSkeleton()
             is PolymarketPositionsPreviewUM.Error -> PolymarketReloadPrompt(
                 text = resourceReference(R.string.prediction_positions_load_error),
                 onReloadClick = state.onRetry,

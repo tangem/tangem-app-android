@@ -12,6 +12,7 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.remote)
     /** Project - API */
     api(projects.features.promoBanners.api)
     implementation(projects.features.commonFeatures.api)
@@ -39,6 +40,7 @@ dependencies {
     api(projects.domain.wallets)
     api(projects.domain.account)
     implementation(projects.core.analytics.models)
+    implementation(projects.core.configToggles)
     implementation(projects.core.ui)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.markets.models)

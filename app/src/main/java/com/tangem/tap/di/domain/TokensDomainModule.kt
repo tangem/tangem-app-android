@@ -1,6 +1,5 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.domain.account.status.usecase.IsCryptoCurrencyCouldHideUseCase
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
@@ -26,10 +25,10 @@ import com.tangem.domain.tokens.repository.YieldSupplyWarningsViewedRepository
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.tap.domain.tokens.DefaultTokensFeatureToggles
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
-import com.tangem.tap.domain.tokens.DefaultTokensFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -51,9 +50,7 @@ internal object TokensDomainModule {
 
     @Provides
     @Singleton
-    fun provideTokensFeatureToggles(featureTogglesManager: FeatureTogglesManager): TokensFeatureToggles {
-        return DefaultTokensFeatureToggles(featureTogglesManager = featureTogglesManager)
-    }
+    fun provideTokensFeatureToggles(): TokensFeatureToggles = DefaultTokensFeatureToggles()
 
     @Provides
     @Singleton

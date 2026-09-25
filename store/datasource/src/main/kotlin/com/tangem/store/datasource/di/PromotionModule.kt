@@ -1,5 +1,7 @@
 package com.tangem.store.datasource.di
 
+import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
+import com.tangem.datasource.api.promotion.addPromotionEnumFallbackAdapters
 import com.tangem.datasource.api.promotion.models.PromotionsResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.core.local.datastore.RuntimeSharedStore
@@ -11,6 +13,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
 import javax.inject.Singleton
 
 @Module
@@ -28,5 +31,11 @@ object PromotionModule {
             store = RuntimeSharedStore<Map<UserWalletId, PromotionsResponse>>(),
             dispatchers = dispatchers,
         )
+    }
+
+    @Provides
+    @IntoSet
+    fun providePromotionEnumFallbackConfigurer(): NetworkMoshiConfigurer {
+        return NetworkMoshiConfigurer { it.addPromotionEnumFallbackAdapters() }
     }
 }

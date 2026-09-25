@@ -23,28 +23,33 @@ sealed class PaymentNetworkStatus {
     abstract val network: Network
 
     /**
+     * The backend's chain id for this network. Taken from the response rather than derived from [network]:
+     * non-EVM payment networks (Tron) have no chain id in the blockchain SDK.
+     */
+    abstract val chainId: Long
+
+    /**
      * @property depositAddress the network's deposit address; never empty — an `ENABLED` network the backend
      * has not provided an address for is dropped by the data layer instead of becoming [Available].
-     * @property chainId the backend's chain id for this network, as required by the withdrawal endpoints. Taken
-     * from the response rather than derived from [network]: non-EVM payment networks (Tron) have no chain id in
-     * the blockchain SDK.
      */
     @Serializable
     data class Available(
         override val network: Network,
+        override val chainId: Long,
         val depositAddress: String,
-        val chainId: Long,
         val cryptoCurrencyStatuses: List<CryptoCurrencyStatus>,
     ) : PaymentNetworkStatus()
 
     @Serializable
     data class NotIssued(
         override val network: Network,
+        override val chainId: Long,
     ) : PaymentNetworkStatus()
 
     @Serializable
     data class Disabled(
         override val network: Network,
+        override val chainId: Long,
         val cryptoCurrencies: List<CryptoCurrency>,
     ) : PaymentNetworkStatus()
 }

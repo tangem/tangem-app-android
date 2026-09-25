@@ -7,6 +7,17 @@ interface HotWalletAccessor {
 
     suspend fun signHashes(hotWalletId: HotWalletId, dataToSign: List<DataToSign>): List<SignedData>
 
+    /**
+     * Signs [dataToSign] reusing an already-established contextual unlock for [hotWalletId] (no auth
+     * prompt). Falls back to [signHashes] (which may prompt) when no contextual unlock is held — so a
+     * caller that established one via [unlockContextual] gets a prompt-free signature, while callers
+     * without a context keep the ordinary behaviour.
+     */
+    suspend fun signHashesReusingContextualUnlock(
+        hotWalletId: HotWalletId,
+        dataToSign: List<DataToSign>,
+    ): List<SignedData>
+
     suspend fun derivePublicKeys(hotWalletId: HotWalletId, request: DeriveWalletRequest): DerivedPublicKeyResponse
 
     suspend fun exportSeedPhrase(hotWalletId: HotWalletId): SeedPhrasePrivateInfo

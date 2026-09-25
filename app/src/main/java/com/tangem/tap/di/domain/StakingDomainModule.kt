@@ -266,7 +266,6 @@ internal object StakingDomainModule {
         blockAidVerifier: BlockAidVerifier,
         recognizer: StakingTransactionRecognizer,
         requestFactory: StakingBlockAidRequestFactory,
-        stakingFeatureToggles: StakingFeatureToggles,
         analyticsEventHandler: AnalyticsEventHandler,
         analyticsExceptionHandler: AnalyticsExceptionHandler,
     ): CheckStakingTransactionUseCase {
@@ -274,7 +273,6 @@ internal object StakingDomainModule {
             blockAidVerifier = blockAidVerifier,
             recognizer = recognizer,
             requestFactory = requestFactory,
-            stakingFeatureToggles = stakingFeatureToggles,
             analyticsEventHandler = analyticsEventHandler,
             analyticsExceptionHandler = analyticsExceptionHandler,
         )

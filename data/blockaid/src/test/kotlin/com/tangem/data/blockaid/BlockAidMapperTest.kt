@@ -76,6 +76,63 @@ class BlockAidMapperTest {
     }
 
     @Test
+    fun `GIVEN max erc20 approval with zero exposure WHEN mapToDomain THEN approval is unlimited`() {
+        // Arrange
+        val spenderDetails = SpenderDetails(
+            isApprovedForAll = false,
+            approval = "0x" + "f".repeat(64),
+            exposure = listOf(ExposureDetail(value = "0", rawValue = "0x0")),
+        )
+        val response = approveScanResponse(spenderDetails)
+
+        // Act
+        val result = mapper.mapToDomain(response)
+
+        // Assert
+        val approve = (result.simulation as SimulationResult.Success).data as SimulationData.Approve
+        val amount = approve.items.single() as ApproveInfo.Amount
+        Truth.assertThat(amount.isUnlimited).isTrue()
+    }
+
+    @Test
+    fun `GIVEN finite erc20 approval and exposure WHEN mapToDomain THEN approved amount is taken from approval`() {
+        // Arrange
+        val spenderDetails = SpenderDetails(
+            isApprovedForAll = false,
+            approval = "0x989680",
+            exposure = listOf(ExposureDetail(value = "500", rawValue = "0x1dcd6500")),
+        )
+        val response = approveScanResponse(spenderDetails)
+
+        // Act
+        val result = mapper.mapToDomain(response)
+
+        // Assert
+        val approve = (result.simulation as SimulationResult.Success).data as SimulationData.Approve
+        val amount = approve.items.single() as ApproveInfo.Amount
+        Truth.assertThat(amount.isUnlimited).isFalse()
+        Truth.assertThat(amount.approvedAmount).isEquivalentAccordingToCompareTo(BigDecimal.TEN)
+    }
+
+    private fun approveScanResponse(spenderDetails: SpenderDetails) = TransactionScanResponse(
+        validation = ValidationResponse(status = "Success", resultType = "Benign", description = ""),
+        simulation = SimulationResponse(
+            status = "Success",
+            accountSummary = AccountSummaryResponse(
+                assetsDiffs = emptyList(),
+                exposures = listOf(
+                    Exposure(
+                        asset = Asset(chainId = 1, logoUrl = "logo", symbol = "USDC", decimals = 6),
+                        spenders = mapOf("spender" to spenderDetails),
+                        assetType = "ERC20",
+                    ),
+                ),
+                traces = null,
+            ),
+        ),
+    )
+
+    @Test
     fun `when response benign validation and success simulation then returns send receive result`() {
         val assetDiff = AssetDiff(
             assetType = "ERC20",

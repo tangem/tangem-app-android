@@ -11,6 +11,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.jointaccount.model.JointPendingOperation
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
@@ -42,6 +43,7 @@ internal class WalletTokensListUMConverter(
     private val stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability>,
     private val accountIdsWithInvites: Set<String>,
     shouldShowMainPromo: Boolean,
+    private val jointPendingOperations: List<JointPendingOperation> = emptyList(),
 ) : Converter<AccountStatusList, WalletTokensListUM> {
 
     private val jointAccountRowConverter by lazy(LazyThreadSafetyMode.NONE) {
@@ -59,6 +61,7 @@ internal class WalletTokensListUMConverter(
             expandedAccounts = expandedAccounts,
             onAccountCollapseClick = clickIntents::onAccountCollapseClick,
             onAccountExpandClick = clickIntents::onAccountExpandClick,
+            jointPendingOperations = jointPendingOperations,
         )
     }
 
@@ -80,6 +83,8 @@ internal class WalletTokensListUMConverter(
             yieldModuleApyMap = yieldModuleApyMap,
             stakingAvailabilityMap = stakingAvailabilityMap,
             clickIntents = clickIntents,
+            userWalletId = selectedWallet.walletId,
+            jointPendingOperations = jointPendingOperations.filter { it.account.accountId == accountId },
         )
     }
 

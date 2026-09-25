@@ -10,6 +10,7 @@ import com.tangem.spend.datasource.config.TangemPay
 import com.tangem.spend.datasource.config.TangemPayEnvironmentConfig
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.TangemPayAuthApi
+import com.tangem.spend.datasource.pay.TangemPayProvisioningApi
 import com.tangem.spend.datasource.pay.addTangemPayEnumFallbackAdapters
 import com.tangem.spend.datasource.pay.models.response.RawJsonAdapter
 import com.tangem.spend.datasource.visa.VisaApi
@@ -65,6 +66,25 @@ internal object SpendDatasourceModule {
                     connectTimeoutSeconds = TIMEOUT_60_SECONDS,
                     readTimeoutSeconds = TIMEOUT_60_SECONDS,
                 ),
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideTangemPayProvisioningApi(factory: RetrofitFactory): TangemPayProvisioningApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = TangemPay.Bff.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+                timeouts = Timeouts(
+                    callTimeoutSeconds = TIMEOUT_60_SECONDS,
+                    connectTimeoutSeconds = TIMEOUT_60_SECONDS,
+                    readTimeoutSeconds = TIMEOUT_60_SECONDS,
+                ),
+                shouldSaveLogs = false,
+                isLoggable = false,
             ),
         )
     }

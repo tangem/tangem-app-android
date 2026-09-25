@@ -108,8 +108,8 @@ internal class DefaultTangemPayCurrencyFactory @Inject constructor(
                 }
                 PaymentNetworkStatus.Available(
                     network = network,
-                    depositAddress = address,
                     chainId = chainId,
+                    depositAddress = address,
                     cryptoCurrencyStatuses = tokensWithCurrency.map { (token, currency) ->
                         buildStatus(
                             currency = currency,
@@ -120,9 +120,13 @@ internal class DefaultTangemPayCurrencyFactory @Inject constructor(
                     },
                 )
             }
-            CustomerInfo.NetworkInfo.Status.NOT_ISSUED -> PaymentNetworkStatus.NotIssued(network = network)
+            CustomerInfo.NetworkInfo.Status.NOT_ISSUED -> PaymentNetworkStatus.NotIssued(
+                network = network,
+                chainId = chainId,
+            )
             CustomerInfo.NetworkInfo.Status.DISABLED -> PaymentNetworkStatus.Disabled(
                 network = network,
+                chainId = chainId,
                 cryptoCurrencies = currencies,
             )
         }
@@ -173,7 +177,6 @@ internal class DefaultTangemPayCurrencyFactory @Inject constructor(
                 networkAddress = networkAddress,
                 sources = CryptoCurrencyStatus.Sources(),
                 pendingTransactions = emptySet(),
-                stakingBalance = null,
                 yieldSupplyStatus = null,
                 hasCurrentNetworkTransactions = false,
             )
@@ -181,7 +184,6 @@ internal class DefaultTangemPayCurrencyFactory @Inject constructor(
             CryptoCurrencyStatus.NoQuote(
                 amount = amount,
                 networkAddress = networkAddress,
-                stakingBalance = null,
                 yieldSupplyStatus = null,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),

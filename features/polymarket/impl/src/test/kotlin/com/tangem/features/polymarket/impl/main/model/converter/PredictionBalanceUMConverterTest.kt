@@ -3,6 +3,7 @@ package com.tangem.features.polymarket.impl.main.model.converter
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
+import com.tangem.domain.polymarket.model.PredictionPositionsValue
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.model.PolymarketChainFamily
 import com.tangem.domain.polymarket.model.PolymarketDepositNetwork
@@ -41,6 +42,7 @@ internal class PredictionBalanceUMConverterTest {
         val actual = converter.convert(
             PredictionBalanceUMConverter.Input(
                 status = status,
+                positions = PredictionPositionsValue.Unknown,
                 requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
                 isTradingAllowed = model.isTradingAllowed,
                 mode = PredictionBalanceMode.AVAILABLE,
@@ -63,6 +65,7 @@ internal class PredictionBalanceUMConverterTest {
         val actual = converter.convert(
             PredictionBalanceUMConverter.Input(
                 status = status,
+                positions = PredictionPositionsValue.Unknown,
                 requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
                 isTradingAllowed = true,
                 mode = PredictionBalanceMode.AVAILABLE,
@@ -82,6 +85,7 @@ internal class PredictionBalanceUMConverterTest {
         val actual = converter.convert(
             PredictionBalanceUMConverter.Input(
                 status = status,
+                positions = PredictionPositionsValue.Unknown,
                 requisites = RequisitesState.Failed,
                 isTradingAllowed = true,
                 mode = PredictionBalanceMode.AVAILABLE,
@@ -109,10 +113,12 @@ internal class PredictionBalanceUMConverterTest {
     @Test
     fun `GIVEN the total mode WHEN converted THEN the balance states the collateral plus the positions`() {
         // Arrange
-        val status = active(balance = "12.5", positionsValue = "2.5")
+        val status = active(balance = "12.5")
 
         // Act
-        val actual = converter.convert(input(status = status, mode = PredictionBalanceMode.TOTAL))
+        val actual = converter.convert(
+            input(status = status, mode = PredictionBalanceMode.TOTAL, positions = positions(amount = "2.5")),
+        )
 
         // Assert
         assertThat(actual.balance.plainText()).isEqualTo("$15.00")
@@ -123,10 +129,12 @@ internal class PredictionBalanceUMConverterTest {
     @Test
     fun `GIVEN the available mode WHEN converted THEN the balance states the collateral alone`() {
         // Arrange
-        val status = active(balance = "12.5", positionsValue = "2.5")
+        val status = active(balance = "12.5")
 
         // Act
-        val actual = converter.convert(input(status = status, mode = PredictionBalanceMode.AVAILABLE))
+        val actual = converter.convert(
+            input(status = status, mode = PredictionBalanceMode.AVAILABLE, positions = positions(amount = "2.5")),
+        )
 
         // Assert
         assertThat(actual.balance.plainText()).isEqualTo("$12.50")
@@ -137,7 +145,7 @@ internal class PredictionBalanceUMConverterTest {
     @Test
     fun `GIVEN an unknown positions value WHEN the total mode is converted THEN it falls back to available`() {
         // Arrange
-        val status = active(balance = "12.5", positionsValue = null)
+        val status = active(balance = "12.5")
 
         // Act
         val actual = converter.convert(input(status = status, mode = PredictionBalanceMode.TOTAL))
@@ -198,6 +206,7 @@ internal class PredictionBalanceUMConverterTest {
         // Arrange
         val input = PredictionBalanceUMConverter.Input(
             status = ACTIVE,
+            positions = PredictionPositionsValue.Unknown,
             requisites = RequisitesState.Loading,
             isTradingAllowed = true,
             mode = PredictionBalanceMode.AVAILABLE,
@@ -217,6 +226,7 @@ internal class PredictionBalanceUMConverterTest {
         // Arrange
         val input = PredictionBalanceUMConverter.Input(
             status = ACTIVE,
+            positions = PredictionPositionsValue.Unknown,
             requisites = RequisitesState.Failed,
             isTradingAllowed = true,
             mode = PredictionBalanceMode.AVAILABLE,
@@ -235,6 +245,7 @@ internal class PredictionBalanceUMConverterTest {
         // Arrange
         val input = PredictionBalanceUMConverter.Input(
             status = ACTIVE,
+            positions = PredictionPositionsValue.Unknown,
             requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
             isTradingAllowed = true,
             mode = PredictionBalanceMode.AVAILABLE,
@@ -252,6 +263,7 @@ internal class PredictionBalanceUMConverterTest {
         // Arrange
         val input = PredictionBalanceUMConverter.Input(
             status = ACTIVE,
+            positions = PredictionPositionsValue.Unknown,
             requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
             isTradingAllowed = true,
             mode = PredictionBalanceMode.AVAILABLE,
@@ -269,6 +281,7 @@ internal class PredictionBalanceUMConverterTest {
         // Arrange
         val input = PredictionBalanceUMConverter.Input(
             status = ACTIVE,
+            positions = PredictionPositionsValue.Unknown,
             requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
             isTradingAllowed = false,
             mode = PredictionBalanceMode.AVAILABLE,
@@ -286,6 +299,7 @@ internal class PredictionBalanceUMConverterTest {
         // Arrange
         val input = PredictionBalanceUMConverter.Input(
             status = ACTIVE.copy(depositAddress = null),
+            positions = PredictionPositionsValue.Unknown,
             requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
             isTradingAllowed = true,
             mode = PredictionBalanceMode.AVAILABLE,
@@ -303,6 +317,7 @@ internal class PredictionBalanceUMConverterTest {
         // Arrange
         val input = PredictionBalanceUMConverter.Input(
             status = ACTIVE.copy(depositAddress = null),
+            positions = PredictionPositionsValue.Unknown,
             requisites = RequisitesState.Failed,
             isTradingAllowed = true,
             mode = PredictionBalanceMode.AVAILABLE,
@@ -321,6 +336,7 @@ internal class PredictionBalanceUMConverterTest {
         // Arrange
         val input = PredictionBalanceUMConverter.Input(
             status = PredictionAccountStatusValue.NotOnboarded,
+            positions = PredictionPositionsValue.Unknown,
             requisites = RequisitesState.Failed,
             isTradingAllowed = true,
             mode = PredictionBalanceMode.AVAILABLE,
@@ -400,9 +416,14 @@ internal class PredictionBalanceUMConverterTest {
         ),
     )
 
-    private fun input(status: PredictionAccountStatusValue, mode: PredictionBalanceMode) =
+    private fun input(
+        status: PredictionAccountStatusValue,
+        mode: PredictionBalanceMode,
+        positions: PredictionPositionsValue = PredictionPositionsValue.Unknown,
+    ) =
         PredictionBalanceUMConverter.Input(
             status = status,
+            positions = positions,
             requisites = RequisitesState.Loading,
             isTradingAllowed = true,
             mode = mode,
@@ -410,16 +431,17 @@ internal class PredictionBalanceUMConverterTest {
 
     private companion object {
 
-        fun active(balance: String, positionsValue: String? = null) = PredictionAccountStatusValue.Active(
+        fun active(balance: String) = PredictionAccountStatusValue.Active(
             source = StatusSource.ACTUAL,
             balance = BigDecimal(balance),
-            positionsValue = positionsValue?.let(::BigDecimal),
             fiatRate = BigDecimal.ONE,
             depositCurrency = mockk(relaxed = true),
             depositAddress = "0xbridge",
         )
 
         val ACTIVE = active(balance = "12.5")
+
+        fun positions(amount: String) = PredictionPositionsValue.Known(amount = BigDecimal(amount), source = StatusSource.ACTUAL)
 
         val DEPOSIT_TARGET = PolymarketDepositTarget(
             network = PolymarketDepositNetwork(

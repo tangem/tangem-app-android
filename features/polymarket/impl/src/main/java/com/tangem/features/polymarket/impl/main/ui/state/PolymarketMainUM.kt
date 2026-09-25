@@ -15,6 +15,7 @@ internal data class PolymarketMainUM(
     val categories: ImmutableList<PolymarketCategoryTabUM>,
     val content: ContentUM,
     val pullToRefreshConfig: PullToRefreshConfig,
+    val isCategoriesLoading: Boolean = false,
     val pendingScrollPosition: PolymarketFeedScrollPosition? = null,
     val positions: PolymarketPositionsPreviewUM = PolymarketPositionsPreviewUM.Loading,
     val isAwaitingFunds: Boolean = false,

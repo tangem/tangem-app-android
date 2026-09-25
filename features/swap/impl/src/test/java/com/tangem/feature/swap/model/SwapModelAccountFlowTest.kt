@@ -83,17 +83,14 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 /**
- * Tests for mode-based withdrawal detection driven by [AccountFlow] (instead of
- * inspecting the FROM slot's [Account] type) plus the hidden/no-op reverse (swap-direction) button
- * whenever the swap screen is opened in an account flow (Tangem Pay top-up/withdraw via swap).
+ * Tests for mode-based withdrawal detection driven by [AccountFlow] plus the hidden/no-op reverse
+ * (swap-direction) button whenever the swap screen is opened in an account flow (Tangem Pay
+ * top-up/withdraw via swap).
  *
- * Behaviour gated by [com.tangem.features.swap.SwapFeatureToggles.isAccountSwapFlowEnabled]:
- *  - toggle ON:  [SwapModel.isTangemPayWithdrawal] is driven purely by `accountFlow is Withdraw`,
- *    regardless of what is in the FROM slot; the reverse button is forced [ChangeCardsButtonState.HIDDEN]
- *    whenever an [AccountFlow] is present, and [SwapModel] exposes a callback for it
- *    (`uiState.onChangeCardsClicked`) that is a no-op.
- *  - toggle OFF: legacy behaviour — [SwapModel.isTangemPayWithdrawal] inspects the FROM slot's
- *    [Account] type, and the reverse button is never forced hidden.
+ * [SwapModel.isTangemPayWithdrawal] is true as soon as `accountFlow is Withdraw`, regardless of what is
+ * in the FROM slot, and stays true for a FROM slot holding an [Account.Payment] token outside any account
+ * flow. The reverse button is forced [ChangeCardsButtonState.HIDDEN] whenever an [AccountFlow] is present,
+ * and the callback [SwapModel] exposes for it (`uiState.onChangeCardsClicked`) is a no-op.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class SwapModelAccountFlowTest : SwapModelTestBase() {
@@ -122,9 +119,8 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     }
 
     @Test
-    fun `GIVEN Withdraw flow and toggle ON WHEN isTangemPayWithdrawal THEN true regardless of FROM slot`() = runTest {
+    fun `GIVEN Withdraw flow WHEN isTangemPayWithdrawal THEN true regardless of FROM slot`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         val model = createModel(accountFlow = AccountFlow.Withdraw)
         val fromWithPortfolioAccount = swapCurrencyStatus(account = mockk<Account.CryptoPortfolio>(relaxed = true))
 
@@ -136,13 +132,12 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     }
 
     @Test
-    fun `GIVEN TopUp flow and toggle ON WHEN FROM is a normal wallet token THEN isTangemPayWithdrawal false`() =
+    fun `GIVEN TopUp flow WHEN FROM is a normal wallet token THEN isTangemPayWithdrawal false`() =
         runTest {
             // Arrange — in a real TopUp flow, FROM is resolved to a wallet token from a crypto-portfolio
             // account (the Payment account is the TO side); it is never Account.Payment. See
             // InitialCurrenciesResolver.resolveAccountTopUpFromPriority, which only ever draws FROM from
             // cryptoPortfolioAccounts/cryptoCurrencyList.
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             val model = createModel(accountFlow = AccountFlow.TopUp)
             val fromWithPortfolioAccount = swapCurrencyStatus(account = mockk<Account.CryptoPortfolio>(relaxed = true))
 
@@ -154,14 +149,12 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         }
 
     @Test
-    fun `GIVEN no account flow and toggle ON WHEN FROM is a Payment account THEN isTangemPayWithdrawal true`() =
+    fun `GIVEN no account flow WHEN FROM is a Payment account THEN isTangemPayWithdrawal true`() =
         runTest {
-            // Arrange — even with the account-swap-flow toggle ON, a regular (non-Tangem-Pay)
-            // swap entry (accountFlow == null) still lets the user manually pick the Payment account as FROM
-            // (Settings.SwapFrom keeps the payment account visible). The legacy slot-based check must still
-            // catch that case so it is routed through withdrawal handling (CEX-only providers), matching
-            // legacy (toggle-OFF) behaviour.
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            // Arrange — a regular (non-Tangem-Pay) swap entry (accountFlow == null) still lets the user
+            // manually pick the Payment account as FROM (Settings.SwapFrom keeps the payment account
+            // visible). The slot-based check must catch that case so it is routed through withdrawal
+            // handling (CEX-only providers).
             val model = createModel(accountFlow = null)
             val fromWithPaymentAccount = swapCurrencyStatus(account = Account.Payment(userWalletId))
 
@@ -175,7 +168,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     @Test
     fun `GIVEN a target-only destination WHEN state emitted THEN reverse button HIDDEN`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
         val from = buildSwapCurrencyStatus(userWallet = mockk(relaxed = true))
         val to = from.copy(account = Account.Prediction(userWalletId))
         coEvery {
@@ -185,7 +177,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                 swapCurrencyPosition = any(),
                 accountFlow = any(),
                 initialToCryptoCurrency = any(),
-                isAccountFlowEnabled = any(),
             )
         } returns (from to to)
 
@@ -200,7 +191,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     @Test
     fun `GIVEN a portfolio destination WHEN state emitted THEN reverse button not forced hidden`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
         val from = buildSwapCurrencyStatus(userWallet = mockk(relaxed = true))
         coEvery {
             initialCurrenciesResolver.invoke(
@@ -209,7 +199,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                 swapCurrencyPosition = any(),
                 accountFlow = any(),
                 initialToCryptoCurrency = any(),
-                isAccountFlowEnabled = any(),
             )
         } returns (from to from)
 
@@ -222,9 +211,8 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     }
 
     @Test
-    fun `GIVEN account flow and toggle ON WHEN state emitted THEN reverse button HIDDEN`() = runTest {
+    fun `GIVEN an account flow WHEN state emitted THEN reverse button HIDDEN`() = runTest {
         // Arrange & Act
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         val model = createModel(accountFlow = AccountFlow.TopUp)
 
         // Assert
@@ -232,7 +220,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     }
 
     @Test
-    fun `GIVEN account flow and toggle ON WHEN model constructed THEN the very first state is already HIDDEN`() =
+    fun `GIVEN an account flow WHEN model constructed THEN the very first state is already HIDDEN`() =
         runTest {
             // Arrange — `initTokens()` (and every other `modelScope.launch { ... }` in `init {}`) is
             // dispatched on `main`/`mainImmediate`/`default`; the base's default dispatchers are all
@@ -241,7 +229,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             // field initializer itself. Using `StandardTestDispatcher` for every role instead defers
             // all of that until the scheduler is advanced, so the assertion below observes the
             // initializer's value directly.
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             val deferred = StandardTestDispatcher(testScheduler)
 
             // Act
@@ -264,7 +251,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                     swapCurrencyPosition = any(),
                     accountFlow = any(),
                     initialToCryptoCurrency = any(),
-                    isAccountFlowEnabled = any(),
                 )
             }
             assertThat(model.uiState.changeCardsButtonState).isEqualTo(ChangeCardsButtonState.HIDDEN)
@@ -275,9 +261,8 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         }
 
     @Test
-    fun `GIVEN no account flow and toggle ON WHEN state emitted THEN reverse button not forced hidden`() = runTest {
+    fun `GIVEN no account flow WHEN state emitted THEN reverse button not forced hidden`() = runTest {
         // Arrange & Act — standalone swap screen (no Tangem Pay account flow) must not be affected.
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         val model = createModel(accountFlow = null)
 
         // Assert
@@ -285,9 +270,8 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     }
 
     @Test
-    fun `GIVEN account flow and toggle ON WHEN onChangeCardsClicked invoked THEN no-op`() = runTest {
+    fun `GIVEN an account flow WHEN onChangeCardsClicked invoked THEN no-op`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         val model = createModel(accountFlow = AccountFlow.Withdraw)
         val fromStatus = swapCurrencyStatus()
         val toStatus = swapCurrencyStatus()
@@ -311,7 +295,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     @Test
     fun `GIVEN Withdraw flow WHEN from selector settings THEN Markets hidden`() = runTest {
         // Arrange & Act
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         val model = createModel(accountFlow = AccountFlow.Withdraw)
         advanceUntilIdle()
 
@@ -323,7 +306,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     @Test
     fun `GIVEN Withdraw flow WHEN from tokenFilter applied THEN only payment account tokens pass`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         val model = createModel(accountFlow = AccountFlow.Withdraw)
         advanceUntilIdle()
         val paymentAccountStatus = MockAccounts.createPaymentAccountStatus(userWalletId = userWalletId)
@@ -349,7 +331,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             // (the regular/non-withdraw predicate) excludes the already-picked FROM token — applying that
             // exclusion here would filter out the only row the Payment-only selector has, rendering it
             // empty. The predicate above (which leaves fromSwapCurrencyStatus null) does not catch this.
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             val model = createModel(accountFlow = AccountFlow.Withdraw)
             advanceUntilIdle()
             val paymentAccountStatus = MockAccounts.createPaymentAccountStatus(userWalletId = userWalletId)
@@ -369,7 +350,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     @Test
     fun `GIVEN Withdraw flow WHEN to selector settings THEN Markets stays shown`() = runTest {
         // Arrange & Act — the TO bridge is unaffected by the withdraw-FROM restriction.
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         val model = createModel(accountFlow = AccountFlow.Withdraw)
         advanceUntilIdle()
 
@@ -381,7 +361,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     @Test
     fun `GIVEN Withdraw flow WHEN from selector settings THEN payment account lists every issued token`() = runTest {
         // Arrange & Act
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         val model = createModel(accountFlow = AccountFlow.Withdraw)
         advanceUntilIdle()
 
@@ -394,7 +373,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     @Test
     fun `GIVEN Withdraw flow WHEN to selector settings THEN the payment account is hidden`() = runTest {
         // Arrange & Act — withdrawing into the same account is not an operation the user can make.
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         val model = createModel(accountFlow = AccountFlow.Withdraw)
         advanceUntilIdle()
 
@@ -407,7 +385,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     @Test
     fun `GIVEN TopUp flow WHEN from selector settings THEN the payment account is hidden`() = runTest {
         // Arrange & Act — funding the account from itself is not an operation the user can make.
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         val model = createModel(accountFlow = AccountFlow.TopUp)
         advanceUntilIdle()
 
@@ -419,8 +396,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
 
     @Test
     fun `GIVEN TopUp flow WHEN from selector settings THEN Markets stays shown`() = runTest {
-        // Arrange & Act — only Withdraw restricts the FROM selector; TopUp keeps legacy SwapFrom settings.
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        // Arrange & Act — only Withdraw restricts the FROM selector; TopUp keeps the plain SwapFrom settings.
         val model = createModel(accountFlow = AccountFlow.TopUp)
         advanceUntilIdle()
 
@@ -430,81 +406,21 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     }
 
     @Test
-    fun `GIVEN toggle OFF WHEN Withdraw flow THEN from selector settings stay legacy`() = runTest {
-        // Arrange & Act — the toggle gates the withdraw-FROM restriction just like it gates everything else.
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
-        val model = createModel(accountFlow = AccountFlow.Withdraw)
+    fun `GIVEN TopUp flow WHEN to selector settings THEN the account's issued tokens are the destinations`() = runTest {
+        // Arrange & Act — topping up targets the account, so every network it is issued on is a destination.
+        val model = createModel(accountFlow = AccountFlow.TopUp)
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.chooseFromTokenBridge.settings.chooserBlock).isInstanceOf(ChooserBlock.Market::class.java)
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN toggle OFF WHEN Withdraw flow THEN from tokenFilter is not restricted to payment account`() = runTest {
-        // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
-        val model = createModel(accountFlow = AccountFlow.Withdraw)
-        advanceUntilIdle()
-        val cryptoPortfolioStatus: AccountStatus.Personal = mockk(relaxed = true)
-        val btcStatus: CryptoCurrencyStatus = mockk(relaxed = true)
-
-        // Act
-        val predicate = model.chooseFromTokenBridge.tokenFilter.value
-
-        // Assert — a regular (non-Payment) account's token still passes when the toggle is off.
-        assertThat(predicate(cryptoPortfolioStatus, btcStatus)).isTrue()
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN toggle OFF WHEN Withdraw flow THEN from tokenFilter is byte-for-byte the to tokenFilter`() = runTest {
-        // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
-        val model = createModel(accountFlow = AccountFlow.Withdraw)
-        advanceUntilIdle()
-        val cryptoPortfolioStatus: AccountStatus.Personal = mockk(relaxed = true)
-        val someStatus: CryptoCurrencyStatus = mockk(relaxed = true)
-
-        // Act
-        val fromPredicate = model.chooseFromTokenBridge.tokenFilter.value
-        val toPredicate = model.chooseToTokenBridge.tokenFilter.value
-
-        // Assert — same base predicate on both sides when not in a Withdraw account flow.
-        assertThat(fromPredicate(cryptoPortfolioStatus, someStatus)).isEqualTo(
-            toPredicate(cryptoPortfolioStatus, someStatus),
+        assertThat(model.chooseToTokenBridge.settings).isEqualTo(
+            ChooseTokenBridge.Settings.SwapTo.copy(paymentAccountTokens = PaymentAccountTokens.IssuedTokens),
         )
         model.onDestroy()
     }
 
     @Test
-    fun `GIVEN toggle OFF WHEN Withdraw flow THEN legacy slot detection used`() = runTest {
+    fun `GIVEN Withdraw flow WHEN filterTangemPayProviders THEN only CEX providers kept`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
-        val model = createModel(accountFlow = AccountFlow.Withdraw)
-        val fromWithPaymentAccount = swapCurrencyStatus(account = Account.Payment(userWalletId))
-        val fromWithPortfolioAccount = swapCurrencyStatus(account = mockk<Account.CryptoPortfolio>(relaxed = true))
-
-        // Act & Assert
-        assertThat(model.isTangemPayWithdrawal(fromWithPaymentAccount)).isTrue()
-        assertThat(model.isTangemPayWithdrawal(fromWithPortfolioAccount)).isFalse()
-    }
-
-    @Test
-    fun `GIVEN toggle OFF WHEN account flow present THEN reverse button not forced hidden`() = runTest {
-        // Arrange & Act — legacy behaviour must be untouched by the account-flow field even if it is set.
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
-        val model = createModel(accountFlow = AccountFlow.Withdraw)
-
-        // Assert
-        assertThat(model.uiState.changeCardsButtonState).isNotEqualTo(ChangeCardsButtonState.HIDDEN)
-    }
-
-    @Test
-    fun `GIVEN Withdraw flow and toggle ON WHEN filterTangemPayProviders THEN only CEX providers kept`() = runTest {
-        // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         val model = createModel(accountFlow = AccountFlow.Withdraw)
         val cexProvider = swapProvider(id = "cex-1", type = ExchangeProviderType.CEX)
         val dexProvider = swapProvider(id = "dex-1", type = ExchangeProviderType.DEX)
@@ -528,9 +444,8 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     }
 
     @Test
-    fun `GIVEN TopUp flow and toggle ON WHEN filterTangemPayProviders THEN providers unfiltered`() = runTest {
+    fun `GIVEN TopUp flow WHEN filterTangemPayProviders THEN providers unfiltered`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         val model = createModel(accountFlow = AccountFlow.TopUp)
         val cexProvider = swapProvider(id = "cex-1", type = ExchangeProviderType.CEX)
         val dexProvider = swapProvider(id = "dex-1", type = ExchangeProviderType.DEX)
@@ -557,10 +472,9 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `GIVEN TopUp flow and toggle ON WHEN model constructed THEN receive card is USD locked and title is Add funds`() =
+    fun `GIVEN TopUp flow WHEN model constructed THEN receive card is USD locked and title is Add funds`() =
         runTest {
             // Arrange
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             val wallet = accountFlowUserWallet()
             val fromStatus = buildSwapCurrencyStatus(wallet)
             val toStatus = buildSwapCurrencyStatus(wallet)
@@ -571,7 +485,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                     swapCurrencyPosition = any(),
                     accountFlow = any(),
                     initialToCryptoCurrency = any(),
-                    isAccountFlowEnabled = any(),
                 )
             } returns (fromStatus to toStatus)
 
@@ -587,9 +500,8 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         }
 
     @Test
-    fun `GIVEN TopUp flow and toggle ON WHEN model constructed THEN send card is not locked`() = runTest {
+    fun `GIVEN TopUp flow WHEN model constructed THEN send card is not locked`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         val wallet = accountFlowUserWallet()
         val fromStatus = buildSwapCurrencyStatus(wallet)
         val toStatus = buildSwapCurrencyStatus(wallet)
@@ -600,7 +512,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                 swapCurrencyPosition = any(),
                 accountFlow = any(),
                 initialToCryptoCurrency = any(),
-                isAccountFlowEnabled = any(),
             )
         } returns (fromStatus to toStatus)
 
@@ -616,10 +527,9 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     }
 
     @Test
-    fun `GIVEN Withdraw flow and toggle ON WHEN model constructed THEN title is Withdraw and receive card unaffected`() =
+    fun `GIVEN Withdraw flow WHEN model constructed THEN title is Withdraw and receive card unaffected`() =
         runTest {
             // Arrange
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             val wallet = accountFlowUserWallet()
             val fromStatus = buildSwapCurrencyStatus(wallet)
             val toStatus = buildSwapCurrencyStatus(wallet)
@@ -630,7 +540,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                     swapCurrencyPosition = any(),
                     accountFlow = any(),
                     initialToCryptoCurrency = any(),
-                    isAccountFlowEnabled = any(),
                 )
             } returns (fromStatus to toStatus)
 
@@ -649,7 +558,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     @Test
     fun `GIVEN no account flow WHEN model constructed THEN title stays default Swap`() = runTest {
         // Arrange & Act
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         val model = createModel(accountFlow = null)
 
         // Assert
@@ -657,48 +565,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     }
 
     @Test
-    fun `GIVEN toggle OFF WHEN TopUp flow THEN title and receive card differ from the toggle-ON equivalent`() = runTest {
-        // Arrange — drive the SAME stubbed FROM/TO pair through a toggle-ON run first, capturing its (already
-        // separately verified) transformed title/card as a baseline. Asserting toggle-OFF differs from that
-        // baseline — rather than only asserting it equals the fields' own defaults — proves the toggle
-        // actually suppresses a real transform, not just that null/false happen to be the untouched defaults.
-        val wallet = accountFlowUserWallet()
-        val fromStatus = buildSwapCurrencyStatus(wallet)
-        val toStatus = buildSwapCurrencyStatus(wallet)
-        coEvery {
-            initialCurrenciesResolver.invoke(
-                userWalletId = any(),
-                initialCryptoCurrency = any(),
-                swapCurrencyPosition = any(),
-                accountFlow = any(),
-                initialToCryptoCurrency = any(),
-                isAccountFlowEnabled = any(),
-            )
-        } returns (fromStatus to toStatus)
-
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
-        val toggleOnModel = createModel(accountFlow = AccountFlow.TopUp)
-        val toggleOnReceiveCard = toggleOnModel.uiState.receiveCardData as SwapCardState.SwapCardData
-        assertThat(toggleOnReceiveCard.fiatSymbolOverride).isEqualTo("USD")
-        assertThat(toggleOnReceiveCard.currencyIconState).isInstanceOf(CurrencyIconState.PaymentAccount::class.java)
-        assertThat(toggleOnModel.uiState.titleId).isEqualTo(R.string.tangempay_card_details_add_funds)
-
-        // Act
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
-        val toggleOffModel = createModel(accountFlow = AccountFlow.TopUp)
-
-        // Assert — toggle OFF genuinely diverges from the toggle-ON baseline above.
-        assertThat(toggleOffModel.uiState.titleId).isNotEqualTo(toggleOnModel.uiState.titleId)
-        assertThat(toggleOffModel.uiState.titleId).isEqualTo(R.string.common_swap)
-        val toggleOffReceiveCard = toggleOffModel.uiState.receiveCardData as SwapCardState.SwapCardData
-        assertThat(toggleOffReceiveCard.fiatSymbolOverride).isNotEqualTo(toggleOnReceiveCard.fiatSymbolOverride)
-        assertThat(toggleOffReceiveCard.fiatSymbolOverride).isNull()
-        assertThat(toggleOffReceiveCard.isSelectionLocked).isFalse()
-        assertThat(toggleOffReceiveCard.currencyIconState).isNotInstanceOf(CurrencyIconState.PaymentAccount::class.java)
-    }
-
-    @Test
-    fun `GIVEN TopUp flow and toggle ON WHEN model constructed THEN CTA mode matches an equivalent non-account swap run`() =
+    fun `GIVEN TopUp flow WHEN model constructed THEN CTA mode matches an equivalent non-account swap run`() =
         runTest {
             // Arrange — hard constraint: abstracting the TO card must NOT repurpose the main button. Rather
             // than asserting the mode is "in" the full set of Mode entries (which is tautological — no value
@@ -707,7 +574,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             // CTA mode. This directly proves the account-flow presentation layer does not alter the CTA — a
             // future change that hardcodes/repurposes the CTA under an account flow would make the two
             // diverge and fail this test.
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             val wallet = accountFlowUserWallet()
             val fromStatus = buildSwapCurrencyStatus(wallet)
             val toStatus = buildSwapCurrencyStatus(wallet)
@@ -718,7 +584,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                     swapCurrencyPosition = any(),
                     accountFlow = any(),
                     initialToCryptoCurrency = any(),
-                    isAccountFlowEnabled = any(),
                 )
             } returns (fromStatus to toStatus)
 
@@ -731,88 +596,31 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             assertThat(topUpModel.uiState.swapButton.mode).isEqualTo(SwapButton.Mode.SWAP)
         }
 
-    // -------------------------------------------------------------------------
-    // Toggle-OFF regression — legacy behaviour must be untouched by AccountFlow
-    // regardless of which flow value is set, not just Withdraw (already covered above).
-    // -------------------------------------------------------------------------
-
     @Test
-    fun `GIVEN toggle OFF WHEN TopUp flow THEN legacy slot detection used for isTangemPayWithdrawal`() = runTest {
+    fun `GIVEN TopUp flow WHEN isTangemPayWithdrawal THEN only the FROM slot account decides`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
         val model = createModel(accountFlow = AccountFlow.TopUp)
         val fromWithPaymentAccount = swapCurrencyStatus(account = Account.Payment(userWalletId))
         val fromWithPortfolioAccount = swapCurrencyStatus(account = mockk<Account.CryptoPortfolio>(relaxed = true))
 
-        // Act & Assert — the TopUp AccountFlow value is ignored; only the FROM slot's Account type matters.
+        // Act & Assert — TopUp is not a withdrawal, so only the FROM slot's Account type matters.
         assertThat(model.isTangemPayWithdrawal(fromWithPaymentAccount)).isTrue()
         assertThat(model.isTangemPayWithdrawal(fromWithPortfolioAccount)).isFalse()
     }
 
-    @Test
-    fun `GIVEN toggle OFF WHEN TopUp flow THEN reverse button not forced hidden`() = runTest {
-        // Arrange & Act
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
-        val model = createModel(accountFlow = AccountFlow.TopUp)
-
-        // Assert
-        assertThat(model.uiState.changeCardsButtonState).isNotEqualTo(ChangeCardsButtonState.HIDDEN)
-    }
-
-    @Test
-    fun `GIVEN toggle OFF WHEN TopUp flow THEN from and to selector settings are the legacy SwapFrom and SwapTo`() =
-        runTest {
-            // Arrange & Act — whole-object equality: SwapFrom/WithdrawFrom differ only in chooserBlock, so this
-            // also proves the withdraw-only Market-hiding restriction does not leak into TopUp.
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
-            val model = createModel(accountFlow = AccountFlow.TopUp)
-            advanceUntilIdle()
-
-            // Assert
-            assertThat(model.chooseFromTokenBridge.settings).isEqualTo(ChooseTokenBridge.Settings.SwapFrom)
-            assertThat(model.chooseToTokenBridge.settings).isEqualTo(ChooseTokenBridge.Settings.SwapTo)
-            model.onDestroy()
-        }
-
-    @Test
-    fun `GIVEN toggle OFF WHEN Withdraw flow THEN from and to selector settings are the legacy SwapFrom and SwapTo`() =
-        runTest {
-            // Arrange & Act — complements the existing chooserBlock-only checks with a whole-object assertion
-            // and covers the TO side, which toggle-OFF Withdraw had no coverage for yet.
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
-            val model = createModel(accountFlow = AccountFlow.Withdraw)
-            advanceUntilIdle()
-
-            // Assert
-            assertThat(model.chooseFromTokenBridge.settings).isEqualTo(ChooseTokenBridge.Settings.SwapFrom)
-            assertThat(model.chooseToTokenBridge.settings).isEqualTo(ChooseTokenBridge.Settings.SwapTo)
-            model.onDestroy()
-        }
-
-    @Test
-    fun `GIVEN toggle OFF WHEN Withdraw flow THEN title stays default Swap`() = runTest {
-        // Arrange & Act — Withdraw+toggle-ON title override (asserted above) must not leak when the toggle is off.
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
-        val model = createModel(accountFlow = AccountFlow.Withdraw)
-
-        // Assert
-        assertThat(model.uiState.titleId).isEqualTo(R.string.common_swap)
-    }
-
     // -------------------------------------------------------------------------
-    // Non-account swap entries unchanged (accountFlow = null, toggle ON) — completes the
+    // Non-account swap entries unchanged (accountFlow = null) — completes the
     // existing title/reverse coverage with the selector-settings assertion.
     // -------------------------------------------------------------------------
 
     @Test
-    fun `GIVEN no account flow and toggle ON WHEN model constructed THEN from and to selector settings are SwapFrom and SwapTo`() =
+    fun `GIVEN no account flow WHEN model constructed THEN from and to selector settings are SwapFrom and SwapTo`() =
         runTest {
             // Arrange & Act
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             val model = createModel(accountFlow = null)
             advanceUntilIdle()
 
-            // Assert — a regular (non-Tangem-Pay) swap entry is unaffected by the account-swap-flow toggle.
+            // Assert — a regular (non-Tangem-Pay) swap entry keeps the plain selector settings.
             assertThat(model.chooseFromTokenBridge.settings).isEqualTo(ChooseTokenBridge.Settings.SwapFrom)
             assertThat(model.chooseToTokenBridge.settings).isEqualTo(ChooseTokenBridge.Settings.SwapTo)
             model.onDestroy()
@@ -831,7 +639,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     fun `GIVEN TopUp flow WHEN from is transfer-eligible (account's own token) THEN transfer path taken and no provider requested`() =
         runTest {
             // Arrange
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             val fromStatus = swapCurrencyStatus()
             val toStatus = swapCurrencyStatus()
             coEvery {
@@ -841,7 +648,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                     swapCurrencyPosition = any(),
                     accountFlow = any(),
                     initialToCryptoCurrency = any(),
-                    isAccountFlowEnabled = any(),
                 )
             } returns (fromStatus to toStatus)
             every { swapTransferInteractor.shouldTransferInsteadOfSwap(any(), any()) } returns true
@@ -877,7 +683,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     fun `GIVEN TopUp flow WHEN from is not transfer-eligible (a different token) THEN swap path taken and provider list requested`() =
         runTest {
             // Arrange
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             val fromStatus = swapCurrencyStatus()
             val toStatus = swapCurrencyStatus()
             coEvery {
@@ -887,7 +692,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                     swapCurrencyPosition = any(),
                     accountFlow = any(),
                     initialToCryptoCurrency = any(),
-                    isAccountFlowEnabled = any(),
                 )
             } returns (fromStatus to toStatus)
             every { swapTransferInteractor.shouldTransferInsteadOfSwap(any(), any()) } returns false
@@ -912,7 +716,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     @Test
     fun `GIVEN a prediction withdraw WHEN checked THEN it is not a Tangem Pay withdrawal`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
         val fromCollateral = swapCurrencyStatus(account = Account.Prediction(userWalletId))
 
@@ -927,7 +730,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     @Test
     fun `GIVEN a prediction withdraw WHEN reverse is clicked THEN the pair does not flip`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         val (collateral, destination) = stubResolvedPredictionPair()
         val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
         advanceUntilIdle()
@@ -946,7 +748,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     fun `GIVEN no account flow and the collateral in FROM WHEN reverse is clicked THEN the pair does not flip`() =
         runTest {
             // Arrange
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             val (collateral, destination) = stubResolvedPredictionPair()
             val model = createModel(accountFlow = null)
             advanceUntilIdle()
@@ -966,7 +767,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     fun `GIVEN a prediction withdraw WHEN the state is built THEN the send card is locked and the title is Withdraw`() =
         runTest {
             // Arrange
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             stubResolvedPredictionPair()
             stubTransferState()
             stubTransferStateBuilderPassthrough()
@@ -984,29 +784,9 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         }
 
     @Test
-    fun `GIVEN the account swap toggle is off WHEN a prediction withdraw is built THEN the withdraw presentation holds`() =
-        runTest {
-            // Arrange
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
-            stubResolvedPredictionPair(destination = polygonUsdcDestination())
-            stubTransferState(sendingAmount = BigDecimal("5"))
-            stubTransferStateBuilderPassthrough()
-
-            // Act
-            val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
-            advanceUntilIdle()
-
-            // Assert
-            assertThat(model.uiState.titleId).isEqualTo(R.string.prediction_main_withdraw)
-            assertThat((model.uiState.sendCardData as SwapCardState.SwapCardData).isSelectionLocked).isTrue()
-            model.onDestroy()
-        }
-
-    @Test
     fun `GIVEN a prediction top-up WHEN the state is built THEN the receive card is locked and the title is Add funds`() =
         runTest {
             // Arrange
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             stubResolvedTopUpPair()
 
             // Act
@@ -1022,26 +802,8 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         }
 
     @Test
-    fun `GIVEN the account swap toggle is off WHEN a prediction top-up is built THEN the top-up presentation holds`() =
-        runTest {
-            // Arrange
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
-            stubResolvedTopUpPair()
-
-            // Act
-            val model = createModel(accountFlow = AccountFlow.PredictionTopUp)
-            advanceUntilIdle()
-
-            // Assert
-            assertThat(model.uiState.titleId).isEqualTo(R.string.common_add_funds)
-            assertThat((model.uiState.receiveCardData as SwapCardState.SwapCardData).isSelectionLocked).isTrue()
-            model.onDestroy()
-        }
-
-    @Test
     fun `GIVEN a prediction top-up WHEN the state is built THEN the send card stays selectable`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         stubResolvedTopUpPair()
 
         // Act
@@ -1059,7 +821,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     fun `GIVEN a prediction top-up WHEN the destination is unresolved THEN the empty receive card is still locked`() =
         runTest {
             // Arrange
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             stubUnresolvedDestination()
 
             // Act
@@ -1076,7 +837,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     fun `GIVEN an account top-up WHEN the destination is unresolved THEN the empty receive card is still locked`() =
         runTest {
             // Arrange
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             stubUnresolvedDestination()
 
             // Act
@@ -1091,7 +851,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     @Test
     fun `GIVEN a prediction top-up WHEN reverse is clicked THEN the pair does not flip`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         val (from, collateral) = stubResolvedTopUpPair()
         val model = createModel(accountFlow = AccountFlow.PredictionTopUp)
         advanceUntilIdle()
@@ -1109,7 +868,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     @Test
     fun `GIVEN a prediction top-up WHEN the transfer is sent THEN the funding window opens`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         val model = createTopUpTransferModel(accountFlow = AccountFlow.PredictionTopUp)
 
         // Act
@@ -1125,7 +883,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     @Test
     fun `GIVEN a prediction top-up WHEN the swap is sent THEN the funding window opens`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         val model = createTopUpSwapModel(accountFlow = AccountFlow.PredictionTopUp)
 
         // Act
@@ -1141,7 +898,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     @Test
     fun `GIVEN no account flow WHEN the same transfer is sent THEN no funding window opens`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         val model = createTopUpTransferModel(accountFlow = null)
 
         // Act
@@ -1158,7 +914,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     fun `GIVEN a prediction withdraw WHEN to selector settings THEN the chooser offers USDC on Polygon to add, hides payment tokens and joint accounts`() =
         runTest {
             // Arrange
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
             advanceUntilIdle()
 
@@ -1184,7 +939,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     fun `GIVEN a prediction withdraw WHEN the currencies settle THEN the to tokenFilter is left to the predefined chooser`() =
         runTest {
             // Arrange
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             stubResolvedPredictionPair()
             val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
             advanceUntilIdle()
@@ -1204,7 +958,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     @Test
     fun `GIVEN a prediction withdraw WHEN no amount is entered yet THEN the button already reads Withdraw`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         stubResolvedPredictionPair()
         stubTransferState()
         stubTransferStateBuilderPassthrough()
@@ -1222,7 +975,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     @Test
     fun `GIVEN a prediction withdraw WHEN the button goes into progress THEN it reads Withdrawing`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         stubResolvedPredictionPair()
         stubTransferState()
         stubTransferStateBuilderPassthrough()
@@ -1243,7 +995,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     @Test
     fun `GIVEN a Tangem Pay withdraw WHEN no amount is entered yet THEN the button keeps its default label`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
 
         // Act
         val model = createModel(accountFlow = AccountFlow.Withdraw)
@@ -1257,7 +1008,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     @Test
     fun `GIVEN a prediction withdraw WHEN the destinations request fails THEN an error is shown`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         val currencyStatus: CryptoCurrencyStatus = mockk(relaxed = true)
         val portfolioStatus = personalAccountStatus(listOf(currencyStatus))
         every { multiAccountStatusListSupplier() } returns
@@ -1277,7 +1027,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     fun `GIVEN a prediction withdraw WHEN a destination is picked THEN the transfer path is taken and no provider is requested`() =
         runTest {
             // Arrange
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             stubResolvedPredictionPair()
             every { swapTransferInteractor.shouldTransferInsteadOfSwap(any(), any()) } returns false
             val transferState = stubTransferState()
@@ -1302,7 +1051,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     fun `GIVEN a prediction withdraw WHEN the amount is entered THEN no network fee is requested, none is shown and the button needs none`() =
         runTest {
             // Arrange
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             stubResolvedPredictionPair()
             stubTransferState()
             stubTransferStateBuilderPassthrough()
@@ -1335,7 +1083,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     fun `GIVEN a prediction withdraw WHEN the transfer state is built THEN the fee selector state is withheld from the builder`() =
         runTest {
             // Arrange
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             stubResolvedPredictionPair()
             stubTransferState()
             stubTransferStateBuilderPassthrough()
@@ -1364,7 +1111,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     fun `GIVEN a prediction withdraw WHEN confirmed THEN it is signed at once, tracked and the transfer success screen opens`() =
         runTest {
             // Arrange
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             stubResolvedPredictionPair(destination = polygonUsdcDestination())
             stubTransferState(sendingAmount = BigDecimal("5"))
             stubTransferStateBuilderPassthrough()
@@ -1401,7 +1147,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     fun `GIVEN the destinations are not loaded yet WHEN confirmed THEN they are fetched on demand and the withdrawal is submitted`() =
         runTest {
             // Arrange
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             val destination = polygonUsdcDestination()
             stubResolvedPredictionPair(destination = destination)
             val withdrawDestination = PredictionWithdrawDestination(
@@ -1439,7 +1184,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     fun `GIVEN a prediction withdraw WHEN confirmed THEN the recipient is the user's address on the destination network`() =
         runTest {
             // Arrange
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             stubResolvedPredictionPair(destination = polygonUsdcDestination())
             stubTransferState(sendingAmount = BigDecimal("5"))
             stubTransferStateBuilderPassthrough()
@@ -1478,7 +1222,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     fun `GIVEN a native destination WHEN confirmed THEN the bridge's own chain and asset are sent back`() =
         runTest {
             // Arrange
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             val destination = polygonCoinDestination()
             stubResolvedPredictionPair(
                 destination = destination,
@@ -1514,7 +1257,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     @Test
     fun `GIVEN a prediction withdraw WHEN the interactor fails THEN an alert is shown and nothing is tracked`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         stubResolvedPredictionPair(destination = polygonUsdcDestination())
         stubTransferState(sendingAmount = BigDecimal("5"))
         stubTransferStateBuilderPassthrough()
@@ -1542,7 +1284,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     fun `GIVEN a withdrawal already in flight WHEN confirmed THEN it is tracked, an alert is shown and the screen stays`() =
         runTest {
             // Arrange
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             stubResolvedPredictionPair(destination = polygonUsdcDestination())
             stubTransferState(sendingAmount = BigDecimal("5"))
             stubTransferStateBuilderPassthrough()
@@ -1571,7 +1312,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     @Test
     fun `GIVEN the card tap is cancelled WHEN confirmed THEN no alert is shown`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         stubResolvedPredictionPair(destination = polygonUsdcDestination())
         stubTransferState(sendingAmount = BigDecimal("5"))
         stubTransferStateBuilderPassthrough()
@@ -1598,7 +1338,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     @Test
     fun `GIVEN the card signing fails WHEN confirmed THEN an alert is shown`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         stubResolvedPredictionPair(destination = polygonUsdcDestination())
         stubTransferState(sendingAmount = BigDecimal("5"))
         stubTransferStateBuilderPassthrough()
@@ -1626,7 +1365,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     @Test
     fun `GIVEN an amount above the collateral balance WHEN entered THEN the primary button is disabled`() = runTest {
         // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         val (collateral, destination) = stubResolvedPredictionPair()
         val aboveBalance = requireNotNull(collateral.status.value.amount) + BigDecimal.ONE
         coEvery {
@@ -1859,7 +1597,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                 swapCurrencyPosition = any(),
                 accountFlow = any(),
                 initialToCryptoCurrency = any(),
-                isAccountFlowEnabled = any(),
             )
         } returns (collateral to destination)
         return collateral to destination
@@ -1874,7 +1611,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                 swapCurrencyPosition = any(),
                 accountFlow = any(),
                 initialToCryptoCurrency = any(),
-                isAccountFlowEnabled = any(),
             )
         } returns (from to null)
         return from
@@ -1890,7 +1626,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                 swapCurrencyPosition = any(),
                 accountFlow = any(),
                 initialToCryptoCurrency = any(),
-                isAccountFlowEnabled = any(),
             )
         } returns (from to collateral)
         every { swapTransferInteractor.shouldTransferInsteadOfSwap(any(), any()) } returns true
@@ -1956,7 +1691,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                 swapCurrencyPosition = any(),
                 accountFlow = any(),
                 initialToCryptoCurrency = any(),
-                isAccountFlowEnabled = any(),
             )
         } returns (from to collateral)
         return from to collateral
@@ -1982,7 +1716,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     fun `GIVEN withdraw and a multi token account WHEN from filter applied THEN every account currency passes`() =
         runTest {
             // Arrange
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             val polygonCurrency = accountCurrencyStatus(polygonCurrencyId, polygonNetworkId)
             val tronCurrency = accountCurrencyStatus(tronCurrencyId, tronNetworkId)
             val model = createModel(accountFlow = AccountFlow.Withdraw)
@@ -2089,7 +1822,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         accountCurrencies: List<CryptoCurrencyStatus>,
         anchoredToStatus: CryptoCurrencyStatus = accountCurrencies.first(),
     ): SwapModel {
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         val wallet = accountFlowUserWallet()
         val paymentAccount = MockAccounts.createPaymentAccountStatus(userWalletId = userWalletId).account
         val from = SwapCurrencyStatus(
@@ -2105,7 +1837,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                 swapCurrencyPosition = any(),
                 accountFlow = any(),
                 initialToCryptoCurrency = any(),
-                isAccountFlowEnabled = any(),
             )
         } returns (from to to)
         coEvery { accountUnderlyingCurrencies.get(userWalletId) } returns accountCurrencies

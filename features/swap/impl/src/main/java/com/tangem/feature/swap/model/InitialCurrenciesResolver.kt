@@ -70,19 +70,16 @@ internal class InitialCurrenciesResolver @Inject constructor(
      * @param swapCurrencyPosition preferred position for the initial currency
      * @param accountFlow non-null when the swap screen was opened for an account top-up/withdraw flow;
      *  `null` for a regular swap. Determines both where [initialCryptoCurrency] is looked up
-     *  (payment, prediction or crypto portfolio accounts) and, combined with [isAccountFlowEnabled],
-     *  which account FROM auto-fill priority applies.
-     * @param initialToCryptoCurrency optional currency to pre-select as TO. It is placed into the TO slot
-     *  ONLY if it already exists in the user's crypto portfolio (and the TO slot wasn't filled otherwise);
-     *  if the currency is not added to the wallet, the TO slot stays empty.
-     * @param isAccountFlowEnabled the account-swap-flow toggle. Decides which currencies a payment account
-     *  contributes (its issued networks vs. its single legacy currency) and overrides the resolved FROM with
-     *  the account flow's own priority. For [AccountFlow.TopUp]: (a) the most-funded wallet token that is one of the account's own
+     *  (payment, prediction or crypto portfolio accounts) and which account FROM auto-fill priority applies.
+     *  For [AccountFlow.TopUp]: (a) the most-funded wallet token that is one of the account's own
      *  underlying currencies ([AccountUnderlyingCurrencies]), if it has a balance — this turns the operation
      *  into a same-wallet transfer; (b) otherwise the regular most-funded wallet token; (c) otherwise `null`
      *  (falls through to "Choose token"). For [AccountFlow.Withdraw]: the account's most-funded token. For
      *  [AccountFlow.PredictionWithdraw]: the prediction account's collateral. For [AccountFlow.PredictionTopUp]:
      *  none — the prediction account is target-only, so FROM is already auto-filled from the portfolio.
+     * @param initialToCryptoCurrency optional currency to pre-select as TO. It is placed into the TO slot
+     *  ONLY if it already exists in the user's crypto portfolio (and the TO slot wasn't filled otherwise);
+     *  if the currency is not added to the wallet, the TO slot stays empty.
      * @return pair of (from, to) [SwapCurrencyStatus]; either or both may be null
      */
     suspend operator fun invoke(
@@ -91,11 +88,10 @@ internal class InitialCurrenciesResolver @Inject constructor(
         swapCurrencyPosition: CurrencyPosition,
         accountFlow: AccountFlow?,
         initialToCryptoCurrency: CryptoCurrency? = null,
-        isAccountFlowEnabled: Boolean = false,
     ): Pair<SwapCurrencyStatus?, SwapCurrencyStatus?> {
         val isPaymentAccount = accountFlow is AccountFlow.TopUp || accountFlow is AccountFlow.Withdraw
         val isPredictionWithdraw = accountFlow is AccountFlow.PredictionWithdraw
-        val walletAccountList = getWalletAccountCurrencyStatusList(userWalletId, isAccountFlowEnabled)
+        val walletAccountList = getWalletAccountCurrencyStatusList(userWalletId)
         val cryptoPortfolioAccounts = walletAccountList.filterKeys { accountStatus ->
             accountStatus is AccountStatus.CryptoPortfolio
         }.mapKeys { (key, _) -> key as AccountStatus.CryptoPortfolio }
@@ -141,21 +137,17 @@ internal class InitialCurrenciesResolver @Inject constructor(
             cryptoPortfolioAccountsMap = cryptoPortfolioAccounts,
         )
 
-        val prioritizedFrom = if (isAccountFlowEnabled) {
-            resolveAccountFlowFromPriority(
-                accountFlow = accountFlow,
-                from = from,
-                userWalletId = userWalletId,
-                cryptoPortfolioAccounts = fromEligibleAccounts,
-                accountFlowAccounts = lookupAccounts,
-            )
-        } else {
-            from
-        }
+        val prioritizedFrom = resolveAccountFlowFromPriority(
+            accountFlow = accountFlow,
+            from = from,
+            userWalletId = userWalletId,
+            cryptoPortfolioAccounts = fromEligibleAccounts,
+            accountFlowAccounts = lookupAccounts,
+        )
 
         // Add funds anchors TO to the account, but passes in its legacy currency, which a multichain account
         // may not hold: fall back to the account's own tokens instead of leaving the slot empty.
-        val anchoredTo = if (isAccountFlowEnabled && accountFlow is AccountFlow.TopUp) {
+        val anchoredTo = if (accountFlow is AccountFlow.TopUp) {
             resolvedTo ?: mostFundedAccountCurrency(cryptoPaymentAccounts)
         } else {
             resolvedTo
@@ -290,7 +282,6 @@ internal class InitialCurrenciesResolver @Inject constructor(
      */
     private suspend fun getWalletAccountCurrencyStatusList(
         userWalletId: UserWalletId,
-        isAccountFlowEnabled: Boolean,
     ): Map<AccountStatus, List<SwapCurrencyStatus>> {
         val userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: return emptyMap()
 
@@ -301,13 +292,13 @@ internal class InitialCurrenciesResolver @Inject constructor(
         return walletAccountCurrencyStatuses.associateWith { accountStatus ->
             val currencyStatuses = when (accountStatus) {
                 is AccountStatus.Personal -> accountStatus.flattenCurrencies()
-                is AccountStatus.Payment -> getPaymentAccountCurrencies(accountStatus, isAccountFlowEnabled)
+                is AccountStatus.Payment -> getPaymentAccountCurrencies(accountStatus)
                 // Virtual account isn't a swap source in the MVP (withdrawal reuses the send flow)
                 is AccountStatus.Money -> emptyList()
                 is AccountStatus.Prediction -> listOfNotNull(
                     (accountStatus.value as? PredictionAccountStatusValue.Active)?.cryptoCurrencyStatus,
                 )
-                is AccountStatus.Collectibles -> emptyList()
+                is AccountStatus.Collectibles -> listOfNotNull(accountStatus.value.cryptoCurrencyStatus)
                 is AccountStatus.Joint -> accountStatus.flattenCurrencies()
             }
             val availabilityStates = rampStateManager.availableForSwap(
@@ -326,27 +317,14 @@ internal class InitialCurrenciesResolver @Inject constructor(
         }
     }
 
-    /**
-     * Every currency the payment account is issued on — the same set the token selector lists — or, while the
-     * account flow is off, only the first of them, because the pre-multichain screens resolve against a single
-     * account currency.
-     */
-    private fun getPaymentAccountCurrencies(
-        accountStatus: AccountStatus.Payment,
-        isAccountFlowEnabled: Boolean,
-    ): List<CryptoCurrencyStatus> {
+    /** Every currency the payment account is issued on — the same set the token selector lists. */
+    private fun getPaymentAccountCurrencies(accountStatus: AccountStatus.Payment): List<CryptoCurrencyStatus> {
         return when (val statusValue = accountStatus.value) {
-            is PaymentAccountStatusValue.Loaded -> statusValue.currencies(isAccountFlowEnabled)
-            is PaymentAccountStatusValue.Deactivated -> statusValue.currencies(isAccountFlowEnabled)
+            is PaymentAccountStatusValue.Loaded -> statusValue.cryptoCurrencyStatuses
+            is PaymentAccountStatusValue.Deactivated -> statusValue.cryptoCurrencyStatuses
             else -> emptyList()
         }
     }
-
-    private fun PaymentAccountStatusValue.Loaded.currencies(isAccountFlowEnabled: Boolean) =
-        if (isAccountFlowEnabled) cryptoCurrencyStatuses else cryptoCurrencyStatuses.take(1)
-
-    private fun PaymentAccountStatusValue.Deactivated.currencies(isAccountFlowEnabled: Boolean) =
-        if (isAccountFlowEnabled) cryptoCurrencyStatuses else cryptoCurrencyStatuses.take(1)
 
     /**
      * Places the [selectedSwapCurrencyStatus] into the FROM or TO slot based on [swapCurrencyPosition].

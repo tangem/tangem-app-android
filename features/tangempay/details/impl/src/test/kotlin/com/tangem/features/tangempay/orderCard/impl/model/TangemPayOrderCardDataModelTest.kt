@@ -53,7 +53,9 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 
 private const val COUNTRY = "US"
@@ -253,21 +255,64 @@ internal class TangemPayOrderCardDataModelTest {
     }
 
     @Test
-    fun `GIVEN accented latin address WHEN filled THEN no error and submittable`() = runTest {
+    fun `GIVEN typographic quotes and a no-break space WHEN order clicked THEN plain ones submitted`() = runTest {
+        // Arrange
+        val model = createLoadedModel()
+        model.fillValidForm(embossName = "JOHNNY\u00A0SILVERHAND", lastName = "O‘Brien", line1 = "Crescent\u00A0st. 24")
+
+        // Act
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(submitted).isEqualTo(
+            PlasticCardOrder(
+                embossName = "JOHNNY SILVERHAND",
+                shippingAddress = ShippingAddress(
+                    firstName = "Johnny",
+                    lastName = "O'Brien",
+                    region = "California",
+                    city = "Night City",
+                    line1 = "Crescent st. 24",
+                    line2 = "Apt. 56",
+                    postalCode = "0000",
+                    phone = "+12345678901",
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN a name on card longer than 26 characters WHEN typed THEN it is cut to 26`() = runTest {
         // Arrange
         val model = createLoadedModel()
 
         // Act
-        model.fillValidForm(city = "São Paulo", region = "Île-de-France", lastName = "Müller")
+        model.form.embossName.onValueChange("JOHNNY SILVERHAND OF NIGHT CITY")
 
         // Assert
-        assertThat(model.form.city.error).isNull()
-        assertThat(model.form.lastName.error).isNull()
-        assertThat(model.form.isOrderEnabled).isTrue()
+        assertThat(model.form.embossName.value).isEqualTo("JOHNNY SILVERHAND OF NIGHT")
+    }
+
+    @ParameterizedTest
+    @EnumSource(OrderFormField::class)
+    fun `GIVEN a valid form WHEN an accented value is typed THEN latin only error shown at once`(
+        field: OrderFormField,
+    ) = runTest {
+        // Arrange
+        val model = createLoadedModel()
+        model.fillValidForm()
+
+        // Act
+        field.read(model.form).onValueChange("São Paulo")
+
+        // Assert
+        assertThat(field.read(model.form).error).isEqualTo(OrderFieldError.NonLatin)
+        assertThat(model.form.isOrderEnabled).isFalse()
     }
 
     @Test
-    fun `GIVEN non-latin city WHEN still typing THEN no error yet but order disabled`() = runTest {
+    fun `GIVEN non-latin city WHEN typed THEN latin only error shown at once and order disabled`() = runTest {
         // Arrange
         val model = createLoadedModel()
 
@@ -275,12 +320,12 @@ internal class TangemPayOrderCardDataModelTest {
         model.fillValidForm(city = "Москва")
 
         // Assert
-        assertThat(model.form.city.error).isNull()
+        assertThat(model.form.city.error).isEqualTo(OrderFieldError.NonLatin)
         assertThat(model.form.isOrderEnabled).isFalse()
     }
 
     @Test
-    fun `GIVEN non-latin city WHEN field blurred THEN error shown and not submitted`() = runTest {
+    fun `GIVEN a latin only error WHEN field blurred THEN it stays and nothing is submitted`() = runTest {
         // Arrange
         val model = createLoadedModel()
         model.fillValidForm(city = "Москва")
@@ -326,7 +371,33 @@ internal class TangemPayOrderCardDataModelTest {
     }
 
     @Test
-    fun `GIVEN focus gained on invalid field WHEN not blurred THEN no error`() = runTest {
+    fun `GIVEN a filled required field WHEN cleared while typing THEN no required error yet`() = runTest {
+        // Arrange
+        val model = createLoadedModel()
+        model.fillValidForm()
+
+        // Act
+        model.form.city.onValueChange("")
+
+        // Assert
+        assertThat(model.form.city.error).isNull()
+        assertThat(model.form.isOrderEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN an empty required field WHEN focus gained THEN no error`() = runTest {
+        // Arrange
+        val model = createLoadedModel()
+
+        // Act
+        model.form.city.onFocusChange(true)
+
+        // Assert
+        assertThat(model.form.city.error).isNull()
+    }
+
+    @Test
+    fun `GIVEN a latin only error WHEN focus gained THEN it stays`() = runTest {
         // Arrange
         val model = createLoadedModel()
         model.fillValidForm(city = "Москва")
@@ -335,7 +406,7 @@ internal class TangemPayOrderCardDataModelTest {
         model.form.city.onFocusChange(true)
 
         // Assert
-        assertThat(model.form.city.error).isNull()
+        assertThat(model.form.city.error).isEqualTo(OrderFieldError.NonLatin)
     }
 
     @Test
@@ -361,20 +432,6 @@ internal class TangemPayOrderCardDataModelTest {
 
         // Assert
         assertThat(model.form.addressLine2.error).isNull()
-    }
-
-    @Test
-    fun `GIVEN non-ascii emboss name WHEN blurred THEN invalid error and order disabled`() = runTest {
-        // Arrange
-        val model = createLoadedModel()
-        model.fillValidForm(embossName = "José")
-
-        // Act
-        model.form.embossName.onFocusChange(false)
-
-        // Assert
-        assertThat(model.form.embossName.error).isEqualTo(OrderFieldError.NonLatin)
-        assertThat(model.form.isOrderEnabled).isFalse()
     }
 
     @Test
@@ -577,11 +634,14 @@ internal class TangemPayOrderCardDataModelTest {
         assertThat(submitted?.embossName).isEqualTo(CUSTOMER_EMBOSS_NAME)
     }
 
-    @Test
-    fun `GIVEN a non-latin customer emboss name WHEN the form loads THEN the emboss name is empty`() = runTest {
+    @ParameterizedTest
+    @ValueSource(strings = ["JOSÉ PÉREZ", "KERRY/EUROBEAT", "JOHNNY SILVERHAND OF NIGHT CITY"])
+    fun `GIVEN a customer emboss name outside the charset WHEN the form loads THEN it is left empty`(
+        embossName: String,
+    ) = runTest {
         // Arrange
         coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns
-            customerInfo(customerEmbossName = "JOSÉ PÉREZ").right()
+            customerInfo(customerEmbossName = embossName).right()
 
         // Act
         val model = createLoadedModel()

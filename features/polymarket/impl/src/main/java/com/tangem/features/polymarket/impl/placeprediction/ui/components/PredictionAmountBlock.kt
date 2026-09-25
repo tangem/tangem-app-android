@@ -47,6 +47,7 @@ internal fun PredictionAmountBlock(
     amountCaption: AmountCaptionUM?,
     collateral: CollateralUM,
     balance: BigDecimal?,
+    isAddFundsEnabled: Boolean,
     onAmountChange: (String) -> Unit,
     onAddFundsClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -89,6 +90,7 @@ internal fun PredictionAmountBlock(
                         variant = TangemButton.Variant.Secondary,
                         size = TangemButton.Size.X7,
                         text = resourceReference(R.string.common_add_funds),
+                        isEnabled = isAddFundsEnabled,
                         onClick = onAddFundsClick,
                     )
                 },

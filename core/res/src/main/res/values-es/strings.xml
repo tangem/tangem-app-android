@@ -980,6 +980,7 @@
   <string name="introduction_create_wallet_seed_phrase_description">Empieza sin una wallet de hardware</string>
   <string name="introduction_create_wallet_seed_phrase_title">Crear wallet con frase semilla</string>
   <string name="introduction_i_have_wallet_hardware_description">Usa Tangem Wallet para entrar en la app</string>
+  <string name="introduction_i_have_wallet_sign_in_google_title">Iniciar sesión con Google</string>
   <string name="introduction_import_icloud_not_found">No se encontró la copia de seguridad de iCloud</string>
   <string name="introduction_import_icloud_restore">Restaurar copia de iCloud</string>
   <string name="introduction_import_icloud_retry">Reintentar copia de iCloud</string>
@@ -991,14 +992,14 @@
   <string name="introduction_stories_button_primary">Escanea tu wallet</string>
   <string name="introduction_stories_button_secondary">Más información o comprar</string>
   <string name="introduction_stories_four_subtitle">Únete a la wallet self-custody usada en todo el mundo</string>
-  <string name="introduction_stories_four_title">La confianza de millones</string>
+  <string name="introduction_stories_four_title">Con la confianza de millones</string>
   <string name="introduction_stories_one_subtitle">Confirma cada acción con tu Tangem</string>
   <string name="introduction_stories_one_title">Controla tu cripto con un toque</string>
   <string name="introduction_stories_three_subtitle">Tus claves privadas nunca salen de la tarjeta.</string>
   <string name="introduction_stories_three_title">Tus claves, tu cripto</string>
   <string name="introduction_stories_two_subtitle">Usa cualquiera de tus tarjetas para acceder a tu wallet</string>
   <string name="introduction_stories_two_title">Una wallet, varias tarjetas</string>
-  <string name="introduction_subtitle">En la única app que necesitas</string>
+  <string name="introduction_subtitle">Un solo lugar seguro para todo lo que tienes</string>
   <string name="introduction_terms_of_service">Términos del servicio</string>
   <string name="introduction_title">Guarda todos tus activos</string>
   <string name="key_invalidated_warning_description">Ha actualizado la biometría, escanee su tarjeta o anillo para entrar</string>

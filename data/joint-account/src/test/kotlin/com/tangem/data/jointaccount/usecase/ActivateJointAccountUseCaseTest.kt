@@ -136,6 +136,28 @@ internal class ActivateJointAccountUseCaseTest {
         assertThat(payloadSlot.captured.config.safeAddress).isEqualTo(computedSafeAddress(model.singleton))
     }
 
+    @Test
+    fun `GIVEN backend spells the address in lowercase WHEN invoke THEN that spelling is signed and sent`() = runTest {
+        // Arrange — the backend stores the config it compares with, so the payload must carry its exact string
+        val lowercaseAddress = computedSafeAddress(SafeSingleton.SAFE_L2).lowercase()
+        val jointAccount = jointAccount(safeAddress = lowercaseAddress)
+        every { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns flowOf(listOf(jointAccount))
+        val inputSlot = slot<JointAccountSignInput>()
+        coEvery { signer.sign(userWalletId = MockAccounts.userWalletId, input = capture(inputSlot)) } returns
+            signResult().right()
+        val payloadSlot = slot<JointAccountActivationPayload>()
+        coEvery { repository.activate(any(), capture(payloadSlot), any()) } returns Unit.right()
+
+        // Act
+        val actual = useCase(account = account)
+
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+        assertThat(payloadSlot.captured.config.safeAddress).isEqualTo(lowercaseAddress)
+        // The signed payload carries the same spelling as the one sent
+        assertThat(inputSlot.captured.makePayload(OWNER_ADDRESS)).isEqualTo(payloadSlot.captured)
+    }
+
     private fun provideTestModels() = SafeSingleton.entries.map(::SingletonModel)
 
     data class SingletonModel(val singleton: SafeSingleton)

@@ -10,6 +10,7 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.remote)
 
     implementation(projects.domain.common)
     implementation(projects.domain.walletManager)

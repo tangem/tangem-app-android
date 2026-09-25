@@ -42,6 +42,7 @@ dependencies {
     implementation(projects.domain.wallets.models)
 
     /** Compose */
+    implementation(deps.androidx.activity.compose)
     implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)

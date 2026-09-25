@@ -6,7 +6,6 @@ import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.currency.balance.BalanceContribution
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.staking.BalanceItem
 import com.tangem.domain.models.staking.BalanceType
@@ -22,8 +21,8 @@ import java.math.BigDecimal
 
 /**
  * Characterization tests for [CryptoCurrencyStatusExt] — the per-currency total helpers
- * (`getTotalFiatAmount` / `getTotalCryptoAmount`), which currently fold the staking balance into the
- * displayed amount and are directly rewritten by the `BalanceContribution` migration.
+ * (`getTotalFiatAmount` / `getTotalCryptoAmount`), which fold the balance contributions of a status into the
+ * displayed amount.
  *
  * They also lock the "yield-supply adds zero" invariant at the per-currency level: these helpers never
  * read `yieldSupplyStatus`, so a yield token's total is its bare amount. The staking branch is driven
@@ -155,85 +154,63 @@ internal class CryptoCurrencyStatusExtTest {
     }
 
     /**
-     * The migration gate at the read site: `getExtraBalanceOrNull` prefers
-     * [CryptoCurrencyStatus.Value.contributions] (filled only while `TWI_1717_BALANCE_CONTRIBUTIONS` is on) and
-     * otherwise falls back to the legacy typed field. Both modes must produce the same numbers — that is what
-     * makes the toggle safe to flip in either direction.
+     * `getExtraBalanceOrNull` reads [CryptoCurrencyStatus.Value.contributions] and nothing else: a producer that
+     * reports no contribution adds nothing to the displayed total, whatever other state the status carries.
      */
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class ToggleParity {
+    inner class GetExtraBalanceOrNull {
 
         @Test
-        fun `GIVEN staking WHEN toggle on and off THEN every total is identical`() {
-            // Arrange — the same staking balance seen through both architectures
-            val legacy = loadedWithStaking(useContributions = false)
-            val contributions = loadedWithStaking(useContributions = true)
-
-            // Act & Assert
-            assertThat(contributions.getExtraBalanceOrNull()).isEqualTo(legacy.getExtraBalanceOrNull())
-            assertThat(contributions.getTotalCryptoAmount()).isEqualTo(legacy.getTotalCryptoAmount())
-            assertThat(contributions.getTotalFiatAmount()).isEqualTo(legacy.getTotalFiatAmount())
-        }
-
-        @Test
-        fun `GIVEN toggle on WHEN getTotalCryptoAmount THEN staked amount is added`() {
+        fun `GIVEN a staking contribution WHEN getExtraBalanceOrNull THEN returns its delta`() {
             // Arrange
-            val status = loadedWithStaking(useContributions = true)
+            val status = loaded(
+                amount = BigDecimal.TEN,
+                fiatAmount = BigDecimal.TEN,
+                fiatRate = BigDecimal.ONE,
+                staking = stakeKit(staked = 9),
+            )
 
             // Act
-            val actual = status.getTotalCryptoAmount()
+            val actual = status.getExtraBalanceOrNull()
 
-            // Assert — Ethereum, so the staked principal sits outside the network balance: 10 + 9
-            assertThat(actual).isEqualTo(BigDecimal(19))
+            // Assert
+            assertThat(actual).isEqualTo(BigDecimal(9))
         }
 
         @Test
-        fun `GIVEN no staking WHEN getExtraBalanceOrNull THEN null in both modes`() {
+        fun `GIVEN no contributions WHEN getExtraBalanceOrNull THEN null`() {
             // Arrange
-            val legacy = loaded(
+            val status = loaded(
                 amount = BigDecimal.TEN,
                 fiatAmount = BigDecimal.TEN,
                 fiatRate = BigDecimal.ONE,
                 staking = null,
-            )
-            val contributions = loaded(
-                amount = BigDecimal.TEN,
-                fiatAmount = BigDecimal.TEN,
-                fiatRate = BigDecimal.ONE,
-                staking = null,
-                useContributions = true,
             )
 
-            // Act & Assert
-            assertThat(legacy.getExtraBalanceOrNull()).isNull()
-            assertThat(contributions.getExtraBalanceOrNull()).isNull()
+            // Act
+            val actual = status.getExtraBalanceOrNull()
+
+            // Assert
+            assertThat(actual).isNull()
         }
 
         @Test
-        fun `GIVEN yield supply only WHEN getExtraBalanceOrNull THEN null`() {
-            // Arrange — yield supply is not a contribution yet; it is projected by its own provider later
+        fun `GIVEN yield supply status but no contributions WHEN getExtraBalanceOrNull THEN null`() {
+            // Arrange
             val status = loaded(
                 amount = BigDecimal.TEN,
                 fiatAmount = BigDecimal.TEN,
                 fiatRate = BigDecimal.ONE,
                 staking = null,
                 yieldSupplyStatus = activeYieldSupply(),
-                useContributions = true,
             )
 
-            // Act & Assert
-            assertThat(status.getExtraBalanceOrNull()).isNull()
-        }
+            // Act
+            val actual = status.getExtraBalanceOrNull()
 
-        private fun loadedWithStaking(useContributions: Boolean): CryptoCurrencyStatus {
-            return loaded(
-                amount = BigDecimal.TEN,
-                fiatAmount = BigDecimal.TEN,
-                fiatRate = BigDecimal.ONE,
-                staking = stakeKit(staked = 9),
-                useContributions = useContributions,
-            )
+            // Assert
+            assertThat(actual).isNull()
         }
     }
 
@@ -244,7 +221,6 @@ internal class CryptoCurrencyStatusExtTest {
         fiatRate: BigDecimal,
         staking: StakingBalance?,
         yieldSupplyStatus: YieldSupplyStatus? = null,
-        useContributions: Boolean = false,
     ): CryptoCurrencyStatus {
         return CryptoCurrencyStatus(
             currency = currency,
@@ -253,16 +229,12 @@ internal class CryptoCurrencyStatusExtTest {
                 fiatAmount = fiatAmount,
                 fiatRate = fiatRate,
                 priceChange = BigDecimal.ZERO,
-                // mirrors CryptoCurrencyStatusFactory, which nulls the typed field whenever contributions are
-                // on: a status carrying BOTH cannot occur in production, and would let every parity assertion
-                // below pass off the legacy fallback even if the contributions path were dead
-                stakingBalance = staking.takeIf { !useContributions },
                 yieldSupplyStatus = yieldSupplyStatus,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),
                 networkAddress = networkAddress(),
                 sources = CryptoCurrencyStatus.Sources(),
-                contributions = if (useContributions) listOfNotNull(staking as? BalanceContribution) else emptyList(),
+                contributions = listOfNotNull(staking),
             ),
         )
     }
@@ -280,12 +252,12 @@ internal class CryptoCurrencyStatusExtTest {
                 fiatAmount = fiatAmount,
                 fiatRate = fiatRate,
                 priceChange = null,
-                stakingBalance = staking,
                 yieldSupplyStatus = null,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),
                 networkAddress = networkAddress(),
                 sources = CryptoCurrencyStatus.Sources(),
+                contributions = listOfNotNull(staking),
             ),
         )
     }

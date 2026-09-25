@@ -6,7 +6,6 @@ import com.tangem.domain.models.getResultStatusSource
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.serialization.SerializedBigDecimal
-import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -58,9 +57,6 @@ data class CryptoCurrencyStatus(
         /** The network address */
         val networkAddress: NetworkAddress? get() = null
 
-        /** Staking balance */
-        val stakingBalance: StakingBalance? get() = null
-
         /** Yield supply status */
         val yieldSupplyStatus: YieldSupplyStatus? get() = null
 
@@ -70,10 +66,8 @@ data class CryptoCurrencyStatus(
          * Read it generically — `contributions.sumOf { it.totalDeltaCryptoAmount() }` — instead of branching on
          * concrete balance types. Downcast only for a type-specific breakdown ("Axis 2").
          *
-         * Filled by `CryptoCurrencyStatusFactory` **only while `TWI_1717_BALANCE_CONTRIBUTIONS` is on**; with the
-         * toggle off it stays empty and readers fall back to the legacy typed fields
-         * (`com.tangem.common.getExtraBalanceOrNull`). That makes an empty list the switch between the two
-         * architectures — the reason it is stored rather than derived from [stakingBalance].
+         * Filled by `CryptoCurrencyStatusFactory` from the registered `BalanceContributionProvider`s; it is the
+         * only source of extra balances. Producers that report none leave it empty.
          *
          * Not serialized (enforced with `@Transient` on every override): statuses are derived in memory, never
          * persisted, and [BalanceContribution] is an open interface with no polymorphic registration — encoding
@@ -187,7 +181,6 @@ data class CryptoCurrencyStatus(
         override val fiatAmount: SerializedBigDecimal,
         override val fiatRate: SerializedBigDecimal,
         override val priceChange: SerializedBigDecimal,
-        override val stakingBalance: StakingBalance?,
         override val yieldSupplyStatus: YieldSupplyStatus?,
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxInfo>,
@@ -216,7 +209,6 @@ data class CryptoCurrencyStatus(
         override val fiatAmount: SerializedBigDecimal?,
         override val fiatRate: SerializedBigDecimal?,
         override val priceChange: SerializedBigDecimal?,
-        override val stakingBalance: StakingBalance?,
         override val yieldSupplyStatus: YieldSupplyStatus?,
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxInfo>,
@@ -239,7 +231,6 @@ data class CryptoCurrencyStatus(
     @Serializable
     data class NoQuote(
         override val amount: SerializedBigDecimal,
-        override val stakingBalance: StakingBalance?,
         override val yieldSupplyStatus: YieldSupplyStatus?,
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxInfo>,

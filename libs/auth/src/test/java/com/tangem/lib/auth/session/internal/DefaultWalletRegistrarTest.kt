@@ -339,6 +339,36 @@ class DefaultWalletRegistrarTest {
     }
 
     @Test
+    fun `GIVEN walletId already registered WHEN prepare forced THEN builds the request`() = runTest {
+        // Arrange
+        stubHappyPath()
+        preferencesDataStore.edit { it[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID) }
+        val nonce = registrar.requestNonce().getOrNull()!!
+
+        // Act
+        val result = registrar.prepare(WALLET_ID, nonce, mobileSigner, shouldForce = true)
+
+        // Assert
+        assertThat(result.getOrNull()?.walletId).isEqualTo(WALLET_ID)
+    }
+
+    @Test
+    fun `GIVEN two registered wallets WHEN forgetRegistration THEN drops only that marker`() = runTest {
+        // Arrange
+        preferencesDataStore.edit {
+            it[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID, OTHER_WALLET_ID)
+        }
+
+        // Act
+        val result = registrar.forgetRegistration(WALLET_ID)
+
+        // Assert
+        assertThat(result.isRight()).isTrue()
+        assertThat(registeredIds()).containsExactly(OTHER_WALLET_ID)
+        coVerify(exactly = 0) { authApi.unregisterWallet(any()) }
+    }
+
+    @Test
     fun `prepare builds the request without posting or persisting anything`() = runTest {
         stubHappyPath()
         val nonce = registrar.requestNonce().getOrNull()!!

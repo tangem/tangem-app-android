@@ -103,9 +103,8 @@ internal class SendConfirmationNotificationsTransformerV2(
         val fee = feeSelectorUM?.selectedFeeItem?.fee
 
         if (fee == null || amountUM == null) return TextReference.EMPTY
-        // The Safe never takes the fee out of the amount: a total over the balance is the "exceeds balance" error
-        // rather than a smaller transfer, and there is no request to describe
-        if (signaturesUM != null && isFeeSubtractedFromAmount) return TextReference.EMPTY
+        // A balance that cannot cover even the fee leaves no request to describe
+        if (signaturesUM != null && isFeeExceedingBalance) return TextReference.EMPTY
 
         val fiatAmountValue = amountUM.amountTextField.fiatAmount.value
         val fiatFeeValue = feeSelectorUM.feeFiatRateUM?.rate?.let { fee.amount.value?.multiply(it) }
