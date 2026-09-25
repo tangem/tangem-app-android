@@ -80,6 +80,7 @@ dependencies {
     api(projects.domain.visa)
     api(projects.domain.wallets)
     implementation(projects.domain.card)
+    implementation(projects.domain.moneyAccount)
     implementation(projects.domain.models)
     runtimeOnly(projects.domain.tokens)
     // endregion
