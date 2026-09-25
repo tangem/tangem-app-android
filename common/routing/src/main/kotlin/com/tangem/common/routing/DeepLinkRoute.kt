@@ -88,9 +88,9 @@ sealed class DeepLinkRoute {
         override val host: String = "yield"
     }
 
-    /** Feed hub ("shtorka") of the wallet screen — a section of it, optionally pre-filtered. */
-    data object Shtorka : DeepLinkRoute() {
-        override val host: String = "shtorka"
+    /** Feed hub of the wallet screen — a section of it, optionally pre-filtered. */
+    data object Discover : DeepLinkRoute() {
+        override val host: String = "discover"
     }
 
     data object PayAppMain : DeepLinkRoute() {
