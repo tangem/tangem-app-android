@@ -76,6 +76,15 @@ internal class WcSdk(
         }
     }
 
+    /** Rejecting answers a proposal the SDK has just delivered, so it is already running. */
+    fun rejectSessionNonBlocking(
+        params: Wallet.Params.SessionReject,
+        onSuccess: (Wallet.Params.SessionReject) -> Unit,
+        onError: (Wallet.Model.Error) -> Unit,
+    ) {
+        WalletKit.rejectSession(params = params, onSuccess = onSuccess, onError = onError)
+    }
+
     suspend fun getActiveSessions(): List<Wallet.Model.Session> {
         ensureInitialized()
         return WalletKit.getListOfActiveSessions()
@@ -121,23 +130,12 @@ internal class WcSdk(
         }
     }
 
-    // Keeps these calls total: a failed start-up comes back as Left, the same channel the SDK's own
-    // failures use, instead of cancelling the caller's coroutine.
-    private suspend fun <T> withStartedSdk(block: suspend () -> Either<Throwable, T>): Either<Throwable, T> {
-        return runSuspendCatching { ensureInitialized() }
-            .fold(
-                onSuccess = { block() },
-                onFailure = { it.left() },
-            )
-    }
-
-    /** Rejecting answers a proposal the SDK has just delivered, so it is already running. */
-    fun rejectSessionNonBlocking(
-        params: Wallet.Params.SessionReject,
-        onSuccess: (Wallet.Params.SessionReject) -> Unit,
+    fun respondSessionRequestNonBlocking(
+        params: Wallet.Params.SessionRequestResponse,
+        onSuccess: (Wallet.Params.SessionRequestResponse) -> Unit,
         onError: (Wallet.Model.Error) -> Unit,
     ) {
-        WalletKit.rejectSession(params = params, onSuccess = onSuccess, onError = onError)
+        WalletKit.respondSessionRequest(params = params, onSuccess = onSuccess, onError = onError)
     }
 
     /** Read failures propagate on purpose — see [com.tangem.data.walletconnect.respond.DefaultWcRespondService]. */
@@ -146,12 +144,14 @@ internal class WcSdk(
     fun getPendingSessionRequests(topic: String): List<Wallet.Model.SessionRequest> =
         WalletKit.getPendingListOfSessionRequests(topic)
 
-    fun respondSessionRequestNonBlocking(
-        params: Wallet.Params.SessionRequestResponse,
-        onSuccess: (Wallet.Params.SessionRequestResponse) -> Unit,
-        onError: (Wallet.Model.Error) -> Unit,
-    ) {
-        WalletKit.respondSessionRequest(params = params, onSuccess = onSuccess, onError = onError)
+    // Keeps these calls total: a failed start-up comes back as Left, the same channel the SDK's own
+    // failures use, instead of cancelling the caller's coroutine.
+    private suspend fun <T> withStartedSdk(block: suspend () -> Either<Throwable, T>): Either<Throwable, T> {
+        return runSuspendCatching { ensureInitialized() }
+            .fold(
+                onSuccess = { block() },
+                onFailure = { it.left() },
+            )
     }
 
     // Reown builds its Koin graph and Android components here, so it stays on the main thread the way the
