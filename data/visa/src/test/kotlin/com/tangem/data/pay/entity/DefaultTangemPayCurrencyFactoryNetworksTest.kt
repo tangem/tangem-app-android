@@ -133,13 +133,43 @@ internal class DefaultTangemPayCurrencyFactoryNetworksTest {
         assertThat(token.contractAddress).isEqualTo(CHECKSUM_CONTRACT.lowercase(Locale.US))
     }
 
+    @Test
+    fun `GIVEN Tron contract WHEN createNetworkStatuses THEN the token keeps the Base58Check case`() {
+        // Arrange — Tron addresses are Base58Check, i.e. case-sensitive: lowercasing would corrupt them.
+        every { network.rawId } returns "tron"
+        val networks = listOf(
+            networkInfo(
+                name = "tron",
+                chainId = TRON_CHAIN_ID,
+                depositAddress = "TDEPOSIT",
+                tokens = listOf(
+                    CustomerInfo.NetworkInfo.Token(
+                        symbol = "USDT",
+                        contractAddress = TRON_USDT_CONTRACT,
+                        availableForWithdrawal = null,
+                    ),
+                ),
+            ),
+        )
+
+        // Act
+        val statuses = factory.createNetworkStatuses(USER_WALLET_ID, networks, fiatRate = null)
+
+        // Assert
+        val available = statuses.single() as PaymentNetworkStatus.Available
+        val token = available.cryptoCurrencyStatuses.single().currency as CryptoCurrency.Token
+        assertThat(token.contractAddress).isEqualTo(TRON_USDT_CONTRACT)
+    }
+
     private fun networkInfo(
         depositAddress: String?,
         status: CustomerInfo.NetworkInfo.Status = CustomerInfo.NetworkInfo.Status.ENABLED,
         tokens: List<CustomerInfo.NetworkInfo.Token> = emptyList(),
+        name: String = "polygon",
+        chainId: Long = POLYGON_CHAIN_ID,
     ) = CustomerInfo.NetworkInfo(
-        name = "polygon",
-        chainId = POLYGON_CHAIN_ID,
+        name = name,
+        chainId = chainId,
         isTestnet = false,
         status = status,
         depositAddress = depositAddress,
@@ -150,5 +180,7 @@ internal class DefaultTangemPayCurrencyFactoryNetworksTest {
         val USER_WALLET_ID = UserWalletId("011")
         const val POLYGON_CHAIN_ID = 137L
         const val CHECKSUM_CONTRACT = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        const val TRON_CHAIN_ID = 728126428L
+        const val TRON_USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
     }
 }
