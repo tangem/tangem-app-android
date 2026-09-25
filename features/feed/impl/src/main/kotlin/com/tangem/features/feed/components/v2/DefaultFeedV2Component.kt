@@ -138,6 +138,9 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
         componentScope.launch {
             feedEntryController.pendingEntry.filterNotNull().collect(::onEntryRequested)
         }
+        componentScope.launch {
+            shtorkaExpansion.collect(::onShtorkaExpansionChange)
+        }
         stack.subscribe(lifecycle) { stackState ->
             // presence on the stack, not "is active": tapping a search result pushes a screen on top of
             // search, and deactivation drops the query — the user would come back to an empty search
@@ -269,6 +272,12 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
                 route = FeedRoute.Search(source = AnalyticsParam.ScreensSources.Markets.value),
             )
             !isActive && isSearchActive -> stackNavigation.pop()
+        }
+    }
+
+    private fun onShtorkaExpansionChange(expansion: ShtorkaExpansion) {
+        if (expansion == ShtorkaExpansion.PILL && stack.value.active.configuration is FeedRoute.Search) {
+            stackNavigation.pop()
         }
     }
 

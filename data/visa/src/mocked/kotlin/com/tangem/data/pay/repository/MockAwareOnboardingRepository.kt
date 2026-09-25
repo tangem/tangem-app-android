@@ -19,6 +19,8 @@ import com.tangem.domain.visa.error.VisaApiError
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 
 /**
  * In MOCK env only skips the NFC-signing enrollment steps (order ids, initial credentials). The
@@ -166,9 +168,9 @@ internal class MockAwareOnboardingRepository @Inject constructor(
     override fun getSavedCustomerInfo(userWalletId: UserWalletId): CustomerInfo? =
         real.getSavedCustomerInfo(userWalletId)
 
-    override suspend fun getHideMainOnboardingBanner(userWalletId: UserWalletId): Boolean {
-        if (isMockMode) return false
-        return real.getHideMainOnboardingBanner(userWalletId)
+    override fun isMainOnboardingBannerHidden(userWalletId: UserWalletId): Flow<Boolean> {
+        if (isMockMode) return flowOf(false)
+        return real.isMainOnboardingBannerHidden(userWalletId)
     }
 
     override suspend fun setHideMainOnboardingBanner(userWalletId: UserWalletId) {
