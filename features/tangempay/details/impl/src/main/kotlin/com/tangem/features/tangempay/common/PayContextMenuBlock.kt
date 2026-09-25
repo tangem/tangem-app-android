@@ -58,7 +58,7 @@ private fun PayContextMenuItem(item: TangemPayDropDownItemUM, onMenuDismiss: () 
                     clickableSingle(
                         onClick = {
                             item.onClick()
-                            onMenuDismiss()
+                            if (item.isDismissOnClick) onMenuDismiss()
                         },
                     )
                 },
