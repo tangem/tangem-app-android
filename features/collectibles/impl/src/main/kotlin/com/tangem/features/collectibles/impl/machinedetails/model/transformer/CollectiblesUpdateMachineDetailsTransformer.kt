@@ -18,7 +18,6 @@ internal class CollectiblesUpdateMachineDetailsTransformer(
     val onBuyClick: () -> Unit,
     val onTurboCheckedChange: (Boolean) -> Unit,
     val onTurboInfoClick: () -> Unit,
-    val onPoweredByClick: () -> Unit,
 ) : Transformer<CollectiblesMachineDetailsUM> {
     override fun transform(prevState: CollectiblesMachineDetailsUM): CollectiblesMachineDetailsUM {
         val previousContent = prevState as? CollectiblesMachineDetailsUM.Content
@@ -29,7 +28,6 @@ internal class CollectiblesUpdateMachineDetailsTransformer(
             imageUrl = machine.imageUrl,
             tiers = CollectiblesMachineTiersConverter.convert(machine),
             details = CollectiblesMachineDetailRowsConverter.convert(machine),
-            onPoweredByClick = onPoweredByClick,
             prizePool = previousContent?.prizePool ?: CollectiblesMachineDetailsUM.PrizePoolUM.Loading,
             footer = CollectiblesMachineDetailsUM.FooterUM(
                 isTurboEnabled = previousContent?.footer?.isTurboEnabled == true,
