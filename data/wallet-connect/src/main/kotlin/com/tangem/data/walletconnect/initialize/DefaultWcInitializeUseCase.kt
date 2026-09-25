@@ -23,9 +23,13 @@ internal class DefaultWcInitializeUseCase(
             return
         }
 
-        // Sessions are persisted by the app itself, so this answers without waking the SDK.
-        val hasSessions = withContext(dispatchers.io) { store.sessions.first().isNotEmpty() }
+        // Both stores are persisted by the app itself, so this answers without waking the SDK. A pending
+        // approval counts: the process can die between approving a session and its settlement, and that
+        // settlement only arrives over a live SDK.
+        val hasLiveWork = withContext(dispatchers.io) {
+            store.sessions.first().isNotEmpty() || store.pendingApproval.first().isNotEmpty()
+        }
 
-        if (hasSessions) wcSdk.ensureInitialized()
+        if (hasLiveWork) wcSdk.ensureInitialized()
     }
 }
