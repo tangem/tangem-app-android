@@ -45,6 +45,22 @@ internal class DefaultQrScanningEventsRepository(
         val parsed = paymentUriParser.parse(withoutSchema)
             ?: return QrResult(address = withoutSchema)
 
+        // ERC-681: `@<chainId>` names the network the payee expects. A URI for another EVM chain must not be
+        // accepted as a payment on the currently selected one — the address would be valid on both, and the
+        // funds would land on a chain the payee is not watching.
+        parsed.chainId?.let { uriChainId ->
+            val currencyChainId = runCatching { cryptoCurrency.network.toBlockchain().getChainId()?.toLong() }
+                .getOrNull()
+            if (currencyChainId != null && currencyChainId != uriChainId) return QrResult()
+        }
+
+        // ERC-681: only a plain `transfer` (or no function at all) is a payment request this screen can fulfil.
+        // Any other function (approve, a contract call, …) must not be reinterpreted as "send to `address`".
+        val functionName = parsed.functionName
+        if (functionName != null && !functionName.equals(QrSentUriParser.FUNCTION_TRANSFER, ignoreCase = true)) {
+            return QrResult()
+        }
+
         val result = QrResult(address = parsed.address)
         result.amount = parsed.amount
         result.memo = parsed.memo?.second

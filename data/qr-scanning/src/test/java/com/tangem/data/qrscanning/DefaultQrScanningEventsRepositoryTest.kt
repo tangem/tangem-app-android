@@ -253,6 +253,46 @@ internal class DefaultQrScanningEventsRepositoryTest {
         )
     }
 
+    @Test
+    fun testErc681ChainIdAndFunction() {
+        every { network.id } returns Network.ID(value = "ethereum", derivationPath = Network.DerivationPath.None)
+        every { network.rawId } returns "ethereum"
+        // matching chain id (Ethereum mainnet = 1) is accepted, with and without a function
+        positiveCase(
+            "$schema2:$address2@1?$valueParam=$valueParamValue4",
+            QrResult(address = address2, amount = BigDecimal("0.000000023")),
+            cryptoCurrency,
+        )
+        positiveCase(
+            "$schema2:$address4@1$function?$addressParam=$addressParamValue",
+            QrResult(address = addressParamValue),
+            tokenCryptoCurrency,
+        )
+        // a URI for another EVM chain (Polygon = 137) is not a payment on the selected Ethereum currency
+        positiveCase(
+            "$schema2:$address2@137?$valueParam=$valueParamValue4",
+            QrResult(),
+            cryptoCurrency,
+        )
+        positiveCase(
+            "$schema2:$address4@137$function?$addressParam=$addressParamValue",
+            QrResult(),
+            tokenCryptoCurrency,
+        )
+        // a non-transfer function is not a payment request and must not be reinterpreted as "send to address"
+        positiveCase(
+            "$schema2:$address4/approve?$addressParam=$addressParamValue&$valueParam=$valueParamValue4",
+            QrResult(),
+            tokenCryptoCurrency,
+        )
+        // a malformed chain id segment is not silently ignored: the raw string is handed to the address validator
+        positiveCase(
+            "$address2@polygon",
+            QrResult(address = "$address2@polygon"),
+            cryptoCurrency,
+        )
+    }
+
     private fun positiveCase(input: String, expected: QrResult, cryptoCurrency: CryptoCurrency) {
         val actual = repository.parseQrCode(input, cryptoCurrency)
         Truth.assertThat(actual.address).isEqualTo(expected.address)

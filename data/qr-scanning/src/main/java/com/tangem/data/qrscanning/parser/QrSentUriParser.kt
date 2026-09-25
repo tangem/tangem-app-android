@@ -10,6 +10,10 @@ internal class QrSentUriParser {
         val amount: BigDecimal?,
         val memo: Pair<String, String>?,
         val remainingParams: Map<String, String>,
+        /** ERC-681 `@<chainId>` path segment, `null` when absent. */
+        val chainId: Long? = null,
+        /** ERC-681 `/<function>` path segment (e.g. `transfer`), `null` when absent. */
+        val functionName: String? = null,
     )
 
     fun parse(withoutScheme: String): Result? {
@@ -17,6 +21,16 @@ internal class QrSentUriParser {
             it != CHAIN_DELIMITER && it != FUNCTION_DELIMITER && it != PARAM_DELIMITER
         }
         if (address.isBlank()) return null
+
+        // ERC-681 path: <address>[@<chainId>][/<function>][?<params>]. Both segments are part of what the payee
+        // asked for and must not be dropped silently: the chain id selects the network, the function tells
+        // whether the URI is a plain transfer at all.
+        val path = withoutScheme.substringBefore(PARAM_DELIMITER).drop(address.length)
+        val chainIdSegment = path.substringAfter(CHAIN_DELIMITER, missingDelimiterValue = "")
+            .substringBefore(FUNCTION_DELIMITER)
+        val chainId = if (chainIdSegment.isEmpty()) null else chainIdSegment.toLongOrNull() ?: return null
+        val functionName = path.substringAfter(FUNCTION_DELIMITER, missingDelimiterValue = "")
+            .takeIf(String::isNotEmpty)
 
         val params = extractParameters(withoutScheme)
         val amount = params[PARAM_AMOUNT]?.toBigDecimalOrNull()
@@ -38,6 +52,8 @@ internal class QrSentUriParser {
             amount = amount,
             memo = memo,
             remainingParams = params - consumedKeys,
+            chainId = chainId,
+            functionName = functionName,
         )
     }
 
@@ -74,6 +90,7 @@ internal class QrSentUriParser {
         const val PARAM_ADDRESS = "address"
         const val PARAM_VALUE = "value"
         const val PARAM_UINT256 = "uint256"
+        const val FUNCTION_TRANSFER = "transfer"
         const val CHARSET_UTF8 = "UTF-8"
     }
 }
