@@ -127,7 +127,8 @@ internal class JointOperationModel @Inject constructor(
         flow2 = userActions,
         flow3 = canCreateContact,
         flow4 = isBalanceHidden,
-    ) { state, actions, canCreateContact, isBalanceHidden ->
+        flow5 = delegate.fiat(userWalletId = params.userWalletId, currency = params.currency),
+    ) { state, actions, canCreateContact, isBalanceHidden, fiat ->
         val answered = state?.withOwnAnswer(answeredLocally = actions.localAnswer)
         val isGone = answered == null || actions.isGone || !answered.isReachable && !answered.isSending
         if (isGone) return@combine JointOperationUM.Gone
@@ -142,6 +143,7 @@ internal class JointOperationModel @Inject constructor(
                     canCreateContact = canCreateContact,
                     isBalanceHidden = isBalanceHidden,
                     isColdWallet = isColdWallet,
+                    fiat = fiat,
                 ),
             ),
             signers = signersConverter.convert(

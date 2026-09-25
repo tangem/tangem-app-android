@@ -1,6 +1,5 @@
 package com.tangem.domain.account.status.producer
 
-import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
@@ -17,16 +16,12 @@ import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
-import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.quotes.multi.MultiQuoteStatusSupplier
-import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier
-import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -65,7 +60,6 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
             val value = PredictionAccountStatusValue.Active(
                 source = StatusSource.ACTUAL,
                 balance = BigDecimal.TEN,
-                positionsValue = null,
                 fiatRate = BigDecimal.ONE,
                 depositCurrency = mockk(relaxed = true),
                 depositAddress = "0xbridge0000000000000000000000000000000001",
@@ -272,17 +266,6 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
             },
             quoteStatusSupplier = mockk<MultiQuoteStatusSupplier> {
                 every { this@mockk.invoke(Unit) } returns flowOf(emptyMap())
-            },
-            stakingBalanceSupplier = mockk<MultiStakingBalanceSupplier> {
-                every { this@mockk.invoke(any()) } returns flowOf(emptySet())
-            },
-            stakingIdFactory = mockk {
-                every { create(currencyId = any(), defaultAddress = any()) } returns
-                    StakingID(integrationId = "integration", address = "0x1").right()
-            },
-            analyticsExceptionHandler = mockk(relaxed = true),
-            tokensFeatureToggles = mockk<TokensFeatureToggles> {
-                every { isBalanceContributionsEnabled } returns false
             },
             balanceContributionProviders = emptySet(),
         )

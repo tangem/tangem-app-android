@@ -257,14 +257,25 @@ internal class SendConfirmModel @Inject constructor(
 
     private fun createJointOperation() {
         val account = jointAccount ?: return
+        val amountValue = amountState?.amountTextField?.cryptoAmount?.value ?: return
+        val feeValue = confirmData.fee?.amount?.value ?: return
         _uiState.update(SendConfirmSendingStateTransformer(isSending = true))
 
+        // The Safe never takes the fee out of the amount by itself, so what the confirm step showed as subtracted
+        // has to be subtracted here, the same way the regular send does before building its transaction
+        val sendingAmount = checkAndCalculateSubtractedAmount(
+            isAmountSubtractAvailable = isAmountSubtractAvailable,
+            cryptoCurrencyStatus = getCurrencyStatusForFeePayment(),
+            amountValue = amountValue,
+            feeValue = feeValue,
+            reduceAmountBy = confirmData.reduceAmountBy.orZero(),
+        )
         modelScope.launch {
             jointSendDelegate
                 .createOperation(
                     account = account,
                     currency = cryptoCurrency,
-                    amountUM = uiState.value.amountUM,
+                    amount = sendingAmount,
                     destinationUM = uiState.value.destinationUM,
                 )
                 .fold(

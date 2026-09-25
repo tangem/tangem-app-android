@@ -176,7 +176,6 @@ class YieldSupplyPromoBannerConverterTest {
             fiatAmount = BigDecimal.ZERO,
             fiatRate = BigDecimal.ONE,
             priceChange = BigDecimal.ZERO,
-            stakingBalance = null,
             yieldSupplyStatus = if (isYieldActive) {
                 YieldSupplyStatus(
                     isActive = true,
@@ -214,7 +213,6 @@ class YieldSupplyPromoBannerConverterTest {
             fiatAmount = null,
             fiatRate = null,
             priceChange = null,
-            stakingBalance = null,
             yieldSupplyStatus = if (isYieldActive) {
                 YieldSupplyStatus(
                     isActive = true,
