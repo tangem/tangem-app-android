@@ -13,12 +13,14 @@ import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.domain.walletconnect.WC_TAG
 import com.tangem.domain.walletconnect.config.WalletConnectConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 /**
  * The only place that talks to the WalletConnect SDK.
@@ -51,13 +53,11 @@ internal class WcSdk(
             if (isInitialized) return
 
             initialize()
-            isInitialized = true
         }
     }
 
-    suspend fun pair(uri: String): Either<Throwable, Unit> {
-        ensureInitialized()
-        return suspendCancellableCoroutine { continuation ->
+    suspend fun pair(uri: String): Either<Throwable, Unit> = withStartedSdk {
+        suspendCancellableCoroutine { continuation ->
             WalletKit.pair(
                 params = Wallet.Params.Pair(uri),
                 onSuccess = { if (continuation.isActive) continuation.resume(Unit.right()) },
@@ -66,9 +66,8 @@ internal class WcSdk(
         }
     }
 
-    suspend fun approveSession(params: Wallet.Params.SessionApprove): Either<Throwable, Unit> {
-        ensureInitialized()
-        return suspendCancellableCoroutine { continuation ->
+    suspend fun approveSession(params: Wallet.Params.SessionApprove): Either<Throwable, Unit> = withStartedSdk {
+        suspendCancellableCoroutine { continuation ->
             WalletKit.approveSession(
                 params = params,
                 onSuccess = { if (continuation.isActive) continuation.resume(Unit.right()) },
@@ -82,9 +81,8 @@ internal class WcSdk(
         return WalletKit.getListOfActiveSessions()
     }
 
-    suspend fun disconnectSession(topic: String): Either<Throwable, Unit> {
-        ensureInitialized()
-        return suspendCancellableCoroutine { continuation ->
+    suspend fun disconnectSession(topic: String): Either<Throwable, Unit> = withStartedSdk {
+        suspendCancellableCoroutine { continuation ->
             WalletKit.disconnectSession(
                 params = Wallet.Params.SessionDisconnect(topic),
                 onSuccess = { if (continuation.isActive) continuation.resume(Unit.right()) },
@@ -93,9 +91,8 @@ internal class WcSdk(
         }
     }
 
-    suspend fun extendSession(topic: String): Either<Throwable, Unit> {
-        ensureInitialized()
-        return suspendCancellableCoroutine { continuation ->
+    suspend fun extendSession(topic: String): Either<Throwable, Unit> = withStartedSdk {
+        suspendCancellableCoroutine { continuation ->
             WalletKit.extendSession(
                 params = Wallet.Params.SessionExtend(topic),
                 onSuccess = { if (continuation.isActive) continuation.resume(Unit.right()) },
@@ -104,9 +101,10 @@ internal class WcSdk(
         }
     }
 
-    suspend fun updateSession(params: Wallet.Params.SessionUpdate): Either<Throwable, Wallet.Params.SessionUpdate> {
-        ensureInitialized()
-        return suspendCancellableCoroutine { continuation ->
+    suspend fun updateSession(
+        params: Wallet.Params.SessionUpdate,
+    ): Either<Throwable, Wallet.Params.SessionUpdate> = withStartedSdk {
+        suspendCancellableCoroutine { continuation ->
             WalletKit.updateSession(
                 params = params,
                 onSuccess = { if (continuation.isActive) continuation.resume(it.right()) },
@@ -117,15 +115,24 @@ internal class WcSdk(
 
     suspend fun respondSessionRequest(
         params: Wallet.Params.SessionRequestResponse,
-    ): Either<Throwable, Wallet.Params.SessionRequestResponse> {
-        ensureInitialized()
-        return suspendCancellableCoroutine { continuation ->
+    ): Either<Throwable, Wallet.Params.SessionRequestResponse> = withStartedSdk {
+        suspendCancellableCoroutine { continuation ->
             WalletKit.respondSessionRequest(
                 params = params,
                 onSuccess = { if (continuation.isActive) continuation.resume(it.right()) },
                 onError = { if (continuation.isActive) continuation.resume(it.throwable.left()) },
             )
         }
+    }
+
+    // Keeps these calls total: a failed start-up comes back as Left, the same channel the SDK's own
+    // failures use, instead of cancelling the caller's coroutine.
+    private suspend fun <T> withStartedSdk(block: suspend () -> Either<Throwable, T>): Either<Throwable, T> {
+        return runSuspendCatching { ensureInitialized() }
+            .fold(
+                onSuccess = { block() },
+                onFailure = { it.left() },
+            )
     }
 
     /** Rejecting answers a proposal the SDK has just delivered, so it is already running. */
@@ -165,12 +172,15 @@ internal class WcSdk(
                 onSuccess = {
                     WalletKit.setWalletDelegate(walletDelegate())
                     observers().forEach { it.onWcSdkInit() }
+                    // Recorded here, not after the await: the caller may be cancelled before it resumes,
+                    // and a second initialization would register the observers twice.
+                    isInitialized = true
                     TangemLogger.withTag(WC_TAG).i("onWcSdkInit")
                     if (continuation.isActive) continuation.resume(Unit)
                 },
                 onError = { error ->
                     TangemLogger.withTag(WC_TAG).e("Error while initializing Web3Wallet: $error")
-                    if (continuation.isActive) continuation.cancel(error.throwable)
+                    if (continuation.isActive) continuation.resumeWithException(error.throwable)
                 },
             )
         }
