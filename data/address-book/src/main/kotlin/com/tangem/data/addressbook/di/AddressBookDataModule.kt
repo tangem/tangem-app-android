@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.tangem.data.addressbook.DefaultAddressBookRepository
+import com.tangem.data.addressbook.cleaner.AddressBookUserWalletDataCleaner
 import com.tangem.data.addressbook.store.AddressBookBlobStore
 import com.tangem.data.addressbook.store.DefaultAddressBookBlobStore
 import com.tangem.data.common.cache.etag.ETagsStore
@@ -13,6 +14,7 @@ import com.tangem.domain.addressbook.crypto.AddressBookCipher
 import com.tangem.domain.addressbook.model.AddressBookBlob
 import com.tangem.domain.addressbook.repository.AddressBookRepository
 import com.tangem.domain.addressbook.time.IsoTimestampProvider
+import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -21,6 +23,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import javax.inject.Singleton
@@ -72,4 +75,8 @@ internal object AddressBookDataModule {
             dispatchers = dispatchers,
         )
     }
+
+    @Provides
+    @IntoSet
+    fun provideAddressBookUserWalletDataCleaner(impl: AddressBookUserWalletDataCleaner): UserWalletDataCleaner = impl
 }
