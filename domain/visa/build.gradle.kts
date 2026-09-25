@@ -29,6 +29,7 @@ dependencies {
     // endregion
 
     // region Domain
+    api(projects.domain.account)
     api(projects.domain.common)
     api(projects.domain.core)
     // endregion
@@ -54,5 +55,6 @@ dependencies {
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
     // endregion
 }
