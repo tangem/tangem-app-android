@@ -1,19 +1,28 @@
 package com.tangem.features.tangempay.withdraw.hub.state
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
+import com.tangem.common.ui.account.toUM
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
+import com.tangem.domain.pay.model.recents.RecentTokenTransfer
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import com.tangem.features.tangempay.withdraw.hub.model.OptionsState
 import com.tangem.features.tangempay.withdraw.hub.model.RecentsState
+import com.tangem.features.tangempay.withdraw.hub.model.TokenRecentsState
 import com.tangem.features.tangempay.withdraw.hub.model.WithdrawHubState
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.BankSectionUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.RecentRecipientUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.RecentsUM
+import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.TokenRecentsUM
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.mock.MockAccounts
 import io.mockk.clearMocks
 import io.mockk.mockk
 import io.mockk.verify
@@ -33,6 +42,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
     private val onSeeAllClick: () -> Unit = mockk(relaxed = true)
     private val onRetryRecentsClick: () -> Unit = mockk(relaxed = true)
     private val onRetryBankSectionClick: () -> Unit = mockk(relaxed = true)
+    private val onRecentTokenClick: (String) -> Unit = mockk(relaxed = true)
 
     private val factory = TangemPayWithdrawHubUMFactory(
         callbacks = TangemPayWithdrawHubUMFactory.Callbacks(
@@ -44,6 +54,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
             onSeeAllClick = onSeeAllClick,
             onRetryRecentsClick = onRetryRecentsClick,
             onRetryBankSectionClick = onRetryBankSectionClick,
+            onRecentTokenClick = onRecentTokenClick,
         ),
     )
 
@@ -58,6 +69,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
             onSeeAllClick,
             onRetryRecentsClick,
             onRetryBankSectionClick,
+            onRecentTokenClick,
         )
     }
 
@@ -243,16 +255,91 @@ internal class TangemPayWithdrawHubUMFactoryTest {
         verify(exactly = 1) { onRetryBankSectionClick() }
     }
 
+    @Test
+    fun `GIVEN token recents loading WHEN create THEN swap recents loading`() {
+        // Act
+        val actual = create()
+
+        // Assert
+        assertThat(actual.swapSection.recents).isEqualTo(TokenRecentsUM.Loading)
+    }
+
+    @Test
+    fun `GIVEN no token recents WHEN create THEN swap recents empty`() {
+        // Act
+        val actual = create(tokenRecents = TokenRecentsState.Loaded(transfers = emptyList()))
+
+        // Assert
+        assertThat(actual.swapSection.recents).isEqualTo(TokenRecentsUM.Empty)
+    }
+
+    @Test
+    fun `GIVEN a recent transfer WHEN create THEN the tile carries the token and the account`() {
+        // Arrange
+        val currency = recentCurrency(name = "Polygon")
+        val account = MockAccounts.createAccount(
+            derivationIndex = 1,
+            name = "Main account",
+            userWalletId = MockAccounts.userWalletId,
+            cryptoCurrencies = listOf(currency),
+        )
+        val state = TokenRecentsState.Loaded(
+            transfers = listOf(RecentTokenTransfer(account = account, currency = currency)),
+        )
+
+        // Act
+        val actual = create(tokenRecents = state).swapSection.recents as TokenRecentsUM.Content
+
+        // Assert
+        assertThat(actual.tokens.single()).isEqualTo(
+            TangemPayWithdrawHubUM.RecentTokenUM(
+                id = currency.id.value,
+                icon = CryptoCurrencyToIconStateConverter(shouldGrayscaleTestnet = false).convert(currency),
+                name = "Polygon",
+                accountName = account.accountName.toUM().value,
+                accountIcon = CryptoPortfolioIconConverter.convert(account.icon),
+            ),
+        )
+    }
+
     private fun create(
         options: OptionsState = OptionsState.Ready(bankWithdrawOptions()),
         recents: RecentsState = RecentsState.Loading,
-    ): TangemPayWithdrawHubUM = factory.create(WithdrawHubState(options = options, recents = recents))
+        tokenRecents: TokenRecentsState = TokenRecentsState.Loading,
+    ): TangemPayWithdrawHubUM = factory.create(
+        WithdrawHubState(options = options, recents = recents, tokenRecents = tokenRecents),
+    )
 
     private fun createRecents(
         accounts: List<BankAccount> = emptyList(),
         hasSavedAccounts: Boolean = true,
         recents: RecentsState = RecentsState.Loaded(accounts = accounts, hasSavedAccounts = hasSavedAccounts),
     ): RecentsUM = (create(recents = recents).bankSection as BankSectionUM.Content).recents
+
+    private fun recentCurrency(name: String): CryptoCurrency.Coin = CryptoCurrency.Coin(
+        id = CryptoCurrency.ID(
+            prefix = CryptoCurrency.ID.Prefix.COIN_PREFIX,
+            body = CryptoCurrency.ID.Body.NetworkId(rawId = "polygon-pos"),
+            suffix = CryptoCurrency.ID.Suffix.RawID(rawId = "matic-network"),
+        ),
+        network = Network(
+            id = Network.ID(value = "polygon-pos", derivationPath = Network.DerivationPath.None),
+            name = "Polygon",
+            currencySymbol = "POL",
+            derivationPath = Network.DerivationPath.None,
+            isTestnet = false,
+            standardType = Network.StandardType.ERC20,
+            hasFiatFeeRate = true,
+            canHandleTokens = true,
+            transactionExtrasType = Network.TransactionExtrasType.NONE,
+            nameResolvingType = Network.NameResolvingType.NONE,
+        ),
+        name = name,
+        symbol = "POL",
+        decimals = 18,
+        iconUrl = null,
+        isCustom = false,
+    )
 
     data class NameModel(
         val beneficiary: Beneficiary,
