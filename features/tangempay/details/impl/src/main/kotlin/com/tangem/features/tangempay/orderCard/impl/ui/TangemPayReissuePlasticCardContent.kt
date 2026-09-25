@@ -37,7 +37,6 @@ import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
-import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.pluralReference
@@ -149,23 +148,23 @@ private fun DeliveryRows(content: TangemPayReissuePlasticCardUM.Content?) {
     TangemRow(
         divider = true,
         contentLead = TangemRowContentLead.End,
-        verticalAlignment = TangemRowVerticalAlignment.Center,
         titleSlot = {
             TangemRowText(
                 text = resourceReference(R.string.tangempay_order_type_delivery_fee),
                 role = TangemRowTextRole.Title,
             )
         },
-        valueSlot = {
-            if (content?.isInsufficientFunds == true) {
+        valueSlot = { RowValue(text = content?.let { stringReference(it.deliveryFee) }) },
+        subvalueSlot = if (content?.isInsufficientFunds == true) {
+            {
                 TangemBadge(
-                    modifier = Modifier.align(Alignment.CenterVertically),
                     text = resourceReference(R.string.tangempay_order_type_not_enough_money),
                     status = TangemBadge.Status.Warning,
                     size = TangemBadge.Size.X4,
                 )
             }
-            RowValue(text = content?.let { stringReference(it.deliveryFee) })
+        } else {
+            null
         },
     )
     InfoRow(
