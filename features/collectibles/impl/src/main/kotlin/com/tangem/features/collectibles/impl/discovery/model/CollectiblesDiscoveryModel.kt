@@ -23,6 +23,7 @@ import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -75,7 +76,22 @@ internal class CollectiblesDiscoveryModel @Inject constructor(
         }
     }
 
-    fun onRefresh() = reload()
+    fun onRefresh() {
+        if (categories == null) {
+            loadCategories()
+            return
+        }
+
+        // reload silent
+        modelScope.launch {
+            getCategoriesUseCase()
+                .onRight { loaded ->
+                    applyCategories(loaded)
+                    reloadMachines()
+                }
+                .onLeft { error -> TangemLogger.e("Unable to refresh the collectibles categories", error.cause) }
+        }.saveIn(categoriesJob)
+    }
 
     private fun buildInitialState(): CollectiblesDiscoveryUM {
         return CollectiblesDiscoveryUM(
@@ -104,13 +120,7 @@ internal class CollectiblesDiscoveryModel @Inject constructor(
 
             getCategoriesUseCase()
                 .onRight { loaded ->
-                    categories = loaded
-                    uiState.update { state ->
-                        state.copy(
-                            tabs = buildTabs(),
-                            hasSearchableCatalogue = loaded.totalMachinesQuantity > 0,
-                        )
-                    }
+                    applyCategories(loaded)
                     reloadMachines()
                 }
                 .onLeft {
@@ -125,6 +135,17 @@ internal class CollectiblesDiscoveryModel @Inject constructor(
                     }
                 }
         }.saveIn(categoriesJob)
+    }
+
+    private fun applyCategories(loaded: CollectibleGachaMachineCategories) {
+        categories = loaded
+        if (loaded.categories.none { it.id == selectedCategoryId }) selectedCategoryId = null
+        uiState.update { state ->
+            state.copy(
+                tabs = buildTabs(),
+                hasSearchableCatalogue = loaded.totalMachinesQuantity > 0,
+            )
+        }
     }
 
     private fun onCategoryClick(categoryId: String?) {
