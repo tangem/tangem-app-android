@@ -329,6 +329,8 @@
   <string name="collectibles_stories_security_title">Hohe Sicherheit, kantenloses Design</string>
   <string name="collectibles_stories_transparency_subtitle">Sehen Sie sich vor dem Kauf jede Karte an und verfolgen Sie Live-Öffnungen direkt aus der Blockchain – inklusive der Wallet und des Kartenwerts jedes Sammlers. Alles in der App</string>
   <string name="collectibles_stories_transparency_title">Hinter dem Vorhang ist nichts</string>
+  <string name="collectibles_turbo_mode_bottomsheet_message">Im Turbo-Modus werden alle gewöhnlichen Karten automatisch verkauft. Jage nach den Grail-Karten mit Höchstgeschwindigkeit.</string>
+  <string name="collectibles_turbo_mode_bottomsheet_title">Turbo-Modus</string>
   <string name="collectibles_welcome_benefit_cold_wallet_subtitle">Nur mit deiner Karte kannst du sie bewegen</string>
   <string name="collectibles_welcome_benefit_cold_wallet_title">Die Karten werden in Ihre Cold Wallet übertragen</string>
   <string name="collectibles_welcome_benefit_sell_offers_subtitle">85–93% en des Versicherungswerts in US-Dollar (USDC)</string>
@@ -1143,7 +1145,7 @@
   <string name="joint_account_activation_account_button_title">Konto aktivieren</string>
   <string name="joint_account_activation_subtitle">Alle Nutzer dieses Kontos teilen sich ein gemeinsames Guthaben. Jedes Mitglied kann das Guthaben jederzeit ausgeben oder abheben – auch ohne Ihre Zustimmung</string>
   <string name="joint_account_activation_title">Sie aktivieren ein gemeinsam genutztes Konto</string>
-  <string name="joint_account_coming_soon_description">Diese Funktion wird für Gemeinschaftskonten noch nicht unterstützt. Wir arbeiten daran.</string>
+  <string name="joint_account_coming_soon_description">Diese Funktion wird für Gemeinschaftskonten noch nicht unterstützt. Wir arbeiten daran</string>
   <string name="joint_account_coming_soon_title">Demnächst für Gemeinschaftskonten verfügbar</string>
   <string name="joint_account_invite_invalid_subtitle">Prüfen Sie, ob Sie den vollständigen Link geöffnet haben, oder bitten Sie den Kontoinhaber, ihn erneut zu senden.</string>
   <string name="joint_account_invite_invalid_title">Der Einladungslink ist ungültig</string>
@@ -1743,6 +1745,7 @@
   <string name="prediction_account_open_detailed_view">Detaillierte Ansicht öffnen</string>
   <string name="prediction_account_subtitle">Guthaben aufladen und mit den Vorhersagen beginnen</string>
   <string name="prediction_account_title">Prognosekonto</string>
+  <string name="prediction_account_unavailable">Es konnte keine Verbindung zu Ihrem Prognose-Konto hergestellt werden. Bitte aktualisieren Sie die Seite oder öffnen Sie diesen Bildschirm erneut.</string>
   <string name="prediction_add_funds_error_description">Die Einzahlungsdetails konnten nicht geladen werden. Bitte aktualisieren Sie die Seite oder rufen Sie diesen Bildschirm erneut auf.</string>
   <string name="prediction_add_funds_notification_limits_description">Der Einzahlungsbetrag muss mindestens %1$s betragen. Einzahlungen über 50.000 $ werden nicht empfohlen – teilen Sie einen höheren Betrag in mehrere kleinere Einzahlungen auf.</string>
   <string name="prediction_add_funds_notification_limits_title">Einzahlungslimits</string>
@@ -1797,6 +1800,8 @@
   <string name="prediction_main_available_balance">Verfügbares Guthaben</string>
   <string name="prediction_main_data_outdated">Die Daten könnten veraltet sein.</string>
   <string name="prediction_main_empty_events">Noch keine Veranstaltungen</string>
+  <string name="prediction_main_empty_positions_subtitle">Entdecken Sie neue Veranstaltungen</string>
+  <string name="prediction_main_empty_positions_title">Sie haben keine aktiven Vorhersagen.</string>
   <string name="prediction_main_events_load_error">Ereignisse konnten nicht geladen werden.\nZum Neuladen tippen</string>
   <string name="prediction_main_explore_events">Veranstaltungen entdecken</string>
   <string name="prediction_main_subtitle">USDC im Polygon-Netzwerk</string>
@@ -1940,9 +1945,17 @@
   <string name="prediction_search_initial_subtitle">Veranstaltungen oder deine Vorhersagen suchen</string>
   <string name="prediction_search_initial_title">Beginnen Sie mit der Eingabe, um zu suchen</string>
   <string name="prediction_search_results_title">Suchergebnisse</string>
+  <string name="prediction_withdraw_balance_unavailable">Der Saldo Ihres Prognosekontos konnte nicht geladen werden. Bitte aktualisieren Sie die Seite oder öffnen Sie diesen Bildschirm erneut.</string>
   <string name="prediction_withdraw_confirm_fee_footer">Für diese Auszahlung fällt keine Netzwerkgebühr an. Der Betrag, den Sie erhalten, kann aufgrund der Währungsumrechnung geringfügig abweichen.</string>
   <string name="prediction_withdraw_confirm_title">Auszahlung bestätigen</string>
+  <string name="prediction_withdraw_empty_balance">Es gibt noch nichts auszuzahlen. Laden Sie zunächst Guthaben auf Ihr Prognosekonto.</string>
+  <string name="prediction_withdraw_error_address_unavailable">Die Auszahlungsadresse konnte nicht abgerufen werden. Bitte versuchen Sie es erneut.</string>
+  <string name="prediction_withdraw_error_asset_unavailable">Auszahlungen in USDC auf Polygon sind vorübergehend ausgesetzt. Bitte versuchen Sie es später erneut.</string>
+  <string name="prediction_withdraw_error_foreign_account">Dieses Prognose-Konto ist nicht mit dieser Wallet verknüpft. Wenden Sie sich an den Support.</string>
+  <string name="prediction_withdraw_error_generic">Die Auszahlung konnte nicht gesendet werden. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.</string>
+  <string name="prediction_withdraw_error_rejected">Polymarket ist momentan nicht erreichbar. Bitte versuchen Sie es in wenigen Minuten erneut.</string>
   <string name="prediction_withdraw_in_progress_message">Ihre letzte Auszahlung wird noch bearbeitet. Bitte warten Sie, bis diese abgeschlossen ist, bevor Sie eine neue Auszahlung beantragen.</string>
+  <string name="prediction_withdraw_min_amount">Der Mindestauszahlungsbetrag beträgt %@. Bitte zahlen Sie Geld ein, um diesen Betrag zu erreichen.</string>
   <string name="prediction_withdraw_status_failed_description">Bei der Bearbeitung Ihrer Auszahlung ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut oder kontaktieren Sie den Kundenservice.</string>
   <string name="prediction_withdraw_status_failed_title">Abhebung fehlgeschlagen</string>
   <string name="prediction_withdraw_status_sent_description">Die Lieferung kann bis zu %1$d Minuten dauern</string>
@@ -2905,7 +2918,6 @@
   <string name="tangempay_withdraw_bank_error_recipient_region">Überweisungen in die Region des Empfängers sind derzeit nicht möglich.</string>
   <string name="tangempay_withdraw_bank_error_region_title">Überweisungen sind nicht möglich</string>
   <string name="tangempay_withdraw_bank_error_sender_region">Überweisungen aus Ihrer Region sind derzeit nicht möglich</string>
-  <string name="tangempay_withdraw_bank_error_unsupported_configuration">Überweisungen sind derzeit nicht möglich. Bitte versuchen Sie es später erneut.</string>
   <plurals name="tangempay_withdraw_bank_eta_business_days">
     <item quantity="one">Werktag</item>
     <item quantity="other">Werktage</item>
