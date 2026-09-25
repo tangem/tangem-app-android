@@ -4,7 +4,7 @@ import com.tangem.features.feed.nav.FeedTabId
 
 /**
  * Section of the feed hub that can be addressed from outside the app — the `section` parameter of the
- * `tangem://shtorka` deeplink.
+ * `tangem://discover` deeplink.
  *
  * The wire names are deliberately not the tab ids (`assets` opens [FeedTabId.RealAssets]), and not every
  * tab is addressable, so this mapping is the contract — never build a [FeedTabId] from a raw parameter.
