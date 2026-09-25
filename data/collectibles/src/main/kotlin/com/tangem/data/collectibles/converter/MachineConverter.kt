@@ -20,7 +20,7 @@ internal object MachineConverter : Converter<MachineDTO, CollectibleGachaMachine
         odds = value.odds.toDomain(),
         tierRanges = value.tierRanges.toDomain(),
         stock = value.stock.toDomain(),
-        expectedValue = value.expectedValue,
+        expectedValue = value.expectedValue.movePointLeft(2),
         imageUrl = value.image,
         categoryId = value.categoryId,
     )
@@ -47,5 +47,5 @@ internal object MachineConverter : Converter<MachineDTO, CollectibleGachaMachine
     )
 
     private fun MachineDTO.MachineTierRangesDTO.MachineTierRangeDTO.toDomain() =
-        CollectibleGachaMachine.TierRange(start = start, end = end)
+        CollectibleGachaMachine.TierRange(start = start.movePointLeft(2), end = end.movePointLeft(2))
 }
