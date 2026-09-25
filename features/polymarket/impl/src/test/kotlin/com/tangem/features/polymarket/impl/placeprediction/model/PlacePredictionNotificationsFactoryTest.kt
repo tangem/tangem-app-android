@@ -461,7 +461,7 @@ internal class PlacePredictionNotificationsFactoryTest {
             title = "Will it rain?",
             imageUrl = null,
             outcomeTitle = "Yes",
-            outcomePriceCents = 42,
+            outcomePrice = "42¢",
             resolutionDateMillis = null,
         ),
         collateral = CollateralUM(tokenSymbol = "USDC", iconState = null),

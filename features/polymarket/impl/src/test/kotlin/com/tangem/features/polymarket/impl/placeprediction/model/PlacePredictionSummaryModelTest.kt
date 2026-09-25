@@ -33,7 +33,6 @@ import com.tangem.features.polymarket.impl.placeprediction.model.converter.Predi
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import io.mockk.clearMocks
 import io.mockk.coEvery
-import io.mockk.clearMocks
 import io.mockk.coVerify
 import io.mockk.slot
 import io.mockk.verify
@@ -52,6 +51,35 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
 
     @Nested
     inner class Submission {
+
+        @Test
+        fun `GIVEN a quote at the display bound WHEN placed THEN signing keeps the raw quote`() = runTest {
+            // Arrange
+            val quote = createQuote().copy(averagePrice = BigDecimal("0.9995"))
+            coEvery { getQuoteUseCase(request = any()) } returns quote.right()
+            val amountModel = createAmountModel(testScope = this)
+            advanceUntilIdle()
+            amountModel.onResume()
+            amountModel.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            val model = createSummaryModel(testScope = this, amountModel = amountModel)
+
+            // Act
+            model.onPlaceClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.market.outcomePrice).isEqualTo("99.9¢")
+            coVerify(exactly = 1) { signOrderInteractor(request = match { it.quote == quote }) }
+            verify {
+                router.replaceAll(
+                    match<PlacePredictionRoute.Status> { it.market.outcomePrice == "99.9¢" },
+                    onComplete = any(),
+                )
+            }
+
+            model.onDestroy()
+        }
 
         @Test
         fun `GIVEN submit started WHEN poll interval elapses THEN quote NOT requested`() = runTest {
@@ -777,7 +805,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
 
                 // Assert
                 assertThat(quoted.isPrimaryButtonEnabled).isTrue()
-                assertThat(quoted.market.outcomePriceCents).isEqualTo(42)
+                assertThat(quoted.market.outcomePrice).isEqualTo("42¢")
                 coVerify(exactly = 1) { signOrderInteractor(request = any()) }
 
                 model.onDestroy()
