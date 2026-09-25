@@ -22,6 +22,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
@@ -92,6 +93,13 @@ internal class WcPairModel @Inject constructor(
     private var proposalNetwork by Delegates.notNull<WcSessionProposal.ProposalNetwork>()
     private var sessionProposal by Delegates.notNull<WcSessionProposal>()
     private var additionallyEnabledNetworks = emptySet<Network>()
+
+    /**
+     * (dApp, account) the current [additionallyEnabledNetworks] belongs to. [handleProposalState] runs on every
+     * portfolio/balance emission; the optional-network selection must only be reset when the proposal or the
+     * selected account actually changes, not on every refresh.
+     */
+    private var handledProposalKey: Pair<WcAppMetaData, AccountId>? = null
     private val dAppVerifiedStateConverter = WcDAppVerifiedStateConverter(onVerifiedClick = ::showVerifiedAlert)
 
     val appInfoUiState: StateFlow<WcAppInfoUM>
@@ -195,7 +203,15 @@ internal class WcPairModel @Inject constructor(
                 account.account is Account.Personal && proposalAccountNetwork.contains(account.account.accountId)
             }
             proposalNetwork = foundNetwork
-            additionallyEnabledNetworks = proposalNetwork.available
+            val proposalKey = sessionProposal.dAppMetaData to portfolioAccountId
+            additionallyEnabledNetworks = if (handledProposalKey == proposalKey) {
+                // same proposal, same account: keep what the user (de)selected, dropping networks that are
+                // no longer offered as optional
+                additionallyEnabledNetworks intersect proposalNetwork.available
+            } else {
+                proposalNetwork.available
+            }
+            handledProposalKey = proposalKey
             appInfoUiState.transformerUpdate(
                 WcAppInfoTransformer(
                     dAppSession = sessionProposal,
