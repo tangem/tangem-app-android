@@ -45,6 +45,7 @@ dependencies {
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.visa.models)
     implementation(projects.domain.wallets)
+    implementation(projects.domain.wallets.models)
     runtimeOnly(projects.domain.txhistory)
 
     /** Compose */
