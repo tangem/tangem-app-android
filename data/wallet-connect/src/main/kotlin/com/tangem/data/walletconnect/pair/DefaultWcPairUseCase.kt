@@ -73,7 +73,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
                 return@flow
             }
 
-            val dAppUri = URI(sdkVerifyContext.getDappOriginUrl())
+            val dAppUri = URI(sdkVerifyContext.getDappOriginUrl(metadataUrl = sdkSessionProposal.url))
             if (dAppUri.host.isNullOrEmpty()) {
                 emit(WcPairState.Error(WcPairError.InvalidDomainURL))
                 return@flow
@@ -116,7 +116,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
                 topic = "",
                 walletId = sessionForApprove.wallet.walletId,
                 accountId = sessionForApprove.account.accountId,
-                url = sdkVerifyContext.getDappOriginUrl(),
+                url = sdkVerifyContext.getDappOriginUrl(metadataUrl = sdkSessionProposal.url),
                 securityStatus = proposalState.dAppSession.securityStatus,
                 connectingTime = connectingTime,
             )
@@ -201,10 +201,10 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
     ): Either<WcPairError, WcPairState.Proposal> = runCatching {
         val proposalAccountNetwork = associateNetworksDelegate.associateAccounts(sessionProposal)
         // Display URL: shown to the user and logged to analytics. getDappOriginUrl() returns the
-        // Verify-attested origin (verifyContext.origin), or the verify.walletconnect.org fallback
+        // Verify-attested origin (verifyContext.origin), or the dApp's own (unverified) metadata url
         // when origin is empty. Display only — the security verdict is decided below (see
         // isDomainConfirmed), where sessionProposal.url is used solely for a host-equality check.
-        val displayUrl = verifyContext.getDappOriginUrl()
+        val displayUrl = verifyContext.getDappOriginUrl(metadataUrl = sessionProposal.url)
         val verificationInfo = when {
             verifyContext.isScam == true -> CheckDAppResult.UNSAFE
             // BlockAid scans only the Verify-attested origin (verifyContext.origin), reached for

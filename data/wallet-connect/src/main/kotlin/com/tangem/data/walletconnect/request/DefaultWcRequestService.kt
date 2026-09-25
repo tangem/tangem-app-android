@@ -32,7 +32,7 @@ internal class DefaultWcRequestService(
         // Triggered when a Dapp sends SessionRequest to sign a transaction or a message
         val sr = WcSdkSessionRequestConverter.convert(
             WcSdkSessionRequestConverter.Input(
-                originUrl = verifyContext.getDappOriginUrl(),
+                originUrl = verifyContext.getDappOriginUrl(metadataUrl = sessionRequest.peerMetaData?.url),
                 sessionRequest = sessionRequest,
             ),
         )
