@@ -9,6 +9,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.visa.error.VisaApiError
+import kotlinx.coroutines.flow.Flow
 
 @Suppress("TooManyFunctions")
 interface OnboardingRepository {
@@ -68,7 +69,7 @@ interface OnboardingRepository {
 
     fun getSavedCustomerInfo(userWalletId: UserWalletId): CustomerInfo?
 
-    suspend fun getHideMainOnboardingBanner(userWalletId: UserWalletId): Boolean
+    fun isMainOnboardingBannerHidden(userWalletId: UserWalletId): Flow<Boolean>
 
     suspend fun setHideMainOnboardingBanner(userWalletId: UserWalletId)
 

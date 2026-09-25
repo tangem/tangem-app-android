@@ -9,6 +9,7 @@ import com.tangem.domain.pay.TangemPayWithdrawState
 import com.tangem.domain.visa.model.TangemPayAuthTokens
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.Flow
 
 private const val MOCK_CUSTOMER_WALLET_ADDRESS = "0x0000000000000000000000000000000000000002"
 private const val MOCK_ACCESS_TOKEN = "mock-access-token"
@@ -118,6 +119,9 @@ internal class MockAwareTangemPayStorage @Inject constructor(
 
     override suspend fun getHideMainOnboardingBanner(userWalletId: UserWalletId): Boolean =
         real.getHideMainOnboardingBanner(userWalletId)
+
+    override fun isMainOnboardingBannerHidden(userWalletId: UserWalletId): Flow<Boolean> =
+        real.isMainOnboardingBannerHidden(userWalletId)
 
     override suspend fun storeTangemPayEligibility(eligibility: Set<String>) =
         real.storeTangemPayEligibility(eligibility)
