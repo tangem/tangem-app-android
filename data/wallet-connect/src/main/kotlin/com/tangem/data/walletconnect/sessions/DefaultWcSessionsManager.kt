@@ -24,6 +24,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -51,13 +52,7 @@ internal class DefaultWcSessionsManager(
     )
         .transformLatest { triple ->
             val (wallets, inStore, allWalletsAccounts) = triple
-            // Skipping the update keeps this shared flow alive so a later emission retries. Treating a
-            // failure as "no sessions in the SDK" would make removeUnknownSessions drop the stored ones.
-            val inSdk: List<Wallet.Model.Session> = runSuspendCatching { wcSdk.getActiveSessions() }
-                .getOrElse { error ->
-                    TangemLogger.withTag(WC_TAG).e("Unable to read active sessions from the SDK", error)
-                    return@transformLatest
-                }
+            val inSdk: List<Wallet.Model.Session> = wcSdk.getActiveSessions()
             val associatedSessions: List<WcSession> = associate(
                 inSdk = inSdk,
                 inStore = inStore,
@@ -66,6 +61,14 @@ internal class DefaultWcSessionsManager(
             )
             removeUnknownSessions(inStore, inSdk, associatedSessions)
             emit(associatedSessions.groupBy { it.wallet })
+        }
+        // The SDK read can fail while subscribers are waiting, and the three upstream flows may never emit
+        // again on their own. Retrying keeps the shared flow alive and eventually produces a state, whereas
+        // treating a failure as "no sessions in the SDK" would make removeUnknownSessions drop stored ones.
+        .retryWhen { cause, _ ->
+            TangemLogger.withTag(WC_TAG).e("Unable to read active sessions from the SDK, retrying", cause)
+            delay(SDK_READ_RETRY_DELAY_MS)
+            true
         }
         .distinctUntilChanged()
         .flowOn(dispatchers.io)
@@ -202,5 +205,9 @@ internal class DefaultWcSessionsManager(
             .onEach { sessionDto -> store.removeSession(sessionDto) }
             .flowOn(dispatchers.io)
             .launchIn(scope)
+    }
+
+    private companion object {
+        const val SDK_READ_RETRY_DELAY_MS = 2_000L
     }
 }
