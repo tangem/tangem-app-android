@@ -29,12 +29,16 @@ internal class WcRoutingModel @Inject constructor(
     private val isSlotEmpty = MutableStateFlow(true)
     private val permittedAppRoute = MutableStateFlow(false)
 
+    /** The configuration currently shown in the slot, `null` when the slot is empty. */
+    private var activeRoute: WcInnerRoute? = null
+
     init {
         setupQueue()
     }
 
     fun onSlotEmpty() {
         TangemLogger.d("WC Queue: onSlotEmpty() called")
+        activeRoute = null
         isSlotEmpty.update { true }
     }
 
@@ -89,6 +93,7 @@ internal class WcRoutingModel @Inject constructor(
                 awaitQueueReady()
                 TangemLogger.d("WC Queue: Queue ready, pushing configuration")
                 isSlotEmpty.update { false }
+                activeRoute = configuration
                 innerRouter.push(configuration)
             }
             .launchIn(modelScope)
@@ -114,6 +119,13 @@ internal class WcRoutingModel @Inject constructor(
             is AppRoute.Disclaimer,
             is AppRoute.Stories,
             -> {
+                // The slot child is destroyed here before it can answer the dApp itself (its cancel() goes
+                // through a channel collected in the model scope that is being cancelled), so the pending
+                // request would only end with a timeout on the dApp side. Reject it explicitly.
+                (activeRoute as? WcInnerRoute.Method)?.let { method ->
+                    TangemLogger.d("WC Queue: rejecting request ${method.rawRequest.request.id} on forced pop")
+                    requestService.rejectNonBlock(method.rawRequest)
+                }
                 innerRouter.pop()
                 false
             }
