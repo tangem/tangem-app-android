@@ -50,7 +50,7 @@ internal class CreatePaymentNetworkContractUseCaseTest {
                     statuses = OrderStatus.activeStatuses,
                 )
             } returns listOf(activeOrder).right()
-            coEvery { pollingUseCase.invoke(any(), any(), any(), any()) } returns true
+            coEvery { pollingUseCase.invoke(any(), any(), any(), any(), any()) } returns true
 
             val result = useCase(userWalletId, network)
 
@@ -62,6 +62,7 @@ internal class CreatePaymentNetworkContractUseCaseTest {
                 pollingUseCase.invoke(
                     TangemPayOrderInfo(orderId = "active-order", orderStatus = OrderStatus.PROCESSING),
                     userWalletId,
+                    any(),
                     any(),
                     any(),
                 )
@@ -87,7 +88,7 @@ internal class CreatePaymentNetworkContractUseCaseTest {
                 chainId = chainId,
             )
         } returns createdOrder.right()
-        coEvery { pollingUseCase.invoke(any(), any(), any(), any()) } returns true
+        coEvery { pollingUseCase.invoke(any(), any(), any(), any(), any()) } returns true
 
         val result = useCase(userWalletId, network)
 
@@ -107,6 +108,7 @@ internal class CreatePaymentNetworkContractUseCaseTest {
                 userWalletId,
                 any(),
                 any(),
+                any(),
             )
         }
     }
@@ -121,7 +123,7 @@ internal class CreatePaymentNetworkContractUseCaseTest {
                 statuses = OrderStatus.activeStatuses,
             )
         } returns listOf(activeOrder).right()
-        coEvery { pollingUseCase.invoke(any(), any(), any(), any()) } coAnswers {
+        coEvery { pollingUseCase.invoke(any(), any(), any(), any(), any()) } coAnswers {
             awaitCancellation() // a poll that never terminates must not block invoke
         }
 
@@ -139,7 +141,7 @@ internal class CreatePaymentNetworkContractUseCaseTest {
         coVerify(exactly = 0) {
             customerOrderRepository.createOrder(any(), any(), any(), any(), any(), any(), any())
         }
-        coVerify(exactly = 0) { pollingUseCase.invoke(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { pollingUseCase.invoke(any(), any(), any(), any(), any()) }
     }
 
     @Test
@@ -174,7 +176,7 @@ internal class CreatePaymentNetworkContractUseCaseTest {
                     chainId = chainId,
                 )
             }
-            coVerify(exactly = 0) { pollingUseCase.invoke(any(), any(), any(), any()) }
+            coVerify(exactly = 0) { pollingUseCase.invoke(any(), any(), any(), any(), any()) }
         }
 
     @Test
@@ -202,7 +204,7 @@ internal class CreatePaymentNetworkContractUseCaseTest {
                 VisaApiError.UnknownWithoutCode.left(),
                 createdOrder.right(),
             )
-            coEvery { pollingUseCase.invoke(any(), any(), any(), any()) } returns true
+            coEvery { pollingUseCase.invoke(any(), any(), any(), any(), any()) } returns true
 
             val result = useCase(userWalletId, network)
 
@@ -222,6 +224,7 @@ internal class CreatePaymentNetworkContractUseCaseTest {
                 pollingUseCase.invoke(
                     TangemPayOrderInfo(orderId = "resilient-order", orderStatus = OrderStatus.NEW),
                     userWalletId,
+                    any(),
                     any(),
                     any(),
                 )
