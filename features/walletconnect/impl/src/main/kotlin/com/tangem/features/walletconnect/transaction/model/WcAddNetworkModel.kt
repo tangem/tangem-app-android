@@ -16,6 +16,7 @@ import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.usecase.method.WcAddNetworkUseCase
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
 import com.tangem.features.walletconnect.transaction.converter.WcAddEthereumChainUMConverter
+import com.tangem.domain.walletconnect.model.HandleMethodError
 import com.tangem.features.walletconnect.transaction.converter.WcHandleMethodErrorConverter
 import com.tangem.features.walletconnect.transaction.converter.WcPortfolioNameDelegate
 import com.tangem.features.walletconnect.transaction.entity.chain.WcAddEthereumChainUM
@@ -110,13 +111,19 @@ internal class WcAddNetworkModel @Inject constructor(
     private fun sign(useCase: WcAddNetworkUseCase) {
         modelScope.launch {
             _uiState.update { it?.copy(transaction = it.transaction.copy(isLoading = true)) }
-            useCase.approve().getOrNull()?.let {
-                showSuccessAddedMessage()
-                router.pop()
-            } ?: run {
-                _uiState.update { it?.copy(transaction = it.transaction.copy(isLoading = false)) }
-                TODO("[REDACTED_JIRA]")
-            }
+            useCase.approve().fold(
+                ifLeft = { error ->
+                    _uiState.update { it?.copy(transaction = it.transaction.copy(isLoading = false)) }
+                    // e.g. the dApp/relay went away after the user tapped Add: show it instead of crashing.
+                    router.push(
+                        WcHandleMethodErrorConverter.convert(HandleMethodError.UnknownError(error.toString())),
+                    )
+                },
+                ifRight = {
+                    showSuccessAddedMessage()
+                    router.pop()
+                },
+            )
         }
     }
 

@@ -31,17 +31,22 @@ internal class WcSwitchNetworkModel @Inject constructor(
             val useCase = useCaseFactory.createUseCase<WcSwitchNetworkUseCase>(params.rawRequest)
                 .onLeft { showErrorDialog(it) }
                 .getOrNull() ?: return@launch
-            val either = useCase.invoke()
-            useCase.reject()
-            either
-                .onLeft { showErrorDialog(it) }
-                .map {
-                    if (it.isExistInWcSession) {
+            useCase.invoke().fold(
+                ifLeft = { error ->
+                    useCase.reject()
+                    showErrorDialog(error)
+                },
+                ifRight = { switchNetwork ->
+                    if (switchNetwork.isExistInWcSession) {
+                        // EIP-3326 expects a null success here; an error breaks dApps that switch before every tx.
+                        useCase.approve()
                         router.pop()
                     } else {
-                        showErrorDialog(HandleMethodError.RequiredNetwork(it.network.name))
+                        useCase.reject()
+                        showErrorDialog(HandleMethodError.RequiredNetwork(switchNetwork.network.name))
                     }
-                }
+                },
+            )
         }
     }
 
