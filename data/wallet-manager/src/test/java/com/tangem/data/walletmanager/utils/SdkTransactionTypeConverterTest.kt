@@ -486,6 +486,20 @@ internal class SdkTransactionTypeConverterTest {
         }
 
         @Test
+        fun `GIVEN another Safe executing a transfer WHEN convert THEN plain named operation`() {
+            // Arrange — another Safe paying this account shows up in its history with that Safe's calldata
+            val converter = jointConverter(coin, safeAddress = "0x9ac8cebb0ee0efd32c57e9824e5d332e042d04df")
+
+            // Act
+            val direct = converter.convert(safeItem(SAFE_EXEC_METHOD_ID, EXEC_TRANSACTION_CALLDATA))
+            val bundled = converter.convert(safeItem(AGGREGATE3_METHOD_ID, AGGREGATE3_CALLDATA))
+
+            // Assert
+            assertThat(direct).isEqualTo(TxInfo.TransactionType.Operation(name = "ExecTransaction"))
+            assertThat(bundled).isEqualTo(TxInfo.TransactionType.Operation(name = "Aggregate3"))
+        }
+
+        @Test
         fun `GIVEN personal account calling a Safe WHEN convert THEN plain named operation`() {
             // Act
             val actual = jointConverter(currencyFactory.ethereum)
@@ -504,17 +518,19 @@ internal class SdkTransactionTypeConverterTest {
             assertThat(actual).isEqualTo(TxInfo.TransactionType.Operation(name = "ExecTransaction"))
         }
 
-        private fun jointConverter(currency: CryptoCurrency) = SdkTransactionTypeConverter(
-            smartContractMethods = mapOf(
-                SAFE_EXEC_METHOD_ID to SmartContractMethod(info = "Safe", source = null, name = "execTransaction"),
-                AGGREGATE3_METHOD_ID to SmartContractMethod(info = "Multicall3", source = null, name = "aggregate3"),
-            ),
-            yieldSupplyAddresses = emptySet(),
-            gaslessFeeAddresses = emptySet(),
-            currency = currency,
-            networkTokens = setOf(token),
-            getCachedTokenInfoUseCase = mockk(relaxed = true),
-        )
+        private fun jointConverter(currency: CryptoCurrency, safeAddress: String = SAFE_ADDRESS) =
+            SdkTransactionTypeConverter(
+                smartContractMethods = mapOf(
+                    SAFE_EXEC_METHOD_ID to SmartContractMethod(info = "Safe", source = null, name = "execTransaction"),
+                    AGGREGATE3_METHOD_ID to SmartContractMethod(info = "Multicall3", source = null, name = "aggregate3"),
+                ),
+                yieldSupplyAddresses = emptySet(),
+                gaslessFeeAddresses = emptySet(),
+                currency = currency,
+                networkTokens = setOf(token),
+                getCachedTokenInfoUseCase = mockk(relaxed = true),
+                safeAddress = safeAddress,
+            )
 
         /** The provider record: relayer → Safe, zero value, the calldata on the type, the fee in the network coin */
         private fun safeItem(methodId: String, callData: String) = TransactionHistoryItem(

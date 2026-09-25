@@ -14,6 +14,7 @@ import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.MockAccounts
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import java.math.BigDecimal
 
 /**
  * Unit tests for [contactCandidate] — which counterparty the details screen offers to save to the address book. Pins
@@ -41,6 +42,21 @@ internal class ContactCandidateTest : TxDetailsConverterTestBase() {
         Model(
             name = "outgoing transfer to an unsaved external address -> offered",
             tx = transfer(isOutgoing = true),
+            lookup = lookupOf(),
+            expected = ContactCandidate(address = USER_ADDRESS, networkId = ethereumId),
+        ),
+        Model(
+            name = "joint account transfer to an unsaved external address -> offered",
+            tx = onChain(
+                type = TransactionType.Joint.Transfer(
+                    recipient = USER_ADDRESS,
+                    amount = BigDecimal.ONE,
+                    refundCapWei = BigDecimal("500000000000000"),
+                    signaturesCount = 2,
+                ),
+                isOutgoing = true,
+                interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+            ),
             lookup = lookupOf(),
             expected = ContactCandidate(address = USER_ADDRESS, networkId = ethereumId),
         ),

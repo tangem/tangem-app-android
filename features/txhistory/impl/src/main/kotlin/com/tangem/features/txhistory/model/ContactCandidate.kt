@@ -61,6 +61,7 @@ private fun ExpressTx.Swap.swapPayoutCandidate(): ContactCandidate? {
 
 /** A plain value transfer: an ordinary Send / Receive, or the non-withdraw yield Send that is one in disguise. */
 internal fun TxInfo.isPlainTransfer(): Boolean = type is TxInfo.TransactionType.Transfer ||
+    type is TxInfo.TransactionType.Joint.Transfer ||
     (type as? TxInfo.TransactionType.YieldSupply.Send)?.isYieldSupplyWithdraw == false
 
 /**
