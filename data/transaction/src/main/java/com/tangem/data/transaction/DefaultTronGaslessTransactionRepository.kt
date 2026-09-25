@@ -1,7 +1,9 @@
 package com.tangem.data.transaction
 
+import com.squareup.moshi.JsonAdapter
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.grow.datasource.gasless.TronGaslessApi
+import com.tangem.grow.datasource.gasless.models.GaslessErrorResponse
 import com.tangem.grow.datasource.gasless.models.tron.TronEstimateRequestBody
 import com.tangem.grow.datasource.gasless.models.tron.TronSubmitRequestBody
 import com.tangem.domain.transaction.TronGaslessTransactionRepository
@@ -20,6 +22,7 @@ import java.time.Instant
 
 internal class DefaultTronGaslessTransactionRepository(
     private val api: TronGaslessApi,
+    private val errorAdapter: JsonAdapter<GaslessErrorResponse>,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : TronGaslessTransactionRepository {
 
@@ -52,7 +55,7 @@ internal class DefaultTronGaslessTransactionRepository(
                 amount = params.amount.toString(),
                 feeTokenContract = params.feeTokenContract,
             ),
-        ).getOrThrowGaslessError()
+        ).getOrThrowGaslessError(errorAdapter)
         if (!response.isSuccess) throw GaslessServiceException(httpCode = null, message = GASLESS_UNSUCCESSFUL)
 
         val res = response.result
@@ -83,7 +86,7 @@ internal class DefaultTronGaslessTransactionRepository(
                 signedCompensationTx = signedCompensationTx,
                 signedOriginalTx = signedOriginalTx,
             ),
-        ).getOrThrowGaslessError()
+        ).getOrThrowGaslessError(errorAdapter)
         if (!response.isSuccess) throw GaslessServiceException(httpCode = null, message = GASLESS_UNSUCCESSFUL)
 
         val res = response.result
