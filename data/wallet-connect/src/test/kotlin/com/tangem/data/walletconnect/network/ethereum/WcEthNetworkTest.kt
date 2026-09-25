@@ -10,6 +10,7 @@ import com.tangem.data.walletconnect.utils.WcNetworksConverter
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.walletconnect.model.HandleMethodError
 import com.tangem.domain.walletconnect.model.WcEthMethod
+import com.tangem.domain.walletconnect.model.WcEthMethodName
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.sdkcopy.WcAppMetaData
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSession
@@ -140,13 +141,44 @@ internal class WcEthNetworkTest {
         assertThat(method.params.message?.contents).isEqualTo("hi")
     }
 
+    @Test
+    fun `GIVEN account outside the session WHEN toUseCase THEN request is refused`() = runTest {
+        // Arrange: 0xdef is a valid wallet address of the same chain but was never exposed to this dApp
+        val request = createTypedDataRequest(params = "[\"0xdef\", {}]")
+
+        // Act
+        val result = network.toUseCase(request)
+
+        // Assert
+        assertThat(result.isLeft()).isTrue()
+        verify(exactly = 0) { signTypedDataFactory.create(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN eth method on a solana chain WHEN toWcMethodName THEN not handled by the EVM network`() {
+        val request = createTypedDataRequest(
+            params = "[\"0xabc\", {}]",
+            chainId = "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+        )
+
+        assertThat(network.toWcMethodName(request)).isNull()
+    }
+
+    @Test
+    fun `GIVEN eth method on an eip155 chain WHEN toWcMethodName THEN handled`() {
+        val request = createTypedDataRequest(params = "[\"0xabc\", {}]")
+
+        assertThat(network.toWcMethodName(request)).isEqualTo(WcEthMethodName.SignTypeData)
+    }
+
     private fun createTypedDataRequest(
         params: String,
         dAppMetaData: WcAppMetaData = emptyMetadata(),
+        chainId: String = "eip155:1",
     ): WcSdkSessionRequest {
         return WcSdkSessionRequest(
             topic = "topic",
-            chainId = "eip155:1",
+            chainId = chainId,
             dAppMetaData = dAppMetaData,
             request = WcSdkSessionRequest.JSONRPCRequest(
                 id = 1L,
@@ -166,7 +198,14 @@ internal class WcEthNetworkTest {
             connectingTime = 0L,
             sdkModel = WcSdkSession(
                 topic = "topic",
-                namespaces = mapOf(),
+                namespaces = mapOf(
+                    "eip155" to WcSdkSession.Session(
+                        chains = listOf("eip155:1"),
+                        accounts = listOf("eip155:1:0xabc"),
+                        methods = listOf("eth_signTypedData", "eth_sendTransaction"),
+                        events = listOf(),
+                    ),
+                ),
                 appMetaData = emptyMetadata(),
             ),
             showWalletInfo = false,

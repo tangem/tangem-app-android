@@ -11,6 +11,7 @@ import com.tangem.data.walletconnect.model.CAIP2
 import com.tangem.data.walletconnect.model.NamespaceKey
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter.Companion.fromJson
+import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter.Companion.isInNamespace
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
@@ -39,6 +40,7 @@ internal class WcBitcoinNetwork(
 ) : WcRequestToUseCaseConverter {
 
     override fun toWcMethodName(request: WcSdkSessionRequest): WcBitcoinMethodName? {
+        if (!request.isInNamespace(NAMESPACE)) return null
         val methodKey = request.request.method
         return WcBitcoinMethodName.entries.find { it.raw == methodKey }
     }
