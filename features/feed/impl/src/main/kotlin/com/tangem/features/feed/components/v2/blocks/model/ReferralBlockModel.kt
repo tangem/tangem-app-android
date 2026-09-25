@@ -31,8 +31,8 @@ import javax.inject.Inject
  * Which wallets the referral invitation is worth making to, and which one a tap opens it for.
  *
  * The programme is per wallet, and so is the screen the card leads to, so the wallet is settled before
- * navigating: silently when only one wallet can still be invited, through the chooser when several can.
- * Once every eligible wallet has joined, the card is dropped.
+ * navigating: silently when the programme is open to one wallet only, through the chooser when it is open
+ * to several. Once every eligible wallet has joined, the card is dropped.
  */
 @Stable
 @ModelScoped
@@ -51,21 +51,49 @@ internal class ReferralBlockModel @Inject constructor(
     private val statusRefreshes = MutableStateFlow(value = 0)
 
     /**
-     * Wallets that can still be invited.
-     *
-     * Reading the join status costs a request per wallet, so the local test — programme open to this
-     * wallet, wallet unlocked — runs first and only its survivors are asked. Compared by id, so a
-     * balance refresh doesn't send the requests again.
+     * Wallets the programme is open to at all — the local test, which costs nothing. Compared by id,
+     * so a balance refresh doesn't send the join-status requests again.
      */
-    private val invitableWallets: StateFlow<List<UserWalletId>> = userWalletsListRepository.userWallets
+    private val offeredWallets: StateFlow<List<UserWallet>> = userWalletsListRepository.userWallets
         .map { wallets -> wallets.orEmpty().filter { !it.isLocked && it.isReferralOffered() } }
         .distinctUntilChanged { old, new -> old.map(UserWallet::walletId) == new.map(UserWallet::walletId) }
-        .combine(statusRefreshes) { offered, _ -> offered }
-        .map { offered -> offered.filterNot { it.hasJoinedReferral() }.map(UserWallet::walletId) }
         .stateIn(scope = modelScope, started = SharingStarted.Eagerly, initialValue = emptyList())
 
-    val isVisible: StateFlow<Boolean> = invitableWallets
-        .map { it.isNotEmpty() }
+    /**
+     * Which of the offered wallets have not joined yet, and whether that is known — reading the join
+     * status costs a request per wallet, and the card is shown as a skeleton while they are in flight
+     * rather than appearing only once the backend has answered.
+     */
+    private val invitation: StateFlow<Invitation> = offeredWallets
+        .combine(statusRefreshes) { offered, _ -> offered }
+        .transform { offered ->
+            if (offered.isEmpty()) {
+                emit(Invitation.Settled(invitable = emptyList()))
+                return@transform
+            }
+
+            emit(Invitation.Pending)
+
+            val invitable = offered.filterNot { it.hasJoinedReferral() }.map(UserWallet::walletId)
+            emit(Invitation.Settled(invitable = invitable))
+        }
+        .stateIn(
+            scope = modelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = Invitation.Settled(invitable = emptyList()),
+        )
+
+    val isVisible: StateFlow<Boolean> = invitation
+        .map { state ->
+            when (state) {
+                Invitation.Pending -> true
+                is Invitation.Settled -> state.invitable.isNotEmpty()
+            }
+        }
+        .stateIn(scope = modelScope, started = SharingStarted.Eagerly, initialValue = false)
+
+    val isLoading: StateFlow<Boolean> = invitation
+        .map { it is Invitation.Pending }
         .stateIn(scope = modelScope, started = SharingStarted.Eagerly, initialValue = false)
 
     /** Read by the block's component, which owns the slot the chooser is shown in. */
@@ -101,16 +129,17 @@ internal class ReferralBlockModel @Inject constructor(
     }
 
     fun onClick() {
-        val wallets = invitableWallets.value
-        when (wallets.size) {
-            0 -> TangemLogger.i("Referral: no wallet left to invite; staying on the feed")
-            1 -> openReferral(wallets.single())
-            else -> showWalletSelector(invitable = wallets.toSet())
+        val invitable = (invitation.value as? Invitation.Settled)?.invitable.orEmpty()
+
+        when {
+            invitable.isEmpty() -> TangemLogger.i("Referral: no wallet left to invite; staying on the feed")
+            offeredWallets.value.size == 1 -> openReferral(invitable.single())
+            else -> showWalletSelector(invitable = invitable.toSet())
         }
     }
 
     private fun showWalletSelector(invitable: Set<UserWalletId>) {
-        // The chooser lists every wallet; the ones the programme isn't open to stay disabled
+        // The chooser lists every wallet; the ones that can't be invited stay disabled
         portfolioSelectorController.isEnabled.value = { wallet, _ -> wallet.walletId in invitable }
         portfolioSelectorController.selectAccount(accountId = null)
         observeWalletSelection()
@@ -154,4 +183,11 @@ internal class ReferralBlockModel @Inject constructor(
     }
         .onFailure { TangemLogger.e("Referral status unavailable, keeping the invite visible", it) }
         .getOrDefault(false)
+
+    private sealed interface Invitation {
+
+        data object Pending : Invitation
+
+        data class Settled(val invitable: List<UserWalletId>) : Invitation
+    }
 }
