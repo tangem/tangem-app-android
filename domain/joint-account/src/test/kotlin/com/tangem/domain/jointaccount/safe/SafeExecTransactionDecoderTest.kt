@@ -8,6 +8,7 @@ import com.tangem.domain.jointaccount.safe.SafeExecutionFixtures.AGGREGATE3_CALL
 import com.tangem.domain.jointaccount.safe.SafeExecutionFixtures.EXEC_TRANSACTION_CALLDATA
 import com.tangem.domain.jointaccount.safe.SafeExecutionFixtures.RECIPIENT
 import com.tangem.domain.jointaccount.safe.SafeExecutionFixtures.RELAYER
+import com.tangem.domain.jointaccount.safe.SafeExecutionFixtures.SAFE
 import com.tangem.domain.jointaccount.safe.SafeExecutionFixtures.ZERO_ADDRESS
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
@@ -59,6 +60,7 @@ internal class SafeExecTransactionDecoderTest {
                     refundReceiver = RELAYER,
                 ),
                 signaturesCount = 2,
+                safe = SAFE,
             ),
         )
     }

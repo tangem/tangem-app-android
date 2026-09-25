@@ -7,6 +7,7 @@ package com.tangem.domain.jointaccount.safe
  * operation, 1.0935 POL to the same recipient.
  */
 internal object SafeExecutionFixtures {
+    const val SAFE = "0x4cd2b9a4197dd56e8bde666691a18b2bfa9d3c74"
     const val RECIPIENT = "0x6dbd0c1957dfe9d85f74b8fe3a355b268a39ec91"
     const val RELAYER = "0x5f2c435df8d00d0cf842a52dd166b1dcd69734c2"
     const val ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"

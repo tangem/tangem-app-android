@@ -29,6 +29,8 @@ internal class SdkTransactionHistoryItemConverter(
     private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
 ) : Converter<SdkTransactionHistoryItem, TxInfo> {
 
+    private val ownAddress: String? = currencyAddresses.firstOrNull()?.value
+
     private val typeConverter by lazy {
         SdkTransactionTypeConverter(
             smartContractMethods = smartContractMethods,
@@ -37,10 +39,9 @@ internal class SdkTransactionHistoryItemConverter(
             currency = currency,
             networkTokens = networkTokens,
             getCachedTokenInfoUseCase = getCachedTokenInfoUseCase,
+            safeAddress = ownAddress,
         )
     }
-
-    private val ownAddress: String? = currencyAddresses.firstOrNull()?.value
 
     private val ownAddresses: Set<String> = currencyAddresses
         .mapTo(mutableSetOf()) { it.value.lowercase() }
