@@ -160,6 +160,29 @@ internal class GiveApprovalModel @Inject constructor(
     }
 
     suspend fun loadFeeExtended(maybeToken: CryptoCurrencyStatus?): Either<GetFeeError, TransactionFeeExtended> {
+        // The gasless / fee-in-token path sends exactly one transaction. A token that requires the allowance to
+        // be reset to zero before it can be changed (USDT-style) would make that single approve revert on-chain
+        // — with the fee already paid. Detect the case like loadFee() does and report it as a gasless error, so
+        // the fee selector falls back to the native fee, where the revoke + approve pair is supported.
+        val requiredAmount = params.amount.parseBigDecimalOrNull()
+        if (requiredAmount != null) {
+            val allowance = getAllowanceInfoUseCase(
+                userWalletId = params.userWalletId,
+                cryptoCurrency = params.cryptoCurrencyStatus.currency,
+                spenderAddress = params.spenderAddress,
+                requiredAmount = requiredAmount,
+            ).getOrElse { error ->
+                TangemLogger.e("Failed to get allowance info", error)
+                return GetFeeError.DataError(error).left()
+            }
+            if (allowance is AllowanceInfo.ResetNeeded) {
+                TangemLogger.i("Allowance must be reset before approving; not possible in a single gasless tx")
+                return GetFeeError.GaslessError.DataError(
+                    IllegalStateException("Allowance reset required; gasless approve is a single transaction"),
+                ).left()
+            }
+        }
+
         val approve = createApprovalTransactionUseCase(
             userWalletId = params.userWalletId,
             cryptoCurrencyStatus = params.cryptoCurrencyStatus,
