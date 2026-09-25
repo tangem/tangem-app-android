@@ -24,7 +24,7 @@ import com.tangem.domain.wallets.builder.HotUserWalletBuilder
 import com.tangem.domain.wallets.usecase.ExportSeedPhraseUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.hotwallet.MnemonicRepository
-import com.tangem.features.hotwallet.SocialLoginFlow
+import com.tangem.features.hotwallet.SocialLoginUseCase
 import com.tangem.features.hotwallet.SocialLoginOutcome
 import com.tangem.features.hotwallet.SocialLoginStage
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImportError
@@ -46,7 +46,7 @@ import javax.inject.Singleton
  */
 @Suppress("LongParameterList")
 @Singleton
-internal class DefaultSocialLoginFlow @Inject constructor(
+internal class DefaultSocialLoginUseCase @Inject constructor(
     private val signInWithSocialProviderUseCase: SignInWithSocialProviderUseCase,
     private val signOutFromSocialProviderUseCase: SignOutFromSocialProviderUseCase,
     private val getSocialRecoveryKeyUseCase: GetSocialRecoveryKeyUseCase,
@@ -62,7 +62,7 @@ internal class DefaultSocialLoginFlow @Inject constructor(
     private val mnemonicRepository: MnemonicRepository,
     private val hotWalletImporter: HotWalletImporter,
     private val appCoroutineScope: AppCoroutineScope,
-) : SocialLoginFlow {
+) : SocialLoginUseCase {
 
     /** Serializes the whole flow, so a double tap cannot run two creations against the same identity */
     private val mutex = Mutex()
@@ -92,10 +92,11 @@ internal class DefaultSocialLoginFlow @Inject constructor(
         idToken: SocialProviderIdToken,
         onStageChanged: (SocialLoginStage) -> Unit,
     ): Either<SocialLoginError, SocialLoginOutcome> {
+        onStageChanged(SocialLoginStage.VerifyingAccount)
+
         val recoveryKey = getSocialRecoveryKeyUseCase(idToken).getOrElse { error ->
             return if (error == SocialLoginError.BindingNotFound) {
-                onStageChanged(SocialLoginStage.CreatingWallet)
-                create(idToken)
+                create(idToken, onStageChanged)
             } else {
                 Either.Left(error)
             }
@@ -108,12 +109,15 @@ internal class DefaultSocialLoginFlow @Inject constructor(
             return finishCreate(pending, recoveryKey)
         }
 
-        onStageChanged(SocialLoginStage.RestoringWallet)
-        return restore(recoveryKey)
+        return restore(recoveryKey, onStageChanged)
     }
 
-    private suspend fun restore(recoveryKey: RecoveryKey): Either<SocialLoginError, SocialLoginOutcome> {
+    private suspend fun restore(
+        recoveryKey: RecoveryKey,
+        onStageChanged: (SocialLoginStage) -> Unit,
+    ): Either<SocialLoginError, SocialLoginOutcome> {
         try {
+            onStageChanged(SocialLoginStage.PreparingWallet)
             val restored = readSocialBackupUseCase(recoveryKey).getOrElse { return Either.Left(it) }
 
             val userWalletId = try {
@@ -122,6 +126,7 @@ internal class DefaultSocialLoginFlow @Inject constructor(
                 if (restored.secret.isPassphraseRequired) {
                     return Either.Left(SocialLoginError.PassphraseNotSupported)
                 }
+                onStageChanged(SocialLoginStage.RestoringWallet)
                 importWallet(restored).getOrElse { return Either.Left(it) }
             } finally {
                 restored.secret.wipe()
@@ -136,7 +141,12 @@ internal class DefaultSocialLoginFlow @Inject constructor(
         }
     }
 
-    private suspend fun create(idToken: SocialProviderIdToken): Either<SocialLoginError, SocialLoginOutcome> {
+    private suspend fun create(
+        idToken: SocialProviderIdToken,
+        onStageChanged: (SocialLoginStage) -> Unit,
+    ): Either<SocialLoginError, SocialLoginOutcome> {
+        onStageChanged(SocialLoginStage.CreatingWallet)
+
         // Taken over only if no registration was ever attempted on it. An attempt that failed still may
         // have been persisted, and binding such a wallet to a second identity would either be refused or
         // leave the backend holding the first key while this attempt encrypts the file with the second.

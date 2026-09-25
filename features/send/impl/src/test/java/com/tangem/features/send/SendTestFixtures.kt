@@ -44,7 +44,6 @@ internal fun loadedStatus(
         fiatAmount = fiatRate,
         fiatRate = fiatRate,
         priceChange = BigDecimal.ZERO,
-        stakingBalance = null,
         yieldSupplyStatus = null,
         hasCurrentNetworkTransactions = false,
         pendingTransactions = emptySet(),

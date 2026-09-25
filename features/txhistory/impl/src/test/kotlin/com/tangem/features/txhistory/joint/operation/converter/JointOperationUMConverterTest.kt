@@ -5,6 +5,8 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.common.ui.cosign.SignatureProgressUM
 import java.math.BigDecimal
 import com.tangem.features.txhistory.joint.operation.model.JointOperationFiat
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -102,6 +104,19 @@ internal class JointOperationUMConverterTest {
         // Assert
         assertThat(actual.cosignAction?.isEnabled).isTrue()
         assertThat(actual.cosignAction?.iconEnd).isNull()
+    }
+
+    @Test
+    fun `GIVEN threshold below the roster WHEN converted THEN the signatures counter runs to the threshold`() {
+        // Act
+        val actual = converter.convert(input(state(isSending = false)))
+
+        // Assert
+        val row = actual.cosign!!
+        assertThat(row.title).isEqualTo(
+            resourceReference(CoreUiR.string.joint_operation_signatures_progress, wrappedList(1, 2)),
+        )
+        assertThat(row.progress).isEqualTo(SignatureProgressUM(collected = 1, total = 2))
     }
 
     @Test
