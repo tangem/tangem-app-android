@@ -28,7 +28,7 @@ import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
-import com.tangem.domain.cloudbackup.usecase.GetCloudBackupStateUseCase
+import com.tangem.domain.cloudbackup.models.CloudBackupStatus
 import com.tangem.domain.cloudbackup.usecase.GetCloudBackupStatusUseCase
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.account.AccountId
@@ -94,7 +94,6 @@ internal class WalletSettingsModel @Inject constructor(
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
     private val jointAccountFeatureToggles: JointAccountFeatureToggles,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
-    private val getCloudBackupStateUseCase: GetCloudBackupStateUseCase,
     private val getCloudBackupStatusUseCase: GetCloudBackupStatusUseCase,
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
 ) : Model() {
@@ -388,7 +387,7 @@ internal class WalletSettingsModel @Inject constructor(
                 event = WalletSettingsAnalyticEvents.NoticeBackupFirst(
                     source = AnalyticsParam.ScreensSources.WalletSettings.value,
                     action = WalletSettingsAnalyticEvents.NoticeBackupFirst.Action.AccessCode,
-                    cloudBackupState = resolveCloudBackupState(userWallet),
+                    cloudBackupState = resolveCloudBackupStatus(userWallet)?.toAnalyticsState(),
                     isBackedUp = manualBackupState(userWallet.backedUp),
                 ),
             )
@@ -507,13 +506,16 @@ internal class WalletSettingsModel @Inject constructor(
     )
 
     private suspend fun sendHotForgetSheet(userWallet: UserWallet.Hot) {
-        val hasCloudBackup = hotWalletFeatureToggles.isGoogleDriveBackupEnabled &&
-            getCloudBackupStateUseCase(userWallet.walletId.stringValue)
+        // Decide on the live Drive status, not on the local "backed up" flag: the file can have been removed from
+        // Drive (Drive UI, another device, account wipe) since the flag was set, and the cloud sheet tells the user
+        // it is safe to forget the wallet because the backup "stays safe".
+        val cloudBackupStatus = resolveCloudBackupStatus(userWallet)
+        val hasCloudBackup = cloudBackupStatus == CloudBackupStatus.Done
 
         analyticsEventHandler.send(
             event = WalletSettingsAnalyticEvents.ForgetWalletRequest(
                 source = AnalyticsParam.ScreensSources.WalletSettings.value,
-                cloudBackupState = resolveCloudBackupState(userWallet),
+                cloudBackupState = cloudBackupStatus?.toAnalyticsState(),
                 isBackedUp = userWallet.backedUp,
             ),
         )
@@ -528,10 +530,10 @@ internal class WalletSettingsModel @Inject constructor(
     private fun manualBackupState(isBackedUp: Boolean): Boolean? =
         isBackedUp.takeIf { hotWalletFeatureToggles.isGoogleDriveBackupEnabled }
 
-    private suspend fun resolveCloudBackupState(userWallet: UserWallet.Hot): AnalyticsParam.CloudBackupState? {
+    private suspend fun resolveCloudBackupStatus(userWallet: UserWallet.Hot): CloudBackupStatus? {
         if (!hotWalletFeatureToggles.isGoogleDriveBackupEnabled) return null
 
-        return getCloudBackupStatusUseCase(userWallet.walletId.stringValue).toAnalyticsState()
+        return getCloudBackupStatusUseCase(userWallet.walletId.stringValue)
     }
 
     private fun sendForgetWithCloudBackupSheet(userWallet: UserWallet.Hot) {
