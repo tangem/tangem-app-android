@@ -208,7 +208,7 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
     @Suppress("NullableToStringCall")
     private fun saveAndBindRefcode() {
         scope.launch(dispatchers.default) {
-            TangemLogger.i("saveAndBindRefcode: refcode = $refcode, campaign = $campaign")
+            TangemLogger.i("saveAndBindRefcode: refcode = ${refcode?.mask()}, campaign = ${campaign?.mask()}")
 
             if (!refcode.isNullOrBlank()) {
                 val conversionData = AppsFlyerConversionData(refcode = refcode, campaign = campaign)

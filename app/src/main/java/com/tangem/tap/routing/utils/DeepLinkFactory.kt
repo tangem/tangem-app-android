@@ -97,7 +97,7 @@ internal class DeepLinkFactory @Inject constructor(
         TangemLogger.i(
             """
                 Received deep link intent
-                |- Received URI: $deeplinkUri
+                |- Received URI: ${deeplinkUri.redactedForLog()}
                 |- Source: $source
             """.trimIndent(),
         )
@@ -142,7 +142,9 @@ internal class DeepLinkFactory @Inject constructor(
         if (isTrustedWebLink) {
             urlOpener.openUrl(url)
         } else {
-            TangemLogger.i("Push link is neither routable nor a trusted web link: $deeplinkUri")
+            TangemLogger.i(
+                "Push link is neither routable nor a trusted web link: ${deeplinkUri.redactedForLog()}",
+            )
         }
     }
 
@@ -176,7 +178,7 @@ internal class DeepLinkFactory @Inject constructor(
                 TangemLogger.i(
                     """
                         No match found for deep link
-                        |- Received URI: $deeplinkUri
+                        |- Received URI: ${deeplinkUri.redactedForLog()}
                     """.trimIndent(),
                 )
                 false
@@ -261,8 +263,8 @@ internal class DeepLinkFactory @Inject constructor(
                 TangemLogger.i(
                     """
                         No match found for deep link
-                        |- Received URI: $deeplinkUri
-                        |- With params: $queryParams
+                        |- Received URI: ${deeplinkUri.redactedForLog()}
+                        |- With params: ${queryParams.keys}
                     """.trimIndent(),
                 )
                 return false
