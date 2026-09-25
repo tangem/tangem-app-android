@@ -17,6 +17,7 @@ import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.pay.usecase.bankofframp.GetBankOfframpOptionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetRecentBankAccountsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
+import com.tangem.domain.pay.usecase.recents.GetRecentTokenTransfersUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
@@ -55,6 +56,7 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
     private val tangemPayWithdrawRepository: TangemPayWithdrawRepository,
     private val uiMessageSender: UiMessageSender,
     private val getRecentBankAccountsUseCase: GetRecentBankAccountsUseCase,
+    private val getRecentTokenTransfersUseCase: GetRecentTokenTransfersUseCase,
     private val markBankAccountUsedUseCase: MarkBankAccountUsedUseCase,
     private val getBankOfframpOptionsUseCase: GetBankOfframpOptionsUseCase,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
@@ -69,6 +71,7 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
         callbacks = TangemPayWithdrawHubUMFactory.Callbacks(
             onBackClick = ::onBackClick,
             onWithinPortfolioClick = ::onWithinPortfolioClick,
+            onRecentTokenClick = ::onRecentTokenClick,
             onToPersonalAccountClick = {
                 analytics.send(TangemPayAnalyticsEvents.Offramp.ToPersonalAccountClicked())
                 openBankWithdraw(entry = BankWithdrawEntry.NewPersonal)
@@ -102,6 +105,7 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
             .launchIn(modelScope)
         loadRecents()
         loadOptions()
+        observeTokenRecents()
     }
 
     private fun loadRecents() {
@@ -126,6 +130,14 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
                 ifRight = { options -> observeAvailableSources(options) },
             )
         }.saveIn(optionsJobHolder)
+    }
+
+    private fun observeTokenRecents() {
+        getRecentTokenTransfersUseCase(params.userWalletId)
+            .onEach { transfers ->
+                state.update { it.copy(tokenRecents = TokenRecentsState.Loaded(transfers = transfers)) }
+            }
+            .launchIn(modelScope)
     }
 
     /** Balances move while the hub is open, so the tokens the wizard may start from are resolved on every update. */
@@ -160,7 +172,16 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
         router.pop()
     }
 
-    private fun onWithinPortfolioClick() {
+    private fun onWithinPortfolioClick() = openWithdrawSwap()
+
+    private fun onRecentTokenClick(currencyId: String) {
+        val loaded = state.value.tokenRecents as? TokenRecentsState.Loaded ?: return
+        val transfer = loaded.transfers.firstOrNull { it.currency.id.value == currencyId } ?: return
+
+        openWithdrawSwap(toCryptoCurrency = transfer.currency)
+    }
+
+    private fun openWithdrawSwap(toCryptoCurrency: CryptoCurrency? = null) {
         modelScope.launch {
             val hasActiveWithdrawal = tangemPayWithdrawRepository.hasWithdrawOrder(params.userWalletId)
             if (hasActiveWithdrawal) {
@@ -171,7 +192,13 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
                 )
             } else {
                 router.pop()
-                router.push(buildWithdrawSwapRoute(userWalletId = params.userWalletId, cryptoCurrency = cryptoCurrency))
+                router.push(
+                    buildWithdrawSwapRoute(
+                        userWalletId = params.userWalletId,
+                        cryptoCurrency = cryptoCurrency,
+                        toCryptoCurrency = toCryptoCurrency,
+                    ),
+                )
             }
         }
     }

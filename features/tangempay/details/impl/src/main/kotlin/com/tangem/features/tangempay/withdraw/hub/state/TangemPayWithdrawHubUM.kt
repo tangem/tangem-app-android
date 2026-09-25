@@ -1,5 +1,7 @@
 package com.tangem.features.tangempay.withdraw.hub.state
 
+import com.tangem.common.ui.account.AccountIconUM
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
@@ -12,6 +14,7 @@ internal data class TangemPayWithdrawHubUM(
 
     data class SwapSectionUM(
         val withinPortfolio: ActionCardUM,
+        val recents: TokenRecentsUM,
     )
 
     sealed interface BankSectionUM {
@@ -53,5 +56,25 @@ internal data class TangemPayWithdrawHubUM(
         val initial: String,
         val name: String,
         val accountNumber: String,
+    )
+
+    sealed interface TokenRecentsUM {
+
+        data object Loading : TokenRecentsUM
+
+        data object Empty : TokenRecentsUM
+
+        data class Content(
+            val tokens: ImmutableList<RecentTokenUM>,
+            val onTokenClick: (currencyId: String) -> Unit,
+        ) : TokenRecentsUM
+    }
+
+    data class RecentTokenUM(
+        val id: String,
+        val icon: CurrencyIconState,
+        val name: String,
+        val accountName: TextReference,
+        val accountIcon: AccountIconUM.CryptoPortfolio,
     )
 }
