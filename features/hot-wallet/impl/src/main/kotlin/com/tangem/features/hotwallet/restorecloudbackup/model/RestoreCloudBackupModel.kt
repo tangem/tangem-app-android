@@ -25,6 +25,7 @@ import com.tangem.features.hotwallet.restorecloudbackup.RestoreCloudBackupCompon
 import com.tangem.features.hotwallet.restorecloudbackup.entity.BackupRowUM
 import com.tangem.features.hotwallet.restorecloudbackup.entity.RestoreCloudBackupUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -279,7 +280,15 @@ internal class RestoreCloudBackupModel @Inject constructor(
             },
             ifRight = { userWalletId ->
                 wipeSecrets()
-                setCloudBackupStateUseCase(userWalletId.stringValue, isBackedUp = true)
+                // The backup is keyed by the wallet id it was made for. A different id after import means a
+                // different wallet (e.g. a mistyped BIP39 passphrase) — that wallet has no backup on Drive, so it
+                // must not be flagged as backed up, or "Forget wallet" would later promise a restore that cannot work.
+                val backupWalletId = selectedBackup?.walletId
+                if (backupWalletId == null || backupWalletId == userWalletId.stringValue) {
+                    setCloudBackupStateUseCase(userWalletId.stringValue, isBackedUp = true)
+                } else {
+                    TangemLogger.w("Restored wallet does not match the backup it was restored from")
+                }
                 params.callbacks.onWalletImported(userWalletId)
             },
         )
