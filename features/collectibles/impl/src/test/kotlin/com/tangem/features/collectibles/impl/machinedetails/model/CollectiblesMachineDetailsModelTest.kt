@@ -10,6 +10,7 @@ import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchFlow
 import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchListState
 import com.tangem.domain.collectibles.usecase.GetCollectibleGachaMachineNftsBatchFlowUseCase
 import com.tangem.domain.collectibles.usecase.GetCollectibleGachaMachineUseCase
+import com.tangem.features.collectibles.impl.CollectiblesRoute
 import com.tangem.features.collectibles.impl.machinedetails.CollectiblesMachineDetailsBottomSheetConfig
 import com.tangem.features.collectibles.impl.createMachine
 import com.tangem.features.collectibles.impl.machinedetails.CollectiblesMachineDetailsComponent
@@ -31,6 +32,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -59,6 +62,25 @@ internal class CollectiblesMachineDetailsModelTest {
     fun tearDown() {
         model?.onDestroy()
         model = null
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN turbo toggled WHEN buy tapped THEN the order is opened with the turbo state`(
+        isTurboEnabled: Boolean,
+    ) = runModelTest {
+        // Arrange
+        val model = startModel()
+        (model.uiState.value as CollectiblesMachineDetailsUM.Content).footer.onTurboCheckedChange(isTurboEnabled)
+        val content = model.uiState.value as CollectiblesMachineDetailsUM.Content
+
+        // Act
+        content.footer.onBuyClick()
+
+        // Assert
+        verify(exactly = 1) {
+            router.push(CollectiblesRoute.ConfirmOrder(externalId = EXTERNAL_ID, isTurboEnabled = isTurboEnabled))
+        }
     }
 
     @Test
