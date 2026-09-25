@@ -16,14 +16,17 @@ import com.tangem.data.walletconnect.request.DefaultWcRequestUseCaseFactory
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter
 import com.tangem.data.walletconnect.respond.DefaultWcRespondService
 import com.tangem.data.walletconnect.respond.WcRespondService
+import com.tangem.data.walletconnect.sdk.WcSdk
 import com.tangem.data.walletconnect.sessions.DefaultWcSessionsManager
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
+import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.core.local.moshi.SdkMoshi
 import com.tangem.data.walletconnect.store.WalletConnectStore
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.walletconnect.WalletConnectProjectIdProvider
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.WcRequestService
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
@@ -43,6 +46,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Provider
 import javax.inject.Singleton
 
 @Module
@@ -61,16 +65,37 @@ internal object WalletConnectDataModule {
     @Provides
     @Singleton
     fun wcInitializeUseCase(
+        wcSdk: WcSdk,
+        store: WalletConnectStore,
+        dispatchers: CoroutineDispatcherProvider,
+    ): WcInitializeUseCase = DefaultWcInitializeUseCase(
+        wcSdk = wcSdk,
+        store = store,
+        dispatchers = dispatchers,
+    )
+
+    @Provides
+    @Singleton
+    fun wcSdk(
         application: Application,
+        projectIdProvider: WalletConnectProjectIdProvider,
+        // A Provider breaks the cycle: the observers are the very classes that call back into the SDK.
+        observers: Provider<Set<@JvmSuppressWildcards WcSdkObserver>>,
+        dispatchers: CoroutineDispatcherProvider,
+    ): WcSdk = WcSdk(
+        application = application,
+        projectIdProvider = projectIdProvider,
+        observers = observers,
+        dispatchers = dispatchers,
+    )
+
+    @Provides
+    @Singleton
+    fun wcSdkObservers(
         sessionsManager: DefaultWcSessionsManager,
         networkService: DefaultWcRequestService,
         pairSdkDelegate: WcPairSdkDelegate,
-    ): WcInitializeUseCase = DefaultWcInitializeUseCase(
-        application = application,
-        sessionsManager = sessionsManager,
-        networkService = networkService,
-        pairSdkDelegate = pairSdkDelegate,
-    )
+    ): Set<@JvmSuppressWildcards WcSdkObserver> = setOf(sessionsManager, networkService, pairSdkDelegate)
 
     @Provides
     @Singleton
@@ -84,10 +109,12 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
-    fun sdkDelegate(appScope: AppCoroutineScope, store: WalletConnectStore): WcPairSdkDelegate = WcPairSdkDelegate(
-        scope = appScope,
-        store = store,
-    )
+    fun sdkDelegate(appScope: AppCoroutineScope, store: WalletConnectStore, wcSdk: WcSdk): WcPairSdkDelegate =
+        WcPairSdkDelegate(
+            scope = appScope,
+            store = store,
+            wcSdk = wcSdk,
+        )
 
     @Provides
     @Singleton
@@ -99,6 +126,7 @@ internal object WalletConnectDataModule {
         multiAccountListSupplier: MultiAccountListSupplier,
         analytics: AnalyticsEventHandler,
         appScope: AppCoroutineScope,
+        wcSdk: WcSdk,
     ): DefaultWcSessionsManager {
         return DefaultWcSessionsManager(
             store = store,
@@ -108,6 +136,7 @@ internal object WalletConnectDataModule {
             analytics = analytics,
             scope = appScope,
             multiAccountListSupplier = multiAccountListSupplier,
+            wcSdk = wcSdk,
         )
     }
 
@@ -133,7 +162,7 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
-    fun wcDefaultWcRespondService(): DefaultWcRespondService = DefaultWcRespondService()
+    fun wcDefaultWcRespondService(wcSdk: WcSdk): DefaultWcRespondService = DefaultWcRespondService(wcSdk)
 
     @Provides
     @Singleton

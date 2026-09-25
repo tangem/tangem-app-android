@@ -215,9 +215,10 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
 
         tangemLoggingInitializer.initSdkLogging(this)
 
-        wcInitializeUseCase.init(
-            projectId = environmentConfig.walletConnectProjectId,
-        )
+        // Starting the WalletConnect SDK costs ~400 ms on the main thread, so it is no longer part of
+        // startup: entry points bring it up on demand, and a user who already has sessions gets it here so
+        // their dApps can still reach the wallet.
+        appScope.launch { wcInitializeUseCase.initializeIfHasSessions() }
     }
 
     override fun newImageLoader(): ImageLoader = createCoilImageLoader(context = this)
