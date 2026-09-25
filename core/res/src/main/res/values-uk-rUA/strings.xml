@@ -804,6 +804,9 @@
   <string name="force_update_warning_title">Потрібне оновлення</string>
   <string name="gasless_not_enough_funds_to_cover_token_fee">Недостатньо коштів</string>
   <string name="gasless_transaction_fee">Комісія за транзакцію</string>
+  <string name="gasless_tron_activation_attempts_limit">Ви зробили кілька спроб. Будь ласка, спробуйте пізніше.</string>
+  <string name="gasless_tron_activation_min_balance_description">Ваш баланс має перевищувати %s.</string>
+  <string name="gasless_tron_activation_try_again_later">Будь ласка, спробуйте пізніше.</string>
   <string name="generic_error">Виникла помилка</string>
   <string name="generic_error_code">Виникла помилка. Код: %s.</string>
   <string name="generic_requires_memo_error">Вимагається memo</string>
