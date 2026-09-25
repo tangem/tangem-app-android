@@ -1,7 +1,9 @@
 package com.tangem.domain.promo
 
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.promo.models.EnrollResult
+import com.tangem.domain.promo.models.PromoCampaign
 import com.tangem.domain.promo.models.PromoCampaignId
 import com.tangem.domain.promo.models.PromoCampaignState
 import com.tangem.domain.promo.models.TokenReward
@@ -35,4 +37,11 @@ interface PromoRepository {
         tokenReward: TokenReward,
         walletIds: List<UserWalletId>,
     ): EnrollResult
+
+    /**
+     * Returns the campaigns eligible for [userWallet] (`GET /v3/promotion`), cached per wallet for the app
+     * session unless [forceRefresh]. Throws if the fetch fails; a failure never evicts other wallets' entries.
+     */
+    @Throws(Exception::class)
+    suspend fun getCampaigns(userWallet: UserWallet, forceRefresh: Boolean = false): List<PromoCampaign>
 }
