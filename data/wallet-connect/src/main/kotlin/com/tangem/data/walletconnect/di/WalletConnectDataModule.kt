@@ -26,7 +26,7 @@ import com.tangem.data.walletconnect.store.WalletConnectStore
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.walletconnect.WalletConnectProjectIdProvider
+import com.tangem.domain.walletconnect.config.WalletConnectConfig
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.WcRequestService
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
@@ -78,13 +78,13 @@ internal object WalletConnectDataModule {
     @Singleton
     fun wcSdk(
         application: Application,
-        projectIdProvider: WalletConnectProjectIdProvider,
+        config: WalletConnectConfig,
         // A Provider breaks the cycle: the observers are the very classes that call back into the SDK.
         observers: Provider<Set<@JvmSuppressWildcards WcSdkObserver>>,
         dispatchers: CoroutineDispatcherProvider,
     ): WcSdk = WcSdk(
         application = application,
-        projectIdProvider = projectIdProvider,
+        config = config,
         observers = observers,
         dispatchers = dispatchers,
     )
