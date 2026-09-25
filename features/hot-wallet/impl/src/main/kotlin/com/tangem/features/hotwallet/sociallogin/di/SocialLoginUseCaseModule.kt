@@ -1,7 +1,7 @@
 package com.tangem.features.hotwallet.sociallogin.di
 
-import com.tangem.features.hotwallet.SocialLoginFlow
-import com.tangem.features.hotwallet.sociallogin.DefaultSocialLoginFlow
+import com.tangem.features.hotwallet.SocialLoginUseCase
+import com.tangem.features.hotwallet.sociallogin.DefaultSocialLoginUseCase
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -10,9 +10,9 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal interface SocialLoginFlowModule {
+internal interface SocialLoginUseCaseModule {
 
     @Binds
     @Singleton
-    fun bindSocialLoginFlow(impl: DefaultSocialLoginFlow): SocialLoginFlow
+    fun bindSocialLoginUseCase(impl: DefaultSocialLoginUseCase): SocialLoginUseCase
 }
