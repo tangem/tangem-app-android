@@ -10,6 +10,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
+import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerReferralAttributionUseCase
 import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.common.wallets.UserWalletSelectedHandler
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -53,6 +54,8 @@ internal class DefaultUserWalletsListRepositoryTest {
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val hotWalletRepository: HotWalletRepository = mockk(relaxed = true)
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase = mockk(relaxed = true)
+    private val clearAppsFlyerReferralAttributionUseCase: ClearAppsFlyerReferralAttributionUseCase =
+        mockk(relaxed = true)
     private val userWalletSelectedHandler: UserWalletSelectedHandler = mockk(relaxed = true)
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase = mockk(relaxed = true)
     private val getCompletedBackupsUseCase: GetCompletedBackupsUseCase = mockk(relaxed = true)
@@ -71,6 +74,7 @@ internal class DefaultUserWalletsListRepositoryTest {
             userWalletEncryptionKeysRepository,
             trackingContextProxy,
             clearAppsFlyerDeeplinkUseCase,
+            clearAppsFlyerReferralAttributionUseCase,
             userWalletSelectedHandler,
         )
 
@@ -92,6 +96,7 @@ internal class DefaultUserWalletsListRepositoryTest {
             analyticsEventHandler = analyticsEventHandler,
             hotWalletRepository = hotWalletRepository,
             clearAppsFlyerDeeplinkUseCase = clearAppsFlyerDeeplinkUseCase,
+            clearAppsFlyerReferralAttributionUseCase = clearAppsFlyerReferralAttributionUseCase,
             userWalletSelectedHandler = Lazy { userWalletSelectedHandler },
             isWalletBackedUpUseCase = isWalletBackedUpUseCase,
             getCompletedBackupsUseCase = getCompletedBackupsUseCase,

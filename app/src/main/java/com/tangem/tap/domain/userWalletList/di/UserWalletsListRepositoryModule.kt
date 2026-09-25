@@ -10,6 +10,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
+import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerReferralAttributionUseCase
 import com.tangem.domain.common.wallets.UserWalletSelectedHandler
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.hotwallet.repository.HotWalletRepository
@@ -60,6 +61,7 @@ internal object UserWalletsListRepositoryModule {
         analyticsEventHandler: AnalyticsEventHandler,
         hotWalletRepository: HotWalletRepository,
         clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase,
+        clearAppsFlyerReferralAttributionUseCase: ClearAppsFlyerReferralAttributionUseCase,
         userWalletSelectedHandler: Lazy<UserWalletSelectedHandler>,
         isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
         getCompletedBackupsUseCase: GetCompletedBackupsUseCase,
@@ -114,6 +116,7 @@ internal object UserWalletsListRepositoryModule {
             analyticsEventHandler = analyticsEventHandler,
             hotWalletRepository = hotWalletRepository,
             clearAppsFlyerDeeplinkUseCase = clearAppsFlyerDeeplinkUseCase,
+            clearAppsFlyerReferralAttributionUseCase = clearAppsFlyerReferralAttributionUseCase,
             userWalletSelectedHandler = userWalletSelectedHandler,
             isWalletBackedUpUseCase = isWalletBackedUpUseCase,
             getCompletedBackupsUseCase = getCompletedBackupsUseCase,
