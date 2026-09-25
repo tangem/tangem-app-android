@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
+import com.reown.walletkit.client.WalletKit
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
@@ -13,6 +14,7 @@ import com.tangem.data.walletconnect.model.CAIP2
 import com.tangem.data.walletconnect.model.NamespaceKey
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter.Companion.fromJson
+import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter.Companion.isInNamespace
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
@@ -33,6 +35,7 @@ internal class WcEthNetwork(
 ) : WcRequestToUseCaseConverter {
 
     override fun toWcMethodName(request: WcSdkSessionRequest): WcEthMethodName? {
+        if (!request.isInNamespace(NamespaceConverter.ETH_NAMESPACE_KEY)) return null
         val methodKey = request.request.method
         val name = WcEthMethodName.entries.find { it.raw == methodKey } ?: return null
         return name
@@ -72,7 +75,15 @@ internal class WcEthNetwork(
             is WcEthMethod.MessageSign,
             is WcEthMethod.SendTransaction,
             is WcEthMethod.SignTransaction,
-            -> networksConverter.findWalletNetworkForRequest(request, session, accountAddress)
+            -> {
+                // The dApp may only ask for signatures from the accounts this session exposed (CAIP-10). The
+                // wallet can hold other derivations of the same chain; matching `from` against all of them would
+                // let a request pick an account the user never shared with this dApp.
+                if (!isSessionAccount(session, chainId, accountAddress)) {
+                    return error("Account $accountAddress is not part of the session for $chainId")
+                }
+                networksConverter.findWalletNetworkForRequest(request, session, accountAddress)
+            }
             is WcEthMethod.AddEthereumChain,
             is WcEthMethod.SwitchEthereumChain,
             -> anyExistNetwork()
@@ -94,6 +105,21 @@ internal class WcEthNetwork(
             is WcEthMethod.AddEthereumChain -> factories.addNetwork.create(context, method)
             is WcEthMethod.SwitchEthereumChain -> factories.switchNetwork.create(context, method)
         }.right()
+    }
+
+    /**
+     * `"<chainId>:<accountAddress>"` must be one of the session's CAIP-10 accounts. The live SDK session is
+     * consulted first so that accounts added through `wallet_addEthereumChain` + `updateSession` count
+     * immediately; the stored copy is the fallback.
+     */
+    private fun isSessionAccount(session: WcSession, chainId: String, accountAddress: String): Boolean {
+        if (chainId.isEmpty() || accountAddress.isEmpty()) return false
+        val liveAccounts = runCatching { WalletKit.getActiveSessionByTopic(session.sdkModel.topic) }
+            .getOrNull()
+            ?.namespaces?.values?.flatMap { it.accounts }
+        val accounts = liveAccounts ?: session.sdkModel.namespaces.values.flatMap { it.accounts }
+        val expected = "$chainId${CAIP2.CAIP_SEPARATOR}$accountAddress"
+        return accounts.any { it.equals(expected, ignoreCase = true) }
     }
 
     private fun WcEthMethodName.toMethod(request: WcSdkSessionRequest): Either<Throwable, WcEthMethod?> {

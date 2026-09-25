@@ -13,6 +13,7 @@ import com.tangem.data.walletconnect.model.CAIP2
 import com.tangem.data.walletconnect.model.NamespaceKey
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter.Companion.fromJson
+import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter.Companion.isInNamespace
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
@@ -33,6 +34,7 @@ internal class WcSolanaNetwork(
 ) : WcRequestToUseCaseConverter {
 
     override fun toWcMethodName(request: WcSdkSessionRequest): WcSolanaMethodName? {
+        if (!request.isInNamespace(SOLANA_NAMESPACE_KEY)) return null
         val methodKey = request.request.method
         val name = WcSolanaMethodName.entries.find { it.raw == methodKey } ?: return null
         return name
@@ -87,7 +89,7 @@ internal class WcSolanaNetwork(
         override val excludedBlockchains: ExcludedBlockchains,
     ) : WcNamespaceConverter {
 
-        override val namespaceKey: NamespaceKey = NamespaceKey("solana")
+        override val namespaceKey: NamespaceKey = NamespaceKey(SOLANA_NAMESPACE_KEY)
 
         override fun toBlockchain(chainId: CAIP2): Blockchain? {
             val isMainNet = MAINNET_CHAIN_ID.any { it.equals(chainId.reference, ignoreCase = true) }
@@ -135,6 +137,7 @@ internal class WcSolanaNetwork(
     )
 
     companion object {
+        const val SOLANA_NAMESPACE_KEY = "solana"
         private val MAINNET_CHAIN_ID = listOf("5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp", "4sGjMW1sUnHzSxGspuhpqLDx6wiyjNtZ")
         private const val TESTNET_CHAIN_ID = "4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z"
     }
