@@ -113,7 +113,6 @@ internal class ChooseTokenListItemConverterJointAccountTest {
                     value = SAFE,
                 ),
             ),
-            stakingBalance = null,
             yieldSupplyStatus = null,
             hasCurrentNetworkTransactions = false,
             pendingTransactions = emptySet(),

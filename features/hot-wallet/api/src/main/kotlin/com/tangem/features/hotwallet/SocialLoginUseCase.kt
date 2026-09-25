@@ -11,9 +11,9 @@ import com.tangem.domain.sociallogin.models.SocialLoginProvider
  * The backend decides which, not the caller — the same entry point serves both "Create wallet" and
  * "I have a wallet" (FR-02).
  */
-interface SocialLoginFlow {
+interface SocialLoginUseCase {
 
-    /** @param onStageChanged called on the flow's own coroutine, never after it returns */
+    /** @param onStageChanged called on the calling coroutine, never after signIn returns */
     suspend fun signIn(
         provider: SocialLoginProvider,
         onStageChanged: (SocialLoginStage) -> Unit = {},
@@ -25,17 +25,20 @@ interface SocialLoginFlow {
 
 enum class SocialLoginStage {
 
-    /** Waiting on the provider and on the backend; the branch is not decided yet */
+    /** The provider owns the screen here — its account chooser and grant sheet */
     SigningIn,
 
-    /** Scenario 1: the identity is new, so a wallet is created, backed up and bound to it */
+    /** Asking the backend whether this identity already owns a wallet */
+    VerifyingAccount,
+
+    /** The backup is being downloaded and decrypted */
+    PreparingWallet,
+
     CreatingWallet,
 
-    /** Scenario 2: the identity already owns a wallet, restored from the cloud backup */
     RestoringWallet,
 }
 
-/** Both outcomes leave a usable wallet on the device */
 sealed interface SocialLoginOutcome {
 
     val userWalletId: UserWalletId

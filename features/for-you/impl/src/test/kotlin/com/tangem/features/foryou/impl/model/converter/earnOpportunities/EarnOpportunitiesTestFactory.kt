@@ -10,7 +10,6 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.currency.balance.BalanceContribution
 import com.tangem.domain.models.earn.EarnRewardType
 import com.tangem.domain.models.earn.EarnToken
 import com.tangem.domain.models.earn.EarnTokenWithCurrency
@@ -168,32 +167,18 @@ internal fun createRowLoadedValue(
     )
 }
 
-/**
- * A status value carrying the earn-related fields read by `ForYouEarnOpportunitiesConverter`.
- *
- * [useContributions] switches between the two architectures the way `CryptoCurrencyStatusFactory` does: with the
- * toggle on the balance arrives in `contributions` and the typed field is **null**. Populating both would let a
- * dead contributions path pass off the legacy fallback.
- */
+/** A status value carrying the earn-related fields read by `ForYouEarnOpportunitiesConverter`. */
 internal fun createEarnStatusValue(
     fiatAmount: BigDecimal = BigDecimal("100"),
     yieldSupplyActive: Boolean? = null,
     isStakingActive: Boolean = false,
     stakingBalance: StakingBalance? = if (isStakingActive) createP2PEthPoolBalance() else null,
-    useContributions: Boolean = false,
 ): CryptoCurrencyStatus.Loaded = mockk {
     every { this@mockk.fiatAmount } returns fiatAmount
     every { yieldSupplyStatus } returns yieldSupplyActive?.let { active ->
         mockk<YieldSupplyStatus> { every { isActive } returns active }
     }
-    every { this@mockk.stakingBalance } returns stakingBalance.takeIf { !useContributions }
-    // The staking accessor reads contributions before falling back to the typed field, so a strict mock has to
-    // answer it either way.
-    every { contributions } returns if (useContributions) {
-        listOfNotNull(stakingBalance as? BalanceContribution)
-    } else {
-        emptyList()
-    }
+    every { contributions } returns listOfNotNull(stakingBalance)
     every { isError } returns false
     every { sources } returns CryptoCurrencyStatus.Sources()
 }
