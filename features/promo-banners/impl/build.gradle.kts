@@ -40,6 +40,7 @@ dependencies {
     api(projects.domain.wallets)
     api(projects.domain.account)
     implementation(projects.core.analytics.models)
+    implementation(projects.core.configToggles)
     implementation(projects.core.ui)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.markets.models)
