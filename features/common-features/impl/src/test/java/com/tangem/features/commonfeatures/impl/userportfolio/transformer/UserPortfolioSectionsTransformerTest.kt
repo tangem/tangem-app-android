@@ -87,7 +87,6 @@ internal class UserPortfolioSectionsTransformerTest {
             networkAddress = NetworkAddress.Single(
                 defaultAddress = NetworkAddress.Address(type = NetworkAddress.Address.Type.Primary, value = SAFE),
             ),
-            stakingBalance = null,
             yieldSupplyStatus = null,
             hasCurrentNetworkTransactions = false,
             pendingTransactions = emptySet(),

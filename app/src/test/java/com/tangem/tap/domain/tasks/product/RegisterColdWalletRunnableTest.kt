@@ -41,7 +41,7 @@ internal class RegisterColdWalletRunnableTest {
     fun setup() {
         clearMocks(launcher, inner)
         every { session.environment.card } returns card
-        coEvery { launcher.registerColdInSession(any(), any(), any()) } just Runs
+        coEvery { launcher.registerColdInSession(any(), any(), any(), any()) } just Runs
         stubInnerPrepare()
     }
 
@@ -56,7 +56,7 @@ internal class RegisterColdWalletRunnableTest {
         val forwarded = prepareThenRunAndCapture(RegisterColdWalletRunnable(inner, launcher))
 
         // Assert
-        coVerify(exactly = 1) { launcher.registerColdInSession(session, card, nonce) }
+        coVerify(exactly = 1) { launcher.registerColdInSession(session, card, nonce, false) }
         assertThat((forwarded as CompletionResult.Success).data).isEqualTo("ok")
     }
 
@@ -74,8 +74,54 @@ internal class RegisterColdWalletRunnableTest {
         val forwarded = prepareThenRunAndCapture(RegisterColdWalletRunnable(inner, launcher))
 
         // Assert
-        coVerify(exactly = 0) { launcher.registerColdInSession(any(), any(), any()) }
+        coVerify(exactly = 0) { launcher.registerColdInSession(any(), any(), any(), any()) }
         assertThat((forwarded as CompletionResult.Success).data).isEqualTo("ok")
+    }
+
+    @Test
+    fun `GIVEN forced registration and no nonce WHEN prepare then run THEN still registers forced`() = runTest {
+        // Arrange — the forced path must reach the launcher without a nonce to drop the stale marker.
+        every { session.scope } returns unconfinedScope()
+        stubInnerRun(CompletionResult.Success("ok"))
+        coEvery { launcher.prefetchColdNonce() } returns null
+
+        // Act
+        val forwarded = prepareThenRunAndCapture(
+            RegisterColdWalletRunnable(inner, launcher, shouldForceRegistration = true),
+        )
+
+        // Assert
+        coVerify(exactly = 1) { launcher.registerColdInSession(session, card, null, true) }
+        assertThat((forwarded as CompletionResult.Success).data).isEqualTo("ok")
+    }
+
+    @Test
+    fun `GIVEN forced registration and nonce ready WHEN prepare then run THEN registers forced with nonce`() =
+        runTest {
+            // Arrange
+            every { session.scope } returns unconfinedScope()
+            stubInnerRun(CompletionResult.Success("ok"))
+            coEvery { launcher.prefetchColdNonce() } returns nonce
+
+            // Act
+            prepareThenRunAndCapture(RegisterColdWalletRunnable(inner, launcher, shouldForceRegistration = true))
+
+            // Assert
+            coVerify(exactly = 1) { launcher.registerColdInSession(session, card, nonce, true) }
+        }
+
+    @Test
+    fun `GIVEN forced registration and inner fails WHEN run THEN nothing registered`() = runTest {
+        // Arrange — the marker is dropped only once the import itself has succeeded.
+        every { session.scope } returns unconfinedScope()
+        stubInnerRun(CompletionResult.Failure(TangemSdkError.UserCancelled()))
+        coEvery { launcher.prefetchColdNonce() } returns nonce
+
+        // Act
+        prepareThenRunAndCapture(RegisterColdWalletRunnable(inner, launcher, shouldForceRegistration = true))
+
+        // Assert
+        coVerify(exactly = 0) { launcher.registerColdInSession(any(), any(), any(), any()) }
     }
 
     @Test
@@ -89,7 +135,7 @@ internal class RegisterColdWalletRunnableTest {
         val forwarded = prepareThenRunAndCapture(RegisterColdWalletRunnable(inner, launcher))
 
         // Assert
-        coVerify(exactly = 0) { launcher.registerColdInSession(any(), any(), any()) }
+        coVerify(exactly = 0) { launcher.registerColdInSession(any(), any(), any(), any()) }
         assertThat(forwarded).isInstanceOf(CompletionResult.Failure::class.java)
     }
 
@@ -105,7 +151,7 @@ internal class RegisterColdWalletRunnableTest {
         val forwarded = prepareThenRunAndCapture(RegisterColdWalletRunnable(inner, launcher))
 
         // Assert
-        coVerify(exactly = 0) { launcher.registerColdInSession(any(), any(), any()) }
+        coVerify(exactly = 0) { launcher.registerColdInSession(any(), any(), any(), any()) }
         assertThat((forwarded as CompletionResult.Success).data).isEqualTo("ok")
     }
 
@@ -115,7 +161,7 @@ internal class RegisterColdWalletRunnableTest {
         every { session.scope } returns unconfinedScope()
         stubInnerRun(CompletionResult.Success("ok"))
         coEvery { launcher.prefetchColdNonce() } returns nonce
-        coEvery { launcher.registerColdInSession(any(), any(), any()) } throws IllegalStateException("boom")
+        coEvery { launcher.registerColdInSession(any(), any(), any(), any()) } throws IllegalStateException("boom")
 
         // Act
         val forwarded = prepareThenRunAndCapture(RegisterColdWalletRunnable(inner, launcher))
@@ -135,7 +181,7 @@ internal class RegisterColdWalletRunnableTest {
         val forwarded = prepareThenRunAndCapture(RegisterColdWalletRunnable(inner, launcher))
 
         // Assert
-        coVerify(exactly = 0) { launcher.registerColdInSession(any(), any(), any()) }
+        coVerify(exactly = 0) { launcher.registerColdInSession(any(), any(), any(), any()) }
         assertThat((forwarded as CompletionResult.Success).data).isEqualTo("ok")
     }
 
