@@ -11,7 +11,7 @@ import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.domain.walletconnect.WC_TAG
-import com.tangem.domain.walletconnect.WalletConnectProjectIdProvider
+import com.tangem.domain.walletconnect.config.WalletConnectConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -34,7 +34,7 @@ import kotlin.coroutines.resume
  */
 internal class WcSdk(
     private val application: Application,
-    private val projectIdProvider: WalletConnectProjectIdProvider,
+    private val config: WalletConnectConfig,
     private val observers: Provider<Set<WcSdkObserver>>,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
@@ -152,7 +152,7 @@ internal class WcSdk(
     // SDK expects; what changed is when this runs, not where.
     private suspend fun initialize() = withContext(dispatchers.main) {
         CoreClient.initialize(
-            relayServerUrl = "wss://$RELAY_URL?projectId=${projectIdProvider.provideProjectId()}",
+            relayServerUrl = "wss://$RELAY_URL?projectId=${config.projectId}",
             connectionType = ConnectionType.AUTOMATIC,
             application = application,
             metaData = appMetaData(),
