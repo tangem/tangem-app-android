@@ -101,7 +101,12 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
         return if (swapTx.activeStatus?.isTerminal == true) {
             swapTx
         } else {
-            val statusModel = getExchangeStatus(swapTx.info.txId, swapTx.provider, swapTx.fromUserWalletId)
+            val statusModel = getExchangeStatus(
+                txId = swapTx.info.txId,
+                provider = swapTx.provider,
+                fromUserWalletId = swapTx.fromUserWalletId,
+                fromCryptoCurrency = swapTx.fromCryptoCurrency,
+            )
 
             if (statusModel != null) {
                 swapTransactionsStateConverter.updateTxStatus(
@@ -118,6 +123,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
         txId: String,
         provider: SwapProvider,
         fromUserWalletId: UserWalletId,
+        fromCryptoCurrency: CryptoCurrency,
     ): ExchangeStatusModel? {
         val fromUserWallet = getUserWalletUseCase(fromUserWalletId).getOrNull()
         return swapRepository.getExchangeStatus(
@@ -130,9 +136,11 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
                 ifRight = { statusModel ->
                     sendStatusUpdateAnalytics(statusModel, provider)
 
+                    // A DEX-bridge refund is paid back to the *source* address, so the refund token belongs to
+                    // the account the swap was sent from — not to whichever side of the swap is being viewed.
                     val accountId = getAccountCurrencyStatusUseCase.invokeSync(
                         userWalletId = fromUserWalletId,
-                        currency = cryptoCurrency,
+                        currency = fromCryptoCurrency,
                     )
                         .map { it.account.accountId }
                         .getOrNull()
@@ -144,7 +152,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
                             type = provider.type,
                         )
                     } else {
-                        TangemLogger.e("Account ID is null, cannot add refund currency ${cryptoCurrency.id}")
+                        TangemLogger.e("Account ID is null, cannot add refund currency ${fromCryptoCurrency.id}")
                         null
                     }
 
@@ -182,6 +190,9 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
     ): CryptoCurrency? {
         status ?: return null
         if (type != ExchangeProviderType.DEX_BRIDGE) return null
+        // The refund fields describe where a refund *would* go; only add the token once the provider actually
+        // refunded. Doing it on every poll made a token appear in the portfolio for deals that completed normally.
+        if (status.status != ExchangeStatus.Refunded) return null
         val refundNetwork = status.refundNetwork
         val refundContractAddress = status.refundContractAddress
 
