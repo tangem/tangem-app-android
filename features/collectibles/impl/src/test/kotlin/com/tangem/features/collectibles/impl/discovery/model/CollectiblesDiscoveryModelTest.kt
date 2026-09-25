@@ -32,6 +32,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -336,6 +337,23 @@ internal class CollectiblesDiscoveryModelTest {
         // Assert
         coVerify(exactly = 2) { getCategoriesUseCase() }
         assertThat(fixture.actions).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN categories failed WHEN reload is clicked THEN tabs and packs show loading`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns CollectiblesError.Api(IllegalStateException("boom")).left()
+        val fixture = startModel()
+        coEvery { getCategoriesUseCase() } coAnswers { awaitCancellation() }
+
+        // Act
+        fixture.model.clickReload()
+        advanceUntilIdle()
+
+        // Assert
+        val state = fixture.model.uiState.value
+        assertThat(state.tabs).isEqualTo(CollectiblesDiscoveryUM.TabsUM.Loading)
+        assertThat(state.content).isEqualTo(CollectiblesDiscoveryUM.ContentUM.Loading)
     }
 
     @Test
