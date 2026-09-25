@@ -10,6 +10,10 @@ internal object JointTransferIntentFactory {
 
     fun create(amountUM: AmountState, destinationUM: DestinationUM, currency: CryptoCurrency): JointTransferIntent? {
         val amount = (amountUM as? AmountState.Data)?.amountTextField?.cryptoAmount?.value ?: return null
+        return create(amount, destinationUM, currency)
+    }
+
+    fun create(amount: BigDecimal, destinationUM: DestinationUM, currency: CryptoCurrency): JointTransferIntent? {
         if (amount <= BigDecimal.ZERO) return null
         val recipient = (destinationUM as? DestinationUM.Content)
             ?.addressTextField?.actualAddress?.takeIf { it.isNotBlank() }
