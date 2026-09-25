@@ -65,7 +65,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
         val accountId = queryParams[ACCOUNT_ID_KEY]
 
         scope.launch {
-            val userWalletId = walletId?.let(::UserWalletId)
+            val userWalletId = UserWalletId.fromStringOrNull(walletId)
             val userWallet = resolveAndSelectUserWalletUseCase(userWalletId) ?: return@launch
 
             val cryptoCurrency = resolveCryptoCurrency(

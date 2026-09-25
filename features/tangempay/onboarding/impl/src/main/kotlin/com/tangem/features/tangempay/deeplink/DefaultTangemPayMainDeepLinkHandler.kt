@@ -42,7 +42,7 @@ internal class DefaultTangemPayMainDeepLinkHandler @AssistedInject constructor(
         val walletId = payload[CUSTOMER_WALLET_ID_KEY]
 
         scope.launch {
-            val userWalletId = walletId?.let(::UserWalletId) ?: run {
+            val userWalletId = UserWalletId.fromStringOrNull(walletId) ?: run {
                 appRouter.popTo(AppRoute.Wallet)
                 return@launch
             }

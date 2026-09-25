@@ -1,6 +1,7 @@
 package com.tangem.domain.models.wallet
 
 import com.tangem.utils.extensions.hexToBytes
+import com.tangem.utils.extensions.hexToBytesOrNull
 import com.tangem.utils.extensions.toHexString
 
 /**
@@ -27,4 +28,16 @@ data class UserWalletId(
     constructor(value: ByteArray?) : this(stringValue = value?.toHexString() ?: "")
 
     override fun toString() = "UserWalletId(${stringValue.take(n = 3)}...${stringValue.takeLast(n = 3)})"
+
+    companion object {
+
+        /**
+         * Parses an externally supplied id (deep link, push payload) without throwing: the primary constructor
+         * decodes [stringValue] eagerly and `hexToBytes` throws on non-hex input.
+         */
+        fun fromStringOrNull(stringValue: String?): UserWalletId? {
+            if (stringValue.isNullOrBlank()) return null
+            return stringValue.hexToBytesOrNull()?.let { UserWalletId(stringValue = stringValue) }
+        }
+    }
 }
