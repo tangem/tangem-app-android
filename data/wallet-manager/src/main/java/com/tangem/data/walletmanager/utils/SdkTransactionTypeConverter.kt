@@ -13,6 +13,7 @@ import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldS
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
+import com.tangem.domain.jointaccount.model.SafeExecution
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.safe.SafeExecTransactionDecoder
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -33,6 +34,7 @@ internal class SdkTransactionTypeConverter(
     private val currency: CryptoCurrency,
     private val networkTokens: Set<CryptoCurrency.Token> = emptySet(),
     private val getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
+    private val safeAddress: String? = null,
 ) : Converter<TransactionHistoryItem, TxInfo.TransactionType> {
 
     private val isJointAccount = currency.network.derivationPath is Network.DerivationPath.Joint
@@ -147,7 +149,7 @@ internal class SdkTransactionTypeConverter(
             "gaslessTransaction" -> getTypeForGaslessMethod(destination, source, methodName)
             "execTransaction",
             "aggregate3",
-            -> decodeSafeExecution(callData)
+            -> decodeSafeExecution(callData, destination)
             else -> fallbackOperation(methodName)
         } ?: fallbackOperation(methodName)
 
@@ -258,13 +260,30 @@ internal class SdkTransactionTypeConverter(
 
     private fun String.toSelectorKey(): String = lowercase().formatHex()
 
-    /** Only a joint account reads its Safe calls; anyone else calling a Safe keeps the plain contract call */
-    private fun decodeSafeExecution(callData: String?): TxInfo.TransactionType.Joint? {
+    /**
+     * The Safe execution in [callData] when this joint account's own Safe ran it: another Safe paying this account
+     * lands in its history too, and a refund in an ERC-20 gas token cannot be shown as the network fee.
+     */
+    private fun readOwnSafeExecution(
+        callData: String?,
+        destination: TransactionHistoryItem.DestinationType,
+    ): SafeExecution? {
         if (!isJointAccount) return null
         val execution = SafeExecTransactionDecoder.decode(callData ?: return null) ?: return null
-        if (execution.operation != SafeTx.OPERATION_CALL) return null
-        // The refund cap is in the gas token; only a native one can be shown as the network fee
-        if (!execution.refund.gasToken.equals(SafeTxGasBuilder.NATIVE_GAS_TOKEN, ignoreCase = true)) return null
+        val executingSafe = execution.safe
+            ?: (destination as? TransactionHistoryItem.DestinationType.Single)?.addressType?.address
+        return execution.takeIf {
+            execution.operation == SafeTx.OPERATION_CALL &&
+                execution.refund.gasToken.equals(SafeTxGasBuilder.NATIVE_GAS_TOKEN, ignoreCase = true) &&
+                safeAddress != null && safeAddress.equals(executingSafe, ignoreCase = true)
+        }
+    }
+
+    private fun decodeSafeExecution(
+        callData: String?,
+        destination: TransactionHistoryItem.DestinationType,
+    ): TxInfo.TransactionType.Joint? {
+        val execution = readOwnSafeExecution(callData, destination) ?: return null
 
         val call = execution.call
         val tokenTransfer = TransferERC20TokenCallData(compiledData = call.data)
