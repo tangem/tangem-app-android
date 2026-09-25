@@ -225,6 +225,23 @@ internal class TronDefaultFeeLoaderTest {
     }
 
     @Test
+    fun `GIVEN activation is refused WHEN load THEN the refusal is returned without a native fallback`() = runTest {
+        // Arrange
+        val refusal = GetFeeError.GaslessError.TronActivationNotEnoughFunds(
+            minimumAmount = BigDecimal(5),
+            tokenSymbol = "USDT",
+        )
+        coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns refusal.left()
+
+        // Act
+        val actual = load(sentBalance = "1", nativeBalance = "50")
+
+        // Assert
+        assertThat(actual).isEqualTo(refusal.left())
+        assertThat(nativeFeeStub.calls).isEqualTo(0)
+    }
+
+    @Test
     fun `GIVEN a wallet WHEN load THEN the quote is requested for it`() = runTest {
         // Act
         load(sentBalance = "7.5", nativeBalance = "50")
