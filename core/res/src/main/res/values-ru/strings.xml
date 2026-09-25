@@ -761,6 +761,7 @@
   <string name="fee_selector_choose_token_title">Выбрать токен</string>
   <string name="feed_market_and_news">Рынок и Новости</string>
   <string name="feed_promo_earn_active_description">Получайте до %1$s APY на %2$s</string>
+  <string name="feed_promo_earn_active_title">Задействуйте больше средств</string>
   <string name="feed_promo_earn_description">Заставьте криптовалюту работать и получайте до %1$s APY</string>
   <string name="feed_promo_earn_title">Начните зарабатывать</string>
   <string name="feed_promo_referral_description">Получайте %1$s за каждого друга</string>
@@ -1032,6 +1033,7 @@
   <string name="introduction_subtitle">В одном приложении для всего</string>
   <string name="introduction_terms_of_service">Условиями использования</string>
   <string name="introduction_title">Храните все свои активы</string>
+  <string name="joint_account_coming_soon_description">Это действие пока недоступно для совместных аккаунтов. Мы работаем над этим</string>
   <string name="key_invalidated_warning_description">Вы обновили данные биометрии, отсканируйте свою карту или кольцо для входа</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Ваш баланс должен быть выше суммы комиссии для осуществления перевода</string>
   <string name="koinos_insufficient_balance_to_send_koin_title">Недостаточно средств</string>
@@ -1080,6 +1082,7 @@
   <string name="market_chart_can_not_load_data">Не удалось загрузить данные</string>
   <string name="market_chart_no_amount">Нет токенов или их стоимость неизвестна</string>
   <string name="market_chart_top_holding">%s вашего портфеля</string>
+  <string name="market_crypto_total_market_cap_title">Общая капитализация рынка</string>
   <string name="markets_about_coin_header">О монете</string>
   <string name="markets_add_to_my_portfolio_description">Чтобы купить, обменять или получить данный токен, вам нужно добавить его к себе в портфель</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">Этот актив в настоящее время не поддерживается в кошельке</string>
