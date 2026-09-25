@@ -18,7 +18,6 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import javax.inject.Provider
 import kotlin.coroutines.resume
 
 /**
@@ -35,7 +34,7 @@ import kotlin.coroutines.resume
 internal class WcSdk(
     private val application: Application,
     private val config: WalletConnectConfig,
-    private val observers: Provider<Set<WcSdkObserver>>,
+    private val observers: () -> Set<WcSdkObserver>,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -165,7 +164,7 @@ internal class WcSdk(
                 Wallet.Params.Init(core = CoreClient),
                 onSuccess = {
                     WalletKit.setWalletDelegate(walletDelegate())
-                    observers.get().forEach { it.onWcSdkInit() }
+                    observers().forEach { it.onWcSdkInit() }
                     TangemLogger.withTag(WC_TAG).i("onWcSdkInit")
                     if (continuation.isActive) continuation.resume(Unit)
                 },
@@ -194,32 +193,32 @@ internal class WcSdk(
 
         override fun onConnectionStateChange(state: Wallet.Model.ConnectionState) {
             TangemLogger.withTag(WC_TAG).i("sdk callback onConnectionStateChange isAvailable=${state.isAvailable}")
-            observers.get().forEach { it.onConnectionStateChange(state) }
+            observers().forEach { it.onConnectionStateChange(state) }
         }
 
         override fun onError(error: Wallet.Model.Error) {
             TangemLogger.withTag(WC_TAG).e("sdk callback onError", error.throwable)
-            observers.get().forEach { it.onError(error) }
+            observers().forEach { it.onError(error) }
         }
 
         override fun onProposalExpired(proposal: Wallet.Model.ExpiredProposal) {
             TangemLogger.withTag(WC_TAG).i("sdk callback onProposalExpired $proposal")
-            observers.get().forEach { it.onProposalExpired(proposal) }
+            observers().forEach { it.onProposalExpired(proposal) }
         }
 
         override fun onRequestExpired(request: Wallet.Model.ExpiredRequest) {
             TangemLogger.withTag(WC_TAG).i("sdk callback onRequestExpired $request")
-            observers.get().forEach { it.onRequestExpired(request) }
+            observers().forEach { it.onRequestExpired(request) }
         }
 
         override fun onSessionDelete(sessionDelete: Wallet.Model.SessionDelete) {
             TangemLogger.withTag(WC_TAG).i("sdk callback onSessionDelete $sessionDelete")
-            observers.get().forEach { it.onSessionDelete(sessionDelete) }
+            observers().forEach { it.onSessionDelete(sessionDelete) }
         }
 
         override fun onSessionExtend(session: Wallet.Model.Session) {
             TangemLogger.withTag(WC_TAG).i("sdk callback onSessionExtend $session")
-            observers.get().forEach { it.onSessionExtend(session) }
+            observers().forEach { it.onSessionExtend(session) }
         }
 
         override fun onSessionProposal(
@@ -227,7 +226,7 @@ internal class WcSdk(
             verifyContext: Wallet.Model.VerifyContext,
         ) {
             TangemLogger.withTag(WC_TAG).i("sdk callback onSessionProposal $sessionProposal")
-            observers.get().forEach { it.onSessionProposal(sessionProposal, verifyContext) }
+            observers().forEach { it.onSessionProposal(sessionProposal, verifyContext) }
         }
 
         override fun onSessionRequest(
@@ -235,17 +234,17 @@ internal class WcSdk(
             verifyContext: Wallet.Model.VerifyContext,
         ) {
             TangemLogger.withTag(WC_TAG).i("sdk callback onSessionRequest $sessionRequest")
-            observers.get().forEach { it.onSessionRequest(sessionRequest, verifyContext) }
+            observers().forEach { it.onSessionRequest(sessionRequest, verifyContext) }
         }
 
         override fun onSessionSettleResponse(settleSessionResponse: Wallet.Model.SettledSessionResponse) {
             TangemLogger.withTag(WC_TAG).i("sdk callback onSessionSettleResponse $settleSessionResponse")
-            observers.get().forEach { it.onSessionSettleResponse(settleSessionResponse) }
+            observers().forEach { it.onSessionSettleResponse(settleSessionResponse) }
         }
 
         override fun onSessionUpdateResponse(sessionUpdateResponse: Wallet.Model.SessionUpdateResponse) {
             TangemLogger.withTag(WC_TAG).i("sdk callback onSessionUpdateResponse $sessionUpdateResponse")
-            observers.get().forEach { it.onSessionUpdateResponse(sessionUpdateResponse) }
+            observers().forEach { it.onSessionUpdateResponse(sessionUpdateResponse) }
         }
     }
 
