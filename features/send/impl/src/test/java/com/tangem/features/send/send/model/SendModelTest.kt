@@ -1,20 +1,25 @@
 package com.tangem.features.send.send.model
 
+import androidx.compose.foundation.text.KeyboardOptions
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.send.api.SendComponent
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.entity.PredefinedValues
+import com.tangem.features.send.api.subcomponents.destination.entity.DestinationTextFieldUM
+import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.common.CommonSendRoute
 import com.tangem.features.send.common.ui.state.ConfirmUM
 import com.tangem.features.send.send.SendModelTestBase
 import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -245,6 +250,91 @@ internal class SendModelTest : SendModelTestBase() {
             assertThat(state.confirmData).isNull()
             verify(exactly = 1) { router.popTo(CommonSendRoute.Amount(isEditMode = false), any()) }
         }
+    }
+
+    @Nested
+    inner class QrDestination {
+
+        @Test
+        fun `GIVEN scanned QR destination WHEN user edits recipient THEN predefined destination follows`() = runTest {
+            // Arrange
+            val model = createSendModel(this)
+            advanceUntilIdle()
+            model.predefinedValues = PredefinedValues.Content.QrCode(
+                amount = null,
+                address = "scannedAddr",
+                memo = "scannedMemo",
+                source = PredefinedValues.Source.SEND_SCREEN,
+            )
+
+            // Act
+            model.onDestinationResult(destinationContent(address = "editedAddr", memo = "editedMemo"))
+
+            // Assert — the fee estimation builds from predefinedValues; it must target the edited recipient
+            val predefined = model.predefinedValues as PredefinedValues.Content.QrCode
+            assertThat(predefined.address).isEqualTo("editedAddr")
+            assertThat(predefined.memo).isEqualTo("editedMemo")
+        }
+
+        @Test
+        fun `GIVEN scanned QR destination WHEN destination reports blank address THEN predefined is kept`() = runTest {
+            // Arrange
+            val model = createSendModel(this)
+            advanceUntilIdle()
+            val scanned = PredefinedValues.Content.QrCode(
+                amount = null,
+                address = "scannedAddr",
+                memo = null,
+                source = PredefinedValues.Source.SEND_SCREEN,
+            )
+            model.predefinedValues = scanned
+
+            // Act
+            model.onDestinationResult(destinationContent(address = "", memo = null))
+
+            // Assert
+            assertThat(model.predefinedValues).isEqualTo(scanned)
+        }
+
+        @Test
+        fun `GIVEN deeplink destination WHEN user edits recipient THEN predefined is not touched`() = runTest {
+            // Arrange
+            val model = createSendModel(this)
+            advanceUntilIdle()
+            model.predefinedValues = deeplink(amount = "1.0")
+
+            // Act
+            model.onDestinationResult(destinationContent(address = "editedAddr", memo = null))
+
+            // Assert
+            assertThat(model.predefinedValues).isEqualTo(deeplink(amount = "1.0"))
+        }
+
+        private fun destinationContent(address: String, memo: String?) = DestinationUM.Content(
+            isPrimaryButtonEnabled = true,
+            addressTextField = DestinationTextFieldUM.RecipientAddress(
+                value = address,
+                keyboardOptions = KeyboardOptions.Default,
+                placeholder = TextReference.EMPTY,
+                label = TextReference.EMPTY,
+                isValuePasted = false,
+            ),
+            memoTextField = memo?.let {
+                DestinationTextFieldUM.RecipientMemo(
+                    value = it,
+                    keyboardOptions = KeyboardOptions.Default,
+                    placeholder = TextReference.EMPTY,
+                    label = TextReference.EMPTY,
+                    disabledText = TextReference.EMPTY,
+                    isEnabled = true,
+                    isValuePasted = false,
+                )
+            },
+            recent = persistentListOf(),
+            wallets = persistentListOf(),
+            networkName = "Ethereum",
+            isRecentHidden = false,
+        )
     }
 
     private fun deeplink(amount: String) = PredefinedValues.Content.Deeplink(
