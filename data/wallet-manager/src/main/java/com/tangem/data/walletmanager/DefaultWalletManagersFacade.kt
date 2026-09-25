@@ -839,18 +839,16 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         return walletManager.wallet.recentTransactions.toTxInfos(
             currency = currency,
             ownAddresses = SdkAddressToAddressConverter.convertList(walletManager.wallet.addresses).toSet(),
-            feePaidCurrency = walletManager.wallet.blockchain.feePaidCurrency(),
         )
     }
 
     private fun List<TransactionData.Uncompiled>.toTxInfos(
         currency: CryptoCurrency,
         ownAddresses: Set<UpdateWalletManagerResult.Address>,
-        feePaidCurrency: FeePaidCurrency,
     ): List<TxInfo> {
         val transactionDataConverter = TransactionDataToTxHistoryItemConverter(
             walletAddresses = ownAddresses,
-            feePaidCurrency = feePaidCurrency,
+            currency = currency,
         )
 
         return this
