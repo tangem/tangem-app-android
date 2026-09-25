@@ -470,6 +470,22 @@ internal class SdkTransactionTypeConverterTest {
         }
 
         @Test
+        fun `GIVEN a refund in an ERC-20 gas token WHEN convert THEN plain named operation`() {
+            // Arrange — the direct fixture with its gasToken word set to the USDT contract
+            val nativeGasToken = "0".repeat(n = 64)
+            val usdtGasToken = USDT_CONTRACT.removePrefix("0x").padStart(length = 64, padChar = '0')
+            val gasTokenWordStart = 10 + 64 * 7
+            val callData = EXEC_TRANSACTION_CALLDATA.replaceRange(gasTokenWordStart, gasTokenWordStart + 64, usdtGasToken)
+            check(EXEC_TRANSACTION_CALLDATA.substring(gasTokenWordStart, gasTokenWordStart + 64) == nativeGasToken)
+
+            // Act
+            val actual = jointConverter(coin).convert(safeItem(SAFE_EXEC_METHOD_ID, callData))
+
+            // Assert
+            assertThat(actual).isEqualTo(TxInfo.TransactionType.Operation(name = "ExecTransaction"))
+        }
+
+        @Test
         fun `GIVEN personal account calling a Safe WHEN convert THEN plain named operation`() {
             // Act
             val actual = jointConverter(currencyFactory.ethereum)
