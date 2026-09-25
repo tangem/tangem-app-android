@@ -52,7 +52,7 @@ internal class TronDefaultFeeLoaderTest {
     fun setUp() {
         clearMocks(getTronGaslessFeeUseCase, isTronGaslessSupportedUseCase)
         coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
-        coEvery { getTronGaslessFeeUseCase(any(), any()) } returns gaslessFee(compensation = "2.41").right()
+        coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns gaslessFee(compensation = "2.41").right()
         nativeFeeStub.reset(nativeFee(value = "6.43").right())
         loader = TronDefaultFeeLoader(getTronGaslessFeeUseCase, isTronGaslessSupportedUseCase)
     }
@@ -70,34 +70,34 @@ internal class TronDefaultFeeLoaderTest {
         // Assert
         val expected = if (model.expectsGasless) gaslessFee(compensation = "2.41") else nativeFee(value = "6.43")
         assertThat(actual).isEqualTo(expected.right())
-        coVerify(exactly = if (model.expectsGasless) 1 else 0) { getTronGaslessFeeUseCase(any(), any()) }
+        coVerify(exactly = if (model.expectsGasless) 1 else 0) { getTronGaslessFeeUseCase(any(), any(), any()) }
         assertThat(nativeFeeStub.calls).isEqualTo(if (model.expectsGasless) 0 else 1)
     }
 
     @Test
     fun `GIVEN TRX covers native fee WHEN quote fails THEN native fee is loaded and kept on next load`() = runTest {
         // Arrange
-        coEvery { getTronGaslessFeeUseCase(any(), any()) } returns quoteError()
+        coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns quoteError()
 
         // Act
         val first = load(sentBalance = "100", nativeBalance = "50")
-        coEvery { getTronGaslessFeeUseCase(any(), any()) } returns gaslessFee(compensation = "2.41").right()
+        coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns gaslessFee(compensation = "2.41").right()
         val second = load(sentBalance = "100", nativeBalance = "50")
 
         // Assert
         assertThat(first).isEqualTo(nativeFee(value = "6.43").right())
         assertThat(second).isEqualTo(nativeFee(value = "6.43").right())
-        coVerify(exactly = 1) { getTronGaslessFeeUseCase(any(), any()) }
+        coVerify(exactly = 1) { getTronGaslessFeeUseCase(any(), any(), any()) }
     }
 
     @Test
     fun `GIVEN TRX short WHEN quote fails THEN the next load quotes again`() = runTest {
         // Arrange
-        coEvery { getTronGaslessFeeUseCase(any(), any()) } returns quoteError()
+        coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns quoteError()
 
         // Act
         val first = load(sentBalance = "100", nativeBalance = "1")
-        coEvery { getTronGaslessFeeUseCase(any(), any()) } returns gaslessFee(compensation = "2.41").right()
+        coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns gaslessFee(compensation = "2.41").right()
         val second = load(sentBalance = "100", nativeBalance = "1")
 
         // Assert
@@ -196,7 +196,7 @@ internal class TronDefaultFeeLoaderTest {
         // Assert
         assertThat(first).isEqualTo(nativeFee(value = "6.43").right())
         assertThat(second).isEqualTo(nativeFee(value = "6.43").right())
-        coVerify(exactly = 1) { getTronGaslessFeeUseCase(any(), any()) }
+        coVerify(exactly = 1) { getTronGaslessFeeUseCase(any(), any(), any()) }
         assertThat(nativeFeeStub.calls).isEqualTo(2)
     }
 
@@ -209,7 +209,7 @@ internal class TronDefaultFeeLoaderTest {
         // Assert
         assertThat(first).isEqualTo(gaslessFee(compensation = "2.41").right())
         assertThat(second).isEqualTo(gaslessFee(compensation = "2.41").right())
-        coVerify(exactly = 2) { getTronGaslessFeeUseCase(any(), any()) }
+        coVerify(exactly = 2) { getTronGaslessFeeUseCase(any(), any(), any()) }
     }
 
     @Test
@@ -225,9 +225,24 @@ internal class TronDefaultFeeLoaderTest {
     }
 
     @Test
+    fun `GIVEN a wallet WHEN load THEN the quote is requested for it`() = runTest {
+        // Act
+        load(sentBalance = "7.5", nativeBalance = "50")
+
+        // Assert
+        coVerify(exactly = 1) {
+            getTronGaslessFeeUseCase(
+                userWalletId = userWalletId,
+                transactionData = transactionData,
+                feeToken = usdt,
+            )
+        }
+    }
+
+    @Test
     fun `GIVEN quote fails and native fails WHEN load THEN native error is returned`() = runTest {
         // Arrange
-        coEvery { getTronGaslessFeeUseCase(any(), any()) } returns GetFeeError.GaslessError.DataError(
+        coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns GetFeeError.GaslessError.DataError(
             IllegalStateException("Quote unavailable"),
         ).left()
         nativeFeeStub.reset(GetFeeError.UnknownError.left())
