@@ -22,11 +22,25 @@ internal class DefaultWcRespondService : WcRespondService {
     internal val expireDuration = Duration.standardSeconds(120)
     internal val cachedRequest = MutableStateFlow<Set<Pair<Long, String>>>(emptySet())
 
+    /**
+     * Identity of a request for the duplicate filter: the relay re-delivers the same `(topic, id)`; two distinct
+     * requests with identical params (a retry after a successful sign, the same SIWE message twice, the same
+     * `wallet_switchEthereumChain` from two dApps) must both be handled.
+     */
     internal fun sessionRequestHash(request: WcSdkSessionRequest): String {
-        return request.request.params.calculateSha256().toHexString()
+        return "${request.topic}:${request.request.id}".calculateSha256().toHexString()
     }
 
-    override suspend fun respond(request: WcSdkSessionRequest, response: String): Either<WcRequestError, String> =
+    override suspend fun respond(request: WcSdkSessionRequest, response: String): Either<WcRequestError, String> {
+        val result = respondInternal(request, response)
+        removeCachedRequest(request)
+        return result
+    }
+
+    private suspend fun respondInternal(
+        request: WcSdkSessionRequest,
+        response: String,
+    ): Either<WcRequestError, String> =
         suspendCancellableCoroutine { continuation ->
             WalletKit.respondSessionRequest(
                 params = Wallet.Params.SessionRequestResponse(
