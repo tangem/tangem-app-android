@@ -12,6 +12,7 @@ import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldS
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyReactivateTokenCallData
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.domain.express.models.ExpressAsset
+import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.safe.SafeExecTransactionDecoder
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -262,6 +263,8 @@ internal class SdkTransactionTypeConverter(
         if (!isJointAccount) return null
         val execution = SafeExecTransactionDecoder.decode(callData ?: return null) ?: return null
         if (execution.operation != SafeTx.OPERATION_CALL) return null
+        // The refund cap is in the gas token; only a native one can be shown as the network fee
+        if (!execution.refund.gasToken.equals(SafeTxGasBuilder.NATIVE_GAS_TOKEN, ignoreCase = true)) return null
 
         val call = execution.call
         val tokenTransfer = TransferERC20TokenCallData(compiledData = call.data)
