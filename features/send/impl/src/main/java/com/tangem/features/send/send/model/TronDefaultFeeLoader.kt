@@ -2,6 +2,7 @@ package com.tangem.features.send.send.model
 
 import arrow.core.Either
 import arrow.core.getOrElse
+import arrow.core.left
 import arrow.core.right
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -9,6 +10,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.error.isTronActivationRefusal
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
@@ -63,6 +65,9 @@ internal class TronDefaultFeeLoader @Inject constructor(
         loadNativeFee: suspend () -> Either<GetFeeError, TransactionFeeExtended>,
     ): Either<GetFeeError, TransactionFeeExtended> {
         val gaslessFee = quoteGaslessFee().getOrElse { error ->
+            // An account that must be activated first cannot pay a native fee either — falling back
+            // would replace an actionable message with an unpayable TRX fee.
+            if (error.isTronActivationRefusal()) return error.left()
             TangemLogger.i("Tron gasless quote unavailable ($error), falling back to the native fee")
             return loadNativeFee().onRight { pinToNativeIfPayable(nativeStatus, it) }
         }
