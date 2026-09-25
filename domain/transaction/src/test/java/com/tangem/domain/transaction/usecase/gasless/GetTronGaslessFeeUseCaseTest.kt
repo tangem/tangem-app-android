@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.TronGaslessTransactionRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
@@ -22,6 +23,7 @@ internal class GetTronGaslessFeeUseCaseTest {
     private val repository: TronGaslessTransactionRepository = mockk()
     private val useCase = GetTronGaslessFeeUseCase(tronGaslessTransactionRepository = repository)
 
+    private val userWalletId = UserWalletId("011")
     private val usdtContract = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
     private val usdtToken = MockCryptoCurrencyFactory().createToken(
         blockchain = Blockchain.Tron,
@@ -58,7 +60,7 @@ internal class GetTronGaslessFeeUseCaseTest {
         coEvery { repository.estimate(any()) } returns quote
 
         // Act
-        val result = useCase(transactionData = transactionData, feeToken = usdtToken)
+        val result = useCase(userWalletId = userWalletId, transactionData = transactionData, feeToken = usdtToken)
 
         // Assert
         val extended = result.getOrNull()
@@ -70,7 +72,11 @@ internal class GetTronGaslessFeeUseCaseTest {
         // The 50 USDT send amount must reach the backend as raw base units (50 * 10^6).
         coVerify {
             repository.estimate(
-                match { it.amount == BigInteger("50000000") && it.feeTokenContract == usdtContract },
+                match {
+                    it.userWalletId == userWalletId &&
+                        it.amount == BigInteger("50000000") &&
+                        it.feeTokenContract == usdtContract
+                },
             )
         }
     }
@@ -81,7 +87,7 @@ internal class GetTronGaslessFeeUseCaseTest {
         coEvery { repository.estimate(any()) } throws RuntimeException("boom")
 
         // Act
-        val result = useCase(transactionData = transactionData, feeToken = usdtToken)
+        val result = useCase(userWalletId = userWalletId, transactionData = transactionData, feeToken = usdtToken)
 
         // Assert
         assertThat(result.isLeft()).isTrue()

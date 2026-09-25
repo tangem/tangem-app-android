@@ -1,9 +1,11 @@
 package com.tangem.domain.transaction.models.tron
 
+import com.tangem.domain.models.wallet.UserWalletId
 import java.math.BigDecimal
 import java.math.BigInteger
 
 data class TronGaslessEstimateParams(
+    val userWalletId: UserWalletId,
     val fromAddress: String,
     val toAddress: String,
     val tokenContract: String,
