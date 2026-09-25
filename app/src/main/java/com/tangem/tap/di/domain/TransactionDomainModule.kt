@@ -1,5 +1,7 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.wallets.hot.TangemHotWalletSigner
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
@@ -366,10 +368,16 @@ internal object TransactionDomainModule {
     fun provideIsTronGaslessSupportedUseCase(
         tronGaslessTransactionRepository: TronGaslessTransactionRepository,
         walletManagersFacade: WalletManagersFacade,
+        featureTogglesManager: FeatureTogglesManager,
     ): IsTronGaslessSupportedUseCase {
         return IsTronGaslessSupportedUseCase(
             repository = tronGaslessTransactionRepository,
             walletManagersFacade = walletManagersFacade,
+            isAccountActivationSponsored = {
+                featureTogglesManager.isFeatureEnabled(
+                    toggle = FeatureToggles.TWI_1783_TRON_GASLESS_ACCOUNT_ACTIVATION_ENABLED,
+                )
+            },
         )
     }
 
@@ -378,9 +386,7 @@ internal object TransactionDomainModule {
     fun provideGetTronGaslessFeeUseCase(
         tronGaslessTransactionRepository: TronGaslessTransactionRepository,
     ): GetTronGaslessFeeUseCase {
-        return GetTronGaslessFeeUseCase(
-            tronGaslessTransactionRepository = tronGaslessTransactionRepository,
-        )
+        return GetTronGaslessFeeUseCase(tronGaslessTransactionRepository = tronGaslessTransactionRepository)
     }
 
     @Provides
