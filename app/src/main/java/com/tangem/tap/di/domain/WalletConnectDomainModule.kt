@@ -6,7 +6,9 @@ import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
+import com.tangem.domain.walletconnect.WalletConnectProjectIdProvider
 import com.tangem.domain.walletconnect.WcTransactionSignerProvider
 import com.tangem.domain.walletconnect.repository.WalletConnectRepository
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
@@ -20,6 +22,12 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal object WalletConnectDomainModule {
+
+    @Provides
+    @Singleton
+    fun providesWalletConnectProjectIdProvider(environmentConfig: EnvironmentConfig): WalletConnectProjectIdProvider {
+        return WalletConnectProjectIdProvider { environmentConfig.walletConnectProjectId }
+    }
 
     @Provides
     @Singleton

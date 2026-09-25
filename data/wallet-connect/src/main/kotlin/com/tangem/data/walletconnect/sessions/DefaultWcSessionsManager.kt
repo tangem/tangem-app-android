@@ -1,15 +1,13 @@
 package com.tangem.data.walletconnect.sessions
 
 import arrow.core.Either
-import arrow.core.left
-import arrow.core.right
 import com.reown.walletkit.client.Wallet
-import com.reown.walletkit.client.WalletKit
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.walletconnect.WC_TAG
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
 import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.data.walletconnect.utils.WcSdkSessionConverter
+import com.tangem.data.walletconnect.sdk.WcSdk
 import com.tangem.data.walletconnect.store.WalletConnectStore
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
@@ -28,9 +26,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.resume
 
 @Suppress("LongParameterList")
 internal class DefaultWcSessionsManager(
@@ -41,6 +37,7 @@ internal class DefaultWcSessionsManager(
     private val wcNetworksConverter: WcNetworksConverter,
     private val analytics: AnalyticsEventHandler,
     private val scope: AppCoroutineScope,
+    private val wcSdk: WcSdk,
 ) : WcSessionsManager, WcSdkObserver {
 
     private val onSessionDelete = Channel<Wallet.Model.SessionDelete>(capacity = Channel.BUFFERED)
@@ -53,7 +50,7 @@ internal class DefaultWcSessionsManager(
     )
         .transformLatest { triple ->
             val (wallets, inStore, allWalletsAccounts) = triple
-            val inSdk: List<Wallet.Model.Session> = WalletKit.getListOfActiveSessions()
+            val inSdk: List<Wallet.Model.Session> = wcSdk.activeSessions()
             val associatedSessions: List<WcSession> = associate(
                 inSdk = inSdk,
                 inStore = inStore,
@@ -176,31 +173,15 @@ internal class DefaultWcSessionsManager(
 
     private fun extendSessions() {
         scope.launch(dispatchers.io) {
-            val topics: List<String> = WalletKit.getListOfActiveSessions().map { it.topic }
+            val topics: List<String> = wcSdk.activeSessions().map { it.topic }
             val jobs = topics.map { topic -> launch { sdkSessionExtend(topic) } }
             jobs.joinAll()
         }
     }
 
-    private suspend fun sdkDisconnectSession(topic: String): Either<Throwable, Unit> {
-        return suspendCancellableCoroutine { continuation ->
-            WalletKit.disconnectSession(
-                params = Wallet.Params.SessionDisconnect(topic),
-                onSuccess = { if (continuation.isActive) continuation.resume(Unit.right()) },
-                onError = { if (continuation.isActive) continuation.resume(it.throwable.left()) },
-            )
-        }
-    }
+    private suspend fun sdkDisconnectSession(topic: String): Either<Throwable, Unit> = wcSdk.disconnectSession(topic)
 
-    private suspend fun sdkSessionExtend(topic: String): Either<Throwable, Unit> {
-        return suspendCancellableCoroutine { continuation ->
-            WalletKit.extendSession(
-                params = Wallet.Params.SessionExtend(topic),
-                onSuccess = { if (continuation.isActive) continuation.resume(Unit.right()) },
-                onError = { if (continuation.isActive) continuation.resume(it.throwable.left()) },
-            )
-        }
-    }
+    private suspend fun sdkSessionExtend(topic: String): Either<Throwable, Unit> = wcSdk.extendSession(topic)
 
     private fun listenOnSessionDelete() {
         onSessionDelete.receiveAsFlow()
