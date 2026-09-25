@@ -287,6 +287,10 @@
   <string name="collectibles_account_collection_empty">Nenhum cartão</string>
   <string name="collectibles_account_collection_row_subtitle">Minha coleção</string>
   <string name="collectibles_account_withdraw">Saque</string>
+  <string name="collectibles_confirm_order_approve_button">Aprovar</string>
+  <string name="collectibles_confirm_order_not_enough_funds_button">Saldo insuficiente</string>
+  <string name="collectibles_confirm_order_platform_fee">Taxa da plataforma</string>
+  <string name="collectibles_confirm_order_total">Total</string>
   <string name="collectibles_entrance_card_subtitle">Abra pacotes de cartões colecionáveis certificados</string>
   <string name="collectibles_entrance_card_title">Explore coleções</string>
   <string name="collectibles_machine_buyback_value">%s do valor</string>
@@ -297,6 +301,7 @@
   <string name="collectibles_machine_load_error">Não foi possível carregar os detalhes do pacote.\nToque para recarregar</string>
   <string name="collectibles_machine_open_button">Abrir por %s</string>
   <string name="collectibles_machine_powered_by">Desenvolvido por %s</string>
+  <string name="collectibles_machine_prize_pool_load_error">Falha ao carregar o conjunto de prêmios.\nToque para recarregar</string>
   <string name="collectibles_machine_prize_pool_section">No conjunto de prêmios</string>
   <string name="collectibles_machine_tier_common">Comum</string>
   <string name="collectibles_machine_tier_epic">Épico</string>
@@ -907,6 +912,7 @@
   <string name="gasless_transaction_fee">Taxa de transação</string>
   <string name="gasless_tron_activation_attempts_limit">Você fez várias tentativas. Tente novamente mais tarde.</string>
   <string name="gasless_tron_activation_min_balance_description">Seu saldo deve ser superior a %s.</string>
+  <string name="gasless_tron_activation_try_again_later">Tente novamente mais tarde.</string>
   <string name="generic_error">Ocorreu um erro.</string>
   <string name="generic_error_code">Ocorreu um erro. Código: %s.</string>
   <string name="generic_requires_memo_error">Requer memorando</string>
@@ -1135,7 +1141,7 @@
   <string name="introduction_stories_three_title">Suas chaves, suas criptomoedas</string>
   <string name="introduction_stories_two_subtitle">Use qualquer um dos seus cartões para acessar sua carteira</string>
   <string name="introduction_stories_two_title">Uma carteira, vários cartões</string>
-  <string name="introduction_subtitle">Um só lugar seguro para tudo o que é seu</string>
+  <string name="introduction_subtitle">Um único lugar seguro para tudo o que é seu</string>
   <string name="introduction_terms_of_service">Termos de serviço</string>
   <string name="introduction_title">Armazene todos os seus ativos</string>
   <string name="joint_account_activated_snackbar">Conta ativada</string>
@@ -1310,7 +1316,7 @@
   <string name="market_crypto_total_cap_fear_greed_title_full">Índice de medo e ganância</string>
   <string name="market_crypto_total_cap_fear_greed_title_short">Índice de medo e ganância</string>
   <string name="market_crypto_total_cap_info">A capitalização de mercado de criptomoedas é o valor total, em dólares, de todas as criptomoedas, calculado multiplicando-se o preço atual de cada uma pelo seu suprimento em circulação.\nFonte: coinmarketcap.com</string>
-  <string name="market_crypto_total_market_cap_title">Capitalização de mercado total</string>
+  <string name="market_crypto_total_market_cap_title">Capitalização total de mercado</string>
   <string name="market_failed_to_load_filters">Falha ao carregar o filtro.\nToque para recarregar</string>
   <string name="markets_about_coin_header">Sobre a moeda</string>
   <string name="markets_add_to_my_portfolio_description">Para comprar, trocar ou receber este ativo, adicione-o à sua carteira.</string>
