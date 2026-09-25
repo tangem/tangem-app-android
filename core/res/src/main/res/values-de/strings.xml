@@ -905,6 +905,9 @@
   <string name="force_update_warning_title">Aktualisierung erforderlich</string>
   <string name="gasless_not_enough_funds_to_cover_token_fee">Nicht genügend Mittel</string>
   <string name="gasless_transaction_fee">Transaktionsgebühr</string>
+  <string name="gasless_tron_activation_attempts_limit">Sie haben bereits mehrere Versuche unternommen. Versuchen Sie es später noch einmal.</string>
+  <string name="gasless_tron_activation_min_balance_description">Ihr Guthaben sollte höher sein als %s.</string>
+  <string name="gasless_tron_activation_try_again_later">Versuchen Sie es später noch einmal.</string>
   <string name="generic_error">Es ist ein Fehler aufgetreten</string>
   <string name="generic_error_code">Es ist ein Fehler aufgetreten. Code: %s.</string>
   <string name="generic_requires_memo_error">Memo erforderlich</string>
