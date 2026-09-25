@@ -48,7 +48,7 @@ internal class WcSdk(
 
     // Held on a scope of its own so that a cancelled caller leaves the in-flight start-up running: the SDK
     // callback is already registered, and starting a second one would register the observers twice.
-    private var initialization: Deferred<Unit>? = null
+    private var initialization: Deferred<Result<Unit>>? = null
 
     @Volatile
     var isInitialized: Boolean = false
@@ -58,10 +58,12 @@ internal class WcSdk(
         if (isInitialized) return
 
         val inFlight = mutex.withLock {
-            initialization ?: scope.async { initialize() }.also { initialization = it }
+            // The Result keeps a failure inside the Deferred: an exception escaping this async would
+            // cancel the app-wide scope it runs on.
+            initialization ?: scope.async { runSuspendCatching { initialize() } }.also { initialization = it }
         }
 
-        runSuspendCatching { inFlight.await() }
+        inFlight.await()
             .onFailure { error ->
                 // Forget the failed attempt so the next caller starts a new one.
                 mutex.withLock { if (initialization === inFlight) initialization = null }
