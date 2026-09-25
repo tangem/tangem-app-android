@@ -3,6 +3,7 @@ package com.tangem.features.txhistory.converter
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.SdkAmountType
+import com.tangem.domain.models.network.TxInfo
 
 /**
  * The token this amount is denominated in, matched among [networkTokens] by the contract the domain model carries —
@@ -13,5 +14,17 @@ import com.tangem.domain.models.network.SdkAmountType
  */
 internal fun SdkAmount?.resolveToken(networkTokens: Set<CryptoCurrency.Token>): CryptoCurrency.Token? {
     val contractAddress = (this?.type as? SdkAmountType.Token)?.contractAddress ?: return null
-    return networkTokens.find { token -> token.contractAddress.equals(contractAddress, ignoreCase = true) }
+    return networkTokens.findByContract(contractAddress)
 }
+
+/** The tracked token a fee-only row paid for */
+internal fun TxInfo.feeForToken(networkTokens: Set<CryptoCurrency.Token>): CryptoCurrency.Token? {
+    return when (val type = type) {
+        is TxInfo.TransactionType.NetworkFee -> type.amount.resolveToken(networkTokens)
+        is TxInfo.TransactionType.Joint.TokenFee -> networkTokens.findByContract(type.tokenContract)
+        else -> null
+    }
+}
+
+private fun Set<CryptoCurrency.Token>.findByContract(contractAddress: String): CryptoCurrency.Token? =
+    find { token -> token.contractAddress.equals(contractAddress, ignoreCase = true) }

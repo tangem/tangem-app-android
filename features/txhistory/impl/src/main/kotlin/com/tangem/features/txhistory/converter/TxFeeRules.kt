@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.domain.txhistory.model.ExpressTx
@@ -36,7 +37,7 @@ internal fun TxInfo.hasForeignFee(): Boolean = !isOutgoing && (
 
 /** The amount of a fee-only transaction already shows the fee, so the card does not repeat it as an info row. */
 internal fun TxInfo.isFeeOnly(currency: CryptoCurrency): Boolean =
-    type is TransactionType.NetworkFee || type is TransactionType.GaslessFee || isFeeOnlyOperation(currency)
+    type is TransactionType.GaslessFee || isTokenFee() || isFeeOnlyOperation(currency)
 
 /**
  * An unrecognized contract call the wallet made itself, in a coin's own history, that moved no coin: all it cost is
@@ -49,6 +50,16 @@ internal fun TxInfo.isFeeOnlyOperation(currency: CryptoCurrency): Boolean = isOu
     currency is CryptoCurrency.Coin &&
     amount.isZero() &&
     (type is TransactionType.Operation || type is TransactionType.UnknownOperation)
+
+/** Moved no coin of its own, only paid for a token transfer */
+internal fun TxInfo.isTokenFee(): Boolean = type is TransactionType.NetworkFee || type is TransactionType.Joint.TokenFee
+
+/** The tokens a fee-only row paid for, when it names them */
+internal fun TxInfo.feeForAmount(): SdkAmount? = when (val type = type) {
+    is TransactionType.NetworkFee -> type.amount
+    is TransactionType.Joint.TokenFee -> type.tokenAmount
+    else -> null
+}
 
 /**
  * Whether the matched on-chain leg is the one the user paid for. Only a swap viewed from its `from` token qualifies:
@@ -66,8 +77,10 @@ internal val ExpressTx.isPayInLeg: Boolean
 internal fun TxInfo.feeRows(currency: CryptoCurrency): ImmutableList<TxHistoryDetailsUM.InfoRowUM> =
     listOfNotNull(feeRow(currency)).toImmutableList()
 
+/** A joint account's fee is the refund cap the operation was signed with, not what was paid: hence the tilde */
 private fun TxInfo.feeRow(currency: CryptoCurrency): TxHistoryDetailsUM.InfoRowUM? {
-    val value = gaslessFeeText(currency) ?: nativeFeeText() ?: return null
+    val text = gaslessFeeText(currency) ?: nativeFeeText() ?: return null
+    val value = if (type is TransactionType.Joint) "${StringsSigns.TILDE_SIGN}$text" else text
     return TxHistoryDetailsUM.InfoRowUM(
         label = resourceReference(R.string.common_network_fee_title),
         value = stringReference(value),
@@ -108,6 +121,6 @@ internal fun TxInfo.feeAmountText(currency: CryptoCurrency): TextReference? {
 }
 
 private fun TxInfo.showsFeeAsAmount(currency: CryptoCurrency): Boolean =
-    type is TransactionType.NetworkFee || isFeeOnlyOperation(currency)
+    isTokenFee() || isFeeOnlyOperation(currency)
 
 // endregion
