@@ -5,6 +5,8 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.isCreated
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -13,12 +15,12 @@ import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 /**
- * Whether the Tangem Pay pitch is worth making: it is, only while the user has no spending account in
- * any wallet.
+ * Whether the Tangem Pay pitch is worth making: it is, only while no wallet has a spending account and
+
+ * that Pay is available there, or a customer still in KYC, whom the pitch leads back to it.
  *
  * Only wallets that actually carry an [Account.Payment] are asked for a status, so a user without
- * Tangem Pay never spins up a payment pipeline. Until the first status lands the answer is "no
- * account", which is what makes the pitch appear as soon as possible for the users it is meant for.
+ * Tangem Pay never spins up a payment pipeline.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @Stable
@@ -41,12 +43,19 @@ internal class TangemPayBlockModel @Inject constructor(
                 combine(
                     flows = walletIds.map { walletId ->
                         paymentAccountStatusSupplier(walletId)
-                            .map { status -> status.value.isCreated }
-                            .onStart { emit(false) }
+                            .map<AccountStatus.Payment, PaymentAccountStatusValue?> { status -> status.value }
+                            .onStart { emit(null) }
                     },
-                ) { statuses -> statuses.any { it } }
+                ) { values ->
+                    values.none { it?.hasSpendingAccount == true } && values.any { it?.isPitchable == true }
+                }
             }
         }
-        .map { hasSpendingAccount -> !hasSpendingAccount }
         .stateIn(scope = modelScope, started = SharingStarted.Eagerly, initialValue = false)
 }
+
+private val PaymentAccountStatusValue.hasSpendingAccount: Boolean
+    get() = isCreated && this !is PaymentAccountStatusValue.UnderReview
+
+private val PaymentAccountStatusValue.isPitchable: Boolean
+    get() = this is PaymentAccountStatusValue.NotCreated || this is PaymentAccountStatusValue.UnderReview
