@@ -6,7 +6,6 @@ import com.tangem.blockchain.common.HEX_PREFIX
 import com.tangem.blockchain.common.UnmarshalHelper
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.extensions.formatHex
-import com.tangem.blockchain.extensions.isAscii
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.common.extensions.toHexString
@@ -30,6 +29,8 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
+import java.nio.ByteBuffer
+import java.nio.charset.CodingErrorAction
 
 @Suppress("LongParameterList")
 internal class WcEthMessageSignUseCase @AssistedInject constructor(
@@ -92,31 +93,46 @@ object LegacySdkHelper {
         ).asRSVLegacyEVM().toHexString().formatHex().lowercase() // use lowercase because some dapps cant handle UPPERCASE
 
     fun createMessageData(message: String): ByteArray {
-        val messageData = try {
-            message.removePrefix(HEX_PREFIX).hexToBytes()
-        } catch (exception: Exception) {
-            message.asciiToHex()?.hexToBytes() ?: byteArrayOf()
-        }
+        val messageData = messageBytes(message)
 
         val prefixData = (ETH_MESSAGE_PREFIX + messageData.size.toString()).toByteArray()
         return (prefixData + messageData).toKeccak()
     }
 
-    fun hexToAscii(hex: String): String? {
-        return try {
-            hex.removePrefix(HEX_PREFIX).hexToBytes().map {
-                val char = it.toInt().toChar()
-                if (char.isAscii()) char else return null
-            }.joinToString("")
-        } catch (exception: Exception) {
-            return null
-        }
+    /**
+     * The bytes `personal_sign` / `eth_sign` sign for [message], following the convention every major wallet
+     * implements: a `0x`-prefixed hex string is the byte payload itself, anything else is the UTF-8 encoding of
+     * the text. The previous implementation guessed — a plain-text message that happened to look like hex
+     * ("deadbeef") was signed as bytes, and a non-ASCII text (Cyrillic, emoji) was signed as an EMPTY message.
+     */
+    fun messageBytes(message: String): ByteArray {
+        return message.asHexBytesOrNull() ?: message.toByteArray(Charsets.UTF_8)
     }
 
-    private fun String.asciiToHex(): String? {
-        return map {
-            if (!it.isAscii()) return null
-            Integer.toHexString(it.code)
-        }.joinToString("")
+    /**
+     * Human-readable form of [message] for the confirmation sheet, or `null` when the payload is not text: a
+     * `0x`-hex message is decoded as UTF-8 (previously only ASCII, so any non-ASCII byte blanked the "Contents"
+     * row while the bytes were still signed), plain text is shown as is.
+     */
+    fun hexToAscii(message: String): String? {
+        val bytes = message.asHexBytesOrNull() ?: return message
+        val decoded = runCatching {
+            Charsets.UTF_8.newDecoder()
+                .onMalformedInput(CodingErrorAction.REPORT)
+                .onUnmappableCharacter(CodingErrorAction.REPORT)
+                .decode(ByteBuffer.wrap(bytes))
+                .toString()
+        }.getOrNull() ?: return null
+        return decoded.takeIf { text -> text.none { it.isISOControl() && it != '\n' && it != '\r' && it != '\t' } }
     }
+
+    /** `0x` + an even number of hex digits → bytes; anything else (incl. odd length or non-hex) → `null`. */
+    private fun String.asHexBytesOrNull(): ByteArray? {
+        if (!startsWith(HEX_PREFIX, ignoreCase = true)) return null
+        val digits = substring(HEX_PREFIX.length)
+        if (digits.length % 2 != 0 || !digits.all { it.isAsciiHexDigit() }) return null
+        return digits.hexToBytes()
+    }
+
+    private fun Char.isAsciiHexDigit(): Boolean = this in '0'..'9' || this in 'a'..'f' || this in 'A'..'F'
 }
