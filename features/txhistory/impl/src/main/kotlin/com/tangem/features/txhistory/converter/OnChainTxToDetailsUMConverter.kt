@@ -119,19 +119,43 @@ internal class OnChainTxToDetailsUMConverter(
 
     /**
      * Validator row of a staking tx: the target's display [name][StakingTarget.name] as plain text — the row carries
-     * no link to the target's page. Present only for a tx that [may carry a target][mayCarryStakingTarget] and one of
-     * whose [candidate addresses][validatorAddressCandidates] resolves in [targetsByAddress]; otherwise `null` — an
-     * unknown address, or a chain that omits the validator address entirely (Solana unstake/withdraw and Tron
-     * freeze/unfreeze/claim carry no validator field in the SDK at all).
+     * no link to the target's page. Present only for a tx that [may carry a target][mayCarryStakingTarget] and either
+     * resolves one of its [candidate addresses][validatorAddressCandidates] in [targetsByAddress] or at least
+     * [names a validator itself][declaredValidatorAddress]; otherwise `null` — a chain that omits the validator
+     * address entirely (Solana unstake/withdraw and Tron freeze/unfreeze/claim carry no validator field in the SDK at
+     * all).
      */
     private fun TxInfo.validatorRow(): TxHistoryDetailsUM.InfoRowUM? {
         if (!mayCarryStakingTarget()) return null
-        val target = validatorAddressCandidates().firstNotNullOfOrNull(::resolveTarget) ?: return null
+        val value = validatorAddressCandidates().firstNotNullOfOrNull(::resolveTarget)?.name
+            ?: declaredValidatorAddress()?.toBriefAddressFormat()
+            ?: return null
         return TxHistoryDetailsUM.InfoRowUM(
             label = resourceReference(R.string.staking_validator),
-            value = stringReference(target.name),
+            value = stringReference(value),
         )
     }
+
+    /**
+     * Address the transaction itself declares to be the validator, shown shortened when [targetsByAddress] has no name
+     * for it — a validator the staking API has since dropped from the yield must still name the target of an old
+     * transaction instead of making the row disappear.
+     *
+     * Only addresses the SDK types as a validator qualify, unlike the broader [validatorAddressCandidates]: a
+     * `Contract` / `User` / plain destination address is a target only if the lookup confirms it, so falling back to
+     * one would label an arbitrary counterparty "Validator". Blank addresses are skipped — the Tron vote parser
+     * reports a missing validator as an empty string.
+     */
+    private fun TxInfo.declaredValidatorAddress(): String? = buildList {
+        (type as? TransactionType.Staking.Vote)?.let { add(it.validatorAddress) }
+        (interactionAddressType as? TxInfo.InteractionAddressType.Validator)?.let { add(it.address) }
+        when (val destination = destinationType) {
+            is TxInfo.DestinationType.Single -> destination.addressType.validatorAddress()?.let(::add)
+            is TxInfo.DestinationType.Multiple -> addAll(destination.addressTypes.mapNotNull { it.validatorAddress() })
+        }
+    }.firstOrNull { it.isNotBlank() }
+
+    private fun TxInfo.AddressType.validatorAddress(): String? = (this as? TxInfo.AddressType.Validator)?.address
 
     /**
      * Addresses of a staking tx that may identify the staking target, most specific first. Membership in
