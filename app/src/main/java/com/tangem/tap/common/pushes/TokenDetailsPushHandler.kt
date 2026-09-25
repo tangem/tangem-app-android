@@ -63,7 +63,7 @@ class TokenDetailsPushHandler @Inject constructor(
     }
 
     private fun resolveUserWallet(walletId: String?): UserWallet? {
-        val userWalletId = walletId?.let(::UserWalletId)
+        val userWalletId = UserWalletId.fromStringOrNull(walletId)
         return if (userWalletId != null) {
             getUserWalletUseCase(userWalletId).getOrNull()
         } else {
