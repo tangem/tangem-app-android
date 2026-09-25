@@ -57,13 +57,14 @@ internal class TxHistoryItemToTransactionItemUMConverter(
     private val networkTokens: Set<CryptoCurrency.Token> = emptySet(),
 ) : Converter<TxInfo, TransactionItemUM> {
 
-    private val titleConverter = TxHistoryTitleConverter()
+    private val titleConverter = TxHistoryTitleConverter(currency)
     private val pillConverter = TxHistoryStatusPillConverter(currency, txHistoryUiActions)
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
 
     @Suppress("CyclomaticComplexMethod")
     override fun convert(value: TxInfo): TransactionItemUM {
         val uiStatus = value.status.toUiStatus()
+        if (value.isFeeOnlyOperation(currency)) return feeOnlyOperationContent(value, uiStatus)
         return when (val type = value.type) {
             // region Pill
             is TransactionType.Approve -> pillConverter.convert(PillInput(value, uiStatus, ApproveSpec))
@@ -250,6 +251,34 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         subtitle = tx.operationCounterpartySubtitle(),
     )
 
+    /**
+     * A row for an unrecognized call that moved no coin: the same fee row as [feeContent], but the call was never
+     * decoded, so the subtitle names the operation itself instead of the asset the fee was paid for.
+     */
+    private fun feeOnlyOperationContent(
+        tx: TxInfo,
+        uiStatus: TransactionItemUM.Content.Status,
+    ): TransactionItemUM.Content = buildContent(
+        tx = tx,
+        uiStatus = uiStatus,
+        title = titleConverter.convert(tx),
+        icon = TxIcon.Vector(Icons.ic_percent_20),
+        subtitle = tx.feeOnlyOperationSubtitle(),
+    )
+
+    /**
+     * What the fee was paid for: the contract method the history named — raw and unlocalized, the same way the
+     * [TransactionType.Operation] row title shows it — or a bare "operation" when the method has no name at all.
+     */
+    private fun TxInfo.feeOnlyOperationSubtitle(): ContentSubtitle {
+        val methodName = (type as? TransactionType.Operation)?.name?.ifBlank { null }
+            ?: return ContentSubtitle.Plain(resourceReference(R.string.transaction_history_fee_for_operation))
+
+        return ContentSubtitle.Plain(
+            resourceReference(R.string.transaction_history_fee_for_operation_name, wrappedList(methodName)),
+        )
+    }
+
     /** A row that is nothing but a network fee — the gasless fee leg, or a token transfer in the coin history. */
     private fun feeContent(tx: TxInfo, uiStatus: TransactionItemUM.Content.Status): TransactionItemUM.Content =
         buildContent(
@@ -296,7 +325,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
 // region Content building helpers
 
 private fun TxInfo.formatContentAmount(currency: CryptoCurrency): String {
-    val value = amountOrFee()
+    val value = amountOrFee(currency)
     val prefix = when {
         status is TxInfo.TransactionStatus.Failed -> ""
         value.isZero() -> ""
@@ -377,19 +406,11 @@ private fun Contact.toContactAvatar(): ContentSubtitle.ContactAvatar {
     }
 }
 
+/**
+ * Yield supply is a token product, and a coin only ever paid the fee for it — such a row never reaches here, it is
+ * a [network fee][isFeeOnlyOperation] by then. So the subtitle speaks of the token that moved.
+ */
 private fun TxInfo.yieldSupplySubtitle(currency: CryptoCurrency, type: TransactionType.YieldSupply): ContentSubtitle {
-    if (currency is CryptoCurrency.Coin) {
-        val briefAddress = type.address?.toBriefAddressFormat()
-        val text = resourceReference(
-            R.string.transaction_history_transaction_for_address,
-            wrappedList(briefAddress.orEmpty()),
-        )
-        return if (briefAddress.isNullOrEmpty()) {
-            ContentSubtitle.Plain(text)
-        } else {
-            ContentSubtitle.PlainAddress(text = text, highlight = briefAddress)
-        }
-    }
     return when (type) {
         is TransactionType.YieldSupply.Enter ->
             amountSubtitle(currency, R.string.yield_module_transaction_enter_subtitle)

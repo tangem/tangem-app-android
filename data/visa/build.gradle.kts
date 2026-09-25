@@ -75,6 +75,7 @@ dependencies {
     // region Project - Domain
     api(projects.domain.common)
     api(projects.domain.core)
+    api(projects.domain.account)
     api(projects.domain.quotes)
     api(projects.domain.visa)
     api(projects.domain.wallets)

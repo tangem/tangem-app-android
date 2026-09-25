@@ -1140,7 +1140,7 @@
   <string name="joint_account_activation_account_button_title">Ativar conta</string>
   <string name="joint_account_activation_subtitle">Todos os membros desta conta compartilham o mesmo saldo. Qualquer membro pode gastar ou sacar os fundos a qualquer momento — inclusive sem a sua aprovação</string>
   <string name="joint_account_activation_title">Você está ativando uma conta compartilhada</string>
-  <string name="joint_account_coming_soon_description">Esta ação ainda não é compatível com contas conjuntas. Estamos trabalhando para disponibilizá-la.</string>
+  <string name="joint_account_coming_soon_description">Esta ação ainda não é compatível com contas conjuntas. Estamos trabalhando para disponibilizá-la</string>
   <string name="joint_account_coming_soon_title">Em breve nas contas conjuntas</string>
   <string name="joint_account_invite_invalid_subtitle">Verifique se você abriu o link completo ou peça ao proprietário da conta para enviá-lo novamente</string>
   <string name="joint_account_invite_invalid_title">O link de convite não é válido</string>
@@ -2902,7 +2902,6 @@
   <string name="tangempay_withdraw_bank_error_recipient_region">As transferências para a região do destinatário não estão disponíveis no momento</string>
   <string name="tangempay_withdraw_bank_error_region_title">As transferências não estão disponíveis</string>
   <string name="tangempay_withdraw_bank_error_sender_region">As transferências da sua região não estão disponíveis no momento</string>
-  <string name="tangempay_withdraw_bank_error_unsupported_configuration">As transferências não estão disponíveis. Por favor, tente novamente mais tarde</string>
   <plurals name="tangempay_withdraw_bank_eta_business_days">
     <item quantity="one">dia útil</item>
     <item quantity="other">dias úteis</item>

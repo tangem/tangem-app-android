@@ -217,6 +217,78 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
+    fun `GIVEN zero-amount Operation in coin history WHEN convert THEN bare network fee row`() {
+        // The call moved no coin and was never decoded — the row shows the fee it paid, for the operation itself
+        val tx = txInfo(
+            type = TransactionType.Operation(name = "YieldSend"),
+            amount = BigDecimal.ZERO,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(EXTERNAL_ADDRESS),
+        ).copy(fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.000015"), decimals = 18))
+
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.title).isEqualTo(resRef(R.string.common_network_fee_title))
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_percent_20))
+        assertThat(result.amount).isEqualTo("${StringsSigns.MINUS}0.000015")
+        assertThat(result.subtitle).isEqualTo(
+            ContentSubtitle.Plain(
+                resRef(R.string.transaction_history_fee_for_operation_name, listOf("YieldSend")),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN zero-amount UnknownOperation in coin history WHEN convert THEN fee row without a method name`() {
+        val tx = txInfo(
+            type = TransactionType.UnknownOperation,
+            amount = BigDecimal.ZERO,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(EXTERNAL_ADDRESS),
+        ).copy(fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.000015"), decimals = 18))
+
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.title).isEqualTo(resRef(R.string.common_network_fee_title))
+        assertThat(result.subtitle).isEqualTo(
+            ContentSubtitle.Plain(resRef(R.string.transaction_history_fee_for_operation)),
+        )
+    }
+
+    @Test
+    fun `GIVEN incoming zero-amount Operation in coin history WHEN convert THEN stays an operation row`() {
+        // Somebody else's call — its fee was paid by the sender, so the row must not report it as the wallet's own
+        val tx = txInfo(
+            type = TransactionType.Operation(name = "YieldSend"),
+            amount = BigDecimal.ZERO,
+            isOutgoing = false,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(EXTERNAL_ADDRESS),
+        ).copy(fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.000015"), decimals = 18))
+
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.title).isEqualTo(TextReference.Str("YieldSend"))
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_document_20))
+        assertThat(result.amount).isEqualTo("0.00")
+    }
+
+    @Test
+    fun `GIVEN zero-amount Operation in token history WHEN convert THEN stays an operation row`() {
+        val tx = txInfo(
+            type = TransactionType.Operation(name = "YieldSend"),
+            amount = BigDecimal.ZERO,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(EXTERNAL_ADDRESS),
+        ).copy(fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.000015"), decimals = 18))
+
+        val result = tokenConverter.convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.title).isEqualTo(TextReference.Str("YieldSend"))
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_document_20))
+        assertThat(result.amount).isEqualTo("0.00")
+    }
+
+    @Test
     fun `GIVEN ClaimRewards confirmed WHEN convert THEN Content with reward title and no amount sign`() {
         val tx = txInfo(
             type = TransactionType.Staking.ClaimRewards,

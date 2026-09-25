@@ -725,6 +725,7 @@
   <string name="fee_selector_choose_token_title">トークンを選択</string>
   <string name="feed_market_and_news">マーケット＆ニュース</string>
   <string name="feed_promo_earn_active_description">%2$sで最大%1$sのAPYを獲得</string>
+  <string name="feed_promo_earn_active_title">もっと運用しよう</string>
   <string name="feed_promo_earn_description">暗号資産を運用して、最大%1$sのAPYを獲得</string>
   <string name="feed_promo_earn_title">運用を始める</string>
   <string name="feed_promo_referral_description">友達1人につき%1$sを獲得</string>
@@ -1071,6 +1072,7 @@
   <string name="market_chart_bubble_total_value">合計評価額</string>
   <string name="market_chart_no_amount">トークンがないか、評価額が不明です</string>
   <string name="market_chart_top_holding">トップ資産比率%s</string>
+  <string name="market_crypto_total_market_cap_title">時価総額</string>
   <string name="markets_about_coin_header">コインについて</string>
   <string name="markets_add_to_my_portfolio_description">このアセットを購入・交換・受け取るには、ポートフォリオに追加してください。</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">このアセットは現在ウォレットで利用できません</string>
