@@ -249,9 +249,10 @@ internal class InitialCurrenciesResolver @Inject constructor(
 
     /**
      * Resolves the optional explicit TO currency, but only if it is already present in the user's crypto
-     * portfolio. Matches by token identity ([isSameTokenAs]) rather than full id, since the passed currency
-     * may come from a different account/derivation. Prefers the instance from the FROM account, then falls
-     * back to the first match across the portfolio. Never returns the same token as FROM.
+     * portfolio. An exact [CryptoCurrency.ID] match wins first: the caller then meant one specific account's
+     * token, and the same token as FROM is a transfer between accounts rather than a duplicate. Without such a
+     * match the currency carries no account, so it falls back to token identity ([isSameTokenAs]), preferring
+     * the instance from the FROM account and never returning the same token as FROM.
      */
     private fun resolveExplicitToCurrency(
         initialToCryptoCurrency: CryptoCurrency?,
@@ -259,6 +260,12 @@ internal class InitialCurrenciesResolver @Inject constructor(
         cryptoPortfolioAccountsMap: Map<AccountStatus.CryptoPortfolio, List<SwapCurrencyStatus>>,
     ): SwapCurrencyStatus? {
         if (initialToCryptoCurrency == null) return null
+
+        val portfolioCurrencies = cryptoPortfolioAccountsMap.values.flatten()
+        val exactMatch = portfolioCurrencies.firstOrNull { status ->
+            status.currency.id == initialToCryptoCurrency.id && !status.isSameSlotAs(from)
+        }
+        if (exactMatch != null) return exactMatch
 
         val fromCurrency = from?.currency
         fun matches(status: SwapCurrencyStatus): Boolean {
@@ -273,7 +280,14 @@ internal class InitialCurrenciesResolver @Inject constructor(
                 ?.firstOrNull(::matches)
         }
 
-        return fromAccountMatch ?: cryptoPortfolioAccountsMap.values.flatten().firstOrNull(::matches)
+        return fromAccountMatch ?: portfolioCurrencies.firstOrNull(::matches)
+    }
+
+    /** Whether the status is literally the FROM slot: the same currency in the same account. */
+    private fun SwapCurrencyStatus.isSameSlotAs(from: SwapCurrencyStatus?): Boolean {
+        if (from == null) return false
+
+        return currency.id == from.currency.id && account.accountId == from.account.accountId
     }
 
     /**
