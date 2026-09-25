@@ -93,5 +93,4 @@ dependencies {
     testImplementation(projects.domain.txhistory.models)
     api(deps.kotlin.coroutines)
     api(projects.domain.staking.models)
-    api(projects.core.configToggles)
 }
