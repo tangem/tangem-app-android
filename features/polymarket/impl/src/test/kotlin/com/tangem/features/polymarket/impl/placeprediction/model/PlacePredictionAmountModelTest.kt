@@ -53,7 +53,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             // Assert
             assertThat(model.uiState.value.market.title).isEqualTo("Market question")
             assertThat(model.uiState.value.market.outcomeTitle).isEqualTo("Yes")
-            assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(42)
+            assertThat(model.uiState.value.market.outcomePrice).isEqualTo("42¢")
             assertThat((model.uiState.value.order as OrderSideUM.Buy).balance).isEqualTo(BigDecimal("100"))
 
             model.onDestroy()
@@ -528,6 +528,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         @Test
         fun `GIVEN empty amount WHEN screen shown THEN book price polls into the header`() = runTest {
             // Arrange
+            coEvery { getPriceUseCase(assetId = any(), side = any()) } returns BigDecimal("0.7455").right()
             val model = createAmountModel(testScope = this)
             advanceUntilIdle()
 
@@ -536,7 +537,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             advanceTimeBy(delayTimeMillis = 1)
 
             // Assert
-            assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(48)
+            assertThat(model.uiState.value.market.outcomePrice).isEqualTo("74.6¢")
             coVerify(exactly = 1) { getPriceUseCase(assetId = ASSET_ID, side = PredictionOrderSide.SELL) }
 
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
@@ -582,11 +583,11 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
 
             // Assert
-            assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(48)
+            assertThat(model.uiState.value.market.outcomePrice).isEqualTo("48¢")
             assertThat(model.uiState.value.notifications).isEmpty()
 
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
-            assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(52)
+            assertThat(model.uiState.value.market.outcomePrice).isEqualTo("52¢")
 
             model.onDestroy()
         }
@@ -606,10 +607,10 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             // Act
             model.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
-            assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(61)
+            assertThat(model.uiState.value.market.outcomePrice).isEqualTo("61¢")
 
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
-            assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(64)
+            assertThat(model.uiState.value.market.outcomePrice).isEqualTo("64¢")
 
             // Assert
             coVerify(exactly = 1) { getPriceUseCase(assetId = any(), side = any()) }
@@ -617,7 +618,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             model.onAmountChange(value = "")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             coVerify(exactly = 2) { getPriceUseCase(assetId = any(), side = any()) }
-            assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(48)
+            assertThat(model.uiState.value.market.outcomePrice).isEqualTo("48¢")
 
             model.onDestroy()
         }
@@ -639,10 +640,10 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
-            assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(61)
+            assertThat(model.uiState.value.market.outcomePrice).isEqualTo("61¢")
 
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
-            assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(61)
+            assertThat(model.uiState.value.market.outcomePrice).isEqualTo("61¢")
 
             model.onDestroy()
         }
@@ -781,7 +782,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             assertThat(order.balance).isEqualTo(BigDecimal("100"))
             assertThat(model.uiState.value.market.title).isEqualTo("Will the event happen?")
             assertThat(model.uiState.value.market.outcomeTitle).isEqualTo("Yes")
-            assertThat(model.uiState.value.market.entryPriceCents).isEqualTo(35)
+            assertThat(model.uiState.value.market.entryPrice).isEqualTo("35.6¢")
             assertThat(model.uiState.value.collateral.tokenSymbol).isEqualTo("pUSD")
             coVerify(exactly = 0) { getEventUseCase(eventId = any()) }
 
