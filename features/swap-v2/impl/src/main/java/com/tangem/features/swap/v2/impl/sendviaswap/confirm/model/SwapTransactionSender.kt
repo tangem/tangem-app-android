@@ -111,11 +111,6 @@ internal class SwapTransactionSender @AssistedInject constructor(
             }
         }
 
-        val fromTransactionAmount = when (confirmData.amountType) {
-            SwapAmountType.From -> swapDataRequestAmount
-            SwapAmountType.To -> confirmData.enteredFromAmount ?: return
-        }
-
         val swapData = getSwapDataUseCase(
             userWallet = userWallet,
             fromCryptoCurrencyStatus = fromStatus,
@@ -129,6 +124,33 @@ internal class SwapTransactionSender @AssistedInject constructor(
             expressOperationType = expressOperationType,
             quoteId = (confirmData.quote as? SwapQuoteUM.Content)?.quoteId,
         ).getOrElse { error -> onExpressError(error); return }
+
+        val fromTransactionAmount = when (confirmData.amountType) {
+            SwapAmountType.From -> swapDataRequestAmount
+            SwapAmountType.To -> {
+                // In "receive exactly N" mode the deposit the provider expects is exchange-data.fromAmount, quoted
+                // for this very request; the figure shown on the confirmation screen came from an earlier quote.
+                // Send what the provider asks for, but never more than the user confirmed — if the rate moved
+                // against the user, stop and show the provider's amount instead of silently paying it.
+                val confirmedFromAmount = confirmData.enteredFromAmount ?: return
+                val providerFromAmount = swapData.transaction.fromAmount
+                if (providerFromAmount > confirmedFromAmount) {
+                    TangemLogger.i(
+                        "Send with swap: provider requires $providerFromAmount, user confirmed $confirmedFromAmount",
+                    )
+                    onExpressError(
+                        ExpressError.ProviderDifferentAmountError(
+                            code = PROVIDER_DIFFERENT_AMOUNT_CODE,
+                            fromAmount = confirmedFromAmount,
+                            fromProviderAmount = providerFromAmount,
+                            decimals = fromStatus.currency.decimals,
+                        ),
+                    )
+                    return
+                }
+                providerFromAmount
+            }
+        }
 
         createAndSendCexTransaction(
             fromAmount = fromTransactionAmount,
@@ -231,5 +253,10 @@ internal class SwapTransactionSender @AssistedInject constructor(
     @AssistedFactory
     interface Factory {
         fun create(userWallet: UserWallet): SwapTransactionSender
+    }
+
+    private companion object {
+        /** Express error code the backend uses for "provider requires a different amount"; reused for the UI text. */
+        const val PROVIDER_DIFFERENT_AMOUNT_CODE = 2320
     }
 }
