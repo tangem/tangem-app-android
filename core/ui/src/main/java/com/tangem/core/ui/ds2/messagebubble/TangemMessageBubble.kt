@@ -30,6 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.conditionalCompose
@@ -45,6 +46,8 @@ import com.tangem.core.ui.res.generated.icons.ic_info_16
  * Design-system v2 (DS3) **Message Bubble** — a compact caption pill with an optional leading icon,
  * an optional close button and an optional "tip" tail on top pointing at the anchored element.
  * DS3 replacement for the legacy `TokenRowPromoBanner`.
+ *
+ * Version: 1.1.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=6327-22326)
  *
@@ -125,6 +128,8 @@ fun TangemMessageBubble(
 
 /** Public API surface of [TangemMessageBubble]. */
 object TangemMessageBubble {
+
+    val version = DsVersion(major = 1, minor = 1, patch = 0)
 
     /** Visual appearance — background, text and tip colors. */
     enum class Variant {
