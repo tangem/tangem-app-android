@@ -36,6 +36,8 @@ import com.tangem.domain.polymarket.flow.PredictionPositionsValueSupplier
 import com.tangem.domain.polymarket.model.PredictionPositionsValue
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
+import com.tangem.domain.polymarket.model.PolymarketApiCredentials
+import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedFooterUM
@@ -110,6 +112,7 @@ internal class PolymarketMainModelTest {
     private val positionsValueFetcher: PredictionPositionsValueFetcher = mockk(relaxed = true)
     private val balancePoller: PredictionBalancePoller = mockk()
     private val fundingWindow: PredictionFundingWindow = mockk(relaxed = true)
+    private val getApiCredentials: GetPolymarketApiCredentialsUseCase = mockk()
 
     private val statusFlow = MutableStateFlow<PredictionAccountStatusValue>(
         value = activeStatus(depositAddress = DEPOSIT_ADDRESS),
@@ -147,6 +150,7 @@ internal class PolymarketMainModelTest {
     init {
         coEvery { getCategoriesUseCase() } returns categories().right()
         coEvery { refreshRequisites(any()) } returns REQUISITES.right()
+        coEvery { getApiCredentials(any()) } returns CREDENTIALS
     }
 
     @AfterEach
@@ -1521,6 +1525,7 @@ internal class PolymarketMainModelTest {
             predictionPositionsValueFetcher = positionsValueFetcher,
             predictionBalancePoller = balancePoller,
             predictionFundingWindow = fundingWindow,
+            getPolymarketApiCredentialsUseCase = getApiCredentials,
         ).also { model = it }
     }
 
@@ -1594,12 +1599,56 @@ internal class PolymarketMainModelTest {
         ),
     )
 
+    @Test
+    fun `GIVEN no stored credentials WHEN the screen opens THEN the gate replaces the feed`() = runTest {
+        // Arrange
+        coEvery { getApiCredentials(USER_WALLET_ID) } returns null
+
+        // Act
+        createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { router.replaceAll(PolymarketRoute.Onboarding(userWalletId = USER_WALLET_ID)) }
+    }
+
+    @Test
+    fun `GIVEN stored credentials WHEN the screen opens THEN the feed stays`() = runTest {
+        // Arrange
+        coEvery { getApiCredentials(USER_WALLET_ID) } returns CREDENTIALS
+
+        // Act
+        createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { router.replaceAll(any()) }
+    }
+
+    @Test
+    fun `GIVEN the credentials are gone WHEN the screen resumes THEN the gate replaces the feed`() = runTest {
+        // Arrange
+        coEvery { getApiCredentials(USER_WALLET_ID) } returnsMany listOf(CREDENTIALS, null)
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onResume()
+        runCurrent()
+        model.onDestroy()
+
+        // Assert
+        verify(exactly = 1) { router.replaceAll(PolymarketRoute.Onboarding(userWalletId = USER_WALLET_ID)) }
+    }
+
     private companion object {
         const val DEPOSIT_ADDRESS = "0xbridge0000000000000000000000000000000001"
         const val STATUS_FETCH_MS = 1_000L
         const val REQUISITES_ADDRESS = "0xrequisites00000000000000000000000000002"
 
         val USER_WALLET_ID = UserWalletId("011")
+
+        val CREDENTIALS = PolymarketApiCredentials(apiKey = "key", secret = "secret", passphrase = "pass")
 
         val COLLATERAL: CryptoCurrency.Token = mockk(relaxed = true)
 
