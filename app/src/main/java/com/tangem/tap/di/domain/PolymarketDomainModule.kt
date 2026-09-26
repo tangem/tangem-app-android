@@ -41,6 +41,7 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketRelayerNonceUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawDestinationsUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionTopUpMinimumUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawalStateUseCase
+import com.tangem.domain.polymarket.usecase.InvalidatePolymarketCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.SearchPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
@@ -182,6 +183,14 @@ internal object PolymarketDomainModule {
 
     @Provides
     @Singleton
+    fun provideInvalidatePolymarketCredentialsUseCase(
+        credentialsStore: PolymarketCredentialsStore,
+    ): InvalidatePolymarketCredentialsUseCase = InvalidatePolymarketCredentialsUseCase(
+        credentialsStore = credentialsStore,
+    )
+
+    @Provides
+    @Singleton
     fun provideDeriveApiCredentialsUseCase(
         polymarketRepository: PolymarketRepository,
         credentialsStore: PolymarketCredentialsStore,
@@ -225,9 +234,11 @@ internal object PolymarketDomainModule {
     fun providePlacePredictionOrderUseCase(
         polymarketRepository: PolymarketRepository,
         getApiCredentials: GetPolymarketApiCredentialsUseCase,
+        invalidateCredentials: InvalidatePolymarketCredentialsUseCase,
     ): PlacePredictionOrderUseCase = PlacePredictionOrderUseCase(
         polymarketRepository = polymarketRepository,
         getApiCredentials = getApiCredentials,
+        invalidateCredentials = invalidateCredentials,
     )
 
     @Provides
@@ -245,9 +256,11 @@ internal object PolymarketDomainModule {
     fun provideGetPolymarketBalanceInteractor(
         polymarketRepository: PolymarketRepository,
         getApiCredentials: GetPolymarketApiCredentialsUseCase,
+        invalidateCredentials: InvalidatePolymarketCredentialsUseCase,
     ): GetPolymarketBalanceInteractor = GetPolymarketBalanceInteractor(
         polymarketRepository = polymarketRepository,
         getApiCredentials = getApiCredentials,
+        invalidateCredentials = invalidateCredentials,
     )
 
     @Provides
