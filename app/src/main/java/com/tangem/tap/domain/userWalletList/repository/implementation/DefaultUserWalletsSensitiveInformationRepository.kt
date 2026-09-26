@@ -97,14 +97,26 @@ internal class DefaultUserWalletsSensitiveInformationRepository(
     }
 
     private suspend fun deleteInternal(userWalletsIds: List<UserWalletId>) {
-        return saveInternal(
-            sensitiveInformation = getAllEncrypted() - userWalletsIds.map { it.stringValue }.toSet(),
-        )
+        val ids = userWalletsIds.map { it.stringValue }.toSet()
+        saveInternal(sensitiveInformation = getAllEncrypted() - ids)
+        deleteIvs(ids)
     }
 
     private suspend fun clearInternal() {
+        val ids = getAllEncrypted().keys
         withContext(Dispatchers.IO) {
             secureStorage.delete(StorageKey.UserWalletsSensitiveInformation.name)
+        }
+        deleteIvs(ids)
+    }
+
+    /**
+     * Each wallet's ciphertext has its IV stored under its own key; removing the ciphertext must remove the IV too,
+     * or secure storage keeps accumulating entries of wallets that no longer exist.
+     */
+    private suspend fun deleteIvs(userWalletsIds: Collection<String>) {
+        withContext(Dispatchers.IO) {
+            userWalletsIds.forEach { secureStorage.delete(StorageKey.SensitiveInformationIv(it).name) }
         }
     }
 
