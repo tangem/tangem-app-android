@@ -14,6 +14,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventsBatch
@@ -24,6 +25,7 @@ import com.tangem.domain.polymarket.model.PredictionPositionsValue
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainModel
@@ -67,6 +69,7 @@ internal class PolymarketMainComponentTest {
     }
     private val positionsPreviewLoader: PolymarketPositionsPreviewLoader = mockk(relaxed = true)
     private val fundingWindow: PredictionFundingWindow = mockk(relaxed = true)
+    private val getApiCredentials: GetPolymarketApiCredentialsUseCase = mockk()
 
     private val userWalletId = UserWalletId("011")
 
@@ -74,6 +77,8 @@ internal class PolymarketMainComponentTest {
         every { positionsPreviewLoader.state } returns MutableStateFlow(PolymarketPositionsPreviewUM.Loading)
         // The model starts loading on construction; empty stubs keep this wiring test off the feed logic.
         coEvery { getPolymarketCategoriesUseCase() } returns emptyList<PolymarketCategory>().right()
+        coEvery { getApiCredentials(any()) } returns
+            PolymarketApiCredentials(apiKey = "key", secret = "secret", passphrase = "pass")
         every { predictionAccountStatusSupplier(any<UserWalletId>()) } returns
             flowOf(PredictionAccountStatusValue.Loading)
         every { fundingWindow.isOpen(any()) } returns MutableStateFlow(false)
@@ -163,5 +168,6 @@ internal class PolymarketMainComponentTest {
         predictionPositionsValueFetcher = mockk(relaxed = true),
         predictionBalancePoller = mockk(relaxed = true),
         predictionFundingWindow = fundingWindow,
+        getPolymarketApiCredentialsUseCase = getApiCredentials,
     )
 }
