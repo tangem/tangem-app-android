@@ -88,6 +88,11 @@ feature was opened with, so children never read it from the feature params.
    collapsed into the button spinner; a failure leaves the screen idle and reports through a snackbar. The
    screen's button is the only retry.
 
+Main sends the user back here (`router.replaceAll(Onboarding)`) whenever it opens or resumes without
+stored CLOB credentials — a `401` drops them, and the gate then shows Reconnect. The store is read, not
+observed: the rejection lands on a background refresh, and the check runs again once the screen is back
+in front of the user.
+
 Region-restricted users (`PolymarketAccessMode.READ_ONLY`) still reach `Main`, browse and withdraw; the
 place-prediction flow re-checks the region itself before an order.
 
@@ -231,7 +236,6 @@ footer.
 
 | Item | Ticket |
 |---|---|
-| Drop L2 credentials on CLOB `401` and route to the gate | [REDACTED_TASK_KEY] |
 | Tradezone PnL (`/v1/leaderboard`) | not ticketed |
 | Withdraw beyond USDC · Polygon (phase 2), withdrawal tracker on cold start, explorer link on withdraw | not ticketed |
 | Prediction-withdraw analytics event | waiting for analysts |
