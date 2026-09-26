@@ -89,10 +89,21 @@ internal class DefaultYieldSupplyTransactionRepository(
             walletManager = walletManager,
             cryptoCurrency = cryptoCurrency,
             callData = callData,
-            destinationAddress = walletManager.getYieldModuleAddress(),
+            destinationAddress = walletManager.requireYieldModuleAddress(),
             amount = BigDecimal.ZERO.convertToSdkAmount(cryptoCurrencyStatus),
             fee = fee,
         )
+    }
+
+    /**
+     * The SDK reports "module address unavailable" (RPC or parse failure) as [EthereumUtils.ZERO_ADDRESS], not as an
+     * error. That sentinel must never travel on as a spender / destination: the approve and exit paths are caught
+     * later by the transaction validator (a confusing failure instead of a clear one), but a gasless fee batch is not.
+     */
+    private suspend fun WalletManager.requireYieldModuleAddress(): String {
+        val address = getYieldModuleAddress()
+        require(address != EthereumUtils.ZERO_ADDRESS) { "Yield module address is unavailable" }
+        return address
     }
 
     override suspend fun getEffectiveProtocolBalance(
@@ -223,7 +234,7 @@ internal class DefaultYieldSupplyTransactionRepository(
                     blockchain = cryptoCurrency.network.toBlockchain(),
                     derivationPath = cryptoCurrency.network.derivationPath.value,
                 ) ?: error("Wallet manager not found")
-                walletManager.getYieldModuleAddress()
+                walletManager.getYieldModuleAddress().takeIf { it != EthereumUtils.ZERO_ADDRESS }
             }.logErrorUnlessCancellation().getOrThrow()
         }
 
