@@ -225,8 +225,18 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
             payInAddress = exchangeData.payInAddress,
             txHash = txHash,
             payInExtraId = exchangeData.payInExtraId,
-        ).also {
+        ).onRight {
             tangemPayStorage.deleteWithdrawOrder(userWalletId = userWallet.walletId, orderId = orderId)
+        }.onLeft { error ->
+            // The withdraw is on-chain and its hash is known; only the notification to Express failed (typically
+            // no network). Keep the order with the hash so pollWithdrawOrdersIfNeeds() retries exchangeSent on the
+            // next launch instead of forgetting the deal.
+            TangemLogger.withTag(TAG).e("exchangeSent failed for order $orderId, keeping it for retry: $error")
+            tangemPayStorage.storeWithdrawOrder(
+                userWalletId = userWallet.walletId,
+                data = TangemPayWithdrawState(orderId = orderId, exchangeData = exchangeData, txHash = txHash),
+            )
+        }.also {
             stopPolling(userWalletId = userWallet.walletId.stringValue, orderId = orderId)
         }
     }

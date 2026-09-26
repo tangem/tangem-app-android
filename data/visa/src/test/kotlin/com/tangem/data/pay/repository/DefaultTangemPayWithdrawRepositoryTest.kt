@@ -27,6 +27,7 @@ import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.feature.swap.domain.api.SwapRepository
+import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.test.mock.MockAccounts
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -337,6 +338,22 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
         coVerify(exactly = 0) { orderRepository.getOrderData(any(), any()) }
         assertExchangeSent()
         coVerify { tangemPayStorage.deleteWithdrawOrder(userWalletId, ORDER_ID) }
+    }
+
+    @Test
+    fun `GIVEN exchangeSent fails WHEN poll THEN the order is kept with its hash for a later retry`() = runTest {
+        coEvery { tangemPayStorage.getWithdrawOrders(userWalletId) } returns listOf(storedOrder(txHash = null))
+        coEvery { orderRepository.getOrderData(userWalletId, ORDER_ID) } returns orderWithHash.right()
+        coEvery {
+            swapRepository.exchangeSent(any(), any(), any(), any(), any(), any(), any())
+        } returns ExpressDataError.UnknownError().left()
+
+        createRepository().pollWithdrawOrdersIfNeeds(userWallet)
+        advanceUntilIdle()
+
+        assertExchangeSent()
+        coVerify(exactly = 0) { tangemPayStorage.deleteWithdrawOrder(userWalletId, ORDER_ID) }
+        coVerify { tangemPayStorage.storeWithdrawOrder(userWalletId, storedOrder(txHash = TX_HASH)) }
     }
 
     @Test
