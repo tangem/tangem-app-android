@@ -132,14 +132,18 @@ class CreateAndSendGaslessTransactionUseCase(
     }
 
     /**
-     * Gets contract nonce with fallback to zero on failure.
+     * Gets the executor contract nonce that goes into the signed EIP-712 payload.
+     *
+     * An account that has not been delegated yet answers `eth_call nonce()` with empty data, which the SDK already
+     * maps to `Success(0)`. A `Failure` is therefore a real lookup error (RPC down, revert) — substituting zero
+     * would sign a payload with a guessed nonce. Fail the send instead so the user retries with a real value.
      */
     private suspend fun getContractNonce(
         gaslessDataProvider: EthereumGaslessDataProvider,
         userAddress: String,
     ): BigInteger {
         return when (val nonceResult = gaslessDataProvider.getGaslessContractNonce(userAddress)) {
-            is Result.Failure -> BigInteger.ZERO
+            is Result.Failure -> error("Unable to read the gasless executor nonce: ${nonceResult.error.message}")
             is Result.Success -> nonceResult.data
         }
     }
