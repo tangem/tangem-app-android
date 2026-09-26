@@ -33,7 +33,7 @@ internal class HuaweiPushNotificationsTokenProvider @Inject constructor(
                 try {
                     val appId = AGConnectOptionsBuilder().build(context).getString(APP_ID_KEY)
                     val token = HmsInstanceId.getInstance(context).getToken(appId, TOKEN_REQUEST_MODE)
-                    TangemLogger.i("Requested token from HuaweiService: $token")
+                    TangemLogger.i("Requested token from HuaweiService (length ${token?.length ?: 0})")
                     token
                 } catch (e: ApiException) {
                     TangemLogger.i("Fetching token from HuaweiService failed cause: ${e.message}")

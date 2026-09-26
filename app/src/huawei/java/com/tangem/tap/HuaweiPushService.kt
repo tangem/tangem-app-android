@@ -22,7 +22,7 @@ class HuaweiPushService : HmsMessageService() {
 
     override fun onNewToken(token: String?, bundle: Bundle?) {
         super.onNewToken(token, bundle)
-        TangemLogger.i("HuaweiPushService: On new token from HuaweiService: $token")
+        TangemLogger.i("HuaweiPushService: On new token from HuaweiService (length ${token?.length ?: 0})")
     }
 
     override fun onTokenError(e: Exception?, bundle: Bundle?) {
