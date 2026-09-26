@@ -11,6 +11,7 @@ import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
+import com.tangem.domain.polymarket.usecase.InvalidatePolymarketCredentialsUseCase
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -29,11 +30,14 @@ internal class GetPolymarketBalanceInteractorTest {
     private val interactor = GetPolymarketBalanceInteractor(
         polymarketRepository = repository,
         getApiCredentials = GetPolymarketApiCredentialsUseCase(credentialsStore = credentialsStore),
+        invalidateCredentials = InvalidatePolymarketCredentialsUseCase(credentialsStore = credentialsStore),
     )
 
     @BeforeEach
     fun resetMocks() {
         clearMocks(repository, credentialsStore)
+
+        coEvery { credentialsStore.clear(any()) } returns Unit
     }
 
     @Test
@@ -109,6 +113,78 @@ internal class GetPolymarketBalanceInteractorTest {
 
         // Assert
         assertThat(actual).isEqualTo(PolymarketAuthError.InvalidSignature.left())
+    }
+
+    @Test
+    fun `GIVEN the refresh is unauthorized WHEN invoke THEN clears the credentials and skips the read`() = runTest {
+        // Arrange
+        coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
+        coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS) } returns
+            PolymarketAuthError.InvalidSignature.left()
+
+        // Act
+        val actual = interactor(addresses = ADDRESSES)
+
+        // Assert
+        assertThat(actual).isEqualTo(PolymarketAuthError.InvalidSignature.left())
+        coVerify(exactly = 1) { credentialsStore.clear(USER_WALLET_ID) }
+        coVerify(exactly = 0) { repository.getBalanceAllowance(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN the read is unauthorized WHEN invoke THEN clears the credentials`() = runTest {
+        // Arrange
+        coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
+        coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS) } returns Unit.right()
+        coEvery { repository.getBalanceAllowance(OWNER, CREDENTIALS) } returns
+            PolymarketAuthError.InvalidSignature.left()
+
+        // Act
+        val actual = interactor(addresses = ADDRESSES)
+
+        // Assert
+        assertThat(actual).isEqualTo(PolymarketAuthError.InvalidSignature.left())
+        coVerify(exactly = 1) { credentialsStore.clear(USER_WALLET_ID) }
+    }
+
+    @Test
+    fun `GIVEN the read fails on network WHEN invoke THEN keeps the credentials`() = runTest {
+        // Arrange
+        coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
+        coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS) } returns Unit.right()
+        coEvery { repository.getBalanceAllowance(OWNER, CREDENTIALS) } returns PolymarketAuthError.Network.left()
+
+        // Act
+        interactor(addresses = ADDRESSES)
+
+        // Assert
+        coVerify(exactly = 0) { credentialsStore.clear(any()) }
+    }
+
+    @Test
+    fun `GIVEN the exchange reports no key WHEN invoke THEN keeps the credentials`() = runTest {
+        // Arrange
+        coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
+        coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS) } returns Unit.right()
+        coEvery { repository.getBalanceAllowance(OWNER, CREDENTIALS) } returns PolymarketAuthError.KeyNotFound.left()
+
+        // Act
+        interactor(addresses = ADDRESSES)
+
+        // Assert
+        coVerify(exactly = 0) { credentialsStore.clear(any()) }
+    }
+
+    @Test
+    fun `GIVEN nothing is stored WHEN invoke THEN clears nothing`() = runTest {
+        // Arrange
+        coEvery { credentialsStore.get(USER_WALLET_ID) } returns null
+
+        // Act
+        interactor(addresses = ADDRESSES)
+
+        // Assert
+        coVerify(exactly = 0) { credentialsStore.clear(any()) }
     }
 
     private companion object {

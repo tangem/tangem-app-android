@@ -7,6 +7,7 @@ import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
+import com.tangem.domain.polymarket.usecase.InvalidatePolymarketCredentialsUseCase
 
 /**
  * Reads the CLOB's collateral balance and allowance of [addresses]'s deposit wallet.
@@ -22,6 +23,7 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 class GetPolymarketBalanceInteractor(
     private val polymarketRepository: PolymarketRepository,
     private val getApiCredentials: GetPolymarketApiCredentialsUseCase,
+    private val invalidateCredentials: InvalidatePolymarketCredentialsUseCase,
 ) {
 
     suspend operator fun invoke(
@@ -30,14 +32,24 @@ class GetPolymarketBalanceInteractor(
         val credentials = getApiCredentials(userWalletId = addresses.userWalletId)
             ?: return PolymarketAuthError.KeyNotFound.left()
 
-        polymarketRepository.syncBalanceAllowance(
+        val refresh = polymarketRepository.syncBalanceAllowance(
             ownerAddress = addresses.ownerAddress,
             credentials = credentials,
         )
 
+        if (refresh.leftOrNull() == PolymarketAuthError.InvalidSignature) {
+            invalidateCredentials(userWalletId = addresses.userWalletId)
+
+            return PolymarketAuthError.InvalidSignature.left()
+        }
+
         return polymarketRepository.getBalanceAllowance(
             ownerAddress = addresses.ownerAddress,
             credentials = credentials,
-        )
+        ).onLeft { error ->
+            if (error == PolymarketAuthError.InvalidSignature) {
+                invalidateCredentials(userWalletId = addresses.userWalletId)
+            }
+        }
     }
 }

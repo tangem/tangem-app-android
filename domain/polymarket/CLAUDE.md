@@ -96,7 +96,11 @@ onboarded. It must match iOS and the SDK byte for byte; `PolymarketDerivationCon
 8. **A ready backend status is not enough to trade.** L2 credentials live only on this device. Reinstall,
    new phone, deleted-and-re-added wallet → status `READY_TO_TRADE`, nothing to sign with →
    `PolymarketEntry.Reconnect`: the same onboarding run signs both digests in one session, uses only the
-   ClobAuth signature to re-derive the credentials, and deploys and approves nothing.
+   ClobAuth signature to re-derive the credentials, and deploys and approves nothing. A CLOB `401` puts a
+   wallet in the same state on purpose: `InvalidatePolymarketCredentialsUseCase` drops only the
+   credentials (never `PolymarketOnboardedStore`, or the gate would ask for a full onboarding), called by
+   `GetPolymarketBalanceInteractor` on `InvalidSignature` and by `PlacePredictionOrderUseCase` on a remote
+   `Unauthorized`. The local "no stored credentials" refusal clears nothing.
 9. **Withdrawal is persisted before it is submitted.** `SubmitPredictionWithdrawalInteractor` stores the
    signed batch, then posts it; the relayer keys submissions on `(deposit wallet, nonce)`, so a resend of the
    same batch returns the same receipt. `prepare()` refuses while a record is in flight (`AlreadyInFlight`).
@@ -195,7 +199,6 @@ The account type itself is `Account.Prediction` / `AccountId.forPredictionAccoun
 ## What is not here (yet)
 
 - Claiming a resolved position (redeem) — [REDACTED_TASK_KEY] / [REDACTED_TASK_KEY]; iOS has a claim transaction service.
-- Dropping L2 credentials on a CLOB `401` — [REDACTED_TASK_KEY], design done, not implemented.
 - Tradezone PnL (`/v1/leaderboard`).
 - Withdraw minimum — deliberately none (BFF client guide §7.1); `minCheckoutUsd` is deposit-only.
 
