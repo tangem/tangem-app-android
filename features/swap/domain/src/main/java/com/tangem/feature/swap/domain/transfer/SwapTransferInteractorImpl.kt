@@ -40,6 +40,7 @@ import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.feature.swap.domain.fee.TransactionFeeResult
 import com.tangem.feature.swap.domain.models.SwapAmount
@@ -58,6 +59,7 @@ class SwapTransferInteractorImpl @Inject constructor(
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val getFeeUseCase: GetFeeUseCase,
     private val getFeeForGaslessUseCase: GetFeeForGaslessUseCase,
+    private val getFeeForTokenUseCase: GetFeeForTokenUseCase,
     private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase,
@@ -374,17 +376,23 @@ class SwapTransferInteractorImpl @Inject constructor(
             network = currency.network,
         ).getOrNull() ?: return feeDataError("Failed to build transfer transaction")
 
-        return getFeeForGaslessUseCase(
-            userWallet = userWallet,
-            network = currency.network,
-            transactionData = transactionData,
-            // A yield-supply send zeroes the amount inside TransactionData; the fee plan needs the real one.
-            sentAmount = fromTokenAmount,
-        ).map { transactionFeeExtended ->
-            selectedToken ?: return@map transactionFeeExtended
-            val selectedTokenId = selectedToken.currency.id
-            transactionFeeExtended.copy(
-                feeTokenId = selectedTokenId,
+        // A yield-supply send zeroes the amount inside TransactionData; the fee plan needs the real one.
+        return if (selectedToken == null) {
+            getFeeForGaslessUseCase(
+                userWallet = userWallet,
+                network = currency.network,
+                transactionData = transactionData,
+                sentAmount = fromTokenAmount,
+            )
+        } else {
+            // The fee has to be quoted in the token the user picked: relabelling the auto-picked quote with the
+            // selected token's id would display and sign a `feeToken` that does not match the token whose decimals
+            // and price produced `maxTokenFee` / `coinPriceInToken`.
+            getFeeForTokenUseCase(
+                userWallet = userWallet,
+                token = selectedToken.currency,
+                transactionData = transactionData,
+                sentAmount = fromTokenAmount,
             )
         }
     }

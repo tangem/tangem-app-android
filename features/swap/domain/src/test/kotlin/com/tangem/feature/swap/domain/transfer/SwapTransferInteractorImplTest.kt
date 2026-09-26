@@ -34,6 +34,7 @@ import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.feature.swap.domain.fee.TransactionFeeResult
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.SwapState
@@ -57,6 +58,7 @@ internal class SwapTransferInteractorImplTest {
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase = mockk()
     private val getFeeUseCase: GetFeeUseCase = mockk()
     private val getFeeForGaslessUseCase: GetFeeForGaslessUseCase = mockk()
+    private val getFeeForTokenUseCase: GetFeeForTokenUseCase = mockk()
     private val createTransferTransactionUseCase: CreateTransferTransactionUseCase = mockk()
     private val sendTransactionUseCase: SendTransactionUseCase = mockk()
     private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase = mockk()
@@ -75,6 +77,7 @@ internal class SwapTransferInteractorImplTest {
         isAccountsModeEnabledUseCase = isAccountsModeEnabledUseCase,
         getFeeUseCase = getFeeUseCase,
         getFeeForGaslessUseCase = getFeeForGaslessUseCase,
+        getFeeForTokenUseCase = getFeeForTokenUseCase,
         createTransferTransactionUseCase = createTransferTransactionUseCase,
         sendTransactionUseCase = sendTransactionUseCase,
         createAndSendGaslessTransactionUseCase = createAndSendGaslessTransactionUseCase,
@@ -1060,6 +1063,58 @@ internal class SwapTransferInteractorImplTest {
             )
         }
     }
+
+    @Test
+    fun `GIVEN user-selected fee token WHEN loadFeeExtended THEN fee is quoted for that token, not relabelled`() =
+        runTest {
+            val userWalletId: UserWalletId = mockk()
+            val userWallet: UserWallet = mockk { every { walletId } returns userWalletId }
+            val network: Network = mockk()
+            val fromCurrencyStatus = buildCurrencyStatus(
+                rawCurrencyId = FROM_RAW_CURRENCY_ID,
+                decimals = FROM_DECIMALS,
+                userWallet = userWallet,
+                network = network,
+            )
+            val toCurrencyStatus = buildCurrencyStatus(
+                rawCurrencyId = TO_RAW_CURRENCY_ID,
+                decimals = TO_DECIMALS,
+                destinationAddress = DESTINATION_ADDRESS,
+            )
+            val feeToken: CryptoCurrency.Token = mockk()
+            val selectedFeeToken: CryptoCurrencyStatus = mockk { every { currency } returns feeToken }
+            val transactionData: TransactionData.Uncompiled = mockk()
+            val feeExtended: TransactionFeeExtended = mockk()
+            coEvery {
+                createTransferTransactionUseCase(
+                    amount = any(),
+                    memo = null,
+                    destination = DESTINATION_ADDRESS,
+                    userWalletId = userWalletId,
+                    network = network,
+                )
+            } returns transactionData.right()
+            coEvery {
+                getFeeForTokenUseCase(
+                    userWallet = userWallet,
+                    token = feeToken,
+                    transactionData = transactionData,
+                    sentAmount = BigDecimal("2.0"),
+                )
+            } returns feeExtended.right()
+
+            val result = sut.loadFeeExtended(
+                fromSwapCurrencyStatus = fromCurrencyStatus,
+                toSwapCurrencyStatus = toCurrencyStatus,
+                fromTokenAmount = BigDecimal("2.0"),
+                selectedToken = selectedFeeToken,
+            )
+
+            assertThat(result).isEqualTo(feeExtended.right())
+            coVerify(exactly = 0) {
+                getFeeForGaslessUseCase(userWallet = any(), network = any(), transactionData = any(), sentAmount = any())
+            }
+        }
 
     // endregion
 
