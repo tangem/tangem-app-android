@@ -116,9 +116,7 @@ internal data object ProgressIndicatorStory : StoryBookPage
 
 internal data object DeviceIconStory : StoryBookPage
 
-internal data class DsComponentsListStory(
-    val onStoryClick: (StoryPageFactory) -> Unit,
-) : StoryBookPage
+internal data object DsComponentsListStory : StoryBookPage
 
 internal data class TangemLoaderStory(
     val selectedSize: TangemLoaderSize,

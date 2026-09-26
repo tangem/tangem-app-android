@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.rememberIsKeyboardVisible
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.animation.TangemAnimationSpec
 import com.tangem.core.ui.ds2.animation.TangemTransition
 import com.tangem.core.ui.ds2.button.TangemButton
@@ -37,6 +38,8 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_right_20
 /**
  * Design-system v2 footer: screen-level actions pinned to the
  * bottom edge over a fade that separates them from the content scrolling underneath.
+ *
+ * Version: 1.0.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=9062-4588)
  *
@@ -198,6 +201,8 @@ private fun Modifier.exceedTop(amount: Dp): Modifier = layout { measurable, cons
 }
 
 object TangemFooter {
+
+    val version = DsVersion(major = 1, minor = 0, patch = 0)
 
     /** Default inner padding of the content column: vertical 8, horizontal 16. */
     @Suppress("MagicNumber")
