@@ -75,7 +75,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
         energy = 1,
         bandwidth = 1,
         trxCost = BigDecimal("1"),
-        expiresAtEpochMs = 1,
+        expiresAtEpochMs = Long.MAX_VALUE,
     )
     private val fee = TransactionFeeExtended(
         transactionFee = TransactionFee.Single(
@@ -230,6 +230,25 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
             }
             coVerify { tronGaslessTransactionRepository.submit("q_2", "signedComp", "signedOrig") }
         }
+
+    @Test
+    fun `GIVEN quote expired WHEN invoke THEN re-quotes even though the amount is unchanged`() = runTest {
+        // Arrange — the confirmation screen sat idle past the quote's expiresAt
+        val expiredFee = fee.copy(tronGaslessQuote = quote.copy(expiresAtEpochMs = 1))
+        val refreshedQuote = quote.copy(quoteId = "q_fresh")
+        coEvery { tronGaslessTransactionRepository.estimate(any()) } returns refreshedQuote
+        coEvery {
+            tronGaslessTransactionRepository.submit("q_fresh", "signedComp", "signedOrig")
+        } returns TronGaslessSubmitResult(compensationTxHash = "hComp", originalTxHash = "hOrig3", status = "BROADCAST")
+
+        // Act
+        val result = useCase(userWallet, usdtCurrency.network, originalTx, expiredFee)
+
+        // Assert
+        assertThat(result.getOrNull()).isEqualTo("hOrig3")
+        coVerify(exactly = 1) { tronGaslessTransactionRepository.estimate(any()) }
+        coVerify(exactly = 0) { tronGaslessTransactionRepository.submit("q_1", any(), any()) }
+    }
 
     @Test
     fun `GIVEN refreshed compensation exceeds the confirmed one WHEN invoke THEN error and nothing is signed`() =
