@@ -33,10 +33,15 @@ private fun LibraryExtension.configureBuildTypes() {
                     fields = buildVariant.configFields,
                     builder = ::buildConfigField,
                 ).create()
+                if (buildVariant in customBuildTypes) matchingFallbacks.add(BuildType.Release.id)
             }
         }
     }
 }
+
+// External AARs are published with the standard debug/release variants only. The custom build types fall back to
+// release, as they do in the app module, so such a dependency resolves in a library module too.
+private val customBuildTypes = BuildType.values().toSet() - BuildType.Debug - BuildType.Release
 
 private fun LibraryExtension.configurePackagingOptions() {
     packaging {
