@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
     <base-config cleartextTrafficPermitted="false">
+        <!--
+            Certificate Transparency is opt-in on Android 16 (API 36) and only becomes the default with API 37.
+            Without this element a mis-issued or coerced CA certificate for api.tangem.org / express.tangem.com is
+            accepted by the platform trust store like any other. Older platforms ignore the element.
+        -->
+        <certificateTransparency enabled="true" />
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>
