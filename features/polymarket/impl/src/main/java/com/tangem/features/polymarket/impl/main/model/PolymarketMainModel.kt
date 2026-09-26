@@ -20,6 +20,7 @@ import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
+import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.arkivanov.decompose.router.slot.SlotNavigation
@@ -92,6 +93,7 @@ internal class PolymarketMainModel @Inject constructor(
     private val predictionPositionsValueFetcher: PredictionPositionsValueFetcher,
     private val predictionBalancePoller: PredictionBalancePoller,
     private val predictionFundingWindow: PredictionFundingWindow,
+    private val getPolymarketApiCredentialsUseCase: GetPolymarketApiCredentialsUseCase,
 ) : Model(), PolymarketAddFundsComponent.ModelCallback {
 
     private val params = paramsContainer.require<PolymarketMainParams>()
@@ -204,6 +206,7 @@ internal class PolymarketMainModel @Inject constructor(
         observeEvents()
         loadCategories()
         modelScope.launch { tradingAllowance.refresh() }
+        returnToGateWithoutCredentials()
     }
 
     fun onBackClick() {
@@ -255,6 +258,16 @@ internal class PolymarketMainModel @Inject constructor(
         predictionBalancePoller.subscribe(userWalletId = params.userWalletId)
             .launchIn(modelScope)
             .saveIn(balancePollJobHolder)
+        returnToGateWithoutCredentials()
+    }
+
+    private fun returnToGateWithoutCredentials() {
+        modelScope.launch {
+            if (getPolymarketApiCredentialsUseCase(userWalletId = params.userWalletId) != null) return@launch
+
+            TangemLogger.i("Main: no credentials to sign with, returning to the gate")
+            router.replaceAll(PolymarketRoute.Onboarding(userWalletId = params.userWalletId))
+        }
     }
 
     fun onPause() {
