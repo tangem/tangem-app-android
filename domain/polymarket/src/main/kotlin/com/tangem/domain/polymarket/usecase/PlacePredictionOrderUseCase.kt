@@ -11,6 +11,7 @@ import com.tangem.domain.polymarket.model.PredictionSignedOrder
 class PlacePredictionOrderUseCase(
     private val polymarketRepository: PolymarketRepository,
     private val getApiCredentials: GetPolymarketApiCredentialsUseCase,
+    private val invalidateCredentials: InvalidatePolymarketCredentialsUseCase,
 ) {
 
     suspend operator fun invoke(
@@ -26,6 +27,10 @@ class PlacePredictionOrderUseCase(
             credentials = credentials,
             signedOrder = signedOrder,
             isNegRisk = isNegRisk,
-        )
+        ).onLeft { error ->
+            if (error is PredictionPlaceOrderError.Unauthorized) {
+                invalidateCredentials(userWalletId = addresses.userWalletId)
+            }
+        }
     }
 }
