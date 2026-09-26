@@ -67,14 +67,29 @@ class YieldSupplyEstimateEnterFeeUseCase(
             transactionDataList = transactionDataList,
         ).onLeft { TangemLogger.e("Error", it) }.getOrNull() ?: return null
 
-        if (estimatedFees.estimatedGasList.isEmpty()) return null
+        val estimatedGasList = estimatedFees.estimatedGasList
+        // The estimates are matched to the transactions by position, so the list must cover every transaction: a
+        // shorter list would make `zip` silently drop the tail of the batch (the `enter` call last), and the user
+        // would sign deploy + approve without ever entering the protocol. An implausibly large estimate (it becomes
+        // the signed gasLimit, ×1.4) is not trusted either — fall back to the static estimation in both cases.
+        if (estimatedGasList.size != transactionDataList.size) {
+            TangemLogger.e(
+                "BlockAid returned ${estimatedGasList.size} gas estimates for ${transactionDataList.size} " +
+                    "transactions; falling back to static estimation",
+            )
+            return null
+        }
+        if (estimatedGasList.any { it > MAX_GAS_LIMIT }) {
+            TangemLogger.e("BlockAid gas estimate out of range: $estimatedGasList; falling back to static estimation")
+            return null
+        }
 
         val fee = feeRepository.getEthereumFeeWithoutGas(
             userWalletId = userWallet.walletId,
             cryptoCurrency = cryptoCurrency,
         )
 
-        return transactionDataList.zip(estimatedFees.estimatedGasList) { transaction, estimatedGas ->
+        return transactionDataList.zip(estimatedGasList) { transaction, estimatedGas ->
             transaction.copy(
                 fee = fee.fixFee(cryptoCurrency, estimatedGas)
                     .increaseGasLimitBy(INCREASE_GAS_LIMIT_FOR_SUPPLY),
@@ -114,5 +129,8 @@ class YieldSupplyEstimateEnterFeeUseCase(
     private companion object {
         // Using constant gas limit to avoid fee calculation errors when contract address is not deployed yet
         val ETHEREUM_CONSTANT_GAS_LIMIT = 500_000.toBigInteger()
+
+        /** Upper bound for a single EVM transaction's gas estimate (about a third of a block). */
+        val MAX_GAS_LIMIT = 10_000_000.toBigInteger()
     }
 }
