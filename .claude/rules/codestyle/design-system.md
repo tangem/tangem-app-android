@@ -68,6 +68,31 @@ Pattern rules:
    Preview helpers (`PreviewRow`, `Section`, etc.) are private in the same file.
 7. **Composite components** (many variants / heavy layout) are split into 3 files like the button:
    public `Tangem<Name>.kt`, private `Tangem<Name>Internal.kt`, tokens `Tangem<Name>Ext.kt`.
+8. **Version.** The component declares its version — see [Versioning](#versioning) below.
+
+## Versioning
+
+Every DS3 component carries a `major.minor.patch` version. **`major.minor` mirror the component
+version in Figma**; **`patch` counts changes with no Figma release behind them** — an Android-only
+bug fix, a new overload, an internal rework.
+
+The version lives in two places, and both are updated in the change that alters the component:
+
+1. `val version` in the component's `object Tangem<Name>` — the single machine-readable source, read
+   by the Storybook:
+   ```kotlin
+   object TangemButton {
+
+       val version = DsVersion(major = 1, minor = 2, patch = 0)
+   ```
+   `DsVersion` is `com.tangem.core.ui.ds2.DsVersion`. A component that has no `object` yet gets one
+   (`/** Public API surface of [TangemRow]. */ object TangemRow { … }`).
+2. A `Version: 1.2.0` line in the KDoc of the component's public entry point, between the summary and
+   the Figma link (see the KDoc requirements below).
+
+Sub-components that ship as part of a bigger component (`TangemTabItem` inside `TangemTabNavigation`,
+`TangemStatusIcon` inside `TangemStatusScreen`, `TangemNavigationText` inside `TangemTopNavigation`)
+are **not** versioned separately — the parent's version covers them.
 
 ## API conventions
 
@@ -122,18 +147,20 @@ A component KDoc must contain, in order:
 
 1. **Summary line.** One sentence stating what the component is and which generation it belongs to —
    start with `Design-system v2 …` for DS3 components (matches the existing wording).
-2. **Figma link.** A markdown link to the exact Figma node:
+2. **Version line.** `Version: <major>.<minor>.<patch>`, matching the `version` declared in the
+   component's `object` — see [Versioning](#versioning).
+3. **Figma link.** A markdown link to the exact Figma node:
    `[Figma](https://www.figma.com/design/…?node-id=…)`. A component without a Figma reference is not
    review-ready.
-3. **Behavior notes** (when behavior is non-obvious). A short prose paragraph or a bulleted
+4. **Behavior notes** (when behavior is non-obvious). A short prose paragraph or a bulleted
    `Behavior notes:` list covering state-dependent rendering — loading, disabled/enabled, icon-only
    vs. labeled, focus ring, animations, what overrides what. Describe *observable behavior*, not the
    implementation.
-4. **`@param` for every parameter.** No parameter may be left undocumented — including `modifier`
+5. **`@param` for every parameter.** No parameter may be left undocumented — including `modifier`
    when its effect is non-trivial (e.g. "Pass `Modifier.fillMaxWidth()` to switch to fixed-width
    layout"). Each `@param` states the meaning **and** the consequences of notable values
    (`null` → non-interactive, `false` → dimmed & clicks ignored, etc.).
-5. **Accessibility guidance** where relevant — e.g. when `contentDescription` should be supplied
+6. **Accessibility guidance** where relevant — e.g. when `contentDescription` should be supplied
    (icon-only buttons, loading state, disabled state) and what it announces.
 
 Additional rules:
@@ -164,6 +191,8 @@ Page layout guidelines live in
       are literal `.dp` (DS3 has no dimension token — never use `dimens2`), with `@Suppress("MagicNumber")`.
 - [ ] Variants/sizes expressed as an `enum` inside `object Tangem<Name>` (not a set of boolean flags).
 - [ ] All public types (enums, statuses, constants) declared inside the `object Tangem<Name>`.
+- [ ] `val version = DsVersion(…)` declared in the object, and the same value in the KDoc `Version:`
+      line (new component → `1.0.0`; changed component → bumped).
 - [ ] Convenient overloads provided (simpler `@Composable` overloads and/or `object` extension presets).
 - [ ] Public sub-components (e.g. `TangemNavigationText`) follow the same rules + KDoc as a full component.
 - [ ] States handled: enabled/disabled, press/focus (`interactionSource`), loading (if applicable).
