@@ -24,6 +24,7 @@ import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.logs.SensitiveUrlMasker
+import com.tangem.datasource.utils.ForeignHostHeadersStripInterceptor
 import com.tangem.datasource.utils.NetworkLogsSaveInterceptor
 import com.tangem.datasource.utils.WireMockRedirectInterceptor
 import com.tangem.datasource.utils.addHeaders
@@ -31,6 +32,7 @@ import com.tangem.utils.JsonStringValuesExtractor
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.serialization.json.Json
 import okhttp3.Authenticator
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import retrofit2.Invocation
@@ -116,7 +118,9 @@ internal class RetrofitApiBuilder @Inject constructor(
                     }
                     .applyTimeouts(timeouts = timeouts)
                     .let {
-                        if (logsSaving) it.applyLogsSaving() else it
+                        // `isLoggable = false` promises that the API's requests stay out of network logs — that has
+                        // to cover the persisted support log as well, not only the debug-build loggers
+                        if (logsSaving && isLoggable(apiConfigId)) it.applyLogsSaving() else it
                     }
                     .addLoggers(apiConfigId = apiConfigId, context = context)
                     .build(),
@@ -165,8 +169,17 @@ internal class RetrofitApiBuilder @Inject constructor(
             )
         } else {
             val headers = environmentConfig.headers
+            val apiHost = environmentConfig.baseUrl.toHttpUrlOrNull()?.host
 
-            this.addHeaders(headers)
+            this.addHeaders(headers).let { builder ->
+                if (apiHost != null && headers.isNotEmpty()) {
+                    builder.addNetworkInterceptor(
+                        ForeignHostHeadersStripInterceptor(apiHost = apiHost, headerNames = headers.keys),
+                    )
+                } else {
+                    builder
+                }
+            }
         }
     }
 
@@ -224,8 +237,10 @@ internal class RetrofitApiBuilder @Inject constructor(
         }
     }
 
+    private fun isLoggable(apiConfigId: ApiConfig.ID): Boolean = apiConfigs[apiConfigId.name]?.isLoggable != false
+
     private fun OkHttpClient.Builder.addLoggers(apiConfigId: ApiConfig.ID, context: Context): OkHttpClient.Builder {
-        if (apiConfigs[apiConfigId.name]?.isLoggable == false) return this
+        if (!isLoggable(apiConfigId)) return this
 
         return if (BuildConfig.LOG_ENABLED) {
             addInterceptor(interceptor = ChuckerInterceptor(context))
