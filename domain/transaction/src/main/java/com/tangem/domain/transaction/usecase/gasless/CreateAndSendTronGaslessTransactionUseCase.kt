@@ -35,6 +35,7 @@ class CreateAndSendTronGaslessTransactionUseCase(
     private val tronGaslessTransactionRepository: TronGaslessTransactionRepository,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val getHotWalletSigner: (UserWallet.Hot) -> TransactionSigner,
+    private val nowEpochMs: () -> Long = System::currentTimeMillis,
 ) {
 
     suspend operator fun invoke(
@@ -106,7 +107,11 @@ class CreateAndSendTronGaslessTransactionUseCase(
     ): TronGaslessQuote {
         val amountRaw = original.amount.toTronGaslessBaseUnits()
             ?: error("Tron gasless: transaction amount is null")
-        if (amountRaw == quotedFee.quotedAmountRaw) return quotedFee
+        // The backend prices the sponsorship for a limited time (`expiresAt`); an expired quoteId must not be
+        // submitted with two freshly signed transfers. Re-quote in that case too, under the same "not more than
+        // what the user confirmed" guard.
+        val isExpired = nowEpochMs() + EXPIRY_SAFETY_MARGIN_MS >= quotedFee.expiresAtEpochMs
+        if (amountRaw == quotedFee.quotedAmountRaw && !isExpired) return quotedFee
 
         val refreshed = tronGaslessTransactionRepository.estimate(
             TronGaslessEstimateParams(
@@ -137,5 +142,10 @@ class CreateAndSendTronGaslessTransactionUseCase(
             }
             is UserWallet.Hot -> getHotWalletSigner(userWallet)
         }
+    }
+
+    private companion object {
+        /** Do not sign against a quote that expires while the two NFC signatures are being collected. */
+        const val EXPIRY_SAFETY_MARGIN_MS = 5_000L
     }
 }
