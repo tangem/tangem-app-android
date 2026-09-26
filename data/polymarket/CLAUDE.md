@@ -98,7 +98,7 @@ date here; when you ingest a change, update this table in the same PR.
 | | `502` | `RelayerUnavailable` | relayer down, retry later |
 | CLOB `POST order` | `400` + "no match" marker | `PredictionPlaceOrderError.NoLiquidity` | fill-and-kill found nothing |
 | | `400` other | `Rejected` | |
-| | `401` | `Unauthorized` | credentials stale — [REDACTED_TASK_KEY] will clear them |
+| | `401` | `Unauthorized` | credentials stale — `PlacePredictionOrderUseCase` clears them |
 | | network/timeout, other | `Ambiguous` | the order may have been placed; the feature reports it as submitted, never as failed |
 | BFF `/withdraw*` | `409` | `PredictionWithdrawError.NonceTaken` | same nonce already submitted |
 | | `422` | `RelayerRejected` | |
