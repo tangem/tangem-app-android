@@ -5,8 +5,6 @@ import androidx.benchmark.macro.StartupMode
 import androidx.benchmark.macro.StartupTimingMetric
 import androidx.benchmark.macro.junit4.MacrobenchmarkRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.uiautomator.By
-import androidx.test.uiautomator.Until
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -14,8 +12,8 @@ import org.junit.runner.RunWith
 /**
  * Measures how long the app takes to start.
  *
- * Reports `timeToInitialDisplay` (first frame — for this app, the splash screen) and, once
- * `reportFullyDrawn()` is called on the first usable screen, `timeToFullDisplay`.
+ * Reports `timeToInitialDisplay`. The splash screen holds back the first frame until the app is ready
+ * (`setKeepOnScreenCondition` in `MainActivity`), so this already covers the whole wait behind the splash.
  *
  * `StartupMode.WARM` is not covered: `MainActivity` is `singleInstance`, so a warm launch reuses the
  * existing instance and the measurement never sees a new frame.
@@ -51,17 +49,10 @@ class StartupBenchmark {
         setupBlock = { pressHome() },
     ) {
         startActivityAndWait()
-
-        // startActivityAndWait() returns on the first frame, which here is still the splash screen.
-        // Waiting for the app's own window keeps a start that never reaches the UI from being recorded
-        // as a fast one.
-        val hasContent = device.wait(Until.hasObject(By.pkg(TARGET_PACKAGE).depth(0)), CONTENT_TIMEOUT_MS)
-        check(hasContent) { "$TARGET_PACKAGE did not render its content within $CONTENT_TIMEOUT_MS ms" }
     }
 
     private companion object {
         const val TARGET_PACKAGE = "com.tangem.wallet.external"
         const val ITERATIONS = 10
-        const val CONTENT_TIMEOUT_MS = 20_000L
     }
 }
