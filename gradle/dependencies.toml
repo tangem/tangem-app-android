@@ -145,7 +145,6 @@ compose-junit = "1.6.2"
 hamcrest = "2.2"
 orchestrator = "1.5.1"
 benchmark = "1.4.1"
-uiautomator = "2.3.0"
 # endregion Testing
 
 [plugins]
@@ -281,7 +280,6 @@ test-hilt-compiler = { module = "com.google.dagger:hilt-android-compiler", versi
 test-orchestrator = { module = "androidx.test:orchestrator", version.ref = "orchestrator" }
 test-benchmark-macro = { module = "androidx.benchmark:benchmark-macro", version.ref = "benchmark" }
 test-benchmark-macro-junit4 = { module = "androidx.benchmark:benchmark-macro-junit4", version.ref = "benchmark" }
-test-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "uiautomator" }
 # endregion Test
 
 # region Other
