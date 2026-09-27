@@ -47,7 +47,6 @@ kotlin {
 dependencies {
     implementation(deps.test.junit)
     implementation(deps.test.junit.android)
-    implementation(deps.test.uiautomator)
     implementation(deps.test.benchmark.macro)
     implementation(deps.test.benchmark.macro.junit4)
 }
