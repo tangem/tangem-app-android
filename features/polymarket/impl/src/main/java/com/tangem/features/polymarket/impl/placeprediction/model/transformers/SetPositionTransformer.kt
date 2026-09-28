@@ -1,7 +1,9 @@
 package com.tangem.features.polymarket.impl.placeprediction.model.transformers
 
 import com.tangem.domain.polymarket.model.PolymarketPosition
+import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
 import com.tangem.features.polymarket.impl.common.PolymarketConst
+import com.tangem.features.polymarket.impl.common.formatPolymarketPrice
 import com.tangem.features.polymarket.impl.common.outcomeAccent
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
@@ -17,6 +19,7 @@ internal class SetPositionTransformer(private val position: PolymarketPosition.O
     override fun transform(prevState: PlacePredictionUM): PlacePredictionUM {
         val order = prevState.order as? OrderSideUM.Sell ?: return prevState
         val available = SharesCalculator.available(held = position.size)
+        val isResolved = position.resolutionStatus == PolymarketResolutionStatus.RESOLVED
 
         return prevState.copy(
             market = prevState.market.copy(
@@ -24,8 +27,9 @@ internal class SetPositionTransformer(private val position: PolymarketPosition.O
                 imageUrl = position.iconUrl,
                 outcomeTitle = position.outcome,
                 outcomeAccent = position.outcomeAccent,
-                outcomePriceCents = prevState.market.outcomePriceCents ?: position.curPrice.toCents(),
-                entryPriceCents = position.avgPrice.toCents(),
+                outcomePrice = prevState.market.outcomePrice
+                    ?: position.curPrice.formatPolymarketPrice(isResolved = isResolved),
+                entryPrice = position.avgPrice.formatPolymarketPrice(isResolved = isResolved),
                 resolutionDateMillis = position.endDate
                     ?.atStartOfDay(ZoneId.of(PolymarketConst.EASTERN_TIME_ZONE))
                     ?.toInstant()
@@ -41,6 +45,4 @@ internal class SetPositionTransformer(private val position: PolymarketPosition.O
         isNotBlank() || available.signum() <= 0 -> this
         else -> available.toPlainString()
     }
-
-    private fun BigDecimal.toCents(): Int = movePointRight(2).toInt()
 }
