@@ -1,5 +1,6 @@
 package com.tangem.features.jointaccount.join.invitepreview.model
 
+import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
@@ -9,6 +10,7 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
+import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitePreviewUseCase
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -28,10 +30,13 @@ import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.io.IOException
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class JointAccountInvitePreviewModelTest {
@@ -106,6 +111,63 @@ internal class JointAccountInvitePreviewModelTest {
         // Assert
         coVerify(exactly = 1) { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) }
         coVerify(exactly = 1) { getJointAccountInvitePreviewUseCase(OTHER_WALLET_ID, INVITE_ID) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN backend unreachable at first WHEN model created THEN the preview is retried and loads`() = runTest {
+        // Arrange — a link opened right after a Quick Share transfer, the phone has no network for a few seconds
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet))
+        coEvery { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) } returnsMany listOf(
+            JointAccountInvitePreviewError.Unreachable(cause = IOException()).left(),
+            JointAccountInvitePreviewError.Unreachable(cause = IOException()).left(),
+            preview().right(),
+        )
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceTimeBy(2.seconds)
+        val whileRetrying = model.uiState.value
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(whileRetrying).isInstanceOf(JointAccountInvitePreviewUM.Loading::class.java)
+        assertThat(model.uiState.value).isInstanceOf(JointAccountInvitePreviewUM.Content::class.java)
+        coVerify(exactly = 3) { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN backend stays unreachable WHEN model created THEN state is Failed after the retries`() = runTest {
+        // Arrange
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet))
+        coEvery { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) } returns
+            JointAccountInvitePreviewError.Unreachable(cause = IOException()).left()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value).isInstanceOf(JointAccountInvitePreviewUM.Failed::class.java)
+        coVerify(exactly = 4) { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN server error WHEN model created THEN state is Failed without a retry`() = runTest {
+        // Arrange
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet))
+        coEvery { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) } returns
+            JointAccountInvitePreviewError.LoadFailed(cause = IllegalStateException()).left()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value).isInstanceOf(JointAccountInvitePreviewUM.Failed::class.java)
+        coVerify(exactly = 1) { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) }
         model.onDestroy()
     }
 
