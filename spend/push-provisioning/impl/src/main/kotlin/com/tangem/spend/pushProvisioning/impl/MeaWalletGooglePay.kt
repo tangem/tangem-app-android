@@ -2,6 +2,7 @@ package com.tangem.spend.pushProvisioning.impl
 
 import android.app.Activity
 import android.content.Intent
+import arrow.core.Either
 import com.google.android.gms.tapandpay.issuer.TokenInfo
 import com.meawallet.mpp.GooglePayDataChangedListener
 import com.meawallet.mpp.GooglePayHasEligibleTokenizationTargetListener
@@ -23,6 +24,12 @@ internal interface MeaWalletGooglePay {
     fun checkWalletForCardSuffix(lastFourDigits: String, listener: GooglePayRegisteredTokensListener)
 
     fun hasEligibleTokenizationTarget(lastFourDigits: String, listener: GooglePayHasEligibleTokenizationTargetListener)
+
+    fun checkStableHardwareId(onComplete: (errorCode: Int?) -> Unit)
+
+    fun checkActiveWallet(onComplete: (errorCode: Int?) -> Unit)
+
+    fun getEnvironment(onComplete: (environment: Either<Int, String>) -> Unit)
 
     fun push(card: GoogleWalletProvisioner.Card, activity: Activity, listener: MppPushCardToGooglePayListener)
 
