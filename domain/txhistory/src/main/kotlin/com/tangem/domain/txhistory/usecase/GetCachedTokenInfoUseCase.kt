@@ -18,4 +18,6 @@ class GetCachedTokenInfoUseCase(private val repository: TokenInfoRepository) {
 
     suspend operator fun invoke(userWalletId: UserWalletId, networkId: String): Set<CryptoCurrency.Token> =
         repository.getCachedTokensForNetwork(userWalletId, networkId)
+
+    fun fetchMissing(ids: Set<ExpressAsset.ID>) = repository.fetchMissing(ids)
 }

@@ -288,6 +288,34 @@ internal class FeeSelectorLogicTest {
     }
 
     @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class TronActivationRefusal {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN tron activation refused WHEN load fee THEN surface refusal without basic fallback`(
+            refusal: GetFeeError,
+        ) = runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            coEvery { onLoadFeeExtended(any()) } returns refusal.left()
+
+            // Act
+            val sut = buildModel(gaslessEnabled = true)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) { onLoadFee() }
+            assertThat(sut.uiState.value).isEqualTo(FeeSelectorUM.Error(refusal))
+        }
+
+        private fun provideTestModels() = listOf(
+            GetFeeError.GaslessError.TronActivationNotEnoughFunds(minimumAmount = BigDecimal(5), tokenSymbol = "USDT"),
+            GetFeeError.GaslessError.TronActivationRateLimited(isPerWallet = true),
+            GetFeeError.GaslessError.TronActivationRateLimited(isPerWallet = false),
+        )
+    }
+
+    @Nested
     inner class CheckLoadFee {
 
         @Test

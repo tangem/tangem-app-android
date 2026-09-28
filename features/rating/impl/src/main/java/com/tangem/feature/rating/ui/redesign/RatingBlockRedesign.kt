@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -27,6 +28,7 @@ import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.RatingTestTags
 import com.tangem.feature.rating.ui.RatingUM
 
 private const val STARS_COUNT = 5
@@ -42,6 +44,7 @@ internal fun RatingBlockRedesign(state: RatingUM, modifier: Modifier = Modifier)
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .testTag(RatingTestTags.BLOCK)
             .clip(RoundedCornerShape(24.dp))
             .background(TangemTheme.colors3.bg.tertiary)
             .padding(16.dp),
@@ -109,7 +112,9 @@ internal fun RedesignStarRow(
             IconButton(
                 onClick = { if (isEnabled) onRatingSelect(star) },
                 enabled = isEnabled,
-                modifier = Modifier.size(32.dp),
+                modifier = Modifier
+                    .size(32.dp)
+                    .testTag("${RatingTestTags.STAR}_$star"),
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_rating_star_24),

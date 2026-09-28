@@ -26,7 +26,6 @@ import com.tangem.store.datasource.txhistory.db.entity.express.ExpressSyncStateE
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.repository.TokenInfoRepository
-import com.tangem.test.core.TestAppCoroutineScope
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -61,7 +60,6 @@ internal class DefaultExpressHistoryRepositoryTest {
         expressSyncStateDao = expressSyncStateDao,
         tokenInfoRepository = tokenInfoRepository,
         database = database,
-        appScope = TestAppCoroutineScope(),
     )
 
     @BeforeEach

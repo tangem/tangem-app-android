@@ -160,6 +160,7 @@ private fun SummaryScreen(state: TangemPayBankWithdrawPreviewUM.Summary, modifie
                     title = transfer.route.title,
                     eta = transfer.route.eta,
                     fee = transfer.route.fee,
+                    onClick = transfer.route.onClick,
                 )
             }
             if (state.recipientCards.isNotEmpty()) {
