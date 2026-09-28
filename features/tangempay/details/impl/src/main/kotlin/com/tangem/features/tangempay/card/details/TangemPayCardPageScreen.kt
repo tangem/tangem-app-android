@@ -37,7 +37,9 @@ import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.TangemPayCardType
+import com.tangem.features.tangempay.card.gpay.AddToGoogleWalletButtonState
 import com.tangem.features.tangempay.card.gpay.AddToWalletBlockState
+import com.tangem.features.tangempay.card.gpay.TangemPayAddToGoogleWalletButton
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToWalletBlock
 import com.tangem.features.tangempay.card.reissue.TangemPayReissueBlock
 import com.tangem.features.tangempay.card.view.DisplayNameState
@@ -336,6 +338,15 @@ private fun LazyListScope.cardState(state: TangemPayCardPageUM) {
             )
         }
     }
+    if (state.addToGoogleWalletButtonState != null) {
+        cardPageItem(key = "GoogleWalletButton") {
+            TangemPayAddToGoogleWalletButton(
+                onClick = state.addToGoogleWalletButtonState.onClick,
+                isLoading = state.addToGoogleWalletButtonState.isLoading,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
     cardPageItem(key = "Limit") {
         TangemPayDailyLimitBlock(
             state = state.dailyLimitState,
@@ -433,6 +444,7 @@ private fun previewDeliveryState(email: String) = TangemPayCardDeliveryUM(
 private fun previewCardPageState(
     cardState: TangemPayCardState = TangemPayCardState.Active,
     addToWalletBlockState: AddToWalletBlockState? = AddToWalletBlockState(onClick = {}, onClickClose = {}),
+    addToGoogleWalletButtonState: AddToGoogleWalletButtonState? = null,
     settings: ImmutableList<TangemPayCardPageSetting> = previewSettings(),
     delivery: TangemPayCardDeliveryUM? = null,
 ) = TangemPayCardPageUM(
@@ -440,6 +452,7 @@ private fun previewCardPageState(
     onBackClick = {},
     dailyLimitState = TangemPayDailyLimitBlockState.Content(limit = "$5,000", onChangeClick = {}),
     addToWalletBlockState = addToWalletBlockState,
+    addToGoogleWalletButtonState = addToGoogleWalletButtonState,
     cardState = cardState,
     menuItems = persistentListOf(),
     delivery = delivery,
@@ -475,6 +488,26 @@ private fun TangemPayCardPageScreenPreview() {
     TangemThemePreviewRedesign {
         TangemPayCardPageScreen(
             state = previewCardPageState(),
+            cardSection = {
+                TangemPayCard(
+                    state = previewCardDetailsState(),
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            },
+        )
+    }
+}
+
+@Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun TangemPayCardPageScreenGoogleWalletPreview() {
+    TangemThemePreviewRedesign {
+        TangemPayCardPageScreen(
+            state = previewCardPageState(
+                addToWalletBlockState = null,
+                addToGoogleWalletButtonState = AddToGoogleWalletButtonState(onClick = {}, isLoading = false),
+            ),
             cardSection = {
                 TangemPayCard(
                     state = previewCardDetailsState(),
