@@ -45,6 +45,8 @@ import com.tangem.feature.tester.presentation.storybook.ui.StoryBookScreen
 import com.tangem.feature.tester.presentation.storybook.viewmodel.StoryBookViewModel
 import com.tangem.feature.tester.presentation.testpush.ui.TestPushScreen
 import com.tangem.feature.tester.presentation.testpush.viewmodel.TestPushViewModel
+import com.tangem.feature.tester.presentation.walletids.ui.WalletIdsScreen
+import com.tangem.feature.tester.presentation.walletids.viewmodels.WalletIdsViewModel
 import com.tangem.features.survey.SurveyLaunchData
 import com.tangem.features.survey.SurveySparrowLauncher
 import dagger.hilt.android.AndroidEntryPoint
@@ -106,6 +108,7 @@ internal class TesterActivity : ComposeActivity() {
                             ButtonUM.TEST_PUSHES,
                             ButtonUM.ACCOUNTS,
                             ButtonUM.ADDRESSES_INFO,
+                            ButtonUM.WALLET_IDS,
                             ButtonUM.STORY_BOOK,
                             ButtonUM.SURVEY_SPARROW,
                             ButtonUM.BACKEND_AUTH_STATUS,
@@ -121,6 +124,7 @@ internal class TesterActivity : ComposeActivity() {
                                 ButtonUM.TEST_PUSHES -> TesterScreen.TEST_PUSHES
                                 ButtonUM.ACCOUNTS -> TesterScreen.ACCOUNTS
                                 ButtonUM.ADDRESSES_INFO -> TesterScreen.ADDRESSES_INFO
+                                ButtonUM.WALLET_IDS -> TesterScreen.WALLET_IDS
                                 ButtonUM.STORY_BOOK -> TesterScreen.STORY_BOOK
                                 ButtonUM.SURVEY_SPARROW -> TesterScreen.SURVEY_SPARROW
                                 ButtonUM.BACKEND_AUTH_STATUS -> TesterScreen.BACKEND_AUTH_STATUS
@@ -206,6 +210,15 @@ internal class TesterActivity : ComposeActivity() {
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
 
                 AddressesInfoScreen(state)
+            }
+
+            composable(route = TesterScreen.WALLET_IDS.name) {
+                val viewModel = hiltViewModel<WalletIdsViewModel>().apply {
+                    setupNavigation(innerTesterRouter)
+                }
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+                WalletIdsScreen(state)
             }
 
             composable(route = TesterScreen.STORY_BOOK.name) {
