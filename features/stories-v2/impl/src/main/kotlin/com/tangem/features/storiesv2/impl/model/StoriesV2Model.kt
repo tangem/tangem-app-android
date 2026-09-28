@@ -200,6 +200,9 @@ internal class StoriesV2Model @Inject constructor(
                     StoriesV2Result.Unavailable(reason = StoriesV2Result.Unavailable.Reason.NO_CONTENT),
                 )
             }
+            StoryV2ContentLoad.AlreadyShown -> deliverStatusResult(
+                StoriesV2Result.Unavailable(reason = StoriesV2Result.Unavailable.Reason.NO_CONTENT),
+            )
             StoryV2ContentLoad.Failed -> {
                 uiState.value = StoriesV2ScreenUM.Error(onReloadClick = ::onReloadClick, onCloseClick = ::onStatusClose)
             }

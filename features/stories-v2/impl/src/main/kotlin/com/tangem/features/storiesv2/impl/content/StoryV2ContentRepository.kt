@@ -8,8 +8,12 @@ import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
@@ -22,6 +26,9 @@ internal sealed interface StoryV2ContentLoad {
 
     /** Nothing showable, which the host treats as "continue without the story". */
     data object Unavailable : StoryV2ContentLoad
+
+    /** A `once` story the viewer has already seen: the host continues without it, and nothing went wrong. */
+    data object AlreadyShown : StoryV2ContentLoad
 
     /** Delivery failed — the network or the files — and trying again may succeed. */
     data object Failed : StoryV2ContentLoad
@@ -71,7 +78,7 @@ internal class DefaultStoryV2ContentRepository @Inject constructor(
         // which the backend rejects and which say nothing about the language of the texts anyway.
         val key = LoadKey(type = type, language = Locale.getDefault().stripExtensions().toLanguageTag())
         val load = loads.computeIfAbsent(key) { appScope.async(dispatchers.io) { resolve(key) } }
-        val result = runSuspendCatching { load.await() }.getOrElse { error ->
+        val result = runSuspendCatching { awaitSurvivingClear(load) }.getOrElse { error ->
             TangemLogger.e("Stories V2: failed to load $type", error)
             StoryV2ContentLoad.Failed
         }
@@ -88,8 +95,18 @@ internal class DefaultStoryV2ContentRepository @Inject constructor(
     }
 
     override suspend fun clearRemoteContent() {
+        // A load still running would otherwise write its files back right after the cleanup.
+        loads.values.forEach { it.cancelAndJoin() }
         loads.clear()
         remoteSource.clear()
+    }
+
+    /** A clear cancels the shared load under its waiters; for them it is a failed delivery they can retry. */
+    private suspend fun awaitSurvivingClear(load: Deferred<StoryV2ContentLoad>): StoryV2ContentLoad = try {
+        load.await()
+    } catch (e: CancellationException) {
+        currentCoroutineContext().ensureActive()
+        StoryV2ContentLoad.Failed
     }
 
     private suspend fun resolve(key: LoadKey): StoryV2ContentLoad = when (key.type) {
@@ -101,7 +118,8 @@ internal class DefaultStoryV2ContentRepository @Inject constructor(
         val slug = StoryV2Registry.slugOf(key.type) ?: return StoryV2ContentLoad.Unavailable
         return when (val load = remoteSource.load(slug = slug, language = key.language)) {
             is RemoteStoryV2Load.Ready -> load.composition.toLoad()
-            RemoteStoryV2Load.Unavailable -> StoryV2ContentLoad.Unavailable
+            RemoteStoryV2Load.NotFound -> StoryV2ContentLoad.Unavailable
+            RemoteStoryV2Load.AlreadyShown -> StoryV2ContentLoad.AlreadyShown
             RemoteStoryV2Load.Failed -> StoryV2ContentLoad.Failed
         }
     }

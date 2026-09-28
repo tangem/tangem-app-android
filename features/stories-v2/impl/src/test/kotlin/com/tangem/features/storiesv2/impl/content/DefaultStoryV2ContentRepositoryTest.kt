@@ -20,6 +20,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -197,7 +198,8 @@ internal class DefaultStoryV2ContentRepositoryTest {
 
         private fun provideTestModels() = listOf(
             NotReadyModel(remoteLoad = RemoteStoryV2Load.Failed, expected = StoryV2ContentLoad.Failed),
-            NotReadyModel(remoteLoad = RemoteStoryV2Load.Unavailable, expected = StoryV2ContentLoad.Unavailable),
+            NotReadyModel(remoteLoad = RemoteStoryV2Load.NotFound, expected = StoryV2ContentLoad.Unavailable),
+            NotReadyModel(remoteLoad = RemoteStoryV2Load.AlreadyShown, expected = StoryV2ContentLoad.AlreadyShown),
         )
     }
 
@@ -273,6 +275,31 @@ internal class DefaultStoryV2ContentRepositoryTest {
                 // Assert
                 coVerify(exactly = 2) { remoteSource.load(slug = any(), language = any()) }
                 coVerify(exactly = 1) { remoteSource.clear() }
+            }
+
+        @Test
+        fun `GIVEN a load in flight WHEN remote content cleared THEN the load stops and its waiter can retry`() =
+            runTest {
+                // Arrange
+                val repository = createRepository()
+                var isRemoteLoadCancelled = false
+                coEvery { remoteSource.load(slug = any(), language = any()) } coAnswers {
+                    try {
+                        awaitCancellation()
+                    } finally {
+                        isRemoteLoadCancelled = true
+                    }
+                }
+                coEvery { remoteSource.clear() } just runs
+                val waiter = async { repository.load(StoryV2Type.HARDWARE_UPGRADE) }
+                runCurrent()
+
+                // Act
+                repository.clearRemoteContent()
+
+                // Assert
+                assertThat(waiter.await()).isEqualTo(StoryV2ContentLoad.Failed)
+                assertThat(isRemoteLoadCancelled).isTrue()
             }
     }
 
