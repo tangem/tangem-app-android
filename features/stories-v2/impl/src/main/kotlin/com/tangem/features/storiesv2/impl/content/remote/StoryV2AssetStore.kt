@@ -32,7 +32,10 @@ internal interface StoryV2AssetStore {
      */
     suspend fun resolve(file: RemoteStoryV2File, keep: Set<String>): StoryV2AssetResult
 
-    /** Deletes every file whose url is not in [urls]: the stories that left a successful response. */
+    /**
+     * Deletes every file whose url is not in [urls]: the stories that left a successful response. A file resolved in
+     * this process stays until the next start, since a player may still be about to open it.
+     */
     suspend fun retainOnly(urls: Set<String>)
 
     suspend fun clear()
@@ -51,7 +54,16 @@ internal class DefaultStoryV2AssetStore @Inject constructor(
      */
     private val locks = ConcurrentHashMap<String, Mutex>()
 
+    /**
+     * Urls handed out in this process. The repository keeps their compositions until the process ends and a player
+     * may open them at any moment, so neither cleanup nor eviction deletes them before a restart.
+     */
+    private val inUse: MutableSet<String> = ConcurrentHashMap.newKeySet()
+
     override suspend fun resolve(file: RemoteStoryV2File, keep: Set<String>): StoryV2AssetResult {
+        // Marked before the size check: a cleanup running meanwhile either spares the file or deletes it before the
+        // check, which then downloads it again.
+        inUse.add(file.url)
         return withContext(dispatchers.io) {
             locks.computeIfAbsent(file.url) { Mutex() }.withLock {
                 val target = File(storage.assets, fileNameOf(file.url))
@@ -68,11 +80,12 @@ internal class DefaultStoryV2AssetStore @Inject constructor(
     }
 
     override suspend fun retainOnly(urls: Set<String>) = withContext(dispatchers.io) {
-        val names = urls.mapTo(mutableSetOf(), ::fileNameOf)
+        val names = protectedNames(urls)
         storedFiles().filterNot { it.name in names }.forEach(File::delete)
     }
 
     override suspend fun clear() {
+        inUse.clear()
         withContext(dispatchers.io) { storage.assets.listFiles()?.forEach(File::delete) }
     }
 
@@ -119,7 +132,7 @@ internal class DefaultStoryV2AssetStore @Inject constructor(
     }
 
     private fun evictToFit(incomingBytes: Long, keep: Set<String>) {
-        val keepNames = keep.mapTo(mutableSetOf(), ::fileNameOf)
+        val keepNames = protectedNames(keep)
         val files = storedFiles()
         var total = files.sumOf(File::length)
         if (total + incomingBytes <= BUDGET_BYTES) return
@@ -134,8 +147,12 @@ internal class DefaultStoryV2AssetStore @Inject constructor(
     }
 
     private fun evictAll(keep: Set<String>) {
-        val keepNames = keep.mapTo(mutableSetOf(), ::fileNameOf)
+        val keepNames = protectedNames(keep)
         storage.assets.listFiles()?.filterNot { it.name in keepNames }?.forEach(File::delete)
+    }
+
+    private fun protectedNames(urls: Set<String>): Set<String> {
+        return (urls + inUse).mapTo(mutableSetOf(), ::fileNameOf)
     }
 
     /** Finished files only; a `.part` belongs to a download still in flight. */

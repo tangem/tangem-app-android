@@ -172,6 +172,52 @@ internal class DefaultStoryV2AssetStoreTest {
     }
 
     @Test
+    fun `GIVEN a file resolved in this process WHEN retainOnly without its url THEN the file stays`() = runTest {
+        // Arrange
+        putOnDevice(url = URL, sizeBytes = SIZE_BYTES)
+        putOnDevice(url = OTHER_URL, sizeBytes = SIZE_BYTES)
+        store.resolve(file = FILE, keep = setOf(URL))
+
+        // Act
+        store.retainOnly(urls = emptySet())
+
+        // Assert
+        assertThat(storedFiles()).containsExactly(nameOf(URL) to SIZE_BYTES)
+    }
+
+    @Test
+    fun `GIVEN a file resolved in this process WHEN another story runs out of space THEN the file is not evicted`() =
+        runTest {
+            // Arrange
+            putOnDevice(url = URL, sizeBytes = SIZE_BYTES)
+            putOnDevice(url = OTHER_URL, sizeBytes = SIZE_BYTES)
+            store.resolve(file = FILE, keep = setOf(URL))
+            downloader.respond(fails(outOfSpace()), writes(SIZE_BYTES))
+
+            // Act
+            val actual = store.resolve(file = KEEP_FILE, keep = setOf(KEEP_URL))
+
+            // Assert
+            assertThat(actual).isEqualTo(StoryV2AssetResult.Ready(targetOf(KEEP_URL)))
+            assertThat(storedFiles()).containsExactly(nameOf(URL) to SIZE_BYTES, nameOf(KEEP_URL) to SIZE_BYTES)
+        }
+
+    @Test
+    fun `GIVEN a resolved file and then a clear WHEN retainOnly without its url THEN the file is deleted`() = runTest {
+        // Arrange
+        putOnDevice(url = URL, sizeBytes = SIZE_BYTES)
+        store.resolve(file = FILE, keep = setOf(URL))
+        store.clear()
+        putOnDevice(url = URL, sizeBytes = SIZE_BYTES)
+
+        // Act
+        store.retainOnly(urls = emptySet())
+
+        // Assert
+        assertThat(storedFiles()).isEmpty()
+    }
+
+    @Test
     fun `GIVEN two resolves of one url at once WHEN the download completes THEN the file is downloaded once`() =
         runTest {
             // Arrange
@@ -263,5 +309,6 @@ internal class DefaultStoryV2AssetStoreTest {
         const val OTHER_URL = "https://cdn.tangem.com/stories/other.mp4"
         const val SIZE_BYTES = 2_048L
         val FILE = RemoteStoryV2File(url = URL, sizeBytes = SIZE_BYTES)
+        val KEEP_FILE = RemoteStoryV2File(url = KEEP_URL, sizeBytes = SIZE_BYTES)
     }
 }
