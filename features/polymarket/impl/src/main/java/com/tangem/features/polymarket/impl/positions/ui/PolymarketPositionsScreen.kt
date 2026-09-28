@@ -73,7 +73,12 @@ internal fun PolymarketPositionsScreen(state: PolymarketPositionsUM, modifier: M
                     indicatorOffset = contentPadding.calculateTopPadding(),
                 ) {
                     when (val content = state.content) {
-                        is Content.Data -> PositionsList(content, listState, contentPadding, state.onRefreshRetry)
+                        is Content.Data -> PositionsList(
+                            content = content,
+                            listState = listState,
+                            contentPadding = contentPadding,
+                            onRefreshRetry = state.onRefreshRetry,
+                        )
                         Content.Loading -> PositionsLoadingState(contentPadding)
                         else -> LazyColumn(
                             modifier = Modifier.fillMaxSize(),
