@@ -8,10 +8,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.ds2.button.Close
-import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.modal.TopNavigation
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.feed.crypto.impl.R
@@ -26,7 +25,8 @@ internal fun MarketInfoBottomSheet(onDismiss: () -> Unit) {
         ),
         title = {
             TangemModal.TopNavigation(
-                endButton = { TangemButton.Close(onClick = onDismiss) },
+                title = resourceReference(R.string.market_crypto_total_market_cap_title),
+                onClose = onDismiss,
             )
         },
         content = {
