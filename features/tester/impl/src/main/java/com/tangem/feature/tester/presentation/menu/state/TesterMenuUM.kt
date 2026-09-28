@@ -26,6 +26,7 @@ data class TesterMenuUM(
         TEST_PUSHES(R.string.test_push),
         ACCOUNTS(R.string.accounts),
         ADDRESSES_INFO(R.string.addresses_info),
+        WALLET_IDS(R.string.wallet_ids),
         STORY_BOOK(R.string.story_book),
         SURVEY_SPARROW(R.string.survey_sparrow),
         BACKEND_AUTH_STATUS(R.string.backend_auth_status),

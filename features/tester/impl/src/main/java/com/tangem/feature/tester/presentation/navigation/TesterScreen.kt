@@ -15,6 +15,7 @@ internal enum class TesterScreen {
     TEST_PUSHES,
     ACCOUNTS,
     ADDRESSES_INFO,
+    WALLET_IDS,
     STORY_BOOK,
     SURVEY_SPARROW,
     BACKEND_AUTH_STATUS,
