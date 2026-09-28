@@ -32,6 +32,7 @@ import com.tangem.domain.moneyaccount.usecase.CreateMoneyAccountOrderUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountFeeTableUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBalanceUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountEligibilityUseCase
+import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountStatusUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountSuitableWalletsUseCase
 import com.tangem.domain.moneyaccount.usecase.RestoreMoneyAccountOrderUseCase
 import com.tangem.domain.moneyaccount.usecase.TrackMoneyAccountOrderUseCase
@@ -174,14 +175,25 @@ internal interface MoneyAccountDataModule {
         }
 
         @Provides
+        fun provideGetMoneyAccountStatusUseCase(
+            moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
+            moneyAccountStatusSupplier: MoneyAccountStatusSupplier,
+        ): GetMoneyAccountStatusUseCase {
+            return GetMoneyAccountStatusUseCase(
+                moneyAccountStatusFetcher = moneyAccountStatusFetcher,
+                moneyAccountStatusSupplier = moneyAccountStatusSupplier,
+            )
+        }
+
+        @Provides
         fun provideGetMoneyAccountEligibilityUseCase(
             getMoneyAccountSuitableWalletsUseCase: GetMoneyAccountSuitableWalletsUseCase,
-            onboardingRepository: OnboardingRepository,
+            getMoneyAccountStatusUseCase: GetMoneyAccountStatusUseCase,
             deviceSecurityInfoProvider: DeviceSecurityInfoProvider,
         ): GetMoneyAccountEligibilityUseCase {
             return GetMoneyAccountEligibilityUseCase(
                 getMoneyAccountSuitableWalletsUseCase = getMoneyAccountSuitableWalletsUseCase,
-                onboardingRepository = onboardingRepository,
+                getMoneyAccountStatusUseCase = getMoneyAccountStatusUseCase,
                 deviceSecurityInfoProvider = deviceSecurityInfoProvider,
             )
         }
