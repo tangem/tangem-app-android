@@ -3,6 +3,7 @@ package com.tangem.data.pay.store
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayWithdrawState
 import com.tangem.domain.visa.model.TangemPayAuthTokens
+import kotlinx.coroutines.flow.Flow
 
 @Suppress("TooManyFunctions")
 interface TangemPayStorage {
@@ -59,6 +60,8 @@ interface TangemPayStorage {
     suspend fun deleteWithdrawOrder(userWalletId: UserWalletId, orderId: String)
 
     suspend fun getHideMainOnboardingBanner(userWalletId: UserWalletId): Boolean
+
+    fun isMainOnboardingBannerHidden(userWalletId: UserWalletId): Flow<Boolean>
 
     suspend fun storeHideOnboardingBanner(userWalletId: UserWalletId, hide: Boolean)
     suspend fun storeTangemPayEligibility(eligibility: Set<String>)
