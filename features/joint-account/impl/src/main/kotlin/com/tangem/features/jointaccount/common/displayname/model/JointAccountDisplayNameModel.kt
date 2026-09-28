@@ -72,7 +72,7 @@ internal class JointAccountDisplayNameModel @Inject constructor(
 
         modelScope.launch {
             try {
-                params.onContinueClick(state.name)
+                params.onContinueClick(state.name.trim())
             } finally {
                 // The callback owns a card session and a network call: whatever it throws, and however it is
                 // cancelled, the button must not stay spinning forever

@@ -28,6 +28,7 @@ import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.moneyaccount.repository.MoneyAccountOrderRepository
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
@@ -86,6 +87,10 @@ internal interface TangemPayDataModule {
     @Binds
     @Singleton
     fun bindIssueCardRepository(repository: DefaultIssueCardRepository): TangemPayIssueCardRepository
+
+    @Binds
+    @Singleton
+    fun bindMoneyAccountOrderRepository(repository: DefaultMoneyAccountOrderRepository): MoneyAccountOrderRepository
 
     @Binds
     @Singleton

@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.*
@@ -28,7 +29,7 @@ import com.tangem.core.ui.res.generated.icons.*
  *
  * Indeterminate circular spinner that rotates continuously to indicate ongoing work.
  *
- * Version: 1.0
+ * Version: 1.0.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=25-5688&m=device-tdp-1&t=9n7s8Xo2l3mLh5j-4)
  *
@@ -83,6 +84,12 @@ enum class TangemLoaderSize(
     X24(sizeDp = 24.dp, imageVector = Icons.ic_loading_spinner_24),
     X28(sizeDp = 28.dp, imageVector = Icons.ic_loading_spinner_28),
     X32(sizeDp = 32.dp, imageVector = Icons.ic_loading_spinner_32),
+}
+
+/** Public API surface of [TangemLoader]. */
+object TangemLoader {
+
+    val version = DsVersion(major = 1, minor = 0, patch = 0)
 }
 
 @Composable

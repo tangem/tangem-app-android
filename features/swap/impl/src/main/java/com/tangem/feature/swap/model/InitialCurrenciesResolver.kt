@@ -312,7 +312,7 @@ internal class InitialCurrenciesResolver @Inject constructor(
                 is AccountStatus.Prediction -> listOfNotNull(
                     (accountStatus.value as? PredictionAccountStatusValue.Active)?.cryptoCurrencyStatus,
                 )
-                is AccountStatus.Collectibles -> emptyList()
+                is AccountStatus.Collectibles -> listOfNotNull(accountStatus.value.cryptoCurrencyStatus)
                 is AccountStatus.Joint -> accountStatus.flattenCurrencies()
             }
             val availabilityStates = rampStateManager.availableForSwap(
