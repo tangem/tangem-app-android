@@ -1,6 +1,7 @@
 package com.tangem.features.jointaccount.join.invitepreview.model
 
 import androidx.compose.runtime.Stable
+import arrow.core.Either
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
@@ -13,6 +14,7 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitePreviewUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -37,6 +39,7 @@ import com.tangem.features.jointaccount.main.entity.MemberCardConfig
 import com.tangem.features.jointaccount.join.navigation.JointAccountJoinRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -48,6 +51,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 import com.tangem.core.ui.R as CoreUiR
 
 @Suppress("LongParameterList")
@@ -140,15 +144,16 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
                 return@launch
             }
 
-            getJointAccountInvitePreviewUseCase(walletId = walletId, inviteId = params.inviteId).fold(
+            loadPreview(walletId).fold(
                 ifLeft = { error ->
                     when (error) {
                         is JointAccountInvitePreviewError.InvalidLink ->
                             stateController.update(SetInvalidLinkTransformer(onGotItClick = ::onCloseClick))
-                        is JointAccountInvitePreviewError.LoadFailed ->
-                            stateController.update(
-                                SetFailedTransformer(onRetryClick = ::retry, onCloseClick = ::onCloseClick),
-                            )
+                        is JointAccountInvitePreviewError.Unreachable,
+                        is JointAccountInvitePreviewError.LoadFailed,
+                        -> stateController.update(
+                            SetFailedTransformer(onRetryClick = ::retry, onCloseClick = ::onCloseClick),
+                        )
                     }
                 },
                 ifRight = { preview ->
@@ -167,6 +172,19 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
                 },
             )
         }
+    }
+
+    private suspend fun loadPreview(
+        walletId: UserWalletId,
+    ): Either<JointAccountInvitePreviewError, JointAccountInvitePreview> {
+        UNREACHABLE_RETRY_DELAYS.forEach { retryDelay ->
+            val result = getJointAccountInvitePreviewUseCase(walletId = walletId, inviteId = params.inviteId)
+            if (result.leftOrNull() !is JointAccountInvitePreviewError.Unreachable) return result
+
+            delay(retryDelay)
+        }
+
+        return getJointAccountInvitePreviewUseCase(walletId = walletId, inviteId = params.inviteId)
     }
 
     private fun retry() {
@@ -249,5 +267,9 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     /** The close icon does not join: the slot stays free and the invitation is not consumed */
     private fun onCloseClick() {
         router.pop()
+    }
+
+    private companion object {
+        val UNREACHABLE_RETRY_DELAYS = listOf(1.seconds, 2.seconds, 3.seconds)
     }
 }
