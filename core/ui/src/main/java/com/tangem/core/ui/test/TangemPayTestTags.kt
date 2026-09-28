@@ -172,6 +172,25 @@ object TangemPayTestTags {
     const val CURRENT_PLAN_ROW = "TANGEM_PAY_CURRENT_PLAN_ROW"
     const val CURRENT_PLAN_CHANGE_BUTTON = "TANGEM_PAY_CURRENT_PLAN_CHANGE_BUTTON"
 
+    // Cashback block on the payment account screen
+    const val CASHBACK_WIDGET = "TANGEM_PAY_CASHBACK_WIDGET"
+    const val CASHBACK_DEACTIVATED_BANNER = "TANGEM_PAY_CASHBACK_DEACTIVATED_BANNER"
+
+    // Cashback screen
+    const val CASHBACK_HEADER_TITLE = "TANGEM_PAY_CASHBACK_HEADER_TITLE"
+    const val CASHBACK_HEADER_SUBTITLE = "TANGEM_PAY_CASHBACK_HEADER_SUBTITLE"
+    const val CASHBACK_BANNER = "TANGEM_PAY_CASHBACK_BANNER"
+    const val CASHBACK_RATE_TILE = "TANGEM_PAY_CASHBACK_RATE_TILE"
+    const val CASHBACK_ACCRUALS_TILE = "TANGEM_PAY_CASHBACK_ACCRUALS_TILE"
+    const val CASHBACK_HISTOGRAM_TITLE = "TANGEM_PAY_CASHBACK_HISTOGRAM_TITLE"
+    const val CASHBACK_HISTOGRAM_MONTH = "TANGEM_PAY_CASHBACK_HISTOGRAM_MONTH"
+    const val CASHBACK_ADDITIONAL_TITLE = "TANGEM_PAY_CASHBACK_ADDITIONAL_TITLE"
+    const val CASHBACK_ERROR_TEXT = "TANGEM_PAY_CASHBACK_ERROR_TEXT"
+    const val CASHBACK_RELOAD_BUTTON = "TANGEM_PAY_CASHBACK_RELOAD_BUTTON"
+
+    // Cashback badge of a transaction-history row
+    const val TRANSACTION_CASHBACK_BADGE = "TANGEM_PAY_TRANSACTION_CASHBACK_BADGE"
+
     fun dailyLimitPresetChip(rawValue: String): String = "TANGEM_PAY_DAILY_LIMIT_PRESET_$rawValue"
 
     /** [feeType] is the backend fee type, e.g. `ACH_ONRAMP`. */
@@ -179,4 +198,7 @@ object TangemPayTestTags {
 
     /** [feeType] is the backend fee type, e.g. `ACH_ONRAMP`. */
     fun vaDepositFeeValue(feeType: String): String = "TANGEM_PAY_VA_DEPOSIT_FEE_VALUE_$feeType"
+
+    /** [index] is the bar position in the cashback histogram, oldest month first. */
+    fun cashbackHistogramAmount(index: Int): String = "TANGEM_PAY_CASHBACK_HISTOGRAM_AMOUNT_$index"
 }

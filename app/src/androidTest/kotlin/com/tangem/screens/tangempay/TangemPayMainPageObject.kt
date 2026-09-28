@@ -121,6 +121,49 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         useUnmergedTree = true
     }
 
+    val supportMenuItem: KNode = child {
+        hasTestTag(TangemPayTestTags.CONTEXT_MENU_ITEM)
+        hasAnyDescendant(withText(getResourceString(CoreResR.string.tangempay_pay_support)))
+        useUnmergedTree = true
+    }
+
+    fun cashbackWidgetWithTitle(title: String): KNode = child {
+        hasTestTag(TangemPayTestTags.CASHBACK_WIDGET)
+        hasAnyDescendant(withText(title))
+        useUnmergedTree = true
+    }
+
+    val cashbackWidget: KNode = child {
+        hasTestTag(TangemPayTestTags.CASHBACK_WIDGET)
+        useUnmergedTree = true
+    }
+
+    fun cashbackMenuItem(month: String): KNode = child {
+        hasTestTag(TangemPayTestTags.CONTEXT_MENU_ITEM)
+        hasAnyDescendant(
+            withText(getResourceString(CoreResR.string.tangempay_cashback_menu_item_title, month)),
+        )
+        useUnmergedTree = true
+    }
+
+    val cashbackDeactivatedBannerTitle: KNode = child {
+        hasAnyAncestor(withTestTag(TangemPayTestTags.CASHBACK_DEACTIVATED_BANNER))
+        hasText(getResourceString(CoreResR.string.tangempay_cashback_deactivated_title))
+        useUnmergedTree = true
+    }
+
+    val cashbackDeactivatedGotItButton: KNode = child {
+        hasAnyAncestor(withTestTag(TangemPayTestTags.CASHBACK_DEACTIVATED_BANNER))
+        hasText(getResourceString(CoreResR.string.common_got_it))
+        useUnmergedTree = true
+    }
+
+    fun transactionCashbackBadge(amount: String): KNode = child {
+        hasTestTag(TangemPayTestTags.TRANSACTION_CASHBACK_BADGE)
+        hasAnyDescendant(withText(amount))
+        useUnmergedTree = true
+    }
+
     fun awaitingDepositBannerTitle(planFee: String): KNode = child {
         hasTestTag(NotificationTestTags.TITLE)
         hasText(getResourceString(CoreResR.string.tangempay_card_details_awaiting_deposit_title, planFee))
