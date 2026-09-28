@@ -92,7 +92,7 @@ private fun JointAccountInvitePreviewScaffold(
 
 @Composable
 private fun LoadingBody(modifier: Modifier = Modifier) {
-    TangemLoader(modifier = modifier, size = TangemLoaderSize.X32)
+    TangemLoader(modifier = modifier, size = TangemLoaderSize.X28)
 }
 
 @Composable
