@@ -4,7 +4,7 @@ import androidx.compose.runtime.Stable
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * Seam for opening the feed hub from outside it — today the `tangem://shtorka` deeplink.
+ * Seam for opening the feed hub from outside it — today the `tangem://discover` deeplink.
  *
  * The hub is not a navigation destination: it lives inside the wallet screen, so a caller cannot route
  * to a section of it. It parks a [FeedEntryRequest] here instead, and the hub picks it up when it next

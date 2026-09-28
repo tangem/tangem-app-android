@@ -3,6 +3,7 @@ package com.tangem.features.tangempay.withdraw.bank.model
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.models.pay.TangemPayCountry
 import com.tangem.domain.models.pay.TangemPayRegion
@@ -19,6 +20,7 @@ import com.tangem.domain.pay.usecase.GetTangemPayCountriesUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayRegionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.POLYGON_CHAIN_ID
 import com.tangem.features.tangempay.withdraw.bank.USDC_POLYGON
@@ -31,16 +33,21 @@ import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormRe
 import com.tangem.features.tangempay.withdraw.bank.offrampDestination
 import com.tangem.features.tangempay.withdraw.bank.preview.model.toOrderRequest
 import com.tangem.features.tangempay.withdraw.hub.bankAccount
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayBankWithdrawModelTest {
 
     private val userWalletId = UserWalletId("011")
@@ -49,6 +56,7 @@ internal class TangemPayBankWithdrawModelTest {
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk(relaxed = true)
     private val getTangemPayCountriesUseCase: GetTangemPayCountriesUseCase = mockk()
     private val getTangemPayRegionsUseCase: GetTangemPayRegionsUseCase = mockk()
+    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
     @BeforeEach
@@ -59,6 +67,7 @@ internal class TangemPayBankWithdrawModelTest {
             paymentAccountStatusFetcher,
             getTangemPayCountriesUseCase,
             getTangemPayRegionsUseCase,
+            analytics,
         )
         coEvery { paymentAccountStatusFetcher(userWalletId) } returns Unit.right()
         coEvery { getBankAccountsUseCase(userWalletId) } returns emptyList<BankAccount>().right()
@@ -453,6 +462,41 @@ internal class TangemPayBankWithdrawModelTest {
         model.onDestroy()
     }
 
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN chosen rail WHEN order signed THEN SendSuccessScreenShowed is sent with that rail`(
+        testModel: SuccessModel,
+    ) {
+        // Arrange
+        val model = createModel(entry = BankWithdrawEntry.NewPersonal)
+        testModel.rail?.let { rail ->
+            model.onAmountConfirmed(
+                BankWithdrawAmountResult(
+                    amount = BigDecimal("500"),
+                    source = bankWithdrawSource(),
+                    destination = offrampDestination(rail = rail),
+                ),
+            )
+        }
+
+        // Act
+        model.onOrderSigned()
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(TangemPayAnalyticsEvents.Offramp.SendSuccessScreenShowed(rail = testModel.rail))
+        }
+        model.onDestroy()
+    }
+
+    private fun provideTestModels() = listOf(
+        SuccessModel(rail = BankRail.ACH),
+        SuccessModel(rail = BankRail.WIRE),
+        SuccessModel(rail = null),
+    )
+
+    internal data class SuccessModel(val rail: BankRail?)
+
     /** A step that reports typed values: every field carries a code and a blank name, as the form model does. */
     private fun formResult(vararg values: Pair<BankWithdrawFormField, String>): BankWithdrawFormResult =
         BankWithdrawFormResult(
@@ -474,5 +518,6 @@ internal class TangemPayBankWithdrawModelTest {
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
         getTangemPayCountriesUseCase = getTangemPayCountriesUseCase,
         getTangemPayRegionsUseCase = getTangemPayRegionsUseCase,
+        analytics = analytics,
     )
 }

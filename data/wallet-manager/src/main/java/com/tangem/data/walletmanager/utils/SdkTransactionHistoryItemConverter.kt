@@ -6,6 +6,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.domain.txhistory.TxHistoryFeatureToggles
+import com.tangem.domain.txhistory.usecase.GetCachedTokenInfoUseCase
 import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isNegative
@@ -20,6 +21,7 @@ internal class SdkTransactionHistoryItemConverter(
     gaslessFeeAddresses: Set<String>,
     currency: CryptoCurrency,
     networkTokens: Set<CryptoCurrency.Token>,
+    getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
     currencyAddresses: Collection<Address>,
     private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
 ) : Converter<SdkTransactionHistoryItem, TxInfo> {
@@ -31,6 +33,7 @@ internal class SdkTransactionHistoryItemConverter(
             gaslessFeeAddresses = gaslessFeeAddresses,
             currency = currency,
             networkTokens = networkTokens,
+            getCachedTokenInfoUseCase = getCachedTokenInfoUseCase,
         )
     }
 

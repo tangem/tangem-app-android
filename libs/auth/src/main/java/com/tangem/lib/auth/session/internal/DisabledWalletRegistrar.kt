@@ -17,6 +17,8 @@ internal object DisabledWalletRegistrar : WalletRegistrar {
 
     override suspend fun isRegistered(walletId: String): Boolean = true
 
+    override suspend fun hasActiveSession(): Boolean = false
+
     override suspend fun requestNonce(): Either<WalletRegistrationError, WalletNonce> =
         WalletRegistrationError.Disabled.left()
 

@@ -90,7 +90,7 @@ internal class ExpressTxToTransactionItemUMConverterTest {
             ExpressOnrampStatus.Failed to Status.Failed,
             ExpressOnrampStatus.Expired to Status.Failed,
             ExpressOnrampStatus.Refunded to Status.Failed,
-            ExpressOnrampStatus.Unknown to Status.Failed,
+            ExpressOnrampStatus.Unknown to Status.Unconfirmed,
             ExpressOnrampStatus.Created to Status.Unconfirmed,
             ExpressOnrampStatus.WaitingForPayment to Status.Unconfirmed,
             ExpressOnrampStatus.PaymentProcessing to Status.Unconfirmed,
