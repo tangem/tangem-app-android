@@ -3,13 +3,18 @@ package com.tangem.data.moneyaccount.repository
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.model.MoneyAccountActivationError
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
+import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.model.MoneyAccountActivationData
 import com.tangem.domain.visa.model.MoneyAccountDepositCredentials
+import com.tangem.domain.visa.model.TangemPayAuthTokens
+import com.tangem.domain.visa.model.TangemPayInitialCredentials
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -29,12 +34,14 @@ internal class DefaultMoneyAccountActivationRepositoryTest {
 
     private val authDataSource: TangemPayAuthDataSource = mockk()
     private val derivationsRepository: DerivationsRepository = mockk(relaxUnitFun = true)
+    private val onboardingRepository: OnboardingRepository = mockk(relaxUnitFun = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
     private val repository = DefaultMoneyAccountActivationRepository(
         authDataSource = authDataSource,
         derivationsRepository = derivationsRepository,
+        onboardingRepository = onboardingRepository,
         userWalletsListRepository = userWalletsListRepository,
         dispatchers = dispatchers,
     )
@@ -45,15 +52,26 @@ internal class DefaultMoneyAccountActivationRepositoryTest {
     private val derivedKeys: Map<ByteArrayKey, ExtendedPublicKeysMap> = mapOf(
         ByteArrayKey(byteArrayOf(1, 2, 3)) to ExtendedPublicKeysMap(emptyMap()),
     )
+    private val initialCredentials = TangemPayInitialCredentials(
+        customerWalletAddress = "0xCW",
+        authTokens = TangemPayAuthTokens(
+            accessToken = "access",
+            expiresAt = 1L,
+            refreshToken = "refresh",
+            refreshExpiresAt = 2L,
+            idempotencyKey = "key",
+        ),
+    )
     private val activationData = MoneyAccountActivationData(
         address = "0xVA",
         signature = "0xSIG",
         derivedKeys = derivedKeys,
+        initialCredentials = initialCredentials,
     )
 
     @BeforeEach
     fun setUp() {
-        clearMocks(authDataSource, derivationsRepository, userWalletsListRepository)
+        clearMocks(authDataSource, derivationsRepository, onboardingRepository, userWalletsListRepository)
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet))
     }
 
@@ -70,6 +88,18 @@ internal class DefaultMoneyAccountActivationRepositoryTest {
     }
 
     @Test
+    fun `GIVEN datasource returns data WHEN activate THEN initial credentials persisted`() = runTest {
+        // Arrange
+        coEvery { authDataSource.produceMoneyAccountData(userWallet) } returns activationData.right()
+
+        // Act
+        repository.activateMoneyAccount(userWalletId)
+
+        // Assert
+        coVerify(exactly = 1) { onboardingRepository.storeInitialCredentials(userWalletId, initialCredentials) }
+    }
+
+    @Test
     fun `GIVEN datasource returns data WHEN activate THEN deposit credentials returned`() = runTest {
         // Arrange
         coEvery { authDataSource.produceMoneyAccountData(userWallet) } returns activationData.right()
@@ -78,19 +108,33 @@ internal class DefaultMoneyAccountActivationRepositoryTest {
         val actual = repository.activateMoneyAccount(userWalletId)
 
         // Assert
-        assertThat(actual).isEqualTo(MoneyAccountDepositCredentials(address = "0xVA", signature = "0xSIG"))
+        assertThat(actual).isEqualTo(MoneyAccountDepositCredentials(address = "0xVA", signature = "0xSIG").right())
     }
 
     @Test
-    fun `GIVEN datasource returns error WHEN activate THEN throws AND nothing persisted`() = runTest {
+    fun `GIVEN datasource returns error WHEN activate THEN returns unknown error AND nothing persisted`() = runTest {
         // Arrange
-        coEvery { authDataSource.produceMoneyAccountData(userWallet) } returns IllegalStateException("nope").left()
+        val cause = IllegalStateException("nope")
+        coEvery { authDataSource.produceMoneyAccountData(userWallet) } returns cause.left()
 
         // Act
-        val error = runCatching { repository.activateMoneyAccount(userWalletId) }.exceptionOrNull()
+        val actual = repository.activateMoneyAccount(userWalletId)
 
         // Assert
-        assertThat(error).isInstanceOf(IllegalStateException::class.java)
+        assertThat(actual).isEqualTo(MoneyAccountActivationError.Unknown(cause).left())
+        coVerify(exactly = 0) { onboardingRepository.storeInitialCredentials(any(), any()) }
         coVerify(exactly = 0) { derivationsRepository.storeDerivedKeys(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN user cancelled signing WHEN activate THEN returns user cancelled error`() = runTest {
+        // Arrange
+        coEvery { authDataSource.produceMoneyAccountData(userWallet) } returns TangemSdkError.UserCancelled().left()
+
+        // Act
+        val actual = repository.activateMoneyAccount(userWalletId)
+
+        // Assert
+        assertThat(actual).isEqualTo(MoneyAccountActivationError.UserCancelled.left())
     }
 }
