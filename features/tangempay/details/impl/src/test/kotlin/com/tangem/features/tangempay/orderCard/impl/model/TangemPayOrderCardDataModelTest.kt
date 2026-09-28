@@ -258,7 +258,7 @@ internal class TangemPayOrderCardDataModelTest {
     fun `GIVEN typographic quotes and a no-break space WHEN order clicked THEN plain ones submitted`() = runTest {
         // Arrange
         val model = createLoadedModel()
-        model.fillValidForm(embossName = "JOHNNY\u00A0SILVERHAND", lastName = "O‘Brien", line1 = "Crescent\u00A0st. 24")
+        model.fillValidForm(embossName = "JOHNNY\u00A0SILVERHAND", line1 = "O‘Brien\u00A0st. 24")
 
         // Act
         model.form.onOrderClick()
@@ -270,10 +270,10 @@ internal class TangemPayOrderCardDataModelTest {
                 embossName = "JOHNNY SILVERHAND",
                 shippingAddress = ShippingAddress(
                     firstName = "Johnny",
-                    lastName = "O'Brien",
+                    lastName = "Silverhand",
                     region = "California",
                     city = "Night City",
-                    line1 = "Crescent st. 24",
+                    line1 = "O'Brien st. 24",
                     line2 = "Apt. 56",
                     postalCode = "0000",
                     phone = "+12345678901",
@@ -292,6 +292,52 @@ internal class TangemPayOrderCardDataModelTest {
 
         // Assert
         assertThat(model.form.embossName.value).isEqualTo("JOHNNY SILVERHAND OF NIGHT")
+    }
+
+    @ParameterizedTest
+    @EnumSource(OrderFormField::class)
+    fun `GIVEN a value longer than the field limit WHEN typed THEN it is cut to the limit`(
+        field: OrderFormField,
+    ) = runTest {
+        // Arrange
+        val model = createLoadedModel()
+        val input = "A".repeat(field.maxLength + 1)
+
+        // Act
+        field.read(model.form).onValueChange(input)
+
+        // Assert
+        assertThat(field.read(model.form).value).isEqualTo(input.take(field.maxLength))
+    }
+
+    @Test
+    fun `GIVEN a last name with an apostrophe WHEN typed THEN invalid text shown and order disabled`() = runTest {
+        // Arrange
+        val model = createLoadedModel()
+
+        // Act
+        model.fillValidForm(lastName = "O'Brien")
+
+        // Assert
+        assertThat(model.form.lastName.error).isEqualTo(OrderFieldError.Invalid)
+        assertThat(model.form.isOrderEnabled).isFalse()
+    }
+
+    @ParameterizedTest
+    @EnumSource(OrderFormField::class)
+    fun `GIVEN a valid form WHEN a disallowed symbol is typed THEN invalid text shown at once`(
+        field: OrderFormField,
+    ) = runTest {
+        // Arrange
+        val model = createLoadedModel()
+        model.fillValidForm()
+
+        // Act
+        field.read(model.form).onValueChange("A@B")
+
+        // Assert
+        assertThat(field.read(model.form).error).isEqualTo(OrderFieldError.Invalid)
+        assertThat(model.form.isOrderEnabled).isFalse()
     }
 
     @ParameterizedTest
