@@ -3,6 +3,7 @@ package com.tangem.features.txhistory.converter
 import androidx.compose.ui.graphics.Color
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.common.ui.account.getResId
@@ -833,8 +834,8 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(counterparty?.title).isEqualTo(stringReference("Family"))
         assertThat(counterparty?.avatar).isEqualTo(
             TxHistoryDetailsUM.CounterpartyAvatar.Account(
-                iconResId = ownAccount.icon.value.getResId(),
-                backgroundColor = ownAccount.icon.color.getUiColor(),
+                name = stringReference("Family"),
+                icon = CryptoPortfolioIconConverter.convert(ownAccount.icon),
             ),
         )
 
@@ -917,8 +918,8 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(result.counterparty?.title).isEqualTo(stringReference("Family"))
         assertThat(result.counterparty?.avatar).isEqualTo(
             TxHistoryDetailsUM.CounterpartyAvatar.Account(
-                iconResId = ownAccount.icon.value.getResId(),
-                backgroundColor = ownAccount.icon.color.getUiColor(),
+                name = stringReference("Family"),
+                icon = CryptoPortfolioIconConverter.convert(ownAccount.icon),
             ),
         )
     }

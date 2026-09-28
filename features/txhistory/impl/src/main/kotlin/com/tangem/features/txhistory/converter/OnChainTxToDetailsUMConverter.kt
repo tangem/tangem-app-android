@@ -2,8 +2,6 @@ package com.tangem.features.txhistory.converter
 
 import androidx.annotation.StringRes
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
-import com.tangem.common.ui.account.getResId
-import com.tangem.common.ui.account.getUiColor
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
@@ -362,8 +360,8 @@ internal class OnChainTxToDetailsUMConverter(
                 label = counterpartyLabel(incoming = R.string.common_from_account),
                 title = owner.account.accountName.toUM().value,
                 avatar = TxHistoryDetailsUM.CounterpartyAvatar.Account(
-                    iconResId = owner.account.icon.value.getResId(),
-                    backgroundColor = owner.account.icon.color.getUiColor(),
+                    name = owner.account.accountName.toUM().value,
+                    icon = CryptoPortfolioIconConverter.convert(owner.account.icon),
                 ),
                 onCopyClick = copyAddress,
             )

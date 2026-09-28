@@ -4,6 +4,8 @@ import androidx.compose.ui.graphics.Color
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.common.ui.account.getResId
+import com.tangem.common.ui.account.getUiColor
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
@@ -17,6 +19,7 @@ import com.tangem.domain.express.models.ExpressOnrampStatus
 import com.tangem.domain.express.models.ExpressTransactionAsset
 import com.tangem.domain.express.models.OnrampTransaction
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
@@ -322,6 +325,49 @@ internal class ExpressTxToTransactionItemUMConverterTest {
         assertThat(owner).isInstanceOf(ContentSubtitle.AssetOwner.Account::class.java)
         assertThat((owner as ContentSubtitle.AssetOwner.Account).name)
             .isEqualTo(secondAccount.accountName.toUM().value)
+        assertThat(owner.avatar).isEqualTo(
+            ContentSubtitle.PortfolioAvatar.Resource(
+                resId = secondAccount.icon.value.getResId(),
+                color = secondAccount.icon.color.getUiColor(),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN swap to an own account with a letter icon WHEN convert THEN the owner tail carries the name monogram`() {
+        // Arrange — the payout account kept the default letter icon: the tail must render its name, not the placeholder.
+        val letterAccount = MockAccounts.createAccount(
+            derivationIndex = 3,
+            name = "Savings",
+            icon = CryptoPortfolioIcon.ofCustomAccount(
+                value = CryptoPortfolioIcon.Icon.Letter,
+                color = CryptoPortfolioIcon.Color.Azure,
+            ),
+        )
+        val swap = createSwap(
+            status = ExpressExchangeStatus.Finished,
+            isOutgoing = true,
+            fromCurrency = ethereum,
+            toCurrency = bitcoin,
+            fromAddress = FROM_ADDRESS,
+            payoutAddress = PAYOUT_ADDRESS,
+        )
+        val lookup = lookupOf(
+            ethereum.network.id.rawId to mapOf(FROM_ADDRESS to ownAccount),
+            bitcoin.network.id.rawId to mapOf(PAYOUT_ADDRESS to letterAccount),
+        )
+
+        // Act
+        val result = converterWith(lookup).convert(swap) as TransactionItemUM.Content
+
+        // Assert
+        val owner = (result.subtitle as ContentSubtitle.Asset).owner
+        assertThat((owner as ContentSubtitle.AssetOwner.Account).avatar).isEqualTo(
+            ContentSubtitle.PortfolioAvatar.Monogram(
+                name = letterAccount.accountName.toUM().value,
+                color = CryptoPortfolioIcon.Color.Azure.getUiColor(),
+            ),
+        )
     }
 
     @Test
