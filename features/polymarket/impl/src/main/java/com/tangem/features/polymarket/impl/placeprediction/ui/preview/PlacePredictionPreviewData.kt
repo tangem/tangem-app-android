@@ -127,7 +127,7 @@ private fun previewState(
         title = "Will Uzbekistan win the 2026 FIFA World Cup?",
         imageUrl = null,
         outcomeTitle = "No",
-        outcomePriceCents = 85,
+        outcomePrice = "85¢",
         resolutionDateMillis = RESOLUTION_AT,
     ),
     collateral = CollateralUM(tokenSymbol = "pUSD", iconState = CurrencyIconState.Empty()),
