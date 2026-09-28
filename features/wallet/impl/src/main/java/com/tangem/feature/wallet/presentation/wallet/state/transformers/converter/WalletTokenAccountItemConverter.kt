@@ -4,6 +4,7 @@ import androidx.compose.ui.text.SpanStyle
 import com.tangem.common.ui.account.AccountIconItemStateConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.components.account.AccountIconSize
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -15,6 +16,7 @@ import com.tangem.core.ui.format.bigdecimal.formatStyled
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.jointaccount.model.JointPendingOperation
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
@@ -31,20 +33,32 @@ internal class WalletTokenAccountItemConverter(
     private val expandedAccounts: Set<AccountId>,
     private val onAccountCollapseClick: (account: Account) -> Unit,
     private val onAccountExpandClick: (account: Account) -> Unit,
+    private val jointPendingOperations: List<JointPendingOperation> = emptyList(),
 ) : Converter<AccountStatus.CryptoPortfolio, TangemTokenRowUM> {
     override fun convert(value: AccountStatus.CryptoPortfolio): TangemTokenRowUM {
         val account = value.account
         val isExpanded = expandedAccounts.contains(account.accountId)
+        val hasPendingOperation = jointPendingOperations.any { it.account.accountId == account.accountId }
+        val iconState = AccountIconItemStateConverter(size = AccountIconSize.ExtraSmall).convert(account)
 
         return TangemTokenRowUM.Content(
             id = account.accountId.value,
             headIconUM = TangemIconUM.Currency(
-                currencyIconState = AccountIconItemStateConverter(size = AccountIconSize.ExtraSmall).convert(account),
+                currencyIconState = when (iconState) {
+                    is CurrencyIconState.CryptoPortfolio.Icon -> iconState.copy(
+                        hasPendingOperation = hasPendingOperation,
+                    )
+                    is CurrencyIconState.CryptoPortfolio.Letter -> iconState.copy(
+                        hasPendingOperation = hasPendingOperation,
+                    )
+                },
             ),
             titleUM = TangemTokenRowUM.TitleUM.Content(
                 text = account.accountName.toUM().value,
             ),
-            subtitleUM = TangemTokenRowUM.SubtitleUM.Content(text = subtitle(value)),
+            subtitleUM = TangemTokenRowUM.SubtitleUM.Content(
+                text = subtitle(value),
+            ),
             topEndContentUM = getTopEndContent(value.tokenList.totalFiatBalance),
             bottomEndContentUM = getBottomEndContent(
                 value.tokenList.totalFiatBalance,

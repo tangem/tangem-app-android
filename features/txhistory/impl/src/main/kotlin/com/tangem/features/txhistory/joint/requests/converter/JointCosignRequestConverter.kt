@@ -52,7 +52,6 @@ internal class JointCosignRequestConverter(
                 briefAddress = recipient.toBriefAddressFormat(),
             ),
             timestamp = startedAt ?: 0L,
-            isPendingSignature = isPendingSignature,
             onClick = { onClick(operationId) },
         )
     }

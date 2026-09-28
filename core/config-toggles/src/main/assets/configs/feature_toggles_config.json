@@ -122,5 +122,9 @@
     {
         "name": "TWI_1520_MERKL_INCENTIVES_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TWI_1705_PROMO_CAMPAIGNS_V2_ENABLED",
+        "version": "undefined"
     }
 ]

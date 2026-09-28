@@ -5,7 +5,8 @@ import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 
 /**
- * @property name raw input exactly as typed — never normalised, the value ends up in the card-signed payload
+ * @property name raw input exactly as typed; only the edge whitespace is dropped when the name is handed on to the
+ *   card-signed payload
  * @property buttonIconRes wallet-interaction icon on the primary button; `null` for wallets without one (hot)
  * @property isButtonLoading the signature session is in progress; the button shows a loader instead of its content
  */
