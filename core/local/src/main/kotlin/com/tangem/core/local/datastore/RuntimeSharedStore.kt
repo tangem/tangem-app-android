@@ -57,7 +57,12 @@ interface RuntimeSharedStore<T> {
             override suspend fun getSyncOrDefault(default: T): T = getSyncOrNull() ?: default
 
             override suspend fun store(value: T) {
-                flow.emit(value = value)
+                // guarded by the same mutex as update: otherwise a store racing an in-flight update
+                // is lost — update reads before the store emits and then overwrites it with a value
+                // derived from the pre-store state
+                updateMutex.withLock {
+                    flow.emit(value = value)
+                }
             }
 
             override suspend fun update(default: T, function: (T) -> T) {

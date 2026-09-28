@@ -21,9 +21,12 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.badge.*
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_cross_circle_16_filled
 
 @Composable
 internal fun TokenRowPromoBanner(promoBannerUM: TangemTokenRowUM.PromoBannerUM, modifier: Modifier = Modifier) {
@@ -32,6 +35,17 @@ internal fun TokenRowPromoBanner(promoBannerUM: TangemTokenRowUM.PromoBannerUM, 
             promoBannerUM = promoBannerUM,
             modifier = modifier,
         )
+        is TangemTokenRowUM.PromoBannerUM.Warning -> Box(modifier = modifier) {
+            TangemMessageBubble(
+                text = promoBannerUM.text,
+                variant = TangemMessageBubble.Variant.Warning,
+                icon = promoBannerUM.icon,
+                onClick = promoBannerUM.onBubbleClick,
+                onClose = promoBannerUM.onCloseClick,
+                trailingIcon = promoBannerUM.trailingIcon ?: Icons.ic_cross_circle_16_filled,
+                closeContentDescription = promoBannerUM.closeContentDescription?.resolveReference(),
+            )
+        }
         TangemTokenRowUM.PromoBannerUM.Empty -> Unit
     }
 }

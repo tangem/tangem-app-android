@@ -30,6 +30,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
@@ -41,6 +42,8 @@ import kotlinx.collections.immutable.toImmutableList
 /**
  * Design-system v2 segmented control — a pill-shaped track of mutually exclusive segments sharing one
  * animated selection pill.
+ *
+ * Version: 1.0.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=7908-343)
  *
@@ -86,6 +89,8 @@ fun TangemSegmentedControl(items: ImmutableList<TangemSegmentedControl.Item>, mo
 }
 
 object TangemSegmentedControl {
+
+    val version = DsVersion(major = 1, minor = 0, patch = 0)
 
     /**
      * State of the segmented control.

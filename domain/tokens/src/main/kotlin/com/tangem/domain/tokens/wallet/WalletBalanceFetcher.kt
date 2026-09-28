@@ -224,10 +224,7 @@ class WalletBalanceFetcher internal constructor(
                 launch { balanceFetchingOperations.fetchQuotes(rawCurrencyIds = setOf(PredictionCollateral.RAW_ID)) }
                 launch {
                     predictionAccountStatusFetcher.invoke(
-                        PredictionAccountStatusFetcher.Params(
-                            userWalletId = userWalletId,
-                            mode = PredictionAccountStatusFetcher.Mode.AVAILABLE_ONLY,
-                        ),
+                        PredictionAccountStatusFetcher.Params(userWalletId = userWalletId),
                     )
                 }
             }

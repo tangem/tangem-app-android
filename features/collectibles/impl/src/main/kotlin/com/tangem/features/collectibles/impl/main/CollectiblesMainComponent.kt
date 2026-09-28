@@ -20,6 +20,7 @@ import com.tangem.features.collectibles.impl.addfunds.CollectiblesAddFundsCompon
 import com.tangem.features.collectibles.impl.discovery.CollectiblesDiscoveryComponent
 import com.tangem.features.collectibles.impl.main.model.CollectiblesMainModel
 import com.tangem.features.collectibles.impl.main.ui.CollectiblesMainScreen
+import com.tangem.features.tokenreceive.TokenReceiveComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -29,6 +30,7 @@ internal class CollectiblesMainComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted params: Params,
     discoveryComponentFactory: CollectiblesDiscoveryComponent.Factory,
+    private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
 ) : ComposableContentComponent, AppComponentContext by context {
 
     private val model: CollectiblesMainModel = getOrCreateModel(params = params)
@@ -68,6 +70,17 @@ internal class CollectiblesMainComponent @AssistedInject constructor(
         config: CollectiblesMainBottomSheetConfig,
         componentContext: ComponentContext,
     ): ComposableBottomSheetComponent = when (config) {
+        is CollectiblesMainBottomSheetConfig.Receive -> tokenReceiveComponentFactory.create(
+            context = childByContext(componentContext),
+            params = TokenReceiveComponent.Params(
+                config = config.config,
+                onDismiss = {
+                    if (bottomSheetSlot.value.child?.configuration is CollectiblesMainBottomSheetConfig.Receive) {
+                        model.onDismissBottomSheet()
+                    }
+                },
+            ),
+        )
         CollectiblesMainBottomSheetConfig.TopUp -> CollectiblesAddFundsComponent(
             appComponentContext = childByContext(componentContext),
             params = CollectiblesAddFundsComponent.Params(
@@ -81,7 +94,9 @@ internal class CollectiblesMainComponent @AssistedInject constructor(
                     }
 
                     override fun onDismissAddFunds() {
-                        model.onDismissAddFunds()
+                        if (bottomSheetSlot.value.child?.configuration is CollectiblesMainBottomSheetConfig.TopUp) {
+                            model.onDismissBottomSheet()
+                        }
                     }
                 },
             ),

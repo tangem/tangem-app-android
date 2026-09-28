@@ -559,6 +559,51 @@ internal class SendConfirmModelTest : SendModelTestBase() {
         }
 
         @Test
+        fun `GIVEN the whole balance entered WHEN onSendClick THEN the operation sends the balance minus the fee`() =
+            runTest {
+                // Arrange — the Safe pays the fee from the same balance, so the entered maximum has to shrink by it
+                coEvery { isAmountSubtractAvailableUseCase(any(), any(), any()) } returns true.right()
+                coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+                coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
+                val amountSlot = slot<BigDecimal>()
+                coEvery {
+                    jointSendDelegate.createOperation(jointAccount, any(), capture(amountSlot), any())
+                } returns Unit.right()
+                val params = jointConfirmParams(onSendTransaction = mockk(relaxed = true), enteredAmount = BigDecimal.ONE)
+                val sut = createSendConfirmModel(this, params)
+                advanceUntilIdle()
+
+                // Act
+                sut.onSendClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(amountSlot.captured).isEqualTo(BigDecimal.ONE - BigDecimal("0.001"))
+            }
+
+        @Test
+        fun `GIVEN an amount the balance covers with the fee WHEN onSendClick THEN it is sent as entered`() = runTest {
+            // Arrange
+            coEvery { isAmountSubtractAvailableUseCase(any(), any(), any()) } returns true.right()
+            coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+            coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
+            val amountSlot = slot<BigDecimal>()
+            coEvery {
+                jointSendDelegate.createOperation(jointAccount, any(), capture(amountSlot), any())
+            } returns Unit.right()
+            val params = jointConfirmParams(onSendTransaction = mockk(relaxed = true), enteredAmount = BigDecimal("0.5"))
+            val sut = createSendConfirmModel(this, params)
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(amountSlot.captured).isEqualTo(BigDecimal("0.5"))
+        }
+
+        @Test
         fun `GIVEN busy slot WHEN onSendClick THEN the slot alert is shown and the step stays editable`() = runTest {
             // Arrange
             coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
@@ -634,9 +679,16 @@ internal class SendConfirmModelTest : SendModelTestBase() {
         }
 
         /** Confirm starts empty so the model builds the real Content with the signatures itself */
-        private fun jointConfirmParams(onSendTransaction: () -> Unit) = MutableParamsContainer(
+        private fun jointConfirmParams(
+            onSendTransaction: () -> Unit,
+            enteredAmount: BigDecimal = BigDecimal.ONE,
+        ) = MutableParamsContainer(
             defaultSendConfirmParams(
-                state = normalFeeState().copy(confirmUM = ConfirmUM.Empty),
+                state = contentState(
+                    fee = realFee(),
+                    transactionFeeExtended = null,
+                    enteredAmount = enteredAmount,
+                ).copy(confirmUM = ConfirmUM.Empty),
                 cryptoCurrencyStatus = loadedFeeStatus,
                 feeCryptoCurrencyStatus = loadedFeeStatus,
             ).copy(

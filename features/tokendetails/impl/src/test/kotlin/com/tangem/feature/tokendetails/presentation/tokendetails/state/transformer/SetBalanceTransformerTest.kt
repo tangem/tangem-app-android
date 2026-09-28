@@ -1,7 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.common.getTotalWithRewardsStakingBalance
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
@@ -30,12 +29,8 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TransferU
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.ZeroBalanceActionsUM
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.collections.immutable.persistentListOf
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
@@ -50,16 +45,6 @@ class SetBalanceTransformerTest {
     private val currency: CryptoCurrency = mockk(relaxed = true) {
         every { this@mockk.network } returns this@SetBalanceTransformerTest.network
         every { symbol } returns "ETH"
-    }
-
-    @BeforeEach
-    fun setup() {
-        mockkStatic(StakingBalance.Data::getTotalWithRewardsStakingBalance)
-    }
-
-    @AfterEach
-    fun teardown() {
-        unmockkStatic(StakingBalance.Data::getTotalWithRewardsStakingBalance)
     }
 
     // region Status type → BalanceBlock type mapping
@@ -211,7 +196,7 @@ class SetBalanceTransformerTest {
     @Test
     fun `GIVEN loaded status without staking WHEN transform THEN balance type is Single`() {
         // GIVEN
-        val status = createStatus(loadedValue(stakingBalance = null))
+        val status = createStatus(loadedValue())
         val transformer = createTransformer(status)
 
         // WHEN
@@ -225,9 +210,7 @@ class SetBalanceTransformerTest {
     @Test
     fun `GIVEN loaded status with staking WHEN transform THEN balance type is Multiple`() {
         // GIVEN
-        val stakingBalance: StakingBalance.Data = mockk(relaxed = true)
-        every { stakingBalance.getTotalWithRewardsStakingBalance(any()) } returns BigDecimal("1.5")
-        val status = createStatus(loadedValue(stakingBalance = stakingBalance))
+        val status = createStatus(loadedValue(contributions = listOf(realStakeKitBalance(BigDecimal("1.5")))))
         val transformer = createTransformer(status)
 
         // WHEN
@@ -239,30 +222,9 @@ class SetBalanceTransformerTest {
     }
 
     @Test
-    fun `GIVEN staking arrives as a contribution WHEN transform THEN balance type is Multiple`() {
-        // GIVEN — toggle-on shape: the typed field is null and the balance is in `contributions`
-        val status = createStatus(
-            loadedValue(
-                stakingBalance = null,
-                contributions = listOf(realStakeKitBalance(amount = BigDecimal("1.5"))),
-            ),
-        )
-        val transformer = createTransformer(status)
-
-        // WHEN
-        val result = transformer.transform(initialState())
-
-        // THEN — reading only the typed field would collapse this back to a Single balance
-        val content = result.balanceBlockUM as TokenDetailsBalanceBlockUM.Content
-        assertThat(content.tokenBalanceTypeUM).isInstanceOf(TokenBalanceTypeUM.Multiple::class.java)
-    }
-
-    @Test
     fun `GIVEN loaded status with staking WHEN transform THEN available balance types include ALL and AVAILABLE`() {
         // GIVEN
-        val stakingBalance: StakingBalance.Data = mockk(relaxed = true)
-        every { stakingBalance.getTotalWithRewardsStakingBalance(any()) } returns BigDecimal("1.5")
-        val status = createStatus(loadedValue(stakingBalance = stakingBalance))
+        val status = createStatus(loadedValue(contributions = listOf(realStakeKitBalance(BigDecimal("1.5")))))
         val transformer = createTransformer(status)
 
         // WHEN
@@ -280,9 +242,7 @@ class SetBalanceTransformerTest {
     @Test
     fun `GIVEN staking balance WHEN Multiple onSelect invoked THEN onToggleBalanceType is called`() {
         // GIVEN
-        val stakingBalance: StakingBalance.Data = mockk(relaxed = true)
-        every { stakingBalance.getTotalWithRewardsStakingBalance(any()) } returns BigDecimal("1.5")
-        val status = createStatus(loadedValue(stakingBalance = stakingBalance))
+        val status = createStatus(loadedValue(contributions = listOf(realStakeKitBalance(BigDecimal("1.5")))))
         val transformer = createTransformer(status)
 
         // WHEN
@@ -298,9 +258,7 @@ class SetBalanceTransformerTest {
     @Test
     fun `GIVEN staking and previous Multiple type AVAILABLE WHEN transform THEN selected type is preserved`() {
         // GIVEN
-        val stakingBalance: StakingBalance.Data = mockk(relaxed = true)
-        every { stakingBalance.getTotalWithRewardsStakingBalance(any()) } returns BigDecimal("1.5")
-        val status = createStatus(loadedValue(stakingBalance = stakingBalance))
+        val status = createStatus(loadedValue(contributions = listOf(realStakeKitBalance(BigDecimal("1.5")))))
         val transformer = createTransformer(status)
 
         val prevContent = TokenDetailsBalanceBlockUM.Content(
@@ -380,7 +338,7 @@ class SetBalanceTransformerTest {
     @Test
     fun `GIVEN amount is zero WHEN transform THEN isBalanceZero is true`() {
         // GIVEN
-        val status = createStatus(loadedValue(amount = BigDecimal.ZERO, stakingBalance = null))
+        val status = createStatus(loadedValue(amount = BigDecimal.ZERO))
         val transformer = createTransformer(status)
 
         // WHEN
@@ -394,7 +352,7 @@ class SetBalanceTransformerTest {
     @Test
     fun `GIVEN non-zero amount WHEN transform THEN isBalanceZero is false`() {
         // GIVEN
-        val status = createStatus(loadedValue(amount = BigDecimal("0.001"), stakingBalance = null))
+        val status = createStatus(loadedValue(amount = BigDecimal("0.001")))
         val transformer = createTransformer(status)
 
         // WHEN
@@ -408,9 +366,9 @@ class SetBalanceTransformerTest {
     @Test
     fun `GIVEN zero amount but non-zero staking WHEN transform THEN isBalanceZero is false`() {
         // GIVEN — staking balance counts towards "total" so amount+staking != 0 keeps the rich UI
-        val stakingBalance: StakingBalance.Data = mockk(relaxed = true)
-        every { stakingBalance.getTotalWithRewardsStakingBalance(any()) } returns BigDecimal("1.5")
-        val status = createStatus(loadedValue(amount = BigDecimal.ZERO, stakingBalance = stakingBalance))
+        val status = createStatus(
+            loadedValue(amount = BigDecimal.ZERO, contributions = listOf(realStakeKitBalance(BigDecimal("1.5")))),
+        )
         val transformer = createTransformer(status)
 
         // WHEN
@@ -428,7 +386,7 @@ class SetBalanceTransformerTest {
     @Test
     fun `GIVEN loaded without staking WHEN transform THEN available balances are null`() {
         // GIVEN
-        val status = createStatus(loadedValue(stakingBalance = null))
+        val status = createStatus(loadedValue())
         val transformer = createTransformer(status)
 
         // WHEN
@@ -443,9 +401,7 @@ class SetBalanceTransformerTest {
     @Test
     fun `GIVEN staking balance WHEN transform THEN available balances are not null`() {
         // GIVEN
-        val stakingBalance: StakingBalance.Data = mockk(relaxed = true)
-        every { stakingBalance.getTotalWithRewardsStakingBalance(any()) } returns BigDecimal("1.5")
-        val status = createStatus(loadedValue(stakingBalance = stakingBalance))
+        val status = createStatus(loadedValue(contributions = listOf(realStakeKitBalance(BigDecimal("1.5")))))
         val transformer = createTransformer(status)
 
         // WHEN
@@ -550,7 +506,6 @@ class SetBalanceTransformerTest {
         amount: BigDecimal = BigDecimal("10.5"),
         fiatAmount: BigDecimal = BigDecimal("21000"),
         fiatRate: BigDecimal = BigDecimal("2000"),
-        stakingBalance: StakingBalance? = null,
         yieldSupplyStatus: YieldSupplyStatus? = null,
         sources: CryptoCurrencyStatus.Sources = CryptoCurrencyStatus.Sources(),
         contributions: List<BalanceContribution> = emptyList(),
@@ -559,7 +514,6 @@ class SetBalanceTransformerTest {
         fiatAmount = fiatAmount,
         fiatRate = fiatRate,
         priceChange = BigDecimal("2.5"),
-        stakingBalance = stakingBalance,
         yieldSupplyStatus = yieldSupplyStatus,
         hasCurrentNetworkTransactions = false,
         pendingTransactions = emptySet(),
@@ -569,9 +523,7 @@ class SetBalanceTransformerTest {
     )
 
     /**
-     * A **real** StakeKit balance for the contributions path. The `mockkStatic` stub above cannot serve it:
-     * `getExtraBalanceOrNull()` answers from `contributions` without ever reaching
-     * `getTotalWithRewardsStakingBalance`, and `totalDeltaCryptoAmount()` is a *member* function, so a mocked
+     * A **real** StakeKit balance, never a mock: `totalDeltaCryptoAmount()` is a *member* function, so a mocked
      * balance would return a mocked `BigDecimal` and the assertion would prove nothing.
      *
      * Ethereum keeps its stake outside the network balance, so every item counts and the delta is [amount].
@@ -619,7 +571,6 @@ class SetBalanceTransformerTest {
 
     private fun noQuoteValue(): CryptoCurrencyStatus.NoQuote = CryptoCurrencyStatus.NoQuote(
         amount = BigDecimal("5.0"),
-        stakingBalance = null,
         yieldSupplyStatus = null,
         hasCurrentNetworkTransactions = false,
         pendingTransactions = emptySet(),
@@ -641,7 +592,6 @@ class SetBalanceTransformerTest {
         fiatAmount = null,
         fiatRate = null,
         priceChange = null,
-        stakingBalance = null,
         yieldSupplyStatus = null,
         hasCurrentNetworkTransactions = false,
         pendingTransactions = emptySet(),

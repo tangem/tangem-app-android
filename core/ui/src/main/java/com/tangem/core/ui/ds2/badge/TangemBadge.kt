@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.ColorReference2
 import com.tangem.core.ui.extensions.TextReference
@@ -40,6 +41,8 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 /**
  * Design-system v2 badge: a compact pill displaying a short label with optional leading / trailing
  * icons.
+ *
+ * Version: 1.0.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=2002-213)
  *
@@ -151,6 +154,8 @@ private fun TangemIconUM.applyTint(tint: Color): TangemIconUM = when (this) {
 }
 
 object TangemBadge {
+
+    val version = DsVersion(major = 1, minor = 0, patch = 0)
 
     /**
      * Visual style of the badge.

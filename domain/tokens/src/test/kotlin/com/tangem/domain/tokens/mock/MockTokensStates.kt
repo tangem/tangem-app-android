@@ -154,7 +154,6 @@ internal object MockTokensStates {
                 networkAddress = requireNotNull(
                     value = MockNetworks.verifiedNetworksStatuses.first { it.network == status.currency.network }.value as? NetworkStatus.Verified,
                 ).address,
-                stakingBalance = null,
                 sources = CryptoCurrencyStatus.Sources(),
                 yieldSupplyStatus = null,
             )
@@ -166,7 +165,6 @@ internal object MockTokensStates {
                 pendingTransactions = emptySet(),
                 hasCurrentNetworkTransactions = false,
                 networkAddress = requireNotNull(networkStatus.value as? NetworkStatus.Verified).address,
-                stakingBalance = null,
                 sources = CryptoCurrencyStatus.Sources(),
                 yieldSupplyStatus = null,
             )
@@ -185,7 +183,6 @@ internal object MockTokensStates {
                         .first { it.network == status.currency.network }
                         .value as? NetworkStatus.Verified,
                 ).address,
-                stakingBalance = null,
                 sources = CryptoCurrencyStatus.Sources(),
                 yieldSupplyStatus = null,
             ),

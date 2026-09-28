@@ -17,6 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.animation.TangemTransition
 import com.tangem.core.ui.ds2.animation.WithoutMaterialWhileAnimating
 import com.tangem.core.ui.ds2.surface.TangemSurface
@@ -27,6 +28,8 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 /**
  * Design-system v2 button stack — secondary actions grouped side by side in a translucent material
  * pill. Used as the secondary-actions slot of [com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation].
+ *
+ * Version: 1.0.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=9434-14086)
  *
@@ -76,6 +79,8 @@ fun TangemButtonStack(
 }
 
 object TangemButtonStack {
+
+    val version = DsVersion(major = 1, minor = 0, patch = 0)
 
     /**
      * Container style behind the entries.

@@ -15,11 +15,16 @@ import com.tangem.core.ui.extensions.styledResourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_chevron_right_16
+import com.tangem.core.ui.res.generated.icons.ic_clock_16
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.jointaccount.model.JointPendingOperation
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletContentClickIntents
 import com.tangem.feature.wallet.impl.R
@@ -31,6 +36,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 
+@Suppress("LongParameterList")
 internal class WalletTokenCurrencyItemConverter(
     private val appCurrency: AppCurrency,
     private val accountId: AccountId,
@@ -38,6 +44,8 @@ internal class WalletTokenCurrencyItemConverter(
     private val yieldModuleApyMap: Map<String, BigDecimal>,
     private val clickIntents: WalletContentClickIntents,
     stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability>,
+    private val userWalletId: UserWalletId,
+    private val jointPendingOperations: List<JointPendingOperation> = emptyList(),
 ) : Converter<CryptoCurrencyStatus, TangemTokenRowUM> {
 
     private val currencyToIconStateConverter = CryptoCurrencyToIconStateConverter()
@@ -48,6 +56,7 @@ internal class WalletTokenCurrencyItemConverter(
 
     override fun convert(value: CryptoCurrencyStatus): TangemTokenRowUM {
         val earnApyInfo = earnApyConverter.convert(value)
+        val pendingOperation = jointPendingOperations.firstOrNull { it.transfer.currency.id == value.currency.id }
 
         return TangemTokenRowUM.Content(
             id = value.currency.id.value,
@@ -58,7 +67,7 @@ internal class WalletTokenCurrencyItemConverter(
             subtitleUM = toCurrencyRowSubtitle(value),
             topEndContentUM = toCurrencyRowTopEnd(value),
             bottomEndContentUM = toCurrencyRowBottomEnd(value),
-            promoBannerUM = toPromoBannerUM(
+            promoBannerUM = pendingOperation?.let(::toPendingOperationBubble) ?: toPromoBannerUM(
                 accountId,
                 value,
                 earnApyInfo.takeIf { shouldShowPromo },
@@ -243,6 +252,24 @@ internal class WalletTokenCurrencyItemConverter(
             is CryptoCurrencyStatus.NoAmount,
             -> TangemTokenRowUM.EndContentUM.Empty
         }
+    }
+
+    private fun toPendingOperationBubble(operation: JointPendingOperation): TangemTokenRowUM.PromoBannerUM.Warning {
+        val onClick = {
+            clickIntents.onJointOperationBannerClick(
+                userWalletId = userWalletId,
+                currency = operation.transfer.currency,
+                operationId = operation.operationId,
+            )
+        }
+
+        return TangemTokenRowUM.PromoBannerUM.Warning(
+            text = resourceReference(R.string.joint_account_pending_transaction_message),
+            icon = Icons.ic_clock_16,
+            trailingIcon = Icons.ic_chevron_right_16,
+            onBubbleClick = onClick,
+            onCloseClick = onClick,
+        )
     }
 
     private fun toPromoBannerUM(

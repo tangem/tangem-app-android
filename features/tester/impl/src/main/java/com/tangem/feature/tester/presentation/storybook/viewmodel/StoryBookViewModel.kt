@@ -1,6 +1,7 @@
 package com.tangem.feature.tester.presentation.storybook.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
 import com.tangem.feature.tester.presentation.storybook.entity.DsStoryBookPage
 import com.tangem.feature.tester.presentation.storybook.entity.StoryBookUM
@@ -34,17 +35,18 @@ internal class StoryBookViewModel @Inject constructor() : ViewModel() {
     private fun onBackClick() {
         when (_uiState.value.currentPage) {
             is StoryList -> router?.back()
-            is DsStoryBookPage -> onStoryClick(dsComponentsListStoryFactory)
-            else -> _uiState.update { it.copy(currentPage = StoryList) }
+            is DsStoryBookPage -> onStoryClick(dsComponentsListStoryFactory, version = null)
+            else -> _uiState.update { it.copy(currentPage = StoryList, currentVersion = null) }
         }
     }
 
-    private fun onStoryClick(factory: StoryPageFactory) {
+    private fun onStoryClick(factory: StoryPageFactory, version: DsVersion?) {
         _uiState.update { state ->
             state.copy(
                 currentPage = factory.create { update ->
                     _uiState.update { s -> s.copy(currentPage = update(s.currentPage)) }
                 },
+                currentVersion = version,
             )
         }
     }

@@ -6,6 +6,12 @@ import com.tangem.common.routing.entity.AddressBookOpenMode
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.addressbook.usecase.IsAddressBookCompatibleUseCase
+import kotlinx.coroutines.flow.map
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import arrow.core.getOrElse
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
@@ -55,11 +61,23 @@ internal class JointOperationDelegate @Inject constructor(
     private val isAddressBookCompatibleUseCase: IsAddressBookCompatibleUseCase,
     private val ownerLookupProducer: TxHistoryOwnerLookupProducer,
     private val userWalletsListRepository: UserWalletsListRepository,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
 ) {
 
     fun isColdWallet(userWalletId: UserWalletId): Boolean {
         return userWalletsListRepository.getSyncOrNull(id = userWalletId) is UserWallet.Cold
     }
+
+    /** The rate of [currency] in the selected app currency; the rate is null while there is no quote for it */
+    fun fiat(userWalletId: UserWalletId, currency: CryptoCurrency): Flow<JointOperationFiat> = combine(
+        flow = singleAccountStatusListSupplier(userWalletId = userWalletId)
+            .map { statuses -> statuses.getCryptoCurrencyStatus(currency).getOrNull()?.value?.fiatRate }
+            .distinctUntilChanged(),
+        flow2 = getSelectedAppCurrencyUseCase().map { maybeAppCurrency ->
+            maybeAppCurrency.getOrElse { AppCurrency.Default }
+        },
+    ) { rate, appCurrency -> JointOperationFiat(rate = rate, appCurrency = appCurrency) }
 
     /**
      * Creating a contact is offered for a foreign [recipient] this wallet has not saved yet — never for one of the

@@ -308,5 +308,8 @@ internal class TangemPayVirtualAccountDepositModelTest {
         beneficiaryBankAddress = "Bank Addr",
         accountNumber = "123",
         routingNumber = "456",
+        transferMessage = null,
+        depositFee = null,
+        depositLimit = null,
     )
 }
