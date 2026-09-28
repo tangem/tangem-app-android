@@ -67,6 +67,7 @@ internal fun CreateWalletBottomSheet(config: TangemBottomSheetConfig?, prewarm: 
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             WalletOptionCard(option = content.cardOrRing)
+            content.socialLogin?.let { WalletOptionCard(option = it) }
             WalletOptionCard(option = content.seedPhrase)
         }
     }

@@ -1746,7 +1746,6 @@ internal class SwapInteractorImpl @Inject constructor(
                 value = if (quote == null) {
                     CryptoCurrencyStatus.NoQuote(
                         amount = balance.orZero(),
-                        stakingBalance = null,
                         yieldSupplyStatus = null,
                         hasCurrentNetworkTransactions = false,
                         pendingTransactions = emptySet(),
@@ -1759,7 +1758,6 @@ internal class SwapInteractorImpl @Inject constructor(
                         fiatAmount = quote.fiatRate.multiply(balance),
                         fiatRate = quote.fiatRate,
                         priceChange = quote.priceChange,
-                        stakingBalance = null,
                         yieldSupplyStatus = null,
                         hasCurrentNetworkTransactions = false,
                         pendingTransactions = emptySet(),

@@ -388,18 +388,28 @@ internal fun PortfolioRowItem(
             },
         ) { isExpandedWrapped ->
             val animatedContentScope = this
+            val currentItem by rememberUpdatedState(item)
 
             val composables = remember {
                 SharedTokenRowComposables(
                     icon = { modifier ->
                         val size =
                             if (isExpandedWrapped) AccountIconSize.ExtraSmall else AccountIconSize.Default
-                        val headIcon = item.tokenRowUM.headIconUM
+                        val shouldShowPendingOperation = !isExpandedWrapped
+                        val headIcon = currentItem.tokenRowUM.headIconUM
                         val sizedHeadIcon = if (headIcon is TangemIconUM.Currency) {
                             headIcon.copy(
                                 currencyIconState = when (val currencyIconState = headIcon.currencyIconState) {
-                                    is CurrencyIconState.CryptoPortfolio.Icon -> currencyIconState.copy(size = size)
-                                    is CurrencyIconState.CryptoPortfolio.Letter -> currencyIconState.copy(size = size)
+                                    is CurrencyIconState.CryptoPortfolio.Icon -> currencyIconState.copy(
+                                        size = size,
+                                        hasPendingOperation = currencyIconState.hasPendingOperation &&
+                                            shouldShowPendingOperation,
+                                    )
+                                    is CurrencyIconState.CryptoPortfolio.Letter -> currencyIconState.copy(
+                                        size = size,
+                                        hasPendingOperation = currencyIconState.hasPendingOperation &&
+                                            shouldShowPendingOperation,
+                                    )
                                     else -> currencyIconState
                                 },
                             )
@@ -437,7 +447,7 @@ internal fun PortfolioRowItem(
                             derivedStateOf { lerp(startStyle, stopStyle, animationFraction.value) }
                         }
 
-                        val resizedTitle = when (val titleUM = item.tokenRowUM.titleUM) {
+                        val resizedTitle = when (val titleUM = currentItem.tokenRowUM.titleUM) {
                             is TangemTokenRowUM.TitleUM.Content -> titleUM.copy(
                                 text = styledStringReference(
                                     titleUM.text.resolveReference(),
