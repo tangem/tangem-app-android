@@ -24,13 +24,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
-import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.feature.tester.presentation.walletids.state.WALLET_IDS_TITLE
 import com.tangem.feature.tester.presentation.walletids.state.WalletIdsScreenUM
 import com.tangem.feature.tester.presentation.walletids.state.WalletIdsUM
 import kotlinx.collections.immutable.persistentListOf
-import com.tangem.feature.tester.impl.R as TesterR
 
 @Composable
 internal fun WalletIdsScreen(state: WalletIdsScreenUM) {
@@ -38,7 +37,7 @@ internal fun WalletIdsScreen(state: WalletIdsScreenUM) {
         topBar = {
             AppBarWithBackButton(
                 onBackClick = state.onBackClick,
-                text = stringResourceSafe(id = TesterR.string.wallet_ids),
+                text = WALLET_IDS_TITLE,
                 modifier = Modifier.statusBarsPadding(),
             )
         },
