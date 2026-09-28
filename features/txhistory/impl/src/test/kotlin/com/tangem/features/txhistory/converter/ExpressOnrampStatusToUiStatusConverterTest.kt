@@ -37,7 +37,7 @@ internal class ExpressOnrampStatusToUiStatusConverterTest {
         Model(status = ExpressOnrampStatus.Failed, expected = Status.Failed),
         Model(status = ExpressOnrampStatus.Expired, expected = Status.Failed),
         Model(status = ExpressOnrampStatus.Refunded, expected = Status.Failed),
-        Model(status = ExpressOnrampStatus.Unknown, expected = Status.Failed),
+        Model(status = ExpressOnrampStatus.Unknown, expected = Status.Unconfirmed),
         Model(status = ExpressOnrampStatus.Created, expected = Status.Unconfirmed),
         Model(status = ExpressOnrampStatus.WaitingForPayment, expected = Status.Unconfirmed),
         Model(status = ExpressOnrampStatus.PaymentProcessing, expected = Status.Unconfirmed),

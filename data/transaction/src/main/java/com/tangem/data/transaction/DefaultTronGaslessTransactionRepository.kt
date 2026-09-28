@@ -1,6 +1,9 @@
 package com.tangem.data.transaction
 
+import com.squareup.moshi.JsonAdapter
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.grow.datasource.gasless.TronGaslessApi
+import com.tangem.grow.datasource.gasless.models.GaslessErrorResponse
 import com.tangem.grow.datasource.gasless.models.tron.TronEstimateRequestBody
 import com.tangem.grow.datasource.gasless.models.tron.TronSubmitRequestBody
 import com.tangem.domain.transaction.TronGaslessTransactionRepository
@@ -19,6 +22,7 @@ import java.time.Instant
 
 internal class DefaultTronGaslessTransactionRepository(
     private val api: TronGaslessApi,
+    private val errorAdapter: JsonAdapter<GaslessErrorResponse>,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : TronGaslessTransactionRepository {
 
@@ -43,14 +47,15 @@ internal class DefaultTronGaslessTransactionRepository(
 
     override suspend fun estimate(params: TronGaslessEstimateParams): TronGaslessQuote = withContext(dispatchers.io) {
         val response = api.estimate(
-            TronEstimateRequestBody(
+            userWalletId = params.userWalletId.stringValue,
+            body = TronEstimateRequestBody(
                 fromAddress = params.fromAddress,
                 toAddress = params.toAddress,
                 tokenContract = params.tokenContract,
                 amount = params.amount.toString(),
                 feeTokenContract = params.feeTokenContract,
             ),
-        ).getOrThrowGaslessError()
+        ).getOrThrowGaslessError(errorAdapter)
         if (!response.isSuccess) throw GaslessServiceException(httpCode = null, message = GASLESS_UNSUCCESSFUL)
 
         val res = response.result
@@ -69,17 +74,19 @@ internal class DefaultTronGaslessTransactionRepository(
     }
 
     override suspend fun submit(
+        userWalletId: UserWalletId,
         quoteId: String,
         signedCompensationTx: String,
         signedOriginalTx: String,
     ): TronGaslessSubmitResult = withContext(dispatchers.io) {
         val response = api.submit(
-            TronSubmitRequestBody(
+            userWalletId = userWalletId.stringValue,
+            body = TronSubmitRequestBody(
                 quoteId = quoteId,
                 signedCompensationTx = signedCompensationTx,
                 signedOriginalTx = signedOriginalTx,
             ),
-        ).getOrThrowGaslessError()
+        ).getOrThrowGaslessError(errorAdapter)
         if (!response.isSuccess) throw GaslessServiceException(httpCode = null, message = GASLESS_UNSUCCESSFUL)
 
         val res = response.result

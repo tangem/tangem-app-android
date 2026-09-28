@@ -921,11 +921,10 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
 
     private suspend fun constructNotCreatedOrEmptyStatus(userWalletId: UserWalletId): PaymentAccountStatusValue {
         val entryPoint = TangemPayEntryPoint.BANNER
-        val shouldShowBanner = !eligibilityManager.isPaeraCustomerForAnyWallet(entryPoint) &&
+        val isAvailable = !eligibilityManager.isPaeraCustomerForAnyWallet(entryPoint) &&
             eligibilityManager.getEligibleWallets(shouldExcludePaeraCustomers = false, entryPoint = entryPoint)
-                .any { it.walletId == userWalletId } &&
-            !onboardingRepository.getHideMainOnboardingBanner(userWalletId)
+                .any { it.walletId == userWalletId }
 
-        return if (shouldShowBanner) PaymentAccountStatusValue.NotCreated else PaymentAccountStatusValue.Empty
+        return if (isAvailable) PaymentAccountStatusValue.NotCreated else PaymentAccountStatusValue.Empty
     }
 }
