@@ -53,11 +53,26 @@ private fun Content(state: TotalMarketCapUM.Content, modifier: Modifier = Modifi
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
     ) {
-        Text(
-            text = state.title.resolveReference(),
-            style = TangemTheme.typography3.heading.small,
-            color = TangemTheme.colors3.text.secondary,
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = state.title.resolveReference(),
+                style = TangemTheme.typography3.heading.small,
+                color = TangemTheme.colors3.text.secondary,
+            )
+            SpacerW(4.dp)
+            Icon(
+                imageVector = Icons.ic_info_20,
+                contentDescription = null,
+                tint = TangemTheme.colors3.icon.secondary,
+                modifier = Modifier
+                    .size(20.dp)
+                    .clickable(
+                        indication = ripple(bounded = false),
+                        interactionSource = remember { MutableInteractionSource() },
+                        onClick = state.onInfoClick,
+                    ),
+            )
+        }
         Row(
             modifier = Modifier.padding(top = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -69,19 +84,6 @@ private fun Content(state: TotalMarketCapUM.Content, modifier: Modifier = Modifi
             )
             SpacerW(8.dp)
             PriceChange(state = state.change)
-            SpacerW(2.dp)
-            Icon(
-                imageVector = Icons.ic_info_16,
-                contentDescription = null,
-                tint = TangemTheme.colors3.icon.secondary,
-                modifier = Modifier
-                    .size(16.dp)
-                    .clickable(
-                        indication = ripple(bounded = false),
-                        interactionSource = remember { MutableInteractionSource() },
-                        onClick = state.onInfoClick,
-                    ),
-            )
         }
         Row(
             modifier = Modifier
