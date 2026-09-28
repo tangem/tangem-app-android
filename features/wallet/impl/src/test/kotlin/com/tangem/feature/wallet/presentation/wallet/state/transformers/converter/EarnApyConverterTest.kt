@@ -26,11 +26,10 @@ import java.math.BigDecimal
 /**
  * Tests the earn-badge APY resolution: which rate a token's badge shows and whether it counts as already earning.
  *
- * Two behaviours are worth pinning. The converter reads the stake through `stakingBalanceData`, so it must reach
- * the same verdict whether the balance arrives as a contribution or through the legacy typed field — with the
- * toggle on, a reader stuck on the legacy field would see no stake and hide the badge for a fully-staked token.
- * And the StakeKit rate selection has real branching: an active stake answers with its own validator's rate, and
- * only falls back to the best preferred validator when the stake doesn't point at a known one.
+ * The converter reads the stake through `stakingBalanceData`, so a token whose only stake arrives as a balance
+ * contribution must still be reported as earning. And the StakeKit rate selection has real branching: an active
+ * stake answers with its own validator's rate, and only falls back to the best preferred validator when the stake
+ * doesn't point at a known one.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class EarnApyConverterTest {
@@ -39,40 +38,17 @@ internal class EarnApyConverterTest {
 
     @Test
     fun `GIVEN Full availability AND the stake arrives as a contribution WHEN convert THEN badge is active`() {
-        // Arrange — Full hides the badge for tokens without a stake, so a reader stuck on the legacy typed
-        // field would see no stake here and return null
+        // Arrange — Full hides the badge for tokens without a stake
         val converter = converter(
             StakingAvailability.Full(stakeKitOption(validator("v1", preferred = true, rate = "0.07"))),
         )
-        val status = status(stakingBalance = stakeKitBalance("v1"), useContributions = true)
+        val status = status(stakingBalance = stakeKitBalance("v1"))
 
         // Act
         val actual = converter.convert(status)
 
         // Assert
         assertThat(actual).isEqualTo(earnApyInfo(rate = "0.07", isActive = true))
-    }
-
-    @Test
-    fun `GIVEN the same stake WHEN reached via legacy field or contribution THEN the badge is identical`() {
-        // Arrange — one balance delivered through each architecture
-        val converter = converter(
-            StakingAvailability.Available(
-                stakeKitOption(
-                    validator("v1", preferred = true, rate = "0.09"),
-                    validator("v2", preferred = false, rate = "0.05"),
-                ),
-            ),
-        )
-        val stake = stakeKitBalance("v2")
-
-        // Act
-        val viaLegacyField = converter.convert(status(stakingBalance = stake))
-        val viaContribution = converter.convert(status(stakingBalance = stake, useContributions = true))
-
-        // Assert
-        assertThat(viaContribution).isEqualTo(viaLegacyField)
-        assertThat(viaContribution).isEqualTo(earnApyInfo(rate = "0.05", isActive = true))
     }
 
     @Test
@@ -86,7 +62,7 @@ internal class EarnApyConverterTest {
                 ),
             ),
         )
-        val status = status(stakingBalance = stakeKitBalance("v2"), useContributions = true)
+        val status = status(stakingBalance = stakeKitBalance("v2"))
 
         // Act
         val actual = converter.convert(status)
@@ -108,7 +84,7 @@ internal class EarnApyConverterTest {
                 ),
             ),
         )
-        val status = status(stakingBalance = stakeKitBalance("unknown"), useContributions = true)
+        val status = status(stakingBalance = stakeKitBalance("unknown"))
 
         // Act
         val actual = converter.convert(status)
@@ -187,28 +163,19 @@ internal class EarnApyConverterTest {
         stakingApyMap = mapOf(currency to availability),
     )
 
-    /**
-     * [useContributions] switches between the two architectures the way `CryptoCurrencyStatusFactory` does: with
-     * the toggle on the balance arrives in `contributions` and the typed field is **null**. Populating both would
-     * let a reader stuck on the legacy field still look correct.
-     */
-    private fun status(
-        stakingBalance: StakingBalance.Data? = null,
-        useContributions: Boolean = false,
-    ): CryptoCurrencyStatus = CryptoCurrencyStatus(
+    private fun status(stakingBalance: StakingBalance.Data? = null): CryptoCurrencyStatus = CryptoCurrencyStatus(
         currency = currency,
         value = CryptoCurrencyStatus.Loaded(
             amount = BigDecimal.ONE,
             fiatAmount = BigDecimal.ONE,
             fiatRate = BigDecimal.ONE,
             priceChange = BigDecimal.ZERO,
-            stakingBalance = stakingBalance.takeIf { !useContributions },
             yieldSupplyStatus = null,
             hasCurrentNetworkTransactions = false,
             pendingTransactions = emptySet(),
             networkAddress = mockk(relaxed = true),
             sources = CryptoCurrencyStatus.Sources(),
-            contributions = if (useContributions) listOfNotNull(stakingBalance) else emptyList(),
+            contributions = listOfNotNull(stakingBalance),
         ),
     )
 

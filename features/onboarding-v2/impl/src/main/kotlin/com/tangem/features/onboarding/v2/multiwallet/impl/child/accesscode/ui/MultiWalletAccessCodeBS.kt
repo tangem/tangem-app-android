@@ -11,6 +11,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemAnimations
+import com.tangem.core.ui.security.SensitiveContentEffect
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.accesscode.ui.state.MultiWalletAccessCodeUM
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.accesscode.ui.state.MultiWalletAccessCodeUM.Step.*
@@ -22,6 +23,7 @@ internal fun MultiWalletAccessCodeBS(
     onBack: () -> Unit,
 ) {
     TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(config = config, onBack = onBack) { _ ->
+        SensitiveContentEffect()
         Content(state)
     }
 }
