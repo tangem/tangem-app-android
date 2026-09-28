@@ -213,6 +213,15 @@ reads the outcome.
 `isRedeemable` — a won position whose payout is not on-chain yet opens the result with a payout-pending
 footer.
 
+## History
+
+`PolymarketHistoryModel` opens a `PolymarketActivitySession` for the route's wallet and binds it to the
+component's resume/pause lifecycle. Rows are grouped by local calendar date and displayed newest first;
+BUY/WITHDRAW amounts are outgoing, SELL/DEPOSIT/REDEEM are incoming, and a lost redemption shows a dash.
+All/Buy/Sell/Funds Added/Withdrawn tabs use backend type filters. Pull-to-refresh retains loaded rows,
+pagination errors offer retry, and an empty filtered result keeps the tabs available. Search and CSV
+are inert placeholders; row-detail sheets and funding source/destination metadata are deferred.
+
 ## Gotchas
 
 - **Never pass `this` as a child context.** Every child gets `child(key)` or `childByContext(...)`; models
