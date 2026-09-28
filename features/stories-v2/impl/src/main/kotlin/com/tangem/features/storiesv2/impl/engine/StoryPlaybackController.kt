@@ -34,6 +34,12 @@ import kotlinx.coroutines.flow.update
  */
 internal const val STALL_TIMEOUT_MS = 2_000L
 
+/**
+ * How long a slide without a poster may stand still before the viewer is told it is waiting. Short enough to explain a
+ * frozen bar, long enough that an ordinary decoder hiccup never flashes a spinner.
+ */
+internal const val FREEZE_INDICATOR_DELAY_MS = 500L
+
 @Suppress("TooManyFunctions")
 internal class StoryPlaybackController(
     private val composition: StoryV2Composition,
@@ -64,6 +70,7 @@ internal class StoryPlaybackController(
 
     private val viewedSlideIds = mutableSetOf<String>()
     private val fallbackSlideIds = mutableSetOf<String>()
+    private val brokenSlideIds = mutableSetOf<String>()
 
     private var isReducedMotion = false
     private var loopsWatched = 0
@@ -154,12 +161,19 @@ internal class StoryPlaybackController(
         advance(StoryV2AdvanceReason.AUTO)
     }
 
-    /** The story continues on the poster rather than showing an error: an empty screen is never acceptable. */
-    fun onPlaybackFailed() {
+    /**
+     * The story continues on the poster rather than showing an error: an empty screen is never acceptable. A slide
+     * without a poster has nothing to continue on, so the story moves past it instead.
+     */
+    fun onPlaybackFailed(reason: StoryV2ErrorReason) {
         if (state.value.isFinished) return
 
-        reportAssetFailure(StoryV2ErrorReason.DECODE_FAILURE)
-        degradeToPoster(StoryV2FallbackReason.PLAYBACK_FAILED)
+        reportAssetFailure(reason)
+        if (currentSlide.asset.poster == null) {
+            skipBrokenSlide()
+        } else {
+            degradeToPoster(StoryV2FallbackReason.PLAYBACK_FAILED)
+        }
     }
 
     fun onTapForward() {
@@ -286,7 +300,7 @@ internal class StoryPlaybackController(
         slidePositionMs = 0L
         slideAtEndForMs = 0L
         firedHapticCount = 0
-        slideFallbackReason = if (isReducedMotion && slide.asset !is StoryV2Asset.Image) {
+        slideFallbackReason = if (isReducedMotion && slide.asset !is StoryV2Asset.Image && slide.asset.poster != null) {
             StoryV2FallbackReason.REDUCE_MOTION
         } else {
             null
@@ -300,6 +314,7 @@ internal class StoryPlaybackController(
                 isManualEntry = isManual,
                 isPlayerDrivenEntry = isPlayerDriven,
                 renderMode = if (slideFallbackReason == null) SlideRenderMode.ASSET else SlideRenderMode.POSTER,
+                isStalled = false,
             )
         }
     }
@@ -359,7 +374,7 @@ internal class StoryPlaybackController(
     }
 
     private fun degradeToPoster(reason: StoryV2FallbackReason) {
-        if (currentSlide.asset is StoryV2Asset.Image) return
+        if (currentSlide.asset is StoryV2Asset.Image || currentSlide.asset.poster == null) return
         // The first reason is the true one. A slide already on its poster because the viewer turned animations off
         // must not be re-labelled a decode failure by whatever the silenced decoder reports afterwards.
         if (state.value.renderMode == SlideRenderMode.POSTER) return
@@ -384,6 +399,12 @@ internal class StoryPlaybackController(
      * back to its poster and the composition times it from there, from the position it had reached.
      */
     private fun updateStall(stalledForMs: Long) {
+        if (currentSlide.asset.poster == null) {
+            // Nothing to fall back to: the slide keeps waiting for its file, and the viewer sees that it is waiting.
+            val isStalled = stalledForMs > FREEZE_INDICATOR_DELAY_MS
+            if (state.value.isStalled != isStalled) state.update { it.copy(isStalled = isStalled) }
+            return
+        }
         if (stalledForMs <= STALL_TIMEOUT_MS) return
         if (state.value.renderMode == SlideRenderMode.POSTER) return
 
@@ -391,9 +412,25 @@ internal class StoryPlaybackController(
         degradeToPoster(StoryV2FallbackReason.ASSET_NOT_READY)
     }
 
+    /**
+     * Skipped slides stay in the story, so a loop meets them again and skips them again. Once none is left that can
+     * play, there is nothing to loop over, and the story ends as never shown.
+     */
+    private fun skipBrokenSlide() {
+        brokenSlideIds.add(currentSlide.id)
+        if (composition.slides.all { it.id in brokenSlideIds }) {
+            finish(
+                reason = StoryV2ExitReason.COMPLETED,
+                result = StoriesV2Result.Unavailable(StoriesV2Result.Unavailable.Reason.NO_USABLE_FRAME),
+            )
+            return
+        }
+        advance(StoryV2AdvanceReason.AUTO)
+    }
+
     /** Reported once per slide per story: a looping story would otherwise re-report the same broken file forever. */
     private fun reportAssetFailure(reason: StoryV2ErrorReason) {
-        if (currentSlide.id in fallbackSlideIds) return
+        if (currentSlide.id in fallbackSlideIds || currentSlide.id in brokenSlideIds) return
 
         analytics.send(
             StoriesV2Events.StoryErrorOccurred(
@@ -428,6 +465,7 @@ internal class StoryPlaybackController(
  * @property isManualEntry       the viewer opened this slide themselves, which makes it a new view
  * @property isPlayerDrivenEntry the only entry the renderer must not touch. Every other one restarts the asset,
  *                               including a loop back onto the very item the player is parked on
+ * @property isStalled           a slide without a poster is waiting for its asset long enough to say so
  */
 internal data class StoryPlaybackState(
     val slideIndex: Int,
@@ -440,6 +478,7 @@ internal data class StoryPlaybackState(
     val isFinished: Boolean,
     val pendingAction: StoryV2Action?,
     val renderMode: SlideRenderMode,
+    val isStalled: Boolean = false,
 ) {
 
     val isRunning: Boolean

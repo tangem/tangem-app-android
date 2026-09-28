@@ -2,6 +2,7 @@ package com.tangem.features.storiesv2.impl.ui
 
 import android.view.SurfaceView
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.aspectRatio
@@ -9,12 +10,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.viewinterop.AndroidView
 import coil.compose.AsyncImage
+import com.tangem.core.ui.ds2.loader.TangemLoader
+import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.features.storiesv2.impl.content.StoryV2ContentMode
 import com.tangem.features.storiesv2.impl.content.StoryV2MediaRef
 import com.tangem.features.storiesv2.impl.ui.state.StoriesV2UM
@@ -33,6 +37,7 @@ import java.io.File
 @Composable
 internal fun StorySlideContent(
     slide: StoriesV2UM.SlideUM,
+    playToken: Int,
     handle: StoryPlayerHandle,
     videoAspectRatio: Float?,
     modifier: Modifier = Modifier,
@@ -44,27 +49,43 @@ internal fun StorySlideContent(
 
         val isCoveredByAsset = slide.content is StoriesV2UM.SlideUM.Content.Video && slide.isAssetReady
         val poster = slide.poster
-        StoryMedia(
-            ref = poster,
-            contentMode = slide.contentMode,
-            modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer { alpha = if (isCoveredByAsset) 0f else 1f },
-            prefetchedPainter = (poster as? StoryV2MediaRef.DrawableResource)?.let { handle.posterPainter(it.id) },
-        )
+        if (poster != null) {
+            StoryMedia(
+                ref = poster,
+                contentMode = slide.contentMode,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer { alpha = if (isCoveredByAsset) 0f else 1f },
+                prefetchedPainter = (poster as? StoryV2MediaRef.DrawableResource)?.let { handle.posterPainter(it.id) },
+            )
+        }
 
         val content = slide.content
         if (content is StoriesV2UM.SlideUM.Content.VectorAnimation) {
             StoryVectorAnimation(
                 source = content.source,
-                positionMs = handle.slidePositionMs,
+                positionMs = { handle.slidePositionMs(playToken) },
                 durationMs = slide.durationMs,
                 contentMode = slide.contentMode,
                 modifier = Modifier.fillMaxSize(),
             )
         }
+
+        if (slide.isBuffering) {
+            // Dimmed rather than hidden: the frame the slide stopped on stays recognisable while it catches up.
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = BUFFERING_SCRIM_ALPHA)),
+            ) {
+                TangemLoader(size = TangemLoaderSize.X24)
+            }
+        }
     }
 }
+
+private const val BUFFERING_SCRIM_ALPHA = 0.5f
 
 @Composable
 private fun BoxScope.VideoSurface(handle: StoryPlayerHandle, contentMode: StoryV2ContentMode, aspectRatio: Float?) {
