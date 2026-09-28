@@ -137,7 +137,7 @@ internal class StoryPlaybackControllerTest {
         assertThat(results).containsExactly(StoriesV2Result.Completed)
         assertThat(events.count { it.event == "Story Closed" }).isEqualTo(1)
         assertThat(events.last { it.event == "Story Closed" }.params["Exit Reason"]).isEqualTo("completed")
-        assertThat(events.last { it.event == "Story Closed" }.params["Story Completed"]).isEqualTo("true")
+        assertThat(events.last { it.event == "Story Closed" }.params["Story Completed"]).isEqualTo("True")
     }
 
     @Test
@@ -363,6 +363,42 @@ internal class StoryPlaybackControllerTest {
     }
 
     @Test
+    fun `GIVEN a deeplink action WHEN clicked THEN only the route key is reported as the destination`() {
+        // Arrange — the query of an app link can name the wallet to open.
+        val action = StoryV2Action(
+            id = "upgrade",
+            label = stringReference(value = "Upgrade"),
+            style = StoryV2Action.Style.PRIMARY,
+            target = StoryV2Action.Target.Deeplink(uri = "tangem://hardware_wallet?user_wallet_id=ABC123"),
+        )
+        val controller = openController(composition = videoStory(actions = listOf(action)))
+
+        // Act
+        controller.onActionClicked(action)
+        pendingActions.single().end()
+
+        // Assert
+        assertThat(events.last { it.event == "Story Closed" }.params["Action Destination"])
+            .isEqualTo("hardware_wallet")
+    }
+
+    @Test
+    fun `GIVEN a story watched on posters WHEN it closes THEN only the properties of the spec are sent`() {
+        // Arrange
+        val controller = openController(composition = videoStory(), isReducedMotion = true)
+        controller.onTapForward()
+
+        // Act
+        controller.onCloseClicked()
+
+        // Assert
+        val sentProperties = events.flatMap { it.params.keys }.toSet()
+        assertThat(sentProperties).containsNoneOf("Story Version", "Fallback Reason", "Fallback Slides", "Watched")
+        val viewed = events.first { it.event == "Slide Viewed" }
+        assertThat(viewed.params["Slide Completed"]).isEqualTo("False")
+    }
+
+    @Test
     fun `GIVEN a close action WHEN clicked THEN the story is dismissed rather than routed`() {
         // Arrange
         val action = StoryV2Action(
@@ -546,8 +582,6 @@ internal class StoryPlaybackControllerTest {
 
         // Assert
         assertThat(controller.state.value.renderMode).isEqualTo(SlideRenderMode.POSTER)
-        controller.onTapForward()
-        assertThat(events.last { it.event == "Slide Viewed" }.params["Fallback Reason"]).isEqualTo("reduce_motion")
     }
 
     @Test
@@ -577,9 +611,6 @@ internal class StoryPlaybackControllerTest {
         val error = events.single { it.event == "Story Error Occurred" }
         assertThat(error.params["Error Stage"]).isEqualTo("asset_playback")
         assertThat(error.params["Error Reason"]).isEqualTo("timeout")
-
-        controller.onTapForward()
-        assertThat(events.last { it.event == "Slide Viewed" }.params["Fallback Reason"]).isEqualTo("asset_not_ready")
     }
 
     @Test
@@ -597,16 +628,16 @@ internal class StoryPlaybackControllerTest {
     }
 
     @Test
-    fun `GIVEN a slide on its poster for reduce motion WHEN playback then fails THEN the first reason is kept`() {
+    fun `GIVEN a slide on its poster for reduce motion WHEN playback then fails THEN no failure is reported`() {
         // Arrange
         val controller = openController(composition = videoStory(), isReducedMotion = true)
 
-        // Act — the silenced decoder is free to complain; that does not make this a technical fallback.
+        // Act — the silenced decoder is free to complain; that does not make this a technical failure.
         controller.onPlaybackFailed(reason = StoryV2ErrorReason.DECODE_FAILURE)
-        controller.onTapForward()
 
         // Assert
-        assertThat(events.last { it.event == "Slide Viewed" }.params["Fallback Reason"]).isEqualTo("reduce_motion")
+        assertThat(controller.state.value.renderMode).isEqualTo(SlideRenderMode.POSTER)
+        assertThat(events.none { it.event == "Story Error Occurred" }).isTrue()
     }
 
     @Test
@@ -725,9 +756,6 @@ internal class StoryPlaybackControllerTest {
         val error = events.last { it.event == "Story Error Occurred" }
         assertThat(error.params["Error Stage"]).isEqualTo("asset_playback")
         assertThat(error.params["Error Reason"]).isEqualTo("decode_failure")
-
-        controller.onCloseClicked()
-        assertThat(events.last { it.event == "Story Closed" }.params["Fallback Slides"]).isEqualTo("1")
     }
 
     @Test
@@ -743,7 +771,7 @@ internal class StoryPlaybackControllerTest {
     }
 
     @Test
-    fun `GIVEN slides visited more than once WHEN the story closes THEN watched counts unique slides`() {
+    fun `GIVEN slides visited more than once WHEN the story closes THEN slides watched counts unique slides`() {
         // Arrange
         val controller = openController(composition = videoStory())
         controller.onTapForward()
@@ -755,7 +783,7 @@ internal class StoryPlaybackControllerTest {
 
         // Assert
         val closed = events.last { it.event == "Story Closed" }
-        assertThat(closed.params["Watched"]).isEqualTo("2")
+        assertThat(closed.params["Slides Watched"]).isEqualTo("2")
         assertThat(closed.params["Slides Total"]).isEqualTo("3")
     }
 
@@ -903,7 +931,6 @@ internal class StoryPlaybackControllerTest {
         withPoster: Boolean = true,
     ) = StoryV2Composition(
         id = "test_story",
-        version = 7,
         origin = StoryV2Origin.BUNDLED,
         endBehavior = endBehavior,
         actions = actions,
@@ -924,7 +951,6 @@ internal class StoryPlaybackControllerTest {
 
     private fun imageStory() = StoryV2Composition(
         id = "image_story",
-        version = 1,
         origin = StoryV2Origin.BUNDLED,
         endBehavior = StoryV2EndBehavior.LOOP,
         actions = emptyList(),
