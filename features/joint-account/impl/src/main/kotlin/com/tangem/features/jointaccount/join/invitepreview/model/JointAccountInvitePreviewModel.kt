@@ -103,7 +103,7 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
 
     /** Once the selector has every unlocked wallet it stays ready: a later balance refresh must not hide the content */
     private val isSelectorReady: StateFlow<Boolean> = combine(portfolioFetcher.data, unlockedWallets) { data, wallets ->
-        wallets.all { wallet -> wallet.walletId in data.balances }
+        wallets.isNotEmpty() && wallets.all { wallet -> wallet.walletId in data.balances }
     }
         .filter { isReady -> isReady }
         .stateIn(modelScope, SharingStarted.Eagerly, false)
@@ -199,11 +199,6 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
         return getJointAccountInvitePreviewUseCase(walletId = walletId, inviteId = params.inviteId)
     }
 
-    /**
-     * Opened through the invite link on a cold start, the screen is ready before the wallet selector has its data,
-     * and a selector opened then shows nothing. The content waits for that data; a wallet that never reports must
-     * not hold the screen forever
-     */
     private suspend fun awaitSelectorReady() {
         val isReady = withTimeoutOrNull(SELECTOR_READY_TIMEOUT) { isSelectorReady.first { it } }
 
