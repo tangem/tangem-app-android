@@ -183,13 +183,6 @@ internal class CryptoFeedTabModel @Inject constructor(
             listManager.reload()
         }.launchIn(modelScope)
 
-        // every tab model is built when the feed opens, so only a real user change may report
-        combine(selectedCategory, selectedInterval, ::Pair)
-            .drop(1)
-            .distinctUntilChanged()
-            .onEach { (category, interval) -> sendSortByAnalytics(category, interval) }
-            .launchIn(modelScope)
-
         // the selector screen publishes here; drop(1) skips the value initialState already rendered
         categoryFilterController.selection.drop(1)
             .onEach(::applyCategorySelection)
@@ -262,12 +255,19 @@ internal class CryptoFeedTabModel @Inject constructor(
         )
     }
 
+    // reported from the user's own picks only: every tab model is built when the feed opens, and a
+    // category filter can reset the sort on its own
     private fun selectCategory(category: MarketPulseCategory) {
+        if (selectedCategory.value == category) return
         selectedCategory.value = category
+        sendSortByAnalytics(category, selectedInterval.value)
     }
 
-    private fun sortTabs(selected: MarketPulseCategory): ImmutableList<TangemTabItemUM> {
-        return MarketPulseCategory.entries
+    private fun sortTabs(
+        selected: MarketPulseCategory,
+        filter: MarketCategorySelection = categoryFilterController.selection.value,
+    ): ImmutableList<TangemTabItemUM> {
+        return availableCategories(filter)
             .map<MarketPulseCategory, TangemTabItemUM> { category ->
                 TangemTabItemUM.Content(
                     id = category.id,
@@ -277,6 +277,13 @@ internal class CryptoFeedTabModel @Inject constructor(
                 )
             }
             .toImmutableList()
+    }
+
+    /** The backend ranks buyers across the whole market only: under a CoinGecko category it returns nothing. */
+    private fun availableCategories(filter: MarketCategorySelection): List<MarketPulseCategory> {
+        return MarketPulseCategory.entries.filter { category ->
+            category != MarketPulseCategory.ExperiencedBuyers || filter.category == null
+        }
     }
 
     private fun applyCategorySelection(selection: MarketCategorySelection) {
@@ -293,7 +300,14 @@ internal class CryptoFeedTabModel @Inject constructor(
             )
         }
         updateMarketPulse { it.copy(categoriesFilter = categoriesFilterItem(selection)) }
-        listManager.reload()
+
+        if (selectedCategory.value in availableCategories(selection)) {
+            updateMarketPulse { it.copy(sortTabs = sortTabs(selected = selectedCategory.value, filter = selection)) }
+            listManager.reload()
+        } else {
+            // its collector re-renders the tabs and reloads the list
+            selectedCategory.value = MarketPulseCategory.MarketCap
+        }
     }
 
     private fun sendSortByAnalytics(category: MarketPulseCategory, interval: MarketPulseInterval) {
@@ -327,7 +341,9 @@ internal class CryptoFeedTabModel @Inject constructor(
     }
 
     private fun selectInterval(interval: MarketPulseInterval) {
+        if (selectedInterval.value == interval) return
         selectedInterval.value = interval
+        sendSortByAnalytics(selectedCategory.value, interval)
     }
 
     override fun onDestroy() {
