@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.testTag
@@ -338,36 +339,7 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
                     .clip(CircleShape),
             )
         }
-        is ContentSubtitle.OwnAccount -> InlineImageSubtitle(
-            template = stringResourceSafe(
-                subtitle.direction.templateResId(),
-                subtitle.accountName.resolveReference(),
-            ),
-            color = secondary,
-            afterIconColor = if (isFailed) secondary else primary,
-            textStyle = TangemTheme.typography3.caption.medium,
-            modifier = modifier,
-        ) {
-            val backgroundColor = if (isFailed) {
-                TangemTheme.colors3.bg.disabled
-            } else {
-                subtitle.iconBackgroundColor
-            }
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(backgroundColor),
-            ) {
-                Icon(
-                    imageVector = ImageVector.vectorResource(id = subtitle.iconResId),
-                    contentDescription = null,
-                    tint = TangemTheme.colors3.icon.staticDark,
-                    modifier = Modifier.size(10.dp),
-                )
-            }
-        }
+        is ContentSubtitle.OwnAccount -> OwnAccountSubtitle(subtitle = subtitle, status = status, modifier = modifier)
         is ContentSubtitle.OwnPaymentAccount -> InlineImageSubtitle(
             template = stringResourceSafe(
                 subtitle.direction.templateResId(),
@@ -520,27 +492,11 @@ private fun ProviderSubtitle(subtitle: ContentSubtitle.Provider, status: Status,
 @Composable
 private fun AssetOwnerIcon(owner: ContentSubtitle.AssetOwner?, isFailed: Boolean) {
     when (owner) {
-        is ContentSubtitle.AssetOwner.Account -> {
-            val backgroundColor = if (isFailed) {
-                TangemTheme.colors3.bg.disabled
-            } else {
-                owner.iconBackgroundColor
-            }
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(backgroundColor),
-            ) {
-                Icon(
-                    imageVector = ImageVector.vectorResource(id = owner.iconResId),
-                    contentDescription = null,
-                    tint = TangemTheme.colors3.icon.staticDark,
-                    modifier = Modifier.size(10.dp),
-                )
-            }
-        }
+        is ContentSubtitle.AssetOwner.Account -> PortfolioAvatar(
+            avatar = owner.avatar,
+            shape = ACCOUNT_AVATAR_SHAPE,
+            isFailed = isFailed,
+        )
         is ContentSubtitle.AssetOwner.PaymentAccount -> PaymentAccountIcon(size = AccountIconSize.ExtraSmall)
         is ContentSubtitle.AssetOwner.Wallet -> TangemDeviceIcon(
             state = owner.deviceIconUM,
@@ -578,13 +534,30 @@ private fun PlainAddressText(subtitle: ContentSubtitle.PlainAddress, status: Sta
 }
 
 /**
+ * Own-account counterparty subtitle: "to/from: {avatar} {account name}", with the avatar drawn as a 16dp rounded
+ * square — the shape accounts carry everywhere else in the app, unlike the circle of a contact.
+ */
+@Composable
+private fun OwnAccountSubtitle(subtitle: ContentSubtitle.OwnAccount, status: Status, modifier: Modifier = Modifier) {
+    val isFailed = status is Status.Failed
+    InlineImageSubtitle(
+        template = stringResourceSafe(subtitle.direction.templateResId(), subtitle.accountName.resolveReference()),
+        color = TangemTheme.colors3.text.secondary,
+        afterIconColor = if (isFailed) TangemTheme.colors3.text.secondary else TangemTheme.colors3.text.primary,
+        textStyle = TangemTheme.typography3.caption.medium,
+        modifier = modifier,
+    ) {
+        PortfolioAvatar(avatar = subtitle.avatar, shape = ACCOUNT_AVATAR_SHAPE, isFailed = isFailed)
+    }
+}
+
+/**
  * Address-book counterparty subtitle: "to: {avatar} {contact name}", with the avatar drawn as a 16dp circle — the shape
  * contacts carry everywhere else in the app, unlike the rounded square of an own account.
  */
 @Composable
 private fun ContactSubtitle(subtitle: ContentSubtitle.Contact, status: Status, modifier: Modifier = Modifier) {
     val isFailed = status is Status.Failed
-    val avatar = subtitle.avatar
     InlineImageSubtitle(
         template = stringResourceSafe(subtitle.direction.templateResId(), subtitle.contactName),
         color = TangemTheme.colors3.text.secondary,
@@ -592,30 +565,43 @@ private fun ContactSubtitle(subtitle: ContentSubtitle.Contact, status: Status, m
         textStyle = TangemTheme.typography3.caption.medium,
         modifier = modifier,
     ) {
-        val avatarColor = when (avatar) {
-            is ContentSubtitle.ContactAvatar.Monogram -> avatar.color
-            is ContentSubtitle.ContactAvatar.Resource -> avatar.color
-        }
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(CircleShape)
-                .background(if (isFailed) TangemTheme.colors3.bg.disabled else avatarColor),
-        ) {
-            when (avatar) {
-                is ContentSubtitle.ContactAvatar.Monogram -> Text(
-                    text = avatar.char.uppercase(),
-                    color = TangemTheme.colors3.text.staticDark.primary,
-                    style = TangemTheme.typography2.captionMedium11,
-                )
-                is ContentSubtitle.ContactAvatar.Resource -> Icon(
-                    imageVector = ImageVector.vectorResource(id = avatar.resId),
-                    contentDescription = null,
-                    tint = TangemTheme.colors3.icon.staticDark,
-                    modifier = Modifier.size(10.dp),
-                )
-            }
+        PortfolioAvatar(avatar = subtitle.avatar, shape = CircleShape, isFailed = isFailed)
+    }
+}
+
+/**
+ * The inline portfolio avatar every counterparty subtitle that names an account or a contact draws: the monogram of a
+ * `Letter` icon, the picked drawable otherwise, over the icon's own color. Only [shape] tells the two callers apart —
+ * a circle for a contact, [ACCOUNT_AVATAR_SHAPE] for an account — and a failed row greys the fill out.
+ *
+ * A [Monogram][ContentSubtitle.PortfolioAvatar.Monogram] resolves its letter here rather than in the converter: an
+ * account name may be a string resource, so its first character depends on the composition's locale.
+ */
+@Composable
+private fun PortfolioAvatar(avatar: ContentSubtitle.PortfolioAvatar, shape: Shape, isFailed: Boolean) {
+    val avatarColor = when (avatar) {
+        is ContentSubtitle.PortfolioAvatar.Monogram -> avatar.color
+        is ContentSubtitle.PortfolioAvatar.Resource -> avatar.color
+    }
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .fillMaxSize()
+            .clip(shape)
+            .background(if (isFailed) TangemTheme.colors3.bg.disabled else avatarColor),
+    ) {
+        when (avatar) {
+            is ContentSubtitle.PortfolioAvatar.Monogram -> Text(
+                text = avatar.name.resolveReference().take(n = 1).uppercase(),
+                color = TangemTheme.colors3.text.staticDark.primary,
+                style = TangemTheme.typography2.captionMedium11,
+            )
+            is ContentSubtitle.PortfolioAvatar.Resource -> Icon(
+                imageVector = ImageVector.vectorResource(id = avatar.resId),
+                contentDescription = null,
+                tint = TangemTheme.colors3.icon.staticDark,
+                modifier = Modifier.size(10.dp),
+            )
         }
     }
 }
@@ -854,7 +840,10 @@ private fun Preview_TransactionItem_Send_Contact() {
                     subtitle = ContentSubtitle.Contact(
                         direction = ContentSubtitle.Direction.TO,
                         contactName = "Binance",
-                        avatar = ContentSubtitle.ContactAvatar.Monogram(char = 'B', color = Color(0xFF007FFF)),
+                        avatar = ContentSubtitle.PortfolioAvatar.Monogram(
+                            name = stringReference("Binance"),
+                            color = Color(0xFF007FFF),
+                        ),
                     ),
                     timestamp = 0L,
                 ),
@@ -871,7 +860,7 @@ private fun Preview_TransactionItem_Send_Contact() {
                     subtitle = ContentSubtitle.Contact(
                         direction = ContentSubtitle.Direction.TO,
                         contactName = "Mom",
-                        avatar = ContentSubtitle.ContactAvatar.Resource(
+                        avatar = ContentSubtitle.PortfolioAvatar.Resource(
                             resId = R.drawable.ic_user_24,
                             color = Color(0xFF32CB77),
                         ),
@@ -1090,8 +1079,10 @@ private fun Preview_TransactionItem_Express_Owner() {
                         icon = tokenIcon,
                         owner = ContentSubtitle.AssetOwner.Account(
                             name = stringReference("Family"),
-                            iconResId = R.drawable.ic_wallet_24,
-                            iconBackgroundColor = Color(0xFF0099FF),
+                            avatar = ContentSubtitle.PortfolioAvatar.Monogram(
+                                name = stringReference("Family"),
+                                color = Color(0xFF0099FF),
+                            ),
                         ),
                     ),
                     timestamp = 0L,
@@ -1124,3 +1115,6 @@ private fun Preview_TransactionItem_Express_Owner() {
 }
 
 // endregion
+
+/** Accounts carry a rounded square wherever their avatar is drawn; only a contact's avatar is a circle. */
+private val ACCOUNT_AVATAR_SHAPE = RoundedCornerShape(size = 4.dp)
