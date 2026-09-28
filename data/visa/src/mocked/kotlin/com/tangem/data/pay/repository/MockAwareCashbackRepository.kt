@@ -24,7 +24,12 @@ import java.util.Currency
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/** In MOCK env returns canned cashback data; otherwise delegates to [DefaultCashbackRepository]. */
+/**
+ * In MOCK env returns canned cashback data; otherwise delegates to [DefaultCashbackRepository].
+ *
+ * Cashback UI tests drive the program status, display mode and amounts from WireMock instead, so they opt out
+ * via the [UITEST_CASHBACK_FROM_API_KEY] system property.
+ */
 @Singleton
 internal class MockAwareCashbackRepository @Inject constructor(
     private val real: DefaultCashbackRepository,
@@ -34,7 +39,8 @@ internal class MockAwareCashbackRepository @Inject constructor(
     private val isMockMode: Boolean
         get() = apiConfigsManager
             .getEnvironmentConfig(TangemPay.Bff.ID)
-            .environment == ApiEnvironment.MOCK
+            .environment == ApiEnvironment.MOCK &&
+            System.getProperty(UITEST_CASHBACK_FROM_API_KEY) != "1"
 
     override suspend fun getCashbackSummary(userWalletId: UserWalletId): Either<VisaApiError, CashbackSummary> {
         if (isMockMode) return MOCK_SUMMARY.right()
@@ -78,6 +84,8 @@ internal class MockAwareCashbackRepository @Inject constructor(
         real.setDeactivationBannerDismissed(userWalletId)
 
     private companion object {
+        const val UITEST_CASHBACK_FROM_API_KEY = "uitest.tangempay.cashback_from_api"
+
         val MOCK_SUMMARY = CashbackSummary.Enabled(
             displayMode = CashbackDisplayMode.FULL,
             cashback = TangemPayCashback(
