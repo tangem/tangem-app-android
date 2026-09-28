@@ -12,15 +12,13 @@ import com.tangem.core.ui.haptic.TangemHapticEffect
  * before building this, so the player behaves identically whether the story shipped in the apk or arrived over the
  * network.
  *
- * @property id       stable slug, also the analytics identity
- * @property version  bumped by any change to the composition
- * @property origin   reported to analytics
- * @property actions  inherited by slides that do not override them
- * @property slides   at least one; slides that could not be resolved are already filtered out
+ * @property id      stable slug, also the analytics identity
+ * @property origin  reported to analytics
+ * @property actions inherited by slides that do not override them
+ * @property slides  at least one; slides that could not be resolved are already filtered out
  */
 internal data class StoryV2Composition(
     val id: String,
-    val version: Int,
     val origin: StoryV2Origin,
     val endBehavior: StoryV2EndBehavior,
     val actions: List<StoryV2Action>,
