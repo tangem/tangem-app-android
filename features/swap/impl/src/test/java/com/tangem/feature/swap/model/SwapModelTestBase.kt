@@ -29,6 +29,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
+import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSwapUseCase
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
@@ -130,6 +131,7 @@ internal abstract class SwapModelTestBase {
     protected val calculateAmountUseCase: CalculateAmountUseCase = mockk(relaxed = true)
     protected val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase = mockk(relaxed = true)
     protected val getCurrencyUSDQuoteUseCase: GetCurrencyUSDQuoteUseCase = mockk(relaxed = true)
+    protected val recordTokenTransferFromSwapUseCase: RecordTokenTransferFromSwapUseCase = mockk(relaxed = true)
     protected val backupErrorWarningSender: BackupErrorWarningSender = mockk {
         every { forWallet(any(), any(), any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
     }
@@ -274,6 +276,7 @@ internal abstract class SwapModelTestBase {
         calculateAmountUseCase = calculateAmountUseCase,
         isHighNetworkFeeUseCase = isHighNetworkFeeUseCase,
         getCurrencyUSDQuoteUseCase = getCurrencyUSDQuoteUseCase,
+        recordTokenTransferFromSwapUseCase = recordTokenTransferFromSwapUseCase,
         backupErrorWarningSender = backupErrorWarningSender,
     )
 

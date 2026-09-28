@@ -157,12 +157,16 @@ private fun FeeSelectorStaticPart(onReadMoreClick: () -> Unit, modifier: Modifie
 }
 
 @Composable
-private fun FeeError(state: FeeSelectorUM.Error) {
-    if (state.error is GetFeeError.GaslessError.NotEnoughFunds) {
+private fun RowScope.FeeError(state: FeeSelectorUM.Error) {
+    val warning = state.error.warningText()
+    if (warning != null) {
         Text(
-            text = stringResourceSafe(R.string.gasless_not_enough_funds_to_cover_token_fee),
+            // A warning sentence must wrap next to the title instead of squeezing it out of the row.
+            modifier = Modifier.weight(1f),
+            text = warning,
             color = TangemTheme.colors.text.warning,
             style = TangemTheme.typography.body2,
+            textAlign = TextAlign.End,
         )
     } else {
         Text(
@@ -171,6 +175,19 @@ private fun FeeError(state: FeeSelectorUM.Error) {
             style = TangemTheme.typography.body2,
         )
     }
+}
+
+@Composable
+private fun GetFeeError.warningText(): String? = when (this) {
+    is GetFeeError.GaslessError.NotEnoughFunds -> {
+        stringResourceSafe(R.string.gasless_not_enough_funds_to_cover_token_fee)
+    }
+    is GetFeeError.GaslessError.TronActivationRateLimited -> if (isPerWallet) {
+        stringResourceSafe(R.string.gasless_tron_activation_attempts_limit)
+    } else {
+        stringResourceSafe(R.string.gasless_tron_activation_try_again_later)
+    }
+    else -> null
 }
 
 @Composable

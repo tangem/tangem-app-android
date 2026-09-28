@@ -4,17 +4,17 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
@@ -27,25 +27,37 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.account.AccountIcon
+import com.tangem.common.ui.account.AccountIconUM
+import com.tangem.core.ui.components.account.AccountIconSize
+import com.tangem.core.ui.components.currency.icon.CurrencyIcon
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.topbar.TangemTopBar
+import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chevron_left_20
+import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.hub.model.WithdrawHubState
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.BankSectionUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.RecentRecipientUM
+import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.RecentTokenUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.RecentsUM
+import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.TokenRecentsUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUMFactory
 import kotlinx.collections.immutable.persistentListOf
+
+private val TokenIconSize = 32.dp
 
 @Composable
 internal fun TangemPayWithdrawHubScreen(state: TangemPayWithdrawHubUM, modifier: Modifier = Modifier) {
@@ -91,10 +103,22 @@ private fun SwapSection(state: TangemPayWithdrawHubUM.SwapSectionUM) {
             title = resourceReference(R.string.tangempay_withdraw_hub_swap_section_title),
             subtitle = resourceReference(R.string.tangempay_withdraw_hub_swap_section_subtitle),
         )
-        HubActionCard(
-            state = state.withinPortfolio,
-            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp),
-        )
+        LazyRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp, bottom = 12.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            item(key = "within_portfolio") { HubActionCard(state = state.withinPortfolio) }
+            when (val recents = state.recents) {
+                TokenRecentsUM.Loading -> recentsShimmerItems(keyPrefix = "swap_recents_shimmer")
+                TokenRecentsUM.Empty -> item(key = "swap_recents_empty") { RecentsEmptyCard() }
+                is TokenRecentsUM.Content -> items(items = recents.tokens, key = { it.id }) { token ->
+                    RecentTokenCard(state = token, onClick = { recents.onTokenClick(token.id) })
+                }
+            }
+        }
     }
 }
 
@@ -120,27 +144,18 @@ internal fun HubSectionHeader(title: TextReference, subtitle: TextReference, mod
 }
 
 @Composable
-private fun HubActionCard(state: TangemPayWithdrawHubUM.ActionCardUM, modifier: Modifier = Modifier) {
+private fun HubActionCard(state: TangemPayWithdrawHubUM.ActionCardUM) {
     Column(
-        modifier = modifier
-            .width(156.dp)
-            .heightIn(min = 136.dp)
-            .clip(RoundedCornerShape(24.dp))
+        modifier = Modifier
+            .size(width = CardWidth, height = RecentsCardHeight)
+            .clip(RoundedCornerShape(RecentsCardCornerRadius))
             .background(TangemTheme.colors3.bg.status.infoSubtle)
             .clickable(onClick = state.onClick)
             .padding(16.dp),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(32.dp)
-                .background(color = TangemTheme.colors3.bg.brand, shape = CircleShape),
-        ) {
-            TangemIcon(
-                modifier = Modifier.size(20.dp),
-                tangemIconUM = state.icon,
-            )
+        IconCircle(background = TangemTheme.colors3.bg.brand) {
+            TangemIcon(modifier = Modifier.size(20.dp), tangemIconUM = state.icon)
         }
         Text(
             text = state.title.resolveReference(),
@@ -149,6 +164,58 @@ private fun HubActionCard(state: TangemPayWithdrawHubUM.ActionCardUM, modifier: 
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
+    }
+}
+
+@Composable
+private fun RecentTokenCard(state: RecentTokenUM, onClick: () -> Unit) {
+    RecentsCard(onClick = onClick) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top,
+        ) {
+            CurrencyIcon(
+                state = state.icon,
+                shouldDisplayNetwork = false,
+                withFixedSize = false,
+                iconSize = TokenIconSize,
+                modifier = Modifier.size(TokenIconSize),
+            )
+            TangemBadge(
+                text = resourceReference(R.string.tangempay_withdraw_hub_recent_badge),
+                variant = TangemBadge.Variant.Tinted,
+                status = TangemBadge.Status.Neutral,
+                size = TangemBadge.Size.X4,
+            )
+        }
+        Column {
+            Text(
+                text = state.name,
+                style = TangemTheme.typography3.subheading.medium,
+                color = TangemTheme.colors3.text.primary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    modifier = Modifier.weight(weight = 1f, fill = false),
+                    text = state.accountName.resolveReference(),
+                    style = TangemTheme.typography3.caption.medium,
+                    color = TangemTheme.colors3.text.secondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                AccountIcon(
+                    name = state.accountName,
+                    icon = state.accountIcon,
+                    size = AccountIconSize.ExtraSmall,
+                )
+            }
+        }
     }
 }
 
@@ -183,6 +250,20 @@ private class BankSectionPreviewProvider : PreviewParameterProvider<BankSectionU
     )
 }
 
+private class SwapRecentsPreviewProvider : PreviewParameterProvider<TokenRecentsUM> {
+    override val values: Sequence<TokenRecentsUM> = sequenceOf(
+        TokenRecentsUM.Loading,
+        TokenRecentsUM.Empty,
+        TokenRecentsUM.Content(
+            tokens = persistentListOf(
+                previewRecentToken(id = "1", name = "Polygon", accountName = "Main account"),
+                previewRecentToken(id = "2", name = "Tether", accountName = "Savings"),
+            ),
+            onTokenClick = {},
+        ),
+    )
+}
+
 private fun previewContent(recents: RecentsUM): BankSectionUM.Content = BankSectionUM.Content(
     toPersonalAccount = previewActionCard(
         iconRes = R.drawable.ic_user_filled_16,
@@ -202,18 +283,45 @@ private fun previewActionCard(iconRes: Int, titleRes: Int): TangemPayWithdrawHub
         onClick = {},
     )
 
-private fun previewState(bankSection: BankSectionUM): TangemPayWithdrawHubUM = TangemPayWithdrawHubUMFactory(
-    callbacks = TangemPayWithdrawHubUMFactory.Callbacks(
-        onBackClick = {},
-        onWithinPortfolioClick = {},
-        onToPersonalAccountClick = {},
-        onToBusinessAccountClick = {},
-        onRecentRecipientClick = {},
-        onSeeAllClick = {},
-        onRetryRecentsClick = {},
-        onRetryBankSectionClick = {},
+private fun previewRecentToken(id: String, name: String, accountName: String): RecentTokenUM = RecentTokenUM(
+    id = id,
+    icon = CurrencyIconState.CoinIcon(
+        url = null,
+        fallbackResId = R.drawable.ic_user_filled_16,
+        isGrayscale = false,
+        shouldShowCustomBadge = false,
     ),
-).create(WithdrawHubState()).copy(bankSection = bankSection)
+    name = name,
+    accountName = stringReference(accountName),
+    accountIcon = AccountIconUM.CryptoPortfolio(
+        value = CryptoPortfolioIcon.Icon.Letter,
+        color = CryptoPortfolioIcon.Color.Azure,
+    ),
+)
+
+private fun previewState(
+    bankSection: BankSectionUM,
+    tokenRecents: TokenRecentsUM = TokenRecentsUM.Loading,
+): TangemPayWithdrawHubUM {
+    val state = TangemPayWithdrawHubUMFactory(
+        callbacks = TangemPayWithdrawHubUMFactory.Callbacks(
+            onBackClick = {},
+            onWithinPortfolioClick = {},
+            onRecentTokenClick = {},
+            onToPersonalAccountClick = {},
+            onToBusinessAccountClick = {},
+            onRecentRecipientClick = {},
+            onSeeAllClick = {},
+            onRetryRecentsClick = {},
+            onRetryBankSectionClick = {},
+        ),
+    ).create(WithdrawHubState())
+
+    return state.copy(
+        bankSection = bankSection,
+        swapSection = state.swapSection.copy(recents = tokenRecents),
+    )
+}
 
 @Preview(showBackground = true)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
@@ -223,5 +331,18 @@ private fun TangemPayWithdrawHubScreenPreview(
 ) {
     TangemThemePreviewRedesign {
         TangemPayWithdrawHubScreen(state = previewState(bankSection))
+    }
+}
+
+@Preview(showBackground = true)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun TangemPayWithdrawHubSwapRecentsPreview(
+    @PreviewParameter(SwapRecentsPreviewProvider::class) tokenRecents: TokenRecentsUM,
+) {
+    TangemThemePreviewRedesign {
+        TangemPayWithdrawHubScreen(
+            state = previewState(bankSection = BankSectionUM.Loading, tokenRecents = tokenRecents),
+        )
     }
 }

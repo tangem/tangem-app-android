@@ -134,6 +134,10 @@ class GetAvailableFeeTokensUseCase(
      * The Tron gasless backend compensates the fee out of the sent token, so [sentCurrencyStatus] is the
      * only token that can pay. Sponsorability is decided by [isTronGaslessSupportedUseCase] — the one the
      * quote path uses — so the offered list and the quote cannot disagree.
+     *
+     * When the service sponsors account activation, a non-activated account still gets the token offered:
+     * the quote path refuses it with a fee-row error when the balance is below the activation minimum,
+     * which tells the user what to do, whereas dropping the token silently leaves only TRX they do not have.
      */
     private suspend fun getTronGaslessTokens(
         userWallet: UserWallet,

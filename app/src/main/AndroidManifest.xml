@@ -365,7 +365,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="shtorka"
+                    android:host="discover"
                     android:scheme="tangem" />
             </intent-filter>
             <intent-filter>
