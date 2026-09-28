@@ -1,128 +1,35 @@
 package com.tangem.data.walletconnect.initialize
 
-import android.app.Application
-import com.reown.android.Core
-import com.reown.android.CoreClient
-import com.reown.android.relay.ConnectionType
-import com.reown.walletkit.client.Wallet
-import com.reown.walletkit.client.WalletKit
-import com.tangem.data.walletconnect.pair.WcPairSdkDelegate
-import com.tangem.data.walletconnect.request.DefaultWcRequestService
-import com.tangem.data.walletconnect.sessions.DefaultWcSessionsManager
-import com.tangem.domain.walletconnect.WC_TAG
-import com.tangem.data.walletconnect.utils.WcSdkObserver
+import com.tangem.data.walletconnect.sdk.WcSdk
+import com.tangem.data.walletconnect.store.WalletConnectStore
+import com.tangem.domain.walletconnect.featuretoggle.WalletConnectFeatureToggles
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
-import com.tangem.utils.logging.TangemLogger
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 
 internal class DefaultWcInitializeUseCase(
-    private val application: Application,
-    private val sessionsManager: DefaultWcSessionsManager,
-    private val networkService: DefaultWcRequestService,
-    private val pairSdkDelegate: WcPairSdkDelegate,
+    private val wcSdk: WcSdk,
+    private val store: WalletConnectStore,
+    private val featureToggles: WalletConnectFeatureToggles,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : WcInitializeUseCase {
 
-    private val wcSdkObservers = mutableSetOf<WcSdkObserver>(
-        sessionsManager,
-        networkService,
-        pairSdkDelegate,
-    )
+    override suspend fun ensureInitialized() = wcSdk.ensureInitialized()
 
-    override fun init(projectId: String) {
-        val relayUrl = "relay.walletconnect.com"
-        val serverUrl = "wss://$relayUrl?projectId=$projectId"
-        val connectionType = ConnectionType.AUTOMATIC
-
-        val appMetaData = Core.Model.AppMetaData(
-            name = "Tangem",
-            description = "Tangem Wallet",
-            url = "tangem.com",
-            icons = listOf(
-                "https://user-images.githubusercontent.com/24321494/124071202-72a00900-da58-11eb-935a-dcdab21de52b.png",
-            ),
-            redirect = "kotlin-wallet-wc:/request", // Custom Redirect URI
-        )
-
-        CoreClient.initialize(
-            relayServerUrl = serverUrl,
-            connectionType = connectionType,
-            application = application,
-            metaData = appMetaData,
-        ) { error ->
-            TangemLogger.withTag(WC_TAG).e("Error while initializing client: $error")
+    override suspend fun initializeOnAppStart() {
+        if (!featureToggles.isOnDemandInitEnabled) {
+            wcSdk.ensureInitialized()
+            return
         }
 
-        WalletKit.initialize(
-            Wallet.Params.Init(core = CoreClient),
-            onSuccess = {
-                val walletDelegate = defineWalletDelegate()
-                WalletKit.setWalletDelegate(walletDelegate)
-                wcSdkObservers.forEach { it.onWcSdkInit() }
-                TangemLogger.withTag(WC_TAG).i("onWcSdkInit")
-            },
-            onError = { error ->
-                TangemLogger.withTag(WC_TAG).e("Error while initializing Web3Wallet: $error")
-            },
-        )
-    }
-
-    private fun defineWalletDelegate() = object : WalletKit.WalletDelegate {
-        override val onSessionAuthenticate: ((Wallet.Model.SessionAuthenticate, Wallet.Model.VerifyContext) -> Unit)?
-            get() = super.onSessionAuthenticate
-
-        override fun onConnectionStateChange(state: Wallet.Model.ConnectionState) {
-            TangemLogger.withTag(WC_TAG).i("sdk callback onConnectionStateChange isAvailable=${state.isAvailable}")
-            wcSdkObservers.forEach { it.onConnectionStateChange(state) }
+        // Both stores are persisted by the app itself, so this answers without waking the SDK. A pending
+        // approval counts: the process can die between approving a session and its settlement, and that
+        // settlement only arrives over a live SDK.
+        val hasLiveWork = withContext(dispatchers.io) {
+            store.sessions.first().isNotEmpty() || store.pendingApproval.first().isNotEmpty()
         }
 
-        override fun onError(error: Wallet.Model.Error) {
-            TangemLogger.withTag(WC_TAG).e("sdk callback onError", error.throwable)
-            wcSdkObservers.forEach { it.onError(error) }
-        }
-
-        override fun onProposalExpired(proposal: Wallet.Model.ExpiredProposal) {
-            TangemLogger.withTag(WC_TAG).i("sdk callback onProposalExpired $proposal")
-            wcSdkObservers.forEach { it.onProposalExpired(proposal) }
-        }
-
-        override fun onRequestExpired(request: Wallet.Model.ExpiredRequest) {
-            TangemLogger.withTag(WC_TAG).i("sdk callback onRequestExpired $request")
-            wcSdkObservers.forEach { it.onRequestExpired(request) }
-        }
-
-        override fun onSessionDelete(sessionDelete: Wallet.Model.SessionDelete) {
-            TangemLogger.withTag(WC_TAG).i("sdk callback onSessionDelete $sessionDelete")
-            wcSdkObservers.forEach { it.onSessionDelete(sessionDelete) }
-        }
-
-        override fun onSessionExtend(session: Wallet.Model.Session) {
-            TangemLogger.withTag(WC_TAG).i("sdk callback onSessionExtend $session")
-            wcSdkObservers.forEach { it.onSessionExtend(session) }
-        }
-
-        override fun onSessionProposal(
-            sessionProposal: Wallet.Model.SessionProposal,
-            verifyContext: Wallet.Model.VerifyContext,
-        ) {
-            TangemLogger.withTag(WC_TAG).i("sdk callback onSessionProposal $sessionProposal")
-            wcSdkObservers.forEach { it.onSessionProposal(sessionProposal, verifyContext) }
-        }
-
-        override fun onSessionRequest(
-            sessionRequest: Wallet.Model.SessionRequest,
-            verifyContext: Wallet.Model.VerifyContext,
-        ) {
-            TangemLogger.withTag(WC_TAG).i("sdk callback onSessionRequest $sessionRequest")
-            wcSdkObservers.forEach { it.onSessionRequest(sessionRequest, verifyContext) }
-        }
-
-        override fun onSessionSettleResponse(settleSessionResponse: Wallet.Model.SettledSessionResponse) {
-            TangemLogger.withTag(WC_TAG).i("sdk callback onSessionSettleResponse $settleSessionResponse")
-            wcSdkObservers.forEach { it.onSessionSettleResponse(settleSessionResponse) }
-        }
-
-        override fun onSessionUpdateResponse(sessionUpdateResponse: Wallet.Model.SessionUpdateResponse) {
-            TangemLogger.withTag(WC_TAG).i("sdk callback onSessionUpdateResponse $sessionUpdateResponse")
-            wcSdkObservers.forEach { it.onSessionUpdateResponse(sessionUpdateResponse) }
-        }
+        if (hasLiveWork) wcSdk.ensureInitialized()
     }
 }
