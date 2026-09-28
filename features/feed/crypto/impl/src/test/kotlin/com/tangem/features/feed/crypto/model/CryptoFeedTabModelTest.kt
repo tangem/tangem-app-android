@@ -35,6 +35,8 @@ import com.tangem.features.feed.nav.FeedTabId
 import com.tangem.features.feed.v2.FeedEntryController
 import com.tangem.features.feed.v2.FeedEntryFilter
 import com.tangem.features.feed.v2.FeedEntryRequest
+import com.tangem.features.feed.crypto.model.list.MarketPulseCategory.ExperiencedBuyers
+import com.tangem.features.feed.crypto.model.list.MarketPulseCategory.MarketCap
 import com.tangem.features.feed.crypto.model.list.MarketPulseCategory.TopGainers
 import com.tangem.features.feed.crypto.model.list.MarketPulseCategory.TopLosers
 import com.tangem.features.feed.crypto.model.list.MarketPulseInterval
@@ -299,6 +301,74 @@ internal class CryptoFeedTabModelTest {
         // Assert
         assertThat(actions.reloadCount()).isEqualTo(reloadsBefore + 1)
     }
+
+    @Test
+    fun `GIVEN no filter applied WHEN the tab opens THEN buyers is offered and trending is not`() = runTest {
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.sortTabIds()).containsExactly(
+            MarketCap.id,
+            TopGainers.id,
+            TopLosers.id,
+            ExperiencedBuyers.id,
+        ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN a category applied WHEN the tabs render THEN buyers is not offered`() = runTest {
+        // Arrange — the backend ranks buyers across the whole market only and returns nothing under a
+        // CoinGecko category
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        filterController.onSelectionApplied(selectionOf(id = "layer-1", name = "Layer 1"))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.sortTabIds()).containsExactly(MarketCap.id, TopGainers.id, TopLosers.id).inOrder()
+    }
+
+    @Test
+    fun `GIVEN a category applied WHEN the filter is cleared THEN buyers is offered again`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        filterController.onSelectionApplied(selectionOf(id = "layer-1", name = "Layer 1"))
+        advanceUntilIdle()
+
+        // Act
+        filterController.onSelectionApplied(MarketCategorySelection())
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.sortTabIds()).contains(ExperiencedBuyers.id)
+    }
+
+    @Test
+    fun `GIVEN sorted by buyers WHEN a category is applied THEN the list is refetched once by market cap`() =
+        runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            model.sortTab(ExperiencedBuyers).onClick()
+            advanceUntilIdle()
+            actions.clear()
+            sentEvents.clear()
+
+            // Act
+            filterController.onSelectionApplied(selectionOf(id = "layer-1", name = "Layer 1"))
+            advanceUntilIdle()
+
+            // Assert — the fallback is not the user's pick, so no sort by is reported for it
+            assertThat(actions.reloadParams().map { it.order to it.geckoCategoryId })
+                .containsExactly(TokenMarketListConfig.Order.ByRating to "layer-1")
+            assertThat(model.sortTab(MarketCap).isSelected).isTrue()
+            assertThat(sectionEvents().filterIsInstance<FeedSectionAnalyticsEvent.SortBy>()).isEmpty()
+        }
 
     @Test
     fun `GIVEN the indicators load WHEN the tab opens THEN the block shows them`() = runTest {
@@ -587,6 +657,24 @@ internal class CryptoFeedTabModelTest {
     }
 
     @Test
+    fun `GIVEN sorted by gainers WHEN gainers is tapped again THEN sort by is not reported again`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.sortTab(TopGainers).onClick()
+        advanceUntilIdle()
+        sentEvents.clear()
+
+        // Act
+        model.sortTab(TopGainers).onClick()
+        model.intervalMenu().onOptionClick(model.intervalMenu().selected)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(sectionEvents()).isEmpty()
+    }
+
+    @Test
     fun `GIVEN the tab open WHEN the interval changes THEN sort by is reported with the new period`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
@@ -684,11 +772,18 @@ internal class CryptoFeedTabModelTest {
         .filterIsInstance<TangemTabItemUM.Content>()
         .first { it.id == category.id }
 
+    private fun CryptoFeedTabModel.sortTabIds(): List<String> = uiState.value.marketPulse.sortTabs
+        .filterIsInstance<TangemTabItemUM.Content>()
+        .map { it.id }
+
     private fun List<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>.reloadCount() =
         count { it is BatchAction.Reload<*> }
 
     private fun List<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>.reloadCategoryIds() =
-        filterIsInstance<BatchAction.Reload<TokenMarketListConfig>>().map { it.requestParams.geckoCategoryId }
+        reloadParams().map { it.geckoCategoryId }
+
+    private fun List<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>.reloadParams() =
+        filterIsInstance<BatchAction.Reload<TokenMarketListConfig>>().map { it.requestParams }
 
     private fun createModel(testScope: TestScope): CryptoFeedTabModel {
         val testDispatcher = StandardTestDispatcher(testScope.testScheduler)
