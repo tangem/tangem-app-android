@@ -157,7 +157,9 @@ internal class PolymarketEventDetailsContentTransformerTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun transformOutcomeLabel(model: OutcomeLabelModel) {
+        fun `GIVEN outcome price WHEN converted THEN displays tenths of a cent within unresolved bounds`(
+            model: OutcomeLabelModel,
+        ) {
             // Arrange
             val event = createEvent(
                 markets = listOf(
@@ -177,8 +179,10 @@ internal class PolymarketEventDetailsContentTransformerTest {
         private fun provideTestModels(): List<OutcomeLabelModel> = listOf(
             // An implied probability doubles as the outcome share price in cents.
             OutcomeLabelModel(title = "Yes", probability = BigDecimal("0.25"), expectedPrice = "25¢"),
-            // Half-up rounding to a whole cent.
-            OutcomeLabelModel(title = "No", probability = BigDecimal("0.746"), expectedPrice = "75¢"),
+            OutcomeLabelModel(title = "No", probability = BigDecimal("0.746"), expectedPrice = "74.6¢"),
+            OutcomeLabelModel(title = "Yes", probability = BigDecimal("0.7455"), expectedPrice = "74.6¢"),
+            OutcomeLabelModel(title = "Yes", probability = BigDecimal("0.0004"), expectedPrice = "0.1¢"),
+            OutcomeLabelModel(title = "No", probability = BigDecimal("0.9995"), expectedPrice = "99.9¢"),
             OutcomeLabelModel(title = "Yes", probability = null, expectedPrice = DASH_SIGN),
         )
     }
