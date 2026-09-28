@@ -22,6 +22,7 @@ dependencies {
 
     api(deps.moshi)
     implementation(deps.moshi.adapters.ext)
+    implementation(deps.okio)
     ksp(deps.moshi.kotlin.codegen)
     api(deps.retrofit)
     api(deps.jodatime)

@@ -48,6 +48,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.TextReference
@@ -62,6 +63,8 @@ import com.tangem.core.ui.res.generated.icons.ic_search_20
 
 /**
  * Search component (DS V3)
+ *
+ * Version: 1.0.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=3953-249&m=dev)
  *
@@ -111,6 +114,8 @@ fun TangemSearch(
 }
 
 object TangemSearch {
+
+    val version = DsVersion(major = 1, minor = 0, patch = 0)
 
     @Immutable
     data class State(
