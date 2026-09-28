@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,7 +16,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -114,14 +112,10 @@ private fun PortfolioSelectorItem(
         contentLead = TangemRowContentLead.Start,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = {
-            Box(
-                modifier = Modifier.clip(CircleShape),
-            ) {
-                CardImage(
-                    modifier = Modifier.size(40.dp),
-                    imageState = walletModel.imageState,
-                )
-            }
+            CardImage(
+                modifier = Modifier.size(40.dp),
+                imageState = walletModel.imageState,
+            )
         },
         titleSlot = { TangemRowText(text = walletModel.name.resolveReference(), role = TangemRowTextRole.Title) },
         subtitleSlot = { InfoRow(walletModel.information, walletModel.balance) },
