@@ -4,6 +4,7 @@ import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.appupdate.model.AppUpdateState
 import com.tangem.domain.appupdate.usecase.GetAppUpdateStateUseCase
@@ -24,6 +25,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
+import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
@@ -61,6 +63,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getMissingJointOwnerKeysCountUseCase: GetMissingJointOwnerKeysCountUseCase,
+    private val onboardingRepository: OnboardingRepository,
 ) {
     private fun assetsDiscoveryProgressFlow(userWallet: UserWallet): Flow<AssetsDiscoveryProgress> =
         if (userWallet is UserWallet.Hot) {
@@ -85,20 +88,28 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             .distinctUntilChanged()
     }
 
+    private fun accountStatusListWithPromoFlow(userWallet: UserWallet): Flow<Pair<AccountStatusList, Boolean>> {
+        val params = SingleAccountStatusListProducer.Params(userWallet.walletId)
+
+        return combine(
+            accountDependencies.singleAccountStatusListSupplier(params),
+            onboardingRepository.isMainOnboardingBannerHidden(userWallet.walletId).distinctUntilChanged(),
+            ::Pair,
+        )
+    }
+
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotificationUM>> {
         val cardTypesResolver = (userWallet as? UserWallet.Cold)?.scanResponse?.cardTypesResolver
 
-        val params = SingleAccountStatusListProducer.Params(userWallet.walletId)
-        val accountStatusListFlow = accountDependencies.singleAccountStatusListSupplier(params)
-
         return combine6(
-            flow1 = accountStatusListFlow,
+            flow1 = accountStatusListWithPromoFlow(userWallet),
             flow2 = isNeedToBackupUseCase(userWallet.walletId).distinctUntilChanged(),
             flow3 = getAccessCodeSkippedUseCase(userWallet.walletId).distinctUntilChanged(),
             flow4 = assetsDiscoveryProgressFlow(userWallet),
             flow5 = getAppUpdateStateUseCase.getBannerStateFlow(),
             flow6 = freshWalletWithBackupFlow(userWallet),
-        ) { accountList, isNeedToBackup, shouldAccessCodeSkipped, discoveryProgress, appUpdateState, activationState ->
+        ) { accountState, isNeedToBackup, shouldAccessCodeSkipped, discoveryProgress, appUpdateState, activationState ->
+            val (accountList, isTangemPayPromoHidden) = accountState
             val (activationWallet, isWalletBackedUp) = activationState
 
             val totalFiatBalance = accountList.totalFiatBalance
@@ -158,6 +169,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
                 if (paymentAccountStatus != null) {
                     addTangemPayWarnings(
                         status = paymentAccountStatus,
+                        isPromoHidden = isTangemPayPromoHidden,
                         userWallet = userWallet,
                         walletClickIntents = clickIntents,
                     )
@@ -326,6 +338,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
 
     private fun MutableList<WalletNotificationUM>.addTangemPayWarnings(
         status: AccountStatus.Payment,
+        isPromoHidden: Boolean,
         userWallet: UserWallet,
         walletClickIntents: WalletClickIntents,
     ) {
@@ -335,10 +348,14 @@ internal class GetWalletNotificationsFactory @Inject constructor(
                 onRefreshClick = { walletClickIntents.onRefreshPayToken(userWallet) },
                 shouldShowProgress = false,
             )
-            is PaymentAccountStatusValue.NotCreated -> WalletNotificationUM.TangemPayPromo(
-                onLaterClick = { walletClickIntents.onOnboardingBannerCloseClick(userWallet.walletId) },
-                onLearnMoreClick = { walletClickIntents.onOnboardingBannerClick(userWallet.walletId) },
-            )
+            is PaymentAccountStatusValue.NotCreated -> if (isPromoHidden) {
+                null
+            } else {
+                WalletNotificationUM.TangemPayPromo(
+                    onLaterClick = { walletClickIntents.onOnboardingBannerCloseClick(userWallet.walletId) },
+                    onLearnMoreClick = { walletClickIntents.onOnboardingBannerClick(userWallet.walletId) },
+                )
+            }
             is PaymentAccountStatusValue.Error.Unavailable -> WalletNotificationUM.TangemPayUnreachable
             is PaymentAccountStatusValue.Error.CardIssueFailed,
             is PaymentAccountStatusValue.Error.ExposedDevice,

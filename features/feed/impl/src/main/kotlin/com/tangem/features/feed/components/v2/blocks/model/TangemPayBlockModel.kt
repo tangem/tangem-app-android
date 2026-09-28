@@ -5,7 +5,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.isCreated
+import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -13,12 +13,11 @@ import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 /**
- * Whether the Tangem Pay pitch is worth making: it is, only while the user has no spending account in
- * any wallet.
+ * Whether the Tangem Pay pitch is worth making: at least one wallet can still be offered Pay and none is
+ * already a customer. A customer still in KYC counts as offerable — the pitch leads them back to it.
  *
  * Only wallets that actually carry an [Account.Payment] are asked for a status, so a user without
- * Tangem Pay never spins up a payment pipeline. Until the first status lands the answer is "no
- * account", which is what makes the pitch appear as soon as possible for the users it is meant for.
+ * Tangem Pay never spins up a payment pipeline.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @Stable
@@ -41,12 +40,31 @@ internal class TangemPayBlockModel @Inject constructor(
                 combine(
                     flows = walletIds.map { walletId ->
                         paymentAccountStatusSupplier(walletId)
-                            .map { status -> status.value.isCreated }
-                            .onStart { emit(false) }
+                            .map { status -> status.value.toPromoEligibility() }
+                            .onStart { emit(PromoEligibility.NOT_AVAILABLE) }
                     },
-                ) { statuses -> statuses.any { it } }
+                ) { eligibilities ->
+                    eligibilities.none { it == PromoEligibility.ALREADY_CUSTOMER } &&
+                        eligibilities.any { it == PromoEligibility.CAN_OFFER }
+                }
             }
         }
-        .map { hasSpendingAccount -> !hasSpendingAccount }
         .stateIn(scope = modelScope, started = SharingStarted.Eagerly, initialValue = false)
+}
+
+private enum class PromoEligibility { CAN_OFFER, NOT_AVAILABLE, ALREADY_CUSTOMER }
+
+private fun PaymentAccountStatusValue.toPromoEligibility(): PromoEligibility = when (this) {
+    is PaymentAccountStatusValue.NotCreated,
+    is PaymentAccountStatusValue.UnderReview,
+    -> PromoEligibility.CAN_OFFER
+    is PaymentAccountStatusValue.Empty -> PromoEligibility.NOT_AVAILABLE
+    is PaymentAccountStatusValue.Loading,
+    is PaymentAccountStatusValue.IssuingCard,
+    is PaymentAccountStatusValue.AwaitingPlanSelection,
+    is PaymentAccountStatusValue.Inactive,
+    is PaymentAccountStatusValue.Loaded,
+    is PaymentAccountStatusValue.Deactivated,
+    is PaymentAccountStatusValue.Error,
+    -> PromoEligibility.ALREADY_CUSTOMER
 }
