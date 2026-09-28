@@ -113,7 +113,7 @@ private fun PortfolioSelectorItem(
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = {
             CardImage(
-                modifier = Modifier.size(40.dp),
+                modifier = Modifier.size(width = 40.dp, height = 26.dp),
                 imageState = walletModel.imageState,
             )
         },
