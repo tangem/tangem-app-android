@@ -12,7 +12,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_document_20
+import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.features.send.common.ui.state.SendSignaturesUM
 import com.tangem.features.send.impl.R
 
@@ -33,8 +33,8 @@ internal fun SignaturesBanner(signaturesUM: SendSignaturesUM, modifier: Modifier
                 },
             ),
             trailingIcon = TangemIconUM.Icon(
-                imageVector = Icons.ic_document_20,
-                tintReference = { TangemTheme.colors3.icon.status.warning },
+                imageVector = Icons.ic_info_20,
+                tintReference = { TangemTheme.colors3.icon.secondary },
             ),
         ),
     )
