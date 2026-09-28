@@ -32,6 +32,11 @@ class TangemPayAddFundsSheetPageObject(semanticsProvider: SemanticsNodeInteracti
         useUnmergedTree = true
     }
 
+    val closeButton: KNode = child {
+        hasTestTag(TangemPayTestTags.ADD_FUNDS_CLOSE_BUTTON)
+        useUnmergedTree = true
+    }
+
     /**
      * Every option row carries the same tag, so a specific one is addressed by its position — which is
      * what makes the sheet's option order assertable. Matched on the merged tree on purpose: the row
