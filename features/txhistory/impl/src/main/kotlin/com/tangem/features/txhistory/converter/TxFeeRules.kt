@@ -44,12 +44,16 @@ internal fun TxInfo.isFeeOnly(currency: CryptoCurrency): Boolean =
  * the network fee, so the row and the details card show that fee under the plain "Network fee" title. Unlike a
  * decoded [TransactionType.NetworkFee] there is nothing to say the fee was paid *for* — the call was never
  * recognized. An **incoming** one is somebody else's call, a zero-value spam call to the wallet's address being the
- * usual case, and the fee on it is the sender's — so it stays an ordinary operation.
+ * usual case, and the fee on it is the sender's — so it stays an ordinary operation. A joint account's Safe call
+ * that moved no coin is the same case: the Safe paid the fee and nothing else.
  */
 internal fun TxInfo.isFeeOnlyOperation(currency: CryptoCurrency): Boolean = isOutgoing &&
     currency is CryptoCurrency.Coin &&
     amount.isZero() &&
-    (type is TransactionType.Operation || type is TransactionType.UnknownOperation)
+    type.isUndecodedCall()
+
+private fun TransactionType.isUndecodedCall(): Boolean =
+    this is TransactionType.Operation || this is TransactionType.UnknownOperation || this is TransactionType.Joint.Call
 
 /** Moved no coin of its own, only paid for a token transfer */
 internal fun TxInfo.isTokenFee(): Boolean = type is TransactionType.NetworkFee || type is TransactionType.Joint.TokenFee
@@ -119,8 +123,7 @@ internal fun TxInfo.feeAmountText(currency: CryptoCurrency): TextReference? {
     return stringReference((prefix + approximateMark() + formatted).trim())
 }
 
-private fun TxInfo.showsFeeAsAmount(currency: CryptoCurrency): Boolean =
-    isTokenFee() || isFeeOnlyOperation(currency)
+internal fun TxInfo.showsFeeAsAmount(currency: CryptoCurrency): Boolean = isTokenFee() || isFeeOnlyOperation(currency)
 
 /** A joint account's fee is the refund cap the operation was signed with, not what was paid */
 internal fun TxInfo.approximateMark(): String = if (type is TransactionType.Joint) StringsSigns.TILDE_SIGN else ""
