@@ -55,6 +55,9 @@ class TangemHotSDKProxy @Inject constructor(
     override suspend fun getContextUnlock(unlockHotWallet: UnlockHotWallet): UnlockHotWallet =
         callSdk { getContextUnlock(unlockHotWallet) }
 
+    override suspend fun getContextUnlockWithRecentBiometry(hotWalletId: HotWalletId): UnlockHotWallet =
+        callSdk { getContextUnlockWithRecentBiometry(hotWalletId) }
+
     override suspend fun delete(id: HotWalletId) = callSdk { delete(id) }
 
     override suspend fun changeAuth(unlockHotWallet: UnlockHotWallet, auth: HotAuth): HotWalletId =
