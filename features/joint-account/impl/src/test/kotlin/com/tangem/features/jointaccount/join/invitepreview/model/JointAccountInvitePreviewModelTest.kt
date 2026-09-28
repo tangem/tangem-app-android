@@ -199,6 +199,31 @@ internal class JointAccountInvitePreviewModelTest {
     }
 
     @Test
+    fun `GIVEN selector data before the wallets WHEN wallets arrive THEN content waits for their data`() = runTest {
+        // Arrange — the fetcher answers first with nothing to show, while the wallet list is still loading
+        val selectorData = MutableSharedFlow<PortfolioFetcher.Data>(replay = 1)
+        selectorData.tryEmit(portfolioData())
+        val wallets = MutableStateFlow<List<UserWallet>?>(value = null)
+        every { portfolioFetcher.data } returns selectorData
+        every { userWalletsListRepository.userWallets } returns wallets
+        coEvery { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) } returns preview().right()
+
+        // Act
+        val model = createModel(testScope = this)
+        runCurrent()
+        wallets.value = listOf(wallet)
+        advanceTimeBy(5.seconds)
+        val beforeData = model.uiState.value
+        selectorData.emit(portfolioData(WALLET_ID))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(beforeData).isInstanceOf(JointAccountInvitePreviewUM.Loading::class.java)
+        assertThat(model.uiState.value).isInstanceOf(JointAccountInvitePreviewUM.Content::class.java)
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN selector data never arrives WHEN the wait runs out THEN content is shown anyway`() = runTest {
         // Arrange
         every { portfolioFetcher.data } returns MutableSharedFlow<PortfolioFetcher.Data>(replay = 1)
