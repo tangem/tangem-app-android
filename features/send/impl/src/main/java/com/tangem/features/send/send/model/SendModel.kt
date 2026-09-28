@@ -370,6 +370,7 @@ internal class SendModel @Inject constructor(
             feeToken is CryptoCurrency.Token &&
                 tronDefaultFeeLoader.isGaslessAvailable(userWallet.walletId, feeToken.network, feeToken) ->
                 getTronGaslessFeeUseCase(
+                    userWalletId = userWallet.walletId,
                     transactionData = transferTransaction,
                     feeToken = feeToken,
                 )

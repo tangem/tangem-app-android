@@ -15,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.unit.Dp
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
@@ -131,7 +130,7 @@ private fun SearchScreenScaffold(
                 position = TangemFade.Position.Top,
                 variant = TangemFade.Variant.Soft,
                 blur = true,
-                backgroundColor = Color.Transparent,
+                backgroundColor = sheetColor,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .height(fadeHeight)

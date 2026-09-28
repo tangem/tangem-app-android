@@ -1,11 +1,13 @@
 package com.tangem.features.tangempay.withdraw.bank.amount.model
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.pay.model.bankofframp.BankRail
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BASE_CHAIN_ID
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
@@ -25,6 +27,7 @@ import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.mockk
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -35,6 +38,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
 
     private val router: Router = mockk(relaxed = true)
     private val onCloseFlow: () -> Unit = mockk(relaxed = true)
+    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
     private val usdcPolygon = paymentToken()
@@ -52,7 +56,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(router, onCloseFlow)
+        clearMocks(router, onCloseFlow, analytics)
         confirmed.clear()
     }
 
@@ -417,6 +421,274 @@ internal class TangemPayBankWithdrawAmountModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN empty draft WHEN positive amount entered THEN AmountEntered is sent`() {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        model.uiState.value.amount.onValueChange("10")
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.AmountEntered()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN amount already entered WHEN amount changed again THEN AmountEntered is sent once`() {
+        // Arrange
+        val model = createModel()
+        model.uiState.value.amount.onValueChange("10")
+
+        // Act
+        model.uiState.value.amount.onValueChange("20")
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.AmountEntered()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN empty draft WHEN zero entered THEN no offramp event is sent`() {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        model.uiState.value.amount.onValueChange("0")
+
+        // Assert
+        verify(exactly = 0) { analytics.send(any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN draft with amount WHEN amount changed THEN AmountEntered is not sent`() {
+        // Arrange
+        val draft = BankWithdrawDraft(
+            entry = BankWithdrawEntry.NewPersonal,
+            amount = BigDecimal("500"),
+            source = bankWithdrawSource(),
+            destination = offrampDestination(),
+        )
+        val model = createModel(draft = draft)
+
+        // Act
+        model.uiState.value.amount.onValueChange("20")
+
+        // Assert
+        verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Offramp.AmountEntered>()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN empty draft WHEN max clicked THEN AmountEntered is sent`() {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        model.uiState.value.source.onMaxClick()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.AmountEntered()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN model WHEN source row clicked THEN CoinSelectorClicked and CoinSelectionSheetOpened are sent`() {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        model.uiState.value.source.onClick()
+
+        // Assert
+        verifyOrder {
+            analytics.send(TangemPayAnalyticsEvents.Offramp.CoinSelectorClicked())
+            analytics.send(TangemPayAnalyticsEvents.Offramp.CoinSelectionSheetOpened())
+        }
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.CoinSelectorClicked()) }
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.CoinSelectionSheetOpened()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN source sheet opened WHEN the selected source picked again THEN CoinInSelectionSheetClicked not sent`() {
+        // Arrange
+        val model = createModel()
+        model.uiState.value.source.onClick()
+        val sheet = model.uiState.value.sheet as SheetUM.Tokens
+
+        // Act
+        sheet.items.first().onClick()
+
+        // Assert
+        verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Offramp.CoinInSelectionSheetClicked>()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN source sheet opened WHEN another source picked THEN CoinInSelectionSheetClicked is sent`() {
+        // Arrange
+        val model = createModel()
+        model.uiState.value.source.onClick()
+        val sheet = model.uiState.value.sheet as SheetUM.Tokens
+
+        // Act
+        sheet.items.last().onClick()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.CoinInSelectionSheetClicked()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN model WHEN route row clicked THEN RailSelectorClicked and RailSelectionSheetOpened are sent`() {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        model.uiState.value.route.onClick?.invoke()
+
+        // Assert
+        verifyOrder {
+            analytics.send(TangemPayAnalyticsEvents.Offramp.RailSelectorClicked())
+            analytics.send(TangemPayAnalyticsEvents.Offramp.RailSelectionSheetOpened())
+        }
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.RailSelectorClicked()) }
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.RailSelectionSheetOpened()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN route sheet opened WHEN the selected rail picked again THEN RailInSelectionSheetClicked is not sent`() {
+        // Arrange
+        val model = createModel()
+        model.uiState.value.route.onClick?.invoke()
+        val sheet = model.uiState.value.sheet as SheetUM.Routes
+
+        // Act
+        sheet.items.first().onClick()
+
+        // Assert
+        verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Offramp.RailInSelectionSheetClicked>()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN route sheet opened WHEN another rail picked THEN RailInSelectionSheetClicked is sent`() {
+        // Arrange
+        val model = createModel()
+        model.uiState.value.route.onClick?.invoke()
+        val sheet = model.uiState.value.sheet as SheetUM.Routes
+
+        // Act
+        sheet.items.last().onClick()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.RailInSelectionSheetClicked()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN valid amount WHEN continue clicked THEN AmountContinueClicked is sent`() {
+        // Arrange
+        val model = createModel()
+        model.uiState.value.amount.onValueChange("500")
+
+        // Act
+        model.uiState.value.onContinueClick()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.AmountContinueClicked()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN invalid amount WHEN continue clicked THEN AmountContinueClicked is not sent`() {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        model.uiState.value.onContinueClick()
+
+        // Assert
+        verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Offramp.AmountContinueClicked>()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN amount above balance WHEN value changed THEN InsufficientFundsStateShowed is sent`() {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        model.uiState.value.amount.onValueChange("2325")
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.InsufficientFundsStateShowed()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN amount above balance WHEN typing continues THEN InsufficientFundsStateShowed is sent once`() {
+        // Arrange
+        val model = createModel()
+        model.uiState.value.amount.onValueChange("2325")
+
+        // Act
+        model.uiState.value.amount.onValueChange("23255")
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.InsufficientFundsStateShowed()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN shortage cleared WHEN balance exceeded again THEN InsufficientFundsStateShowed is sent twice`() {
+        // Arrange
+        val model = createModel()
+        model.uiState.value.amount.onValueChange("2325")
+        model.uiState.value.amount.onValueChange("500")
+
+        // Act
+        model.uiState.value.amount.onValueChange("2325")
+
+        // Assert
+        verify(exactly = 2) { analytics.send(TangemPayAnalyticsEvents.Offramp.InsufficientFundsStateShowed()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN draft amount above balance WHEN model created THEN InsufficientFundsStateShowed is sent`() {
+        // Arrange
+        val draft = BankWithdrawDraft(
+            entry = BankWithdrawEntry.NewPersonal,
+            amount = BigDecimal("2325"),
+            source = bankWithdrawSource(),
+            destination = offrampDestination(),
+        )
+
+        // Act
+        val model = createModel(draft = draft)
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.InsufficientFundsStateShowed()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN amount below minimum WHEN value changed THEN InsufficientFundsStateShowed is not sent`() {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        model.uiState.value.amount.onValueChange("0.5")
+
+        // Assert
+        verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Offramp.InsufficientFundsStateShowed>()) }
+        model.onDestroy()
+    }
+
     private fun createModel(
         draft: BankWithdrawDraft = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal),
         step: TangemPayBankWithdrawInnerRoute = TangemPayBankWithdrawInnerRoute.Amount,
@@ -436,6 +708,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
             ),
             dispatchers = dispatchers,
             router = router,
+            analytics = analytics,
         )
     }
 }

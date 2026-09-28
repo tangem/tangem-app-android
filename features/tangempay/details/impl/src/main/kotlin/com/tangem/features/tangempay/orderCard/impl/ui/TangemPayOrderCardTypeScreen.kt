@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.orderCard.impl.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -234,17 +235,9 @@ private fun DetailsArea(
     pagerState: PagerState,
     modifier: Modifier = Modifier,
 ) {
-    val heightReserve = remember {
-        Plastic.Available(
-            country = "",
-            deliveryFee = "",
-            deliveryEta = TangemPayOrderCardTypeUM.DeliveryEta(minBusinessDays = null, maxBusinessDays = 1),
-            feeState = FeeState.InsufficientFunds,
-        )
-    }
-    Box(modifier = modifier.fillMaxWidth()) {
+    Box(modifier = modifier.fillMaxWidth().animateContentSize()) {
         Column(modifier = Modifier.fillMaxWidth().alpha(0f).clearAndSetSemantics {}) {
-            PlasticDetails(plastic = heightReserve, isLoading = false)
+            PlasticDetails(plastic = state.plastic, isLoading = false)
         }
         HorizontalPager(
             state = pagerState,
@@ -398,10 +391,15 @@ private fun DeliverToRow(plastic: Plastic, isLoading: Boolean) {
 
 @Composable
 private fun DeliveryFeeRow(plastic: Plastic.Available) {
+    val isInsufficientFunds = plastic.feeState == FeeState.InsufficientFunds
     TangemRow(
         divider = true,
         contentLead = TangemRowContentLead.End,
-        verticalAlignment = TangemRowVerticalAlignment.Center,
+        verticalAlignment = if (isInsufficientFunds) {
+            TangemRowVerticalAlignment.Top
+        } else {
+            TangemRowVerticalAlignment.Center
+        },
         titleSlot = {
             TangemRowText(
                 text = resourceReference(R.string.tangempay_order_type_delivery_fee),
@@ -409,16 +407,11 @@ private fun DeliveryFeeRow(plastic: Plastic.Available) {
             )
         },
         valueSlot = {
-            when (plastic.feeState) {
-                FeeState.InsufficientFunds -> StatusBadge(
-                    text = resourceReference(R.string.tangempay_order_type_not_enough_money),
-                    status = TangemBadge.Status.Warning,
-                )
-                FeeState.FreeDelivery -> StatusBadge(
+            if (plastic.feeState == FeeState.FreeDelivery) {
+                StatusBadge(
                     text = resourceReference(R.string.tangempay_order_type_first_delivery_free),
                     status = TangemBadge.Status.Success,
                 )
-                FeeState.Default -> Unit
             }
             plastic.deliveryFee?.let { fee ->
                 RowValueText(
@@ -428,6 +421,16 @@ private fun DeliveryFeeRow(plastic: Plastic.Available) {
                     },
                 )
             }
+        },
+        subvalueSlot = if (isInsufficientFunds) {
+            {
+                StatusBadge(
+                    text = resourceReference(R.string.tangempay_order_type_not_enough_money),
+                    status = TangemBadge.Status.Warning,
+                )
+            }
+        } else {
+            null
         },
     )
 }

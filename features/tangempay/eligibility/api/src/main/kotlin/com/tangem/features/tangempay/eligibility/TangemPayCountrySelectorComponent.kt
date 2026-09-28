@@ -12,19 +12,23 @@ interface TangemPayCountrySelectorComponent : ComposableContentComponent {
         val onDismiss: () -> Unit
 
         /**
-         * @property shouldIncludeRegions `false` keeps the sheet on the country list: an address form picks the US
-         * state from its own region field, while residency onboarding needs the state right after the country.
+         * @property selectedCountryCode already picked country, shown in its own section above the full list.
+         * @property selectedRegionCode already picked region, highlighted in the region step only when it belongs
+         * to [selectedCountryCode].
          */
         data class Countries(
             override val onDismiss: () -> Unit,
             val onSelected: (country: TangemPayCountry, region: TangemPayRegion?) -> Unit,
-            val shouldIncludeRegions: Boolean = true,
+            val selectedCountryCode: String? = null,
+            val selectedRegionCode: String? = null,
         ) : Params
 
+        /** @property selectedRegionCode already picked region, shown in its own section above the full list. */
         data class Regions(
             val countryCode: String,
             override val onDismiss: () -> Unit,
             val onSelected: (region: TangemPayRegion) -> Unit,
+            val selectedRegionCode: String? = null,
         ) : Params
     }
 

@@ -8,7 +8,7 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.common.routing.utils.popToIfCovered
 import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.features.feed.FeedFeatureToggles
-import com.tangem.features.feed.entry.deeplink.ShtorkaDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.DiscoverDeepLinkHandler
 import com.tangem.features.feed.v2.FeedEntryController
 import com.tangem.features.feed.v2.FeedEntryRequest
 import com.tangem.features.feed.v2.FeedSection
@@ -17,12 +17,12 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
-internal class DefaultShtorkaDeepLinkHandler @AssistedInject constructor(
+internal class DefaultDiscoverDeepLinkHandler @AssistedInject constructor(
     @Assisted private val queryParams: Map<String, String>,
     private val feedEntryController: FeedEntryController,
     private val feedFeatureToggles: FeedFeatureToggles,
     private val appRouter: AppRouter,
-) : ShtorkaDeepLinkHandler {
+) : DiscoverDeepLinkHandler {
 
     init {
         handleDeepLink()
@@ -40,14 +40,14 @@ internal class DefaultShtorkaDeepLinkHandler @AssistedInject constructor(
                 ),
             )
         } else {
-            TangemLogger.i("Shtorka deeplink: the feed hub is disabled, opening the wallet instead")
+            TangemLogger.i("Discover deeplink: the feed hub is disabled, opening the wallet instead")
         }
 
         appRouter.popToIfCovered(AppRoute.Wallet)
     }
 
     @AssistedFactory
-    interface Factory : ShtorkaDeepLinkHandler.Factory {
-        override fun create(queryParams: Map<String, String>): DefaultShtorkaDeepLinkHandler
+    interface Factory : DiscoverDeepLinkHandler.Factory {
+        override fun create(queryParams: Map<String, String>): DefaultDiscoverDeepLinkHandler
     }
 }

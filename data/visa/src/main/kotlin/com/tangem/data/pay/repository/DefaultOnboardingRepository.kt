@@ -38,6 +38,7 @@ import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
@@ -332,19 +333,12 @@ internal class DefaultOnboardingRepository @Inject constructor(
         }
     }
 
-    override suspend fun getHideMainOnboardingBanner(userWalletId: UserWalletId): Boolean {
-        return tangemPayStorage.getHideMainOnboardingBanner(userWalletId)
+    override fun isMainOnboardingBannerHidden(userWalletId: UserWalletId): Flow<Boolean> {
+        return tangemPayStorage.isMainOnboardingBannerHidden(userWalletId)
     }
 
     override suspend fun setHideMainOnboardingBanner(userWalletId: UserWalletId) {
         tangemPayStorage.storeHideOnboardingBanner(userWalletId, hide = true)
-        paymentAccountStatusStore.store(
-            userWalletId = userWalletId,
-            status = AccountStatus.Payment(
-                account = Account.Payment(userWalletId),
-                value = PaymentAccountStatusValue.Empty,
-            ),
-        )
     }
 
     override suspend fun disableTangemPay(userWalletId: UserWalletId): Either<VisaApiError, Unit> {
@@ -358,6 +352,13 @@ internal class DefaultOnboardingRepository @Inject constructor(
             tangemPayStorage.clearAll(userWalletId = userWalletId, customerWalletAddress = address)
             txHistoryItemsStore.remove(userWalletId.stringValue)
             setHideMainOnboardingBanner(userWalletId)
+            paymentAccountStatusStore.store(
+                userWalletId = userWalletId,
+                status = AccountStatus.Payment(
+                    account = Account.Payment(userWalletId),
+                    value = PaymentAccountStatusValue.Empty,
+                ),
+            )
         }
     }
 }

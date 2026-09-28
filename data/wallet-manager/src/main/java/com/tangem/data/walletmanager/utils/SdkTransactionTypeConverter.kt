@@ -10,12 +10,15 @@ import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldS
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyInitTokenCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyReactivateTokenCallData
 import com.tangem.common.extensions.hexToBytes
+import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.SdkAmountType
 import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.txhistory.usecase.GetCachedTokenInfoUseCase
 import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.extensions.isZero
 import java.math.BigDecimal
 
 internal class SdkTransactionTypeConverter(
@@ -24,6 +27,7 @@ internal class SdkTransactionTypeConverter(
     gaslessFeeAddresses: Set<String>,
     private val currency: CryptoCurrency,
     private val networkTokens: Set<CryptoCurrency.Token> = emptySet(),
+    private val getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
 ) : Converter<TransactionHistoryItem, TxInfo.TransactionType> {
 
     /** The SDK reports a selector prefixed or bare depending on the source; the asset is keyed prefixed. */
@@ -33,24 +37,19 @@ internal class SdkTransactionTypeConverter(
     private val gaslessFeeAddressesLowercase: Set<String> = gaslessFeeAddresses.map { it.lowercase() }.toSet()
 
     override fun convert(value: TransactionHistoryItem): TxInfo.TransactionType {
-        val (type, destination) = value.type to value.destinationType
-        val source = value.sourceType
-
-        return when (type) {
+        return when (val type = value.type) {
             is TransactionType.ContractMethod -> {
                 getTransactionType(
                     methodName = smartContractMethods[type.id.toSelectorKey()]?.name,
                     callData = type.callData,
-                    destination = destination,
-                    source = source,
+                    historyItem = value,
                 )
             }
             is TransactionType.ContractMethodName -> {
                 getTransactionType(
                     methodName = type.name,
                     callData = type.callData,
-                    destination = destination,
-                    source = source,
+                    historyItem = value,
                 )
             }
             is TransactionType.Transfer -> {
@@ -87,10 +86,11 @@ internal class SdkTransactionTypeConverter(
     private fun getTransactionType(
         methodName: String?,
         callData: String?,
-        destination: TransactionHistoryItem.DestinationType,
-        source: TransactionHistoryItem.SourceType,
+        historyItem: TransactionHistoryItem,
     ): TxInfo.TransactionType {
-        return when (methodName) {
+        val destination = historyItem.destinationType
+        val source = historyItem.sourceType
+        var result = when (methodName) {
             "transfer" -> decodeTokenTransfer(callData, destination) ?: TxInfo.TransactionType.Transfer
             "approve" -> decodeApprove(callData, destination)
             "swap" -> TxInfo.TransactionType.Swap
@@ -112,21 +112,7 @@ internal class SdkTransactionTypeConverter(
             "withdrawRewardsPOL",
             -> TxInfo.TransactionType.Staking.ClaimRewards
             "redelegate" -> TxInfo.TransactionType.Staking.Restake
-            "yieldSend" -> {
-                val sourceAddresses = when (source) {
-                    is TransactionHistoryItem.SourceType.Multiple -> source.addresses
-                    is TransactionHistoryItem.SourceType.Single -> listOf(source.address)
-                }.map {
-                    it.lowercase()
-                }.toSet()
-
-                val isYieldSupplyWithdraw =
-                    yieldSupplyAddresses.intersect(sourceAddresses).isNotEmpty()
-
-                TxInfo.TransactionType.YieldSupply.Send(
-                    isYieldSupplyWithdraw = isYieldSupplyWithdraw,
-                )
-            }
+            "yieldSend" -> decodeYieldSend(source)
             "enterProtocolByOwner" -> callData?.let { data ->
                 TxInfo.TransactionType.YieldSupply.Enter(
                     EthereumYieldSupplyEnterCallData.decode(data)?.tokenContractAddress.orEmpty(),
@@ -151,10 +137,42 @@ internal class SdkTransactionTypeConverter(
                 )
             }
             "supplyTopUp" -> TxInfo.TransactionType.YieldSupply.Topup
-            "gaslessTransaction" -> getTypeForGaslessMethod(destination, source)
-            null -> TxInfo.TransactionType.UnknownOperation
-            else -> TxInfo.TransactionType.Operation(name = methodName.replaceFirstChar { it.titlecase() })
-        } ?: TxInfo.TransactionType.Operation(name = methodName?.replaceFirstChar { it.titlecase() }.orEmpty())
+            "gaslessTransaction" -> getTypeForGaslessMethod(destination, source, methodName)
+            else -> fallbackOperation(methodName)
+        } ?: fallbackOperation(methodName)
+
+        // A call decoded into a protocol interaction (yield supply for now, other protocols may join) describes what
+        // the token did. In the coin's own history the same call moved nothing and cost only the fee, so it drops
+        // back to a plain operation — which the history then renders as a network-fee row.
+        val isCoinFeeOnly = currency is CryptoCurrency.Coin &&
+            historyItem.amount.value?.isZero() == true &&
+            result is TxInfo.TransactionType.YieldSupply
+        if (isCoinFeeOnly) {
+            result = fallbackOperation(methodName)
+        }
+        return result
+    }
+
+    private fun fallbackOperation(methodName: String?): TxInfo.TransactionType {
+        return if (methodName == null) {
+            TxInfo.TransactionType.UnknownOperation
+        } else {
+            TxInfo.TransactionType.Operation(name = methodName.replaceFirstChar { it.titlecase() })
+        }
+    }
+
+    private fun decodeYieldSend(source: TransactionHistoryItem.SourceType): TxInfo.TransactionType.YieldSupply.Send {
+        val sourceAddresses = when (source) {
+            is TransactionHistoryItem.SourceType.Multiple -> source.addresses.map { it.lowercase() }.toSet()
+            is TransactionHistoryItem.SourceType.Single -> setOf(source.address.lowercase())
+        }
+
+        val isYieldSupplyWithdraw =
+            yieldSupplyAddresses.intersect(sourceAddresses).isNotEmpty()
+
+        return TxInfo.TransactionType.YieldSupply.Send(
+            isYieldSupplyWithdraw = isYieldSupplyWithdraw,
+        )
     }
 
     private fun decodeApprove(
@@ -210,7 +228,15 @@ internal class SdkTransactionTypeConverter(
     private fun TransactionHistoryItem.DestinationType.resolveToken(): CryptoCurrency.Token? {
         val contractAddress = (this as? TransactionHistoryItem.DestinationType.Single)?.addressType?.address
             ?: return null
-        return networkTokens.find { it.contractAddress.equals(contractAddress, ignoreCase = true) }
+        val result = networkTokens.find { it.contractAddress.equals(contractAddress, ignoreCase = true) }
+        if (result == null) {
+            val tokenId = ExpressAsset.ID(
+                networkId = currency.network.rawId,
+                contractAddress = contractAddress,
+            )
+            getCachedTokenInfoUseCase.fetchMissing(setOf(tokenId))
+        }
+        return result
     }
 
     private fun CryptoCurrency.Token.toSdkAmount(rawValue: BigDecimal?): SdkAmount = SdkAmount(
@@ -225,6 +251,7 @@ internal class SdkTransactionTypeConverter(
     private fun getTypeForGaslessMethod(
         destination: TransactionHistoryItem.DestinationType,
         source: TransactionHistoryItem.SourceType,
+        methodName: String,
     ): TxInfo.TransactionType {
         return when {
             destination is TransactionHistoryItem.DestinationType.Single &&
@@ -234,7 +261,7 @@ internal class SdkTransactionTypeConverter(
                 yieldSupplyAddresses.contains(source.address.lowercase())
             -> TxInfo.TransactionType.YieldSupply.Send(isYieldSupplyWithdraw = true)
 
-            else -> TxInfo.TransactionType.UnknownOperation
+            else -> fallbackOperation(methodName)
         }
     }
 }

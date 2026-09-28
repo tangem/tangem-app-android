@@ -12,6 +12,7 @@ import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
 import com.tangem.utils.StringsSigns
+import com.tangem.utils.extensions.isZero
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
@@ -34,7 +35,20 @@ internal fun TxInfo.hasForeignFee(): Boolean = !isOutgoing && (
     )
 
 /** The amount of a fee-only transaction already shows the fee, so the card does not repeat it as an info row. */
-internal fun TxInfo.isFeeOnly(): Boolean = type is TransactionType.NetworkFee || type is TransactionType.GaslessFee
+internal fun TxInfo.isFeeOnly(currency: CryptoCurrency): Boolean =
+    type is TransactionType.NetworkFee || type is TransactionType.GaslessFee || isFeeOnlyOperation(currency)
+
+/**
+ * An unrecognized contract call the wallet made itself, in a coin's own history, that moved no coin: all it cost is
+ * the network fee, so the row and the details card show that fee under the plain "Network fee" title. Unlike a
+ * decoded [TransactionType.NetworkFee] there is nothing to say the fee was paid *for* — the call was never
+ * recognized. An **incoming** one is somebody else's call, a zero-value spam call to the wallet's address being the
+ * usual case, and the fee on it is the sender's — so it stays an ordinary operation.
+ */
+internal fun TxInfo.isFeeOnlyOperation(currency: CryptoCurrency): Boolean = isOutgoing &&
+    currency is CryptoCurrency.Coin &&
+    amount.isZero() &&
+    (type is TransactionType.Operation || type is TransactionType.UnknownOperation)
 
 /**
  * Whether the matched on-chain leg is the one the user paid for. Only a swap viewed from its `from` token qualifies:
@@ -80,16 +94,20 @@ private fun TxInfo.nativeFeeText(): String? {
 
 // region The fee as the row's own amount
 
-/** The value a row shows: a [TransactionType.NetworkFee] moved no coin of its own, so it shows the fee it paid. */
-internal fun TxInfo.amountOrFee(): BigDecimal = if (type is TransactionType.NetworkFee) fee?.value ?: amount else amount
+/** The value a row shows: a fee-only transaction moved no coin of its own, so it shows the fee it paid. */
+internal fun TxInfo.amountOrFee(currency: CryptoCurrency): BigDecimal =
+    if (showsFeeAsAmount(currency)) fee?.value ?: amount else amount
 
 /** The same substitution for the details card, which renders the value as a signed [TextReference]. */
 internal fun TxInfo.feeAmountText(currency: CryptoCurrency): TextReference? {
-    if (type !is TransactionType.NetworkFee) return null
+    if (!showsFeeAsAmount(currency)) return null
     val feeValue = fee?.value ?: return null
     val formatted = feeValue.format { crypto(cryptoCurrency = currency, ignoreSymbolPosition = true) }
     val prefix = if (status is TxInfo.TransactionStatus.Failed) "" else "${StringsSigns.MINUS} "
     return stringReference((prefix + formatted).trim())
 }
+
+private fun TxInfo.showsFeeAsAmount(currency: CryptoCurrency): Boolean =
+    type is TransactionType.NetworkFee || isFeeOnlyOperation(currency)
 
 // endregion

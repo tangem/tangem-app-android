@@ -43,6 +43,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.AssetOwnerUM
@@ -107,6 +108,7 @@ private fun TwoAssetsSideRow(asset: AssetUM, isBalanceHidden: Boolean, modifier:
         verticalAlignment = TangemRowVerticalAlignment.Center,
         titleSlot = { TwoAssetsSideLabel(label = asset.label, owner = asset.owner) },
         subtitleSlot = {
+            val hasAmount = asset.amount.resolveReference() != BigDecimalFormatConstants.EMPTY_BALANCE_SIGN
             Text(
                 text = asset.amount.orMaskWithStars(isBalanceHidden).resolveReference(),
                 style = TangemTheme.typography3.heading.small,
@@ -115,7 +117,11 @@ private fun TwoAssetsSideRow(asset: AssetUM, isBalanceHidden: Boolean, modifier:
                 } else {
                     TangemTheme.colors3.text.primary
                 },
-                textDecoration = if (asset.isFaded && !isBalanceHidden) TextDecoration.LineThrough else null,
+                textDecoration = if (asset.isFaded && hasAmount && !isBalanceHidden) {
+                    TextDecoration.LineThrough
+                } else {
+                    null
+                },
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(top = 6.dp),
@@ -267,6 +273,22 @@ private fun TxHistoryDetailsTwoAssetsBlockPreview() {
             TxHistoryDetailsTwoAssetsBlock(
                 from = previewAsset(label = "You sent", amount = "- 390 USDT", isFaded = false),
                 to = previewAsset(label = "You receive", amount = "~ 1,800.00 POL", isFaded = false),
+                isBalanceHidden = false,
+            )
+            // Failed deal — the spent leg stands as sent, the never-received one is struck through.
+            TxHistoryDetailsTwoAssetsBlock(
+                from = previewAsset(label = "You paid", amount = "3,903.02 SEK", isFaded = false),
+                to = previewAsset(label = "To", amount = "0.006339 BTC", isFaded = true),
+                isBalanceHidden = false,
+            )
+            // Failed deal the provider never priced — the payout leg dims to a bare dash, with nothing to strike.
+            TxHistoryDetailsTwoAssetsBlock(
+                from = previewAsset(label = "You paid", amount = "3,903.02 SEK", isFaded = false),
+                to = previewAsset(
+                    label = "To",
+                    amount = BigDecimalFormatConstants.EMPTY_BALANCE_SIGN,
+                    isFaded = true,
+                ),
                 isBalanceHidden = false,
             )
             // Account -> another account (own-to-own transfer between two of the user's accounts).

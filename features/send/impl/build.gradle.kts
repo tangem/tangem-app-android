@@ -71,6 +71,7 @@ dependencies {
     implementation(projects.domain.transaction)
     implementation(projects.core.analytics.models)
     implementation(projects.domain.core)
+    implementation(projects.domain.visa)
 
 
     /** Compose libraries */

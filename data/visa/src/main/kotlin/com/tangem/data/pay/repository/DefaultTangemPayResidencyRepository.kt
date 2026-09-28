@@ -23,13 +23,13 @@ internal class DefaultTangemPayResidencyRepository @Inject constructor(
     override suspend fun getCountries(): Either<VisaApiError, List<TangemPayCountry>> {
         return requestHelper.performWithStaticToken {
             tangemPayApi.getGeoCountries()
-        }.map { response -> TangemPayCountryConverter.convertList(response.result.countries) }
+        }.map { response -> TangemPayCountryConverter.convertList(response.result) }
     }
 
     override suspend fun getRegions(countryCode: String): Either<VisaApiError, List<TangemPayRegion>> {
         return requestHelper.performWithStaticToken {
             tangemPayApi.getGeoRegions(countryCode = countryCode)
-        }.map { response -> TangemPayRegionConverter.convertList(response.result.regions) }
+        }.map { response -> TangemPayRegionConverter.convertList(response.result) }
     }
 
     override suspend fun checkEligibilityForCountry(

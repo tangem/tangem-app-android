@@ -290,6 +290,7 @@
   <string name="collectibles_confirm_order_approve_button">Aprovar</string>
   <string name="collectibles_confirm_order_not_enough_funds_button">Saldo insuficiente</string>
   <string name="collectibles_confirm_order_platform_fee">Taxa da plataforma</string>
+  <string name="collectibles_confirm_order_screen_title">Confirmar pedido</string>
   <string name="collectibles_confirm_order_total">Total</string>
   <string name="collectibles_entrance_card_subtitle">Abra pacotes de cartões colecionáveis certificados</string>
   <string name="collectibles_entrance_card_title">Explore coleções</string>
@@ -334,6 +335,8 @@
   <string name="collectibles_stories_security_title">Alta segurança, design sem contato</string>
   <string name="collectibles_stories_transparency_subtitle">Veja todos os cartões antes de comprar e acompanhe aberturas ao vivo diretamente da blockchain, com a carteira de cada colecionador e o valor do cartão. Tudo no app</string>
   <string name="collectibles_stories_transparency_title">Nada fica escondido</string>
+  <string name="collectibles_turbo_mode_bottomsheet_message">O modo Turbo vende automaticamente de volta qualquer carta Comum. Encontre cartas raras na velocidade máxima</string>
+  <string name="collectibles_turbo_mode_bottomsheet_title">Modo Turbo</string>
   <string name="collectibles_welcome_benefit_cold_wallet_subtitle">Somente seu cartão pode movimentá-los</string>
   <string name="collectibles_welcome_benefit_cold_wallet_title">Os cartões vão para a sua carteira fria</string>
   <string name="collectibles_welcome_benefit_sell_offers_subtitle">85–93% do valor segurado, em USDC</string>
@@ -1211,6 +1214,7 @@
   <string name="joint_account_onboarding_shared_description">Use-a com seus amigos, familiares ou parceiros.</string>
   <string name="joint_account_onboarding_shared_title">Conta compartilhada.</string>
   <string name="joint_account_onboarding_subtitle">Uma maneira simples de gerenciar criptomoedas em conjunto — para necessidades pessoais ou empresariais.</string>
+  <string name="joint_account_pending_transaction_message">Revise e assine a operação</string>
   <string name="joint_account_send_blocked_subtitle">O envio está bloqueado por motivos de segurança. Por favor, entre em contato com o suporte</string>
   <string name="joint_account_send_blocked_title">O envio está bloqueado</string>
   <string name="joint_account_send_create_request">Criar solicitação</string>
@@ -1748,6 +1752,7 @@
   <string name="prediction_account_open_detailed_view">Abrir visão detalhada</string>
   <string name="prediction_account_subtitle">Adicione fundos e comece a fazer previsões</string>
   <string name="prediction_account_title">Conta de previsões</string>
+  <string name="prediction_account_unavailable">Não foi possível conectar à sua conta de previsões. Atualize ou reabra esta tela.</string>
   <string name="prediction_add_funds_error_description">Não foi possível carregar os detalhes do depósito. Atualize a tela ou acesse-a novamente.</string>
   <string name="prediction_add_funds_notification_limits_description">O valor do depósito deve ser de, no mínimo, %1$s. Não é recomendado fazer depósitos acima de US$ 50.000 — divida valores maiores em vários depósitos menores.</string>
   <string name="prediction_add_funds_notification_limits_title">Limites de depósito</string>
@@ -1802,6 +1807,8 @@
   <string name="prediction_main_available_balance">Saldo disponível</string>
   <string name="prediction_main_data_outdated">Os dados podem estar desatualizados.</string>
   <string name="prediction_main_empty_events">Nenhum evento ainda</string>
+  <string name="prediction_main_empty_positions_subtitle">Explore novos eventos</string>
+  <string name="prediction_main_empty_positions_title">Você não tem previsões ativas</string>
   <string name="prediction_main_events_load_error">Falha ao carregar os eventos.\nToque para recarregar</string>
   <string name="prediction_main_explore_events">Explorar eventos</string>
   <string name="prediction_main_subtitle">USDC na rede Polygon</string>
@@ -1945,9 +1952,17 @@
   <string name="prediction_search_initial_subtitle">Pesquise eventos ou suas previsões</string>
   <string name="prediction_search_initial_title">Comece a digitar para pesquisar</string>
   <string name="prediction_search_results_title">Resultados da pesquisa</string>
+  <string name="prediction_withdraw_balance_unavailable">Não foi possível carregar o saldo da sua conta de previsões. Atualize ou reabra esta tela.</string>
   <string name="prediction_withdraw_confirm_fee_footer">Nenhuma taxa de rede é cobrada por este saque. O valor que você receber poderá apresentar uma pequena diferença devido à conversão realizada pela bridge.</string>
   <string name="prediction_withdraw_confirm_title">Confirmar saque</string>
+  <string name="prediction_withdraw_empty_balance">Ainda não há nada para sacar. Primeiro, adicione fundos à sua conta de previsões.</string>
+  <string name="prediction_withdraw_error_address_unavailable">Não foi possível obter um endereço para o saque. Tente novamente</string>
+  <string name="prediction_withdraw_error_asset_unavailable">Os saques de USDC pela Polygon estão temporariamente suspensos. Tente novamente mais tarde.</string>
+  <string name="prediction_withdraw_error_foreign_account">Esta conta de previsões não está vinculada a esta carteira. Entre em contato com o suporte</string>
+  <string name="prediction_withdraw_error_generic">Não foi possível enviar o saque. Verifique sua conexão e tente novamente</string>
+  <string name="prediction_withdraw_error_rejected">A Polymarket recusou o saque. Tente novamente</string>
   <string name="prediction_withdraw_in_progress_message">Seu saque anterior ainda está sendo processado. Aguarde a conclusão antes de iniciar um novo saque.</string>
+  <string name="prediction_withdraw_min_amount">O saque mínimo é de %@. Adicione fundos para atingir esse valor.</string>
   <string name="prediction_withdraw_status_failed_description">Algo deu errado ao processar seu saque. Tente novamente ou entre em contato com o suporte.</string>
   <string name="prediction_withdraw_status_failed_title">Falha no saque</string>
   <string name="prediction_withdraw_status_sent_description">O envio pode levar até %1$d minutos</string>
@@ -2544,6 +2559,8 @@
   <string name="tangempay_card_details_add_funds">Adicionar fundos</string>
   <string name="tangempay_card_details_add_funds_subtitle">Opções de recarga</string>
   <string name="tangempay_card_details_add_to_wallet_button_text">Adicionar ao Google Wallet</string>
+  <string name="tangempay_card_details_add_to_wallet_error_description">Tentar usar outro dispositivo ou entre em contato com o suporte</string>
+  <string name="tangempay_card_details_add_to_wallet_error_title">Não foi possível adicionar o cartão</string>
   <string name="tangempay_card_details_awaiting_deposit_cancel_button">Cancele %1$s, mude para %2$s</string>
   <string name="tangempay_card_details_awaiting_deposit_subtitle">Para pagar a mensalidade do plano e começar a usar o novo cartão</string>
   <string name="tangempay_card_details_awaiting_deposit_title">Recarregue sua conta no valor de %1$s</string>
@@ -3038,6 +3055,8 @@
   <string name="transaction_history_empty_transactions">Você ainda não possui nenhuma transação.</string>
   <string name="transaction_history_enabling_yield_mode">Ativando o modo de rendimento</string>
   <string name="transaction_history_error_failed_to_load">Falha ao carregar o histórico de transações. Clique no botão \n para atualizar as informações.</string>
+  <string name="transaction_history_fee_for_operation">Para a operação</string>
+  <string name="transaction_history_fee_for_operation_name">Para %s</string>
   <string name="transaction_history_fee_for_sending">Para envio</string>
   <string name="transaction_history_fee_sending_asset">Enviar %%image%%%s</string>
   <string name="transaction_history_from_inline_address">de: %%image%% %s</string>

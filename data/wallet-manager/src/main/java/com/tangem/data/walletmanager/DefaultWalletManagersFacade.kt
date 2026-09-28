@@ -57,6 +57,7 @@ import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.domain.walletmanager.model.TokenInfo
 import com.tangem.domain.walletmanager.utils.SdkPageConverter
 import com.tangem.domain.wallets.extension.hasDerivation
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import dagger.Lazy
@@ -294,6 +295,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                     currency = currency,
                     currencyAddresses = getAddresses(userWalletId, currency.network),
                     txHistoryFeatureToggles = txHistoryFeatureToggles,
+                    getCachedTokenInfoUseCase = getCachedTokenInfoUseCase,
                     networkTokens = getCachedTokenInfoUseCase(
                         userWalletId = userWalletId,
                         networkId = currency.network.rawId,
@@ -543,6 +545,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         }
     }
 
+    @RemoveWithToggle("TWI_1783_TRON_GASLESS_ACCOUNT_ACTIVATION_ENABLED")
     override suspend fun isTronAccountActivated(userWalletId: UserWalletId, network: Network): Boolean =
         withContext(dispatchers.io) {
             val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
@@ -836,27 +839,20 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         return walletManager.wallet.recentTransactions.toTxInfos(
             currency = currency,
             ownAddresses = SdkAddressToAddressConverter.convertList(walletManager.wallet.addresses).toSet(),
-            feePaidCurrency = walletManager.wallet.blockchain.feePaidCurrency(),
         )
     }
 
     private fun List<TransactionData.Uncompiled>.toTxInfos(
         currency: CryptoCurrency,
         ownAddresses: Set<UpdateWalletManagerResult.Address>,
-        feePaidCurrency: FeePaidCurrency,
     ): List<TxInfo> {
         val transactionDataConverter = TransactionDataToTxHistoryItemConverter(
             walletAddresses = ownAddresses,
-            feePaidCurrency = feePaidCurrency,
+            currency = currency,
         )
 
         return this
-            .filter { transaction ->
-                when (currency) {
-                    is CryptoCurrency.Coin -> transaction.amount.type is AmountType.Coin
-                    is CryptoCurrency.Token -> transaction.contractAddress == currency.contractAddress
-                }
-            }
+            .filter { transaction -> transaction.belongsToHistoryOf(currency) }
             .mapNotNull(transactionDataConverter::convert)
     }
 

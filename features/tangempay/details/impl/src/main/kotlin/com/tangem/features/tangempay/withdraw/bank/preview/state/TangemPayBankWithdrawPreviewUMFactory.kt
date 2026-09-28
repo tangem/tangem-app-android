@@ -88,6 +88,7 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
                 title = railTitle,
                 eta = destination.eta.toTextReference(),
                 fee = fee,
+                onClick = if (isSending) null else callbacks.onRailClick,
             ),
             sendingSummary = resourceReference(
                 R.string.tangempay_withdraw_bank_sending_summary,
@@ -156,5 +157,6 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
         val onSendClick: () -> Unit,
         val onRetryClick: () -> Unit,
         val onEditClick: (BankWithdrawEditTarget) -> Unit,
+        val onRailClick: () -> Unit,
     )
 }
