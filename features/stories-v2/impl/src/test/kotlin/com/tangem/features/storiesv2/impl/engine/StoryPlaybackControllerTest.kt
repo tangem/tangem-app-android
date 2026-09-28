@@ -25,6 +25,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -342,44 +343,51 @@ internal class StoryPlaybackControllerTest {
         assertThat(closed.params["Action Destination"]).isEqualTo("hardware_wallet")
     }
 
-    @Test
-    fun `GIVEN a web action WHEN clicked THEN only the host is reported as the destination`() {
-        // Arrange — a full url can carry campaign data, which has no place in an analytics property.
-        val action = StoryV2Action(
-            id = "learn_more",
-            label = stringReference(value = "Learn more"),
-            style = StoryV2Action.Style.SECONDARY,
-            target = StoryV2Action.Target.Web(url = "https://buy.tangem.com/products?utm=story"),
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ActionDestination {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a link action WHEN clicked THEN only its host is reported as the destination`(
+            model: DestinationModel,
+        ) {
+            // Arrange — the path, the query or the fragment of a link can carry campaign data or a wallet id.
+            val action = StoryV2Action(
+                id = "open",
+                label = stringReference(value = "Open"),
+                style = StoryV2Action.Style.PRIMARY,
+                target = model.target,
+            )
+            val controller = openController(composition = videoStory(actions = listOf(action)))
+
+            // Act
+            controller.onActionClicked(action)
+            pendingActions.single().end()
+
+            // Assert
+            assertThat(events.last { it.event == "Story Closed" }.params["Action Destination"])
+                .isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            DestinationModel(
+                target = StoryV2Action.Target.Web(url = "https://buy.tangem.com/products?utm=story"),
+                expected = "buy.tangem.com",
+            ),
+            DestinationModel(
+                target = StoryV2Action.Target.Web(url = "https://feedback.tangem.com#form"),
+                expected = "feedback.tangem.com",
+            ),
+            DestinationModel(
+                target = StoryV2Action.Target.Deeplink(uri = "tangem://hardware_wallet?user_wallet_id=ABC123"),
+                expected = "hardware_wallet",
+            ),
+            DestinationModel(
+                target = StoryV2Action.Target.Deeplink(uri = "tangem://hardware_wallet#section"),
+                expected = "hardware_wallet",
+            ),
         )
-        val controller = openController(composition = videoStory(actions = listOf(action)))
-
-        // Act
-        controller.onActionClicked(action)
-        pendingActions.single().end()
-
-        // Assert
-        assertThat(events.last { it.event == "Story Closed" }.params["Action Destination"])
-            .isEqualTo("buy.tangem.com")
-    }
-
-    @Test
-    fun `GIVEN a deeplink action WHEN clicked THEN only the route key is reported as the destination`() {
-        // Arrange — the query of an app link can name the wallet to open.
-        val action = StoryV2Action(
-            id = "upgrade",
-            label = stringReference(value = "Upgrade"),
-            style = StoryV2Action.Style.PRIMARY,
-            target = StoryV2Action.Target.Deeplink(uri = "tangem://hardware_wallet?user_wallet_id=ABC123"),
-        )
-        val controller = openController(composition = videoStory(actions = listOf(action)))
-
-        // Act
-        controller.onActionClicked(action)
-        pendingActions.single().end()
-
-        // Assert
-        assertThat(events.last { it.event == "Story Closed" }.params["Action Destination"])
-            .isEqualTo("hardware_wallet")
     }
 
     @Test
@@ -968,6 +976,8 @@ internal class StoryPlaybackControllerTest {
     )
 
     internal data class PosterlessStallModel(val stalledForMs: Long, val isStalled: Boolean)
+
+    internal data class DestinationModel(val target: StoryV2Action.Target, val expected: String)
 
     private companion object {
         const val SLIDE_DURATION_MS = 6_000L
