@@ -492,8 +492,8 @@ private val StoryV2Action.Target.analyticsType: String
     }
 
 /**
- * Links are reported as their host alone — the route key for a deeplink. The path and the query can carry campaign
- * data or a wallet id.
+ * Links are reported as their host alone — the route key for a deeplink. The path, the query and the fragment can
+ * carry campaign data or a wallet id.
  */
 private val StoryV2Action.Target.analyticsDestination: String?
     get() = when (this) {
@@ -503,4 +503,4 @@ private val StoryV2Action.Target.analyticsDestination: String?
         StoryV2Action.Target.Close -> null
     }
 
-private fun String.linkHost(): String = substringAfter("://").substringBefore('/').substringBefore('?')
+private fun String.linkHost(): String = substringAfter("://").takeWhile { it !in "/?#" }
