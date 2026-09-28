@@ -94,7 +94,7 @@ internal fun FeedPromoCard(
     ) {
         Text(
             text = title,
-            style = TangemTheme.typography3.subheading.medium,
+            style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
             overflow = TextOverflow.Ellipsis,
             maxLines = 2,
@@ -102,7 +102,7 @@ internal fun FeedPromoCard(
         if (description != null) {
             Text(
                 text = description,
-                style = TangemTheme.typography3.body.medium,
+                style = TangemTheme.typography3.subheading.medium,
                 color = TangemTheme.colors3.text.primary,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 3,
