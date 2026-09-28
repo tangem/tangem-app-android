@@ -109,6 +109,8 @@ import dev.chrisbanes.haze.rememberHazeState
  *   a palette forced around the call site never reaches it.
  * @param containerColor overrides the card fill; `null` keeps the component's own surface colour. Read at the
  *   call site, so pass a colour from the palette the modal renders in.
+ * @param showDragIndicator whether the drag pill is drawn above [title]. Its space stays either way, so the title
+ *   sits at the same height with or without it.
  * @param prewarm when `true`, the sheet is composed and measured while hidden — invisibly, off to
  *   the side of the host — so that its first appearance starts moving as fast as its second. Only
  *   worth it where the first tap is the one that matters (an onboarding screen) and where the call
@@ -128,6 +130,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModal(
     isMaterialEnabled: Boolean = true,
     forceDarkTheme: Boolean = false,
     containerColor: Color? = null,
+    showDragIndicator: Boolean = true,
     prewarm: Boolean = false,
     crossinline title: @Composable BoxScope.(T) -> Unit = {},
     crossinline content: @Composable ColumnScope.(T) -> Unit,
@@ -143,6 +146,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModal(
         LocalBottomSheetAlwaysVisible.current -> PreviewTangemModal<T>(
             config = config,
             containerColor = containerColor,
+            showDragIndicator = showDragIndicator,
             scrollableContent = scrollableContent,
             title = title,
             content = content,
@@ -152,6 +156,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModal(
             isMaterialEnabled = isMaterialEnabled,
             forceDarkTheme = forceDarkTheme,
             containerColor = containerColor,
+            showDragIndicator = showDragIndicator,
             config = config,
             onBack = onBack,
             dismissOnClickOutside = dismissOnClickOutside,
@@ -164,6 +169,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModal(
             config = config,
             forceDarkTheme = forceDarkTheme,
             containerColor = containerColor,
+            showDragIndicator = showDragIndicator,
             onBack = onBack,
             dismissOnClickOutside = dismissOnClickOutside,
             scrollableContent = scrollableContent,
@@ -204,6 +210,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> OverlayTangemMo
     isMaterialEnabled: Boolean,
     forceDarkTheme: Boolean,
     containerColor: Color?,
+    showDragIndicator: Boolean,
     config: TangemBottomSheetConfig,
     noinline onBack: (() -> Unit)?,
     dismissOnClickOutside: Boolean,
@@ -237,6 +244,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> OverlayTangemMo
                             config = config,
                             isMaterial = isMaterialEnabled,
                             containerColor = containerColor,
+                            showDragIndicator = showDragIndicator,
                             scrollableContent = scrollableContent,
                             title = title,
                             content = content,
@@ -269,6 +277,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> OverlayTangemMo
             isMaterial = isMaterialEnabled,
             forceDarkTheme = forceDarkTheme,
             containerColor = containerColor,
+            showDragIndicator = showDragIndicator,
             scrollableContent = scrollableContent,
             title = title,
             content = content,
@@ -297,6 +306,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> PrewarmTangemMo
     isMaterial: Boolean,
     forceDarkTheme: Boolean,
     containerColor: Color?,
+    showDragIndicator: Boolean,
     scrollableContent: Boolean,
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable ColumnScope.(T) -> Unit,
@@ -313,6 +323,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> PrewarmTangemMo
                         config = config,
                         isMaterial = isMaterial,
                         containerColor = containerColor,
+                        showDragIndicator = showDragIndicator,
                         scrollableContent = scrollableContent,
                         title = title,
                         content = content,
@@ -320,6 +331,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> PrewarmTangemMo
                 } else {
                     ModalPrewarmChrome(
                         isMaterial = isMaterial,
+                        showDragIndicator = showDragIndicator,
                         scrollableContent = scrollableContent,
                     )
                 }
@@ -357,11 +369,12 @@ internal fun ModalPalette(forceDarkTheme: Boolean, content: @Composable () -> Un
 /** The card of a contentless modal: everything of a modal appearance except the caller's content. */
 @Composable
 @PublishedApi
-internal fun ModalPrewarmChrome(isMaterial: Boolean, scrollableContent: Boolean) {
+internal fun ModalPrewarmChrome(isMaterial: Boolean, showDragIndicator: Boolean, scrollableContent: Boolean) {
     TangemModalContainer<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig.Empty,
         isMaterial = isMaterial,
         containerColor = null,
+        showDragIndicator = showDragIndicator,
         scrollableContent = scrollableContent,
         title = {},
         content = {},
@@ -380,6 +393,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> DefaultTangemMo
     config: TangemBottomSheetConfig,
     forceDarkTheme: Boolean,
     containerColor: Color?,
+    showDragIndicator: Boolean,
     noinline onBack: (() -> Unit)?,
     dismissOnClickOutside: Boolean,
     scrollableContent: Boolean,
@@ -415,6 +429,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> DefaultTangemMo
                         config = config,
                         isMaterial = false,
                         containerColor = containerColor,
+                        showDragIndicator = showDragIndicator,
                         scrollableContent = scrollableContent,
                         title = title,
                         content = content,
@@ -498,9 +513,11 @@ internal fun ModalDialogWindowEffect() {
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 @PublishedApi
+@Suppress("LongParameterList")
 internal inline fun <reified T : TangemBottomSheetConfigContent> PreviewTangemModal(
     config: TangemBottomSheetConfig,
     containerColor: Color?,
+    showDragIndicator: Boolean,
     scrollableContent: Boolean,
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable ColumnScope.(T) -> Unit,
@@ -522,6 +539,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> PreviewTangemMo
                 config = config,
                 isMaterial = true,
                 containerColor = containerColor,
+                showDragIndicator = showDragIndicator,
                 scrollableContent = scrollableContent,
                 title = title,
                 content = content,
@@ -537,6 +555,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> TangemModalCont
     config: TangemBottomSheetConfig,
     isMaterial: Boolean,
     containerColor: Color?,
+    showDragIndicator: Boolean,
     scrollableContent: Boolean,
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable ColumnScope.(T) -> Unit,
@@ -582,7 +601,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> TangemModalCont
                     .onFocusEvent { state -> morphGeometry.isFocused = state.hasFocus },
             ) {
                 CompositionLocalProvider(LocalHazeState provides contentHazeState) {
-                    DragIndicator(geometry = morphGeometry)
+                    DragIndicator(geometry = morphGeometry, isShown = showDragIndicator)
                     Box(modifier = Modifier.fillMaxWidth()) {
                         title(model)
                     }
@@ -606,25 +625,30 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> TangemModalCont
     }
 }
 
-/** Drag pill above the title, widening from 36dp to 44dp as the card morphs edge-to-edge. */
+/**
+ * Drag pill above the title, widening from 36dp to 44dp as the card morphs edge-to-edge. When not [isShown] it
+ * keeps its space and draws nothing.
+ */
 @Composable
 @PublishedApi
-internal fun DragIndicator(geometry: ModalMorphGeometry, modifier: Modifier = Modifier) {
+internal fun DragIndicator(geometry: ModalMorphGeometry, isShown: Boolean, modifier: Modifier = Modifier) {
     val color = TangemTheme.colors3.border.tertiary
     Box(
         modifier = modifier
             .fillMaxWidth()
             .padding(top = 4.dp, bottom = 8.dp)
             .height(4.dp)
-            .drawBehind {
-                val width = lerp(36.dp.toPx(), 44.dp.toPx(), geometry.flatten)
-                drawRoundRect(
-                    color = color,
-                    topLeft = Offset(x = (size.width - width) / 2f, y = 0f),
-                    size = Size(width = width, height = size.height),
-                    cornerRadius = CornerRadius(size.height / 2f),
-                )
-            },
+            .conditionalCompose(isShown) { drawPill(geometry = geometry, color = color) },
+    )
+}
+
+private fun Modifier.drawPill(geometry: ModalMorphGeometry, color: Color): Modifier = drawBehind {
+    val width = lerp(36.dp.toPx(), 44.dp.toPx(), geometry.flatten)
+    drawRoundRect(
+        color = color,
+        topLeft = Offset(x = (size.width - width) / 2f, y = 0f),
+        size = Size(width = width, height = size.height),
+        cornerRadius = CornerRadius(size.height / 2f),
     )
 }
 
