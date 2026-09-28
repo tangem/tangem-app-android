@@ -38,18 +38,22 @@ import com.tangem.features.jointaccount.main.JointAccountMembersUM
 import com.tangem.features.jointaccount.main.entity.MemberCardConfig
 import com.tangem.features.jointaccount.join.navigation.JointAccountJoinRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 import com.tangem.core.ui.R as CoreUiR
@@ -96,6 +100,13 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     private val unlockedWallets: StateFlow<List<UserWallet>> = userWalletsListRepository.userWallets
         .map { wallets -> wallets.orEmpty().filterNot(UserWallet::isLocked) }
         .stateIn(modelScope, SharingStarted.Eagerly, emptyList())
+
+    /** Once the selector has every unlocked wallet it stays ready: a later balance refresh must not hide the content */
+    private val isSelectorReady: StateFlow<Boolean> = combine(portfolioFetcher.data, unlockedWallets) { data, wallets ->
+        wallets.all { wallet -> wallet.walletId in data.balances }
+    }
+        .filter { isReady -> isReady }
+        .stateIn(modelScope, SharingStarted.Eagerly, false)
 
     /**
      * The wallet that joins the account. A pick in the selector always wins; with no pick yet it defaults to
@@ -158,6 +169,7 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
                 },
                 ifRight = { preview ->
                     params.draftHolder.setConfig(config = preview.config)
+                    awaitSelectorReady()
                     stateController.update(
                         SetContentTransformer(
                             preview = preview,
@@ -185,6 +197,19 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
         }
 
         return getJointAccountInvitePreviewUseCase(walletId = walletId, inviteId = params.inviteId)
+    }
+
+    /**
+     * Opened through the invite link on a cold start, the screen is ready before the wallet selector has its data,
+     * and a selector opened then shows nothing. The content waits for that data; a wallet that never reports must
+     * not hold the screen forever
+     */
+    private suspend fun awaitSelectorReady() {
+        val isReady = withTimeoutOrNull(SELECTOR_READY_TIMEOUT) { isSelectorReady.first { it } }
+
+        if (isReady == null) {
+            TangemLogger.i("Joint account invite: the wallet selector data is not ready in time, showing the content")
+        }
     }
 
     private fun retry() {
@@ -271,5 +296,6 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
 
     private companion object {
         val UNREACHABLE_RETRY_DELAYS = listOf(1.seconds, 2.seconds, 3.seconds)
+        val SELECTOR_READY_TIMEOUT = 10.seconds
     }
 }
