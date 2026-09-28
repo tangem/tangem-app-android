@@ -11,6 +11,7 @@ import com.tangem.data.pay.util.WithdrawStoreDataConverter
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.local.moshi.SdkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.utils.get
 import com.tangem.datasource.local.preferences.utils.getObjectMapSync
 import com.tangem.datasource.local.preferences.utils.getSyncOrNull
 import com.tangem.datasource.local.preferences.utils.store
@@ -21,6 +22,7 @@ import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.spend.datasource.preferences.SpendPreferencesKeys
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import java.util.UUID
@@ -278,6 +280,10 @@ internal class DefaultTangemPayStorage @Inject constructor(
         return appPreferencesStore.getSyncOrNull(
             key = spendPreferencesKeys.getHideOnboardingKey(userWalletId),
         ) == true
+    }
+
+    override fun isMainOnboardingBannerHidden(userWalletId: UserWalletId): Flow<Boolean> {
+        return appPreferencesStore.get(key = spendPreferencesKeys.getHideOnboardingKey(userWalletId), default = false)
     }
 
     override suspend fun storeTangemPayEligibility(eligibility: Set<String>) {
