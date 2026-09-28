@@ -9,7 +9,6 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
-import com.tangem.core.ui.security.DisableScreenshotsDisposableEffect
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.accesscode.model.MultiWalletAccessCodeModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.accesscode.ui.MultiWalletAccessCodeBS
@@ -62,8 +61,6 @@ class MultiWalletAccessCodeComponent(
             state = state,
             onBack = { model.onBack() },
         )
-
-        DisableScreenshotsDisposableEffect()
     }
 
     @JvmInline
