@@ -120,6 +120,25 @@ internal class SendRecipientHistoryListConverterTest {
         }
 
         @Test
+        fun `GIVEN outgoing joint account transfer WHEN convert THEN its recipient is listed`() {
+            // Arrange
+            val jointTransfer = txInfo(
+                type = TxInfo.TransactionType.Joint.Transfer(
+                    recipient = RECIPIENT,
+                    amount = BigDecimal.ONE,
+                    refundCapWei = BigDecimal("500000000000000"),
+                    signaturesCount = 2,
+                ),
+            )
+
+            // Act
+            val actual = converter.convert(listOf(jointTransfer))
+
+            // Assert
+            assertThat(actual.single().title).isEqualTo(stringReference(RECIPIENT))
+        }
+
+        @Test
         fun `GIVEN more than ten valid transactions WHEN convert THEN capped at ten`() {
             // Arrange
             val txs = (1..12).map { txInfo(txHash = "hash$it") }
