@@ -236,6 +236,14 @@ internal class GoogleWalletResultsTest {
         private fun provideTestModels(): List<AddResultModel> {
             val declinedError = createDeclinedError()
             val googlePayError = FakeMppError(errorCode = MppErrorCode.GOOGLE_PAY_ERROR)
+            val googlePayUnavailableError = FakeMppError(
+                errorCode = MppErrorCode.GOOGLE_PAY_ERROR,
+                walletErrorCode = TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE,
+            )
+            val googlePayAttestationError = FakeMppError(
+                errorCode = MppErrorCode.GOOGLE_PAY_ERROR,
+                walletErrorCode = TapAndPayStatusCodes.TAP_AND_PAY_ATTESTATION_ERROR,
+            )
             val walletApiError = createLookupError(TapAndPayStatusCodes.TAP_AND_PAY_ATTESTATION_ERROR)
             val notAllowlistedError = FakeMppError(
                 errorCode = MppErrorCode.STABLE_HARDWARE_ID_ERROR,
@@ -270,10 +278,28 @@ internal class GoogleWalletResultsTest {
                 AddResultModel(
                     error = declinedError,
                     expected = AddResult.Failed(
-                        reason = FailureReason.GOOGLE_WALLET_ERROR,
+                        reason = FailureReason.TOKENIZATION_DECLINED,
                         description = declinedError.describe(),
                         sdkErrorCode = MppErrorCode.GOOGLE_PAY_ERROR,
                         walletErrorCode = TapAndPayStatusCodes.TAP_AND_PAY_TOKENIZATION_DECLINED,
+                    ),
+                ),
+                AddResultModel(
+                    error = googlePayUnavailableError,
+                    expected = AddResult.Failed(
+                        reason = FailureReason.UNSUPPORTED,
+                        description = googlePayUnavailableError.describe(),
+                        sdkErrorCode = MppErrorCode.GOOGLE_PAY_ERROR,
+                        walletErrorCode = TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE,
+                    ),
+                ),
+                AddResultModel(
+                    error = googlePayAttestationError,
+                    expected = AddResult.Failed(
+                        reason = FailureReason.GOOGLE_WALLET_ERROR,
+                        description = googlePayAttestationError.describe(),
+                        sdkErrorCode = MppErrorCode.GOOGLE_PAY_ERROR,
+                        walletErrorCode = TapAndPayStatusCodes.TAP_AND_PAY_ATTESTATION_ERROR,
                     ),
                 ),
                 AddResultModel(
