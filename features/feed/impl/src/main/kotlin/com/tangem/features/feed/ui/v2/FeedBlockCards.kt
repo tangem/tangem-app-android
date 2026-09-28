@@ -59,7 +59,8 @@ internal fun FeedShortcutCard(
                     text = title,
                     style = TangemTheme.typography3.caption.medium,
                     color = TangemTheme.colors3.text.primary,
-                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 2,
                 )
             }
         }
