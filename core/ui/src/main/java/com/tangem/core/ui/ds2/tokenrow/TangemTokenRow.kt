@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
@@ -35,6 +36,8 @@ import com.tangem.core.ui.res.generated.icons.ic_sign_equal_24
  * Design-system v2 (DS3) **Token Row** — a portfolio list item: token icon, title with an optional
  * badge, quote + price change, fiat/crypto balances and an optional message-bubble promo line
  * underneath. DS3 replacement for the legacy `ds/row/token` `TangemTokenRow`.
+ *
+ * Version: 1.2.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=5723-2473)
  *
@@ -137,6 +140,8 @@ fun TangemTokenRow(
 
 /** Public API surface of [TangemTokenRow]. */
 object TangemTokenRow {
+
+    val version = DsVersion(major = 1, minor = 2, patch = 0)
 
     /**
      * Badge shown after the title (e.g. an `"APY 5.47%"` chip). Wraps [TangemBadge] so callers can
