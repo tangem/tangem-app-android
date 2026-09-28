@@ -47,8 +47,9 @@ internal class TangemPayBlockComponent(
     }
 
     private fun onClick() {
+        val mode = model.onboardingMode.value ?: return
         blocksAnalytics.onProductCardClicked(productCard)
-        router.push(AppRoute.TangemPayOnboarding(mode = AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain))
+        router.push(AppRoute.TangemPayOnboarding(mode = mode))
     }
 
     companion object {
