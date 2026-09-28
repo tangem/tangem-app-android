@@ -17,14 +17,13 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.account.AccountIcon
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.components.account.AccountIconSize
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetType
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
-import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
+import com.tangem.core.ui.ds2.modal.TangemModal
+import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -45,19 +44,14 @@ internal fun MemberCardModal(
     onCopyClick: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
+    TangemModal<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
             isShown = true,
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        type = TangemBottomSheetType.Modal,
-        containerColor = TangemTheme.colors3.bg.secondary,
         title = {
-            TangemTopNavigation(
-                blurBackground = false,
-                endButton = { TangemButton.Close(onClick = onDismiss) },
-            )
+            TangemModal.TopNavigation(endButton = { TangemButton.Close(onClick = onDismiss) })
         },
         content = {
             MemberCardContent(
@@ -168,10 +162,7 @@ private fun MemberIdentity(name: TextReference, address: TextReference, modifier
 private fun MemberCardContentPreview() {
     TangemThemePreviewRedesign {
         Column(modifier = Modifier.background(TangemTheme.colors3.bg.secondary)) {
-            TangemTopNavigation(
-                blurBackground = false,
-                endButton = { TangemButton.Close(onClick = {}) },
-            )
+            TangemModal.TopNavigation(endButton = { TangemButton.Close(onClick = {}) })
             MemberCardContent(
                 avatar = MemberAvatarUM(monogram = "D", color = CryptoPortfolioIcon.Color.CandyGrapeFizz),
                 name = stringReference("Danil Kolbasenko"),
