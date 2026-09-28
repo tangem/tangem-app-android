@@ -37,6 +37,7 @@ import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.visa.model.TangemPayInitialCredentials
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -89,8 +90,17 @@ internal class DefaultOnboardingRepository @Inject constructor(
                 )
             // should storeCheckCustomerWalletResult because we already know this
             tangemPayStorage.storeCheckCustomerWalletResult(userWallet.walletId, true)
+            storeInitialCredentials(userWalletId = userWallet.walletId, initialCredentials = initialCredentials)
+        }
+    }
+
+    override suspend fun storeInitialCredentials(
+        userWalletId: UserWalletId,
+        initialCredentials: TangemPayInitialCredentials,
+    ) {
+        withContext(dispatcherProvider.io) {
             tangemPayStorage.storeCustomerWalletAddress(
-                userWalletId = userWallet.walletId,
+                userWalletId = userWalletId,
                 customerWalletAddress = initialCredentials.customerWalletAddress,
             )
             tangemPayStorage.storeAuthTokens(
