@@ -122,7 +122,6 @@ internal class StoryV2CompositionValidatorTest {
     private fun composition(slides: List<StoryV2Slide>, actions: List<StoryV2Action> = emptyList()) =
         StoryV2Composition(
             id = "story",
-            version = 1,
             origin = StoryV2Origin.BUNDLED,
             endBehavior = StoryV2EndBehavior.LOOP,
             actions = actions,
