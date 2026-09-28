@@ -15,6 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -49,11 +50,11 @@ internal fun TesterMenuScreen(state: TesterMenuUM, modifier: Modifier = Modifier
 
         items(
             items = state.buttons.toImmutableList(),
-            key = ButtonUM::textResId,
+            key = ButtonUM::name,
             contentType = { "button" },
         ) { button ->
             PrimaryButton(
-                text = stringResourceSafe(button.textResId),
+                text = button.text.resolveReference(),
                 onClick = { state.onButtonClick(button) },
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 8.dp)
