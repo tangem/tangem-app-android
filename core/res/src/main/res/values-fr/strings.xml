@@ -955,7 +955,7 @@
   <string name="introduction_stories_three_title">Vos clés, vos cryptos</string>
   <string name="introduction_stories_two_subtitle">Utilisez n\'importe laquelle de vos cartes pour accéder à votre wallet</string>
   <string name="introduction_stories_two_title">Un wallet, plusieurs cartes</string>
-  <string name="introduction_subtitle">Dans la seule application dont vous avez besoin</string>
+  <string name="introduction_subtitle">Un seul endroit sécurisé pour tout ce que vous possédez</string>
   <string name="introduction_terms_of_service">Conditions d\'utilisation</string>
   <string name="introduction_title">Stockez tous vos actifs</string>
   <string name="key_invalidated_warning_description">Vous avez mis à jour vos données biométriques, scannez votre carte ou bague pour entrer</string>

@@ -29,6 +29,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.TangemColors3
@@ -36,6 +37,8 @@ import com.tangem.core.ui.res.generated.TangemColors3
 /**
  * Design-system v2 (DS3) **Glow Ring** — an animated angular-gradient halo that runs around a
  * rounded-rect outline, like lights chasing along the border.
+ *
+ * Version: 1.1.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=4933-126&m=dev)
  *
@@ -143,6 +146,8 @@ private fun rememberGlowRingStops(variant: TangemGlowRing.Variant, animated: Boo
 
 /** Public API surface of [TangemGlowRing]. */
 object TangemGlowRing {
+
+    val version = DsVersion(major = 1, minor = 1, patch = 0)
 
     /** Color theme of the glow ring gradient. */
     enum class Variant {
