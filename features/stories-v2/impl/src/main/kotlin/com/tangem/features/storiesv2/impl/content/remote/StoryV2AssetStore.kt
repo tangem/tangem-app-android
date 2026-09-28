@@ -60,6 +60,9 @@ internal class DefaultStoryV2AssetStore @Inject constructor(
      */
     private val inUse: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
+    /** Partial files being written right now. Any other `.part` was left by a killed process and is only waste. */
+    private val partsInFlight: MutableSet<String> = ConcurrentHashMap.newKeySet()
+
     override suspend fun resolve(file: RemoteStoryV2File, keep: Set<String>): StoryV2AssetResult {
         // Marked before the size check: a cleanup running meanwhile either spares the file or deletes it before the
         // check, which then downloads it again.
@@ -91,6 +94,9 @@ internal class DefaultStoryV2AssetStore @Inject constructor(
 
     /** Out of space means one cleanup and one more attempt, never a retry loop. */
     private suspend fun download(file: RemoteStoryV2File, target: File, keep: Set<String>): StoryV2AssetResult {
+        // A file larger than the whole budget could only be stored by breaking it, so its declaration is broken.
+        if (file.sizeBytes > BUDGET_BYTES) return StoryV2AssetResult.Failed(StoryV2ErrorReason.INTEGRITY_MISMATCH)
+
         storage.assets.mkdirs()
         evictToFit(incomingBytes = file.sizeBytes, keep = keep)
 
@@ -104,8 +110,9 @@ internal class DefaultStoryV2AssetStore @Inject constructor(
     /** Ready only once fully written, matching the declared size and renamed into place. */
     private suspend fun write(file: RemoteStoryV2File, target: File): WriteResult {
         val part = File(target.parentFile, "${target.name}$PART_SUFFIX")
+        partsInFlight.add(part.name)
         return try {
-            downloader.download(url = file.url, target = part)
+            downloader.download(url = file.url, target = part, expectedBytes = file.sizeBytes)
             when {
                 part.length() != file.sizeBytes -> {
                     part.delete()
@@ -128,6 +135,8 @@ internal class DefaultStoryV2AssetStore @Inject constructor(
                 TangemLogger.e("Stories V2: failed to download ${file.url}", e)
                 WriteResult.Failed(StoryV2ErrorReason.NETWORK)
             }
+        } finally {
+            partsInFlight.remove(part.name)
         }
     }
 
@@ -148,16 +157,16 @@ internal class DefaultStoryV2AssetStore @Inject constructor(
 
     private fun evictAll(keep: Set<String>) {
         val keepNames = protectedNames(keep)
-        storage.assets.listFiles()?.filterNot { it.name in keepNames }?.forEach(File::delete)
+        storedFiles().filterNot { it.name in keepNames }.forEach(File::delete)
     }
 
     private fun protectedNames(urls: Set<String>): Set<String> {
         return (urls + inUse).mapTo(mutableSetOf(), ::fileNameOf)
     }
 
-    /** Finished files only; a `.part` belongs to a download still in flight. */
+    /** Everything but the partial files being written: a leftover part takes space like any other file. */
     private fun storedFiles(): List<File> {
-        return storage.assets.listFiles()?.filterNot { it.name.endsWith(PART_SUFFIX) }.orEmpty()
+        return storage.assets.listFiles()?.filterNot { it.name in partsInFlight }.orEmpty()
     }
 
     private fun WriteResult.toAssetResult(target: File): StoryV2AssetResult = when (this) {

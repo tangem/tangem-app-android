@@ -2,7 +2,6 @@ package com.tangem.features.storiesv2.impl.content.remote
 
 import androidx.datastore.core.DataStore
 import com.squareup.moshi.JsonDataException
-import com.squareup.moshi.JsonEncodingException
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.tangem.core.remote.moshi.NetworkMoshi
@@ -47,9 +46,6 @@ internal class StoryV2LocalStore @Inject constructor(
         return try {
             responseAdapter.fromJson(saved.json)
         } catch (e: JsonDataException) {
-            TangemLogger.e("Stories V2: saved response is unreadable", e)
-            null
-        } catch (e: JsonEncodingException) {
             TangemLogger.e("Stories V2: saved response is unreadable", e)
             null
         } catch (e: IOException) {
