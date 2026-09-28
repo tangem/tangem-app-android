@@ -118,7 +118,7 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
                 PlaceholderStory -> PlaceholderStory()
                 ProgressIndicatorStory -> ProgressIndicatorStory()
                 DeviceIconStory -> DeviceIconStory()
-                is DsComponentsListStory -> DsComponentsListStory(state = storyState)
+                DsComponentsListStory -> DsComponentsListStory(onStoryClick = state.onStoryClick)
                 is TangemLoaderStory -> TangemLoaderStory(state = storyState)
                 is TangemButtonStory -> TangemButtonStory(state = storyState)
                 is TangemButtonGroupStory -> TangemButtonGroupStory(state = storyState)
@@ -145,6 +145,8 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
                 is TangemSegmentedControlStory -> TangemSegmentedControlStory(state = storyState)
                 is TextStyleStory -> TextStyleStory(state = storyState)
             }
+
+            DsVersionBadge(version = state.currentVersion, withStatusBarPadding = isEdgeToEdgePage)
         }
     }
 }
