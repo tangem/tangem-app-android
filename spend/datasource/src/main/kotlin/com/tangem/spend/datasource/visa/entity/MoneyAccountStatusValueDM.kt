@@ -13,21 +13,25 @@ import java.math.BigDecimal
 sealed interface MoneyAccountStatusValueDM {
 
     @NameLabel("empty")
+    @JsonClass(generateAdapter = true)
     data class Empty(
         @Json(name = "empty") val marker: Boolean = true,
     ) : MoneyAccountStatusValueDM
 
     @NameLabel("not_created")
+    @JsonClass(generateAdapter = true)
     data class NotCreated(
         @Json(name = "not_created") val marker: Boolean = true,
     ) : MoneyAccountStatusValueDM
 
     @NameLabel("country_not_supported")
+    @JsonClass(generateAdapter = true)
     data class CountryNotSupported(
         @Json(name = "country_not_supported") val marker: Boolean = true,
     ) : MoneyAccountStatusValueDM
 
     @NameLabel("issuing")
+    @JsonClass(generateAdapter = true)
     data class Issuing(
         @Json(name = "issuing") val marker: Boolean = true,
         @Json(name = "step") val step: MoneyAccountStatusValue.IssuingStep,
@@ -36,6 +40,7 @@ sealed interface MoneyAccountStatusValueDM {
     ) : MoneyAccountStatusValueDM
 
     @NameLabel("kyc_status")
+    @JsonClass(generateAdapter = true)
     data class UnderReview(
         @Json(name = "kyc_status") val kycStatus: KycStatus,
         @Json(name = "customer_id") val customerId: String,
@@ -43,6 +48,7 @@ sealed interface MoneyAccountStatusValueDM {
     ) : MoneyAccountStatusValueDM
 
     @NameLabel("verification_declined")
+    @JsonClass(generateAdapter = true)
     data class VerificationDeclined(
         @Json(name = "verification_declined") val marker: Boolean = true,
         @Json(name = "customer_id") val customerId: String,
@@ -50,6 +56,7 @@ sealed interface MoneyAccountStatusValueDM {
     ) : MoneyAccountStatusValueDM
 
     @NameLabel("activating")
+    @JsonClass(generateAdapter = true)
     data class Activating(
         @Json(name = "activating") val marker: Boolean = true,
         @Json(name = "customer_id") val customerId: String?,
@@ -57,6 +64,7 @@ sealed interface MoneyAccountStatusValueDM {
     ) : MoneyAccountStatusValueDM
 
     @NameLabel("active_account")
+    @JsonClass(generateAdapter = true)
     data class ActiveAccount(
         @Json(name = "active_account") val marker: Boolean = true,
         @Json(name = "customer_id") val customerId: String,
@@ -65,6 +73,7 @@ sealed interface MoneyAccountStatusValueDM {
     ) : MoneyAccountStatusValueDM
 
     @NameLabel("deactivated")
+    @JsonClass(generateAdapter = true)
     data class Deactivated(
         @Json(name = "deactivated") val marker: Boolean = true,
         @Json(name = "customer_id") val customerId: String,
