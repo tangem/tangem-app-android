@@ -39,6 +39,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.animation.TangemAnimationSpec
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.res.TangemTheme
@@ -52,6 +53,8 @@ import com.tangem.core.ui.res.generated.icons.ic_control_circle_24_filled
  * Design-system v2 circular checkmark: an `unchecked` outline circle or a `checked` filled circle
  * with a checkmark. Unlike [TangemCheckbox], this control is round (border-radius/full) and
  * boolean-only — it has no indeterminate state.
+ *
+ * Version: 1.0.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=3671-5693)
  *
@@ -170,6 +173,12 @@ fun TangemCheckmark(
             }
         }
     }
+}
+
+/** Public API surface of [TangemCheckmark]. */
+object TangemCheckmark {
+
+    val version = DsVersion(major = 1, minor = 0, patch = 0)
 }
 
 @Preview(name = "Light", showBackground = true)
