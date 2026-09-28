@@ -153,7 +153,7 @@ internal class YieldSupplyStartEarningModelTest : YieldSupplyActionModelTestBase
     }
 
     @Test
-    fun `GIVEN content loaded WHEN onClick THEN sends activates tracks pending and notifies sent`() = runTest {
+    fun `GIVEN content loaded WHEN onClick THEN tracks pending and notifies sent`() = runTest {
         // Arrange
         val model = createModel()
         advanceUntilIdle()
@@ -164,9 +164,22 @@ internal class YieldSupplyStartEarningModelTest : YieldSupplyActionModelTestBase
 
         // Assert
         coVerify { yieldSupplyRepository.saveTokenProtocolPendingStatus(userWalletId, any(), any()) }
-        coVerify { activateUseCase(userWalletId, any(), any()) }
-        coVerify { pendingTracker.addPending(userWalletId, any(), any()) }
+        coVerify { pendingTracker.addPending(userWalletId, any(), any(), any()) }
         verify { callback.onTransactionSent() }
+    }
+
+    @Test
+    fun `GIVEN content loaded WHEN onClick THEN does not activate protocol before the enter tx settles`() = runTest {
+        // Arrange
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Act
+        model.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { activateUseCase(any(), any(), any()) }
     }
 
     @Test
@@ -256,7 +269,6 @@ internal class YieldSupplyStartEarningModelTest : YieldSupplyActionModelTestBase
         getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
         yieldSupplyNotificationsUpdateTrigger = notificationsUpdateTrigger,
         yieldSupplyAlertFactory = alertFactory,
-        yieldSupplyActivateUseCase = activateUseCase,
         yieldSupplyMinAmountUseCase = minAmountUseCase,
         yieldSupplyGetMaxFeeUseCase = getMaxFeeUseCase,
         yieldSupplyGetCurrentFeeUseCase = getCurrentFeeUseCase,
