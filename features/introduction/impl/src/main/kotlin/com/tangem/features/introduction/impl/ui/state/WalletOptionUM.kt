@@ -1,10 +1,10 @@
 package com.tangem.features.introduction.impl.ui.state
 
-import androidx.annotation.DrawableRes
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.tangem.core.ui.extensions.TextReference
 
 internal data class WalletOptionUM(
-    @DrawableRes val iconRes: Int,
+    val icon: ImageVector,
     val title: TextReference,
     val description: TextReference,
     val isEnabled: Boolean = true,

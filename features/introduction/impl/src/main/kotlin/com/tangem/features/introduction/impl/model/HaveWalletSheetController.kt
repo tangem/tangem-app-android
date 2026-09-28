@@ -8,6 +8,10 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
+import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_20
+import com.tangem.core.ui.res.generated.icons.ic_user_20
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.cloudbackup.usecase.ResolveCloudRestoreBackupsUseCase
 import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
@@ -19,7 +23,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import com.tangem.core.res.R as CoreResR
-import com.tangem.core.ui.R as CoreUiR
 
 @Suppress("LongParameterList")
 internal class HaveWalletSheetController(
@@ -54,14 +57,14 @@ internal class HaveWalletSheetController(
 
     private fun optionsStep() = HaveWalletUM.Step.Options(
         cardOrRing = WalletOptionUM(
-            iconRes = CoreUiR.drawable.ic_tangem_24,
+            icon = Icons.ic_logo_tangem_20,
             title = resourceReference(CoreResR.string.introduction_create_wallet_hardware_title),
             description = resourceReference(CoreResR.string.introduction_i_have_wallet_hardware_description),
             onClick = ::onSignInWithCardClick,
         ),
         socialLogin = if (socialLoginFeatureToggles.isSocialLoginEnabled) {
             WalletOptionUM(
-                iconRes = CoreUiR.drawable.ic_user_24,
+                icon = Icons.ic_user_20,
                 title = resourceReference(CoreResR.string.introduction_i_have_wallet_sign_in_google_title),
                 description = resourceReference(CoreResR.string.introduction_create_wallet_seed_phrase_description),
                 // TODO TWI-1555: social login belongs to another team; the row stays inert until it lands.
@@ -71,7 +74,7 @@ internal class HaveWalletSheetController(
             null
         },
         importWallet = WalletOptionUM(
-            iconRes = CoreUiR.drawable.ic_arrow_down_24,
+            icon = Icons.ic_arrow_down_20,
             title = resourceReference(CoreResR.string.hw_import_existing_wallet),
             // The sheet's own wording: the hw_ description belongs to the mobile-wallet screens and reads
             // differently there.
