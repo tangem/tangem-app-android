@@ -90,9 +90,27 @@ sealed interface TransactionItemUM {
         data class OwnAccount(
             val direction: Direction,
             val accountName: TextReference,
-            @DrawableRes val iconResId: Int,
-            val iconBackgroundColor: Color,
+            val avatar: PortfolioAvatar,
         ) : ContentSubtitle
+
+        /**
+         * Leading avatar of whichever counterparty a subtitle names a portfolio for — an own account
+         * ([OwnAccount], [AssetOwner.Account]) or a saved contact ([Contact]). Resolved from that portfolio's icon:
+         * the default `Letter` icon renders the [Monogram] of [Monogram.name], any icon picked in the editor renders
+         * as [Resource].
+         *
+         * [Monogram] carries the whole name rather than its first character because an account name is a
+         * [TextReference] — the main account's title is a localized resource, so its letter is only known once the
+         * reference resolves against the composition's resources. The shape is the enclosing subtitle's call, not the
+         * avatar's: a circle for a contact, a rounded square for an account.
+         */
+        @Immutable
+        sealed interface PortfolioAvatar {
+
+            data class Monogram(val name: TextReference, val color: Color) : PortfolioAvatar
+
+            data class Resource(@DrawableRes val resId: Int, val color: Color) : PortfolioAvatar
+        }
 
         /**
          * Counterparty matches one of the user's own Tangem Pay (Payment) accounts — renders as
@@ -117,20 +135,8 @@ sealed interface TransactionItemUM {
         data class Contact(
             val direction: Direction,
             val contactName: String,
-            val avatar: ContactAvatar,
+            val avatar: PortfolioAvatar,
         ) : ContentSubtitle
-
-        /**
-
-         * app carries a letter [Monogram], while an icon picked in the contact editor renders as [Resource].
-         */
-        @Immutable
-        sealed interface ContactAvatar {
-
-            data class Monogram(val char: Char, val color: Color) : ContactAvatar
-
-            data class Resource(@DrawableRes val resId: Int, val color: Color) : ContactAvatar
-        }
 
         /**
          * Counterparty asset ticker — renders as "to/from: <icon> <SYMBOL>", optionally followed by the counterparty
@@ -159,8 +165,7 @@ sealed interface TransactionItemUM {
         sealed interface AssetOwner {
             data class Account(
                 val name: TextReference,
-                @DrawableRes val iconResId: Int,
-                val iconBackgroundColor: Color,
+                val avatar: PortfolioAvatar,
             ) : AssetOwner
 
             data class PaymentAccount(val name: TextReference) : AssetOwner

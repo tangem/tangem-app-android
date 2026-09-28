@@ -3,8 +3,6 @@ package com.tangem.features.txhistory.converter
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Direction as RowDirection
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
-import com.tangem.common.ui.account.getResId
-import com.tangem.common.ui.account.getUiColor
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
@@ -103,8 +101,7 @@ internal class ExpressTxToTransactionItemUMConverter(
     private fun ResolvedOwner.toAssetOwner(): ContentSubtitle.AssetOwner? = when (this) {
         is ResolvedOwner.OwnAccount -> ContentSubtitle.AssetOwner.Account(
             name = account.accountName.toUM().value,
-            iconResId = account.icon.value.getResId(),
-            iconBackgroundColor = account.icon.color.getUiColor(),
+            avatar = account.icon.toPortfolioAvatar(name = account.accountName.toUM().value),
         )
         is ResolvedOwner.OwnPaymentAccount -> ContentSubtitle.AssetOwner.PaymentAccount(
             name = account.accountName.toUM().value,
