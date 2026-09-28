@@ -122,7 +122,7 @@ internal class DefaultFeedbackRepository(
 
     override fun getLogFile(): File? = appLogsStore.getFile()
 
-    override suspend fun getZipLogFile(): File? = appLogsStore.getZipFile()
+    override suspend fun getZipLogFile(infoLogs: String?): File? = appLogsStore.getZipFile(infoLogs)
 
     override fun sendEmail(feedbackEmail: FeedbackEmail) {
         emailSender.send(
