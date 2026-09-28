@@ -1,6 +1,7 @@
 package com.tangem.data.walletmanager.utils
 
 import com.tangem.blockchain.common.address.Address
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.blockchain.common.Amount
@@ -29,7 +30,7 @@ internal class SdkTransactionHistoryItemConverter(
     private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
 ) : Converter<SdkTransactionHistoryItem, TxInfo> {
 
-    private val ownAddress: String? = currencyAddresses.firstOrNull()?.value
+    private val ownAddress: String? = currencyAddresses.firstOrNull { it.type == AddressType.Default }?.value
 
     private val typeConverter by lazy {
         SdkTransactionTypeConverter(
