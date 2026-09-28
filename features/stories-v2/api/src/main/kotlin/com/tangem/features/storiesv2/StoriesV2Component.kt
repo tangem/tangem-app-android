@@ -4,8 +4,8 @@ import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
 
 /**
- * Full-screen story player. Owns playback, progress, pause, haptics and analytics; performs no network requests and
- * reads no feature flags. Every decision that leaves the player goes back to the host: action taps through
+ * Full-screen story player. Owns playback, progress, pause, haptics and analytics, and reads no feature flags. A remote
+ * story still downloading is waited for on a loading screen, with a retry if the delivery fails. Every decision that leaves the player goes back to the host: action taps through
  * [Params.onAction], terminal outcomes through [Params.onResult].
  */
 interface StoriesV2Component : ComposableContentComponent {
