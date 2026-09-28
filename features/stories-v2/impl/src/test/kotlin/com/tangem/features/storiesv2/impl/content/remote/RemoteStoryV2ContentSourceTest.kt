@@ -111,7 +111,7 @@ internal class RemoteStoryV2ContentSourceTest {
         }
 
         @Test
-        fun `GIVEN a response without the slug WHEN load THEN the story is unavailable`() = runTest {
+        fun `GIVEN a response without the slug WHEN load THEN the story is not found`() = runTest {
             // Arrange
             givenResponse(mapOf(MAIN_PLACEMENT to emptyList()))
 
@@ -119,7 +119,7 @@ internal class RemoteStoryV2ContentSourceTest {
             val actual = source.load(slug = SLUG, language = "en")
 
             // Assert
-            assertThat(actual).isEqualTo(RemoteStoryV2Load.Unavailable)
+            assertThat(actual).isEqualTo(RemoteStoryV2Load.NotFound)
         }
 
         @Test
@@ -344,7 +344,7 @@ internal class RemoteStoryV2ContentSourceTest {
     inner class OncePolicy {
 
         @Test
-        fun `GIVEN a once story already shown WHEN load THEN it is unavailable and nothing is downloaded`() = runTest {
+        fun `GIVEN a once story already shown WHEN load THEN it is reported as shown and not downloaded`() = runTest {
             // Arrange
             givenResponse(mapOf(MAIN_PLACEMENT to listOf(storyDto(displayPolicy = "once"))))
             coEvery { localStore.shownSlugs() } returns setOf(SLUG)
@@ -353,7 +353,7 @@ internal class RemoteStoryV2ContentSourceTest {
             val actual = source.load(slug = SLUG, language = "en")
 
             // Assert
-            assertThat(actual).isEqualTo(RemoteStoryV2Load.Unavailable)
+            assertThat(actual).isEqualTo(RemoteStoryV2Load.AlreadyShown)
             coVerify(exactly = 0) { assetStore.resolve(file = any(), keep = any()) }
         }
 
