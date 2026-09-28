@@ -68,10 +68,16 @@ internal class CollectiblesDiscoveryContentTransformerTest {
             expected = Expectation.Loading,
         ),
         TransformModel(
-            description = "GIVEN an empty screen WHEN first page reloads THEN content is loading",
+            description = "GIVEN an empty screen WHEN first page reloads THEN it stays empty",
             status = PaginationStatus.InitialLoading,
             prevContent = CollectiblesDiscoveryUM.ContentUM.Empty(message = stringReference("empty")),
-            expected = Expectation.Loading,
+            expected = Expectation.Empty,
+        ),
+        TransformModel(
+            description = "GIVEN an empty screen WHEN status is None THEN it stays empty",
+            status = PaginationStatus.None,
+            prevContent = CollectiblesDiscoveryUM.ContentUM.Empty(message = stringReference("empty")),
+            expected = Expectation.Empty,
         ),
         TransformModel(
             description = "GIVEN packs on screen WHEN status is None THEN they stay and are marked reloading",
