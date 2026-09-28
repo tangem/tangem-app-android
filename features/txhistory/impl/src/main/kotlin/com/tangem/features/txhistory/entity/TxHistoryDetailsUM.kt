@@ -2,7 +2,6 @@ package com.tangem.features.txhistory.entity
 
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.cosign.CosignRequestRowUM
@@ -158,11 +157,13 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
 
         val name: TextReference
 
-        /** User's own account — the [iconResId] glyph tinted over [backgroundColor], shown **before** the [name]. */
+        /**
+         * User's own account — its portfolio [icon] over the icon's color, shown **before** the [name]. The avatar is
+         * drawn by the design-system `AccountIcon`, so a `Letter` icon renders the monogram of [name].
+         */
         data class Account(
             override val name: TextReference,
-            @DrawableRes val iconResId: Int,
-            val backgroundColor: Color,
+            val icon: AccountIconUM.CryptoPortfolio,
         ) : AssetOwnerUM
 
         /** User's own Tangem Pay (Payment) account — the Visa icon, shown **before** the [name]. */
@@ -286,10 +287,13 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
         /** A plain type glyph over the neutral avatar circle — the ↑ of a fee-only card, which has no owner. */
         data class Glyph(val icon: TxIcon) : CounterpartyAvatar
 
-        /** User's own account — rendered as [iconResId] tinted over [backgroundColor]. */
+        /**
+         * User's own account — rendered by the design-system `AccountIcon` from its portfolio [icon], so a `Letter`
+         * icon renders the monogram of [name] instead of a placeholder glyph.
+         */
         data class Account(
-            @DrawableRes val iconResId: Int,
-            val backgroundColor: Color,
+            val name: TextReference,
+            val icon: AccountIconUM.CryptoPortfolio,
         ) : CounterpartyAvatar
 
         /** User's own Tangem Pay (Payment) account — rendered as the Visa icon. */
@@ -299,8 +303,8 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
         data class Wallet(val deviceIconUM: DeviceIconUM) : CounterpartyAvatar
 
         /**
-         * Recipient saved in an address book — rendered as the contact avatar: the monogram of [name] for a letter
-         * [icon], the picked drawable otherwise.
+         * Recipient saved in an address book — the same avatar as [Account], drawn from the contact's own portfolio
+         * [icon]; only the circular contact shape tells the two apart.
          */
         data class Contact(val name: String, val icon: AccountIconUM.CryptoPortfolio) : CounterpartyAvatar
     }

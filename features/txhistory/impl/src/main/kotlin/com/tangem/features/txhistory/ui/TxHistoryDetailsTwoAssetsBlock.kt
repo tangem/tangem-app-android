@@ -29,7 +29,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
+import com.tangem.common.ui.account.AccountIcon
+import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.components.account.AccountIconSize
+import com.tangem.domain.models.account.CryptoPortfolioIcon.Color as IconColor
+import com.tangem.domain.models.account.CryptoPortfolioIcon.Icon
 import com.tangem.core.ui.components.account.PaymentAccountIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.currency.icon.TangemCurrencyIcon
@@ -186,21 +190,14 @@ private fun LabelText(text: TextReference, modifier: Modifier = Modifier) {
 private fun AssetOwnerIcon(owner: AssetOwnerUM, modifier: Modifier = Modifier) {
     val iconModifier = modifier.size(16.dp)
     when (owner) {
-        is AssetOwnerUM.Account -> Box(
-            modifier = iconModifier
-                .clip(RoundedCornerShape(4.dp))
-                .background(owner.backgroundColor),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                painter = painterResource(id = owner.iconResId),
-                contentDescription = null,
-                // staticDark == white in both themes (the constant glyph tone for a colored avatar), matching the
-                // white-on-color account avatar in Figma and the counterparty card / history-list account icon.
-                tint = TangemTheme.colors3.icon.staticDark,
-                modifier = Modifier.size(8.dp),
-            )
-        }
+        // The raw modifier, not the pre-sized iconModifier: AccountIcon sizes itself from ExtraSmall (16dp), and an
+        // outer size() would pin that instead of following the design-system size.
+        is AssetOwnerUM.Account -> AccountIcon(
+            name = owner.name,
+            icon = owner.icon,
+            size = AccountIconSize.ExtraSmall,
+            modifier = modifier,
+        )
         is AssetOwnerUM.Wallet -> TangemDeviceIcon(
             state = owner.deviceIconUM,
             modifier = iconModifier,
@@ -299,8 +296,7 @@ private fun TxHistoryDetailsTwoAssetsBlockPreview() {
                     isFaded = false,
                     owner = AssetOwnerUM.Account(
                         name = stringReference("Main account"),
-                        iconResId = R.drawable.ic_rounded_star_24,
-                        backgroundColor = Color(0xFF007FFF),
+                        icon = AccountIconUM.CryptoPortfolio(value = Icon.Star, color = IconColor.Azure),
                     ),
                 ),
                 to = previewAsset(
@@ -309,8 +305,7 @@ private fun TxHistoryDetailsTwoAssetsBlockPreview() {
                     isFaded = false,
                     owner = AssetOwnerUM.Account(
                         name = stringReference("Family"),
-                        iconResId = R.drawable.ic_family_24,
-                        backgroundColor = Color(0xFF744FF1),
+                        icon = AccountIconUM.CryptoPortfolio(value = Icon.Family, color = IconColor.CandyGrapeFizz),
                     ),
                 ),
                 isBalanceHidden = false,
