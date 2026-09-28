@@ -761,7 +761,79 @@ internal class PolymarketMainModelTest {
 
         // Assert
         assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
+        coVerify(exactly = 1) { refreshRequisites(USER_WALLET_ID) }
         model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a pending refresh WHEN the model is destroyed before it starts THEN the indicator stops`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isTrue()
+        model.onDestroy()
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
+        coVerify(exactly = 0) { positionsPreviewLoader.refresh(any(), USER_WALLET_ID, any()) }
+    }
+
+    @Test
+    fun `GIVEN a running refresh WHEN the model is destroyed THEN the positions read is cancelled and indicator stops`() =
+        runTest {
+            // Arrange
+            val readCancelled = CompletableDeferred<Unit>()
+            coEvery { positionsPreviewLoader.refresh(any(), USER_WALLET_ID, any()) } coAnswers {
+                try {
+                    awaitCancellation()
+                } finally {
+                    readCancelled.complete(Unit)
+                }
+            }
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+            runCurrent()
+            assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isTrue()
+
+            // Act
+            model.onDestroy()
+            runCurrent()
+
+            // Assert
+            assertThat(readCancelled.isCompleted).isTrue()
+            assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
+            coVerify(exactly = 1) { refreshRequisites(USER_WALLET_ID) }
+        }
+
+    @Test
+    fun `GIVEN a failed positions read WHEN pulled again THEN refresh can complete`() = runTest {
+        // Arrange
+        coEvery { positionsPreviewLoader.refresh(any(), USER_WALLET_ID, any()) } throws IllegalStateException("Failed")
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
+        coVerify(exactly = 1) { refreshRequisites(USER_WALLET_ID) }
+
+        // Act
+        coEvery { positionsPreviewLoader.refresh(any(), USER_WALLET_ID, any()) } returns Unit
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
+        coVerify(exactly = 2) { positionsPreviewLoader.refresh(any(), USER_WALLET_ID, any()) }
+        coVerify(exactly = 2) { refreshRequisites(USER_WALLET_ID) }
     }
 
     @Test
