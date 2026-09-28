@@ -1,5 +1,6 @@
 package com.tangem.tap.domain.tasks.visa
 
+import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
@@ -10,26 +11,29 @@ import com.tangem.core.error.ext.tangemError
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.card.common.visa.VisaUtilities
+import com.tangem.domain.visa.datasource.TangemPayRemoteDataSource
 import com.tangem.domain.visa.error.VisaActivationError
 import com.tangem.domain.visa.model.MoneyAccountActivationData
+import com.tangem.domain.visa.model.TangemPayAuthTokens
+import com.tangem.domain.visa.model.TangemPayInitialCredentials
+import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.operations.sign.SignHashCommand
 import com.tangem.operations.sign.SignHashResponse
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-/**
- * Derives the Money Account key ([VisaUtilities.moneyAccountDerivationPath]) on the card and
- * generates its deposit address. The derived key is returned (keyed by the seed wallet public key)
- * so the caller can persist it via `DerivationsRepository.storeDerivedKeys` — no second tap needed.
- */
 class TangemPayGenerateMoneyAccountAddressTask @AssistedInject constructor(
     @Assisted private val coroutineScope: CoroutineScope,
+    private val dispatchersProvider: CoroutineDispatcherProvider,
+    private val tangemPayRemoteDataSource: TangemPayRemoteDataSource,
 ) : CardSessionRunnable<MoneyAccountActivationData> {
 
     override fun run(session: CardSession, callback: CompletionCallback<MoneyAccountActivationData>) {
@@ -69,11 +73,24 @@ class TangemPayGenerateMoneyAccountAddressTask @AssistedInject constructor(
             is CompletionResult.Success<ExtendedPublicKey> -> result.data
         }
 
-        val signature = when (
-            val result = signDepositAddress(
+        val customerWalletAddress = VisaUtilities.generateAddressFromExtendedKey(extendedPublicKey = customerWalletKey)
+        val authTokens = when (
+            val result = authorizeCustomerWallet(
                 session = session,
                 walletPublicKey = publicKey,
-                address = address,
+                customerWalletAddress = customerWalletAddress,
+                customerWalletKey = customerWalletKey,
+            )
+        ) {
+            is CompletionResult.Failure<*> -> return CompletionResult.Failure(result.error)
+            is CompletionResult.Success<TangemPayAuthTokens> -> result.data
+        }
+
+        val signature = when (
+            val result = signPersonalMessage(
+                session = session,
+                walletPublicKey = publicKey,
+                content = VisaUtilities.moneyAccountDepositAddressMessage(depositAddress = address),
                 customerWalletKey = customerWalletKey,
             )
         ) {
@@ -92,6 +109,10 @@ class TangemPayGenerateMoneyAccountAddressTask @AssistedInject constructor(
                 address = address,
                 signature = signature,
                 derivedKeys = derivedKeys,
+                initialCredentials = TangemPayInitialCredentials(
+                    customerWalletAddress = customerWalletAddress,
+                    authTokens = authTokens,
+                ),
             ),
         )
     }
@@ -111,13 +132,48 @@ class TangemPayGenerateMoneyAccountAddressTask @AssistedInject constructor(
         return deferred.await()
     }
 
-    private suspend fun signDepositAddress(
+    private suspend fun authorizeCustomerWallet(
         session: CardSession,
         walletPublicKey: ByteArray,
-        address: String,
+        customerWalletAddress: String,
+        customerWalletKey: ExtendedPublicKey,
+    ): CompletionResult<TangemPayAuthTokens> {
+        val challenge = withContext(dispatchersProvider.io) {
+            tangemPayRemoteDataSource.getCustomerWalletAuthChallenge(
+                customerWalletAddress = customerWalletAddress,
+                customerWalletId = UserWalletIdBuilder.walletPublicKey(walletPublicKey).stringValue,
+            )
+        }.getOrElse { return CompletionResult.Failure(it.tangemError) }
+
+        val signature = when (
+            val result = signPersonalMessage(
+                session = session,
+                walletPublicKey = walletPublicKey,
+                content = VisaUtilities.signWithNonceMessage(challenge.challenge),
+                customerWalletKey = customerWalletKey,
+            )
+        ) {
+            is CompletionResult.Failure<*> -> return CompletionResult.Failure(result.error)
+            is CompletionResult.Success<String> -> result.data
+        }
+
+        val authTokens = withContext(dispatchersProvider.io) {
+            tangemPayRemoteDataSource.getTokenWithCustomerWallet(
+                sessionId = challenge.session.sessionId,
+                signature = signature,
+                nonce = challenge.challenge,
+            )
+        }.getOrNull() ?: return CompletionResult.Failure(VisaActivationError.FailedRemoteState.tangemError)
+
+        return CompletionResult.Success(authTokens)
+    }
+
+    private suspend fun signPersonalMessage(
+        session: CardSession,
+        walletPublicKey: ByteArray,
+        content: String,
         customerWalletKey: ExtendedPublicKey,
     ): CompletionResult<String> {
-        val content = VisaUtilities.moneyAccountDepositAddressMessage(depositAddress = address)
         val hash = VisaUtilities.hashPersonalMessage(content.toByteArray(Charsets.UTF_8))
 
         val deferred = CompletableDeferred<CompletionResult<SignHashResponse>>()
