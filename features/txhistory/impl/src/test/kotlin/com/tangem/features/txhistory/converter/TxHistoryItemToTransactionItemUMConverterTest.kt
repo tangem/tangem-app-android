@@ -2,12 +2,14 @@ package com.tangem.features.txhistory.converter
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.account.getResId
+import com.tangem.common.ui.account.getUiColor
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.ContentSubtitle
 import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.ds.image.DeviceIconUM
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
@@ -449,7 +451,49 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         assertThat(result.title).isEqualTo(resRef(R.string.common_transferred))
         val subtitle = result.subtitle as ContentSubtitle.OwnAccount
         assertThat(subtitle.direction).isEqualTo(ContentSubtitle.Direction.TO)
-        assertThat(subtitle.iconResId).isNotEqualTo(0)
+        assertThat(subtitle.avatar).isEqualTo(
+            ContentSubtitle.PortfolioAvatar.Resource(
+                resId = ownAccount.icon.value.getResId(),
+                color = ownAccount.icon.color.getUiColor(),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN own account with a letter icon WHEN convert THEN OwnAccount subtitle carries the name monogram`() {
+        // Arrange — an account that kept the default letter icon must render its name, not the letter placeholder glyph.
+        val ownAccount = createMainAccount(UserWalletId(stringValue = "00")).copy(
+            icon = CryptoPortfolioIcon.ofCustomAccount(
+                value = CryptoPortfolioIcon.Icon.Letter,
+                color = CryptoPortfolioIcon.Color.Azure,
+            ),
+        )
+        val converter = TxHistoryItemToTransactionItemUMConverter(
+            currency = coin,
+            txHistoryUiActions = txHistoryUiActions,
+            lookupContext = TxHistoryLookupContext(
+                ownAccountByNetwork = mapOf(coin.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
+                isAccountsModeEnabled = true,
+                walletInfoById = emptyMap(),
+            ),
+        )
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val result = converter.convert(tx) as TransactionItemUM.Content
+
+        // Assert
+        val subtitle = result.subtitle as ContentSubtitle.OwnAccount
+        assertThat(subtitle.avatar).isEqualTo(
+            ContentSubtitle.PortfolioAvatar.Monogram(
+                name = ownAccount.accountName.toUM().value,
+                color = CryptoPortfolioIcon.Color.Azure.getUiColor(),
+            ),
+        )
     }
 
     @Test
@@ -525,7 +569,8 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         val subtitle = result.subtitle as ContentSubtitle.Contact
         assertThat(subtitle.direction).isEqualTo(ContentSubtitle.Direction.TO)
         assertThat(subtitle.contactName).isEqualTo("Binance")
-        assertThat((subtitle.avatar as ContentSubtitle.ContactAvatar.Monogram).char).isEqualTo('B')
+        assertThat((subtitle.avatar as ContentSubtitle.PortfolioAvatar.Monogram).name)
+            .isEqualTo(stringReference("Binance"))
     }
 
     @Test
@@ -551,7 +596,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         // Assert
         val subtitle = result.subtitle as ContentSubtitle.Contact
         assertThat(subtitle.contactName).isEqualTo("Mom")
-        assertThat((subtitle.avatar as ContentSubtitle.ContactAvatar.Resource).resId)
+        assertThat((subtitle.avatar as ContentSubtitle.PortfolioAvatar.Resource).resId)
             .isEqualTo(CryptoPortfolioIcon.Icon.User.getResId())
     }
 
