@@ -7,6 +7,9 @@ import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.grow.datasource.gasless.GaslessTxServiceApi
 import com.tangem.grow.datasource.gasless.GaslessTxServiceApiV2
 import com.tangem.grow.datasource.gasless.TronGaslessApi
+import com.tangem.grow.datasource.gasless.models.GaslessErrorResponse
+import com.squareup.moshi.Moshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.transaction.*
@@ -98,10 +101,12 @@ internal object TransactionDataModule {
     @Singleton
     fun provideTronGaslessTransactionRepository(
         tronGaslessApi: TronGaslessApi,
+        @NetworkMoshi moshi: Moshi,
         coroutineDispatcherProvider: CoroutineDispatcherProvider,
     ): TronGaslessTransactionRepository {
         return DefaultTronGaslessTransactionRepository(
             api = tronGaslessApi,
+            errorAdapter = moshi.adapter(GaslessErrorResponse::class.java),
             dispatchers = coroutineDispatcherProvider,
         )
     }

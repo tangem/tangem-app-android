@@ -41,11 +41,11 @@
     },
     {
         "name": "AND_15438_BACKEND_AUTHENTICATION_ENABLED",
-        "version": "undefined"
+        "version": "6.4"
     },
     {
         "name": "AND_15767_NEW_TX_HISTORY_ENABLED",
-        "version": "undefined"
+        "version": "6.4"
     },
     {
         "name": "AND_14829_WARNINGS_REFACTORING_ENABLED",
@@ -62,6 +62,10 @@
     {
         "name": "AND_16357_CHOOSE_TOKEN_PULSE_ANIMATION",
         "version": "6.4"
+    },
+    {
+        "name": "TWI_1783_TRON_GASLESS_ACCOUNT_ACTIVATION_ENABLED",
+        "version": "undefined"
     },
     {
         "name": "TWI_1586_CARD_LINKED_STATUS_UPDATE",

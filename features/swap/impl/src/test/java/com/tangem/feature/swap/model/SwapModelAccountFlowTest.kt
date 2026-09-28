@@ -27,6 +27,7 @@ import com.tangem.domain.models.quote.PriceChange
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.interactor.PredictionWithdrawalFailure
 import com.tangem.domain.polymarket.interactor.SubmitPredictionWithdrawalInteractor
@@ -1642,6 +1643,123 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             every { selectedFeeItem } returns FeeItem.Market(fee = mockk(relaxed = true))
         }
         return model
+    }
+
+    private fun TestScope.createWithdrawTransferModel(): SwapModel {
+        val payToken = swapCurrencyStatus(account = Account.Payment(userWalletId))
+        val portfolioToken = swapCurrencyStatus()
+        coEvery {
+            initialCurrenciesResolver.invoke(
+                userWalletId = any(),
+                initialCryptoCurrency = any(),
+                swapCurrencyPosition = any(),
+                accountFlow = any(),
+                initialToCryptoCurrency = any(),
+            )
+        } returns (payToken to portfolioToken)
+        every { swapTransferInteractor.shouldTransferInsteadOfSwap(any(), any()) } returns true
+        stubTransferState(sendingAmount = BigDecimal("5"))
+        stubTransferStateBuilderPassthrough()
+        coEvery {
+            swapTransferInteractor.withdrawTangemPay(any(), any(), any(), any())
+        } returns WithdrawalResult.Success.right()
+
+        val model = createModel(accountFlow = AccountFlow.Withdraw, dispatchers = deferredDispatchers())
+        advanceUntilIdle()
+        return model
+    }
+
+    @Test
+    fun `GIVEN a payment account withdrawal WHEN the transfer succeeds THEN the pair is recorded`() = runTest {
+        // Arrange
+        val model = createWithdrawTransferModel()
+
+        // Act
+        model.uiState.swapButton.onClick()
+        advanceUntilIdle()
+
+        // Assert — the arguments are read outside the verification block because MockK runs that block in
+        // recording mode, where a mock's property yields a fresh signature value instead of the stubbed one.
+        val from = requireNotNull(model.dataState.fromSwapCurrencyStatus)
+        val to = requireNotNull(model.dataState.toSwapCurrencyStatus)
+        val fromUserWalletId = from.userWalletId
+        val fromAccount = from.account
+        val fromCurrency = from.currency
+        val toUserWalletId = to.userWalletId
+        val toAccount = to.account
+        val toCurrency = to.currency
+        coVerify(exactly = 1) {
+            recordTokenTransferFromSwapUseCase(
+                fromUserWalletId = fromUserWalletId,
+                fromAccount = fromAccount,
+                fromCurrency = fromCurrency,
+                toUserWalletId = toUserWalletId,
+                toAccount = toAccount,
+                toCurrency = toCurrency,
+            )
+        }
+        model.onDestroy()
+    }
+
+    private fun TestScope.createTopUpToPaymentTransferModel(): SwapModel {
+        val portfolioToken = swapCurrencyStatus()
+        val payToken = swapCurrencyStatus(account = Account.Payment(userWalletId))
+        coEvery {
+            initialCurrenciesResolver.invoke(
+                userWalletId = any(),
+                initialCryptoCurrency = any(),
+                swapCurrencyPosition = any(),
+                accountFlow = any(),
+                initialToCryptoCurrency = any(),
+            )
+        } returns (portfolioToken to payToken)
+        every { swapTransferInteractor.shouldTransferInsteadOfSwap(any(), any()) } returns true
+        stubTransferState(sendingAmount = BigDecimal("5"))
+        stubTransferStateBuilderPassthrough()
+        coEvery {
+            swapTransferInteractor.sendTransfer(any(), any(), any(), any(), any())
+        } returns TRANSFER_TX_HASH.right()
+        every { getExplorerTransactionUrlUseCase(txHash = any(), currency = any()) } returns EXPLORER_URL.right()
+
+        val model = createModel(accountFlow = AccountFlow.TopUp, dispatchers = deferredDispatchers())
+        advanceUntilIdle()
+        // Without a selected fee onTransferClick falls through to the "Illegal state" branch instead of
+        // reaching sendTransfer; the withdrawal helper needs none, its branch is checked earlier.
+        model.feeSelectorRepository.state.value = mockk<FeeSelectorUM.Content>(relaxed = true) {
+            every { selectedFeeItem } returns FeeItem.Market(fee = mockk(relaxed = true))
+        }
+        return model
+    }
+
+    @Test
+    fun `GIVEN a payment account top up WHEN the transfer succeeds THEN the pair is recorded`() = runTest {
+        // Arrange
+        val model = createTopUpToPaymentTransferModel()
+
+        // Act
+        model.uiState.swapButton.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        val from = requireNotNull(model.dataState.fromSwapCurrencyStatus)
+        val to = requireNotNull(model.dataState.toSwapCurrencyStatus)
+        val fromUserWalletId = from.userWalletId
+        val fromAccount = from.account
+        val fromCurrency = from.currency
+        val toUserWalletId = to.userWalletId
+        val toAccount = to.account
+        val toCurrency = to.currency
+        coVerify(exactly = 1) {
+            recordTokenTransferFromSwapUseCase(
+                fromUserWalletId = fromUserWalletId,
+                fromAccount = fromAccount,
+                fromCurrency = fromCurrency,
+                toUserWalletId = toUserWalletId,
+                toAccount = toAccount,
+                toCurrency = toCurrency,
+            )
+        }
+        model.onDestroy()
     }
 
     private fun TestScope.createTopUpSwapModel(accountFlow: AccountFlow?): SwapModel {

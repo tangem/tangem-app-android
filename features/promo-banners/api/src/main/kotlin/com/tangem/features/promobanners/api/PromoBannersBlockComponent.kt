@@ -27,9 +27,9 @@ interface PromoBannersBlockComponent {
     enum class Placeholder(val value: String) {
         MAIN("main"),
         FEED("shtorka"),
-        CRYPTO("crypto"),
-        ASSETS("assets"),
-        EARN("earn"),
+        CRYPTO("shtorka_crypto"),
+        RWA("shtorka_rwa"),
+        EARN("shtorka_earn"),
         PAYMENT_ACCOUNT_MAIN("payment_account_main"),
     }
 

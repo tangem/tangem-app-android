@@ -27,6 +27,7 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
@@ -70,6 +71,7 @@ internal class GetWalletNotificationsFactoryTest {
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
     private val getMissingJointOwnerKeysCountUseCase: GetMissingJointOwnerKeysCountUseCase = mockk()
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
+    private val onboardingRepository: OnboardingRepository = mockk()
     private val clickIntents: WalletClickIntents = mockk(relaxed = true)
 
     private val currencyFactory = MockCryptoCurrencyFactory()
@@ -90,11 +92,13 @@ internal class GetWalletNotificationsFactoryTest {
         isWalletBackedUpUseCase = isWalletBackedUpUseCase,
         getUserWalletUseCase = getUserWalletUseCase,
         getMissingJointOwnerKeysCountUseCase = getMissingJointOwnerKeysCountUseCase,
+        onboardingRepository = onboardingRepository,
     )
 
     @BeforeEach
     fun setup() {
         clearMocks(
+            onboardingRepository,
             isDemoCardUseCase,
             isNeedToBackupUseCase,
             isWalletBackupProblematicUseCase,
@@ -124,6 +128,7 @@ internal class GetWalletNotificationsFactoryTest {
         every { getAppUpdateStateUseCase.getBannerStateFlow() } returns flowOf(AppUpdateState.NoUpdate)
         every { hasSingleWalletSignedHashesUseCase(any(), any()) } returns flowOf(false)
         every { isWalletBackedUpUseCase.flow(any()) } returns flowOf(true)
+        every { onboardingRepository.isMainOnboardingBannerHidden(any()) } returns flowOf(false)
         every { getUserWalletUseCase.invokeFlow(any()) } returns
             flowOf(GetUserWalletError.UserWalletNotFound.left())
         coEvery { getMissingJointOwnerKeysCountUseCase(any(), any()) } returns 0
@@ -799,6 +804,7 @@ internal class GetWalletNotificationsFactoryTest {
             value = model.value,
         )
         stubAccountStatusList(balance = LOADED_NON_ZERO, accountStatuses = listOf(paymentStatus))
+        every { onboardingRepository.isMainOnboardingBannerHidden(WALLET_ID) } returns flowOf(model.isPromoHidden)
 
         // Act
         val result = factory.create(coldWallet, clickIntents).first()
@@ -812,6 +818,7 @@ internal class GetWalletNotificationsFactoryTest {
 
     internal data class TangemPayModel(
         val value: PaymentAccountStatusValue,
+        val isPromoHidden: Boolean = false,
         val expectRefreshNeeded: Boolean = false,
         val expectPromo: Boolean = false,
         val expectUnreachable: Boolean = false,
@@ -820,6 +827,7 @@ internal class GetWalletNotificationsFactoryTest {
     private fun provideTangemPayModels() = listOf(
         TangemPayModel(value = PaymentAccountStatusValue.Error.NotSynced, expectRefreshNeeded = true),
         TangemPayModel(value = PaymentAccountStatusValue.NotCreated, expectPromo = true),
+        TangemPayModel(value = PaymentAccountStatusValue.NotCreated, isPromoHidden = true),
         TangemPayModel(value = PaymentAccountStatusValue.Error.Unavailable, expectUnreachable = true),
         // Non-actionable statuses produce no TangemPay notification.
         TangemPayModel(value = PaymentAccountStatusValue.Loading),

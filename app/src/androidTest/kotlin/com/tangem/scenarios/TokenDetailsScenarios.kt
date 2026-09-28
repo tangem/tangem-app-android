@@ -4,7 +4,10 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
 import com.tangem.common.BaseTestCase
+import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.core.ui.test.TokenDetailsScreenTestTags
+import com.tangem.screens.onMainScreen
+import com.tangem.screens.onTokenDetailsScreen
 
 /**
  * Pulls the 'Token details' screen to refresh.
@@ -25,4 +28,30 @@ fun BaseTestCase.pullToRefreshTokenDetails() {
             swipeDown(startY = 0f, endY = visibleSize.height.toFloat() * 6f, durationMillis = 800)
         }
     waitForIdle()
+}
+
+/**
+ * Opens [tokenTitle]'s details from the token list on Main.
+ *
+ * A single tap is not enough: the row keeps re-laying out while its APY promo banner resolves, and a
+ * tap that lands mid-relayout is dropped, leaving the test on Main. Retry the tap — once the details
+ * screen is up the row is gone, so the click throws and only the assertion decides the outcome.
+ */
+fun BaseTestCase.openTokenDetailsFromTokenList(tokenTitle: String) = openTokenDetailsByTapping {
+    onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+}
+
+/**
+ * Same as [openTokenDetailsFromTokenList], for a token nested under an account section. The same token
+ * can sit in several accounts (and on the pager's neighbouring page), so tap the copy that is on screen.
+ */
+fun BaseTestCase.openTokenDetailsFromAccountSection(tokenTitle: String) = openTokenDetailsByTapping {
+    onMainScreen { clickDisplayedToken(tokenTitle) }
+}
+
+private fun BaseTestCase.openTokenDetailsByTapping(tap: () -> Unit) {
+    awaitAssert {
+        runCatching(tap)
+        onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
+    }
 }
