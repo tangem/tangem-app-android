@@ -223,7 +223,7 @@ private fun CashbackBadge(
 ) {
     TangemBadge(
         text = stringReference(cashback.amount.orMaskWithStars(isBalanceHidden)),
-        modifier = modifier,
+        modifier = modifier.testTag(TangemPayTestTags.TRANSACTION_CASHBACK_BADGE),
         variant = TangemBadge.Variant.Tinted,
         status = when (cashback.style) {
             TangemPayTransactionCashbackUM.Style.Confirmed -> TangemBadge.Status.Info
