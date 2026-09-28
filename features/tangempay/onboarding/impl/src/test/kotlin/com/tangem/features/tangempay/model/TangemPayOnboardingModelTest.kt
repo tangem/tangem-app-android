@@ -67,6 +67,9 @@ internal class TangemPayOnboardingModelTest {
         )
         every { tangemPayFeatureToggles.isResidencyStepEnabled } returns false
         coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(mockk<UserWallet>())
+        coEvery {
+            eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true)
+        } returns listOf(OFFER_WALLET_ID)
     }
 
     @Test
@@ -82,6 +85,43 @@ internal class TangemPayOnboardingModelTest {
         assertThat(model.uiState.value).isInstanceOf(TangemPayOnboardingScreenState.Content::class.java)
         coVerify(exactly = 0) { eligibilityManager.getTangemPayAvailability(any()) }
         verify(exactly = 0) { router.replaceAll(AppRoute.TangemPayHotWalletOnboarding, onComplete = any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN valid deeplink AND no wallet can take offer WHEN model created THEN screen closed`() = runTest {
+        // Arrange
+        coEvery { repository.validateDeeplink(deeplink) } returns true.right()
+        coEvery { eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true) } returns emptyList()
+
+        // Act
+        val model = createModel(TangemPayOnboardingComponent.Params.Deeplink(deeplink))
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { router.pop() }
+        assertThat(model.uiState.value).isInstanceOf(TangemPayOnboardingScreenState.Loading::class.java)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN offer wallets gone before click WHEN get card clicked THEN screen closed`() = runTest {
+        // Arrange
+        coEvery { repository.validateDeeplink(deeplink) } returns true.right()
+        coEvery {
+            eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true)
+        } returnsMany listOf(listOf(OFFER_WALLET_ID), emptyList())
+        val model = createModel(TangemPayOnboardingComponent.Params.Deeplink(deeplink))
+        advanceUntilIdle()
+        val content = model.uiState.value as TangemPayOnboardingScreenState.Content
+
+        // Act
+        content.buttonConfig.onClick.invoke()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { router.pop() }
+        coVerify(exactly = 0) { repository.getCustomerInfo(any()) }
         model.onDestroy()
     }
 
@@ -103,18 +143,21 @@ internal class TangemPayOnboardingModelTest {
     }
 
     @Test
-    fun `GIVEN MobileOnboardingDeeplink AND no wallets WHEN model created THEN onboarding shown as before`() =
+    fun `GIVEN MobileOnboardingDeeplink AND no wallet can take offer WHEN model created THEN screen closed`() =
         runTest {
             // Arrange
-            coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+            coEvery {
+                eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true)
+            } returns emptyList()
 
             // Act
             val model = createModel(TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink)
             advanceUntilIdle()
 
             // Assert
-            assertThat(model.uiState.value).isInstanceOf(TangemPayOnboardingScreenState.Content::class.java)
+            verify(exactly = 1) { router.pop() }
             verify(exactly = 0) { router.replaceAll(AppRoute.TangemPayHotWalletOnboarding, onComplete = any()) }
+            coVerify(exactly = 0) { repository.validateDeeplink(any()) }
             model.onDestroy()
         }
 
@@ -196,17 +239,18 @@ internal class TangemPayOnboardingModelTest {
             // Arrange
             coEvery {
                 eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true)
-            } returns emptyList()
+            } returns listOf(OFFER_WALLET_ID, UserWalletId("022"))
             val model = createModel(TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink)
             advanceUntilIdle()
             val content = model.uiState.value as TangemPayOnboardingScreenState.Content
+            clearMocks(eligibilityManager, answers = false)
 
             // Act
             content.buttonConfig.onClick.invoke()
             advanceUntilIdle()
 
             // Assert
-            coVerify { eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true) }
+            coVerify(exactly = 1) { eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true) }
             model.onDestroy()
         }
 
@@ -218,6 +262,7 @@ internal class TangemPayOnboardingModelTest {
             val model = createModel(TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink)
             advanceUntilIdle()
             val content = model.uiState.value as TangemPayOnboardingScreenState.Content
+            clearMocks(eligibilityManager, answers = false)
 
             // WHEN
             content.buttonConfig.onClick.invoke()
@@ -300,6 +345,7 @@ internal class TangemPayOnboardingModelTest {
     }
 
     private companion object {
+        val OFFER_WALLET_ID = UserWalletId("011")
         val DEEPLINK_ERROR = object : UniversalError {
             override val errorCode: Int = 0
         }
