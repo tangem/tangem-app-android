@@ -49,6 +49,22 @@ internal class DefaultStoryV2AssetStoreTest {
         // Assert
         assertThat(actual).isEqualTo(StoryV2AssetResult.Ready(targetOf(URL)))
         assertThat(storedFiles()).containsExactly(nameOf(URL) to SIZE_BYTES)
+        assertThat(downloader.expectedBytes).isEqualTo(SIZE_BYTES)
+    }
+
+    @Test
+    fun `GIVEN a declared size above the budget WHEN resolve THEN it fails without a download`() = runTest {
+        // Arrange
+        putOnDevice(url = OTHER_URL, sizeBytes = SIZE_BYTES)
+        val oversized = RemoteStoryV2File(url = URL, sizeBytes = DefaultStoryV2AssetStore.BUDGET_BYTES + 1)
+
+        // Act
+        val actual = store.resolve(file = oversized, keep = setOf(URL))
+
+        // Assert
+        assertThat(actual).isEqualTo(StoryV2AssetResult.Failed(StoryV2ErrorReason.INTEGRITY_MISMATCH))
+        assertThat(downloader.calls).isEqualTo(0)
+        assertThat(storedFiles()).containsExactly(nameOf(OTHER_URL) to SIZE_BYTES)
     }
 
     @Test
@@ -152,24 +168,48 @@ internal class DefaultStoryV2AssetStoreTest {
     }
 
     @Test
-    fun `GIVEN stored files WHEN retainOnly THEN only files of other urls are deleted`() = runTest {
+    fun `GIVEN stored files and a leftover part WHEN retainOnly THEN only the kept urls stay`() = runTest {
         // Arrange
         putOnDevice(url = URL, sizeBytes = SIZE_BYTES)
         putOnDevice(url = KEEP_URL, sizeBytes = SIZE_BYTES)
         putOnDevice(url = OTHER_URL, sizeBytes = SIZE_BYTES)
-        // A download still in flight is not a stored file yet.
-        val inFlight = File(assetsDir, "${nameOf(OTHER_URL)}.part").apply { writeBytes(ByteArray(size = 1)) }
+        // Left by a process killed mid-download: nothing is writing it any more.
+        File(assetsDir, "${nameOf(URL)}.part").writeBytes(ByteArray(size = 1))
 
         // Act
         store.retainOnly(urls = setOf(URL, KEEP_URL))
 
         // Assert
-        assertThat(storedFiles()).containsExactly(
-            nameOf(URL) to SIZE_BYTES,
-            nameOf(KEEP_URL) to SIZE_BYTES,
-            inFlight.name to 1L,
-        )
+        assertThat(storedFiles()).containsExactly(nameOf(URL) to SIZE_BYTES, nameOf(KEEP_URL) to SIZE_BYTES)
     }
+
+    @Test
+    fun `GIVEN another download in flight WHEN a resolve runs out of space THEN the other download completes`() =
+        runTest {
+            // Arrange — the first download keeps its partial file open while the second one makes room.
+            val gate = CompletableDeferred<Unit>()
+            downloader.respond(
+                { target ->
+                    target.outputStream().use { output ->
+                        output.write(ByteArray(size = 1))
+                        gate.await()
+                        output.write(ByteArray(SIZE_BYTES.toInt() - 1))
+                    }
+                },
+                fails(outOfSpace()),
+                writes(SIZE_BYTES),
+            )
+            val inFlight = async { store.resolve(file = FILE, keep = setOf(URL)) }
+            runCurrent()
+
+            // Act
+            val other = store.resolve(file = KEEP_FILE, keep = setOf(KEEP_URL))
+            gate.complete(Unit)
+
+            // Assert
+            assertThat(other).isEqualTo(StoryV2AssetResult.Ready(targetOf(KEEP_URL)))
+            assertThat(inFlight.await()).isEqualTo(StoryV2AssetResult.Ready(targetOf(URL)))
+        }
 
     @Test
     fun `GIVEN a file resolved in this process WHEN retainOnly without its url THEN the file stays`() = runTest {
@@ -285,10 +325,14 @@ internal class DefaultStoryV2AssetStoreTest {
         var calls = 0
             private set
 
+        var expectedBytes: Long? = null
+            private set
+
         private var steps: List<suspend (File) -> Unit> = emptyList()
 
         fun reset() {
             calls = 0
+            expectedBytes = null
             steps = emptyList()
         }
 
@@ -296,9 +340,10 @@ internal class DefaultStoryV2AssetStoreTest {
             this.steps = steps.toList()
         }
 
-        override suspend fun download(url: String, target: File) {
+        override suspend fun download(url: String, target: File, expectedBytes: Long) {
             val step = steps[minOf(calls, steps.lastIndex)]
             calls++
+            this.expectedBytes = expectedBytes
             step(target)
         }
     }
