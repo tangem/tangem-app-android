@@ -1,6 +1,7 @@
 package com.tangem.features.txhistory.joint.operation.model
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.entity.AddressBookOpenMode
 import com.tangem.core.decompose.navigation.Router
@@ -11,13 +12,13 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
-import arrow.core.getOrElse
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
+import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
@@ -39,6 +40,7 @@ import com.tangem.features.txhistory.model.isSavableAsContact
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOf
 import javax.inject.Inject
 
@@ -51,6 +53,7 @@ internal class JointOperationDelegate @Inject constructor(
     private val router: Router,
     private val accountListSupplier: SingleAccountListSupplier,
     private val jointAccountListSupplier: SingleJointAccountListSupplier,
+    private val jointAccountListFetcher: SingleJointAccountListFetcher,
     private val transferResolver: JointOperationTransferResolver,
     private val signersResolver: JointOperationSignersResolver,
     private val ownerAddressResolver: JointOwnerAddressResolver,
@@ -64,6 +67,13 @@ internal class JointOperationDelegate @Inject constructor(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
 ) {
+
+    /**
+
+
+     * that stale read; a genuinely gone operation still resolves to `null` after it.
+     */
+    private var hasRetriedMissingOperationFetch = false
 
     fun isColdWallet(userWalletId: UserWalletId): Boolean {
         return userWalletsListRepository.getSyncOrNull(id = userWalletId) is UserWallet.Cold
@@ -111,6 +121,7 @@ internal class JointOperationDelegate @Inject constructor(
             flow2 = jointAccountListSupplier(userWalletId = userWalletId),
         ) { account, accounts ->
             resolve(
+                userWalletId = userWalletId,
                 account = account,
                 currency = currency,
                 operationId = operationId,
@@ -148,12 +159,32 @@ internal class JointOperationDelegate @Inject constructor(
     }
 
     private suspend fun resolve(
+        userWalletId: UserWalletId,
         account: Account.Joint?,
         currency: CryptoCurrency,
         operationId: String,
         accounts: List<JointAccount>,
     ): JointOperationState? {
         if (account == null) return null
+
+        buildState(account = account, currency = currency, operationId = operationId, accounts = accounts)?.let {
+            return it
+        }
+        if (hasRetriedMissingOperationFetch) return null
+        hasRetriedMissingOperationFetch = true
+
+        jointAccountListFetcher(userWalletId = userWalletId).getOrElse { return null }
+        val freshAccounts = jointAccountListSupplier(userWalletId = userWalletId).firstOrNull() ?: return null
+
+        return buildState(account = account, currency = currency, operationId = operationId, accounts = freshAccounts)
+    }
+
+    private suspend fun buildState(
+        account: Account.Joint,
+        currency: CryptoCurrency,
+        operationId: String,
+        accounts: List<JointAccount>,
+    ): JointOperationState? {
         val jointAccount = accounts
             .firstOrNull { it.cryptoAccountId.equals(account.accountId.value, ignoreCase = true) }
             ?: return null
