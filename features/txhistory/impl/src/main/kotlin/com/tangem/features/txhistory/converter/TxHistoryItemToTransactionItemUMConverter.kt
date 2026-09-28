@@ -10,6 +10,7 @@ import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Conten
 import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
@@ -363,8 +364,7 @@ private fun ResolvedOwner.toSubtitle(direction: ContentSubtitle.Direction): Cont
     is ResolvedOwner.OwnAccount -> ContentSubtitle.OwnAccount(
         direction = direction,
         accountName = account.accountName.toUM().value,
-        iconResId = account.icon.value.getResId(),
-        iconBackgroundColor = account.icon.color.getUiColor(),
+        avatar = account.icon.toPortfolioAvatar(name = account.accountName.toUM().value),
     )
     is ResolvedOwner.OwnPaymentAccount -> ContentSubtitle.OwnPaymentAccount(
         direction = direction,
@@ -391,18 +391,31 @@ private fun externalAddressSubtitle(address: String, direction: ContentSubtitle.
     )
 
 /**
-
- * icon picked in the contact editor renders as its own drawable.
+ * A portfolio still on the default `Letter` icon renders the monogram of [name]; an icon picked in the account or
+ * contact editor renders as its own drawable. The same rule the design-system `AccountIcon` applies wherever a
+ * portfolio avatar is drawn full-size — here for the inline row avatar, which has its own container.
+ *
+ * The letter itself is left to the composition: [name] may be a string resource (the main account's title), so its
+ * first character is only known once the reference resolves.
  */
-private fun Contact.toContactAvatar(): ContentSubtitle.ContactAvatar {
-    val icon = portfolioIcon()
-    val color = icon.color.getUiColor()
-    val monogram = name.value.firstOrNull()
-
-    return if (icon.value == CryptoPortfolioIcon.Icon.Letter && monogram != null) {
-        ContentSubtitle.ContactAvatar.Monogram(char = monogram, color = color)
+internal fun CryptoPortfolioIcon.toPortfolioAvatar(name: TextReference): ContentSubtitle.PortfolioAvatar =
+    if (value == CryptoPortfolioIcon.Icon.Letter) {
+        ContentSubtitle.PortfolioAvatar.Monogram(name = name, color = color.getUiColor())
     } else {
-        ContentSubtitle.ContactAvatar.Resource(resId = icon.value.getResId(), color = color)
+        ContentSubtitle.PortfolioAvatar.Resource(resId = value.getResId(), color = color.getUiColor())
+    }
+
+/**
+ * A contact's name is a plain string, so an empty one is caught here rather than rendering a blank circle: it falls
+ * back to the letter drawable, as it did before the monogram existed.
+ */
+private fun Contact.toContactAvatar(): ContentSubtitle.PortfolioAvatar {
+    val icon = portfolioIcon()
+
+    return if (name.value.isEmpty()) {
+        ContentSubtitle.PortfolioAvatar.Resource(resId = icon.value.getResId(), color = icon.color.getUiColor())
+    } else {
+        icon.toPortfolioAvatar(name = stringReference(name.value))
     }
 }
 
