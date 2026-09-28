@@ -744,3 +744,29 @@ internal data class TangemStatusScreenStory(
     val onFullscreenToggle: () -> Unit,
     val onReplayClick: () -> Unit,
 ) : DsStoryBookPage
+
+@Suppress("BooleanPropertyNaming")
+internal data class TangemAccountRowStory(
+    val variant: Variant,
+    val tokenCount: Int,
+    val isExpanded: Boolean,
+    val hasMembersAmount: Boolean,
+    val hasUpdateWarning: Boolean,
+    val hasSection: Boolean,
+    val longTitle: Boolean,
+    val isBalanceHidden: Boolean,
+    val isBalanceFlickering: Boolean,
+    val onVariantChange: (Variant) -> Unit,
+    val onTokenCountChange: (Int) -> Unit,
+    val onExpandedToggle: () -> Unit,
+    val onMembersAmountToggle: () -> Unit,
+    val onUpdateWarningToggle: () -> Unit,
+    val onSectionToggle: () -> Unit,
+    val onLongTitleToggle: () -> Unit,
+    val onBalanceHiddenToggle: () -> Unit,
+    val onBalanceFlickeringToggle: () -> Unit,
+) : DsStoryBookPage {
+
+    /** Which [com.tangem.core.ui.ds2.accountrow.TangemAccountRow] variant is rendered. */
+    enum class Variant { Default, Unreachable, BalanceError, Empty, Shimmer }
+}
