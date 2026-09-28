@@ -42,18 +42,21 @@ private const val FORM_VALUES_KT = "com.tangem.features.tangempay.withdraw.bank.
 internal class TangemPayBankWithdrawPreviewUMFactoryTest {
 
     private val edited = mutableListOf<BankWithdrawEditTarget>()
+    private var railClicks = 0
     private val callbacks = TangemPayBankWithdrawPreviewUMFactory.Callbacks(
         onBackClick = {},
         onCloseClick = {},
         onSendClick = {},
         onRetryClick = {},
         onEditClick = { edited += it },
+        onRailClick = { railClicks++ },
     )
     private val factory = TangemPayBankWithdrawPreviewUMFactory(callbacks)
 
     @BeforeEach
     fun resetState() {
         edited.clear()
+        railClicks = 0
     }
 
     @Test
@@ -319,7 +322,32 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
     }
 
     @Test
-    fun `GIVEN saved recipient WHEN create THEN only the amount is tappable`() {
+    fun `GIVEN not sending WHEN rail row tapped THEN the rail callback fires`() {
+        // Arrange
+        val actual = factory.create(draft = savedDraft(), state = PreviewState()) as Summary
+
+        // Act
+        actual.transfer?.route?.onClick?.invoke()
+
+        // Assert
+        assertThat(railClicks).isEqualTo(1)
+        assertThat(edited).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN sending WHEN create THEN the rail row is read-only`() {
+        // Arrange
+        val state = PreviewState(send = SendState.CreatingOrder)
+
+        // Act
+        val actual = factory.create(draft = savedDraft(), state = state) as Summary
+
+        // Assert
+        assertThat(actual.transfer?.route?.onClick).isNull()
+    }
+
+    @Test
+    fun `GIVEN saved recipient WHEN create THEN the recipient cards are read-only`() {
         // Act
         val actual = factory.create(draft = savedDraft(), state = PreviewState()) as Summary
 

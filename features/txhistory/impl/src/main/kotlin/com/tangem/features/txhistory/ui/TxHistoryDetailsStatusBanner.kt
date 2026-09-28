@@ -288,18 +288,16 @@ private fun StatusBannerTrailing(isLoading: Boolean, style: Style, modifier: Mod
 private fun Style.backgroundColor(): Color = when (this) {
     Style.Info -> TangemTheme.colors3.bg.status.infoSubtle
     Style.Success -> TangemTheme.colors3.bg.status.successSubtle
-    Style.Error, Style.Refunded -> TangemTheme.colors3.bg.status.errorSubtle
+    Style.Error, Style.Refunded, Style.Expired -> TangemTheme.colors3.bg.status.errorSubtle
     Style.Warning -> TangemTheme.colors3.bg.status.warningSubtle
-    Style.Expired -> TangemTheme.colors3.bg.tertiary
 }
 
 @Composable
 private fun Style.contentColor(): Color = when (this) {
     Style.Info -> TangemTheme.colors3.text.status.info
     Style.Success -> TangemTheme.colors3.text.status.success
-    Style.Error, Style.Refunded -> TangemTheme.colors3.text.status.error
+    Style.Error, Style.Refunded, Style.Expired -> TangemTheme.colors3.text.status.error
     Style.Warning -> TangemTheme.colors3.text.status.warning
-    Style.Expired -> TangemTheme.colors3.text.tertiary
 }
 
 private fun Style.icon() = when (this) {

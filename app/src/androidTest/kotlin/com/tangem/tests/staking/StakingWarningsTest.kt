@@ -46,7 +46,7 @@ class StakingWarningsTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details screen' open") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -103,7 +103,7 @@ class StakingWarningsTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details screen' open") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -178,7 +178,7 @@ class StakingWarningsTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details screen' open") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }

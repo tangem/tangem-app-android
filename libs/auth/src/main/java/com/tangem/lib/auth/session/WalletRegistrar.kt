@@ -39,6 +39,13 @@ interface WalletRegistrar {
     suspend fun isRegistered(walletId: String): Boolean
 
     /**
+     * Whether a device session exists, i.e. a registration attempt can reach the backend at all. Lets a
+     * caller skip a user-facing step (an unlock prompt) that would be wasted on a registration bound to
+     * fail with [WalletRegistrationError.NoActiveSession]. Returns `false` if the token store can't be read.
+     */
+    suspend fun hasActiveSession(): Boolean
+
+    /**
      * Phase 0 (COLD prefetch): requests and deciphers a wallet nonce. Card-independent — needs only
      * a valid session and the device key — so it can run before the card is tapped, letting the
      * network round-trip overlap the tap. Feed the result into [prepare].
