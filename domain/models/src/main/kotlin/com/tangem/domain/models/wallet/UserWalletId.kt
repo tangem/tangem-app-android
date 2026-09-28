@@ -1,9 +1,9 @@
 package com.tangem.domain.models.wallet
 
 import com.squareup.moshi.JsonClass
+import com.tangem.common.extensions.calculateSha256
 import com.tangem.utils.extensions.hexToBytes
 import com.tangem.utils.extensions.toHexString
-import java.security.MessageDigest
 
 /**
  * Represents a unique identifier for a user wallet.
@@ -34,4 +34,4 @@ data class UserWalletId(
 
 /** SHA-256 of [UserWalletId.value] as uppercase hex — the user id Amplitude Experiment targets on both platforms. */
 val UserWalletId.hashedStringValue: String
-    get() = MessageDigest.getInstance("SHA-256").digest(value).toHexString()
+    get() = value.calculateSha256().toHexString()
