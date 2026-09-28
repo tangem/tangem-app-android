@@ -49,7 +49,7 @@ class StakingTest : BaseTestCase() {
                 swipeVertical(SwipeDirection.UP)
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details screen' open") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -97,7 +97,7 @@ class StakingTest : BaseTestCase() {
                 swipeVertical(SwipeDirection.UP)
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details screen' open") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -152,7 +152,7 @@ class StakingTest : BaseTestCase() {
                 swipeVertical(SwipeDirection.UP)
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details screen' open") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -216,7 +216,7 @@ class StakingTest : BaseTestCase() {
                 openMainScreenWithExistingHotWallet(seedPhrase = SVS_SEED_PHRASE_12)
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details screen' open") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -298,7 +298,7 @@ class StakingTest : BaseTestCase() {
                 openMainScreenWithExistingHotWallet(seedPhrase = SVS_SEED_PHRASE_12)
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details screen' open") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -389,7 +389,7 @@ class StakingTest : BaseTestCase() {
                 openMainScreenWithExistingHotWallet(seedPhrase = SVS_SEED_PHRASE_12)
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details screen' open") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -477,7 +477,7 @@ class StakingTest : BaseTestCase() {
                 openMainScreenWithExistingHotWallet(seedPhrase = SVS_SEED_PHRASE_12)
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details screen' open") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }

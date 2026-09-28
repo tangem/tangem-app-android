@@ -19,7 +19,7 @@ import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-internal class DefaultShtorkaDeepLinkHandlerTest {
+internal class DefaultDiscoverDeepLinkHandlerTest {
 
     private val appRouter: AppRouter = mockk()
     private val feedEntryController: FeedEntryController = mockk()
@@ -153,7 +153,7 @@ internal class DefaultShtorkaDeepLinkHandlerTest {
         verify(exactly = 1) { appRouter.popTo(AppRoute.Wallet, any()) }
     }
 
-    private fun createHandler(queryParams: Map<String, String>) = DefaultShtorkaDeepLinkHandler(
+    private fun createHandler(queryParams: Map<String, String>) = DefaultDiscoverDeepLinkHandler(
         queryParams = queryParams,
         feedEntryController = feedEntryController,
         feedFeatureToggles = feedFeatureToggles,
