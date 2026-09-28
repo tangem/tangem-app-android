@@ -17,6 +17,9 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.dialog.Dialogs.hotWalletCreationNotSupportedDialog
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_20
+import com.tangem.core.ui.res.generated.icons.ic_wallet_plus_20
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.cloudbackup.usecase.ResolveCloudRestoreBackupsUseCase
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
@@ -44,7 +47,6 @@ import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 import com.tangem.core.res.R as CoreResR
-import com.tangem.core.ui.R as CoreUiR
 import kotlinx.coroutines.withContext
 
 @Suppress("LongParameterList")
@@ -226,14 +228,14 @@ internal class IntroductionModel @Inject constructor(
         onDismissRequest = ::onCreateWalletSheetDismissRequested,
         content = CreateWalletUM(
             cardOrRing = WalletOptionUM(
-                iconRes = CoreUiR.drawable.ic_tangem_24,
+                icon = Icons.ic_logo_tangem_20,
                 title = resourceReference(CoreResR.string.introduction_create_wallet_hardware_title),
                 description = resourceReference(CoreResR.string.introduction_create_wallet_hardware_description),
                 isEnabled = !isCreatingMobileWallet,
                 onClick = ::onTangemCardOrRingClick,
             ),
             seedPhrase = WalletOptionUM(
-                iconRes = CoreUiR.drawable.ic_wallet_plus_20,
+                icon = Icons.ic_wallet_plus_20,
                 title = resourceReference(CoreResR.string.introduction_create_wallet_seed_phrase_title),
                 description = resourceReference(CoreResR.string.introduction_create_wallet_seed_phrase_description),
                 isLoading = isCreatingMobileWallet,

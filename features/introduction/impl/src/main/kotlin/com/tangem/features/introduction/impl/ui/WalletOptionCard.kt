@@ -10,7 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.ds2.row.TangemRow
@@ -28,7 +28,7 @@ internal fun WalletOptionCard(option: WalletOptionUM, modifier: Modifier = Modif
             .alpha(if (option.isEnabled) 1f else DISABLED_CONTENT_ALPHA),
         onClick = if (option.isEnabled && !option.isLoading) option.onClick else null,
         verticalAlignment = TangemRowVerticalAlignment.Center,
-        startSlot = { OptionIcon(iconRes = option.iconRes) },
+        startSlot = { OptionIcon(icon = option.icon) },
         titleSlot = { TangemRowText(text = option.title, role = TangemRowTextRole.Title) },
         subtitleSlot = {
             TangemRowText(
@@ -50,7 +50,7 @@ internal fun WalletOptionCard(option: WalletOptionUM, modifier: Modifier = Modif
 private const val DISABLED_CONTENT_ALPHA = 0.4f
 
 @Composable
-private fun OptionIcon(iconRes: Int) {
+private fun OptionIcon(icon: ImageVector) {
     Box(
         modifier = Modifier
             .size(40.dp)
@@ -59,7 +59,7 @@ private fun OptionIcon(iconRes: Int) {
     ) {
         Icon(
             modifier = Modifier.size(20.dp),
-            painter = painterResource(id = iconRes),
+            imageVector = icon,
             contentDescription = null,
             tint = TangemTheme.colors3.icon.primary,
         )
