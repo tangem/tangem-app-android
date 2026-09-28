@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
@@ -28,6 +29,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackHistogramUM
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackHistogramUM.Style
 import kotlinx.collections.immutable.ImmutableList
@@ -46,6 +48,7 @@ internal fun TangemPayCashbackHistogram(state: TangemPayCashbackHistogramUM, mod
                 text = state.title.resolveReference(),
                 style = TangemTheme.typography3.heading.small,
                 color = TangemTheme.colors3.text.primary,
+                modifier = Modifier.testTag(TangemPayTestTags.CASHBACK_HISTOGRAM_TITLE),
             )
         }
         Chart(bars = state.bars)
@@ -64,8 +67,8 @@ private fun Chart(bars: ImmutableList<TangemPayCashbackHistogramUM.Bar>, modifie
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.Bottom,
         ) {
-            bars.forEach { bar ->
-                BarColumn(bar = bar, maxValue = maxValue, modifier = Modifier.weight(1f))
+            bars.forEachIndexed { index, bar ->
+                BarColumn(bar = bar, index = index, maxValue = maxValue, modifier = Modifier.weight(1f))
             }
         }
         Box(
@@ -87,7 +90,9 @@ private fun Chart(bars: ImmutableList<TangemPayCashbackHistogramUM.Bar>, modifie
                     style = TangemTheme.typography3.caption.medium,
                     color = monthColor(bar.style),
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag(TangemPayTestTags.CASHBACK_HISTOGRAM_MONTH),
                 )
             }
         }
@@ -95,7 +100,12 @@ private fun Chart(bars: ImmutableList<TangemPayCashbackHistogramUM.Bar>, modifie
 }
 
 @Composable
-private fun BarColumn(bar: TangemPayCashbackHistogramUM.Bar, maxValue: Float, modifier: Modifier = Modifier) {
+private fun BarColumn(
+    bar: TangemPayCashbackHistogramUM.Bar,
+    index: Int,
+    maxValue: Float,
+    modifier: Modifier = Modifier,
+) {
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         if (bar.style != Style.Regular || bar.amountValue != 0f) {
             Text(
@@ -104,7 +114,9 @@ private fun BarColumn(bar: TangemPayCashbackHistogramUM.Bar, maxValue: Float, mo
                 color = amountColor(bar.style),
                 textAlign = TextAlign.Center,
                 maxLines = 1,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(TangemPayTestTags.cashbackHistogramAmount(index)),
             )
             Spacer(modifier = Modifier.height(4.dp))
         }
