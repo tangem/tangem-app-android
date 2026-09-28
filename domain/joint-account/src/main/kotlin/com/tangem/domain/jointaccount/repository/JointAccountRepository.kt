@@ -89,7 +89,8 @@ interface JointAccountRepository {
      *
      * [JointAccountInvitePreviewError.InvalidLink] covers a link the backend refuses or does not know — already
      * redeemed, this wallet already holding a slot, or no such invite. None of the three is retryable and all
-     * read the same to the invitee. Anything else is [JointAccountInvitePreviewError.LoadFailed].
+     * read the same to the invitee. A request that got no answer is [JointAccountInvitePreviewError.Unreachable];
+     * anything else is [JointAccountInvitePreviewError.LoadFailed].
      */
     suspend fun getInvitePreview(
         walletId: UserWalletId,
