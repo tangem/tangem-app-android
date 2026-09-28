@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
@@ -28,10 +29,12 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -51,6 +54,7 @@ internal class JointAccountInvitePreviewModelTest {
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
 
     private val wallet: UserWallet = mockWallet(id = WALLET_ID, locked = false)
+    private val portfolioData = MutableSharedFlow<PortfolioFetcher.Data>(replay = 1)
 
     @BeforeEach
     fun resetMocks() {
@@ -62,6 +66,8 @@ internal class JointAccountInvitePreviewModelTest {
             portfolioFetcherFactory,
         )
         every { portfolioFetcherFactory.create(any(), any()) } returns portfolioFetcher
+        every { portfolioFetcher.data } returns portfolioData
+        portfolioData.tryEmit(portfolioData(WALLET_ID, OTHER_WALLET_ID))
         every { portfolioSelectorController.selectedAccountWithData(any()) } returns MutableStateFlow(null)
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(null)
         every { userWalletsListRepository.selectedUserWallet } returns MutableStateFlow(null)
@@ -172,6 +178,63 @@ internal class JointAccountInvitePreviewModelTest {
     }
 
     @Test
+    fun `GIVEN selector data missing WHEN preview loaded THEN content waits for the data`() = runTest {
+        // Arrange — a cold start through the invite link: the preview answers before the balances are read
+        val selectorData = MutableSharedFlow<PortfolioFetcher.Data>(replay = 1)
+        every { portfolioFetcher.data } returns selectorData
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet))
+        coEvery { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) } returns preview().right()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceTimeBy(5.seconds)
+        val beforeData = model.uiState.value
+        selectorData.emit(portfolioData(WALLET_ID))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(beforeData).isInstanceOf(JointAccountInvitePreviewUM.Loading::class.java)
+        assertThat(model.uiState.value).isInstanceOf(JointAccountInvitePreviewUM.Content::class.java)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN selector data never arrives WHEN the wait runs out THEN content is shown anyway`() = runTest {
+        // Arrange
+        every { portfolioFetcher.data } returns MutableSharedFlow<PortfolioFetcher.Data>(replay = 1)
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet))
+        coEvery { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) } returns preview().right()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceTimeBy(9.seconds)
+        val beforeTimeout = model.uiState.value
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(beforeTimeout).isInstanceOf(JointAccountInvitePreviewUM.Loading::class.java)
+        assertThat(model.uiState.value).isInstanceOf(JointAccountInvitePreviewUM.Content::class.java)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN selector data missing WHEN preview fails THEN state is Failed at once`() = runTest {
+        // Arrange
+        every { portfolioFetcher.data } returns MutableSharedFlow<PortfolioFetcher.Data>(replay = 1)
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet))
+        coEvery { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) } returns
+            JointAccountInvitePreviewError.LoadFailed(cause = IllegalStateException()).left()
+
+        // Act
+        val model = createModel(testScope = this)
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value).isInstanceOf(JointAccountInvitePreviewUM.Failed::class.java)
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN no unlocked wallets after sync WHEN model created THEN state is Failed`() = runTest {
         // Arrange
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(emptyList())
@@ -199,6 +262,14 @@ internal class JointAccountInvitePreviewModelTest {
         portfolioFetcherFactory = portfolioFetcherFactory,
         clipboardManager = clipboardManager,
         uiMessageSender = uiMessageSender,
+    )
+
+    private fun portfolioData(vararg walletIds: UserWalletId): PortfolioFetcher.Data = PortfolioFetcher.Data(
+        appCurrency = AppCurrency.Default,
+        isBalanceHidden = false,
+        balances = walletIds.associateWith {
+            mockk<PortfolioFetcher.PortfolioBalance> { every { accountsBalance.accountStatuses } returns emptyList() }
+        },
     )
 
     private fun preview(): JointAccountInvitePreview = JointAccountInvitePreview(
