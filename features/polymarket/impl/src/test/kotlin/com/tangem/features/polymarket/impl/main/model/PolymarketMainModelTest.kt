@@ -21,12 +21,7 @@ import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.domain.polymarket.approval.PolymarketContracts
-import com.tangem.domain.polymarket.model.PolymarketPositionsTab
-import com.tangem.domain.polymarket.model.PolymarketPosition
-import com.tangem.domain.polymarket.model.PolymarketPositionResult
-import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetConfig
-import com.tangem.features.polymarket.impl.positions.model.createPolymarketPosition
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
@@ -46,7 +41,6 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedFooterUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedScrollPosition
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketPositionsPreviewUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
@@ -64,7 +58,6 @@ import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -124,8 +117,6 @@ internal class PolymarketMainModelTest {
 
     private val positionsFlow = MutableStateFlow<PredictionPositionsValue>(value = PredictionPositionsValue.Unknown)
 
-    private val positionsPreviewLoader: PolymarketPositionsPreviewLoader = mockk(relaxed = true)
-    private val positionsState = MutableStateFlow<PolymarketPositionsPreviewUM>(PolymarketPositionsPreviewUM.Loading)
     private val isFundingOpen = MutableStateFlow(false)
 
     private val batchState = MutableStateFlow(
@@ -722,11 +713,15 @@ internal class PolymarketMainModelTest {
         }
 
     @Test
-    fun `GIVEN a slow positions read WHEN pulled twice THEN one refresh runs and the indicator waits`() = runTest {
+    fun `GIVEN a slow block refresh WHEN pulled twice THEN one refresh runs and the indicator waits`() = runTest {
         // Arrange
-        val positionsRead = CompletableDeferred<Unit>()
-        coEvery { positionsPreviewLoader.refresh(any(), USER_WALLET_ID, any()) } coAnswers { positionsRead.await() }
+        val blockRead = CompletableDeferred<Unit>()
+        var blockRefreshes = 0
         val model = createModel(testScope = this)
+        model.blocksRefresh.register {
+            blockRefreshes++
+            blockRead.await()
+        }
         advanceUntilIdle()
 
         // Act
@@ -737,10 +732,10 @@ internal class PolymarketMainModelTest {
 
         // Assert
         assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isTrue()
-        coVerify(exactly = 1) { positionsPreviewLoader.refresh(any(), USER_WALLET_ID, any()) }
+        assertThat(blockRefreshes).isEqualTo(1)
 
         // Act
-        positionsRead.complete(Unit)
+        blockRead.complete(Unit)
         runCurrent()
 
         // Assert
@@ -749,10 +744,10 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
-    fun `GIVEN a manual refresh WHEN the positions read is cancelled THEN the indicator stops`() = runTest {
+    fun `GIVEN a manual refresh WHEN a block refresh is cancelled THEN the indicator stops`() = runTest {
         // Arrange
-        coEvery { positionsPreviewLoader.refresh(any(), USER_WALLET_ID, any()) } throws CancellationException()
         val model = createModel(testScope = this)
+        model.blocksRefresh.register { throw CancellationException() }
         advanceUntilIdle()
 
         // Act
@@ -768,7 +763,9 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN a pending refresh WHEN the model is destroyed before it starts THEN the indicator stops`() = runTest {
         // Arrange
+        var blockRefreshes = 0
         val model = createModel(testScope = this)
+        model.blocksRefresh.register { blockRefreshes++ }
         advanceUntilIdle()
 
         // Act
@@ -779,22 +776,22 @@ internal class PolymarketMainModelTest {
 
         // Assert
         assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
-        coVerify(exactly = 0) { positionsPreviewLoader.refresh(any(), USER_WALLET_ID, any()) }
+        assertThat(blockRefreshes).isEqualTo(0)
     }
 
     @Test
-    fun `GIVEN a running refresh WHEN the model is destroyed THEN the positions read is cancelled and indicator stops`() =
+    fun `GIVEN a running refresh WHEN the model is destroyed THEN the block refresh is cancelled and indicator stops`() =
         runTest {
             // Arrange
             val readCancelled = CompletableDeferred<Unit>()
-            coEvery { positionsPreviewLoader.refresh(any(), USER_WALLET_ID, any()) } coAnswers {
+            val model = createModel(testScope = this)
+            model.blocksRefresh.register {
                 try {
                     awaitCancellation()
                 } finally {
                     readCancelled.complete(Unit)
                 }
             }
-            val model = createModel(testScope = this)
             advanceUntilIdle()
             model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
             runCurrent()
@@ -811,10 +808,14 @@ internal class PolymarketMainModelTest {
         }
 
     @Test
-    fun `GIVEN a failed positions read WHEN pulled again THEN refresh can complete`() = runTest {
+    fun `GIVEN a failed block refresh WHEN pulled again THEN refresh can complete`() = runTest {
         // Arrange
-        coEvery { positionsPreviewLoader.refresh(any(), USER_WALLET_ID, any()) } throws IllegalStateException("Failed")
+        var blockRefreshes = 0
         val model = createModel(testScope = this)
+        model.blocksRefresh.register {
+            blockRefreshes++
+            if (blockRefreshes == 1) error("Failed")
+        }
         advanceUntilIdle()
 
         // Act
@@ -826,13 +827,12 @@ internal class PolymarketMainModelTest {
         coVerify(exactly = 1) { refreshRequisites(USER_WALLET_ID) }
 
         // Act
-        coEvery { positionsPreviewLoader.refresh(any(), USER_WALLET_ID, any()) } returns Unit
         model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
         runCurrent()
 
         // Assert
         assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
-        coVerify(exactly = 2) { positionsPreviewLoader.refresh(any(), USER_WALLET_ID, any()) }
+        assertThat(blockRefreshes).isEqualTo(2)
         coVerify(exactly = 2) { refreshRequisites(USER_WALLET_ID) }
     }
 
@@ -1460,100 +1460,9 @@ internal class PolymarketMainModelTest {
             depositAddress = depositAddress,
         )
 
-    @Test
-    fun `GIVEN main preview WHEN see all tapped THEN opens Active for the settled wallet`() = runTest {
-        // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
-        val model = createModel(testScope = this)
-
-        // Act
-        requireNotNull(model.uiState.value.onActivePositionsClick).invoke()
-
-        // Assert
-        verify { router.push(PolymarketRoute.Positions(USER_WALLET_ID, PolymarketPositionsTab.ACTIVE)) }
-    }
-
-    @Test
-    fun `GIVEN empty active preview WHEN Finished tapped THEN history remains reachable`() = runTest {
-        // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
-        positionsState.value = PolymarketPositionsPreviewUM.Content(persistentListOf())
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-
-        // Act
-        requireNotNull(model.uiState.value.onFinishedPositionsClick).invoke()
-
-        // Assert
-        verify { router.push(PolymarketRoute.Positions(USER_WALLET_ID, PolymarketPositionsTab.FINISHED)) }
-    }
-
-    @Test
-    fun `GIVEN positions update WHEN main resumes and pauses THEN forwards state and lifecycle`() = runTest {
-        // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-        val positions = PolymarketPositionsPreviewUM.Error(onRetry = {})
-
-        // Act
-        positionsState.value = positions
-        model.onResume()
-        model.onPause()
-        advanceUntilIdle()
-
-        // Assert
-        assertThat(model.uiState.value.positions).isEqualTo(positions)
-        verify(exactly = 1) { positionsPreviewLoader.resume(any(), USER_WALLET_ID, any()) }
-        verify(exactly = 1) { positionsPreviewLoader.pause() }
-    }
-
-    @Test
-    fun `GIVEN main preview WHEN position tapped THEN details receives resolved wallet and outcome`() = runTest {
-        // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-        val click = slot<(PolymarketPosition.Open) -> Unit>()
-        model.onResume()
-        verify { positionsPreviewLoader.resume(any(), USER_WALLET_ID, capture(click)) }
-        val position = createPolymarketPosition()
-
-        // Act
-        click.captured(position)
-        model.onPause()
-
-        // Assert
-        verify(exactly = 1) { router.push(PolymarketRoute.PositionDetails(USER_WALLET_ID, position.id), any()) }
-    }
-
-    @Test
-    fun `GIVEN main preview WHEN claimable position tapped THEN result receives wallet and real position`() = runTest {
-        // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-        val click = slot<(PolymarketPosition.Open) -> Unit>()
-        model.onResume()
-        verify { positionsPreviewLoader.resume(any(), USER_WALLET_ID, capture(click)) }
-        val position = createPolymarketPosition(
-            result = PolymarketPositionResult.SPLIT,
-            resolutionStatus = PolymarketResolutionStatus.RESOLVED,
-        ).copy(isRedeemable = true)
-
-        // Act
-        click.captured(position)
-        model.onPause()
-
-        // Assert
-        verify(exactly = 1) { router.push(PolymarketRoute.PositionResult(USER_WALLET_ID, position), any()) }
-        verify(exactly = 0) { router.push(ofType<PolymarketRoute.PositionDetails>(), any()) }
-    }
-
     private fun createModel(testScope: TestScope): PolymarketMainModel {
         every { predictionAccountStatusSupplier(any<UserWalletId>()) } returns statusFlow
         every { positionsValueSupplier(any<UserWalletId>()) } returns positionsFlow
-        every { positionsPreviewLoader.state } returns positionsState
 
         every { getEventsBatchFlowUseCase(capture(contextSlot), any()) } answers {
             val feedActions = mutableListOf<BatchAction<Int, PolymarketEventsListConfig,
@@ -1610,7 +1519,6 @@ internal class PolymarketMainModelTest {
             predictionAccountStatusFetcher = accountStatusFetcher,
             predictionPositionsValueSupplier = positionsValueSupplier,
             predictionPositionsValueFetcher = positionsValueFetcher,
-            positionsPreviewLoader = positionsPreviewLoader,
             predictionBalancePoller = balancePoller,
             predictionFundingWindow = fundingWindow,
         ).also { model = it }
