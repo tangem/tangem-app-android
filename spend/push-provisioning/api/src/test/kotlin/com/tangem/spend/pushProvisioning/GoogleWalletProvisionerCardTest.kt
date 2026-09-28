@@ -13,6 +13,7 @@ internal class GoogleWalletProvisionerCardTest {
             cardSecret = "time-based-secret",
             lastFourDigits = "1234",
             displayName = "Tangem Pay",
+            environment = GoogleWalletProvisioner.Environment.TEST,
         )
 
         // Act
