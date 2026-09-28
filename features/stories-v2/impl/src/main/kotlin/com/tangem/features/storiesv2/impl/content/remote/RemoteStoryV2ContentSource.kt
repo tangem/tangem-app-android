@@ -17,6 +17,7 @@ import com.tangem.features.storiesv2.impl.content.StoryV2Slide
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -24,8 +25,11 @@ internal sealed interface RemoteStoryV2Load {
 
     data class Ready(val composition: StoryV2Composition) : RemoteStoryV2Load
 
-    /** The backend has nothing for this slug, or it was already shown under `once`. */
-    data object Unavailable : RemoteStoryV2Load
+    /** The backend has nothing for this slug. */
+    data object NotFound : RemoteStoryV2Load
+
+    /** A `once` story the viewer has already seen. */
+    data object AlreadyShown : RemoteStoryV2Load
 
     /** Neither the network nor the device could produce the story; a retry may. */
     data object Failed : RemoteStoryV2Load
@@ -51,14 +55,14 @@ internal class RemoteStoryV2ContentSource @Inject constructor(
     private var catalog: Catalog? = null
 
     /** Policies of the stories last produced, from the network or the saved answer alike. */
-    private val displayPolicies = mutableMapOf<String, RemoteStoryV2.DisplayPolicy>()
+    private val displayPolicies = ConcurrentHashMap<String, RemoteStoryV2.DisplayPolicy>()
 
     suspend fun load(slug: String, language: String): RemoteStoryV2Load {
         val stories = catalog(language) ?: return RemoteStoryV2Load.Failed
-        val story = stories.firstOrNull { it.slug == slug } ?: return RemoteStoryV2Load.Unavailable
+        val story = stories.firstOrNull { it.slug == slug } ?: return RemoteStoryV2Load.NotFound
 
         if (story.displayPolicy == RemoteStoryV2.DisplayPolicy.ONCE && slug in localStore.shownSlugs()) {
-            return RemoteStoryV2Load.Unavailable
+            return RemoteStoryV2Load.AlreadyShown
         }
 
         return download(story)?.let(RemoteStoryV2Load::Ready) ?: RemoteStoryV2Load.Failed
