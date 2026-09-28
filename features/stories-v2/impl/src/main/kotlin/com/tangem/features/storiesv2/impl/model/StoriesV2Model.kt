@@ -4,9 +4,7 @@ import android.content.Context
 import android.graphics.BitmapFactory
 import android.provider.Settings
 import android.view.SurfaceView
-import androidx.compose.runtime.LongState
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -24,6 +22,7 @@ import com.tangem.features.storiesv2.impl.analytics.StoryV2ErrorStage
 import com.tangem.features.storiesv2.impl.content.StoryV2Action
 import com.tangem.features.storiesv2.impl.content.StoryV2Asset
 import com.tangem.features.storiesv2.impl.content.StoryV2Composition
+import com.tangem.features.storiesv2.impl.content.StoryV2ContentLoad
 import com.tangem.features.storiesv2.impl.content.StoryV2Haptic
 import com.tangem.features.storiesv2.impl.content.StoryV2ContentRepository
 import com.tangem.features.storiesv2.impl.content.StoryV2MediaRef
@@ -38,6 +37,7 @@ import com.tangem.features.storiesv2.impl.engine.StoryVideoPlayer
 import com.tangem.features.storiesv2.impl.engine.VideoSlideClock
 import com.tangem.features.storiesv2.impl.engine.WallSlideClock
 import com.tangem.features.storiesv2.impl.ui.StoryPlayerHandle
+import com.tangem.features.storiesv2.impl.ui.state.StoriesV2ScreenUM
 import com.tangem.features.storiesv2.impl.ui.state.StoriesV2UM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -49,6 +49,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -76,11 +77,10 @@ internal class StoriesV2Model @Inject constructor(
 
     private val params = paramsContainer.require<StoriesV2Component.Params>()
 
-    val uiState: StateFlow<StoriesV2UM?>
-        field = MutableStateFlow<StoriesV2UM?>(null)
+    val uiState: StateFlow<StoriesV2ScreenUM>
+        field = MutableStateFlow<StoriesV2ScreenUM>(StoriesV2ScreenUM.Loading(onCloseClick = ::onStatusClose))
 
-    override val slidePositionMs: LongState
-        field = mutableLongStateOf(0L)
+    private val slidePosition = SlidePosition()
 
     /** Only needed to letterbox a `contain` video; `cover` is cropped by the decoder. */
     val videoAspectRatio: StateFlow<Float?>
@@ -103,8 +103,11 @@ internal class StoriesV2Model @Inject constructor(
 
     private var appliedRenderMode = SlideRenderMode.ASSET
 
+    private var loadJob: Job? = null
+    private var isStatusResultDelivered = false
+
     init {
-        modelScope.launch { open() }
+        loadJob = modelScope.launch { open() }
     }
 
     override fun onDestroy() {
@@ -119,9 +122,10 @@ internal class StoriesV2Model @Inject constructor(
         controller?.setInForeground(inForeground)
     }
 
-    /** System back leaves the story the same way the close button does. */
+    /** System back leaves the story the same way the close button does, also while it is still loading. */
     fun onBackClick() {
-        controller?.onCloseClicked()
+        val controller = controller
+        if (controller != null) controller.onCloseClicked() else onStatusClose()
     }
 
     override fun attachSurface(surfaceView: SurfaceView) {
@@ -140,7 +144,7 @@ internal class StoriesV2Model @Inject constructor(
         val isRunning = state.isRunning
         val elapsedMs = elapsedMs(frameTimeNanos = frameTimeNanos, isRunning = isRunning)
         val positionMs = clock.onFrame(frameTimeNanos = frameTimeNanos, isRunning = isRunning)
-        slidePositionMs.longValue = positionMs
+        slidePosition.update(positionMs)
 
         controller.onProgress(positionMs = positionMs, elapsedMs = elapsedMs, stalledForMs = clock.stalledForMs)
     }
@@ -154,34 +158,72 @@ internal class StoriesV2Model @Inject constructor(
     }
 
     override fun onFirstFrameRendered() {
-        uiState.update { it?.copy(slide = it.slide.copy(isAssetReady = true)) }
+        uiState.update { state ->
+            if (state is StoriesV2ScreenUM.Content) {
+                state.copy(story = state.story.copy(slide = state.story.slide.copy(isAssetReady = true)))
+            } else {
+                state
+            }
+        }
     }
 
     override fun onAspectRatioChanged(aspectRatio: Float) {
         videoAspectRatio.value = aspectRatio
     }
 
-    override fun onError() {
-        controller?.onPlaybackFailed()
+    override fun onError(reason: StoryV2ErrorReason) {
+        controller?.onPlaybackFailed(reason)
     }
+
+    override fun slidePositionMs(playToken: Int): Long = slidePosition.of(playToken)
 
     override fun posterPainter(id: Int): Painter? = posterPainters[id]
 
+    /**
+     * A remote story may still be downloading when the player opens, so the viewer waits on a loading screen, as on
+     * iOS. A failed delivery offers a retry; a story that simply is not there hands control straight back to the host.
+     */
     private suspend fun open() {
-        val composition = contentRepository.getComposition(params.type)
-        if (composition == null) {
-            analytics.send(
-                StoriesV2Events.StoryErrorOccurred(
-                    storyId = null,
-                    slideId = null,
-                    errorStage = StoryV2ErrorStage.CONTENT_VALIDATION.analyticsValue,
-                    errorReason = StoryV2ErrorReason.NOT_FOUND.analyticsValue,
-                    source = params.source.analyticsValue,
-                ),
-            )
-            params.onResult(StoriesV2Result.Unavailable(reason = StoriesV2Result.Unavailable.Reason.NO_CONTENT))
-            return
+        when (val load = contentRepository.load(params.type)) {
+            is StoryV2ContentLoad.Ready -> start(load.composition)
+            StoryV2ContentLoad.Unavailable -> {
+                analytics.send(
+                    StoriesV2Events.StoryErrorOccurred(
+                        storyId = null,
+                        slideId = null,
+                        errorStage = StoryV2ErrorStage.CONTENT_VALIDATION.analyticsValue,
+                        errorReason = StoryV2ErrorReason.NOT_FOUND.analyticsValue,
+                        source = params.source.analyticsValue,
+                    ),
+                )
+                deliverStatusResult(
+                    StoriesV2Result.Unavailable(reason = StoriesV2Result.Unavailable.Reason.NO_CONTENT),
+                )
+            }
+            StoryV2ContentLoad.Failed -> {
+                uiState.value = StoriesV2ScreenUM.Error(onReloadClick = ::onReloadClick, onCloseClick = ::onStatusClose)
+            }
         }
+    }
+
+    private fun onReloadClick() {
+        uiState.value = StoriesV2ScreenUM.Loading(onCloseClick = ::onStatusClose)
+        loadJob = modelScope.launch { open() }
+    }
+
+    /** Leaving before the story started: the download carries on in the background for the next open. */
+    private fun onStatusClose() {
+        loadJob?.cancel()
+        deliverStatusResult(StoriesV2Result.Dismissed)
+    }
+
+    private fun deliverStatusResult(result: StoriesV2Result) {
+        if (isStatusResultDelivered || controller != null) return
+        isStatusResultDelivered = true
+        params.onResult(result)
+    }
+
+    private fun start(composition: StoryV2Composition) {
         this.composition = composition
         prefetchPosters(composition)
 
@@ -201,6 +243,7 @@ internal class StoriesV2Model @Inject constructor(
 
         controller.setReducedMotion(enabled = isReducedMotionEnabled())
         controller.onOpened()
+        modelScope.launch { contentRepository.markShown(params.type) }
 
         // Collected only after the first slide is entered, so the player starts that slide rather than starting
         // the pre-open state and correcting itself.
@@ -241,7 +284,7 @@ internal class StoriesV2Model @Inject constructor(
         val composition = composition ?: return
         val slide = composition.slides[state.slideIndex]
 
-        var isAssetReady = uiState.value?.slide?.isAssetReady == true
+        var isAssetReady = (uiState.value as? StoriesV2ScreenUM.Content)?.story?.slide?.isAssetReady == true
 
         if (state.playToken != appliedPlayToken) {
             isAssetReady = enterSlide(state = state, slide = slide)
@@ -252,11 +295,13 @@ internal class StoriesV2Model @Inject constructor(
 
         videoPlayer?.setRunning(running = state.isRunning && isPlayerDriven(state = state, slide = slide))
 
-        uiState.value = buildUiState(
-            composition = composition,
-            state = state,
-            slide = slide,
-            isAssetReady = isAssetReady,
+        uiState.value = StoriesV2ScreenUM.Content(
+            story = buildUiState(
+                composition = composition,
+                state = state,
+                slide = slide,
+                isAssetReady = isAssetReady,
+            ),
         )
     }
 
@@ -280,7 +325,7 @@ internal class StoriesV2Model @Inject constructor(
         clock.reset()
         previousFrameNanos = NO_TIME
         elapsedRemainderNanos = 0L
-        slidePositionMs.longValue = 0L
+        slidePosition.enter(playToken = state.playToken)
 
         return !isPlayerDriven || !isInterrupted
     }
@@ -289,7 +334,7 @@ internal class StoriesV2Model @Inject constructor(
     private fun degradeSlide(slide: StoryV2Slide) {
         appliedRenderMode = SlideRenderMode.POSTER
         videoPlayer?.setRunning(running = false)
-        clock = WallSlideClock(durationMs = slide.asset.durationMs, startPositionMs = slidePositionMs.longValue)
+        clock = WallSlideClock(durationMs = slide.asset.durationMs, startPositionMs = slidePosition.currentMs)
         previousFrameNanos = NO_TIME
         elapsedRemainderNanos = 0L
     }
@@ -331,6 +376,7 @@ internal class StoriesV2Model @Inject constructor(
                 content = slide.asset.toContent(renderMode = state.renderMode),
                 contentMode = slide.asset.contentMode,
                 isAssetReady = isAssetReady,
+                isBuffering = state.isStalled,
             ),
             actions = composition.actionsOf(slide)
                 .map { action ->
