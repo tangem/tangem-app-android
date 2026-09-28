@@ -35,6 +35,8 @@ private val IN_WALLET_TOKEN_STATES = setOf(
     GooglePayTokenState.TOKEN_STATE_FELICA_PENDING_PROVISIONING,
 )
 
+private val WALLET_DECLINE_ERROR_CODES = setOf(TapAndPayStatusCodes.TAP_AND_PAY_TOKENIZATION_DECLINED)
+
 private val NETWORK_ERROR_CODES = setOf(
     MppErrorCode.NO_NETWORK_CONNECTION,
     MppErrorCode.GENERIC_NETWORK_PROBLEM,
@@ -111,10 +113,14 @@ internal fun Throwable.describe(): String =
 private val MppError.walletErrorCodeOrNull: Int?
     get() = walletApiErrorCode.takeIf { it != NO_WALLET_ERROR_CODE }
 
+private val MppError.isTokenizationDeclined: Boolean
+    get() = code == MppErrorCode.GOOGLE_PAY_ERROR && walletApiErrorCode in WALLET_DECLINE_ERROR_CODES
+
 private val MppError.failureReason: FailureReason
     get() = when {
         isWalletUnsupported -> FailureReason.UNSUPPORTED
         code in NETWORK_ERROR_CODES -> FailureReason.NETWORK_ERROR
+        isTokenizationDeclined -> FailureReason.TOKENIZATION_DECLINED
         code == MppErrorCode.GOOGLE_PAY_ERROR || walletErrorCodeOrNull != null -> FailureReason.GOOGLE_WALLET_ERROR
         else -> FailureReason.MEAWALLET_ERROR
     }
