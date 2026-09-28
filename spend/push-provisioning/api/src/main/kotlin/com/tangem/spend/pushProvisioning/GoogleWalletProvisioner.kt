@@ -6,6 +6,8 @@ interface GoogleWalletProvisioner {
 
     val environment: Environment?
 
+    val isAdditionInProgress: Boolean
+
     val walletChanges: Flow<Unit>
 
     suspend fun getCardStatus(lastFourDigits: String): CardStatus
@@ -20,9 +22,11 @@ interface GoogleWalletProvisioner {
         UNSUPPORTED,
         NO_ACTIVITY,
         ADDITION_IN_PROGRESS,
+        ENVIRONMENT_MISMATCH,
         TOKEN_LOOKUP_FAILED,
         NO_TOKEN_AWAITING_VERIFICATION,
         NETWORK_ERROR,
+        TOKENIZATION_DECLINED,
         GOOGLE_WALLET_ERROR,
         MEAWALLET_ERROR,
         UNEXPECTED_ERROR,
@@ -33,9 +37,10 @@ interface GoogleWalletProvisioner {
         val cardSecret: String,
         val lastFourDigits: String,
         val displayName: String,
+        val environment: Environment,
     ) {
         override fun toString(): String = "Card(processorCardId=$processorCardId, cardSecret=***, " +
-            "lastFourDigits=$lastFourDigits, displayName=$displayName)"
+            "lastFourDigits=$lastFourDigits, displayName=$displayName, environment=$environment)"
     }
 
     sealed interface CardStatus {
