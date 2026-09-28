@@ -26,11 +26,10 @@ import com.tangem.domain.pay.usecase.GetTangemPayRegionsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.eligibility.EligibilityInnerRoute
 import com.tangem.features.tangempay.eligibility.TangemPayEligibilityComponent
+import com.tangem.features.tangempay.eligibility.TangemPayWalletSelectorComponent
 import com.tangem.features.tangempay.eligibility.onboarding.MoneyAccountOnboardingLauncher
 import com.tangem.features.tangempay.eligibility.onboarding.OnboardingLauncher
 import com.tangem.features.tangempay.eligibility.onboarding.PaymentAccountOnboardingLauncher
-import com.tangem.features.tangempay.eligibility.TangemPayWalletSelectorComponent
-import com.tangem.features.tangempay.eligibility.country.ResidencyListUM.Content
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -225,7 +224,10 @@ internal class ResidencyListModel @Inject constructor(
     override fun onWalletSelected(userWalletId: UserWalletId) {
         bottomSheetNavigation.dismiss()
         modelScope.launch {
-            onboardingLauncher.continueWith(userWalletId = userWalletId, onFailed = ::releaseContinuing)
+            onboardingLauncher.continueWith(
+                userWalletId = userWalletId,
+                onFailed = ::releaseContinuing,
+            )
         }
     }
 

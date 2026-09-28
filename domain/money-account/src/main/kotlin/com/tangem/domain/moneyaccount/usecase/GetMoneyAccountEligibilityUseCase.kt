@@ -3,6 +3,7 @@ package com.tangem.domain.moneyaccount.usecase
 import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.model.MoneyAccountEligibility
+import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import kotlinx.coroutines.async
@@ -13,6 +14,7 @@ class GetMoneyAccountEligibilityUseCase(
     private val getMoneyAccountSuitableWalletsUseCase: GetMoneyAccountSuitableWalletsUseCase,
     private val getMoneyAccountStatusUseCase: GetMoneyAccountStatusUseCase,
     private val deviceSecurityInfoProvider: DeviceSecurityInfoProvider,
+    private val onboardingRepository: OnboardingRepository,
 ) {
     suspend operator fun invoke(): MoneyAccountEligibility {
         if (deviceSecurityInfoProvider.isSecurityExposed()) {
@@ -34,6 +36,8 @@ class GetMoneyAccountEligibilityUseCase(
     }
 
     private suspend fun canOpenMoneyAccount(userWalletId: UserWalletId): Boolean {
+        if (!onboardingRepository.isTangemPayInitialDataProduced(userWalletId)) return true
+
         val status = getMoneyAccountStatusUseCase(userWalletId).getOrNull() ?: return false
         return status is MoneyAccountStatusValue.NotCreated
     }

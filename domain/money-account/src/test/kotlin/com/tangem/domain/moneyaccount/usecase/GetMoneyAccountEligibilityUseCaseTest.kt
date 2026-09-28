@@ -8,9 +8,11 @@ import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.model.MoneyAccountEligibility
+import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.security.DeviceSecurityInfoProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -26,11 +28,13 @@ internal class GetMoneyAccountEligibilityUseCaseTest {
     private val getMoneyAccountSuitableWalletsUseCase: GetMoneyAccountSuitableWalletsUseCase = mockk()
     private val getMoneyAccountStatusUseCase: GetMoneyAccountStatusUseCase = mockk()
     private val deviceSecurityInfoProvider: DeviceSecurityInfoProvider = mockk()
+    private val onboardingRepository: OnboardingRepository = mockk()
 
     private val useCase = GetMoneyAccountEligibilityUseCase(
         getMoneyAccountSuitableWalletsUseCase = getMoneyAccountSuitableWalletsUseCase,
         getMoneyAccountStatusUseCase = getMoneyAccountStatusUseCase,
         deviceSecurityInfoProvider = deviceSecurityInfoProvider,
+        onboardingRepository = onboardingRepository,
     )
 
     @BeforeEach
@@ -39,7 +43,9 @@ internal class GetMoneyAccountEligibilityUseCaseTest {
             getMoneyAccountSuitableWalletsUseCase,
             getMoneyAccountStatusUseCase,
             deviceSecurityInfoProvider,
+            onboardingRepository,
         )
+        coEvery { onboardingRepository.isTangemPayInitialDataProduced(any()) } returns true
         every { deviceSecurityInfoProvider.isRooted } returns false
         every { deviceSecurityInfoProvider.isBootloaderUnlocked } returns false
         every { deviceSecurityInfoProvider.isXposed } returns false
@@ -81,6 +87,21 @@ internal class GetMoneyAccountEligibilityUseCaseTest {
 
         // Assert
         assertThat(result).isEqualTo(MoneyAccountEligibility.Available(listOf(wallet)))
+    }
+
+    @Test
+    fun `GIVEN wallet without auth tokens WHEN invoke THEN returns Available without status loading`() = runTest {
+        // Arrange
+        val wallet = mockWallet()
+        every { getMoneyAccountSuitableWalletsUseCase() } returns listOf(wallet)
+        coEvery { onboardingRepository.isTangemPayInitialDataProduced(wallet.walletId) } returns false
+
+        // Act
+        val result = useCase()
+
+        // Assert
+        assertThat(result).isEqualTo(MoneyAccountEligibility.Available(listOf(wallet)))
+        coVerify(exactly = 0) { getMoneyAccountStatusUseCase(any()) }
     }
 
     @Test
