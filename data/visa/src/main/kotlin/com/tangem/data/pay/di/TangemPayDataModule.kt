@@ -33,6 +33,7 @@ import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusProducer
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.moneyaccount.repository.MoneyAccountRepository
 import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.*
 import com.tangem.domain.pay.usecase.bankofframp.AwaitBankOfframpSignatureUseCase
@@ -487,8 +488,13 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
-        fun provideGetOnrampFeesUseCase(onboardingRepository: OnboardingRepository): GetOnrampFeesUseCase {
-            return GetOnrampFeesUseCase(onboardingRepository = onboardingRepository)
+        fun provideGetAccountFeesUseCase(onboardingRepository: OnboardingRepository): GetAccountFeesUseCase {
+            return GetAccountFeesUseCase(onboardingRepository = onboardingRepository)
+        }
+
+        @Provides
+        fun provideGetOnrampFeesUseCase(getAccountFeesUseCase: GetAccountFeesUseCase): GetOnrampFeesUseCase {
+            return GetOnrampFeesUseCase(getAccountFeesUseCase = getAccountFeesUseCase)
         }
 
         @Provides
@@ -572,6 +578,12 @@ internal interface TangemPayDataModule {
         @Provides
         @Singleton
         fun provideBankOfframpRepository(repository: DefaultBankOfframpRepository): BankOfframpRepository = repository
+
+        @Provides
+        @Singleton
+        fun provideMoneyAccountFeesRepository(repository: DefaultMoneyAccountRepository): MoneyAccountRepository {
+            return repository
+        }
 
         @Provides
         @Singleton
