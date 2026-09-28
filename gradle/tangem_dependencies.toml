@@ -11,7 +11,7 @@ tangemCardSdk = "develop-671"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
 tangemVico = "tangem-master-21"
 #tangemVico = "0.0.1" # Keep it! - used for local builds ^
-tangemHotSdk = "develop-553"
+tangemHotSdk = "develop-554"
 
 #tangemHotSdk = "0.0.1" # Keep it! - used for local builds ^
 tangemUsedeskSdk = "main-13"
