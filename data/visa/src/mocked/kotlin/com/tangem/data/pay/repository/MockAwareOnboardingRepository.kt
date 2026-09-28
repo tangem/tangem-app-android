@@ -9,9 +9,10 @@ import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.domain.models.account.BankCredentials
-import com.tangem.domain.models.account.TangemPayOnrampFee
 import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.AccountFee
+import com.tangem.domain.pay.model.AccountFeeGroupType
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.repository.OnboardingRepository
@@ -78,9 +79,10 @@ internal class MockAwareOnboardingRepository @Inject constructor(
         productInstanceId: String,
     ): Either<VisaApiError, BankCredentials> = real.getBankCredentials(userWalletId, productInstanceId)
 
-    override suspend fun getOnrampFees(
+    override suspend fun getFees(
         userWalletId: UserWalletId,
-    ): Either<VisaApiError, List<TangemPayOnrampFee>> = real.getOnrampFees(userWalletId)
+        types: Set<AccountFeeGroupType>,
+    ): Either<VisaApiError, List<AccountFee>> = real.getFees(userWalletId, types)
 
     override suspend fun createOrder(
         userWalletId: UserWalletId,
