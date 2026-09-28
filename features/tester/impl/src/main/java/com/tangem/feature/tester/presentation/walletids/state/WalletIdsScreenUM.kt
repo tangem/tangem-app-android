@@ -2,6 +2,8 @@ package com.tangem.feature.tester.presentation.walletids.state
 
 import kotlinx.collections.immutable.ImmutableList
 
+internal const val WALLET_IDS_TITLE = "Wallet IDs"
+
 internal data class WalletIdsScreenUM(
     val wallets: ImmutableList<WalletIdsUM>,
     val onBackClick: () -> Unit,
