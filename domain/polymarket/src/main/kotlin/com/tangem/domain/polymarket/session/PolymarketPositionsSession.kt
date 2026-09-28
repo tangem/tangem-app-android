@@ -140,10 +140,11 @@ class PolymarketPositionsSession internal constructor(
 
     private fun load(isRefreshing: Boolean = false) {
         val scope = scope?.takeIf { it.isActive } ?: return
-        val retained = state.value.takeIf {
-            isRefreshing && it.filter == request.value.filter &&
-                (it.status is PaginationStatus.Paginating || it.status is PaginationStatus.EndOfPagination ||
-                    it.positions.isNotEmpty())
+        val retained = state.value.takeIf { current ->
+            isRefreshing && current.filter == request.value.filter &&
+                (current.status is PaginationStatus.Paginating ||
+                    current.status is PaginationStatus.EndOfPagination ||
+                    current.positions.isNotEmpty())
         }
         job?.cancel()
         requestMore = null
