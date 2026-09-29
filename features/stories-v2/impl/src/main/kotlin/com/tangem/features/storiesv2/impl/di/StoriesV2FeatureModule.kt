@@ -6,6 +6,10 @@ import com.tangem.features.storiesv2.StoriesV2StorybookComponent
 import com.tangem.features.storiesv2.impl.component.DefaultStoriesV2Component
 import com.tangem.features.storiesv2.impl.content.DefaultStoryV2ContentRepository
 import com.tangem.features.storiesv2.impl.content.StoryV2ContentRepository
+import com.tangem.features.storiesv2.impl.content.remote.DefaultStoryV2AssetStore
+import com.tangem.features.storiesv2.impl.content.remote.OkHttpStoryV2FileDownloader
+import com.tangem.features.storiesv2.impl.content.remote.StoryV2AssetStore
+import com.tangem.features.storiesv2.impl.content.remote.StoryV2FileDownloader
 import com.tangem.features.storiesv2.impl.prefetch.DefaultStoriesV2Prefetcher
 import com.tangem.features.storiesv2.impl.storybook.DefaultStoriesV2StorybookComponent
 import dagger.Binds
@@ -31,4 +35,12 @@ internal interface StoriesV2FeatureModule {
     @Binds
     @Singleton
     fun bindContentRepository(impl: DefaultStoryV2ContentRepository): StoryV2ContentRepository
+
+    @Binds
+    @Singleton
+    fun bindAssetStore(impl: DefaultStoryV2AssetStore): StoryV2AssetStore
+
+    @Binds
+    @Singleton
+    fun bindFileDownloader(impl: OkHttpStoryV2FileDownloader): StoryV2FileDownloader
 }
