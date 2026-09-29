@@ -10,6 +10,7 @@ import com.tangem.domain.wallets.hot.HotWalletAccessor
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.hot.sdk.TangemHotSdk
+import com.tangem.hot.sdk.exception.RecentBiometryUnavailableException
 import com.tangem.hot.sdk.exception.WrongPasswordException
 import com.tangem.hot.sdk.model.*
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -70,6 +71,18 @@ class DefaultHotWalletAccessor @Inject constructor(
 
     override suspend fun unlockContextual(hotWalletId: HotWalletId, auth: HotAuth): UnlockHotWallet =
         storeContextUnlock(UnlockHotWallet(hotWalletId, auth))
+
+    override suspend fun unlockContextualWithRecentBiometry(hotWalletId: HotWalletId): UnlockHotWallet {
+        // "Require access code" turns biometrics off for sensitive actions, so a biometric app unlock can't stand
+        // in for the wallet's authentication either.
+        if (isAccessCodeRequired()) {
+            throw RecentBiometryUnavailableException("The access code is required for sensitive actions")
+        }
+
+        return tangemHotSdk.getContextUnlockWithRecentBiometry(hotWalletId).also { unlockHotWallet ->
+            contextualUnlockHotWallet[hotWalletId] = unlockHotWallet
+        }
+    }
 
     private suspend fun storeContextUnlock(unlock: UnlockHotWallet): UnlockHotWallet =
         tangemHotSdk.getContextUnlock(unlock).also { unlockHotWallet ->
