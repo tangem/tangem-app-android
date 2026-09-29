@@ -16,4 +16,7 @@ data class TokenApiResponse(
     @Json(name = "refreshTokenExpiresAt") val refreshTokenExpiresAt: String?,
     /** List of wallet IDs bound to this device. */
     @Json(name = "walletIds") val walletIds: List<String>,
-)
+) {
+
+    override fun toString(): String = "TokenApiResponse(***)"
+}
