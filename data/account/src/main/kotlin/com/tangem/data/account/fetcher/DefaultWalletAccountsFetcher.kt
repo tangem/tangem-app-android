@@ -68,7 +68,6 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
 
     override suspend fun fetch(userWalletId: UserWalletId): GetWalletAccountsResponse {
         val savedAccountsResponse = getAccountsResponseStore(userWalletId = userWalletId).getSyncOrNull()
-            ?.withoutJointAccountsIfDisabled(userWalletId)
         val fetchResult = fetchWalletAccounts(userWalletId, savedAccountsResponse)
         val accountsResponse = fetchResult.accountsResponse
 
@@ -204,7 +203,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
                 fetchWalletAccountsErrorHandler.handle(
                     error = throwable,
                     userWalletId = userWalletId,
-                    savedAccountsResponse = savedAccountsResponse,
+                    savedAccountsResponse = savedAccountsResponse?.withoutJointAccountsIfDisabled(userWalletId),
                     pushWalletAccounts = { accounts, eTag ->
                         pushInternal(
                             userWalletId = userWalletId,
@@ -232,21 +231,24 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         return if (isSavedByOtherVersion) null else getETag(userWalletId)
     }
 
-    /** With the toggle off no joint record reaches the store, so nothing downstream has to tell the two kinds apart */
+    /**
+     * With the toggle off the document is brought to the `v1` shape: no joint record reaches the store, so nothing
+     * downstream has to tell the two kinds apart, and no joint counter survives to be compared with them
+     */
     private fun GetWalletAccountsResponse.withoutJointAccountsIfDisabled(
         userWalletId: UserWalletId,
     ): GetWalletAccountsResponse {
-        if (jointAccountFeatureToggles.isJointAccountEnabled) return this
+        if (jointAccountFeatureToggles.isJointAccountEnabled || !isJointAware) return this
 
         val ownAccounts = accounts.filterNot(WalletAccountDTO::isJoint)
-        if (ownAccounts.size == accounts.size) return this
+        if (ownAccounts.size != accounts.size) {
+            TangemLogger.i(
+                "Joint account feature is off: dropped ${accounts.size - ownAccounts.size} joint account(s) " +
+                    "of $userWalletId from the accounts response",
+            )
+        }
 
-        TangemLogger.i(
-            "Joint account feature is off: dropped ${accounts.size - ownAccounts.size} joint account(s) " +
-                "of $userWalletId from the accounts response",
-        )
-
-        return copy(accounts = ownAccounts)
+        return copy(wallet = wallet.copy(totalJointAccounts = null), accounts = ownAccounts)
     }
 
     private suspend fun initializeAccounts(
