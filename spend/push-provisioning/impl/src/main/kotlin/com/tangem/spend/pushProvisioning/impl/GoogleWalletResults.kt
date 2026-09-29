@@ -116,11 +116,15 @@ private val MppError.walletErrorCodeOrNull: Int?
 private val MppError.isTokenizationDeclined: Boolean
     get() = code == MppErrorCode.GOOGLE_PAY_ERROR && walletApiErrorCode in WALLET_DECLINE_ERROR_CODES
 
+private val MppError.isTooManyAttempts: Boolean
+    get() = walletApiErrorCode == TapAndPayStatusCodes.TAP_AND_PAY_VELOCITY_CHECK_EXCEEDED_ERROR
+
 private val MppError.failureReason: FailureReason
     get() = when {
         isWalletUnsupported -> FailureReason.UNSUPPORTED
         code in NETWORK_ERROR_CODES -> FailureReason.NETWORK_ERROR
         isTokenizationDeclined -> FailureReason.TOKENIZATION_DECLINED
+        isTooManyAttempts -> FailureReason.TOO_MANY_ATTEMPTS
         code == MppErrorCode.GOOGLE_PAY_ERROR || walletErrorCodeOrNull != null -> FailureReason.GOOGLE_WALLET_ERROR
         else -> FailureReason.MEAWALLET_ERROR
     }
