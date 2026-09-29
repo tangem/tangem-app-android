@@ -15,6 +15,8 @@ internal class NoopGoogleWalletProvisioner @Inject constructor() : GoogleWalletP
 
     override val environment: Environment? = null
 
+    override val isAdditionInProgress: Boolean = false
+
     override val walletChanges: Flow<Unit> = flow { awaitCancellation() }
 
     override suspend fun getCardStatus(lastFourDigits: String): CardStatus = CardStatus.Unsupported
