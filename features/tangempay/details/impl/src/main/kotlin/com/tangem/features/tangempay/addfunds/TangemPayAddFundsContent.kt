@@ -52,6 +52,7 @@ internal fun TangemPayAddFundsContent(state: TangemPayAddFundsUM) {
                 type = TangemTopBarType.BottomSheet,
                 endContent = {
                     TangemButton(
+                        modifier = Modifier.testTag(TangemPayTestTags.ADD_FUNDS_CLOSE_BUTTON),
                         iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_close_24),
                         onClick = state.dismiss,
                         size = TangemButton.Size.X11,
