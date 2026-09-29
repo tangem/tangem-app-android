@@ -121,7 +121,7 @@ internal class DefaultMoneyAccountActivationRepositoryTest {
         val actual = repository.activateMoneyAccount(userWalletId)
 
         // Assert
-        assertThat(actual).isEqualTo(MoneyAccountActivationError.Unknown(cause).left())
+        assertThat(actual).isEqualTo(MoneyAccountActivationError.Unknown.left())
         coVerify(exactly = 0) { onboardingRepository.storeInitialCredentials(any(), any()) }
         coVerify(exactly = 0) { derivationsRepository.storeDerivedKeys(any(), any()) }
     }
