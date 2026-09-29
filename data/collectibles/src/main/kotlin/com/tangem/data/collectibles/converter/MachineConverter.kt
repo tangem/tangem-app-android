@@ -1,5 +1,6 @@
 package com.tangem.data.collectibles.converter
 
+import com.tangem.data.collectibles.CollectiblesConst.CENTS_SCALE
 import com.tangem.domain.collectibles.models.CollectibleGachaMachine
 import com.tangem.grow.datasource.collectibles.models.response.model.MachineDTO
 import com.tangem.utils.converter.Converter
@@ -11,16 +12,16 @@ internal object MachineConverter : Converter<MachineDTO, CollectibleGachaMachine
         externalId = value.externalId,
         name = value.name,
         shortName = value.shortName,
-        price = value.price.movePointLeft(2),
-        fee = value.fee.movePointLeft(2),
-        feeAmount = value.feeAmount.movePointLeft(2),
+        price = value.price.movePointLeft(CENTS_SCALE),
+        fee = value.fee.movePointLeft(CENTS_SCALE),
+        feeAmount = value.feeAmount.movePointLeft(CENTS_SCALE),
         contains = value.contains,
         instantBuybackPercent = value.instantBuybackPercent,
         lowThreshold = value.lowThreshold,
         odds = value.odds.toDomain(),
         tierRanges = value.tierRanges.toDomain(),
         stock = value.stock.toDomain(),
-        expectedValue = value.expectedValue.movePointLeft(2),
+        expectedValue = value.expectedValue.movePointLeft(CENTS_SCALE),
         imageUrl = value.image,
         categoryId = value.categoryId,
     )
@@ -46,6 +47,8 @@ internal object MachineConverter : Converter<MachineDTO, CollectibleGachaMachine
         epic = epic?.toDomain(),
     )
 
-    private fun MachineDTO.MachineTierRangesDTO.MachineTierRangeDTO.toDomain() =
-        CollectibleGachaMachine.TierRange(start = start.movePointLeft(2), end = end.movePointLeft(2))
+    private fun MachineDTO.MachineTierRangesDTO.MachineTierRangeDTO.toDomain() = CollectibleGachaMachine.TierRange(
+        start = start.movePointLeft(CENTS_SCALE),
+        end = end.movePointLeft(CENTS_SCALE),
+    )
 }
