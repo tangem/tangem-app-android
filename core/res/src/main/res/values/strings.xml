@@ -1486,6 +1486,21 @@
   <string name="markets_yield_supply_banner_title">Activate Yield Mode</string>
   <string name="mobile_wallet_requires_min_os_warning_body">You must update to %1$s  before creating a mobile wallet</string>
   <string name="mobile_wallet_requires_min_os_warning_title">Mobile Wallet requires %1$s or later</string>
+  <string name="money_account_onboarding_currency_card_caption">Account currency</string>
+  <string name="money_account_onboarding_description">Works just like a regular bank account. But powered by crypto and fully under your control.</string>
+  <string name="money_account_onboarding_disclaimer">Tangem Pay is a financial technology company, not a bank. Banking services are provided by SSB, Member FDIC. Funds deposited at SSB are eligible for FDIC insurance up to $250,000 per depositor, per insured bank, subject to applicable limitations and FDIC rules.</string>
+  <string name="money_account_onboarding_earn_card_caption">Earn</string>
+  <string name="money_account_onboarding_fees_error">Failed to load fees information.\nTap to reload</string>
+  <string name="money_account_onboarding_fees_notice">SWIFT transfers aren’t supported. If you send one, it will be returned</string>
+  <string name="money_account_onboarding_fees_provider">Provider</string>
+  <string name="money_account_onboarding_fees_title">Fees</string>
+  <string name="money_account_onboarding_secondary_button">Terms and fees</string>
+  <string name="money_account_onboarding_terms_link">Terms of Service</string>
+  <string name="money_account_onboarding_terms_notice">By using service, you agree with provider %1$s</string>
+  <string name="money_account_onboarding_title">Get Money account</string>
+  <string name="money_account_onboarding_transfers_card_caption">Money in. Money out.</string>
+  <string name="money_account_onboarding_transfers_card_subtitle">with a dedicated account with banking details</string>
+  <string name="money_account_onboarding_transfers_card_title">Send and receive fiat payments</string>
   <string name="news_all_news">All news</string>
   <string name="news_like">Like</string>
   <plurals name="news_published_hours_ago">
@@ -1757,6 +1772,7 @@
   <string name="prediction_account_title">Prediction account</string>
   <string name="prediction_account_unavailable">Couldn\'t connect to your prediction account. Refresh or reopen this screen.</string>
   <string name="prediction_add_funds_error_description">Couldn\'t load deposit details. Refresh or re-enter this screen.</string>
+  <string name="prediction_add_funds_max_receive_amount_title">The amount to receive must not exceed %s</string>
   <string name="prediction_add_funds_notification_limits_description">The deposit amount must be at least %1$s. Deposits above $50,000 are not recommended — split a larger amount into several smaller deposits.</string>
   <string name="prediction_add_funds_notification_limits_title">Deposit limits</string>
   <string name="prediction_add_funds_receive_body">Send %1$s from another wallet, minimum %2$s</string>
@@ -1980,6 +1996,8 @@
   <string name="promo_campaign_reactivation_summary_description">Earn 0.5% cashback on every swap over $500, on any pair except stable to stable. Max payout $50 per swap.\n\nComplete five qualifying swaps and unlock an extra $10 bonus.\n\nRewards are paid weekly in USDT or USDC on the address selected.</string>
   <string name="promo_campaign_select_cashback_account">Select cashback account</string>
   <string name="promo_campaign_select_token">Select cashback token</string>
+  <string name="promo_campaign_selected_cashback_account">Selected cashback account</string>
+  <string name="promo_campaign_selected_token">Selected cashback token</string>
   <string name="promo_campaign_summary_title">Enroll in %1$s</string>
   <string name="promo_campaign_terms_agreement">I agree with %1$s</string>
   <string name="promo_campaign_terms_agreement_android">I agree with</string>
@@ -2563,7 +2581,9 @@
   <string name="tangempay_card_details_add_funds_subtitle">Top-up options</string>
   <string name="tangempay_card_details_add_to_wallet_button_text">Add to Google Wallet</string>
   <string name="tangempay_card_details_add_to_wallet_error_description">Try another device or contact support</string>
+  <string name="tangempay_card_details_add_to_wallet_error_rate_limit">Too many attempts. Try again in 24 hours</string>
   <string name="tangempay_card_details_add_to_wallet_error_title">Could Not Add Card</string>
+  <string name="tangempay_card_details_add_to_wallet_error_wallet_unavailable">Google Wallet is unavailable. Check system settings</string>
   <string name="tangempay_card_details_awaiting_deposit_cancel_button">Cancel %1$s, move to %2$s</string>
   <string name="tangempay_card_details_awaiting_deposit_subtitle">To pay monthly fee for plan and start use new card</string>
   <string name="tangempay_card_details_awaiting_deposit_title">Top-up your account on %1$s</string>
@@ -2971,6 +2991,7 @@
   <string name="tangempay_withdraw_bank_transfer_type_own">Your account</string>
   <string name="tangempay_withdraw_bank_transfer_type_third_party">3rd-party account</string>
   <string name="tangempay_withdraw_bank_transfer_type_title">Type of transfer</string>
+  <string name="tangempay_withdraw_hub_accounts_load_error">Couldn’t load list. Tap to reload</string>
   <string name="tangempay_withdraw_hub_bank_section_subtitle">Send to another bank using ACH or FedWire</string>
   <string name="tangempay_withdraw_hub_bank_section_subtitle_unavailable">Available only for USDC on Polygon, Base, Arbitrum</string>
   <string name="tangempay_withdraw_hub_bank_section_title">Bank transfer</string>
