@@ -144,6 +144,7 @@ kaspresso-allure = "1.6.0"
 compose-junit = "1.6.2"
 hamcrest = "2.2"
 orchestrator = "1.5.1"
+benchmark = "1.4.1"
 # endregion Testing
 
 [plugins]
@@ -153,6 +154,7 @@ kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
 android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
+android-test = { id = "com.android.test", version.ref = "androidGradlePlugin" }
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlytics" }
 firebase-perf = { id = "com.google.firebase.firebase-perf", version.ref = "firebasePerf" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
@@ -276,6 +278,8 @@ test-hamcrest = { module = "org.hamcrest:hamcrest", version.ref = "hamcrest" }
 test-hilt = { module = "com.google.dagger:hilt-android-testing", version.ref = "hilt" }
 test-hilt-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt" }
 test-orchestrator = { module = "androidx.test:orchestrator", version.ref = "orchestrator" }
+test-benchmark-macro = { module = "androidx.benchmark:benchmark-macro", version.ref = "benchmark" }
+test-benchmark-macro-junit4 = { module = "androidx.benchmark:benchmark-macro-junit4", version.ref = "benchmark" }
 # endregion Test
 
 # region Other
