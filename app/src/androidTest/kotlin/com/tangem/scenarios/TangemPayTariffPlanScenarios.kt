@@ -21,6 +21,9 @@ private const val ORDERS_SCENARIO = "tangem_pay_tariff_plan_orders"
 private const val ORDER_SCENARIO = "tangem_pay_tariff_plan_order"
 private const val OFFERS_SCENARIO = "tangem_pay_tariff_plan_offers"
 
+/** The Basic transition order is polled by its own id, so it has a scenario of its own. */
+private const val BASIC_ORDER_SCENARIO = "tangem_pay_tariff_plan_basic_order"
+
 /** The card-issue order list is drained explicitly, so an issue order never masks the tariff-plan one. */
 private const val CARD_ISSUE_ORDERS_SCENARIO = "tangem_pay_card_issue_orders"
 
@@ -31,9 +34,13 @@ private const val HISTORY_INITIAL_EMPTY_STATE = "InitialEmpty"
 
 private const val ORDERS_EMPTY_STATE = "Empty"
 private const val ORDERS_AWAITING_DEPOSIT_STATE = "AwaitingDeposit"
+private const val ORDERS_PLUS_PROCESSING_STATE = "PlusProcessing"
 private const val ORDER_STARTED_STATE = "Started"
 private const val ORDER_AWAITING_DEPOSIT_STATE = "AwaitingDeposit"
 private const val ORDER_COMPLETED_STATE = "Completed"
+private const val BASIC_ORDER_PROCESSING_STATE = "Processing"
+private const val BASIC_ORDER_COMPLETED_STATE = "Completed"
+private const val HISTORY_AFTER_PLAN_FEE_STATE = "AfterPlanFee"
 private const val PLAN_BASIC_STATE = "Basic"
 
 private const val PLACE_ORDER_ENDPOINT = "/bff-v2/v1/order"
@@ -73,6 +80,10 @@ fun setTangemPayTariffPlanScenarios(
     step("Set WireMock scenario '$CARD_ISSUE_ORDERS_SCENARIO' to '$ORDERS_EMPTY_STATE'") {
         setWireMockScenarioState(CARD_ISSUE_ORDERS_SCENARIO, ORDERS_EMPTY_STATE)
     }
+    // Only Processing and Completed are mapped, so the reset default would leave the order poll unanswered.
+    step("Set WireMock scenario '$BASIC_ORDER_SCENARIO' to '$BASIC_ORDER_COMPLETED_STATE'") {
+        setWireMockScenarioState(BASIC_ORDER_SCENARIO, BASIC_ORDER_COMPLETED_STATE)
+    }
     offers?.let {
         step("Set WireMock scenario '$OFFERS_SCENARIO' to '$it'") {
             setWireMockScenarioState(OFFERS_SCENARIO, it)
@@ -110,6 +121,41 @@ fun stageTangemPayPlanOrderCompleted(plan: String) {
     step("Switch WireMock scenario '$ORDERS_SCENARIO' to '$ORDERS_EMPTY_STATE'") {
         setWireMockScenarioState(ORDERS_SCENARIO, ORDERS_EMPTY_STATE)
     }
+}
+
+/** Only the polled order: the list is flipped by the POST stub, so staging it here would race that. */
+fun stageTangemPayBasicOrderPolling() {
+    step("Switch WireMock scenario '$BASIC_ORDER_SCENARIO' to '$BASIC_ORDER_PROCESSING_STATE'") {
+        setWireMockScenarioState(BASIC_ORDER_SCENARIO, BASIC_ORDER_PROCESSING_STATE)
+    }
+}
+
+/** Finishes the Basic card issuance the account was waiting on. */
+fun completeTangemPayBasicOrderIssuing() {
+    step("Switch WireMock scenario '$BASIC_ORDER_SCENARIO' to '$BASIC_ORDER_COMPLETED_STATE'") {
+        setWireMockScenarioState(BASIC_ORDER_SCENARIO, BASIC_ORDER_COMPLETED_STATE)
+    }
+    step("Switch WireMock scenario '$ORDERS_SCENARIO' to '$ORDERS_EMPTY_STATE'") {
+        setWireMockScenarioState(ORDERS_SCENARIO, ORDERS_EMPTY_STATE)
+    }
+}
+
+/** Moves the paid Plus transition order from 'awaiting deposit' to 'processing'. */
+fun stageTangemPayPlusOrderProcessing() {
+    step("Switch WireMock scenario '$ORDER_SCENARIO' to '$ORDER_STARTED_STATE'") {
+        setWireMockScenarioState(ORDER_SCENARIO, ORDER_STARTED_STATE)
+    }
+    step("Switch WireMock scenario '$ORDERS_SCENARIO' to '$ORDERS_PLUS_PROCESSING_STATE'") {
+        setWireMockScenarioState(ORDERS_SCENARIO, ORDERS_PLUS_PROCESSING_STATE)
+    }
+}
+
+/** Completes the Plus transition order and puts the plan fee it charged into the transaction history. */
+fun completeTangemPayPlusOrderWithPlanFee(plan: String) {
+    step("Switch WireMock scenario '$HISTORY_SCENARIO' to '$HISTORY_AFTER_PLAN_FEE_STATE'") {
+        setWireMockScenarioState(HISTORY_SCENARIO, HISTORY_AFTER_PLAN_FEE_STATE)
+    }
+    stageTangemPayPlanOrderCompleted(plan)
 }
 
 /** Called after the cancel tap: the cancel stub flips the polled order, the list is drained here. */
@@ -152,11 +198,17 @@ fun BaseTestCase.openTangemPaySelectPlanFromOnboarding() {
     }
 }
 
-/** From the open payment account, opens 'Current plan' through the top bar more-actions menu. */
-fun BaseTestCase.openTangemPayCurrentPlan() {
+/** Opens 'Current plan' from the top bar menu; [assertMenuItems] also checks the items it offers. */
+fun BaseTestCase.openTangemPayCurrentPlan(assertMenuItems: Boolean = false) {
     step("Click on 'More' button") {
         awaitSuccess { onTangemPayMainScreen { moreActionsButton.assertIsDisplayed() } }
         onTangemPayMainScreen { moreActionsButton.performClick() }
+    }
+    if (assertMenuItems) {
+        step("Assert the more-actions menu offers 'Current plan' and 'Support'") {
+            awaitSuccess { onTangemPayMainScreen { currentPlanMenuItem.assertIsDisplayed() } }
+            onTangemPayMainScreen { paySupportMenuItem.assertIsDisplayed() }
+        }
     }
     step("Click on 'Current plan' menu item") {
         awaitSuccess { onTangemPayMainScreen { currentPlanMenuItem.assertIsDisplayed() } }
@@ -232,5 +284,41 @@ fun BaseTestCase.assertTangemPayCurrentPlanName(expectedPlanName: String) {
 fun BaseTestCase.assertTangemPayAwaitingDepositBannerHidden(planFee: String) {
     awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
         onTangemPayMainScreen { awaitingDepositBannerTitle(planFee).assertDoesNotExist() }
+    }
+}
+
+/** Waits for the card-issuing banner, the payment account's proof a transition order is in progress. */
+fun BaseTestCase.assertTangemPayIssuingCardBanner() {
+    step("Assert 'Issuing new digital card' banner is displayed") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onTangemPayMainScreen { issuingCardBanner.assertIsDisplayed() }
+        }
+    }
+}
+
+/** Waits for the card-issuing banner to leave the payment account — the order it stood for is done. */
+fun BaseTestCase.assertTangemPayIssuingCardBannerHidden() {
+    step("Assert 'Issuing new digital card' banner is not displayed") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onTangemPayMainScreen { issuingCardBanner.assertDoesNotExist() }
+        }
+    }
+}
+
+/** From the top-up banner, opens the 'Add funds' sheet and closes it again. */
+fun BaseTestCase.checkTangemPayAddFundsFromTopUpBanner() {
+    step("Click on 'Add funds' button on the top-up banner") {
+        awaitSuccess { onTangemPayMainScreen { awaitingDepositBannerAddFundsButton.assertIsDisplayed() } }
+        onTangemPayMainScreen { awaitingDepositBannerAddFundsButton.performClick() }
+    }
+    // 'Add funds' labels the action button and the banner button too, so the sheet is recognised by its rows.
+    step("Assert 'Add funds' sheet is displayed") {
+        awaitSuccess { onTangemPayAddFundsSheet { optionAt(index = 0).assertIsDisplayed() } }
+    }
+    step("Click on 'Close' button") {
+        onTangemPayAddFundsSheet { closeButton.clickWithAssertion() }
+    }
+    step("Assert 'Add funds' sheet is not displayed") {
+        awaitSuccess { onTangemPayAddFundsSheet { optionAt(index = 0).assertDoesNotExist() } }
     }
 }
