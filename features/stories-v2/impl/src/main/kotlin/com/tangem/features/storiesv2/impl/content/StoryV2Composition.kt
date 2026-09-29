@@ -68,17 +68,19 @@ internal data class StoryV2Haptic(
 /**
  * @property durationMs  authoritative display duration; progress, analytics and haptics are all measured against it,
  *                       never against the length the media file happens to have
- * @property poster      always present, so no code path can end up with nothing to draw
+ * @property poster      the asset's first frame, drawn until the asset produces one. Bundled content always has
+ *                       it; the remote contract has none, so a remote slide waits for its local file instead and
+ *                       cannot fall back to a still
  */
 internal sealed interface StoryV2Asset {
 
     val durationMs: Long
     val contentMode: StoryV2ContentMode
-    val poster: StoryV2MediaRef
+    val poster: StoryV2MediaRef?
 
     data class Video(
         val source: StoryV2MediaRef,
-        override val poster: StoryV2MediaRef,
+        override val poster: StoryV2MediaRef?,
         override val durationMs: Long,
         override val contentMode: StoryV2ContentMode = StoryV2ContentMode.COVER,
     ) : StoryV2Asset
@@ -95,7 +97,7 @@ internal sealed interface StoryV2Asset {
     /** [durationMs] governs the segment, not the length of the animation. */
     data class VectorAnimation(
         val source: StoryV2MediaRef,
-        override val poster: StoryV2MediaRef,
+        override val poster: StoryV2MediaRef?,
         override val durationMs: Long,
         override val contentMode: StoryV2ContentMode = StoryV2ContentMode.CONTAIN,
     ) : StoryV2Asset
