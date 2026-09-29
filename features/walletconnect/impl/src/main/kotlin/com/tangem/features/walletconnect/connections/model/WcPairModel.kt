@@ -19,6 +19,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.models.account.Account
@@ -117,6 +118,9 @@ internal class WcPairModel @Inject constructor(
             flow = portfolioFetcher.data,
             flow2 = selectorController.selectedAccountWithData(portfolioFetcher)
                 .filterNotNull()
+                .transform { selected ->
+                    if (selected.second is AccountStatus.Joint) declineJointAccount() else emit(selected)
+                }
                 .onEach { selectedPortfolio.tryEmit(it) }
                 .runningReduce { _, new ->
                     stackNavigation.pop()
@@ -192,7 +196,8 @@ internal class WcPairModel @Inject constructor(
                 isAccountMode = isAccountMode,
             )
             selectorController.isEnabled.value = { _, account ->
-                account.account is Account.Personal && proposalAccountNetwork.contains(account.account.accountId)
+                account.account is Account.Joint ||
+                    account.account is Account.Personal && proposalAccountNetwork.contains(account.account.accountId)
             }
             proposalNetwork = foundNetwork
             additionallyEnabledNetworks = proposalNetwork.available
@@ -313,6 +318,17 @@ internal class WcPairModel @Inject constructor(
         )
         analytics.send(event)
         stackNavigation.pushNew(WcAppInfoRoutes.Alert.UnsafeDomain)
+    }
+
+    private fun declineJointAccount() {
+        messageSender.send(
+            DialogMessage(
+                title = resourceReference(R.string.common_coming_soon),
+                message = resourceReference(R.string.joint_account_coming_soon_description),
+            ),
+        )
+        val (_, previous) = selectedPortfolio.replayCache.firstOrNull() ?: return
+        selectorController.selectAccount(previous.accountId)
     }
 
     private fun showVerifiedAlert(appName: String) {

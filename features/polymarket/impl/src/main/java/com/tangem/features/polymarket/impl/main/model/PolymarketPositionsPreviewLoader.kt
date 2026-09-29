@@ -8,11 +8,13 @@ import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketPositionsPreviewUM
 import com.tangem.features.polymarket.impl.positions.model.PolymarketPositionUMConverter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.JobHolder
-import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
@@ -33,10 +35,11 @@ internal class PolymarketPositionsPreviewLoader @Inject constructor(
     val state: StateFlow<PolymarketPositionsPreviewUM>
         field = MutableStateFlow<PolymarketPositionsPreviewUM>(PolymarketPositionsPreviewUM.Loading)
 
-    private val refreshJob = JobHolder()
-    private val invalidationJob = JobHolder()
+    private var pollingJob: Job? = null
+    private var invalidationJob: Job? = null
     private var isResumed = false
     private var appliedRevision = 0L
+    private var indexingRetry = INDEXING_RETRY_INTERVALS.size
 
     fun resume(
         scope: CoroutineScope,
@@ -44,40 +47,73 @@ internal class PolymarketPositionsPreviewLoader @Inject constructor(
         onPositionClick: ((PolymarketPosition.Open) -> Unit)? = null,
     ) {
         isResumed = true
+        invalidationJob?.cancel()
         val converter = PolymarketPositionUMConverter(onPositionClick)
         val onRetry = { if (isResumed) resume(scope, userWalletId, onPositionClick) }
-        appliedRevision = updateListener.currentRevision(userWalletId)
-        startPolling(scope = scope, userWalletId = userWalletId, onRetry = onRetry, converter = converter)
-        scope.launch {
+        applyRevision(updateListener.currentRevision(userWalletId))
+        restartPolling(scope = scope, userWalletId = userWalletId, onRetry = onRetry, converter = converter)
+        invalidationJob = scope.launch {
             updateListener.revisionFlow(userWalletId).collect { revision ->
                 if (revision == appliedRevision) return@collect
-                appliedRevision = revision
-                startPolling(scope = scope, userWalletId = userWalletId, onRetry = onRetry, converter = converter)
+                applyRevision(revision)
+                restartPolling(scope = scope, userWalletId = userWalletId, onRetry = onRetry, converter = converter)
             }
-        }.saveIn(invalidationJob)
+        }
     }
 
-    private fun startPolling(
+    suspend fun refresh(
+        scope: CoroutineScope,
+        userWalletId: UserWalletId,
+        onPositionClick: ((PolymarketPosition.Open) -> Unit)? = null,
+    ) {
+        if (!isResumed) return
+        val onRetry = { if (isResumed) resume(scope, userWalletId, onPositionClick) }
+        restartPolling(
+            scope = scope,
+            userWalletId = userWalletId,
+            onRetry = onRetry,
+            converter = PolymarketPositionUMConverter(onPositionClick),
+        ).await()
+    }
+
+    private fun applyRevision(revision: Long) {
+        if (revision == appliedRevision) return
+        appliedRevision = revision
+        indexingRetry = 0
+    }
+
+    private fun restartPolling(
         scope: CoroutineScope,
         userWalletId: UserWalletId,
         onRetry: () -> Unit,
         converter: PolymarketPositionUMConverter,
-    ) {
-        scope.launch {
+    ): Deferred<Unit> {
+        pollingJob?.cancel()
+        val firstRead = CompletableDeferred<Unit>()
+        val job = scope.launch(start = CoroutineStart.LAZY) {
             if (state.value !is PolymarketPositionsPreviewUM.Content) {
                 state.value = PolymarketPositionsPreviewUM.Loading
             }
             while (true) {
                 refresh(userWalletId, onRetry, converter)
-                delay(POLL_INTERVAL)
+                firstRead.complete(Unit)
+                val indexingDelay = INDEXING_RETRY_INTERVALS.getOrNull(indexingRetry)
+                if (indexingDelay != null) indexingRetry++
+                delay(indexingDelay ?: POLL_INTERVAL)
             }
-        }.saveIn(refreshJob)
+        }
+        pollingJob = job
+        job.invokeOnCompletion { firstRead.cancel() }
+        job.start()
+        return firstRead
     }
 
     fun pause() {
         isResumed = false
-        refreshJob.cancel()
-        invalidationJob.cancel()
+        pollingJob?.cancel()
+        pollingJob = null
+        invalidationJob?.cancel()
+        invalidationJob = null
     }
 
     private suspend fun refresh(
@@ -116,5 +152,7 @@ internal class PolymarketPositionsPreviewLoader @Inject constructor(
     private companion object {
         const val PREVIEW_SIZE = 3
         val POLL_INTERVAL = 20.seconds
+        // Successful reads can still return the pre-trade list while the backend indexes a fill.
+        val INDEXING_RETRY_INTERVALS = listOf(2.seconds, 4.seconds, 8.seconds, 16.seconds)
     }
 }

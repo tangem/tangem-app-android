@@ -8,6 +8,8 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.yield.supply.YieldSupplyRepository
+import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
+import com.tangem.domain.yield.supply.models.YieldSupplyEnterOutcome
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -24,6 +26,7 @@ import org.junit.jupiter.api.Test
 class YieldSupplyPendingTrackerTest {
 
     private val yieldSupplyRepository: YieldSupplyRepository = mockk()
+    private val yieldSupplyTransactionRepository: YieldSupplyTransactionRepository = mockk()
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher = mockk()
 
     private lateinit var testScope: TestScope
@@ -36,6 +39,7 @@ class YieldSupplyPendingTrackerTest {
         testScope = TestScope(StandardTestDispatcher())
         useCase = YieldSupplyPendingTracker(
             yieldSupplyRepository = yieldSupplyRepository,
+            yieldSupplyTransactionRepository = yieldSupplyTransactionRepository,
             singleNetworkStatusFetcher = singleNetworkStatusFetcher,
             coroutineScope = TestAppCoroutineScope(testScope),
         )
@@ -147,15 +151,15 @@ class YieldSupplyPendingTrackerTest {
 
         useCase.addPending(userWalletId, token, txIds)
 
-        testScope.advanceTimeBy(10_001L * 6)
+        testScope.advanceTimeBy(10_001L * MAX_ATTEMPTS)
 
-        coVerify(exactly = 6) {
+        coVerify(exactly = MAX_ATTEMPTS) {
             yieldSupplyRepository.getPendingTxHashes(userWalletId, token)
         }
 
         testScope.advanceTimeBy(10_001L)
 
-        coVerify(exactly = 6) {
+        coVerify(exactly = MAX_ATTEMPTS) {
             yieldSupplyRepository.getPendingTxHashes(userWalletId, token)
         }
     }
@@ -270,6 +274,175 @@ class YieldSupplyPendingTrackerTest {
             singleNetworkStatusFetcher.invoke(any())
         }
         assertThat(paramsSlot.captured.userWalletId).isEqualTo(userWalletId)
+    }
+
+    @Test
+    fun `GIVEN enter tx deposited WHEN checked THEN activates protocol and stops tracking`() = runTest {
+        // Arrange
+        val token = createToken()
+        stubEnterOutcome(token, YieldSupplyEnterOutcome.Deposited)
+
+        // Act
+        useCase.addPending(userWalletId, token, ENTER_TX_IDS, depositContext())
+        testScope.advanceTimeBy(10_001L)
+
+        // Assert
+        coVerify(exactly = 1) {
+            yieldSupplyRepository.activateProtocol(userWalletId, token, OWNER_ADDRESS)
+        }
+    }
+
+    @Test
+    fun `GIVEN enter tx failed WHEN checked THEN activates protocol so the relayer can deposit`() = runTest {
+        // Arrange
+        val token = createToken()
+        stubEnterOutcome(token, YieldSupplyEnterOutcome.Failed)
+
+        // Act
+        useCase.addPending(userWalletId, token, ENTER_TX_IDS, depositContext())
+        testScope.advanceTimeBy(10_001L)
+
+        // Assert
+        coVerify(exactly = 1) {
+            yieldSupplyRepository.activateProtocol(userWalletId, token, OWNER_ADDRESS)
+        }
+    }
+
+    @Test
+    fun `GIVEN relayer already deposited WHEN checked THEN does not activate protocol`() = runTest {
+        // Arrange
+        val token = createToken()
+        stubEnterOutcome(token, YieldSupplyEnterOutcome.DepositedByRelayer)
+
+        // Act
+        useCase.addPending(userWalletId, token, ENTER_TX_IDS, depositContext())
+        testScope.advanceTimeBy(10_001L)
+
+        // Assert
+        coVerify(exactly = 0) { yieldSupplyRepository.activateProtocol(any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN enter tx not mined WHEN checked THEN does not activate protocol and keeps tracking`() = runTest {
+        // Arrange
+        val token = createToken()
+        stubEnterOutcome(token, outcome = null)
+
+        // Act
+        useCase.addPending(userWalletId, token, ENTER_TX_IDS, depositContext())
+        testScope.advanceTimeBy(10_001L * 3)
+
+        // Assert
+        coVerify(exactly = 0) { yieldSupplyRepository.activateProtocol(any(), any(), any()) }
+        coVerify(exactly = 3) {
+            yieldSupplyTransactionRepository.getEnterTransactionOutcome(userWalletId, token, ENTER_TX_HASH)
+        }
+    }
+
+    @Test
+    fun `GIVEN nothing to deposit WHEN setup settles THEN activates protocol`() = runTest {
+        // Arrange
+        val token = createToken()
+        coEvery { yieldSupplyRepository.getPendingTxHashes(userWalletId, token) } returns emptyList()
+        coEvery { yieldSupplyRepository.activateProtocol(any(), any(), any()) } returns true
+        coEvery { singleNetworkStatusFetcher.invoke(any()) } returns Either.Right(Unit)
+
+        // Act
+        useCase.addPending(userWalletId, token, ENTER_TX_IDS, depositContext(enterTransactionHash = null))
+        testScope.advanceTimeBy(10_001L)
+
+        // Assert
+        coVerify(exactly = 1) {
+            yieldSupplyRepository.activateProtocol(userWalletId, token, OWNER_ADDRESS)
+        }
+        coVerify(exactly = 0) {
+            yieldSupplyTransactionRepository.getEnterTransactionOutcome(any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `GIVEN nothing to deposit WHEN setup still pending THEN does not activate protocol`() = runTest {
+        // Arrange
+        val token = createToken()
+        coEvery { yieldSupplyRepository.getPendingTxHashes(userWalletId, token) } returns ENTER_TX_IDS
+        coEvery { singleNetworkStatusFetcher.invoke(any()) } returns Either.Right(Unit)
+
+        // Act
+        useCase.addPending(userWalletId, token, ENTER_TX_IDS, depositContext(enterTransactionHash = null))
+        testScope.advanceTimeBy(10_001L)
+
+        // Assert
+        coVerify(exactly = 0) { yieldSupplyRepository.activateProtocol(any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN deposit settling WHEN stop requested THEN settled deposit does not activate protocol`() = runTest {
+        // Arrange
+        val token = createToken()
+        stubEnterOutcome(token, YieldSupplyEnterOutcome.Deposited)
+        coEvery { yieldSupplyRepository.getPendingTxHashes(userWalletId, token) } returns emptyList()
+
+        // Act
+        useCase.addPending(userWalletId, token, ENTER_TX_IDS, depositContext())
+        useCase.addPending(userWalletId, token, listOf("0xexit"))
+        testScope.advanceTimeBy(10_001L)
+
+        // Assert
+        coVerify(exactly = 0) { yieldSupplyRepository.activateProtocol(any(), any(), any()) }
+        coVerify(exactly = 0) { yieldSupplyTransactionRepository.getEnterTransactionOutcome(any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN deposit settling WHEN hasPendingDeposit THEN true until settled`() = runTest {
+        // Arrange
+        val token = createToken()
+        stubEnterOutcome(token, YieldSupplyEnterOutcome.Deposited)
+
+        // Act
+        useCase.addPending(userWalletId, token, ENTER_TX_IDS, depositContext())
+        val beforeSettle = useCase.hasPendingDeposit(userWalletId, token.id)
+        testScope.advanceTimeBy(10_001L)
+        val afterSettle = useCase.hasPendingDeposit(userWalletId, token.id)
+
+        // Assert
+        assertThat(beforeSettle).isTrue()
+        assertThat(afterSettle).isFalse()
+    }
+
+    @Test
+    fun `GIVEN tracking without deposit context WHEN hasPendingDeposit THEN false`() = runTest {
+        // Arrange
+        val token = createToken()
+        coEvery { yieldSupplyRepository.getPendingTxHashes(userWalletId, token) } returns listOf("0xapprove")
+        coEvery { singleNetworkStatusFetcher.invoke(any()) } returns Either.Right(Unit)
+
+        // Act
+        useCase.addPending(userWalletId, token, listOf("0xapprove"))
+
+        // Assert
+        assertThat(useCase.hasPendingDeposit(userWalletId, token.id)).isFalse()
+    }
+
+    private fun depositContext(enterTransactionHash: String? = ENTER_TX_HASH) =
+        YieldSupplyPendingTracker.DepositContext(
+            ownerAddress = OWNER_ADDRESS,
+            enterTransactionHash = enterTransactionHash,
+        )
+
+    private fun stubEnterOutcome(token: CryptoCurrency.Token, outcome: YieldSupplyEnterOutcome?) {
+        coEvery {
+            yieldSupplyTransactionRepository.getEnterTransactionOutcome(userWalletId, token, ENTER_TX_HASH)
+        } returns outcome
+        coEvery { yieldSupplyRepository.activateProtocol(any(), any(), any()) } returns true
+        coEvery { singleNetworkStatusFetcher.invoke(any()) } returns Either.Right(Unit)
+    }
+
+    private companion object {
+        /** Mirrors YieldSupplyPendingTracker.MAX_ATTEMPTS, which is private. */
+        const val MAX_ATTEMPTS = 15
+        const val ENTER_TX_HASH = "0xenter"
+        const val OWNER_ADDRESS = "0xowner"
+        val ENTER_TX_IDS = listOf(ENTER_TX_HASH)
     }
 
     private fun createToken(

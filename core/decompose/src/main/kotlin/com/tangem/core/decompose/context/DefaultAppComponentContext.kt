@@ -27,8 +27,11 @@ class DefaultAppComponentContext(
     override val componentScope: CoroutineScope = ComponentCoroutineScope(lifecycle, dispatchers)
 
     override val navigationProvider: AppNavigationProvider
-        get() = instanceKeeper.getOrCreate { DefaultAppNavigationProvider() }
+        get() = instanceKeeper.getOrCreate(key = NAVIGATION_PROVIDER_KEY) { DefaultAppNavigationProvider() }
 
     override val router: Router
-        get() = replaceRouter ?: instanceKeeper.getOrCreate { DefaultRouter(navigationProvider) }
+        get() = replaceRouter ?: instanceKeeper.getOrCreate(key = ROUTER_KEY) { DefaultRouter(navigationProvider) }
 }
+
+private const val NAVIGATION_PROVIDER_KEY = "DefaultAppComponentContext.navigationProvider"
+private const val ROUTER_KEY = "DefaultAppComponentContext.router"
