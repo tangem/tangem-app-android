@@ -25,6 +25,7 @@ import com.tangem.feature.tester.presentation.storybook.entity.TangemLoaderStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemStatusScreenStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemContextMenuStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemMessageStory
+import com.tangem.feature.tester.presentation.storybook.entity.TangemModalStatusStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemPagerIndicatorStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemSearchFieldStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemSegmentedPickerStory
@@ -51,6 +52,7 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.filter.TangemFil
 import com.tangem.feature.tester.presentation.storybook.page.ds.footer.TangemFooterStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.glowring.TangemGlowRingStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.loader.TangemLoaderStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.modalstatus.TangemModalStatusStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.statusscreen.TangemStatusScreenStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.messagebanner.TangemMessageBannerStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.modal.TangemModalStory
@@ -93,6 +95,7 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
         // edge-to-edge ones (which manage insets themselves) keeps the usual system bars padding.
         val isEdgeToEdgePage = storyState is TangemShtorkaStory ||
             storyState is TangemModalStory ||
+            storyState is TangemModalStatusStory ||
             storyState is StoriesV2Story ||
             storyState is TangemStatusScreenStory
         val insetsModifier = if (isEdgeToEdgePage) Modifier else Modifier.systemBarsPadding()
@@ -134,6 +137,7 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
                 is TangemShimmerStory -> TangemShimmerStory(state = storyState)
                 is TangemShtorkaStory -> TangemShtorkaStory(state = storyState)
                 is TangemModalStory -> TangemModalStory(state = storyState)
+                is TangemModalStatusStory -> TangemModalStatusStory(state = storyState)
                 is TangemFadeStory -> TangemFadeStory(state = storyState)
                 is TangemTopNavigationStory -> TangemTopNavigationStory(state = storyState)
                 is TangemMessageBannerStory -> TangemMessageBannerStory(state = storyState)
