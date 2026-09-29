@@ -4,11 +4,14 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -17,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.ds2.button.TangemButton
@@ -45,6 +49,7 @@ internal fun JointAccountShareSafelyBS(onDismiss: () -> Unit, modifier: Modifier
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
+        scrollableContent = false,
         title = {
             TangemModal.TopNavigation(
                 title = resourceReference(CoreUiR.string.joint_account_invite_members_safety_sheet_title),
@@ -52,19 +57,13 @@ internal fun JointAccountShareSafelyBS(onDismiss: () -> Unit, modifier: Modifier
             )
         },
         content = {
-            Content(modifier = modifier)
-            TangemFooter(
-                windowInsets = WindowInsets(0),
-                fadeEnabled = false,
-                blurBackground = false,
-                modifier = Modifier.padding(bottom = 24.dp),
-            ) {
-                TangemButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    variant = TangemButton.Variant.Primary,
-                    size = TangemButton.Size.X12,
-                    text = resourceReference(CoreUiR.string.common_got_it),
-                    onClick = onDismiss,
+            Box(modifier = modifier.weight(weight = 1f, fill = false)) {
+                Content()
+                Footer(
+                    onGotItClick = onDismiss,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth(),
                 )
             }
         },
@@ -73,7 +72,12 @@ internal fun JointAccountShareSafelyBS(onDismiss: () -> Unit, modifier: Modifier
 
 @Composable
 private fun Content(modifier: Modifier = Modifier) {
-    Column(modifier = modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 10.dp)) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 8.dp, vertical = 10.dp),
+    ) {
         ShareSafelyPointRow(
             icon = Icons.ic_lightning_24,
             title = resourceReference(CoreUiR.string.joint_account_invite_members_safety_first_point_title),
@@ -95,8 +99,33 @@ private fun Content(modifier: Modifier = Modifier) {
                 CoreUiR.string.joint_account_invite_members_safety_third_point_subtitle,
             ),
         )
+        SpacerH(FOOTER_HEIGHT)
     }
 }
+
+@Composable
+private fun Footer(onGotItClick: () -> Unit, modifier: Modifier = Modifier) {
+    TangemFooter(
+        modifier = modifier,
+        windowInsets = WindowInsets(0),
+        contentPadding = PaddingValues(all = FOOTER_PADDING),
+        // inside a modal the fade samples the screen behind the sheet, not the list under it
+        blurBackground = false,
+    ) {
+        TangemButton(
+            modifier = Modifier.fillMaxWidth(),
+            variant = TangemButton.Variant.Primary,
+            size = TangemButton.Size.X12,
+            text = resourceReference(CoreUiR.string.common_got_it),
+            onClick = onGotItClick,
+        )
+    }
+}
+
+private val FOOTER_PADDING = 16.dp
+
+/** Scroll reserve under the last row: the footer's [TangemButton.Size.X12] button and its padding */
+private val FOOTER_HEIGHT = FOOTER_PADDING * 2 + 48.dp
 
 @Composable
 private fun ShareSafelyPointRow(
