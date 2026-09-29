@@ -28,14 +28,20 @@ internal class CollectiblesPrizePoolTransformer(
     override fun transform(prevState: CollectiblesMachineDetailsUM): CollectiblesMachineDetailsUM {
         if (prevState !is CollectiblesMachineDetailsUM.Content) return prevState
 
-        return prevState.copy(prizePool = transformPrizePool())
+        return prevState.copy(prizePool = transformPrizePool(prevPrizePool = prevState.prizePool))
     }
 
-    private fun transformPrizePool(): CollectiblesMachineDetailsUM.PrizePoolUM {
+    private fun transformPrizePool(
+        prevPrizePool: CollectiblesMachineDetailsUM.PrizePoolUM,
+    ): CollectiblesMachineDetailsUM.PrizePoolUM {
         return when (batchListState.status) {
             is PaginationStatus.None,
             is PaginationStatus.InitialLoading,
-            -> CollectiblesMachineDetailsUM.PrizePoolUM.Loading
+            -> if (prevPrizePool is CollectiblesMachineDetailsUM.PrizePoolUM.Error) {
+                prevPrizePool.copy(isReloading = true)
+            } else {
+                CollectiblesMachineDetailsUM.PrizePoolUM.Loading
+            }
             is PaginationStatus.InitialLoadingError -> CollectiblesMachineDetailsUM.PrizePoolUM.Error(
                 message = resourceReference(R.string.collectibles_machine_prize_pool_load_error),
                 onReloadClick = onReloadClick,
