@@ -14,15 +14,54 @@ import org.junit.jupiter.api.Test
 internal class SocialLoginConsentPromptTest {
 
     private val states = mutableListOf<SocialLoginConsentUM?>()
+    private val events = mutableListOf<SocialLoginConsentPrompt.Event>()
 
     private val prompt = SocialLoginConsentPrompt(
         title = stringReference("title"),
         description = stringReference("description"),
         acknowledgement = stringReference("acknowledgement"),
         onStateChanged = { states += it },
+        onEvent = { events += it },
     )
 
+    @Test
+    fun `GIVEN a missed acknowledgement WHEN confirming twice THEN every step is reported in order`() = runTest {
+        // Arrange
+        val answer = async { prompt.await() }
+        runCurrent()
+
+        // Act
+        current.onConfirmClick()
+        current.onAcknowledgedChange(true)
+        current.onConfirmClick()
+        answer.await()
+
+        // Assert
+        assertThat(events).containsExactly(
+            SocialLoginConsentPrompt.Event.Shown,
+            SocialLoginConsentPrompt.Event.AcknowledgementMissing,
+            SocialLoginConsentPrompt.Event.Confirmed(isEmailSharingAllowed = false),
+        ).inOrder()
+    }
+
     private val current: SocialLoginConsentUM get() = states.last()!!
+
+    @Test
+    fun `GIVEN a double tap WHEN confirming THEN the consent is reported once`() = runTest {
+        // Arrange
+        val answer = async { prompt.await() }
+        runCurrent()
+        current.onAcknowledgedChange(true)
+        val ui = current
+
+        // Act
+        ui.onConfirmClick()
+        ui.onConfirmClick()
+        answer.await()
+
+        // Assert
+        assertThat(events.filterIsInstance<SocialLoginConsentPrompt.Event.Confirmed>()).hasSize(1)
+    }
 
     @Test
     fun `GIVEN both boxes ticked WHEN confirming THEN the opt-in is reported`() = runTest {
