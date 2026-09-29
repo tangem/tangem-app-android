@@ -195,6 +195,15 @@ sealed class TangemPayAnalyticsEvents(
         event = "Button - Support On Transaction Popup",
     )
 
+    data class UnknownTransactionType(val type: String?) : TangemPayAnalyticsEvents(
+        categoryName = "Visa Screen",
+        event = "Errors",
+        params = mapOf(
+            AnalyticsParam.ERROR_DESCRIPTION to "Unknown Transaction Type",
+            AnalyticsParam.Key.TYPE to (type ?: MISSING_WIRE_TYPE),
+        ),
+    )
+
     class KycPassedAndOrderCreated : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa KYC Passed And Order Created",
@@ -957,5 +966,7 @@ sealed class TangemPayAnalyticsEvents(
         }
     }
 }
+
+private const val MISSING_WIRE_TYPE = "missing"
 
 private fun Boolean.toYesNo(): String = if (this) "Yes" else "No"

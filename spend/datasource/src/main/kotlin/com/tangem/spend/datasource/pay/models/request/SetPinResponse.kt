@@ -1,15 +1,15 @@
 package com.tangem.spend.datasource.pay.models.request
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class SetPinResponse(
-    @Json(name = "result") val result: Result?,
-    @Json(name = "error") val error: String?,
+    @SerialName("result") val result: Result?,
+    @SerialName("error") val error: String?,
 ) {
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Result(
-        @Json(name = "result") val result: String,
+        @SerialName("result") val result: String,
     )
 }
