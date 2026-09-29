@@ -48,7 +48,6 @@ import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
-import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.extensions.orMaskWithStars
@@ -61,6 +60,7 @@ import com.tangem.core.ui.res.generated.icons.ic_cloud_exclamation_20
 import com.tangem.core.ui.res.generated.icons.ic_dot_12_filled
 import com.tangem.core.ui.res.generated.icons.ic_grid_plus_20
 import com.tangem.core.ui.res.generated.icons.ic_grid_plus_24
+import com.tangem.utils.StringsSigns
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -427,25 +427,17 @@ internal fun AccountRowSmallBalance(
     )
 }
 
-/** Price change under the collapsed balance. */
-@Composable
-internal fun AccountRowPriceChange(state: TangemPriceChange.State, modifier: Modifier = Modifier) {
-    TangemPriceChange(state = state, modifier = modifier)
-}
-
 /** The `—` shown instead of a balance when it could not be calculated. */
 @Composable
 internal fun AccountRowBalanceError(modifier: Modifier = Modifier) {
     Text(
-        text = BALANCE_ERROR_DASH,
+        text = StringsSigns.DASH_SIGN,
         style = TangemTheme.typography3.body.medium,
         color = TangemTheme.colors3.text.primary,
         maxLines = 1,
         modifier = modifier,
     )
 }
-
-private const val BALANCE_ERROR_DASH = "—"
 
 /** Collapse affordance at the end of the expanded heading. */
 @Composable
