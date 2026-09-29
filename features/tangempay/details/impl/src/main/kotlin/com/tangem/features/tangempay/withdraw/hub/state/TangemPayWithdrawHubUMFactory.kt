@@ -73,12 +73,12 @@ internal class TangemPayWithdrawHubUMFactory(private val callbacks: Callbacks) {
         RecentsState.Loading -> RecentsUM.Loading
         RecentsState.Failed -> RecentsUM.Error(onRetryClick = callbacks.onRetryRecentsClick)
         is RecentsState.Loaded -> if (state.accounts.isEmpty()) {
-            RecentsUM.Empty(onSeeAllClick = callbacks.onSeeAllClick.takeIf { state.hasSavedAccounts })
+            RecentsUM.Empty
         } else {
             RecentsUM.Content(
                 recipients = state.accounts.map(::toRecipient).toImmutableList(),
                 onRecipientClick = callbacks.onRecentRecipientClick,
-                onSeeAllClick = callbacks.onSeeAllClick,
+                onSeeAllClick = callbacks.onSeeAllClick.takeIf { state.hasMoreAccounts },
             )
         }
     }
