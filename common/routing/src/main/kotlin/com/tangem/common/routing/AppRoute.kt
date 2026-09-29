@@ -344,6 +344,18 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/wallet_hardware_backup/${userWalletId.stringValue}")
 
     @Serializable
+    data class HardwareUpgradeStories(
+        val userWalletId: UserWalletId,
+        val source: Source,
+    ) : AppRoute(path = "/hardware_upgrade_stories/${userWalletId.stringValue}") {
+
+        enum class Source {
+            MAIN,
+            WALLET_SETTINGS,
+        }
+    }
+
+    @Serializable
     data class CreateCloudBackup(
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/create_cloud_backup/${userWalletId.stringValue}")
