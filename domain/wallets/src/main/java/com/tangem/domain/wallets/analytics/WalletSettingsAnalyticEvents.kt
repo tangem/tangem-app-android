@@ -103,6 +103,10 @@ sealed class WalletSettingsAnalyticEvents(
         event = "Cloud Backup Deleted",
     )
 
+    class SocialRecoveryDeleted : WalletSettingsAnalyticEvents(
+        event = "Social Recovery Deleted",
+    )
+
     data class CloudBackupDeletionError(
         val errorMessage: String,
     ) : WalletSettingsAnalyticEvents(
