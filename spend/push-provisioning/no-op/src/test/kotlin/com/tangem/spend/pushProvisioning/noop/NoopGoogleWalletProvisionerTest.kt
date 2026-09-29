@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.spend.pushProvisioning.GoogleWalletProvisioner.AddResult
 import com.tangem.spend.pushProvisioning.GoogleWalletProvisioner.Card
 import com.tangem.spend.pushProvisioning.GoogleWalletProvisioner.CardStatus
+import com.tangem.spend.pushProvisioning.GoogleWalletProvisioner.Environment
 import com.tangem.spend.pushProvisioning.GoogleWalletProvisioner.FailureReason
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -15,6 +16,11 @@ internal class NoopGoogleWalletProvisionerTest {
     @Test
     fun `GIVEN build without the SDK WHEN environment read THEN no environment`() {
         assertThat(provisioner.environment).isNull()
+    }
+
+    @Test
+    fun `GIVEN build without the SDK WHEN addition state read THEN no card is being added`() {
+        assertThat(provisioner.isAdditionInProgress).isFalse()
     }
 
     @Test
@@ -53,6 +59,7 @@ internal class NoopGoogleWalletProvisionerTest {
             cardSecret = "card-secret",
             lastFourDigits = LAST_FOUR_DIGITS,
             displayName = DISPLAY_NAME,
+            environment = Environment.TEST,
         )
     }
 }

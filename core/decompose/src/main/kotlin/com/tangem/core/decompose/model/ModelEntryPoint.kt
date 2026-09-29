@@ -43,7 +43,7 @@ inline fun <reified M : Model, reified P : Any> AppComponentContext.getOrCreateM
     messageSender: UiMessageSender? = null,
     router: Router? = null,
 ): M {
-    val entryPoint = instanceKeeper.getOrCreateSimple(key = "modelsEntryPoint_${M::class.simpleName}") {
+    val entryPoint = instanceKeeper.getOrCreateSimple(key = "modelsEntryPoint_${M::class.java.simpleName}") {
         val hiltComponent = hiltComponentBuilder
             .router(router ?: this@getOrCreateModel.router)
             .uiMessageSender(messageSender ?: this@getOrCreateModel.messageSender)
@@ -53,10 +53,10 @@ inline fun <reified M : Model, reified P : Any> AppComponentContext.getOrCreateM
         EntryPoints.get(hiltComponent, ModelsEntryPoint::class.java)
     }
 
-    val modelKey = "model_${M::class.simpleName}"
+    val modelKey = "model_${M::class.java.simpleName}"
     val model = instanceKeeper.getOrCreate(modelKey) {
         requireNotNull(entryPoint.models()[M::class.java]?.get()) {
-            "Model ${M::class.simpleName} is not provided"
+            "Model ${M::class.java.simpleName} is not provided"
         } as M
     }
 
