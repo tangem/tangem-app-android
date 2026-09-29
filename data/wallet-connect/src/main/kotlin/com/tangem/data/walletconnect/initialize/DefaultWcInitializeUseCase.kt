@@ -35,8 +35,9 @@ internal class DefaultWcInitializeUseCase(
 
     // Both stores are persisted by the app itself, so this answers without waking the SDK. A pending
     // approval counts: the process can die between approving a session and its settlement, and that
-    // settlement only arrives over a live SDK.
+    // settlement only arrives over a live SDK. An expired one counts too, since the SDK may have settled it
+    // before the process died.
     private suspend fun hasLiveWork(): Boolean = withContext(dispatchers.io) {
-        store.sessions.first().isNotEmpty() || store.pendingApproval.first().isNotEmpty()
+        store.sessions.first().isNotEmpty() || store.pendingApprovalIncludingExpired.first().isNotEmpty()
     }
 }
