@@ -201,7 +201,7 @@ private fun VariantSelector(
 private fun TokenCountSelector(selected: Int, onSelect: (Int) -> Unit) {
     Section(label = "Tokens in the expanded body") {
         ChipGrid(
-            items = (0..MAX_TOKEN_COUNT).toList(),
+            items = (1..MAX_TOKEN_COUNT).toList(),
             label = { it.toString() },
             isSelected = { it == selected },
             onSelect = onSelect,
