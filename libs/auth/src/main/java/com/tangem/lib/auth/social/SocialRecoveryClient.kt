@@ -68,7 +68,10 @@ interface SocialRecoveryClient {
  * @property forRequest the nonce itself, for [SocialRecoveryClient.recoverKey] and everything bound to it
  * (the device signature, the attestation)
  */
-data class SignInNonce(val forProvider: String, val forRequest: String)
+data class SignInNonce(val forProvider: String, val forRequest: String) {
+
+    override fun toString(): String = "SignInNonce(***)"
+}
 
 sealed interface SocialRecoveryError {
 
