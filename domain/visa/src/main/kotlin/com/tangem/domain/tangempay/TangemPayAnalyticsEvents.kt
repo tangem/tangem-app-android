@@ -643,11 +643,6 @@ sealed class TangemPayAnalyticsEvents(
             categoryName = CATEGORY,
             event = "Cashback Banner Error State Showed",
         )
-
-        class ButtonErrorStateShowed : TangemPayAnalyticsEvents(
-            categoryName = CATEGORY,
-            event = "Cashback Button Error State Showed",
-        )
     }
 
     object Eligibility {

@@ -5,6 +5,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.data.pay.store.CashbackSummaryStore
 import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.OrderType
@@ -29,6 +30,7 @@ internal class DefaultOnboardingRepositoryTest {
     private val tangemPayApi: TangemPayApi = mockk()
     private val requestHelper: TangemPayRequestPerformer = mockk()
     private val tangemPayStorage: TangemPayStorage = mockk(relaxed = true)
+    private val cashbackSummaryStore: CashbackSummaryStore = mockk(relaxed = true)
 
     private val repository = DefaultOnboardingRepository(
         analytics = mockk(relaxed = true),
@@ -41,12 +43,13 @@ internal class DefaultOnboardingRepositoryTest {
         userWalletsListRepository = mockk(relaxed = true),
         paymentAccountStatusStore = mockk(relaxed = true),
         txHistoryItemsStore = mockk(relaxed = true),
+        cashbackSummaryStore = cashbackSummaryStore,
         customerInfoStore = mockk(relaxed = true),
     )
 
     @BeforeEach
     fun setUp() {
-        clearMocks(tangemPayApi, requestHelper, tangemPayStorage)
+        clearMocks(tangemPayApi, requestHelper, tangemPayStorage, cashbackSummaryStore)
 
         coEvery {
             requestHelper.performRequest<Any>(userWalletId = any(), requestBlock = any())
@@ -201,6 +204,35 @@ internal class DefaultOnboardingRepositoryTest {
                 assertThat(actual).isEqualTo(NEW_ORDER_ID.right())
                 coVerify(exactly = 1) { tangemPayApi.createOrder(any(), any()) }
             }
+    }
+
+    @Nested
+    inner class DisableTangemPay {
+
+        @Test
+        fun `GIVEN backend accepts WHEN disableTangemPay THEN cached cashback summary removed`() = runTest {
+            // Arrange
+            coEvery { tangemPayApi.setTangemPayEnabledStatus(any(), any()) } returns ApiResponse.Success<Any>(Unit)
+
+            // Act
+            repository.disableTangemPay(USER_WALLET_ID)
+
+            // Assert
+            coVerify(exactly = 1) { cashbackSummaryStore.remove(listOf(USER_WALLET_ID)) }
+        }
+
+        @Test
+        fun `GIVEN backend error WHEN disableTangemPay THEN cached cashback summary kept`() = runTest {
+            // Arrange
+            coEvery { tangemPayApi.setTangemPayEnabledStatus(any(), any()) } returns
+                ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<Any>
+
+            // Act
+            repository.disableTangemPay(USER_WALLET_ID)
+
+            // Assert
+            coVerify(exactly = 0) { cashbackSummaryStore.remove(any()) }
+        }
     }
 
     private fun orderResponse(
