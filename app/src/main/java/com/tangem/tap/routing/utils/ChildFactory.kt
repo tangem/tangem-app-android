@@ -547,6 +547,7 @@ internal class ChildFactory @Inject constructor(
                         walletMetaInfo = route.walletMetaInfo,
                         source = route.source,
                         prefilledMessage = route.prefilledMessage,
+                        clientEmail = route.clientEmail,
                     ),
                     componentFactory = usedeskComponentFactory,
                 )
