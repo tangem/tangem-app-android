@@ -1111,23 +1111,23 @@ internal class StateBuilder(
         val toSwapCurrencyStatus = requireNotNull(dataState.toSwapCurrencyStatus)
         val fromAmount = swapTransactionState.fromAmountValue ?: BigDecimal.ZERO
         val toAmount = swapTransactionState.toAmountValue ?: BigDecimal.ZERO
-        val providerState = uiState.providerState as ProviderState.Content
+        val providerState = uiState.providerState as? ProviderState.Content
 
         val fromFiatAmount = getFormattedFiatAmount(fromSwapCurrencyStatus.status.value.fiatRate?.multiply(fromAmount))
         val toFiatAmount = getFormattedFiatAmount(toSwapCurrencyStatus.status.value.fiatRate?.multiply(toAmount))
 
-        val shouldShowStatus = providerState.type == ExchangeProviderType.CEX.providerName
+        val shouldShowStatus = providerState?.type == ExchangeProviderType.CEX.providerName
         val isFloatRate = dataState.selectedProvider?.rateTypes?.contains(RateType.FLOAT) == true
         return uiState.copy(
             successState = SwapSuccessStateHolder(
                 timestamp = swapTransactionState.timestamp,
                 txUrl = txUrl,
-                providerName = stringReference(providerState.name),
-                providerType = stringReference(providerState.type),
+                providerName = stringReference(providerState?.name.orEmpty()),
+                providerType = stringReference(providerState?.type.orEmpty()),
                 shouldShowStatusButton = shouldShowStatus,
                 isTransferMode = false,
-                providerIcon = providerState.iconUrl,
-                rate = providerState.subtitle,
+                providerIcon = providerState?.iconUrl.orEmpty(),
+                rate = providerState?.subtitle ?: TextReference.EMPTY,
                 fee = swapFee?.let { fee -> formatSwapFeeForSuccess(fee) },
                 fromTitle = getCardAccountTitle(fromSwapCurrencyStatus.account, isFromCard = true),
                 toTitle = getCardAccountTitle(toSwapCurrencyStatus.account, isFromCard = false),
@@ -1157,7 +1157,7 @@ internal class StateBuilder(
         val toSwapCurrencyStatus = requireNotNull(dataState.toSwapCurrencyStatus)
         val fromAmount = swapTransactionState.fromAmountValue ?: BigDecimal.ZERO
         val toAmount = swapTransactionState.toAmountValue ?: BigDecimal.ZERO
-        val providerState = uiState.providerState as ProviderState.Content
+        val providerState = uiState.providerState as? ProviderState.Content
 
         val fromFiatAmount = getFormattedFiatAmount(fromSwapCurrencyStatus.status.value.fiatRate?.multiply(fromAmount))
         val toFiatAmount = getFormattedFiatAmount(toSwapCurrencyStatus.status.value.fiatRate?.multiply(toAmount))
@@ -1166,12 +1166,12 @@ internal class StateBuilder(
             successState = SwapSuccessStateHolder(
                 timestamp = System.currentTimeMillis(),
                 txUrl = txUrl,
-                providerName = stringReference(providerState.name),
-                providerType = stringReference(providerState.type),
+                providerName = stringReference(providerState?.name.orEmpty()),
+                providerType = stringReference(providerState?.type.orEmpty()),
                 shouldShowStatusButton = false,
                 isTransferMode = false,
-                providerIcon = providerState.iconUrl,
-                rate = providerState.subtitle,
+                providerIcon = providerState?.iconUrl.orEmpty(),
+                rate = providerState?.subtitle ?: TextReference.EMPTY,
                 fee = TextReference.EMPTY,
                 fromTitle = getCardAccountTitle(fromSwapCurrencyStatus.account, isFromCard = true),
                 toTitle = getCardAccountTitle(toSwapCurrencyStatus.account, isFromCard = false),
