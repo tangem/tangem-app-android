@@ -113,7 +113,7 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
         modelScope.launch {
             val recents = getRecentBankAccountsUseCase(params.userWalletId).fold(
                 ifLeft = { RecentsState.Failed },
-                ifRight = { RecentsState.Loaded(accounts = it.recents, hasSavedAccounts = it.hasSavedAccounts) },
+                ifRight = { RecentsState.Loaded(accounts = it.recents, hasMoreAccounts = it.hasMoreAccounts) },
             )
             state.update { it.copy(recents = recents) }
         }.saveIn(recentsJobHolder)
