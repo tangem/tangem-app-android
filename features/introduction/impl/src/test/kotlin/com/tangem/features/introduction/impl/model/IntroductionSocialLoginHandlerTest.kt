@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
@@ -11,7 +12,6 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SelectWalletError
-import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
@@ -25,6 +25,9 @@ import com.tangem.features.introduction.impl.ui.state.SocialLoginProgressUM
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.AppCoroutineScope
 import io.mockk.Called
+import io.mockk.Runs
+import io.mockk.every
+import io.mockk.just
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -42,7 +45,6 @@ internal class IntroductionSocialLoginHandlerTest {
 
     private val socialLoginUseCase: SocialLoginUseCase = mockk(relaxed = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk(relaxed = true)
-    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
     private val appCoroutineScope: AppCoroutineScope = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
@@ -54,7 +56,6 @@ internal class IntroductionSocialLoginHandlerTest {
         getAvailableSocialLoginProvidersUseCase = getAvailableSocialLoginProvidersUseCase,
         socialLoginUseCase = socialLoginUseCase,
         userWalletsListRepository = userWalletsListRepository,
-        sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
         appCoroutineScope = appCoroutineScope,
         urlOpener = urlOpener,
         router = router,
@@ -69,7 +70,6 @@ internal class IntroductionSocialLoginHandlerTest {
             getAvailableSocialLoginProvidersUseCase,
             socialLoginUseCase,
             userWalletsListRepository,
-            sendFeedbackEmailUseCase,
             urlOpener,
             router,
             uiMessageSender,
@@ -158,6 +158,51 @@ internal class IntroductionSocialLoginHandlerTest {
             verify(exactly = 1) { uiMessageSender.send(any<SnackbarMessage>()) }
             verify(exactly = 0) { uiMessageSender.send(any<DialogMessage>()) }
         }
+    }
+
+    @Test
+    fun `GIVEN two failed attempts WHEN support is contacted THEN each opens the chat under its own id`() = runTest {
+        // Arrange
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any()) } returns SocialLoginError.BackupNotFound.left()
+        val dialogs = mutableListOf<DialogMessage>()
+        val routes = mutableListOf<AppRoute>()
+        every { uiMessageSender.send(capture(dialogs)) } just Runs
+        every { router.push(capture(routes), any()) } just Runs
+
+        // Act
+        handler.signIn(PROVIDER, host)
+        dialogs.last().firstAction.onClick()
+        handler.signIn(PROVIDER, host)
+        dialogs.last().firstAction.onClick()
+
+        // Assert
+        val chats = routes.filterIsInstance<AppRoute.Usedesk>()
+        assertThat(chats.map { it.source }).containsExactly(
+            AnalyticsParam.ScreensSources.SocialLogin,
+            AnalyticsParam.ScreensSources.SocialLogin,
+        )
+        assertThat(chats.mapNotNull { it.clientEmail }.distinct()).hasSize(2)
+    }
+
+    @Test
+    fun `GIVEN a newer attempt WHEN the older dialog contacts support THEN the chat keeps the older id`() = runTest {
+        // Arrange
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any()) } returns SocialLoginError.BackupNotFound.left()
+        val dialogs = mutableListOf<DialogMessage>()
+        val routes = mutableListOf<AppRoute>()
+        every { uiMessageSender.send(capture(dialogs)) } just Runs
+        every { router.push(capture(routes), any()) } just Runs
+        handler.signIn(PROVIDER, host)
+        handler.signIn(PROVIDER, host)
+
+        // Act
+        dialogs[1].firstAction.onClick()
+        dialogs[0].firstAction.onClick()
+
+        // Assert
+        val ids = routes.filterIsInstance<AppRoute.Usedesk>().map { it.clientEmail }
+        assertThat(ids).hasSize(2)
+        assertThat(ids.distinct()).hasSize(2)
     }
 
     data class FailureModel(val error: SocialLoginError, val isSupportDialog: Boolean)
