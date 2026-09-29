@@ -791,14 +791,11 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = when (val mode = route.mode) {
                         is AppRoute.MoneyAccountOnboarding.Mode.Deeplink ->
-                            MoneyAccountOnboardingComponent.Params.Deeplink(
-                                userWalletId = mode.userWalletId,
-                                deeplink = mode.deeplink,
-                            )
-                        is AppRoute.MoneyAccountOnboarding.Mode.FromMain ->
-                            MoneyAccountOnboardingComponent.Params.FromMain(userWalletId = mode.userWalletId)
-                        is AppRoute.MoneyAccountOnboarding.Mode.FromDetailsScreen ->
-                            MoneyAccountOnboardingComponent.Params.FromDetailsScreen(userWalletId = mode.userWalletId)
+                            MoneyAccountOnboardingComponent.Params.Deeplink(deeplink = mode.deeplink)
+                        AppRoute.MoneyAccountOnboarding.Mode.FromMain ->
+                            MoneyAccountOnboardingComponent.Params.FromMain
+                        AppRoute.MoneyAccountOnboarding.Mode.FromDetailsScreen ->
+                            MoneyAccountOnboardingComponent.Params.FromDetailsScreen
                     },
                     componentFactory = moneyAccountOnboardingComponentFactory,
                 )

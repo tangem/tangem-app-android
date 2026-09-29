@@ -31,13 +31,18 @@ private fun TangemPayTxHistoryItem.toAnalyticsType(): String = when (this) {
 }
 
 private fun TxInfo.TransactionType.toAnalyticsType(isOutgoing: Boolean): String = when (this) {
-    TxInfo.TransactionType.Transfer -> if (isOutgoing) "Send" else "Receive"
+    TxInfo.TransactionType.Transfer,
+    is TxInfo.TransactionType.Joint.Transfer,
+    -> if (isOutgoing) "Send" else "Receive"
     is TxInfo.TransactionType.Approve -> "Approve"
     TxInfo.TransactionType.Swap -> "Swap"
     is TxInfo.TransactionType.Staking -> "Staking"
     is TxInfo.TransactionType.YieldSupply -> "Yield Supply"
     TxInfo.TransactionType.GaslessFee -> "Gasless Fee"
-    is TxInfo.TransactionType.NetworkFee -> "Network Fee"
+    is TxInfo.TransactionType.NetworkFee,
+    is TxInfo.TransactionType.Joint.TokenFee,
+    -> "Network Fee"
+    is TxInfo.TransactionType.Joint.Call -> "Unknown"
     is TxInfo.TransactionType.Operation -> name
     TxInfo.TransactionType.UnknownOperation -> "Unknown"
 }

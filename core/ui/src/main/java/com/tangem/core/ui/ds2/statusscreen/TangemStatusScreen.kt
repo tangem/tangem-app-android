@@ -33,6 +33,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.ambient.TangemAmbientBackground
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
@@ -49,6 +50,8 @@ import com.tangem.core.ui.utils.rememberScreenCornerRadius
  * Design-system v2 full-screen status template: an ambient-lit screen with a status asset, title,
  * description and optional detail rows pinned above the footer. The header block is vertically centered
  * in the space the details and footer leave free.
+ *
+ * Version: 1.1.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=9267-11586)
  *
@@ -227,6 +230,8 @@ private fun Header(
 }
 
 object TangemStatusScreen {
+
+    val version = DsVersion(major = 1, minor = 1, patch = 0)
 
     /** Color mood of the screen — picks the ambient light's hue and the glow ring's variant. */
     enum class Variant(

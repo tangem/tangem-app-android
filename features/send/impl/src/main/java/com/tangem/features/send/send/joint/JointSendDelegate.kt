@@ -21,6 +21,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import kotlinx.coroutines.flow.firstOrNull
+import java.math.BigDecimal
 import javax.inject.Inject
 
 /** What the send flow needs from the joint account domain: the account itself, its fee coin and the fee estimate */
@@ -87,10 +88,10 @@ internal class JointSendDelegate @Inject constructor(
     suspend fun createOperation(
         account: Account.Joint,
         currency: CryptoCurrency,
-        amountUM: AmountState,
+        amount: BigDecimal,
         destinationUM: DestinationUM,
     ): Either<JointOperationCreateError, Unit> {
-        val intent = JointTransferIntentFactory.create(amountUM, destinationUM, currency)
+        val intent = JointTransferIntentFactory.create(amount, destinationUM, currency)
             ?: return JointOperationCreateError.InvalidPayload.left()
 
         return createJointOperationUseCase(account = account, network = currency.network, intent = intent)

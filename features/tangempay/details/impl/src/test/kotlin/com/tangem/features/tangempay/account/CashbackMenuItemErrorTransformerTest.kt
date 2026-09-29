@@ -34,6 +34,7 @@ internal class CashbackMenuItemErrorTransformerTest {
         val errorEntry = items.first { it.isTitledWith(R.string.tangempay_cashback_title) }
         assertThat(errorEntry.onClick).isSameInstanceAs(onReload)
         assertThat(errorEntry.isEnabled).isTrue()
+        assertThat(errorEntry.isDismissOnClick).isFalse()
         assertThat(errorEntry.subtitle)
             .isEqualTo(resourceReference(R.string.tangempay_cashback_widget_error_description))
         assertThat(result.cashbackBlockState).isNull()

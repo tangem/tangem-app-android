@@ -82,7 +82,7 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      * "High Risk" notice (no animation between emissions needed there).
      *
      * @property style Visual identity of the status — selects the plaque colors, the trailing glyph and the title
-     * motion together. One value per distinct look, so a terminal whose glyph diverges from a plain colour (the grey
+     * motion together. One value per distinct look, so a terminal that shares a colour but not a glyph (the red
      * [Expired][Style.Expired] clock, the red [Refunded][Style.Refunded] arrow) is its own entry rather than a colour
      * plus a separate glyph override.
      * @property title Status line, e.g. "Awaiting funds" / "Confirmed" / "Failed".
@@ -309,6 +309,9 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      * Shared bottom-sheet top bar. The icon glyph and [title] text come from the transaction type; [status] drives
      * the three visual states (in-progress / confirmed / failed) — recoloring the icon circle and the title.
      *
+     * [statusStyle] overrides those colors where the bucket alone reads wrong — a deal paused by the provider is
+     * in flight, but must alert in amber rather than look like ordinary progress.
+     *
      * [subtitle] is normally the transaction date; [subtitleStyle] recolors it independently of [status] — e.g. a
      * joint-account transaction awaiting member signatures shows "Pending" there instead of a date, in
      * [SubtitleStyle.Warning], regardless of the on-chain [status].
@@ -320,10 +323,17 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
         val status: TransactionItemUM.Content.Status,
         val title: TextReference,
         val subtitle: TextReference,
+        val statusStyle: StatusStyle = StatusStyle.Default,
         val subtitleStyle: SubtitleStyle = SubtitleStyle.Default,
         val menu: ImmutableList<MenuItemUM> = persistentListOf(),
         val debugModel: TxHistoryInfo? = null,
     ) {
+
+        /**
+         * Visual identity of the [status]-tinted parts — the icon circle, its glyph and [HeaderUM.title].
+         * [Default] takes the colors of the [HeaderUM.status] bucket; [Warning] paints all three amber.
+         */
+        enum class StatusStyle { Default, Warning }
 
         /** Visual identity of [HeaderUM.subtitle], independent of the on-chain [HeaderUM.status]. */
         enum class SubtitleStyle { Default, Warning }
