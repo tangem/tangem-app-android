@@ -8,7 +8,6 @@ import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
-import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -23,7 +22,6 @@ internal class DefaultWcInitializeUseCase(
 ) : WcInitializeUseCase {
 
     override fun invoke() {
-        @RemoveWithToggle("AND_18021_WALLETCONNECT_ON_DEMAND_INIT_ENABLED")
         if (!featureToggles.isOnDemandInitEnabled) {
             wcSdk.initializeNow()
             return
