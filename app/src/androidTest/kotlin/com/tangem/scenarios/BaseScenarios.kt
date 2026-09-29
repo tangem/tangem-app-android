@@ -73,7 +73,7 @@ fun BaseTestCase.openTokenDetails(tokenName: String) {
         synchronizeAddresses()
     }
     step("Click on token with name: '$tokenName'") {
-        onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+        openTokenDetailsFromTokenList(tokenName)
     }
 }
 

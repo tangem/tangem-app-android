@@ -42,16 +42,20 @@ internal fun TransactionCheckResultsItem(
             }
             if (item.estimatedWalletChanges != null) {
                 WcEstimatedWalletChangesItem(item.estimatedWalletChanges)
-            } else if (item.spendAllowance != null) {
+            }
+            if (item.spendAllowance != null) {
                 WcSpendAllowanceItem(item.spendAllowance, onClickAllowToSpend)
                 ApproveDescription(
                     modifier = Modifier.padding(bottom = 6.dp, start = 12.dp, end = 12.dp),
                     onLearnMoreClick = item.spendAllowance.onLearnMoreClicked,
                 )
-            } else if (!item.additionalNotification.isNullOrEmpty()) {
-                WcEstimatedWalletChangesNotificationItem(description = item.additionalNotification)
-            } else {
-                WcEstimatedWalletChangesNotificationItem()
+            }
+            if (item.estimatedWalletChanges == null && item.spendAllowance == null) {
+                if (!item.additionalNotification.isNullOrEmpty()) {
+                    WcEstimatedWalletChangesNotificationItem(description = item.additionalNotification)
+                } else {
+                    WcEstimatedWalletChangesNotificationItem()
+                }
             }
         }
     }
@@ -134,6 +138,28 @@ private class TransactionCheckResultsItemProvider : PreviewParameterProvider<WcS
                 isUnlimited = false,
                 amountText = stringReference("0.00 WPOL"),
                 tokenSymbol = "",
+                tokenImageUrl = "",
+                networkIconRes = 0,
+                onLearnMoreClicked = {},
+            ),
+        ),
+        WcSendReceiveTransactionCheckResultsUM(
+            isLoading = false,
+            estimatedWalletChanges = WcEstimatedWalletChangesUM(
+                items = persistentListOf(
+                    WcEstimatedWalletChangeUM(
+                        iconRes = R.drawable.ic_send_new_24,
+                        title = resourceReference(R.string.common_send),
+                        description = "- 5 ETH",
+                        tokenIconUrl = "https://tangem.com",
+                    ),
+                ),
+            ),
+            spendAllowance = WcSpendAllowanceUM(
+                amountValue = BigDecimal.ONE,
+                isUnlimited = false,
+                amountText = stringReference("1.00 USDC"),
+                tokenSymbol = "USDC",
                 tokenImageUrl = "",
                 networkIconRes = 0,
                 onLearnMoreClicked = {},

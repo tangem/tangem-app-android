@@ -24,11 +24,15 @@ import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.StartTangemPayOrderPollingUseCase
+import com.tangem.domain.pay.usecase.GetAccountFeesUseCase
 import com.tangem.domain.moneyaccount.repository.MoneyAccountActivationRepository
+import com.tangem.domain.moneyaccount.repository.MoneyAccountRepository
 import com.tangem.domain.moneyaccount.usecase.ActivateMoneyAccountUseCase
 import com.tangem.domain.moneyaccount.usecase.CreateMoneyAccountOrderUseCase
+import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountFeeTableUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBalanceUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountEligibilityUseCase
+import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountStatusUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountSuitableWalletsUseCase
 import com.tangem.domain.moneyaccount.usecase.RestoreMoneyAccountOrderUseCase
 import com.tangem.domain.moneyaccount.usecase.TrackMoneyAccountOrderUseCase
@@ -171,15 +175,37 @@ internal interface MoneyAccountDataModule {
         }
 
         @Provides
+        fun provideGetMoneyAccountStatusUseCase(
+            moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
+            moneyAccountStatusSupplier: MoneyAccountStatusSupplier,
+        ): GetMoneyAccountStatusUseCase {
+            return GetMoneyAccountStatusUseCase(
+                moneyAccountStatusFetcher = moneyAccountStatusFetcher,
+                moneyAccountStatusSupplier = moneyAccountStatusSupplier,
+            )
+        }
+
+        @Provides
         fun provideGetMoneyAccountEligibilityUseCase(
             getMoneyAccountSuitableWalletsUseCase: GetMoneyAccountSuitableWalletsUseCase,
-            onboardingRepository: OnboardingRepository,
+            getMoneyAccountStatusUseCase: GetMoneyAccountStatusUseCase,
             deviceSecurityInfoProvider: DeviceSecurityInfoProvider,
         ): GetMoneyAccountEligibilityUseCase {
             return GetMoneyAccountEligibilityUseCase(
                 getMoneyAccountSuitableWalletsUseCase = getMoneyAccountSuitableWalletsUseCase,
-                onboardingRepository = onboardingRepository,
+                getMoneyAccountStatusUseCase = getMoneyAccountStatusUseCase,
                 deviceSecurityInfoProvider = deviceSecurityInfoProvider,
+            )
+        }
+
+        @Provides
+        fun provideGetMoneyAccountFeeTableUseCase(
+            moneyAccountRepository: MoneyAccountRepository,
+            getAccountFeesUseCase: GetAccountFeesUseCase,
+        ): GetMoneyAccountFeeTableUseCase {
+            return GetMoneyAccountFeeTableUseCase(
+                moneyAccountRepository = moneyAccountRepository,
+                getAccountFeesUseCase = getAccountFeesUseCase,
             )
         }
     }

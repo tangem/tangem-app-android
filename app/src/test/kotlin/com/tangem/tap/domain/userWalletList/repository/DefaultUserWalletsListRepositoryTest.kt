@@ -24,6 +24,7 @@ import com.tangem.domain.wallets.registration.WalletRegistrationTrigger
 import com.tangem.domain.wallets.usecase.GetCompletedBackupsUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.hot.sdk.TangemHotSdk
+import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
 import com.tangem.tap.domain.userWalletList.model.UserWalletSensitiveInformation
@@ -371,6 +372,41 @@ internal class DefaultUserWalletsListRepositoryTest {
                 match { wallets -> wallets.singleOrNull()?.walletId == walletId },
             )
         }
+    }
+
+    @Test
+    fun `GIVEN locked hot wallet WHEN unlocked with access code THEN registration reuses that code`() = runTest {
+        // Arrange
+        val walletId = UserWalletId("00bb")
+        val lockedHot = UserWallet.Hot(
+            name = "Hot",
+            walletId = walletId,
+            hotWalletId = mockk(relaxed = true),
+            wallets = null, // locked
+            backedUp = false,
+        )
+        repository.userWallets.value = listOf(lockedHot)
+        val accessCode = "111111".toCharArray()
+        coEvery { passwordRequester.requestPassword(any()) } returns
+            HotWalletPasswordRequester.Result.EnteredPassword(HotAuth.Password(accessCode))
+        coEvery { userWalletEncryptionKeysRepository.getEncryptedWithPassword(walletId, any()) } returns
+            UserWalletEncryptionKey(walletId = walletId, encryptionKey = ByteArray(size = 32) { 1 })
+        coEvery { sensitiveInformationRepository.getAll(any()) } returns CompletionResult.Success(
+            mapOf(walletId to UserWalletSensitiveInformation(wallets = null, mobileWallets = emptyList())),
+        )
+
+        // Act
+        val result = repository.unlock(walletId, UserWalletsListRepository.UnlockMethod.AccessCode)
+
+        // Assert
+        assertThat(result.isRight()).isTrue()
+        verify(exactly = 1) {
+            walletRegistrationTrigger.onMobileWalletUnlockedWithAccessCode(
+                userWallet = match { it.walletId == walletId },
+                accessCode = match { it.value.contentEquals(accessCode) },
+            )
+        }
+        verify(exactly = 0) { walletRegistrationTrigger.onMobileWalletsUnlocked(any()) }
     }
 
     private companion object {

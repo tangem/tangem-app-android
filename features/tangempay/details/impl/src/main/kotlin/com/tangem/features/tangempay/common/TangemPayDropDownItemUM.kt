@@ -12,4 +12,5 @@ internal data class TangemPayDropDownItemUM(
     val isEnabled: Boolean = true,
     val titleColor: ColorReference2? = null,
     val subtitleColor: ColorReference2? = null,
+    val isDismissOnClick: Boolean = true,
 )

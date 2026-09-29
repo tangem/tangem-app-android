@@ -1,14 +1,14 @@
 package com.tangem.features.feed.deeplink.di
 
+import com.tangem.features.feed.deeplink.DefaultDiscoverDeepLinkHandler
 import com.tangem.features.feed.deeplink.DefaultEarnDeepLinkHandler
 import com.tangem.features.feed.deeplink.DefaultNewsDeepLinkHandler
 import com.tangem.features.feed.deeplink.DefaultNewsDetailsDeepLinkHandler
-import com.tangem.features.feed.deeplink.DefaultShtorkaDeepLinkHandler
 import com.tangem.features.feed.deeplink.DefaultYieldDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.DiscoverDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.EarnDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.NewsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
-import com.tangem.features.feed.entry.deeplink.ShtorkaDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.YieldDeepLinkHandler
 import dagger.Binds
 import dagger.Module
@@ -40,5 +40,7 @@ internal interface FeedDeepLinkModule {
 
     @Binds
     @Singleton
-    fun bindShtorkaDeepLinkHandlerFactory(impl: DefaultShtorkaDeepLinkHandler.Factory): ShtorkaDeepLinkHandler.Factory
+    fun bindDiscoverDeepLinkHandlerFactory(
+        impl: DefaultDiscoverDeepLinkHandler.Factory,
+    ): DiscoverDeepLinkHandler.Factory
 }

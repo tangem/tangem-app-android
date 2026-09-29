@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.withdraw.bank.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -12,6 +13,7 @@ import com.tangem.domain.pay.usecase.GetTangemPayCountriesUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayRegionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.TangemPayBankWithdrawComponent
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormFields
@@ -36,6 +38,7 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val getTangemPayCountriesUseCase: GetTangemPayCountriesUseCase,
     private val getTangemPayRegionsUseCase: GetTangemPayRegionsUseCase,
+    private val analytics: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankWithdrawComponent.Params>()
@@ -100,6 +103,7 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
     /** The transfer is on its way: the recipient moves to the top of the recents and the balance is refetched. */
     fun onOrderSigned() {
         val draft = draft.value
+        analytics.send(TangemPayAnalyticsEvents.Offramp.SendSuccessScreenShowed(rail = draft.destination?.rail))
         val bankAccountId = draft.order?.bankAccountId ?: draft.recipient?.id
         modelScope.launch {
             bankAccountId?.let {
