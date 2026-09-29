@@ -121,7 +121,7 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         useUnmergedTree = true
     }
 
-    val supportMenuItem: KNode = child {
+    val paySupportMenuItem: KNode = child {
         hasTestTag(TangemPayTestTags.CONTEXT_MENU_ITEM)
         hasAnyDescendant(withText(getResourceString(CoreResR.string.tangempay_pay_support)))
         useUnmergedTree = true
@@ -161,6 +161,13 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
     fun transactionCashbackBadge(amount: String): KNode = child {
         hasTestTag(TangemPayTestTags.TRANSACTION_CASHBACK_BADGE)
         hasAnyDescendant(withText(amount))
+        useUnmergedTree = true
+    }
+
+    // The action-button row keeps its label outside the button, so only the banner's is inside BASE_BUTTON.
+    val awaitingDepositBannerAddFundsButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasAnyDescendant(withText(getResourceString(CoreResR.string.tangempay_card_details_add_funds)))
         useUnmergedTree = true
     }
 
