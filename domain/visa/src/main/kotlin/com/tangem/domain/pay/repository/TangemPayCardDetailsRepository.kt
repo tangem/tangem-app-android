@@ -30,6 +30,8 @@ interface TangemPayCardDetailsRepository {
         cardId: String,
     ): Either<UniversalError, TangemPayCardProvisioningData>
 
+    fun isProductionEnvironment(): Boolean
+
     suspend fun isAddToWalletDone(userWalletId: UserWalletId): Either<UniversalError, Boolean>
 
     suspend fun setAddToWalletAsDone(userWalletId: UserWalletId): Either<UniversalError, Unit>

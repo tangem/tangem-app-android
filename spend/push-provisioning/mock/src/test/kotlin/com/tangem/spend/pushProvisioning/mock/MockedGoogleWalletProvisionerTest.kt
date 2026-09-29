@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.spend.pushProvisioning.GoogleWalletProvisioner.AddResult
 import com.tangem.spend.pushProvisioning.GoogleWalletProvisioner.Card
 import com.tangem.spend.pushProvisioning.GoogleWalletProvisioner.CardStatus
+import com.tangem.spend.pushProvisioning.GoogleWalletProvisioner.Environment
 import com.tangem.spend.pushProvisioning.GoogleWalletProvisioner.FailureReason
 import com.tangem.test.core.ProvideTestModels
 import kotlinx.coroutines.test.runTest
@@ -57,6 +58,14 @@ internal class MockedGoogleWalletProvisionerTest {
                 expectedResult = AddResult.Failed(
                     reason = FailureReason.NETWORK_ERROR,
                     description = "Mocked network error",
+                ),
+                expectedStatus = CardStatus.NotAdded,
+            ),
+            AddModel(
+                addResult = "declined",
+                expectedResult = AddResult.Failed(
+                    reason = FailureReason.TOKENIZATION_DECLINED,
+                    description = "Mocked decline",
                 ),
                 expectedStatus = CardStatus.NotAdded,
             ),
@@ -125,6 +134,7 @@ internal class MockedGoogleWalletProvisionerTest {
             cardSecret = "card-secret",
             lastFourDigits = LAST_FOUR_DIGITS,
             displayName = DISPLAY_NAME,
+            environment = Environment.TEST,
         )
     }
 }

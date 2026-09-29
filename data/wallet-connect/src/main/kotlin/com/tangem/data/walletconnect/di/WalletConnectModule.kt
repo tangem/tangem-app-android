@@ -10,6 +10,7 @@ import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.setTypes
 import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.domain.walletconnect.featuretoggle.WalletConnectFeatureToggles
 import com.tangem.domain.walletconnect.model.WcPendingApprovalSessionDTO
 import com.tangem.domain.walletconnect.model.WcSessionDTO
 import dagger.Module
@@ -30,6 +31,7 @@ internal object WalletConnectModule {
         @ApplicationContext context: Context,
         scope: AppCoroutineScope,
         dataStoreFactory: AppDataStoreFactory,
+        featureToggles: WalletConnectFeatureToggles,
     ): WalletConnectStore {
         return DefaultWalletConnectStore(
             persistenceStore = dataStoreFactory.create(
@@ -50,6 +52,7 @@ internal object WalletConnectModule {
                 produceFile = { context.dataStoreFile(fileName = "wallet_connect_pending_approval_sessions") },
                 scope = scope,
             ),
+            featureToggles = featureToggles,
         )
     }
 }

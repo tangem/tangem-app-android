@@ -83,7 +83,7 @@ private fun TurboMode(state: CollectiblesMachineDetailsUM.FooterUM, modifier: Mo
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "Turbo mode",
+                text = stringResourceSafe(R.string.collectibles_machine_turbo_mode),
                 style = TangemTheme.typography3.caption.medium,
                 color = TangemTheme.colors3.text.secondary,
             )

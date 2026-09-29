@@ -1,5 +1,7 @@
 package com.tangem.features.collectibles.impl.machinedetails.model.transformer
 
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchListState
 import com.tangem.domain.collectibles.models.CollectibleGachaMachineNft
@@ -35,7 +37,7 @@ internal class CollectiblesPrizePoolTransformer(
             is PaginationStatus.InitialLoading,
             -> CollectiblesMachineDetailsUM.PrizePoolUM.Loading
             is PaginationStatus.InitialLoadingError -> CollectiblesMachineDetailsUM.PrizePoolUM.Error(
-                message = stringReference(ERROR_MESSAGE),
+                message = resourceReference(R.string.collectibles_machine_prize_pool_load_error),
                 onReloadClick = onReloadClick,
             )
             is PaginationStatus.NextBatchLoading -> toContent(isLoadingNextPage = true)
@@ -69,7 +71,6 @@ internal class CollectiblesPrizePoolTransformer(
     private companion object {
 
         const val PRIZES_PER_ROW = 2
-        const val ERROR_MESSAGE = "Failed to load the prize pool.\nTap to reload" // TODO design not ready
-        const val EMPTY_MESSAGE = "This pack has no cards in its prize pool yet" // TODO design not ready
+        const val EMPTY_MESSAGE = "This pack has no cards in its prize pool yet" // TODO clarify the text
     }
 }
