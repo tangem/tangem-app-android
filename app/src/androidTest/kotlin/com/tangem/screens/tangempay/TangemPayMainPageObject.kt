@@ -127,6 +127,43 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         useUnmergedTree = true
     }
 
+    fun cashbackWidgetWithTitle(title: String): KNode = child {
+        hasTestTag(TangemPayTestTags.CASHBACK_WIDGET)
+        hasAnyDescendant(withText(title))
+        useUnmergedTree = true
+    }
+
+    val cashbackWidget: KNode = child {
+        hasTestTag(TangemPayTestTags.CASHBACK_WIDGET)
+        useUnmergedTree = true
+    }
+
+    fun cashbackMenuItem(month: String): KNode = child {
+        hasTestTag(TangemPayTestTags.CONTEXT_MENU_ITEM)
+        hasAnyDescendant(
+            withText(getResourceString(CoreResR.string.tangempay_cashback_menu_item_title, month)),
+        )
+        useUnmergedTree = true
+    }
+
+    val cashbackDeactivatedBannerTitle: KNode = child {
+        hasAnyAncestor(withTestTag(TangemPayTestTags.CASHBACK_DEACTIVATED_BANNER))
+        hasText(getResourceString(CoreResR.string.tangempay_cashback_deactivated_title))
+        useUnmergedTree = true
+    }
+
+    val cashbackDeactivatedGotItButton: KNode = child {
+        hasAnyAncestor(withTestTag(TangemPayTestTags.CASHBACK_DEACTIVATED_BANNER))
+        hasText(getResourceString(CoreResR.string.common_got_it))
+        useUnmergedTree = true
+    }
+
+    fun transactionCashbackBadge(amount: String): KNode = child {
+        hasTestTag(TangemPayTestTags.TRANSACTION_CASHBACK_BADGE)
+        hasAnyDescendant(withText(amount))
+        useUnmergedTree = true
+    }
+
     // The action-button row keeps its label outside the button, so only the banner's is inside BASE_BUTTON.
     val awaitingDepositBannerAddFundsButton: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)

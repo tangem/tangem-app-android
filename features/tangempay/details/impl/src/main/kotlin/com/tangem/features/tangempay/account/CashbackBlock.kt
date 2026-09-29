@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -35,6 +36,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.*
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.core.ui.R as CoreUiR
 
 /**
@@ -54,7 +56,7 @@ internal fun CashbackBlock(state: CashbackBlockUM, modifier: Modifier = Modifier
 @Composable
 private fun WidgetRow(state: CashbackBlockUM.Widget, modifier: Modifier = Modifier) {
     CashbackRow(
-        modifier = modifier,
+        modifier = modifier.testTag(TangemPayTestTags.CASHBACK_WIDGET),
         caption = resourceReference(CoreUiR.string.tangempay_cashback_title),
         onClick = state.onClick,
         title = { TangemRowText(text = state.title, role = TangemRowTextRole.Title) },
@@ -155,7 +157,7 @@ private fun CashbackRow(
 
 @Composable
 private fun DeactivatedBanner(state: CashbackBlockUM.DeactivatedBanner, modifier: Modifier = Modifier) {
-    Box(modifier = modifier) {
+    Box(modifier = modifier.testTag(TangemPayTestTags.CASHBACK_DEACTIVATED_BANNER)) {
         TangemMessageBanner(
             title = resourceReference(CoreUiR.string.tangempay_cashback_deactivated_title),
             description = resourceReference(CoreUiR.string.tangempay_cashback_deactivated_description),
