@@ -2,6 +2,7 @@ package com.tangem.datasource.local.datastore
 
 import android.content.Context
 import androidx.datastore.core.CorruptionException
+import androidx.datastore.core.DataMigration
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.Serializer
@@ -40,7 +41,12 @@ internal class DefaultAppDataStoreFactory @Inject constructor(
         )
     }
 
-    override fun <T> create(serializer: Serializer<T>, scope: CoroutineScope, produceFile: () -> File): DataStore<T> {
+    override fun <T> create(
+        serializer: Serializer<T>,
+        scope: CoroutineScope,
+        produceFile: () -> File,
+        migrations: List<DataMigration<T>>,
+    ): DataStore<T> {
         val file = produceFile()
         return DataStoreFactory.create(
             serializer = serializer,
@@ -48,6 +54,7 @@ internal class DefaultAppDataStoreFactory @Inject constructor(
                 analyticsExceptionHandler.sendException(corruptionEvent(file = file, cause = exception))
                 serializer.defaultValue
             },
+            migrations = migrations,
             scope = scope,
             produceFile = { file },
         )

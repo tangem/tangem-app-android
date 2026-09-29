@@ -9,8 +9,8 @@ import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.AccountFeeGroupType
+import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.pay.model.OrderType
-import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.request.OrderRequest
@@ -79,20 +79,14 @@ internal class DefaultOnboardingRepositoryTest {
                     ApiResponse.Success(orderResponse(NEW_ORDER_ID))
 
                 // Act
-                val actual = repository.createOrder(
-                    userWalletId = USER_WALLET_ID,
-                    deeplinkValue = CAMPAIGN_KEY,
-                    specificationName = CAMPAIGN_SPECIFICATION,
-                    type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
-                )
+                val actual = repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST)
 
                 // Assert
                 assertThat(actual).isEqualTo(NEW_ORDER_ID.right())
                 assertThat(body.captured.data).isEqualTo(
-                    OrderRequest.Data(
+                    OrderRequest.VirtualCardIssueKycV2(
                         customerWalletAddress = WALLET_ADDRESS,
                         specificationName = CAMPAIGN_SPECIFICATION,
-                        type = "CARD_ISSUE_VIRTUAL_RAIN_KYC_V2",
                         deeplinkValue = CAMPAIGN_KEY,
                     ),
                 )
@@ -100,7 +94,7 @@ internal class DefaultOnboardingRepositoryTest {
             }
 
         @Test
-        fun `GIVEN default params WHEN createOrder THEN body keeps legacy specification and type without deeplink`() =
+        fun `GIVEN request without deeplink WHEN createOrder THEN body has no deeplink AND order stored as regular`() =
             runTest {
                 // Arrange
                 val body = slot<OrderRequest>()
@@ -108,15 +102,14 @@ internal class DefaultOnboardingRepositoryTest {
                     ApiResponse.Success(orderResponse(NEW_ORDER_ID))
 
                 // Act
-                val actual = repository.createOrder(USER_WALLET_ID)
+                val actual = repository.createOrder(USER_WALLET_ID, REGULAR_REQUEST)
 
                 // Assert
                 assertThat(actual).isEqualTo(NEW_ORDER_ID.right())
                 assertThat(body.captured.data).isEqualTo(
-                    OrderRequest.Data(
+                    OrderRequest.VirtualCardIssueKyc(
                         customerWalletAddress = WALLET_ADDRESS,
-                        specificationName = OnboardingRepository.DEFAULT_ISSUE_SPECIFICATION_NAME,
-                        type = "CARD_ISSUE_VIRTUAL_RAIN_KYC",
+                        specificationName = REGULAR_SPECIFICATION,
                         deeplinkValue = null,
                     ),
                 )
@@ -130,12 +123,58 @@ internal class DefaultOnboardingRepositoryTest {
                 ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<OrderResponse>
 
             // Act
-            val actual = repository.createOrder(USER_WALLET_ID, deeplinkValue = CAMPAIGN_KEY)
+            val actual = repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST)
 
             // Assert
             assertThat(actual).isEqualTo(VisaApiError.Unspecified.left())
             coVerify(exactly = 0) { tangemPayStorage.storeOrderId(any(), any(), any()) }
         }
+
+        @Test
+        fun `GIVEN response without result WHEN createOrder THEN error returned AND nothing stored`() = runTest {
+            // Arrange
+            coEvery { tangemPayApi.createOrder(any(), any()) } returns ApiResponse.Success(OrderResponse(result = null))
+
+            // Act
+            val actual = repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST)
+
+            // Assert
+            assertThat(actual).isEqualTo(VisaApiError.UnknownWithoutCode.left())
+            coVerify(exactly = 0) { tangemPayStorage.storeOrderId(any(), any(), any()) }
+        }
+    }
+
+    @Nested
+    inner class CreateVirtualAccountOrder {
+
+        @Test
+        fun `GIVEN created order WHEN createVirtualAccountOrder THEN the order id is returned`() = runTest {
+            // Act
+            val actual = createVirtualAccountOrder()
+
+            // Assert
+            assertThat(actual).isEqualTo(NEW_ORDER_ID.right())
+        }
+
+        @Test
+        fun `GIVEN response without result WHEN createVirtualAccountOrder THEN error returned instead of a crash`() =
+            runTest {
+                // Arrange
+                coEvery { tangemPayApi.createOrder(any(), any()) } returns
+                    ApiResponse.Success(OrderResponse(result = null))
+
+                // Act
+                val actual = createVirtualAccountOrder()
+
+                // Assert
+                assertThat(actual).isEqualTo(VisaApiError.UnknownWithoutCode.left())
+            }
+
+        private suspend fun createVirtualAccountOrder() = repository.createVirtualAccountOrder(
+            userWalletId = USER_WALLET_ID,
+            paymentAccountAddress = PAYMENT_ACCOUNT_ADDRESS,
+            idempotencyKey = IDEMPOTENCY_KEY,
+        )
     }
 
     @Nested
@@ -150,7 +189,7 @@ internal class DefaultOnboardingRepositoryTest {
                 ApiResponse.Success(orderResponse(STORED_ORDER_ID, OrderResponse.Result.Status.PROCESSING))
 
             // Act
-            val actual = repository.createOrder(USER_WALLET_ID, deeplinkValue = CAMPAIGN_KEY)
+            val actual = repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST)
 
             // Assert
             assertThat(actual).isEqualTo(STORED_ORDER_ID.right())
@@ -165,7 +204,7 @@ internal class DefaultOnboardingRepositoryTest {
                 coEvery { tangemPayStorage.isCampaignOrder(WALLET_ADDRESS) } returns false
 
                 // Act
-                val actual = repository.createOrder(USER_WALLET_ID, deeplinkValue = CAMPAIGN_KEY)
+                val actual = repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST)
 
                 // Assert
                 assertThat(actual).isEqualTo(NEW_ORDER_ID.right())
@@ -182,7 +221,7 @@ internal class DefaultOnboardingRepositoryTest {
                 ApiResponse.Success(orderResponse(STORED_ORDER_ID, OrderResponse.Result.Status.NEW))
 
             // Act
-            val actual = repository.createOrder(USER_WALLET_ID)
+            val actual = repository.createOrder(USER_WALLET_ID, REGULAR_REQUEST)
 
             // Assert
             assertThat(actual).isEqualTo(STORED_ORDER_ID.right())
@@ -199,7 +238,7 @@ internal class DefaultOnboardingRepositoryTest {
                     ApiResponse.Success(orderResponse(STORED_ORDER_ID, OrderResponse.Result.Status.COMPLETED))
 
                 // Act
-                val actual = repository.createOrder(USER_WALLET_ID, deeplinkValue = CAMPAIGN_KEY)
+                val actual = repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST)
 
                 // Assert
                 assertThat(actual).isEqualTo(NEW_ORDER_ID.right())
@@ -372,7 +411,19 @@ internal class DefaultOnboardingRepositoryTest {
         const val WALLET_ADDRESS = "0xabc"
         const val CAMPAIGN_KEY = "tpay_for_oxford"
         const val CAMPAIGN_SPECIFICATION = "SP_000009"
+        const val REGULAR_SPECIFICATION = "SP_000004"
+        val CAMPAIGN_REQUEST = CustomerOrderRequest.CardIssue(
+            type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
+            specificationName = CAMPAIGN_SPECIFICATION,
+            deeplinkValue = CAMPAIGN_KEY,
+        )
+        val REGULAR_REQUEST = CustomerOrderRequest.CardIssue(
+            type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
+            specificationName = REGULAR_SPECIFICATION,
+        )
         const val STORED_ORDER_ID = "order_stored"
         const val NEW_ORDER_ID = "order_new"
+        const val PAYMENT_ACCOUNT_ADDRESS = "0xpayment"
+        const val IDEMPOTENCY_KEY = "6f1c9e2a-0b3d-4c5e-8a7b-9d0e1f2a3b4c"
     }
 }

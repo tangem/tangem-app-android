@@ -1,24 +1,24 @@
 package com.tangem.spend.datasource.visa.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class CardActivationRemoteStateResponse(
-    @Json(name = "result") val result: Result,
+    @SerialName("result") val result: Result,
 ) {
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Result(
-        @Json(name = "status") val status: String,
-        @Json(name = "order") val activationOrder: ActivationOrder?,
-        @Json(name = "step_error") val stepError: String?,
+        @SerialName("status") val status: String,
+        @SerialName("order") val activationOrder: ActivationOrder?,
+        @SerialName("step_error") val stepError: String?,
     )
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class ActivationOrder(
-        @Json(name = "id") val id: String,
-        @Json(name = "customer_id") val customerId: String,
-        @Json(name = "customer_wallet_address") val customerWalletAddress: String,
-        @Json(name = "card_wallet_address") val cardWalletAddress: String,
+        @SerialName("id") val id: String,
+        @SerialName("customer_id") val customerId: String,
+        @SerialName("customer_wallet_address") val customerWalletAddress: String,
+        @SerialName("card_wallet_address") val cardWalletAddress: String,
     )
 }

@@ -1,25 +1,22 @@
 package com.tangem.data.pay.repository
 
 import arrow.core.Either
-import arrow.core.flatMap
-import arrow.core.left
-import arrow.core.right
+import arrow.core.raise.catch
+import arrow.core.raise.either
+import arrow.core.raise.ensureNotNull
 import com.tangem.data.pay.util.OrderConverter
+import com.tangem.data.pay.util.OrderRequestConverter
 import com.tangem.data.pay.util.OrderStatusConverter
-import com.tangem.data.pay.util.PlasticIssueOrderRequestConverter
-import com.tangem.data.pay.util.ShippingAddressRequestConverter
-import com.tangem.spend.datasource.pay.TangemPayApi
-import com.tangem.spend.datasource.pay.models.request.OrderRequest
-import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.CardActivationOrder
+import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderData
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderType
-import com.tangem.domain.pay.model.PlasticCardOrder
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.spend.datasource.pay.TangemPayApi
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 internal class DefaultCustomerOrderRepository @Inject constructor(
@@ -62,112 +59,25 @@ internal class DefaultCustomerOrderRepository @Inject constructor(
 
     override suspend fun createOrder(
         userWalletId: UserWalletId,
-        type: OrderType,
-        specificationName: String?,
+        request: CustomerOrderRequest,
         idempotencyKey: String,
-        targetTariffPlanId: String?,
-        transitionType: TangemPayTariffPlanTransition.Type?,
-        chainId: Int?,
-        deeplinkValue: String?,
-    ): Either<VisaApiError, Order> {
-        val walletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
-        return requestHelper.performRequest(userWalletId) { authHeader ->
-            tangemPayApi.createOrder(
-                authHeader = authHeader,
-                body = OrderRequest(
-                    data = OrderRequest.Data(
-                        customerWalletAddress = walletAddress,
-                        specificationName = specificationName,
-                        type = type.wireValue,
-                        targetTariffPlanId = targetTariffPlanId,
-                        tariffPlanTransitionType = transitionType?.name,
-                        chainId = chainId,
-                        deeplinkValue = deeplinkValue,
-                    ),
-                    idempotencyKey = idempotencyKey,
-                ),
-            )
-        }.map { response ->
-            val result = requireNotNull(response.result) { "createOrder returned empty result" }
-            OrderConverter.convert(result)
+    ): Either<VisaApiError, Order> = either {
+        val customerWalletAddress = catch({ requestHelper.getCustomerWalletAddress(userWalletId) }) { throwable ->
+            TangemLogger.e("Customer wallet address is not available for $userWalletId", throwable)
+            raise(VisaApiError.UnknownWithoutCode)
         }
-    }
-
-    override suspend fun createPlasticIssueOrder(
-        userWalletId: UserWalletId,
-        specificationName: String,
-        order: PlasticCardOrder,
-        idempotencyKey: String,
-    ): Either<VisaApiError, Order> {
-        return requestHelper.performRequest(userWalletId) { authHeader ->
-            val walletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
-            tangemPayApi.createOrder(
-                authHeader = authHeader,
-                body = PlasticIssueOrderRequestConverter.convert(
-                    customerWalletAddress = walletAddress,
-                    specificationName = specificationName,
-                    order = order,
-                    idempotencyKey = idempotencyKey,
-                ),
-            )
-        }.flatMap { response ->
-            val result = response.result ?: return@flatMap VisaApiError.UnknownWithoutCode.left()
-            OrderConverter.convert(result).right()
-        }
-    }
-
-    override suspend fun createPlasticReissueOrder(
-        userWalletId: UserWalletId,
-        sourceProductInstanceId: String,
-        order: PlasticCardOrder,
-        idempotencyKey: String,
-    ): Either<VisaApiError, Order> {
-        return requestHelper.performRequest(userWalletId) { authHeader ->
-            val walletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
-            tangemPayApi.createOrder(
-                authHeader = authHeader,
-                body = OrderRequest(
-                    data = OrderRequest.Data(
-                        customerWalletAddress = walletAddress,
-                        specificationName = null,
-                        type = OrderType.CARD_REISSUE_PLASTIC_RAIN.wireValue,
-                        embossName = order.embossName,
-                        sourceProductInstanceId = sourceProductInstanceId,
-                        shippingAddress = ShippingAddressRequestConverter.convert(order.shippingAddress),
-                    ),
-                    idempotencyKey = idempotencyKey,
-                ),
-            )
-        }.flatMap { response ->
-            val result = response.result ?: return@flatMap VisaApiError.UnknownWithoutCode.left()
-            OrderConverter.convert(result).right()
-        }
-    }
-
-    override suspend fun createCardActivationOrder(
-        userWalletId: UserWalletId,
-        order: CardActivationOrder,
-        idempotencyKey: String,
-    ): Either<VisaApiError, Order> {
-        return requestHelper.performRequest(userWalletId) { authHeader ->
-            val walletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
-            tangemPayApi.createOrder(
-                authHeader = authHeader,
-                body = OrderRequest(
-                    data = OrderRequest.Data(
-                        customerWalletAddress = walletAddress,
-                        specificationName = null,
-                        type = OrderType.CARD_ACTIVATION_PLASTIC_RAIN.wireValue,
-                        productInstanceId = order.productInstanceId,
-                        lastFourDigits = order.lastFourDigits,
-                    ),
-                    idempotencyKey = idempotencyKey,
-                ),
-            )
-        }.flatMap { response ->
-            val result = response.result ?: return@flatMap VisaApiError.UnknownWithoutCode.left()
-            OrderConverter.convert(result).right()
-        }
+        val body = OrderRequestConverter.convert(
+            OrderRequestConverter.Input(
+                customerWalletAddress = customerWalletAddress,
+                request = request,
+                idempotencyKey = idempotencyKey,
+            ),
+        ).bind()
+        val response = requestHelper.performRequest(userWalletId) { authHeader ->
+            tangemPayApi.createOrder(authHeader = authHeader, body = body)
+        }.bind()
+        val result = ensureNotNull(response.result) { VisaApiError.UnknownWithoutCode }
+        OrderConverter.convert(result)
     }
 
     override suspend fun cancelOrder(userWalletId: UserWalletId, orderId: String): Either<VisaApiError, Unit> {

@@ -1,7 +1,7 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * Response from `GET /v1/order` (findOrders) — array of orders matching the requested
@@ -9,7 +9,7 @@ import com.squareup.moshi.JsonClass
  *
  * Each order shares the same shape as the single-order [OrderResponse.Result].
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class FindOrdersResponse(
-    @Json(name = "result") val result: List<OrderResponse.Result>,
+    @SerialName("result") val result: List<OrderResponse.Result>,
 )

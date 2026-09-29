@@ -8,7 +8,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.AccountFeeGroupType
 import com.tangem.domain.pay.model.CustomerInfo
-import com.tangem.domain.pay.model.OrderType
+import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.visa.error.VisaApiError
 import kotlinx.coroutines.flow.Flow
 
@@ -36,9 +36,7 @@ interface OnboardingRepository {
 
     suspend fun createOrder(
         userWalletId: UserWalletId,
-        deeplinkValue: String? = null,
-        specificationName: String = DEFAULT_ISSUE_SPECIFICATION_NAME,
-        type: OrderType = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
+        request: CustomerOrderRequest.CardIssue,
     ): Either<VisaApiError, String>
 
     suspend fun clearOrderId(userWalletId: UserWalletId)
@@ -80,8 +78,4 @@ interface OnboardingRepository {
     suspend fun disableTangemPay(userWalletId: UserWalletId): Either<VisaApiError, Unit>
 
     suspend fun isTangemPayDeactivated(userWalletId: UserWalletId): Boolean
-
-    companion object {
-        const val DEFAULT_ISSUE_SPECIFICATION_NAME = "SP_000004"
-    }
 }
