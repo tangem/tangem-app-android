@@ -103,6 +103,7 @@ internal sealed class StoriesV2Events(
         private val errorStage: String,
         private val errorReason: String,
         private val source: String?,
+        private val httpCode: Int? = null,
     ) : StoriesV2Events(
         event = "Story Error Occurred",
         params = buildMap {
@@ -110,6 +111,7 @@ internal sealed class StoriesV2Events(
             slideId?.let { put(SLIDE_ID, it) }
             put(ERROR_STAGE, errorStage)
             put(ERROR_REASON, errorReason)
+            httpCode?.let { put(HTTP_CODE, it.toString()) }
             source?.let { put(AnalyticsParam.SOURCE, it) }
         },
     )
@@ -187,3 +189,4 @@ private const val ACTION_TARGET_TYPE = "Action Target Type"
 private const val ACTION_DESTINATION = "Action Destination"
 private const val ERROR_STAGE = "Error Stage"
 private const val ERROR_REASON = "Error Reason"
+private const val HTTP_CODE = "HTTP Code"

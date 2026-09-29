@@ -18,6 +18,7 @@ import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsV1R
 import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerRequest
 import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerResponse
 import com.tangem.datasource.api.tangemTech.models.promobanners.PromoBannerDisplaysResponse
+import com.tangem.datasource.api.tangemTech.models.storiesv2.StoriesV2Response
 import com.tangem.lib.auth.api.RequiresSessionAuth
 import retrofit2.http.*
 
@@ -124,6 +125,12 @@ interface TangemTechApi {
 
     @GET("v1/stories/{story_id}")
     suspend fun getStoryById(@Path("story_id") storyId: String): ApiResponse<StoryContentResponse>
+
+    @GET("api/v2/stories")
+    suspend fun getStoriesV2(
+        @Query("slugs") slugs: List<String>,
+        @Query("language") language: String,
+    ): ApiResponse<StoriesV2Response>
 
     // region promotions
     @GET("/v2/promotion")
