@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -34,6 +35,7 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
 import com.tangem.core.ui.components.haze.ProvideHaze
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
+import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
@@ -43,7 +45,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.domain.polymarket.model.PolymarketPositionsFilter
 import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadMoreEffect
-import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadingState
 import com.tangem.features.polymarket.impl.common.ui.PolymarketNextPageLoader
 import com.tangem.features.polymarket.impl.common.ui.PolymarketReloadPrompt
 import com.tangem.features.polymarket.impl.positiondetails.ui.PolymarketFinishedPositionSheet
@@ -54,6 +55,9 @@ import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPosition
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM.NextPage
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM.Tab
 import kotlinx.collections.immutable.persistentListOf
+import kotlin.math.ceil
+
+private val PositionsItemSpacing = 12.dp
 
 @Composable
 internal fun PolymarketPositionsScreen(state: PolymarketPositionsUM, modifier: Modifier = Modifier) {
@@ -75,6 +79,7 @@ internal fun PolymarketPositionsScreen(state: PolymarketPositionsUM, modifier: M
                             contentPadding = contentPadding,
                             onRefreshRetry = state.onRefreshRetry,
                         )
+                        Content.Loading -> PositionsLoadingState(contentPadding)
                         else -> LazyColumn(
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = contentPadding,
@@ -96,10 +101,9 @@ private fun PositionsPlaceholder(state: PolymarketPositionsUM, modifier: Modifie
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
             when (val content = state.content) {
-                Content.Loading -> PolymarketLoadingState()
                 Content.Empty -> EmptyPositions(state.selectedTab, state.selectedFilter)
                 is Content.Error -> PositionsRetry(content.onRetry)
-                is Content.Data -> Unit
+                Content.Loading, is Content.Data -> Unit
             }
             state.onRefreshRetry?.let { PositionsRetry(it) }
         }
@@ -158,7 +162,6 @@ private fun PositionsList(
     contentPadding: PaddingValues,
     onRefreshRetry: (() -> Unit)?,
 ) {
-    val layoutDirection = LocalLayoutDirection.current
     val nextPage = content.nextPage
     if (nextPage is NextPage.Ready) {
         // Recheck after a short page even when the end stayed visible throughout loading.
@@ -170,13 +173,8 @@ private fun PositionsList(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         state = listState,
-        contentPadding = PaddingValues(
-            top = contentPadding.calculateTopPadding() + 8.dp,
-            bottom = contentPadding.calculateBottomPadding() + 16.dp,
-            start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
-            end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
-        ),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = positionsContentPadding(contentPadding),
+        verticalArrangement = Arrangement.spacedBy(PositionsItemSpacing),
     ) {
         if (onRefreshRetry != null) {
             item(key = "refresh_error", contentType = "retry") { PositionsRetry(onRefreshRetry) }
@@ -194,6 +192,39 @@ private fun PositionsList(
             NextPage.End, is NextPage.Ready -> Unit
         }
     }
+}
+
+@Composable
+private fun PositionsLoadingState(contentPadding: PaddingValues) {
+    val padding = positionsContentPadding(contentPadding)
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val availableHeight = maxHeight - padding.calculateTopPadding() - padding.calculateBottomPadding()
+        val skeletonCount = ceil(
+            (availableHeight + PositionsItemSpacing) / (PolymarketPositionCardSkeletonHeight + PositionsItemSpacing),
+        ).toInt().coerceAtLeast(1)
+        ProvideTangemShimmer {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = padding,
+                verticalArrangement = Arrangement.spacedBy(PositionsItemSpacing),
+            ) {
+                items(count = skeletonCount, contentType = { "skeleton" }) {
+                    PolymarketPositionCardSkeleton()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun positionsContentPadding(contentPadding: PaddingValues): PaddingValues {
+    val layoutDirection = LocalLayoutDirection.current
+    return PaddingValues(
+        top = contentPadding.calculateTopPadding() + 8.dp,
+        bottom = contentPadding.calculateBottomPadding() + 16.dp,
+        start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
+        end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
+    )
 }
 
 @Composable
