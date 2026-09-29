@@ -58,6 +58,11 @@ private fun EndSlot(endButton: (@Composable () -> Unit)?) {
     }
 }
 
+// A centered title needs the same gap on both sides, otherwise the column (and the text in it) is off-center.
+private fun contentStartPadding(hasStartButton: Boolean, contentAlign: TangemTopNavigation.ContentAlign): Dp {
+    return if (hasStartButton || contentAlign == TangemTopNavigation.ContentAlign.Center) 12.dp else 0.dp
+}
+
 private fun Modifier.revealFromBehindGroup(progress: () -> Float): Modifier = layout { measurable, constraints ->
     val placeable = measurable.measure(constraints)
     val width = (placeable.width * progress().coerceIn(0f, 1f)).roundToInt()
@@ -151,7 +156,13 @@ fun TangemTopNavigation(
 
                 Column(
                     modifier = Modifier
-                        .padding(start = if (startButton != null) 12.dp else 0.dp, end = 12.dp)
+                        .padding(
+                            start = contentStartPadding(
+                                hasStartButton = startButton != null,
+                                contentAlign = contentAlign,
+                            ),
+                            end = 12.dp,
+                        )
                         .layoutId(SlotId.Content),
                     horizontalAlignment = when (contentAlign) {
                         TangemTopNavigation.ContentAlign.Start -> Alignment.Start
