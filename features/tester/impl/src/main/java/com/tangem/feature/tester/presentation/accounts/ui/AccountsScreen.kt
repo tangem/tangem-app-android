@@ -19,6 +19,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.common.ui.account.toUM
@@ -226,7 +230,7 @@ private fun LazyListScope.ManageAccountsButtons(buttons: ImmutableList<AccountsU
 @Composable
 private fun WalletIdsBlock(walletIds: AccountsUM.WalletIds) {
     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-        WalletIdRow(title = "id", value = walletIds.id, onCopyClick = walletIds.onCopyIdClick)
+        WalletIdRow(title = "UserWalletId", value = walletIds.id, onCopyClick = walletIds.onCopyIdClick)
         WalletIdRow(title = "Amplitude WalletId hash", value = walletIds.hash, onCopyClick = walletIds.onCopyHashClick)
     }
 }
@@ -236,7 +240,10 @@ private fun WalletIdRow(title: String, value: String, onCopyClick: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         SelectionContainer(modifier = Modifier.weight(1f)) {
             Text(
-                text = "$title: $value",
+                text = buildAnnotatedString {
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(title) }
+                    append(": $value")
+                },
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.secondary,
             )
