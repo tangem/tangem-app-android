@@ -20,6 +20,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.ui.components.bottomsheets.message.*
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
@@ -44,6 +45,7 @@ import com.tangem.domain.wallets.analytics.Settings
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.analytics.toAnalyticsState
 import com.tangem.domain.wallets.usecase.*
+import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.feature.walletsettings.entity.*
 import com.tangem.feature.walletsettings.impl.R
@@ -97,6 +99,7 @@ internal class WalletSettingsModel @Inject constructor(
     private val getCloudBackupStateUseCase: GetCloudBackupStateUseCase,
     private val getCloudBackupStatusUseCase: GetCloudBackupStatusUseCase,
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
+    private val isSocialBackupCompletedUseCase: IsSocialBackupCompletedUseCase,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
@@ -151,12 +154,14 @@ internal class WalletSettingsModel @Inject constructor(
             flow2 = walletCardItemDelegate.cardItemFlow(wallet),
             flow3 = accountItemsDelegate.loadAccount(wallet, onAddAccountClick = ::onAddAccountClick),
             flow4 = isWalletBackedUpUseCase.flow(wallet),
-        ) { nftEnabled, cardItem, accountList, isWalletBackedUp ->
+            flow5 = isSocialWalletFlow(wallet),
+        ) { nftEnabled, cardItem, accountList, isWalletBackedUp, isSocialWallet ->
             state.update { value ->
                 value.copy(
                     items = buildItems(
                         userWallet = wallet,
                         isWalletBackedUp = isWalletBackedUp,
+                        isSocialWallet = isSocialWallet,
                         cardItem = cardItem,
                         isNFTEnabled = nftEnabled,
                         accountList = accountList,
@@ -184,9 +189,15 @@ internal class WalletSettingsModel @Inject constructor(
         trackingContextProxy.removeContext()
     }
 
+    private fun isSocialWalletFlow(wallet: UserWallet): Flow<Boolean> = when (wallet) {
+        is UserWallet.Cold -> flowOf(false)
+        is UserWallet.Hot -> isSocialBackupCompletedUseCase.flow(wallet.walletId)
+    }
+
     private fun buildItems(
         userWallet: UserWallet,
         isWalletBackedUp: Boolean,
+        isSocialWallet: Boolean,
         cardItem: WalletSettingsItemUM.CardBlock,
         isNFTEnabled: Boolean,
         accountList: List<WalletSettingsAccountsUM>,
@@ -199,6 +210,7 @@ internal class WalletSettingsModel @Inject constructor(
         return itemsBuilder.buildItems(
             userWallet = userWallet,
             isWalletBackedUp = isWalletBackedUp,
+            isSocialWallet = isSocialWallet,
             cardItem = cardItem,
             isReferralAvailable = when (userWallet) {
                 is UserWallet.Cold -> userWallet.cardTypesResolver.isTangemWallet()
@@ -218,6 +230,10 @@ internal class WalletSettingsModel @Inject constructor(
             onCheckedNFTChange = ::onCheckedNFTChange,
             forgetWallet = {
                 onForgetWalletClick(userWallet)
+            },
+            onLogOutClick = ::onLogOutClick,
+            onDeleteWalletClick = {
+                if (userWallet is UserWallet.Hot) onDeleteWalletClick(userWallet)
             },
             onLinkMoreCardsClick = {
                 when (userWallet) {
@@ -247,7 +263,7 @@ internal class WalletSettingsModel @Inject constructor(
         router.push(AppRoute.PushNotificationSettings(userWalletId = params.userWalletId))
     }
 
-    private fun forgetWallet() = modelScope.launch {
+    private fun forgetWallet(onForgotten: () -> Unit = {}) = modelScope.launch {
         val userWallet = getUserWalletUseCase(params.userWalletId)
             .getOrNull()
 
@@ -264,6 +280,8 @@ internal class WalletSettingsModel @Inject constructor(
 
             return@launch
         }
+
+        onForgotten()
 
         if (hasUserWallets) {
             router.pop()
@@ -643,6 +661,85 @@ internal class WalletSettingsModel @Inject constructor(
                 }
                 // The seed phrase itself only when it was saved: a social-only wallet has no phrase the user
                 // has seen, so it goes to the backup options instead.
+                if (userWallet.backedUp) {
+                    primaryButton {
+                        text = resourceReference(R.string.hw_remove_wallet_notification_action_backup_view_v2)
+                        onClick {
+                            unlockWalletIfNeedAndProceed {
+                                router.push(AppRoute.ViewPhrase(userWallet.walletId))
+                            }
+                            closeBs()
+                        }
+                    }
+                } else {
+                    primaryButton {
+                        text = resourceReference(R.string.hw_remove_wallet_notification_action_backup_go)
+                        onClick {
+                            router.push(
+                                AppRoute.WalletBackup(
+                                    userWalletId = userWallet.walletId,
+                                    isColdWalletOptionShown = false,
+                                ),
+                            )
+                            closeBs()
+                        }
+                    }
+                }
+            },
+        )
+    }
+
+    private fun onLogOutClick() {
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.LogOutRequest())
+        messageSender.send(
+            DialogMessage(
+                // TODO [REDACTED_TASK_KEY]: waiting on social_wallet_log_out_title / _description in Lokalise.
+                title = stringReference("Are you sure you want to log out?"),
+                message = stringReference("You can always sign in at any time."),
+                firstActionBuilder = {
+                    EventMessageAction(
+                        // TODO [REDACTED_TASK_KEY]: waiting on social_wallet_settings_log_out in Lokalise.
+                        title = stringReference("Log out"),
+                        isWarning = true,
+                        onClick = {
+                            forgetWallet(
+                                onForgotten = {
+                                    analyticsEventHandler.send(WalletSettingsAnalyticEvents.WalletLoggedOut())
+                                },
+                            )
+                        },
+                    )
+                },
+                secondActionBuilder = { cancelAction() },
+            ),
+        )
+    }
+
+    private fun onDeleteWalletClick(userWallet: UserWallet.Hot) {
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.DeleteWalletRequest())
+        messageSender.send(
+            bottomSheetMessage {
+                infoBlock {
+                    icon(R.drawable.ic_alert_triangle_20) {
+                        type = MessageBottomSheetUM.Icon.Type.Attention
+                        backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
+                    }
+                    // TODO [REDACTED_TASK_KEY]: waiting on social_wallet_delete_title / _description in Lokalise.
+                    title = stringReference("Delete wallet?")
+                    body = stringReference(
+                        "This wallet will be permanently removed from the app, and your Google account will no " +
+                            "longer be linked to it. Back up your seed phrase first - otherwise you'll " +
+                            "permanently lose access to any crypto it holds.",
+                    )
+                }
+                secondaryButton {
+                    // TODO [REDACTED_TASK_KEY]: waiting on social_wallet_delete_anyway in Lokalise.
+                    text = stringReference("Delete anyway")
+                    onClick {
+                        router.push(AppRoute.ForgetWallet(userWallet.walletId, shouldDeleteSocialRecovery = true))
+                        closeBs()
+                    }
+                }
                 if (userWallet.backedUp) {
                     primaryButton {
                         text = resourceReference(R.string.hw_remove_wallet_notification_action_backup_view_v2)
