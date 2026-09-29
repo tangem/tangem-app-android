@@ -11,6 +11,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.hot.HotWalletAccessor
+import com.tangem.hot.sdk.exception.RecentBiometryUnavailableException
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.auth.AuthFeatureToggles
@@ -56,14 +57,14 @@ class WalletRegistrationLauncher @Inject internal constructor(
     /**
      * Catches up the registration of an already-saved MOBILE wallet at unlock time. A protected
      * (Password/Biometry) wallet can only register by signing the nonce with its key, which needs an
-     * unlock context. Establish a short-lived contextual unlock (the single auth), register within it —
-     * so the nonce is requested AFTER the auth and signed immediately (no ~55s expiry) and no second
-     * prompt appears — then ALWAYS clear the context. Already-registered wallets are skipped before any
-     * auth, so a routine unlock never pops a needless prompt; a context established elsewhere is reused
-     * and left untouched.
-     *
-     * Without a device session the registration can't be sent, so the auth is not asked for at all.
-     * An [accessCode] the user has just unlocked the wallet with establishes the context without a prompt.
+     * unlock context. The context is built only from the authentication the user has just passed to
+     * unlock — the entered [accessCode], or else the biometric unlock reused by the keystore (a NoPassword
+     * wallet needs none) — so the catch-up never asks for authentication of its own. When neither is
+     * available (e.g. a Password wallet unlocked biometrically) the registration waits for an access-code
+     * unlock. The nonce is requested after the context exists and signed right away, and the context is
+     * ALWAYS cleared.
+     * Already-registered wallets and a missing device session are skipped up front; a context
+     * established elsewhere is reused and left untouched.
      */
     suspend fun registerUnlockedMobileWallet(userWallet: UserWallet.Hot, accessCode: HotAuth.Password? = null) {
         if (!authFeatureToggles.isBackendAuthenticationEnabled) return
@@ -81,14 +82,20 @@ class WalletRegistrationLauncher @Inject internal constructor(
 
         try {
             runSuspendCatching {
-                if (accessCode != null) {
-                    hotWalletAccessor.unlockContextual(userWallet.hotWalletId, accessCode)
-                } else {
-                    hotWalletAccessor.unlockContextual(userWallet.hotWalletId)
+                when {
+                    accessCode != null -> hotWalletAccessor.unlockContextual(userWallet.hotWalletId, accessCode)
+                    // A NoPassword wallet opens without any auth, so its context never prompts.
+                    userWallet.hotWalletId.authType == HotWalletId.AuthType.NoPassword ->
+                        hotWalletAccessor.unlockContextual(userWallet.hotWalletId)
+                    else -> hotWalletAccessor.unlockContextualWithRecentBiometry(userWallet.hotWalletId)
                 }
             }
                 .onFailure { error ->
-                    TangemLogger.e("Failed to establish an unlock context for mobile registration", error)
+                    if (error is RecentBiometryUnavailableException) {
+                        TangemLogger.i("Deferring mobile registration to access-code unlock: ${error.message}")
+                    } else {
+                        TangemLogger.e("Failed to establish an unlock context for mobile registration", error)
+                    }
                     return
                 }
             registerMobile(userWallet)
