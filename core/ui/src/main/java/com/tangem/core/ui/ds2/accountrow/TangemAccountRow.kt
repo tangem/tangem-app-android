@@ -608,7 +608,7 @@ private fun AccountRowScaffold(
         animationSpec = AccountRowPressSpec,
         label = "accountRowPressAlpha",
     )
-    val motion = rememberAccountRowMotion(isExpanded = isExpanded)
+    val motion = rememberAccountRowMotion(isExpanded = isExpanded && content != null)
 
     AccountRowContainer(
         motion = motion,
@@ -676,7 +676,7 @@ private fun AccountRowScaffold(
         }
 
         if (priceChange != null && badge == null) {
-            AccountRowPriceChange(
+            TangemPriceChange(
                 state = priceChange,
                 modifier = Modifier
                     .layoutId(AccountRowLayoutId.PRICE_CHANGE)
