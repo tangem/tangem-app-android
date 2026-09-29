@@ -6,4 +6,6 @@ data class PolymarketPositionsState(
     val positions: List<PolymarketPosition> = emptyList(),
     val status: PaginationStatus<List<PolymarketPosition>> = PaginationStatus.None,
     val filter: PolymarketPositionsFilter = PolymarketPositionsFilter.ALL,
+    val isRefreshing: Boolean = false,
+    val refreshError: Throwable? = null,
 )
