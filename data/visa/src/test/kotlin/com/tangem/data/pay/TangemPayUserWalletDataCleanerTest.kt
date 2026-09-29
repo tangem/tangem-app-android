@@ -2,6 +2,7 @@ package com.tangem.data.pay
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.data.pay.repository.TangemPayRequestPerformer
+import com.tangem.data.pay.store.CashbackSummaryStore
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.store.TangemPayCustomerInfoStore
 import com.tangem.data.pay.store.TangemPayStorage
@@ -26,6 +27,7 @@ internal class TangemPayUserWalletDataCleanerTest {
 
     private val paymentAccountStatusesStore: PaymentAccountStatusesStore = mockk()
     private val txHistoryItemsStore: TangemPayTxHistoryItemsStore = mockk()
+    private val cashbackSummaryStore: CashbackSummaryStore = mockk()
     private val tangemPayStorage: TangemPayStorage = mockk()
     // A real store, so the assertions can look at what actually stayed in the cache
     private val customerInfoStore = TangemPayCustomerInfoStore()
@@ -34,6 +36,7 @@ internal class TangemPayUserWalletDataCleanerTest {
     private val cleaner = TangemPayUserWalletDataCleaner(
         paymentAccountStatusesStore = paymentAccountStatusesStore,
         txHistoryItemsStore = txHistoryItemsStore,
+        cashbackSummaryStore = cashbackSummaryStore,
         tangemPayStorage = tangemPayStorage,
         customerInfoStore = customerInfoStore,
         requestPerformer = requestPerformer,
@@ -41,10 +44,17 @@ internal class TangemPayUserWalletDataCleanerTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(paymentAccountStatusesStore, txHistoryItemsStore, tangemPayStorage, requestPerformer)
+        clearMocks(
+            paymentAccountStatusesStore,
+            txHistoryItemsStore,
+            cashbackSummaryStore,
+            tangemPayStorage,
+            requestPerformer,
+        )
         customerInfoStore.clear()
         coEvery { paymentAccountStatusesStore.remove(any<List<UserWalletId>>()) } just Runs
         coEvery { txHistoryItemsStore.remove(any<List<String>>()) } just Runs
+        coEvery { cashbackSummaryStore.remove(any()) } just Runs
         coEvery { tangemPayStorage.getCustomerWalletAddress(any()) } returns null
         coEvery { tangemPayStorage.clearAll(any(), any()) } just Runs
         coEvery { tangemPayStorage.clearIsTangemPayDeactivated(any()) } just Runs
@@ -60,6 +70,15 @@ internal class TangemPayUserWalletDataCleanerTest {
         coVerify(exactly = 1) { paymentAccountStatusesStore.remove(listOf(WALLET_A, WALLET_B)) }
         coVerify(exactly = 1) { txHistoryItemsStore.remove(listOf(WALLET_A.stringValue, WALLET_B.stringValue)) }
         coVerify(exactly = 1) { requestPerformer.removeCachedCustomerWalletAddresses(listOf(WALLET_A, WALLET_B)) }
+    }
+
+    @Test
+    fun `GIVEN wallets WHEN clear THEN cached cashback summaries removed in a single call`() = runTest {
+        // Act
+        cleaner.clear(listOf(WALLET_A, WALLET_B))
+
+        // Assert
+        coVerify(exactly = 1) { cashbackSummaryStore.remove(listOf(WALLET_A, WALLET_B)) }
     }
 
     @Test
