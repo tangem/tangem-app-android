@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.withdraw.hub.ui
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds.image.TangemIcon
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.resolveReference
@@ -52,7 +54,7 @@ internal fun BankSection(state: BankSectionUM, modifier: Modifier = Modifier) {
             when (state) {
                 BankSectionUM.Loading -> loadingItems()
                 is BankSectionUM.Error -> item(key = "bank_error") {
-                    UnableToLoadCard(onRetryClick = state.onRetryClick)
+                    UnableToLoadCard(textRes = R.string.common_unable_to_load, onRetryClick = state.onRetryClick)
                 }
                 is BankSectionUM.Content -> {
                     item(key = "bank_actions") {
@@ -86,7 +88,12 @@ private fun LazyListScope.recentsItems(recents: RecentsUM) {
     when (recents) {
         RecentsUM.Loading -> recentsShimmerItems(keyPrefix = "recents_shimmer")
         RecentsUM.Empty -> item(key = "recents_empty") { RecentsEmptyCard() }
-        is RecentsUM.Error -> item(key = "recents_error") { UnableToLoadCard(onRetryClick = recents.onRetryClick) }
+        is RecentsUM.Error -> item(key = "recents_error") {
+            UnableToLoadCard(
+                textRes = R.string.tangempay_withdraw_hub_accounts_load_error,
+                onRetryClick = recents.onRetryClick,
+            )
+        }
         is RecentsUM.Content -> {
             items(items = recents.recipients, key = { it.id }) { recipient ->
                 RecentRecipientCard(
@@ -165,11 +172,19 @@ private fun SeeAllCard(onClick: () -> Unit) {
 }
 
 @Composable
-private fun UnableToLoadCard(onRetryClick: () -> Unit) {
+private fun UnableToLoadCard(@StringRes textRes: Int, onRetryClick: () -> Unit) {
     RecentsCard(isDashed = true, onClick = onRetryClick) {
-        SecondaryIconCircle(imageVector = Icons.ic_arrow_refresh_20)
+        IconCircle(background = TangemTheme.colors3.bg.inverse) {
+            TangemIcon(
+                modifier = Modifier.size(20.dp),
+                tangemIconUM = TangemIconUM.Icon(
+                    imageVector = Icons.ic_arrow_refresh_20,
+                    tintReference = { TangemTheme.colors3.icon.inverse },
+                ),
+            )
+        }
         Text(
-            text = resourceReference(R.string.common_unable_to_load).resolveReference(),
+            text = resourceReference(textRes).resolveReference(),
             style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
             maxLines = 3,
