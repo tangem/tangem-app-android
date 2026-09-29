@@ -75,6 +75,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
+import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSwapUseCase
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.flow.PredictionWithdrawalTracker
@@ -209,6 +210,7 @@ internal class SwapModel @Inject constructor(
     private val calculateAmountUseCase: CalculateAmountUseCase,
     private val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase,
     private val getCurrencyUSDQuoteUseCase: GetCurrencyUSDQuoteUseCase,
+    private val recordTokenTransferFromSwapUseCase: RecordTokenTransferFromSwapUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<SwapComponent.Params>()
@@ -1907,7 +1909,10 @@ internal class SwapModel @Inject constructor(
             .onRight { result ->
                 when (result) {
                     WithdrawalResult.Cancelled -> startLoadingQuotesFromLastState()
-                    WithdrawalResult.Success -> updateTransferModeTangemPayState()
+                    WithdrawalResult.Success -> {
+                        recordTokenTransfer(fromSwapCurrencyStatus, toSwapCurrencyStatus)
+                        updateTransferModeTangemPayState()
+                    }
                 }
             }
     }
@@ -1963,6 +1968,7 @@ internal class SwapModel @Inject constructor(
                     ""
                 }
                 updateWalletBalance()
+                recordTokenTransfer(fromSwapCurrencyStatus, toSwapCurrencyStatus)
                 sendTransferInProgressEvent(isTangemPay = false)
                 uiState = swapTransferStateBuilder.createSuccessState(
                     uiState = uiState,
@@ -1984,6 +1990,20 @@ internal class SwapModel @Inject constructor(
                 openPredictionFundingWindow()
                 router.replaceAll(SwapRoute.Success)
             },
+        )
+    }
+
+    private suspend fun recordTokenTransfer(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+    ) {
+        recordTokenTransferFromSwapUseCase(
+            fromUserWalletId = fromSwapCurrencyStatus.userWalletId,
+            fromAccount = fromSwapCurrencyStatus.account,
+            fromCurrency = fromSwapCurrencyStatus.currency,
+            toUserWalletId = toSwapCurrencyStatus.userWalletId,
+            toAccount = toSwapCurrencyStatus.account,
+            toCurrency = toSwapCurrencyStatus.currency,
         )
     }
 

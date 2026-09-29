@@ -54,7 +54,7 @@ the tab and raising the sheet); a tab never touches it.
 
 - Cross-module sheets over the feed — no route support; feature-internal bottom sheets keep using
   their own `childSlot`, as everywhere in the app.
-- Deep-link entry to an arbitrary `FeedRoute` — not wired. `tangem://shtorka` opens the hub on a
+- Deep-link entry to an arbitrary `FeedRoute` — not wired. `tangem://discover` opens the hub on a
   *section*, optionally pre-filtered, through `FeedEntryController` (`com.tangem.features.feed.v2`);
   there is still no route → initial feed stack mapper, so a deeplink cannot land on a pushed screen.
 - Remote tab ordering/availability — contributors are static; `FeedTabContributor.isAvailable` is

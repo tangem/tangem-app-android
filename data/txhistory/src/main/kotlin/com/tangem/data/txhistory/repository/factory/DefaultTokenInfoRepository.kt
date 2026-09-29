@@ -4,8 +4,6 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.store.datasource.txhistory.db.dao.TokenInfoDao
-import com.tangem.store.datasource.txhistory.db.entity.express.TokenInfoEntity
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.express.models.ExpressAsset
@@ -13,8 +11,11 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.repository.TokenInfoRepository
+import com.tangem.store.datasource.txhistory.db.dao.TokenInfoDao
+import com.tangem.store.datasource.txhistory.db.entity.express.TokenInfoEntity
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -54,7 +55,7 @@ internal class DefaultTokenInfoRepository @Inject constructor(
             id to token
         }.toMap()
 
-        appScope.launch { fetchMissing(ids.subtract(result.keys)) }
+        fetchMissing(ids.subtract(result.keys))
         return result
     }
 
@@ -99,7 +100,11 @@ internal class DefaultTokenInfoRepository @Inject constructor(
     }
 
     /** Fetches and caches metadata for token assets that are stale/missing in the cache and not already owned. */
-    override suspend fun fetchMissing(assetIds: Set<ExpressAsset.ID>) = withContext(dispatchers.io) {
+    override fun fetchMissing(assetIds: Set<ExpressAsset.ID>) {
+        appScope.launch { runSuspendCatching { internalFetchMissing(assetIds) } }
+    }
+
+    private suspend fun internalFetchMissing(assetIds: Set<ExpressAsset.ID>) = withContext(dispatchers.io) {
         // Coins resolve without the catalog — only tokens are looked up.
         val tokenIds = mutableListOf<ExpressAsset.ID>()
         val networkIds = mutableSetOf<String>()

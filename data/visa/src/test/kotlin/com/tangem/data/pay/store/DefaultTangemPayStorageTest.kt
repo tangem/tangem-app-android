@@ -108,6 +108,21 @@ internal class DefaultTangemPayStorageTest {
     }
 
     @Test
+    fun `GIVEN payment account recents WHEN clearAll THEN the recents key is removed`() = runTest {
+        // Arrange
+        val key = spendPreferencesKeys.paymentAccountRecents(WALLET)
+        prefs.editData { preferences ->
+            preferences[key] = """{"coin⟨ethereum⟩ethereum":{"accountId":"aa","usedAtMillis":1}}"""
+        }
+
+        // Act
+        storage.clearAll(userWalletId = WALLET, customerWalletAddress = null)
+
+        // Assert
+        assertThat(prefs.data.first()[key]).isNull()
+    }
+
+    @Test
     fun `GIVEN two wallets WHEN clearAll for one THEN the other one keeps its data`() = runTest {
         // Arrange
         storage.storeCheckCustomerWalletResult(userWalletId = WALLET, isPaeraCustomer = true)

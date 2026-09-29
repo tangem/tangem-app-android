@@ -20,6 +20,7 @@ import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
+import com.tangem.domain.polymarket.flow.PredictionPositionsUpdateEmitter
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
 import com.tangem.domain.polymarket.model.PolymarketChainFamily
 import com.tangem.domain.polymarket.model.PolymarketDepositNetwork
@@ -86,6 +87,7 @@ internal abstract class PlacePredictionModelTestBase {
     protected val awaitDelayedOrderUseCase: AwaitDelayedPredictionOrderUseCase = mockk()
     protected val positionsRepository: PolymarketPositionsRepository = mockk()
     protected val fundingWindow: PredictionFundingWindow = mockk(relaxed = true)
+    protected val positionsUpdateEmitter: PredictionPositionsUpdateEmitter = mockk(relaxed = true)
     protected val statusSupplier: PredictionAccountStatusSupplier = mockk()
     protected val balancePoller: PredictionBalancePoller = mockk()
     protected val refreshRequisites: RefreshPredictionDepositRequisitesInteractor = mockk()
@@ -114,6 +116,7 @@ internal abstract class PlacePredictionModelTestBase {
             awaitDelayedOrderUseCase,
             positionsRepository,
             fundingWindow,
+            positionsUpdateEmitter,
             statusSupplier,
             balancePoller,
             refreshRequisites,
@@ -217,6 +220,7 @@ internal abstract class PlacePredictionModelTestBase {
             awaitDelayedPredictionOrderUseCase = awaitDelayedOrderUseCase,
             positionsRepository = positionsRepository,
             predictionFundingWindow = fundingWindow,
+            positionsUpdateEmitter = positionsUpdateEmitter,
         ).also(models::add)
 
     protected fun createStatusModel(

@@ -3,12 +3,16 @@ package com.tangem.data.yield.supply
 import com.google.common.truth.Truth
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
+import com.tangem.blockchain.blockchains.ethereum.network.EthereumTransactionReceipt
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.TransactionReceiptProvider
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.smartcontract.SmartContractCallDataProviderFactory
+import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.yieldsupply.YieldSupplyContractCallDataProviderFactory
 import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionStatus
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -17,16 +21,22 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.yield.supply.models.YieldSupplyEnterOutcome
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
+import java.math.BigInteger
 import com.tangem.blockchain.yieldsupply.providers.YieldSupplyStatus as SDKYieldSupplyStatus
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -339,5 +349,94 @@ class DefaultYieldSupplyTransactionRepositoryTest {
 
         Truth.assertThat(result).isNotNull()
         Truth.assertThat(result.methodId).isEqualTo("0xf3fef3a3")
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetEnterTransactionOutcome {
+
+        private val receiptWalletManager = mockk<WalletManager>(
+            relaxed = true,
+            moreInterfaces = arrayOf(TransactionReceiptProvider::class),
+        )
+        private val outcomeWalletManagersFacade: WalletManagersFacade = mockk()
+        private val outcomeRepository = DefaultYieldSupplyTransactionRepository(
+            walletManagersFacade = outcomeWalletManagersFacade,
+            dispatchers = TestingCoroutineDispatcherProvider(),
+        )
+
+        @BeforeEach
+        fun resetMocks() {
+            clearMocks(receiptWalletManager, outcomeWalletManagersFacade)
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN receipt WHEN getEnterTransactionOutcome THEN maps outcome`(model: OutcomeModel) = runTest {
+            // Arrange
+            val resolvedWalletManager = if (model.isReceiptProvider) receiptWalletManager else walletManager
+            coEvery {
+                outcomeWalletManagersFacade.getOrCreateWalletManager(any(), any(), any())
+            } returns resolvedWalletManager
+            coEvery {
+                (receiptWalletManager as TransactionReceiptProvider).getTransactionReceipt(ENTER_TX_HASH)
+            } returns model.receipt
+            coEvery { receiptWalletManager.getYieldSupplyStatus(any()) } returns SDKYieldSupplyStatus(
+                isActive = model.protocolBalance != null,
+                isInitialized = true,
+                maxNetworkFee = BigDecimal.TEN,
+            )
+            coEvery { receiptWalletManager.getEffectiveProtocolBalance(any()) } returns
+                (model.protocolBalance ?: BigDecimal.ZERO)
+
+            // Act
+            val actual = outcomeRepository.getEnterTransactionOutcome(
+                userWalletId = userWalletId,
+                cryptoCurrency = cryptoCurrency,
+                transactionHash = ENTER_TX_HASH,
+            )
+
+            // Assert
+            Truth.assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            OutcomeModel(receipt = Result.Success(null), expected = null),
+            OutcomeModel(receipt = Result.Failure(BlockchainSdkError.CustomError("rpc down")), expected = null),
+            OutcomeModel(receipt = Result.Success(receipt(isSuccess = true)), expected = YieldSupplyEnterOutcome.Deposited),
+            OutcomeModel(
+                receipt = Result.Success(receipt(isSuccess = false)),
+                protocolBalance = null,
+                expected = YieldSupplyEnterOutcome.Failed,
+            ),
+            OutcomeModel(
+                receipt = Result.Success(receipt(isSuccess = false)),
+                protocolBalance = BigDecimal.TEN,
+                expected = YieldSupplyEnterOutcome.DepositedByRelayer,
+            ),
+            OutcomeModel(
+                receipt = Result.Success(receipt(isSuccess = true)),
+                isReceiptProvider = false,
+                expected = null,
+            ),
+        )
+
+        private fun receipt(isSuccess: Boolean) = EthereumTransactionReceipt(
+            transactionHash = ENTER_TX_HASH,
+            isSuccess = isSuccess,
+            blockNumber = BigInteger.ONE,
+            gasUsed = BigInteger.ONE,
+        )
+    }
+
+    data class OutcomeModel(
+        val receipt: Result<EthereumTransactionReceipt?>,
+        val expected: YieldSupplyEnterOutcome?,
+        val protocolBalance: BigDecimal? = null,
+        val isReceiptProvider: Boolean = true,
+    )
+
+    private companion object {
+        const val ENTER_TX_HASH = "0xenter"
     }
 }

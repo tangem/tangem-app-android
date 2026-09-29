@@ -38,6 +38,18 @@ sealed class NotificationUM(val config: NotificationConfig) {
             subtitle = resourceReference(R.string.send_notification_exceed_balance_text),
         )
 
+        /**
+         * The Tron account is not activated and holds less than [minimumAmount] of the token, the floor below
+         * which the gasless service refuses to sponsor the activation.
+         */
+        data class TronActivationNotEnoughFunds(val minimumAmount: String, val tokenSymbol: String) : Error(
+            title = resourceReference(R.string.common_insufficient_balance),
+            subtitle = resourceReference(
+                R.string.gasless_tron_activation_min_balance_description,
+                wrappedList("$minimumAmount $tokenSymbol"),
+            ),
+        )
+
         data object InvalidAmount : Error(
             title = resourceReference(R.string.send_notification_invalid_amount_title),
             subtitle = resourceReference(R.string.send_notification_invalid_amount_text),

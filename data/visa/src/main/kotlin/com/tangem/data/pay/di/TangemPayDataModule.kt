@@ -11,6 +11,7 @@ import com.tangem.data.pay.flow.DefaultPaymentAccountStatusFetcher
 import com.tangem.data.pay.flow.DefaultPaymentAccountStatusProducer
 import com.tangem.data.pay.repository.*
 import com.tangem.data.pay.store.DefaultBankOfframpRecentsStore
+import com.tangem.data.pay.store.DefaultPaymentAccountRecentsStore
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCurrencyStatusUseCase
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCustomerIdUseCase
@@ -24,6 +25,7 @@ import com.tangem.spend.datasource.preferences.SpendPreferencesKeys
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.moneyaccount.repository.MoneyAccountOrderRepository
@@ -33,6 +35,7 @@ import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusProducer
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.moneyaccount.repository.MoneyAccountRepository
 import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.*
 import com.tangem.domain.pay.usecase.bankofframp.AwaitBankOfframpSignatureUseCase
@@ -44,6 +47,9 @@ import com.tangem.domain.pay.usecase.bankofframp.GetBankOfframpOptionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetRecentBankAccountsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
 import com.tangem.domain.pay.usecase.bankofframp.SignBankOfframpOrderUseCase
+import com.tangem.domain.pay.usecase.recents.GetRecentTokenTransfersUseCase
+import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSendUseCase
+import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSwapUseCase
 import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
@@ -487,8 +493,13 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
-        fun provideGetOnrampFeesUseCase(onboardingRepository: OnboardingRepository): GetOnrampFeesUseCase {
-            return GetOnrampFeesUseCase(onboardingRepository = onboardingRepository)
+        fun provideGetAccountFeesUseCase(onboardingRepository: OnboardingRepository): GetAccountFeesUseCase {
+            return GetAccountFeesUseCase(onboardingRepository = onboardingRepository)
+        }
+
+        @Provides
+        fun provideGetOnrampFeesUseCase(getAccountFeesUseCase: GetAccountFeesUseCase): GetOnrampFeesUseCase {
+            return GetOnrampFeesUseCase(getAccountFeesUseCase = getAccountFeesUseCase)
         }
 
         @Provides
@@ -575,6 +586,12 @@ internal interface TangemPayDataModule {
 
         @Provides
         @Singleton
+        fun provideMoneyAccountFeesRepository(repository: DefaultMoneyAccountRepository): MoneyAccountRepository {
+            return repository
+        }
+
+        @Provides
+        @Singleton
         fun provideTangemPayResidencyRepository(
             repository: DefaultTangemPayResidencyRepository,
         ): TangemPayResidencyRepository = CachingTangemPayResidencyRepository(origin = repository)
@@ -586,6 +603,44 @@ internal interface TangemPayDataModule {
             spendPreferencesKeys: SpendPreferencesKeys,
         ): BankOfframpRecentsStore {
             return DefaultBankOfframpRecentsStore(prefs = prefs, spendPreferencesKeys = spendPreferencesKeys)
+        }
+
+        @Provides
+        @Singleton
+        fun providePaymentAccountRecentsStore(
+            prefs: AppPreferencesStore,
+            spendPreferencesKeys: SpendPreferencesKeys,
+        ): PaymentAccountRecentsStore {
+            return DefaultPaymentAccountRecentsStore(prefs = prefs, spendPreferencesKeys = spendPreferencesKeys)
+        }
+
+        @Provides
+        fun provideGetRecentTokenTransfersUseCase(
+            recentsStore: PaymentAccountRecentsStore,
+            singleAccountListSupplier: SingleAccountListSupplier,
+        ): GetRecentTokenTransfersUseCase {
+            return GetRecentTokenTransfersUseCase(
+                recentsStore = recentsStore,
+                singleAccountListSupplier = singleAccountListSupplier,
+            )
+        }
+
+        @Provides
+        fun provideRecordTokenTransferFromSwapUseCase(
+            recentsStore: PaymentAccountRecentsStore,
+        ): RecordTokenTransferFromSwapUseCase {
+            return RecordTokenTransferFromSwapUseCase(recentsStore = recentsStore)
+        }
+
+        @Provides
+        fun provideRecordTokenTransferFromSendUseCase(
+            recentsStore: PaymentAccountRecentsStore,
+            paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+        ): RecordTokenTransferFromSendUseCase {
+            return RecordTokenTransferFromSendUseCase(
+                recentsStore = recentsStore,
+                paymentAccountStatusSupplier = paymentAccountStatusSupplier,
+            )
         }
 
         @Provides

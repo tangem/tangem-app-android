@@ -21,6 +21,7 @@ internal sealed interface CollectiblesMachineDetailsUM {
         val imageUrl: String?,
         val tiers: ImmutableList<TierUM>,
         val details: ImmutableList<DetailUM>,
+        val onPoweredByClick: () -> Unit,
         val prizePool: PrizePoolUM,
         val footer: FooterUM,
     ) : CollectiblesMachineDetailsUM

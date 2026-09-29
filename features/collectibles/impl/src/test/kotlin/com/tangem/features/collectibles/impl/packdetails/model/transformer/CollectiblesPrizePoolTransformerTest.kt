@@ -33,6 +33,7 @@ internal class CollectiblesPrizePoolTransformerTest {
             buyButtonText = stringReference("Open for 50 USDC"),
             onBuyClick = {},
         ),
+        onPoweredByClick = {},
     )
 
     @ParameterizedTest

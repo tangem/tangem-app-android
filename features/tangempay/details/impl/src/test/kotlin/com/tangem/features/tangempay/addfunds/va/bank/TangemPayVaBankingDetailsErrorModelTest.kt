@@ -103,6 +103,9 @@ internal class TangemPayVaBankingDetailsErrorModelTest {
         beneficiaryBankAddress = "Bank Addr",
         accountNumber = "123",
         routingNumber = "456",
+        transferMessage = null,
+        depositFee = null,
+        depositLimit = null,
     )
 
     private fun TestScope.createModel() = TangemPayVaBankingDetailsErrorModel(

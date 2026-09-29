@@ -1,13 +1,9 @@
 package com.tangem.domain.models.account
 
+import com.tangem.domain.models.serialization.SerializedBigDecimal
 import kotlinx.serialization.Serializable
+import java.util.Locale
 
-/**
- * Bank (fiat) credentials for a Virtual Account on-ramp — the wire/ACH requisites a user transfers funds to.
- *
- * Returned by `bff-v2/v1/account/bank-credentials/{product_instance_id}`. Sensitive data — kept transient
- * (never persisted in the local payment-account cache).
- */
 @Serializable
 data class BankCredentials(
     val type: String,
@@ -17,4 +13,26 @@ data class BankCredentials(
     val beneficiaryBankAddress: String,
     val accountNumber: String,
     val routingNumber: String,
-)
+    val transferMessage: String?,
+    val depositFee: SerializedBigDecimal?,
+    val depositLimit: DepositLimit?,
+) {
+    @Serializable
+    data class DepositLimit(
+        val amount: SerializedBigDecimal,
+        val period: Period,
+    ) {
+        enum class Period {
+            DAY,
+            UNKNOWN,
+            ;
+
+            companion object {
+                fun fromString(value: String) = when (value.uppercase(Locale.US)) {
+                    "DAY" -> DAY
+                    else -> UNKNOWN
+                }
+            }
+        }
+    }
+}

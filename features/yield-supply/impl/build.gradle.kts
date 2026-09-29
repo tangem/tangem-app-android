@@ -91,5 +91,4 @@ dependencies {
     testImplementation(deps.kotlin.coroutines)
     api(deps.kotlin.coroutines)
     api(projects.domain.networks)
-    api(projects.core.configToggles)
 }
