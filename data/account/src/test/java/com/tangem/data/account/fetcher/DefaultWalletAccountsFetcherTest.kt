@@ -124,7 +124,7 @@ class DefaultWalletAccountsFetcherTest {
             fetcher.fetch(userWalletId)
 
             // Assert
-            Truth.assertThat(stored.captured.invoke(null)?.accounts).containsExactly(ownAccount)
+            Truth.assertThat(stored.captured.invoke(null)).isEqualTo(v1Response)
         }
 
         @Test
@@ -191,7 +191,7 @@ class DefaultWalletAccountsFetcherTest {
         }
 
         @Test
-        fun `GIVEN toggle is off and saved v2 document WHEN request fails THEN joint records leave the saved document`() =
+        fun `GIVEN toggle is off and saved v2 document WHEN request fails THEN saved document takes the v1 shape`() =
             runTest {
                 // Arrange
                 every { jointAccountFeatureToggles.isJointAccountEnabled } returns false
@@ -217,7 +217,7 @@ class DefaultWalletAccountsFetcherTest {
                 runCatching { fetcher.fetch(userWalletId) }
 
                 // Assert
-                Truth.assertThat(handled.captured?.accounts).containsExactly(ownAccount)
+                Truth.assertThat(handled.captured).isEqualTo(v1Response)
             }
 
         private fun arrangeFetch(
