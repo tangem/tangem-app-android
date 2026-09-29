@@ -2,7 +2,6 @@ package com.tangem.screens
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
-import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.MARKETS_MAIN_NETWORK_SUFFIX
@@ -14,9 +13,17 @@ import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import androidx.compose.ui.test.hasText as withText
+import com.tangem.core.res.R as CoreResR
 
 class MarketsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<MarketsPageObject>(semanticsProvider = semanticsProvider) {
+
+    val addAccountBanner: KNode = child {
+        hasClickAction()
+        hasAnyDescendant(withText(getResourceString(CoreResR.string.account_form_title_create)))
+        useUnmergedTree = true
+    }
 
     val addButton: KNode = child {
         hasTestTag(BaseButtonTestTags.TEXT)
