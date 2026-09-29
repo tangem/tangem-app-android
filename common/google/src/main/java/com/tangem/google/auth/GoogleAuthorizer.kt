@@ -51,7 +51,10 @@ value class GoogleAuthScope(val value: String)
 /** Successful authorization result. */
 data class GoogleAuthResult(
     val accessToken: String,
-)
+) {
+
+    override fun toString(): String = "GoogleAuthResult(***)"
+}
 
 sealed interface GoogleAuthError {
 
