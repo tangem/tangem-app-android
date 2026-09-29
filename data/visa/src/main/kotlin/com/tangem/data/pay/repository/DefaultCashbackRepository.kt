@@ -1,6 +1,7 @@
 package com.tangem.data.pay.repository
 
 import arrow.core.Either
+import com.tangem.data.pay.store.CashbackSummaryStore
 import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.data.pay.util.CashbackAccrualDocsConverter
 import com.tangem.data.pay.util.CashbackHistoryConverter
@@ -16,18 +17,28 @@ import com.tangem.domain.pay.model.CashbackSummary
 import com.tangem.domain.pay.repository.CashbackRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 internal class DefaultCashbackRepository @Inject constructor(
     private val tangemPayApi: TangemPayApi,
     private val requestHelper: TangemPayRequestPerformer,
     private val storage: TangemPayStorage,
+    private val summaryStore: CashbackSummaryStore,
 ) : CashbackRepository {
 
     override suspend fun getCashbackSummary(userWalletId: UserWalletId): Either<VisaApiError, CashbackSummary> {
         return requestHelper.performRequest(userWalletId) { authHeader ->
             tangemPayApi.getCashbackSummary(authHeader = authHeader)
-        }.map(CashbackSummaryConverter::convert)
+        }
+            .map(CashbackSummaryConverter::convert)
+            .onRight { summary -> summaryStore.store(userWalletId, summary) }
+    }
+
+    override fun observeCashbackSummary(userWalletId: UserWalletId): Flow<CashbackSummary?> {
+        return summaryStore.get(userWalletId)
     }
 
     override suspend fun getCashbackPromotions(userWalletId: UserWalletId): Either<VisaApiError, CashbackPromotions> {
@@ -63,12 +74,22 @@ internal class DefaultCashbackRepository @Inject constructor(
     }
 
     override suspend fun isDeactivationBannerDismissed(userWalletId: UserWalletId): Boolean {
-        val customerWalletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
-        return storage.getCashbackDeactivationDismissed(customerWalletAddress)
+        return runSuspendCatching {
+            val customerWalletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
+            storage.getCashbackDeactivationDismissed(customerWalletAddress)
+        }.getOrElse { throwable ->
+            TangemLogger.e("Failed to check if the cashback deactivation banner is dismissed", throwable)
+            false
+        }
     }
 
     override suspend fun setDeactivationBannerDismissed(userWalletId: UserWalletId) {
-        val customerWalletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
-        storage.storeCashbackDeactivationDismissed(customerWalletAddress = customerWalletAddress, isDismissed = true)
+        runSuspendCatching {
+            val customerWalletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
+            storage.storeCashbackDeactivationDismissed(
+                customerWalletAddress = customerWalletAddress,
+                isDismissed = true,
+            )
+        }.onFailure { TangemLogger.e("Failed to persist the cashback deactivation banner dismissal", it) }
     }
 }
