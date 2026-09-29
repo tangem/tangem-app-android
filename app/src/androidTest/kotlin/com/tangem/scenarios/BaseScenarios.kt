@@ -1,8 +1,10 @@
 package com.tangem.scenarios
 
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import com.tangem.common.BaseTestCase
+import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_WALLET_CREATION
@@ -44,6 +46,7 @@ fun BaseTestCase.scanCard(
     }
 }
 
+@OptIn(ExperimentalTestApi::class)
 fun BaseTestCase.openMainScreen(
     productType: ProductType? = null,
     mockContent: MockContent? = null,
@@ -55,6 +58,19 @@ fun BaseTestCase.openMainScreen(
             mockContent = mockContent,
             isTwinsCard = isTwinsCard,
         )
+    }
+    step("Allow push notifications if the ask is shown") {
+        // Introduction redesign (6.4) defers the push soft-ask to just after the wallet is added, so it can
+        // appear between Scan and Main. Wait for it or for Main, then allow it through — POST_NOTIFICATIONS is
+        // pre-granted via `install -g`, so no OS dialog follows.
+        composeTestRule.waitUntilAtLeastOneExists(
+            hasText(getResourceString(CommonR.string.common_allow))
+                or hasTestTag(MainScreenTestTags.SCREEN_CONTAINER),
+            timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG,
+        )
+        onPushNotificationsScreen {
+            if (allowButton.isDisplayedSafely()) allowButton.performClick()
+        }
     }
     step("Assert 'Main' screen is displayed") {
         onMainScreen { screenContainer.assertIsDisplayed() }
