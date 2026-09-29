@@ -7,10 +7,8 @@ import java.math.BigDecimal
 /**
  * A gacha machine (pack) as served by GET /api/v1/machine/machines and GET /api/v1/machine/{externalId}.
  *
- * @property price **in cents** — 5000 means $50.00. So are [fee] and [feeAmount]; the data layer divides
- *   them by 100 — see `MachineConverter`.
- * @property expectedValue the exception to that rule: already served in whole currency units, so it is
- *   carried through untouched.
+ * @property price **in cents** — 5000 means $50.00. So are [fee], [feeAmount], [expectedValue] and
+ *   [tierRanges]; the data layer divides them by 100 — see `MachineConverter`.
  */
 @JsonClass(generateAdapter = true)
 data class MachineDTO(
@@ -92,9 +90,9 @@ data class MachineDTO(
         @JsonClass(generateAdapter = true)
         data class MachineTierRangeDTO(
             @Json(name = "start")
-            val start: Int,
+            val start: BigDecimal,
             @Json(name = "end")
-            val end: Int,
+            val end: BigDecimal,
         )
     }
 }
