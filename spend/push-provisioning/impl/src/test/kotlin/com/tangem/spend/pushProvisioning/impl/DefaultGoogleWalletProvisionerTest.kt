@@ -604,6 +604,87 @@ internal class DefaultGoogleWalletProvisionerTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class StableHardwareIdStatusCheck {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN card not in wallet WHEN stable hardware id checked THEN unsupported if the SDK would not get it`(
+            model: HardwareIdStatusCase,
+        ) = runTest {
+            // Arrange
+            givenWalletTokens()
+            model.arrange()
+            val provisioner = createProvisioner()
+
+            // Act
+            val actual = provisioner.getCardStatus(LAST_FOUR_DIGITS)
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            HardwareIdStatusCase(
+                description = "id returned",
+                expected = CardStatus.NotAdded,
+            ) { givenStableHardwareId(error = null) },
+            HardwareIdStatusCase(
+                description = "app not verified",
+                expected = CardStatus.Unsupported,
+            ) {
+                givenStableHardwareId(error = TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE)
+                givenActiveWallet(error = TapAndPayStatusCodes.TAP_AND_PAY_NO_ACTIVE_WALLET)
+            },
+            HardwareIdStatusCase(
+                description = "id refused, active wallet",
+                expected = CardStatus.Unsupported,
+            ) {
+                givenStableHardwareId(error = TapAndPayStatusCodes.TAP_AND_PAY_ATTESTATION_ERROR)
+                givenActiveWallet(error = null)
+            },
+            HardwareIdStatusCase(
+                description = "id refused, wallet id refused too",
+                expected = CardStatus.Unsupported,
+            ) {
+                givenStableHardwareId(error = TapAndPayStatusCodes.TAP_AND_PAY_ATTESTATION_ERROR)
+                givenActiveWallet(error = TapAndPayStatusCodes.TAP_AND_PAY_ATTESTATION_ERROR)
+            },
+            HardwareIdStatusCase(
+                description = "id refused before the SDK creates the wallet",
+                expected = CardStatus.NotAdded,
+            ) {
+                givenStableHardwareId(error = TapAndPayStatusCodes.TAP_AND_PAY_ATTESTATION_ERROR)
+                givenActiveWallet(error = TapAndPayStatusCodes.TAP_AND_PAY_NO_ACTIVE_WALLET)
+            },
+            HardwareIdStatusCase(
+                description = "id check never answers",
+                expected = CardStatus.NotAdded,
+            ) { justRun { sdk.checkStableHardwareId(any()) } },
+        )
+
+        @ParameterizedTest
+        @MethodSource("provideStatesWithoutPush")
+        fun `GIVEN card needs no push WHEN getCardStatus THEN stable hardware id not checked`(tokenState: Int) =
+            runTest {
+                // Arrange
+                givenWalletTokens(tokenState)
+                val provisioner = createProvisioner()
+
+                // Act
+                provisioner.getCardStatus(LAST_FOUR_DIGITS)
+
+                // Assert
+                verify(exactly = 0) { sdk.checkStableHardwareId(any()) }
+            }
+
+        private fun provideStatesWithoutPush() = listOf(
+            TapAndPay.TOKEN_STATE_ACTIVE,
+            TapAndPay.TOKEN_STATE_NEEDS_IDENTITY_VERIFICATION,
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class StableHardwareIdCheck {
 
         @BeforeEach
@@ -1084,6 +1165,14 @@ internal class DefaultGoogleWalletProvisionerTest {
     }
 
     internal class HardwareIdCase(private val description: String, val arrange: () -> Unit) {
+        override fun toString(): String = description
+    }
+
+    internal class HardwareIdStatusCase(
+        private val description: String,
+        val expected: CardStatus,
+        val arrange: () -> Unit,
+    ) {
         override fun toString(): String = description
     }
 
