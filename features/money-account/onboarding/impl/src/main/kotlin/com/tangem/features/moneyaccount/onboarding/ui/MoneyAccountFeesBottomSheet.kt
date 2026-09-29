@@ -24,7 +24,8 @@ import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.rememberLastNonNull
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -33,6 +34,7 @@ import com.tangem.features.moneyaccount.onboarding.impl.R
 import com.tangem.features.moneyaccount.onboarding.ui.MoneyAccountOnboardingUM.FeeRowUM
 import com.tangem.features.moneyaccount.onboarding.ui.MoneyAccountOnboardingUM.FeesUM
 import kotlinx.collections.immutable.persistentListOf
+import com.tangem.core.ui.R as CoreUiR
 
 private const val FEES_PLACEHOLDER_ROWS = 2
 
@@ -47,7 +49,7 @@ internal fun MoneyAccountFeesBottomSheet(fees: FeesUM?, onDismiss: () -> Unit) {
         ),
         title = {
             TangemModal.TopNavigation(
-                title = stringReference("Fees"),
+                title = resourceReference(CoreUiR.string.money_account_onboarding_fees_title),
                 onClose = onDismiss,
             )
         },
@@ -89,7 +91,7 @@ private fun FeesContent(fees: FeesUM, modifier: Modifier = Modifier) {
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
                 .padding(top = 8.dp, bottom = 32.dp),
-            text = "SWIFT transfers aren't supported. If you send one, it will be returned",
+            text = stringResourceSafe(CoreUiR.string.money_account_onboarding_fees_notice),
             style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
@@ -107,9 +109,24 @@ private fun FeesTable(rows: @Composable ColumnScope.() -> Unit) {
     ) {
         FeesTableRow(
             modifier = Modifier.padding(vertical = 12.dp),
-            provider = { CaptionText(text = "Provider", textAlign = TextAlign.Start) },
-            receive = { CaptionText(text = "Receive", textAlign = TextAlign.End) },
-            send = { CaptionText(text = "Send", textAlign = TextAlign.End) },
+            provider = {
+                CaptionText(
+                    text = stringResourceSafe(CoreUiR.string.money_account_onboarding_fees_provider),
+                    textAlign = TextAlign.Start,
+                )
+            },
+            receive = {
+                CaptionText(
+                    text = stringResourceSafe(CoreUiR.string.common_receive),
+                    textAlign = TextAlign.End,
+                )
+            },
+            send = {
+                CaptionText(
+                    text = stringResourceSafe(CoreUiR.string.common_send),
+                    textAlign = TextAlign.End,
+                )
+            },
         )
         HorizontalDivider(
             thickness = 1.dp,
@@ -217,7 +234,7 @@ private fun FeesError(onRetryClick: () -> Unit) {
             onClick = onRetryClick,
         )
         CaptionText(
-            text = "Failed to load fees information.\nTap to reload",
+            text = stringResourceSafe(CoreUiR.string.money_account_onboarding_fees_error),
             textAlign = TextAlign.Center,
         )
     }
