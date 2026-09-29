@@ -22,7 +22,7 @@ internal class DefaultWalletConnectStoreTest {
     @Test
     fun `GIVEN recovery enabled WHEN pendingApproval read THEN expired approvals are hidden but kept`() = runTest {
         // Arrange
-        every { featureToggles.isInterruptedApprovalRecoveryEnabled } returns true
+        every { featureToggles.isOnDemandInitEnabled } returns true
         val store = createStore(setOf(actual, expired))
 
         // Act
@@ -36,7 +36,7 @@ internal class DefaultWalletConnectStoreTest {
     @Test
     fun `GIVEN recovery disabled WHEN pendingApproval read THEN expired approvals are removed`() = runTest {
         // Arrange
-        every { featureToggles.isInterruptedApprovalRecoveryEnabled } returns false
+        every { featureToggles.isOnDemandInitEnabled } returns false
         val store = createStore(setOf(actual, expired))
 
         // Act
