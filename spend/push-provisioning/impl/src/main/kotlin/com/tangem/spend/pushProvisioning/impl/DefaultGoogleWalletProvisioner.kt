@@ -155,7 +155,7 @@ internal class DefaultGoogleWalletProvisioner @Inject constructor(
         onThrow = Throwable::describe,
     ) { complete ->
         sdk.getEnvironment { environment ->
-            complete(environment.fold(ifLeft = { "unknown, code $it" }, ifRight = { it }))
+            complete(environment.fold(ifLeft = { "unknown, ${it.describe()}" }, ifRight = { it }))
         }
     }
 
@@ -175,37 +175,37 @@ internal class DefaultGoogleWalletProvisioner @Inject constructor(
     private suspend fun canPushCard(lastFourDigits: String): Boolean {
         if (!hasEligibleTokenizationTarget(lastFourDigits)) return false
 
-        val hardwareIdError = findStableHardwareIdError() ?: return true
-        logger.e("$STABLE_HARDWARE_ID_UNAVAILABLE_REASON: $hardwareIdError, card treated as unsupported")
+        val failure = findStableHardwareIdFailure() ?: return true
+        logger.e("$STABLE_HARDWARE_ID_UNAVAILABLE_REASON: ${failure.describe()}, card treated as unsupported")
         return false
     }
 
     private suspend fun checkStableHardwareId(): AddResult.Failed? {
-        val errorCode = findStableHardwareIdError() ?: return null
+        val failure = findStableHardwareIdFailure() ?: return null
 
         return AddResult.Failed(
-            reason = if (errorCode == TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE) {
+            reason = if (failure.code == TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE) {
                 FailureReason.UNSUPPORTED
             } else {
                 FailureReason.GOOGLE_WALLET_ERROR
             },
-            description = "$STABLE_HARDWARE_ID_UNAVAILABLE_REASON: $errorCode",
-            walletErrorCode = errorCode,
+            description = "$STABLE_HARDWARE_ID_UNAVAILABLE_REASON: ${failure.describe()}",
+            walletErrorCode = failure.code,
         )
     }
 
-    private suspend fun findStableHardwareIdError(): Int? {
-        val errorCode = awaitWalletCheck(sdk::checkStableHardwareId) ?: return null
-        val isAppUnverified = errorCode == TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE
-        return if (isAppUnverified || !isWalletMissing()) errorCode else null
+    private suspend fun findStableHardwareIdFailure(): TapAndPayFailure? {
+        val failure = awaitWalletCheck(sdk::checkStableHardwareId) ?: return null
+        val isAppUnverified = failure.code == TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE
+        return if (isAppUnverified || !isWalletMissing()) failure else null
     }
 
     private suspend fun isWalletMissing(): Boolean =
-        awaitWalletCheck(sdk::checkActiveWallet) == TapAndPayStatusCodes.TAP_AND_PAY_NO_ACTIVE_WALLET
+        awaitWalletCheck(sdk::checkActiveWallet)?.code == TapAndPayStatusCodes.TAP_AND_PAY_NO_ACTIVE_WALLET
 
-    private suspend fun awaitWalletCheck(check: (onComplete: (errorCode: Int?) -> Unit) -> Unit): Int? =
-        awaitSdk<Option<Int>>(onTimeout = { None }, onThrow = { None }) { complete ->
-            check { errorCode -> complete(errorCode.toOption()) }
+    private suspend fun awaitWalletCheck(check: (onComplete: (TapAndPayFailure?) -> Unit) -> Unit): TapAndPayFailure? =
+        awaitSdk<Option<TapAndPayFailure>>(onTimeout = { None }, onThrow = { None }) { complete ->
+            check { failure -> complete(failure.toOption()) }
         }.getOrNull()
 
     private suspend fun resumeAdding(lastFourDigits: String, displayName: String, activity: Activity): AddResult {
