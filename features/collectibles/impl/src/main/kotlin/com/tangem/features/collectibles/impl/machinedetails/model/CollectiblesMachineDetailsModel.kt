@@ -16,6 +16,7 @@ import com.tangem.domain.collectibles.models.CollectibleGachaMachineNftsListConf
 import com.tangem.domain.collectibles.usecase.GetCollectibleGachaMachineNftsBatchFlowUseCase
 import com.tangem.domain.collectibles.usecase.GetCollectibleGachaMachineUseCase
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.collectibles.impl.CollectiblesRoute
 import com.tangem.features.collectibles.impl.R
 import com.tangem.features.collectibles.impl.machinedetails.CollectiblesMachineDetailsBottomSheetConfig
 import com.tangem.features.collectibles.impl.machinedetails.CollectiblesMachineDetailsComponent
@@ -116,7 +117,7 @@ internal class CollectiblesMachineDetailsModel @Inject constructor(
                     ifLeft = {
                         uiState.value = CollectiblesMachineDetailsUM.Error(
                             onBackClick = ::onBackClick,
-                            message = resourceReference(R.string.collectibles_main_search_load_error),
+                            message = resourceReference(R.string.collectibles_machine_load_error),
                             onReloadClick = ::loadMachine,
                         )
                     },
@@ -192,7 +193,8 @@ internal class CollectiblesMachineDetailsModel @Inject constructor(
     }
 
     private fun onBuyClick() {
-        // TODO([REDACTED_TASK_KEY])
+        val isTurboEnabled = (uiState.value as? CollectiblesMachineDetailsUM.Content)?.footer?.isTurboEnabled == true
+        router.push(CollectiblesRoute.ConfirmOrder(externalId = params.externalId, isTurboEnabled = isTurboEnabled))
     }
 
     private fun onPoweredByClick() {
