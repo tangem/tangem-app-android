@@ -10,6 +10,7 @@ internal class SocialLoginConsentPrompt(
     private val description: TextReference,
     private val acknowledgement: TextReference,
     private val onStateChanged: (SocialLoginConsentUM?) -> Unit,
+    private val onEvent: (Event) -> Unit = {},
 ) {
 
     private val answer = CompletableDeferred<SocialLoginConsent?>()
@@ -18,6 +19,7 @@ internal class SocialLoginConsentPrompt(
 
     suspend fun await(): SocialLoginConsent? {
         publish()
+        onEvent(Event.Shown)
 
         return try {
             answer.await()
@@ -57,14 +59,24 @@ internal class SocialLoginConsentPrompt(
     private fun onConfirmClick() {
         if (!choice.isAcknowledged) {
             update { it.copy(isAcknowledgementMissing = true) }
+            onEvent(Event.AcknowledgementMissing)
             return
         }
 
-        answer.complete(SocialLoginConsent(isEmailSharingAllowed = choice.isEmailSharingAllowed))
+        val isEmailSharingAllowed = choice.isEmailSharingAllowed
+        if (answer.complete(SocialLoginConsent(isEmailSharingAllowed = isEmailSharingAllowed))) {
+            onEvent(Event.Confirmed(isEmailSharingAllowed = isEmailSharingAllowed))
+        }
     }
 
     private fun onCloseClick() {
         answer.complete(null)
+    }
+
+    sealed interface Event {
+        data object Shown : Event
+        data object AcknowledgementMissing : Event
+        data class Confirmed(val isEmailSharingAllowed: Boolean) : Event
     }
 
     private data class Choice(
