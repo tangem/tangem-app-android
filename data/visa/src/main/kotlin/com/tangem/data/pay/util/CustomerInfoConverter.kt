@@ -131,6 +131,7 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
         when (this) {
             CustomerMeResponse.ProductInstance.SpecificationDataType.ACCOUNT -> SpecificationDataType.ACCOUNT
             CustomerMeResponse.ProductInstance.SpecificationDataType.CARD -> SpecificationDataType.CARD
+            CustomerMeResponse.ProductInstance.SpecificationDataType.UNKNOWN -> SpecificationDataType.UNKNOWN
         }
 
     private fun String?.toDateTimeOrNull(): DateTime? = this?.let { runCatching { DateTime.parse(it) }.getOrNull() }

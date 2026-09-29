@@ -79,6 +79,7 @@ dependencies {
     implementation(deps.okio)
     api(deps.retrofit)
     api(deps.retrofit.moshi)
+    implementation(deps.retrofit.kotlinxSerialization)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
     // endregion
 
