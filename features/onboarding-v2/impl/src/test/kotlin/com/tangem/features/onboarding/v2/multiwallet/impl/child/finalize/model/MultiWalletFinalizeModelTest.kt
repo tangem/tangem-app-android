@@ -27,7 +27,9 @@ import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.domain.wallets.usecase.SyncWalletWithRemoteUseCase
 import com.tangem.domain.wallets.usecase.UpdateWalletUseCase
-import com.tangem.domain.sociallogin.usecase.DeleteSocialRecoveryUseCase
+import com.tangem.domain.sociallogin.usecase.DeleteSocialBackupAfterUpgradeUseCase
+import io.mockk.verify
+import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.features.onboarding.v2.common.ui.CantLeaveBackupDialog
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
@@ -75,7 +77,7 @@ internal class MultiWalletFinalizeModelTest {
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
     private val walletCardsBackupReporter: WalletCardsBackupReporter = mockk(relaxUnitFun = true)
     private val derivationsHelper: DerivationsHelper = mockk(relaxUnitFun = true)
-    private val deleteSocialRecoveryUseCase: DeleteSocialRecoveryUseCase = mockk(relaxed = true)
+    private val deleteSocialBackupAfterUpgradeUseCase: DeleteSocialBackupAfterUpgradeUseCase = mockk(relaxed = true)
     private val paramsContainer: ParamsContainer = mockk()
 
     private val coldUserWallet: UserWallet.Cold = mockk(relaxed = true) {
@@ -643,7 +645,7 @@ internal class MultiWalletFinalizeModelTest {
         }
 
     @Test
-    fun `GIVEN hot wallet upgrade WHEN backup finishes THEN social recovery is dropped after the upgrade`() =
+    fun `GIVEN hot wallet upgrade WHEN backup finishes THEN social recovery is cleared after the upgrade`() =
         runTest {
             // Arrange
             arrangeHotWalletUpgrade()
@@ -655,9 +657,25 @@ internal class MultiWalletFinalizeModelTest {
             // Assert — FR-16, and only once the wallet is recorded as upgraded
             coVerifyOrder {
                 walletsRepository.upgradeWallet(UPGRADED_WALLET_ID)
-                deleteSocialRecoveryUseCase(UPGRADED_WALLET_ID)
+                deleteSocialBackupAfterUpgradeUseCase(UPGRADED_WALLET_ID)
             }
         }
+
+    @Test
+    fun `GIVEN the social backup file deleted WHEN backup finishes THEN the deletion is reported`() = runTest {
+        // Arrange
+        arrangeHotWalletUpgrade()
+        coEvery { walletsRepository.upgradeWallet(UPGRADED_WALLET_ID) } just Runs
+        coEvery { deleteSocialBackupAfterUpgradeUseCase(UPGRADED_WALLET_ID) } returns true.right()
+
+        // Act
+        finishBackupAsUpgrade()
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(ofType<WalletSettingsAnalyticEvents.SocialRecoveryDeleted>())
+        }
+    }
 
     @Test
     fun `GIVEN the upgrade fails WHEN backup finishes THEN social recovery is kept`() = runTest {
@@ -669,7 +687,7 @@ internal class MultiWalletFinalizeModelTest {
         finishBackupAsUpgrade()
 
         // Assert
-        coVerify(exactly = 0) { deleteSocialRecoveryUseCase(any()) }
+        coVerify(exactly = 0) { deleteSocialBackupAfterUpgradeUseCase(any()) }
     }
 
     private fun arrangeHotWalletUpgrade() {
@@ -735,7 +753,7 @@ internal class MultiWalletFinalizeModelTest {
             analyticsEventHandler = analyticsEventHandler,
             walletCardsBackupReporter = walletCardsBackupReporter,
             derivationsHelper = derivationsHelper,
-            deleteSocialRecoveryUseCase = deleteSocialRecoveryUseCase,
+            deleteSocialBackupAfterUpgradeUseCase = deleteSocialBackupAfterUpgradeUseCase,
         )
     }
 
