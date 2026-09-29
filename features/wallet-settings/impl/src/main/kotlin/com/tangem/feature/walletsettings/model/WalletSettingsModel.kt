@@ -54,10 +54,13 @@ import com.tangem.feature.walletsettings.utils.AccountListSortingSaver
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
 import com.tangem.feature.walletsettings.utils.WalletCardItemDelegate
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
+import com.tangem.features.hotwallet.HardwareUpgradeLauncher
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
@@ -100,11 +103,14 @@ internal class WalletSettingsModel @Inject constructor(
     private val getCloudBackupStatusUseCase: GetCloudBackupStatusUseCase,
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
     private val isSocialBackupCompletedUseCase: IsSocialBackupCompletedUseCase,
+    private val hardwareUpgradeLauncher: HardwareUpgradeLauncher,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
     val dialogNavigation = SlotNavigation<DialogConfig>()
     val bottomSheetNavigation: SlotNavigation<WalletSettingsBSConfig> = SlotNavigation()
+
+    private val upgradeJobHolder = JobHolder()
 
     private val isJointAccountEnabled: Boolean
         get() = jointAccountFeatureToggles.isJointAccountEnabled
@@ -391,7 +397,17 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onUpgradeWalletClick() {
-        router.push(AppRoute.WalletHardwareBackup(userWalletId = params.userWalletId))
+        modelScope.launch {
+            hardwareUpgradeLauncher.launch(
+                userWalletId = params.userWalletId,
+                source = AppRoute.HardwareUpgradeStories.Source.WALLET_SETTINGS,
+            )
+        }.saveIn(upgradeJobHolder)
+    }
+
+    /** Drops a pending upgrade launch, so it doesn't navigate after the user has left the screen. */
+    fun onPause() {
+        upgradeJobHolder.cancel()
     }
 
     private fun onBackupClick() {
