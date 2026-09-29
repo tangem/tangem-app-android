@@ -1,39 +1,39 @@
 package com.tangem.data.visa.config
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 internal data class VisaConfig(
-    @Json(name = "testnet")
+    @SerialName("testnet")
     val testnet: Addresses,
-    @Json(name = "mainnet")
+    @SerialName("mainnet")
     val mainnet: Addresses,
-    @Json(name = "txHistoryAPIAdditionalHeaders")
+    @SerialName("txHistoryAPIAdditionalHeaders")
     val header: Header,
-    @Json(name = "rsaPublicKey")
+    @SerialName("rsaPublicKey")
     val rsaPublicKey: RsaPublicKey,
-    @Json(name = "rainRSAPublicKey")
+    @SerialName("rainRSAPublicKey")
     val rainRSAPublicKey: RsaPublicKey,
 ) {
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Addresses(
-        @Json(name = "paymentAccountRegistry")
+        @SerialName("paymentAccountRegistry")
         val paymentAccountRegistry: String,
-        @Json(name = "bridgeProcessor")
+        @SerialName("bridgeProcessor")
         val bridgeProcessor: String,
     )
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Header(
-        @Json(name = "x-asn")
+        @SerialName("x-asn")
         val xAsn: String,
     )
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class RsaPublicKey(
-        @Json(name = "prod") val prod: String,
-        @Json(name = "dev") val dev: String,
+        @SerialName("prod") val prod: String,
+        @SerialName("dev") val dev: String,
     )
 }

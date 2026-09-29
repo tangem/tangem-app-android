@@ -20,12 +20,10 @@ import com.tangem.spend.datasource.pay.models.request.CardDetailsRequest
 import com.tangem.spend.datasource.pay.models.request.FreezeUnfreezeCardRequest
 import com.tangem.spend.datasource.pay.models.request.UpdateCardRequest
 import com.tangem.spend.datasource.pay.models.request.SetPinRequest
-import com.tangem.spend.datasource.pay.models.response.FreezeUnfreezeCardResponse
 import com.tangem.spend.datasource.pay.store.TangemPayCardFrozenStateStore
 import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.SetPinResult
@@ -228,12 +226,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
 
         TangemPayOrderInfo(
             orderId = result.orderId,
-            orderStatus = when (result.status) {
-                FreezeUnfreezeCardResponse.Status.NEW -> OrderStatus.NEW
-                FreezeUnfreezeCardResponse.Status.PROCESSING -> OrderStatus.PROCESSING
-                FreezeUnfreezeCardResponse.Status.COMPLETED -> OrderStatus.COMPLETED
-                FreezeUnfreezeCardResponse.Status.CANCELED -> OrderStatus.CANCELED
-            },
+            orderStatus = OrderStatusConverter.convert(result.status),
         )
     }
 
@@ -249,12 +242,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
 
         TangemPayOrderInfo(
             orderId = result.orderId,
-            orderStatus = when (result.status) {
-                FreezeUnfreezeCardResponse.Status.NEW -> OrderStatus.NEW
-                FreezeUnfreezeCardResponse.Status.PROCESSING -> OrderStatus.PROCESSING
-                FreezeUnfreezeCardResponse.Status.COMPLETED -> OrderStatus.COMPLETED
-                FreezeUnfreezeCardResponse.Status.CANCELED -> OrderStatus.CANCELED
-            },
+            orderStatus = OrderStatusConverter.convert(result.status),
         )
     }
 
