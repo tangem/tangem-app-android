@@ -184,6 +184,20 @@ internal object TangemPayMessagesFactory {
         )
     }
 
+    fun createAddToGoogleWalletRateLimitError(): DialogMessage {
+        return DialogMessage(
+            title = resourceReference(R.string.tangempay_card_details_add_to_wallet_error_title),
+            message = resourceReference(R.string.tangempay_card_details_add_to_wallet_error_rate_limit),
+        )
+    }
+
+    fun createAddToGoogleWalletUnavailableError(): DialogMessage {
+        return DialogMessage(
+            title = resourceReference(R.string.tangempay_card_details_add_to_wallet_error_title),
+            message = resourceReference(R.string.tangempay_card_details_add_to_wallet_error_wallet_unavailable),
+        )
+    }
+
     fun createVaPreparingMessage(): BottomSheetMessage {
         return bottomSheetMessage {
             infoBlock {
