@@ -85,12 +85,7 @@ private fun LazyListScope.loadingItems() {
 private fun LazyListScope.recentsItems(recents: RecentsUM) {
     when (recents) {
         RecentsUM.Loading -> recentsShimmerItems(keyPrefix = "recents_shimmer")
-        is RecentsUM.Empty -> {
-            item(key = "recents_empty") { RecentsEmptyCard() }
-            recents.onSeeAllClick?.let { onSeeAllClick ->
-                item(key = "recents_see_all") { SeeAllCard(onClick = onSeeAllClick) }
-            }
-        }
+        RecentsUM.Empty -> item(key = "recents_empty") { RecentsEmptyCard() }
         is RecentsUM.Error -> item(key = "recents_error") { UnableToLoadCard(onRetryClick = recents.onRetryClick) }
         is RecentsUM.Content -> {
             items(items = recents.recipients, key = { it.id }) { recipient ->
@@ -99,7 +94,9 @@ private fun LazyListScope.recentsItems(recents: RecentsUM) {
                     onClick = { recents.onRecipientClick(recipient.id) },
                 )
             }
-            item(key = "recents_see_all") { SeeAllCard(onClick = recents.onSeeAllClick) }
+            recents.onSeeAllClick?.let { onSeeAllClick ->
+                item(key = "recents_see_all") { SeeAllCard(onClick = onSeeAllClick) }
+            }
         }
     }
 }
