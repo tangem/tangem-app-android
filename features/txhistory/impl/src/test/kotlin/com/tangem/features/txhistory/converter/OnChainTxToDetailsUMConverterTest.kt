@@ -287,6 +287,71 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(details.header.menu).isEmpty()
     }
 
+    @Test
+    fun `GIVEN GaslessFee WHEN convert THEN neither counterparty card nor Copy address row`() {
+        // Arrange — the fee collector is not a recipient the user chose, so the card names nobody
+        val tx = txInfo(
+            type = TransactionType.GaslessFee,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val details = converter.convert(tx)
+
+        // Assert
+        assertThat(details.counterparty).isNull()
+        assertThat(details.header.menu).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN NetworkFee WHEN convert THEN counterparty names the asset the fee was paid for`() {
+        // Arrange
+        val tx = txInfo(
+            type = TransactionType.NetworkFee(
+                amount = SdkAmount(
+                    currencySymbol = "USDT",
+                    value = BigDecimal("5"),
+                    decimals = 6,
+                    type = SdkAmountType.Token(contractAddress = USER_ADDRESS),
+                ),
+                address = USER_ADDRESS,
+            ),
+            amount = BigDecimal.ZERO,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val details = converter.convert(tx)
+
+        // Assert
+        assertThat(details.counterparty?.label).isEqualTo(resourceReference(R.string.common_send))
+        assertThat(details.counterparty?.avatar).isEqualTo(
+            TxHistoryDetailsUM.CounterpartyAvatar.Glyph(icon = TxIcon.Vector(Icons.ic_arrow_up_20)),
+        )
+        assertThat(details.counterparty?.title).isEqualTo(stringReference("5.00\u00A0USDT"))
+        assertThat(details.header.menu).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN NetworkFee for an untracked token WHEN convert THEN no counterparty card`() {
+        // Arrange — the asset cannot be named, and the recipient must not stand in for it
+        val tx = txInfo(
+            type = TransactionType.NetworkFee(amount = null, address = USER_ADDRESS),
+            amount = BigDecimal.ZERO,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val details = converter.convert(tx)
+
+        // Assert
+        assertThat(details.counterparty).isNull()
+        assertThat(details.header.menu).isEmpty()
+    }
+
     // endregion
 
     // region Amount block

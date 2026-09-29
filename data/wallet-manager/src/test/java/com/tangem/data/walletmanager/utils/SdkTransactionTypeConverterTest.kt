@@ -306,6 +306,228 @@ internal class SdkTransactionTypeConverterTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class TronTokenTransfer {
+
+        private val tronUsdt = currencyFactory.createToken(
+            blockchain = Blockchain.Tron,
+            id = "tether",
+            contractAddress = TRON_USDT_CONTRACT,
+            symbol = "USDT",
+            decimals = 6,
+        )
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun convert(model: TokenTransferModel) {
+            // Arrange
+            val converter = createConverter(currency = model.currency, networkTokens = model.networkTokens)
+
+            // Act
+            val actual = converter.convert(
+                item(
+                    destination = singleContract(TRON_USDT_CONTRACT),
+                    methodId = model.methodId,
+                    callData = model.callData,
+                ),
+            )
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels(): List<TokenTransferModel> {
+            val coin = currencyFactory.createCoin(Blockchain.Tron)
+            return listOf(
+                // The TRC-20 recipient is decoded back into the base58 form the rest of the app speaks
+                TokenTransferModel(
+                    currency = coin,
+                    networkTokens = setOf(tronUsdt),
+                    callData = TRON_TRANSFER_CALL_DATA,
+                    expected = TxInfo.TransactionType.NetworkFee(
+                        amount = SdkAmount(
+                            currencySymbol = "USDT",
+                            value = BigDecimal("5.000000"),
+                            decimals = 6,
+                            type = SdkAmountType.Token(contractAddress = TRON_USDT_CONTRACT, id = "tether"),
+                        ),
+                        address = TRON_RECIPIENT,
+                    ),
+                ),
+                TokenTransferModel(
+                    currency = coin,
+                    networkTokens = emptySet(),
+                    callData = TRON_TRANSFER_CALL_DATA,
+                    expected = TxInfo.TransactionType.NetworkFee(amount = null, address = TRON_RECIPIENT),
+                ),
+                // Token history: the very same call is the transfer itself
+                TokenTransferModel(
+                    currency = tronUsdt,
+                    networkTokens = setOf(tronUsdt),
+                    callData = TRON_TRANSFER_CALL_DATA,
+                    expected = TxInfo.TransactionType.Transfer,
+                ),
+                // A wallet reusing the EVM encoding leaves the prefix byte zero and means the same recipient
+                TokenTransferModel(
+                    currency = coin,
+                    networkTokens = setOf(tronUsdt),
+                    callData = TRANSFER_METHOD_ID + TRON_SPENDER_BODY.padStart(64, '0') +
+                        FIVE_USDT_RAW_HEX.padStart(64, '0'),
+                    expected = TxInfo.TransactionType.NetworkFee(
+                        amount = SdkAmount(
+                            currencySymbol = "USDT",
+                            value = BigDecimal("5.000000"),
+                            decimals = 6,
+                            type = SdkAmountType.Token(contractAddress = TRON_USDT_CONTRACT, id = "tether"),
+                        ),
+                        address = TRON_SPENDER,
+                    ),
+                ),
+            )
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class TronApprove {
+
+        private val tronUsdt = currencyFactory.createToken(
+            blockchain = Blockchain.Tron,
+            id = "tether",
+            contractAddress = TRON_USDT_CONTRACT,
+            symbol = "USDT",
+            decimals = 6,
+        )
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun convert(model: TokenTransferModel) {
+            // Arrange
+            val converter = createConverter(currency = model.currency, networkTokens = model.networkTokens)
+
+            // Act
+            val actual = converter.convert(
+                item(
+                    destination = singleContract(TRON_USDT_CONTRACT),
+                    methodId = model.methodId,
+                    callData = model.callData,
+                ),
+            )
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels(): List<TokenTransferModel> {
+            val coin = currencyFactory.createCoin(Blockchain.Tron)
+            val approved = SdkAmount(
+                currencySymbol = "USDT",
+                value = BigDecimal("5.000000"),
+                decimals = 6,
+                type = SdkAmountType.Token(contractAddress = TRON_USDT_CONTRACT, id = "tether"),
+            )
+            return listOf(
+                // The spender is named in base58, the only form a Tron address has
+                TokenTransferModel(
+                    currency = coin,
+                    networkTokens = setOf(tronUsdt),
+                    methodId = APPROVE_METHOD_ID,
+                    callData = tronApproveCallData(spender = "41" + TRON_SPENDER_BODY),
+                    expected = TxInfo.TransactionType.Approve(amount = approved, address = TRON_SPENDER),
+                ),
+                // A wallet reusing the EVM encoding leaves the prefix byte zero and means the same spender
+                TokenTransferModel(
+                    currency = coin,
+                    networkTokens = setOf(tronUsdt),
+                    methodId = APPROVE_METHOD_ID,
+                    callData = tronApproveCallData(spender = TRON_SPENDER_BODY),
+                    expected = TxInfo.TransactionType.Approve(amount = approved, address = TRON_SPENDER),
+                ),
+            )
+        }
+
+        private fun tronApproveCallData(spender: String): String =
+            APPROVE_METHOD_ID +
+                spender.padStart(length = 64, padChar = '0') +
+                FIVE_USDT_RAW_HEX.padStart(length = 64, padChar = '0')
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class PlainTransfer {
+
+        private val tronUsdt = currencyFactory.createToken(
+            blockchain = Blockchain.Tron,
+            id = "tether",
+            contractAddress = TRON_USDT_CONTRACT,
+            symbol = "USDT",
+            decimals = 6,
+        )
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun convert(model: PlainTransferModel) {
+            // Arrange
+            val converter = createConverter(
+                currency = model.currency,
+                gaslessFeeAddresses = setOf(TRON_FEE_RECIPIENT),
+            )
+
+            // Act
+            val actual = converter.convert(
+                transferItem(destination = model.destination, isOutgoing = model.isOutgoing),
+            )
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            // The leg that paid for the gasless transfer, told apart by its recipient alone
+            PlainTransferModel(
+                currency = tronUsdt,
+                destination = singleUser(TRON_FEE_RECIPIENT),
+                expected = TxInfo.TransactionType.GaslessFee,
+            ),
+            // The leg that reached the recipient the user typed
+            PlainTransferModel(
+                currency = tronUsdt,
+                destination = singleUser(TRON_RECIPIENT),
+                expected = TxInfo.TransactionType.Transfer,
+            ),
+            // Tokens arriving from the fee collector are not a fee the user paid
+            PlainTransferModel(
+                currency = tronUsdt,
+                destination = singleUser(TRON_FEE_RECIPIENT),
+                isOutgoing = false,
+                expected = TxInfo.TransactionType.Transfer,
+            ),
+            PlainTransferModel(
+                currency = tronUsdt,
+                destination = TransactionHistoryItem.DestinationType.Multiple(
+                    addressTypes = listOf(
+                        TransactionHistoryItem.AddressType.User(TRON_RECIPIENT),
+                        TransactionHistoryItem.AddressType.User(TRON_FEE_RECIPIENT),
+                    ),
+                ),
+                expected = TxInfo.TransactionType.Transfer,
+            ),
+            // The fee is paid in the token, so a TRX transfer to the same address is an ordinary send
+            PlainTransferModel(
+                currency = currencyFactory.createCoin(Blockchain.Tron),
+                destination = singleUser(TRON_FEE_RECIPIENT),
+                expected = TxInfo.TransactionType.Transfer,
+            ),
+            // Off Tron the address alone decides nothing - the EVM fee leg is identified by its method
+            PlainTransferModel(
+                currency = currencyFactory.createToken(Blockchain.Ethereum, contractAddress = USDT_CONTRACT),
+                destination = singleUser(TRON_FEE_RECIPIENT),
+                expected = TxInfo.TransactionType.Transfer,
+            ),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class YieldSend {
 
         @ParameterizedTest
@@ -361,6 +583,7 @@ internal class SdkTransactionTypeConverterTest {
     private fun createConverter(
         currency: CryptoCurrency,
         networkTokens: Set<CryptoCurrency.Token> = emptySet(),
+        gaslessFeeAddresses: Set<String> = setOf(FEE_RECIPIENT),
     ) = SdkTransactionTypeConverter(
         smartContractMethods = mapOf(
             GASLESS_METHOD_ID to SmartContractMethod(info = null, source = null, name = "gaslessTransaction"),
@@ -368,7 +591,7 @@ internal class SdkTransactionTypeConverterTest {
             TRANSFER_METHOD_ID to SmartContractMethod(info = null, source = null, name = "transfer"),
         ),
         yieldSupplyAddresses = emptySet(),
-        gaslessFeeAddresses = setOf(FEE_RECIPIENT),
+        gaslessFeeAddresses = gaslessFeeAddresses,
         currency = currency,
         networkTokens = networkTokens,
         getCachedTokenInfoUseCase = mockk(relaxed = true),
@@ -391,6 +614,21 @@ internal class SdkTransactionTypeConverterTest {
         fee = mockk(),
     )
 
+    private fun transferItem(
+        destination: TransactionHistoryItem.DestinationType,
+        isOutgoing: Boolean,
+    ) = TransactionHistoryItem(
+        txHash = "0xhash",
+        timestamp = 0L,
+        isOutgoing = isOutgoing,
+        destinationType = destination,
+        sourceType = TransactionHistoryItem.SourceType.Single(SENDER),
+        status = TransactionHistoryItem.TransactionStatus.Confirmed,
+        type = TransactionHistoryItem.TransactionType.Transfer,
+        amount = Amount(currencySymbol = "USDT", value = BigDecimal.ONE, decimals = 6),
+        fee = mockk(),
+    )
+
     private fun singleUser(address: String) = TransactionHistoryItem.DestinationType.Single(
         addressType = TransactionHistoryItem.AddressType.User(address),
     )
@@ -403,6 +641,13 @@ internal class SdkTransactionTypeConverterTest {
         val currency: CryptoCurrency,
         val amount: BigDecimal,
         val expected: TxInfo.TransactionType,
+    )
+
+    internal data class PlainTransferModel(
+        val currency: CryptoCurrency,
+        val destination: TransactionHistoryItem.DestinationType,
+        val expected: TxInfo.TransactionType,
+        val isOutgoing: Boolean = true,
     )
 
     internal data class GaslessModel(
@@ -431,6 +676,13 @@ internal class SdkTransactionTypeConverterTest {
         const val GASLESS_METHOD_ID = "0x6234d42b"
         const val APPROVE_METHOD_ID = "0x095ea7b3"
         const val TRANSFER_METHOD_ID = "0xa9059cbb"
+        const val TRON_USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
+        const val TRON_RECIPIENT = "TSrqiA137hwRbUQwARCCzYCEZVMfFyHap3"
+        const val TRON_FEE_RECIPIENT = "TSWsmaEDgWaE2VsP9tCBGh5GbBRbrdHSuZ"
+        const val TRON_SPENDER = "TG5wUqBkukAho2E38ca3EZG4zvYp3hUivZ"
+        const val TRON_SPENDER_BODY = "4316b5c3f99fd4818918abced9d7df3d31396ae3"
+        const val TRON_TRANSFER_CALL_DATA = "0xa9059cbb000000000000000000000041b945de8e80a32a1bf5aa55038d" +
+            "69a1c90f1eca3f00000000000000000000000000000000000000000000000000000000004c4b40"
         const val SENDER = "0x9ffd974772bda94d288240c1b22f367ce75ccd7f"
         const val RECIPIENT = "0x2222222222222222222222222222222222222222"
         const val FEE_RECIPIENT = "0x1111111111111111111111111111111111111111"
