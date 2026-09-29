@@ -8,6 +8,7 @@ import com.tangem.domain.walletconnect.model.WcPendingApprovalSessionDTO
 import com.tangem.domain.walletconnect.model.WcSessionDTO
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.utils.annotations.RemoveWithToggle
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -75,6 +76,7 @@ internal class DefaultWcInitializeUseCaseTest {
         coVerify(exactly = 1) { wcSdk.ensureInitialized() }
     }
 
+    @RemoveWithToggle("AND_18021_WALLETCONNECT_ON_DEMAND_INIT_ENABLED")
     @Test
     fun `GIVEN toggle disabled WHEN invoke THEN sdk starts synchronously without reading sessions`() =
         runTest {
