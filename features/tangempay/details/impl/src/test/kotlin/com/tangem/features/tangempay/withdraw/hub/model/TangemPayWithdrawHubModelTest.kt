@@ -49,7 +49,6 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import io.mockk.verifyOrder
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -122,7 +121,7 @@ internal class TangemPayWithdrawHubModelTest {
     }
 
     @Test
-    fun `GIVEN model WHEN within portfolio clicked THEN hub popped and withdraw swap pushed`() {
+    fun `GIVEN model WHEN within portfolio clicked THEN withdraw swap pushed over the hub`() {
         // Arrange
         val model = createModel()
         val expectedRoute = AppRoute.Swap(
@@ -137,10 +136,8 @@ internal class TangemPayWithdrawHubModelTest {
         model.uiState.value.swapSection.withinPortfolio.onClick()
 
         // Assert
-        verifyOrder {
-            router.pop()
-            router.push(expectedRoute)
-        }
+        verify(exactly = 1) { router.push(expectedRoute) }
+        verify(exactly = 0) { router.pop() }
         model.onDestroy()
     }
 
@@ -187,7 +184,7 @@ internal class TangemPayWithdrawHubModelTest {
     }
 
     @Test
-    fun `GIVEN a recent token WHEN it is clicked THEN hub popped and swap pushed with that token as TO`() {
+    fun `GIVEN a recent token WHEN it is clicked THEN swap pushed over the hub with that token as TO`() {
         // Arrange
         val transfer = recentTransfer()
         tokenRecentsFlow.value = listOf(transfer)
@@ -205,10 +202,8 @@ internal class TangemPayWithdrawHubModelTest {
         model.tokenRecents().onTokenClick(RECENT_CURRENCY_ID_VALUE)
 
         // Assert
-        verifyOrder {
-            router.pop()
-            router.push(expectedRoute)
-        }
+        verify(exactly = 1) { router.push(expectedRoute) }
+        verify(exactly = 0) { router.pop() }
         model.onDestroy()
     }
 
