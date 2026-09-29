@@ -24,7 +24,12 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_binoculars_20
 
 @Composable
-internal fun CollectiblesStatus(message: TextReference, onReloadClick: (() -> Unit)?, modifier: Modifier = Modifier) {
+internal fun CollectiblesStatus(
+    message: TextReference,
+    onReloadClick: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+    isReloading: Boolean = false,
+) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -51,6 +56,7 @@ internal fun CollectiblesStatus(message: TextReference, onReloadClick: (() -> Un
                 variant = TangemButton.Variant.Primary,
                 size = TangemButton.Size.X10,
                 iconStart = TangemIconUM.Icon(imageVector = Icons.ic_arrow_refresh_20),
+                isLoading = isReloading,
                 onClick = onReloadClick,
             )
         }
@@ -73,6 +79,11 @@ private fun CollectiblesStatusPreview() {
             CollectiblesStatus(
                 message = stringReference("Failed to load cards list.\nTap to reload"),
                 onReloadClick = {},
+            )
+            CollectiblesStatus(
+                message = stringReference("Failed to load prize pool.\nTap to reload"),
+                onReloadClick = {},
+                isReloading = true,
             )
             CollectiblesStatus(
                 message = stringReference("No results. Try to change your wording\nor explore from the list"),
