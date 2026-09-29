@@ -10,6 +10,7 @@ import com.tangem.data.pay.entity.DefaultTangemPayCurrencyFactory
 import com.tangem.data.pay.flow.DefaultPaymentAccountStatusFetcher
 import com.tangem.data.pay.flow.DefaultPaymentAccountStatusProducer
 import com.tangem.data.pay.repository.*
+import com.tangem.data.pay.store.CashbackSummaryStore
 import com.tangem.data.pay.store.DefaultBankOfframpRecentsStore
 import com.tangem.data.pay.store.DefaultPaymentAccountRecentsStore
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
@@ -19,6 +20,7 @@ import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawUseCase
 import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawWithSwapUseCase
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.spend.datasource.pay.store.entity.CashbackSummaryDM
 import com.tangem.spend.datasource.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.spend.datasource.preferences.SpendPreferencesKeys
@@ -61,6 +63,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
 import javax.inject.Singleton
 
 @Module
@@ -205,6 +209,18 @@ internal interface TangemPayDataModule {
                 ),
                 converter = converter,
                 scope = scope,
+            )
+        }
+
+        @Provides
+        @Singleton
+        fun provideCashbackSummaryStore(dataStoreFactory: AppDataStoreFactory): CashbackSummaryStore {
+            return CashbackSummaryStore(
+                dataStore = dataStoreFactory.create(
+                    defaultValue = emptyMap(),
+                    serializer = MapSerializer(String.serializer(), CashbackSummaryDM.serializer()),
+                    fileName = "tangem_pay_cashback_summary",
+                ),
             )
         }
 
@@ -363,6 +379,13 @@ internal interface TangemPayDataModule {
         @Provides
         fun provideGetCashbackSummaryUseCase(cashbackRepository: CashbackRepository): GetCashbackSummaryUseCase {
             return GetCashbackSummaryUseCase(cashbackRepository)
+        }
+
+        @Provides
+        fun provideObserveCashbackSummaryUseCase(
+            cashbackRepository: CashbackRepository,
+        ): ObserveCashbackSummaryUseCase {
+            return ObserveCashbackSummaryUseCase(cashbackRepository)
         }
 
         @Provides
