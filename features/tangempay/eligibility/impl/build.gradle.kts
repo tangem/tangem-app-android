@@ -29,6 +29,8 @@ dependencies {
 
     /** Domain */
     implementation(projects.domain.models)
+    implementation(projects.domain.moneyAccount)
+    implementation(projects.domain.moneyAccount.models)
     implementation(projects.domain.visa)
     implementation(projects.domain.visa.models)
 

@@ -75,12 +75,14 @@ internal class TangemPayBankWithdrawFormComponent(
                 onSelected = { country, region ->
                     model.onCountrySelected(field = config.field, country = country, region = region)
                 },
-                shouldIncludeRegions = false,
+                selectedCountryCode = config.selectedCountryCode,
+                selectedRegionCode = config.selectedRegionCode,
             )
             is CountrySelectorConfig.Region -> TangemPayCountrySelectorComponent.Params.Regions(
                 countryCode = config.countryCode,
                 onDismiss = selectorNavigation::dismiss,
                 onSelected = { region -> model.onRegionSelected(field = config.field, region = region) },
+                selectedRegionCode = config.selectedRegionCode,
             )
         },
     )

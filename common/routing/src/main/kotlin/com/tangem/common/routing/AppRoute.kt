@@ -629,13 +629,13 @@ sealed class AppRoute(val path: String) : Route {
         @Serializable
         sealed class Mode {
             @Serializable
-            data class Deeplink(val userWalletId: UserWalletId, val deeplink: String) : Mode()
+            data class Deeplink(val deeplink: String) : Mode()
 
             @Serializable
-            data class FromMain(val userWalletId: UserWalletId) : Mode()
+            data object FromMain : Mode()
 
             @Serializable
-            data class FromDetailsScreen(val userWalletId: UserWalletId) : Mode()
+            data object FromDetailsScreen : Mode()
         }
     }
 

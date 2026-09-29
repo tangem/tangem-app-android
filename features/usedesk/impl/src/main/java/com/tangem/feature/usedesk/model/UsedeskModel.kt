@@ -8,9 +8,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.store.datasource.preferences.StorePreferencesKeys
+import com.tangem.domain.feedback.GetSupportChatLogsUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
-import com.tangem.domain.feedback.repository.FeedbackRepository
 import com.tangem.domain.settings.UsedeskTokenTtlManager
 import com.tangem.feature.usedesk.analytics.UsedeskAnalyticsEvents
 import com.tangem.feature.usedesk.api.UsedeskComponent
@@ -34,7 +34,7 @@ internal class UsedeskModel @Inject constructor(
     private val appPreferencesStore: AppPreferencesStore,
     private val storePreferencesKeys: StorePreferencesKeys,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val feedbackRepository: FeedbackRepository,
+    private val getSupportChatLogsUseCase: GetSupportChatLogsUseCase,
     private val usedeskTokenTtlManager: UsedeskTokenTtlManager,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     paramsContainer: ParamsContainer,
@@ -91,12 +91,12 @@ internal class UsedeskModel @Inject constructor(
     }
 
     /**
-     * Collects the app logs into a zip archive (the same one attached to the support email)
+     * Collects the app logs and the wallet/device info into a zip archive
      * and returns it via [onReady] on the main thread, or null if there are no logs.
      */
     fun provideLogsFile(onReady: (File?) -> Unit) {
         modelScope.launch {
-            val file = runSuspendCatching { feedbackRepository.getZipLogFile() }.getOrNull()
+            val file = runSuspendCatching { getSupportChatLogsUseCase(params.walletMetaInfo) }.getOrNull()
             withContext(dispatchers.main) { onReady(file) }
         }
     }

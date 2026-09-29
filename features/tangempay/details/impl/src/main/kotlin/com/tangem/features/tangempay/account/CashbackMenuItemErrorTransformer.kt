@@ -49,6 +49,7 @@ internal class CashbackMenuItemErrorTransformer(
                 title = resourceReference(R.string.tangempay_cashback_title),
                 subtitle = resourceReference(R.string.tangempay_cashback_widget_error_description),
                 onClick = onReload,
+                isDismissOnClick = false,
                 titleColor = ColorReference2 { TangemTheme.colors3.text.status.error },
                 subtitleColor = ColorReference2 { TangemTheme.colors3.text.status.error },
                 icon = TangemIconUM.Icon(

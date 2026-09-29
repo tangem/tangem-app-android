@@ -1,11 +1,15 @@
 package com.tangem.data.walletmanager.utils
 
 import com.tangem.blockchain.common.address.Address
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.SdkAmount
+import com.tangem.domain.models.network.SdkAmountType
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.domain.txhistory.TxHistoryFeatureToggles
+import com.tangem.domain.txhistory.usecase.GetCachedTokenInfoUseCase
 import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isNegative
@@ -20,9 +24,12 @@ internal class SdkTransactionHistoryItemConverter(
     gaslessFeeAddresses: Set<String>,
     currency: CryptoCurrency,
     networkTokens: Set<CryptoCurrency.Token>,
+    getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
     currencyAddresses: Collection<Address>,
     private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
 ) : Converter<SdkTransactionHistoryItem, TxInfo> {
+
+    private val ownAddress: String? = currencyAddresses.firstOrNull { it.type == AddressType.Default }?.value
 
     private val typeConverter by lazy {
         SdkTransactionTypeConverter(
@@ -31,6 +38,8 @@ internal class SdkTransactionHistoryItemConverter(
             gaslessFeeAddresses = gaslessFeeAddresses,
             currency = currency,
             networkTokens = networkTokens,
+            getCachedTokenInfoUseCase = getCachedTokenInfoUseCase,
+            safeAddress = ownAddress,
         )
     }
 
@@ -136,22 +145,79 @@ internal class SdkTransactionHistoryItemConverter(
         is TxInfo.DestinationType.Multiple -> addressTypes
     }
 
-    override fun convert(value: SdkTransactionHistoryItem): TxInfo.Single = TxInfo.Single(
+    override fun convert(value: SdkTransactionHistoryItem): TxInfo.Single {
+        val type = typeConverter.convert(value)
+        val safeAddress = ownAddress
+
+        return if (type is TransactionType.Joint && safeAddress != null) {
+            jointRow(value = value, type = type, safeAddress = safeAddress)
+        } else {
+            record(value = value, type = type)
+        }
+    }
+
+    private fun record(value: SdkTransactionHistoryItem, type: TransactionType): TxInfo.Single = TxInfo.Single(
         txHash = value.txHash,
         timestampInMillis = value.timestamp,
         isOutgoing = value.isOutgoing,
         destinationType = value.destinationType.toDomain(),
         sourceType = value.sourceType.toDomain(),
         interactionAddressType = value.extractInteractionAddressType(),
-        status = when (value.status) {
-            SdkTransactionHistoryItem.TransactionStatus.Confirmed -> TxInfo.TransactionStatus.Confirmed
-            SdkTransactionHistoryItem.TransactionStatus.Failed -> TxInfo.TransactionStatus.Failed
-            SdkTransactionHistoryItem.TransactionStatus.Unconfirmed -> TxInfo.TransactionStatus.Unconfirmed
-        },
-        type = typeConverter.convert(value),
+        status = value.status.toDomain(),
+        type = type,
         amount = requireNotNull(value.amount.value) { "Transaction amount value must not be null" },
         fee = value.fee.toDomain(),
     )
+
+    /** The record is the relayer's zero-value call to the Safe; the row is what the Safe did, and the type knows it */
+    private fun jointRow(
+        value: SdkTransactionHistoryItem,
+        type: TransactionType.Joint,
+        safeAddress: String,
+    ): TxInfo.Single {
+        val (counterparty, interaction, amount) = when (type) {
+            is TransactionType.Joint.Transfer -> Triple(
+                TxInfo.AddressType.User(type.recipient),
+                TxInfo.InteractionAddressType.User(type.recipient),
+                type.amount,
+            )
+            is TransactionType.Joint.TokenFee -> Triple(
+                TxInfo.AddressType.Contract(type.tokenContract),
+                TxInfo.InteractionAddressType.Contract(type.tokenContract),
+                BigDecimal.ZERO,
+            )
+            is TransactionType.Joint.Call -> Triple(
+                TxInfo.AddressType.Contract(type.contract),
+                TxInfo.InteractionAddressType.Contract(type.contract),
+                type.value,
+            )
+        }
+        val feeCoin = value.fee
+
+        return TxInfo.Single(
+            txHash = value.txHash,
+            timestampInMillis = value.timestamp,
+            isOutgoing = true,
+            destinationType = TxInfo.DestinationType.Single(counterparty),
+            sourceType = TxInfo.SourceType.Single(safeAddress),
+            interactionAddressType = interaction,
+            status = value.status.toDomain(),
+            type = type,
+            amount = amount,
+            fee = SdkAmount(
+                currencySymbol = feeCoin.currencySymbol,
+                value = type.refundCapWei.movePointLeft(feeCoin.decimals),
+                decimals = feeCoin.decimals,
+                type = SdkAmountType.Coin,
+            ),
+        )
+    }
+
+    private fun SdkTransactionHistoryItem.TransactionStatus.toDomain(): TxInfo.TransactionStatus = when (this) {
+        SdkTransactionHistoryItem.TransactionStatus.Confirmed -> TxInfo.TransactionStatus.Confirmed
+        SdkTransactionHistoryItem.TransactionStatus.Failed -> TxInfo.TransactionStatus.Failed
+        SdkTransactionHistoryItem.TransactionStatus.Unconfirmed -> TxInfo.TransactionStatus.Unconfirmed
+    }
 
     private fun SdkTransactionHistoryItem.SourceType.toDomain(): TxInfo.SourceType = when (this) {
         is TransactionHistoryItem.SourceType.Single -> TxInfo.SourceType.Single(address)

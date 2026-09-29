@@ -5,13 +5,11 @@ import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.format.bigdecimal.simple
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
-import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
+import com.tangem.features.polymarket.impl.common.formatPolymarketPrice
 import com.tangem.features.polymarket.impl.common.formatPolymarketShares
 import com.tangem.features.polymarket.impl.common.formatPolymarketVolume
 import com.tangem.features.polymarket.impl.common.formatSlippagePercent
@@ -32,6 +30,9 @@ internal class PolymarketPositionDetailsConverter :
 
     override fun convert(value: Input): Content.Data {
         val position = value.position
+        val isResolved = position.resolutionStatus == PolymarketResolutionStatus.RESOLVED
+        val entryPrice = position.avgPrice.formatPolymarketPrice(isResolved = isResolved)
+        val currentPrice = position.curPrice.formatPolymarketPrice(isResolved = isResolved)
 
         return Content.Data(
             summary = PolymarketPositionDetailsUM.Summary(
@@ -60,7 +61,7 @@ internal class PolymarketPositionDetailsConverter :
             event = event(position, value.event),
             metrics = PolymarketPositionDetailsUM.Metrics(
                 quantity = stringReference(position.size.formatPolymarketShares()),
-                priceChanges = stringReference("${position.avgPrice.cents()} → ${position.curPrice.cents()}"),
+                priceChanges = stringReference("$entryPrice → $currentPrice"),
                 unrealizedPnl = stringReference(position.cashPnl.signedMoney()),
                 realizedPnl = stringReference(position.realizedPnl.signedMoney()),
             ),
@@ -99,9 +100,6 @@ internal class PolymarketPositionDetailsConverter :
             volume = matching?.volume?.let { stringReference(it.formatPolymarketVolume()) },
         )
     }
-
-    private fun BigDecimal.cents(): String =
-        "${movePointRight(2).format { simple(decimals = 2) }}${PolymarketConst.CENT_SIGN}"
 
     private fun BigDecimal.signedMoney(): String {
         val prefix = if (setScale(2, RoundingMode.HALF_UP).signum() > 0) PLUS else ""

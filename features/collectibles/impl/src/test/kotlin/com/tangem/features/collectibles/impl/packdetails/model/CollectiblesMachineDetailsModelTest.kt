@@ -5,7 +5,11 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchAction
 import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchFlow
 import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchListState
@@ -32,7 +36,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -45,6 +49,7 @@ internal class CollectiblesMachineDetailsModelTest {
     private val getMachineUseCase: GetCollectibleGachaMachineUseCase = mockk()
     private val getPrizePoolBatchFlowUseCase: GetCollectibleGachaMachineNftsBatchFlowUseCase = mockk()
     private val router: Router = mockk(relaxed = true)
+    private val urlOpener: UrlOpener = mockk(relaxed = true)
 
     private val batchListState = MutableStateFlow(
         createNftsBatchListState(batches = emptyList(), status = PaginationStatus.None),
@@ -82,7 +87,7 @@ internal class CollectiblesMachineDetailsModelTest {
     }
 
     @Test
-    fun `GIVEN the machine loads WHEN model created THEN the pack is rendered`() = runTest {
+    fun `GIVEN the machine loads WHEN model created THEN the pack is rendered`() = runModelTest {
         // Arrange & Act
         val fixture = startModel()
 
@@ -94,7 +99,7 @@ internal class CollectiblesMachineDetailsModelTest {
     }
 
     @Test
-    fun `GIVEN the machine fails WHEN model created THEN the whole screen reports the error`() = runTest {
+    fun `GIVEN the machine fails WHEN model created THEN the whole screen reports the error`() = runModelTest {
         // Arrange
         coEvery { getMachineUseCase(any(), any()) } returns CollectiblesError.Api(IllegalStateException()).left()
 
@@ -106,7 +111,7 @@ internal class CollectiblesMachineDetailsModelTest {
     }
 
     @Test
-    fun `GIVEN the price and expected value WHEN model created THEN the footer reads them`() = runTest {
+    fun `GIVEN the price and expected value WHEN model created THEN the footer reads them`() = runModelTest {
         // Arrange
         coEvery { getMachineUseCase(any(), any()) } returns createMachine(
             price = BigDecimal("50"),
@@ -118,12 +123,14 @@ internal class CollectiblesMachineDetailsModelTest {
 
         // Assert
         val footer = (fixture.model.uiState.value as CollectiblesMachineDetailsUM.Content).footer
-        assertThat(footer.buyButtonText).isEqualTo(stringReference("Open for 50 USDC"))
+        assertThat(footer.buyButtonText).isEqualTo(
+            resourceReference(R.string.collectibles_machine_open_button, wrappedList("50 USDC")),
+        )
         assertThat(footer.expectedValue).isEqualTo(stringReference("$53.95"))
     }
 
     @Test
-    fun `GIVEN the screen is open WHEN model created THEN the prize pool is reloaded for this machine`() = runTest {
+    fun `GIVEN the screen is open WHEN model created THEN the prize pool is reloaded for this machine`() = runModelTest {
         // Arrange & Act
         val fixture = startModel()
 
@@ -136,7 +143,7 @@ internal class CollectiblesMachineDetailsModelTest {
     }
 
     @Test
-    fun `GIVEN a loaded pool WHEN turbo toggled THEN only the flag changes`() = runTest {
+    fun `GIVEN a loaded pool WHEN turbo toggled THEN only the flag changes`() = runModelTest {
         // Arrange
         val fixture = startModel()
         val before = fixture.model.uiState.value as CollectiblesMachineDetailsUM.Content
@@ -151,7 +158,7 @@ internal class CollectiblesMachineDetailsModelTest {
     }
 
     @Test
-    fun `GIVEN pages left WHEN onLoadMore THEN the next page is requested`() = runTest {
+    fun `GIVEN pages left WHEN onLoadMore THEN the next page is requested`() = runModelTest {
         // Arrange
         val fixture = startModel()
         batchListState.value = createNftsBatchListState(
@@ -160,18 +167,18 @@ internal class CollectiblesMachineDetailsModelTest {
                 BatchFetchResult.Success(data = listOf(createNft()), empty = false, last = false),
             ),
         )
-        advanceUntilIdle()
+        runCurrent()
 
         // Act
         fixture.model.onLoadMore()
-        advanceUntilIdle()
+        runCurrent()
 
         // Assert
         assertThat(fixture.actions.last()).isInstanceOf(BatchAction.LoadMore::class.java)
     }
 
     @Test
-    fun `GIVEN the last page WHEN onLoadMore THEN nothing is requested`() = runTest {
+    fun `GIVEN the last page WHEN onLoadMore THEN nothing is requested`() = runModelTest {
         // Arrange
         val fixture = startModel()
         batchListState.value = createNftsBatchListState(
@@ -179,35 +186,35 @@ internal class CollectiblesMachineDetailsModelTest {
                 BatchFetchResult.Success(data = listOf(createNft()), empty = false, last = true),
             ),
         )
-        advanceUntilIdle()
+        runCurrent()
         val before = fixture.actions.size
 
         // Act
         fixture.model.onLoadMore()
-        advanceUntilIdle()
+        runCurrent()
 
         // Assert
         assertThat(fixture.actions).hasSize(before)
     }
 
     @Test
-    fun `GIVEN the pool is still loading WHEN onLoadMore THEN nothing is requested`() = runTest {
+    fun `GIVEN the pool is still loading WHEN onLoadMore THEN nothing is requested`() = runModelTest {
         // Arrange
         val fixture = startModel()
         batchListState.value = createNftsBatchListState(status = PaginationStatus.InitialLoading)
-        advanceUntilIdle()
+        runCurrent()
         val before = fixture.actions.size
 
         // Act
         fixture.model.onLoadMore()
-        advanceUntilIdle()
+        runCurrent()
 
         // Assert
         assertThat(fixture.actions).hasSize(before)
     }
 
     @Test
-    fun `GIVEN the pack is open WHEN back clicked THEN the screen is popped`() = runTest {
+    fun `GIVEN the pack is open WHEN back clicked THEN the screen is popped`() = runModelTest {
         // Arrange
         val fixture = startModel()
 
@@ -226,11 +233,22 @@ internal class CollectiblesMachineDetailsModelTest {
      * is *unconfined* so it resumes inside the emitter's call stack; on the standard test dispatcher it would
      * see only that replayed action and silently miss every later one.
      */
+    /** The model is destroyed inside [runTest]: its closing advanceUntilIdle would spin on the never-idle polling. */
+    private fun runModelTest(testBody: suspend TestScope.() -> Unit) = runTest {
+        try {
+            testBody()
+        } finally {
+            model?.onDestroy()
+            model = null
+        }
+    }
+
     private fun TestScope.startModel(): Fixture {
         val model = CollectiblesMachineDetailsModel(
             dispatchers = createTestingCoroutineDispatcherProvider(),
             getMachineUseCase = getMachineUseCase,
             router = router,
+            urlOpener = urlOpener,
             paramsContainer = MutableParamsContainer(
                 CollectiblesMachineDetailsComponent.Params(externalId = EXTERNAL_ID),
             ),
@@ -241,7 +259,7 @@ internal class CollectiblesMachineDetailsModelTest {
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             batchingContextSlot.captured.actionsFlow.toList(actions)
         }
-        advanceUntilIdle()
+        runCurrent()
 
         return Fixture(model = model, actions = actions)
     }

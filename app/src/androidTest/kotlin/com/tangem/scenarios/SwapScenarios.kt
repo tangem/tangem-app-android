@@ -351,7 +351,7 @@ private fun BaseTestCase.navigateToSwapForToken(tokenName: String, fromAccountNa
         }
     }
     step("Click on token with name: '$tokenName'") {
-        onMainScreen { findTokenInAnyAccountByName(tokenName).clickWithAssertion() }
+        openTokenDetailsFromAccountSection(tokenName)
     }
     step("Open 'Swap' screen") {
         openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = false)
@@ -389,7 +389,7 @@ fun BaseTestCase.openSwapFromZeroBalanceToken(tokenName: String, accountName: St
         }
     }
     step("Click on token with name: '$tokenName'") {
-        onMainScreen { findTokenInAnyAccountByName(tokenName).clickWithAssertion() }
+        openTokenDetailsFromAccountSection(tokenName)
     }
     step("Assert 'Token details' screen is displayed") {
         onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -522,7 +522,7 @@ fun BaseTestCase.openSwapAmountScreen(
         }
     }
     step("Click on token with name: '$fromTokenName'") {
-        onMainScreen { tokenWithTitleAndAddress(fromTokenName).clickWithAssertion() }
+        openTokenDetailsFromTokenList(fromTokenName)
     }
     step("Open 'Swap' screen") {
         openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = storiesExist)
