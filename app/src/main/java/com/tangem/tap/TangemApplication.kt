@@ -215,10 +215,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
 
         tangemLoggingInitializer.initSdkLogging(this)
 
-        appScope.launch {
-            runSuspendCatching { wcInitializeUseCase.initializeOnAppStart() }
-                .onFailure { error -> TangemLogger.e("Failed to start WalletConnect", error) }
-        }
+        wcInitializeUseCase.initializeOnAppStart()
     }
 
     override fun newImageLoader(): ImageLoader = createCoilImageLoader(context = this)
