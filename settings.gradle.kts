@@ -294,6 +294,7 @@ if (properties.getProperty("usedesk.local").toBoolean()) {
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":app")
+include(":benchmark")
 include(":plugins:detekt-rules")
 
 include(":test:core")

@@ -5,6 +5,7 @@ plugins {
     alias(deps.plugins.kotlin.kapt) apply false
     alias(deps.plugins.android.application) apply false
     alias(deps.plugins.android.library) apply false
+    alias(deps.plugins.android.test) apply false
     alias(deps.plugins.hilt.android) apply false
     alias(deps.plugins.google.services) apply false
     alias(deps.plugins.firebase.crashlytics) apply false
