@@ -206,8 +206,18 @@ internal class DefaultGoogleWalletProvisionerTest {
             EnvironmentLogCase(description = "environment returned", expected = "SANDBOX") {
                 givenWalletEnvironment("SANDBOX".right())
             },
-            EnvironmentLogCase(description = "environment refused", expected = "unknown, code 15009") {
-                givenWalletEnvironment(TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE.left())
+            EnvironmentLogCase(description = "environment refused", expected = "unknown, 15009: $TAP_AND_PAY_MESSAGE") {
+                givenWalletEnvironment(tapAndPayFailure(TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE).left())
+            },
+            EnvironmentLogCase(description = "environment refused without a message", expected = "unknown, 15009") {
+                givenWalletEnvironment(
+                    TapAndPayFailure(code = TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE, message = null).left(),
+                )
+            },
+            EnvironmentLogCase(description = "environment refused with blank message", expected = "unknown, 15009") {
+                givenWalletEnvironment(
+                    TapAndPayFailure(code = TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE, message = " ").left(),
+                )
             },
             EnvironmentLogCase(description = "environment check never answers", expected = "check timed out") {
                 justRun { sdk.getEnvironment(any()) }
@@ -330,7 +340,8 @@ internal class DefaultGoogleWalletProvisionerTest {
                 // Assert
                 assertThat(logs.entries).containsExactly(
                     Severity.Error to "Google Wallet did not return the stable hardware id: " +
-                        "${TapAndPayStatusCodes.TAP_AND_PAY_ATTESTATION_ERROR}, card treated as unsupported",
+                        "${TapAndPayStatusCodes.TAP_AND_PAY_ATTESTATION_ERROR}: $TAP_AND_PAY_MESSAGE, " +
+                        "card treated as unsupported",
                 )
             }
     }
@@ -812,7 +823,8 @@ internal class DefaultGoogleWalletProvisionerTest {
             assertThat(actual).isEqualTo(
                 AddResult.Failed(
                     reason = model.expectedReason,
-                    description = "Google Wallet did not return the stable hardware id: ${model.hardwareIdError}",
+                    description = "Google Wallet did not return the stable hardware id: " +
+                        "${model.hardwareIdError}: $TAP_AND_PAY_MESSAGE",
                     walletErrorCode = model.hardwareIdError,
                 ),
             )
@@ -1315,21 +1327,30 @@ internal class DefaultGoogleWalletProvisionerTest {
     }
 
     private fun givenStableHardwareId(error: Int?) {
-        every { sdk.checkStableHardwareId(any()) } answers { firstArg<(Int?) -> Unit>().invoke(error) }
+        every { sdk.checkStableHardwareId(any()) } answers {
+            firstArg<(TapAndPayFailure?) -> Unit>().invoke(error?.let(::tapAndPayFailure))
+        }
     }
 
     private fun givenActiveWallet(error: Int?) {
-        every { sdk.checkActiveWallet(any()) } answers { firstArg<(Int?) -> Unit>().invoke(error) }
+        every { sdk.checkActiveWallet(any()) } answers {
+            firstArg<(TapAndPayFailure?) -> Unit>().invoke(error?.let(::tapAndPayFailure))
+        }
     }
 
-    private fun givenWalletEnvironment(environment: Either<Int, String>) {
-        every { sdk.getEnvironment(any()) } answers { firstArg<(Either<Int, String>) -> Unit>().invoke(environment) }
+    private fun givenWalletEnvironment(environment: Either<TapAndPayFailure, String>) {
+        every { sdk.getEnvironment(any()) } answers {
+            firstArg<(Either<TapAndPayFailure, String>) -> Unit>().invoke(environment)
+        }
     }
+
+    private fun tapAndPayFailure(code: Int) = TapAndPayFailure(code = code, message = TAP_AND_PAY_MESSAGE)
 
     private companion object {
         const val LAST_FOUR_DIGITS = "1234"
         const val DISPLAY_NAME = "Tangem Pay"
         const val TOKEN_ID = "token-id"
+        const val TAP_AND_PAY_MESSAGE = "Refused by Google"
         const val PUSH_REQUEST_CODE = 1002
 
         val CARD = Card(
