@@ -215,7 +215,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
 
         tangemLoggingInitializer.initSdkLogging(this)
 
-        wcInitializeUseCase.initializeOnAppStart()
+        wcInitializeUseCase()
     }
 
     override fun newImageLoader(): ImageLoader = createCoilImageLoader(context = this)
