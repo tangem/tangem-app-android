@@ -287,6 +287,11 @@
   <string name="collectibles_account_collection_empty">Keine Karten</string>
   <string name="collectibles_account_collection_row_subtitle">Meine Sammlung</string>
   <string name="collectibles_account_withdraw">Auszahlung</string>
+  <string name="collectibles_confirm_order_approve_button">Genehmigen</string>
+  <string name="collectibles_confirm_order_not_enough_funds_button">Nicht genügend Mittel</string>
+  <string name="collectibles_confirm_order_platform_fee">Plattformgebühr</string>
+  <string name="collectibles_confirm_order_screen_title">Bestellung bestätigen</string>
+  <string name="collectibles_confirm_order_total">Gesamt</string>
   <string name="collectibles_entrance_card_subtitle">Geöffnete Packungen mit sortierten Sammelkarten</string>
   <string name="collectibles_entrance_card_title">Kollektionen entdecken</string>
   <string name="collectibles_machine_buyback_value">%s von Wert</string>
@@ -297,6 +302,7 @@
   <string name="collectibles_machine_load_error">Die Details zum Paket konnten nicht geladen werden.\nZum Neuladen bitte antippen</string>
   <string name="collectibles_machine_open_button">Geöffnet für %s</string>
   <string name="collectibles_machine_powered_by">Unterstützt von %s</string>
+  <string name="collectibles_machine_prize_pool_load_error">Der Preispool konnte nicht geladen werden.\nZum Neuladen bitte antippen</string>
   <string name="collectibles_machine_prize_pool_section">Im Preispool</string>
   <string name="collectibles_machine_tier_common">Allgemein</string>
   <string name="collectibles_machine_tier_epic">Episch</string>
@@ -1132,7 +1138,7 @@
   <string name="introduction_stories_button_secondary">Mehr erfahren oder kaufen</string>
   <string name="introduction_stories_four_subtitle">Nutze die Self-Custody Wallet, die weltweit im Einsatz ist</string>
   <string name="introduction_stories_four_title">Millionen Menschen vertrauen uns.</string>
-  <string name="introduction_stories_one_subtitle">Bestätigen Sie jede Aktion mit Ihrem Tangem </string>
+  <string name="introduction_stories_one_subtitle">Bestätigen Sie jede Aktion mit Ihrem Tangem</string>
   <string name="introduction_stories_one_title">Kryptowährungen mit einem Fingertipp steuern</string>
   <string name="introduction_stories_three_subtitle">Ihre privaten Schlüssel verlassen niemals die Karte.</string>
   <string name="introduction_stories_three_title">Ihre Schlüssel, Ihre Krypto</string>
@@ -1208,6 +1214,7 @@
   <string name="joint_account_onboarding_shared_description">Nutze es gemeinsam mit deinen Freunden, deiner Familie oder deinem Partner.</string>
   <string name="joint_account_onboarding_shared_title">Gemeinsames Konto.</string>
   <string name="joint_account_onboarding_subtitle">Eine einfache Möglichkeit, Kryptowährungen gemeinsam zu verwalten – für private oder geschäftliche Zwecke.</string>
+  <string name="joint_account_pending_transaction_message">Prüfen und unterzeichnen Sie den Vorgang</string>
   <string name="joint_account_send_blocked_subtitle">Das Senden ist aus Sicherheitsgründen gesperrt. Bitte wenden Sie sich an den Support.</string>
   <string name="joint_account_send_blocked_title">Das Senden ist gesperrt</string>
   <string name="joint_account_send_create_request">Anfrage erstellen</string>
@@ -3046,6 +3053,8 @@
   <string name="transaction_history_empty_transactions">Du hast noch keine Transaktionen</string>
   <string name="transaction_history_enabling_yield_mode">Yield-Modus aktivieren</string>
   <string name="transaction_history_error_failed_to_load">Der Transaktionsverlauf konnte nicht geladen werden.\nKlicke auf die Schaltfläche Neu laden, um die Informationen zu aktualisieren.</string>
+  <string name="transaction_history_fee_for_operation">Für den Betrieb</string>
+  <string name="transaction_history_fee_for_operation_name">Für %s</string>
   <string name="transaction_history_fee_for_sending">Zum Versenden</string>
   <string name="transaction_history_fee_sending_asset">Schicken %%Bild%% %s</string>
   <string name="transaction_history_from_inline_address">aus: %%image%% %s</string>

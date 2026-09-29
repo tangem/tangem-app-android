@@ -43,6 +43,7 @@ dependencies {
     implementation(deps.androidx.appCompat)
     implementation(deps.arrow.core)
     implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.immutable.collections)
     implementation(deps.lifecycle.compose)
     implementation(deps.lifecycle.runtime.ktx)
 }

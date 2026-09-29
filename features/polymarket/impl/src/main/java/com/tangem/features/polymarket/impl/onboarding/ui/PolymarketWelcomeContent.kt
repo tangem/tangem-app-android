@@ -32,6 +32,9 @@ import com.tangem.core.ui.res.generated.icons.ic_percent_backward_24
 import com.tangem.core.ui.res.generated.icons.ic_shield_checkmark_24
 import com.tangem.core.ui.res.generated.icons.ic_wallet_24
 
+internal const val HERO_TINT_START_Y = 448f
+internal const val HERO_TINT_END_Y = 528f
+
 /**
  * Scrolling body of the Welcome screen. Stateless — the footer overlaying it lives in the scaffold's overlay
  * slot and owns the legal-line reveal.
@@ -58,7 +61,11 @@ internal fun PolymarketWelcomeContent(
             ),
     ) {
         // No top padding: the hero is full-bleed and scrolls under the status bar and the top navigation.
-        OnboardingHero(imageResId = UiR.drawable.img_prediction_welcome_hero) {
+        OnboardingHero(
+            imageResId = UiR.drawable.img_prediction_welcome_hero,
+            tintStartY = HERO_TINT_START_Y,
+            tintEndY = HERO_TINT_END_Y,
+        ) {
             OnboardingHeadline(
                 title = resourceReference(R.string.prediction_onboarding_title),
                 subtitle = resourceReference(R.string.prediction_onboarding_subtitle),

@@ -43,7 +43,7 @@ internal data class PlacePredictionUM(
                 title = "",
                 imageUrl = null,
                 outcomeTitle = "",
-                outcomePriceCents = null,
+                outcomePrice = null,
                 resolutionDateMillis = null,
             ),
             collateral = CollateralUM(tokenSymbol = "", iconState = null),
@@ -122,11 +122,11 @@ internal data class MarketHeaderUM(
     val title: String,
     val imageUrl: String?,
     val outcomeTitle: String,
-    val outcomePriceCents: Int?,
+    val outcomePrice: String?,
     val resolutionDateMillis: Long?,
     val outcomeAccent: PolymarketOutcomeAccent = PolymarketOutcomeAccent.Neutral,
     val isPriceUnavailable: Boolean = false,
-    val entryPriceCents: Int? = null,
+    val entryPrice: String? = null,
 )
 
 @Immutable
