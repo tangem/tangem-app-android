@@ -32,6 +32,10 @@
         "version": "undefined"
     },
     {
+        "name": "AND_18021_WALLETCONNECT_ON_DEMAND_INIT_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "TWI_1326_YIELD_DEX_TRANSFER_ENABLED",
         "version": "undefined"
     },
@@ -125,6 +129,14 @@
     },
     {
         "name": "TWI_1705_PROMO_CAMPAIGNS_V2_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1062_GOOGLE_WALLET_PUSH_PROVISIONING_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1062_GOOGLE_WALLET_BUTTON_ALWAYS_SHOWN",
         "version": "undefined"
     }
 ]

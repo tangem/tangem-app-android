@@ -18,27 +18,32 @@ import java.math.BigDecimal
 sealed interface PaymentAccountStatusValueDM {
 
     @NameLabel("empty")
+    @JsonClass(generateAdapter = true)
     data class Empty(
         @Json(name = "empty") val marker: Boolean = true,
     ) : PaymentAccountStatusValueDM
 
     @NameLabel("not_created")
+    @JsonClass(generateAdapter = true)
     data class NotCreated(
         @Json(name = "not_created") val marker: Boolean = true,
     ) : PaymentAccountStatusValueDM
 
     @NameLabel("kyc_status")
+    @JsonClass(generateAdapter = true)
     data class UnderReview(
         @Json(name = "kyc_status") val kycStatus: KycStatus,
         @Json(name = "customer_id") val customerId: String,
     ) : PaymentAccountStatusValueDM
 
     @NameLabel("issuing_card")
+    @JsonClass(generateAdapter = true)
     data class IssuingCard(
         @Json(name = "issuing_card") val marker: Boolean = true,
     ) : PaymentAccountStatusValueDM
 
     @NameLabel("active_account")
+    @JsonClass(generateAdapter = true)
     data class ActiveAccount(
         @Json(name = "active_account") val marker: Boolean = true,
         @Json(name = "customer_id") val customerId: String,
@@ -50,6 +55,7 @@ sealed interface PaymentAccountStatusValueDM {
     ) : PaymentAccountStatusValueDM
 
     @NameLabel("card_issue_failed")
+    @JsonClass(generateAdapter = true)
     data class CardIssueFailed(
         @Json(name = "card_issue_failed") val marker: Boolean = true,
         @Json(name = "customer_id") val customerId: String,
@@ -58,6 +64,7 @@ sealed interface PaymentAccountStatusValueDM {
     ) : PaymentAccountStatusValueDM
 
     @NameLabel("deactivated_account")
+    @JsonClass(generateAdapter = true)
     data class DeactivatedAccount(
         @Json(name = "deactivated_account") val marker: Boolean = true,
         @Json(name = "customer_id") val customerId: String,

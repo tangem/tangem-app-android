@@ -26,7 +26,7 @@ class ActivityInstanceHolder<T : Any> {
 inline fun <reified T : Any> AppComponentContext.getOrCreateActivityInstanceHolder(
     noinline factory: (AppCompatActivity) -> T,
 ): ActivityInstanceHolder<T> {
-    val holder = instanceKeeper.getOrCreateSimple {
+    val holder = instanceKeeper.getOrCreateSimple(key = "ActivityInstanceHolder_${T::class.java.name}") {
         ActivityInstanceHolder<T>()
     }
 
