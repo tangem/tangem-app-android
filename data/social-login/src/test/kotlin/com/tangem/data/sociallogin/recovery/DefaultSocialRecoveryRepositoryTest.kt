@@ -121,6 +121,47 @@ internal class DefaultSocialRecoveryRepositoryTest {
     }
 
     @Test
+    fun `GIVEN a hot wallet WHEN registerRestoredWallet THEN it is registered under its base64 id`() = runTest {
+        // Arrange
+        val signer: WalletSigner = mockk()
+        coEvery { walletSignerProvider.signerFor(BACKEND_WALLET_ID) } returns signer
+        coEvery { client.registerWallet(any(), any()) } returns Unit.right()
+
+        // Act
+        val actual = repository.registerRestoredWallet(WALLET_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+        coVerify(exactly = 1) { client.registerWallet(walletId = BACKEND_WALLET_ID, signer = signer) }
+    }
+
+    @Test
+    fun `GIVEN no signer for the wallet WHEN registerRestoredWallet THEN the backend is not called`() = runTest {
+        // Arrange
+        coEvery { walletSignerProvider.signerFor(any()) } returns null
+
+        // Act
+        val actual = repository.registerRestoredWallet(WALLET_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(SocialLoginError.Unknown().left())
+        coVerify(exactly = 0) { client.registerWallet(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN the backend is unreachable WHEN registerRestoredWallet THEN the error is translated`() = runTest {
+        // Arrange
+        coEvery { walletSignerProvider.signerFor(BACKEND_WALLET_ID) } returns mockk()
+        coEvery { client.registerWallet(any(), any()) } returns SocialRecoveryError.Api(AuthError.NetworkError).left()
+
+        // Act
+        val actual = repository.registerRestoredWallet(WALLET_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(SocialLoginError.NetworkError.left())
+    }
+
+    @Test
     fun `GIVEN the wallet id WHEN unbindWallet THEN the backend id is passed through`() = runTest {
         // Arrange
         coEvery { client.unbindWallet(any()) } returns Unit.right()
