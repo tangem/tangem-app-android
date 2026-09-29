@@ -165,22 +165,21 @@ internal class TangemPayWithdrawHubUMFactoryTest {
     }
 
     @Test
-    fun `GIVEN no recents and no saved accounts WHEN createRecents THEN empty without see all`() {
+    fun `GIVEN no saved accounts WHEN createRecents THEN empty`() {
         // Act
-        val actual = createRecents(accounts = emptyList(), hasSavedAccounts = false)
+        val actual = createRecents(accounts = emptyList())
 
         // Assert
-        assertThat(actual).isEqualTo(RecentsUM.Empty(onSeeAllClick = null))
+        assertThat(actual).isEqualTo(RecentsUM.Empty)
     }
 
     @Test
-    fun `GIVEN no recents but saved accounts WHEN createRecents THEN empty with see all callback`() {
+    fun `GIVEN every saved account shown WHEN createRecents THEN no see all`() {
         // Act
-        val actual = createRecents(accounts = emptyList()) as RecentsUM.Empty
-        requireNotNull(actual.onSeeAllClick).invoke()
+        val actual = createRecents(accounts = listOf(bankAccount()), hasMoreAccounts = false) as RecentsUM.Content
 
         // Assert
-        verify(exactly = 1) { onSeeAllClick() }
+        assertThat(actual.onSeeAllClick).isNull()
     }
 
     @Test
@@ -211,12 +210,12 @@ internal class TangemPayWithdrawHubUMFactoryTest {
     }
 
     @Test
-    fun `GIVEN content WHEN see all clicked THEN callback invoked`() {
+    fun `GIVEN more saved accounts than shown WHEN see all clicked THEN callback invoked`() {
         // Arrange
-        val content = createRecents(accounts = listOf(bankAccount())) as RecentsUM.Content
+        val content = createRecents(accounts = listOf(bankAccount()), hasMoreAccounts = true) as RecentsUM.Content
 
         // Act
-        content.onSeeAllClick()
+        requireNotNull(content.onSeeAllClick).invoke()
 
         // Assert
         verify(exactly = 1) { onSeeAllClick() }
@@ -312,8 +311,8 @@ internal class TangemPayWithdrawHubUMFactoryTest {
 
     private fun createRecents(
         accounts: List<BankAccount> = emptyList(),
-        hasSavedAccounts: Boolean = true,
-        recents: RecentsState = RecentsState.Loaded(accounts = accounts, hasSavedAccounts = hasSavedAccounts),
+        hasMoreAccounts: Boolean = false,
+        recents: RecentsState = RecentsState.Loaded(accounts = accounts, hasMoreAccounts = hasMoreAccounts),
     ): RecentsUM = (create(recents = recents).bankSection as BankSectionUM.Content).recents
 
     private fun recentCurrency(name: String): CryptoCurrency.Coin = CryptoCurrency.Coin(
