@@ -366,13 +366,46 @@ internal class DefaultSocialRecoveryClientTest {
     fun `GIVEN authentication is toggled off WHEN unbindWallet THEN the teardown is not reported as done`() =
         runTest {
             // Arrange
-            coEvery { walletRegistrar.unregister(WALLET_ID) } returns Either.Left(WalletRegistrationError.Disabled)
+            coEvery {
+                walletRegistrar.unregister(walletId = WALLET_ID, shouldDeleteSocialRecovery = true)
+            } returns Either.Left(WalletRegistrationError.Disabled)
 
             // Act
             val result = client.unbindWallet(WALLET_ID)
 
             // Assert — a binding made before the toggle flipped is still on the server
             assertThat(result.leftOrNull()).isEqualTo(SocialRecoveryError.NoActiveSession)
+        }
+
+    @Test
+    fun `GIVEN a bound wallet WHEN unbindWallet THEN it is unregistered together with its social recovery`() =
+        runTest {
+            // Arrange
+            coEvery {
+                walletRegistrar.unregister(walletId = WALLET_ID, shouldDeleteSocialRecovery = true)
+            } returns Either.Right(Unit)
+
+            // Act
+            val result = client.unbindWallet(WALLET_ID)
+
+            // Assert
+            assertThat(result).isEqualTo(Either.Right(Unit))
+            coVerify(exactly = 1) { walletRegistrar.unregister(walletId = WALLET_ID, shouldDeleteSocialRecovery = true) }
+        }
+
+    @Test
+    fun `GIVEN the server unbound but the local state was not saved WHEN unbindWallet THEN it is reported as done`() =
+        runTest {
+            // Arrange
+            coEvery {
+                walletRegistrar.unregister(walletId = WALLET_ID, shouldDeleteSocialRecovery = true)
+            } returns Either.Left(WalletRegistrationError.PersistenceFailed(IllegalStateException()))
+
+            // Act
+            val result = client.unbindWallet(WALLET_ID)
+
+            // Assert
+            assertThat(result).isEqualTo(Either.Right(Unit))
         }
 
     /** Answers the recover call the way the backend would: sealing [storedKey] to the request's own key */
