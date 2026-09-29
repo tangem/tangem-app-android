@@ -7,7 +7,7 @@ import java.math.BigDecimal
  */
 data class PromoCampaign(
     val name: String,
-    val status: String,
+    val status: PromoCampaignStatus,
     val timeline: PromoTimeline,
     val isAlreadyEnrolled: Boolean,
     val payout: PromoPayout,
@@ -19,6 +19,13 @@ data class PromoPayout(
     val isNeeded: Boolean,
     val tokens: List<PromoPayoutToken>,
 )
+
+enum class PromoCampaignStatus {
+    Draft,
+    Active,
+    Paused,
+    Archived,
+}
 
 /** How the device's wallets are registered on enrollment. */
 enum class PromoMatchMode {
@@ -43,7 +50,10 @@ data class PromoLink(
 
 sealed interface PromoDescriptionBlock {
 
-    data class Text(val textKey: String) : PromoDescriptionBlock
+    data class Text(
+        val titleKey: String?,
+        val textKey: String,
+    ) : PromoDescriptionBlock
 
     data class Items(
         val titleKey: String?,

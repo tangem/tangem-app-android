@@ -1980,6 +1980,8 @@
   <string name="promo_campaign_reactivation_summary_description">Earn 0.5% cashback on every swap over $500, on any pair except stable to stable. Max payout $50 per swap.\n\nComplete five qualifying swaps and unlock an extra $10 bonus.\n\nRewards are paid weekly in USDT or USDC on the address selected.</string>
   <string name="promo_campaign_select_cashback_account">Select cashback account</string>
   <string name="promo_campaign_select_token">Select cashback token</string>
+  <string name="promo_campaign_selected_cashback_account">Selected cashback account</string>
+  <string name="promo_campaign_selected_token">Selected cashback token</string>
   <string name="promo_campaign_summary_title">Enroll in %1$s</string>
   <string name="promo_campaign_terms_agreement">I agree with %1$s</string>
   <string name="promo_campaign_terms_agreement_android">I agree with</string>
