@@ -191,7 +191,6 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
                     ),
                 )
             } else {
-                router.pop()
                 router.push(
                     buildWithdrawSwapRoute(
                         userWalletId = params.userWalletId,
