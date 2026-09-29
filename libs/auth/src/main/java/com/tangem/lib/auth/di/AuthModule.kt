@@ -2,6 +2,7 @@ package com.tangem.lib.auth.di
 
 import android.content.Context
 import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.squareup.moshi.Moshi
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.lib.auth.api.AuthApi
@@ -32,7 +33,8 @@ import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.lib.auth.session.SessionTokenRefresher
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.lib.auth.performance.FirebaseNonceRequestPerformanceTracker
-import com.tangem.lib.auth.performance.NonceRequestPerformanceTracker
+import com.tangem.lib.auth.performance.NonceRequestTracker
+import com.tangem.lib.auth.performance.TimeoutReportingNonceRequestTracker
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.lib.auth.session.internal.AuthErrorConverter
 import com.tangem.lib.auth.session.internal.DefaultDeviceRegistrar
@@ -58,6 +60,7 @@ import dagger.multibindings.IntoMap
 import dagger.multibindings.StringKey
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
+import kotlin.time.Duration.Companion.seconds
 import okhttp3.Authenticator
 import okhttp3.Interceptor
 import java.security.KeyStore
@@ -67,6 +70,8 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal object AuthModule {
+
+    private val NONCE_REQUEST_TIMEOUT = 5.seconds
 
     @Provides
     @IntoMap
@@ -194,6 +199,7 @@ internal object AuthModule {
         signedRequestPayload: SignedRequestPayload,
         attestationProvider: AttestationProvider,
         errorConverter: AuthErrorConverter,
+        nonceRequestTracker: NonceRequestTracker,
         deviceRegistrar: Lazy<DeviceRegistrar>,
         dispatchers: CoroutineDispatcherProvider,
     ): SessionTokenRefresher {
@@ -207,6 +213,7 @@ internal object AuthModule {
             signedRequestPayload = signedRequestPayload,
             attestationProvider = attestationProvider,
             errorConverter = errorConverter,
+            nonceRequestTracker = nonceRequestTracker,
             deviceRegistrar = deviceRegistrar,
             clock = Clock.System,
             dispatchers = dispatchers,
@@ -226,6 +233,7 @@ internal object AuthModule {
         attestationProvider: AttestationProvider,
         errorConverter: AuthErrorConverter,
         appPreferencesStore: AppPreferencesStore,
+        nonceRequestTracker: NonceRequestTracker,
         sessionTokenRefresher: Lazy<SessionTokenRefresher>,
         walletRegistrar: WalletRegistrar,
         dispatchers: CoroutineDispatcherProvider,
@@ -241,6 +249,7 @@ internal object AuthModule {
             attestationProvider = attestationProvider,
             errorConverter = errorConverter,
             appPreferencesStore = appPreferencesStore,
+            nonceRequestTracker = nonceRequestTracker,
             sessionTokenRefresher = sessionTokenRefresher,
             walletRegistrar = walletRegistrar,
             dispatchers = dispatchers,
@@ -260,7 +269,7 @@ internal object AuthModule {
         attestationProvider: AttestationProvider,
         errorConverter: AuthErrorConverter,
         appPreferencesStore: AppPreferencesStore,
-        nonceRequestPerformanceTracker: NonceRequestPerformanceTracker,
+        nonceRequestTracker: NonceRequestTracker,
         locks: WalletRegistrationLocks,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletRegistrar {
@@ -275,7 +284,7 @@ internal object AuthModule {
             attestationProvider = attestationProvider,
             errorConverter = errorConverter,
             appPreferencesStore = appPreferencesStore,
-            nonceRequestPerformanceTracker = nonceRequestPerformanceTracker,
+            nonceRequestTracker = nonceRequestTracker,
             locks = locks,
             dispatchers = dispatchers,
         )
@@ -283,8 +292,12 @@ internal object AuthModule {
 
     @Provides
     @Singleton
-    fun provideNonceRequestPerformanceTracker(): NonceRequestPerformanceTracker =
-        FirebaseNonceRequestPerformanceTracker()
+    fun provideNonceRequestTracker(analyticsEventHandler: AnalyticsEventHandler): NonceRequestTracker =
+        TimeoutReportingNonceRequestTracker(
+            delegate = FirebaseNonceRequestPerformanceTracker(),
+            analyticsEventHandler = analyticsEventHandler,
+            timeout = NONCE_REQUEST_TIMEOUT,
+        )
 
     @Provides
     @Singleton
