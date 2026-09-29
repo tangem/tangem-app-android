@@ -106,6 +106,7 @@ internal class WcPairComponent(
                     portfolioFetcher = model.portfolioFetcher,
                     bsCallback = model.portfolioSelectorCallback,
                     controller = model.selectorController,
+                    settings = PortfolioSelectorComponent.Settings(isJointAccountsIncluded = true),
                 ),
             )
         }
