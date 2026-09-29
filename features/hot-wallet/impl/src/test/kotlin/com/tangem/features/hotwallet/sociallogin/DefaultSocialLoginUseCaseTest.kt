@@ -16,12 +16,14 @@ import com.tangem.domain.sociallogin.models.SocialProviderIdToken
 import com.tangem.domain.sociallogin.usecase.GenerateRecoveryKeyUseCase
 import com.tangem.domain.sociallogin.usecase.GetSocialRecoveryKeyUseCase
 import com.tangem.domain.sociallogin.usecase.ReadSocialBackupUseCase
+import com.tangem.domain.sociallogin.usecase.RegisterRestoredWalletUseCase
 import com.tangem.domain.sociallogin.usecase.RegisterSocialRecoveryUseCase
 import com.tangem.domain.sociallogin.usecase.SetSocialBackupCompletedUseCase
 import com.tangem.domain.sociallogin.usecase.SignInWithSocialProviderUseCase
 import com.tangem.domain.sociallogin.usecase.SignOutFromSocialProviderUseCase
 import com.tangem.domain.sociallogin.usecase.WriteSocialBackupUseCase
 import com.tangem.domain.wallets.builder.HotUserWalletBuilder
+import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.domain.wallets.usecase.ExportSeedPhraseUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.hotwallet.MnemonicRepository
@@ -65,6 +67,8 @@ internal class DefaultSocialLoginUseCaseTest {
     private val readSocialBackupUseCase: ReadSocialBackupUseCase = mockk(relaxed = true)
     private val mnemonicRepository: MnemonicRepository = mockk()
     private val hotWalletImporter: HotWalletImporter = mockk()
+    private val registerRestoredWalletUseCase: RegisterRestoredWalletUseCase = mockk()
+    private val deleteWalletUseCase: DeleteWalletUseCase = mockk()
 
     private lateinit var useCase: DefaultSocialLoginUseCase
 
@@ -77,6 +81,8 @@ internal class DefaultSocialLoginUseCaseTest {
         readSocialBackupUseCase = readSocialBackupUseCase,
         registerSocialRecoveryUseCase = registerSocialRecoveryUseCase,
         setSocialBackupCompletedUseCase = setSocialBackupCompletedUseCase,
+        registerRestoredWalletUseCase = registerRestoredWalletUseCase,
+        deleteWalletUseCase = deleteWalletUseCase,
         tangemHotSdk = tangemHotSdk,
         hotUserWalletBuilderFactory = hotUserWalletBuilderFactory,
         saveWalletUseCase = saveWalletUseCase,
@@ -102,6 +108,8 @@ internal class DefaultSocialLoginUseCaseTest {
             readSocialBackupUseCase,
             mnemonicRepository,
             hotWalletImporter,
+            registerRestoredWalletUseCase,
+            deleteWalletUseCase,
         )
 
         useCase = createUseCase()
@@ -129,6 +137,8 @@ internal class DefaultSocialLoginUseCaseTest {
 
         every { mnemonicRepository.generateMnemonic(any<String>()) } returns mockk()
         coEvery { hotWalletImporter.import(any(), any(), any(), any(), any()) } returns RESTORED_WALLET_ID.right()
+        coEvery { registerRestoredWalletUseCase(RESTORED_WALLET_ID) } returns Unit.right()
+        coEvery { deleteWalletUseCase(RESTORED_WALLET_ID) } returns false.right()
     }
 
     private fun restoredBackup() = RestoredSocialBackup(
@@ -307,6 +317,56 @@ internal class DefaultSocialLoginUseCaseTest {
                 hotWalletImporter.import(any(), any(), any(), any(), any())
             }
             coVerify(exactly = 0) { registerSocialRecoveryUseCase(any(), any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN identity owns a wallet WHEN signIn THEN the imported wallet is registered`() = runTest {
+        // Arrange
+        bindIdentity()
+        coEvery { readSocialBackupUseCase(any()) } returns restoredBackup().right()
+
+        // Act
+        useCase.signIn(PROVIDER) { CONSENT }
+
+        // Assert
+        coVerifyOrder {
+            hotWalletImporter.import(any(), any(), any(), any(), any())
+            registerRestoredWalletUseCase(RESTORED_WALLET_ID)
+        }
+    }
+
+    @Test
+    fun `GIVEN the registration fails WHEN signIn THEN the imported wallet is discarded`() = runTest {
+        // Arrange
+        bindIdentity()
+        coEvery { readSocialBackupUseCase(any()) } returns restoredBackup().right()
+        coEvery { registerRestoredWalletUseCase(RESTORED_WALLET_ID) } returns SocialLoginError.NetworkError.left()
+
+        // Act
+        val actual = useCase.signIn(PROVIDER) { CONSENT }
+
+        // Assert
+        assertThat(actual).isEqualTo(SocialLoginError.NetworkError.left())
+        coVerify(exactly = 1) { deleteWalletUseCase(RESTORED_WALLET_ID) }
+        coVerify(exactly = 1) { setSocialBackupCompletedUseCase(RESTORED_WALLET_ID, false) }
+    }
+
+    @Test
+    fun `GIVEN the wallet was already on the device AND the registration fails WHEN signIn THEN it is kept`() =
+        runTest {
+            // Arrange
+            bindIdentity()
+            coEvery { readSocialBackupUseCase(any()) } returns restoredBackup().right()
+            coEvery { hotWalletImporter.import(any(), any(), any(), any(), any()) } returns
+                HotWalletImportError.AlreadySaved.left()
+            coEvery { registerRestoredWalletUseCase(RESTORED_WALLET_ID) } returns SocialLoginError.ServerError().left()
+
+            // Act
+            val actual = useCase.signIn(PROVIDER) { CONSENT }
+
+            // Assert
+            assertThat(actual).isEqualTo(SocialLoginError.ServerError().left())
+            coVerify(exactly = 0) { deleteWalletUseCase(any()) }
         }
 
     @Test
