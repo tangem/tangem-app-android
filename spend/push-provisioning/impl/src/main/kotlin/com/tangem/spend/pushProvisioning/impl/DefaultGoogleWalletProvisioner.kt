@@ -91,6 +91,7 @@ internal class DefaultGoogleWalletProvisioner @Inject constructor(
 
         return addFromActivity(card.lastFourDigits) { activity ->
             checkStableHardwareId() ?: awaitAddition { complete ->
+                logger.i("Push provisioning started: push, $environment SDK")
                 sdk.push(card = card, activity = activity, listener = pushListener(complete))
             }
         }
@@ -213,6 +214,7 @@ internal class DefaultGoogleWalletProvisioner @Inject constructor(
 
         return when {
             pendingToken != null -> awaitAddition { complete ->
+                logger.i("Push provisioning started: tokenize, $environment SDK")
                 sdk.tokenize(
                     token = pendingToken,
                     displayName = displayName,
@@ -267,13 +269,23 @@ internal class DefaultGoogleWalletProvisioner @Inject constructor(
 
     private fun onAddResult(lastFourDigits: String, result: AddResult): AddResult {
         when (result) {
-            AddResult.Added -> recentlyAddedCards += lastFourDigits
-            AddResult.AlreadyAdded -> {
-                logger.i("Card is already in the wallet")
+            AddResult.Added -> {
+                logger.i("Push provisioning succeeded")
                 recentlyAddedCards += lastFourDigits
             }
-            AddResult.Cancelled -> Unit
-            is AddResult.Failed -> logger.e("Adding card failed: ${result.description}")
+            AddResult.AlreadyAdded -> {
+                logger.i("Push provisioning found the card already in the wallet")
+                recentlyAddedCards += lastFourDigits
+            }
+            AddResult.Cancelled -> logger.i("Push provisioning cancelled")
+            is AddResult.Failed -> if (result.reason == FailureReason.ADDITION_IN_PROGRESS) {
+                logger.i("Push provisioning skipped: another card is being added")
+            } else {
+                logger.e(
+                    "Push provisioning failed: ${result.reason}, SDK code ${result.sdkErrorCode}, " +
+                        "wallet code ${result.walletErrorCode}, $environment SDK, ${result.description}",
+                )
+            }
         }
         return result
     }
