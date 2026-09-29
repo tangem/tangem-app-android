@@ -310,7 +310,7 @@ internal class DefaultPromoRepositoryTest {
 
         private fun createV3Dto() = PromotionsV3Response.PromotionDto(
             name = "example_campaign",
-            status = "active",
+            status = PromotionsV3Response.Status.ACTIVE,
             startAt = "2026-06-01T00:00:00Z",
             endAt = "2026-08-31T23:59:59Z",
             isAlreadyEnrolled = false,
@@ -331,7 +331,7 @@ internal class DefaultPromoRepositoryTest {
 
         private fun createExpectedCampaign() = PromoCampaign(
             name = "example_campaign",
-            status = "active",
+            status = PromoCampaignStatus.Active,
             timeline = PromoTimeline(
                 start = Instant.parse("2026-06-01T00:00:00Z"),
                 end = Instant.parse("2026-08-31T23:59:59Z"),
