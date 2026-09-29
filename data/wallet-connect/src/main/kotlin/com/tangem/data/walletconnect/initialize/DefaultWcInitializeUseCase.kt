@@ -38,11 +38,6 @@ internal class DefaultWcInitializeUseCase(
     // settlement only arrives over a live SDK. An expired one counts too, since the SDK may have settled it
     // before the process died.
     private suspend fun hasLiveWork(): Boolean = withContext(dispatchers.io) {
-        val approvals = if (featureToggles.isInterruptedApprovalRecoveryEnabled) {
-            store.pendingApprovalIncludingExpired
-        } else {
-            store.pendingApproval
-        }
-        store.sessions.first().isNotEmpty() || approvals.first().isNotEmpty()
+        store.sessions.first().isNotEmpty() || store.pendingApprovalIncludingExpired.first().isNotEmpty()
     }
 }
