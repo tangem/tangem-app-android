@@ -57,7 +57,7 @@ internal class DefaultWcSessionsManager(
         .transformLatest { triple ->
             val (wallets, inStore, allWalletsAccounts) = triple
             val inSdk: List<Wallet.Model.Session> = wcSdk.getActiveSessions()
-            val actualInStore = if (featureToggles.isInterruptedApprovalRecoveryEnabled) {
+            val actualInStore = if (featureToggles.isOnDemandInitEnabled) {
                 inStore + interruptedApprovals.complete(inSdk)
             } else {
                 inStore

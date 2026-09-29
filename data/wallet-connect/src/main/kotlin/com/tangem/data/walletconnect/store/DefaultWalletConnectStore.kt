@@ -23,7 +23,7 @@ internal class DefaultWalletConnectStore(
         get() = persistenceStore.data
 
     override val pendingApproval: Flow<Set<WcPendingApprovalSessionDTO>>
-        get() = if (featureToggles.isInterruptedApprovalRecoveryEnabled) {
+        get() = if (featureToggles.isOnDemandInitEnabled) {
             // Expired approvals are only hidden here: one of them may have been settled right before the process
             // died, so they are removed where the SDK sessions are known.
             pendingApprovalSessionsStore.data
@@ -39,7 +39,7 @@ internal class DefaultWalletConnectStore(
     override val pendingApprovalIncludingExpired: Flow<Set<WcPendingApprovalSessionDTO>>
         get() = pendingApprovalSessionsStore.data
 
-    @RemoveWithToggle("AND_18136_WALLETCONNECT_INTERRUPTED_APPROVAL_RECOVERY_ENABLED")
+    @RemoveWithToggle("AND_18021_WALLETCONNECT_ON_DEMAND_INIT_ENABLED")
     private fun removingExpiredPendingApproval(): Flow<Set<WcPendingApprovalSessionDTO>> =
         pendingApprovalSessionsStore.data
             .transform { pendingApprovalSet ->
