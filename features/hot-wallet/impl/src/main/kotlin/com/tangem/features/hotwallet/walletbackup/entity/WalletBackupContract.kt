@@ -12,7 +12,7 @@ internal data class WalletBackupUM(
     val onGoogleDriveClick: () -> Unit,
     val onHardwareWalletClick: () -> Unit,
     val isBackedUp: Boolean,
-    /** Hidden for a social-login wallet, whose seed is already in the cloud under its own key (FR-10) */
+    /** Hidden for a social-login wallet, whose seed is already in the cloud under its own key */
     val isGoogleDriveOptionShown: Boolean = true,
 ) {
 

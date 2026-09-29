@@ -7,7 +7,7 @@ import javax.inject.Inject
 
 /**
  * Providers the onboarding may offer: none while the feature is off, otherwise the ones usable on this
- * device (FR-13).
+ * device.
  */
 class GetAvailableSocialLoginProvidersUseCase @Inject constructor(
     private val socialLoginProviderRepository: SocialLoginProviderRepository,
