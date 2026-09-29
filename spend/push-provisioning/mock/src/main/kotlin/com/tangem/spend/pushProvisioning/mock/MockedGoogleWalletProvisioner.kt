@@ -19,6 +19,8 @@ internal class MockedGoogleWalletProvisioner @Inject constructor() : GoogleWalle
 
     override val environment: Environment = Environment.TEST
 
+    override val isAdditionInProgress: Boolean = false
+
     override val walletChanges: Flow<Unit> = flow { awaitCancellation() }
 
     override suspend fun getCardStatus(lastFourDigits: String): CardStatus {
@@ -44,6 +46,10 @@ internal class MockedGoogleWalletProvisioner @Inject constructor() : GoogleWalle
                 reason = FailureReason.NETWORK_ERROR,
                 description = "Mocked network error",
             )
+            RESULT_DECLINED -> AddResult.Failed(
+                reason = FailureReason.TOKENIZATION_DECLINED,
+                description = "Mocked decline",
+            )
             RESULT_FAILED -> AddResult.Failed(reason = FailureReason.MEAWALLET_ERROR, description = "Mocked failure")
             else -> AddResult.Added
         }
@@ -60,6 +66,7 @@ internal class MockedGoogleWalletProvisioner @Inject constructor() : GoogleWalle
         const val RESULT_ALREADY_ADDED = "already_added"
         const val RESULT_CANCELLED = "cancelled"
         const val RESULT_NETWORK_ERROR = "network_error"
+        const val RESULT_DECLINED = "declined"
         const val RESULT_FAILED = "failed"
         const val STATUS_UNSUPPORTED = "unsupported"
         const val STATUS_UNKNOWN = "unknown"
