@@ -51,5 +51,9 @@ sealed interface SocialLoginOutcome {
 
     data class WalletCreated(override val userWalletId: UserWalletId) : SocialLoginOutcome
 
-    data class WalletRestored(override val userWalletId: UserWalletId) : SocialLoginOutcome
+    /** @property isNewOnDevice false when the wallet was already on this device before the restore */
+    data class WalletRestored(
+        override val userWalletId: UserWalletId,
+        val isNewOnDevice: Boolean,
+    ) : SocialLoginOutcome
 }
