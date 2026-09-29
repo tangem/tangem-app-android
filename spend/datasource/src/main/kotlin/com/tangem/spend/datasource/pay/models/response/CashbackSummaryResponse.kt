@@ -1,34 +1,34 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
-import java.math.BigDecimal
+import com.tangem.domain.models.serialization.SerializedBigDecimal
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * Response from `GET /v1/customer/cashback/summary`.
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class CashbackSummaryResponse(
-    @Json(name = "result") val result: Result?,
+    @SerialName("result") val result: Result?,
 ) {
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Result(
-        @Json(name = "cashback_program_status") val cashbackProgramStatus: String,
-        @Json(name = "cashback_display_mode") val cashbackDisplayMode: String,
-        @Json(name = "period") val period: Period,
-        @Json(name = "payout_currency") val payoutCurrency: String?,
-        @Json(name = "confirmed_amount") val confirmedAmount: BigDecimal,
-        @Json(name = "total_earned_amount") val totalEarnedAmount: BigDecimal?,
-        @Json(name = "previous_payout_end_date") val previousPayoutEndDate: String?,
-        @Json(name = "previous_payout_amount") val previousPayoutAmount: BigDecimal?,
-        @Json(name = "currency") val currency: String,
+        @SerialName("cashback_program_status") val cashbackProgramStatus: String,
+        @SerialName("cashback_display_mode") val cashbackDisplayMode: String,
+        @SerialName("period") val period: Period,
+        @SerialName("payout_currency") val payoutCurrency: String?,
+        @SerialName("confirmed_amount") val confirmedAmount: SerializedBigDecimal,
+        @SerialName("total_earned_amount") val totalEarnedAmount: SerializedBigDecimal?,
+        @SerialName("previous_payout_end_date") val previousPayoutEndDate: String?,
+        @SerialName("previous_payout_amount") val previousPayoutAmount: SerializedBigDecimal?,
+        @SerialName("currency") val currency: String,
     )
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Period(
-        @Json(name = "year") val year: Int,
-        @Json(name = "month") val month: Int,
-        @Json(name = "payout_start_date") val payoutStartDate: String?,
-        @Json(name = "payout_end_date") val payoutEndDate: String?,
+        @SerialName("year") val year: Int,
+        @SerialName("month") val month: Int,
+        @SerialName("payout_start_date") val payoutStartDate: String?,
+        @SerialName("payout_end_date") val payoutEndDate: String?,
     )
 }

@@ -16,8 +16,8 @@ Owned by the core Android team.
 - **Files & assets** — `FileReader`, `AssetLoader` (load bundled JSON assets by `KType`/`Type`).
 - **Runtime state** — in-memory stores `RuntimeStateStore`, `RuntimeSharedStore`,
   `RuntimeSharedMapStore` (+ `KotlinxDataStoreSerializer`).
-- **DataStore utilities** — `AppDataStoreFactory`, `MoshiDataStoreSerializer`, `MoshiTypesExt`,
-  `DataStoreExt`.
+- **DataStore utilities** — `AppDataStoreFactory`, `DeleteObsoleteFileMigration` (drops the file of a
+  renamed store), `MoshiDataStoreSerializer`, `MoshiTypesExt`, `DataStoreExt`.
 - **Connectivity** — `NetworkConnectionManager`.
 - **Moshi** — the `@SdkMoshi` qualifier and `SdkMoshiConfigurer` extension point.
 

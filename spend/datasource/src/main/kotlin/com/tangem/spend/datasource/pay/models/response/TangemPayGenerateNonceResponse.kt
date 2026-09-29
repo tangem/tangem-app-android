@@ -1,10 +1,10 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class TangemPayGenerateNonceResponse(
-    @Json(name = "nonce") val nonce: String,
-    @Json(name = "session_id") val sessionId: String,
+    @SerialName("nonce") val nonce: String,
+    @SerialName("session_id") val sessionId: String,
 )
