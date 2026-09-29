@@ -77,7 +77,6 @@ class GetCryptoCurrencyActionsUseCase(
                             userWallet = userWallet,
                             cryptoCurrencyStatus = cryptoCurrencyStatus,
                             stakingAvailability = stakingAvailability,
-                            yieldSupplyAvailability = yieldSupplyAvailability,
                         )
                     }
             }
