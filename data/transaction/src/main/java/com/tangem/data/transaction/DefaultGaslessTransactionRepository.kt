@@ -7,8 +7,6 @@ import com.tangem.data.transaction.convertes.GaslessBatchTransactionRequestBuild
 import com.tangem.data.transaction.convertes.GaslessSignedTransactionResultConverter
 import com.tangem.data.transaction.convertes.GaslessTransactionRequestBuilder
 import com.tangem.data.transaction.convertes.GaslessTxDataToGaslessRequestConverter
-import com.tangem.grow.datasource.gasless.GaslessTxServiceApi
-import com.tangem.grow.datasource.gasless.GaslessTxServiceApiV2
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.GaslessTransactionRepository
@@ -17,6 +15,8 @@ import com.tangem.domain.transaction.models.Eip7702Authorization
 import com.tangem.domain.transaction.models.GaslessBatchTransactionData
 import com.tangem.domain.transaction.models.GaslessSignedTransactionResult
 import com.tangem.domain.transaction.models.GaslessTransactionData
+import com.tangem.grow.datasource.gasless.GaslessTxServiceApi
+import com.tangem.grow.datasource.gasless.GaslessTxServiceApiV2
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
@@ -170,7 +170,7 @@ class DefaultGaslessTransactionRepository(
         val backendAddress = runSuspendCatching { getTokenFeeReceiverAddress() }
             .onFailure { TangemLogger.e("Failed to load gasless fee recipient; serving hardcoded addresses", it) }
             .getOrNull()
-        return KNOWN_FEE_COLLECTION_ADDRESSES + setOfNotNull(backendAddress)
+        return KNOWN_FEE_COLLECTION_ADDRESSES + TRON_GASLESS_FEE_RECIPIENT + setOfNotNull(backendAddress)
     }
 
     private companion object {
@@ -180,6 +180,10 @@ class DefaultGaslessTransactionRepository(
         val KNOWN_FEE_COLLECTION_ADDRESSES = setOf(
             "0xFc719364BcCdc92D055d8C3164eF1ab4f5A9182c",
             "0xAf722F46145fbb106379d506ED3a5B96f110c8E5",
+        )
+
+        val TRON_GASLESS_FEE_RECIPIENT = setOf(
+            "TSWsmaEDgWaE2VsP9tCBGh5GbBRbrdHSuZ",
         )
     }
 }
