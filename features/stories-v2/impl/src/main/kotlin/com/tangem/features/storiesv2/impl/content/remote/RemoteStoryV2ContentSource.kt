@@ -160,8 +160,6 @@ internal class RemoteStoryV2ContentSource @Inject constructor(
 
         return StoryV2Composition(
             id = story.slug,
-            // Remote stories are edited in place and carry no version.
-            version = 0,
             origin = StoryV2Origin.REMOTE,
             endBehavior = story.endBehavior,
             actions = story.actions,
