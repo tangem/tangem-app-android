@@ -13,6 +13,7 @@ import com.tangem.domain.walletconnect.model.WcPairError
 import com.tangem.domain.walletconnect.model.WcPairError.ApprovalFailed
 import com.tangem.domain.walletconnect.model.WcPendingApprovalSessionDTO
 import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
@@ -107,6 +108,10 @@ internal class WcPairSdkDelegate(
         // Reown opens the relay socket only on an outgoing call or an activity resume, and with on-demand init the
         // SDK starts after MainActivity has already resumed. Without a session to extend, nothing else would open
         // it, and the settle of a pending approval would wait for the next resume.
+        @RemoveWithToggle(
+            toggleName = "AND_18021_WALLETCONNECT_ON_DEMAND_INIT_ENABLED",
+            description = "Subscribe unconditionally and drop the featureToggles dependency.",
+        )
         if (!featureToggles.isOnDemandInitEnabled) return
 
         scope.launch {
