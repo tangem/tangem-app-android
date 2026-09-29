@@ -120,11 +120,18 @@ internal object BlockAidMapper {
     }
 
     private fun mapSimulationSuccessResult(from: AccountSummaryResponse): SimulationResult {
-        return when {
-            !from.exposures.isNullOrEmpty() -> mapApproveTransaction(from.exposures)
-            !from.assetsDiffs.isNullOrEmpty() -> mapSendReceiveTransaction(from.assetsDiffs)
-            else -> SimulationResult.Success(data = SimulationData.NoWalletChangesDetected)
+        val approvals = mapApprovals(from.exposures.orEmpty())
+        val transfers = mapTransfers(from.assetsDiffs.orEmpty())
+        val data = when {
+            approvals.isNotEmpty() -> SimulationData.Approve(
+                items = approvals,
+                send = transfers.send,
+                receive = transfers.receive,
+            )
+            transfers.send.isNotEmpty() || transfers.receive.isNotEmpty() -> transfers
+            else -> SimulationData.NoWalletChangesDetected
         }
+        return SimulationResult.Success(data)
     }
 
     private fun mapToSolanaAssetsDiffs(assetsDiffs: List<SolanaTransactionAssetDiff>): SimulationResult {
@@ -170,18 +177,13 @@ internal object BlockAidMapper {
         }
     }
 
-    private fun mapApproveTransaction(exposures: List<Exposure>?): SimulationResult {
-        val amounts: List<ApproveInfo>? = exposures?.flatMap { exposure ->
+    private fun mapApprovals(exposures: List<Exposure>): List<ApproveInfo> {
+        return exposures.flatMap { exposure ->
             if (exposure.assetType.isNFT()) {
                 listOf(mapApproveNftTransaction(exposure))
             } else {
                 mapTransaction(exposure)
             }
-        }
-        return if (!amounts.isNullOrEmpty()) {
-            SimulationResult.Success(SimulationData.Approve(amounts))
-        } else {
-            SimulationResult.Success(SimulationData.NoWalletChangesDetected)
         }
     }
 
@@ -215,11 +217,11 @@ internal object BlockAidMapper {
         )
     }
 
-    private fun mapSendReceiveTransaction(assetDiffs: List<AssetDiff>?): SimulationResult {
+    private fun mapTransfers(assetDiffs: List<AssetDiff>): SimulationData.SendAndReceive {
         val sendInfo = arrayListOf<AmountInfo>()
         val receiveInfo = arrayListOf<AmountInfo>()
 
-        assetDiffs?.forEach { diff ->
+        assetDiffs.forEach { diff ->
             val token = TokenInfo(
                 chainId = diff.asset.chainId,
                 logoUrl = diff.asset.logoUrl,
@@ -256,11 +258,7 @@ internal object BlockAidMapper {
             }
         }
 
-        return if (sendInfo.isNotEmpty() || receiveInfo.isNotEmpty()) {
-            SimulationResult.Success(SimulationData.SendAndReceive(send = sendInfo, receive = receiveInfo))
-        } else {
-            SimulationResult.Success(SimulationData.NoWalletChangesDetected)
-        }
+        return SimulationData.SendAndReceive(send = sendInfo, receive = receiveInfo)
     }
 
     private fun String.isNFT(): Boolean {

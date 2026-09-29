@@ -1,6 +1,5 @@
 package com.tangem.features.storiesv2.impl.content
 
-import com.tangem.features.storiesv2.impl.content.StoryV2Haptic
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.stringReference

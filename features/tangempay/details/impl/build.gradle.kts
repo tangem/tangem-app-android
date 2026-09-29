@@ -48,6 +48,9 @@ dependencies {
     implementation(projects.domain.wallets.models)
     runtimeOnly(projects.domain.txhistory)
 
+    /** Spend */
+    implementation(projects.spend.pushProvisioning.api)
+
     /** Compose */
     api(deps.compose.coil)
     api(deps.compose.foundation)

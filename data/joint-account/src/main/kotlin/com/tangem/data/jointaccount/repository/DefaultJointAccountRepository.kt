@@ -183,10 +183,11 @@ internal class DefaultJointAccountRepository @Inject constructor(
                 // A link the backend does not know is as dead as one it refuses: retrying it can only fail again
                 val isInvalidLink = error is ApiResponseError.HttpException &&
                     error.code in DEAD_INVITE_CODES
-                if (isInvalidLink) {
-                    JointAccountInvitePreviewError.InvalidLink.left()
-                } else {
-                    JointAccountInvitePreviewError.LoadFailed(cause = error).left()
+                when {
+                    isInvalidLink -> JointAccountInvitePreviewError.InvalidLink.left()
+                    error is ApiResponseError.NetworkException || error is ApiResponseError.TimeoutException ->
+                        JointAccountInvitePreviewError.Unreachable(cause = error).left()
+                    else -> JointAccountInvitePreviewError.LoadFailed(cause = error).left()
                 }
             },
         )
