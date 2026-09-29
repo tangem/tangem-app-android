@@ -3,9 +3,10 @@ package com.tangem.data.pay.repository
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.squareup.moshi.Moshi
+import com.tangem.core.remote.json.NetworkJsonFactory
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.data.common.cache.CacheRegistry
+import com.tangem.data.visa.utils.TangemPayTxHistoryItemConverter
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryListBatchingContext
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryListConfig
@@ -109,12 +110,15 @@ internal class DefaultTangemPayTxHistoryRepositoryTest {
             cacheRegistry = cacheRegistry,
             txHistoryItemsStore = txHistoryItemsStore,
             dispatchers = TestingCoroutineDispatcherProvider(),
-            moshi = Moshi.Builder().build(),
+            txHistoryItemConverter = TangemPayTxHistoryItemConverter(
+                json = NetworkJsonFactory.create(),
+                analytics = mockk(relaxed = true),
+            ),
         )
     }
 
     private fun transactionResponse() = TangemPayTransactionResponse(
-        result = TangemPayTxHistoryResponse.Transaction(id = TX_ID, type = "SPEND"),
+        result = TangemPayTxHistoryResponse.Transaction.Spend(id = TX_ID, spend = null),
     )
 
     private fun historyResponse() = TangemPayTxHistoryResponse(

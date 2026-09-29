@@ -5,15 +5,13 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.remote.config.managers.ApiConfigsManager
-import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.CardActivationOrder
+import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderData
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.OrderType
-import com.tangem.domain.pay.model.PlasticCardOrder
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.spend.datasource.config.TangemPay
@@ -56,56 +54,13 @@ internal class MockAwareCustomerOrderRepository @Inject constructor(
 
     override suspend fun createOrder(
         userWalletId: UserWalletId,
-        type: OrderType,
-        specificationName: String?,
-        idempotencyKey: String,
-        targetTariffPlanId: String?,
-        transitionType: TangemPayTariffPlanTransition.Type?,
-        chainId: Int?,
-        deeplinkValue: String?,
-    ): Either<VisaApiError, Order> = real.createOrder(
-        userWalletId = userWalletId,
-        type = type,
-        specificationName = specificationName,
-        idempotencyKey = idempotencyKey,
-        targetTariffPlanId = targetTariffPlanId,
-        transitionType = transitionType,
-        chainId = chainId,
-        deeplinkValue = deeplinkValue,
-    )
-
-    override suspend fun createPlasticIssueOrder(
-        userWalletId: UserWalletId,
-        specificationName: String,
-        order: PlasticCardOrder,
-        idempotencyKey: String,
-    ): Either<VisaApiError, Order> = real.createPlasticIssueOrder(
-        userWalletId = userWalletId,
-        specificationName = specificationName,
-        order = order,
-        idempotencyKey = idempotencyKey,
-    )
-
-    override suspend fun createPlasticReissueOrder(
-        userWalletId: UserWalletId,
-        sourceProductInstanceId: String,
-        order: PlasticCardOrder,
-        idempotencyKey: String,
-    ): Either<VisaApiError, Order> = real.createPlasticReissueOrder(
-        userWalletId = userWalletId,
-        sourceProductInstanceId = sourceProductInstanceId,
-        order = order,
-        idempotencyKey = idempotencyKey,
-    )
-
-    override suspend fun createCardActivationOrder(
-        userWalletId: UserWalletId,
-        order: CardActivationOrder,
+        request: CustomerOrderRequest,
         idempotencyKey: String,
     ): Either<VisaApiError, Order> {
-        if (!isMockMode) {
-            return real.createCardActivationOrder(userWalletId, order, idempotencyKey)
+        if (!isMockMode || request !is CustomerOrderRequest.CardActivation) {
+            return real.createOrder(userWalletId = userWalletId, request = request, idempotencyKey = idempotencyKey)
         }
+        val order = request.order
         if (order.lastFourDigits != MOCK_VALID_LAST_DIGITS) return VisaApiError.CardActivationInvalidCardData.left()
 
         val created = Order(
