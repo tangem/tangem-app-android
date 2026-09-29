@@ -223,32 +223,32 @@ private class BankSectionPreviewProvider : PreviewParameterProvider<BankSectionU
     override val values: Sequence<BankSectionUM> = sequenceOf(
         BankSectionUM.Loading,
         BankSectionUM.Error(onRetryClick = {}),
-        previewContent(
-            recents = RecentsUM.Content(
-                recipients = persistentListOf(
-                    RecentRecipientUM(
-                        id = "1",
-                        initial = "A",
-                        name = "Andrei M.",
-                        accountNumber = "0000000000",
-                    ),
-                    RecentRecipientUM(
-                        id = "2",
-                        initial = "J",
-                        name = "Johnny S.",
-                        accountNumber = "0000000000",
-                    ),
-                ),
-                onRecipientClick = {},
-                onSeeAllClick = {},
-            ),
-        ),
+        previewContent(recents = previewRecents(onSeeAllClick = {})),
+        previewContent(recents = previewRecents(onSeeAllClick = null)),
         previewContent(recents = RecentsUM.Loading),
-        previewContent(recents = RecentsUM.Empty(onSeeAllClick = null)),
-        previewContent(recents = RecentsUM.Empty(onSeeAllClick = {})),
+        previewContent(recents = RecentsUM.Empty),
         previewContent(recents = RecentsUM.Error(onRetryClick = {})),
     )
 }
+
+private fun previewRecents(onSeeAllClick: (() -> Unit)?): RecentsUM.Content = RecentsUM.Content(
+    recipients = persistentListOf(
+        RecentRecipientUM(
+            id = "1",
+            initial = "A",
+            name = "Andrei M.",
+            accountNumber = "0000000000",
+        ),
+        RecentRecipientUM(
+            id = "2",
+            initial = "J",
+            name = "Johnny S.",
+            accountNumber = "0000000000",
+        ),
+    ),
+    onRecipientClick = {},
+    onSeeAllClick = onSeeAllClick,
+)
 
 private class SwapRecentsPreviewProvider : PreviewParameterProvider<TokenRecentsUM> {
     override val values: Sequence<TokenRecentsUM> = sequenceOf(
