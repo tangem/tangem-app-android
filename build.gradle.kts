@@ -5,6 +5,7 @@ plugins {
     alias(deps.plugins.kotlin.kapt) apply false
     alias(deps.plugins.android.application) apply false
     alias(deps.plugins.android.library) apply false
+    alias(deps.plugins.android.test) apply false
     alias(deps.plugins.hilt.android) apply false
     alias(deps.plugins.google.services) apply false
     alias(deps.plugins.firebase.crashlytics) apply false
@@ -259,13 +260,6 @@ dependencyAnalysis {
                 exclude("com.appsflyer:oaid")
                 // Moshi adapters are registered reflectively when building the Moshi instance.
                 exclude("com.squareup.moshi:moshi-adapters")
-                // :data:wallet-connect excludes app.cash.sqldelight:android-driver from both reown
-                // artifacts, so these unexcluded declarations are what supply that driver at runtime.
-                // Nothing here references reown by type — dropping them crashes the app on start.
-                exclude(
-                    "com.reown:android-core",
-                    "com.reown:walletkit",
-                )
                 // agcp brings the AGConnect runtime the huawei flavor reads through
                 // AGConnectOptionsBuilder in HuaweiPushNotificationsTokenProvider.
                 exclude("com.huawei.agconnect:agcp")
