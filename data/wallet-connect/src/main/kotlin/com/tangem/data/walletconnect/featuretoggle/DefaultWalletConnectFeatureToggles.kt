@@ -13,4 +13,9 @@ internal class DefaultWalletConnectFeatureToggles(
 
     override val isOnDemandInitEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_18021_WALLETCONNECT_ON_DEMAND_INIT_ENABLED)
+
+    override val isInterruptedApprovalRecoveryEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(
+            FeatureToggles.AND_18136_WALLETCONNECT_INTERRUPTED_APPROVAL_RECOVERY_ENABLED,
+        )
 }
