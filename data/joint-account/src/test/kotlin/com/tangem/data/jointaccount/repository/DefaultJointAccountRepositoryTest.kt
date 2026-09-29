@@ -360,6 +360,26 @@ internal class DefaultJointAccountRepositoryTest {
         assertThat(actual).isEqualTo(Either.Left(JointAccountInvitePreviewError.InvalidLink))
     }
 
+    /** A link opened right after a Quick Share transfer finds the phone still reconnecting: worth a retry, not a dead end */
+    @ParameterizedTest
+    @MethodSource("provideUnreachableCauses")
+    fun `GIVEN request got no answer WHEN getInvitePreview THEN Unreachable`(cause: ApiResponseError) = runTest {
+        // Arrange
+        coEvery { jointAccountApi.getJointAccountInvite(any(), any()) } returns
+            ApiResponse.Error(cause = cause) as ApiResponse<JointAccountInvitePreviewDto>
+
+        // Act
+        val actual = repository.getInvitePreview(walletId = WALLET_ID, inviteId = INVITE_A)
+
+        // Assert
+        assertThat(actual).isEqualTo(Either.Left(JointAccountInvitePreviewError.Unreachable(cause = cause)))
+    }
+
+    private fun provideUnreachableCauses() = listOf(
+        ApiResponseError.NetworkException(),
+        ApiResponseError.TimeoutException(),
+    )
+
     @Test
     fun `GIVEN server error WHEN getInvitePreview THEN LoadFailed`() = runTest {
         // Arrange

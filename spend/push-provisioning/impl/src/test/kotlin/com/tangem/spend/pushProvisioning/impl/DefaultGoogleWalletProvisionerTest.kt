@@ -2,6 +2,9 @@ package com.tangem.spend.pushProvisioning.impl
 
 import android.app.Activity
 import app.cash.turbine.test
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
 import com.google.android.gms.tapandpay.TapAndPay
 import com.google.android.gms.tapandpay.TapAndPayStatusCodes
 import com.google.common.truth.Truth.assertThat
@@ -18,6 +21,8 @@ import com.tangem.spend.pushProvisioning.GoogleWalletProvisioner.Environment
 import com.tangem.spend.pushProvisioning.GoogleWalletProvisioner.FailureReason
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
+import com.tangem.utils.logging.Severity
+import com.tangem.utils.logging.TangemLogger
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.justRun
@@ -30,11 +35,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class DefaultGoogleWalletProvisionerTest {
@@ -47,11 +54,14 @@ internal class DefaultGoogleWalletProvisionerTest {
     fun setUp() {
         clearMocks(sdk)
         every { sdk.isOsSupported } returns true
+        every { sdk.isProdSdk } returns false
         every { sdk.isWalletAvailable() } returns true
         justRun { sdk.initialize() }
         every { sdk.hasEligibleTokenizationTarget(LAST_FOUR_DIGITS, any()) } answers {
             secondArg<GooglePayHasEligibleTokenizationTargetListener>().onSuccess(true)
         }
+        givenStableHardwareId(error = null)
+        givenWalletEnvironment("SANDBOX".right())
         activityBridge = DefaultPushProvisioningActivityBridge(sdk)
         activityBridge.attach(activity)
     }
@@ -150,6 +160,78 @@ internal class DefaultGoogleWalletProvisionerTest {
             ),
         )
 
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class WalletEnvironmentLogging {
+
+        private val logs = RecordingLogWriter()
+
+        @BeforeEach
+        fun recordLogs() {
+            logs.entries.clear()
+            TangemLogger.setLogWriters(listOf(logs))
+        }
+
+        @AfterEach
+        fun resetLogWriters() {
+            TangemLogger.setLogWriters(emptyList())
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN app not verified by Google WHEN getCardStatus THEN TapAndPay environment logged with the failure`(
+            model: EnvironmentLogCase,
+        ) = runTest {
+            // Arrange
+            val notVerifiedError = createLookupError(TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE)
+            every { sdk.checkWalletForCardSuffix(LAST_FOUR_DIGITS, any()) } answers {
+                secondArg<GooglePayRegisteredTokensListener>().onFailure(notVerifiedError)
+            }
+            model.arrange()
+            val provisioner = createProvisioner()
+
+            // Act
+            provisioner.getCardStatus(LAST_FOUR_DIGITS)
+
+            // Assert
+            assertThat(logs.entries).containsExactly(
+                Severity.Error to
+                    "Token lookup failed: ${notVerifiedError.describe()}, TapAndPay environment: ${model.expected}",
+            )
+        }
+
+        private fun provideTestModels() = listOf(
+            EnvironmentLogCase(description = "environment returned", expected = "SANDBOX") {
+                givenWalletEnvironment("SANDBOX".right())
+            },
+            EnvironmentLogCase(description = "environment refused", expected = "unknown, code 15009") {
+                givenWalletEnvironment(TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE.left())
+            },
+            EnvironmentLogCase(description = "environment check never answers", expected = "check timed out") {
+                justRun { sdk.getEnvironment(any()) }
+            },
+        )
+
+        @Test
+        fun `GIVEN lookup fails for another reason WHEN getCardStatus THEN environment not requested`() = runTest {
+            // Arrange
+            val lookupError = createLookupError(TapAndPayStatusCodes.TAP_AND_PAY_ATTESTATION_ERROR)
+            every { sdk.checkWalletForCardSuffix(LAST_FOUR_DIGITS, any()) } answers {
+                secondArg<GooglePayRegisteredTokensListener>().onFailure(lookupError)
+            }
+            val provisioner = createProvisioner()
+
+            // Act
+            provisioner.getCardStatus(LAST_FOUR_DIGITS)
+
+            // Assert
+            assertThat(logs.entries).containsExactly(
+                Severity.Error to "Token lookup failed: ${lookupError.describe()}",
+            )
+            verify(exactly = 0) { sdk.getEnvironment(any()) }
+        }
     }
 
     @Nested
@@ -448,7 +530,7 @@ internal class DefaultGoogleWalletProvisionerTest {
                     description = "declined",
                     answer = { it.onFailure(declinedError) },
                     expected = AddResult.Failed(
-                        reason = FailureReason.GOOGLE_WALLET_ERROR,
+                        reason = FailureReason.TOKENIZATION_DECLINED,
                         description = declinedError.describe(),
                         sdkErrorCode = MppErrorCode.GOOGLE_PAY_ERROR,
                         walletErrorCode = TapAndPayStatusCodes.TAP_AND_PAY_TOKENIZATION_DECLINED,
@@ -479,22 +561,134 @@ internal class DefaultGoogleWalletProvisionerTest {
         }
 
         @Test
-        fun `GIVEN push WHEN it completes THEN bridge awaits the activity result only during the push`() = runTest {
+        fun `GIVEN push WHEN it completes THEN card is being added only during the push`() = runTest {
             // Arrange
+            val provisioner = createProvisioner()
             var isAwaitingDuringPush = false
+            var isAddingDuringPush = false
             every { sdk.push(CARD, activity, any()) } answers {
                 isAwaitingDuringPush = activityBridge.isAwaitingResult
+                isAddingDuringPush = provisioner.isAdditionInProgress
                 thirdArg<MppPushCardToGooglePayListener>().onSuccess(TOKEN_ID, LAST_FOUR_DIGITS, null)
             }
-            val provisioner = createProvisioner()
 
             // Act
             provisioner.addCard(CARD)
 
             // Assert
             assertThat(isAwaitingDuringPush).isTrue()
+            assertThat(isAddingDuringPush).isTrue()
             assertThat(activityBridge.isAwaitingResult).isFalse()
+            assertThat(provisioner.isAdditionInProgress).isFalse()
         }
+
+        @Test
+        fun `GIVEN card from another environment WHEN card added THEN refused without calling the SDK`() = runTest {
+            // Arrange
+            val provisioner = createProvisioner()
+
+            // Act
+            val actual = provisioner.addCard(CARD.copy(environment = Environment.PROD))
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                AddResult.Failed(
+                    reason = FailureReason.ENVIRONMENT_MISMATCH,
+                    description = "Card data belongs to another environment than the SDK",
+                ),
+            )
+            verify(exactly = 0) { sdk.checkStableHardwareId(any()) }
+            verify(exactly = 0) { sdk.push(any(), any(), any()) }
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class StableHardwareIdCheck {
+
+        @BeforeEach
+        fun givenPushSucceeds() {
+            every { sdk.push(CARD, activity, any()) } answers {
+                thirdArg<MppPushCardToGooglePayListener>().onSuccess(TOKEN_ID, LAST_FOUR_DIGITS, null)
+            }
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN SDK would not get the stable hardware id WHEN addCard THEN refused without push`(
+            model: HardwareIdRefusalCase,
+        ) = runTest {
+            // Arrange
+            givenStableHardwareId(error = model.hardwareIdError)
+            model.arrangeActiveWallet()
+            val provisioner = createProvisioner()
+
+            // Act
+            val actual = provisioner.addCard(CARD)
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                AddResult.Failed(
+                    reason = model.expectedReason,
+                    description = "Google Wallet did not return the stable hardware id: ${model.hardwareIdError}",
+                    walletErrorCode = model.hardwareIdError,
+                ),
+            )
+            verify(exactly = 0) { sdk.push(any(), any(), any()) }
+        }
+
+        private fun provideTestModels() = listOf(
+            HardwareIdRefusalCase(
+                description = "app not verified, active wallet",
+                hardwareIdError = TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE,
+                expectedReason = FailureReason.UNSUPPORTED,
+            ) { givenActiveWallet(error = null) },
+            HardwareIdRefusalCase(
+                description = "app not verified, no active wallet",
+                hardwareIdError = TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE,
+                expectedReason = FailureReason.UNSUPPORTED,
+            ) { givenActiveWallet(error = TapAndPayStatusCodes.TAP_AND_PAY_NO_ACTIVE_WALLET) },
+            HardwareIdRefusalCase(
+                description = "id refused, active wallet",
+                hardwareIdError = TapAndPayStatusCodes.TAP_AND_PAY_ATTESTATION_ERROR,
+                expectedReason = FailureReason.GOOGLE_WALLET_ERROR,
+            ) { givenActiveWallet(error = null) },
+            HardwareIdRefusalCase(
+                description = "id refused, wallet id refused too",
+                hardwareIdError = TapAndPayStatusCodes.TAP_AND_PAY_ATTESTATION_ERROR,
+                expectedReason = FailureReason.GOOGLE_WALLET_ERROR,
+            ) { givenActiveWallet(error = TapAndPayStatusCodes.TAP_AND_PAY_ATTESTATION_ERROR) },
+            HardwareIdRefusalCase(
+                description = "id refused, wallet check never answers",
+                hardwareIdError = TapAndPayStatusCodes.TAP_AND_PAY_ATTESTATION_ERROR,
+                expectedReason = FailureReason.GOOGLE_WALLET_ERROR,
+            ) { justRun { sdk.checkActiveWallet(any()) } },
+        )
+
+        @ParameterizedTest
+        @MethodSource("providePushedCases")
+        fun `GIVEN SDK gets the stable hardware id itself WHEN addCard THEN card pushed`(model: HardwareIdCase) =
+            runTest {
+                // Arrange
+                model.arrange()
+                val provisioner = createProvisioner()
+
+                // Act
+                val actual = provisioner.addCard(CARD)
+
+                // Assert
+                assertThat(actual).isEqualTo(AddResult.Added)
+                verify(exactly = 1) { sdk.push(CARD, activity, any()) }
+            }
+
+        private fun providePushedCases() = listOf(
+            HardwareIdCase(description = "id returned") { givenStableHardwareId(error = null) },
+            HardwareIdCase(description = "id refused before the SDK creates the wallet") {
+                givenStableHardwareId(error = TapAndPayStatusCodes.TAP_AND_PAY_ATTESTATION_ERROR)
+                givenActiveWallet(error = TapAndPayStatusCodes.TAP_AND_PAY_NO_ACTIVE_WALLET)
+            },
+            HardwareIdCase(description = "id check never answers") { justRun { sdk.checkStableHardwareId(any()) } },
+        )
     }
 
     @Nested
@@ -611,6 +805,7 @@ internal class DefaultGoogleWalletProvisionerTest {
             // Assert
             assertThat(actual).isEqualTo(model.expected)
             verify(exactly = 0) { sdk.checkWalletForCardSuffix(any(), any()) }
+            verify(exactly = 0) { sdk.checkStableHardwareId(any()) }
             verify(exactly = 0) { sdk.push(any(), any(), any()) }
             verify(exactly = 0) { sdk.tokenize(any(), any(), any(), any()) }
         }
@@ -679,7 +874,7 @@ internal class DefaultGoogleWalletProvisionerTest {
                     description = "declined",
                     answer = { it.onFailure(declinedError) },
                     expected = AddResult.Failed(
-                        reason = FailureReason.GOOGLE_WALLET_ERROR,
+                        reason = FailureReason.TOKENIZATION_DECLINED,
                         description = declinedError.describe(),
                         sdkErrorCode = MppErrorCode.GOOGLE_PAY_ERROR,
                         walletErrorCode = TapAndPayStatusCodes.TAP_AND_PAY_TOKENIZATION_DECLINED,
@@ -879,6 +1074,42 @@ internal class DefaultGoogleWalletProvisionerTest {
         override fun toString(): String = description
     }
 
+    internal class HardwareIdRefusalCase(
+        private val description: String,
+        val hardwareIdError: Int,
+        val expectedReason: FailureReason,
+        val arrangeActiveWallet: () -> Unit,
+    ) {
+        override fun toString(): String = description
+    }
+
+    internal class HardwareIdCase(private val description: String, val arrange: () -> Unit) {
+        override fun toString(): String = description
+    }
+
+    internal class EnvironmentLogCase(
+        private val description: String,
+        val expected: String,
+        val arrange: () -> Unit,
+    ) {
+        override fun toString(): String = description
+    }
+
+    private class RecordingLogWriter : TangemLogger.LogWriter {
+
+        val entries = mutableListOf<Pair<Severity, String>>()
+
+        override fun write(
+            severity: Severity,
+            tag: String,
+            message: String,
+            throwable: Throwable?,
+            shouldSanitize: Boolean,
+        ) {
+            entries += severity to message
+        }
+    }
+
     internal data class EnvironmentModel(val isProdSdk: Boolean, val expected: Environment)
 
     private fun TestScope.createProvisioner() = DefaultGoogleWalletProvisioner(
@@ -893,6 +1124,18 @@ internal class DefaultGoogleWalletProvisionerTest {
         }
     }
 
+    private fun givenStableHardwareId(error: Int?) {
+        every { sdk.checkStableHardwareId(any()) } answers { firstArg<(Int?) -> Unit>().invoke(error) }
+    }
+
+    private fun givenActiveWallet(error: Int?) {
+        every { sdk.checkActiveWallet(any()) } answers { firstArg<(Int?) -> Unit>().invoke(error) }
+    }
+
+    private fun givenWalletEnvironment(environment: Either<Int, String>) {
+        every { sdk.getEnvironment(any()) } answers { firstArg<(Either<Int, String>) -> Unit>().invoke(environment) }
+    }
+
     private companion object {
         const val LAST_FOUR_DIGITS = "1234"
         const val DISPLAY_NAME = "Tangem Pay"
@@ -904,6 +1147,7 @@ internal class DefaultGoogleWalletProvisionerTest {
             cardSecret = "card-secret",
             lastFourDigits = LAST_FOUR_DIGITS,
             displayName = DISPLAY_NAME,
+            environment = Environment.TEST,
         )
     }
 }

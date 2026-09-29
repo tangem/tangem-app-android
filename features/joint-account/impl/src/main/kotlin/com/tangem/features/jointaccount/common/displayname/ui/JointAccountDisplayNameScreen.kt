@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
@@ -38,6 +39,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.accounts.JointAccountCreationTestTags
 import com.tangem.features.jointaccount.common.displayname.ui.state.JointAccountDisplayNameUM
 
 @Composable
@@ -132,6 +134,7 @@ private fun NameField(state: JointAccountDisplayNameUM, modifier: Modifier = Mod
 
         SimpleTextField(
             modifier = Modifier
+                .testTag(JointAccountCreationTestTags.DISPLAY_NAME_FIELD)
                 .fillMaxWidth()
                 .focusRequester(focusRequester)
                 .onFocusChanged { isFocused = it.isFocused }
@@ -177,6 +180,7 @@ private fun Footer(state: JointAccountDisplayNameUM, modifier: Modifier = Modifi
 
         TangemButton(
             modifier = Modifier
+                .testTag(JointAccountCreationTestTags.DISPLAY_NAME_CREATE_BUTTON)
                 .fillMaxWidth()
                 .padding(top = 16.dp)
                 .padding(horizontal = 16.dp, vertical = 12.dp),

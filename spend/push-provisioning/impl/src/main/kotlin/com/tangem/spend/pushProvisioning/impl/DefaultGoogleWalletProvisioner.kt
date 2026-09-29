@@ -2,8 +2,12 @@ package com.tangem.spend.pushProvisioning.impl
 
 import android.app.Activity
 import arrow.core.Either
+import arrow.core.None
+import arrow.core.Option
 import arrow.core.getOrElse
 import arrow.core.left
+import arrow.core.toOption
+import com.google.android.gms.tapandpay.TapAndPayStatusCodes
 import com.meawallet.mpp.GooglePayDataChangedListener
 import com.tangem.spend.pushProvisioning.GoogleWalletProvisioner
 import com.tangem.spend.pushProvisioning.GoogleWalletProvisioner.AddResult
@@ -42,6 +46,9 @@ internal class DefaultGoogleWalletProvisioner @Inject constructor(
         if (sdk.isProdSdk) Environment.PROD else Environment.TEST
     }
 
+    override val isAdditionInProgress: Boolean
+        get() = activityBridge.isAwaitingResult
+
     override val walletChanges: Flow<Unit> = callbackFlow {
         val listener = GooglePayDataChangedListener { trySend(Unit) }
         val isRegistered = isPushProvisioningSupported() &&
@@ -73,8 +80,20 @@ internal class DefaultGoogleWalletProvisioner @Inject constructor(
         }
     }
 
-    override suspend fun addCard(card: Card): AddResult = addFromActivity(card.lastFourDigits) { activity ->
-        awaitAddition { complete -> sdk.push(card = card, activity = activity, listener = pushListener(complete)) }
+    override suspend fun addCard(card: Card): AddResult {
+        if (card.environment != environment) {
+            logger.e("Adding card refused: card environment ${card.environment} differs from SDK $environment")
+            return AddResult.Failed(
+                reason = FailureReason.ENVIRONMENT_MISMATCH,
+                description = ENVIRONMENT_MISMATCH_REASON,
+            )
+        }
+
+        return addFromActivity(card.lastFourDigits) { activity ->
+            checkStableHardwareId() ?: awaitAddition { complete ->
+                sdk.push(card = card, activity = activity, listener = pushListener(complete))
+            }
+        }
     }
 
     override suspend fun resumeAddingCard(lastFourDigits: String, displayName: String): AddResult =
@@ -120,7 +139,23 @@ internal class DefaultGoogleWalletProvisioner @Inject constructor(
             sdk.checkWalletForCardSuffix(lastFourDigits, registeredTokensListener(complete))
         }
 
-        return lookup.onLeft { logger.e("Token lookup failed: ${it.description}") }
+        return lookup.onLeft { failure ->
+            val walletEnvironment = if (failure.isWalletUnsupported) {
+                ", TapAndPay environment: ${describeWalletEnvironment()}"
+            } else {
+                ""
+            }
+            logger.e("Token lookup failed: ${failure.description}$walletEnvironment")
+        }
+    }
+
+    private suspend fun describeWalletEnvironment(): String = awaitSdk(
+        onTimeout = { WALLET_ENVIRONMENT_TIMEOUT_REASON },
+        onThrow = Throwable::describe,
+    ) { complete ->
+        sdk.getEnvironment { environment ->
+            complete(environment.fold(ifLeft = { "unknown, code $it" }, ifRight = { it }))
+        }
     }
 
     private suspend fun hasEligibleTokenizationTarget(lastFourDigits: String): Boolean {
@@ -135,6 +170,29 @@ internal class DefaultGoogleWalletProvisioner @Inject constructor(
             .onLeft { logger.e("Tokenization target check failed: $it") }
             .getOrElse { true }
     }
+
+    private suspend fun checkStableHardwareId(): AddResult.Failed? {
+        val errorCode = awaitWalletCheck(sdk::checkStableHardwareId) ?: return null
+        val reason = when {
+            errorCode == TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE -> FailureReason.UNSUPPORTED
+            isWalletMissing() -> return null
+            else -> FailureReason.GOOGLE_WALLET_ERROR
+        }
+
+        return AddResult.Failed(
+            reason = reason,
+            description = "$STABLE_HARDWARE_ID_UNAVAILABLE_REASON: $errorCode",
+            walletErrorCode = errorCode,
+        )
+    }
+
+    private suspend fun isWalletMissing(): Boolean =
+        awaitWalletCheck(sdk::checkActiveWallet) == TapAndPayStatusCodes.TAP_AND_PAY_NO_ACTIVE_WALLET
+
+    private suspend fun awaitWalletCheck(check: (onComplete: (errorCode: Int?) -> Unit) -> Unit): Int? =
+        awaitSdk<Option<Int>>(onTimeout = { None }, onThrow = { None }) { complete ->
+            check { errorCode -> complete(errorCode.toOption()) }
+        }.getOrNull()
 
     private suspend fun resumeAdding(lastFourDigits: String, displayName: String, activity: Activity): AddResult {
         val tokens = findTokens(lastFourDigits).getOrElse { failure -> return failure.toAddResult() }
@@ -211,9 +269,12 @@ internal class DefaultGoogleWalletProvisioner @Inject constructor(
         const val NO_ACTIVITY_REASON = "No activity to open Google Wallet from"
         const val UNSUPPORTED_REASON = "Push provisioning is not supported on this device"
         const val ADDITION_IN_PROGRESS_REASON = "Another card is being added to Google Wallet"
+        const val ENVIRONMENT_MISMATCH_REASON = "Card data belongs to another environment than the SDK"
+        const val STABLE_HARDWARE_ID_UNAVAILABLE_REASON = "Google Wallet did not return the stable hardware id"
         const val NO_PENDING_TOKEN_REASON = "No token awaits identity verification"
         const val TOKEN_LOOKUP_TIMEOUT_REASON = "Token lookup timed out"
         const val ELIGIBILITY_TIMEOUT_REASON = "Tokenization target check timed out"
+        const val WALLET_ENVIRONMENT_TIMEOUT_REASON = "check timed out"
         val SDK_CALLBACK_TIMEOUT = 10.seconds
     }
 }
