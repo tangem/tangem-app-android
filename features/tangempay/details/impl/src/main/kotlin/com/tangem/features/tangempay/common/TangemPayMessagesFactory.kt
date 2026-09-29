@@ -170,6 +170,20 @@ internal object TangemPayMessagesFactory {
         )
     }
 
+    fun createAddToGoogleWalletError(): DialogMessage {
+        return DialogMessage(
+            title = resourceReference(R.string.tangempay_card_details_add_to_wallet_error_title),
+            message = resourceReference(R.string.tangempay_card_details_add_to_wallet_error_description),
+        )
+    }
+
+    fun createAddToGoogleWalletNetworkError(): DialogMessage {
+        return DialogMessage(
+            title = resourceReference(R.string.tangempay_card_details_add_to_wallet_error_title),
+            message = resourceReference(R.string.hw_cloud_backup_error_network),
+        )
+    }
+
     fun createVaPreparingMessage(): BottomSheetMessage {
         return bottomSheetMessage {
             infoBlock {
