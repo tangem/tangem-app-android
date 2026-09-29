@@ -41,7 +41,7 @@ fun BaseTestCase.openTangemPayMoreActionsMenu() {
         onTangemPayMainScreen { moreActionsButton.performClick() }
     }
     step("Assert 'Support' menu item is displayed") {
-        awaitSuccess { onTangemPayMainScreen { supportMenuItem.assertIsDisplayed() } }
+        awaitSuccess { onTangemPayMainScreen { paySupportMenuItem.assertIsDisplayed() } }
     }
 }
 

@@ -17,6 +17,7 @@ dependencies {
 
     // region Other libraries
     implementation(deps.androidx.core.ktx)
+    api(deps.moshi)
     // endregion
 
     // region Tangem SDKs
