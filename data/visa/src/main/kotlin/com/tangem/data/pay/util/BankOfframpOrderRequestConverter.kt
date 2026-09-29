@@ -14,9 +14,10 @@ import com.tangem.domain.pay.model.bankofframp.PostalAddress
 import com.tangem.spend.datasource.pay.models.request.BankOfframpPlaceOrderRequest
 
 /**
- * Builds the create-order body. A saved recipient is sent by id alone; a new one is described in full, and the
- * backend requires every field of that description while the domain model allows a recipient to be partial — so
- * anything missing ends the call as [BankOfframpError.Validation] instead of reaching the wire half-filled.
+ * Builds the create-order body. A saved recipient is sent by id with the picked rail; a new one is described in
+ * full, and the backend requires every field of that description while the domain model allows a recipient to be
+ * partial — so anything missing ends the call as [BankOfframpError.Validation] instead of reaching the wire
+ * half-filled.
  */
 internal object BankOfframpOrderRequestConverter {
 
@@ -28,7 +29,11 @@ internal object BankOfframpOrderRequestConverter {
         idempotencyKey: String,
     ): Either<BankOfframpError, BankOfframpPlaceOrderRequest> = either {
         val data = when (val recipient = request.recipient) {
-            is BankOfframpRecipient.Saved -> data(request = request, bankAccountId = recipient.bankAccountId)
+            is BankOfframpRecipient.Saved -> data(
+                request = request,
+                bankAccountId = recipient.bankAccountId,
+                rail = request.rail.name,
+            )
             is BankOfframpRecipient.New -> data(
                 request = request,
                 bankAccount = convertBankAccount(details = recipient.details, rail = request.rail),
@@ -40,12 +45,14 @@ internal object BankOfframpOrderRequestConverter {
     private fun data(
         request: BankOfframpOrderRequest,
         bankAccountId: String? = null,
+        rail: String? = null,
         bankAccount: BankOfframpPlaceOrderRequest.BankAccount? = null,
     ) = BankOfframpPlaceOrderRequest.Data(
         chainId = request.chainId,
         amountInCents = request.amountInCents,
         tokenContractAddress = request.tokenContractAddress,
         bankAccountId = bankAccountId,
+        rail = rail,
         bankAccount = bankAccount,
     )
 
