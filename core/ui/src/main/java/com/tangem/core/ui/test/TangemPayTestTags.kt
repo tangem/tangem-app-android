@@ -127,6 +127,7 @@ object TangemPayTestTags {
 
     // Add funds bottom sheet: one tag per option row, addressed by position to assert their order.
     const val ADD_FUNDS_OPTION = "TANGEM_PAY_ADD_FUNDS_OPTION"
+    const val ADD_FUNDS_CLOSE_BUTTON = "TANGEM_PAY_ADD_FUNDS_CLOSE_BUTTON"
 
     // Choose-network bottom sheet sections, split by network status
     const val CHOOSE_NETWORK_FAST_SECTION = "TANGEM_PAY_CHOOSE_NETWORK_FAST_SECTION"

@@ -397,12 +397,14 @@ internal class OnChainTxToDetailsUMConverter(
     }
 
     /**
-     * Whether the transaction has a counterparty worth a card. Contract interactions (yield-supply / staking / approve)
-     * talk to a protocol/validator, not a real recipient. A NON-withdraw Send is exempt: it is a plain transfer and
-     * keeps its recipient card. A withdraw Send stays a yield operation, so it gets none (no "from: Aave" in details).
+     * Whether the transaction has a counterparty worth a card. A fee-only transaction has none — what it paid the fee
+     * for is named by [toTransferredAssetUM] instead, and where the fee itself went is not a recipient the user chose.
+     * Contract interactions (yield-supply / staking / approve) talk to a protocol/validator, not a real recipient. A
+     * NON-withdraw Send is exempt: it is a plain transfer and keeps its recipient card. A withdraw Send stays a yield
+     * operation, so it gets none (no "from: Aave" in details).
      */
     private fun TxInfo.hasCounterpartyCard(): Boolean {
-        if (isFeeOnlyOperation(currency)) return false
+        if (isFeeOnly(currency)) return false
         val isPlainSend = (type as? TransactionType.YieldSupply.Send)?.isYieldSupplyWithdraw == false
         val isProtocolType = type is TransactionType.YieldSupply ||
             type is TransactionType.Staking ||
