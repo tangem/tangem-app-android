@@ -45,6 +45,10 @@ android {
     }
     androidResources {
         generateLocaleConfig = true
+        val aaptDefaultIgnoredAssets = listOf(
+            "!.svn", "!.git", "!.ds_store", "!*.scc", ".*", "<dir>_*", "!CVS", "!thumbs.db", "!picasa.ini", "!*~",
+        )
+        ignoreAssetsPatterns += aaptDefaultIgnoredAssets + "<dir>meawallet"
     }
     signingConfigs {
         getByName("debug") {
@@ -172,6 +176,7 @@ dependencies {
     implementation(projects.domain.notifications.models)
     implementation(projects.domain.feed.search)
     implementation(projects.domain.swap)
+    implementation(projects.domain.swap.models)
     implementation(projects.domain.walletManager)
     implementation(projects.domain.yieldSupply)
     implementation(projects.domain.polymarket)
@@ -201,6 +206,21 @@ dependencies {
     implementation(projects.core.local)
     implementation(projects.core.remote)
     implementation(projects.spend.datasource)
+    implementation(projects.spend.pushProvisioning.api)
+    mockedImplementation(projects.spend.pushProvisioning.mock)
+    androidTestImplementation(projects.spend.pushProvisioning.mock)
+    val pushProvisioningImplPath = ":spend:push-provisioning:impl"
+    if (findProject(pushProvisioningImplPath) != null) {
+        debugImplementation(project(pushProvisioningImplPath))
+        internalImplementation(project(pushProvisioningImplPath))
+        externalImplementation(project(pushProvisioningImplPath))
+        releaseImplementation(project(pushProvisioningImplPath))
+    } else {
+        debugImplementation(projects.spend.pushProvisioning.noOp)
+        internalImplementation(projects.spend.pushProvisioning.noOp)
+        externalImplementation(projects.spend.pushProvisioning.noOp)
+        releaseImplementation(projects.spend.pushProvisioning.noOp)
+    }
     implementation(projects.store.datasource)
     implementation(projects.grow.datasource)
     implementation(projects.core.utils)
@@ -486,12 +506,6 @@ dependencies {
     runtimeOnly(deps.androidx.credentials.playServicesAuth)
     implementation(deps.armadillo)
     implementation(deps.kotlin.serialization)
-    // :data:wallet-connect excludes app.cash.sqldelight:android-driver from both reown artifacts, so
-    // these unexcluded declarations are the only thing putting that driver in the APK. Reown builds it
-    // inside its own Koin module, so nothing here references it and it looks unused — removing it
-    // crashes the app on start with NoClassDefFoundError for AndroidSqliteDriver.
-    runtimeOnly(deps.reownCore)
-    runtimeOnly(deps.reownWeb3)
     implementation(deps.decompose.ext.compose)
     implementation(deps.moshi.adapters)
     implementation(deps.moshi.kotlin)

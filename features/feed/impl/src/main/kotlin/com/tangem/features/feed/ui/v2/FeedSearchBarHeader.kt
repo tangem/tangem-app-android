@@ -10,12 +10,14 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.search.TangemSearch
 import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.features.feed.search.FeedSearchBarController
 
 /**
@@ -60,6 +62,7 @@ internal fun FeedSearchBarHeader(
             Box(
                 modifier = Modifier
                     .matchParentSize()
+                    .testTag(MainScreenTestTags.MARKETS_SHEET_EXPAND_AREA)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,

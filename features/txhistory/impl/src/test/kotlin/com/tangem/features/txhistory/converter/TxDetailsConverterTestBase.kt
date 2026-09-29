@@ -84,6 +84,7 @@ internal open class TxDetailsConverterTestBase {
         vaults: List<P2PEthPoolVault> = emptyList(),
         lookup: TxHistoryLookupContext = lookupOf(),
         isBalanceHidden: Boolean = false,
+        networkTokens: Set<CryptoCurrency.Token> = emptySet(),
     ) = OnChainTxToDetailsUMConverter(
         currency = currency,
         onCopyAddress = copiedAddresses::add,
@@ -92,9 +93,10 @@ internal open class TxDetailsConverterTestBase {
             validators.forEach { put(it.address, it.toStakingTarget()) }
             vaults.forEach { put(it.vaultAddress, it.toStakingTarget()) }
         },
-        onOpenValidator = openedUrls::add,
+        onExploreProvider = openedUrls::add,
         lookup = lookup,
         isBalanceHidden = isBalanceHidden,
+        networkTokens = networkTokens,
     )
 
     protected fun expressConverter(

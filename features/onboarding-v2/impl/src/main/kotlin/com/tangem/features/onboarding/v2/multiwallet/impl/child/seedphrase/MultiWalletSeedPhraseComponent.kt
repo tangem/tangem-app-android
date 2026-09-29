@@ -8,7 +8,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.security.DisableScreenshotsDisposableEffect
+import com.tangem.core.ui.security.SensitiveContentEffect
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
@@ -79,7 +79,7 @@ internal class MultiWalletSeedPhraseComponent(
             model.onBack()
         }
 
-        DisableScreenshotsDisposableEffect()
+        SensitiveContentEffect()
 
         MultiWalletSeedPhrase(modifier = modifier, state = state)
     }

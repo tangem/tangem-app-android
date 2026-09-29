@@ -28,6 +28,9 @@ class SpendPreferencesKeys @Inject constructor() {
     fun bankOfframpRecents(userWalletId: UserWalletId): Preferences.Key<String> =
         stringPreferencesKey("tangem_pay_bank_offramp_recents_${userWalletId.stringValue}")
 
+    fun paymentAccountRecents(userWalletId: UserWalletId): Preferences.Key<String> =
+        stringPreferencesKey("tangem_pay_account_recents_${userWalletId.stringValue}")
+
     fun getAddToWalletKey(customerWalletAddress: String): Preferences.Key<Boolean> =
         booleanPreferencesKey("tangem_pay_add_to_wallet_done_key_$customerWalletAddress")
 

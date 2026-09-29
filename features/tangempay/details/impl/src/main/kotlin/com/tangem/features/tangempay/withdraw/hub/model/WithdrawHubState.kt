@@ -1,12 +1,14 @@
 package com.tangem.features.tangempay.withdraw.hub.model
 
 import com.tangem.domain.pay.model.bankofframp.BankAccount
+import com.tangem.domain.pay.model.recents.RecentTokenTransfer
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
 
 /** Raw inputs of the withdraw hub; the UM factory turns them into the swap and bank sections. */
 internal data class WithdrawHubState(
     val options: OptionsState = OptionsState.Loading,
     val recents: RecentsState = RecentsState.Loading,
+    val tokenRecents: TokenRecentsState = TokenRecentsState.Loading,
 )
 
 internal sealed interface OptionsState {
@@ -27,4 +29,11 @@ internal sealed interface RecentsState {
 
     /** [hasSavedAccounts] gates "See all" when the usage log is empty but recipients exist elsewhere. */
     data class Loaded(val accounts: List<BankAccount>, val hasSavedAccounts: Boolean) : RecentsState
+}
+
+internal sealed interface TokenRecentsState {
+
+    data object Loading : TokenRecentsState
+
+    data class Loaded(val transfers: List<RecentTokenTransfer>) : TokenRecentsState
 }

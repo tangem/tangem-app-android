@@ -36,7 +36,7 @@ internal class RwaFeedTabComponent @AssistedInject constructor(
     private val promoBannersBlockComponent: PromoBannersBlockComponent = promoBannersBlockComponentFactory.create(
         context = child("promoBannersBlockComponent"),
         params = PromoBannersBlockComponent.Params(
-            placeholder = PromoBannersBlockComponent.Placeholder.ASSETS,
+            placeholder = PromoBannersBlockComponent.Placeholder.RWA,
             isInitiallyVisibleOnScreen = false,
         ),
     )
