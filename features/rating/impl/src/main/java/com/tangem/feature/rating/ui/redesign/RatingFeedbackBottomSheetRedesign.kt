@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -31,7 +30,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
+import com.tangem.core.ui.ds2.modal.TangemModal
+import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.test.RatingTestTags
@@ -51,23 +51,16 @@ import kotlinx.coroutines.delay
 @Composable
 @Suppress("MagicNumber")
 internal fun RatingFeedbackBottomSheetRedesign(config: TangemBottomSheetConfig) {
-    TangemModalBottomSheet<RatingFeedbackBS>(
+    TangemModal<RatingFeedbackBS>(
         config = config,
-        containerColor = TangemTheme.colors3.bg.secondary,
         title = { content ->
-            TangemButton.Close(
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(16.dp),
-                onClick = content.onDismiss,
-            )
+            TangemModal.TopNavigation(endButton = { TangemButton.Close(onClick = content.onDismiss) })
         },
         content = { content ->
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .navigationBarsPadding(),
+                    .padding(horizontal = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 RedesignStarRow(
