@@ -1,15 +1,19 @@
 package com.tangem.features.moneyaccount.onboarding.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.features.moneyaccount.onboarding.component.MoneyAccountOnboardingComponent
+import com.tangem.features.moneyaccount.onboarding.impl.R
 import com.tangem.features.moneyaccount.onboarding.ui.MoneyAccountOnboardingUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.delay
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -33,8 +37,8 @@ internal class MoneyAccountOnboardingModel @Inject constructor(
     init {
         when (params) {
             is MoneyAccountOnboardingComponent.Params.Deeplink -> validateDeeplinkAndShow(params.deeplink)
-            is MoneyAccountOnboardingComponent.Params.FromMain,
-            is MoneyAccountOnboardingComponent.Params.FromDetailsScreen,
+            MoneyAccountOnboardingComponent.Params.FromMain,
+            MoneyAccountOnboardingComponent.Params.FromDetailsScreen,
             -> showOnboarding()
         }
     }
@@ -52,34 +56,41 @@ internal class MoneyAccountOnboardingModel @Inject constructor(
             MoneyAccountOnboardingUM.Content(
                 onBack = ::back,
                 isLoading = false,
-                onGetCardClick = ::onGetCardClick,
+                fees = null,
+                onGetStartedClick = ::onGetStartedClick,
+                onTermsAndFeesClick = ::showFees,
                 onTermsClick = ::onTermsClick,
-                onPrivacyClick = ::onPrivacyClick,
+                onFeesDismiss = ::hideFees,
             )
         }
     }
 
+    // TODO v_rodionov: #[REDACTED_TASK_KEY] get fee stuff from backend
+    private fun showFees() {
+        updateContent { it.copy(fees = MoneyAccountOnboardingUM.FeesUM.Content(STUB_FEE_ROWS)) }
+    }
+
+    private fun hideFees() {
+        updateContent { it.copy(fees = null) }
+    }
+
     private fun onTermsClick() {
-        // TODO([REDACTED_TASK_KEY]): open the provider Terms of Use link.
+        // TODO v_rodionov: #[REDACTED_TASK_KEY] open the provider Terms of Use link.
     }
 
-    private fun onPrivacyClick() {
-        // TODO([REDACTED_TASK_KEY]): open the provider Privacy Policy link.
+    private fun onGetStartedClick() {
+        router.push(
+            AppRoute.TangemPayEligibility(
+                product = TangemPayProduct.BANKING_ACCOUNT,
+                userWalletId = null,
+            ),
+        )
     }
 
-    private fun onGetCardClick() {
-        modelScope.launch {
-            setLoading(isLoading = true)
-            delay(STUB_GET_CARD_DELAY_MS)
-            // TODO: create order and sign challenge [REDACTED_JIRA]
-            setLoading(isLoading = false)
-        }
-    }
-
-    private fun setLoading(isLoading: Boolean) {
+    private fun updateContent(block: (MoneyAccountOnboardingUM.Content) -> MoneyAccountOnboardingUM.Content) {
         uiState.update { state ->
             when (state) {
-                is MoneyAccountOnboardingUM.Content -> state.copy(isLoading = isLoading)
+                is MoneyAccountOnboardingUM.Content -> block(state)
                 is MoneyAccountOnboardingUM.Loading -> state
             }
         }
@@ -90,7 +101,19 @@ internal class MoneyAccountOnboardingModel @Inject constructor(
     }
 
     private companion object {
-        // TODO([REDACTED_TASK_KEY]): remove the stub delay once create-order + sign-challenge is implemented.
-        const val STUB_GET_CARD_DELAY_MS = 3000L
+        val STUB_FEE_ROWS = persistentListOf(
+            MoneyAccountOnboardingUM.FeeRowUM(
+                icon = TangemIconUM.Image(R.drawable.img_flag_usa_44),
+                provider = "FedWire",
+                receive = "$0",
+                send = "$0",
+            ),
+            MoneyAccountOnboardingUM.FeeRowUM(
+                icon = TangemIconUM.Image(R.drawable.img_flag_usa_44),
+                provider = "ACH",
+                receive = "$0",
+                send = "$0",
+            ),
+        )
     }
 }

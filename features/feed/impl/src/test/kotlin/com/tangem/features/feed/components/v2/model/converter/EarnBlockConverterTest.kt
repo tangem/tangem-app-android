@@ -12,6 +12,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.util.Locale
 
 internal class EarnBlockConverterTest {
 
@@ -154,6 +155,23 @@ internal class EarnBlockConverterTest {
                 target = EarnBlockUM.Target.EarnTab,
             ),
         )
+    }
+
+    @Test
+    fun `GIVEN a locale that spaces its percent sign WHEN convert THEN the rate carries no space`() {
+        // Arrange
+        val previousLocale = Locale.getDefault()
+        Locale.setDefault(Locale.forLanguageTag("ru"))
+
+        try {
+            // Act
+            val actual = convert(statuses = emptyList(), catalogueApy = BigDecimal("0.1264"))
+
+            // Assert
+            assertThat(actual.pitch).isEqualTo(EarnBlockUM.Pitch.Onboarding(apy = "12,64%"))
+        } finally {
+            Locale.setDefault(previousLocale)
+        }
     }
 
     private fun convert(

@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
@@ -22,6 +23,8 @@ import kotlinx.collections.immutable.persistentListOf
 
 /**
  * Design-system v2 filter group — a horizontally scrollable row of [TangemFilterItem] chips.
+ *
+ * Version: 1.0.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/branch/0xt9Tg8x8f0Z0m2KUdLG9q/%F0%9F%92%A0-DS-Components?node-id=7959-24284&m=dev)
  *
@@ -57,6 +60,12 @@ fun TangemFilterGroup(
 
 private val HorizontalPadding: Dp = 16.dp
 private val ItemSpacing: Dp = 4.dp
+
+/** Public API surface of [TangemFilterGroup]. */
+object TangemFilterGroup {
+
+    val version = DsVersion(major = 1, minor = 0, patch = 0)
+}
 
 // region Previews
 

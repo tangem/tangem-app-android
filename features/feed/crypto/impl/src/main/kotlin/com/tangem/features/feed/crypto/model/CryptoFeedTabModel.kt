@@ -235,7 +235,7 @@ internal class CryptoFeedTabModel @Inject constructor(
     private suspend fun resolveCategory(categoryId: String): MarketCategorySelection.Entry? {
         val entry = categoryResolver.resolve(categoryId = categoryId, currency = currentAppCurrency.value.code)
 
-        if (entry == null) TangemLogger.i("Shtorka deeplink: no crypto category matches '$categoryId'")
+        if (entry == null) TangemLogger.i("Discover deeplink: no crypto category matches '$categoryId'")
 
         return entry
     }

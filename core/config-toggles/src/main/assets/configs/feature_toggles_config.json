@@ -32,6 +32,10 @@
         "version": "undefined"
     },
     {
+        "name": "AND_18021_WALLETCONNECT_ON_DEMAND_INIT_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "TWI_1326_YIELD_DEX_TRANSFER_ENABLED",
         "version": "undefined"
     },
@@ -41,11 +45,11 @@
     },
     {
         "name": "AND_15438_BACKEND_AUTHENTICATION_ENABLED",
-        "version": "undefined"
+        "version": "6.4"
     },
     {
         "name": "AND_15767_NEW_TX_HISTORY_ENABLED",
-        "version": "undefined"
+        "version": "6.4"
     },
     {
         "name": "AND_14829_WARNINGS_REFACTORING_ENABLED",
@@ -62,6 +66,10 @@
     {
         "name": "AND_16357_CHOOSE_TOKEN_PULSE_ANIMATION",
         "version": "6.4"
+    },
+    {
+        "name": "TWI_1783_TRON_GASLESS_ACCOUNT_ACTIVATION_ENABLED",
+        "version": "undefined"
     },
     {
         "name": "TWI_1586_CARD_LINKED_STATUS_UPDATE",
@@ -121,6 +129,14 @@
     },
     {
         "name": "TWI_1705_PROMO_CAMPAIGNS_V2_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1062_GOOGLE_WALLET_PUSH_PROVISIONING_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1062_GOOGLE_WALLET_BUTTON_ALWAYS_SHOWN",
         "version": "undefined"
     }
 ]

@@ -55,6 +55,7 @@ import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.sheetscaffold.TangemSheetState
 import com.tangem.core.ui.components.sheetscaffold.TangemSheetValue
 import com.tangem.core.ui.components.sheetscaffold.rememberSheetState
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.res.LocalBottomSheetAlwaysVisible
@@ -70,6 +71,8 @@ import dev.chrisbanes.haze.rememberHazeState
 /**
  * Design-system v2 modal bottom sheet: a floating modal-material card with a drag indicator,
  * optional [title] slot and [content], shown above a dimmed scrim.
+ *
+ * Version: 1.1.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=8256-1265&m=dev)
  *
@@ -175,6 +178,8 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModal(
 
 /** Public namespace of the modal component. */
 object TangemModal {
+
+    val version = DsVersion(major = 1, minor = 1, patch = 0)
 
     /**
      * Where the modal is presented.

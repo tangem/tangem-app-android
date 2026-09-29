@@ -9,6 +9,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.hot.HotWalletAccessor
+import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.lib.auth.session.WalletNonce
@@ -60,6 +61,7 @@ internal class WalletRegistrationLauncherTest {
         }
         every { mobileSigner.signerFor(any()) } returns mockk<WalletSigner>()
         coEvery { walletRegistrar.register(any(), any()) } returns Unit.right()
+        coEvery { walletRegistrar.hasActiveSession() } returns true
     }
 
     @AfterEach
@@ -129,6 +131,44 @@ internal class WalletRegistrationLauncherTest {
         coVerify(exactly = 0) { hotWalletAccessor.unlockContextual(any()) }
         coVerify(exactly = 0) { walletRegistrar.register(any(), any()) }
     }
+
+    @Test
+    fun `GIVEN no active session WHEN registerUnlockedMobileWallet THEN no auth is asked`() = runTest {
+        // Arrange
+        every { authFeatureToggles.isBackendAuthenticationEnabled } returns true
+        val wallet = hotWallet(authType = HotWalletId.AuthType.Biometry)
+        coEvery { walletRegistrar.isRegistered(any()) } returns false
+        coEvery { walletRegistrar.hasActiveSession() } returns false
+
+        // Act
+        launcher.registerUnlockedMobileWallet(wallet)
+
+        // Assert
+        coVerify(exactly = 0) { hotWalletAccessor.unlockContextual(any()) }
+        coVerify(exactly = 0) { walletRegistrar.register(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN entered access code WHEN registerUnlockedMobileWallet THEN context comes from it without a prompt`() =
+        runTest {
+            // Arrange
+            every { authFeatureToggles.isBackendAuthenticationEnabled } returns true
+            val wallet = hotWallet(authType = HotWalletId.AuthType.Biometry)
+            val hotWalletId = wallet.hotWalletId
+            val accessCode = HotAuth.Password("111111".toCharArray())
+            coEvery { walletRegistrar.isRegistered(any()) } returns false
+            every { hotWalletAccessor.getContextualUnlock(hotWalletId) } returns null
+            coEvery { hotWalletAccessor.unlockContextual(hotWalletId, accessCode) } returns mockk()
+
+            // Act
+            launcher.registerUnlockedMobileWallet(wallet, accessCode)
+
+            // Assert
+            coVerify(exactly = 1) { hotWalletAccessor.unlockContextual(hotWalletId, accessCode) }
+            coVerify(exactly = 0) { hotWalletAccessor.unlockContextual(hotWalletId) }
+            coVerify(exactly = 1) { walletRegistrar.register(any(), any()) }
+            verify(exactly = 1) { hotWalletAccessor.clearContextualUnlock(hotWalletId) }
+        }
 
     @Test
     fun `registerUnlockedMobileWallet reuses an existing context and leaves it untouched`() = runTest {
