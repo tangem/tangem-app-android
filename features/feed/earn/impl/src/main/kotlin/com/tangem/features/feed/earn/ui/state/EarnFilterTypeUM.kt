@@ -6,7 +6,7 @@ import com.tangem.core.ui.extensions.resourceReference
 
 internal enum class EarnFilterTypeUM(val title: TextReference, val text: TextReference) {
     All(
-        title = resourceReference(R.string.earn_filter_all_types),
+        title = resourceReference(R.string.common_all),
         text = resourceReference(R.string.earn_filter_all_types_text),
     ),
     Staking(
