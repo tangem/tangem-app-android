@@ -19,6 +19,7 @@ import com.tangem.lib.auth.session.AuthPreferenceKeys
 import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
+import com.tangem.lib.auth.performance.NonceRequestType
 import com.tangem.lib.auth.session.WalletNonce
 import com.tangem.lib.auth.session.WalletRegistrationError
 import com.tangem.lib.auth.session.WalletSignatureBundle
@@ -67,6 +68,8 @@ class DefaultWalletRegistrarTest {
         preferencesDataStore = preferencesDataStore,
     )
 
+    private val trackedNonceRequestTypes = mutableListOf<NonceRequestType>()
+
     private lateinit var locks: WalletRegistrationLocks
     private lateinit var registrar: DefaultWalletRegistrar
 
@@ -96,6 +99,7 @@ class DefaultWalletRegistrarTest {
         // the store answers with the set that ends up in effect
         coEvery { store.save(any()) } answers { firstArg() }
         preferencesDataStore.reset()
+        trackedNonceRequestTypes.clear()
         mockkStatic(android.util.Base64::class)
         every { android.util.Base64.encodeToString(any(), any()) } answers {
             java.util.Base64.getEncoder().encodeToString(firstArg())
@@ -117,7 +121,10 @@ class DefaultWalletRegistrarTest {
             attestationProvider = attestationProvider,
             errorConverter = errorConverter,
             appPreferencesStore = appPreferencesStore,
-            nonceRequestPerformanceTracker = { it() },
+            nonceRequestTracker = { type, request ->
+                trackedNonceRequestTypes += type
+                request()
+            },
             locks = locks,
             dispatchers = dispatchers,
         )
@@ -444,6 +451,31 @@ class DefaultWalletRegistrarTest {
         assertThat(result.isRight()).isTrue()
         assertThat(registeredIds()).contains(WALLET_ID)
         coVerify(exactly = 0) { store.save(any()) }
+    }
+
+    @Test
+    fun `GIVEN mobile wallet WHEN register THEN nonce request tracked as mobile wallet`() = runTest {
+        // Arrange
+        stubHappyPath()
+        coEvery { authApi.registerWallet(any()) } returns tokenSuccess()
+
+        // Act
+        registrar.register(WALLET_ID, mobileSigner)
+
+        // Assert
+        assertThat(trackedNonceRequestTypes).containsExactly(NonceRequestType.MOBILE_WALLET)
+    }
+
+    @Test
+    fun `GIVEN cold wallet prefetch WHEN requestNonce THEN nonce request tracked as cold wallet`() = runTest {
+        // Arrange
+        stubHappyPath()
+
+        // Act
+        registrar.requestNonce()
+
+        // Assert
+        assertThat(trackedNonceRequestTypes).containsExactly(NonceRequestType.COLD_WALLET)
     }
 
     @Test
