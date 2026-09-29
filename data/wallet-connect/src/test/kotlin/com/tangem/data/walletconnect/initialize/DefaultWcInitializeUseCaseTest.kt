@@ -31,6 +31,7 @@ internal class DefaultWcInitializeUseCaseTest {
     fun resetMocks() {
         clearMocks(wcSdk, store, featureToggles)
         every { featureToggles.isOnDemandInitEnabled } returns true
+        every { featureToggles.isInterruptedApprovalRecoveryEnabled } returns false
     }
 
     @Test
@@ -89,6 +90,21 @@ internal class DefaultWcInitializeUseCaseTest {
             coVerify(exactly = 0) { wcSdk.ensureInitialized() }
             coVerify(exactly = 0) { store.sessions }
         }
+
+    @Test
+    fun `GIVEN only an expired approval and recovery enabled WHEN invoke THEN sdk is initialized`() = runTest {
+        // Arrange
+        every { featureToggles.isInterruptedApprovalRecoveryEnabled } returns true
+        coEvery { store.sessions } returns flowOf(emptySet())
+        coEvery { store.pendingApprovalIncludingExpired } returns flowOf(setOf(mockk<WcPendingApprovalSessionDTO>()))
+
+        // Act
+        createUseCase(this).invoke()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { wcSdk.ensureInitialized() }
+    }
 
     private fun createUseCase(testScope: TestScope) = DefaultWcInitializeUseCase(
         wcSdk = wcSdk,
