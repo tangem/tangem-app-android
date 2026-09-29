@@ -496,12 +496,32 @@ class DefaultWalletRegistrarTest {
         val result = registrar.unregister(WALLET_ID)
 
         assertThat(result.isRight()).isTrue()
-        assertThat(request.captured.walletId).isEqualTo(WALLET_ID)
+        assertThat(request.captured).isEqualTo(WalletUnregisterRequest(walletId = WALLET_ID))
         // The rotated tokens actually persisted reflect the updated bound-wallet set.
         coVerify { store.save(capture(saved)) }
         assertThat(saved.captured.accessToken).isEqualTo("rotated-access")
         assertThat(saved.captured.walletIds).containsExactly(OTHER_WALLET_ID)
         assertThat(registeredIds()).containsExactly(OTHER_WALLET_ID)
+    }
+
+    @Test
+    fun `unregister asked to drop the social recovery sends the flag with the wallet id`() = runTest {
+        val request = slot<WalletUnregisterRequest>()
+        coEvery { authApi.unregisterWallet(capture(request)) } returns ApiResponse.Success(
+            data = TokenApiResponse(
+                accessToken = "rotated-access",
+                accessTokenExpiresAt = "2024-01-01T00:00:00Z",
+                refreshToken = "rotated-rt",
+                refreshTokenExpiresAt = "2024-02-01T00:00:00Z",
+                walletIds = emptyList(),
+            ),
+        )
+
+        val result = registrar.unregister(walletId = WALLET_ID, shouldDeleteSocialRecovery = true)
+
+        assertThat(result.isRight()).isTrue()
+        assertThat(request.captured)
+            .isEqualTo(WalletUnregisterRequest(walletId = WALLET_ID, shouldDeleteSocialRecovery = true))
     }
 
     @Test
