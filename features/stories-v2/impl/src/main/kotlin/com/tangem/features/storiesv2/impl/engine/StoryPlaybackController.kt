@@ -10,7 +10,6 @@ import com.tangem.features.storiesv2.impl.analytics.StoryV2AdvanceReason
 import com.tangem.features.storiesv2.impl.analytics.StoryV2ErrorReason
 import com.tangem.features.storiesv2.impl.analytics.StoryV2ErrorStage
 import com.tangem.features.storiesv2.impl.analytics.StoryV2ExitReason
-import com.tangem.features.storiesv2.impl.analytics.StoryV2FallbackReason
 import com.tangem.features.storiesv2.impl.content.StoryV2Action
 import com.tangem.features.storiesv2.impl.content.StoryV2Asset
 import com.tangem.features.storiesv2.impl.content.StoryV2Composition
@@ -82,15 +81,11 @@ internal class StoryPlaybackController(
     private var slideAtEndForMs = 0L
     private var isRepeatAutoView = false
     private var firedHapticCount = 0
-    private var slideFallbackReason: StoryV2FallbackReason? = null
 
-    /**
-     * Not a failure: animated assets are shown as their poster, the viewer keeps the full story, and the fallback
-     * is reported under its own reason so it stays out of the technical guardrail.
-     */
+    /** Not a failure: animated assets are shown as their poster and the viewer keeps the full story. */
     fun setReducedMotion(enabled: Boolean) {
         isReducedMotion = enabled
-        if (enabled) degradeToPoster(StoryV2FallbackReason.REDUCE_MOTION)
+        if (enabled) degradeToPoster()
     }
 
     /** Safe to call more than once. */
@@ -101,7 +96,6 @@ internal class StoryPlaybackController(
         analytics.send(
             StoriesV2Events.StoryOpened(
                 storyId = composition.id,
-                storyVersion = composition.version,
                 slidesTotal = composition.slides.size,
                 contentOrigin = composition.origin.analyticsValue,
                 source = source.analyticsValue,
@@ -172,7 +166,7 @@ internal class StoryPlaybackController(
         if (currentSlide.asset.poster == null) {
             skipBrokenSlide()
         } else {
-            degradeToPoster(StoryV2FallbackReason.PLAYBACK_FAILED)
+            degradeToPoster()
         }
     }
 
@@ -300,12 +294,8 @@ internal class StoryPlaybackController(
         slidePositionMs = 0L
         slideAtEndForMs = 0L
         firedHapticCount = 0
-        slideFallbackReason = if (isReducedMotion && slide.asset !is StoryV2Asset.Image && slide.asset.poster != null) {
-            StoryV2FallbackReason.REDUCE_MOTION
-        } else {
-            null
-        }
-        if (slideFallbackReason != null) fallbackSlideIds.add(slide.id)
+        val isOnPoster = isReducedMotion && slide.asset !is StoryV2Asset.Image && slide.asset.poster != null
+        if (isOnPoster) fallbackSlideIds.add(slide.id)
 
         state.update { previous ->
             previous.copy(
@@ -313,7 +303,7 @@ internal class StoryPlaybackController(
                 playToken = previous.playToken + 1,
                 isManualEntry = isManual,
                 isPlayerDrivenEntry = isPlayerDriven,
-                renderMode = if (slideFallbackReason == null) SlideRenderMode.ASSET else SlideRenderMode.POSTER,
+                renderMode = if (isOnPoster) SlideRenderMode.POSTER else SlideRenderMode.ASSET,
                 isStalled = false,
             )
         }
@@ -329,7 +319,6 @@ internal class StoryPlaybackController(
         analytics.send(
             StoriesV2Events.SlideViewed(
                 storyId = composition.id,
-                storyVersion = composition.version,
                 slideId = slide.id,
                 slideIndex = state.value.slideIndex + 1,
                 assetType = slide.asset.analyticsType,
@@ -337,7 +326,6 @@ internal class StoryPlaybackController(
                 watchedMs = slideWatchedMs,
                 isSlideCompleted = slidePositionMs >= slide.asset.durationMs,
                 advanceReason = reason.analyticsValue,
-                fallbackReason = slideFallbackReason?.analyticsValue,
                 source = source.analyticsValue,
             ),
         )
@@ -357,29 +345,24 @@ internal class StoryPlaybackController(
         analytics.send(
             StoriesV2Events.StoryClosed(
                 storyId = composition.id,
-                storyVersion = composition.version,
                 slidesTotal = composition.slides.size,
-                watched = viewedSlideIds.size,
+                slidesWatched = viewedSlideIds.size,
                 loopsWatched = loopsWatched,
                 isStoryCompleted = isStoryCompleted,
                 exitReason = reason.analyticsValue,
                 actionId = action?.id,
                 actionTargetType = action?.target?.analyticsType,
                 actionDestination = action?.target?.analyticsDestination,
-                fallbackSlides = fallbackSlideIds.size,
                 source = source.analyticsValue,
             ),
         )
         result?.let(onResult)
     }
 
-    private fun degradeToPoster(reason: StoryV2FallbackReason) {
+    private fun degradeToPoster() {
         if (currentSlide.asset is StoryV2Asset.Image || currentSlide.asset.poster == null) return
-        // The first reason is the true one. A slide already on its poster because the viewer turned animations off
-        // must not be re-labelled a decode failure by whatever the silenced decoder reports afterwards.
         if (state.value.renderMode == SlideRenderMode.POSTER) return
 
-        slideFallbackReason = reason
         fallbackSlideIds.add(currentSlide.id)
         state.update { it.copy(renderMode = SlideRenderMode.POSTER) }
     }
@@ -409,7 +392,7 @@ internal class StoryPlaybackController(
         if (state.value.renderMode == SlideRenderMode.POSTER) return
 
         reportAssetFailure(StoryV2ErrorReason.TIMEOUT)
-        degradeToPoster(StoryV2FallbackReason.ASSET_NOT_READY)
+        degradeToPoster()
     }
 
     /**
@@ -508,11 +491,16 @@ private val StoryV2Action.Target.analyticsType: String
         StoryV2Action.Target.Close -> "close"
     }
 
-/** Web destinations are reported as the host alone: the path and the query can carry campaign data. */
+/**
+ * Links are reported as their host alone — the route key for a deeplink. The path, the query and the fragment can
+ * carry campaign data or a wallet id.
+ */
 private val StoryV2Action.Target.analyticsDestination: String?
     get() = when (this) {
         is StoryV2Action.Target.Screen -> key
-        is StoryV2Action.Target.Web -> url.substringAfter("://").substringBefore('/').substringBefore('?')
-        is StoryV2Action.Target.Deeplink -> uri
+        is StoryV2Action.Target.Web -> url.linkHost()
+        is StoryV2Action.Target.Deeplink -> uri.linkHost()
         StoryV2Action.Target.Close -> null
     }
+
+private fun String.linkHost(): String = substringAfter("://").takeWhile { it !in "/?#" }
