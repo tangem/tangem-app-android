@@ -62,8 +62,13 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
 
     private val userTokensBackwardCompatibility = UserTokensBackwardCompatibility()
 
+    /** `v1` has no joint counter at all */
+    private val GetWalletAccountsResponse.isJointAware: Boolean
+        get() = wallet.totalJointAccounts != null
+
     override suspend fun fetch(userWalletId: UserWalletId): GetWalletAccountsResponse {
         val savedAccountsResponse = getAccountsResponseStore(userWalletId = userWalletId).getSyncOrNull()
+            ?.withoutJointAccountsIfDisabled(userWalletId)
         val fetchResult = fetchWalletAccounts(userWalletId, savedAccountsResponse)
         val accountsResponse = fetchResult.accountsResponse
 
@@ -182,7 +187,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
                 val apiResponse = withContext(dispatchers.io) {
                     walletAccountsApi.getAccounts(
                         walletId = userWalletId.stringValue,
-                        eTag = getETag(userWalletId),
+                        eTag = getRevalidationETag(userWalletId, savedAccountsResponse),
                     )
                 }
 
@@ -211,6 +216,20 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
                 )
             },
         )
+    }
+
+    /**
+     * `v1` and `api/v2` answer with the same ETag, but a `304` is served from the saved document, so the request is
+     * conditional only when that document was fetched by the version this build speaks now
+     */
+    private suspend fun getRevalidationETag(
+        userWalletId: UserWalletId,
+        savedAccountsResponse: GetWalletAccountsResponse?,
+    ): String? {
+        val isSavedByOtherVersion = savedAccountsResponse != null &&
+            savedAccountsResponse.isJointAware != jointAccountFeatureToggles.isJointAccountEnabled
+
+        return if (isSavedByOtherVersion) null else getETag(userWalletId)
     }
 
     /** With the toggle off no joint record reaches the store, so nothing downstream has to tell the two kinds apart */
