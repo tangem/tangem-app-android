@@ -652,7 +652,7 @@ internal class MultiWalletFinalizeModelTest {
             // Act
             finishBackupAsUpgrade()
 
-            // Assert — FR-16, and only once the wallet is recorded as upgraded
+            // Assert — only once the wallet is recorded as upgraded
             coVerifyOrder {
                 walletsRepository.upgradeWallet(UPGRADED_WALLET_ID)
                 deleteSocialRecoveryUseCase(UPGRADED_WALLET_ID)
