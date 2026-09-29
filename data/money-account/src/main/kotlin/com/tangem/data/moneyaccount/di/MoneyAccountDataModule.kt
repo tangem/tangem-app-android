@@ -10,6 +10,7 @@ import com.tangem.data.moneyaccount.repository.DefaultMoneyAccountActivationRepo
 import com.tangem.data.moneyaccount.store.MoneyAccountStatusesStore
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.moneyaccount.repository.MoneyAccountOrderRepository
 import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM
 import com.tangem.datasource.utils.AppDataStoreFactory
@@ -190,12 +191,14 @@ internal interface MoneyAccountDataModule {
             getMoneyAccountStatusUseCase: GetMoneyAccountStatusUseCase,
             deviceSecurityInfoProvider: DeviceSecurityInfoProvider,
             onboardingRepository: OnboardingRepository,
+            singleAccountListSupplier: SingleAccountListSupplier,
         ): GetMoneyAccountEligibilityUseCase {
             return GetMoneyAccountEligibilityUseCase(
                 getMoneyAccountSuitableWalletsUseCase = getMoneyAccountSuitableWalletsUseCase,
                 getMoneyAccountStatusUseCase = getMoneyAccountStatusUseCase,
                 deviceSecurityInfoProvider = deviceSecurityInfoProvider,
                 onboardingRepository = onboardingRepository,
+                singleAccountListSupplier = singleAccountListSupplier,
             )
         }
 
