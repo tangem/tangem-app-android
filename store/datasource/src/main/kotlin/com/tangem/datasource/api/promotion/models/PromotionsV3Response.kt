@@ -13,7 +13,7 @@ data class PromotionsV3Response(
     @JsonClass(generateAdapter = true)
     data class PromotionDto(
         @Json(name = "name") val name: String,
-        @Json(name = "status") val status: String,
+        @Json(name = "status") val status: Status,
         @Json(name = "startAt") val startAt: String,
         @Json(name = "endAt") val endAt: String,
         @Json(name = "alreadyEnrolled") val isAlreadyEnrolled: Boolean,
@@ -84,6 +84,23 @@ data class PromotionsV3Response(
     )
 
     /** Values unknown to this app version parse as `UNKNOWN`, see `addPromotionEnumFallbackAdapters`. */
+    @JsonClass(generateAdapter = false)
+    enum class Status {
+        @Json(name = "draft")
+        DRAFT,
+
+        @Json(name = "active")
+        ACTIVE,
+
+        @Json(name = "paused")
+        PAUSED,
+
+        @Json(name = "archived")
+        ARCHIVED,
+
+        UNKNOWN,
+    }
+
     @JsonClass(generateAdapter = false)
     enum class MatchMode {
         @Json(name = "strict")

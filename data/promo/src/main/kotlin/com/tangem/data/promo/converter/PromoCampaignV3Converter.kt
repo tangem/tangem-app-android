@@ -16,7 +16,7 @@ internal object PromoCampaignV3Converter : Converter<PromotionDto, PromoCampaign
     override fun convert(value: PromotionDto): PromoCampaign? {
         return PromoCampaign(
             name = value.name,
-            status = value.status,
+            status = convertStatus(value.status) ?: return null,
             timeline = PromoTimeline(
                 start = parseInstant(value.startAt) ?: return null,
                 end = parseInstant(value.endAt) ?: return null,
@@ -32,6 +32,14 @@ internal object PromoCampaignV3Converter : Converter<PromotionDto, PromoCampaign
     }
 
     private fun parseInstant(value: String): Instant? = runCatching { Instant.parse(value) }.getOrNull()
+
+    private fun convertStatus(status: Status): PromoCampaignStatus? = when (status) {
+        Status.DRAFT -> PromoCampaignStatus.Draft
+        Status.ACTIVE -> PromoCampaignStatus.Active
+        Status.PAUSED -> PromoCampaignStatus.Paused
+        Status.ARCHIVED -> PromoCampaignStatus.Archived
+        Status.UNKNOWN -> null
+    }
 
     private fun convertMatchMode(matchMode: MatchMode): PromoMatchMode? = when (matchMode) {
         MatchMode.STRICT -> PromoMatchMode.Strict
@@ -62,7 +70,9 @@ internal object PromoCampaignV3Converter : Converter<PromotionDto, PromoCampaign
     private fun convertLink(link: Link) = PromoLink(textKey = link.textKey, url = link.url)
 
     private fun convertBlock(block: DescriptionBlock): PromoDescriptionBlock? = when (block.type) {
-        BlockType.TEXT -> block.textKey?.let(PromoDescriptionBlock::Text)
+        BlockType.TEXT -> block.textKey?.let { textKey ->
+            PromoDescriptionBlock.Text(titleKey = block.titleKey, textKey = textKey)
+        }
         BlockType.HIGHLIGHT -> block.textKey?.let { textKey ->
             PromoDescriptionBlock.Highlight(titleKey = block.titleKey, textKey = textKey)
         }
