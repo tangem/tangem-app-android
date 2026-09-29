@@ -2,7 +2,6 @@
 
 package com.tangem.core.ui.ds2.accountrow
 
-import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
@@ -19,14 +18,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ripple.RippleAlpha
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalRippleConfiguration
-import androidx.compose.material3.RippleConfiguration
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,7 +39,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import com.tangem.core.ui.components.text.applyBladeBrush
-import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.TextReference
@@ -59,7 +52,6 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_collapse_20
 import com.tangem.core.ui.res.generated.icons.ic_cloud_exclamation_20
 import com.tangem.core.ui.res.generated.icons.ic_dot_12_filled
 import com.tangem.core.ui.res.generated.icons.ic_grid_plus_20
-import com.tangem.core.ui.res.generated.icons.ic_grid_plus_24
 import com.tangem.utils.StringsSigns
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -70,6 +62,7 @@ import kotlin.math.roundToInt
 internal enum class AccountRowLayoutId {
     AVATAR,
     TITLE,
+    TITLE_ANCHOR,
     SUBTITLE,
     BALANCE_LARGE,
     PRICE_CHANGE,
@@ -119,152 +112,158 @@ internal fun AccountRowContainer(
         .conditionalCompose(isInteractive) {
             combinedClickable(
                 interactionSource = interactionSource,
-                indication = LocalIndication.current,
+                indication = null,
                 role = Role.Button,
                 onLongClick = onLongClick,
                 onClick = onClick ?: {},
             )
         }
 
-    WithAccountRowRipple(enabled = isInteractive) {
-        Layout(content = content, modifier = cardModifier) { measurables, constraints ->
-            val progress = motion.expansion
-            val padding = 16.dp.roundToPx()
-            val avatarGap = 8.dp.roundToPx()
-            val contentGap = 12.dp.roundToPx()
-            val inlineGap = 2.dp.roundToPx()
-            val avatarCollapsed = 40.dp.roundToPx()
-            val avatarExpanded = 16.dp.roundToPx()
-            val expandedLineHeight = 20.dp.roundToPx()
-            val expandedBottomPadding = 8.dp.roundToPx()
+    Layout(content = content, modifier = cardModifier) { measurables, constraints ->
+        val progress = motion.expansion
+        val padding = 16.dp.roundToPx()
+        val avatarGap = 8.dp.roundToPx()
+        val contentGap = 12.dp.roundToPx()
+        val inlineGap = 2.dp.roundToPx()
+        val avatarCollapsed = 40.dp.roundToPx()
+        val avatarExpanded = 16.dp.roundToPx()
+        val expandedLineHeight = 20.dp.roundToPx()
+        val expandedBottomPadding = 8.dp.roundToPx()
 
-            val width = constraints.maxWidth
-            val innerWidth = max(0, width - padding * 2)
-            val loose = Constraints(maxWidth = width)
+        val width = constraints.maxWidth
+        val innerWidth = max(0, width - padding * 2)
+        val loose = Constraints(maxWidth = width)
 
-            val avatar = measurables.measureById(
-                id = AccountRowLayoutId.AVATAR,
-                constraints = Constraints.fixed(avatarCollapsed, avatarCollapsed),
+        val avatar = measurables.measureById(
+            id = AccountRowLayoutId.AVATAR,
+            constraints = Constraints.fixed(avatarCollapsed, avatarCollapsed),
+        )
+        val arrow = measurables.measureById(AccountRowLayoutId.ARROW, loose)
+        val dot = measurables.measureById(AccountRowLayoutId.DOT, loose)
+
+        val endMaxWidth = (innerWidth * END_CLUSTER_MAX_WIDTH_FRACTION).toInt()
+        val endConstraints = Constraints(maxWidth = endMaxWidth)
+        val balanceLarge = measurables.measureById(AccountRowLayoutId.BALANCE_LARGE, endConstraints)
+        val priceChange = measurables.measureById(AccountRowLayoutId.PRICE_CHANGE, endConstraints)
+        val endBadge = measurables.measureById(AccountRowLayoutId.END_BADGE, endConstraints)
+        val balanceSmall = measurables.measureById(AccountRowLayoutId.BALANCE_SMALL, endConstraints)
+
+        val endWidth = maxOf(endBadge.widthOrZero(), balanceLarge.widthOrZero(), priceChange.widthOrZero())
+        val startWidthCollapsed = max(
+            0,
+            innerWidth - avatarCollapsed - avatarGap - contentGap - endWidth,
+        )
+        val titleWidthExpanded = max(
+            0,
+            innerWidth - avatarExpanded - avatarGap - arrow.widthOrZero() - avatarGap -
+                dot.widthOrZero() - balanceSmall.widthOrZero() - inlineGap * 2,
+        )
+        val titleScale = motion.titleScale
+        val titleBudgetExpanded = (titleWidthExpanded / ACCOUNT_ROW_TITLE_EXPANDED_SCALE).roundToInt()
+        val titleMaxWidth = if (motion.isTitleCaption) {
+            titleWidthExpanded
+        } else {
+            lerp(startWidthCollapsed, titleBudgetExpanded, progress)
+        }
+
+        val title = measurables.measureById(
+            id = AccountRowLayoutId.TITLE,
+            constraints = Constraints(maxWidth = max(0, titleMaxWidth)),
+        )
+        val subtitle = measurables.measureById(
+            id = AccountRowLayoutId.SUBTITLE,
+            constraints = Constraints(maxWidth = startWidthCollapsed),
+        )
+        val titleAnchor = measurables.measureById(
+            id = AccountRowLayoutId.TITLE_ANCHOR,
+            constraints = Constraints(maxWidth = max(0, titleWidthExpanded)),
+        )
+        val slot = measurables.measureById(
+            id = AccountRowLayoutId.CONTENT,
+            constraints = Constraints(minWidth = width, maxWidth = width),
+        )
+
+        val startClusterHeight = title.heightOrZero() +
+            if (subtitle != null) inlineGap + subtitle.height else 0
+        val endClusterHeight = when {
+            endBadge != null -> endBadge.height
+            balanceLarge != null && priceChange != null ->
+                balanceLarge.height + inlineGap + priceChange.height
+            else -> max(balanceLarge.heightOrZero(), priceChange.heightOrZero())
+        }
+        val mainHeight = maxOf(avatarCollapsed, startClusterHeight, endClusterHeight)
+        val collapsedHeight = mainHeight + padding * 2
+
+        val lineHeight = maxOf(
+            expandedLineHeight,
+            arrow.heightOrZero(),
+            (title.heightOrZero() * titleScale).roundToInt(),
+        )
+        val expandedHeadingHeight = padding + lineHeight + expandedBottomPadding
+        val expandedHeight = expandedHeadingHeight + slot.heightOrZero()
+
+        val height = lerp(collapsedHeight, expandedHeight, progress)
+        val headingBottom = lerp(collapsedHeight, expandedHeadingHeight, progress)
+
+        layout(width = width, height = max(0, height)) {
+            val avatarX = padding
+            val avatarY = lerp(
+                padding + (mainHeight - avatarCollapsed) / 2,
+                padding + (lineHeight - avatarExpanded) / 2,
+                progress,
             )
-            val arrow = measurables.measureById(AccountRowLayoutId.ARROW, loose)
-            val dot = measurables.measureById(AccountRowLayoutId.DOT, loose)
+            avatar?.placeRelative(x = avatarX, y = avatarY)
 
-            val endMaxWidth = (innerWidth * END_CLUSTER_MAX_WIDTH_FRACTION).toInt()
-            val endConstraints = Constraints(maxWidth = endMaxWidth)
-            val balanceLarge = measurables.measureById(AccountRowLayoutId.BALANCE_LARGE, endConstraints)
-            val priceChange = measurables.measureById(AccountRowLayoutId.PRICE_CHANGE, endConstraints)
-            val endBadge = measurables.measureById(AccountRowLayoutId.END_BADGE, endConstraints)
-            val balanceSmall = measurables.measureById(AccountRowLayoutId.BALANCE_SMALL, endConstraints)
+            val titleX = lerp(
+                padding + avatarCollapsed + avatarGap,
+                padding + avatarExpanded + avatarGap,
+                progress,
+            )
+            val startClusterTop = padding + (mainHeight - startClusterHeight) / 2
+            val titleCenterY = lerp(
+                startClusterTop + title.heightOrZero() / 2,
+                padding + lineHeight / 2,
+                progress,
+            )
+            val titleY = titleCenterY - title.heightOrZero() / 2
+            title?.placeRelative(x = titleX, y = titleY)
 
-            val endWidth = maxOf(endBadge.widthOrZero(), balanceLarge.widthOrZero(), priceChange.widthOrZero())
-            val startWidthCollapsed = max(
-                0,
-                innerWidth - avatarCollapsed - avatarGap - contentGap - endWidth,
-            )
-            val titleWidthExpanded = max(
-                0,
-                innerWidth - avatarExpanded - avatarGap - arrow.widthOrZero() - avatarGap -
-                    dot.widthOrZero() - balanceSmall.widthOrZero() - inlineGap * 2,
-            )
-            val titleScale = motion.titleScale
-            val titleBudgetExpanded = (titleWidthExpanded / ACCOUNT_ROW_TITLE_EXPANDED_SCALE).roundToInt()
-            val titleMaxWidth = if (motion.isTitleCaption) {
-                titleWidthExpanded
-            } else {
-                lerp(startWidthCollapsed, titleBudgetExpanded, progress)
-            }
-
-            val title = measurables.measureById(
-                id = AccountRowLayoutId.TITLE,
-                constraints = Constraints(maxWidth = max(0, titleMaxWidth)),
-            )
-            val subtitle = measurables.measureById(
-                id = AccountRowLayoutId.SUBTITLE,
-                constraints = Constraints(maxWidth = startWidthCollapsed),
-            )
-            val slot = measurables.measureById(
-                id = AccountRowLayoutId.CONTENT,
-                constraints = Constraints(minWidth = width, maxWidth = width),
+            subtitle?.placeRelative(
+                x = titleX,
+                y = titleY + title.heightOrZero() + inlineGap,
             )
 
-            val startClusterHeight = title.heightOrZero() +
-                if (subtitle != null) inlineGap + subtitle.height else 0
-            val endClusterHeight = when {
-                endBadge != null -> endBadge.height
-                balanceLarge != null && priceChange != null ->
-                    balanceLarge.height + inlineGap + priceChange.height
-                else -> max(balanceLarge.heightOrZero(), priceChange.heightOrZero())
-            }
-            val mainHeight = maxOf(avatarCollapsed, startClusterHeight, endClusterHeight)
-            val collapsedHeight = mainHeight + padding * 2
-
-            val lineHeight = maxOf(
-                expandedLineHeight,
-                arrow.heightOrZero(),
-                (title.heightOrZero() * titleScale).roundToInt(),
+            val endRight = width - padding
+            val endTop = padding + (mainHeight - endClusterHeight) / 2
+            endBadge?.placeRelative(x = endRight - endBadge.width, y = endTop)
+            balanceLarge?.placeRelative(x = endRight - balanceLarge.width, y = endTop)
+            priceChange?.placeRelative(
+                x = endRight - priceChange.width,
+                y = if (balanceLarge != null) endTop + balanceLarge.height + inlineGap else endTop,
             )
-            val expandedHeadingHeight = padding + lineHeight + expandedBottomPadding
-            val expandedHeight = expandedHeadingHeight + slot.heightOrZero()
 
-            val height = lerp(collapsedHeight, expandedHeight, progress)
-            val headingBottom = lerp(collapsedHeight, expandedHeadingHeight, progress)
+            val titleRight = lerp(
+                padding + avatarCollapsed + avatarGap + title.widthOrZero(),
+                padding + avatarExpanded + avatarGap + titleAnchor.widthOrZero(),
+                progress,
+            )
+            val dotX = titleRight + inlineGap
+            dot?.placeRelative(x = dotX, y = titleCenterY - dot.height / 2)
+            balanceSmall?.placeRelative(
+                x = dotX + dot.widthOrZero() + inlineGap,
+                y = titleCenterY - balanceSmall.height / 2,
+            )
 
-            layout(width = width, height = max(0, height)) {
-                val avatarX = padding
-                val avatarY = lerp(
-                    padding + (mainHeight - avatarCollapsed) / 2,
-                    padding + (lineHeight - avatarExpanded) / 2,
+            arrow?.placeRelative(
+                x = endRight - arrow.width,
+                y = lerp(
+                    padding + (mainHeight - arrow.height) / 2,
+                    padding + (lineHeight - arrow.height) / 2,
                     progress,
-                )
-                avatar?.placeRelative(x = avatarX, y = avatarY)
+                ),
+            )
 
-                val titleX = lerp(
-                    padding + avatarCollapsed + avatarGap,
-                    padding + avatarExpanded + avatarGap,
-                    progress,
-                )
-                val startClusterTop = padding + (mainHeight - startClusterHeight) / 2
-                val titleCenterY = lerp(
-                    startClusterTop + title.heightOrZero() / 2,
-                    padding + lineHeight / 2,
-                    progress,
-                )
-                val titleY = titleCenterY - title.heightOrZero() / 2
-                title?.placeRelative(x = titleX, y = titleY)
-
-                subtitle?.placeRelative(
-                    x = titleX,
-                    y = titleY + title.heightOrZero() + inlineGap,
-                )
-
-                val endRight = width - padding
-                val endTop = padding + (mainHeight - endClusterHeight) / 2
-                endBadge?.placeRelative(x = endRight - endBadge.width, y = endTop)
-                balanceLarge?.placeRelative(x = endRight - balanceLarge.width, y = endTop)
-                priceChange?.placeRelative(
-                    x = endRight - priceChange.width,
-                    y = if (balanceLarge != null) endTop + balanceLarge.height + inlineGap else endTop,
-                )
-
-                val titleRight = titleX + (title.widthOrZero() * titleScale).roundToInt()
-                val dotX = titleRight + inlineGap
-                dot?.placeRelative(x = dotX, y = titleCenterY - dot.height / 2)
-                balanceSmall?.placeRelative(
-                    x = dotX + dot.widthOrZero() + inlineGap,
-                    y = titleCenterY - balanceSmall.height / 2,
-                )
-
-                arrow?.placeRelative(
-                    x = endRight - arrow.width,
-                    y = lerp(
-                        padding + (mainHeight - arrow.height) / 2,
-                        padding + (lineHeight - arrow.height) / 2,
-                        progress,
-                    ),
-                )
-
-                slot?.placeRelative(x = 0, y = headingBottom)
-            }
+            slot?.placeRelative(x = 0, y = headingBottom)
         }
     }
 }
@@ -278,27 +277,6 @@ private fun List<Measurable>.measureById(id: AccountRowLayoutId, constraints: Co
 private fun Placeable?.widthOrZero(): Int = this?.width ?: 0
 
 private fun Placeable?.heightOrZero(): Int = this?.height ?: 0
-
-@Composable
-private fun WithAccountRowRipple(enabled: Boolean, content: @Composable () -> Unit) {
-    if (enabled) {
-        CompositionLocalProvider(LocalRippleConfiguration provides accountRowRipple(), content = content)
-    } else {
-        content()
-    }
-}
-
-@Composable
-@ReadOnlyComposable
-private fun accountRowRipple(): RippleConfiguration = RippleConfiguration(
-    color = TangemTheme.colors3.interaction.press.default,
-    rippleAlpha = RippleAlpha(
-        draggedAlpha = 0f,
-        focusedAlpha = 0f,
-        hoveredAlpha = 0.05f,
-        pressedAlpha = 0.1f,
-    ),
-)
 
 // endregion
 
@@ -323,6 +301,22 @@ internal fun AccountRowTitle(title: TextReference, motion: AccountRowMotion, mod
             scaleY = scale
             transformOrigin = TransformOrigin(pivotFractionX = 0f, pivotFractionY = 0.5f)
         },
+    )
+}
+
+/**
+ * Invisible stand-in for the title at its settled caption width. The dot and the compact balance are
+ * placed from this rather than from the live, scaled title, so the moment the title swaps to real
+ * caption text at the end of the transition does not nudge them sideways.
+ */
+@Composable
+internal fun AccountRowTitleAnchor(title: TextReference, modifier: Modifier = Modifier) {
+    Text(
+        text = title.resolveReference(),
+        style = TangemTheme.typography3.caption.medium,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = modifier,
     )
 }
 
@@ -461,7 +455,7 @@ internal fun AccountRowEmptyBody(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 36.dp),
+            .padding(horizontal = 8.dp, vertical = 36.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
@@ -474,13 +468,13 @@ internal fun AccountRowEmptyBody(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(TangemTheme.colors3.bg.tertiary),
+                    .background(TangemTheme.colors3.bg.opaque.primary),
             ) {
                 Icon(
-                    imageVector = Icons.ic_grid_plus_24,
+                    imageVector = Icons.ic_grid_plus_20,
                     contentDescription = null,
                     tint = TangemTheme.colors3.icon.secondary,
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(20.dp),
                 )
             }
             Text(
@@ -494,7 +488,6 @@ internal fun AccountRowEmptyBody(
         TangemButton(
             variant = TangemButton.Variant.Secondary,
             size = TangemButton.Size.X9,
-            iconStart = TangemIconUM.Icon(imageVector = Icons.ic_grid_plus_20),
             text = addTokensLabel,
             onClick = onAddTokensClick,
         )

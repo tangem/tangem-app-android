@@ -3,15 +3,14 @@
 package com.tangem.core.ui.ds2.accountrow
 
 import android.content.res.Configuration
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
@@ -602,12 +601,7 @@ private fun AccountRowScaffold(
     avatar: @Composable () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val pressAlpha by animateFloatAsState(
-        targetValue = if (isPressed) ACCOUNT_ROW_PRESSED_ALPHA else 1f,
-        animationSpec = AccountRowPressSpec,
-        label = "accountRowPressAlpha",
-    )
+    val pressAlpha by rememberAccountRowPressAlpha(interactionSource)
     val motion = rememberAccountRowMotion(isExpanded = isExpanded && content != null)
 
     AccountRowContainer(
@@ -638,6 +632,7 @@ private fun AccountRowScaffold(
                 .layoutId(AccountRowLayoutId.TITLE)
                 .graphicsLayer { alpha = pressAlpha },
         )
+        AccountRowTitleAnchor(title = title, modifier = Modifier.layoutId(AccountRowLayoutId.TITLE_ANCHOR))
 
         if (tokensAmount != null || membersAmount != null) {
             AccountRowSubtitle(
@@ -696,6 +691,7 @@ private fun AccountRowScaffold(
                 isFlickering = isBalanceFlickering,
                 modifier = Modifier
                     .layoutId(AccountRowLayoutId.BALANCE_SMALL)
+                    .offset(x = motion.smallBalanceOffset)
                     .graphicsLayer { alpha = pressAlpha * motion.smallBalanceAlpha },
             )
         }

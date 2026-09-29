@@ -3,14 +3,22 @@
 package com.tangem.core.ui.ds2.accountrow
 
 import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.Transition
+import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
+import androidx.compose.foundation.interaction.InteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 
@@ -32,6 +40,11 @@ internal data class AccountRowMotion(
     val priceChangeAlpha: Float,
     val smallBalanceAlpha: Float,
     val dotAlpha: Float,
+    /**
+     * Horizontal drift of the compact balance. Figma animates its position alongside its opacity, so it
+     * slides out as it dissolves and slides in as it appears instead of popping at its final spot.
+     */
+    val smallBalanceOffset: Dp,
     val arrowAlpha: Float,
     val slotAlpha: Float,
     /**
@@ -46,12 +59,43 @@ private val StandardEasing = CubicBezierEasing(a = 0.6f, b = 0f, c = 0.4f, d = 1
 private val AcceleratedEasing = CubicBezierEasing(a = 0.7f, b = 0f, c = 0.3f, d = 1f)
 private val PressEasing = CubicBezierEasing(a = 0.5f, b = 0f, c = 0.5f, d = 1f)
 
+/** How far the compact balance drifts while it appears or dissolves (Figma: `-97,10 → -71,10`). */
+private val SmallBalanceSlide = 26.dp
+
 /** Opacity every heading element drops to while the row is held down. */
 internal const val ACCOUNT_ROW_PRESSED_ALPHA = 0.6f
 
-/** Press feedback spec, shared by all heading elements. */
-internal val AccountRowPressSpec: FiniteAnimationSpec<Float> =
-    tween(durationMillis = 150, easing = PressEasing)
+/** Time the heading takes to reach [ACCOUNT_ROW_PRESSED_ALPHA], and the floor on how long it stays there. */
+private const val PRESS_DURATION_MS = 150
+
+private val AccountRowPressSpec: FiniteAnimationSpec<Float> =
+    tween(durationMillis = PRESS_DURATION_MS, easing = PressEasing)
+
+/**
+ * Opacity the heading elements are drawn at while the row is held down.
+ *
+ * A tap is usually shorter than the ramp, so releasing the moment the finger lifts leaves the fade
+ * interrupted part-way down — around 0.87 for a 60ms tap, close enough to 1 that the press reads as
+ * no feedback at all. Collecting sequentially and suspending on [Animatable.animateTo] makes the
+ * release wait for the press to finish, so every tap reaches [ACCOUNT_ROW_PRESSED_ALPHA] before it
+ * comes back. Expressing the hold in animation time rather than wall-clock also keeps it correct
+ * when the system animator duration scale is not 1.
+ */
+@Composable
+internal fun rememberAccountRowPressAlpha(interactionSource: InteractionSource): State<Float> {
+    val alpha = remember { Animatable(initialValue = 1f) }
+    LaunchedEffect(interactionSource) {
+        interactionSource.interactions.collect { interaction ->
+            when (interaction) {
+                is PressInteraction.Press ->
+                    alpha.animateTo(targetValue = ACCOUNT_ROW_PRESSED_ALPHA, animationSpec = AccountRowPressSpec)
+                is PressInteraction.Release, is PressInteraction.Cancel ->
+                    alpha.animateTo(targetValue = 1f, animationSpec = AccountRowPressSpec)
+            }
+        }
+    }
+    return alpha.asState()
+}
 
 /** Title scale at the expanded end — `caption.medium` (12sp) over `body.medium` (16sp). */
 internal const val ACCOUNT_ROW_TITLE_EXPANDED_SCALE = 0.75f
@@ -114,6 +158,7 @@ internal fun rememberAccountRowMotion(isExpanded: Boolean): AccountRowMotion {
             expandSpec = tween(durationMillis = 120, delayMillis = 270, easing = StandardEasing),
             collapseSpec = tween(durationMillis = 50, delayMillis = 270, easing = AcceleratedEasing),
         ),
+        smallBalanceOffset = transition.animateSmallBalanceOffset(),
         dotAlpha = transition.animateExpansionAlpha(
             label = "dotAlpha",
             expandedValue = 1f,
@@ -134,6 +179,15 @@ internal fun rememberAccountRowMotion(isExpanded: Boolean): AccountRowMotion {
         ),
         isSettled = transition.currentState == transition.targetState,
     )
+}
+
+@Composable
+private fun Transition<Boolean>.animateSmallBalanceOffset(): Dp {
+    val offset by animateDp(
+        label = "smallBalanceOffset",
+        transitionSpec = { tween(durationMillis = 180, delayMillis = 270, easing = AcceleratedEasing) },
+    ) { expanded -> if (expanded) 0.dp else SmallBalanceSlide }
+    return offset
 }
 
 /**
