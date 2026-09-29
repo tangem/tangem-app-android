@@ -143,8 +143,10 @@ Status receives the result, market header and position id as route data and owns
   it is placeable: `quote.isPlaceable` (market state; a SELL also places on `BELOW_MIN_ORDER_SIZE`) and
   `isBelowMinAmount` (BUY only, price-weighted — a SELL has no floor beyond one whole share or the whole
   position).
-- **Shares.** `SharesCalculator`: the sellable size is the position floored to the 2-decimal exchange grid
-  (`PolymarketConst.SHARES_DECIMALS`); presets and ± steps move in whole shares with a floor of one share
+- **Shares.** `SharesCalculator`: the sellable size is the whole position at the on-chain share precision
+  (`PolymarketConst.SHARES_DECIMALS` = 6) — it is not floored onto the 2-decimal amount grid, because the BFF
+  quotes the sale of a whole position at the position's own precision (a sub-cent whole position included);
+  presets and ± steps move in whole shares with a floor of one share
   (or the whole position when smaller), and 100 % is the position itself, so a full close reaches the
   last fraction.
 - **Slippage.** Default 3 %, range 0.1–30 % (`SlippagePickerUM`); a fill at the worst-case price counts as filled.
