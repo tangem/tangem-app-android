@@ -30,8 +30,6 @@ import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.model.CashbackDisplayMode
-import com.tangem.domain.pay.model.CashbackSummary
 import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
@@ -40,9 +38,10 @@ import com.tangem.domain.pay.usecase.bankofframp.FindActiveBankOfframpOrderUseCa
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.TangemPayFeatureToggles
+import com.tangem.features.tangempay.account.cashback.TangemPayCashbackController
+import com.tangem.features.tangempay.account.cashback.withCashback
 import com.tangem.features.tangempay.addfunds.AddFundsListener
 import com.tangem.features.tangempay.card.issue.TangemPayIssueAdditionalCardComponent
-import com.tangem.features.tangempay.cashback.impl.model.TangemPayCashbackDateFormatter
 import com.tangem.features.tangempay.common.*
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.details.impl.R
@@ -56,7 +55,6 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
-import com.tangem.utils.transformer.Transformer
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -82,11 +80,9 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val produceTangemPayInitialDataUseCase: ProduceTangemPayInitialDataUseCase,
     private val onboardingRepository: OnboardingRepository,
     private val getCustomerOffers: GetCustomerOffersUseCase,
-    private val getCashbackSummaryUseCase: GetCashbackSummaryUseCase,
     private val getBankCredentialsUseCase: GetBankCredentialsUseCase,
-    private val getCashbackDeactivationDismissedUseCase: GetCashbackDeactivationDismissedUseCase,
-    private val setCashbackDeactivationDismissedUseCase: SetCashbackDeactivationDismissedUseCase,
     private val findActiveBankOfframpOrderUseCase: FindActiveBankOfframpOrderUseCase,
+    cashbackControllerFactory: TangemPayCashbackController.Factory,
     tangemPayCurrencyFactory: TangemPayCurrencyFactory,
 ) : Model(),
     TangemPayTxHistoryUiActions,
@@ -110,28 +106,29 @@ internal class TangemPayDetailsModel @Inject constructor(
         intents = this,
     )
 
-    val uiState: StateFlow<TangemPayDetailsUM>
-        field = MutableStateFlow(
-            when {
-                params.initialStatus.value is PaymentAccountStatusValue.Deactivated -> {
-                    stateFactory.getDeactivatedState(
-                        params.initialStatus.value as PaymentAccountStatusValue.Deactivated,
-                    )
-                }
-                else -> stateFactory.getLoadingState()
-            },
-        )
+    private val baseState = MutableStateFlow(
+        when {
+            params.initialStatus.value is PaymentAccountStatusValue.Deactivated -> {
+                stateFactory.getDeactivatedState(
+                    params.initialStatus.value as PaymentAccountStatusValue.Deactivated,
+                )
+            }
+            else -> stateFactory.getLoadingState()
+        },
+    )
+
+    private val cashback = cashbackControllerFactory.create(scope = modelScope, accountStatus = currentStatus)
+
+    val uiState: StateFlow<TangemPayDetailsUM> =
+        combine(baseState, cashback.state, TangemPayDetailsUM::withCashback)
+            .stateIn(modelScope, SharingStarted.Eagerly, baseState.value)
 
     private val refreshStateJobHolder = JobHolder()
-    private val cashbackBlockJobHolder = JobHolder()
     private val planSelectionJobHolder = JobHolder()
-    private val cashbackDateFormatter = TangemPayCashbackDateFormatter()
 
     val bottomSheetNavigation: SlotNavigation<TangemPayDetailsNavigation> = SlotNavigation()
 
     private var shownTiersBanner: TangemPayTiersBannerType? = null
-    private var shownCashbackBlock: CashbackBlockAnalyticsType? = null
-    private var cashbackTransformer: Transformer<TangemPayDetailsUM>? = null
     private var isDeliveryBannerShown = false
     private var isCardIssueFailedBannerDismissed = false
 
@@ -151,30 +148,24 @@ internal class TangemPayDetailsModel @Inject constructor(
                 }
                 when (state) {
                     is PaymentAccountStatusValue.Deactivated -> {
-                        cashbackBlockJobHolder.cancel()
-                        cashbackTransformer = null
-                        uiState.update { stateFactory.getDeactivatedState(state) }
+                        baseState.update { stateFactory.getDeactivatedState(state) }
                         handleInitialRoute()
                     }
                     is PaymentAccountStatusValue.Loaded -> {
-                        fetchCashbackBlock()
-                        uiState.update {
-                            val freshState = stateFactory.getLoadedState(state)
-                            cashbackTransformer?.transform(freshState) ?: freshState
-                        }
+                        baseState.update { stateFactory.getLoadedState(state) }
                         sendDeliveryBannerAnalytics()
                         handleInitialRoute()
                     }
-                    is PaymentAccountStatusValue.Inactive -> uiState.update {
+                    is PaymentAccountStatusValue.Inactive -> baseState.update {
                         stateFactory.getInactiveState(state)
                     }
-                    is PaymentAccountStatusValue.Error.CardIssueFailed -> uiState.update {
+                    is PaymentAccountStatusValue.Error.CardIssueFailed -> baseState.update {
                         stateFactory.getCardIssueFailedState(
                             status = state,
                             isBannerDismissed = isCardIssueFailedBannerDismissed,
                         )
                     }
-                    else -> uiState.update { stateFactory.getLoadingState() }
+                    else -> baseState.update { stateFactory.getLoadingState() }
                 }
             }
             .launchIn(modelScope)
@@ -309,131 +300,9 @@ internal class TangemPayDetailsModel @Inject constructor(
         router.push(TangemPayAccountDetailsInnerRoute.WithdrawHub)
     }
 
-    private fun fetchCashbackBlock() {
-        if (cashbackBlockJobHolder.isActive) return
-        // A closed account shows only the deactivation notice — no cashback UI on top of it ([REDACTED_TASK_KEY])
-        if (currentStatus.value.value is PaymentAccountStatusValue.Deactivated) return
-        modelScope.launch {
-            getCashbackSummaryUseCase(userWalletId).onRight { summary ->
-                val isDismissed = getCashbackDeactivationDismissedUseCase(userWalletId)
-                sendCashbackBlockAnalytics(summary = summary, isDeactivationDismissed = isDismissed)
-                val transformer = CashbackBlockTransformer(
-                    summary = summary,
-                    isDeactivationDismissed = isDismissed,
-                    dateFormatter = cashbackDateFormatter,
-                    onClick = ::onClickCashback,
-                    onMenuItemClick = ::onClickCashbackMenuItem,
-                    onGotIt = ::onDismissCashbackDeactivation,
-                )
-                cashbackTransformer = transformer
-                uiState.update(transformer)
-            }.onLeft {
-                val current = cashbackTransformer
-                val isMenuEntryShown = current is CashbackMenuItemErrorTransformer ||
-                    current is CashbackBlockTransformer && current.isAltBlockMode
-                when {
-                    // The menu entry is the shown cashback UI — the error state lives there ([REDACTED_TASK_KEY])
-                    isMenuEntryShown -> {
-                        sendCashbackBlockShown(CashbackBlockAnalyticsType.SettingsButtonError)
-                        applyCashbackTransformer(
-                            CashbackMenuItemErrorTransformer(
-                                onReload = ::onReloadCashbackMenuItem,
-                                isReloading = false,
-                            ),
-                        )
-                    }
-                    // A failed refresh must not wipe the successfully shown widget ([REDACTED_TASK_KEY])
-                    current is CashbackBlockTransformer -> return@onLeft
-                    else -> {
-                        sendCashbackBlockShown(CashbackBlockAnalyticsType.Error)
-                        applyCashbackTransformer(
-                            CashbackErrorBlockTransformer(
-                                onReload = ::onReloadCashbackBlock,
-                                isReloading = false,
-                            ),
-                        )
-                    }
-                }
-            }
-        }.saveIn(cashbackBlockJobHolder)
-    }
-
-    private fun applyCashbackTransformer(transformer: Transformer<TangemPayDetailsUM>) {
-        cashbackTransformer = transformer
-        uiState.update(transformer)
-    }
-
-    private fun onReloadCashbackBlock() {
-        if (cashbackBlockJobHolder.isActive) return
-        applyCashbackTransformer(
-            CashbackErrorBlockTransformer(onReload = ::onReloadCashbackBlock, isReloading = true),
-        )
-        fetchCashbackBlock()
-    }
-
-    private fun onReloadCashbackMenuItem() {
-        if (cashbackBlockJobHolder.isActive) return
-        applyCashbackTransformer(
-            CashbackMenuItemErrorTransformer(onReload = ::onReloadCashbackMenuItem, isReloading = true),
-        )
-        fetchCashbackBlock()
-    }
-
-    private fun sendCashbackBlockAnalytics(summary: CashbackSummary, isDeactivationDismissed: Boolean) {
-        val block = when (summary) {
-            is CashbackSummary.Enabled -> when (summary.displayMode) {
-                CashbackDisplayMode.FULL -> CashbackBlockAnalyticsType.Widget
-                CashbackDisplayMode.ALT_BLOCK -> CashbackBlockAnalyticsType.SettingsButton
-            }
-
-            CashbackSummary.Deactivated ->
-                CashbackBlockAnalyticsType.DeactivationBanner.takeIf { !isDeactivationDismissed }
-
-            CashbackSummary.Disabled,
-            CashbackSummary.Unknown,
-            -> null
-        }
-        sendCashbackBlockShown(block)
-    }
-
-    private fun sendCashbackBlockShown(block: CashbackBlockAnalyticsType?) {
-        if (block == shownCashbackBlock) return
-        shownCashbackBlock = block
-
-        val event = when (block) {
-            CashbackBlockAnalyticsType.Widget -> {
-                TangemPayAnalyticsEvents.Cashback.BannerShowed()
-            }
-            CashbackBlockAnalyticsType.SettingsButton -> {
-                TangemPayAnalyticsEvents.Cashback.ButtonInSettingsShowed()
-            }
-            CashbackBlockAnalyticsType.DeactivationBanner -> {
-                TangemPayAnalyticsEvents.Cashback.DeactivationBannerShowed()
-            }
-            CashbackBlockAnalyticsType.Error -> {
-                TangemPayAnalyticsEvents.Cashback.BannerErrorStateShowed()
-            }
-            CashbackBlockAnalyticsType.SettingsButtonError -> {
-                TangemPayAnalyticsEvents.Cashback.ButtonErrorStateShowed()
-            }
-            null -> null
-        }
-
-        event?.let { analytics.send(it) }
-    }
-
-    private fun onDismissCashbackDeactivation() {
-        analytics.send(TangemPayAnalyticsEvents.Cashback.DeactivationBannerGotItClicked())
-        modelScope.launch {
-            setCashbackDeactivationDismissedUseCase(userWalletId)
-            cashbackTransformer = null
-            uiState.update { it.copy(cashbackBlockState = null) }
-        }.saveIn(cashbackBlockJobHolder)
-    }
-
     private fun handleBalanceHiding() {
         getBalanceHidingSettingsUseCase().onEach {
-            uiState.update(DetailBalanceVisibilityTransformer(isHidden = it.isBalanceHidden))
+            baseState.update(DetailBalanceVisibilityTransformer(isHidden = it.isBalanceHidden))
         }.launchIn(modelScope)
     }
 
@@ -454,7 +323,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         isCardIssueFailedBannerDismissed = true
         val status = currentStatus.value.value
         if (status is PaymentAccountStatusValue.Error.CardIssueFailed) {
-            uiState.update { stateFactory.getCardIssueFailedState(status = status, isBannerDismissed = true) }
+            baseState.update { stateFactory.getCardIssueFailedState(status = status, isBannerDismissed = true) }
         }
     }
 
@@ -472,12 +341,12 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onRefreshSwipe(refreshState: ShowRefreshState) {
-        fetchCashbackBlock()
+        cashback.refresh()
         modelScope.launch {
-            uiState.update(TangemPayDetailsRefreshTransformer(isRefreshing = refreshState.value))
+            baseState.update(TangemPayDetailsRefreshTransformer(isRefreshing = refreshState.value))
             paymentAccountStatusFetcher.invoke(userWalletId)
             txHistoryUpdateListener.triggerUpdate()
-            uiState.update(TangemPayDetailsRefreshTransformer(isRefreshing = false))
+            baseState.update(TangemPayDetailsRefreshTransformer(isRefreshing = false))
         }.saveIn(refreshStateJobHolder)
     }
 
@@ -668,7 +537,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         bottomSheetNavigation.activate(
             configuration = TangemPayDetailsNavigation.TransactionDetails(
                 transaction = item,
-                isBalanceHidden = uiState.value.isBalanceHidden,
+                isBalanceHidden = baseState.value.isBalanceHidden,
                 userWalletId = userWalletId,
                 customerId = customerId,
             ),
@@ -678,16 +547,6 @@ internal class TangemPayDetailsModel @Inject constructor(
     override fun onClickCurrentPlan(tariffPlan: TangemPayTariffPlanState) {
         analytics.send(TangemPayAnalyticsEvents.Tiers.CurrentPlanClicked())
         router.push(TangemPayAccountDetailsInnerRoute.CurrentPlan(tariffPlan))
-    }
-
-    override fun onClickCashback() {
-        analytics.send(TangemPayAnalyticsEvents.Cashback.BannerClicked())
-        router.push(TangemPayAccountDetailsInnerRoute.Cashback)
-    }
-
-    private fun onClickCashbackMenuItem() {
-        analytics.send(TangemPayAnalyticsEvents.Cashback.ButtonInSettingsClicked())
-        router.push(TangemPayAccountDetailsInnerRoute.Cashback)
     }
 
     private fun openCurrentPlan() {
@@ -783,16 +642,16 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onRenewSession() {
-        uiState.update(TangemPayMessageBannerTransformer(shouldShowProgress = true))
+        baseState.update(TangemPayMessageBannerTransformer(shouldShowProgress = true))
         modelScope.launch {
             produceTangemPayInitialDataUseCase(userWalletId)
                 .onRight {
                     paymentAccountStatusFetcher.invoke(userWalletId)
-                    uiState.update(TangemPayMessageBannerTransformer(shouldShowProgress = false))
+                    baseState.update(TangemPayMessageBannerTransformer(shouldShowProgress = false))
                 }
                 .onLeft {
                     uiMessageSender.send(SnackbarMessage(resourceReference(R.string.common_error)))
-                    uiState.update(TangemPayMessageBannerTransformer(shouldShowProgress = false))
+                    baseState.update(TangemPayMessageBannerTransformer(shouldShowProgress = false))
                 }
         }
     }
@@ -832,7 +691,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     private fun sendDeliveryBannerAnalytics() {
-        val banner = uiState.value.balanceBlockState.cardsBlockState?.progressBanner
+        val banner = baseState.value.balanceBlockState.cardsBlockState?.progressBanner
         val isShown = banner is CardsProgressBannerUM.Delivering || banner is CardsProgressBannerUM.DeliveringMultiple
 
         if (isShown == isDeliveryBannerShown) return
@@ -865,5 +724,3 @@ internal class TangemPayDetailsModel @Inject constructor(
         event?.let { analytics.send(it) }
     }
 }
-
-private enum class CashbackBlockAnalyticsType { Widget, SettingsButton, DeactivationBanner, Error, SettingsButtonError }
