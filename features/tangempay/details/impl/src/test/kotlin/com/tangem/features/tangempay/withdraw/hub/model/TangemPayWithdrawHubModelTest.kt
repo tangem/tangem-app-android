@@ -378,27 +378,26 @@ internal class TangemPayWithdrawHubModelTest {
     }
 
     @Test
-    fun `GIVEN no recent and no saved accounts WHEN model created THEN recents empty without see all`() {
+    fun `GIVEN no saved accounts WHEN model created THEN recents empty`() {
         // Act
         val model = createModel()
 
         // Assert
-        assertThat(model.recents()).isEqualTo(RecentsUM.Empty(onSeeAllClick = null))
+        assertThat(model.recents()).isEqualTo(RecentsUM.Empty)
         model.onDestroy()
     }
 
     @Test
-    fun `GIVEN no recent but saved accounts WHEN model created THEN recents empty with see all`() {
+    fun `GIVEN every saved account shown WHEN model created THEN recents content without see all`() {
         // Arrange
         coEvery { getRecentBankAccountsUseCase(userWalletId) } returns
-            recentBankAccounts(hasSavedAccounts = true).right()
-        val model = createModel()
+            recentBankAccounts(recents = listOf(bankAccount(id = "acc-1")), hasMoreAccounts = false).right()
 
         // Act
-        requireNotNull((model.recents() as RecentsUM.Empty).onSeeAllClick).invoke()
+        val model = createModel()
 
         // Assert
-        assertThat(opened.single().first).isEqualTo(BankWithdrawEntry.SeeAll)
+        assertThat((model.recents() as RecentsUM.Content).onSeeAllClick).isNull()
         model.onDestroy()
     }
 
@@ -479,14 +478,14 @@ internal class TangemPayWithdrawHubModelTest {
     }
 
     @Test
-    fun `GIVEN recents content WHEN see all clicked THEN wizard opened with see all entry`() {
+    fun `GIVEN more saved accounts than shown WHEN see all clicked THEN wizard opened with see all entry`() {
         // Arrange
         coEvery { getRecentBankAccountsUseCase(userWalletId) } returns
-            recentBankAccounts(recents = listOf(bankAccount(id = "acc-1"))).right()
+            recentBankAccounts(recents = listOf(bankAccount(id = "acc-1")), hasMoreAccounts = true).right()
         val model = createModel()
 
         // Act
-        (model.recents() as RecentsUM.Content).onSeeAllClick()
+        requireNotNull((model.recents() as RecentsUM.Content).onSeeAllClick).invoke()
 
         // Assert
         assertThat(opened.single().first).isEqualTo(BankWithdrawEntry.SeeAll)
@@ -530,14 +529,14 @@ internal class TangemPayWithdrawHubModelTest {
     }
 
     @Test
-    fun `GIVEN recents content WHEN see all clicked THEN SavedContactsSeeAllClicked is sent`() {
+    fun `GIVEN more saved accounts than shown WHEN see all clicked THEN SavedContactsSeeAllClicked is sent`() {
         // Arrange
         coEvery { getRecentBankAccountsUseCase(userWalletId) } returns
-            recentBankAccounts(recents = listOf(bankAccount(id = "acc-1"))).right()
+            recentBankAccounts(recents = listOf(bankAccount(id = "acc-1")), hasMoreAccounts = true).right()
         val model = createModel()
 
         // Act
-        (model.recents() as RecentsUM.Content).onSeeAllClick()
+        requireNotNull((model.recents() as RecentsUM.Content).onSeeAllClick).invoke()
 
         // Assert
         verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.SavedContactsSeeAllClicked()) }

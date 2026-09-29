@@ -6,6 +6,7 @@ import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.model.bankofframp.RecentBankAccounts
 import com.tangem.domain.pay.repository.BankOfframpRecentsStore
 import com.tangem.domain.pay.repository.BankOfframpRepository
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -13,7 +14,10 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class GetRecentBankAccountsUseCaseTest {
 
     private val repository: BankOfframpRepository = mockk()
@@ -39,7 +43,7 @@ internal class GetRecentBankAccountsUseCaseTest {
         // Assert
         val expected = RecentBankAccounts(
             recents = listOf("b", "c", "d").map { bankAccount(id = it, displayName = it) },
-            hasSavedAccounts = true,
+            hasMoreAccounts = true,
         )
         assertThat(actual).isEqualTo(expected.right())
         coVerify(exactly = 1) { repository.getBankAccounts(TEST_USER_WALLET_ID) }
@@ -55,35 +59,72 @@ internal class GetRecentBankAccountsUseCaseTest {
         val actual = useCase(TEST_USER_WALLET_ID)
 
         // Assert
-        val expected = RecentBankAccounts(recents = listOf(bankAccount(id = "a")), hasSavedAccounts = true)
+        val expected = RecentBankAccounts(recents = listOf(bankAccount(id = "a")), hasMoreAccounts = false)
         assertThat(actual).isEqualTo(expected.right())
     }
 
     @Test
-    fun `GIVEN saved accounts without usage WHEN invoke THEN empty recents with has saved`() = runTest {
+    fun `GIVEN saved accounts without usage WHEN invoke THEN first three in see all order returned`() = runTest {
         // Arrange
-        coEvery { repository.getBankAccounts(TEST_USER_WALLET_ID) } returns listOf(bankAccount()).right()
+        val accounts = listOf("Dave", "charlie", "Bob", "alice").map { bankAccount(id = it, displayName = it) }
+        coEvery { repository.getBankAccounts(TEST_USER_WALLET_ID) } returns accounts.right()
         coEvery { recentsStore.getUsage(TEST_USER_WALLET_ID) } returns emptyMap()
 
         // Act
         val actual = useCase(TEST_USER_WALLET_ID)
 
         // Assert
-        val expected = RecentBankAccounts(recents = emptyList(), hasSavedAccounts = true)
+        val expected = RecentBankAccounts(
+            recents = listOf("alice", "Bob", "charlie").map { bankAccount(id = it, displayName = it) },
+            hasMoreAccounts = true,
+        )
         assertThat(actual).isEqualTo(expected.right())
     }
 
     @Test
-    fun `GIVEN no accounts at all WHEN invoke THEN empty recents without has saved`() = runTest {
+    fun `GIVEN some accounts used WHEN invoke THEN used ones first and the rest in see all order`() = runTest {
         // Arrange
-        coEvery { repository.getBankAccounts(TEST_USER_WALLET_ID) } returns emptyList<BankAccount>().right()
-        coEvery { recentsStore.getUsage(TEST_USER_WALLET_ID) } returns mapOf("gone" to 1L)
+        val accounts = listOf("c", "b", "a", "d").map { bankAccount(id = it, displayName = it) }
+        coEvery { repository.getBankAccounts(TEST_USER_WALLET_ID) } returns accounts.right()
+        coEvery { recentsStore.getUsage(TEST_USER_WALLET_ID) } returns mapOf("d" to 5L)
 
         // Act
         val actual = useCase(TEST_USER_WALLET_ID)
 
         // Assert
-        val expected = RecentBankAccounts(recents = emptyList(), hasSavedAccounts = false)
+        val expected = RecentBankAccounts(
+            recents = listOf("d", "a", "b").map { bankAccount(id = it, displayName = it) },
+            hasMoreAccounts = true,
+        )
         assertThat(actual).isEqualTo(expected.right())
     }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN saved accounts count WHEN invoke THEN more accounts flagged only above three`(model: CountModel) =
+        runTest {
+            // Arrange
+            val accounts = List(model.count) { bankAccount(id = "acc-$it", displayName = "acc-$it") }
+            coEvery { repository.getBankAccounts(TEST_USER_WALLET_ID) } returns accounts.right()
+            coEvery { recentsStore.getUsage(TEST_USER_WALLET_ID) } returns emptyMap()
+
+            // Act
+            val actual = useCase(TEST_USER_WALLET_ID)
+
+            // Assert
+            val expected = RecentBankAccounts(
+                recents = accounts.take(model.expectedShown),
+                hasMoreAccounts = model.expectedHasMore,
+            )
+            assertThat(actual).isEqualTo(expected.right())
+        }
+
+    internal data class CountModel(val count: Int, val expectedShown: Int, val expectedHasMore: Boolean)
+
+    private fun provideTestModels() = listOf(
+        CountModel(count = 0, expectedShown = 0, expectedHasMore = false),
+        CountModel(count = 1, expectedShown = 1, expectedHasMore = false),
+        CountModel(count = 3, expectedShown = 3, expectedHasMore = false),
+        CountModel(count = 4, expectedShown = 3, expectedHasMore = true),
+    )
 }
