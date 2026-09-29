@@ -6,10 +6,10 @@ import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
 
 /**
- * Scenarios 1 and 2 of UC-08 behind one call: sign in, then create a wallet or restore the existing one.
+ * Social login behind one call: sign in, then create a wallet or restore the existing one.
  *
  * The backend decides which, not the caller — the same entry point serves both "Create wallet" and
- * "I have a wallet" (FR-02).
+ * "I have a wallet".
  */
 interface SocialLoginUseCase {
 
