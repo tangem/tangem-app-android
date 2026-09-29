@@ -43,6 +43,7 @@ dependencies {
 
     // region Project - Domain
     api(projects.domain.moneyAccount)
+    implementation(projects.domain.account)
     implementation(projects.domain.common)
     implementation(projects.domain.core)
     implementation(projects.domain.models)
