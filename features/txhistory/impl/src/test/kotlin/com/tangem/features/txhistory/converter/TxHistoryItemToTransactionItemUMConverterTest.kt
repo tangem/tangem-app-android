@@ -173,6 +173,31 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
+    fun `GIVEN joint token fee WHEN convert THEN the fee amount is marked approximate`() {
+        // Arrange — the joint fee is the refund cap the operation was signed with, not what was paid
+        val refundCap = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.000015"), decimals = 18)
+        val tx = txInfo(
+            type = TransactionType.Joint.TokenFee(
+                tokenContract = TOKEN_CONTRACT,
+                tokenAmount = null,
+                recipient = EXTERNAL_ADDRESS,
+                refundCapWei = BigDecimal("15000000000000"),
+                signaturesCount = 2,
+            ),
+            amount = BigDecimal.ZERO,
+            isOutgoing = true,
+            interactionAddressType = null,
+        ).copy(fee = refundCap)
+
+        // Act
+        val result = networkFeeConverter.convert(tx) as TransactionItemUM.Content
+
+        // Assert
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_percent_20))
+        assertThat(result.amount).startsWith("${StringsSigns.MINUS}${StringsSigns.TILDE_SIGN}")
+    }
+
+    @Test
     fun `GIVEN NetworkFee WHEN convert THEN amount is the network fee it paid`() {
         // The transaction moved no coin, so the row shows its fee rather than its own zero amount
         val tx = txInfo(
@@ -250,6 +275,33 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
         assertThat(result.title).isEqualTo(resRef(R.string.common_network_fee_title))
+        assertThat(result.subtitle).isEqualTo(
+            ContentSubtitle.Plain(resRef(R.string.transaction_history_fee_for_operation)),
+        )
+    }
+
+    @Test
+    fun `GIVEN zero-value joint call in coin history WHEN convert THEN approximate network fee row`() {
+        // Arrange
+        val tx = txInfo(
+            type = TransactionType.Joint.Call(
+                contract = EXTERNAL_ADDRESS,
+                value = BigDecimal.ZERO,
+                refundCapWei = BigDecimal("15000000000000"),
+                signaturesCount = 2,
+            ),
+            amount = BigDecimal.ZERO,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(EXTERNAL_ADDRESS),
+        ).copy(fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.000015"), decimals = 18))
+
+        // Act
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        // Assert
+        assertThat(result.title).isEqualTo(resRef(R.string.common_network_fee_title))
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_percent_20))
+        assertThat(result.amount).isEqualTo("${StringsSigns.MINUS}${StringsSigns.TILDE_SIGN}0.000015")
         assertThat(result.subtitle).isEqualTo(
             ContentSubtitle.Plain(resRef(R.string.transaction_history_fee_for_operation)),
         )

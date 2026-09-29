@@ -53,7 +53,9 @@ import com.tangem.domain.polymarket.model.PredictionPositionsValue
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -70,6 +72,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -388,26 +391,34 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     private fun onRefresh() {
+        if (uiState.value.pullToRefreshConfig.isRefreshing) return
         setRefreshing(isRefreshing = true)
 
         modelScope.launch {
-            listOf(
-                async { tradingAllowance.refresh() },
-                async {
-                    predictionAccountStatusFetcher(
-                        PredictionAccountStatusFetcher.Params(userWalletId = params.userWalletId),
-                    )
-                },
-                async {
-                    predictionPositionsValueFetcher(
-                        PredictionPositionsValueFetcher.Params(userWalletId = params.userWalletId),
-                    )
-                },
-            ).awaitAll()
-            fundingRequisites.refresh()
-
+            runSuspendCatching {
+                coroutineScope {
+                    listOf(
+                        async { tradingAllowance.refresh() },
+                        async { positionsPreviewLoader.refresh(modelScope, params.userWalletId, ::openPosition) },
+                        async {
+                            predictionAccountStatusFetcher(
+                                PredictionAccountStatusFetcher.Params(userWalletId = params.userWalletId),
+                            )
+                        },
+                        async {
+                            predictionPositionsValueFetcher(
+                                PredictionPositionsValueFetcher.Params(userWalletId = params.userWalletId),
+                            )
+                        },
+                    ).awaitAll()
+                }
+                fundingRequisites.refresh()
+            }.onFailure { error ->
+                TangemLogger.e("Failed to refresh Polymarket main screen", error)
+            }
+        }.saveIn(refreshJobHolder).invokeOnCompletion {
             setRefreshing(isRefreshing = false)
-        }.saveIn(refreshJobHolder)
+        }
     }
 
     private fun setRefreshing(isRefreshing: Boolean) {

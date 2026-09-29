@@ -62,6 +62,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -719,6 +720,121 @@ internal class PolymarketMainModelTest {
                 positionsValueFetcher(PredictionPositionsValueFetcher.Params(userWalletId = USER_WALLET_ID))
             }
         }
+
+    @Test
+    fun `GIVEN a slow positions read WHEN pulled twice THEN one refresh runs and the indicator waits`() = runTest {
+        // Arrange
+        val positionsRead = CompletableDeferred<Unit>()
+        coEvery { positionsPreviewLoader.refresh(any(), USER_WALLET_ID, any()) } coAnswers { positionsRead.await() }
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        runCurrent()
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isTrue()
+        coVerify(exactly = 1) { positionsPreviewLoader.refresh(any(), USER_WALLET_ID, any()) }
+
+        // Act
+        positionsRead.complete(Unit)
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a manual refresh WHEN the positions read is cancelled THEN the indicator stops`() = runTest {
+        // Arrange
+        coEvery { positionsPreviewLoader.refresh(any(), USER_WALLET_ID, any()) } throws CancellationException()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
+        coVerify(exactly = 1) { refreshRequisites(USER_WALLET_ID) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a pending refresh WHEN the model is destroyed before it starts THEN the indicator stops`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isTrue()
+        model.onDestroy()
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
+        coVerify(exactly = 0) { positionsPreviewLoader.refresh(any(), USER_WALLET_ID, any()) }
+    }
+
+    @Test
+    fun `GIVEN a running refresh WHEN the model is destroyed THEN the positions read is cancelled and indicator stops`() =
+        runTest {
+            // Arrange
+            val readCancelled = CompletableDeferred<Unit>()
+            coEvery { positionsPreviewLoader.refresh(any(), USER_WALLET_ID, any()) } coAnswers {
+                try {
+                    awaitCancellation()
+                } finally {
+                    readCancelled.complete(Unit)
+                }
+            }
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+            runCurrent()
+            assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isTrue()
+
+            // Act
+            model.onDestroy()
+            runCurrent()
+
+            // Assert
+            assertThat(readCancelled.isCompleted).isTrue()
+            assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
+            coVerify(exactly = 1) { refreshRequisites(USER_WALLET_ID) }
+        }
+
+    @Test
+    fun `GIVEN a failed positions read WHEN pulled again THEN refresh can complete`() = runTest {
+        // Arrange
+        coEvery { positionsPreviewLoader.refresh(any(), USER_WALLET_ID, any()) } throws IllegalStateException("Failed")
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
+        coVerify(exactly = 1) { refreshRequisites(USER_WALLET_ID) }
+
+        // Act
+        coEvery { positionsPreviewLoader.refresh(any(), USER_WALLET_ID, any()) } returns Unit
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
+        coVerify(exactly = 2) { positionsPreviewLoader.refresh(any(), USER_WALLET_ID, any()) }
+        coVerify(exactly = 2) { refreshRequisites(USER_WALLET_ID) }
+    }
 
     @Test
     fun `GIVEN an account with a confirmed address WHEN add funds tapped THEN the sheet opens`() =

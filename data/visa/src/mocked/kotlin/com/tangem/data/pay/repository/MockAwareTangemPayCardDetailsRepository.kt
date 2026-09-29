@@ -86,6 +86,8 @@ internal class MockAwareTangemPayCardDetailsRepository @Inject constructor(
         return real.getProvisioningData(userWalletId, cardId)
     }
 
+    override fun isProductionEnvironment(): Boolean = real.isProductionEnvironment()
+
     override suspend fun isAddToWalletDone(userWalletId: UserWalletId): Either<UniversalError, Boolean> =
         real.isAddToWalletDone(userWalletId)
 

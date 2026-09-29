@@ -190,6 +190,9 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
         TangemPayCardProvisioningData(processorCardId = result.cardId, cardSecret = cardSecret)
     }
 
+    override fun isProductionEnvironment(): Boolean =
+        apiConfigsManager.getEnvironmentConfig(TangemPay.Bff.ID).environment == ApiEnvironment.PROD
+
     override suspend fun isAddToWalletDone(userWalletId: UserWalletId): Either<UniversalError, Boolean> {
         return catch(
             block = {
@@ -337,18 +340,8 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
     }
 
     private suspend fun getPublicKeyBase64(): String {
-        val env = apiConfigsManager.getEnvironmentConfig(TangemPay.Bff.ID).environment
-        return when (env) {
-            ApiEnvironment.DEV,
-            ApiEnvironment.DEV_2,
-            ApiEnvironment.DEV_3,
-            ApiEnvironment.STAGE,
-            ApiEnvironment.STAGE_2,
-            ApiEnvironment.STAGE_3,
-            ApiEnvironment.MOCK,
-            -> visaLibLoader.getOrCreateConfig().rainRSAPublicKey.dev
-            ApiEnvironment.PROD -> visaLibLoader.getOrCreateConfig().rainRSAPublicKey.prod
-        }
+        val rainRSAPublicKey = visaLibLoader.getOrCreateConfig().rainRSAPublicKey
+        return if (isProductionEnvironment()) rainRSAPublicKey.prod else rainRSAPublicKey.dev
     }
 
     private fun <T> catchException(throwable: Throwable): Either<UniversalError, T> {

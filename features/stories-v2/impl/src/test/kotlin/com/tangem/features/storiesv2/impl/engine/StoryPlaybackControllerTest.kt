@@ -8,6 +8,8 @@ import com.tangem.features.storiesv2.StoriesV2PendingAction
 import com.tangem.features.storiesv2.StoriesV2Result
 import com.tangem.features.storiesv2.StoryV2ActionTarget
 import com.tangem.features.storiesv2.StoryV2Source
+import com.tangem.features.storiesv2.impl.analytics.StoriesV2Events
+import com.tangem.features.storiesv2.impl.analytics.StoryV2ErrorReason
 import com.tangem.features.storiesv2.impl.content.StoryV2Action
 import com.tangem.features.storiesv2.impl.content.StoryV2Asset
 import com.tangem.core.ui.haptic.TangemHapticEffect
@@ -17,6 +19,7 @@ import com.tangem.features.storiesv2.impl.content.StoryV2EndBehavior
 import com.tangem.features.storiesv2.impl.content.StoryV2MediaRef
 import com.tangem.features.storiesv2.impl.content.StoryV2Origin
 import com.tangem.features.storiesv2.impl.content.StoryV2Slide
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -24,6 +27,7 @@ import io.mockk.runs
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class StoryPlaybackControllerTest {
@@ -598,7 +602,7 @@ internal class StoryPlaybackControllerTest {
         val controller = openController(composition = videoStory(), isReducedMotion = true)
 
         // Act — the silenced decoder is free to complain; that does not make this a technical fallback.
-        controller.onPlaybackFailed()
+        controller.onPlaybackFailed(reason = StoryV2ErrorReason.DECODE_FAILURE)
         controller.onTapForward()
 
         // Assert
@@ -713,7 +717,7 @@ internal class StoryPlaybackControllerTest {
         val controller = openController(composition = videoStory())
 
         // Act
-        controller.onPlaybackFailed()
+        controller.onPlaybackFailed(reason = StoryV2ErrorReason.DECODE_FAILURE)
 
         // Assert
         assertThat(controller.state.value.renderMode).isEqualTo(SlideRenderMode.POSTER)
@@ -724,6 +728,18 @@ internal class StoryPlaybackControllerTest {
 
         controller.onCloseClicked()
         assertThat(events.last { it.event == "Story Closed" }.params["Fallback Slides"]).isEqualTo("1")
+    }
+
+    @Test
+    fun `GIVEN a missing file WHEN playback fails THEN the failure is reported as not found`() {
+        // Arrange
+        val controller = openController(composition = videoStory())
+
+        // Act
+        controller.onPlaybackFailed(reason = StoryV2ErrorReason.NOT_FOUND)
+
+        // Assert
+        assertThat(events.last { it.event == "Story Error Occurred" }.params["Error Reason"]).isEqualTo("not_found")
     }
 
     @Test
@@ -742,6 +758,119 @@ internal class StoryPlaybackControllerTest {
         assertThat(closed.params["Watched"]).isEqualTo("2")
         assertThat(closed.params["Slides Total"]).isEqualTo("3")
     }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN a slide without a poster WHEN it stands still THEN only the stall indicator reacts`(
+        model: PosterlessStallModel,
+    ) {
+        // Arrange
+        val controller = openController(composition = videoStory(withPoster = false))
+        val before = controller.state.value
+
+        // Act
+        controller.onProgress(positionMs = 100L, elapsedMs = FRAME_MS, stalledForMs = model.stalledForMs)
+
+        // Assert — there is no still to fall back to, so the slide keeps waiting for its file however long it takes.
+        assertThat(controller.state.value).isEqualTo(before.copy(isStalled = model.isStalled))
+        assertThat(events.map { it.event }).containsExactly("Story Opened")
+    }
+
+    @Test
+    fun `GIVEN a stalled slide without a poster WHEN its position moves again THEN the stall indicator is cleared`() {
+        // Arrange
+        val controller = openController(composition = videoStory(withPoster = false))
+        val before = controller.state.value
+        controller.onProgress(positionMs = 100L, elapsedMs = FRAME_MS, stalledForMs = STALL_TIMEOUT_MS + 1)
+
+        // Act
+        controller.onProgress(positionMs = 200L, elapsedMs = FRAME_MS, stalledForMs = 0L)
+
+        // Assert
+        assertThat(controller.state.value).isEqualTo(before)
+    }
+
+    @Test
+    fun `GIVEN a slide without a poster WHEN playback fails THEN the story moves on and reports the failure once`() {
+        // Arrange
+        val controller = openController(composition = videoStory(withPoster = false))
+
+        // Act
+        controller.onPlaybackFailed(reason = StoryV2ErrorReason.DECODE_FAILURE)
+
+        // Assert
+        assertThat(controller.state.value.slideIndex).isEqualTo(1)
+        assertThat(events.filter { it.event == "Story Error Occurred" })
+            .containsExactly(playbackFailure(slideId = "slide_0"))
+    }
+
+    @Test
+    fun `GIVEN a broken slide without a poster WHEN a loop meets it again THEN it is skipped unreported`() {
+        // Arrange
+        val controller = openController(composition = videoStory(withPoster = false))
+        controller.onPlaybackFailed(reason = StoryV2ErrorReason.DECODE_FAILURE)
+        repeat(times = 2) { controller.onPlayerEnded() }
+
+        // Act
+        controller.onPlaybackFailed(reason = StoryV2ErrorReason.DECODE_FAILURE)
+
+        // Assert
+        assertThat(controller.state.value.slideIndex).isEqualTo(1)
+        assertThat(events.filter { it.event == "Story Error Occurred" })
+            .containsExactly(playbackFailure(slideId = "slide_0"))
+    }
+
+    @Test
+    fun `GIVEN slides without posters WHEN every one fails to play THEN the story ends with no usable frame`() {
+        // Arrange
+        val controller = openController(composition = videoStory(withPoster = false))
+
+        // Act
+        repeat(times = 3) { controller.onPlaybackFailed(reason = StoryV2ErrorReason.DECODE_FAILURE) }
+
+        // Assert
+        assertThat(results).containsExactly(
+            StoriesV2Result.Unavailable(reason = StoriesV2Result.Unavailable.Reason.NO_USABLE_FRAME),
+        )
+    }
+
+    @Test
+    fun `GIVEN reduce motion WHEN a story without posters opens THEN the slide plays its asset`() {
+        // Act
+        val controller = openController(composition = videoStory(withPoster = false), isReducedMotion = true)
+
+        // Assert
+        assertThat(controller.state.value.renderMode).isEqualTo(SlideRenderMode.ASSET)
+    }
+
+    @Test
+    fun `GIVEN a slide without a poster WHEN reduce motion is turned on THEN it keeps playing its asset`() {
+        // Arrange
+        val controller = openController(composition = videoStory(withPoster = false))
+        val before = controller.state.value
+
+        // Act
+        controller.setReducedMotion(enabled = true)
+
+        // Assert
+        assertThat(controller.state.value).isEqualTo(before)
+    }
+
+    private fun provideTestModels() = listOf(
+        PosterlessStallModel(stalledForMs = 0L, isStalled = false),
+        PosterlessStallModel(stalledForMs = FREEZE_INDICATOR_DELAY_MS, isStalled = false),
+        PosterlessStallModel(stalledForMs = FREEZE_INDICATOR_DELAY_MS + 1, isStalled = true),
+        PosterlessStallModel(stalledForMs = STALL_TIMEOUT_MS + 1, isStalled = true),
+        PosterlessStallModel(stalledForMs = STALL_TIMEOUT_MS * 5, isStalled = true),
+    )
+
+    private fun playbackFailure(slideId: String) = StoriesV2Events.StoryErrorOccurred(
+        storyId = "test_story",
+        slideId = slideId,
+        errorStage = "asset_playback",
+        errorReason = "decode_failure",
+        source = StoryV2Source.ONBOARDING.analyticsValue,
+    )
 
     private fun openController(
         composition: StoryV2Composition,
@@ -771,6 +900,7 @@ internal class StoryPlaybackControllerTest {
         endBehavior: StoryV2EndBehavior = StoryV2EndBehavior.LOOP,
         actions: List<StoryV2Action> = emptyList(),
         haptics: List<StoryV2Haptic> = emptyList(),
+        withPoster: Boolean = true,
     ) = StoryV2Composition(
         id = "test_story",
         version = 7,
@@ -784,7 +914,7 @@ internal class StoryPlaybackControllerTest {
                 subtitle = null,
                 asset = StoryV2Asset.Video(
                     source = StoryV2MediaRef.RawResource(id = index),
-                    poster = StoryV2MediaRef.DrawableResource(id = index),
+                    poster = StoryV2MediaRef.DrawableResource(id = index).takeIf { withPoster },
                     durationMs = SLIDE_DURATION_MS,
                 ),
                 haptics = haptics,
@@ -810,6 +940,8 @@ internal class StoryPlaybackControllerTest {
             )
         },
     )
+
+    internal data class PosterlessStallModel(val stalledForMs: Long, val isStalled: Boolean)
 
     private companion object {
         const val SLIDE_DURATION_MS = 6_000L

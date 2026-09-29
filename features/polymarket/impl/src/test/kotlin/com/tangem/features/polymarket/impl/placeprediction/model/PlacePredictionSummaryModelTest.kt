@@ -43,6 +43,8 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 
 
@@ -153,8 +155,9 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             model.onDestroy()
         }
 
-        @Test
-        fun `GIVEN the order fills WHEN place clicked THEN the balance window opens`() = runTest {
+        @ParameterizedTest
+        @ValueSource(strings = ["10", "23.2"])
+        fun `GIVEN a buy fills WHEN place clicked THEN balance and positions refresh`(filledShares: String) = runTest {
             // Arrange
             val amountModel = createAmountModel(testScope = this)
             advanceUntilIdle()
@@ -163,12 +166,16 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             val model = createSummaryModel(testScope = this, amountModel = amountModel)
 
+            coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                createPlaceResult(takingAmount = BigDecimal(filledShares)).right()
+
             // Act
             model.onPlaceClick()
             advanceUntilIdle()
 
             // Assert
             verify(exactly = 1) { fundingWindow.open(userWalletId = USER_WALLET_ID) }
+            verify(exactly = 1) { positionsUpdateEmitter.triggerUpdate(USER_WALLET_ID) }
 
             model.onDestroy()
         }
@@ -191,6 +198,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
 
             // Assert
             verify(exactly = 0) { fundingWindow.open(userWalletId = any()) }
+            verify(exactly = 0) { positionsUpdateEmitter.triggerUpdate(any()) }
 
             model.onDestroy()
         }
@@ -213,6 +221,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
 
             // Assert
             verify(exactly = 1) { fundingWindow.open(userWalletId = USER_WALLET_ID) }
+            verify(exactly = 1) { positionsUpdateEmitter.triggerUpdate(USER_WALLET_ID) }
 
             model.onDestroy()
         }
@@ -236,6 +245,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
 
             // Assert
             verify(exactly = 0) { fundingWindow.open(userWalletId = any()) }
+            verify(exactly = 0) { positionsUpdateEmitter.triggerUpdate(any()) }
 
             model.onDestroy()
         }
@@ -811,8 +821,9 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 model.onDestroy()
             }
 
-        @Test
-        fun `GIVEN a priced sell WHEN place clicked THEN the position is re-read AND the order is signed as a sell`() =
+        @ParameterizedTest
+        @ValueSource(strings = ["10", "12.8"])
+        fun `GIVEN a priced sell WHEN place clicked THEN the position is re-read and invalidated`(filledShares: String) =
             runTest {
                 // Arrange
                 coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
@@ -824,6 +835,8 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 val model = createSummaryModel(testScope = this, amountModel = amountModel)
                 val request = slot<PredictionSignRequest>()
                 coEvery { signOrderInteractor(request = capture(request)) } returns SIGNED_ORDER.right()
+                coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                    createPlaceResult(makingAmount = BigDecimal(filledShares)).right()
 
                 clearMocks(positionsRepository, getBalanceInteractor, answers = false)
 
@@ -836,6 +849,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 coVerify(exactly = 0) { getBalanceInteractor(addresses = any()) }
                 assertThat(request.captured.side).isEqualTo(PredictionOrderSide.SELL)
                 assertThat(request.captured.quote).isEqualTo(createSellQuote())
+                verify(exactly = 1) { positionsUpdateEmitter.triggerUpdate(USER_WALLET_ID) }
 
                 model.onDestroy()
             }

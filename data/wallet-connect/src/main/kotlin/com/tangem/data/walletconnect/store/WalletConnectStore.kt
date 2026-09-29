@@ -10,6 +10,9 @@ internal interface WalletConnectStore {
     val sessions: Flow<WcSessionCollection>
     val pendingApproval: Flow<Set<WcPendingApprovalSessionDTO>>
 
+    /** Includes approvals past their expiry, which may still have been settled by the SDK. */
+    val pendingApprovalIncludingExpired: Flow<Set<WcPendingApprovalSessionDTO>>
+
     suspend fun findSessionByTopic(topic: String) = sessions.first().find { it.topic == topic }
 
     suspend fun saveSessions(sessions: WcSessionCollection)
