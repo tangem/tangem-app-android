@@ -78,6 +78,7 @@ private fun StoryModal(state: TangemModalStory) {
             content = TangemModalStoryContent,
         ),
         scrollableContent = state.isContentScrollable,
+        chromePlacement = state.chromePlacement,
         presentation = state.presentation,
         title = {
             TangemModal.TopNavigation(
@@ -143,7 +144,16 @@ private fun Controls(state: TangemModalStory, modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         ShowModalButton(label = "Show modal", onClick = { state.onShownChange(true) })
-        PresentationSelector(selected = state.presentation, onSelect = state.onPresentationChange)
+        ChipSelector(
+            items = TangemModal.Presentation.entries,
+            selected = state.presentation,
+            onSelect = state.onPresentationChange,
+        )
+        ChipSelector(
+            items = TangemModal.ChromePlacement.entries,
+            selected = state.chromePlacement,
+            onSelect = state.onChromePlacementChange,
+        )
         ToggleRow(
             label = "scrollable content",
             checked = state.isContentScrollable,
@@ -172,7 +182,7 @@ private fun StoryTextField() {
 }
 
 @Composable
-private fun PresentationSelector(selected: TangemModal.Presentation, onSelect: (TangemModal.Presentation) -> Unit) {
+private fun <T : Enum<T>> ChipSelector(items: List<T>, selected: T, onSelect: (T) -> Unit) {
     val shape = RoundedCornerShape(50)
     Row(
         modifier = Modifier
@@ -182,11 +192,11 @@ private fun PresentationSelector(selected: TangemModal.Presentation, onSelect: (
             .padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        TangemModal.Presentation.entries.forEach { presentation ->
+        items.forEach { item ->
             Chip(
-                label = presentation.name,
-                selected = presentation == selected,
-                onClick = { onSelect(presentation) },
+                label = item.name,
+                selected = item == selected,
+                onClick = { onSelect(item) },
                 modifier = Modifier.weight(1f),
             )
         }
