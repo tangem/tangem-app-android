@@ -131,6 +131,7 @@ internal object WalletConnectDataModule {
         analytics: AnalyticsEventHandler,
         appScope: AppCoroutineScope,
         wcSdk: WcSdk,
+        featureToggles: WalletConnectFeatureToggles,
     ): DefaultWcSessionsManager {
         return DefaultWcSessionsManager(
             store = store,
@@ -141,6 +142,7 @@ internal object WalletConnectDataModule {
             scope = appScope,
             multiAccountListSupplier = multiAccountListSupplier,
             wcSdk = wcSdk,
+            featureToggles = featureToggles,
         )
     }
 
