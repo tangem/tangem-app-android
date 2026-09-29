@@ -10,8 +10,8 @@ import com.tangem.domain.pay.model.bankofframp.RecentBankAccounts
 
 internal fun recentBankAccounts(
     recents: List<BankAccount> = emptyList(),
-    hasSavedAccounts: Boolean = recents.isNotEmpty(),
-): RecentBankAccounts = RecentBankAccounts(recents = recents, hasSavedAccounts = hasSavedAccounts)
+    hasMoreAccounts: Boolean = false,
+): RecentBankAccounts = RecentBankAccounts(recents = recents, hasMoreAccounts = hasMoreAccounts)
 
 internal fun bankAccount(
     id: String = "acc-1",
