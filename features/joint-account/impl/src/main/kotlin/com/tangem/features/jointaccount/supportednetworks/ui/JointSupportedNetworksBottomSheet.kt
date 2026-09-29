@@ -3,36 +3,26 @@ package com.tangem.features.jointaccount.supportednetworks.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.bottomsheets.LocalBottomSheetContentScrollable
-import com.tangem.core.ui.components.bottomsheets.LocalTangemBottomSheetContentBottomInset
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
+import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetType
 import com.tangem.core.ui.ds2.button.TangemButton
-import com.tangem.core.ui.ds2.row.TangemRow
-import com.tangem.core.ui.ds2.row.TangemRowContentLead
-import com.tangem.core.ui.ds2.row.TangemRowText
-import com.tangem.core.ui.ds2.row.TangemRowTextRole
-import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
-import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
+import com.tangem.core.ui.ds2.footer.TangemFooter
+import com.tangem.core.ui.ds2.modal.TangemModal
+import com.tangem.core.ui.ds2.modal.TopNavigation
+import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -43,58 +33,41 @@ import com.tangem.core.ui.R as CoreUiR
 
 @Composable
 internal fun JointSupportedNetworksBottomSheet(state: JointSupportedNetworksUM) {
-    TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
+    TangemModal<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
             isShown = true,
             onDismissRequest = state.onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        type = TangemBottomSheetType.Modal,
-        containerColor = TangemTheme.colors3.bg.secondary,
+        scrollableContent = false,
         title = {
-            TangemTopNavigation(
+            TangemModal.TopNavigation(
                 title = resourceReference(CoreUiR.string.common_supported_networks),
-                contentAlign = TangemTopNavigation.ContentAlign.Center,
-                blurBackground = false,
                 onClose = state.onDismiss,
             )
         },
         content = {
-            JointSupportedNetworksContent(state = state)
-        },
-        footer = {
-            TangemButton(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(all = 16.dp),
-                variant = TangemButton.Variant.Secondary,
-                size = TangemButton.Size.X12,
-                text = resourceReference(CoreUiR.string.common_got_it),
-                onClick = state.onGotItClick,
-            )
+            Box(modifier = Modifier.weight(weight = 1f, fill = false)) {
+                JointSupportedNetworksContent(state = state)
+                Footer(
+                    onGotItClick = state.onGotItClick,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth(),
+                )
+            }
         },
     )
 }
 
 @Composable
 private fun JointSupportedNetworksContent(state: JointSupportedNetworksUM, modifier: Modifier = Modifier) {
-    val bottomInset = LocalTangemBottomSheetContentBottomInset.current
-    val contentScrollable = LocalBottomSheetContentScrollable.current
-    val scrollState = rememberScrollState()
-
-    if (contentScrollable != null) {
-        LaunchedEffect(scrollState) {
-            snapshotFlow { scrollState.canScrollForward || scrollState.canScrollBackward }
-                .collect { isScrollable -> contentScrollable.value = isScrollable }
-        }
-    }
-
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .verticalScroll(scrollState)
-            .padding(horizontal = 16.dp)
-            .padding(bottom = bottomInset.coerceAtLeast(16.dp)),
+            .verticalScroll(rememberScrollState())
+            .padding(top = 16.dp)
+            .padding(horizontal = 16.dp),
     ) {
         Column(
             modifier = Modifier
@@ -106,8 +79,30 @@ private fun JointSupportedNetworksContent(state: JointSupportedNetworksUM, modif
                 NetworkRow(item = item)
             }
         }
+        SpacerH(FOOTER_HEIGHT)
     }
 }
+
+@Composable
+private fun Footer(onGotItClick: () -> Unit, modifier: Modifier = Modifier) {
+    TangemFooter(
+        modifier = modifier,
+        windowInsets = WindowInsets(0),
+        contentPadding = PaddingValues(all = FOOTER_PADDING),
+        blurBackground = false,
+    ) {
+        TangemButton(
+            modifier = Modifier.fillMaxWidth(),
+            variant = TangemButton.Variant.Secondary,
+            size = TangemButton.Size.X12,
+            text = resourceReference(CoreUiR.string.common_got_it),
+            onClick = onGotItClick,
+        )
+    }
+}
+
+private val FOOTER_PADDING = 16.dp
+private val FOOTER_HEIGHT = FOOTER_PADDING * 2 + 48.dp
 
 @Composable
 private fun NetworkRow(item: NetworkItemUM, modifier: Modifier = Modifier) {
@@ -142,10 +137,8 @@ private fun NetworkRow(item: NetworkItemUM, modifier: Modifier = Modifier) {
 private fun JointSupportedNetworksContentPreview() {
     TangemThemePreviewRedesign {
         Column(modifier = Modifier.background(TangemTheme.colors3.bg.secondary)) {
-            TangemTopNavigation(
+            TangemModal.TopNavigation(
                 title = resourceReference(CoreUiR.string.common_supported_networks),
-                contentAlign = TangemTopNavigation.ContentAlign.Center,
-                blurBackground = false,
                 onClose = {},
             )
             JointSupportedNetworksContent(
