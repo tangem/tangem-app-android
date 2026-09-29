@@ -452,7 +452,7 @@ private fun StrengthIndicator(strength: PasswordStrength?, hint: PasswordStrengt
 
     Column(modifier = modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            // FR-09: a password too short to rate shows no meter, only the neutral label and the hint.
+            // A password too short to rate shows no meter, only the neutral label and the hint.
             // The gap to the label lives inside the animated block, so it collapses together with the meter
             // instead of leaving the label offset until the animation ends.
             AnimatedVisibility(visible = strength != null) {

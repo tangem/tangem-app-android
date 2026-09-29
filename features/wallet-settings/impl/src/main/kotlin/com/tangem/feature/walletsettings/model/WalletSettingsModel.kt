@@ -595,7 +595,7 @@ internal class WalletSettingsModel @Inject constructor(
     @Suppress("LongMethod")
     private fun sendForgetSeedBackupSheet(userWallet: UserWallet.Hot) {
         // Any backup, not the seed phrase alone: a wallet kept by social recovery survives being
-        // forgotten, so it must not be offered the "forget anyway" wording (FR-11, FR-15).
+        // forgotten, so it must not be offered the "forget anyway" wording.
         val isBackedUp = state.value.isWalletBackedUp
 
         if (!isBackedUp) {
