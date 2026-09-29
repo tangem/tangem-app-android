@@ -8,7 +8,6 @@ import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.domain.walletconnect.config.WalletConnectConfig
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import com.tangem.utils.annotations.RemoveWithToggle
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -137,7 +136,6 @@ internal class WcSdkTest {
         verify(exactly = 1) { WalletKit.initialize(any(), any(), any()) }
     }
 
-    @RemoveWithToggle("AND_18021_WALLETCONNECT_ON_DEMAND_INIT_ENABLED")
     @Test
     fun `GIVEN sdk started now WHEN ensureInitialized THEN the same start-up is awaited`() = runTest {
         // Arrange
