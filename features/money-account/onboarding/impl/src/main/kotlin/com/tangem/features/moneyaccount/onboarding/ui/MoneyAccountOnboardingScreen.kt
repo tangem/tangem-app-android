@@ -32,15 +32,15 @@ import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.button.TangemButtonGroup
 import com.tangem.core.ui.ds2.footer.TangemFooter
-import com.tangem.core.ui.extensions.annotatedReference
 import com.tangem.core.ui.extensions.appendColored
-import com.tangem.core.ui.extensions.resolveAnnotatedReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_info_16
 import com.tangem.features.moneyaccount.onboarding.impl.R
+import com.tangem.core.ui.R as CoreUiR
 
 private const val HEADER_IMAGE_ASPECT_RATIO = 402f / 568f
 private const val GRADIENT_TRANSPARENT_STOP = 0.49f
@@ -109,10 +109,11 @@ private fun Content(state: MoneyAccountOnboardingUM.Content, modifier: Modifier 
             Text(
                 modifier = Modifier
                     .padding(horizontal = 24.dp)
-                    .padding(top = 24.dp, bottom = 12.dp),
-                text = "Tangem Pay is a financial technology company, not a bank. Banking services are provided " +
-                    "by SSB, Member FDIC. Funds deposited at SSB are eligible for FDIC insurance up to $250,000 " +
-                    "per depositor, per insured bank, subject to applicable limitations and FDIC rules.",
+                    .padding(
+                        top = 24.dp,
+                        bottom = 12.dp,
+                    ),
+                text = stringResourceSafe(CoreUiR.string.money_account_onboarding_disclaimer),
                 style = TangemTheme.typography3.caption.medium,
                 color = TangemTheme.colors3.text.secondary,
             )
@@ -128,13 +129,13 @@ private fun Content(state: MoneyAccountOnboardingUM.Content, modifier: Modifier 
                 TangemButton(
                     variant = TangemButton.Variant.Secondary,
                     size = TangemButton.Size.X12,
-                    text = stringReference("Terms and fees"),
+                    text = resourceReference(CoreUiR.string.money_account_onboarding_secondary_button),
                     onClick = state.onTermsAndFeesClick,
                 )
                 TangemButton(
                     variant = TangemButton.Variant.Primary,
                     size = TangemButton.Size.X12,
-                    text = stringReference("Get started"),
+                    text = resourceReference(CoreUiR.string.common_get_started),
                     isLoading = state.isLoading,
                     onClick = state.onGetStartedClick,
                 )
@@ -181,12 +182,12 @@ private fun Header() {
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(
-                text = "Get Money account",
+                text = stringResourceSafe(CoreUiR.string.money_account_onboarding_title),
                 style = TangemTheme.typography3.heading.medium,
                 color = TangemTheme.colors3.text.primary,
             )
             Text(
-                text = "Works just like a regular bank account. But powered by crypto and fully under your control.",
+                text = stringResourceSafe(CoreUiR.string.money_account_onboarding_description),
                 style = TangemTheme.typography3.subheading.medium,
                 color = TangemTheme.colors3.text.secondary,
             )
@@ -204,12 +205,13 @@ private fun Cards(modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxWidth(),
             verticalSpacing = 4.dp,
         ) {
-            CardCaption(text = "Money in. Money out.")
+            CardCaption(text = stringResourceSafe(CoreUiR.string.money_account_onboarding_transfers_card_caption))
             Text(
                 text = buildAnnotatedString {
-                    append("Send and receive fiat payments ")
+                    append(stringResourceSafe(CoreUiR.string.money_account_onboarding_transfers_card_title))
+                    append(" ")
                     appendColored(
-                        text = "with a dedicated account with banking details",
+                        text = stringResourceSafe(CoreUiR.string.money_account_onboarding_transfers_card_subtitle),
                         color = TangemTheme.colors3.text.secondary,
                     )
                 },
@@ -273,7 +275,7 @@ private fun EarnCard(modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.spacedBy(2.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            CardCaption(text = "Earn")
+            CardCaption(text = stringResourceSafe(CoreUiR.string.money_account_onboarding_earn_card_caption))
             Icon(
                 modifier = Modifier.size(16.dp),
                 imageVector = Icons.ic_info_16,
@@ -281,6 +283,7 @@ private fun EarnCard(modifier: Modifier = Modifier) {
                 tint = TangemTheme.colors3.icon.secondary,
             )
         }
+        // TODO v_rodionov: #[REDACTED_TASK_KEY] get this info from grow service
         CardValue(text = "4,56% APY")
     }
 }
@@ -291,7 +294,7 @@ private fun AccountCurrencyCard(modifier: Modifier = Modifier) {
         modifier = modifier.fillMaxHeight(),
         verticalSpacing = 8.dp,
     ) {
-        CardCaption(text = "Account currency")
+        CardCaption(text = stringResourceSafe(CoreUiR.string.money_account_onboarding_currency_card_caption))
         Row(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -309,18 +312,22 @@ private fun AccountCurrencyCard(modifier: Modifier = Modifier) {
 @Composable
 private fun TermsText(onTermsClick: () -> Unit) {
     val linkColor = TangemTheme.colors3.text.primary
+    val linkText = stringResourceSafe(CoreUiR.string.money_account_onboarding_terms_link)
+    val fullText = stringResourceSafe(CoreUiR.string.money_account_onboarding_terms_notice, linkText)
+    val linkStart = fullText.indexOf(linkText)
     Text(
         modifier = Modifier.fillMaxWidth(),
-        text = annotatedReference {
-            append("By using service, you agree with provider ")
+        text = buildAnnotatedString {
+            append(fullText.substring(0, linkStart))
             withLink(
                 link = LinkAnnotation.Clickable(
                     tag = "MA_TERMS",
                     linkInteractionListener = { onTermsClick() },
                 ),
-                block = { appendColored(text = "Terms of Service", color = linkColor) },
+                block = { appendColored(text = linkText, color = linkColor) },
             )
-        }.resolveAnnotatedReference(),
+            append(fullText.substring(linkStart + linkText.length))
+        },
         style = TangemTheme.typography3.caption.medium,
         color = TangemTheme.colors3.text.secondary,
         textAlign = TextAlign.Center,
