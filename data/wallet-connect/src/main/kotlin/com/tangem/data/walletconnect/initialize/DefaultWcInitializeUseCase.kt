@@ -21,9 +21,7 @@ internal class DefaultWcInitializeUseCase(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : WcInitializeUseCase {
 
-    override suspend fun ensureInitialized() = wcSdk.ensureInitialized()
-
-    override fun initializeOnAppStart() {
+    override fun invoke() {
         if (!featureToggles.isOnDemandInitEnabled) {
             wcSdk.initializeNow()
             return

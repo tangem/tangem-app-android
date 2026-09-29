@@ -34,13 +34,13 @@ internal class DefaultWcInitializeUseCaseTest {
     }
 
     @Test
-    fun `GIVEN no saved sessions WHEN initializeOnAppStart THEN sdk stays down`() = runTest {
+    fun `GIVEN no saved sessions WHEN invoke THEN sdk stays down`() = runTest {
         // Arrange
         coEvery { store.sessions } returns flowOf(emptySet())
         coEvery { store.pendingApproval } returns flowOf(emptySet())
 
         // Act
-        createUseCase(this).initializeOnAppStart()
+        createUseCase(this).invoke()
         advanceUntilIdle()
 
         // Assert
@@ -48,13 +48,13 @@ internal class DefaultWcInitializeUseCaseTest {
     }
 
     @Test
-    fun `GIVEN saved session WHEN initializeOnAppStart THEN sdk is initialized`() = runTest {
+    fun `GIVEN saved session WHEN invoke THEN sdk is initialized`() = runTest {
         // Arrange
         coEvery { store.sessions } returns flowOf(setOf(createSession()))
         coEvery { store.pendingApproval } returns flowOf(emptySet())
 
         // Act
-        createUseCase(this).initializeOnAppStart()
+        createUseCase(this).invoke()
         advanceUntilIdle()
 
         // Assert
@@ -62,13 +62,13 @@ internal class DefaultWcInitializeUseCaseTest {
     }
 
     @Test
-    fun `GIVEN pending approval WHEN initializeOnAppStart THEN sdk is initialized`() = runTest {
+    fun `GIVEN pending approval WHEN invoke THEN sdk is initialized`() = runTest {
         // Arrange
         coEvery { store.sessions } returns flowOf(emptySet())
         coEvery { store.pendingApproval } returns flowOf(setOf(mockk<WcPendingApprovalSessionDTO>()))
 
         // Act
-        createUseCase(this).initializeOnAppStart()
+        createUseCase(this).invoke()
         advanceUntilIdle()
 
         // Assert
@@ -76,28 +76,19 @@ internal class DefaultWcInitializeUseCaseTest {
     }
 
     @Test
-    fun `GIVEN toggle disabled WHEN initializeOnAppStart THEN sdk starts synchronously without reading sessions`() =
+    fun `GIVEN toggle disabled WHEN invoke THEN sdk starts synchronously without reading sessions`() =
         runTest {
             // Arrange
             every { featureToggles.isOnDemandInitEnabled } returns false
 
             // Act
-            createUseCase(this).initializeOnAppStart()
+            createUseCase(this).invoke()
 
             // Assert
             verify(exactly = 1) { wcSdk.initializeNow() }
             coVerify(exactly = 0) { wcSdk.ensureInitialized() }
             coVerify(exactly = 0) { store.sessions }
         }
-
-    @Test
-    fun `GIVEN any state WHEN ensureInitialized THEN delegates to sdk`() = runTest {
-        // Act
-        createUseCase(this).ensureInitialized()
-
-        // Assert
-        coVerify(exactly = 1) { wcSdk.ensureInitialized() }
-    }
 
     private fun createUseCase(testScope: TestScope) = DefaultWcInitializeUseCase(
         wcSdk = wcSdk,
