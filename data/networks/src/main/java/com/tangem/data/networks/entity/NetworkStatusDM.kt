@@ -37,6 +37,7 @@ sealed interface NetworkStatusDM {
      * @property yieldSupplyStatuses yield supply statuses
      */
     @NameLabel("amounts")
+    @JsonClass(generateAdapter = true)
     data class Verified(
         @Json(name = "network_id") override val networkId: ID,
         @Json(name = "derivation_path") override val derivationPath: DerivationPath,
@@ -57,6 +58,7 @@ sealed interface NetworkStatusDM {
      * @property errorMessage          error message
      */
     @NameLabel("amount_to_create_account")
+    @JsonClass(generateAdapter = true)
     data class NoAccount(
         @Json(name = "network_id") override val networkId: ID,
         @Json(name = "derivation_path") override val derivationPath: DerivationPath,

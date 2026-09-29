@@ -96,8 +96,8 @@ internal fun Amount.formatFiatAmount(): String = (value ?: BigDecimal.ZERO)
  * `null` — no on-chain hash to link to). An empty list leaves the header with no "•••" button. Repeat / Hide are not
  * part of this iteration.
  *
- * The counterparty-dependent "Copy address" row is not built here — it is prepended per transaction shape by
- * [withCopyAddress], which knows the resolved counterparty.
+ * The transaction-dependent rows are not built here: "Copy address" is prepended by [withCopyAddress], which knows the
+ * resolved counterparty, and a yield-supply tx appends "Explore Aave" — both per transaction shape.
  */
 internal fun buildDetailsMenu(
     onCopyTxId: (() -> Unit)?,

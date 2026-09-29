@@ -19,6 +19,7 @@ import com.tangem.features.collectibles.impl.discovery.ui.state.CollectiblesDisc
 
 internal object DiscoveryListKeys {
     const val TABS = "tabs"
+    const val TABS_SKELETON = "tabs_skeleton"
     const val SKELETON = "skeleton"
     const val STATUS = "status"
     const val NEXT_PAGE = "next_page"
@@ -47,33 +48,43 @@ internal fun LazyListState.isCollectiblesTabBandPinned(headerKey: String): Boole
 }
 
 private fun LazyListScope.tabBandItem(tabs: CollectiblesDiscoveryUM.TabsUM, scrollState: ScrollState) {
-    if (tabs is CollectiblesDiscoveryUM.TabsUM.Hidden) return
+    when (tabs) {
+        is CollectiblesDiscoveryUM.TabsUM.Content -> {
+            item(key = DiscoveryListKeys.TABS, contentType = DiscoveryListKeys.TABS) {
+                if (!LocalCollectiblesDiscoveryListContext.current.isTabBandShown) return@item
 
-    item(key = DiscoveryListKeys.TABS, contentType = DiscoveryListKeys.TABS) {
-        val context = LocalCollectiblesDiscoveryListContext.current
-
-        if (!context.isTabBandShown) return@item
-
-        val bandModifier = Modifier.alpha(if (context.isTabBandPinned) 0f else context.leadingBlocksAlpha)
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .zIndex(1f),
-        ) {
-            if (tabs is CollectiblesDiscoveryUM.TabsUM.Content) {
-                CollectiblesTabBand(
-                    tabs = tabs.tabs,
-                    scrollState = scrollState,
-                    contentPadding = PaddingValues(vertical = 8.dp, horizontal = 16.dp),
-                    modifier = bandModifier,
-                )
-            } else {
-                CollectiblesTabBandSkeleton(modifier = bandModifier)
+                TabBandSlot { bandModifier ->
+                    CollectiblesTabBand(
+                        tabs = tabs.tabs,
+                        scrollState = scrollState,
+                        contentPadding = PaddingValues(vertical = 8.dp, horizontal = 16.dp),
+                        modifier = bandModifier,
+                    )
+                }
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
         }
+
+        CollectiblesDiscoveryUM.TabsUM.Loading -> {
+            item(key = DiscoveryListKeys.TABS_SKELETON, contentType = DiscoveryListKeys.TABS_SKELETON) {
+                TabBandSlot { bandModifier -> CollectiblesTabBandSkeleton(modifier = bandModifier) }
+            }
+        }
+        CollectiblesDiscoveryUM.TabsUM.Hidden -> Unit
+    }
+}
+
+@Composable
+private fun TabBandSlot(band: @Composable (bandModifier: Modifier) -> Unit) {
+    val context = LocalCollectiblesDiscoveryListContext.current
+    val bandModifier = Modifier.alpha(if (context.isTabBandPinned) 0f else context.leadingBlocksAlpha)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .zIndex(1f),
+    ) {
+        band(bandModifier)
+        Spacer(modifier = Modifier.height(12.dp))
     }
 }
 

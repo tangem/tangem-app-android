@@ -32,7 +32,8 @@ internal class SendRecipientHistoryListConverter(
     }
 
     private fun List<TxInfo>.filterRecipients(cryptoCurrency: CryptoCurrency) = this.filter { item ->
-        val isTransfer = item.type == TxInfo.TransactionType.Transfer
+        val isTransfer = item.type == TxInfo.TransactionType.Transfer ||
+            item.type is TxInfo.TransactionType.Joint.Transfer
         val isNotContract = item.interactionAddressType is TxInfo.InteractionAddressType.User
         val isSingleAddress = if (item.isOutgoing) {
             item.destinationType is TxInfo.DestinationType.Single
@@ -40,7 +41,8 @@ internal class SendRecipientHistoryListConverter(
             item.sourceType is TxInfo.SourceType.Single
         }
         val isNotZero = !item.amount.isZero()
-        isTransfer && isSingleAddress && isNotContract && item.isOutgoing && isNotZero
+        val isNotGaslessFeeRecipient = !item.isSentToGaslessFeeRecipient()
+        isTransfer && isSingleAddress && isNotContract && item.isOutgoing && isNotZero && isNotGaslessFeeRecipient
     }
         .take(RECENT_LIST_SIZE)
         .mapIndexed { index, tx ->
@@ -53,6 +55,11 @@ internal class SendRecipientHistoryListConverter(
                 subtitleIconRes = tx.extractIconRes(),
             )
         }.toPersistentList()
+
+    private fun TxInfo.isSentToGaslessFeeRecipient(): Boolean {
+        val destination = destinationType as? TxInfo.DestinationType.Single ?: return false
+        return destination.addressType.address.lowercase() in GASLESS_FEE_RECIPIENTS_LOWERCASE
+    }
 
     private fun TxInfo.extractAddress(): TextReference = if (isOutgoing) {
         when (val destination = destinationType) {
@@ -88,5 +95,14 @@ internal class SendRecipientHistoryListConverter(
 
     companion object {
         private const val RECENT_LIST_SIZE = 10
+
+        /**
+         * Tron gasless compensation is a separate plain TRC20 transfer to our fee address, so it lands in the
+         * history as an ordinary [TxInfo.TransactionType.Transfer]. Users picked it from Recents and sent funds
+         * to it by mistake.
+         */
+        private val GASLESS_FEE_RECIPIENTS_LOWERCASE = setOf(
+            "TSWsmaEDgWaE2VsP9tCBGh5GbBRbrdHSuZ",
+        ).map(String::lowercase).toSet()
     }
 }

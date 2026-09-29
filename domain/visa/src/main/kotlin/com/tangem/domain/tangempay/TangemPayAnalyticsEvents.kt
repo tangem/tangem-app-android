@@ -3,6 +3,7 @@ package com.tangem.domain.tangempay
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
+import com.tangem.domain.pay.model.bankofframp.BankRail
 
 sealed class TangemPayAnalyticsEvents(
     categoryName: String,
@@ -772,6 +773,188 @@ sealed class TangemPayAnalyticsEvents(
             AnalyticsParam.Key.BLOCKCHAIN to blockchain,
             "Chain Id" to chainId.toString(),
         )
+    }
+
+    object Offramp {
+
+        private const val CATEGORY = "Visa VA Offramp"
+        private const val FIRST_PARTY = "1st party"
+        private const val THIRD_PARTY = "3rd party"
+        private const val RAIL_ACH = "ACH"
+        private const val RAIL_WIRE = "Wire"
+
+        class BankTransferSheetOpened : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Bank Transfer Sheet Opened",
+        )
+
+        class ToPersonalAccountClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "To Personal Account Clicked",
+        )
+
+        class ToBusinessAccountClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "To Business Account Clicked",
+        )
+
+        class SavedContactClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Saved Contact Clicked",
+        )
+
+        class SavedContactsSeeAllClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Saved Contacts See All Clicked",
+        )
+
+        class SavedContactsScreenOpened : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Saved Contacts Screen Opened",
+        )
+
+        class SearchBarClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Search Bar Clicked",
+        )
+
+        class SavedContactOnContactsScreenClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Saved Contact On Contacts Screen Clicked",
+        )
+
+        class AmountEntered : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Amount Entered",
+        )
+
+        class CoinSelectorClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Coin Selector Clicked",
+        )
+
+        class CoinSelectionSheetOpened : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Coin Selection Sheet Opened",
+        )
+
+        class CoinInSelectionSheetClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Coin In Selection Sheet Clicked",
+        )
+
+        class AmountContinueClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Amount Continue Clicked",
+        )
+
+        class PersonalAccountTypeScreenOpened : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Personal Account Type Screen Opened",
+        )
+
+        data class PersonalAccountTypeContinueClicked(val isThirdParty: Boolean) : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Personal Account Type Continue Clicked",
+            params = transferTypeParams(isThirdParty = isThirdParty),
+        )
+
+        class RecipientDetailsScreenOpened : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Recipient Details Screen Opened",
+        )
+
+        data class RecipientDetailsFieldFilled(val field: String) : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Recipient Details Field Filled",
+            params = mapOf(AnalyticsParam.Key.FIELD to field),
+        )
+
+        class RecipientDetailsContinueClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Recipient Details Continue Clicked",
+        )
+
+        class RecipientBankDetailsScreenOpened : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Recipient Bank Details Screen Opened",
+        )
+
+        data class RecipientBankDetailsFieldFilled(val field: String) : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Recipient Bank Details Field Filled",
+            params = mapOf(AnalyticsParam.Key.FIELD to field),
+        )
+
+        class RecipientBankDetailsContinueClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Recipient Bank Details Continue Clicked",
+        )
+
+        class ConfirmationScreenOpened : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Confirmation Screen Opened",
+        )
+
+        class RailSelectorClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Rail Selector Clicked",
+        )
+
+        class RecipientDetailsOnConfirmationClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Recipient Details On Confirmation Clicked",
+        )
+
+        class RecipientBankDetailsOnConfirmationClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Recipient Bank Details On Confirmation Clicked",
+        )
+
+        class RailSelectionSheetOpened : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Rail Selection Sheet Opened",
+        )
+
+        class RailInSelectionSheetClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Rail In Selection Sheet Clicked",
+        )
+
+        class InsufficientFundsStateShowed : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Insufficient Funds State Showed",
+        )
+
+        class SendOnConfirmationClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Send On Confirmation Clicked",
+        )
+
+        class SendErrorScreenOpened : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Send Error Screen Opened",
+        )
+
+        data class SendSuccessScreenShowed(val rail: BankRail?) : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Send Success Screen Showed",
+            params = railParams(rail = rail),
+        )
+
+        private fun transferTypeParams(isThirdParty: Boolean): Map<String, String> = mapOf(
+            AnalyticsParam.Key.TYPE to if (isThirdParty) THIRD_PARTY else FIRST_PARTY,
+        )
+
+        private fun railParams(rail: BankRail?): Map<String, String> {
+            val railName = when (rail) {
+                BankRail.ACH -> RAIL_ACH
+                BankRail.WIRE -> RAIL_WIRE
+                null -> return emptyMap()
+            }
+
+            return mapOf(AnalyticsParam.Key.TYPE to railName)
+        }
     }
 }
 

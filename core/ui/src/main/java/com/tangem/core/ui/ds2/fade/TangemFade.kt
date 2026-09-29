@@ -22,6 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.haze.hazeEffectTangem
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -36,6 +37,8 @@ private val BLUR_RADIUS = 20.dp
 
 /**
  * Design-system fade overlay used at the top or bottom edge of scrollable content.
+ *
+ * Version: 1.1.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=2272-21336)
  *
@@ -137,6 +140,9 @@ private fun buildBrush(
 }
 
 object TangemFade {
+
+    val version = DsVersion(major = 1, minor = 1, patch = 0)
+
     enum class Position { Top, Bottom }
     enum class Variant { Hard, Soft }
 }

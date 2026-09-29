@@ -36,10 +36,12 @@ internal class CollectiblesDiscoveryContentTransformer(
         return when (batchListState.status) {
             is PaginationStatus.None,
             is PaginationStatus.InitialLoading,
-            -> if (prev is CollectiblesDiscoveryUM.ContentUM.Content) {
-                prev.copy(isReloading = true)
-            } else {
-                CollectiblesDiscoveryUM.ContentUM.Loading
+            -> when (prev) {
+                is CollectiblesDiscoveryUM.ContentUM.Content -> prev.copy(isReloading = true)
+                is CollectiblesDiscoveryUM.ContentUM.Empty -> prev
+                is CollectiblesDiscoveryUM.ContentUM.Loading,
+                is CollectiblesDiscoveryUM.ContentUM.Error,
+                -> CollectiblesDiscoveryUM.ContentUM.Loading
             }
             is PaginationStatus.InitialLoadingError -> CollectiblesDiscoveryUM.ContentUM.Error(
                 message = TextReference.Res(R.string.collectibles_main_search_load_error),

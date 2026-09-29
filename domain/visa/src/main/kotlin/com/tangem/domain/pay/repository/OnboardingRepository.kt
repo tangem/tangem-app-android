@@ -3,12 +3,14 @@ package com.tangem.domain.pay.repository
 import arrow.core.Either
 import com.tangem.core.error.UniversalError
 import com.tangem.domain.models.account.BankCredentials
-import com.tangem.domain.models.account.TangemPayOnrampFee
 import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.AccountFee
+import com.tangem.domain.pay.model.AccountFeeGroupType
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.visa.error.VisaApiError
+import kotlinx.coroutines.flow.Flow
 
 @Suppress("TooManyFunctions")
 interface OnboardingRepository {
@@ -27,7 +29,10 @@ interface OnboardingRepository {
         productInstanceId: String,
     ): Either<VisaApiError, BankCredentials>
 
-    suspend fun getOnrampFees(userWalletId: UserWalletId): Either<VisaApiError, List<TangemPayOnrampFee>>
+    suspend fun getFees(
+        userWalletId: UserWalletId,
+        types: Set<AccountFeeGroupType>,
+    ): Either<VisaApiError, List<AccountFee>>
 
     suspend fun createOrder(
         userWalletId: UserWalletId,
@@ -68,7 +73,7 @@ interface OnboardingRepository {
 
     fun getSavedCustomerInfo(userWalletId: UserWalletId): CustomerInfo?
 
-    suspend fun getHideMainOnboardingBanner(userWalletId: UserWalletId): Boolean
+    fun isMainOnboardingBannerHidden(userWalletId: UserWalletId): Flow<Boolean>
 
     suspend fun setHideMainOnboardingBanner(userWalletId: UserWalletId)
 

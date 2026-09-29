@@ -1,12 +1,12 @@
 package com.tangem.tests.main
 
 import com.tangem.common.BaseTestCase
-import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.parseNumericBalance
 import com.tangem.common.extensions.pullToRefresh
 import com.tangem.common.extensions.tapBackButton
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.onMainScreen
@@ -92,7 +92,7 @@ class BalanceCachingTest : BaseTestCase() {
                 pullToRefresh()
             }
             step("Click on '$tokenWithOutdatedBalance' token with outdated balance") {
-                onMainScreen { tokenWithTitleAndAddress(tokenWithOutdatedBalance).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenWithOutdatedBalance)
             }
             step("Assert 'Balances may be outdated' banner is displayed on 'Token details' screen") {
                 flakySafely {
@@ -145,7 +145,7 @@ class BalanceCachingTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on '$tokenName' token") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenName)
             }
             step("Get Total balance") {
                 flakySafely {

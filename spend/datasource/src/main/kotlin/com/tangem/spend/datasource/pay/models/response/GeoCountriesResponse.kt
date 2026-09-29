@@ -8,13 +8,8 @@ import com.squareup.moshi.JsonClass
  */
 @JsonClass(generateAdapter = true)
 data class GeoCountriesResponse(
-    @Json(name = "result") val result: Result,
+    @Json(name = "result") val result: List<Country>,
 ) {
-
-    @JsonClass(generateAdapter = true)
-    data class Result(
-        @Json(name = "countries") val countries: List<Country>,
-    )
 
     @JsonClass(generateAdapter = true)
     data class Country(

@@ -173,6 +173,31 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
+    fun `GIVEN joint token fee WHEN convert THEN the fee amount is marked approximate`() {
+        // Arrange — the joint fee is the refund cap the operation was signed with, not what was paid
+        val refundCap = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.000015"), decimals = 18)
+        val tx = txInfo(
+            type = TransactionType.Joint.TokenFee(
+                tokenContract = TOKEN_CONTRACT,
+                tokenAmount = null,
+                recipient = EXTERNAL_ADDRESS,
+                refundCapWei = BigDecimal("15000000000000"),
+                signaturesCount = 2,
+            ),
+            amount = BigDecimal.ZERO,
+            isOutgoing = true,
+            interactionAddressType = null,
+        ).copy(fee = refundCap)
+
+        // Act
+        val result = networkFeeConverter.convert(tx) as TransactionItemUM.Content
+
+        // Assert
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_percent_20))
+        assertThat(result.amount).startsWith("${StringsSigns.MINUS}${StringsSigns.TILDE_SIGN}")
+    }
+
+    @Test
     fun `GIVEN NetworkFee WHEN convert THEN amount is the network fee it paid`() {
         // The transaction moved no coin, so the row shows its fee rather than its own zero amount
         val tx = txInfo(
@@ -214,6 +239,105 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         assertThat(result.subtitle).isEqualTo(
             ContentSubtitle.Plain(resRef(R.string.transaction_history_fee_for_sending)),
         )
+    }
+
+    @Test
+    fun `GIVEN zero-amount Operation in coin history WHEN convert THEN bare network fee row`() {
+        // The call moved no coin and was never decoded — the row shows the fee it paid, for the operation itself
+        val tx = txInfo(
+            type = TransactionType.Operation(name = "YieldSend"),
+            amount = BigDecimal.ZERO,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(EXTERNAL_ADDRESS),
+        ).copy(fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.000015"), decimals = 18))
+
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.title).isEqualTo(resRef(R.string.common_network_fee_title))
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_percent_20))
+        assertThat(result.amount).isEqualTo("${StringsSigns.MINUS}0.000015")
+        assertThat(result.subtitle).isEqualTo(
+            ContentSubtitle.Plain(
+                resRef(R.string.transaction_history_fee_for_operation_name, listOf("YieldSend")),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN zero-amount UnknownOperation in coin history WHEN convert THEN fee row without a method name`() {
+        val tx = txInfo(
+            type = TransactionType.UnknownOperation,
+            amount = BigDecimal.ZERO,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(EXTERNAL_ADDRESS),
+        ).copy(fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.000015"), decimals = 18))
+
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.title).isEqualTo(resRef(R.string.common_network_fee_title))
+        assertThat(result.subtitle).isEqualTo(
+            ContentSubtitle.Plain(resRef(R.string.transaction_history_fee_for_operation)),
+        )
+    }
+
+    @Test
+    fun `GIVEN zero-value joint call in coin history WHEN convert THEN approximate network fee row`() {
+        // Arrange
+        val tx = txInfo(
+            type = TransactionType.Joint.Call(
+                contract = EXTERNAL_ADDRESS,
+                value = BigDecimal.ZERO,
+                refundCapWei = BigDecimal("15000000000000"),
+                signaturesCount = 2,
+            ),
+            amount = BigDecimal.ZERO,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(EXTERNAL_ADDRESS),
+        ).copy(fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.000015"), decimals = 18))
+
+        // Act
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        // Assert
+        assertThat(result.title).isEqualTo(resRef(R.string.common_network_fee_title))
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_percent_20))
+        assertThat(result.amount).isEqualTo("${StringsSigns.MINUS}${StringsSigns.TILDE_SIGN}0.000015")
+        assertThat(result.subtitle).isEqualTo(
+            ContentSubtitle.Plain(resRef(R.string.transaction_history_fee_for_operation)),
+        )
+    }
+
+    @Test
+    fun `GIVEN incoming zero-amount Operation in coin history WHEN convert THEN stays an operation row`() {
+        // Somebody else's call — its fee was paid by the sender, so the row must not report it as the wallet's own
+        val tx = txInfo(
+            type = TransactionType.Operation(name = "YieldSend"),
+            amount = BigDecimal.ZERO,
+            isOutgoing = false,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(EXTERNAL_ADDRESS),
+        ).copy(fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.000015"), decimals = 18))
+
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.title).isEqualTo(TextReference.Str("YieldSend"))
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_document_20))
+        assertThat(result.amount).isEqualTo("0.00")
+    }
+
+    @Test
+    fun `GIVEN zero-amount Operation in token history WHEN convert THEN stays an operation row`() {
+        val tx = txInfo(
+            type = TransactionType.Operation(name = "YieldSend"),
+            amount = BigDecimal.ZERO,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(EXTERNAL_ADDRESS),
+        ).copy(fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.000015"), decimals = 18))
+
+        val result = tokenConverter.convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.title).isEqualTo(TextReference.Str("YieldSend"))
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_document_20))
+        assertThat(result.amount).isEqualTo("0.00")
     }
 
     @Test
@@ -610,12 +734,12 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     // region Content — YieldSupply
 
     @Test
-    fun `GIVEN YieldSupply Topup WHEN convert THEN topup title`() {
+    fun `GIVEN YieldSupply Topup WHEN convert THEN supplied title`() {
         val tx = txInfo(type = TransactionType.YieldSupply.Topup)
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.title).isEqualTo(resRef(R.string.yield_module_transaction_topup))
+        assertThat(result.title).isEqualTo(resRef(R.string.transaction_history_supplied))
     }
 
     @Test
@@ -773,14 +897,18 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
-    fun `GIVEN YieldSupply Topup Token WHEN convert THEN amount-formatted topup subtitle`() {
+    fun `GIVEN YieldSupply Topup Token WHEN convert THEN Aave provider subtitle`() {
         val tx = txInfo(type = TransactionType.YieldSupply.Topup, amount = BigDecimal("3.0"))
 
         val result = tokenConverter.convert(tx) as TransactionItemUM.Content
 
-        val subtitle = result.subtitle as ContentSubtitle.Plain
-        val res = subtitle.text as TextReference.Res
-        assertThat(res.id).isEqualTo(R.string.yield_module_transaction_topup_subtitle)
+        assertThat(result.subtitle).isEqualTo(
+            ContentSubtitle.Provider(
+                direction = ContentSubtitle.Direction.TO,
+                name = resRef(R.string.yield_module_provider),
+                iconResId = R.drawable.img_aave_22,
+            ),
+        )
     }
 
     @Test
@@ -802,7 +930,8 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
-    fun `GIVEN YieldSupply Topup Coin WHEN convert THEN address-based subtitle`() {
+    fun `GIVEN YieldSupply Topup Coin WHEN convert THEN Aave provider subtitle`() {
+        // Arrange — a coin topup names the provider too: the row mirrors a withdraw, which never shows the address.
         val tx = txInfo(
             type = TransactionType.YieldSupply.Topup,
             interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
@@ -811,9 +940,13 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        val subtitle = result.subtitle as ContentSubtitle.Plain
-        val res = subtitle.text as TextReference.Res
-        assertThat(res.id).isEqualTo(R.string.transaction_history_transaction_for_address)
+        assertThat(result.subtitle).isEqualTo(
+            ContentSubtitle.Provider(
+                direction = ContentSubtitle.Direction.TO,
+                name = resRef(R.string.yield_module_provider),
+                iconResId = R.drawable.img_aave_22,
+            ),
+        )
     }
 
     // endregion

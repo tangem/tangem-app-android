@@ -88,6 +88,15 @@ internal class SendRecipientHistoryListConverterTest {
                 txInfo(destinationType = TxInfo.DestinationType.Multiple(listOf(TxInfo.AddressType.User(RECIPIENT)))),
             ),
             FilterModel("zero amount", txInfo(amount = BigDecimal.ZERO)),
+            FilterModel(
+                "tron gasless fee recipient",
+                txInfo(
+                    interactionAddressType = TxInfo.InteractionAddressType.User(TRON_GASLESS_FEE_RECIPIENT),
+                    destinationType = TxInfo.DestinationType.Single(
+                        TxInfo.AddressType.User(TRON_GASLESS_FEE_RECIPIENT),
+                    ),
+                ),
+            ),
         )
     }
 
@@ -111,6 +120,25 @@ internal class SendRecipientHistoryListConverterTest {
         }
 
         @Test
+        fun `GIVEN outgoing joint account transfer WHEN convert THEN its recipient is listed`() {
+            // Arrange
+            val jointTransfer = txInfo(
+                type = TxInfo.TransactionType.Joint.Transfer(
+                    recipient = RECIPIENT,
+                    amount = BigDecimal.ONE,
+                    refundCapWei = BigDecimal("500000000000000"),
+                    signaturesCount = 2,
+                ),
+            )
+
+            // Act
+            val actual = converter.convert(listOf(jointTransfer))
+
+            // Assert
+            assertThat(actual.single().title).isEqualTo(stringReference(RECIPIENT))
+        }
+
+        @Test
         fun `GIVEN more than ten valid transactions WHEN convert THEN capped at ten`() {
             // Arrange
             val txs = (1..12).map { txInfo(txHash = "hash$it") }
@@ -130,5 +158,6 @@ internal class SendRecipientHistoryListConverterTest {
     private companion object {
         private const val RECIPIENT = "0xRecipientAddress"
         private const val SOURCE = "0xSourceAddress"
+        private const val TRON_GASLESS_FEE_RECIPIENT = "TSWsmaEDgWaE2VsP9tCBGh5GbBRbrdHSuZ"
     }
 }

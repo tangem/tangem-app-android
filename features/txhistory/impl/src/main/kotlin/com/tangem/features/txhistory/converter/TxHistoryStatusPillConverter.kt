@@ -34,12 +34,14 @@ internal class TxHistoryStatusPillConverter(
         val allowance = (tx.type as? TransactionType.Approve)?.amount
         val allowanceValue = allowance?.value
         val hasAmount = spec.amount.show(uiStatus)
+        val split = spec.confirmedSplit?.takeIf { uiStatus.isSettled() }
         return TransactionItemUM.Pill(
             txHash = tx.txHash,
             kind = spec.kind,
             status = uiStatus,
-            label = spec.labels.resolve(uiStatus),
+            label = split?.let { resourceReference(it.label) } ?: spec.labels.resolve(uiStatus),
             amount = when {
+                split != null -> resourceReference(split.value)
                 !hasAmount -> null
                 allowance == null ->
                     stringReference(
@@ -68,6 +70,19 @@ internal data class PillSpec(
     val kind: PillKind,
     val labels: PillLabels,
     val amount: PillAmount,
+    /** Two-tone text of the settled pill; `null` renders [PillLabels.confirmed] in a single tone. */
+    val confirmedSplit: PillConfirmedSplit? = null,
+)
+
+/**
+ * Settled pill rendered in two tones: [label] in the muted label color and [value] in the primary one — the split the
+ * pill already draws for an approve's allowance, reused to emphasize the state a yield-mode transaction ended in
+ * ("Yield mode **Enabled**"). It replaces [PillLabels.confirmed], which stays the single-tone title of the details
+ * card, and applies only to the settled statuses [PillLabels.resolve] answers [PillLabels.confirmed] for.
+ */
+internal data class PillConfirmedSplit(
+    @StringRes val label: Int,
+    @StringRes val value: Int,
 )
 
 internal data class PillLabels(
@@ -148,10 +163,14 @@ internal val YieldEnterSpec = PillSpec(
     kind = PillKind.YIELD_MODE,
     labels = PillLabels(
         confirmed = R.string.yield_module_transaction_enter,
-        pending = R.string.yield_module_token_details_earn_notification_processing,
-        failedBase = R.string.common_yield_mode,
+        pending = R.string.transaction_history_enabling_yield_mode,
+        failedBase = R.string.common_yield_mode_inline,
     ),
     amount = PillAmount.NEVER,
+    confirmedSplit = PillConfirmedSplit(
+        label = R.string.common_yield_mode_inline,
+        value = R.string.common_enabled,
+    ),
 )
 internal val YieldExitSpec = PillSpec(
     kind = PillKind.YIELD_MODE,
@@ -160,6 +179,10 @@ internal val YieldExitSpec = PillSpec(
         pending = R.string.transaction_history_disabling_yield_mode,
     ),
     amount = PillAmount.NEVER,
+    confirmedSplit = PillConfirmedSplit(
+        label = R.string.common_yield_mode_inline,
+        value = R.string.common_disabled,
+    ),
 )
 
 private fun TxInfo.buildPillSubtitle(status: TransactionItemUM.Content.Status): TransactionItemUM.PillSubtitle? {
@@ -171,6 +194,10 @@ private fun TxInfo.buildPillSubtitle(status: TransactionItemUM.Content.Status): 
         briefAddress = address.toBriefAddressFormat(),
     )
 }
+
+/** The statuses [resolve] answers [PillLabels.confirmed] for — the same ones [PillSpec.confirmedSplit] replaces. */
+private fun TransactionItemUM.Content.Status.isSettled(): Boolean =
+    this is TransactionItemUM.Content.Status.Confirmed || this is TransactionItemUM.Content.Status.PendingSignature
 
 internal fun PillLabels.resolve(status: TransactionItemUM.Content.Status): TextReference = when (status) {
     is TransactionItemUM.Content.Status.Confirmed,

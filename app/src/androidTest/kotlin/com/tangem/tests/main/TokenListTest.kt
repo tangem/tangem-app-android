@@ -6,6 +6,7 @@ import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.HOLD_DURATION_MS
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.addNewCardWalletWithoutSync
 import com.tangem.scenarios.getMainScreenTokensOrder
 import com.tangem.scenarios.openMainScreen
@@ -219,7 +220,7 @@ class TokenListTest : BaseTestCase() {
                 onMainScreen { tokenWithCustomDerivationIcon(customTokenName).assertIsDisplayed() }
             }
             step("Click on '$customTokenName' token with custom derivation icon") {
-                onMainScreen { tokenWithTitleAndAddress(customTokenName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(customTokenName)
             }
             step("Assert custom derivation icon is displayed on 'Token details' screen") {
                 onTokenDetailsScreen { customDerivationIcon.assertIsDisplayed() }

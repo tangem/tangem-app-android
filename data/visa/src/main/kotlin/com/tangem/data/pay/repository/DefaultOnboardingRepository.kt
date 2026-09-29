@@ -9,7 +9,7 @@ import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.store.TangemPayCustomerInfoStore
 import com.tangem.data.pay.util.BankCredentialsConverter
 import com.tangem.data.pay.util.CustomerInfoConverter
-import com.tangem.data.pay.util.OnrampFeeConverter
+import com.tangem.data.pay.util.AccountFeeConverter
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.request.AccountOrderRequest
 import com.tangem.spend.datasource.pay.models.request.DeeplinkValidityRequest
@@ -25,18 +25,20 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.PaymentAccountStatusValue
-import com.tangem.domain.models.account.TangemPayOnrampFee
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
+import com.tangem.domain.pay.model.AccountFee
+import com.tangem.domain.pay.model.AccountFeeGroupType
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
@@ -127,12 +129,15 @@ internal class DefaultOnboardingRepository @Inject constructor(
         }
     }
 
-    override suspend fun getOnrampFees(userWalletId: UserWalletId): Either<VisaApiError, List<TangemPayOnrampFee>> {
+    override suspend fun getFees(
+        userWalletId: UserWalletId,
+        types: Set<AccountFeeGroupType>,
+    ): Either<VisaApiError, List<AccountFee>> {
         return requestHelper.performRequest(userWalletId) { authHeader ->
-            tangemPayApi.getFees(authHeader = authHeader, groups = "ONRAMP")
+            tangemPayApi.getFees(authHeader = authHeader, groups = types.map(AccountFeeGroupType::toString))
         }.flatMap { response ->
             val result = response.result ?: return@flatMap VisaApiError.UnknownWithoutCode.left()
-            OnrampFeeConverter.convertList(result).right()
+            result.mapNotNull(AccountFeeConverter::convert).right()
         }
     }
 
@@ -328,19 +333,12 @@ internal class DefaultOnboardingRepository @Inject constructor(
         }
     }
 
-    override suspend fun getHideMainOnboardingBanner(userWalletId: UserWalletId): Boolean {
-        return tangemPayStorage.getHideMainOnboardingBanner(userWalletId)
+    override fun isMainOnboardingBannerHidden(userWalletId: UserWalletId): Flow<Boolean> {
+        return tangemPayStorage.isMainOnboardingBannerHidden(userWalletId)
     }
 
     override suspend fun setHideMainOnboardingBanner(userWalletId: UserWalletId) {
         tangemPayStorage.storeHideOnboardingBanner(userWalletId, hide = true)
-        paymentAccountStatusStore.store(
-            userWalletId = userWalletId,
-            status = AccountStatus.Payment(
-                account = Account.Payment(userWalletId),
-                value = PaymentAccountStatusValue.Empty,
-            ),
-        )
     }
 
     override suspend fun disableTangemPay(userWalletId: UserWalletId): Either<VisaApiError, Unit> {
@@ -354,6 +352,13 @@ internal class DefaultOnboardingRepository @Inject constructor(
             tangemPayStorage.clearAll(userWalletId = userWalletId, customerWalletAddress = address)
             txHistoryItemsStore.remove(userWalletId.stringValue)
             setHideMainOnboardingBanner(userWalletId)
+            paymentAccountStatusStore.store(
+                userWalletId = userWalletId,
+                status = AccountStatus.Payment(
+                    account = Account.Payment(userWalletId),
+                    value = PaymentAccountStatusValue.Empty,
+                ),
+            )
         }
     }
 }

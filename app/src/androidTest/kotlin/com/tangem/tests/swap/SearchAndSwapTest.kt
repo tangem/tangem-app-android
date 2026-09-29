@@ -8,6 +8,7 @@ import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.performTextInputInChunks
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R
+import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.SwapEntryPoint
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.openSwapFromTokenSelector
@@ -225,7 +226,7 @@ class SearchAndSwapTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Open 'Swap' screen") {
                 openSwapScreen(from = SwapEntryPoint.TokenDetails)

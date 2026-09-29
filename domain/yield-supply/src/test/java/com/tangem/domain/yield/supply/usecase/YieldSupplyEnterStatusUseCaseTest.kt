@@ -59,7 +59,7 @@ class YieldSupplyEnterStatusUseCaseTest {
     @Test
     fun `GIVEN no pending tx matches status WHEN invoke THEN clears status and returns null`() = runTest {
         val token = createToken()
-        val cryptoStatus = createStatus(token, isActive = true)
+        val cryptoStatus = createStatus(token, isActive = true, effectiveProtocolBalance = BigDecimal.TEN)
         val status = YieldSupplyPendingStatus.Enter(txIds = listOf("0xabc123"))
 
         coEvery {
@@ -103,7 +103,7 @@ class YieldSupplyEnterStatusUseCaseTest {
     @Test
     fun `GIVEN empty pending tx list WHEN invoke THEN clears status and returns null`() = runTest {
         val token = createToken()
-        val cryptoStatus = createStatus(token, isActive = true)
+        val cryptoStatus = createStatus(token, isActive = true, effectiveProtocolBalance = BigDecimal.TEN)
         val status = YieldSupplyPendingStatus.Enter(txIds = listOf("0xabc123"))
 
         coEvery {
@@ -226,9 +226,9 @@ class YieldSupplyEnterStatusUseCaseTest {
     }
 
     @Test
-    fun `GIVEN isActive true and Enter status with no pending tx WHEN invoke THEN clears status`() = runTest {
+    fun `GIVEN funds in protocol and Enter status with no pending tx WHEN invoke THEN clears status`() = runTest {
         val token = createToken()
-        val cryptoStatus = createStatus(token, isActive = true)
+        val cryptoStatus = createStatus(token, isActive = true, effectiveProtocolBalance = BigDecimal.TEN)
         val status = YieldSupplyPendingStatus.Enter(txIds = listOf("0xenter"))
 
         coEvery {
@@ -295,10 +295,10 @@ class YieldSupplyEnterStatusUseCaseTest {
     }
 
     @Test
-    fun `GIVEN status older than 20 seconds with no pending tx WHEN invoke THEN clears status`() = runTest {
+    fun `GIVEN status older than the expiration window with no pending tx WHEN invoke THEN clears status`() = runTest {
         val token = createToken()
         val cryptoStatus = createStatus(token, isActive = false)
-        val expiredCreatedAt = System.currentTimeMillis() - 21_000L
+        val expiredCreatedAt = System.currentTimeMillis() - 151_000L
         val status = YieldSupplyPendingStatus.Enter(txIds = listOf("0xenter"), createdAt = expiredCreatedAt)
 
         coEvery {
@@ -317,6 +317,61 @@ class YieldSupplyEnterStatusUseCaseTest {
         val value = (result as Either.Right).value
         assertThat(value).isNull()
         coVerify { yieldSupplyRepository.saveTokenProtocolPendingStatus(userWalletId, token, null) }
+    }
+
+    @Test
+    fun `GIVEN active module but no protocol balance WHEN invoke THEN clears status`() = runTest {
+        // The deposit that follows activation is tracked separately as a top-up, so an empty protocol balance
+        // must not hold the screen on "Enabling" — the module is active and yield mode genuinely is on.
+
+        // Arrange
+        val token = createToken()
+        val cryptoStatus = createStatus(token, isActive = true, effectiveProtocolBalance = BigDecimal.ZERO)
+        val status = YieldSupplyPendingStatus.Enter(txIds = listOf("0xenter"))
+
+        coEvery {
+            yieldSupplyRepository.getTokenProtocolPendingStatus(userWalletId, token)
+        } returns status
+        coEvery {
+            yieldSupplyRepository.getPendingTxHashes(userWalletId, cryptoStatus.currency)
+        } returns emptyList()
+        coEvery {
+            yieldSupplyRepository.saveTokenProtocolPendingStatus(userWalletId, token, null)
+        } returns Unit
+
+        // Act
+        val result = useCase(userWalletId, cryptoStatus)
+
+        // Assert
+        assertThat(result.isRight()).isTrue()
+        assertThat((result as Either.Right).value).isNull()
+        coVerify { yieldSupplyRepository.saveTokenProtocolPendingStatus(userWalletId, token, null) }
+    }
+
+    @Test
+    fun `GIVEN active module and deposit still in flight WHEN invoke THEN clears status`() = runTest {
+        // Arrange
+        val token = createToken()
+        val cryptoStatus = createStatus(token, isActive = true, effectiveProtocolBalance = BigDecimal.ZERO)
+        val pendingTxHash = "0xenter"
+        val status = YieldSupplyPendingStatus.Enter(txIds = listOf(pendingTxHash))
+
+        coEvery {
+            yieldSupplyRepository.getTokenProtocolPendingStatus(userWalletId, token)
+        } returns status
+        coEvery {
+            yieldSupplyRepository.getPendingTxHashes(userWalletId, cryptoStatus.currency)
+        } returns listOf(pendingTxHash)
+        coEvery {
+            yieldSupplyRepository.saveTokenProtocolPendingStatus(userWalletId, token, null)
+        } returns Unit
+
+        // Act
+        val result = useCase(userWalletId, cryptoStatus)
+
+        // Assert
+        assertThat(result.isRight()).isTrue()
+        assertThat((result as Either.Right).value).isNull()
     }
 
     private fun createToken(): CryptoCurrency.Token {
@@ -354,12 +409,13 @@ class YieldSupplyEnterStatusUseCaseTest {
     private fun createStatus(
         token: CryptoCurrency.Token,
         isActive: Boolean? = null,
+        effectiveProtocolBalance: BigDecimal? = null,
         yieldSupplyStatus: YieldSupplyStatus? = isActive?.let {
             YieldSupplyStatus(
                 isActive = it,
                 isInitialized = true,
                 isAllowedToSpend = true,
-                effectiveProtocolBalance = null,
+                effectiveProtocolBalance = effectiveProtocolBalance,
             )
         },
     ): CryptoCurrencyStatus {

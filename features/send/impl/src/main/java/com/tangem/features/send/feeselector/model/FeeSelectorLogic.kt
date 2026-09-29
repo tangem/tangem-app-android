@@ -15,6 +15,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.error.isTronActivationRefusal
 import com.tangem.domain.transaction.models.AvailableFeeTokens
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
@@ -278,6 +279,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
             ifLeft = { error ->
                 when {
                     error is GetFeeError.GaslessError.NotEnoughFunds -> error.left()
+                    error.isTronActivationRefusal() -> error.left()
                     // Only the automatic choice may fall back to the basic fee. Overriding a token the
                     // user picked explicitly would move the fee to the network coin behind their back,
                     // and the speed-only selector it leaves behind offers no way back to the token.

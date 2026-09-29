@@ -215,13 +215,24 @@ internal class TxHistoryStatusPillConverterTest {
     // region YieldSupply
 
     @Test
-    fun `GIVEN YieldEnter uiStatus Confirmed WHEN convert THEN enter label and no amount`() {
+    fun `GIVEN YieldEnter uiStatus Confirmed WHEN convert THEN two-tone Yield mode Enabled`() {
         val tx = txInfo(type = TransactionType.YieldSupply.Enter(address = USER_ADDRESS))
 
         val result = converter.convert(Input(tx, Status.Confirmed, YieldEnterSpec))
 
         assertThat(result.kind).isEqualTo(TransactionItemUM.PillKind.YIELD_MODE)
-        assertThat(result.label).isEqualTo(resRef(R.string.yield_module_transaction_enter))
+        assertThat(result.label).isEqualTo(resRef(R.string.common_yield_mode_inline))
+        assertThat(result.amount).isEqualTo(resRef(R.string.common_enabled))
+        assertThat(result.currencySymbol).isNull()
+    }
+
+    @Test
+    fun `GIVEN YieldEnter uiStatus Unconfirmed WHEN convert THEN single-tone enabling label`() {
+        val tx = txInfo(type = TransactionType.YieldSupply.Enter(address = USER_ADDRESS))
+
+        val result = converter.convert(Input(tx, Status.Unconfirmed, YieldEnterSpec))
+
+        assertThat(result.label).isEqualTo(resRef(R.string.transaction_history_enabling_yield_mode))
         assertThat(result.amount).isNull()
     }
 
@@ -232,17 +243,19 @@ internal class TxHistoryStatusPillConverterTest {
         val result = converter.convert(Input(tx, Status.Failed, YieldEnterSpec))
 
         assertThat(result.label).isEqualTo(
-            resRef(R.string.common_action_failed, listOf(resRef(R.string.common_yield_mode))),
+            resRef(R.string.common_action_failed, listOf(resRef(R.string.common_yield_mode_inline))),
         )
+        assertThat(result.amount).isNull()
     }
 
     @Test
-    fun `GIVEN YieldExit uiStatus Confirmed WHEN convert THEN exit label`() {
+    fun `GIVEN YieldExit uiStatus Confirmed WHEN convert THEN two-tone Yield mode Disabled`() {
         val tx = txInfo(type = TransactionType.YieldSupply.Exit(address = USER_ADDRESS))
 
         val result = converter.convert(Input(tx, Status.Confirmed, YieldExitSpec))
 
-        assertThat(result.label).isEqualTo(resRef(R.string.yield_module_transaction_exit))
+        assertThat(result.label).isEqualTo(resRef(R.string.common_yield_mode_inline))
+        assertThat(result.amount).isEqualTo(resRef(R.string.common_disabled))
     }
 
     @Test

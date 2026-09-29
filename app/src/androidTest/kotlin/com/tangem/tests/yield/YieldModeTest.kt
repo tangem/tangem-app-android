@@ -10,8 +10,8 @@ import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.isDisplayedSafely
 import com.tangem.common.extensions.pullToRefresh
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.openMainScreenWithExistingHotWallet
-import com.tangem.screens.onMainScreen
 import com.tangem.screens.onTokenDetailsScreen
 import com.tangem.screens.onTokenDetailsTopBar
 import com.tangem.screens.onTxHistoryScreen
@@ -63,7 +63,7 @@ class YieldModeTest : BaseTestCase() {
             }
 
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details' screen is displayed") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -113,7 +113,6 @@ class YieldModeTest : BaseTestCase() {
     fun firstTimeLandingActivationTest() {
         val tokenTitle = "USDC"
         val apy = "5.24"
-        val enterTransactionTitle = getResourceString(CoreResR.string.yield_module_transaction_enter)
 
         val portfolioScenario = "user_tokens_api"
         val portfolioState = "YieldUSDCEthereum"
@@ -140,7 +139,7 @@ class YieldModeTest : BaseTestCase() {
             }
 
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details' screen is displayed") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -187,7 +186,7 @@ class YieldModeTest : BaseTestCase() {
             step("Assert 'Yield mode enabled' transaction is displayed in history") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     onTxHistoryScreen {
-                        transactionItem(enterTransactionTitle).assertIsDisplayed()
+                        yieldModePill(CoreResR.string.common_enabled).assertIsDisplayed()
                     }
                 }
             }
@@ -201,7 +200,7 @@ class YieldModeTest : BaseTestCase() {
         val tokenTitle = "USDC"
         val topUpAmount = "600.00"
         val incomingTransactionTitle = getResourceString(CoreResR.string.common_received)
-        val topUpTransactionTitle = getResourceString(CoreResR.string.yield_module_transaction_topup)
+        val topUpTransactionTitle = getResourceString(CoreResR.string.transaction_history_supplied)
         val supplyingNotificationTitle = getResourceString(
             CoreResR.string.yield_module_amount_not_transfered_to_aave_title,
             topUpAmount,
@@ -232,7 +231,7 @@ class YieldModeTest : BaseTestCase() {
             }
 
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details' screen is displayed") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -247,7 +246,7 @@ class YieldModeTest : BaseTestCase() {
                     onTxHistoryScreen { transactionItem(incomingTransactionTitle).assertIsDisplayed() }
                 }
             }
-            step("Assert 'Supply to Aave' transaction is displayed in history") {
+            step("Assert '$topUpTransactionTitle' transaction is displayed in history") {
                 onTxHistoryScreen { transactionItem(topUpTransactionTitle).assertIsDisplayed() }
             }
 
@@ -294,7 +293,7 @@ class YieldModeTest : BaseTestCase() {
             }
 
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details' screen is displayed") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -351,7 +350,6 @@ class YieldModeTest : BaseTestCase() {
         val nativeCoinTitle = "Ethereum"
         val apy = "5.24"
         val reactivateTransactionTitle = getResourceString(CoreResR.string.yield_module_transaction_reactivate)
-        val enterTransactionTitle = getResourceString(CoreResR.string.yield_module_transaction_enter)
         val portfolioScenario = "user_tokens_api"
         val portfolioState = "YieldUSDCEthereum"
         val balancesScenario = "moralis_evm_token_balances_api"
@@ -377,7 +375,7 @@ class YieldModeTest : BaseTestCase() {
             }
 
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details' screen is displayed") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -423,7 +421,7 @@ class YieldModeTest : BaseTestCase() {
             }
             step("Assert 'Yield mode enabled' transaction is displayed in history") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onTxHistoryScreen { transactionItem(enterTransactionTitle).assertIsDisplayed() }
+                    onTxHistoryScreen { yieldModePill(CoreResR.string.common_enabled).assertIsDisplayed() }
                 }
             }
 
@@ -431,7 +429,7 @@ class YieldModeTest : BaseTestCase() {
                 onTokenDetailsTopBar { backButton.clickWithAssertion() }
             }
             step("Click on native coin with name: '$nativeCoinTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(nativeCoinTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(nativeCoinTitle)
             }
             step("Assert 'Token details' screen is displayed") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -442,7 +440,7 @@ class YieldModeTest : BaseTestCase() {
                 }
             }
             step("Assert 'Enter protocol' transaction is displayed in history") {
-                onTxHistoryScreen { transactionItem(enterTransactionTitle).assertIsDisplayed() }
+                onTxHistoryScreen { yieldModePill(CoreResR.string.common_enabled).assertIsDisplayed() }
             }
         }
     }
@@ -453,7 +451,6 @@ class YieldModeTest : BaseTestCase() {
     fun closeActiveLandingTest() {
         val tokenTitle = "USDC"
         val nativeCoinTitle = "Ethereum"
-        val exitTransactionTitle = getResourceString(CoreResR.string.yield_module_transaction_exit)
         val portfolioScenario = "user_tokens_api"
         val portfolioState = "YieldUSDCEthereum"
         val balancesScenario = "moralis_evm_token_balances_api"
@@ -479,7 +476,7 @@ class YieldModeTest : BaseTestCase() {
             }
 
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert 'Token details' screen is displayed") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -522,14 +519,14 @@ class YieldModeTest : BaseTestCase() {
                 onTokenDetailsTopBar { backButton.clickWithAssertion() }
             }
             step("Click on native coin with name: '$nativeCoinTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(nativeCoinTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(nativeCoinTitle)
             }
             step("Assert 'Token details' screen is displayed") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
             }
             step("Assert 'Yield mode disabled' transaction is displayed in history") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onTxHistoryScreen { transactionItem(exitTransactionTitle).assertIsDisplayed() }
+                    onTxHistoryScreen { yieldModePill(CoreResR.string.common_disabled).assertIsDisplayed() }
                 }
             }
         }

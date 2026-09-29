@@ -41,7 +41,6 @@ dependencies {
     api(projects.domain.appCurrency)
     api(projects.domain.appCurrency.models)
     api(projects.domain.balanceHiding)
-    api(projects.domain.card)
     api(projects.domain.express.models)
     api(projects.domain.feedback)
     api(projects.domain.legacy)

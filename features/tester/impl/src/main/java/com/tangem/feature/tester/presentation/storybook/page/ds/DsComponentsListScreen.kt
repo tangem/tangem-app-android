@@ -12,8 +12,32 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButton
+import com.tangem.core.ui.ds2.DsVersion
+import com.tangem.core.ui.ds2.badge.TangemBadge
+import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.button.TangemButtonGroup
+import com.tangem.core.ui.ds2.button.TangemButtonStack
+import com.tangem.core.ui.ds2.checkbox.TangemCheckbox
+import com.tangem.core.ui.ds2.checkbox.TangemCheckmark
+import com.tangem.core.ui.ds2.fade.TangemFade
+import com.tangem.core.ui.ds2.filter.TangemFilterGroup
+import com.tangem.core.ui.ds2.footer.TangemFooter
+import com.tangem.core.ui.ds2.glowring.TangemGlowRing
+import com.tangem.core.ui.ds2.loader.TangemLoader
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
+import com.tangem.core.ui.ds2.modal.TangemModal
+import com.tangem.core.ui.ds2.row.TangemRow
+import com.tangem.core.ui.ds2.search.TangemSearch
+import com.tangem.core.ui.ds2.segmentedcontrol.TangemSegmentedControl
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
+import com.tangem.core.ui.ds2.shtorka.TangemShtorka
+import com.tangem.core.ui.ds2.statusscreen.TangemStatusScreen
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
+import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
+import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
+import com.tangem.core.ui.ds2.tokenrow.TangemTokenRowMarket
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.tester.presentation.storybook.entity.DsComponentsListStory
 import com.tangem.feature.tester.presentation.storybook.entity.StoryPageFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.badge.tangemBadgeV2StoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.button.tangemButtonStoryFactory
@@ -41,38 +65,42 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.tokenrowmarket.t
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenrowv2.tangemTokenRowV2StoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.topnavigation.tangemTopNavigationStoryFactory
 
-private data class DsStoryItem(val title: String, val factory: StoryPageFactory)
+/** [version] is `null` for entries that showcase tokens rather than a versioned DS component. */
+private data class DsStoryItem(val title: String, val version: DsVersion?, val factory: StoryPageFactory)
 
 private fun buildDsStories() = listOf(
-    DsStoryItem(title = "⏳ TangemLoader", factory = tangemLoaderStoryFactory),
-    DsStoryItem(title = "🔘 TangemButton", factory = tangemButtonStoryFactory),
-    DsStoryItem(title = "🔘 TangemButtonGroup", factory = tangemButtonGroupStoryFactory),
-    DsStoryItem(title = "🔘 TangemButtonStack", factory = tangemButtonStackStoryFactory),
-    DsStoryItem(title = "🏷️ TangemBadge", factory = tangemBadgeV2StoryFactory),
-    DsStoryItem(title = "☑️ TangemCheckbox", factory = tangemCheckboxV2StoryFactory),
-    DsStoryItem(title = "⭕ TangemCheckmark", factory = tangemCheckmarkStoryFactory),
-    DsStoryItem(title = "🎨 TangemTokenIcon", factory = tangemTokenIconStoryFactory),
-    DsStoryItem(title = "📋 TangemRow", factory = tangemRowStoryFactory),
-    DsStoryItem(title = "🪙 TangemTokenRow", factory = tangemTokenRowV2StoryFactory),
-    DsStoryItem(title = "📈 TangemTokenRowMarket", factory = tangemTokenRowMarketStoryFactory),
-    DsStoryItem(title = "🔎 TangemSearch", factory = tangemSearchStoryFactory),
-    DsStoryItem(title = "✨ TangemShimmer", factory = tangemShimmerStoryFactory),
-    DsStoryItem(title = "🪟 TangemShtorka", factory = tangemShtorkaStoryFactory),
-    DsStoryItem(title = "🗂️ TangemModal", factory = tangemModalStoryFactory),
-    DsStoryItem(title = "🌫️ TangemFade", factory = tangemFadeStoryFactory),
-    DsStoryItem(title = "🧭 TangemTopNavigation", factory = tangemTopNavigationStoryFactory),
-    DsStoryItem(title = "🧱 TangemFooter", factory = tangemFooterStoryFactory),
-    DsStoryItem(title = "💫 TangemGlowRing", factory = tangemGlowRingStoryFactory),
-    DsStoryItem(title = "🚥 TangemStatusScreen", factory = tangemStatusScreenStoryFactory),
-    DsStoryItem(title = "📢 TangemMessageBanner", factory = tangemMessageBannerStoryFactory),
-    DsStoryItem(title = "🎛️ TangemFilterGroup", factory = tangemFilterGroupStoryFactory),
-    DsStoryItem(title = "📑 TangemTabNavigation", factory = tangemTabNavigationStoryFactory),
-    DsStoryItem(title = "🎚️ TangemSegmentedControl", factory = tangemSegmentedControlStoryFactory),
-    DsStoryItem(title = "🔤 Text styles", factory = textStyleStoryFactory),
+    DsStoryItem("⏳ TangemLoader", TangemLoader.version, tangemLoaderStoryFactory),
+    DsStoryItem("🔘 TangemButton", TangemButton.version, tangemButtonStoryFactory),
+    DsStoryItem("🔘 TangemButtonGroup", TangemButtonGroup.version, tangemButtonGroupStoryFactory),
+    DsStoryItem("🔘 TangemButtonStack", TangemButtonStack.version, tangemButtonStackStoryFactory),
+    DsStoryItem("🏷️ TangemBadge", TangemBadge.version, tangemBadgeV2StoryFactory),
+    DsStoryItem("☑️ TangemCheckbox", TangemCheckbox.version, tangemCheckboxV2StoryFactory),
+    DsStoryItem("⭕ TangemCheckmark", TangemCheckmark.version, tangemCheckmarkStoryFactory),
+    DsStoryItem("🎨 TangemTokenIcon", TangemTokenIcon.version, tangemTokenIconStoryFactory),
+    DsStoryItem("📋 TangemRow", TangemRow.version, tangemRowStoryFactory),
+    DsStoryItem("🪙 TangemTokenRow", TangemTokenRow.version, tangemTokenRowV2StoryFactory),
+    DsStoryItem("📈 TangemTokenRowMarket", TangemTokenRowMarket.version, tangemTokenRowMarketStoryFactory),
+    DsStoryItem("🔎 TangemSearch", TangemSearch.version, tangemSearchStoryFactory),
+    DsStoryItem("✨ TangemShimmer", TangemShimmer.version, tangemShimmerStoryFactory),
+    DsStoryItem("🪟 TangemShtorka", TangemShtorka.version, tangemShtorkaStoryFactory),
+    DsStoryItem("🗂️ TangemModal", TangemModal.version, tangemModalStoryFactory),
+    DsStoryItem("🌫️ TangemFade", TangemFade.version, tangemFadeStoryFactory),
+    DsStoryItem("🧭 TangemTopNavigation", TangemTopNavigation.version, tangemTopNavigationStoryFactory),
+    DsStoryItem("🧱 TangemFooter", TangemFooter.version, tangemFooterStoryFactory),
+    DsStoryItem("💫 TangemGlowRing", TangemGlowRing.version, tangemGlowRingStoryFactory),
+    DsStoryItem("🚥 TangemStatusScreen", TangemStatusScreen.version, tangemStatusScreenStoryFactory),
+    DsStoryItem("📢 TangemMessageBanner", TangemMessageBanner.version, tangemMessageBannerStoryFactory),
+    DsStoryItem("🎛️ TangemFilterGroup", TangemFilterGroup.version, tangemFilterGroupStoryFactory),
+    DsStoryItem("📑 TangemTabNavigation", TangemTabNavigation.version, tangemTabNavigationStoryFactory),
+    DsStoryItem("🎚️ TangemSegmentedControl", TangemSegmentedControl.version, tangemSegmentedControlStoryFactory),
+    DsStoryItem("🔤 Text styles", null, textStyleStoryFactory),
 )
 
 @Composable
-internal fun DsComponentsListStory(state: DsComponentsListStory, modifier: Modifier = Modifier) {
+internal fun DsComponentsListStory(
+    onStoryClick: (StoryPageFactory, DsVersion?) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val stories = remember { buildDsStories() }
 
     LazyColumn(
@@ -83,8 +111,8 @@ internal fun DsComponentsListStory(state: DsComponentsListStory, modifier: Modif
     ) {
         items(items = stories, key = { it.title }) { item ->
             PrimaryButton(
-                text = item.title,
-                onClick = { state.onStoryClick(item.factory) },
+                text = item.version?.let { "${item.title}  v$it" } ?: item.title,
+                onClick = { onStoryClick(item.factory, item.version) },
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .fillMaxWidth(),

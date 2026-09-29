@@ -37,6 +37,7 @@ internal object CollectiblesMachineDetailsPreviewData {
                 value = stringReference("85% of value"),
             ),
         ),
+        onPoweredByClick = {},
         prizePool = prizePool(
             prize,
             prize.copy(id = "nft_2", title = stringReference("Charizard V")),

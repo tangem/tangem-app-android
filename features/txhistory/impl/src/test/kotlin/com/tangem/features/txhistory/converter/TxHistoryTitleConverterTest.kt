@@ -1,6 +1,8 @@
 package com.tangem.features.txhistory.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.WrappedList
 import com.tangem.domain.models.network.SdkAmount
@@ -16,7 +18,10 @@ import java.math.BigDecimal
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TxHistoryTitleConverterTest {
 
-    private val converter = TxHistoryTitleConverter()
+    private val coin = MockCryptoCurrencyFactory().createCoin(Blockchain.Ethereum)
+
+    private val converter = TxHistoryTitleConverter(coin)
+    private val refundCapWei = BigDecimal("500000000000000")
 
     @ParameterizedTest
     @ProvideTestModels
@@ -30,6 +35,44 @@ internal class TxHistoryTitleConverterTest {
 
     @Suppress("LongMethod")
     private fun provideTestModels() = listOf(
+        // A joint account's executed operation reads like the transfer it is, its token fee like a fee, the rest as a call
+        TitleModel(
+            tx = txInfo(
+                type = TransactionType.Joint.Transfer(
+                    recipient = "0xrecipient",
+                    amount = BigDecimal.ONE,
+                    refundCapWei = refundCapWei,
+                    signaturesCount = 2,
+                ),
+                isOutgoing = true,
+            ),
+            expected = resRef(R.string.common_sent),
+        ),
+        TitleModel(
+            tx = txInfo(
+                type = TransactionType.Joint.TokenFee(
+                    tokenContract = "0xtoken",
+                    tokenAmount = null,
+                    recipient = "0xrecipient",
+                    refundCapWei = refundCapWei,
+                    signaturesCount = 2,
+                ),
+                isOutgoing = true,
+            ),
+            expected = resRef(R.string.common_network_fee_title),
+        ),
+        TitleModel(
+            tx = txInfo(
+                type = TransactionType.Joint.Call(
+                    contract = "0xcontract",
+                    value = BigDecimal.ZERO,
+                    refundCapWei = refundCapWei,
+                    signaturesCount = 2,
+                ),
+                isOutgoing = true,
+            ),
+            expected = resRef(R.string.transaction_history_operation),
+        ),
         // Pills resolve to the status-aware label text (no amount)
         TitleModel(
             tx = txInfo(TransactionType.Approve(amount = SdkAmount(currencySymbol = "USDT", value = null, decimals = 6), address = "0xspender")),
@@ -156,7 +199,22 @@ internal class TxHistoryTitleConverterTest {
         ),
         TitleModel(
             tx = txInfo(TransactionType.YieldSupply.Topup),
-            expected = resRef(R.string.yield_module_transaction_topup),
+            expected = resRef(R.string.transaction_history_supplied),
+        ),
+        TitleModel(
+            tx = txInfo(TransactionType.YieldSupply.Topup, status = TransactionStatus.Unconfirmed),
+            expected = resRef(R.string.common_supplying),
+        ),
+        TitleModel(
+            tx = txInfo(TransactionType.YieldSupply.Topup, status = TransactionStatus.Failed),
+            expected = resRef(R.string.transaction_history_status_supply_failed),
+        ),
+        TitleModel(
+            tx = txInfo(
+                type = TransactionType.YieldSupply.Send(address = "0xdest", isYieldSupplyWithdraw = true),
+                status = TransactionStatus.Failed,
+            ),
+            expected = resRef(R.string.transaction_history_status_withdraw_failed),
         ),
         TitleModel(
             tx = txInfo(TransactionType.UnknownOperation),
@@ -175,6 +233,24 @@ internal class TxHistoryTitleConverterTest {
             ),
             expected = resRef(R.string.common_network_fee_title),
         ),
+        // An outgoing coin call that moved nothing is titled by the fee it cost, named method or not
+        TitleModel(
+            tx = txInfo(
+                type = TransactionType.Operation(name = "YieldSend"),
+                isOutgoing = true,
+                amount = BigDecimal.ZERO,
+            ),
+            expected = resRef(R.string.common_network_fee_title),
+        ),
+        TitleModel(
+            tx = txInfo(TransactionType.UnknownOperation, isOutgoing = true, amount = BigDecimal.ZERO),
+            expected = resRef(R.string.common_network_fee_title),
+        ),
+        // The same call incoming was paid for by its sender, so it keeps the operation title
+        TitleModel(
+            tx = txInfo(TransactionType.Operation(name = "YieldSend"), amount = BigDecimal.ZERO),
+            expected = TextReference.Str("YieldSend"),
+        ),
     )
 
     internal data class TitleModel(
@@ -187,6 +263,7 @@ internal class TxHistoryTitleConverterTest {
         type: TransactionType,
         status: TransactionStatus = TransactionStatus.Confirmed,
         isOutgoing: Boolean = false,
+        amount: BigDecimal = BigDecimal.ONE,
     ): TxInfo.Single = TxInfo.Single(
         txHash = "0xtxhash",
         timestampInMillis = 1_700_000_000_000L,
@@ -196,7 +273,7 @@ internal class TxHistoryTitleConverterTest {
         interactionAddressType = null,
         status = status,
         type = type,
-        amount = BigDecimal.ONE,
+        amount = amount,
     )
 
     private fun resRef(id: Int): TextReference = TextReference.Res(id = id)

@@ -1,5 +1,3 @@
-import com.android.build.api.dsl.CommonExtension
-
 plugins {
     alias(deps.plugins.kotlin.android) apply false
     alias(deps.plugins.kotlin.jvm) apply false
@@ -7,6 +5,7 @@ plugins {
     alias(deps.plugins.kotlin.kapt) apply false
     alias(deps.plugins.android.application) apply false
     alias(deps.plugins.android.library) apply false
+    alias(deps.plugins.android.test) apply false
     alias(deps.plugins.hilt.android) apply false
     alias(deps.plugins.google.services) apply false
     alias(deps.plugins.firebase.crashlytics) apply false
@@ -34,27 +33,6 @@ buildscript {
         classpath(deps.agconnect.agcp)
     }
 }
-
-// `-Pdependency.analysis.android.ignored.variants` is passed only by the PR check, which trims the build
-// to two build types (see run_code_quality.yml); the nightly run and a local `buildHealth`
-// analyse every variant and pass nothing. Reusing that flag as the marker for "this is the trimmed run"
-// beats inventing a private switch: the compensation it gates cannot outlive the variant trimming that
-// made it necessary, because there is only one thing to forget instead of two.
-// Presence is what counts, not content. A present-but-empty value means the workflow tried to trim and
-// the list did not survive the trip — DAGP would then quietly analyse everything — so it is left to fail
-// in `verifyDagpIgnoredVariantsProperty` rather than papered over here. Both readers use this one value,
-// so they cannot disagree about what "passed" means.
-val dagpIgnoredVariants: String? = providers
-    .gradleProperty("dependency.analysis.android.ignored.variants")
-    .orNull
-
-val isTrimmedVariantRun = dagpIgnoredVariants != null
-
-// Declaration buckets dropped from the analysis in the trimmed run. Single source of truth: consumed
-// by `ignoreSourceSet` below and checked against the module's real source sets by
-// `verifyDagpIgnoredSourceSets`, because DAGP matches these names literally and a stale one is a
-// silent no-op rather than an error.
-val dagpIgnoredSourceSets = listOf("internal", "external", "release", "mocked")
 
 // Dependency Analysis (DAGP) global configuration.
 dependencyAnalysis {
@@ -173,24 +151,9 @@ dependencyAnalysis {
     }
     issues {
         all {
-            // Only meaningful in the trimmed run. A dependency declared on `<buildType>Implementation`
-            // for a build type with no analysed variant reads as unused, so those source sets are
-            // dropped from the analysis rather than silenced by coordinate — the artifact stays checked
-            // wherever it is still declared. `mocked` is in the list even though its variant IS analysed
-            // (androidTest and src/mocked hang off it): chucker is the real library in debug and mocked
-            // and a no-op stub elsewhere, so once the stub build types are gone it looks used in every
-            // analysed variant and the plugin advises collapsing the pair into one `implementation`.
-            // Dropping the mocked bucket leaves `debugImplementation(chucker)` as the declaration under
-            // watch. The guard matters because this is a global setting: applied unconditionally it also
-            // blinded the full run, where all five build types are analysed and the twelve declarations
-            // it hides (chucker/chuckerStub in :app and :core:datasource-impl, :features:kyc:impl in :app)
-            // are exactly what the nightly report exists to watch.
-            if (isTrimmedVariantRun) {
-                ignoreSourceSet(*dagpIgnoredSourceSets.toTypedArray())
-            }
             // Default severity is "warn", which is what local runs get: buildHealth/projectHealth only
-            // report. Both CI workflows pass -Pdagp.severity=fail, so advice fails the build there — the
-            // PR check in the modules it analyses, the nightly across the whole graph.
+            // report. The nightly run_dependency_analysis.yml passes -Pdagp.severity=fail and analyses the
+            // whole graph in every variant, so advice fails the build there.
             onAny { severity(providers.gradleProperty("dagp.severity").getOrElse("warn")) }
             // Ignores the whole "wrong configuration" category, not only `implementation` -> `api`. The
             // plugin's filter is `Advice.isChange()` — declared and used, but on a different configuration
@@ -205,15 +168,15 @@ dependencyAnalysis {
             //     against those types.
             //     The exact mechanism behind 1 and 2 was never pinned down — the reason to silence them is
             //     that both were systematic and unusable, not a theory about how the plugin reads ABIs.
-            //  3. `<buildType>Implementation` -> `implementation`: the variant-collapse advice. Once a
-            //     dependency is used in every analysed variant, DAGP merges the declaration onto the base
-            //     configuration — that is the chucker pair once the stub build types leave the analysis.
+            //  3. `<buildType>Implementation` -> `implementation`: the variant-collapse advice. When a
+            //     dependency is declared per build type and used in every variant, DAGP merges the
+            //     declarations onto the base configuration.
             //  4. `implementation` -> a variant-scoped configuration: the mirror image, e.g. googlePlay
             //     review, declared plainly in :app but referenced only from app/src/google.
             // Cases 1 and 2 are what the 17 per-module exclusions this rule replaced were about; 3 and 4
             // come with the category. Narrowing it back to "only -> api" resurrects all four at once and
-            // fails the PR check. To re-enable one case, exclude the coordinate under this handler rather
-            // than re-scoping the severity.
+            // fails the nightly run. To re-enable one case, exclude the coordinate under this handler
+            // rather than re-scoping the severity.
             onIncorrectConfiguration { severity("ignore") }
             // dagger-compiler is always pulled by hilt-compiler (declared via kapt(deps.hilt.kapt));
             // no need to declare the annotation processor separately.
@@ -275,6 +238,11 @@ dependencyAnalysis {
                 // Feature `impl` modules are wired in per build type purely so Hilt picks up their
                 // @Module bindings; dropping them removes the feature from the built app at runtime.
                 exclude(":features:kyc:impl")
+                exclude(
+                    ":spend:push-provisioning:impl",
+                    ":spend:push-provisioning:mock",
+                    ":spend:push-provisioning:no-op",
+                )
                 // Same reason: :data:social-login only contributes Hilt bindings (feature toggle,
                 // provider repository). Nothing references it by type until the UC-08 feature
                 // modules land.
@@ -292,13 +260,6 @@ dependencyAnalysis {
                 exclude("com.appsflyer:oaid")
                 // Moshi adapters are registered reflectively when building the Moshi instance.
                 exclude("com.squareup.moshi:moshi-adapters")
-                // :data:wallet-connect excludes app.cash.sqldelight:android-driver from both reown
-                // artifacts, so these unexcluded declarations are what supply that driver at runtime.
-                // Nothing here references reown by type — dropping them crashes the app on start.
-                exclude(
-                    "com.reown:android-core",
-                    "com.reown:walletkit",
-                )
                 // agcp brings the AGConnect runtime the huawei flavor reads through
                 // AGConnectOptionsBuilder in HuaweiPushNotificationsTokenProvider.
                 exclude("com.huawei.agconnect:agcp")
@@ -427,92 +388,60 @@ val unitTest by tasks.registering {
     description = "Run unit tests for debug/googleDebug variant and all JVM modules"
 }
 
-// :core:datasource-impl is the implementation module for :core:local / :core:remote and is wired in
-// only by :app (like a feature `impl`). This guard keeps it out of every other module's dependencies,
-// so modules keep compiling against the contracts and never against the implementation.
-val verifyDatasourceImplIsolation by tasks.registering {
-    group = "verification"
-    description = "Fails if any module other than :app depends on :core:datasource-impl"
+// Implementation modules such as :core:datasource-impl are wired in only by :app (like a feature `impl`).
+// This guard keeps them out of every other module's dependencies, so modules keep compiling against the
+// contracts and never against an implementation.
+fun registerAppOnlyDependencyCheck(taskName: String, targets: Set<String>, contractHint: String) =
+    tasks.register(taskName) {
+        group = "verification"
+        description = "Fails if any module other than :app depends on ${targets.joinToString()}"
+        notCompatibleWithConfigurationCache("Reads the declared dependencies of every project")
 
-    doLast {
-        val target = ":core:datasource-impl"
-        val allowedDependents = setOf(":app")
+        doLast {
+            val allowedDependents = setOf(":app")
 
-        val offenders = rootProject.subprojects
-            .filter { it.path != target && it.path !in allowedDependents }
-            .filter { module ->
-                module.configurations.any { configuration ->
-                    configuration.dependencies.any { dependency ->
-                        dependency is ProjectDependency && dependency.path == target
+            targets.forEach { target ->
+                val offenders = rootProject.subprojects
+                    .filter { it.path !in targets && it.path !in allowedDependents }
+                    .filter { module ->
+                        module.configurations.any { configuration ->
+                            configuration.dependencies.any { dependency ->
+                                dependency is ProjectDependency && dependency.path == target
+                            }
+                        }
                     }
+                    .map { it.path }
+                    .sorted()
+
+                if (offenders.isNotEmpty()) {
+                    throw GradleException(
+                        buildString {
+                            appendLine("$target is an implementation module — only :app may depend on it.")
+                            appendLine(contractHint)
+                            appendLine("Offending modules:")
+                            offenders.forEach { appendLine("  - $it") }
+                        }.trim(),
+                    )
                 }
             }
-            .map { it.path }
-            .sorted()
-
-        if (offenders.isNotEmpty()) {
-            throw GradleException(
-                buildString {
-                    appendLine("$target is an implementation module — only :app may depend on it.")
-                    appendLine("Depend on the contracts in :core:local / :core:remote instead.")
-                    appendLine("Offending modules:")
-                    offenders.forEach { appendLine("  - $it") }
-                }.trim(),
-            )
         }
     }
-}
 
-/**
- * Fails if a name in [dagpIgnoredSourceSets] is not a real Android source set of this module.
- *
- * DAGP resolves `ignoreSourceSet` against `CommonExtension.sourceSets` by exact string, so a typo or a
- * build type renamed in `BuildType` is not an error there — the entry silently stops matching and the
- * declarations it was meant to drop come back as unused-dependency advice. Runs only where the list is
- * actually applied: validating it on an ordinary build would put a new way to fail into every assemble,
- * test and IDE sync for no gain. Pure-JVM modules have no Android extension and return early.
- */
-fun Project.verifyDagpIgnoredSourceSets() {
-    if (!isTrimmedVariantRun) return
-    val sourceSets = extensions.findByType(CommonExtension::class.java)?.sourceSets?.names ?: return
-    val unknown = dagpIgnoredSourceSets.filterNot { it in sourceSets }
-    if (unknown.isEmpty()) return
+registerAppOnlyDependencyCheck(
+    taskName = "verifyDatasourceImplIsolation",
+    targets = setOf(":core:datasource-impl"),
+    contractHint = "Depend on the contracts in :core:local / :core:remote instead.",
+)
 
-    error(
-        "Dependency analysis ignores source sets that do not exist in $path: ${unknown.joinToString()}. " +
-            "Run `./gradlew $path:sourceSets` for the names this module has. Build types come from " +
-            "BuildType.kt in plugins/configuration; renaming one means updating `dagpIgnoredSourceSets` " +
-            "here and IGNORED_VARIANTS in .github/workflows/run_code_quality.yml together.",
-    )
-}
-
-/**
- * Fails if the CI-supplied variant list is malformed. No-op locally, where the property is absent.
- *
- * `Flags.androidIgnoredVariants()` splits the value on ',' without trimming, so a stray space after a
- * comma matches nothing and that variant is analysed after all — silently, and in the direction that
- * produces advice rather than hiding it. Only the shape is checked, never the exact contents: which
- * variants CI pays to analyse is a cost decision that is allowed to change without touching this file.
- */
-fun Project.verifyDagpIgnoredVariantsProperty() {
-    val raw = dagpIgnoredVariants ?: return
-    val android = extensions.findByType(CommonExtension::class.java) ?: return
-
-    val buildTypes = android.buildTypes.names.toList()
-    // Library variants are bare build types; only :app is flavored, where they are <flavor><BuildType>.
-    val known = buildTypes + android.productFlavors.names.flatMap { flavor ->
-        buildTypes.map { flavor + it.replaceFirstChar(Char::uppercaseChar) }
-    }
-    val problems = raw.split(",").filterNot { it.isNotBlank() && it == it.trim() && it in known }
-    if (problems.isEmpty()) return
-
-    error(
-        "-Pdependency.analysis.android.ignored.variants has entries that match no variant of $path: " +
-            "${problems.joinToString { "\"$it\"" }}. Known: ${known.sorted().joinToString()}. Blank " +
-            "entries and stray whitespace count — the value is split on ',' and compared literally. " +
-            "It is set by IGNORED_VARIANTS in .github/workflows/run_code_quality.yml.",
-    )
-}
+registerAppOnlyDependencyCheck(
+    taskName = "verifyPushProvisioningIsolation",
+    targets = setOf(
+        ":spend:push-provisioning:impl",
+        ":spend:push-provisioning:mock",
+        ":spend:push-provisioning:no-op",
+    ),
+    contractHint = "Depend on :spend:push-provisioning:api instead.",
+)
 
 subprojects {
     // Dependency Analysis (DAGP) registers `projectHealth`/`reason` on each module. In 3.x the
@@ -522,14 +451,10 @@ subprojects {
 
     // App module
     plugins.withId("com.android.application") {
-        // Both checks run in `afterEvaluate` because the build types they compare against are created
-        // by the `configuration` convention plugin, after AGP itself is applied.
+        // AGP registers variant tasks (testGoogleDebugUnitTest, testDebugUnitTest) in its own
+        // `afterEvaluate`, once build types and flavors are known, so `tasks.named` has to wait as well.
         afterEvaluate {
             unitTest.configure { dependsOn(tasks.named("testGoogleDebugUnitTest")) }
-            verifyDagpIgnoredSourceSets()
-            // :app is the only flavored module, so it is the only one that can validate the
-            // <flavor><BuildType> spellings the workflow passes.
-            verifyDagpIgnoredVariantsProperty()
         }
     }
 
@@ -537,7 +462,6 @@ subprojects {
     plugins.withId("com.android.library") {
         afterEvaluate {
             unitTest.configure { dependsOn(tasks.named("testDebugUnitTest")) }
-            verifyDagpIgnoredSourceSets()
         }
     }
 

@@ -3,6 +3,7 @@ package com.tangem.features.tangempay.withdraw.bank.recipients.model
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -16,6 +17,7 @@ import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.recipients.TangemPayBankWithdrawRecipientsComponent
 import com.tangem.features.tangempay.withdraw.bank.recipients.state.TangemPayBankWithdrawRecipientsUM.ContentUM
@@ -41,6 +43,7 @@ internal class TangemPayBankWithdrawRecipientsModelTest {
     private val markBankAccountUsedUseCase: MarkBankAccountUsedUseCase = mockk(relaxed = true)
     private val onRecipientSelected: (BankAccount) -> Unit = mockk(relaxed = true)
     private val onCloseFlow: () -> Unit = mockk(relaxed = true)
+    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
     private val basit = bankAccount(
@@ -68,6 +71,7 @@ internal class TangemPayBankWithdrawRecipientsModelTest {
             markBankAccountUsedUseCase,
             onRecipientSelected,
             onCloseFlow,
+            analytics,
         )
         coEvery { getBankAccountsUseCase(userWalletId) } returns listOf(basit, raxanax, saburo).right()
     }
@@ -225,6 +229,86 @@ internal class TangemPayBankWithdrawRecipientsModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN recipients step WHEN model created THEN SavedContactsScreenOpened is sent`() {
+        // Act
+        val model = createModel()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.SavedContactsScreenOpened()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN inactive search WHEN activated THEN SearchBarClicked is sent`() {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        model.uiState.value.search.onActiveChange(true)
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.SearchBarClicked()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN active search WHEN activated again THEN SearchBarClicked is sent once`() {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        model.uiState.value.search.onActiveChange(true)
+        model.uiState.value.search.onActiveChange(true)
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.SearchBarClicked()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN search deactivated WHEN activated again THEN SearchBarClicked is sent twice`() {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        model.uiState.value.search.onActiveChange(true)
+        model.uiState.value.search.onActiveChange(false)
+        model.uiState.value.search.onActiveChange(true)
+
+        // Assert
+        verify(exactly = 2) { analytics.send(TangemPayAnalyticsEvents.Offramp.SearchBarClicked()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN inactive search WHEN deactivated THEN no SearchBarClicked is sent`() {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        model.uiState.value.search.onActiveChange(false)
+
+        // Assert
+        verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Offramp.SearchBarClicked>()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN recipients WHEN recipient clicked THEN SavedContactOnContactsScreenClicked is sent`() {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        (model.uiState.value.content as ContentUM.Recipients).items.first().onClick()
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(TangemPayAnalyticsEvents.Offramp.SavedContactOnContactsScreenClicked())
+        }
+        model.onDestroy()
+    }
+
     private fun createModel(): TangemPayBankWithdrawRecipientsModel = TangemPayBankWithdrawRecipientsModel(
         paramsContainer = MutableParamsContainer(
             TangemPayBankWithdrawRecipientsComponent.Params(
@@ -238,5 +322,6 @@ internal class TangemPayBankWithdrawRecipientsModelTest {
         uiMessageSender = uiMessageSender,
         getBankAccountsUseCase = getBankAccountsUseCase,
         markBankAccountUsedUseCase = markBankAccountUsedUseCase,
+        analytics = analytics,
     )
 }

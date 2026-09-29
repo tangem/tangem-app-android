@@ -27,7 +27,6 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
     implementation(projects.core.analytics)
-    implementation(projects.core.configToggles)
     implementation(projects.core.navigation)
     implementation(projects.data.nft)
     implementation(projects.core.utils)
@@ -72,6 +71,7 @@ dependencies {
     implementation(projects.domain.transaction)
     implementation(projects.core.analytics.models)
     implementation(projects.domain.core)
+    implementation(projects.domain.visa)
 
 
     /** Compose libraries */

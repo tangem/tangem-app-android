@@ -261,5 +261,15 @@
         "info": "GaslessTransactions",
         "source": "https://github.com/tangem-developments/tangem-gasless-service",
         "name": "gaslessTransaction"
+    },
+    "0x6a761202": {
+        "info": "Safe",
+        "source": "https://github.com/safe-global/safe-smart-account/blob/main/contracts/Safe.sol",
+        "name": "execTransaction"
+    },
+    "0x82ad56cb": {
+        "info": "Multicall3",
+        "source": "https://github.com/mds1/multicall/blob/main/src/Multicall3.sol",
+        "name": "aggregate3"
     }
 }

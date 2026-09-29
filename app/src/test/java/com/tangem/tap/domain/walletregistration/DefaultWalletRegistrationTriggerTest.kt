@@ -1,6 +1,7 @@
 package com.tangem.tap.domain.walletregistration
 
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.test.core.TestAppCoroutineScope
 import io.mockk.Runs
 import io.mockk.clearMocks
@@ -62,6 +63,25 @@ internal class DefaultWalletRegistrationTriggerTest {
         // Assert
         coVerify(exactly = 1) { launcher.registerUnlockedMobileWallet(walletA) }
         coVerify(exactly = 1) { launcher.registerUnlockedMobileWallet(walletB) }
+    }
+
+    @Test
+    fun `GIVEN wallet unlocked with access code WHEN triggered THEN registers it with that code`() = runTest {
+        // Arrange
+        val trigger = DefaultWalletRegistrationTrigger(
+            launcher = launcher,
+            appCoroutineScope = TestAppCoroutineScope(this),
+        )
+        val wallet = mockk<UserWallet.Hot>()
+        val accessCode = HotAuth.Password("111111".toCharArray())
+        coEvery { launcher.registerUnlockedMobileWallet(any(), any()) } just Runs
+
+        // Act
+        trigger.onMobileWalletUnlockedWithAccessCode(wallet, accessCode)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { launcher.registerUnlockedMobileWallet(wallet, accessCode) }
     }
 
     @Test
