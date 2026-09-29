@@ -9,6 +9,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.hot.HotWalletAccessor
+import com.tangem.hot.sdk.exception.RecentBiometryUnavailableException
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.auth.AuthFeatureToggles
@@ -105,18 +106,64 @@ internal class WalletRegistrationLauncherTest {
     }
 
     @Test
-    fun `registerUnlockedMobileWallet establishes a context, registers, then clears the context`() = runTest {
+    fun `GIVEN NoPassword wallet WHEN registerUnlockedMobileWallet THEN opens it without auth and registers`() =
+        runTest {
+            // Arrange
+            every { authFeatureToggles.isBackendAuthenticationEnabled } returns true
+            val wallet = hotWallet(authType = HotWalletId.AuthType.NoPassword)
+            val hotWalletId = wallet.hotWalletId
+            coEvery { walletRegistrar.isRegistered(any()) } returns false
+            every { hotWalletAccessor.getContextualUnlock(hotWalletId) } returns null
+            coEvery { hotWalletAccessor.unlockContextual(hotWalletId) } returns mockk()
+
+            // Act
+            launcher.registerUnlockedMobileWallet(wallet)
+
+            // Assert
+            coVerify(exactly = 1) { hotWalletAccessor.unlockContextual(hotWalletId) }
+            coVerify(exactly = 0) { hotWalletAccessor.unlockContextualWithRecentBiometry(any()) }
+            coVerify(exactly = 1) { walletRegistrar.register(any(), any()) }
+            verify(exactly = 1) { hotWalletAccessor.clearContextualUnlock(hotWalletId) }
+        }
+
+    @Test
+    fun `GIVEN biometric unlock WHEN registerUnlockedMobileWallet THEN reuses it without a prompt and clears context`() =
+        runTest {
+            // Arrange
+            every { authFeatureToggles.isBackendAuthenticationEnabled } returns true
+            val wallet = hotWallet(authType = HotWalletId.AuthType.Biometry)
+            val hotWalletId = wallet.hotWalletId
+            coEvery { walletRegistrar.isRegistered(any()) } returns false
+            every { hotWalletAccessor.getContextualUnlock(hotWalletId) } returns null
+            coEvery { hotWalletAccessor.unlockContextualWithRecentBiometry(hotWalletId) } returns mockk()
+
+            // Act
+            launcher.registerUnlockedMobileWallet(wallet)
+
+            // Assert
+            coVerify(exactly = 1) { hotWalletAccessor.unlockContextualWithRecentBiometry(hotWalletId) }
+            coVerify(exactly = 0) { hotWalletAccessor.unlockContextual(any()) }
+            coVerify(exactly = 1) { walletRegistrar.register(any(), any()) }
+            verify(exactly = 1) { hotWalletAccessor.clearContextualUnlock(hotWalletId) }
+        }
+
+    @Test
+    fun `GIVEN unlock auth not reusable WHEN registerUnlockedMobileWallet THEN defers without a prompt`() = runTest {
+        // Arrange
         every { authFeatureToggles.isBackendAuthenticationEnabled } returns true
-        val wallet = hotWallet(authType = HotWalletId.AuthType.Biometry)
+        val wallet = hotWallet(authType = HotWalletId.AuthType.Password)
         val hotWalletId = wallet.hotWalletId
         coEvery { walletRegistrar.isRegistered(any()) } returns false
         every { hotWalletAccessor.getContextualUnlock(hotWalletId) } returns null
-        coEvery { hotWalletAccessor.unlockContextual(hotWalletId) } returns mockk()
+        coEvery { hotWalletAccessor.unlockContextualWithRecentBiometry(hotWalletId) } throws
+            RecentBiometryUnavailableException("Wallet is not biometry-protected")
 
+        // Act
         launcher.registerUnlockedMobileWallet(wallet)
 
-        coVerify(exactly = 1) { hotWalletAccessor.unlockContextual(hotWalletId) }
-        coVerify(exactly = 1) { walletRegistrar.register(any(), any()) }
+        // Assert
+        coVerify(exactly = 0) { hotWalletAccessor.unlockContextual(any()) }
+        coVerify(exactly = 0) { walletRegistrar.register(any(), any()) }
         verify(exactly = 1) { hotWalletAccessor.clearContextualUnlock(hotWalletId) }
     }
 
