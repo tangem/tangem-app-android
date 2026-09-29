@@ -105,13 +105,20 @@ class DefaultWalletAccountsFetcherTest {
             derivationIndex = 0,
             type = WalletAccountDTO.Type.JOINT,
         )
+        private val v1Response = createGetWalletAccountsResponse(userWalletId).copy(accounts = listOf(ownAccount))
+        private val v2Response = createGetWalletAccountsResponse(userWalletId).let { response ->
+            response.copy(
+                wallet = response.wallet.copy(totalJointAccounts = 1),
+                accounts = listOf(ownAccount, jointAccount),
+            )
+        }
 
         @Test
         fun `GIVEN toggle is off WHEN fetch THEN joint records do not reach the store`() = runTest {
             // Arrange
             every { jointAccountFeatureToggles.isJointAccountEnabled } returns false
 
-            val stored = arrangeFetch(accounts = listOf(ownAccount, jointAccount))
+            val stored = arrangeFetch(response = v2Response, requestETag = eTag)
 
             // Act
             fetcher.fetch(userWalletId)
@@ -125,7 +132,7 @@ class DefaultWalletAccountsFetcherTest {
             // Arrange
             every { jointAccountFeatureToggles.isJointAccountEnabled } returns true
 
-            val stored = arrangeFetch(accounts = listOf(ownAccount, jointAccount))
+            val stored = arrangeFetch(response = v2Response, requestETag = eTag)
 
             // Act
             fetcher.fetch(userWalletId)
@@ -136,13 +143,89 @@ class DefaultWalletAccountsFetcherTest {
                 .inOrder()
         }
 
-        private fun arrangeFetch(
-            accounts: List<WalletAccountDTO>,
-        ): CapturingSlot<suspend (GetWalletAccountsResponse?) -> GetWalletAccountsResponse?> {
-            val response = createGetWalletAccountsResponse(userWalletId).copy(accounts = accounts)
+        @Test
+        fun `GIVEN toggle is on and saved v2 document WHEN fetch THEN request is conditional`() = runTest {
+            // Arrange
+            every { jointAccountFeatureToggles.isJointAccountEnabled } returns true
+            accountsResponseStoreFlow.value = v2Response
 
+            arrangeFetch(response = v2Response, requestETag = eTag)
+
+            // Act
+            fetcher.fetch(userWalletId)
+
+            // Assert
+            coVerify(exactly = 1) { walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = eTag) }
+        }
+
+        @Test
+        fun `GIVEN toggle is on and saved v1 document WHEN fetch THEN request is unconditional`() = runTest {
+            // Arrange
+            every { jointAccountFeatureToggles.isJointAccountEnabled } returns true
+            accountsResponseStoreFlow.value = v1Response
+
+            val stored = arrangeFetch(response = v2Response, requestETag = null)
+
+            // Act
+            fetcher.fetch(userWalletId)
+
+            // Assert
+            Truth.assertThat(stored.captured.invoke(null)?.accounts)
+                .containsExactly(ownAccount, jointAccount)
+                .inOrder()
+        }
+
+        @Test
+        fun `GIVEN toggle is off and saved v2 document WHEN fetch THEN request is unconditional`() = runTest {
+            // Arrange
+            every { jointAccountFeatureToggles.isJointAccountEnabled } returns false
+            accountsResponseStoreFlow.value = v2Response
+
+            val stored = arrangeFetch(response = v1Response, requestETag = null)
+
+            // Act
+            fetcher.fetch(userWalletId)
+
+            // Assert
+            Truth.assertThat(stored.captured.invoke(null)?.accounts).containsExactly(ownAccount)
+        }
+
+        @Test
+        fun `GIVEN toggle is off and saved v2 document WHEN request fails THEN joint records leave the saved document`() =
+            runTest {
+                // Arrange
+                every { jointAccountFeatureToggles.isJointAccountEnabled } returns false
+                accountsResponseStoreFlow.value = v2Response
+
+                val error = ApiResponseError.NetworkException()
+                coEvery {
+                    walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = null)
+                } returns ApiResponse.Error(cause = error) as ApiResponse<GetWalletAccountsResponse>
+
+                val handled = slot<GetWalletAccountsResponse?>()
+                coEvery {
+                    fetchWalletAccountsErrorHandler.handle(
+                        error = error,
+                        userWalletId = userWalletId,
+                        savedAccountsResponse = captureNullable(handled),
+                        pushWalletAccounts = any(),
+                        storeWalletAccounts = any(),
+                    )
+                } answers { FetchResult(accountsResponse = handled.captured!!, error = error) }
+
+                // Act
+                runCatching { fetcher.fetch(userWalletId) }
+
+                // Assert
+                Truth.assertThat(handled.captured?.accounts).containsExactly(ownAccount)
+            }
+
+        private fun arrangeFetch(
+            response: GetWalletAccountsResponse,
+            requestETag: String?,
+        ): CapturingSlot<suspend (GetWalletAccountsResponse?) -> GetWalletAccountsResponse?> {
             coEvery {
-                walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = eTag)
+                walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = requestETag)
             } returns ApiResponse.Success(data = response, headers = mapOf(ETAG_HEADER to listOf(eTag)))
 
             val transform = slot<suspend (GetWalletAccountsResponse?) -> GetWalletAccountsResponse?>()
