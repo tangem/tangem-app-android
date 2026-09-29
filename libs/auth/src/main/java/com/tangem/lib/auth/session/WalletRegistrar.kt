@@ -84,7 +84,10 @@ interface WalletRegistrar {
      * Unbinds a previously registered wallet from the authenticated device. Persists the fresh
      * session tokens returned by the server and drops the local registration marker.
      */
-    suspend fun unregister(walletId: String): Either<WalletRegistrationError, Unit>
+    suspend fun unregister(
+        walletId: String,
+        shouldDeleteSocialRecovery: Boolean = false,
+    ): Either<WalletRegistrationError, Unit>
 
     /**
      * Drops ALL local registration markers (no network). Called when the device is re-registered: the
