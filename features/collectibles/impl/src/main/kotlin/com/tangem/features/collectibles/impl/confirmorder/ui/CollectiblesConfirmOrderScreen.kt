@@ -64,8 +64,14 @@ internal fun CollectiblesConfirmOrderScreen(state: CollectiblesConfirmOrderUM, m
             )
         },
         overlay = {
-            if (state is CollectiblesConfirmOrderUM.Content) {
-                ConfirmFooter(
+            when (state) {
+                is CollectiblesConfirmOrderUM.Loading -> CollectiblesConfirmOrderFooterSkeleton(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .onSizeChanged { size -> footerHeight = size.height },
+                )
+                is CollectiblesConfirmOrderUM.Error -> Unit
+                is CollectiblesConfirmOrderUM.Content -> ConfirmFooter(
                     order = state.order,
                     onConfirm = {
                         state.onApproveClick()
@@ -89,21 +95,30 @@ internal fun CollectiblesConfirmOrderScreen(state: CollectiblesConfirmOrderUM, m
         },
     ) { contentPadding ->
         when (state) {
-            is CollectiblesConfirmOrderUM.Loading -> Unit
-            is CollectiblesConfirmOrderUM.Error -> Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(contentPadding),
-                contentAlignment = Alignment.Center,
-            ) {
-                CollectiblesStatus(message = state.message, onReloadClick = state.onReloadClick)
-            }
+            is CollectiblesConfirmOrderUM.Loading -> CollectiblesConfirmOrderSkeleton(footerHeight = footerHeight)
+            is CollectiblesConfirmOrderUM.Error -> ConfirmOrderError(state = state, contentPadding = contentPadding)
             is CollectiblesConfirmOrderUM.Content -> ConfirmOrderContent(
                 order = state.order,
                 progress = progress,
                 footerHeight = footerHeight,
             )
         }
+    }
+}
+
+@Composable
+private fun ConfirmOrderError(state: CollectiblesConfirmOrderUM.Error, contentPadding: PaddingValues) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(contentPadding),
+        contentAlignment = Alignment.Center,
+    ) {
+        CollectiblesStatus(
+            message = state.message,
+            onReloadClick = state.onReloadClick,
+            isReloading = state.isReloading,
+        )
     }
 }
 
