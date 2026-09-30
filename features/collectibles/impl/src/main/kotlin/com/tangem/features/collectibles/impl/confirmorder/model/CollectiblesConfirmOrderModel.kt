@@ -48,21 +48,29 @@ internal class CollectiblesConfirmOrderModel @Inject constructor(
         loadMachine()
     }
 
-    private fun loadMachine() {
+    private fun loadMachine(skipCache: Boolean = false) {
         modelScope.launch {
             // Served from memory when opened from the catalogue
-            getMachineUseCase(externalId = params.externalId, skipCache = false)
+            getMachineUseCase(externalId = params.externalId, skipCache = skipCache)
                 .fold(
                     ifLeft = {
                         uiState.value = CollectiblesConfirmOrderUM.Error(
                             onBackClick = ::onBackClick,
                             message = resourceReference(R.string.collectibles_machine_load_error),
-                            onReloadClick = ::loadMachine,
+                            onReloadClick = ::reloadMachine,
                         )
                     },
                     ifRight = { machine -> observeBalance(machine) },
                 )
         }
+    }
+
+    private fun reloadMachine() {
+        val error = uiState.value as? CollectiblesConfirmOrderUM.Error ?: return
+        if (error.isReloading) return
+
+        uiState.value = error.copy(isReloading = true)
+        loadMachine(skipCache = true)
     }
 
     // The catalogue below in the stack keeps this flow subscribed, so the balance is replayed without a request
