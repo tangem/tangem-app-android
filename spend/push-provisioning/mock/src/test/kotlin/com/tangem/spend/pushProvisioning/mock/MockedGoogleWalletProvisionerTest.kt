@@ -70,6 +70,22 @@ internal class MockedGoogleWalletProvisionerTest {
                 expectedStatus = CardStatus.NotAdded,
             ),
             AddModel(
+                addResult = "rate_limited",
+                expectedResult = AddResult.Failed(
+                    reason = FailureReason.TOO_MANY_ATTEMPTS,
+                    description = "Mocked rate limit",
+                ),
+                expectedStatus = CardStatus.NotAdded,
+            ),
+            AddModel(
+                addResult = "unsupported",
+                expectedResult = AddResult.Failed(
+                    reason = FailureReason.UNSUPPORTED,
+                    description = "Mocked unsupported",
+                ),
+                expectedStatus = CardStatus.NotAdded,
+            ),
+            AddModel(
                 addResult = "failed",
                 expectedResult = AddResult.Failed(
                     reason = FailureReason.MEAWALLET_ERROR,

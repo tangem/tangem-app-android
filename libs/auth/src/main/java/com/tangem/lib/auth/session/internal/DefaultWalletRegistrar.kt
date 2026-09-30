@@ -17,7 +17,8 @@ import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.attestation.getAttestationTokenOrNull
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
-import com.tangem.lib.auth.performance.NonceRequestPerformanceTracker
+import com.tangem.lib.auth.performance.NonceRequestTracker
+import com.tangem.lib.auth.performance.NonceRequestType
 import com.tangem.lib.auth.session.AuthError
 import com.tangem.lib.auth.session.PreparedWalletRegistration
 import com.tangem.lib.auth.session.WalletNonce
@@ -41,7 +42,7 @@ internal class DefaultWalletRegistrar(
     private val attestationProvider: AttestationProvider,
     private val errorConverter: AuthErrorConverter,
     private val appPreferencesStore: AppPreferencesStore,
-    private val nonceRequestPerformanceTracker: NonceRequestPerformanceTracker,
+    private val nonceRequestTracker: NonceRequestTracker,
     // shared with the social binding client, which posts to the same endpoint — see the class doc
     private val locks: WalletRegistrationLocks,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -56,7 +57,7 @@ internal class DefaultWalletRegistrar(
                 either {
                     if (isAlreadyRegistered(walletId)) return@either
                     requireSession()
-                    val nonce = fetchNonce()
+                    val nonce = fetchNonce(NonceRequestType.MOBILE_WALLET)
                     val prepared = assemble(walletId, nonce, signer)
                     locks.sessionRotation.withLock {
                         handleRegisterResponse(prepared.walletId, authApi.registerWallet(prepared.request))
@@ -88,7 +89,7 @@ internal class DefaultWalletRegistrar(
         // so it can be prefetched before the wallet id is known.
         either {
             requireSession()
-            fetchNonce()
+            fetchNonce(NonceRequestType.COLD_WALLET)
         }
     }
 
@@ -127,17 +128,25 @@ internal class DefaultWalletRegistrar(
             }
         }
 
-    override suspend fun unregister(walletId: String): Either<WalletRegistrationError, Unit> =
-        withContext(dispatchers.io) {
-            locks.forWallet(walletId).withLock {
-                locks.sessionRotation.withLock {
-                    either { unregisterWallet(walletId) }
-                }
+    override suspend fun unregister(
+        walletId: String,
+        shouldDeleteSocialRecovery: Boolean,
+    ): Either<WalletRegistrationError, Unit> = withContext(dispatchers.io) {
+        locks.forWallet(walletId).withLock {
+            locks.sessionRotation.withLock {
+                either { unregisterWallet(walletId, shouldDeleteSocialRecovery) }
             }
         }
+    }
 
-    private suspend fun Raise<WalletRegistrationError>.unregisterWallet(walletId: String) {
-        val request = WalletUnregisterRequest(walletId = walletId)
+    private suspend fun Raise<WalletRegistrationError>.unregisterWallet(
+        walletId: String,
+        shouldDeleteSocialRecovery: Boolean,
+    ) {
+        val request = WalletUnregisterRequest(
+            walletId = walletId,
+            shouldDeleteSocialRecovery = true.takeIf { shouldDeleteSocialRecovery },
+        )
         when (val response = authApi.unregisterWallet(request)) {
             is ApiResponse.Success -> {
                 try {
@@ -200,14 +209,14 @@ internal class DefaultWalletRegistrar(
         }
     }
 
-    private suspend fun Raise<WalletRegistrationError>.fetchNonce(): WalletNonce {
+    private suspend fun Raise<WalletRegistrationError>.fetchNonce(type: NonceRequestType): WalletNonce {
         TangemLogger.i("Requesting wallet nonce")
 
         val devicePublicKey = deviceKeyManager.getPublicKeyEncoded().getOrNull()
             ?: raise(WalletRegistrationError.DeviceKeyUnavailable)
         val devicePublicKeyBase64 = devicePublicKey.toBase64NoWrap()
 
-        val nonceResponse = nonceRequestPerformanceTracker.track {
+        val nonceResponse = nonceRequestTracker.track(type) {
             authApi.requestWalletNonce(NonceApiRequest(devicePublicKey = devicePublicKeyBase64))
         }
         val cipheredNonce = when (nonceResponse) {
