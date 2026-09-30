@@ -191,6 +191,22 @@ class DefaultWalletAccountsFetcherTest {
         }
 
         @Test
+        fun `GIVEN toggle is off and saved local document with joint records WHEN fetch THEN request is unconditional`() =
+            runTest {
+                // Arrange
+                every { jointAccountFeatureToggles.isJointAccountEnabled } returns false
+                accountsResponseStoreFlow.value = v2Response.copy(wallet = v2Response.wallet.copy(totalJointAccounts = null))
+
+                val stored = arrangeFetch(response = v1Response, requestETag = null)
+
+                // Act
+                fetcher.fetch(userWalletId)
+
+                // Assert
+                Truth.assertThat(stored.captured.invoke(null)).isEqualTo(v1Response)
+            }
+
+        @Test
         fun `GIVEN toggle is off and saved v2 document WHEN fetch THEN v1 shape is stored before the request`() =
             runTest {
                 // Arrange

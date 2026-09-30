@@ -62,9 +62,9 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
 
     private val userTokensBackwardCompatibility = UserTokensBackwardCompatibility()
 
-    /** `v1` has no joint counter at all */
+    /** `v1` has neither the joint counter nor typed records; a document written locally has the records but no counter */
     private val GetWalletAccountsResponse.isJointAware: Boolean
-        get() = wallet.totalJointAccounts != null
+        get() = wallet.totalJointAccounts != null || accounts.any(WalletAccountDTO::isJoint)
 
     override suspend fun fetch(userWalletId: UserWalletId): GetWalletAccountsResponse {
         val savedAccountsResponse = getAccountsResponseStore(userWalletId = userWalletId).getSyncOrNull()
