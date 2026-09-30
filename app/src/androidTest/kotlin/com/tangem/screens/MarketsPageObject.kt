@@ -25,6 +25,11 @@ class MarketsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         useUnmergedTree = true
     }
 
+    val tokensList: KNode = child {
+        hasTestTag(MarketsTestTags.TOKENS_LIST_ITEM)
+        useUnmergedTree = true
+    }
+
     val addButton: KNode = child {
         hasTestTag(BaseButtonTestTags.TEXT)
         hasText(getResourceString(R.string.common_add))
