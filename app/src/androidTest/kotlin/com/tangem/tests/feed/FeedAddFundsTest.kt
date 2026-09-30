@@ -243,7 +243,7 @@ class FeedAddFundsTest : BaseTestCase() {
                 expandFeed()
             }
             step("Assert markets feed is expanded") {
-                flakySafely { onMarketsScreen { tokensList.assertIsDisplayed() } }
+                flakySafely { onMarketsScreen { feedContent.assertIsDisplayed() } }
             }
             step("Assert 'Add account' tile is not displayed") {
                 onMarketsScreen { addAccountBanner.assertDoesNotExist() }
