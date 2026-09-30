@@ -621,6 +621,60 @@ fun BaseTestCase.chooseWithdrawReceiveToken(tokenName: String) {
     }
 }
 
+/**
+ * Starts and ends on the Payment account; expects the first-time swap stories to be disabled. The token
+ * selector keeps an expanded account expanded for the whole app session, so only the first call in a
+ * session passes [expandPaymentAccount].
+ */
+fun BaseTestCase.checkTangemPayWithdrawableOnlyOnNetwork(
+    tokenName: String,
+    networkName: String,
+    otherNetworkNames: List<String>,
+    expandPaymentAccount: Boolean,
+) {
+    val polygonNetwork = "Polygon"
+    val allFilterLabel = getResourceString(CoreResR.string.common_all)
+
+    step("Assert 'Withdraw' button is enabled") {
+        onTangemPayMainScreen { withdrawButtonControl.assertIsEnabled() }
+    }
+    step("Click on 'Withdraw' action chip") {
+        onTangemPayMainScreen { withdrawButton.clickWithAssertion() }
+    }
+    step("Assert 'Withdraw' screen is displayed") {
+        awaitSuccess { onSwapTokenScreen { withdrawTitle.assertIsDisplayed() } }
+    }
+    if (expandPaymentAccount) {
+        openWithdrawSourceTokenSelector()
+    } else {
+        step("Click on the source token in the 'From' block") {
+            onSwapTokenScreen { swapSelectTokenIcon.clickWithAssertion() }
+        }
+    }
+    step("Assert only '$tokenName' on '$networkName' is displayed") {
+        onSwapSelectTokenScreen {
+            awaitSuccess { tokenWithNameAndNetwork(tokenName, networkName).assertIsDisplayed() }
+            (otherNetworkNames + polygonNetwork).forEach { tokenWithNameAndNetwork(tokenName, it).assertDoesNotExist() }
+        }
+    }
+    selectBalanceFilter(allFilterLabel)
+    step("Assert '$tokenName' on '$polygonNetwork' and on '$networkName' are displayed") {
+        onSwapSelectTokenScreen {
+            awaitSuccess { tokenWithNameAndNetwork(tokenName, polygonNetwork).assertIsDisplayed() }
+            tokenWithNameAndNetwork(tokenName, networkName).assertIsDisplayed()
+        }
+    }
+    step("Click on 'Close' button on the token selector") {
+        onSwapSelectTokenScreen { closeButton.clickWithAssertion() }
+    }
+    step("Click on 'Close' button on the 'Withdraw' screen") {
+        onSwapTokenScreen { closeButton.clickWithAssertion() }
+    }
+    step("Assert payment account balance is displayed") {
+        awaitSuccess { onTangemPayMainScreen { balance.assertIsDisplayed() } }
+    }
+}
+
 /** On the withdraw Swap screen, opens the source token selector and expands the 'Payment' account. */
 fun BaseTestCase.openWithdrawSourceTokenSelector() {
     step("Click on the source token in the 'From' block") {
