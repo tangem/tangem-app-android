@@ -21,13 +21,10 @@ import org.junit.jupiter.params.ParameterizedTest
 internal class BankOfframpOrderRequestConverterTest {
 
     @Test
-    fun `GIVEN saved recipient WHEN convert THEN the bank account id sent with the selected rail`() {
+    fun `GIVEN saved recipient WHEN convert THEN only the bank account id sent`() {
         // Act
         val actual = BankOfframpOrderRequestConverter.convert(
-            request = orderRequest(
-                rail = BankRail.ACH,
-                recipient = BankOfframpRecipient.Saved(bankAccountId = "acc-1"),
-            ),
+            request = orderRequest(recipient = BankOfframpRecipient.Saved(bankAccountId = "acc-1")),
             idempotencyKey = KEY,
         )
 
@@ -39,7 +36,6 @@ internal class BankOfframpOrderRequestConverterTest {
                     amountInCents = 10_000L,
                     tokenContractAddress = TOKEN_ADDRESS,
                     bankAccountId = "acc-1",
-                    rail = "ACH",
                 ),
                 idempotencyKey = KEY,
             ).right(),

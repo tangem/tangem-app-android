@@ -731,9 +731,9 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     }
 
     @Test
-    fun `GIVEN summary WHEN rail row tapped THEN RailSelectorClicked is sent and the amount step opened`() {
+    fun `GIVEN new recipient WHEN rail row tapped THEN RailSelectorClicked is sent and the amount step opened`() {
         // Arrange
-        val model = createModel()
+        val model = createModel(newRecipientDraft())
 
         // Act
         summary(model).transfer?.route?.onClick?.invoke()
@@ -750,7 +750,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     fun `GIVEN request in flight WHEN rail row tapped THEN no RailSelectorClicked is sent`() {
         // Arrange
         coEvery { createBankOfframpOrderUseCase(userWalletId, any(), any()) } coAnswers { awaitCancellation() }
-        val model = createModel()
+        val model = createModel(newRecipientDraft())
         val onRailClick = requireNotNull(summary(model).transfer?.route?.onClick)
         summary(model).onSendClick()
 

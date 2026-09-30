@@ -23,7 +23,7 @@ internal data class AmountState(
 ) {
 
     fun resolve(draft: BankWithdrawDraft, options: BankWithdrawOptions): AmountSelection {
-        val preferredRail = selectedRail ?: draft.destination?.rail
+        val preferredRail = draft.recipient?.details?.rail ?: selectedRail ?: draft.destination?.rail
         val destination = options.destinations.firstOrNull { it.rail == preferredRail } ?: options.destinations.first()
         val preferredSourceId = selectedSourceId ?: draft.source?.id
         val source = options.sources.firstOrNull { it.id == preferredSourceId } ?: options.sources.first()

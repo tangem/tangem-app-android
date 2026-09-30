@@ -23,6 +23,7 @@ import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTa
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import com.tangem.features.tangempay.withdraw.bank.offrampDestination
 import com.tangem.features.tangempay.withdraw.bank.paymentToken
+import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.mockk
@@ -89,6 +90,48 @@ internal class TangemPayBankWithdrawAmountModelTest {
 
         // Assert
         assertThat(model.uiState.value.route.onClick).isNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN saved entry before its recipient loads WHEN model created THEN route row not clickable`() {
+        // Act
+        val model = createModel(draft = BankWithdrawDraft(entry = BankWithdrawEntry.Saved("acc-1")))
+
+        // Assert
+        assertThat(model.uiState.value.route.onClick).isNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN saved recipient on wire WHEN model created THEN wire shown and route row not clickable`() {
+        // Arrange
+        val draft = BankWithdrawDraft(entry = BankWithdrawEntry.SeeAll, recipient = bankAccount(rail = BankRail.WIRE))
+
+        // Act
+        val model = createModel(draft = draft)
+
+        // Assert
+        val route = model.uiState.value.route
+        assertThat(route.rail).isEqualTo(BankRail.WIRE)
+        assertThat(route.onClick).isNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN wire picked WHEN saved recipient on ach selected THEN ach shown and route row not clickable`() {
+        // Arrange
+        val model = createModel()
+        model.uiState.value.route.onClick?.invoke()
+        (model.uiState.value.sheet as SheetUM.Routes).items.last().onClick()
+
+        // Act
+        draftFlow.value = draftFlow.value.copy(recipient = bankAccount(rail = BankRail.ACH))
+
+        // Assert
+        val route = model.uiState.value.route
+        assertThat(route.rail).isEqualTo(BankRail.ACH)
+        assertThat(route.onClick).isNull()
         model.onDestroy()
     }
 

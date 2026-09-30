@@ -322,9 +322,9 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
     }
 
     @Test
-    fun `GIVEN not sending WHEN rail row tapped THEN the rail callback fires`() {
+    fun `GIVEN new recipient not sending WHEN rail row tapped THEN the rail callback fires`() {
         // Arrange
-        val actual = factory.create(draft = savedDraft(), state = PreviewState()) as Summary
+        val actual = factory.create(draft = newRecipientDraft(), state = PreviewState()) as Summary
 
         // Act
         actual.transfer?.route?.onClick?.invoke()
@@ -340,7 +340,16 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
         val state = PreviewState(send = SendState.CreatingOrder)
 
         // Act
-        val actual = factory.create(draft = savedDraft(), state = state) as Summary
+        val actual = factory.create(draft = newRecipientDraft(), state = state) as Summary
+
+        // Assert
+        assertThat(actual.transfer?.route?.onClick).isNull()
+    }
+
+    @Test
+    fun `GIVEN saved recipient not sending WHEN create THEN the rail row is read-only`() {
+        // Act
+        val actual = factory.create(draft = savedDraft(), state = PreviewState()) as Summary
 
         // Assert
         assertThat(actual.transfer?.route?.onClick).isNull()

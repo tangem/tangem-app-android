@@ -56,7 +56,7 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
     }
 
     fun onRecipientSelected(account: BankAccount) {
-        draft.update { it.copy(recipient = account) }
+        draft.update { it.withSavedRecipient(account) }
     }
 
     /**
@@ -68,7 +68,7 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
         modelScope.launch {
             markBankAccountUsedUseCase(userWalletId = params.userWalletId, bankAccountId = account.id)
         }
-        draft.update { it.copy(recipient = account, newRecipient = NewRecipientDraft.forEntry(it.entry)) }
+        draft.update { it.withSavedRecipient(account).copy(newRecipient = NewRecipientDraft.forEntry(it.entry)) }
     }
 
     fun onTransferTypeSelected(isThirdParty: Boolean) {
@@ -141,6 +141,13 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
         val entry = params.entry as? BankWithdrawEntry.Saved ?: return
         accounts.firstOrNull { it.id == entry.bankAccountId }?.let(::onRecipientSelected)
     }
+
+    private fun BankWithdrawDraft.withSavedRecipient(account: BankAccount): BankWithdrawDraft = copy(
+        recipient = account,
+        destination = destination?.let { current ->
+            params.options.value.destinations.firstOrNull { it.rail == account.details.rail } ?: current
+        },
+    )
 }
 
 private const val TAG = "TangemPayBankWithdrawModel"
