@@ -95,7 +95,7 @@ private fun SectionsContent(state: MarketCategorySelectorUM.ContentUM.Content, m
             item(key = "loadingMore") { LoadingMoreRow() }
         }
 
-        item(key = "footerSpacer") { SpacerH(128.dp) }
+        item(key = "footerSpacer") { FooterSpacer() }
     }
 
     InfiniteListHandler(
@@ -187,6 +187,16 @@ private fun SectionHeader(title: TextReference, modifier: Modifier = Modifier) {
     )
 }
 
+/** Keeps the last rows scrollable above the [Footer], which sits over the list including the navigation bar inset. */
+@Composable
+private fun FooterSpacer() {
+    Spacer(
+        modifier = Modifier
+            .navigationBarsPadding()
+            .height(128.dp),
+    )
+}
+
 /**
  * Always present, so a filter arrived at with a selection can still be changed and applied; both
  * actions only mean something once the draft diverges from what is already applied.
@@ -205,7 +215,9 @@ private fun Footer(state: MarketCategorySelectorFooterUM, isEnabled: Boolean, mo
                 modifier = Modifier.matchParentSize(),
             )
             Column(
-                modifier = Modifier.padding(all = 16.dp),
+                modifier = Modifier
+                    .navigationBarsPadding()
+                    .padding(all = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(space = 8.dp),
             ) {
                 TangemButton(

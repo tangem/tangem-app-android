@@ -18,9 +18,11 @@ import com.tangem.core.ui.ds2.tabnavigation.TangemTabItem
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.feed.crypto.impl.R
 import com.tangem.features.feed.crypto.ui.state.CryptoFeedTabUM
 import com.tangem.features.feed.crypto.ui.state.MarketPulseIntervalUM
 import com.tangem.features.feed.crypto.ui.state.MarketPulseListUM
@@ -161,6 +163,7 @@ private fun MarketPulseControls(
                 state = categoriesFilter,
                 variant = TangemFilterItem.Variant.Transparent,
                 modifier = Modifier.weight(weight = 1f, fill = false),
+                clearContentDescription = stringResourceSafe(R.string.common_reset),
             )
         } else {
             Spacer(modifier = Modifier.weight(weight = 1f))
@@ -176,16 +179,27 @@ private fun IntervalFilter(intervalMenu: MarketPulseIntervalUM, modifier: Modifi
     val hapticManager = LocalHapticManager.current
 
     Box(modifier = modifier) {
+        val onClick = {
+            hapticManager.perform(TangemHapticEffect.View.ContextClick)
+            isMenuExpanded = true
+        }
         TangemFilterItem(
             variant = TangemFilterItem.Variant.Transparent,
-            state = TangemFilterItemUM.Inactive(
-                id = "interval",
-                label = intervalMenu.selected.intervalTitle(),
-                onClick = {
-                    hapticManager.perform(TangemHapticEffect.View.ContextClick)
-                    isMenuExpanded = true
-                },
-            ),
+            state = if (intervalMenu.selected == intervalMenu.default) {
+                TangemFilterItemUM.Inactive(
+                    id = INTERVAL_FILTER_ID,
+                    label = intervalMenu.selected.intervalTitle(),
+                    onClick = onClick,
+                )
+            } else {
+                TangemFilterItemUM.Active(
+                    id = INTERVAL_FILTER_ID,
+                    value = intervalMenu.selected.intervalTitle(),
+                    onClick = onClick,
+                    onClearClick = { intervalMenu.onOptionClick(intervalMenu.default) },
+                )
+            },
+            clearContentDescription = stringResourceSafe(R.string.common_reset),
         )
         MarketPulseIntervalMenu(
             um = intervalMenu,
@@ -197,3 +211,5 @@ private fun IntervalFilter(intervalMenu: MarketPulseIntervalUM, modifier: Modifi
         )
     }
 }
+
+private const val INTERVAL_FILTER_ID = "interval"
