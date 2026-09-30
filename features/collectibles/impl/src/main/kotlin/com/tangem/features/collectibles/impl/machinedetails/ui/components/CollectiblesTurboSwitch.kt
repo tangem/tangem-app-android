@@ -1,5 +1,6 @@
 package com.tangem.features.collectibles.impl.machinedetails.ui.components
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -37,6 +38,10 @@ internal fun CollectiblesTurboSwitch(
         targetValue = if (isChecked) 18.dp else 2.dp,
         label = "TurboThumbOffset",
     )
+    val trackColor by animateColorAsState(
+        targetValue = if (isChecked) TangemTheme.colors3.bg.status.info else TangemTheme.colors3.bg.opaque.secondary,
+        label = "TurboTrackColor",
+    )
 
     Box(
         modifier = modifier
@@ -48,7 +53,7 @@ internal fun CollectiblesTurboSwitch(
                 onValueChange = onCheckedChange,
             )
             .size(width = 48.dp, height = 20.dp)
-            .background(color = TangemTheme.colors3.bg.opaque.secondary, shape = RoundedCornerShape(100.dp)),
+            .background(color = trackColor, shape = RoundedCornerShape(100.dp)),
         contentAlignment = Alignment.CenterStart,
     ) {
         Box(

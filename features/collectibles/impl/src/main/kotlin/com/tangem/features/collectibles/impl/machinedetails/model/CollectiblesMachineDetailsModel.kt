@@ -108,15 +108,15 @@ internal class CollectiblesMachineDetailsModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private fun loadMachine() {
+    private fun loadMachine(skipCache: Boolean = false) {
         modelScope.launch {
-            getMachineUseCase(externalId = params.externalId)
+            getMachineUseCase(externalId = params.externalId, skipCache = skipCache)
                 .fold(
                     ifLeft = {
                         uiState.value = CollectiblesMachineDetailsUM.Error(
                             onBackClick = ::onBackClick,
                             message = resourceReference(R.string.collectibles_machine_load_error),
-                            onReloadClick = ::loadMachine,
+                            onReloadClick = ::reloadMachine,
                         )
                     },
                     ifRight = { machine ->
@@ -132,6 +132,14 @@ internal class CollectiblesMachineDetailsModel @Inject constructor(
                     },
                 )
         }.saveIn(machineJob)
+    }
+
+    private fun reloadMachine() {
+        val error = uiState.value as? CollectiblesMachineDetailsUM.Error ?: return
+        if (error.isReloading) return
+
+        uiState.value = error.copy(isReloading = true)
+        loadMachine(skipCache = true)
     }
 
     // Driven by state, not by the load: a load landing after onPause must not poll behind a stopped screen
