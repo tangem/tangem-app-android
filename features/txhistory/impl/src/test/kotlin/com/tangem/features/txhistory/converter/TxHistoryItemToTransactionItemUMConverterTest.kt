@@ -1,5 +1,6 @@
 package com.tangem.features.txhistory.converter
 
+import androidx.annotation.StringRes
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.account.getResId
 import com.tangem.common.ui.account.getUiColor
@@ -35,10 +36,13 @@ import com.tangem.features.txhistory.model.TxHistoryLookupContext
 import com.tangem.features.txhistory.model.WalletInfo
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.utils.StringsSigns
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.mockk
 import io.mockk.verify
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -288,6 +292,87 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         assertThat(result.title).isEqualTo(TextReference.Str("YieldSend"))
         assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_document_20))
         assertThat(result.amount).isEqualTo("0.00")
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class YieldModeNetworkFee {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun convert(model: YieldModeFeeModel) {
+            // Arrange
+            val tx = txInfo(
+                type = TransactionType.Operation(name = "SupplyTopUp", recognized = model.recognized),
+                amount = BigDecimal.ZERO,
+                isOutgoing = true,
+                interactionAddressType = TxInfo.InteractionAddressType.Contract(EXTERNAL_ADDRESS),
+            ).copy(fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.000015"), decimals = 18))
+
+            // Act
+            val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+            // Assert
+            assertThat(result.title).isEqualTo(resRef(R.string.common_network_fee_title))
+            assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_percent_20))
+            assertThat(result.amount).isEqualTo("${StringsSigns.MINUS}0.000015")
+            assertThat(result.subtitle).isEqualTo(ContentSubtitle.Plain(resRef(model.expectedSubtitle)))
+        }
+
+        /** The yield operation happened in the token; the coin only paid its gas, and the subtitle says which mode. */
+        private fun provideTestModels() = listOf(
+            YieldModeFeeModel(
+                recognized = TransactionType.YieldSupply.Enter(address = EXTERNAL_ADDRESS),
+                expectedSubtitle = R.string.transaction_history_fee_for_yield_mode_activation,
+            ),
+            YieldModeFeeModel(
+                recognized = TransactionType.YieldSupply.Topup,
+                expectedSubtitle = R.string.transaction_history_fee_for_yield_mode_top_up,
+            ),
+            YieldModeFeeModel(
+                recognized = TransactionType.YieldSupply.Exit(address = EXTERNAL_ADDRESS),
+                expectedSubtitle = R.string.transaction_history_fee_for_yield_mode_deactivation,
+            ),
+            YieldModeFeeModel(
+                recognized = TransactionType.YieldSupply.DeployContract(address = EXTERNAL_ADDRESS),
+                expectedSubtitle = R.string.transaction_history_fee_for_yield_mode_deployment,
+            ),
+            YieldModeFeeModel(
+                recognized = TransactionType.YieldSupply.InitializeToken(address = EXTERNAL_ADDRESS),
+                expectedSubtitle = R.string.transaction_history_fee_for_yield_mode_initialization,
+            ),
+            YieldModeFeeModel(
+                recognized = TransactionType.YieldSupply.ReactivateToken(address = EXTERNAL_ADDRESS),
+                expectedSubtitle = R.string.transaction_history_fee_for_yield_mode_reactivation,
+            ),
+        )
+    }
+
+    internal data class YieldModeFeeModel(
+        val recognized: TransactionType.YieldSupply,
+        @StringRes val expectedSubtitle: Int,
+    )
+
+    @Test
+    fun `GIVEN fee-only operation recognized as a yield Send WHEN convert THEN subtitle keeps the method name`() {
+        // Arrange — a Send changed no mode, so there is nothing to name but the method itself
+        val tx = txInfo(
+            type = TransactionType.Operation(
+                name = "YieldSend",
+                recognized = TransactionType.YieldSupply.Send(isYieldSupplyWithdraw = true),
+            ),
+            amount = BigDecimal.ZERO,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(EXTERNAL_ADDRESS),
+        ).copy(fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.000015"), decimals = 18))
+
+        // Act
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        // Assert
+        assertThat(result.subtitle).isEqualTo(
+            ContentSubtitle.Plain(resRef(R.string.transaction_history_fee_for_operation_name, listOf("YieldSend"))),
+        )
     }
 
     @Test
