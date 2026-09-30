@@ -40,7 +40,7 @@ internal class PolymarketPositionDetailsConverterTest {
         )
         assertThat(actual.metrics).isEqualTo(
             PolymarketPositionDetailsUM.Metrics(
-                quantity = stringReference("28.0898"),
+                quantity = stringReference("28.08"),
                 priceChanges = stringReference("35.6¢ → 35.5¢"),
                 unrealizedPnl = stringReference("-$0.03"),
                 realizedPnl = stringReference("+$12.00"),
