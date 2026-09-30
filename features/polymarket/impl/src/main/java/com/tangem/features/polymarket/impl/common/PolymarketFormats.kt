@@ -51,7 +51,12 @@ internal fun BigDecimal.formatSlippagePercent(): String = movePointLeft(2).forma
 }
 
 /** Formats a share count the way the result screen states it: grouped, fraction only when present, e.g. "4,612.54". */
-internal fun BigDecimal.formatPolymarketShares(): String = format { simple(decimals = PolymarketConst.SHARES_DECIMALS) }
+internal fun BigDecimal.formatPolymarketShares(): String = format { simple(decimals = 2) }
+
+/** Formats a held position without rounding it, so a remainder below a cent stays visible, e.g. "15.1663". */
+internal fun BigDecimal.formatPolymarketPositionShares(): String = format {
+    simple(decimals = PolymarketConst.SHARES_DECIMALS)
+}
 
 /** @return a whole-percent share the way the calculator buttons state it, e.g. "25%". */
 internal fun Int.formatPolymarketPercent(): String = BigDecimal(this).movePointLeft(2).format {

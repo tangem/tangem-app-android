@@ -145,8 +145,9 @@ Status receives the result, market header and position id as route data and owns
   position).
 - **Shares.** `SharesCalculator`: the sellable size is the whole position at the on-chain share precision
   (`PolymarketConst.SHARES_DECIMALS` = 6) — it is not floored onto the 2-decimal amount grid, because the BFF
-  quotes the sale of a whole position at the position's own precision (a sub-cent whole position included);
-  presets and ± steps move in whole shares with a floor of one share
+  quotes the sale of a whole position at the position's own precision (a sub-cent whole position included).
+  A held position renders unrounded (`formatPolymarketPositionShares`), a trade's shares at 2 decimals
+  (`formatPolymarketShares`); presets and ± steps move in whole shares with a floor of one share
   (or the whole position when smaller), and 100 % is the position itself, so a full close reaches the
   last fraction.
 - **Slippage.** Default 3 %, range 0.1–30 % (`SlippagePickerUM`); a fill at the worst-case price counts as filled.
