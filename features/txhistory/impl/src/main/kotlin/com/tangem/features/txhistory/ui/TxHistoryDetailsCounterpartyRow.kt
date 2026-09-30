@@ -28,6 +28,7 @@ import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.ds.image.TangemDeviceIcon
 import com.tangem.core.ui.ds2.row.TangemRow
+import com.tangem.core.ui.ds2.row.TangemRowAddressText
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
@@ -38,6 +39,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.CounterpartyAvatar
+import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.CounterpartyTitle
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.CounterpartyUM
 
 /**
@@ -66,7 +68,14 @@ internal fun TxHistoryDetailsCounterpartyRow(counterparty: CounterpartyUM, modif
             startSlot = { CounterpartyAvatar(counterparty.avatar) },
             titleSlot = { TangemRowText(text = counterparty.label, role = TangemRowTextRole.Subtitle) },
             subtitleSlot = {
-                TangemRowText(text = counterparty.title, role = TangemRowTextRole.Title)
+                when (val title = counterparty.title) {
+                    is CounterpartyTitle.Name -> TangemRowText(text = title.value, role = TangemRowTextRole.Title)
+                    is CounterpartyTitle.Address -> TangemRowAddressText(
+                        address = title.value,
+                        role = TangemRowTextRole.Title,
+                        modifier = Modifier.weight(weight = 1f, fill = false),
+                    )
+                }
                 counterparty.titleIcon?.let { icon ->
                     CurrencyIcon(
                         state = icon,
@@ -144,7 +153,7 @@ private fun TxHistoryDetailsCounterpartyRowPreview() {
             TxHistoryDetailsCounterpartyRow(
                 counterparty = CounterpartyUM(
                     label = stringReference("Recipient"),
-                    title = stringReference("33Bd321fS...ga21412B"),
+                    title = CounterpartyTitle.Address("33Bd321fS2p2oMzEcHKNK1cEZga21412B"),
                     avatar = CounterpartyAvatar.Address(rawAddress = "0xfb6916095ca1df60bb79ce92ce3ea74c37c5d359"),
                     onCopyClick = {},
                 ),
@@ -152,7 +161,7 @@ private fun TxHistoryDetailsCounterpartyRowPreview() {
             TxHistoryDetailsCounterpartyRow(
                 counterparty = CounterpartyUM(
                     label = stringReference("Recipient"),
-                    title = stringReference("Danil Kolbasenko"),
+                    title = CounterpartyTitle.Name(stringReference("Danil Kolbasenko")),
                     avatar = CounterpartyAvatar.Account(
                         name = stringReference("Danil Kolbasenko"),
                         icon = AccountIconUM.CryptoPortfolio(value = Icon.Letter, color = IconColor.CandyGrapeFizz),
@@ -163,7 +172,7 @@ private fun TxHistoryDetailsCounterpartyRowPreview() {
             TxHistoryDetailsCounterpartyRow(
                 counterparty = CounterpartyUM(
                     label = stringReference("Recipient"),
-                    title = stringReference("Tangem wallet"),
+                    title = CounterpartyTitle.Name(stringReference("Tangem wallet")),
                     avatar = CounterpartyAvatar.Wallet(
                         deviceIconUM = DeviceIconUM.Card(mainColor = Color(0xFF1E1E1E), secondColor = null),
                     ),
@@ -173,7 +182,7 @@ private fun TxHistoryDetailsCounterpartyRowPreview() {
             TxHistoryDetailsCounterpartyRow(
                 counterparty = CounterpartyUM(
                     label = stringReference("Recipient"),
-                    title = stringReference("Binance"),
+                    title = CounterpartyTitle.Name(stringReference("Binance")),
                     avatar = CounterpartyAvatar.Contact(
                         name = "Binance",
                         icon = AccountIconUM.CryptoPortfolio(

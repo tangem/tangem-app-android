@@ -40,12 +40,12 @@ import com.tangem.features.txhistory.model.TxHistoryLookupContext
 import com.tangem.features.txhistory.model.resolveExpressLegOwner
 import com.tangem.features.txhistory.model.resolveSwapLegOwners
 import com.tangem.utils.StringsSigns
-import com.tangem.utils.toBriefAddressFormat
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 import java.math.RoundingMode
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * Converts an [ExpressTx] (swap / onramp) to the [TxHistoryDetailsUM.TwoAssets] details card. The `from`/`to` legs come
@@ -62,6 +62,7 @@ internal class ExpressTxToDetailsUMConverter(
     private val refundCurrency: CryptoCurrency? = null,
     private val onLearnMoreAboutRefundsClick: () -> Unit = {},
     private val onGoToRefundedTokenClick: (CryptoCurrency) -> Unit = {},
+    private val nowMillis: () -> Long = System::currentTimeMillis,
 ) {
 
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
@@ -83,6 +84,7 @@ internal class ExpressTxToDetailsUMConverter(
         val fromOwner = legOwners.from?.toAssetOwnerUM()
         val toOwner = legOwners.to?.toAssetOwnerUM()
         val refundToken = refundCurrency.takeIf { swap.tx.status == ExpressExchangeStatus.Refunded }
+        val isLongRunning = swap.tx.isLongRunning(nowMillis())
         return TxHistoryDetailsUM.TwoAssets(
             header = TxHistoryDetailsUM.HeaderUM(
                 icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
@@ -110,7 +112,8 @@ internal class ExpressTxToDetailsUMConverter(
                 sign = status.incomingSign(),
                 isFaded = status is Status.Failed,
             ),
-            statusBanner = refundToken?.let(::refundedInBanner) ?: swap.tx.status.toStatusBannerUM(),
+            statusBanner = refundToken?.let(::refundedInBanner)
+                ?: if (isLongRunning) longTransactionTimeBanner() else swap.tx.status.toStatusBannerUM(),
             rows = swap.toInfoRows(
                 currency = currency,
                 onProviderClick = swap.providerClick(),
@@ -118,7 +121,7 @@ internal class ExpressTxToDetailsUMConverter(
                 showProviderType = true,
             ),
             providerButton = refundToken?.let(::goToRefundedTokenButton)
-                ?: providerButton(swap.externalTxUrl, swap.tx.status.providerButtonLabel()),
+                ?: providerButton(swap.externalTxUrl, swap.tx.status.providerButtonLabel(isLongRunning)),
         )
     }
 
@@ -205,10 +208,7 @@ internal class ExpressTxToDetailsUMConverter(
             name = stringReference(walletInfo.name),
             deviceIconUM = walletInfo.deviceIconUM,
         )
-        is ResolvedOwner.Foreign -> TxHistoryDetailsUM.AssetOwnerUM.Address(
-            name = stringReference(address.toBriefAddressFormat()),
-            rawAddress = address,
-        )
+        is ResolvedOwner.Foreign -> TxHistoryDetailsUM.AssetOwnerUM.Address(rawAddress = address)
     }
 
     /** Leg caption: the direction-only [fallback] ("You send" / "You receive") without an owner, "From" / "To" with one. */
@@ -336,17 +336,21 @@ private fun ExpressOnrampStatus.toStatusBannerUM(): TxHistoryDetailsUM.StatusBan
  * Label of the bottom CTA for an express swap, or `null` for statuses that need no provider action. The KYC
  * [Verifying][ExpressExchangeStatus.Verifying] state sends the user to verification; the failure terminals and the
  * [Paused][ExpressExchangeStatus.Paused] hold send them to the provider (to track / resume / refund). Mirrors the
- * failed/verification/paused banners (the existing express block uses the same per-tx link for all of them).
+ * failed/verification/paused banners (the existing express block uses the same per-tx link for all of them). A deal
+ * stuck past the long-running threshold overrides all of them with "Go to provider" — see [isLongRunning].
  */
 @StringRes
-private fun ExpressExchangeStatus.providerButtonLabel(): Int? = when (this) {
-    ExpressExchangeStatus.Verifying -> R.string.common_go_to_verification
-    ExpressExchangeStatus.Paused,
-    ExpressExchangeStatus.Failed,
-    ExpressExchangeStatus.TxFailed,
-    ExpressExchangeStatus.Expired,
-    -> R.string.common_go_to_provider
-    else -> null
+private fun ExpressExchangeStatus.providerButtonLabel(isLongRunning: Boolean): Int? {
+    if (isLongRunning) return R.string.common_go_to_provider
+    return when (this) {
+        ExpressExchangeStatus.Verifying -> R.string.common_go_to_verification
+        ExpressExchangeStatus.Paused,
+        ExpressExchangeStatus.Failed,
+        ExpressExchangeStatus.TxFailed,
+        ExpressExchangeStatus.Expired,
+        -> R.string.common_go_to_provider
+        else -> null
+    }
 }
 
 /**
@@ -423,6 +427,47 @@ private fun failedBanner(@StringRes title: Int = R.string.express_exchange_statu
         subtitle = resourceReference(R.string.express_exchange_notification_failed_text),
         isLoading = false,
     )
+
+private val LONG_RUNNING_THRESHOLD = 15.minutes
+
+/**
+
+ * stages that wait on the user's own pay-in ([Waiting][ExpressExchangeStatus.Waiting] /
+ * [WaitingTxHash][ExpressExchangeStatus.WaitingTxHash] / [ExchangeTxSent][ExpressExchangeStatus.ExchangeTxSent]) count
+ * as stuck only once that pay-in is on chain — before that the deal waits on the user, not on the provider.
+ */
+private fun ExchangeTransaction.isLongRunning(nowMillis: Long): Boolean {
+    if (nowMillis - createdAtMillis <= LONG_RUNNING_THRESHOLD.inWholeMilliseconds) return false
+    return when (status) {
+        ExpressExchangeStatus.Confirming,
+        ExpressExchangeStatus.Exchanging,
+        ExpressExchangeStatus.Sending,
+        -> true
+        ExpressExchangeStatus.Waiting,
+        ExpressExchangeStatus.WaitingTxHash,
+        ExpressExchangeStatus.ExchangeTxSent,
+        -> payinHash != null
+        ExpressExchangeStatus.Preview,
+        ExpressExchangeStatus.Created,
+        ExpressExchangeStatus.Verifying,
+        ExpressExchangeStatus.Paused,
+        ExpressExchangeStatus.Finished,
+        ExpressExchangeStatus.Failed,
+        ExpressExchangeStatus.TxFailed,
+        ExpressExchangeStatus.Refunded,
+        ExpressExchangeStatus.Expired,
+        ExpressExchangeStatus.Unknown,
+        -> false
+    }
+}
+
+/** Amber plaque of a stuck deal — replaces the stage banner the status alone would render. */
+private fun longTransactionTimeBanner() = TxHistoryDetailsUM.StatusBannerUM(
+    style = Style.Warning,
+    title = resourceReference(R.string.express_exchange_notification_long_transaction_time_title),
+    subtitle = resourceReference(R.string.express_exchange_notification_long_transaction_time_text),
+    isLoading = false,
+)
 
 /** KYC verification: amber plaque with the "visit provider for verification" hint. */
 private fun verificationBanner() = TxHistoryDetailsUM.StatusBannerUM(
