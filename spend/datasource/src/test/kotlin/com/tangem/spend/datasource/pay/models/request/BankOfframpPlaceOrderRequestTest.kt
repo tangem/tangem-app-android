@@ -27,7 +27,7 @@ internal class BankOfframpPlaceOrderRequestTest {
     @Test
     fun `GIVEN saved recipient WHEN serialized THEN data has exactly the mode A keys`() {
         // Arrange
-        val request = createRequest(bankAccountId = BANK_ACCOUNT_ID, rail = "ACH")
+        val request = createRequest(bankAccountId = BANK_ACCOUNT_ID)
 
         // Act
         val json = serialize(request)
@@ -38,8 +38,7 @@ internal class BankOfframpPlaceOrderRequestTest {
         assertThat(json.child("data")).isEqualTo(
             parse(
                 """{"type":"BANK_OFFRAMP_RAIN","chain_id":137,"amount_in_cents":10000,""" +
-                    """"token_contract_address":"$TOKEN_CONTRACT_ADDRESS","bank_account_id":"$BANK_ACCOUNT_ID",""" +
-                    """"rail":"ACH"}""",
+                    """"token_contract_address":"$TOKEN_CONTRACT_ADDRESS","bank_account_id":"$BANK_ACCOUNT_ID"}""",
             ),
         )
     }
@@ -99,7 +98,6 @@ internal class BankOfframpPlaceOrderRequestTest {
 
     private fun createRequest(
         bankAccountId: String? = null,
-        rail: String? = null,
         bankAccount: BankOfframpPlaceOrderRequest.BankAccount? = null,
     ) = BankOfframpPlaceOrderRequest(
         data = BankOfframpPlaceOrderRequest.Data(
@@ -107,7 +105,6 @@ internal class BankOfframpPlaceOrderRequestTest {
             amountInCents = 10_000,
             tokenContractAddress = TOKEN_CONTRACT_ADDRESS,
             bankAccountId = bankAccountId,
-            rail = rail,
             bankAccount = bankAccount,
         ),
         idempotencyKey = IDEMPOTENCY_KEY,
