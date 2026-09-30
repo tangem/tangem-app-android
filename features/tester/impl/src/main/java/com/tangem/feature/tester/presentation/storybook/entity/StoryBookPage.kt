@@ -6,6 +6,7 @@ import com.tangem.core.ui.ds.badge.TangemBadgeColor
 import com.tangem.core.ui.ds.field.search.TangemFieldShape
 import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.ds.topbar.TangemTopBarType
+import com.tangem.core.ui.ds2.avatar.TangemAvatar
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.button.TangemButtonGroup
@@ -802,4 +803,26 @@ internal data class TangemAccountRowStory(
 
     /** Which [com.tangem.core.ui.ds2.accountrow.TangemAccountRow] variant is rendered. */
     enum class Variant { Default, Unreachable, BalanceError, Empty, Shimmer }
+}
+
+@Suppress("BooleanPropertyNaming")
+internal data class TangemAvatarStory(
+    val variant: Variant,
+    val fillColor: TangemAvatar.FillColor,
+    val appearance: TangemAvatar.Appearance,
+    val status: TangemAvatar.Status,
+    val hasPendingIndicator: Boolean,
+    val hasUserInitial: Boolean,
+    val isShimmerRounded: Boolean,
+    val onVariantChange: (Variant) -> Unit,
+    val onFillColorChange: (TangemAvatar.FillColor) -> Unit,
+    val onAppearanceChange: (TangemAvatar.Appearance) -> Unit,
+    val onStatusChange: (TangemAvatar.Status) -> Unit,
+    val onPendingIndicatorToggle: () -> Unit,
+    val onUserInitialToggle: () -> Unit,
+    val onShimmerRoundedToggle: () -> Unit,
+) : DsStoryBookPage {
+
+    /** Which [com.tangem.core.ui.ds2.avatar.TangemAvatar.UiState] subtype is rendered. */
+    enum class Variant { Account, User, Address, Icon, Transaction, Shimmer }
 }
