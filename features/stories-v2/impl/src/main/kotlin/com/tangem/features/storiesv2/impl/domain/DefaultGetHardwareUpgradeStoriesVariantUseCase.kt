@@ -14,13 +14,20 @@ internal class DefaultGetHardwareUpgradeStoriesVariantUseCase @Inject constructo
     override suspend fun invoke(): HardwareUpgradeStoriesVariant {
         if (!featureToggles.isHardwareUpgradeStoriesAbEnabled) return HardwareUpgradeStoriesVariant.CONTROL
 
-        val value = abTestsManager.getValue(key = AMPLITUDE_ID, defaultValue = CONTROL_VALUE)
-        // Only the exact treatment value shows the story; control, an unknown value or none at all stay safe.
-        return if (value == TREATMENT_VALUE) {
-            HardwareUpgradeStoriesVariant.TREATMENT
-        } else {
-            HardwareUpgradeStoriesVariant.CONTROL
-        }
+        return abTestsManager.getValue(key = AMPLITUDE_ID, defaultValue = CONTROL_VALUE).toVariant()
+    }
+
+    override fun peek(): HardwareUpgradeStoriesVariant {
+        if (!featureToggles.isHardwareUpgradeStoriesAbEnabled) return HardwareUpgradeStoriesVariant.CONTROL
+
+        return abTestsManager.peekValue(key = AMPLITUDE_ID).toVariant()
+    }
+
+    // Only the exact treatment value shows the story; control, an unknown value or none at all stay safe.
+    private fun String?.toVariant(): HardwareUpgradeStoriesVariant = if (this == TREATMENT_VALUE) {
+        HardwareUpgradeStoriesVariant.TREATMENT
+    } else {
+        HardwareUpgradeStoriesVariant.CONTROL
     }
 
     private companion object {
