@@ -24,6 +24,7 @@ import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.domain.models.ui.SwapFee
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
+import com.tangem.feature.swap.models.PredictionTopUpLimits
 import com.tangem.feature.swap.models.UiActions
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.utils.Provider
@@ -319,6 +320,70 @@ internal class SwapNotificationsFactoryTest {
         assertThat(notifications.filterIsInstance<SwapNotificationUM.Error.RegionalRestriction>()).isEmpty()
     }
 
+    @Test
+    fun `GIVEN prediction limits and receive amount below minimum WHEN notifications built THEN minimum warning shown first`() {
+        // Arrange
+        every { isGaslessFeeSupportedForNetwork(any()) } returns false
+        val quoteModel = buildQuotesLoadedState(providerType = ExchangeProviderType.CEX, isRestricted = true)
+
+        // Act
+        val notifications = factoryWithLimits(minimum = "1", maximum = "100").getConfirmationStateNotifications(
+            quoteModel = quoteModel,
+            feeCryptoCurrencyStatus = buildCoinFeeStatus(),
+            swapFee = buildSwapFee(),
+            feeError = null,
+            appRouter = appRouter,
+        )
+
+        // Assert
+        assertThat(notifications.first())
+            .isEqualTo(SwapNotificationUM.Warning.PredictionMinimumDeposit(amountText = "$1"))
+    }
+
+    @Test
+    fun `GIVEN prediction limits and receive amount at maximum WHEN notifications built THEN maximum warning shown first`() {
+        // Arrange
+        every { isGaslessFeeSupportedForNetwork(any()) } returns false
+        val quoteModel = buildQuotesLoadedState(providerType = ExchangeProviderType.CEX)
+
+        // Act
+        val notifications = factoryWithLimits(minimum = "0.1", maximum = "0.5").getConfirmationStateNotifications(
+            quoteModel = quoteModel,
+            feeCryptoCurrencyStatus = buildCoinFeeStatus(),
+            swapFee = buildSwapFee(),
+            feeError = null,
+            appRouter = appRouter,
+        )
+
+        // Assert
+        assertThat(notifications.first())
+            .isEqualTo(SwapNotificationUM.Warning.PredictionMaximumDeposit(amountText = "$0.5"))
+    }
+
+    @Test
+    fun `GIVEN no prediction limits WHEN notifications built THEN no prediction warning`() {
+        // Arrange
+        every { isGaslessFeeSupportedForNetwork(any()) } returns false
+        val quoteModel = buildQuotesLoadedState(providerType = ExchangeProviderType.CEX)
+
+        // Act
+        val notifications = factory.getConfirmationStateNotifications(
+            quoteModel = quoteModel,
+            feeCryptoCurrencyStatus = buildCoinFeeStatus(),
+            swapFee = buildSwapFee(),
+            feeError = null,
+            appRouter = appRouter,
+        )
+
+        // Assert
+        assertThat(
+            notifications.none {
+                it is SwapNotificationUM.Warning.PredictionMinimumDeposit ||
+                    it is SwapNotificationUM.Warning.PredictionMaximumDeposit
+            },
+        ).isTrue()
+    }
+
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
@@ -370,6 +435,20 @@ internal class SwapNotificationsFactoryTest {
         }
         return CryptoCurrencyStatus(currency = currency, value = statusValue)
     }
+
+    private fun factoryWithLimits(minimum: String, maximum: String) = SwapNotificationsFactory(
+        actions = actions,
+        isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
+        appCurrencyProvider = appCurrencyProvider,
+        predictionTopUpLimitsProvider = Provider {
+            PredictionTopUpLimits(
+                minimum = BigDecimal(minimum),
+                minimumText = "$$minimum",
+                maximum = BigDecimal(maximum),
+                maximumText = "$$maximum",
+            )
+        },
+    )
 
     private fun buildQuotesLoadedState(
         providerType: ExchangeProviderType,
