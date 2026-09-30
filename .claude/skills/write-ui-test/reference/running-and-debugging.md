@@ -147,6 +147,44 @@ disabled) is usually missing mock *data* or an app-side gate, not a test bug. Tw
   is also absent from the full log (`/__admin/requests`), the app never issued it (a data/state gate) →
   fix the mock data or the app, not the mappings.
 
+## Keep the run loop short
+
+- **Start the build in the background first**, before reading code. A cold
+  `:app:assembleGoogleMocked :app:assembleGoogleMockedAndroidTest` takes ~25 min. Run
+  `git submodule update --init --recursive` **before** it: syncing `ds-tokens` later invalidates `core:ui`
+  and forces a second near-full rebuild.
+- **After switching between develop and a `releases/x.y` branch,** a stale incremental Kotlin cache gives
+  `Unresolved reference` for symbols that exist in the same module. Add `:<module>:clean` to the build;
+  the code is fine.
+- **Run only the methods under test.** One Gradle call accepts `Class#method` entries of *different*
+  classes, but **two methods of the same class in one filter start 0 tests** (`Starting 0 tests`,
+  "Instrumentation did not complete"). Run same-class methods as separate Gradle calls, and copy the
+  result XML after each one: the next call overwrites the results directory.
+- One background command per build or run, one completion notification. Don't stack watchers on top of
+  it. A `pgrep -f "GradleWrapperMain"` loop matches its own shell: use `pgrep -f "[G]radleWrapperMain"`.
+
+## Local failures that are not the test
+
+Each of these looks like a broken test and costs a run to find:
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| Every test dies at the first step: `'Get started' is not displayed` | The stories screen shows only on the first launch; opening the app by hand consumed it | `adb shell pm clear com.tangem.wallet.mocked` before the run |
+| `Process crashed`, logcat `ANR … failed to complete startup` in `DexFileVerifier` | Both APKs are huge and installed unoptimized | `adb shell cmd package compile -m speed -f com.tangem.wallet.mocked` (and `.mocked.test`) after each install |
+| `No compose hierarchies found in the app`, black `screencap` | The emulator screen turned off | `adb shell svc power stayon true`, `settings put system screen_off_timeout 2147483647`, `input keyevent KEYCODE_WAKEUP` |
+| `Process crashed`, logcat `Zygote: … exited due to signal 9` | The emulator ran out of memory | Restart the AVD with `-memory 6144 -cores 4` |
+| `NoSuchMethodError` in `DaggerDefault_HiltComponents_SingletonC` | The installed app APK is older than the test APK | Build and install **both** APKs |
+| `ComposeNotIdleException` at a trivial first step | Software rendering (`-gpu swiftshader_indirect`) | Boot with `-gpu host` |
+| Steps take minutes that normally take seconds; cold boot makes it worse | The Mac host is saturated (`uptime` load ≫ cores) | Pause runs until the host drains; results are unverifiable until then |
+| `Starting 0 tests`, `Test instrumentation process crashed`, no stack trace | A Joda date in a test-class field initializer, or a same-class method filter | See `pitfalls.md`, and the filter rule above |
+| WalletConnect test times out on the connection sheet | `getWcUri()` hit Cloudflare Access without the VPN (logs `blocked by Cloudflare Access`) | Connect the VPN or leave WC tests out of the local run |
+
+Screens with `FLAG_SECURE` (hot-wallet onboarding, Tangem Pay) return black screenshots, and
+`uiautomator dump` is killed while instrumentation holds UiAutomation. Inspect the tree with
+`BaseTestCase.printAllRoots(tag)`, or a throwaway test that calls
+`onAllNodes(isRoot(), useUnmergedTree = …)[i].printToLog(tag, Int.MAX_VALUE)` for both trees. Delete it
+afterwards.
+
 ## "UiAutomationService already registered" — retry, it's not a failure
 
 Back-to-back `am instrument` runs sometimes fail instantly with `UiAutomationService … already
@@ -167,6 +205,11 @@ Distinguish:
 - A REAL failure shows `java.lang.AssertionError` inside the test's own classes
   (e.g. `at com.tangem.tests.X.foo$lambda…`). When auto-classifying CLI output, key off the presence
   of `java.lang.AssertionError` vs. only `original_screenshots`.
+- In raw `am instrument` output classify **per test**: its `INSTRUMENTATION_STATUS: test=<name>` block
+  ends with `INSTRUMENTATION_STATUS_CODE: 0` (pass), `-2` (failure) or `-1` (error). Run-level
+  `FAILURES!!!` / `INSTRUMENTATION_CODE: -1` appear on a clean pass too, because of the hook above.
+- **A green run proves nothing about a branch you rebased afterwards.** Re-verify on freshly built and
+  reinstalled APKs.
 
 ## `@Ignore` on instrumentation tests
 
