@@ -2,6 +2,7 @@ package com.tangem.features.hotwallet.hardwareupgrade.component
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
@@ -37,10 +38,15 @@ internal class DefaultHardwareUpgradeStoriesComponent @AssistedInject constructo
         player.Content(modifier)
     }
 
-    /** Posted: the player may finish while still being created, inside the navigation that opened this route. */
+    /**
+     * Waits until the story is on top: `replaceCurrent` replaces the top screen, which may be one opened over the story
+
+     */
     private fun openHardwareWallet() {
-        componentScope.launch(dispatchers.main) {
-            router.replaceCurrent(AppRoute.WalletHardwareBackup(userWalletId = params.userWalletId))
+        lifecycle.doOnResume(isOneTime = true) {
+            componentScope.launch(dispatchers.main) {
+                router.replaceCurrent(AppRoute.WalletHardwareBackup(userWalletId = params.userWalletId))
+            }
         }
     }
 
