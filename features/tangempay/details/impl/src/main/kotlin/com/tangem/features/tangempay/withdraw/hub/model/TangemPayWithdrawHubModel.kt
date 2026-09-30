@@ -86,7 +86,6 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
                 openBankWithdraw(entry = BankWithdrawEntry.SeeAll)
             },
             onRetryRecentsClick = ::loadRecents,
-            onRetryBankSectionClick = ::onRetryBankSection,
         ),
     )
 
@@ -161,11 +160,6 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
                 current.copy(options = resolved?.let(OptionsState::Ready) ?: OptionsState.Unavailable)
             }
         }
-    }
-
-    private fun onRetryBankSection() {
-        loadOptions()
-        loadRecents()
     }
 
     private fun onBackClick() {

@@ -41,7 +41,6 @@ internal class TangemPayWithdrawHubUMFactoryTest {
     private val onRecentRecipientClick: (String) -> Unit = mockk(relaxed = true)
     private val onSeeAllClick: () -> Unit = mockk(relaxed = true)
     private val onRetryRecentsClick: () -> Unit = mockk(relaxed = true)
-    private val onRetryBankSectionClick: () -> Unit = mockk(relaxed = true)
     private val onRecentTokenClick: (String) -> Unit = mockk(relaxed = true)
 
     private val factory = TangemPayWithdrawHubUMFactory(
@@ -53,7 +52,6 @@ internal class TangemPayWithdrawHubUMFactoryTest {
             onRecentRecipientClick = onRecentRecipientClick,
             onSeeAllClick = onSeeAllClick,
             onRetryRecentsClick = onRetryRecentsClick,
-            onRetryBankSectionClick = onRetryBankSectionClick,
             onRecentTokenClick = onRecentTokenClick,
         ),
     )
@@ -68,7 +66,6 @@ internal class TangemPayWithdrawHubUMFactoryTest {
             onRecentRecipientClick,
             onSeeAllClick,
             onRetryRecentsClick,
-            onRetryBankSectionClick,
             onRecentTokenClick,
         )
     }
@@ -243,15 +240,25 @@ internal class TangemPayWithdrawHubUMFactoryTest {
     }
 
     @Test
-    fun `GIVEN options unavailable WHEN create THEN bank section error retries the whole section`() {
-        // Arrange
-        val actual = create(options = OptionsState.Unavailable).bankSection as BankSectionUM.Error
-
+    fun `GIVEN options ready WHEN create THEN bank section available`() {
         // Act
-        actual.onRetryClick()
+        val actual = create().bankSection as BankSectionUM.Content
 
         // Assert
-        verify(exactly = 1) { onRetryBankSectionClick() }
+        assertThat(actual.isAvailable).isTrue()
+    }
+
+    @Test
+    fun `GIVEN options unavailable WHEN create THEN bank section unavailable and keeps its recents`() {
+        // Arrange
+        val recents = RecentsState.Loaded(accounts = listOf(bankAccount(id = "acc-1")), hasMoreAccounts = false)
+
+        // Act
+        val actual = create(options = OptionsState.Unavailable, recents = recents).bankSection as BankSectionUM.Content
+
+        // Assert
+        assertThat(actual.isAvailable).isFalse()
+        assertThat((actual.recents as RecentsUM.Content).recipients.map { it.id }).containsExactly("acc-1")
     }
 
     @Test
