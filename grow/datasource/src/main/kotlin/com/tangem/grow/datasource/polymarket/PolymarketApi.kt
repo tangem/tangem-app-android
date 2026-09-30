@@ -1,9 +1,11 @@
 package com.tangem.grow.datasource.polymarket
 
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketActivityPageResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketApprovalCallDto
 import com.tangem.grow.datasource.polymarket.models.PolymarketCategoriesResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketConfigurationResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketDepositReconcileResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketEventResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketEventsResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteRequest
@@ -26,11 +28,39 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 /**
- * Polymarket predictions BFF Discovery API (`api/predictions/v1`).
+ * Polymarket predictions BFF API (`api/predictions/v1`).
  *
  * Provided in [com.tangem.grow.datasource.di.GrowDatasourceModule].
  */
+@Suppress("TooManyFunctions")
 interface PolymarketApi {
+
+    /**
+     * Operation history, newest first.
+     *
+     * @param type optional operation type: `BUY`, `SELL`, `REDEEM`, `DEPOSIT` or `WITHDRAW`
+     * @param redeemResult optional redemption result: `WON`, `LOST` or `SPLIT`
+     * @param cursor opaque cursor from the previous page; `null` for the first page
+     */
+    @GET("api/predictions/v1/activity")
+    suspend fun getActivity(
+        @Header("wallet-id") walletId: String,
+        @Query("depositWalletAddress") depositWalletAddress: String,
+        @Query("type") type: String? = null,
+        @Query("redeemResult") redeemResult: String? = null,
+        @Query("limit") limit: Int? = null,
+        @Query("cursor") cursor: String? = null,
+    ): ApiResponse<PolymarketActivityPageResponse>
+
+    /**
+     * Ask the service to look for deposits. A `202` means the scan was accepted or is already running;
+     * it does not mean that the history has finished updating.
+     */
+    @POST("api/predictions/v1/activity/deposits/reconcile")
+    suspend fun reconcileDeposits(
+        @Header("wallet-id") walletId: String,
+        @Query("depositWalletAddress") depositWalletAddress: String,
+    ): ApiResponse<PolymarketDepositReconcileResponse>
 
     @GET("api/predictions/v1/positions?sort=endDate&ascending=true")
     suspend fun getPositions(
