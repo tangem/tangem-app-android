@@ -41,6 +41,7 @@ import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
 import com.tangem.feature.swap.model.SwapProcessDataState
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.ProviderState
+import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.presentation.R
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -52,6 +53,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -566,6 +569,56 @@ internal class SwapTransferStateBuilderTest {
                 sendingAmount.parseBigDecimal(transferState.toTokenInfo.tokenAmount.decimals),
             )
         }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN a prediction limit warning WHEN updateTransferButtonEnableState THEN button is disabled`(
+        isMinimum: Boolean,
+    ) = runTest {
+        // Arrange
+        val limits = PredictionTopUpLimits(
+            minimum = BigDecimal.ONE,
+            minimumText = "$1.00",
+            maximum = BigDecimal(100),
+            maximumText = "$100.00",
+        )
+        val warning = if (isMinimum) {
+            SwapNotificationUM.Warning.PredictionMinimumDeposit(amountText = "$1.00")
+        } else {
+            SwapNotificationUM.Warning.PredictionMaximumDeposit(amountText = "$100.00")
+        }
+        coEvery {
+            notificationsFactory.getNotifications(
+                transferState = any(),
+                feeSelectorUM = any(),
+                feeCryptoCurrencyStatus = any(),
+                actions = any(),
+                predictionTopUpLimits = limits,
+            )
+        } returns persistentListOf(warning)
+        val transferState = buildTransferState(
+            fromAmount = BigDecimal("1"),
+            toAmount = BigDecimal("1"),
+            isAccountsMode = false,
+        )
+
+        // Act
+        val result = sut.updateTransferButtonEnableState(
+            dataState = SwapProcessDataState(),
+            transferState = transferState,
+            actions = actions,
+            uiStateHolder = baseStateHolder(),
+            feePaidCryptoCurrencyStatus = null,
+            fee = mockk(relaxed = true),
+            isTangemPayWithdrawal = false,
+            feeSelectorUM = null,
+            predictionTopUpLimits = limits,
+        )
+
+        // Assert
+        assertThat(result.notifications).containsExactly(warning)
+        assertThat(result.swapButton.isEnabled).isFalse()
+    }
 
     @Test
     fun `GIVEN Tron fee WHEN updateTransferButtonEnableState THEN transferFooter uses Tron token fee sending text`() =
