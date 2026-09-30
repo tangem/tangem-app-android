@@ -22,6 +22,7 @@ import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.collectibles.impl.common.ui.CollectiblesPackImage
+import com.tangem.features.collectibles.impl.common.ui.CollectiblesPackImageErrorCard
 import com.tangem.features.collectibles.impl.common.ui.CollectiblesStatus
 import com.tangem.features.collectibles.impl.confirmorder.ui.state.CollectiblesConfirmOrderUM
 import com.tangem.features.collectibles.impl.confirmorder.ui.state.CollectiblesConfirmOrderUM.OrderUM
@@ -151,6 +152,7 @@ private fun PackImage(imageUrl: String?, progress: ConfirmProgress, modifier: Mo
                 rotationZ = PackLaunch.rotation(progress)
                 alpha = PackLaunch.alpha(progress)
             },
+        errorContent = { CollectiblesPackImageErrorCard() },
     )
 }
 
