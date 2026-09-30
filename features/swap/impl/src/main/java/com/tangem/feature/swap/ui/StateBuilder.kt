@@ -8,6 +8,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.AccountTitleUM
+import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldConverter
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
@@ -1411,14 +1412,14 @@ internal class StateBuilder(
         } else {
             R.string.swapping_to_account_title to R.string.swapping_to_title
         }
-        return if (account != null && isAccountsModeProvider()) {
-            AccountTitleUM.Account(
+        return when {
+            account == null || !isAccountsModeProvider() -> AccountTitleUM.Text(resourceReference(placeholder))
+            account is Account.Prediction -> AccountTitleUM.Account.prediction(prefixText = resourceReference(prefix))
+            else -> AccountTitleUM.Account(
                 prefixText = resourceReference(prefix),
-                name = account.toTitleName(),
+                name = account.accountName.toUM().value,
                 icon = account.toIconUM(),
             )
-        } else {
-            AccountTitleUM.Text(resourceReference(placeholder))
         }
     }
 
