@@ -147,8 +147,8 @@ Status receives the result, market header and position id as route data and owns
   (`PolymarketConst.SHARES_DECIMALS` = `PolymarketContracts.COLLATERAL_DECIMALS`, 6 — shares are minted 1:1 from
   collateral base units) — it is not floored onto the 2-decimal amount grid, because the BFF
   quotes the sale of a whole position at the position's own precision (a sub-cent whole position included).
-  A held position renders unrounded (`formatPolymarketPositionShares`), a trade's shares at 2 decimals
-  (`formatPolymarketShares`); presets and ± steps move in whole shares with a floor of one share
+  Every share count renders cut down to 2 decimals, as on iOS, never more than is held (`formatPolymarketShares`);
+  only a count below 0.01 keeps its own precision, so a sellable remainder is not shown as `0`; presets and ± steps move in whole shares with a floor of one share
   (or the whole position when smaller), and 100 % is the position itself, so a full close reaches the
   last fraction.
 - **Slippage.** Default 3 %, range 0.1–30 % (`SlippagePickerUM`); a fill at the worst-case price counts as filled.
