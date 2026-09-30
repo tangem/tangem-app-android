@@ -10,6 +10,7 @@ import com.tangem.domain.pay.model.AccountFeeGroupType
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.visa.model.TangemPayInitialCredentials
 import kotlinx.coroutines.flow.Flow
 
 @Suppress("TooManyFunctions")
@@ -20,6 +21,8 @@ interface OnboardingRepository {
     suspend fun isTangemPayInitialDataProduced(userWalletId: UserWalletId): Boolean
 
     suspend fun produceInitialData(userWalletId: UserWalletId)
+
+    suspend fun storeInitialCredentials(userWalletId: UserWalletId, initialCredentials: TangemPayInitialCredentials)
 
     suspend fun getCustomerInfo(userWalletId: UserWalletId): Either<VisaApiError, CustomerInfo>
 
