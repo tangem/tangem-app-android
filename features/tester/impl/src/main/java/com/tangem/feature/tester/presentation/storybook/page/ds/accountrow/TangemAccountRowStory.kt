@@ -23,14 +23,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.account.AccountIconSize
-import com.tangem.core.ui.components.account.AccountResIcon
 import com.tangem.core.ui.ds2.accountrow.BalanceError
 import com.tangem.core.ui.ds2.accountrow.Empty
 import com.tangem.core.ui.ds2.accountrow.Section
 import com.tangem.core.ui.ds2.accountrow.Shimmer
 import com.tangem.core.ui.ds2.accountrow.TangemAccountRow
 import com.tangem.core.ui.ds2.accountrow.Unreachable
+import com.tangem.core.ui.ds2.avatar.TangemAvatar
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.core.ui.ds2.util.TangemPriceChange
@@ -81,13 +80,10 @@ private fun ComponentPreview(state: TangemAccountRowStory) {
 @Suppress("LongMethod")
 @Composable
 private fun AccountRowPreview(state: TangemAccountRowStory) {
-    val avatar: @Composable () -> Unit = {
-        AccountResIcon(
-            resId = R.drawable.ic_airplane_mode_24,
-            color = TangemTheme.colors3.bg.accent.blue,
-            size = AccountIconSize.Default,
-        )
-    }
+    val avatar = TangemAvatar.UiState.Account(
+        iconRes = R.drawable.ic_airplane_mode_24,
+        color = TangemAvatar.FillColor.DarkBlue,
+    )
     val title = stringReference(if (state.longTitle) LONG_TITLE else SHORT_TITLE)
     val tokensAmount = stringReference("${state.tokenCount} tokens")
     val membersAmount = if (state.hasMembersAmount) stringReference("2 members") else null
