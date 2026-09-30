@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.withdraw.bank.preview.state
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -259,6 +260,7 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
         assertThat(actual).isEqualTo(
             Failed(
                 title = resourceReference(R.string.tangempay_withdraw_bank_error_general_title),
+                icon = TangemStatusIcon.Kind.Warning,
                 onCloseClick = callbacks.onCloseClick,
                 onRetryClick = callbacks.onRetryClick,
             ),
@@ -275,6 +277,7 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
         assertThat(actual).isEqualTo(
             Failed(
                 title = resourceReference(model.titleRes),
+                icon = TangemStatusIcon.Kind.HeartBroken,
                 onCloseClick = callbacks.onCloseClick,
                 onRetryClick = null,
             ),
