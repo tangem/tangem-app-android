@@ -19,8 +19,7 @@ private const val ACCOUNT_TOP_UP_ABSTRACT_SYMBOL = "USD"
  * Applied to every state the model emits rather than inside the builders that produce them, so a state
  * assembled anywhere still gets the same treatment. The main button is deliberately left alone: it keeps
  * its dynamic Transfer/Swap label in account flows too.
- */
-/**
+ *
  * @param predictionCollateralBalance the prediction account balance, shown on the receive card of a prediction top-up
  */
 internal fun SwapStateHolder.withAccountFlowPresentation(
