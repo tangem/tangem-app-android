@@ -9,7 +9,6 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
-import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldConverter
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
@@ -1415,7 +1414,7 @@ internal class StateBuilder(
         return if (account != null && isAccountsModeProvider()) {
             AccountTitleUM.Account(
                 prefixText = resourceReference(prefix),
-                name = account.accountName.toUM().value,
+                name = account.toTitleName(),
                 icon = account.toIconUM(),
             )
         } else {

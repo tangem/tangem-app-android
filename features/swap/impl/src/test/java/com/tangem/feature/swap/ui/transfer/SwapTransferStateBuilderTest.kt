@@ -1022,6 +1022,36 @@ internal class SwapTransferStateBuilderTest {
         }
 
     @Test
+    fun `GIVEN a transfer to the prediction account WHEN the success state is built THEN the destination title is localized`() {
+        // Arrange
+        val transferState = buildTransferState(fromAmount = BigDecimal.ONE, toAmount = BigDecimal.ONE, isAccountsMode = true)
+        val dataState = SwapProcessDataState(
+            fromSwapCurrencyStatus = fromCurrencyStatus,
+            toSwapCurrencyStatus = toCurrencyStatus.copy(account = Account.Prediction(toCurrencyStatus.userWalletId)),
+            amount = BigDecimal.ONE.toPlainString(),
+            currentTransferState = transferState,
+        )
+
+        // Act
+        val result = sut.createTangemPayWithdrawalSuccessState(
+            uiState = baseStateHolder(),
+            dataState = dataState,
+            fee = null,
+            onExploreClick = {},
+            onShareClick = {},
+        )
+
+        // Assert
+        assertThat(requireNotNull(result.successState).toTitle).isEqualTo(
+            AccountTitleUM.Account(
+                prefixText = resourceReference(R.string.swapping_to_account_title),
+                name = resourceReference(R.string.prediction_account_title),
+                icon = AccountIconUM.Prediction,
+            ),
+        )
+    }
+
+    @Test
     fun `GIVEN transfer dataState WHEN createTangemPayWithdrawalSuccessState THEN feeless transfer success holder is built`() {
         // from amount comes from dataState.amount, to amount from transferState.sendingAmount — keep them distinct
         val fromAmount = BigDecimal("2.0")
