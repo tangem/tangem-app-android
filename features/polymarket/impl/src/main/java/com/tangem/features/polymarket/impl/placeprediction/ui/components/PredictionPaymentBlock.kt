@@ -29,7 +29,7 @@ import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.features.polymarket.impl.placeprediction.entity.CollateralUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.balance
-import com.tangem.features.polymarket.impl.common.formatPolymarketShares
+import com.tangem.features.polymarket.impl.common.formatPolymarketPositionShares
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import java.math.BigDecimal
 
@@ -144,7 +144,7 @@ private fun SellAmountRow(amountValue: String, payout: BigDecimal?, collateral: 
             Text(
                 text = stringResourceSafe(
                     R.string.prediction_close_selling_tokens,
-                    amountValue.parseToBigDecimal(PolymarketConst.SHARES_DECIMALS).formatPolymarketShares(),
+                    amountValue.parseToBigDecimal(PolymarketConst.SHARES_DECIMALS).formatPolymarketPositionShares(),
                 ),
                 style = TangemTheme.typography3.caption.medium,
                 color = TangemTheme.colors3.text.secondary,
