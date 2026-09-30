@@ -283,7 +283,6 @@ internal fun AccountRowAvatar(state: TangemAvatar.UiState, motion: AccountRowMot
     TangemAvatarContent(state = state, tokens = motion.avatarTokens(), modifier = modifier)
 }
 
-@Composable
 private fun AccountRowMotion.avatarTokens(): AvatarTokens = lerpAvatarTokens(
     start = TangemAvatar.Size.X40.tokens(),
     stop = TangemAvatar.Size.X16.tokens(),
