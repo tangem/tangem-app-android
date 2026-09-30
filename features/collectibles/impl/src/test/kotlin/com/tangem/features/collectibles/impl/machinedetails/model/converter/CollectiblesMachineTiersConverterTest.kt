@@ -1,4 +1,4 @@
-package com.tangem.features.collectibles.impl.packdetails.model.converter
+package com.tangem.features.collectibles.impl.machinedetails.model.converter
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.res.R
@@ -8,7 +8,6 @@ import com.tangem.domain.collectibles.models.CollectibleGachaMachine
 import com.tangem.features.collectibles.impl.createMachine
 import com.tangem.features.collectibles.impl.createOdds
 import com.tangem.features.collectibles.impl.createTierRanges
-import com.tangem.features.collectibles.impl.machinedetails.model.converter.CollectiblesMachineTiersConverter
 import com.tangem.features.collectibles.impl.machinedetails.ui.state.CollectiblesMachineDetailsUM
 import org.junit.jupiter.api.Test
 
