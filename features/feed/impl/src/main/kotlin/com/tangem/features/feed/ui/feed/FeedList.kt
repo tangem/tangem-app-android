@@ -23,6 +23,7 @@ import com.tangem.core.ui.res.*
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_pie_chart_20
 import com.tangem.core.ui.test.BaseSearchBarTestTags.SEARCH_BAR
+import com.tangem.core.ui.test.MarketsTestTags
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.components.FeedSearchBar
@@ -101,6 +102,7 @@ private fun FeedListContent(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .testTag(MarketsTestTags.FEED_CONTENT)
             .verticalScroll(rememberScrollState())
             .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding())
             .drawBehind { drawRect(background) },
