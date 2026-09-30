@@ -208,7 +208,7 @@ private fun previewSingleAsset() = TxHistoryDetailsUM.SingleAsset(
     ),
     counterparty = TxHistoryDetailsUM.CounterpartyUM(
         label = stringReference("Recipient"),
-        title = stringReference("33Bd321fS...ga21412B"),
+        title = TxHistoryDetailsUM.CounterpartyTitle.Address("0xfb6916095ca1df60bb79ce92ce3ea74c37c5d359"),
         avatar = TxHistoryDetailsUM.CounterpartyAvatar.Address(
             rawAddress = "0xfb6916095ca1df60bb79ce92ce3ea74c37c5d359",
         ),

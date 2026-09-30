@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -39,6 +40,8 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.account.PaymentAccountIcon
+import com.tangem.core.ui.components.atoms.text.EllipsisText
+import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
@@ -53,6 +56,7 @@ import com.tangem.core.ui.ds.image.TangemDeviceIcon
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.ds2.badge.TangemBadge
+import com.tangem.core.ui.ds2.tokenrow.TokenRowPendingDots
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
@@ -274,6 +278,9 @@ private fun TitleRow(
         modifier = modifier,
     ) {
         TitleText(title = title, status = status, modifier = Modifier.weight(weight = 1f, fill = false))
+        if (status is Status.Unconfirmed) {
+            TokenRowPendingDots(color = status.titleColor)
+        }
         if (isPendingSignature) {
             TangemBadge(
                 text = resourceReference(R.string.transaction_history_pending),
@@ -325,10 +332,11 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
             status = status,
             modifier = modifier,
         )
-        is ContentSubtitle.ExternalAddress -> InlineImageSubtitle(
-            template = stringResourceSafe(subtitle.direction.templateResId(), subtitle.briefAddress),
+        is ContentSubtitle.ExternalAddress -> InlineAddressSubtitle(
+            template = stringResourceSafe(subtitle.direction.templateResId(), subtitle.rawAddress),
+            address = subtitle.rawAddress,
             color = secondary,
-            afterIconColor = if (isFailed) secondary else primary,
+            addressColor = if (isFailed) secondary else primary,
             textStyle = TangemTheme.typography3.caption.medium,
             modifier = modifier,
         ) {
@@ -509,28 +517,48 @@ private fun AssetOwnerIcon(owner: ContentSubtitle.AssetOwner?, isFailed: Boolean
 @Composable
 private fun PlainAddressText(subtitle: ContentSubtitle.PlainAddress, status: Status, modifier: Modifier = Modifier) {
     val full = subtitle.text.resolveReference()
-    val highlightColor = if (status is Status.Failed) {
-        TangemTheme.colors3.text.secondary
-    } else {
-        TangemTheme.colors3.text.primary
+    val secondary = TangemTheme.colors3.text.secondary
+    val addressColor = if (status is Status.Failed) secondary else TangemTheme.colors3.text.primary
+    val textStyle = TangemTheme.typography3.caption.medium
+    val addressStart = full.lastIndexOf(subtitle.address)
+    if (addressStart < 0) {
+        Text(
+            text = full,
+            color = secondary,
+            style = textStyle,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = modifier,
+        )
+        return
     }
-    val text = remember(full, subtitle.highlight, highlightColor) {
-        buildAnnotatedString {
-            append(full)
-            val start = full.lastIndexOf(subtitle.highlight)
-            if (start >= 0) {
-                addStyle(SpanStyle(color = highlightColor), start, start + subtitle.highlight.length)
-            }
+    // Split rather than span-styled, so the address alone shrinks to the width the surrounding literals leave it.
+    val prefix = full.take(addressStart).trim()
+    val suffix = full.drop(addressStart + subtitle.address.length).trim()
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        if (prefix.isNotEmpty()) {
+            Text(text = prefix, color = secondary, style = textStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+        Box(
+            modifier = Modifier
+                .weight(weight = 1f, fill = false)
+                .widthIn(max = HISTORY_ROW_ADDRESS_MAX_WIDTH),
+        ) {
+            EllipsisText(
+                text = subtitle.address,
+                color = addressColor,
+                style = textStyle,
+                ellipsis = TextEllipsis.Middle,
+            )
+        }
+        if (suffix.isNotEmpty()) {
+            Text(text = suffix, color = secondary, style = textStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
-    Text(
-        text = text,
-        color = TangemTheme.colors3.text.secondary,
-        style = TangemTheme.typography3.caption.medium,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-        modifier = modifier,
-    )
 }
 
 /**
