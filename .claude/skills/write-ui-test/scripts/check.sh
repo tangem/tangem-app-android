@@ -94,7 +94,7 @@ check_test_lines() {
         text ~ /^import com\.tangem\.common\.R([^A-Za-z0-9_.]|$)/ {
             emit("error", "common-r", "com.tangem.common.R has almost no strings, import com.tangem.core.res.R")
         }
-        code ~ /(^|[^A-Za-z0-9_])pullToRefresh\(\)/ {
+        code ~ /(^|[^A-Za-z0-9_])pullToRefresh\(/ && code !~ /fun[[:space:]]+([A-Za-z0-9_]+\.)?pullToRefresh\(/ && code !~ /^[[:space:]]*(\/\/|\*|\/\*)/ {
             emit("error", "uiautomator-pull-to-refresh", "the UiAutomator pullToRefresh() is a silent no-op on PullToRefreshBox, use a Compose swipeDown gesture")
         }
         text ~ /"""\{|"\{\\"|\{[[:space:]]*\\"[a-zA-Z]+\\"[[:space:]]*:/ {
