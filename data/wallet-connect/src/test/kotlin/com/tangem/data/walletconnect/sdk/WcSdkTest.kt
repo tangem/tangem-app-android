@@ -1,7 +1,6 @@
 package com.tangem.data.walletconnect.sdk
 
 import android.app.Application
-import com.reown.android.Core
 import com.reown.android.CoreClient
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
@@ -135,6 +134,23 @@ internal class WcSdkTest {
 
         // Assert
         verify(exactly = 1) { WalletKit.initialize(any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN sdk started now WHEN ensureInitialized THEN the same start-up is awaited`() = runTest {
+        // Arrange
+        val wcSdk = createSdk(this)
+
+        // Act
+        wcSdk.initializeNow()
+        val waiting = async { wcSdk.ensureInitialized() }
+        runCurrent()
+        onSuccess.captured.invoke()
+        waiting.await()
+
+        // Assert
+        verify(exactly = 1) { WalletKit.initialize(any(), any(), any()) }
+        verify(exactly = 1) { observer.onWcSdkInit() }
     }
 
     private fun createSdk(testScope: TestScope) = WcSdk(

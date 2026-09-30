@@ -1,18 +1,17 @@
 package com.tangem.features.tangempay
 
-import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.features.tangempay.account.TangemPayAction
 import com.tangem.features.tangempay.account.TangemPayActionButtonUM
 import com.tangem.features.tangempay.account.TangemPayDetailsUM
 
-internal val List<TangemPayActionButtonUM>.withdrawButton: ActionButtonConfig
-    get() = first { it.action == TangemPayAction.Withdraw }.config
+internal val List<TangemPayActionButtonUM>.withdrawButton: TangemPayActionButtonUM
+    get() = first { it.action == TangemPayAction.Withdraw }
 
-internal val List<TangemPayActionButtonUM>.addFundsButton: ActionButtonConfig
-    get() = first { it.action == TangemPayAction.AddFunds }.config
+internal val List<TangemPayActionButtonUM>.addFundsButton: TangemPayActionButtonUM
+    get() = first { it.action == TangemPayAction.AddFunds }
 
-internal val TangemPayDetailsUM.withdrawButton: ActionButtonConfig
+internal val TangemPayDetailsUM.withdrawButton: TangemPayActionButtonUM
     get() = balanceBlockState.actionButtons.withdrawButton
 
-internal val TangemPayDetailsUM.addFundsButton: ActionButtonConfig
+internal val TangemPayDetailsUM.addFundsButton: TangemPayActionButtonUM
     get() = balanceBlockState.actionButtons.addFundsButton

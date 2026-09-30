@@ -3,6 +3,7 @@ plugins {
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
+    alias(deps.plugins.kotlin.serialization)
     id("configuration")
 }
 
@@ -14,10 +15,17 @@ dependencies {
     /** Core */
     api(projects.core.decompose)
     api(projects.core.utils)
+    implementation(projects.core.abTests)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
+    implementation(projects.core.configToggles)
+    implementation(projects.core.local)
+    implementation(projects.core.remote)
     implementation(projects.core.res)
     implementation(projects.core.ui)
+
+    /** Data */
+    implementation(projects.store.datasource)
 
     /** Api */
     api(projects.features.storiesV2.api)
@@ -43,6 +51,7 @@ dependencies {
     // `@UnstableApi` in media3 is an androidx opt-in marker, so opting in needs androidx's own OptIn annotation.
     implementation(deps.androidx.annotation.experimental)
     implementation(deps.androidx.appCompat)
+    implementation(deps.androidx.datastore.core)
     implementation(deps.compose.coil)
     implementation(deps.decompose)
     implementation(deps.kotlin.coroutines)
@@ -51,6 +60,8 @@ dependencies {
     implementation(deps.lifecycle.compose)
     implementation(deps.lottie)
     implementation(deps.lottie.compose)
+    implementation(deps.moshi)
+    implementation(deps.okHttp)
 
     /** Tests */
     testImplementation(projects.test.core)
