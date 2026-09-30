@@ -539,7 +539,7 @@
   <string name="common_support">Поддержка</string>
   <string name="common_supported_networks">Поддерживаемые сети</string>
   <string name="common_swap">Обменять</string>
-  <string name="common_swapped">Обменяно</string>
+  <string name="common_swapped">Обмен завершен</string>
   <string name="common_swapping">Обмен</string>
   <string name="common_tangem">Tangem</string>
   <string name="common_tangem_wallet">Tangem Wallet</string>
