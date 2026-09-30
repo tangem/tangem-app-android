@@ -101,6 +101,15 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
     val accountClosedBannerTitle: KNode =
         bannerTitle(CoreResR.string.tangempay_account_deactivated_message_title)
 
+    val accountClosedBannerMessage: KNode =
+        bannerMessage(CoreResR.string.tangempay_account_deactivated_message_subtitle)
+
+    // The deactivated screen shows no other message banner, so the start icon belongs to the account-closed one.
+    val accountClosedBannerIcon: KNode = child {
+        hasTestTag(NotificationTestTags.START_ICON)
+        useUnmergedTree = true
+    }
+
     // The confirmation dialog and the more-actions menu carry the same label, but neither is on screen
     // while this banner button is the one being clicked.
     val removeAccountBannerButton: KNode = child {
