@@ -108,13 +108,6 @@ internal const val ACCOUNT_ROW_TITLE_EXPANDED_SCALE = 0.75f
 internal val AccountRowMotion.isTitleCaption: Boolean
     get() = isSettled && expansion == 1f
 
-/**
- * Scale the 40dp avatar is drawn at, reaching its 16dp expanded size. Written as the ratio of the two
- * design sizes so it stays in step with the box the layout centres.
- */
-internal val AccountRowMotion.avatarScale: Float
-    get() = lerp(start = 1f, stop = 16.dp / 40.dp, fraction = expansion)
-
 /** Scale the title placeable is drawn at: 1 once it is real caption text, interpolated until then. */
 internal val AccountRowMotion.titleScale: Float
     get() = if (isTitleCaption) {

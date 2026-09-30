@@ -6,31 +6,26 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.account.AccountIconSize
-import com.tangem.core.ui.components.account.AccountResIcon
 import com.tangem.core.ui.ds2.DsVersion
+import com.tangem.core.ui.ds2.avatar.TangemAvatar
 import com.tangem.core.ui.ds2.badge.TangemBadge
-import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.core.ui.ds2.util.TangemPriceChange
@@ -46,7 +41,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * shrinks that line into a compact heading and reveals [content], normally the account's
  * [TangemTokenRow]s.
  *
- * Version: 1.0.0
+ * Version: 1.1.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=10694-21239)
  *
@@ -60,6 +55,8 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * - The title is always one line and ellipsized, in both states.
  * - Holding the row down dims its heading to 60 %.
  *
+ * @param avatar Leading account avatar. The row renders it itself, morphing it from 40dp to 16dp as
+ * it expands — pass the state, not a pre-sized composable. See [TangemAvatar.UiState].
  * @param title Account name. Single line, ellipsized.
  * @param modifier Modifier applied to the card. The card always fills the available width.
  * @param tokensAmount Localized token count (e.g. `"2 tokens"`). `null` hides it.
@@ -77,13 +74,11 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * @param onClick Card click handler. `null` with no [onLongClick] makes the card non-interactive.
  * @param onLongClick Card long-press handler. `null` disables long-press.
  * @param content Expanded body — the account's token rows. `null` makes the card non-expandable.
- * @param avatar Leading account avatar. Render it at [AccountIconSize.Default] (40dp) and do not
- * animate it — the row shrinks it itself while expanding. `AccountResIcon` / `AccountCharIcon` /
- * `PaymentAccountIcon` all fit.
  */
 @Suppress("LongParameterList")
 @Composable
 fun TangemAccountRow(
+    avatar: TangemAvatar.UiState,
     title: TextReference,
     modifier: Modifier = Modifier,
     tokensAmount: TextReference? = null,
@@ -98,7 +93,6 @@ fun TangemAccountRow(
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     content: (@Composable ColumnScope.() -> Unit)? = null,
-    avatar: @Composable () -> Unit,
 ) {
     AccountRowScaffold(
         avatar = avatar,
@@ -122,7 +116,7 @@ fun TangemAccountRow(
 /** Public API surface of [TangemAccountRow]. */
 object TangemAccountRow {
 
-    val version = DsVersion(major = 1, minor = 0, patch = 0)
+    val version = DsVersion(major = 1, minor = 1, patch = 0)
 
     /**
      * State model of [TangemAccountRow] — one subtype per Figma variant. Render it with the
@@ -252,6 +246,8 @@ object TangemAccountRow {
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=10694-21239)
  *
+ * @param avatar Leading account avatar. The row renders it itself, morphing it from 40dp to 16dp as
+ * it expands — pass the state, not a pre-sized composable. See [TangemAvatar.UiState].
  * @param state Card state model. See [TangemAccountRow.State].
  * @param modifier Modifier applied to the card.
  * @param isExpanded Whether the card shows [content].
@@ -261,19 +257,17 @@ object TangemAccountRow {
  * @param content Expanded body — the account's token rows. Ignored by
  * [TangemAccountRow.State.Empty], which renders its own body, and by
  * [TangemAccountRow.State.Shimmer].
- * @param avatar Leading account avatar, rendered at [AccountIconSize.Default]. It stays outside
- * [state] because it is a composable slot.
  */
 @Suppress("LongParameterList")
 @Composable
 fun TangemAccountRow(
+    avatar: TangemAvatar.UiState,
     state: TangemAccountRow.State,
     modifier: Modifier = Modifier,
     isExpanded: Boolean = false,
     isBalanceHidden: Boolean = false,
     collapseContentDescription: String? = null,
     content: (@Composable ColumnScope.() -> Unit)? = null,
-    avatar: @Composable () -> Unit,
 ) {
     when (state) {
         is TangemAccountRow.State.Content -> TangemAccountRow(
@@ -345,6 +339,8 @@ fun TangemAccountRow(
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=10694-21239)
  *
+ * @param avatar Leading account avatar. The row renders it itself, morphing it from 40dp to 16dp as
+ * it expands — pass the state, not a pre-sized composable. See [TangemAvatar.UiState].
  * @param title Account name.
  * @param badge Localized badge label (e.g. `"Unreachable"`).
  * @param modifier Modifier applied to the card.
@@ -355,11 +351,11 @@ fun TangemAccountRow(
  * @param onClick Card click handler. `null` with no [onLongClick] makes it non-interactive.
  * @param onLongClick Card long-press handler. `null` disables long-press.
  * @param content Expanded body — the account's token rows, themselves usually unreachable.
- * @param avatar Leading account avatar, rendered at [AccountIconSize.Default].
  */
 @Suppress("LongParameterList")
 @Composable
 fun TangemAccountRow.Unreachable(
+    avatar: TangemAvatar.UiState,
     title: TextReference,
     badge: TextReference,
     modifier: Modifier = Modifier,
@@ -370,7 +366,6 @@ fun TangemAccountRow.Unreachable(
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     content: (@Composable ColumnScope.() -> Unit)? = null,
-    avatar: @Composable () -> Unit,
 ) {
     AccountRowScaffold(
         avatar = avatar,
@@ -393,6 +388,8 @@ fun TangemAccountRow.Unreachable(
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=10694-21239)
  *
+ * @param avatar Leading account avatar. The row renders it itself, morphing it from 40dp to 16dp as
+ * it expands — pass the state, not a pre-sized composable. See [TangemAvatar.UiState].
  * @param title Account name.
  * @param modifier Modifier applied to the card.
  * @param tokensAmount Localized token count. `null` hides it.
@@ -402,11 +399,11 @@ fun TangemAccountRow.Unreachable(
  * @param onClick Card click handler. `null` with no [onLongClick] makes it non-interactive.
  * @param onLongClick Card long-press handler. `null` disables long-press.
  * @param content Expanded body — the account's token rows.
- * @param avatar Leading account avatar, rendered at [AccountIconSize.Default].
  */
 @Suppress("LongParameterList")
 @Composable
 fun TangemAccountRow.BalanceError(
+    avatar: TangemAvatar.UiState,
     title: TextReference,
     modifier: Modifier = Modifier,
     tokensAmount: TextReference? = null,
@@ -416,7 +413,6 @@ fun TangemAccountRow.BalanceError(
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     content: (@Composable ColumnScope.() -> Unit)? = null,
-    avatar: @Composable () -> Unit,
 ) {
     AccountRowScaffold(
         avatar = avatar,
@@ -440,6 +436,8 @@ fun TangemAccountRow.BalanceError(
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=10694-21239)
  *
+ * @param avatar Leading account avatar. The row renders it itself, morphing it from 40dp to 16dp as
+ * it expands — pass the state, not a pre-sized composable. See [TangemAvatar.UiState].
  * @param title Account name.
  * @param message Localized prompt shown in the expanded body.
  * @param addTokensLabel Localized label of the button under [message].
@@ -456,11 +454,11 @@ fun TangemAccountRow.BalanceError(
  * @param collapseContentDescription Accessibility label of the collapse arrow.
  * @param onClick Card click handler. `null` with no [onLongClick] makes it non-interactive.
  * @param onLongClick Card long-press handler. `null` disables long-press.
- * @param avatar Leading account avatar, rendered at [AccountIconSize.Default].
  */
 @Suppress("LongParameterList")
 @Composable
 fun TangemAccountRow.Empty(
+    avatar: TangemAvatar.UiState,
     title: TextReference,
     message: TextReference,
     addTokensLabel: TextReference,
@@ -475,7 +473,6 @@ fun TangemAccountRow.Empty(
     collapseContentDescription: String? = null,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
-    avatar: @Composable () -> Unit,
 ) {
     AccountRowScaffold(
         avatar = avatar,
@@ -516,11 +513,10 @@ fun TangemAccountRow.Shimmer(modifier: Modifier = Modifier) {
         interactionSource = interactionSource,
         modifier = modifier,
     ) {
-        TangemShimmer(
-            radius = 12.dp,
-            modifier = Modifier
-                .layoutId(AccountRowLayoutId.AVATAR)
-                .size(40.dp),
+        TangemAvatar(
+            state = TangemAvatar.UiState.Shimmer(shape = TangemAvatar.UiState.Shimmer.Shape.RoundedSquare),
+            size = TangemAvatar.Size.X40,
+            modifier = Modifier.layoutId(AccountRowLayoutId.AVATAR),
         )
         AccountRowShimmerLine(
             lineHeight = 20.dp,
@@ -581,6 +577,7 @@ fun TangemAccountRow.Section(
 @Suppress("LongParameterList", "LongMethod", "CyclomaticComplexMethod")
 @Composable
 private fun AccountRowScaffold(
+    avatar: TangemAvatar.UiState,
     title: TextReference,
     modifier: Modifier = Modifier,
     isExpanded: Boolean = false,
@@ -598,7 +595,6 @@ private fun AccountRowScaffold(
     isBalanceHidden: Boolean = false,
     isBalanceFlickering: Boolean = false,
     content: (@Composable ColumnScope.() -> Unit)? = null,
-    avatar: @Composable () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val pressAlpha by rememberAccountRowPressAlpha(interactionSource)
@@ -611,19 +607,13 @@ private fun AccountRowScaffold(
         onClick = onClick,
         onLongClick = onLongClick,
     ) {
-        val avatarScale = motion.avatarScale
-        Box(
+        AccountRowAvatar(
+            state = avatar,
+            motion = motion,
             modifier = Modifier
                 .layoutId(AccountRowLayoutId.AVATAR)
-                .graphicsLayer {
-                    alpha = pressAlpha
-                    scaleX = avatarScale
-                    scaleY = avatarScale
-                    transformOrigin = TransformOrigin(pivotFractionX = 0f, pivotFractionY = 0f)
-                },
-        ) {
-            avatar()
-        }
+                .graphicsLayer { alpha = pressAlpha },
+        )
 
         AccountRowTitle(
             title = title,
@@ -815,14 +805,11 @@ private fun PreviewTokenRow() {
 }
 
 @Composable
-private fun PreviewContainer(content: @Composable (avatar: @Composable () -> Unit) -> Unit) {
-    val avatar: @Composable () -> Unit = {
-        AccountResIcon(
-            resId = R.drawable.ic_airplane_mode_24,
-            color = TangemTheme.colors3.bg.accent.blue,
-            size = AccountIconSize.Default,
-        )
-    }
+private fun PreviewContainer(content: @Composable (avatar: TangemAvatar.UiState) -> Unit) {
+    val avatar = TangemAvatar.UiState.Account(
+        iconRes = R.drawable.ic_airplane_mode_24,
+        color = TangemAvatar.FillColor.DarkBlue,
+    )
     TangemThemePreviewRedesign {
         Column(
             verticalArrangement = Arrangement.spacedBy(12.dp),
