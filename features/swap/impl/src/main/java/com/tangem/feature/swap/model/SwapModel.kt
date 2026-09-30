@@ -211,6 +211,7 @@ internal class SwapModel @Inject constructor(
     private val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase,
     private val getCurrencyUSDQuoteUseCase: GetCurrencyUSDQuoteUseCase,
     private val recordTokenTransferFromSwapUseCase: RecordTokenTransferFromSwapUseCase,
+    private val predictionTopUpLimitsResolver: PredictionTopUpLimitsResolver,
 ) : Model() {
 
     private val params = paramsContainer.require<SwapComponent.Params>()
@@ -244,6 +245,8 @@ internal class SwapModel @Inject constructor(
     private var isAccountsMode: Boolean = false
 
     private var predictionWithdrawDestinations: Map<CryptoCurrency.ID, PredictionWithdrawDestination>? = null
+
+    private var predictionTopUpLimits: PredictionTopUpLimits? = null
 
     private val predictionWithdrawTargets: StateFlow<List<PredefinedTokenToAdd>> = MutableStateFlow(
         listOfNotNull(polymarketCollateralCurrencyFactory.createDepositTarget().toPredefinedToken()),
@@ -302,6 +305,7 @@ internal class SwapModel @Inject constructor(
         isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
         appRouter = appRouter,
         isChooseTokenPulseEnabled = swapFeatureToggles.isChooseTokenPulseEnabled,
+        predictionTopUpLimitsProvider = Provider { predictionTopUpLimits },
     )
 
     private val amountDebouncer = Debouncer()
@@ -587,6 +591,12 @@ internal class SwapModel @Inject constructor(
 
             preselectedFromCurrency = fromSwapCurrencyStatus?.currency
             preselectedToCurrency = toSwapCurrencyStatus?.currency
+
+            if (isPredictionTopUpFlow) {
+                predictionTopUpLimits = toSwapCurrencyStatus?.currency?.let { receiveCurrency ->
+                    predictionTopUpLimitsResolver.resolve(params.userWalletId, receiveCurrency)
+                }
+            }
 
             analyticsEventHandler.send(
                 SwapEvents.SwapScreenOpened(
@@ -1031,6 +1041,7 @@ internal class SwapModel @Inject constructor(
                     feePaidCryptoCurrencyStatus = feePaidCryptoCurrency,
                     feeSelectorUM = feeSelectorRepository.state.value.takeUnless { isGaslessWithdrawal },
                     isHighNetworkFee = isHighNetworkFee(selectedSwapFee),
+                    predictionTopUpLimits = predictionTopUpLimits,
                 )
                 when {
                     uiState.successState != null -> Unit
@@ -1080,6 +1091,7 @@ internal class SwapModel @Inject constructor(
                 isTangemPayWithdrawal = isGaslessWithdrawal,
                 feeSelectorUM = feeSelectorRepository.state.value.takeUnless { isGaslessWithdrawal },
                 isHighNetworkFee = isHighNetworkFee(getSelectedSwapFee()),
+                predictionTopUpLimits = predictionTopUpLimits,
             )
         }
     }
