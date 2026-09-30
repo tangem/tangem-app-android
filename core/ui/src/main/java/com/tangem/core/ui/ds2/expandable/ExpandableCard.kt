@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.Placeable
@@ -33,6 +34,9 @@ import kotlin.math.roundToInt
  * `INLINE_*` are the compact copies that sit after the title while the row is expanded — the account
  * row uses two (dot, balance), the expandable row four (dot, value, dot, caption). `CONTENT_SLOT` and
  * `HEADING_SLOT` replace the structured children when the caller supplies its own content.
+ *
+ * There is no id for an expanded body: the card is the heading only, so a host can keep its rows as
+ * siblings in its own lazy list. See [ExpandableCard].
  */
 internal enum class ExpandableCardLayoutId {
     AVATAR,
@@ -47,7 +51,6 @@ internal enum class ExpandableCardLayoutId {
     INLINE_3,
     INLINE_4,
     ARROW,
-    CONTENT,
     CONTENT_SLOT,
     HEADING_SLOT,
 }
@@ -74,8 +77,14 @@ private val InlineIds = listOf(
  * — they are hidden by their own alpha, not by being absent, so their position keeps tracking the
  * ones that move.
  *
+ * The card renders the heading and nothing else. What a row reveals when it expands is emitted by the
+ * host next to it, so a `LazyColumn` keeps composing only the rows on screen; nesting the body here
+ * would compose every one of them inside a single lazy item.
+ *
  * @param contentGap Space between the start and end columns of the collapsed row. The account row
  * uses 12dp, the expandable row 8dp.
+ * @param shape Card background and clip. Defaults to the standalone 24dp card; a host that continues
+ * the card with sibling items passes a shape whose bottom corners are square.
  */
 @Suppress("LongMethod", "CyclomaticComplexMethod", "LongParameterList")
 @Composable
@@ -84,6 +93,7 @@ internal fun ExpandableCard(
     interactionSource: MutableInteractionSource,
     modifier: Modifier = Modifier,
     contentGap: Dp = 12.dp,
+    shape: Shape = ExpandableCardShape,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     content: @Composable () -> Unit,
@@ -93,13 +103,13 @@ internal fun ExpandableCard(
 
     val cardModifier = modifier
         .fillMaxWidth()
-        .clip(ExpandableCardShape)
+        .clip(shape)
         .background(TangemTheme.colors3.bg.secondary)
         .conditionalCompose(isFocused) {
             border(
                 width = 2.dp,
                 color = TangemTheme.colors3.interaction.focusRing.brand,
-                shape = ExpandableCardShape,
+                shape = shape,
             )
         }
         .conditionalCompose(isInteractive) {
@@ -172,11 +182,6 @@ internal fun ExpandableCard(
             id = ExpandableCardLayoutId.HEADING_SLOT,
             constraints = Constraints(maxWidth = max(0, titleWidthExpanded)),
         )
-        val slot = measurables.measureById(
-            id = ExpandableCardLayoutId.CONTENT,
-            constraints = Constraints(minWidth = width, maxWidth = width),
-        )
-
         val structuredStartHeight = title.heightOrZero() +
             if (subtitle != null) inlineGap + subtitle.height else 0
         val startClusterHeight = contentSlot?.height ?: structuredStartHeight
@@ -195,11 +200,9 @@ internal fun ExpandableCard(
             headingSlot.heightOrZero(),
             (title.heightOrZero() * titleScale).roundToInt(),
         )
-        val expandedHeadingHeight = padding + lineHeight + expandedBottomPadding
-        val expandedHeight = expandedHeadingHeight + slot.heightOrZero()
+        val expandedHeight = padding + lineHeight + expandedBottomPadding
 
         val height = lerp(collapsedHeight, expandedHeight, progress)
-        val headingBottom = lerp(collapsedHeight, expandedHeadingHeight, progress)
 
         layout(width = width, height = max(0, height)) {
             val avatarCenterY = lerp(padding + mainHeight / 2, padding + lineHeight / 2, progress)
@@ -252,8 +255,6 @@ internal fun ExpandableCard(
                     progress,
                 ),
             )
-
-            slot?.placeRelative(x = 0, y = headingBottom)
         }
     }
 }
