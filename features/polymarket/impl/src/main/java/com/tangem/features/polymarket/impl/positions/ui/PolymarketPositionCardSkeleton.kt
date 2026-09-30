@@ -22,6 +22,8 @@ import com.tangem.features.polymarket.impl.common.ui.PolymarketCardIconSize
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.features.polymarket.impl.positions.ui.preview.PolymarketPositionCardPreviewProvider
 
+internal val PolymarketPositionCardSkeletonHeight = 112.dp
+
 @Composable
 internal fun PolymarketPositionCardSkeleton(modifier: Modifier = Modifier) {
     TangemSurface(
@@ -30,7 +32,11 @@ internal fun PolymarketPositionCardSkeleton(modifier: Modifier = Modifier) {
         shape = PolymarketCardShape,
     ) {
         // Matches the content card at the default font scale, including its outcome bubble.
-        Box(modifier = Modifier.height(112.dp).padding(horizontal = 16.dp, vertical = 18.dp)) {
+        Box(
+            modifier = Modifier
+                .height(PolymarketPositionCardSkeletonHeight)
+                .padding(horizontal = 16.dp, vertical = 18.dp),
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),

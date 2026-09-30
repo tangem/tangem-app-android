@@ -6,19 +6,16 @@ import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -27,10 +24,12 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds.TangemPagerIndicator
-import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds.topbar.TangemTopBar
+import com.tangem.core.ui.ds2.button.Back
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.*
 import com.tangem.core.ui.test.TangemPayTestTags
@@ -45,9 +44,10 @@ import com.tangem.features.tangempay.card.reissue.TangemPayReissueBlock
 import com.tangem.features.tangempay.card.view.DisplayNameState
 import com.tangem.features.tangempay.card.view.TangemPayCard
 import com.tangem.features.tangempay.card.view.TangemPayCardDetailsUM
-import com.tangem.features.tangempay.common.PayContextMenuBlock
+import com.tangem.features.tangempay.common.PayContextMenuButton
 import com.tangem.features.tangempay.common.TangemPayDropDownItemUM
 import com.tangem.features.tangempay.details.impl.R
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -84,19 +84,16 @@ private fun TangemPayCardPageScreen(
     modifier: Modifier = Modifier,
     cardSection: @Composable () -> Unit,
 ) {
-    Scaffold(
+    TangemTopBarScaffold(
         modifier = modifier,
+        containerColor = TangemTheme.colors3.bg.primary,
         topBar = {
             CardPageTopBar(
                 items = state.menuItems,
                 onBackClick = state.onBackClick,
             )
         },
-        contentWindowInsets = ScaffoldDefaults.contentWindowInsets.exclude(WindowInsets.navigationBars),
-        containerColor = TangemTheme.colors3.bg.primary,
-    ) { scaffoldPaddings ->
-        val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
-        val contentBottomPadding = TangemTheme.dimens.spacing16 + bottomBarHeight
+    ) { contentPadding ->
         val reissueTitle = progressBannerTitleOrNull(cardState = state.cardState)
 
         if (state.delivery != null) {
@@ -105,8 +102,7 @@ private fun TangemPayCardPageScreen(
                 cardSection = cardSection,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(scaffoldPaddings)
-                    .padding(bottom = bottomBarHeight),
+                    .padding(contentPadding),
             )
         } else if (reissueTitle != null) {
             ReissueCardLayout(
@@ -114,15 +110,24 @@ private fun TangemPayCardPageScreen(
                 cardSection = cardSection,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(scaffoldPaddings)
-                    .padding(bottom = contentBottomPadding),
+                    .padding(contentPadding)
+                    .padding(bottom = TangemTheme.dimens.spacing16),
             )
         } else {
-            LazyColumn(
+            // Material buttons inside the scaffold content can't blur the scaffold's own haze source (Haze skips
+            // an ancestor source of the same state), so they sample a separate state backed by the plain background.
+            val buttonsHazeState = rememberHazeState()
+            Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(scaffoldPaddings),
-                contentPadding = PaddingValues(bottom = contentBottomPadding),
+                    .matchParentSize()
+                    .background(TangemTheme.colors3.bg.primary)
+                    .hazeSourceTangem(state = buttonsHazeState, zIndex = -1f),
+            )
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = contentPadding.copy(
+                    bottom = contentPadding.calculateBottomPadding() + TangemTheme.dimens.spacing16,
+                ),
                 verticalArrangement = Arrangement.spacedBy(0.dp),
             ) {
                 item(key = "Card") {
@@ -135,10 +140,12 @@ private fun TangemPayCardPageScreen(
                     state.cardState == TangemPayCardState.Active
                 ) {
                     cardPageItem("Settings buttons") {
-                        TangemPayCardPageSettingsButtonsBlock(
-                            modifier = Modifier.fillMaxWidth(),
-                            settings = state.settings,
-                        )
+                        CompositionLocalProvider(LocalHazeState provides buttonsHazeState) {
+                            TangemPayCardPageSettingsButtonsBlock(
+                                modifier = Modifier.fillMaxWidth(),
+                                settings = state.settings,
+                            )
+                        }
                     }
                 }
                 cardState(state = state)
@@ -360,32 +367,11 @@ private fun CardPageTopBar(
     items: ImmutableList<TangemPayDropDownItemUM>,
     modifier: Modifier = Modifier,
 ) {
-    var isDropdownMenuShown by rememberSaveable { mutableStateOf(false) }
-    TangemTopBar(
-        modifier = modifier.statusBarsPadding(),
-        startContent = {
-            TangemButton(
-                iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_arrow_back_28),
-                onClick = onBackClick,
-                size = TangemButton.Size.X11,
-                variant = TangemButton.Variant.Material,
-            )
-        },
-        endContent = {
-            Box {
-                TangemButton(
-                    modifier = Modifier.testTag(TangemPayTestTags.CARD_PAGE_MORE_BUTTON),
-                    iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_more_default_24),
-                    onClick = { isDropdownMenuShown = true },
-                    size = TangemButton.Size.X11,
-                    variant = TangemButton.Variant.Material,
-                )
-                PayContextMenuBlock(
-                    items = items,
-                    onMenuDismiss = { isDropdownMenuShown = false },
-                    isDropdownMenuShown = isDropdownMenuShown,
-                )
-            }
+    TangemTopNavigation(
+        modifier = modifier,
+        startButton = { TangemButton.Back(onClick = onBackClick) },
+        endButtonsGroup = {
+            PayContextMenuButton(items = items, testTag = TangemPayTestTags.CARD_PAGE_MORE_BUTTON)
         },
     )
 }

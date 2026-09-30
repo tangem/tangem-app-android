@@ -27,6 +27,7 @@ interface GoogleWalletProvisioner {
         NO_TOKEN_AWAITING_VERIFICATION,
         NETWORK_ERROR,
         TOKENIZATION_DECLINED,
+        TOO_MANY_ATTEMPTS,
         GOOGLE_WALLET_ERROR,
         MEAWALLET_ERROR,
         UNEXPECTED_ERROR,

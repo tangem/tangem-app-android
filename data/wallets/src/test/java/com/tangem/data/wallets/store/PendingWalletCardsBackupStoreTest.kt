@@ -1,15 +1,19 @@
 package com.tangem.data.wallets.store
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.datasource.api.tangemTech.models.WalletCardDTO
 import com.tangem.test.core.datastore.MockStateDataStore
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.io.ByteArrayOutputStream
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class PendingWalletCardsBackupStoreTest {
@@ -117,6 +121,35 @@ internal class PendingWalletCardsBackupStoreTest {
         // Assert
         assertThat(actual).isEqualTo(entry)
     }
+
+    /**
+     * The store's DataStore is built with an explicit list serializer instead of the reified
+     * `serializer<List<PendingWalletCardsBackup>>()`, which resolves through Kotlin reflection. The file it
+     * writes must stay byte-for-byte what the reified serializer wrote, so queued reports survive the update.
+     */
+    @Test
+    fun `GIVEN queued entries WHEN written with the explicit serializer THEN the file matches the reified one`() =
+        runTest {
+            // Arrange
+            val entries = listOf(entry(id = "1"), entry(id = "2"))
+            val explicit = KotlinxDataStoreSerializer(
+                defaultValue = emptyList(),
+                serializer = ListSerializer(PendingWalletCardsBackup.serializer()),
+            )
+            val reified = KotlinxDataStoreSerializer(
+                defaultValue = emptyList(),
+                serializer = serializer<PendingWalletCardsBackups>(),
+            )
+
+            // Act
+            val written = ByteArrayOutputStream().also { explicit.writeTo(entries, it) }.toString()
+            val writtenByReified = ByteArrayOutputStream().also { reified.writeTo(entries, it) }.toString()
+            val readBack = explicit.readFrom(writtenByReified.byteInputStream())
+
+            // Assert
+            assertThat(written).isEqualTo(writtenByReified)
+            assertThat(readBack).isEqualTo(entries)
+        }
 
     private companion object {
 

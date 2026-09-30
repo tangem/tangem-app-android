@@ -37,7 +37,7 @@ internal class DefaultWcInitializeUseCaseTest {
     fun `GIVEN no saved sessions WHEN invoke THEN sdk stays down`() = runTest {
         // Arrange
         coEvery { store.sessions } returns flowOf(emptySet())
-        coEvery { store.pendingApproval } returns flowOf(emptySet())
+        coEvery { store.pendingApprovalIncludingExpired } returns flowOf(emptySet())
 
         // Act
         createUseCase(this).invoke()
@@ -51,7 +51,7 @@ internal class DefaultWcInitializeUseCaseTest {
     fun `GIVEN saved session WHEN invoke THEN sdk is initialized`() = runTest {
         // Arrange
         coEvery { store.sessions } returns flowOf(setOf(createSession()))
-        coEvery { store.pendingApproval } returns flowOf(emptySet())
+        coEvery { store.pendingApprovalIncludingExpired } returns flowOf(emptySet())
 
         // Act
         createUseCase(this).invoke()
@@ -65,7 +65,7 @@ internal class DefaultWcInitializeUseCaseTest {
     fun `GIVEN pending approval WHEN invoke THEN sdk is initialized`() = runTest {
         // Arrange
         coEvery { store.sessions } returns flowOf(emptySet())
-        coEvery { store.pendingApproval } returns flowOf(setOf(mockk<WcPendingApprovalSessionDTO>()))
+        coEvery { store.pendingApprovalIncludingExpired } returns flowOf(setOf(mockk<WcPendingApprovalSessionDTO>()))
 
         // Act
         createUseCase(this).invoke()

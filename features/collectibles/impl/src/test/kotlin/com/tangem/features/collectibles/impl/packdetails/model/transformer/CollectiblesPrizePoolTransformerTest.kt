@@ -33,7 +33,6 @@ internal class CollectiblesPrizePoolTransformerTest {
             buyButtonText = stringReference("Open for 50 USDC"),
             onBuyClick = {},
         ),
-        onPoweredByClick = {},
     )
 
     @ParameterizedTest
@@ -87,6 +86,31 @@ internal class CollectiblesPrizePoolTransformerTest {
         val pool = (actual as CollectiblesMachineDetailsUM.Content).prizePool
         val ids = (pool as CollectiblesMachineDetailsUM.PrizePoolUM.Content).rows.flatMap { it.prizes }.map { it.id }
         assertThat(ids).containsExactly("a", "b").inOrder()
+    }
+
+    @Test
+    fun `GIVEN the pool failed WHEN the retry starts loading THEN the error stays with a spinner`() {
+        // Arrange
+        val onReloadClick = {}
+        val error = content.copy(
+            prizePool = CollectiblesMachineDetailsUM.PrizePoolUM.Error(
+                message = stringReference("Failed to load prize pool"),
+                onReloadClick = onReloadClick,
+            ),
+        )
+        val batchListState = createNftsBatchListState(status = PaginationStatus.InitialLoading)
+
+        // Act
+        val actual = CollectiblesPrizePoolTransformer(batchListState, onReloadClick = onReloadClick).transform(error)
+
+        // Assert
+        assertThat((actual as CollectiblesMachineDetailsUM.Content).prizePool).isEqualTo(
+            CollectiblesMachineDetailsUM.PrizePoolUM.Error(
+                message = stringReference("Failed to load prize pool"),
+                onReloadClick = onReloadClick,
+                isReloading = true,
+            ),
+        )
     }
 
     @Test

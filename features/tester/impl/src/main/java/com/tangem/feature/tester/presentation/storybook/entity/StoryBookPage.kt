@@ -16,6 +16,7 @@ import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.modal.TangemModal
+import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusScreen
@@ -631,12 +632,14 @@ internal data class TangemModalStory(
     val isTallContent: Boolean,
     val isInputVisible: Boolean,
     val presentation: TangemModal.Presentation,
+    val chromePlacement: TangemModal.ChromePlacement,
     val onShownChange: (Boolean) -> Unit,
     val onStackedShownChange: (Boolean) -> Unit,
     val onContentScrollableToggle: () -> Unit,
     val onTallContentToggle: () -> Unit,
     val onInputToggle: () -> Unit,
     val onPresentationChange: (TangemModal.Presentation) -> Unit,
+    val onChromePlacementChange: (TangemModal.ChromePlacement) -> Unit,
 ) : DsStoryBookPage
 
 @Suppress("BooleanPropertyNaming")
@@ -724,6 +727,36 @@ internal data class TangemTabNavigationStory(
         Light("light"),
         Dark("dark"),
     }
+}
+
+internal data class TangemModalStatusStory(
+    val variant: TangemModalStatus.Variant,
+    val titleStyle: TangemModalStatus.TitleStyle,
+    val hasDescription: Boolean,
+    val hasCustomAsset: Boolean,
+    val hasExtraBottom: Boolean,
+    val hasDetails: Boolean,
+    val openedExample: TangemModalStatusExample?,
+    val isMessageSheetShown: Boolean,
+    val onVariantChange: (TangemModalStatus.Variant) -> Unit,
+    val onTitleStyleChange: (TangemModalStatus.TitleStyle) -> Unit,
+    val onDescriptionToggle: () -> Unit,
+    val onCustomAssetToggle: () -> Unit,
+    val onExtraBottomToggle: () -> Unit,
+    val onDetailsToggle: () -> Unit,
+    val onExampleOpen: (TangemModalStatusExample) -> Unit,
+    val onExampleDismiss: () -> Unit,
+    val onMessageSheetShownChange: (Boolean) -> Unit,
+) : DsStoryBookPage
+
+/** The modal status screens from the DS Figma examples, each recreated in a real modal. */
+internal enum class TangemModalStatusExample(val label: String) {
+    KycInProgress(label = "KYC in progress"),
+    ErrorWithTwoActions(label = "An error occured"),
+    NotAvailable(label = "Virtual account not available"),
+    PredictionAmount(label = "Prediction amount + rows"),
+    PaymentCompleted(label = "Payment completed"),
+    PredictionLoss(label = "Prediction loss + recipient"),
 }
 
 internal data class TangemStatusScreenStory(

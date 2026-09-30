@@ -52,10 +52,8 @@ interface SocialRecoveryClient {
      * Drops the binding of [walletId] and the recovery key stored with it, so the identity can no
      * longer restore this wallet. Unbinding a wallet that has no binding is a success.
      *
-     * There is no binding-only endpoint: the wallet registration is what carries the binding, so this
-     * unregisters the wallet. Fine for its only caller — the upgrade to a card keeps the wallet id, so
-     * the scan behind it found the hot registration's marker and skipped the cold one; dropping that
-     * marker here is what lets the next card tap register the wallet as cold.
+     * There is no binding-only endpoint, so this unregisters the whole wallet and drops its local
+     * registration marker.
      */
     suspend fun unbindWallet(walletId: String): Either<SocialRecoveryError, Unit>
 }
@@ -68,7 +66,10 @@ interface SocialRecoveryClient {
  * @property forRequest the nonce itself, for [SocialRecoveryClient.recoverKey] and everything bound to it
  * (the device signature, the attestation)
  */
-data class SignInNonce(val forProvider: String, val forRequest: String)
+data class SignInNonce(val forProvider: String, val forRequest: String) {
+
+    override fun toString(): String = "SignInNonce(***)"
+}
 
 sealed interface SocialRecoveryError {
 
