@@ -10,9 +10,11 @@ import com.tangem.datasource.api.promotion.models.PromotionsV3Response.MatchMode
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.PayoutToken
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.PromotionDto
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.Properties
+import com.tangem.datasource.api.promotion.models.PromotionsV3Response.Status
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.TableCell
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.ValueType
 import com.tangem.domain.promo.models.PromoCampaign
+import com.tangem.domain.promo.models.PromoCampaignStatus
 import com.tangem.domain.promo.models.PromoCampaignContent
 import com.tangem.domain.promo.models.PromoDescriptionBlock
 import com.tangem.domain.promo.models.PromoDescriptionBlock.Cell
@@ -57,6 +59,16 @@ internal class PromoCampaignV3ConverterTest {
             expected = createCampaign(),
         ),
         ConvertModel(
+            description = "GIVEN paused status WHEN convert THEN Paused",
+            dto = createDto(status = Status.PAUSED),
+            expected = createCampaign(status = PromoCampaignStatus.Paused),
+        ),
+        ConvertModel(
+            description = "GIVEN unknown status WHEN convert THEN null",
+            dto = createDto(status = Status.UNKNOWN),
+            expected = null,
+        ),
+        ConvertModel(
             description = "GIVEN linked_wallet match mode WHEN convert THEN LinkedWallet",
             dto = createDto(matchMode = MatchMode.LINKED_WALLET),
             expected = createCampaign(matchMode = PromoMatchMode.LinkedWallet),
@@ -96,13 +108,13 @@ internal class PromoCampaignV3ConverterTest {
             description = "GIVEN text and highlight blocks WHEN convert THEN mapped",
             dto = createDto(
                 blocks = listOf(
-                    createBlock(type = BlockType.TEXT, textKey = "intro"),
+                    createBlock(type = BlockType.TEXT, titleKey = "intro_title", textKey = "intro"),
                     createBlock(type = BlockType.HIGHLIGHT, titleKey = "deadline_title", textKey = "deadline"),
                 ),
             ),
             expected = createCampaign(
                 blocks = listOf(
-                    PromoDescriptionBlock.Text(textKey = "intro"),
+                    PromoDescriptionBlock.Text(titleKey = "intro_title", textKey = "intro"),
                     PromoDescriptionBlock.Highlight(titleKey = "deadline_title", textKey = "deadline"),
                 ),
             ),
@@ -208,13 +220,14 @@ internal class PromoCampaignV3ConverterTest {
     )
 
     private fun createDto(
+        status: Status = Status.ACTIVE,
         startAt: String = START,
         matchMode: MatchMode = MatchMode.STRICT,
         payoutTokens: List<PayoutToken>? = null,
         blocks: List<DescriptionBlock> = emptyList(),
     ) = PromotionDto(
         name = "example_campaign",
-        status = "active",
+        status = status,
         startAt = startAt,
         endAt = END,
         isAlreadyEnrolled = true,
@@ -234,12 +247,13 @@ internal class PromoCampaignV3ConverterTest {
     )
 
     private fun createCampaign(
+        status: PromoCampaignStatus = PromoCampaignStatus.Active,
         matchMode: PromoMatchMode = PromoMatchMode.Strict,
         payoutTokens: List<PromoPayoutToken>? = null,
         blocks: List<PromoDescriptionBlock> = emptyList(),
     ) = PromoCampaign(
         name = "example_campaign",
-        status = "active",
+        status = status,
         timeline = PromoTimeline(start = Instant.parse(START), end = Instant.parse(END)),
         isAlreadyEnrolled = true,
         payout = PromoPayout(isNeeded = payoutTokens != null, tokens = payoutTokens.orEmpty()),
