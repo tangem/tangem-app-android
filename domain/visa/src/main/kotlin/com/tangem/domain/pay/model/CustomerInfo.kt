@@ -135,10 +135,14 @@ data class CustomerInfo(
             UNKNOWN,
         }
 
-        /** `ACCOUNT` marks a Virtual Account instance (vs. a `CARD`); used by VA MVP0 (TWI-1638). */
+        /**
+         * `ACCOUNT` marks a Virtual Account instance (vs. a `CARD`); used by VA MVP0 (TWI-1638). `UNKNOWN` is a
+         * type this app version does not know: such an instance is neither an account nor a card and is ignored.
+         */
         enum class SpecificationDataType {
             ACCOUNT,
             CARD,
+            UNKNOWN,
         }
     }
 
