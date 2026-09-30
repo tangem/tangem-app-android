@@ -267,11 +267,18 @@ internal class TxHistoryItemToTransactionItemUMConverter(
     )
 
     /**
-     * What the fee was paid for: the contract method the history named — raw and unlocalized, the same way the
-     * [TransactionType.Operation] row title shows it — or a bare "operation" when the method has no name at all.
+     * What the fee was paid for: the localized name of the protocol call the operation gave up its type for; else the
+     * contract method the history named — raw and unlocalized, the same way the [TransactionType.Operation] row title
+     * shows it — or a bare "operation" when the method has no name at all.
      */
     private fun TxInfo.feeOnlyOperationSubtitle(): ContentSubtitle {
-        val methodName = (type as? TransactionType.Operation)?.name?.ifBlank { null }
+        val operation = type as? TransactionType.Operation
+            ?: return ContentSubtitle.Plain(resourceReference(R.string.transaction_history_fee_for_operation))
+
+        operation.recognized?.feeSubtitleResId()
+            ?.let { return ContentSubtitle.Plain(resourceReference(it)) }
+
+        val methodName = operation.name.ifBlank { null }
             ?: return ContentSubtitle.Plain(resourceReference(R.string.transaction_history_fee_for_operation))
 
         return ContentSubtitle.Plain(
@@ -426,6 +433,36 @@ private fun TxInfo.yieldSupplySubtitle(currency: CryptoCurrency, type: Transacti
             amountSubtitle(currency, R.string.yield_module_transaction_exit_subtitle)
         else -> extractAddressSubtitle()
     }
+}
+
+/**
+ * The network-fee subtitle naming the protocol call a coin's history only paid the gas of. `null` for a call the row
+ * has no wording for — a yield [Send][TransactionType.YieldSupply.Send] changed no mode, it is a transfer the module
+ * made — which leaves the subtitle on the raw method name.
+ */
+@StringRes
+private fun TransactionType.feeSubtitleResId(): Int? = when (this) {
+    is TransactionType.YieldSupply.Enter -> R.string.transaction_history_fee_for_yield_mode_activation
+    is TransactionType.YieldSupply.Topup -> R.string.transaction_history_fee_for_yield_mode_top_up
+    is TransactionType.YieldSupply.Exit -> R.string.transaction_history_fee_for_yield_mode_deactivation
+    is TransactionType.YieldSupply.DeployContract -> R.string.transaction_history_fee_for_yield_mode_deployment
+    is TransactionType.YieldSupply.InitializeToken -> R.string.transaction_history_fee_for_yield_mode_initialization
+    is TransactionType.YieldSupply.ReactivateToken -> R.string.transaction_history_fee_for_yield_mode_reactivation
+    is TransactionType.Approve,
+    TransactionType.GaslessFee,
+    is TransactionType.NetworkFee,
+    is TransactionType.Operation,
+    TransactionType.Staking.ClaimRewards,
+    TransactionType.Staking.Restake,
+    TransactionType.Staking.Stake,
+    TransactionType.Staking.Unstake,
+    is TransactionType.Staking.Vote,
+    TransactionType.Staking.Withdraw,
+    TransactionType.Swap,
+    TransactionType.Transfer,
+    TransactionType.UnknownOperation,
+    is TransactionType.YieldSupply.Send,
+    -> null
 }
 
 /**
