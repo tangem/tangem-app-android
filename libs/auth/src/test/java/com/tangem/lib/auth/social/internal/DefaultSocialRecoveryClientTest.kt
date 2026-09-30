@@ -186,7 +186,9 @@ internal class DefaultSocialRecoveryClientTest {
         // Arrange
         coEvery { api.recoverWallet(any()) } returns httpError(
             code = ApiResponseError.HttpException.Code.NOT_FOUND,
-            message = "no binding for this identity",
+            message = "Not Found",
+            errorBody = """{"status":404,"detail":"No recovery key is stored for this identity",""" +
+                """"code":"RECOVERY_BINDING_NOT_FOUND"}""",
         )
 
         // Act
@@ -195,6 +197,23 @@ internal class DefaultSocialRecoveryClientTest {
         // Assert
         assertThat(result.leftOrNull()).isEqualTo(SocialRecoveryError.BindingNotFound)
     }
+
+    @Test
+    fun `GIVEN a 404 without the binding code WHEN recoverKey THEN it is an error rather than BindingNotFound`() =
+        runTest {
+            // Arrange
+            coEvery { api.recoverWallet(any()) } returns httpError(
+                code = ApiResponseError.HttpException.Code.NOT_FOUND,
+                message = "Not Found",
+                errorBody = """{"status":404,"detail":"Something else"}""",
+            )
+
+            // Act
+            val result = client.recoverKey(nonce = NONCE, providerIdToken = ID_TOKEN)
+
+            // Assert
+            assertThat(result.leftOrNull()).isInstanceOf(SocialRecoveryError.Api::class.java)
+        }
 
     @Test
     fun `GIVEN the nonce expired WHEN recoverKey THEN NonceExpired is returned rather than BindingNotFound`() =
