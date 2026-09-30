@@ -17,6 +17,7 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
+import com.tangem.feature.swap.models.PredictionTopUpLimits
 import com.tangem.feature.swap.models.UiActions
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.CustomFeeFieldUM
@@ -468,6 +469,87 @@ internal class SwapTransferNotificationsFactoryTest {
     private fun errorSelector(error: GetFeeError): FeeSelectorUM.Error = FeeSelectorUM.Error(error = error)
 
     @Suppress("LongParameterList")
+    @Test
+    fun `GIVEN prediction limits and sending amount below minimum WHEN getNotifications THEN minimum warning is first`() =
+        runTest {
+            // Arrange
+            val transferState = buildTransferState(sendingAmount = BigDecimal("0.5"))
+
+            // Act
+            val result = sut.getNotifications(
+                transferState = transferState,
+                feeSelectorUM = null,
+                feeCryptoCurrencyStatus = null,
+                actions = actions,
+                isHighNetworkFee = true,
+                predictionTopUpLimits = PREDICTION_LIMITS,
+            )
+
+            // Assert
+            assertThat(result)
+                .containsExactly(
+                    SwapNotificationUM.Warning.PredictionMinimumDeposit(amountText = "$1.00"),
+                    NotificationUM.Warning.HighNetworkFee,
+                )
+                .inOrder()
+        }
+
+    @Test
+    fun `GIVEN prediction limits and sending amount at maximum WHEN getNotifications THEN maximum warning is added`() =
+        runTest {
+            // Arrange
+            val transferState = buildTransferState(sendingAmount = BigDecimal("100"))
+
+            // Act
+            val result = sut.getNotifications(
+                transferState = transferState,
+                feeSelectorUM = null,
+                feeCryptoCurrencyStatus = null,
+                actions = actions,
+                predictionTopUpLimits = PREDICTION_LIMITS,
+            )
+
+            // Assert
+            assertThat(result).containsExactly(SwapNotificationUM.Warning.PredictionMaximumDeposit(amountText = "$100.00"))
+        }
+
+    @Test
+    fun `GIVEN prediction limits and sending amount still loading WHEN getNotifications THEN no prediction warning`() =
+        runTest {
+            // Arrange
+            val transferState = buildTransferState(sendingAmount = BigDecimal("0.5")).copy(isSendingAmountLoading = true)
+
+            // Act
+            val result = sut.getNotifications(
+                transferState = transferState,
+                feeSelectorUM = null,
+                feeCryptoCurrencyStatus = null,
+                actions = actions,
+                predictionTopUpLimits = PREDICTION_LIMITS,
+            )
+
+            // Assert
+            assertThat(result).isEmpty()
+        }
+
+    @Test
+    fun `GIVEN no prediction limits and a tiny sending amount WHEN getNotifications THEN no prediction warning`() =
+        runTest {
+            // Arrange
+            val transferState = buildTransferState(sendingAmount = BigDecimal("0.5"))
+
+            // Act
+            val result = sut.getNotifications(
+                transferState = transferState,
+                feeSelectorUM = null,
+                feeCryptoCurrencyStatus = null,
+                actions = actions,
+            )
+
+            // Assert
+            assertThat(result).isEmpty()
+        }
+
     private fun buildTransferState(
         fromTokenInfo: TokenSwapInfo = buildTokenInfo(buildCoinStatus()),
         toTokenInfo: TokenSwapInfo = buildTokenInfo(buildCoinStatus()),
@@ -589,5 +671,11 @@ internal class SwapTransferNotificationsFactoryTest {
 
     private companion object {
         const val TRON_FEE_NOTIFICATION_MAX_SHOW_COUNT = 3
+        val PREDICTION_LIMITS = PredictionTopUpLimits(
+            minimum = BigDecimal.ONE,
+            minimumText = "$1.00",
+            maximum = BigDecimal(100),
+            maximumText = "$100.00",
+        )
     }
 }

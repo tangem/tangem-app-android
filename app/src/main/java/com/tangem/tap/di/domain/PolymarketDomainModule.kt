@@ -39,6 +39,7 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketRelayerNonceUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawDestinationsUseCase
+import com.tangem.domain.polymarket.usecase.GetPredictionTopUpMinimumUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawalStateUseCase
 import com.tangem.domain.polymarket.usecase.SearchPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
@@ -309,6 +310,12 @@ internal object PolymarketDomainModule {
     ): GetPredictionWithdrawalStateUseCase = GetPredictionWithdrawalStateUseCase(
         repository = withdrawRepository,
     )
+
+    @Provides
+    @Singleton
+    fun provideGetPredictionTopUpMinimumUseCase(
+        requisitesStore: PredictionDepositRequisitesStore,
+    ): GetPredictionTopUpMinimumUseCase = GetPredictionTopUpMinimumUseCase(requisitesStore = requisitesStore)
 
     @Provides
     @Singleton
