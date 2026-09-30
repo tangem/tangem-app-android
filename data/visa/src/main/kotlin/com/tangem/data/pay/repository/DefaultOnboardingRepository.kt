@@ -2,6 +2,7 @@ package com.tangem.data.pay.repository
 
 import arrow.core.Either
 import arrow.core.flatMap
+import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -11,7 +12,6 @@ import com.tangem.data.pay.util.BankCredentialsConverter
 import com.tangem.data.pay.util.CustomerInfoConverter
 import com.tangem.data.pay.util.AccountFeeConverter
 import com.tangem.spend.datasource.pay.TangemPayApi
-import com.tangem.spend.datasource.pay.models.request.AccountOrderRequest
 import com.tangem.spend.datasource.pay.models.request.DeeplinkValidityRequest
 import com.tangem.spend.datasource.pay.models.request.OrderRequest
 import com.tangem.spend.datasource.pay.models.request.SetTangemPayEnabledRequest
@@ -19,6 +19,7 @@ import com.tangem.spend.datasource.pay.models.response.CustomerMeResponse
 import com.tangem.spend.datasource.pay.models.response.OrderResponse
 import com.tangem.spend.datasource.pay.store.TangemPayCardFrozenStateStore
 import com.tangem.data.pay.store.TangemPayStorage
+import com.tangem.data.pay.util.OrderRequestConverter
 import com.tangem.spend.datasource.pay.store.TangemPayTxHistoryItemsStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.Account
@@ -33,7 +34,7 @@ import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
 import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.AccountFeeGroupType
 import com.tangem.domain.pay.model.CustomerInfo
-import com.tangem.domain.pay.model.OrderType
+import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
@@ -44,7 +45,6 @@ import java.util.UUID
 import javax.inject.Inject
 
 private const val VALID_STATUS = "valid"
-private const val VIRTUAL_ACCOUNT_SPECIFICATION_NAME = "SP_000006"
 
 @Suppress("LongParameterList", "TooManyFunctions")
 internal class DefaultOnboardingRepository @Inject constructor(
@@ -165,12 +165,10 @@ internal class DefaultOnboardingRepository @Inject constructor(
 
     override suspend fun createOrder(
         userWalletId: UserWalletId,
-        deeplinkValue: String?,
-        specificationName: String,
-        type: OrderType,
+        request: CustomerOrderRequest.CardIssue,
     ): Either<VisaApiError, String> = withContext(dispatcherProvider.io) {
         val walletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
-        val isCampaignOrder = deeplinkValue != null
+        val isCampaignOrder = request.deeplinkValue != null
         val reusableOrderId = findReusableOrderId(
             userWalletId = userWalletId,
             walletAddress = walletAddress,
@@ -178,21 +176,20 @@ internal class DefaultOnboardingRepository @Inject constructor(
         )
         if (reusableOrderId != null) return@withContext reusableOrderId.right()
 
-        requestHelper.performRequest(userWalletId) { authHeader ->
-            val data = OrderRequest.Data(
+        val body = OrderRequestConverter.convert(
+            OrderRequestConverter.Input(
                 customerWalletAddress = walletAddress,
-                specificationName = specificationName,
-                type = type.wireValue,
-                deeplinkValue = deeplinkValue,
-            )
-            tangemPayApi.createOrder(
-                authHeader = authHeader,
-                body = OrderRequest(data = data, idempotencyKey = UUID.randomUUID().toString()),
-            )
-        }.map { response ->
-            val result = requireNotNull(response.result)
+                request = request,
+                idempotencyKey = UUID.randomUUID().toString(),
+            ),
+        ).getOrElse { return@withContext it.left() }
+
+        requestHelper.performRequest(userWalletId) { authHeader ->
+            tangemPayApi.createOrder(authHeader = authHeader, body = body)
+        }.flatMap { response ->
+            val result = response.result ?: return@flatMap VisaApiError.UnknownWithoutCode.left()
             tangemPayStorage.storeOrderId(walletAddress, result.id, isCampaignOrder)
-            result.id
+            result.id.right()
         }
     }
 
@@ -219,19 +216,14 @@ internal class DefaultOnboardingRepository @Inject constructor(
         idempotencyKey: String,
     ): Either<VisaApiError, String> = withContext(dispatcherProvider.io) {
         requestHelper.performRequest(userWalletId) { authHeader ->
-            tangemPayApi.createAccountOrder(
+            tangemPayApi.createOrder(
                 authHeader = authHeader,
-                body = AccountOrderRequest(
-                    data = AccountOrderRequest.Data(
-                        depositAddress = paymentAccountAddress,
-                        type = OrderType.ACCOUNT_ISSUE_VIRTUAL_RAIN.wireValue,
-                        specificationName = VIRTUAL_ACCOUNT_SPECIFICATION_NAME,
-                        signature = null,
-                    ),
+                body = OrderRequest(
+                    data = OrderRequest.VirtualAccountIssue(depositAddress = paymentAccountAddress),
                     idempotencyKey = idempotencyKey,
                 ),
             )
-        }.map { response -> requireNotNull(response.result).id }
+        }.flatMap { response -> response.result?.id?.right() ?: VisaApiError.UnknownWithoutCode.left() }
     }
 
     override suspend fun getVirtualAccountOrderId(userWalletId: UserWalletId): String? =

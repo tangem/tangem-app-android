@@ -5,6 +5,7 @@ import arrow.core.raise.either
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.OrderType
@@ -44,11 +45,11 @@ class CreateTariffPlanTransitionOrderUseCase(
 
         val order = planTransitionOrder ?: customerOrderRepository.createOrder(
             userWalletId = userWalletId,
-            type = orderType,
-            specificationName = null,
+            request = CustomerOrderRequest.TariffPlanTransition(
+                targetTariffPlanId = targetTariffPlanId,
+                transitionType = transitionType,
+            ),
             idempotencyKey = UUID.randomUUID().toString(),
-            targetTariffPlanId = targetTariffPlanId,
-            transitionType = transitionType,
         ).bind()
 
         issueCardRepository.storeIssueOrderId(userWalletId = userWalletId, orderId = order.id)
