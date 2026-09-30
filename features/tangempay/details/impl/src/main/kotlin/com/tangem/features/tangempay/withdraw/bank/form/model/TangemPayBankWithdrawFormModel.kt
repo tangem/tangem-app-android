@@ -184,7 +184,7 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
         val values = currentValues()
         val errors = BankWithdrawFormValidator.validateAll(fields = form.fields, values = values)
         if (errors.isNotEmpty()) {
-            state.update { it.copy(errors = errors) }
+            state.update { it.copy(errors = errors, focusedField = null) }
         } else {
             analytics.send(continueClickedEvent())
             form.onContinue(result())
