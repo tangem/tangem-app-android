@@ -61,7 +61,7 @@ internal class PolymarketPositionDetailsConverterTest {
     @ProvideTestModels
     fun `GIVEN resolution state and past end date WHEN converted THEN uses backend state`(case: StatusCase) {
         // Arrange
-        val position = createPolymarketPosition(resolutionStatus = case.status).copy(
+        val position = createPolymarketPosition(resolutionStatus = case.status, result = case.result).copy(
             endDate = LocalDate.of(2000, 1, 1),
             avgPrice = BigDecimal("0.0004"),
             curPrice = BigDecimal("0.9995"),
@@ -139,11 +139,39 @@ internal class PolymarketPositionDetailsConverterTest {
         ),
         StatusCase(PolymarketResolutionStatus.PROPOSED, Notice.Pending, R.string.prediction_positions_pending),
         StatusCase(PolymarketResolutionStatus.DISPUTED, Notice.Disputed, R.string.prediction_positions_disputed),
-        StatusCase(PolymarketResolutionStatus.UNKNOWN, null, R.string.prediction_positions_unknown),
+        StatusCase(PolymarketResolutionStatus.UNKNOWN, null, R.string.prediction_positions_pending),
         StatusCase(
             PolymarketResolutionStatus.RESOLVED,
             null,
             R.string.prediction_positions_unknown,
+            expectedPriceChanges = "0¢ → 100¢",
+        ),
+        StatusCase(
+            PolymarketResolutionStatus.RESOLVED,
+            null,
+            R.string.prediction_positions_unknown,
+            result = PolymarketPositionResult.UNKNOWN,
+            expectedPriceChanges = "0¢ → 100¢",
+        ),
+        StatusCase(
+            PolymarketResolutionStatus.RESOLVED,
+            null,
+            R.string.prediction_positions_won,
+            result = PolymarketPositionResult.WON,
+            expectedPriceChanges = "0¢ → 100¢",
+        ),
+        StatusCase(
+            PolymarketResolutionStatus.RESOLVED,
+            null,
+            R.string.prediction_positions_lost,
+            result = PolymarketPositionResult.LOST,
+            expectedPriceChanges = "0¢ → 100¢",
+        ),
+        StatusCase(
+            PolymarketResolutionStatus.RESOLVED,
+            null,
+            R.string.prediction_positions_split,
+            result = PolymarketPositionResult.SPLIT,
             expectedPriceChanges = "0¢ → 100¢",
         ),
     )
@@ -153,6 +181,7 @@ internal class PolymarketPositionDetailsConverterTest {
         val notice: Notice?,
         val label: Int,
         val isTradable: Boolean = false,
+        val result: PolymarketPositionResult? = null,
         val expectedPriceChanges: String = "0.1¢ → 99.9¢",
     )
 }
