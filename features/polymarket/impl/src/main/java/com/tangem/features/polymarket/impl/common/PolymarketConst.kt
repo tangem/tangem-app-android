@@ -1,14 +1,14 @@
 package com.tangem.features.polymarket.impl.common
 
-import com.tangem.domain.polymarket.approval.PolymarketContracts
 import java.math.BigDecimal
 
 internal object PolymarketConst {
     const val CENT_SIGN = "¢"
     const val USD_CODE = "USD"
     const val USD_SYMBOL = "$"
-    const val COLLATERAL_DECIMALS = 2
-    const val SHARES_DECIMALS = PolymarketContracts.COLLATERAL_DECIMALS
+    const val COLLATERAL_DISPLAY_DECIMALS = 2
+    const val SHARES_DISPLAY_DECIMALS = 2
+    val SHARES_DISPLAY_STEP: BigDecimal = BigDecimal.ONE.movePointLeft(SHARES_DISPLAY_DECIMALS)
 
     const val EASTERN_TIME_ZONE = "America/New_York"
 

@@ -144,7 +144,7 @@ Status receives the result, market header and position id as route data and owns
   `isBelowMinAmount` (BUY only, price-weighted — a SELL has no floor beyond one whole share or the whole
   position).
 - **Shares.** `SharesCalculator`: the sellable size is the whole position at the on-chain share precision
-  (`PolymarketConst.SHARES_DECIMALS` = `PolymarketContracts.COLLATERAL_DECIMALS`, 6 — shares are minted 1:1 from
+  (`PolymarketContracts.SHARE_DECIMALS` = `COLLATERAL_DECIMALS`, 6 — shares are minted 1:1 from
   collateral base units) — it is not floored onto the 2-decimal amount grid, because the BFF
   quotes the sale of a whole position at the position's own precision (a sub-cent whole position included).
   Every share count renders cut down to 2 decimals, as on iOS, never more than is held (`formatPolymarketShares`);
