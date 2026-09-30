@@ -16,6 +16,7 @@ sealed class MoneyAccountStatusValue {
 
     abstract val source: StatusSource
 
+    // TODO v_rodionov: #[REDACTED_TASK_KEY] check if it possible to make balance not nullable
     abstract val balance: Balance?
 
     val totalFiatBalance: TotalFiatBalance
