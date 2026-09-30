@@ -25,6 +25,7 @@ import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -851,6 +852,41 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             assertThat(receiveCard.balance)
                 .isEqualTo(resourceReference(R.string.common_balance, wrappedList(expectedBalance)))
             assertThat(receiveCard.tokenSymbol).isEqualTo(stringReference(collateral.currency.symbol))
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction top-up WHEN the prediction balance changes THEN the receive card shows the new pUSD balance`() =
+        runTest {
+            // Arrange
+            val (_, collateral) = stubResolvedTopUpPair()
+            val updatedAmount = BigDecimal("7.5")
+            val updatedCollateralStatus = collateral.status.copy(
+                value = mockk<CryptoCurrencyStatus.Value>(relaxed = true) {
+                    every { amount } returns updatedAmount
+                },
+            )
+            val predictionStatusValue = mockk<PredictionAccountStatusValue.Active>(relaxed = true) {
+                every { cryptoCurrencyStatus } returns updatedCollateralStatus
+            }
+            every { singleAccountStatusSupplier(any()) } returns flowOf(
+                AccountStatus.Prediction(account = Account.Prediction(userWalletId), value = predictionStatusValue),
+            )
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.PredictionTopUp)
+            advanceUntilIdle()
+
+            // Assert
+            val receiveCard = model.uiState.receiveCardData as SwapCardState.SwapCardData
+            val expectedBalance = updatedAmount.format {
+                crypto(
+                    symbol = PolymarketCollateralCurrencyFactory.COLLATERAL_SYMBOL,
+                    decimals = PolymarketContracts.COLLATERAL_DECIMALS,
+                )
+            }
+            assertThat(receiveCard.balance)
+                .isEqualTo(resourceReference(R.string.common_balance, wrappedList(expectedBalance)))
             model.onDestroy()
         }
 
