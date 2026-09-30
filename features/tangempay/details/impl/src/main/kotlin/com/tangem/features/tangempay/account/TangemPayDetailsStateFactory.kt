@@ -1,11 +1,13 @@
 package com.tangem.features.tangempay.account
 
-import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_down_24
+import com.tangem.core.ui.res.generated.icons.ic_arrow_up_24
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayTariffPlanState
@@ -366,21 +368,17 @@ internal class TangemPayDetailsStateFactory(
         return persistentListOf(
             TangemPayActionButtonUM(
                 action = TangemPayAction.AddFunds,
-                config = ActionButtonConfig(
-                    text = resourceReference(id = R.string.tangempay_card_details_add_funds),
-                    iconResId = R.drawable.ic_arrow_down_24,
-                    onClick = intents::onClickAddFunds,
-                    isEnabled = isAddFundsEnabled,
-                ),
+                text = resourceReference(id = R.string.tangempay_card_details_add_funds),
+                icon = TangemIconUM.Icon(imageVector = Icons.ic_arrow_down_24),
+                onClick = intents::onClickAddFunds,
+                isEnabled = isAddFundsEnabled,
             ),
             TangemPayActionButtonUM(
                 action = TangemPayAction.Withdraw,
-                config = ActionButtonConfig(
-                    text = resourceReference(id = R.string.tangempay_card_details_withdraw),
-                    iconResId = R.drawable.ic_arrow_up_24,
-                    onClick = intents::onClickWithdraw,
-                    isEnabled = isWithdrawEnabled,
-                ),
+                text = resourceReference(id = R.string.tangempay_card_details_withdraw),
+                icon = TangemIconUM.Icon(imageVector = Icons.ic_arrow_up_24),
+                onClick = intents::onClickWithdraw,
+                isEnabled = isWithdrawEnabled,
             ),
         )
     }

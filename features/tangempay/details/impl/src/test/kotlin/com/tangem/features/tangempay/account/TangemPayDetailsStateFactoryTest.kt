@@ -76,7 +76,7 @@ internal class TangemPayDetailsStateFactoryTest {
         val state = factory.getLoadedState(status)
 
         // Assert
-        val actionButtonsEnabled = state.balanceBlockState.actionButtons.map { it.config.isEnabled }
+        val actionButtonsEnabled = state.balanceBlockState.actionButtons.map { it.isEnabled }
         assertThat(actionButtonsEnabled).containsExactly(case.expectedEnabled, case.expectedEnabled)
         assertThat(state.balanceBlockState.cardsBlockState?.isAddCardEnabled).isEqualTo(case.expectedEnabled)
         // The card tile is intentionally NOT source-gated: it stays clickable on stale data as long as
@@ -99,7 +99,7 @@ internal class TangemPayDetailsStateFactoryTest {
         val state = factory.getLoadedState(status)
 
         // Assert
-        assertThat(state.balanceBlockState.actionButtons.map { it.config.isEnabled }).containsExactly(false, false)
+        assertThat(state.balanceBlockState.actionButtons.map { it.isEnabled }).containsExactly(false, false)
         assertThat(state.balanceBlockState.cardsBlockState?.isAddCardEnabled).isTrue()
     }
 
@@ -409,7 +409,7 @@ internal class TangemPayDetailsStateFactoryTest {
 
         // Assert
         assertThat(state.balanceBlockState).isInstanceOf(TangemPayDetailsBalanceBlockState.Error::class.java)
-        assertThat(state.balanceBlockState.actionButtons.map { it.config.isEnabled }).containsExactly(false, false)
+        assertThat(state.balanceBlockState.actionButtons.map { it.isEnabled }).containsExactly(false, false)
         assertThat(state.balanceBlockState.cardsBlockState?.cards).hasSize(1)
     }
 
@@ -423,7 +423,7 @@ internal class TangemPayDetailsStateFactoryTest {
 
         // Assert
         assertThat(state.balanceBlockState).isInstanceOf(TangemPayDetailsBalanceBlockState.Error::class.java)
-        assertThat(state.balanceBlockState.actionButtons.map { it.config.isEnabled }).containsExactly(false, false)
+        assertThat(state.balanceBlockState.actionButtons.map { it.isEnabled }).containsExactly(false, false)
     }
 
     @ParameterizedTest

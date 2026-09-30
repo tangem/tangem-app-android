@@ -13,6 +13,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.RawResourceDataSource
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
+import com.tangem.features.storiesv2.impl.analytics.StoryV2ErrorReason
 import com.tangem.features.storiesv2.impl.content.StoryV2Asset
 import com.tangem.features.storiesv2.impl.content.StoryV2Composition
 import com.tangem.features.storiesv2.impl.content.StoryV2ContentMode
@@ -49,7 +50,7 @@ internal class StoryVideoPlayer(
         /** Width over height, needed to letterbox a `contain` slide. */
         fun onAspectRatioChanged(aspectRatio: Float)
 
-        fun onError()
+        fun onError(reason: StoryV2ErrorReason)
     }
 
     val frames = RenderedFrameFeed()
@@ -185,7 +186,7 @@ internal class StoryVideoPlayer(
         }
 
         override fun onPlayerError(error: PlaybackException) {
-            listener.onError()
+            listener.onError(reason = playbackErrorReason(errorCode = error.errorCode))
         }
     }
 
@@ -228,4 +229,13 @@ internal class StoryVideoPlayer(
             is StoryV2MediaRef.DrawableResource -> error("A drawable cannot be a video source")
         }
     }
+}
+
+/**
+ * A file that went missing from the cache is not a file the device cannot decode, and the playback guardrail has to
+ * tell the two apart.
+ */
+internal fun playbackErrorReason(errorCode: Int): StoryV2ErrorReason = when (errorCode) {
+    PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND -> StoryV2ErrorReason.NOT_FOUND
+    else -> StoryV2ErrorReason.DECODE_FAILURE
 }
