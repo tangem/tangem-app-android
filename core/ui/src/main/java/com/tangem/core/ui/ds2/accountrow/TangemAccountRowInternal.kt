@@ -8,7 +8,6 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -39,6 +37,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import com.tangem.core.ui.components.text.applyBladeBrush
+import com.tangem.core.ui.ds2.avatar.AvatarTokens
+import com.tangem.core.ui.ds2.avatar.TangemAvatar
+import com.tangem.core.ui.ds2.avatar.TangemAvatarContent
+import com.tangem.core.ui.ds2.avatar.lerpAvatarTokens
+import com.tangem.core.ui.ds2.avatar.tokens
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.TextReference
@@ -134,10 +137,7 @@ internal fun AccountRowContainer(
         val innerWidth = max(0, width - padding * 2)
         val loose = Constraints(maxWidth = width)
 
-        val avatar = measurables.measureById(
-            id = AccountRowLayoutId.AVATAR,
-            constraints = Constraints.fixed(avatarCollapsed, avatarCollapsed),
-        )
+        val avatar = measurables.measureById(AccountRowLayoutId.AVATAR, loose)
         val arrow = measurables.measureById(AccountRowLayoutId.ARROW, loose)
         val dot = measurables.measureById(AccountRowLayoutId.DOT, loose)
 
@@ -206,13 +206,8 @@ internal fun AccountRowContainer(
         val headingBottom = lerp(collapsedHeight, expandedHeadingHeight, progress)
 
         layout(width = width, height = max(0, height)) {
-            val avatarX = padding
-            val avatarY = lerp(
-                padding + (mainHeight - avatarCollapsed) / 2,
-                padding + (lineHeight - avatarExpanded) / 2,
-                progress,
-            )
-            avatar?.placeRelative(x = avatarX, y = avatarY)
+            val avatarCenterY = lerp(padding + mainHeight / 2, padding + lineHeight / 2, progress)
+            avatar?.placeRelative(x = padding, y = avatarCenterY - avatar.height / 2)
 
             val titleX = lerp(
                 padding + avatarCollapsed + avatarGap,
@@ -277,6 +272,23 @@ private fun List<Measurable>.measureById(id: AccountRowLayoutId, constraints: Co
 private fun Placeable?.widthOrZero(): Int = this?.width ?: 0
 
 private fun Placeable?.heightOrZero(): Int = this?.height ?: 0
+
+/**
+ * The row's avatar. Its dimensions are interpolated between the [TangemAvatar.Size.X40] and
+ * [TangemAvatar.Size.X16] presets rather than scaled, so the rounded-square corner lands on the radius the
+ * design system defines for each size instead of a scaled-down version of the larger one.
+ */
+@Composable
+internal fun AccountRowAvatar(state: TangemAvatar.UiState, motion: AccountRowMotion, modifier: Modifier = Modifier) {
+    TangemAvatarContent(state = state, tokens = motion.avatarTokens(), modifier = modifier)
+}
+
+@Composable
+private fun AccountRowMotion.avatarTokens(): AvatarTokens = lerpAvatarTokens(
+    start = TangemAvatar.Size.X40.tokens(),
+    stop = TangemAvatar.Size.X16.tokens(),
+    fraction = expansion,
+)
 
 // endregion
 
@@ -463,20 +475,10 @@ internal fun AccountRowEmptyBody(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(TangemTheme.colors3.bg.opaque.primary),
-            ) {
-                Icon(
-                    imageVector = Icons.ic_grid_plus_20,
-                    contentDescription = null,
-                    tint = TangemTheme.colors3.icon.secondary,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
+            TangemAvatar(
+                state = TangemAvatar.UiState.Icon(imageVector = Icons.ic_grid_plus_20),
+                size = TangemAvatar.Size.X40,
+            )
             Text(
                 text = message.resolveReference(),
                 style = TangemTheme.typography3.caption.medium,
