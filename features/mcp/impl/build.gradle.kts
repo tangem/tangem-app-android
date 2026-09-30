@@ -29,6 +29,7 @@ dependencies {
     implementation(projects.domain.models)
 
     /** Core */
+    implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
     implementation(projects.core.navigation)
     implementation(projects.core.ui)
