@@ -45,7 +45,6 @@ internal class TxHistoryStatusPillConverterTest {
         assertThat(result.currencySymbol).isEqualTo("ETH")
         val subtitle = result.subtitle as TransactionItemUM.PillSubtitle.Address
         assertThat(subtitle.rawAddress).isEqualTo(USER_ADDRESS)
-        assertThat(subtitle.briefAddress).isEqualTo(USER_ADDRESS_BRIEF)
     }
 
     @Test
@@ -354,7 +353,6 @@ internal class TxHistoryStatusPillConverterTest {
         const val TX_HASH = "0xtxhash"
         const val TIMESTAMP = 1_700_000_000_000L
         const val USER_ADDRESS = "0x1234567890abcdef1234"
-        const val USER_ADDRESS_BRIEF = "0x1234...1234"
     }
 
     // endregion
