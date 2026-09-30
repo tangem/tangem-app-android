@@ -14,6 +14,7 @@ import com.tangem.datasource.api.promotion.models.PromotionsV3Response.MatchMode
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.PayoutToken
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.PromotionDto
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.Properties
+import com.tangem.datasource.api.promotion.models.PromotionsV3Response.Status
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.TableCell
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.ValueType
 import org.junit.jupiter.api.Test
@@ -173,10 +174,10 @@ internal class PromotionsV3ResponseTest {
     }
 
     @Test
-    fun `GIVEN unknown match mode and value types WHEN parsed THEN mapped to UNKNOWN`() {
+    fun `GIVEN unknown status, match mode and value types WHEN parsed THEN mapped to UNKNOWN`() {
         // Arrange
         val json = """
-            {"promotions":[{"name":"example_campaign","status":"active",
+            {"promotions":[{"name":"example_campaign","status":"expired",
             "startAt":"2026-06-01T00:00:00Z","endAt":"2026-08-31T23:59:59Z","alreadyEnrolled":false,
             "properties":{"payoutNeeded":false,"matchMode":"all_wallets"},
             "content":{"campaignNameKey":"campaign.example_campaign.title",
@@ -195,6 +196,7 @@ internal class PromotionsV3ResponseTest {
         val expected = PromotionsV3Response(
             promotions = listOf(
                 createPromotion(
+                    status = Status.UNKNOWN,
                     alreadyEnrolled = false,
                     properties = Properties(isPayoutNeeded = false, payoutTokens = null, matchMode = MatchMode.UNKNOWN),
                     publicDescription = listOf(
@@ -227,9 +229,10 @@ internal class PromotionsV3ResponseTest {
         properties: Properties,
         publicDescription: List<DescriptionBlock>,
         learnMoreLink: Link?,
+        status: Status = Status.ACTIVE,
     ) = PromotionDto(
         name = "example_campaign",
-        status = "active",
+        status = status,
         startAt = "2026-06-01T00:00:00Z",
         endAt = "2026-08-31T23:59:59Z",
         isAlreadyEnrolled = alreadyEnrolled,
