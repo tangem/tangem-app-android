@@ -51,6 +51,7 @@ dependencies {
     // `@UnstableApi` in media3 is an androidx opt-in marker, so opting in needs androidx's own OptIn annotation.
     implementation(deps.androidx.annotation.experimental)
     implementation(deps.androidx.appCompat)
+    implementation(deps.androidx.datastore.core)
     implementation(deps.compose.coil)
     implementation(deps.decompose)
     implementation(deps.kotlin.coroutines)
