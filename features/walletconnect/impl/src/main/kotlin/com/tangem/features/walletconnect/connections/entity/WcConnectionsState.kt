@@ -4,11 +4,13 @@ import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 internal data class WcConnectionsState(
     val topAppBarConfig: WcConnectionsTopAppBarConfig,
     val connections: WcConnections,
     val onNewConnectionClick: () -> Unit,
+    val connectedAgents: ImmutableList<McpAgentInfo> = persistentListOf(),
 )
 
 internal data class WcConnectionsTopAppBarConfig(
@@ -59,6 +61,13 @@ internal data class WcConnectedAppInfo(
     val name: String,
     val iconUrl: String,
     val verifiedState: VerifiedDAppState,
+    val subtitle: String,
+    val onClick: () -> Unit,
+)
+
+internal data class McpAgentInfo(
+    val id: String,
+    val name: String,
     val subtitle: String,
     val onClick: () -> Unit,
 )

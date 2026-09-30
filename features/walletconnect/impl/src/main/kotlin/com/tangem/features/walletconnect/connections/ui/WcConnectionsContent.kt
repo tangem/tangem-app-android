@@ -50,6 +50,10 @@ import kotlinx.collections.immutable.ImmutableList
 
 private const val LOCKED_WALLET_ALPHA = 0.5f
 
+// MVP: no Lokalise keys for the MCP screen yet
+private const val CONNECTED_AGENTS_TITLE = "Connected Agents"
+private const val CONNECTED_DAPPS_TITLE = "Connected dApps"
+
 @Composable
 internal fun WcConnectionsContent(state: WcConnectionsState, modifier: Modifier = Modifier) {
     Scaffold(
@@ -78,30 +82,112 @@ internal fun WcConnectionsContent(state: WcConnectionsState, modifier: Modifier 
                 modifier = Modifier
                     .padding(innerPadding)
                     .fillMaxSize(),
-                connections = state.connections,
-                onNewConnectionClick = state.onNewConnectionClick,
+                state = state,
             )
         },
     )
 }
 
 @Composable
-private fun Content(connections: WcConnections, onNewConnectionClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun Content(state: WcConnectionsState, modifier: Modifier = Modifier) {
+    val connections = state.connections
+    val agents = state.connectedAgents
     when {
         connections is WcConnections.Loading -> return
-        !connections.isNotEmpty() -> EmptyConnectionsBlock(
+        !connections.isNotEmpty() && agents.isEmpty() -> EmptyConnectionsBlock(
             modifier = modifier,
-            onNewConnectionClick = onNewConnectionClick,
+            onNewConnectionClick = state.onNewConnectionClick,
         )
-        connections is WcConnections.AccountMode -> AccountModeContent(
-            modifier = modifier,
-            items = connections.items,
+        else -> Column(modifier = modifier) {
+            if (agents.isNotEmpty()) {
+                ConnectedAgentsBlock(agents = agents)
+                SectionTitle(
+                    text = CONNECTED_DAPPS_TITLE,
+                    modifier = Modifier.padding(
+                        start = TangemTheme.dimens.spacing24,
+                        end = TangemTheme.dimens.spacing16,
+                        top = TangemTheme.dimens.spacing16,
+                    ),
+                )
+            }
+            ConnectionsList(connections = connections, modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+private fun ConnectionsList(connections: WcConnections, modifier: Modifier = Modifier) {
+    when (connections) {
+        is WcConnections.Loading -> Unit
+        is WcConnections.AccountMode -> AccountModeContent(modifier = modifier, items = connections.items)
+        is WcConnections.WalletMode -> ConnectionsBlock(modifier = modifier, connections = connections.connections)
+    }
+}
+
+@Composable
+private fun ConnectedAgentsBlock(agents: ImmutableList<McpAgentInfo>, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+    ) {
+        SectionTitle(
+            text = CONNECTED_AGENTS_TITLE,
+            modifier = Modifier.padding(start = TangemTheme.dimens.spacing8, top = TangemTheme.dimens.spacing12),
         )
-        connections is WcConnections.WalletMode -> ConnectionsBlock(
-            modifier = modifier,
-            connections = connections.connections,
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    color = TangemTheme.colors.background.primary,
+                    shape = RoundedCornerShape(TangemTheme.dimens.radius14),
+                )
+                .clip(RoundedCornerShape(TangemTheme.dimens.radius14)),
+        ) {
+            agents.fastForEach { agent ->
+                key(agent.id) {
+                    AgentItem(
+                        agent = agent,
+                        modifier = Modifier
+                            .clickable(onClick = agent.onClick)
+                            .padding(all = 12.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AgentItem(agent: McpAgentInfo, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing2),
+    ) {
+        Text(
+            text = agent.name,
+            color = TangemTheme.colors.text.primary1,
+            style = TangemTheme.typography.subtitle2,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = agent.subtitle,
+            color = TangemTheme.colors.text.tertiary,
+            style = TangemTheme.typography.caption2,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
+}
+
+@Composable
+private fun SectionTitle(text: String, modifier: Modifier = Modifier) {
+    Text(
+        modifier = modifier,
+        text = text,
+        color = TangemTheme.colors.text.primary1,
+        style = TangemTheme.typography.subtitle1,
+    )
 }
 
 @Composable
@@ -455,5 +541,7 @@ private class WcConnectionsStateProvider : CollectionPreviewParameterProvider<Wc
         WcConnectionsPreviewData.stateWithEmptyConnections,
         WcConnectionsPreviewData.fullState,
         WcConnectionsPreviewData.accountState,
+        WcConnectionsPreviewData.agentsWithDappsState,
+        WcConnectionsPreviewData.agentsOnlyState,
     ),
 )
