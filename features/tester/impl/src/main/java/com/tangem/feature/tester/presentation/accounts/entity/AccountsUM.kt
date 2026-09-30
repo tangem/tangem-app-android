@@ -10,7 +10,18 @@ internal data class AccountsUM(
     val walletSelector: WalletSelector,
     val accountListBottomSheetConfig: AccountListBottomSheetConfig,
     val buttons: ImmutableList<Button>,
+    val walletIds: WalletIds?,
 ) {
+
+    /**
+     * @property hash the id Amplitude Experiment targets the wallet by
+     */
+    data class WalletIds(
+        val id: String,
+        val hash: String,
+        val onCopyIdClick: () -> Unit,
+        val onCopyHashClick: () -> Unit,
+    )
 
     data class Button(
         val id: ID,

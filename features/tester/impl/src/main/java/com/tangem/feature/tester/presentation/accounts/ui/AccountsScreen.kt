@@ -11,12 +11,18 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.common.ui.account.toUM
@@ -61,6 +67,10 @@ internal fun AccountsScreen(state: AccountsUM, modifier: Modifier = Modifier) {
 
         if (state.walletSelector.selected != null) {
             ManageAccountsButtons(buttons = state.buttons)
+        }
+
+        state.walletIds?.let { walletIds ->
+            item { WalletIdsBlock(walletIds = walletIds) }
         }
     }
 
@@ -214,5 +224,36 @@ private fun LazyListScope.ManageAccountsButtons(buttons: ImmutableList<AccountsU
             showProgress = button.isInProgress,
             enabled = button.isEnabled,
         )
+    }
+}
+
+@Composable
+private fun WalletIdsBlock(walletIds: AccountsUM.WalletIds) {
+    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+        WalletIdRow(title = "UserWalletId", value = walletIds.id, onCopyClick = walletIds.onCopyIdClick)
+        WalletIdRow(title = "Amplitude WalletId hash", value = walletIds.hash, onCopyClick = walletIds.onCopyHashClick)
+    }
+}
+
+@Composable
+private fun WalletIdRow(title: String, value: String, onCopyClick: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        SelectionContainer(modifier = Modifier.weight(1f)) {
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(title) }
+                    append(": $value")
+                },
+                style = TangemTheme.typography.caption2,
+                color = TangemTheme.colors.text.secondary,
+            )
+        }
+        IconButton(onClick = onCopyClick) {
+            Icon(
+                painter = painterResource(R.drawable.ic_copy_24),
+                contentDescription = "Copy $title",
+                tint = TangemTheme.colors.icon.primary1,
+            )
+        }
     }
 }
