@@ -77,6 +77,7 @@ class DefaultSessionTokenRefresherTest {
             signedRequestPayload = signedRequestPayload,
             attestationProvider = attestationProvider,
             errorConverter = errorConverter,
+            nonceRequestTracker = { _, request -> request() },
             deviceRegistrar = Lazy { deviceRegistrar },
             clock = fixedClock,
             dispatchers = dispatchers,

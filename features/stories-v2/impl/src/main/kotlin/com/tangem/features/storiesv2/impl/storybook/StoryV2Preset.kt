@@ -135,7 +135,6 @@ internal enum class StoryV2Preset(val title: String, val description: String) {
             actions: List<StoryV2Action> = emptyList(),
         ) = StoryV2Composition(
             id = "storybook",
-            version = 1,
             origin = StoryV2Origin.BUNDLED,
             endBehavior = endBehavior,
             actions = actions,

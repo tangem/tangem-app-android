@@ -128,7 +128,7 @@ internal class DefaultSocialBackupRepository(
     /**
      * Every file owned by [walletId] goes, not just the newest: a write only best-effort cleans up what
      * it replaced, so the folder can hold several files of the same wallet, and leaving an older one
-     * behind would keep the wallet restorable after FR-16 reported it unbound. Files of other wallets
+     * behind would keep the wallet restorable after it was reported unbound. Files of other wallets
      * are left alone.
      */
     override suspend fun deleteBackup(walletId: UserWalletId): Either<SocialLoginError, Unit> =
