@@ -68,7 +68,12 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
 
     override suspend fun fetch(userWalletId: UserWalletId): GetWalletAccountsResponse {
         val savedAccountsResponse = getAccountsResponseStore(userWalletId = userWalletId).getSyncOrNull()
-        val fetchResult = fetchWalletAccounts(userWalletId, savedAccountsResponse)
+        val eTag = getRevalidationETag(userWalletId, savedAccountsResponse)
+        val fetchResult = fetchWalletAccounts(
+            userWalletId = userWalletId,
+            savedAccountsResponse = savedAccountsResponse?.let { normalizeSaved(userWalletId, it) },
+            eTag = eTag,
+        )
         val accountsResponse = fetchResult.accountsResponse
 
         val updatedResponse = when {
@@ -180,14 +185,12 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     private suspend fun fetchWalletAccounts(
         userWalletId: UserWalletId,
         savedAccountsResponse: GetWalletAccountsResponse?,
+        eTag: String?,
     ): FetchResult {
         return safeApiCall(
             call = {
                 val apiResponse = withContext(dispatchers.io) {
-                    walletAccountsApi.getAccounts(
-                        walletId = userWalletId.stringValue,
-                        eTag = getRevalidationETag(userWalletId, savedAccountsResponse),
-                    )
+                    walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = eTag)
                 }
 
                 saveETag(userWalletId, apiResponse)
@@ -203,7 +206,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
                 fetchWalletAccountsErrorHandler.handle(
                     error = throwable,
                     userWalletId = userWalletId,
-                    savedAccountsResponse = savedAccountsResponse?.withoutJointAccountsIfDisabled(userWalletId),
+                    savedAccountsResponse = savedAccountsResponse,
                     pushWalletAccounts = { accounts, eTag ->
                         pushInternal(
                             userWalletId = userWalletId,
@@ -215,6 +218,17 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
                 )
             },
         )
+    }
+
+    /** The saved document stands in for the answer until the request completes, so it is brought to shape first */
+    private suspend fun normalizeSaved(
+        userWalletId: UserWalletId,
+        savedAccountsResponse: GetWalletAccountsResponse,
+    ): GetWalletAccountsResponse {
+        val normalized = savedAccountsResponse.withoutJointAccountsIfDisabled(userWalletId)
+        if (normalized != savedAccountsResponse) store(userWalletId = userWalletId, response = normalized)
+
+        return normalized
     }
 
     /**
