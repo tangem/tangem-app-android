@@ -17,6 +17,7 @@ import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.visa.model.TangemPayInitialCredentials
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -67,6 +68,14 @@ internal class MockAwareOnboardingRepository @Inject constructor(
             return
         }
         real.produceInitialData(userWalletId)
+    }
+
+    override suspend fun storeInitialCredentials(
+        userWalletId: UserWalletId,
+        initialCredentials: TangemPayInitialCredentials,
+    ) {
+        if (isMockMode) return
+        real.storeInitialCredentials(userWalletId = userWalletId, initialCredentials = initialCredentials)
     }
 
     // Delegates to WireMock (via the real repo + synthetic storage tokens) so the customer state — KYC status,
