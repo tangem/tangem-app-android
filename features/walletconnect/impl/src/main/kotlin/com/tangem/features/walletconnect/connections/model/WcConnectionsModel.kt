@@ -36,6 +36,7 @@ import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.usecase.WcSessionsUseCase
 import com.tangem.domain.walletconnect.usecase.disconnect.WcDisconnectUseCase
+import com.tangem.features.mcp.api.McpFeatureToggles
 import com.tangem.features.walletconnect.connections.components.WcConnectionsComponent
 import com.tangem.features.walletconnect.connections.entity.McpAgentInfo
 import com.tangem.features.walletconnect.connections.entity.WcConnections
@@ -65,6 +66,7 @@ internal class WcConnectionsModel @Inject constructor(
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val wcPairService: WcPairService,
     private val mcpRequestService: McpRequestService,
+    private val mcpFeatureToggles: McpFeatureToggles,
     private val mcpRepository: McpRepository,
     override val dispatchers: CoroutineDispatcherProvider,
     analytics: AnalyticsEventHandler,
@@ -80,7 +82,7 @@ internal class WcConnectionsModel @Inject constructor(
         analytics.send(WcAnalyticEvents.ScreenOpened())
         listenQrUpdates()
         listenWcSessions()
-        loadMcpSessions()
+        if (mcpFeatureToggles.isMcpEnabled) loadMcpSessions()
     }
 
     private fun loadMcpSessions() {
@@ -136,6 +138,8 @@ internal class WcConnectionsModel @Inject constructor(
      * too — anything else stays on the WalletConnect path.
      */
     private fun parseMcpUserCode(qrCode: String): String? {
+        if (!mcpFeatureToggles.isMcpEnabled) return null
+
         val uri = runCatching { Uri.parse(qrCode) }.getOrNull() ?: return null
         if (uri.scheme != DeepLinkScheme.Tangem.scheme) return null
         if (uri.host != DeepLinkRoute.McpAuthorization.host) return null
