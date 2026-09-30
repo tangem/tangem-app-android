@@ -12,6 +12,7 @@ import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -176,13 +177,12 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
         ) : AssetOwnerUM
 
         /**
-         * External blockchain address — the [name] is the brief address, decorated with an identicon generated from
-         * [rawAddress], shown **before** the [name].
+         * External blockchain address — the address itself, decorated with an identicon generated from it, shown
+         * **before** the [name]. The address is kept raw; the leg shortens it to the width it gets.
          */
-        data class Address(
-            override val name: TextReference,
-            val rawAddress: String,
-        ) : AssetOwnerUM
+        data class Address(val rawAddress: String) : AssetOwnerUM {
+            override val name: TextReference = stringReference(rawAddress)
+        }
     }
 
     /**
@@ -242,6 +242,9 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      *
      * [isValueHideable] marks the [value] as an amount of the user's own funds (the network fee), so it is masked under
      * [isBalanceHidden]; a provider name or an exchange rate is not, and stays visible.
+     *
+     * [isValueAddress] marks the [value] as a raw blockchain address (the validator row falling back to one), so it is
+     * shortened from its middle to the width the row leaves it instead of being cut at its end like an amount.
      */
     data class InfoRowUM(
         val label: TextReference,
@@ -249,6 +252,7 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
         @DrawableRes val trailingIconRes: Int? = null,
         val onClick: (() -> Unit)? = null,
         val isValueHideable: Boolean = false,
+        val isValueAddress: Boolean = false,
     )
 
     /**
@@ -261,7 +265,7 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      * wallet renders its display name and still copies the address behind it.
      *
      * @property label Section label above the counterparty: "Recipient" (outgoing) / "From" (incoming).
-     * @property title Counterparty value: brief address / account name / wallet name.
+     * @property title Counterparty value: the address itself, or an account / wallet / contact name.
      * @property avatar Leading avatar.
      * @property titleIcon Currency avatar drawn after the [title] — the asset of a fee-only card ("120.03 USDT ⓣ").
      * `null` on a counterparty card, which names an address rather than an asset.
@@ -271,11 +275,26 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      */
     data class CounterpartyUM(
         val label: TextReference,
-        val title: TextReference,
+        val title: CounterpartyTitle,
         val avatar: CounterpartyAvatar,
         val titleIcon: CurrencyIconState? = null,
         val onCopyClick: (() -> Unit)? = null,
     )
+
+    /**
+     * Value a [CounterpartyUM] shows. The two are kept apart so the card can size an address to the width it gets: a
+     * [Name] is cut at its end like any label, an [Address] in its middle, where the groups a user recognizes an
+     * address by survive.
+     */
+    @Immutable
+    sealed interface CounterpartyTitle {
+
+        /** A resolved name — own account, own wallet, saved contact — or the asset line of a fee-only card. */
+        data class Name(val value: TextReference) : CounterpartyTitle
+
+        /** The counterparty address, kept raw: the card decides how much of it fits. */
+        data class Address(val value: String) : CounterpartyTitle
+    }
 
     /** Leading avatar of the [CounterpartyUM] card — the only thing that differs between counterparty kinds. */
     @Immutable
