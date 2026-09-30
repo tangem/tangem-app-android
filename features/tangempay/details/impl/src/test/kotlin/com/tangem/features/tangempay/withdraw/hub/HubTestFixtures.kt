@@ -17,6 +17,7 @@ internal fun bankAccount(
     id: String = "acc-1",
     beneficiary: Beneficiary = Beneficiary.Individual(firstName = "Andrei", lastName = "Melnikov"),
     accountNumber: String = "0000000000",
+    rail: BankRail? = BankRail.ACH,
 ): BankAccount = BankAccount(
     id = id,
     displayName = when (beneficiary) {
@@ -25,7 +26,7 @@ internal fun bankAccount(
     },
     details = BankAccountDetails(
         currency = "USD",
-        rail = BankRail.ACH,
+        rail = rail,
         isThirdParty = false,
         beneficiary = beneficiary,
         beneficiaryAddress = postalAddress(),

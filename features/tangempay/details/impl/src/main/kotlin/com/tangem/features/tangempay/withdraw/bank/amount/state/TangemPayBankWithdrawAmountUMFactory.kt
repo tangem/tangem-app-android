@@ -18,6 +18,7 @@ import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWit
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderFactory
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSource
+import com.tangem.features.tangempay.withdraw.bank.model.isRailLocked
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import kotlinx.collections.immutable.toImmutableList
 import java.util.Currency
@@ -42,7 +43,7 @@ internal class TangemPayBankWithdrawAmountUMFactory(
             ),
             amount = createAmountField(selection = selection),
             source = createSourceRow(source = selection.source, currency = selection.currency),
-            route = createRouteRow(selection = selection),
+            route = createRouteRow(selection = selection, isRailLocked = draft.isRailLocked),
             isContinueEnabled = selection.isContinueEnabled,
             sheet = createSheet(sheet = sheet, selection = selection),
             onBackClick = callbacks.onBackClick,
@@ -86,12 +87,12 @@ internal class TangemPayBankWithdrawAmountUMFactory(
         wrappedList(source.network.name, source.fiatBalance.formatFiat(currency)),
     )
 
-    private fun createRouteRow(selection: AmountSelection): RouteRowUM = RouteRowUM(
+    private fun createRouteRow(selection: AmountSelection, isRailLocked: Boolean): RouteRowUM = RouteRowUM(
         rail = selection.destination.rail,
         title = selection.destination.toTitleReference(),
         eta = selection.destination.eta.toTextReference(),
         fee = selection.destination.fee.toText(),
-        onClick = callbacks.onRouteClick.takeIf { selection.destinations.size > 1 },
+        onClick = callbacks.onRouteClick.takeIf { selection.destinations.size > 1 && !isRailLocked },
     )
 
     private fun createSheet(sheet: AmountSheet?, selection: AmountSelection): SheetUM = when (sheet) {
