@@ -9,7 +9,6 @@ import com.tangem.domain.polymarket.model.PolymarketPositionsTab
 import com.tangem.domain.polymarket.model.PolymarketPositionsFilter
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.features.polymarket.impl.positionresult.model.canOpenPositionResult
-import com.tangem.features.polymarket.impl.positiondetails.model.canOpenPositionDetails
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.positiondetails.model.PolymarketFinishedPositionConverter
 import com.tangem.features.polymarket.impl.positions.PolymarketPositionsComponent
@@ -132,12 +131,12 @@ internal class PolymarketPositionsModel @Inject constructor(
     }
 
     private fun openPosition(position: PolymarketPosition.Open) {
-        when {
-            position.canOpenPositionResult -> router.push(PolymarketRoute.PositionResult(params.userWalletId, position))
-            position.canOpenPositionDetails -> router.push(
-                PolymarketRoute.PositionDetails(params.userWalletId, position.id),
-            )
+        val route = if (position.canOpenPositionResult) {
+            PolymarketRoute.PositionResult(params.userWalletId, position)
+        } else {
+            PolymarketRoute.PositionDetails(params.userWalletId, position.id)
         }
+        router.push(route)
     }
 
     private fun openFinishedPosition(position: PolymarketPosition.Closed) {
