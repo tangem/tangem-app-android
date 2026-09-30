@@ -574,7 +574,9 @@ internal class SwapModel @Inject constructor(
 
     private fun initTokens() {
         modelScope.launch(dispatchers.default) {
-            isAccountsMode = isAccountsModeEnabledUseCase.invokeSync()
+            isAccountsMode = isAccountsModeEnabledUseCase.invokeSync() ||
+                isPredictionTopUpFlow ||
+                isPredictionWithdrawFlow
 
             val (resolvedFromCurrencyStatus, resolvedToCurrencyStatus) = initialCurrenciesResolver(
                 userWalletId = params.userWalletId,
@@ -2899,6 +2901,7 @@ internal class SwapModel @Inject constructor(
     private fun SwapStateHolder.withAccountFlowPresentation(): SwapStateHolder = withAccountFlowPresentation(
         accountFlow = accountFlow,
         isReverseLocked = isReverseLocked,
+        predictionCollateralBalance = dataState.toSwapCurrencyStatus?.status?.value?.amount,
     )
 
     // Mode-based detection (accountFlow is Withdraw) covers the Tangem Pay withdraw-via-swap entry
