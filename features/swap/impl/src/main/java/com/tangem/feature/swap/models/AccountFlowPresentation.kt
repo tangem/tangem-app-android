@@ -2,8 +2,15 @@ package com.tangem.feature.swap.models
 
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
+import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.feature.swap.presentation.R
+import java.math.BigDecimal
 
 /** Abstract currency label for the TO card in an account top-up flow. */
 private const val ACCOUNT_TOP_UP_ABSTRACT_SYMBOL = "USD"
@@ -13,9 +20,13 @@ private const val ACCOUNT_TOP_UP_ABSTRACT_SYMBOL = "USD"
  * assembled anywhere still gets the same treatment. The main button is deliberately left alone: it keeps
  * its dynamic Transfer/Swap label in account flows too.
  */
+/**
+ * @param predictionCollateralBalance the prediction account balance, shown on the receive card of a prediction top-up
+ */
 internal fun SwapStateHolder.withAccountFlowPresentation(
     accountFlow: AccountFlow?,
     isReverseLocked: Boolean,
+    predictionCollateralBalance: BigDecimal? = null,
 ): SwapStateHolder {
     val reversedState = if (isReverseLocked) {
         copy(changeCardsButtonState = ChangeCardsButtonState.HIDDEN)
@@ -29,7 +40,7 @@ internal fun SwapStateHolder.withAccountFlowPresentation(
 
     return when (flow) {
         is AccountFlow.PredictionWithdraw -> titledState.withPredictionWithdrawCards()
-        is AccountFlow.PredictionTopUp -> titledState.withLockedReceiveCard()
+        is AccountFlow.PredictionTopUp -> titledState.withPredictionTopUpReceiveCard(predictionCollateralBalance)
         is AccountFlow.CollectiblesTopUp -> titledState.withLockedReceiveCard()
         is AccountFlow.TopUp -> titledState.withAccountTopUpReceiveCard()
         is AccountFlow.Withdraw -> titledState
@@ -63,6 +74,29 @@ private fun SwapStateHolder.withAccountTopUpReceiveCard(): SwapStateHolder {
         ),
     )
 }
+
+private fun SwapStateHolder.withPredictionTopUpReceiveCard(collateralBalance: BigDecimal?): SwapStateHolder {
+    val receiveCard = receiveCardData as? SwapCardState.SwapCardData ?: return withLockedReceiveCard()
+    return copy(
+        receiveCardData = receiveCard.copy(
+            currencyIconState = CurrencyIconState.PredictionAccount(),
+            balance = collateralBalance?.formatCollateralBalance() ?: receiveCard.balance,
+            isSelectionLocked = true,
+        ),
+    )
+}
+
+private fun BigDecimal.formatCollateralBalance(): TextReference = resourceReference(
+    id = R.string.common_balance,
+    formatArgs = wrappedList(
+        format {
+            crypto(
+                symbol = PolymarketCollateralCurrencyFactory.COLLATERAL_SYMBOL,
+                decimals = PolymarketContracts.COLLATERAL_DECIMALS,
+            )
+        },
+    ),
+)
 
 private fun SwapCardState.withSelectionLocked(): SwapCardState = when (this) {
     is SwapCardState.SwapCardData -> copy(isSelectionLocked = true)
