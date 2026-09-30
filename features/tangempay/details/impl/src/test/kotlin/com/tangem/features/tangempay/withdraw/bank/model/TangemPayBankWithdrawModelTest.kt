@@ -264,6 +264,34 @@ internal class TangemPayBankWithdrawModelTest {
     }
 
     @Test
+    fun `GIVEN ach confirmed WHEN saved recipient on wire suggested THEN draft destination switches to wire`() {
+        // Arrange
+        val model = createModel(BankWithdrawEntry.NewPersonal)
+        model.onAmountConfirmed(achAmountResult())
+
+        // Act
+        model.onSavedRecipientSelected(bankAccount(id = "acc-5", rail = BankRail.WIRE))
+
+        // Assert
+        assertThat(model.draft.value.destination).isEqualTo(wireDestination())
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN ach confirmed WHEN saved recipient on wire picked from all THEN draft destination switches to wire`() {
+        // Arrange
+        val model = createModel(BankWithdrawEntry.SeeAll)
+        model.onAmountConfirmed(achAmountResult())
+
+        // Act
+        model.onRecipientSelected(bankAccount(id = "acc-5", rail = BankRail.WIRE))
+
+        // Assert
+        assertThat(model.draft.value.destination).isEqualTo(wireDestination())
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN draft WHEN amount confirmed THEN draft keeps amount source and destination`() {
         // Arrange
         val model = createModel(BankWithdrawEntry.NewBusiness)
@@ -503,6 +531,15 @@ internal class TangemPayBankWithdrawModelTest {
             values = values.toMap(),
             displayNames = values.associate { (field, _) -> field to "" },
         )
+
+    private fun achAmountResult() = BankWithdrawAmountResult(
+        amount = BigDecimal("500"),
+        source = bankWithdrawSource(),
+        destination = offrampDestination(),
+    )
+
+    private fun wireDestination() =
+        offrampDestination(rail = BankRail.WIRE, fee = BigDecimal("11.00"), minDays = 0, maxDays = 0)
 
     private fun createModel(entry: BankWithdrawEntry): TangemPayBankWithdrawModel = TangemPayBankWithdrawModel(
         paramsContainer = MutableParamsContainer(
