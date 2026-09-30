@@ -826,7 +826,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             val receiveTitle = (model.uiState.receiveCardData as SwapCardState.SwapCardData).type.accountTitleUM
             assertThat((sendTitle as AccountTitleUM.Account).name).isEqualTo(from.account.accountName.toUM().value)
             assertThat((receiveTitle as AccountTitleUM.Account).icon).isEqualTo(AccountIconUM.Prediction)
-            assertThat(receiveTitle.name).isEqualTo(collateral.account.accountName.toUM().value)
+            assertThat(receiveTitle.name).isEqualTo(resourceReference(R.string.prediction_account_title))
             model.onDestroy()
         }
 
