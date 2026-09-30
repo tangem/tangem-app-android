@@ -10,7 +10,7 @@ import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.common.formatPolymarketPrice
-import com.tangem.features.polymarket.impl.common.formatPolymarketShares
+import com.tangem.features.polymarket.impl.common.formatPolymarketPositionShares
 import com.tangem.features.polymarket.impl.common.formatPolymarketVolume
 import com.tangem.features.polymarket.impl.common.formatSlippagePercent
 import com.tangem.features.polymarket.impl.common.outcomeAccent
@@ -60,7 +60,7 @@ internal class PolymarketPositionDetailsConverter :
             ),
             event = event(position, value.event),
             metrics = PolymarketPositionDetailsUM.Metrics(
-                quantity = stringReference(position.size.formatPolymarketShares()),
+                quantity = stringReference(position.size.formatPolymarketPositionShares()),
                 priceChanges = stringReference("$entryPrice → $currentPrice"),
                 unrealizedPnl = stringReference(position.cashPnl.signedMoney()),
                 realizedPnl = stringReference(position.realizedPnl.signedMoney()),
