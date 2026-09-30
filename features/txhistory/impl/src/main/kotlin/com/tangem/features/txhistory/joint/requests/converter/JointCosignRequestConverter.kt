@@ -15,7 +15,6 @@ import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.joint.requests.model.JointCosignRequest
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
-import com.tangem.utils.toBriefAddressFormat
 import java.time.Instant
 
 internal class JointCosignRequestConverter(
@@ -49,7 +48,6 @@ internal class JointCosignRequestConverter(
             subtitle = ContentSubtitle.ExternalAddress(
                 direction = ContentSubtitle.Direction.TO,
                 rawAddress = recipient,
-                briefAddress = recipient.toBriefAddressFormat(),
             ),
             timestamp = startedAt ?: 0L,
             isPendingSignature = isPendingSignature,

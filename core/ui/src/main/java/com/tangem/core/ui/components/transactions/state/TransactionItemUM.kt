@@ -68,20 +68,24 @@ sealed interface TransactionItemUM {
         data class Plain(val text: TextReference) : ContentSubtitle
 
         /**
-         * Plain-text address subtitle without an identicon — renders "prefix: <address>", where [highlight]
+         * Plain-text address subtitle without an identicon — renders "prefix: <address>", where [address]
          * (a substring of the resolved [text]) is painted in the primary text color while the prefix stays
          * tertiary. Used for contract / validator addresses, external swap addresses and yield "for: <address>".
+         *
+         * [text] carries the **raw** address, never a pre-shortened one: the row shortens it to the width the
+         * subtitle gets. See `EllipsisText`.
          */
-        data class PlainAddress(val text: TextReference, val highlight: String) : ContentSubtitle
+        data class PlainAddress(val text: TextReference, val address: String) : ContentSubtitle
 
         /**
-         * External counterparty address — renders as "to/from: <identicon> <briefAddress>".
+         * External counterparty address — renders as "to/from: <identicon> <rawAddress>".
          * Used for Transfer to/from external addresses.
+         *
+         * The address is kept raw here; the row shortens it to the width the subtitle gets. See `EllipsisText`.
          */
         data class ExternalAddress(
             val direction: Direction,
             val rawAddress: String,
-            val briefAddress: String,
         ) : ContentSubtitle
 
         /**
@@ -230,8 +234,11 @@ sealed interface TransactionItemUM {
 
     @Immutable
     sealed interface PillSubtitle {
-        /** Address subtitle with inline IdentIcon (Blockies 8×8, hashed from [rawAddress]). */
-        data class Address(val rawAddress: String, val briefAddress: String) : PillSubtitle
+        /**
+         * Address subtitle with inline IdentIcon (Blockies 8×8, hashed from [rawAddress]). The address is kept raw
+         * here; the pill shortens it to the width it gets. See `EllipsisText`.
+         */
+        data class Address(val rawAddress: String) : PillSubtitle
     }
 
     data class Loading(override val txHash: String) : TransactionItemUM

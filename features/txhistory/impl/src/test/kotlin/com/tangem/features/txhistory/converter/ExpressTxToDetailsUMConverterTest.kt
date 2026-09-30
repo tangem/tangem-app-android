@@ -16,8 +16,13 @@ import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
+import com.tangem.test.core.ProvideTestModels
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
+import kotlin.time.Duration.Companion.minutes
 
 internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() {
 
@@ -678,6 +683,115 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
     // endregion
 
+    // region Long transaction time
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class LongRunningSwap {
+
+        @Test
+        fun `GIVEN exchanging swap older than 15 minutes WHEN convert THEN long-transaction-time banner`() {
+            // Act
+            val banner = stuckConverter().convert(expressSwap(status = ExpressExchangeStatus.Exchanging)).statusBanner
+
+            // Assert
+            assertThat(banner).isEqualTo(
+                TxHistoryDetailsUM.StatusBannerUM(
+                    style = TxHistoryDetailsUM.StatusBannerUM.Style.Warning,
+                    title = resourceReference(R.string.express_exchange_notification_long_transaction_time_title),
+                    subtitle = resourceReference(R.string.express_exchange_notification_long_transaction_time_text),
+                    isLoading = false,
+                ),
+            )
+        }
+
+        @Test
+        fun `GIVEN exchanging swap exactly 15 minutes old WHEN convert THEN ordinary stage banner`() {
+            // Arrange
+            val converter = expressConverter(nowMillis = TIMESTAMP + LONG_RUNNING_THRESHOLD_MILLIS)
+
+            // Act
+            val banner = converter.convert(expressSwap(status = ExpressExchangeStatus.Exchanging)).statusBanner
+
+            // Assert
+            assertThat(banner?.title).isEqualTo(resourceReference(R.string.express_exchange_status_exchanging_active))
+        }
+
+        @Test
+        fun `GIVEN stuck swap with url WHEN convert THEN go-to-provider button opening the url`() {
+            // Act — the stage alone would render no CTA; being stuck adds the way out.
+            val result = stuckConverter().convert(
+                expressSwap(status = ExpressExchangeStatus.Exchanging, externalTxUrl = EXTERNAL_URL),
+            )
+
+            // Assert
+            val button = result.providerButton
+            assertThat(button?.text).isEqualTo(resourceReference(R.string.common_go_to_provider))
+            button?.onClick?.invoke()
+            assertThat(openedUrls).containsExactly(EXTERNAL_URL)
+        }
+
+        @Test
+        fun `GIVEN stuck swap without url WHEN convert THEN banner stays and no provider button`() {
+            // Act — a DEX deal has nowhere to send the user, but the warning still has to be shown.
+            val result = stuckConverter().convert(
+                expressSwap(status = ExpressExchangeStatus.Exchanging, externalTxUrl = null),
+            )
+
+            // Assert
+            assertThat(result.statusBanner?.title)
+                .isEqualTo(resourceReference(R.string.express_exchange_notification_long_transaction_time_title))
+            assertThat(result.providerButton).isNull()
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun statusMatrix(model: LongRunningModel) {
+            // Act
+            val banner = stuckConverter()
+                .convert(expressSwap(status = model.status, payinHash = model.payinHash))
+                .statusBanner
+
+            // Assert
+            val isLongRunningBanner = banner?.title ==
+                resourceReference(R.string.express_exchange_notification_long_transaction_time_title)
+            assertThat(isLongRunningBanner).isEqualTo(model.isLongRunning)
+        }
+
+        private fun provideTestModels() = listOf(
+            LongRunningModel(ExpressExchangeStatus.Confirming, isLongRunning = true),
+            LongRunningModel(ExpressExchangeStatus.Exchanging, isLongRunning = true),
+            LongRunningModel(ExpressExchangeStatus.Sending, isLongRunning = true),
+            // The pay-in stages wait on the user until their own transfer is on chain.
+            LongRunningModel(ExpressExchangeStatus.Waiting, isLongRunning = false),
+            LongRunningModel(ExpressExchangeStatus.WaitingTxHash, isLongRunning = false),
+            LongRunningModel(ExpressExchangeStatus.ExchangeTxSent, isLongRunning = false),
+            LongRunningModel(ExpressExchangeStatus.Waiting, payinHash = PAYIN_HASH, isLongRunning = true),
+            LongRunningModel(ExpressExchangeStatus.WaitingTxHash, payinHash = PAYIN_HASH, isLongRunning = true),
+            LongRunningModel(ExpressExchangeStatus.ExchangeTxSent, payinHash = PAYIN_HASH, isLongRunning = true),
+            LongRunningModel(ExpressExchangeStatus.Preview, payinHash = PAYIN_HASH, isLongRunning = false),
+            LongRunningModel(ExpressExchangeStatus.Created, payinHash = PAYIN_HASH, isLongRunning = false),
+            LongRunningModel(ExpressExchangeStatus.Verifying, payinHash = PAYIN_HASH, isLongRunning = false),
+            LongRunningModel(ExpressExchangeStatus.Paused, payinHash = PAYIN_HASH, isLongRunning = false),
+            LongRunningModel(ExpressExchangeStatus.Finished, payinHash = PAYIN_HASH, isLongRunning = false),
+            LongRunningModel(ExpressExchangeStatus.Failed, payinHash = PAYIN_HASH, isLongRunning = false),
+            LongRunningModel(ExpressExchangeStatus.TxFailed, payinHash = PAYIN_HASH, isLongRunning = false),
+            LongRunningModel(ExpressExchangeStatus.Refunded, payinHash = PAYIN_HASH, isLongRunning = false),
+            LongRunningModel(ExpressExchangeStatus.Expired, payinHash = PAYIN_HASH, isLongRunning = false),
+            LongRunningModel(ExpressExchangeStatus.Unknown, payinHash = PAYIN_HASH, isLongRunning = false),
+        )
+
+        private fun stuckConverter() = expressConverter(nowMillis = TIMESTAMP + LONG_RUNNING_THRESHOLD_MILLIS + 1)
+    }
+
+    internal data class LongRunningModel(
+        val status: ExpressExchangeStatus,
+        val payinHash: String? = null,
+        val isLongRunning: Boolean,
+    )
+
+    // endregion
+
     // region Leg owner
 
     @Test
@@ -860,4 +974,9 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     // endregion
+
+    private companion object {
+        const val PAYIN_HASH = "0xpayinhash"
+        val LONG_RUNNING_THRESHOLD_MILLIS = 15.minutes.inWholeMilliseconds
+    }
 }
