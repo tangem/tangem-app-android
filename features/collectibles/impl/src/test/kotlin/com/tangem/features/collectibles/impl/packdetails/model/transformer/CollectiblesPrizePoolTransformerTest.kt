@@ -168,7 +168,7 @@ internal class CollectiblesPrizePoolTransformerTest {
         ),
         TestModel(
             batchListState = createNftsBatchListState(batches = emptyList()),
-            expected = CollectiblesMachineDetailsUM.PrizePoolUM.Empty::class.java,
+            expected = CollectiblesMachineDetailsUM.PrizePoolUM.Error::class.java,
         ),
     )
 }
