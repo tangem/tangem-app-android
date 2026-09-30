@@ -1,11 +1,10 @@
-package com.tangem.features.collectibles.impl.packdetails.model.transformer
+package com.tangem.features.collectibles.impl.machinedetails.model.transformer
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchListState
 import com.tangem.features.collectibles.impl.createNft
 import com.tangem.features.collectibles.impl.createNftsBatchListState
-import com.tangem.features.collectibles.impl.machinedetails.model.transformer.CollectiblesPrizePoolTransformer
 import com.tangem.features.collectibles.impl.machinedetails.ui.state.CollectiblesMachineDetailsUM
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.PaginationStatus
