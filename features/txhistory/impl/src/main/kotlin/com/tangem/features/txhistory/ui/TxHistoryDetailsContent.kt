@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.cosign.CosignRequestRow
-import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.resolveReference
@@ -39,7 +38,7 @@ internal fun TxHistoryDetailsContent(
 
 @Composable
 private fun SingleAssetContent(state: TxHistoryDetailsUM.SingleAsset, modifier: Modifier = Modifier) {
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(modifier = modifier.fillMaxWidth().padding(bottom = 16.dp)) {
         TxHistoryDetailsAmountBlock(amountBlock = state.amountBlock, isBalanceHidden = state.isBalanceHidden)
         state.counterparty?.let { counterparty ->
             TxHistoryDetailsCounterpartyRow(
@@ -72,7 +71,6 @@ private fun SingleAssetContent(state: TxHistoryDetailsUM.SingleAsset, modifier: 
                     start = 16.dp,
                     end = 16.dp,
                     top = if (state.statusBanner != null) 16.dp else 0.dp,
-                    bottom = 16.dp,
                 ),
         )
         state.cosignAction?.let { cosignAction ->
@@ -108,10 +106,8 @@ private fun CosignActionBlock(state: TxHistoryDetailsUM.CosignActionUM, modifier
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 12.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
+                    .padding(top = 12.dp, start = 16.dp, end = 16.dp),
             )
-        } else {
-            SpacerH16()
         }
     }
 }

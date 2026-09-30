@@ -667,6 +667,7 @@ internal class ChildFactory @Inject constructor(
                     params = ForgetWalletComponent.Params(
                         userWalletId = route.userWalletId,
                         shouldDeleteCloudBackup = route.shouldDeleteCloudBackup,
+                        shouldDeleteSocialRecovery = route.shouldDeleteSocialRecovery,
                     ),
                     componentFactory = forgetWalletComponentFactory,
                 )

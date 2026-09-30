@@ -103,6 +103,10 @@ sealed class WalletSettingsAnalyticEvents(
         event = "Cloud Backup Deleted",
     )
 
+    class SocialRecoveryDeleted : WalletSettingsAnalyticEvents(
+        event = "Social Recovery Deleted",
+    )
+
     data class CloudBackupDeletionError(
         val errorMessage: String,
     ) : WalletSettingsAnalyticEvents(
@@ -129,6 +133,33 @@ sealed class WalletSettingsAnalyticEvents(
 
     class WalletForgotten : WalletSettingsAnalyticEvents(
         event = "Wallet Forgotten",
+    )
+
+    class LogOutRequest : WalletSettingsAnalyticEvents(
+        event = "Log Out Request",
+    )
+
+    class WalletLoggedOut : WalletSettingsAnalyticEvents(
+        event = "Wallet Logged Out",
+    )
+
+    class DeleteWalletRequest : WalletSettingsAnalyticEvents(
+        event = "Delete Wallet Request",
+    )
+
+    class DeleteWalletScreenOpened : WalletSettingsAnalyticEvents(
+        event = "Delete Wallet Screen Opened",
+    )
+
+    class WalletDeleted : WalletSettingsAnalyticEvents(
+        event = "Wallet Deleted",
+    )
+
+    data class DeleteWalletError(
+        val errorMessage: String,
+    ) : WalletSettingsAnalyticEvents(
+        event = "Delete Wallet Error",
+        params = mapOf(AnalyticsParam.ERROR_MESSAGE to errorMessage),
     )
 
     class ButtonRecoveryPhrase : WalletSettingsAnalyticEvents(

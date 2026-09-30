@@ -7,7 +7,6 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchAction
 import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchingContext
@@ -43,7 +42,6 @@ internal class CollectiblesMachineDetailsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getMachineUseCase: GetCollectibleGachaMachineUseCase,
     private val router: Router,
-    private val urlOpener: UrlOpener,
     paramsContainer: ParamsContainer,
     getPrizePoolBatchFlowUseCase: GetCollectibleGachaMachineNftsBatchFlowUseCase,
 ) : Model() {
@@ -129,7 +127,6 @@ internal class CollectiblesMachineDetailsModel @Inject constructor(
                                 onBuyClick = ::onBuyClick,
                                 onTurboCheckedChange = ::onTurboCheckedChange,
                                 onTurboInfoClick = ::onTurboInfoClick,
-                                onPoweredByClick = ::onPoweredByClick,
                             ),
                         )
                     },
@@ -167,6 +164,9 @@ internal class CollectiblesMachineDetailsModel @Inject constructor(
     }
 
     private fun reloadPrizePool() {
+        val prizePool = (uiState.value as? CollectiblesMachineDetailsUM.Content)?.prizePool
+        if (prizePool is CollectiblesMachineDetailsUM.PrizePoolUM.Error && prizePool.isReloading) return
+
         modelScope.launch {
             actionsFlow.emit(
                 BatchAction.Reload(
@@ -197,10 +197,6 @@ internal class CollectiblesMachineDetailsModel @Inject constructor(
         router.push(CollectiblesRoute.ConfirmOrder(externalId = params.externalId, isTurboEnabled = isTurboEnabled))
     }
 
-    private fun onPoweredByClick() {
-        urlOpener.openUrl(COLLECTOR_CRYPT_URL)
-    }
-
     private fun onBackClick() {
         router.pop()
     }
@@ -208,6 +204,5 @@ internal class CollectiblesMachineDetailsModel @Inject constructor(
     private companion object {
 
         const val EXPECTED_VALUE_POLLING_DELAY_MS = 10_000L
-        const val COLLECTOR_CRYPT_URL = "https://collectorcrypt.com" // TODO confirm the correct Collector Crypt link
     }
 }
