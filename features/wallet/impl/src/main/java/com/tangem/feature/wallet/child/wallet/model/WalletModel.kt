@@ -29,6 +29,8 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
 import com.tangem.domain.marketing.WarmUpMarketingCampaignsUseCase
+import com.tangem.domain.mcp.McpRequestService
+import com.tangem.domain.mcp.models.McpRequest
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.wallet.*
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
@@ -130,6 +132,7 @@ internal class WalletModel @Inject constructor(
     private val getWalletIconUseCase: GetWalletIconUseCase,
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val wcPairService: WcPairService,
+    private val mcpRequestService: McpRequestService,
     private val resolveQrSendTargetsUseCase: ResolveQrSendTargetsUseCase,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val uiMessageSender: UiMessageSender,
@@ -863,6 +866,9 @@ internal class WalletModel @Inject constructor(
                         screen = WcPairRequest.Screen.MAIN,
                     ),
                 )
+            }
+            is QrSendTarget.McpAuthorization -> {
+                mcpRequestService.request(McpRequest.Pair(userCode = target.userCode))
             }
             is QrSendTarget.Single -> {
                 innerWalletRouter.openSend(
