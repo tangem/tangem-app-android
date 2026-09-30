@@ -1,10 +1,9 @@
-package com.tangem.features.collectibles.impl.packdetails.model.converter
+package com.tangem.features.collectibles.impl.machinedetails.model.converter
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.collectibles.models.CollectibleGachaMachineNft
 import com.tangem.features.collectibles.impl.createNft
-import com.tangem.features.collectibles.impl.machinedetails.model.converter.CollectiblesPrizeConverter
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
