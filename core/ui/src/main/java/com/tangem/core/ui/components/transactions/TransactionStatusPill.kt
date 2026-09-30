@@ -6,12 +6,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,6 +31,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.SpanStyle
@@ -38,6 +41,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.test.TransactionHistoryItemTestTags
+import com.tangem.core.ui.components.atoms.text.EllipsisText
+import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
@@ -93,9 +98,10 @@ private fun Pill(state: TransactionItemUM.Pill, isBalanceHidden: Boolean) {
  * color, then the address tail — "to:" secondary, the address itself primary, neither of them status-dependent — with
  * the address' identicon as inline content.
  *
- * One [Text] rather than a row of them, so the capsule ellipsizes as a whole instead of letting a long address push
- * it past the screen edge, and the gaps are plain spaces as the design has them. The amount is masked before it
- * enters the string, so hiding balances stars out the number alone.
+ * The body up to and including the identicon is one [Text], so the capsule ellipsizes as a whole instead of letting a
+ * long label push it past the screen edge, and its gaps are plain spaces as the design has them. The address follows
+ * as its own [EllipsisText], taking whatever width the body leaves and shortening from its middle to fit. The amount is
+ * masked before it enters the string, so hiding balances stars out the number alone.
  */
 @Composable
 private fun PillText(state: TransactionItemUM.Pill, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
@@ -113,7 +119,7 @@ private fun PillText(state: TransactionItemUM.Pill, isBalanceHidden: Boolean, mo
     }
     val address = (state.subtitle as? PillSubtitle.Address)?.takeIf { !isFailed }
     val addressTemplate = address?.let {
-        stringResourceSafe(R.string.transaction_history_to_inline_address, it.briefAddress)
+        stringResourceSafe(R.string.transaction_history_to_inline_address, it.rawAddress)
     }
     val identiconSizeSp = with(LocalDensity.current) { IDENTICON_SIZE.toSp() }
     val placeholder = remember(identiconSizeSp) {
@@ -135,18 +141,41 @@ private fun PillText(state: TransactionItemUM.Pill, isBalanceHidden: Boolean, mo
                     // The template keeps its own spacing around the marker, e.g. "to: %image% 33Bd...ga2B"
                     withStyle(spans.addressLabel) { append(" " + template.substringBefore(INLINE_IMAGE_PLACEHOLDER)) }
                     appendInlineContent(IDENTICON_INLINE_ID, INLINE_IMAGE_PLACEHOLDER)
-                    withStyle(spans.address) {
-                        append(template.substringAfter(INLINE_IMAGE_PLACEHOLDER, missingDelimiterValue = ""))
-                    }
                 }
             }
         }
     }
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        PillBody(text = text, address = address, identiconPlaceholder = placeholder)
+        address?.let { subtitle ->
+            Box(
+                modifier = Modifier
+                    .weight(weight = 1f, fill = false)
+                    .widthIn(max = HISTORY_ROW_ADDRESS_MAX_WIDTH),
+            ) {
+                EllipsisText(
+                    text = subtitle.rawAddress,
+                    color = TangemTheme.colors3.text.primary,
+                    style = TangemTheme.typography3.caption.medium,
+                    ellipsis = TextEllipsis.Middle,
+                )
+            }
+        }
+    }
+}
+
+/** Everything of the pill up to and including the [address]' identicon, as one ellipsizable line. */
+@Composable
+private fun PillBody(text: AnnotatedString, address: PillSubtitle.Address?, identiconPlaceholder: Placeholder) {
     Text(
         text = text,
         inlineContent = address?.let { subtitle ->
             mapOf(
-                IDENTICON_INLINE_ID to InlineTextContent(placeholder = placeholder) {
+                IDENTICON_INLINE_ID to InlineTextContent(placeholder = identiconPlaceholder) {
                     IdentIcon(
                         address = subtitle.rawAddress,
                         modifier = Modifier
@@ -159,7 +188,6 @@ private fun PillText(state: TransactionItemUM.Pill, isBalanceHidden: Boolean, mo
         style = TangemTheme.typography3.caption.medium,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
-        modifier = modifier,
     )
 }
 
@@ -218,7 +246,6 @@ private data class PillSpans(
     val label: SpanStyle,
     val value: SpanStyle,
     val addressLabel: SpanStyle,
-    val address: SpanStyle,
 )
 
 /**
@@ -231,7 +258,6 @@ private fun Status.pillSpans(): PillSpans = PillSpans(
     label = SpanStyle(color = labelColor()),
     value = SpanStyle(color = valueColor()),
     addressLabel = SpanStyle(color = TangemTheme.colors3.text.secondary),
-    address = SpanStyle(color = TangemTheme.colors3.text.primary),
 )
 
 /** The leading icon always carries the label color of its state, so the pill reads as one piece. */
@@ -359,7 +385,6 @@ private fun Preview_TransactionStatusPill_Approve() {
                     currencySymbol = "USDT",
                     subtitle = PillSubtitle.Address(
                         rawAddress = "33BdfSXXXXXXXXXXXXXXXXXXXXXXga2B",
-                        briefAddress = "33BdfS...ga2B",
                     ),
                 ),
                 previewPill(
@@ -371,7 +396,6 @@ private fun Preview_TransactionStatusPill_Approve() {
                     currencySymbol = "USDT",
                     subtitle = PillSubtitle.Address(
                         rawAddress = "33BdfSXXXXXXXXXXXXXXXXXXXXXXga2B",
-                        briefAddress = "33BdfS...ga2B",
                     ),
                 ),
                 previewPill(
@@ -383,7 +407,6 @@ private fun Preview_TransactionStatusPill_Approve() {
                     currencySymbol = "USDT",
                     subtitle = PillSubtitle.Address(
                         rawAddress = "33BdfSXXXXXXXXXXXXXXXXXXXXXXga2B",
-                        briefAddress = "33BdfS...ga2B",
                     ),
                 ),
                 // Unlimited allowance variant — "Unlimited" stands in for the number
@@ -396,7 +419,6 @@ private fun Preview_TransactionStatusPill_Approve() {
                     currencySymbol = "USDT",
                     subtitle = PillSubtitle.Address(
                         rawAddress = "33BdfSXXXXXXXXXXXXXXXXXXXXXXga2B",
-                        briefAddress = "33BdfS...ga2B",
                     ),
                 ),
             ),
