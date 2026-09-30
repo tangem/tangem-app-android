@@ -72,7 +72,7 @@ internal fun RwaFeedTabContent(
         state = listState,
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(
-            top = contentPadding.calculateTopPadding() + 16.dp,
+            top = contentPadding.calculateTopPadding(),
             bottom = bottomPadding,
         ),
     ) {
