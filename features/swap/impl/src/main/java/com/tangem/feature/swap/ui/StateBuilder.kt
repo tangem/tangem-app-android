@@ -74,6 +74,7 @@ internal class StateBuilder(
     private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
     private val appRouter: AppRouter,
     private val isChooseTokenPulseEnabled: Boolean,
+    private val predictionTopUpLimitsProvider: Provider<PredictionTopUpLimits?> = Provider { null },
 ) {
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
 
@@ -83,6 +84,7 @@ internal class StateBuilder(
         actions = actions,
         isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
         appCurrencyProvider = appCurrencyProvider,
+        predictionTopUpLimitsProvider = predictionTopUpLimitsProvider,
     )
 
     fun createInitialLoadingState(swapUIMode: SwapUIMode = SwapUIMode.Detailed): SwapStateHolder {
@@ -799,6 +801,8 @@ internal class StateBuilder(
                 notification is SwapNotificationUM.Warning.NoAvailableTokensToSwap ||
                 notification is SwapNotificationUM.Warning.SwapNotSupported ||
                 notification is SwapNotificationUM.Warning.NeedReserveToCreateAccount ||
+                notification is SwapNotificationUM.Warning.PredictionMinimumDeposit ||
+                notification is SwapNotificationUM.Warning.PredictionMaximumDeposit ||
                 notification is SwapNotificationUM.Info.PermissionNeeded
         } && !priceImpact.shouldDisableButton()
     }
