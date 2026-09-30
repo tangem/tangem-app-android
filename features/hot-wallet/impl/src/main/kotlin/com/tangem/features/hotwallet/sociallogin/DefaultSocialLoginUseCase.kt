@@ -39,11 +39,6 @@ import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Ordering follows NFR-01: social recovery counts as set up only once both the backend binding and the
- * cloud file are in place, so the completion flag is written last and a failure in between leaves an
- * ordinary hot wallet behind.
- */
 @Suppress("LongParameterList")
 @Singleton
 internal class DefaultSocialLoginUseCase @Inject constructor(
@@ -127,13 +122,10 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
                     return Either.Left(SocialLoginError.PassphraseNotSupported)
                 }
                 onStageChanged(SocialLoginStage.RestoringWallet)
-                importWallet(restored).getOrElse { return Either.Left(it) }
+                importMarkedWallet(restored).getOrElse { return Either.Left(it) }
             } finally {
                 restored.secret.wipe()
             }
-
-            setSocialBackupCompletedUseCase(walletId = userWalletId, isCompleted = true)
-                .getOrElse { return Either.Left(it) }
 
             return Either.Right(SocialLoginOutcome.WalletRestored(userWalletId))
         } finally {
@@ -163,7 +155,7 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
         pending.rememberRegistration(recoveryKey)
 
         // The binding comes first: the folder holds one file per account, so writing before the backend
-        // accepts the binding could overwrite another wallet's backup on the way to an FR-14 conflict.
+        // accepts the binding could overwrite another wallet's backup on the way to a binding conflict.
         registerSocialRecoveryUseCase(
             idToken = idToken,
             walletId = pending.userWallet.walletId,
@@ -192,7 +184,11 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
                     walletId = userWallet.walletId,
                     secret = secret,
                     recoveryKey = recoveryKey,
-                ).getOrElse { return Either.Left(it) }
+                ).getOrElse { error ->
+                    return Either.Left(
+                        if (error == SocialLoginError.CloudUnavailable) SocialLoginError.BackupWriteFailed() else error,
+                    )
+                }
             } finally {
                 secret.wipe()
             }
@@ -236,6 +232,17 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
                     isPassphraseRequired = false,
                 )
             }
+
+    private suspend fun importMarkedWallet(restored: RestoredSocialBackup): Either<SocialLoginError, UserWalletId> {
+        val walletId = restored.info.walletId
+        setSocialBackupCompletedUseCase(walletId = walletId, isCompleted = true)
+            .getOrElse { return Either.Left(it) }
+
+        return importWallet(restored).onLeft {
+            setSocialBackupCompletedUseCase(walletId = walletId, isCompleted = false)
+                .onLeft { error -> TangemLogger.e("Failed to clear the flag of a wallet not imported: $error") }
+        }
+    }
 
     private suspend fun importWallet(restored: RestoredSocialBackup): Either<SocialLoginError, UserWalletId> {
         // the SDK only parses a String, so this copy of the phrase cannot be wiped

@@ -144,7 +144,7 @@ internal class WalletHardwareBackupModel @Inject constructor(
             analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonUpgradeCurrent())
             modelScope.launch {
                 // Any backup will do, not the seed phrase alone: a wallet kept by a cloud backup or by
-                // social recovery is just as restorable after the upgrade (FR-15).
+                // social recovery is just as restorable after the upgrade.
                 if (!isWalletBackedUpUseCase(userWallet)) {
                     messageSender.send(saveSeedPhraseBeforeUpgradeBS(resolveCloudBackupState()))
                 } else {

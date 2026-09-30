@@ -31,6 +31,8 @@ import com.tangem.spend.pushProvisioning.GoogleWalletProvisioner.CardStatus
 import com.tangem.spend.pushProvisioning.GoogleWalletProvisioner.Environment
 import com.tangem.spend.pushProvisioning.GoogleWalletProvisioner.FailureReason
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.utils.logging.Severity
+import com.tangem.utils.logging.TangemLogger
 import io.mockk.Called
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -46,6 +48,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -300,6 +303,28 @@ internal class TangemPayAddToGoogleWalletControllerTest {
 
     @Nested
     inner class AddCard {
+
+        @AfterEach
+        fun resetLogWriters() {
+            TangemLogger.setLogWriters(emptyList())
+        }
+
+        @Test
+        fun `GIVEN card not in wallet WHEN add clicked THEN tap logged with the card status`() = runTest {
+            // Arrange
+            val logs = RecordingLogWriter()
+            TangemLogger.setLogWriters(listOf(logs))
+            val controller = createStartedController()
+
+            // Act
+            controller.onAddClick()
+            runCurrent()
+
+            // Assert
+            assertThat(logs.entries).containsExactly(
+                Severity.Info to "Add to Google Wallet tapped, card status: NotAdded",
+            )
+        }
 
         @Test
         fun `GIVEN card not in wallet WHEN add clicked THEN card pushed with its provisioning data`() = runTest {
@@ -563,7 +588,8 @@ internal class TangemPayAddToGoogleWalletControllerTest {
             AddResultModel(result = failure(FailureReason.TOKENIZATION_DECLINED), expectedDialog = null),
             AddResultModel(result = failure(FailureReason.ADDITION_IN_PROGRESS), expectedDialog = null),
             AddResultModel(result = failure(FailureReason.ENVIRONMENT_MISMATCH), expectedDialog = GENERIC_ERROR_DIALOG),
-            AddResultModel(result = failure(FailureReason.UNSUPPORTED), expectedDialog = GENERIC_ERROR_DIALOG),
+            AddResultModel(result = failure(FailureReason.UNSUPPORTED), expectedDialog = WALLET_UNAVAILABLE_DIALOG),
+            AddResultModel(result = failure(FailureReason.TOO_MANY_ATTEMPTS), expectedDialog = RATE_LIMIT_DIALOG),
         )
 
         @Test
@@ -657,6 +683,21 @@ internal class TangemPayAddToGoogleWalletControllerTest {
 
     internal data class ErrorDialog(val title: TextReference?, val message: TextReference)
 
+    private class RecordingLogWriter : TangemLogger.LogWriter {
+
+        val entries = mutableListOf<Pair<Severity, String>>()
+
+        override fun write(
+            severity: Severity,
+            tag: String,
+            message: String,
+            throwable: Throwable?,
+            shouldSanitize: Boolean,
+        ) {
+            entries += severity to message
+        }
+    }
+
     internal data class EntryModel(
         val card: TangemPayCard? = addableCard(),
         val frozenState: TangemPayCardFrozenState = TangemPayCardFrozenState.Unfrozen,
@@ -709,6 +750,14 @@ internal class TangemPayAddToGoogleWalletControllerTest {
         val GENERIC_ERROR_DIALOG = ErrorDialog(
             title = ERROR_TITLE,
             message = resourceReference(CoreUiR.string.tangempay_card_details_add_to_wallet_error_description),
+        )
+        val RATE_LIMIT_DIALOG = ErrorDialog(
+            title = ERROR_TITLE,
+            message = resourceReference(CoreUiR.string.tangempay_card_details_add_to_wallet_error_rate_limit),
+        )
+        val WALLET_UNAVAILABLE_DIALOG = ErrorDialog(
+            title = ERROR_TITLE,
+            message = resourceReference(CoreUiR.string.tangempay_card_details_add_to_wallet_error_wallet_unavailable),
         )
 
         fun addableCard(

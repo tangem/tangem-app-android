@@ -9,7 +9,6 @@ import com.tangem.domain.polymarket.model.PolymarketPositionsTab
 import com.tangem.features.polymarket.impl.main.PolymarketPositionsPreviewComponent
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketPositionsPreviewUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
-import com.tangem.features.polymarket.impl.positiondetails.model.canOpenPositionDetails
 import com.tangem.features.polymarket.impl.positionresult.model.canOpenPositionResult
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.StateFlow
@@ -54,11 +53,11 @@ internal class PolymarketPositionsPreviewModel @Inject constructor(
     }
 
     private fun openPosition(position: PolymarketPosition.Open) {
-        when {
-            position.canOpenPositionResult -> router.push(PolymarketRoute.PositionResult(params.userWalletId, position))
-            position.canOpenPositionDetails -> router.push(
-                PolymarketRoute.PositionDetails(params.userWalletId, position.id),
-            )
+        val route = if (position.canOpenPositionResult) {
+            PolymarketRoute.PositionResult(params.userWalletId, position)
+        } else {
+            PolymarketRoute.PositionDetails(params.userWalletId, position.id)
         }
+        router.push(route)
     }
 }

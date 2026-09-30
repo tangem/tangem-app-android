@@ -12,7 +12,9 @@ import com.tangem.utils.logging.TangemLogger
 import java.lang.reflect.Field
 
 class ApplicationInjectionExecutionRule(
-    private val toggleStates: Map<String, Boolean>,
+    // Supplier, not a plain map: it is read at test-evaluation time so a subclass `featureToggleOverrides`
+    // override (initialized after BaseTestCase's rule chain) is already in place when toggles are applied.
+    private val toggleStates: () -> Map<String, Boolean>,
 ) : TestRule {
 
     private val tangemApplication: TangemApplication
@@ -53,9 +55,10 @@ class ApplicationInjectionExecutionRule(
     private fun overrideFeatureToggles() {
         try {
             val versionField = getVersionField()
+            val states = toggleStates()
 
             FeatureToggles.entries.forEach { toggle ->
-                val enabled = toggleStates[toggle.rawName] ?: return@forEach
+                val enabled = states[toggle.rawName] ?: return@forEach
                 val newVersion = if (enabled) ENABLED_VERSION else DISABLED_VERSION
                 versionField.set(toggle, newVersion)
             }
@@ -63,12 +66,12 @@ class ApplicationInjectionExecutionRule(
             // Surface overrides that don't match any known toggle (e.g. a typo or a rawName from another
             // platform) — they are ignored rather than failing the run.
             val knownNames = FeatureToggles.entries.mapTo(mutableSetOf()) { it.rawName }
-            val unknown = toggleStates.keys - knownNames
+            val unknown = states.keys - knownNames
             if (unknown.isNotEmpty()) {
                 TangemLogger.e("Ignoring unknown feature toggle overrides (no matching rawName): $unknown")
             }
 
-            TangemLogger.i("FeatureToggles.values updated: $toggleStates")
+            TangemLogger.i("FeatureToggles.values updated: $states")
 
         } catch (e: Exception) {
             TangemLogger.e("FeatureToggles.values didn't change with error: ${e.message}")
