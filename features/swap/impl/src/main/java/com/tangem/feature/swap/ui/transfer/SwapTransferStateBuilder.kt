@@ -8,7 +8,6 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
-import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldConverter
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
@@ -35,6 +34,7 @@ import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.SwapButton.Mode
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.presentation.R
+import com.tangem.feature.swap.ui.toTitleName
 import com.tangem.feature.swap.ui.SwapAmountScreenClickIntents
 import com.tangem.feature.swap.ui.swapSuccessNavigation
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
@@ -300,7 +300,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
         return if (account != null && isAccountsMode) {
             AccountTitleUM.Account(
                 prefixText = resourceReference(prefix),
-                name = account.accountName.toUM().value,
+                name = account.toTitleName(),
                 icon = account.toIconUM(),
             )
         } else {
