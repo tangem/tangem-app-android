@@ -8,7 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,10 +20,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.avatar.TangemAvatar
-import com.tangem.core.ui.ds2.expandablerow.Empty
+import com.tangem.core.ui.ds2.expandable.expandableRowReveal
+import com.tangem.core.ui.ds2.expandablerow.EmptyBody
 import com.tangem.core.ui.ds2.expandablerow.Shimmer
 import com.tangem.core.ui.ds2.expandablerow.Slot
 import com.tangem.core.ui.ds2.expandablerow.TangemExpandableRow
@@ -75,6 +76,7 @@ private fun ComponentPreview(state: TangemExpandableRowStory) {
     }
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun ExpandableRowPreview(state: TangemExpandableRowStory) {
     val avatar = TangemAvatar.UiState.Account(
@@ -86,48 +88,47 @@ private fun ExpandableRowPreview(state: TangemExpandableRowStory) {
     val subtitle = if (state.hasSubtitle) stringReference("Subtitle") else null
     val value = if (state.hasValue) stringReference("Value") else null
     val caption = if (state.hasCaption) stringReference("Caption") else null
-    val body: @Composable ColumnScope.() -> Unit = { TokenRows(state = state) }
+    val isEmpty = state.variant == TangemExpandableRowStory.Variant.Empty
+    Column(
+        modifier = Modifier
+            .clip(RoundedCornerShape(24.dp))
+            .background(TangemTheme.colors3.bg.secondary),
+    ) {
+        when (state.variant) {
+            TangemExpandableRowStory.Variant.Default,
+            TangemExpandableRowStory.Variant.Empty,
+            -> TangemExpandableRow(
+                avatar = avatar,
+                title = title,
+                badge = badge,
+                subtitle = subtitle,
+                value = value,
+                caption = caption,
+                isExpandable = true,
+                isExpanded = state.isExpanded,
+                shape = RectangleShape,
+                collapseContentDescription = "Collapse",
+                onClick = state.onExpandedToggle,
+            )
+            TangemExpandableRowStory.Variant.Slot -> TangemExpandableRow.Slot(
+                avatar = avatar,
+                isExpandable = true,
+                isExpanded = state.isExpanded,
+                shape = RectangleShape,
+                collapseContentDescription = "Collapse",
+                onClick = state.onExpandedToggle,
+                headingSlot = { SlotLabel(text = "Heading slot") },
+                contentSlot = {
+                    SlotLabel(text = "Content start", modifier = Modifier.weight(1f))
+                    SlotLabel(text = "Content end")
+                },
+            )
+            TangemExpandableRowStory.Variant.Shimmer -> TangemExpandableRow.Shimmer()
+        }
 
-    when (state.variant) {
-        TangemExpandableRowStory.Variant.Default -> TangemExpandableRow(
-            avatar = avatar,
-            title = title,
-            badge = badge,
-            subtitle = subtitle,
-            value = value,
-            caption = caption,
-            isExpanded = state.isExpanded,
-            collapseContentDescription = "Collapse",
-            onClick = state.onExpandedToggle,
-            content = body,
-        )
-        TangemExpandableRowStory.Variant.Slot -> TangemExpandableRow.Slot(
-            avatar = avatar,
-            isExpanded = state.isExpanded,
-            collapseContentDescription = "Collapse",
-            onClick = state.onExpandedToggle,
-            content = body,
-            headingSlot = { SlotLabel(text = "Heading slot") },
-            contentSlot = {
-                SlotLabel(text = "Content start", modifier = Modifier.weight(1f))
-                SlotLabel(text = "Content end")
-            },
-        )
-        TangemExpandableRowStory.Variant.Empty -> TangemExpandableRow.Empty(
-            avatar = avatar,
-            title = title,
-            message = stringReference("Add tokens to begin tracking your crypto assets and transactions"),
-            addTokensLabel = stringReference("Add tokens"),
-            onAddTokensClick = {},
-            badge = badge,
-            subtitle = subtitle,
-            value = value,
-            caption = caption,
-            isExpanded = state.isExpanded,
-            collapseContentDescription = "Collapse",
-            onClick = state.onExpandedToggle,
-        )
-        TangemExpandableRowStory.Variant.Shimmer -> TangemExpandableRow.Shimmer()
+        Column(modifier = Modifier.expandableRowReveal(state.isExpanded)) {
+            BodyItems(state = state, isEmpty = isEmpty)
+        }
     }
 }
 
@@ -141,22 +142,47 @@ private fun SlotLabel(text: String, modifier: Modifier = Modifier) {
     )
 }
 
+/**
+ * The rows an open row reveals. On the real screen these are sibling lazy items; the storybook
+ * stands in for that host with a plain column so the shapes and background still read as one card.
+ */
 @Composable
-private fun ColumnScope.TokenRows(state: TangemExpandableRowStory) {
-    repeat(state.tokenCount) {
-        TangemTokenRow(
-            icon = TangemTokenIcon.UiState.Token(TangemTokenIcon.State(url = SAMPLE_ICON_URL)),
-            title = stringReference("Bitcoin"),
-            quote = stringReference("$1.00"),
-            priceChange = TangemPriceChange.State(
-                value = stringReference("2.08%"),
-                direction = TangemPriceChange.Direction.Up,
-            ),
-            fiatBalance = stringReference("$583.00"),
-            cryptoBalance = stringReference("0,000015 BTC"),
-            onClick = {},
-        )
+private fun BodyItems(state: TangemExpandableRowStory, isEmpty: Boolean) {
+    val items: List<@Composable () -> Unit> = buildList {
+        if (isEmpty) {
+            add {
+                TangemExpandableRow.EmptyBody(
+                    message = stringReference(
+                        "Add tokens to begin tracking your crypto assets and transactions",
+                    ),
+                    addTokensLabel = stringReference("Add tokens"),
+                    onAddTokensClick = {},
+                    shape = RectangleShape,
+                )
+            }
+        } else {
+            repeat(state.tokenCount) {
+                add { TokenRow() }
+            }
+        }
     }
+    items.forEach { item -> item() }
+}
+
+@Composable
+private fun TokenRow() {
+    TangemTokenRow(
+        icon = TangemTokenIcon.UiState.Token(TangemTokenIcon.State(url = SAMPLE_ICON_URL)),
+        title = stringReference("Bitcoin"),
+        quote = stringReference("$1.00"),
+        priceChange = TangemPriceChange.State(
+            value = stringReference("2.08%"),
+            direction = TangemPriceChange.Direction.Up,
+        ),
+        fiatBalance = stringReference("$583.00"),
+        cryptoBalance = stringReference("0,000015 BTC"),
+        onClick = {},
+    )
 }
 
 @Composable
