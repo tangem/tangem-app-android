@@ -173,6 +173,26 @@ internal object SwapNotificationUM {
             ),
         )
 
+        data class PredictionMinimumDeposit(
+            val amountText: String,
+        ) : Warning(
+            title = resourceReference(
+                id = R.string.warning_express_notification_invalid_reserve_amount_title,
+                formatArgs = wrappedList(amountText),
+            ),
+            subtitle = TextReference.EMPTY,
+        )
+
+        data class PredictionMaximumDeposit(
+            val amountText: String,
+        ) : Warning(
+            title = resourceReference(
+                id = R.string.prediction_add_funds_max_receive_amount_title,
+                formatArgs = wrappedList(amountText),
+            ),
+            subtitle = TextReference.EMPTY,
+        )
+
         data class NeedReserveToCreateAccount(
             val receiveAmount: String,
             val receiveToken: String,

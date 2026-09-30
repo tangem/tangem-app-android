@@ -7,6 +7,11 @@ pluginManagement {
     }
 
     includeBuild("plugins/configuration")
+    includeBuild("plugins/settings")
+}
+
+plugins {
+    id("meawallet-sdk")
 }
 
 val properties = java.util.Properties()
@@ -19,86 +24,6 @@ if (propertiesFile.exists()) {
         "local.properties not found, please create it next to build.gradle and set gpr.user and gpr.key (Create a GitHub package read only + non expiration token at https://github.com/settings/tokens)\n" +
             "Or set GITHUB_ACTOR and GITHUB_TOKEN environment variables"
     )
-}
-
-val meaWalletSdkRegistry = "https://maven.pkg.github.com/tangem-developments/tangem-app-android"
-
-abstract class MeaWalletSdkAccessDenial : ValueSource<String, MeaWalletSdkAccessDenial.Parameters> {
-
-    interface Parameters : ValueSourceParameters {
-        val metadataUrl: Property<String>
-        val localProperties: RegularFileProperty
-    }
-
-    override fun obtain(): String? {
-        val gprProperties = java.util.Properties()
-        parameters.localProperties.get().asFile.takeIf { it.isFile }?.inputStream()?.use { gprProperties.load(it) }
-        val user = gprProperties.getProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR").orEmpty()
-        val token = gprProperties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
-            ?: return "there is no gpr.key or GITHUB_TOKEN for GitHub Packages"
-        val credentials = java.util.Base64.getEncoder().encodeToString("$user:$token".toByteArray())
-        val answer = try {
-            val url = java.net.URI(parameters.metadataUrl.get()).toURL()
-            val connection = url.openConnection() as java.net.HttpURLConnection
-            connection.requestMethod = "HEAD"
-            connection.connectTimeout = TIMEOUT_MILLIS
-            connection.readTimeout = TIMEOUT_MILLIS
-            connection.setRequestProperty("Authorization", "Basic $credentials")
-            "HTTP ${connection.responseCode}"
-        } catch (e: java.io.IOException) {
-            "${e.javaClass.simpleName}: ${e.message}"
-        }
-        return when (answer) {
-            "HTTP 200" -> null
-            in DENIED_ANSWERS -> "GitHub Packages refused the token ($answer)"
-            else -> {
-                println(
-                    "Could not check the MeaWallet SDK in GitHub Packages ($answer); building with it, " +
-                        "set meawallet.sdk=noop if it cannot be resolved"
-                )
-                null
-            }
-        }
-    }
-
-    private companion object {
-        val DENIED_ANSWERS = setOf("HTTP 401", "HTTP 403", "HTTP 404")
-        const val TIMEOUT_MILLIS = 3_000
-    }
-}
-
-val hasMeaWalletConfig = file("app/src/main/assets/tangem-app-config/meawallet/mea_config").isFile
-val meaWalletSdkOverride = (providers.gradleProperty("meawallet.sdk").orNull ?: properties.getProperty("meawallet.sdk"))
-    ?.trim()
-    ?.let { if (it == "no-op") "noop" else it }
-require(meaWalletSdkOverride == null || meaWalletSdkOverride == "impl" || meaWalletSdkOverride == "noop") {
-    "meawallet.sdk must be impl or noop, got '$meaWalletSdkOverride'"
-}
-require(meaWalletSdkOverride != "impl" || hasMeaWalletConfig) {
-    "meawallet.sdk=impl needs meawallet/mea_config in tangem-app-config"
-}
-val shouldProbeMeaWalletSdk = hasMeaWalletConfig && meaWalletSdkOverride == null && !gradle.startParameter.isOffline
-val meaWalletSdkAccessDenial = if (shouldProbeMeaWalletSdk) {
-    providers.of(MeaWalletSdkAccessDenial::class.java) {
-        parameters.metadataUrl.set("$meaWalletSdkRegistry/com/meawallet/mpp-prod/maven-metadata.xml")
-        parameters.localProperties.set(propertiesFile)
-    }.orNull
-} else {
-    null
-}
-val meaWalletSdkNoopReason = when {
-    !hasMeaWalletConfig -> "tangem-app-config has no meawallet/mea_config"
-    meaWalletSdkOverride == "noop" -> "meawallet.sdk=noop"
-    meaWalletSdkAccessDenial != null ->
-        "$meaWalletSdkAccessDenial; the MeaWallet SDK needs a token with read:packages and SSO for tangem-developments"
-    else -> null
-}
-val hasMeaWalletSdk = meaWalletSdkNoopReason == null
-if (meaWalletSdkNoopReason != null) {
-    println("Google Wallet push provisioning is built as a no-op: $meaWalletSdkNoopReason")
-}
-if (!hasMeaWalletSdk && providers.environmentVariable("REQUIRE_MEAWALLET_SDK").orNull == "true") {
-    error("REQUIRE_MEAWALLET_SDK is set, but the MeaWallet SDK is not available to this build: $meaWalletSdkNoopReason")
 }
 
 dependencyResolutionManagement {
@@ -221,21 +146,6 @@ dependencyResolutionManagement {
         }
         maven("https://jitpack.io")
         maven("https://maven.sumsub.com/repository/maven-public/")
-        exclusiveContent {
-            forRepository {
-                maven {
-                    url = uri(meaWalletSdkRegistry)
-                    credentials {
-                        username = properties.getProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
-                        password = properties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
-                    }
-                }
-            }
-            filter {
-                includeGroupAndSubgroups("com.meawallet")
-                includeModule("com.google.android.gms", "play-services-tapandpay")
-            }
-        }
     }
 
     versionCatalogs {
@@ -294,6 +204,7 @@ if (properties.getProperty("usedesk.local").toBoolean()) {
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":app")
+include(":benchmark")
 include(":plugins:detekt-rules")
 
 include(":test:core")
@@ -343,9 +254,6 @@ include(":spend:datasource")
 include(":spend:push-provisioning:api")
 include(":spend:push-provisioning:mock")
 include(":spend:push-provisioning:no-op")
-if (hasMeaWalletSdk) {
-    include(":spend:push-provisioning:impl")
-}
 // endregion Spend modules
 
 // region Store modules

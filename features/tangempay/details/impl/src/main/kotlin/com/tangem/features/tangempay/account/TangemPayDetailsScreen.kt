@@ -13,7 +13,6 @@ import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,33 +34,39 @@ import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
+import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.components.topFade
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.badge.TangemBadge
+import com.tangem.core.ui.ds2.button.Back
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds2.messagebanner.CloseButton
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
+import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.BaseActionButtonsBlockTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
-import com.tangem.features.tangempay.common.PayContextMenuBlock
+import com.tangem.features.tangempay.common.PayContextMenuButton
 import com.tangem.features.tangempay.common.TangemPayActionButton
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.txhistory.PreviewTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.txhistory.TangemPayTxHistoryComponent
 import com.tangem.features.tangempay.txhistory.TangemPayTxHistoryUM
 import com.tangem.utils.StringsSigns.DASH_SIGN
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.ImmutableList
 import com.tangem.core.ui.R as CoreUiR
 
@@ -85,63 +90,77 @@ internal fun TangemPayDetailsScreen(
     val rootBackground = TangemTheme.colors3.bg.primary
 
     val txHistoryState by txHistoryComponent.state.collectAsStateWithLifecycle()
+    val hazeState = rememberHazeState()
+    val buttonsHazeState = rememberHazeState()
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(rootBackground),
-    ) {
-        TangemPullToRefreshSlidingContainer(
-            config = state.pullToRefreshConfig,
-            indicatorOffset = topBarTotalHeight,
+    CompositionLocalProvider(LocalHazeState provides hazeState) {
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .background(rootBackground),
         ) {
-            LazyColumn(
+            // Material buttons inside the list can't blur the list's own haze source (Haze skips an ancestor
+            // source of the same state), so they sample a separate state backed by the plain background.
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .testTag(TangemPayTestTags.PAYMENT_ACCOUNT_CONTENT)
-                    .topFade(
-                        height = topBarTotalHeight,
-                        0f to rootBackground,
-                        TOP_FADE_MID_STOP to rootBackground.copy(alpha = TOP_FADE_MID_ALPHA),
-                        1f to Color.Transparent,
-                    ),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                state = listState,
-                contentPadding = PaddingValues(
-                    top = topBarTotalHeight,
-                    bottom = TangemTheme.dimens2.x4 + bottomBarHeight,
-                ),
+                    .background(rootBackground)
+                    .hazeSourceTangem(state = buttonsHazeState, zIndex = -1f),
+            )
+
+            TangemPullToRefreshSlidingContainer(
+                config = state.pullToRefreshConfig,
+                indicatorOffset = topBarTotalHeight,
             ) {
-                payDetailsBody(state)
-                state.cashbackBlockState?.let { cashbackState ->
-                    item("cashbackBlock") {
-                        SpacerH12()
-                        CashbackBlock(
-                            state = cashbackState,
-                            modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .testTag(TangemPayTestTags.PAYMENT_ACCOUNT_CONTENT)
+                        .hazeSourceTangem(state = hazeState)
+                        .topFade(
+                            height = topBarTotalHeight,
+                            0f to rootBackground,
+                            TOP_FADE_MID_STOP to rootBackground.copy(alpha = TOP_FADE_MID_ALPHA),
+                            1f to Color.Transparent,
+                        ),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    state = listState,
+                    contentPadding = PaddingValues(
+                        top = topBarTotalHeight,
+                        bottom = TangemTheme.dimens2.x4 + bottomBarHeight,
+                    ),
+                ) {
+                    payDetailsBody(state = state, buttonsHazeState = buttonsHazeState)
+                    state.cashbackBlockState?.let { cashbackState ->
+                        item("cashbackBlock") {
+                            SpacerH12()
+                            CashbackBlock(
+                                state = cashbackState,
+                                modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
+                            )
+                        }
+                    }
+                    item("promoBannersBlock") {
+                        promoBannersBlockComponent.Content(
+                            modifier = Modifier.padding(vertical = 12.dp),
                         )
                     }
+                    with(txHistoryComponent) { txHistoryContent(listState = listState, state = txHistoryState) }
                 }
-                item("promoBannersBlock") {
-                    promoBannersBlockComponent.Content(
-                        modifier = Modifier.padding(vertical = 12.dp),
-                    )
-                }
-                with(txHistoryComponent) { txHistoryContent(listState = listState, state = txHistoryState) }
             }
-        }
 
-        PayDetailsTopBar(
-            config = state.topBarConfig,
-            onHeightChange = { measuredHeight ->
-                if (topBarTotalHeight != measuredHeight) topBarTotalHeight = measuredHeight
-            },
-        )
+            PayDetailsTopBar(
+                config = state.topBarConfig,
+                onHeightChange = { measuredHeight ->
+                    if (topBarTotalHeight != measuredHeight) topBarTotalHeight = measuredHeight
+                },
+            )
+        }
     }
 }
 
 @Suppress("LongMethod")
-private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
+private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM, buttonsHazeState: HazeState) {
     item("balanceBlock") {
         BalanceBlock(
             state = state.balanceBlockState,
@@ -157,7 +176,9 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
     if (state.balanceBlockState.actionButtons.isNotEmpty()) {
         item("actionButtonsBlock") {
             SpacerH24()
-            ActionBlock(actionButtons = state.balanceBlockState.actionButtons)
+            CompositionLocalProvider(LocalHazeState provides buttonsHazeState) {
+                ActionBlock(actionButtons = state.balanceBlockState.actionButtons)
+            }
         }
     }
 
@@ -302,42 +323,28 @@ private fun PayDetailsTopBar(
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
-    TangemTopBar(
-        modifier = modifier
-            .onSizeChanged { size ->
-                onHeightChange(with(density) { size.height.toDp() })
-            }
-            .statusBarsPadding(),
-        title = resourceReference(R.string.tangempay_payment_account),
-        subtitle = config.subtitle,
-        startContent = {
-            TangemButton(
-                iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_arrow_back_28),
-                onClick = config.onBackClick,
-                size = TangemButton.Size.X11,
-                variant = TangemButton.Variant.Material,
-            )
+    TangemTopNavigation(
+        modifier = modifier.onSizeChanged { size ->
+            onHeightChange(with(density) { size.height.toDp() })
         },
-        endContent = if (config.items.isNotEmpty()) {
+        contentAlign = TangemTopNavigation.ContentAlign.Center,
+        blurBackground = false,
+        startButton = { TangemButton.Back(onClick = config.onBackClick) },
+        contentColumn = {
+            TangemNavigationText(
+                text = resourceReference(R.string.tangempay_payment_account),
+                role = TangemNavigationText.Role.Title,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            TangemNavigationText(text = config.subtitle, role = TangemNavigationText.Role.Subtitle)
+        },
+        endButtonsGroup = if (config.items.isNotEmpty()) {
             {
-                var isDropdownMenuShown by rememberSaveable { mutableStateOf(false) }
-                Box {
-                    TangemButton(
-                        modifier = Modifier.testTag(TokenDetailsTopBarTestTags.MORE_BUTTON),
-                        iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_more_default_24),
-                        onClick = {
-                            config.onOpenMenu()
-                            isDropdownMenuShown = true
-                        },
-                        size = TangemButton.Size.X11,
-                        variant = TangemButton.Variant.Material,
-                    )
-                    PayContextMenuBlock(
-                        items = config.items,
-                        onMenuDismiss = { isDropdownMenuShown = false },
-                        isDropdownMenuShown = isDropdownMenuShown,
-                    )
-                }
+                PayContextMenuButton(
+                    items = config.items,
+                    testTag = TokenDetailsTopBarTestTags.MORE_BUTTON,
+                    onOpen = config.onOpenMenu,
+                )
             }
         } else {
             null
@@ -482,14 +489,12 @@ private fun LazyItemScope.ActionBlock(
         horizontalArrangement = Arrangement.Center,
     ) {
         actionButtons.fastForEach { actionButton ->
-            val config = actionButton.config
             TangemPayActionButton(
                 modifier = Modifier.testTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON),
-                iconRes = config.iconResId,
-                onClick = config.onClick,
-                isEnabled = config.isEnabled,
-                isLoading = config.isInProgress,
-                title = config.text,
+                icon = actionButton.icon,
+                onClick = actionButton.onClick,
+                isEnabled = actionButton.isEnabled,
+                title = actionButton.text,
             )
         }
     }

@@ -1,5 +1,6 @@
 package com.tangem.features.hotwallet.forgetwallet
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -23,6 +24,8 @@ internal class DefaultForgetWalletComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
+        BackHandler(onBack = state.onBackClick)
+
         ForgetWalletContent(
             state = state,
             modifier = modifier,

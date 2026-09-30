@@ -26,11 +26,11 @@ import com.tangem.common.ui.cosign.SignatureProgressUM
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
 import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.extensions.plus
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.styledStringReference
@@ -46,7 +46,7 @@ import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import kotlinx.collections.immutable.persistentListOf
 
 /**
- * The transaction details bottom sheet ("Operation"): the [TangemModalBottomSheet] shell shared by all transaction
+ * The transaction details bottom sheet ("Operation"): the [TangemModal] shell shared by all transaction
  * types, with the [TxHistoryDetailsTopNavigation] header in the title slot and [TxHistoryDetailsContent] (single-asset
  * or two-asset body) as the content.
  *
@@ -63,8 +63,7 @@ internal fun TxHistoryDetailsModalBottomSheetContent(
     onDismiss: () -> Unit,
     ratingContent: (@Composable () -> Unit)? = null,
 ) {
-    TangemModalBottomSheet<TxHistoryDetailsUM>(
-        containerColor = TangemTheme.colors3.bg.secondary,
+    TangemModal<TxHistoryDetailsUM>(
         config = TangemBottomSheetConfig(
             isShown = state != null,
             onDismissRequest = onDismiss,
