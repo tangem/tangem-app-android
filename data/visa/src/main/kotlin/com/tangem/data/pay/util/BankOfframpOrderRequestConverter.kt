@@ -12,21 +12,23 @@ import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
 import com.tangem.domain.pay.model.bankofframp.PostalAddress
 import com.tangem.spend.datasource.pay.models.request.BankOfframpPlaceOrderRequest
+import com.tangem.utils.converter.Converter
 
 /**
  * Builds the create-order body. A saved recipient is sent by id alone; a new one is described in full, and the
  * backend requires every field of that description while the domain model allows a recipient to be partial — so
  * anything missing ends the call as [BankOfframpError.Validation] instead of reaching the wire half-filled.
  */
-internal object BankOfframpOrderRequestConverter {
+internal object BankOfframpOrderRequestConverter :
+    Converter<BankOfframpOrderRequestConverter.Input, Either<BankOfframpError, BankOfframpPlaceOrderRequest>> {
 
     private const val INDIVIDUAL_TYPE = "INDIVIDUAL"
     private const val BUSINESS_TYPE = "BUSINESS"
 
-    fun convert(
-        request: BankOfframpOrderRequest,
-        idempotencyKey: String,
-    ): Either<BankOfframpError, BankOfframpPlaceOrderRequest> = either {
+    data class Input(val request: BankOfframpOrderRequest, val idempotencyKey: String)
+
+    override fun convert(value: Input): Either<BankOfframpError, BankOfframpPlaceOrderRequest> = either {
+        val request = value.request
         val data = when (val recipient = request.recipient) {
             is BankOfframpRecipient.Saved -> data(request = request, bankAccountId = recipient.bankAccountId)
             is BankOfframpRecipient.New -> data(
@@ -34,7 +36,7 @@ internal object BankOfframpOrderRequestConverter {
                 bankAccount = convertBankAccount(details = recipient.details, rail = request.rail),
             )
         }
-        BankOfframpPlaceOrderRequest(data = data, idempotencyKey = idempotencyKey)
+        BankOfframpPlaceOrderRequest(data = data, idempotencyKey = value.idempotencyKey)
     }
 
     private fun data(
