@@ -32,7 +32,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.common.formatPolymarketPercent
-import com.tangem.features.polymarket.impl.common.formatPolymarketPositionShares
+import com.tangem.features.polymarket.impl.common.formatPolymarketShares
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
@@ -61,7 +61,7 @@ internal fun PredictionSharesBlock(
 }
 
 private fun SellPositionUM.availableLabel(): String = when (this) {
-    is SellPositionUM.Held -> available.formatPolymarketPositionShares()
+    is SellPositionUM.Held -> available.formatPolymarketShares()
     SellPositionUM.Loading,
     SellPositionUM.NotHeld,
     SellPositionUM.Unreadable,
@@ -87,7 +87,7 @@ private fun ProceedsSection(selected: BigDecimal, position: SellPositionUM, proc
             modifier = Modifier.padding(top = CAPTION_GAP),
             text = stringResourceSafe(
                 R.string.prediction_close_selling_of,
-                selected.formatPolymarketPositionShares(),
+                selected.formatPolymarketShares(),
                 position.availableLabel(),
             ),
             style = TangemTheme.typography3.caption.medium,

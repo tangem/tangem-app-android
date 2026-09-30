@@ -26,29 +26,31 @@ internal class PolymarketSharesFormatTest {
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN shares WHEN formatted THEN a position is never rounded up and a trade shows two decimals`(
+    fun `GIVEN shares WHEN formatted THEN cut down to two decimals and a remainder below a cent kept whole`(
         model: SharesFormatModel,
     ) {
         // Arrange
         val shares = BigDecimal(model.shares)
 
         // Act
-        val position = shares.formatPolymarketPositionShares()
-        val trade = shares.formatPolymarketShares()
+        val actual = shares.formatPolymarketShares()
 
         // Assert
-        assertThat(position).isEqualTo(model.expectedPosition)
-        assertThat(trade).isEqualTo(model.expectedTrade)
+        assertThat(actual).isEqualTo(model.expected)
     }
 
     private fun provideTestModels(): List<SharesFormatModel> = listOf(
-        SharesFormatModel(shares = "15.1663", expectedPosition = "15.1663", expectedTrade = "15.17"),
-        SharesFormatModel(shares = "51.2345678", expectedPosition = "51.234567", expectedTrade = "51.23"),
-        SharesFormatModel(shares = "0.0063", expectedPosition = "0.0063", expectedTrade = "0.01"),
-        SharesFormatModel(shares = "15.160000", expectedPosition = "15.16", expectedTrade = "15.16"),
-        SharesFormatModel(shares = "4612.54", expectedPosition = "4,612.54", expectedTrade = "4,612.54"),
-        SharesFormatModel(shares = "51", expectedPosition = "51", expectedTrade = "51"),
+        SharesFormatModel(shares = "15.1663", expected = "15.16"),
+        SharesFormatModel(shares = "5.3999", expected = "5.39"),
+        SharesFormatModel(shares = "97.95918", expected = "97.95"),
+        SharesFormatModel(shares = "15.160000", expected = "15.16"),
+        SharesFormatModel(shares = "4612.54", expected = "4,612.54"),
+        SharesFormatModel(shares = "51", expected = "51"),
+        SharesFormatModel(shares = "0.01", expected = "0.01"),
+        SharesFormatModel(shares = "0.0063", expected = "0.0063"),
+        SharesFormatModel(shares = "0.0000001", expected = "0"),
+        SharesFormatModel(shares = "0", expected = "0"),
     )
 
-    data class SharesFormatModel(val shares: String, val expectedPosition: String, val expectedTrade: String)
+    data class SharesFormatModel(val shares: String, val expected: String)
 }

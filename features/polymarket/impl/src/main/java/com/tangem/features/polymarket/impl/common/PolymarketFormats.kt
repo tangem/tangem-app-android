@@ -11,6 +11,7 @@ import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.format.bigdecimal.simple
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 /**
  * Formats a traded volume as Polymarket states it: in USD, regardless of the currency selected in the app,
@@ -50,13 +51,22 @@ internal fun BigDecimal.formatSlippagePercent(): String = movePointLeft(2).forma
     percent(minFractionDigits = 0)
 }
 
-/** Formats a share count the way the result screen states it: grouped, fraction only when present, e.g. "4,612.54". */
-internal fun BigDecimal.formatPolymarketShares(): String = format { simple(decimals = 2) }
-
-/** Formats a held position without rounding it, so a remainder below a cent stays visible, e.g. "15.1663". */
-internal fun BigDecimal.formatPolymarketPositionShares(): String = floorToSharePrecision().format {
-    simple(decimals = PolymarketConst.SHARES_DECIMALS)
+/**
+ * Formats a share count cut down to two decimals, grouped, fraction only when present, e.g. "4,612.54" — never more
+ * than is held. A count below one hundredth keeps its own precision, e.g. "0.0063", so a sellable remainder is not
+ * shown as nothing.
+ */
+internal fun BigDecimal.formatPolymarketShares(): String {
+    val displayed = if (signum() > 0 && this < SHARES_DISPLAY_STEP) {
+        floorToSharePrecision()
+    } else {
+        setScale(SHARES_DISPLAY_DECIMALS, RoundingMode.FLOOR)
+    }
+    return displayed.format { simple(decimals = PolymarketConst.SHARES_DECIMALS) }
 }
+
+private const val SHARES_DISPLAY_DECIMALS = 2
+private val SHARES_DISPLAY_STEP: BigDecimal = BigDecimal.ONE.movePointLeft(SHARES_DISPLAY_DECIMALS)
 
 /** @return a whole-percent share the way the calculator buttons state it, e.g. "25%". */
 internal fun Int.formatPolymarketPercent(): String = BigDecimal(this).movePointLeft(2).format {
