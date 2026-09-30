@@ -5,6 +5,7 @@ import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.components.label.entity.LabelStyle
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.walletsettings.entity.WalletSettingsAccountsUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
@@ -22,6 +23,7 @@ internal class ItemsBuilder @Inject constructor() {
     fun buildItems(
         userWallet: UserWallet,
         isWalletBackedUp: Boolean,
+        isSocialWallet: Boolean,
         cardItem: WalletSettingsItemUM.CardBlock,
         accountsUM: List<WalletSettingsAccountsUM>,
         isLinkMoreCardsAvailable: Boolean,
@@ -32,6 +34,8 @@ internal class ItemsBuilder @Inject constructor() {
         onCheckedNFTChange: (Boolean) -> Unit,
         onNotificationSettingsClick: () -> Unit,
         forgetWallet: () -> Unit,
+        onLogOutClick: () -> Unit,
+        onDeleteWalletClick: () -> Unit,
         onLinkMoreCardsClick: () -> Unit,
         onReferralClick: () -> Unit,
         onManageTokensClick: () -> Unit,
@@ -64,7 +68,13 @@ internal class ItemsBuilder @Inject constructor() {
                 onCheckedNFTChange = onCheckedNFTChange,
             ),
         )
-        .add(buildForgetItem(forgetWallet))
+        .add(
+            if (isSocialWallet) {
+                buildLogOutAndDeleteItem(onLogOutClick = onLogOutClick, onDeleteWalletClick = onDeleteWalletClick)
+            } else {
+                buildForgetItem(forgetWallet)
+            },
+        )
 
     private fun buildNFTItems(
         isNFTFeatureEnabled: Boolean,
@@ -187,6 +197,27 @@ internal class ItemsBuilder @Inject constructor() {
             ),
         ),
     )
+
+    private fun buildLogOutAndDeleteItem(onLogOutClick: () -> Unit, onDeleteWalletClick: () -> Unit) =
+        WalletSettingsItemUM.WithItems(
+            id = "forget",
+            description = resourceReference(R.string.settings_forget_wallet_footer),
+            blocks = persistentListOf(
+                BlockUM(
+                    // TODO [REDACTED_TASK_KEY]: waiting on social_wallet_settings_log_out in Lokalise.
+                    text = stringReference("Log out"),
+                    iconRes = null,
+                    onClick = onLogOutClick,
+                ),
+                BlockUM(
+                    // TODO [REDACTED_TASK_KEY]: waiting on social_wallet_settings_delete_wallet in Lokalise.
+                    text = stringReference("Delete wallet"),
+                    iconRes = null,
+                    onClick = onDeleteWalletClick,
+                    accentType = BlockUM.AccentType.WARNING,
+                ),
+            ),
+        )
 
     private fun buildAccessCodeItem(userWallet: UserWallet, onItemClick: () -> Unit): List<WalletSettingsItemUM> {
         return when (userWallet) {
