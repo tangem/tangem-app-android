@@ -141,7 +141,7 @@ internal class PolymarketPositionUMConverterTest {
 
     @ParameterizedTest
     @EnumSource(PolymarketResolutionStatus::class)
-    fun `GIVEN resolution state WHEN card tapped THEN only unresolved positions open details`(status: PolymarketResolutionStatus) {
+    fun `GIVEN any resolution state WHEN card tapped THEN the position opens`(status: PolymarketResolutionStatus) {
         // Arrange
         val onClick: (PolymarketPosition.Open) -> Unit = mockk(relaxed = true)
         val position = createPolymarketPosition(resolutionStatus = status)
@@ -151,7 +151,7 @@ internal class PolymarketPositionUMConverterTest {
         card.onClick?.invoke()
 
         // Assert
-        verify(exactly = if (status == PolymarketResolutionStatus.RESOLVED) 0 else 1) { onClick(position) }
+        verify(exactly = 1) { onClick(position) }
     }
 
     @Test
@@ -168,7 +168,7 @@ internal class PolymarketPositionUMConverterTest {
 
     @ParameterizedTest
     @EnumSource(PolymarketPositionResult::class)
-    fun `GIVEN redeemable position WHEN card tapped THEN passes known result and real data`(result: PolymarketPositionResult) {
+    fun `GIVEN redeemable position WHEN card tapped THEN passes the real position`(result: PolymarketPositionResult) {
         // Arrange
         val onClick: (PolymarketPosition.Open) -> Unit = mockk(relaxed = true)
         val position = createPolymarketPosition(result = result, resolutionStatus = PolymarketResolutionStatus.RESOLVED)
@@ -179,7 +179,7 @@ internal class PolymarketPositionUMConverterTest {
         card.onClick?.invoke()
 
         // Assert
-        verify(exactly = if (result == PolymarketPositionResult.UNKNOWN) 0 else 1) { onClick(position) }
+        verify(exactly = 1) { onClick(position) }
     }
     data class ResultModel(val result: PolymarketPositionResult, val badge: TangemBadgeUM)
 }
