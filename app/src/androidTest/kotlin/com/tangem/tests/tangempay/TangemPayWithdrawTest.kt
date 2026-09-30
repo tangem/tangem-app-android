@@ -18,7 +18,6 @@ import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
-import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -122,9 +121,8 @@ class TangemPayWithdrawTest : BaseTestCase() {
             step("Assert balance contains '$zeroBalanceText'") {
                 onTangemPayMainScreen { balance.assertTextContainsSafe(zeroBalanceText, substring = true) }
             }
-            // ACTION_BUTTON exposes no Disabled semantics; a disabled one simply carries no click action.
             step("Assert 'Withdraw' button is disabled") {
-                onTangemPayMainScreen { withdrawButton.assertHasNoClickAction() }
+                onTangemPayMainScreen { withdrawButtonControl.assertIsNotEnabled() }
             }
         }
     }
@@ -458,6 +456,75 @@ class TangemPayWithdrawTest : BaseTestCase() {
                     }
                     tokenWithNameAndNetwork(usdcToken, polygonNetwork).assertIsDisplayed()
                     tokenWithNameAndNetwork(usdtToken, bscNetwork).assertIsDisplayed()
+                }
+            }
+        }
+    }
+
+    @AllureId("11645")
+    @DisplayName("Tangem Pay: Withdraw is enabled when the balance is withdrawable on one non-Polygon network only")
+    @Test
+    fun withdrawEnabledWhenOnlyOneNonPolygonNetworkIsWithdrawableTest() {
+        val storiesScenario = "stories_first_time_swap_v2"
+        val balanceScenario = "tangem_pay_balance_update"
+        val expressAssetsScenario = "express_api_assets"
+        val historyScenario = "tangem_pay_transaction_history"
+        val storiesErrorState = "Error"
+        val eligibilityState = "PaeraCustomer"
+        val expressAssetsState = "PayWithdrawAllNetworks"
+        val historyState = "InitialEmpty"
+        val withdrawableOnlyOnNetwork = listOf(
+            "WithdrawableOnlyOnBsc" to "BNB Smart Chain",
+            "WithdrawableOnlyOnBase" to "Base",
+            "WithdrawableOnlyOnArbitrum" to "Arbitrum One",
+        )
+        val (firstBalanceState, _) = withdrawableOnlyOnNetwork.first()
+        val customerMeEndpoint = "/bff-v2/v1/customer/me"
+        val balanceText = "10.00"
+        val usdcToken = "USDC"
+
+        setupHooks(
+            // The stories request fires at app start and the loop opens Withdraw three times, so keep them off.
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
+        ).run {
+            step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityState'") {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
+            }
+            step("Set WireMock scenario '$expressAssetsScenario' to '$expressAssetsState'") {
+                setWireMockScenarioState(expressAssetsScenario, expressAssetsState)
+            }
+            step("Set WireMock scenario '$historyScenario' to '$historyState'") {
+                setWireMockScenarioState(historyScenario, historyState)
+            }
+            step("Set WireMock scenario '$balanceScenario' to '$firstBalanceState'") {
+                setWireMockScenarioState(balanceScenario, firstBalanceState)
+            }
+            step("Open Tangem Pay") { openTangemPay() }
+            withdrawableOnlyOnNetwork.forEachIndexed { index, (balanceState, networkName) ->
+                step("Set WireMock scenario '$balanceScenario' to '$balanceState'") {
+                    setWireMockScenarioState(balanceScenario, balanceState)
+                }
+                val customerMeRequestsBefore = getWireMockRequestCount("GET", customerMeEndpoint)
+                step("Pull to refresh Tangem Pay") { pullToRefreshTangemPay() }
+                // Every state has the same $10 balance, so only the journal proves the refresh reached WireMock.
+                step("Assert '$customerMeEndpoint' is requested again") {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                        val customerMeRequests = getWireMockRequestCount("GET", customerMeEndpoint)
+                        if (customerMeRequests <= customerMeRequestsBefore) {
+                            throw AssertionError("'$customerMeEndpoint' was not requested after the refresh")
+                        }
+                    }
+                }
+                step("Assert balance contains '$balanceText'") {
+                    onTangemPayMainScreen { balance.assertTextContainsSafe(balanceText, substring = true) }
+                }
+                step("Assert the balance is withdrawable only on '$networkName'") {
+                    checkTangemPayWithdrawableOnlyOnNetwork(
+                        tokenName = usdcToken,
+                        networkName = networkName,
+                        otherNetworkNames = withdrawableOnlyOnNetwork.map { it.second } - networkName,
+                        expandPaymentAccount = index == 0,
+                    )
                 }
             }
         }
