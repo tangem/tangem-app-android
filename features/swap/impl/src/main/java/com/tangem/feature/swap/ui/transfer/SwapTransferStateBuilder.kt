@@ -62,6 +62,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
         feePaidCryptoCurrencyStatus: CryptoCurrencyStatus?,
         feeSelectorUM: FeeSelectorUM?,
         isHighNetworkFee: Boolean = false,
+        predictionTopUpLimits: PredictionTopUpLimits? = null,
     ): SwapStateHolder {
         val fromTokenSwapInfo = transferState.fromTokenInfo
         val isInsufficientBalance = transferState.isInsufficientBalance
@@ -73,6 +74,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
             feeCryptoCurrencyStatus = feePaidCryptoCurrencyStatus,
             actions = actions,
             isHighNetworkFee = isHighNetworkFee,
+            predictionTopUpLimits = predictionTopUpLimits,
         )
         return uiStateHolder.copy(
             sendCardData = createSendSwapCardState(
@@ -349,6 +351,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
         isTangemPayWithdrawal: Boolean,
         feeSelectorUM: FeeSelectorUM?,
         isHighNetworkFee: Boolean = false,
+        predictionTopUpLimits: PredictionTopUpLimits? = null,
     ): SwapStateHolder {
         val notifications = notificationsFactory.getNotifications(
             transferState = transferState,
@@ -356,6 +359,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
             feeSelectorUM = feeSelectorUM,
             actions = actions,
             isHighNetworkFee = isHighNetworkFee,
+            predictionTopUpLimits = predictionTopUpLimits,
         )
         return uiStateHolder.copy(
             notifications = notifications,
@@ -389,6 +393,8 @@ internal class SwapTransferStateBuilder @Inject constructor(
                 notification is SwapNotificationUM.Warning.NoAvailableTokensToSwap ||
                 notification is SwapNotificationUM.Warning.SwapNotSupported ||
                 notification is SwapNotificationUM.Warning.NeedReserveToCreateAccount ||
+                notification is SwapNotificationUM.Warning.PredictionMinimumDeposit ||
+                notification is SwapNotificationUM.Warning.PredictionMaximumDeposit ||
                 notification is SwapNotificationUM.Info.PermissionNeeded
         }
     }
