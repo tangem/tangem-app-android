@@ -80,12 +80,20 @@ data class CustomerMeResponse(
         @SerialName("cid") val cid: String?,
         @SerialName("card_id") val cardId: String?,
         @SerialName("card_wallet_address") val cardWalletAddress: String?,
+        /**
+         * A status this build does not know falls back to [Status.UNKNOWN] since app version 6.5. Older versions
+         * fail to parse the whole `customer/me` response on it.
+         */
         @SerialName("status") val status: Status = Status.UNKNOWN,
         @SerialName("updated_at") val updatedAt: String,
         @SerialName("payment_account_id") val paymentAccountId: String,
         @SerialName("display_name") val displayName: String?,
         @SerialName("actual_card_limit") val actualCardLimit: CardLimit?,
         @SerialName("admin_card_limit") val adminCardLimit: CardLimit?,
+        /**
+         * A type this build does not know falls back to [SpecificationDataType.UNKNOWN] since app version 6.5. Older
+         * versions fail to parse the whole `customer/me` response on it.
+         */
         @SerialName("product_specification_data_type") val specificationDataType: SpecificationDataType =
             SpecificationDataType.UNKNOWN,
     ) {
