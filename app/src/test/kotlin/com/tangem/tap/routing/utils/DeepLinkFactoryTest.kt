@@ -15,13 +15,14 @@ import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.YieldDeepLinkHandler
 import com.tangem.features.jointaccount.deeplink.JointAccountDeepLinkHandler
 import com.tangem.features.jointaccount.deeplink.JointAccountInviteDeepLinkHandler
-import com.tangem.features.survey.deeplink.SurveyDeepLinkHandler
+import com.tangem.features.mcp.api.deeplink.McpDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SellDeepLinkHandler
 import com.tangem.features.promobanners.api.deeplink.CampaignsDeepLinkHandler
 import com.tangem.features.send.api.deeplink.SellRedirectDeepLinkHandler
 import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
+import com.tangem.features.survey.deeplink.SurveyDeepLinkHandler
 import com.tangem.features.swap.deeplink.SwapDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.TangemPayAccountDeepLinkHandler
@@ -150,6 +151,10 @@ internal class DeepLinkFactoryTest {
         every { create(any(), any()) } returns mockk()
     }
 
+    private val mcpDeepLinkFactory = mockk<McpDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any()) } returns mockk()
+    }
+
     private val urlOpener = mockk<UrlOpener>(relaxed = true)
 
     private val mockedUri = mockk<Uri>(relaxed = true)
@@ -185,6 +190,7 @@ internal class DeepLinkFactoryTest {
         discoverDeepLink = discoverDeepLinkFactory,
         surveyDeepLink = surveyDeepLinkFactory,
         promoCampaignsDeepLink = campaignsDeepLinkHandlerFactory,
+        mcpDeepLink = mcpDeepLinkFactory,
         jointAccountDeepLink = jointAccountDeepLinkFactory,
         jointAccountInviteDeepLink = jointAccountInviteDeepLinkFactory,
         urlOpener = urlOpener,
@@ -420,6 +426,14 @@ internal class DeepLinkFactoryTest {
         deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
         verify { tangemPayMainDeepLink.create(eq(testScope), any()) }
+
+        // Test MCP authorization
+        every { mockedUri.host } returns "mcp.authorization"
+        every { mockedUri.queryParameterNames } returns setOf("user_code")
+        every { mockedUri.getQueryParameter("user_code") } returns "ABCD-1234"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { mcpDeepLinkFactory.create(eq(mapOf("user_code" to "ABCD-1234"))) }
     }
 
     @Test
