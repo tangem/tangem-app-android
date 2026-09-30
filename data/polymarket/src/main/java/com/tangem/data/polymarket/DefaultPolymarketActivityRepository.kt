@@ -59,10 +59,10 @@ internal class DefaultPolymarketActivityRepository @Inject constructor(
     override suspend fun reconcileDeposits(addresses: PolymarketAddresses): Either<PolymarketActivityError, Duration> =
         read(
             call = { api.reconcileDeposits(addresses.userWalletId.stringValue, addresses.depositWalletAddress) },
-            convert = {
-                require(it.state == "SCANNING") { "Unexpected deposit reconciliation state: ${it.state}" }
-                require(it.retryAfterSeconds >= 0) { "Negative deposit reconciliation delay" }
-                it.retryAfterSeconds.seconds
+            convert = { response ->
+                require(response.state == "SCANNING") { "Unexpected deposit reconciliation state: ${response.state}" }
+                require(response.retryAfterSeconds >= 0) { "Negative deposit reconciliation delay" }
+                response.retryAfterSeconds.seconds
             },
         )
 
