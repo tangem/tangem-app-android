@@ -20,7 +20,6 @@ import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.features.polymarket.impl.positionresult.model.canOpenPositionResult
-import com.tangem.features.polymarket.impl.positiondetails.model.canOpenPositionDetails
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
@@ -232,12 +231,12 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     private fun openPosition(position: PolymarketPosition.Open) {
-        when {
-            position.canOpenPositionResult -> router.push(PolymarketRoute.PositionResult(params.userWalletId, position))
-            position.canOpenPositionDetails -> router.push(
-                PolymarketRoute.PositionDetails(params.userWalletId, position.id),
-            )
+        val route = if (position.canOpenPositionResult) {
+            PolymarketRoute.PositionResult(params.userWalletId, position)
+        } else {
+            PolymarketRoute.PositionDetails(params.userWalletId, position.id)
         }
+        router.push(route)
     }
 
     fun onLoadMore() {
