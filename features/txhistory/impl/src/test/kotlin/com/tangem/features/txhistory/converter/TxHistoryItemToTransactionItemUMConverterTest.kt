@@ -352,7 +352,6 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         val subtitle = result.subtitle as ContentSubtitle.ExternalAddress
         assertThat(subtitle.direction).isEqualTo(ContentSubtitle.Direction.TO)
         assertThat(subtitle.rawAddress).isEqualTo(USER_ADDRESS)
-        assertThat(subtitle.briefAddress).isEqualTo(USER_ADDRESS_BRIEF)
     }
 
     @Test
@@ -1254,7 +1253,6 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         const val TX_HASH = "0xtxhash"
         const val TIMESTAMP = 1_700_000_000_000L
         const val USER_ADDRESS = "0x1234567890abcdef1234"
-        const val USER_ADDRESS_BRIEF = "0x1234...1234"
         const val EXTERNAL_ADDRESS = "0xExternalAddress5678"
         const val TOKEN_CONTRACT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
         val OWN_WALLET_ID = UserWalletId(stringValue = "00")

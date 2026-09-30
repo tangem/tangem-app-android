@@ -38,7 +38,6 @@ import com.tangem.features.txhistory.model.reclassifyOwnOperationAsTransfer
 import com.tangem.features.txhistory.model.resolveCounterparty
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.extensions.isZero
-import com.tangem.utils.toBriefAddressFormat
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
@@ -127,19 +126,19 @@ internal class OnChainTxToDetailsUMConverter(
      */
     private fun TxInfo.validatorRow(): TxHistoryDetailsUM.InfoRowUM? {
         if (!mayCarryStakingTarget()) return null
-        val value = validatorAddressCandidates().firstNotNullOfOrNull(::resolveTarget)?.name
-            ?: declaredValidatorAddress()?.toBriefAddressFormat()
-            ?: return null
+        val name = validatorAddressCandidates().firstNotNullOfOrNull(::resolveTarget)?.name
+        val value = name ?: declaredValidatorAddress() ?: return null
         return TxHistoryDetailsUM.InfoRowUM(
             label = resourceReference(R.string.staking_validator),
             value = stringReference(value),
+            isValueAddress = name == null,
         )
     }
 
     /**
-     * Address the transaction itself declares to be the validator, shown shortened when [targetsByAddress] has no name
-     * for it — a validator the staking API has since dropped from the yield must still name the target of an old
-     * transaction instead of making the row disappear.
+     * Address the transaction itself declares to be the validator, shown in place of a name when [targetsByAddress]
+     * has none for it — a validator the staking API has since dropped from the yield must still name the target of an
+     * old transaction instead of making the row disappear.
      *
      * Only addresses the SDK types as a validator qualify, unlike the broader [validatorAddressCandidates]: a
      * `Contract` / `User` / plain destination address is a target only if the lookup confirms it, so falling back to
@@ -257,7 +256,7 @@ internal class OnChainTxToDetailsUMConverter(
 
         return TxHistoryDetailsUM.CounterpartyUM(
             label = resourceReference(R.string.common_send),
-            title = stringReference(amount ?: symbol),
+            title = TxHistoryDetailsUM.CounterpartyTitle.Name(stringReference(amount ?: symbol)),
             avatar = TxHistoryDetailsUM.CounterpartyAvatar.Glyph(icon = TxIcon.Vector(Icons.ic_arrow_up_20)),
             titleIcon = networkFee.amount.resolveToken(networkTokens)?.let(iconStateConverter::convert),
         )
@@ -358,7 +357,7 @@ internal class OnChainTxToDetailsUMConverter(
         return when (val owner = resolvedCounterparty()) {
             is ResolvedOwner.OwnAccount -> TxHistoryDetailsUM.CounterpartyUM(
                 label = counterpartyLabel(incoming = R.string.common_from_account),
-                title = owner.account.accountName.toUM().value,
+                title = TxHistoryDetailsUM.CounterpartyTitle.Name(owner.account.accountName.toUM().value),
                 avatar = TxHistoryDetailsUM.CounterpartyAvatar.Account(
                     name = owner.account.accountName.toUM().value,
                     icon = CryptoPortfolioIconConverter.convert(owner.account.icon),
@@ -367,19 +366,19 @@ internal class OnChainTxToDetailsUMConverter(
             )
             is ResolvedOwner.OwnPaymentAccount -> TxHistoryDetailsUM.CounterpartyUM(
                 label = counterpartyLabel(incoming = R.string.common_from_account),
-                title = owner.account.accountName.toUM().value,
+                title = TxHistoryDetailsUM.CounterpartyTitle.Name(owner.account.accountName.toUM().value),
                 avatar = TxHistoryDetailsUM.CounterpartyAvatar.PaymentAccount,
                 onCopyClick = copyAddress,
             )
             is ResolvedOwner.OwnWallet -> TxHistoryDetailsUM.CounterpartyUM(
                 label = counterpartyLabel(incoming = R.string.common_from_wallet),
-                title = stringReference(owner.walletInfo.name),
+                title = TxHistoryDetailsUM.CounterpartyTitle.Name(stringReference(owner.walletInfo.name)),
                 avatar = TxHistoryDetailsUM.CounterpartyAvatar.Wallet(deviceIconUM = owner.walletInfo.deviceIconUM),
                 onCopyClick = copyAddress,
             )
             is ResolvedOwner.SavedContact -> TxHistoryDetailsUM.CounterpartyUM(
                 label = counterpartyLabel(incoming = R.string.common_from_address),
-                title = stringReference(owner.contact.name.value),
+                title = TxHistoryDetailsUM.CounterpartyTitle.Name(stringReference(owner.contact.name.value)),
                 avatar = TxHistoryDetailsUM.CounterpartyAvatar.Contact(
                     name = owner.contact.name.value,
                     icon = CryptoPortfolioIconConverter.convert(owner.contact.portfolioIcon()),
@@ -388,7 +387,7 @@ internal class OnChainTxToDetailsUMConverter(
             )
             is ResolvedOwner.External -> TxHistoryDetailsUM.CounterpartyUM(
                 label = counterpartyLabel(incoming = R.string.common_from_address),
-                title = stringReference(owner.address.toBriefAddressFormat()),
+                title = TxHistoryDetailsUM.CounterpartyTitle.Address(owner.address),
                 avatar = TxHistoryDetailsUM.CounterpartyAvatar.Address(rawAddress = owner.address),
                 onCopyClick = copyAddress,
             )
