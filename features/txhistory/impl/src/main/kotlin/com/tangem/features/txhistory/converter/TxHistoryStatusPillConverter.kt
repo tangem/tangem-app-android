@@ -15,7 +15,6 @@ import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.utils.converter.Converter
-import com.tangem.utils.toBriefAddressFormat
 
 internal class TxHistoryStatusPillConverter(
     private val currency: CryptoCurrency,
@@ -189,10 +188,7 @@ private fun TxInfo.buildPillSubtitle(status: TransactionItemUM.Content.Status): 
     val approve = type as? TransactionType.Approve ?: return null
     if (status is TransactionItemUM.Content.Status.Failed) return null
     val address = approve.address.takeIf { it.isNotBlank() } ?: return null
-    return TransactionItemUM.PillSubtitle.Address(
-        rawAddress = address,
-        briefAddress = address.toBriefAddressFormat(),
-    )
+    return TransactionItemUM.PillSubtitle.Address(rawAddress = address)
 }
 
 /** The statuses [resolve] answers [PillLabels.confirmed] for — the same ones [PillSpec.confirmedSplit] replaces. */
