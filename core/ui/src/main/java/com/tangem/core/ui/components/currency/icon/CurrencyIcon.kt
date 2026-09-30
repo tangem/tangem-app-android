@@ -42,6 +42,7 @@ fun TangemCurrencyIcon(state: CurrencyIconState, modifier: Modifier = Modifier, 
             is CurrencyIconState.CustomTokenIcon,
             is CurrencyIconState.TokenIcon,
             is CurrencyIconState.PaymentAccount,
+            is CurrencyIconState.PredictionAccount,
             is CurrencyIconState.CryptoPortfolio.Icon,
             is CurrencyIconState.CryptoPortfolio.Letter,
             -> {
@@ -98,6 +99,7 @@ fun CurrencyIcon(
             is CurrencyIconState.CustomTokenIcon,
             is CurrencyIconState.TokenIcon,
             is CurrencyIconState.PaymentAccount,
+            is CurrencyIconState.PredictionAccount,
             is CurrencyIconState.CryptoPortfolio.Icon,
             is CurrencyIconState.CryptoPortfolio.Letter,
             -> {
