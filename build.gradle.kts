@@ -5,6 +5,7 @@ plugins {
     alias(deps.plugins.kotlin.kapt) apply false
     alias(deps.plugins.android.application) apply false
     alias(deps.plugins.android.library) apply false
+    alias(deps.plugins.android.test) apply false
     alias(deps.plugins.hilt.android) apply false
     alias(deps.plugins.google.services) apply false
     alias(deps.plugins.firebase.crashlytics) apply false
@@ -243,7 +244,7 @@ dependencyAnalysis {
                     ":spend:push-provisioning:no-op",
                 )
                 // Same reason: :data:social-login only contributes Hilt bindings (feature toggle,
-                // provider repository). Nothing references it by type until the UC-08 feature
+                // provider repository). Nothing references it by type until the social login feature
                 // modules land.
                 exclude(":data:social-login")
                 // CameraX is split into runtime-wired artifacts: camera-lifecycle and camera-view back

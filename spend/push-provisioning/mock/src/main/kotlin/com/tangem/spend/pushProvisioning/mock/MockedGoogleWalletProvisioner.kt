@@ -50,6 +50,14 @@ internal class MockedGoogleWalletProvisioner @Inject constructor() : GoogleWalle
                 reason = FailureReason.TOKENIZATION_DECLINED,
                 description = "Mocked decline",
             )
+            RESULT_RATE_LIMITED -> AddResult.Failed(
+                reason = FailureReason.TOO_MANY_ATTEMPTS,
+                description = "Mocked rate limit",
+            )
+            RESULT_UNSUPPORTED -> AddResult.Failed(
+                reason = FailureReason.UNSUPPORTED,
+                description = "Mocked unsupported",
+            )
             RESULT_FAILED -> AddResult.Failed(reason = FailureReason.MEAWALLET_ERROR, description = "Mocked failure")
             else -> AddResult.Added
         }
@@ -67,6 +75,8 @@ internal class MockedGoogleWalletProvisioner @Inject constructor() : GoogleWalle
         const val RESULT_CANCELLED = "cancelled"
         const val RESULT_NETWORK_ERROR = "network_error"
         const val RESULT_DECLINED = "declined"
+        const val RESULT_RATE_LIMITED = "rate_limited"
+        const val RESULT_UNSUPPORTED = "unsupported"
         const val RESULT_FAILED = "failed"
         const val STATUS_UNSUPPORTED = "unsupported"
         const val STATUS_UNKNOWN = "unknown"

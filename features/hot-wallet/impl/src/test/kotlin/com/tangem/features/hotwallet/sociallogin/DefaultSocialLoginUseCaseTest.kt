@@ -182,8 +182,8 @@ internal class DefaultSocialLoginUseCaseTest {
         // Act
         val actual = useCase.signIn(PROVIDER) {}
 
-        // Assert — NFR-01: bound but with no file in the cloud is not a finished setup
-        assertThat(actual).isEqualTo(SocialLoginError.CloudUnavailable.left())
+        // Assert — bound but with no file in the cloud is not a finished setup
+        assertThat(actual).isEqualTo(SocialLoginError.BackupWriteFailed().left())
         coVerify(exactly = 0) { setSocialBackupCompletedUseCase(any(), any()) }
     }
 
@@ -292,7 +292,7 @@ internal class DefaultSocialLoginUseCaseTest {
     }
 
     @Test
-    fun `GIVEN identity owns a wallet WHEN signIn THEN it is imported before being marked as backed up`() =
+    fun `GIVEN identity owns a wallet WHEN signIn THEN it is marked as backed up before it is imported`() =
         runTest {
             // Arrange
             bindIdentity()
@@ -304,8 +304,8 @@ internal class DefaultSocialLoginUseCaseTest {
             // Assert
             assertThat(actual).isEqualTo(SocialLoginOutcome.WalletRestored(RESTORED_WALLET_ID).right())
             coVerifyOrder {
-                hotWalletImporter.import(any(), any(), any(), any(), any())
                 setSocialBackupCompletedUseCase(RESTORED_WALLET_ID, true)
+                hotWalletImporter.import(any(), any(), any(), any(), any())
             }
             coVerify(exactly = 0) { registerSocialRecoveryUseCase(any(), any(), any()) }
         }
@@ -346,7 +346,7 @@ internal class DefaultSocialLoginUseCaseTest {
     }
 
     @Test
-    fun `GIVEN the import fails WHEN signIn THEN the wallet is not marked as backed up`() = runTest {
+    fun `GIVEN the import fails WHEN signIn THEN the flag is taken back`() = runTest {
         // Arrange
         bindIdentity()
         coEvery { readSocialBackupUseCase(any()) } returns restoredBackup().right()
@@ -359,7 +359,26 @@ internal class DefaultSocialLoginUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(SocialLoginError.Unknown(cause).left())
-        coVerify(exactly = 0) { setSocialBackupCompletedUseCase(any(), any()) }
+        coVerifyOrder {
+            setSocialBackupCompletedUseCase(RESTORED_WALLET_ID, true)
+            setSocialBackupCompletedUseCase(RESTORED_WALLET_ID, false)
+        }
+    }
+
+    @Test
+    fun `GIVEN the flag cannot be stored WHEN signIn THEN the wallet is not imported`() = runTest {
+        // Arrange
+        bindIdentity()
+        coEvery { readSocialBackupUseCase(any()) } returns restoredBackup().right()
+        coEvery { setSocialBackupCompletedUseCase(RESTORED_WALLET_ID, true) } returns
+            SocialLoginError.PersistenceFailed().left()
+
+        // Act
+        val actual = useCase.signIn(PROVIDER) {}
+
+        // Assert
+        assertThat(actual).isEqualTo(SocialLoginError.PersistenceFailed().left())
+        coVerify(exactly = 0) { hotWalletImporter.import(any(), any(), any(), any(), any()) }
     }
 
     @Test

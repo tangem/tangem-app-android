@@ -250,6 +250,10 @@ internal class GoogleWalletResultsTest {
                 walletErrorCode = TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE,
             )
             val debuggerError = FakeMppError(errorCode = MppErrorCode.DEBUGGER_ATTACHED)
+            val tooManyAttemptsError = FakeMppError(
+                errorCode = MppErrorCode.GOOGLE_PAY_ERROR,
+                walletErrorCode = TapAndPayStatusCodes.TAP_AND_PAY_VELOCITY_CHECK_EXCEEDED_ERROR,
+            )
             val networkErrors = listOf(
                 MppErrorCode.NO_NETWORK_CONNECTION,
                 MppErrorCode.GENERIC_NETWORK_PROBLEM,
@@ -282,6 +286,15 @@ internal class GoogleWalletResultsTest {
                         description = declinedError.describe(),
                         sdkErrorCode = MppErrorCode.GOOGLE_PAY_ERROR,
                         walletErrorCode = TapAndPayStatusCodes.TAP_AND_PAY_TOKENIZATION_DECLINED,
+                    ),
+                ),
+                AddResultModel(
+                    error = tooManyAttemptsError,
+                    expected = AddResult.Failed(
+                        reason = FailureReason.TOO_MANY_ATTEMPTS,
+                        description = tooManyAttemptsError.describe(),
+                        sdkErrorCode = MppErrorCode.GOOGLE_PAY_ERROR,
+                        walletErrorCode = TapAndPayStatusCodes.TAP_AND_PAY_VELOCITY_CHECK_EXCEEDED_ERROR,
                     ),
                 ),
                 AddResultModel(

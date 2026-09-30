@@ -17,6 +17,7 @@ import com.tangem.domain.collectibles.usecase.GetCollectibleGachaMachinesBatchFl
 import com.tangem.features.collectibles.impl.CollectiblesRoute
 import com.tangem.features.collectibles.impl.createBatchListState
 import com.tangem.features.collectibles.impl.createCategories
+import com.tangem.features.collectibles.impl.createCategory
 import com.tangem.features.collectibles.impl.createMachine
 import com.tangem.features.collectibles.impl.discovery.ui.state.CollectiblesDiscoveryUM
 import com.tangem.pagination.BatchAction
@@ -372,6 +373,99 @@ internal class CollectiblesDiscoveryModelTest {
         // Assert
         coVerify(exactly = 1) { getCategoriesUseCase() }
         assertThat(fixture.actions).containsExactly(reload(), reload()).inOrder()
+    }
+
+    @Test
+    fun `GIVEN categories loaded WHEN refreshed THEN categories are requested again and tabs rebuilt`() = runTest {
+        // Arrange
+        val fixture = startModel()
+        coEvery { getCategoriesUseCase() } returns createCategories(
+            categories = listOf(createCategory(id = "sports"), createCategory(id = "retro")),
+        ).right()
+
+        // Act
+        fixture.model.onRefresh()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 2) { getCategoriesUseCase() }
+        assertThat(fixture.model.tabIds()).containsExactly("all", "sports", "retro").inOrder()
+        assertThat(fixture.actions).containsExactly(reload(), reload()).inOrder()
+    }
+
+    @Test
+    fun `GIVEN a selected category WHEN refreshed THEN it stays selected and filters the catalogue`() = runTest {
+        // Arrange
+        val fixture = startModel()
+        fixture.model.clickTab(id = "sports")
+        advanceUntilIdle()
+
+        // Act
+        fixture.model.onRefresh()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(fixture.model.selectedTabIds()).containsExactly("sports")
+        assertThat(fixture.actions)
+            .containsExactly(reload(), reload(categoryId = "sports"), reload(categoryId = "sports"))
+            .inOrder()
+    }
+
+    @Test
+    fun `GIVEN the selected category is gone WHEN refreshed THEN All is selected and the catalogue is unfiltered`() =
+        runTest {
+            // Arrange
+            val fixture = startModel()
+            fixture.model.clickTab(id = "sports")
+            advanceUntilIdle()
+            coEvery { getCategoriesUseCase() } returns createCategories(
+                categories = listOf(createCategory(id = "anime")),
+            ).right()
+
+            // Act
+            fixture.model.onRefresh()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(fixture.model.selectedTabIds()).containsExactly("all")
+            assertThat(fixture.actions)
+                .containsExactly(reload(), reload(categoryId = "sports"), reload())
+                .inOrder()
+        }
+
+    @Test
+    fun `GIVEN categories loaded WHEN the refresh fails THEN the screen is kept and packs are not requested`() =
+        runTest {
+            // Arrange
+            val fixture = startModel()
+            batchListState.value = paginating(last = true)
+            advanceUntilIdle()
+            val stateBefore = fixture.model.uiState.value
+            coEvery { getCategoriesUseCase() } returns CollectiblesError.Api(IllegalStateException("boom")).left()
+
+            // Act
+            fixture.model.onRefresh()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(fixture.model.uiState.value).isEqualTo(stateBefore)
+            assertThat(fixture.actions).containsExactly(reload())
+        }
+
+    @Test
+    fun `GIVEN categories never loaded WHEN refreshed THEN the screen loads from scratch`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns CollectiblesError.Api(IllegalStateException("boom")).left()
+        val fixture = startModel()
+        coEvery { getCategoriesUseCase() } returns createCategories().right()
+
+        // Act
+        fixture.model.onRefresh()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(fixture.model.tabIds()).containsExactly("all", "sports", "anime").inOrder()
+        assertThat(fixture.actions).containsExactly(reload())
     }
 
     @Test

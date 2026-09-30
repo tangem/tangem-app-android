@@ -25,6 +25,10 @@ sealed interface FeedbackEmailType {
         override val walletMetaInfo: WalletMetaInfo? = null
     }
 
+    data object SocialLoginProblem : FeedbackEmailType {
+        override val walletMetaInfo: WalletMetaInfo? = null
+    }
+
     /** User has problem with sending transaction */
     data class TransactionSendingProblem(override val walletMetaInfo: WalletMetaInfo) : FeedbackEmailType
 

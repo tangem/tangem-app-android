@@ -12,15 +12,13 @@ import com.tangem.core.ui.haptic.TangemHapticEffect
  * before building this, so the player behaves identically whether the story shipped in the apk or arrived over the
  * network.
  *
- * @property id       stable slug, also the analytics identity
- * @property version  bumped by any change to the composition
- * @property origin   reported to analytics
- * @property actions  inherited by slides that do not override them
- * @property slides   at least one; slides that could not be resolved are already filtered out
+ * @property id      stable slug, also the analytics identity
+ * @property origin  reported to analytics
+ * @property actions inherited by slides that do not override them
+ * @property slides  at least one; slides that could not be resolved are already filtered out
  */
 internal data class StoryV2Composition(
     val id: String,
-    val version: Int,
     val origin: StoryV2Origin,
     val endBehavior: StoryV2EndBehavior,
     val actions: List<StoryV2Action>,
@@ -68,17 +66,19 @@ internal data class StoryV2Haptic(
 /**
  * @property durationMs  authoritative display duration; progress, analytics and haptics are all measured against it,
  *                       never against the length the media file happens to have
- * @property poster      always present, so no code path can end up with nothing to draw
+ * @property poster      the asset's first frame, drawn until the asset produces one. Bundled content always has
+ *                       it; the remote contract has none, so a remote slide waits for its local file instead and
+ *                       cannot fall back to a still
  */
 internal sealed interface StoryV2Asset {
 
     val durationMs: Long
     val contentMode: StoryV2ContentMode
-    val poster: StoryV2MediaRef
+    val poster: StoryV2MediaRef?
 
     data class Video(
         val source: StoryV2MediaRef,
-        override val poster: StoryV2MediaRef,
+        override val poster: StoryV2MediaRef?,
         override val durationMs: Long,
         override val contentMode: StoryV2ContentMode = StoryV2ContentMode.COVER,
     ) : StoryV2Asset
@@ -95,7 +95,7 @@ internal sealed interface StoryV2Asset {
     /** [durationMs] governs the segment, not the length of the animation. */
     data class VectorAnimation(
         val source: StoryV2MediaRef,
-        override val poster: StoryV2MediaRef,
+        override val poster: StoryV2MediaRef?,
         override val durationMs: Long,
         override val contentMode: StoryV2ContentMode = StoryV2ContentMode.CONTAIN,
     ) : StoryV2Asset

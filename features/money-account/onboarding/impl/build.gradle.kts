@@ -27,6 +27,8 @@ dependencies {
     api(projects.domain.common)
     api(projects.domain.visa)
     implementation(projects.domain.models)
+    implementation(projects.domain.moneyAccount)
+    implementation(projects.domain.visa.models)
 
     /** Compose */
     implementation(deps.compose.foundation)
@@ -46,4 +48,7 @@ dependencies {
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.lifecycle.compose)
     implementation(deps.lifecycle.runtime.ktx)
+
+    /** Tests */
+    testImplementation(projects.test.core)
 }

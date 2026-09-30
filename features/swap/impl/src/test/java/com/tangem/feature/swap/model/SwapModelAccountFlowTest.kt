@@ -54,6 +54,7 @@ import com.tangem.feature.swap.models.SwapCardState
 import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.models.UiActions
 import com.tangem.feature.swap.models.states.ProviderState
+import com.tangem.feature.swap.models.PredictionTopUpLimits
 import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.router.SwapRoute
 import com.tangem.feature.swap.ui.transfer.SwapTransferNotificationsFactory
@@ -897,6 +898,69 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     }
 
     @Test
+    fun `GIVEN a prediction top-up with a $10 minimum and a 0_5 USDC rate WHEN the transfer is built THEN the builder gets the limits in USDC`() =
+        runTest {
+            // Arrange
+            coEvery { getPredictionTopUpMinimumUseCase(userWalletId) } returns BigDecimal("10")
+            coEvery { getCurrencyUSDQuoteUseCase(CryptoCurrency.RawID("usd-coin")) } returns BigDecimal("0.5")
+
+            // Act
+            val model = createTopUpTransferModel(accountFlow = AccountFlow.PredictionTopUp)
+
+            // Assert
+            val limits = capturedTopUpLimits().last()
+            assertThat(limits?.minimum).isEqualTo(BigDecimal("20.000000"))
+            assertThat(limits?.maximum).isEqualTo(BigDecimal("100000.000000"))
+            coVerify { getCurrencyUSDQuoteUseCase(CryptoCurrency.RawID("usd-coin")) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction top-up without a USD quote WHEN the transfer is built THEN no limits reach the builder`() =
+        runTest {
+            // Arrange
+            coEvery { getPredictionTopUpMinimumUseCase(userWalletId) } returns BigDecimal("10")
+            coEvery { getCurrencyUSDQuoteUseCase(any()) } returns null
+
+            // Act
+            val model = createTopUpTransferModel(accountFlow = AccountFlow.PredictionTopUp)
+
+            // Assert
+            assertThat(capturedTopUpLimits().toSet()).containsExactly(null)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN no account flow WHEN the transfer is built THEN the prediction limits are not resolved`() = runTest {
+        // Arrange
+        coEvery { getPredictionTopUpMinimumUseCase(userWalletId) } returns BigDecimal("10")
+
+        // Act
+        val model = createTopUpTransferModel(accountFlow = null)
+
+        // Assert
+        assertThat(capturedTopUpLimits().toSet()).containsExactly(null)
+        coVerify(exactly = 0) { getPredictionTopUpMinimumUseCase(any()) }
+        model.onDestroy()
+    }
+
+    private fun capturedTopUpLimits(): List<PredictionTopUpLimits?> {
+        val captured = mutableListOf<PredictionTopUpLimits?>()
+        verify {
+            swapTransferStateBuilder.createTransferState(
+                actions = any(),
+                transferState = any(),
+                uiStateHolder = any(),
+                feePaidCryptoCurrencyStatus = any(),
+                feeSelectorUM = any(),
+                isHighNetworkFee = any(),
+                predictionTopUpLimits = captureNullable(captured),
+            )
+        }
+        return captured
+    }
+
+    @Test
     fun `GIVEN no account flow WHEN the same transfer is sent THEN no funding window opens`() = runTest {
         // Arrange
         val model = createTopUpTransferModel(accountFlow = null)
@@ -1395,7 +1459,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
 
     private fun realSwapTransferStateBuilder(): SwapTransferStateBuilder {
         val notificationsFactory: SwapTransferNotificationsFactory = mockk {
-            every { getNotifications(any(), any(), any(), any(), any()) } returns persistentListOf()
+            every { getNotifications(any(), any(), any(), any(), any(), any()) } returns persistentListOf()
         }
         val isFeeApproximateUseCase: IsFeeApproximateUseCase = mockk {
             every { invoke(networkId = any(), amountType = any()) } returns false
@@ -1467,7 +1531,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
 
     private fun stubTransferStateBuilderPassthrough() {
         every {
-            swapTransferStateBuilder.createTransferState(any(), any(), any(), any(), any(), any())
+            swapTransferStateBuilder.createTransferState(any(), any(), any(), any(), any(), any(), any())
         } answers {
             arg<SwapStateHolder>(2).copy(
                 swapButton = SwapButton(
@@ -1480,7 +1544,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         }
         every {
             swapTransferStateBuilder.updateTransferButtonEnableState(
-                any(), any(), any(), any(), any(), any(), any(), any(), any(),
+                any(), any(), any(), any(), any(), any(), any(), any(), any(), any(),
             )
         } answers { arg<SwapStateHolder>(3) }
         every { swapTransferStateBuilder.updateTransferTitle(any()) } answers { firstArg() }
@@ -1619,7 +1683,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
 
     private fun TestScope.createTopUpTransferModel(accountFlow: AccountFlow?): SwapModel {
         val from = swapCurrencyStatus()
-        val collateral = swapCurrencyStatus(account = Account.Prediction(userWalletId))
+        val collateral = swapCurrencyStatus(currency = usdcPolygonToken(), account = Account.Prediction(userWalletId))
         coEvery {
             initialCurrenciesResolver.invoke(
                 userWalletId = any(),

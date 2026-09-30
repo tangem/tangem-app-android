@@ -5,7 +5,6 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -49,7 +48,6 @@ internal class CollectiblesMachineDetailsModelTest {
     private val getMachineUseCase: GetCollectibleGachaMachineUseCase = mockk()
     private val getPrizePoolBatchFlowUseCase: GetCollectibleGachaMachineNftsBatchFlowUseCase = mockk()
     private val router: Router = mockk(relaxed = true)
-    private val urlOpener: UrlOpener = mockk(relaxed = true)
 
     private val batchListState = MutableStateFlow(
         createNftsBatchListState(batches = emptyList(), status = PaginationStatus.None),
@@ -248,7 +246,6 @@ internal class CollectiblesMachineDetailsModelTest {
             dispatchers = createTestingCoroutineDispatcherProvider(),
             getMachineUseCase = getMachineUseCase,
             router = router,
-            urlOpener = urlOpener,
             paramsContainer = MutableParamsContainer(
                 CollectiblesMachineDetailsComponent.Params(externalId = EXTERNAL_ID),
             ),

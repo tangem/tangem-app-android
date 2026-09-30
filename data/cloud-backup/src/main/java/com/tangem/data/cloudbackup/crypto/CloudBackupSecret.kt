@@ -13,10 +13,10 @@ import java.nio.CharBuffer
 /**
  * Decrypted cloud-backup payload — the plaintext that sits INSIDE [CloudBackupFileData.crypto].
  *
- * This is the cross-platform "secret" contract (UC-07 §4.1): both platforms must produce and parse
+ * This is the cross-platform "secret" contract: both platforms must produce and parse
  * exactly this JSON, otherwise decryption succeeds but parsing fails.
  *
- * The BIP39 passphrase itself is deliberately not backed up — it never leaves the device (CPR-07). Only
+ * The BIP39 passphrase itself is deliberately not backed up — it never leaves the device. Only
  * [passphraseRequired] travels with the backup, so the restore flow knows to ask for it; it is mandatory,
  * hence no default value.
  *

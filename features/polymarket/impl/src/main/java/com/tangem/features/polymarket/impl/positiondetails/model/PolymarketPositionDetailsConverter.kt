@@ -55,7 +55,7 @@ internal class PolymarketPositionDetailsConverter :
                 currentValue = stringReference(position.currentValue.formatPolymarketMoney()),
                 outcomeLabel = stringReference(position.outcome),
                 outcomeVariant = position.outcomeAccent.toBubbleVariant(),
-                payout = position.size.takeIf { position.canOpenPositionDetails }
+                payout = position.size.takeIf { position.hasPayoutEstimate }
                     ?.let { stringReference(it.formatPolymarketMoney()) },
             ),
             event = event(position, value.event),
@@ -112,8 +112,11 @@ internal class PolymarketPositionDetailsConverter :
     )
 }
 
-internal val PolymarketPosition.Open.canOpenPositionDetails: Boolean
+private val PolymarketPosition.Open.hasPayoutEstimate: Boolean
     get() = resolutionStatus != PolymarketResolutionStatus.RESOLVED && result == null && !isRedeemable
 
+internal val PolymarketPosition.Open.isMarketTradable: Boolean
+    get() = resolutionStatus == PolymarketResolutionStatus.OPEN && isAcceptingOrders
+
 internal val PolymarketPosition.Open.canClosePosition: Boolean
-    get() = canOpenPositionDetails && marketId != null && isAcceptingOrders && size.signum() > 0
+    get() = marketId != null && size.signum() > 0
