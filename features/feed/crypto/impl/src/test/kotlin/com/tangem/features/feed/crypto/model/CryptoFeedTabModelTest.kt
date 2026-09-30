@@ -7,6 +7,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
 import com.tangem.features.feed.analytics.FeedSectionAnalyticsEvent
 import com.tangem.features.feed.analytics.FeedSortPeriod
@@ -93,6 +94,7 @@ internal class CryptoFeedTabModelTest {
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
     private val getMarketIndicatorsUseCase: GetMarketIndicatorsUseCase = mockk()
     private val router: Router = mockk(relaxed = true)
+    private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val sentEvents = mutableListOf<AnalyticsEvent>()
 
@@ -812,6 +814,7 @@ internal class CryptoFeedTabModelTest {
             categoryResolver = categoryResolver,
             feedEntryController = feedEntryController,
             router = router,
+            urlOpener = urlOpener,
             analyticsEventHandler = analyticsEventHandler,
         ).also { model = it }
     }

@@ -42,6 +42,7 @@ internal data class RwaFeedTabUM(
 @Immutable
 internal data class RwaIntervalUM(
     val selected: RwaInterval,
+    val default: RwaInterval,
     val onOptionClick: (RwaInterval) -> Unit,
 )
 

@@ -59,6 +59,8 @@ private const val UPDATE_QUOTES_TIMER_MILLIS = 60_000L
  */
 private const val CATEGORIES_FILTER_ID = "rwa_categories"
 
+private val DEFAULT_INTERVAL = RwaInterval.H24
+
 /**
  * Model of the Real assets tab. The Featured rail and the main list are two independent requests
  * against the same endpoint: the rail is pinned to the reserved `featured-assets` category, the list
@@ -104,7 +106,7 @@ internal class RwaFeedTabModel @Inject constructor(
      * Source of truth for the trend interval and the sort; conflation is what makes re-picking the current
      * value a no-op, so neither setter needs an equality guard.
      */
-    private val selectedInterval = MutableStateFlow(RwaInterval.H24)
+    private val selectedInterval = MutableStateFlow(DEFAULT_INTERVAL)
     private val selectedSort = MutableStateFlow(RwaSort.MarketCap)
 
     val uiState: StateFlow<RwaFeedTabUM>
@@ -218,7 +220,11 @@ internal class RwaFeedTabModel @Inject constructor(
         return RwaFeedTabUM(
             featured = RwaFeaturedUM.Loading,
             categoriesFilter = categoriesFilterItem(selection = request.selection),
-            interval = RwaIntervalUM(selected = selectedInterval.value, onOptionClick = ::selectInterval),
+            interval = RwaIntervalUM(
+                selected = selectedInterval.value,
+                default = DEFAULT_INTERVAL,
+                onOptionClick = ::selectInterval,
+            ),
             sortTabs = sortTabs(selected = selectedSort.value),
             onVisibleItemsChange = { ids -> visibleItemIds.value = ids.map(CryptoCurrency::RawID) },
             list = RwaListUM.Loading,
