@@ -240,7 +240,7 @@ internal class TangemPayWithdrawHubModelTest {
     }
 
     @Test
-    fun `GIVEN offramp options fail WHEN model created THEN bank section error`() {
+    fun `GIVEN offramp options fail WHEN model created THEN bank section unavailable`() {
         // Arrange
         coEvery { getBankOfframpOptionsUseCase(userWalletId) } returns optionsFailure
 
@@ -248,12 +248,12 @@ internal class TangemPayWithdrawHubModelTest {
         val model = createModel()
 
         // Assert
-        assertThat(model.uiState.value.bankSection).isInstanceOf(BankSectionUM.Error::class.java)
+        assertThat(model.bankContent().isAvailable).isFalse()
         model.onDestroy()
     }
 
     @Test
-    fun `GIVEN no token with balance WHEN model created THEN bank section error`() {
+    fun `GIVEN no token with balance WHEN model created THEN bank section unavailable`() {
         // Arrange
         statusFlow.resetReplayCache()
         emitStatus(balance = BigDecimal.ZERO)
@@ -262,26 +262,7 @@ internal class TangemPayWithdrawHubModelTest {
         val model = createModel()
 
         // Assert
-        assertThat(model.uiState.value.bankSection).isInstanceOf(BankSectionUM.Error::class.java)
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN bank section error WHEN retry clicked THEN options and recents reloaded`() {
-        // Arrange
-        coEvery { getBankOfframpOptionsUseCase(userWalletId) } returnsMany listOf(
-            optionsFailure,
-            offrampOptions().right(),
-        )
-        val model = createModel()
-
-        // Act
-        (model.uiState.value.bankSection as BankSectionUM.Error).onRetryClick()
-
-        // Assert
-        assertThat(model.uiState.value.bankSection).isInstanceOf(BankSectionUM.Content::class.java)
-        coVerify(exactly = 2) { getBankOfframpOptionsUseCase(userWalletId) }
-        coVerify(exactly = 2) { getRecentBankAccountsUseCase(userWalletId) }
+        assertThat(model.bankContent().isAvailable).isFalse()
         model.onDestroy()
     }
 
@@ -302,7 +283,7 @@ internal class TangemPayWithdrawHubModelTest {
     }
 
     @Test
-    fun `GIVEN the account cannot be resolved WHEN status emitted THEN bank section error`() {
+    fun `GIVEN the account cannot be resolved WHEN status emitted THEN bank section unavailable`() {
         // Arrange
         emitStatusValue(PaymentAccountStatusValue.Error.Unavailable)
 
@@ -310,7 +291,7 @@ internal class TangemPayWithdrawHubModelTest {
         val model = createModel()
 
         // Assert
-        assertThat(model.uiState.value.bankSection).isInstanceOf(BankSectionUM.Error::class.java)
+        assertThat(model.bankContent().isAvailable).isFalse()
         model.onDestroy()
     }
 
@@ -328,7 +309,7 @@ internal class TangemPayWithdrawHubModelTest {
     }
 
     @Test
-    fun `GIVEN last token spent WHEN account status updates THEN bank section error`() {
+    fun `GIVEN last token spent WHEN account status updates THEN bank section unavailable`() {
         // Arrange
         val model = createModel()
         assertThat(model.uiState.value.bankSection).isInstanceOf(BankSectionUM.Content::class.java)
@@ -337,7 +318,7 @@ internal class TangemPayWithdrawHubModelTest {
         emitStatus(balance = BigDecimal.ZERO)
 
         // Assert
-        assertThat(model.uiState.value.bankSection).isInstanceOf(BankSectionUM.Error::class.java)
+        assertThat(model.bankContent().isAvailable).isFalse()
         model.onDestroy()
     }
 
