@@ -110,6 +110,7 @@ internal class DefaultCryptoFeedTabComponent @AssistedInject constructor(
             override fun BottomSheet() {
                 MarketIndexInfoBottomSheet(
                     state = MarketIndexInfoBottomSheetContent(config.data),
+                    onLinkClick = model::openUrl,
                     onDismiss = ::dismiss,
                 )
             }
@@ -121,6 +122,7 @@ internal class DefaultCryptoFeedTabComponent @AssistedInject constructor(
         @Composable
         override fun BottomSheet() {
             MarketInfoBottomSheet(
+                onLinkClick = model::openUrl,
                 onDismiss = ::dismiss,
             )
         }

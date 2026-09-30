@@ -65,7 +65,7 @@ private fun SectionsContent(state: CategorySelectorUM.Content, modifier: Modifie
                 }
             }
 
-            SpacerH(128.dp)
+            FooterSpacer()
         }
 
         Footer(
@@ -147,6 +147,16 @@ private fun SectorsRail(tags: ImmutableList<CategorySectorUM>, modifier: Modifie
     }
 }
 
+/** Keeps the last rows scrollable above the [Footer], which sits over the list including the navigation bar inset. */
+@Composable
+private fun FooterSpacer() {
+    Spacer(
+        modifier = Modifier
+            .navigationBarsPadding()
+            .height(128.dp),
+    )
+}
+
 @Composable
 private fun Footer(state: CategorySelectorFooterUM, isEnabled: Boolean, modifier: Modifier = Modifier) {
     AnimatedVisibility(
@@ -161,6 +171,7 @@ private fun Footer(state: CategorySelectorFooterUM, isEnabled: Boolean, modifier
                         colors = listOf(Color.Transparent, TangemTheme.colors3.bg.primary),
                     ),
                 )
+                .navigationBarsPadding()
                 .padding(all = 16.dp),
             verticalArrangement = Arrangement.spacedBy(space = 8.dp),
         ) {
