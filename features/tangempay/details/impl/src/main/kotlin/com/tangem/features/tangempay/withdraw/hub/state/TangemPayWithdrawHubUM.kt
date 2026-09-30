@@ -21,12 +21,11 @@ internal data class TangemPayWithdrawHubUM(
 
         data object Loading : BankSectionUM
 
-        data class Error(val onRetryClick: () -> Unit) : BankSectionUM
-
         data class Content(
             val toPersonalAccount: ActionCardUM,
             val toBusinessAccount: ActionCardUM,
             val recents: RecentsUM,
+            val isAvailable: Boolean,
         ) : BankSectionUM
     }
 

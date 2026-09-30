@@ -1,6 +1,5 @@
 package com.tangem.features.tangempay.withdraw.hub.ui
 
-import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
@@ -39,31 +39,39 @@ import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.R
 
 @Composable
 internal fun BankSection(state: BankSectionUM, modifier: Modifier = Modifier) {
+    val isAvailable = (state as? BankSectionUM.Content)?.isAvailable != false
     Column(modifier = modifier.fillMaxWidth()) {
         HubSectionHeader(
             title = resourceReference(R.string.tangempay_withdraw_hub_bank_section_title),
-            subtitle = resourceReference(R.string.tangempay_withdraw_hub_bank_section_subtitle),
+            subtitle = if (isAvailable) {
+                resourceReference(R.string.tangempay_withdraw_hub_bank_section_subtitle)
+            } else {
+                resourceReference(R.string.tangempay_withdraw_hub_bank_section_subtitle_unavailable)
+            },
+            subtitleColor = if (isAvailable) {
+                TangemTheme.colors3.text.secondary
+            } else {
+                TangemTheme.colors3.text.status.warning
+            },
         )
         LazyRow(
             modifier = Modifier
                 .fillMaxWidth()
+                .alpha(if (isAvailable) 1f else UNAVAILABLE_ALPHA)
                 .padding(top = 4.dp, bottom = 12.dp),
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             when (state) {
                 BankSectionUM.Loading -> loadingItems()
-                is BankSectionUM.Error -> item(key = "bank_error") {
-                    UnableToLoadCard(textRes = R.string.common_unable_to_load, onRetryClick = state.onRetryClick)
-                }
                 is BankSectionUM.Content -> {
                     item(key = "bank_actions") {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            BankActionCard(state = state.toPersonalAccount)
-                            BankActionCard(state = state.toBusinessAccount)
+                            BankActionCard(state = state.toPersonalAccount, isEnabled = state.isAvailable)
+                            BankActionCard(state = state.toBusinessAccount, isEnabled = state.isAvailable)
                         }
                     }
-                    recentsItems(recents = state.recents)
+                    recentsItems(recents = state.recents, isEnabled = state.isAvailable)
                 }
             }
         }
@@ -84,38 +92,35 @@ private fun LazyListScope.loadingItems() {
     recentsShimmerItems(keyPrefix = "recents_shimmer")
 }
 
-private fun LazyListScope.recentsItems(recents: RecentsUM) {
+private fun LazyListScope.recentsItems(recents: RecentsUM, isEnabled: Boolean) {
     when (recents) {
         RecentsUM.Loading -> recentsShimmerItems(keyPrefix = "recents_shimmer")
         RecentsUM.Empty -> item(key = "recents_empty") { RecentsEmptyCard() }
         is RecentsUM.Error -> item(key = "recents_error") {
-            UnableToLoadCard(
-                textRes = R.string.tangempay_withdraw_hub_accounts_load_error,
-                onRetryClick = recents.onRetryClick,
-            )
+            UnableToLoadCard(onRetryClick = recents.onRetryClick.takeIf { isEnabled })
         }
         is RecentsUM.Content -> {
             items(items = recents.recipients, key = { it.id }) { recipient ->
                 RecentRecipientCard(
                     state = recipient,
-                    onClick = { recents.onRecipientClick(recipient.id) },
+                    onClick = { recents.onRecipientClick(recipient.id) }.takeIf { isEnabled },
                 )
             }
             recents.onSeeAllClick?.let { onSeeAllClick ->
-                item(key = "recents_see_all") { SeeAllCard(onClick = onSeeAllClick) }
+                item(key = "recents_see_all") { SeeAllCard(onClick = onSeeAllClick.takeIf { isEnabled }) }
             }
         }
     }
 }
 
 @Composable
-private fun BankActionCard(state: TangemPayWithdrawHubUM.ActionCardUM) {
+private fun BankActionCard(state: TangemPayWithdrawHubUM.ActionCardUM, isEnabled: Boolean) {
     Row(
         modifier = Modifier
             .width(CardWidth)
             .clip(RoundedCornerShape(ActionCardCornerRadius))
             .background(TangemTheme.colors3.bg.status.infoSubtle)
-            .clickableSingle(role = Role.Button, onClick = state.onClick)
+            .clickableSingle(enabled = isEnabled, role = Role.Button, onClick = state.onClick)
             .padding(16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -135,7 +140,7 @@ private fun BankActionCard(state: TangemPayWithdrawHubUM.ActionCardUM) {
 }
 
 @Composable
-private fun RecentRecipientCard(state: TangemPayWithdrawHubUM.RecentRecipientUM, onClick: () -> Unit) {
+private fun RecentRecipientCard(state: TangemPayWithdrawHubUM.RecentRecipientUM, onClick: (() -> Unit)?) {
     RecentsCard(onClick = onClick) {
         RecipientAvatar(initial = state.initial)
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -158,7 +163,7 @@ private fun RecentRecipientCard(state: TangemPayWithdrawHubUM.RecentRecipientUM,
 }
 
 @Composable
-private fun SeeAllCard(onClick: () -> Unit) {
+private fun SeeAllCard(onClick: (() -> Unit)?) {
     RecentsCard(onClick = onClick) {
         SecondaryIconCircle(imageVector = Icons.ic_chevron_right_20)
         Text(
@@ -172,7 +177,7 @@ private fun SeeAllCard(onClick: () -> Unit) {
 }
 
 @Composable
-private fun UnableToLoadCard(@StringRes textRes: Int, onRetryClick: () -> Unit) {
+private fun UnableToLoadCard(onRetryClick: (() -> Unit)?) {
     RecentsCard(isDashed = true, onClick = onRetryClick) {
         IconCircle(background = TangemTheme.colors3.bg.inverse) {
             TangemIcon(
@@ -184,7 +189,7 @@ private fun UnableToLoadCard(@StringRes textRes: Int, onRetryClick: () -> Unit) 
             )
         }
         Text(
-            text = resourceReference(textRes).resolveReference(),
+            text = resourceReference(R.string.tangempay_withdraw_hub_accounts_load_error).resolveReference(),
             style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
             maxLines = 3,
@@ -203,3 +208,5 @@ private fun RecipientAvatar(initial: String) {
         )
     }
 }
+
+private const val UNAVAILABLE_ALPHA = 0.4f
