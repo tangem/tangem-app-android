@@ -11,10 +11,30 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * Wraps [inner] and, once it succeeds, performs best-effort COLD wallet registration on the
- * still-open [CardSession] (piggybacking on the same NFC tap), then forwards the original result.
- * Applied only to the card operations that should bind the card (scan / wallet creation / signing /
- * key derivation) — the call sites decide when to wrap — so a cold card is bound on those taps.
+ * A card operation that must run the in-session COLD wallet registration itself, at a point where the card is
+ * still being read, because the operation ends with a step that leaves the NFC session paused — the scan's
+ * card attestation pauses it, after which the card can't be reached (the tag goes stale and re-taps are
+ * ignored). [RegisterColdWalletRunnable] hands such an operation the registration via [coldWalletRegistration]
+ * instead of registering after it.
+ */
+internal interface ColdWalletRegistrationHost {
+    var coldWalletRegistration: InSessionColdWalletRegistration?
+}
+
+internal fun interface InSessionColdWalletRegistration {
+
+    /** Registers on [session]; [onComplete] is always called, whatever the outcome, so the host can proceed. */
+    fun register(session: CardSession, onComplete: () -> Unit)
+}
+
+/**
+ * Wraps [inner] and performs best-effort COLD wallet registration on the still-open [CardSession]
+ * (piggybacking on the same NFC tap). Applied only to the card operations that should bind the card
+ * (scan / wallet creation / signing / key derivation) — the call sites decide when to wrap — so a cold
+ * card is bound on those taps.
+ *
+ * The registration runs once [inner] succeeds, before its result is forwarded — unless [inner] is a
+ * [ColdWalletRegistrationHost], which is handed the registration to run mid-operation instead.
  *
  * The wallet nonce is prefetched in [prepare], which runs *before* the NFC session (no card needed
  * for the nonce), and [prepare] blocks up to [NONCE_PREFETCH_BUDGET_MS] for it. The nonce round-trip
@@ -22,11 +42,9 @@ import kotlinx.coroutines.withTimeoutOrNull
  * ready in time. Registration then runs only if the nonce has arrived; otherwise this tap skips it
  * (the card binds on a later one).
  *
- * On success the inner result is forwarded only **after** the in-session registration attempt
- * completes, so it can extend the operation slightly — but it never changes the outcome: the inner
- * result is always forwarded unchanged, even if registration fails, throws or is cancelled (errors
- * are logged only). All other runnable behaviour (preflight, access-code policy, encryption) is
- * delegated to [inner].
+ * The registration can extend the operation slightly, but it never changes the outcome: the operation
+ * always continues, even if registration fails, throws or is cancelled (errors are logged only). All
+ * other runnable behaviour (preflight, access-code policy, encryption) is delegated to [inner].
  */
 internal class RegisterColdWalletRunnable<T>(
     private val inner: CardSessionRunnable<T>,
@@ -65,19 +83,21 @@ internal class RegisterColdWalletRunnable<T>(
     }
 
     override fun run(session: CardSession, callback: (result: CompletionResult<T>) -> Unit) {
+        if (inner is ColdWalletRegistrationHost) {
+            inner.coldWalletRegistration = InSessionColdWalletRegistration(::registerCold)
+            inner.run(session, callback)
+            return
+        }
+
         inner.run(session) { result ->
             when (result) {
-                is CompletionResult.Success -> registerColdThenComplete(session, result, callback)
+                is CompletionResult.Success -> registerCold(session) { callback(result) }
                 is CompletionResult.Failure -> callback(result)
             }
         }
     }
 
-    private fun registerColdThenComplete(
-        session: CardSession,
-        result: CompletionResult.Success<T>,
-        callback: (result: CompletionResult<T>) -> Unit,
-    ) {
+    private fun registerCold(session: CardSession, onComplete: () -> Unit) {
         val card = session.environment.card
         val prefetchedNonce = nonce
         // Register only when the nonce prefetched in prepare() is ready; otherwise skip (the card binds
@@ -86,7 +106,7 @@ internal class RegisterColdWalletRunnable<T>(
         // must drop the stale local marker for that later tap to register.
         val hasRegistrationWork = prefetchedNonce != null || shouldForceRegistration
         if (card == null || !hasRegistrationWork) {
-            callback(result)
+            onComplete()
             return
         }
         // Launch on the card session's own scope so the in-session registration is bound to the tap
@@ -103,9 +123,9 @@ internal class RegisterColdWalletRunnable<T>(
                 .onFailure { TangemLogger.e("Cold wallet registration failed", it) }
         }
         // invokeOnCompletion fires even if the job was cancelled or never started (e.g. the session
-        // scope was already cancelled), so the wrapped operation's result is always forwarded — the
-        // runnable callback can never be dropped, while still waiting for the registration to finish.
-        job.invokeOnCompletion { callback(result) }
+        // scope was already cancelled), so the operation always proceeds — it can never be left hanging,
+        // while still waiting for the registration to finish.
+        job.invokeOnCompletion { onComplete() }
     }
 
     private companion object {

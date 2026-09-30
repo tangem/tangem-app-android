@@ -457,8 +457,9 @@ internal class DefaultTangemSdkManager(
     }
 
     /**
-     * Wraps [runnable] so that, on success, the card is bound to the device via cold wallet
-     * registration on the same NFC tap. Applied only when the call site opts in via
+     * Wraps [runnable] so that the card is bound to the device via cold wallet registration on the
+     * same NFC tap — after [runnable] succeeds, or mid-scan before the card attestation (see
+     * [ColdWalletRegistrationHost]). Applied only when the call site opts in via
      * `registerColdWallet = true` (and the backend-auth toggle is on) — currently scan / wallet
      * creation / key derivation; signing opts in separately in `TangemSigner`. Twin / Visa /
      * walletless cards are skipped inside [WalletRegistrationLauncher]. The registration is launched

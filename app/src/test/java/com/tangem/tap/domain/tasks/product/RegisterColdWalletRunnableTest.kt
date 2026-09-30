@@ -201,6 +201,92 @@ internal class RegisterColdWalletRunnableTest {
         assertThat(prepared).isInstanceOf(CompletionResult.Failure::class.java)
     }
 
+    @Test
+    fun `GIVEN host operation and nonce ready WHEN run THEN registers mid-operation before it completes`() =
+        runTest {
+            // Arrange
+            every { session.scope } returns unconfinedScope()
+            coEvery { launcher.prefetchColdNonce() } returns nonce
+            val events = mutableListOf<String>()
+            coEvery { launcher.registerColdInSession(any(), any(), any(), any()) } answers { events += "registered" }
+            val host = FakeRegistrationHost(onRest = { events += "rest of operation" })
+
+            // Act
+            val forwarded = prepareThenRunAndCapture(RegisterColdWalletRunnable(host, launcher))
+
+            // Assert
+            coVerify(exactly = 1) { launcher.registerColdInSession(session, card, nonce, false) }
+            assertThat(events).containsExactly("registered", "rest of operation").inOrder()
+            assertThat((forwarded as CompletionResult.Success).data).isEqualTo("ok")
+        }
+
+    @Test
+    fun `GIVEN host operation and registration throws WHEN run THEN the operation still proceeds`() = runTest {
+        // Arrange
+        every { session.scope } returns unconfinedScope()
+        coEvery { launcher.prefetchColdNonce() } returns nonce
+        coEvery { launcher.registerColdInSession(any(), any(), any(), any()) } throws IllegalStateException("boom")
+        var hasProceeded = false
+        val host = FakeRegistrationHost(onRest = { hasProceeded = true })
+
+        // Act
+        val forwarded = prepareThenRunAndCapture(RegisterColdWalletRunnable(host, launcher))
+
+        // Assert
+        assertThat(hasProceeded).isTrue()
+        assertThat((forwarded as CompletionResult.Success).data).isEqualTo("ok")
+    }
+
+    @Test
+    fun `GIVEN host operation and no nonce WHEN run THEN proceeds without registering`() = runTest {
+        // Arrange
+        every { session.scope } returns unconfinedScope()
+        coEvery { launcher.prefetchColdNonce() } returns null
+        var hasProceeded = false
+        val host = FakeRegistrationHost(onRest = { hasProceeded = true })
+
+        // Act
+        val forwarded = prepareThenRunAndCapture(RegisterColdWalletRunnable(host, launcher))
+
+        // Assert
+        coVerify(exactly = 0) { launcher.registerColdInSession(any(), any(), any(), any()) }
+        assertThat(hasProceeded).isTrue()
+        assertThat((forwarded as CompletionResult.Success).data).isEqualTo("ok")
+    }
+
+    @Test
+    fun `GIVEN host operation fails after registration WHEN run THEN failure forwarded and registered once`() =
+        runTest {
+            // Arrange
+            every { session.scope } returns unconfinedScope()
+            coEvery { launcher.prefetchColdNonce() } returns nonce
+            val host = FakeRegistrationHost(result = CompletionResult.Failure(TangemSdkError.UserCancelled()))
+
+            // Act
+            val forwarded = prepareThenRunAndCapture(RegisterColdWalletRunnable(host, launcher))
+
+            // Assert
+            coVerify(exactly = 1) { launcher.registerColdInSession(any(), any(), any(), any()) }
+            assertThat(forwarded).isInstanceOf(CompletionResult.Failure::class.java)
+        }
+
+    /** Runs the handed registration first, then the rest of the operation, like `ScanProductTask`. */
+    private class FakeRegistrationHost(
+        private val result: CompletionResult<String> = CompletionResult.Success("ok"),
+        private val onRest: () -> Unit = {},
+    ) : CardSessionRunnable<String>, ColdWalletRegistrationHost {
+
+        override var coldWalletRegistration: InSessionColdWalletRegistration? = null
+
+        override fun run(session: CardSession, callback: (result: CompletionResult<String>) -> Unit) {
+            val proceed = {
+                onRest()
+                callback(result)
+            }
+            coldWalletRegistration?.register(session, proceed) ?: proceed()
+        }
+    }
+
     /** Makes [inner] invoke its run callback synchronously with [result]. */
     private fun stubInnerRun(result: CompletionResult<String>) {
         every { inner.run(any(), any()) } answers {
