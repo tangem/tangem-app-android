@@ -32,6 +32,8 @@ import com.tangem.core.ui.R
 import com.tangem.common.ui.account.AccountIcon
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.components.account.AccountIconSize
+import com.tangem.core.ui.components.atoms.text.EllipsisText
+import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.domain.models.account.CryptoPortfolioIcon.Color as IconColor
 import com.tangem.domain.models.account.CryptoPortfolioIcon.Icon
 import com.tangem.core.ui.components.account.PaymentAccountIcon
@@ -158,11 +160,20 @@ private fun TwoAssetsSideLabel(label: TextReference, owner: AssetOwnerUM?, modif
         LabelText(text = label)
         when (owner) {
             is AssetOwnerUM.Account,
-            is AssetOwnerUM.Address,
             is AssetOwnerUM.PaymentAccount,
             -> {
                 AssetOwnerIcon(owner = owner)
                 LabelText(text = owner.name, modifier = Modifier.weight(weight = 1f, fill = false))
+            }
+            is AssetOwnerUM.Address -> {
+                AssetOwnerIcon(owner = owner)
+                EllipsisText(
+                    text = owner.rawAddress,
+                    style = TangemTheme.typography3.caption.medium,
+                    color = TangemTheme.colors3.text.secondary,
+                    ellipsis = TextEllipsis.Middle,
+                    modifier = Modifier.weight(weight = 1f, fill = false),
+                )
             }
             is AssetOwnerUM.Wallet -> {
                 LabelText(text = owner.name, modifier = Modifier.weight(weight = 1f, fill = false))
@@ -347,10 +358,7 @@ private fun TxHistoryDetailsTwoAssetsBlockPreview() {
                     label = "To",
                     amount = "+ 1,800.00 POL",
                     isFaded = false,
-                    owner = AssetOwnerUM.Address(
-                        name = stringReference("33Bd3…a21412B"),
-                        rawAddress = "0xfb6916095ca1df60bb79ce92ce3ea74c37c5d359",
-                    ),
+                    owner = AssetOwnerUM.Address(rawAddress = "0xfb6916095ca1df60bb79ce92ce3ea74c37c5d359"),
                 ),
                 isBalanceHidden = false,
             )
