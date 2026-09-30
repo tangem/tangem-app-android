@@ -8,8 +8,8 @@ import com.squareup.moshi.JsonClass
  *
  * Distinct from the card-issue [OrderRequest], which requires a `customer_wallet_address` and a
  * `specification_name` this order carries none of. The recipient is described either by [Data.bankAccountId] —
- * one already saved on the backend, sent with the picked [Data.rail] — or by the whole [Data.bankAccount], whose
- * details carry the rail; the unused fields stay null and Moshi leaves them out of the body.
+ * one already saved on the backend — or by the whole [Data.bankAccount]; the unused one stays null and Moshi
+ * leaves it out of the body.
  *
  * [idempotencyKey] is sent here as well as in the `Idempotency-Key` header: the backend reads the body key on
  * this endpoint today, the header is what its contract asks for.
@@ -26,7 +26,6 @@ data class BankOfframpPlaceOrderRequest(
         @Json(name = "amount_in_cents") val amountInCents: Long,
         @Json(name = "token_contract_address") val tokenContractAddress: String,
         @Json(name = "bank_account_id") val bankAccountId: String? = null,
-        @Json(name = "rail") val rail: String? = null,
         @Json(name = "bank_account") val bankAccount: BankAccount? = null,
         @Json(name = "type") val type: String = "BANK_OFFRAMP_RAIN",
     )
