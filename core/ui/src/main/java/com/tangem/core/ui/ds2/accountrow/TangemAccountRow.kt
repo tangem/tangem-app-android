@@ -26,6 +26,17 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.avatar.TangemAvatar
 import com.tangem.core.ui.ds2.badge.TangemBadge
+import com.tangem.core.ui.ds2.expandable.ExpandableAvatar
+import com.tangem.core.ui.ds2.expandable.ExpandableCard
+import com.tangem.core.ui.ds2.expandable.ExpandableCardLayoutId
+import com.tangem.core.ui.ds2.expandable.ExpandableCollapseArrow
+import com.tangem.core.ui.ds2.expandable.ExpandableDot
+import com.tangem.core.ui.ds2.expandable.ExpandableEmptyBody
+import com.tangem.core.ui.ds2.expandable.ExpandableShimmerLine
+import com.tangem.core.ui.ds2.expandable.ExpandableTitle
+import com.tangem.core.ui.ds2.expandable.ExpandableTitleAnchor
+import com.tangem.core.ui.ds2.expandable.rememberExpansionMotion
+import com.tangem.core.ui.ds2.expandable.rememberRowPressAlpha
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.core.ui.ds2.util.TangemPriceChange
@@ -41,7 +52,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * shrinks that line into a compact heading and reveals [content], normally the account's
  * [TangemTokenRow]s.
  *
- * Version: 1.1.0
+ * Version: 1.0.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=10694-21239)
  *
@@ -116,7 +127,7 @@ fun TangemAccountRow(
 /** Public API surface of [TangemAccountRow]. */
 object TangemAccountRow {
 
-    val version = DsVersion(major = 1, minor = 1, patch = 0)
+    val version = DsVersion(major = 1, minor = 0, patch = 0)
 
     /**
      * State model of [TangemAccountRow] — one subtype per Figma variant. Render it with the
@@ -489,7 +500,7 @@ fun TangemAccountRow.Empty(
         onClick = onClick,
         onLongClick = onLongClick,
         content = {
-            AccountRowEmptyBody(
+            ExpandableEmptyBody(
                 message = message,
                 addTokensLabel = addTokensLabel,
                 onAddTokensClick = onAddTokensClick,
@@ -508,35 +519,35 @@ fun TangemAccountRow.Empty(
 @Composable
 fun TangemAccountRow.Shimmer(modifier: Modifier = Modifier) {
     val interactionSource = remember { MutableInteractionSource() }
-    AccountRowContainer(
-        motion = rememberAccountRowMotion(isExpanded = false),
+    ExpandableCard(
+        motion = rememberExpansionMotion(isExpanded = false),
         interactionSource = interactionSource,
         modifier = modifier,
     ) {
         TangemAvatar(
             state = TangemAvatar.UiState.Shimmer(shape = TangemAvatar.UiState.Shimmer.Shape.RoundedSquare),
             size = TangemAvatar.Size.X40,
-            modifier = Modifier.layoutId(AccountRowLayoutId.AVATAR),
+            modifier = Modifier.layoutId(ExpandableCardLayoutId.AVATAR),
         )
-        AccountRowShimmerLine(
+        ExpandableShimmerLine(
             lineHeight = 20.dp,
             width = 72.dp,
-            modifier = Modifier.layoutId(AccountRowLayoutId.TITLE),
+            modifier = Modifier.layoutId(ExpandableCardLayoutId.TITLE),
         )
-        AccountRowShimmerLine(
+        ExpandableShimmerLine(
             lineHeight = 16.dp,
             width = 44.dp,
-            modifier = Modifier.layoutId(AccountRowLayoutId.SUBTITLE),
+            modifier = Modifier.layoutId(ExpandableCardLayoutId.SUBTITLE),
         )
-        AccountRowShimmerLine(
+        ExpandableShimmerLine(
             lineHeight = 20.dp,
             width = 72.dp,
-            modifier = Modifier.layoutId(AccountRowLayoutId.BALANCE_LARGE),
+            modifier = Modifier.layoutId(ExpandableCardLayoutId.END_TOP),
         )
-        AccountRowShimmerLine(
+        ExpandableShimmerLine(
             lineHeight = 16.dp,
             width = 44.dp,
-            modifier = Modifier.layoutId(AccountRowLayoutId.PRICE_CHANGE),
+            modifier = Modifier.layoutId(ExpandableCardLayoutId.END_BOTTOM),
         )
     }
 }
@@ -597,39 +608,39 @@ private fun AccountRowScaffold(
     content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val pressAlpha by rememberAccountRowPressAlpha(interactionSource)
-    val motion = rememberAccountRowMotion(isExpanded = isExpanded && content != null)
+    val pressAlpha by rememberRowPressAlpha(interactionSource)
+    val motion = rememberExpansionMotion(isExpanded = isExpanded && content != null)
 
-    AccountRowContainer(
+    ExpandableCard(
         motion = motion,
         interactionSource = interactionSource,
         modifier = modifier,
         onClick = onClick,
         onLongClick = onLongClick,
     ) {
-        AccountRowAvatar(
+        ExpandableAvatar(
             state = avatar,
             motion = motion,
             modifier = Modifier
-                .layoutId(AccountRowLayoutId.AVATAR)
+                .layoutId(ExpandableCardLayoutId.AVATAR)
                 .graphicsLayer { alpha = pressAlpha },
         )
 
-        AccountRowTitle(
+        ExpandableTitle(
             title = title,
             motion = motion,
             modifier = Modifier
-                .layoutId(AccountRowLayoutId.TITLE)
+                .layoutId(ExpandableCardLayoutId.TITLE)
                 .graphicsLayer { alpha = pressAlpha },
         )
-        AccountRowTitleAnchor(title = title, modifier = Modifier.layoutId(AccountRowLayoutId.TITLE_ANCHOR))
+        ExpandableTitleAnchor(title = title, modifier = Modifier.layoutId(ExpandableCardLayoutId.TITLE_ANCHOR))
 
         if (tokensAmount != null || membersAmount != null) {
             AccountRowSubtitle(
                 tokensAmount = tokensAmount,
                 membersAmount = membersAmount,
                 modifier = Modifier
-                    .layoutId(AccountRowLayoutId.SUBTITLE)
+                    .layoutId(ExpandableCardLayoutId.SUBTITLE)
                     .graphicsLayer { alpha = pressAlpha * motion.subtitleAlpha },
             )
         }
@@ -641,13 +652,13 @@ private fun AccountRowScaffold(
                 status = TangemBadge.Status.Warning,
                 size = TangemBadge.Size.X6,
                 modifier = Modifier
-                    .layoutId(AccountRowLayoutId.END_BADGE)
-                    .graphicsLayer { alpha = pressAlpha * motion.largeBalanceAlpha },
+                    .layoutId(ExpandableCardLayoutId.END_SINGLE)
+                    .graphicsLayer { alpha = pressAlpha * motion.endTopAlpha },
             )
             hasBalanceError -> AccountRowBalanceError(
                 modifier = Modifier
-                    .layoutId(AccountRowLayoutId.BALANCE_LARGE)
-                    .graphicsLayer { alpha = pressAlpha * motion.largeBalanceAlpha },
+                    .layoutId(ExpandableCardLayoutId.END_TOP)
+                    .graphicsLayer { alpha = pressAlpha * motion.endTopAlpha },
             )
             balance != null -> AccountRowLargeBalance(
                 balance = balance,
@@ -655,8 +666,8 @@ private fun AccountRowScaffold(
                 isBalanceHidden = isBalanceHidden,
                 isFlickering = isBalanceFlickering,
                 modifier = Modifier
-                    .layoutId(AccountRowLayoutId.BALANCE_LARGE)
-                    .graphicsLayer { alpha = pressAlpha * motion.largeBalanceAlpha },
+                    .layoutId(ExpandableCardLayoutId.END_TOP)
+                    .graphicsLayer { alpha = pressAlpha * motion.endTopAlpha },
             )
         }
 
@@ -664,15 +675,15 @@ private fun AccountRowScaffold(
             TangemPriceChange(
                 state = priceChange,
                 modifier = Modifier
-                    .layoutId(AccountRowLayoutId.PRICE_CHANGE)
-                    .graphicsLayer { alpha = pressAlpha * motion.priceChangeAlpha },
+                    .layoutId(ExpandableCardLayoutId.END_BOTTOM)
+                    .graphicsLayer { alpha = pressAlpha * motion.endBottomAlpha },
             )
         }
 
         if (balance != null && showCompactBalance) {
-            AccountRowDot(
+            ExpandableDot(
                 modifier = Modifier
-                    .layoutId(AccountRowLayoutId.DOT)
+                    .layoutId(ExpandableCardLayoutId.INLINE_1)
                     .graphicsLayer { alpha = pressAlpha * motion.dotAlpha },
             )
             AccountRowSmallBalance(
@@ -680,23 +691,23 @@ private fun AccountRowScaffold(
                 isBalanceHidden = isBalanceHidden,
                 isFlickering = isBalanceFlickering,
                 modifier = Modifier
-                    .layoutId(AccountRowLayoutId.BALANCE_SMALL)
-                    .offset(x = motion.smallBalanceOffset)
-                    .graphicsLayer { alpha = pressAlpha * motion.smallBalanceAlpha },
+                    .layoutId(ExpandableCardLayoutId.INLINE_2)
+                    .offset(x = motion.compactOffset)
+                    .graphicsLayer { alpha = pressAlpha * motion.compactAlpha },
             )
         }
 
         if (content != null) {
-            AccountRowCollapseArrow(
+            ExpandableCollapseArrow(
                 contentDescription = collapseContentDescription,
                 modifier = Modifier
-                    .layoutId(AccountRowLayoutId.ARROW)
+                    .layoutId(ExpandableCardLayoutId.ARROW)
                     .graphicsLayer { alpha = pressAlpha * motion.arrowAlpha },
             )
             if (isExpanded || motion.expansion > 0f) {
                 Column(
                     modifier = Modifier
-                        .layoutId(AccountRowLayoutId.CONTENT)
+                        .layoutId(ExpandableCardLayoutId.CONTENT)
                         .graphicsLayer { alpha = motion.slotAlpha },
                     content = content,
                 )
