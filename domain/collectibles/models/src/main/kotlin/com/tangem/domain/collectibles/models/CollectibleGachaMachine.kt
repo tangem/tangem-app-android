@@ -51,5 +51,5 @@ data class CollectibleGachaMachine(
         val epic: TierRange?,
     )
 
-    data class TierRange(val start: Int, val end: Int)
+    data class TierRange(val start: BigDecimal, val end: BigDecimal)
 }
