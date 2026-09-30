@@ -54,7 +54,7 @@ internal fun BigDecimal.formatSlippagePercent(): String = movePointLeft(2).forma
 internal fun BigDecimal.formatPolymarketShares(): String = format { simple(decimals = 2) }
 
 /** Formats a held position without rounding it, so a remainder below a cent stays visible, e.g. "15.1663". */
-internal fun BigDecimal.formatPolymarketPositionShares(): String = format {
+internal fun BigDecimal.formatPolymarketPositionShares(): String = floorToSharePrecision().format {
     simple(decimals = PolymarketConst.SHARES_DECIMALS)
 }
 
