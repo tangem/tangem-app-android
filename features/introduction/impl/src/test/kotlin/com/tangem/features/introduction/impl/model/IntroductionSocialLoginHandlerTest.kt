@@ -6,9 +6,11 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SelectWalletError
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
@@ -17,6 +19,8 @@ import com.tangem.features.hotwallet.SocialLoginUseCase
 import com.tangem.features.hotwallet.SocialLoginOutcome
 import com.tangem.features.hotwallet.SocialLoginStage
 import com.tangem.features.introduction.impl.ui.state.SocialLoginProgressUM
+import com.tangem.test.core.ProvideTestModels
+import com.tangem.utils.coroutines.AppCoroutineScope
 import io.mockk.Called
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -24,6 +28,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import org.junit.jupiter.params.ParameterizedTest
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -34,6 +39,8 @@ internal class IntroductionSocialLoginHandlerTest {
 
     private val socialLoginUseCase: SocialLoginUseCase = mockk(relaxed = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk(relaxed = true)
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
+    private val appCoroutineScope: AppCoroutineScope = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
 
@@ -43,6 +50,8 @@ internal class IntroductionSocialLoginHandlerTest {
         getAvailableSocialLoginProvidersUseCase = getAvailableSocialLoginProvidersUseCase,
         socialLoginUseCase = socialLoginUseCase,
         userWalletsListRepository = userWalletsListRepository,
+        sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
+        appCoroutineScope = appCoroutineScope,
         router = router,
         uiMessageSender = uiMessageSender,
     )
@@ -55,6 +64,7 @@ internal class IntroductionSocialLoginHandlerTest {
             getAvailableSocialLoginProvidersUseCase,
             socialLoginUseCase,
             userWalletsListRepository,
+            sendFeedbackEmailUseCase,
             router,
             uiMessageSender,
         )
@@ -94,19 +104,42 @@ internal class IntroductionSocialLoginHandlerTest {
         verify(exactly = 1) { uiMessageSender.send(any<SnackbarMessage>()) }
     }
 
-    @Test
-    fun `GIVEN viewer backed out WHEN signIn THEN provider is signed out and a message is shown`() = runTest {
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN a failure WHEN signIn THEN it is shown the way the spec puts it`(model: FailureModel) = runTest {
         // Arrange
-        coEvery { socialLoginUseCase.signIn(PROVIDER, any()) } returns SocialLoginError.SignInCanceled.left()
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any()) } returns model.error.left()
 
         // Act
         handler.signIn(PROVIDER, host)
 
         // Assert
-        coVerify(exactly = 1) { socialLoginUseCase.signOut(PROVIDER) }
-        verify { router wasNot Called }
-        coVerify(exactly = 0) { userWalletsListRepository.select(any()) }
+        if (model.isSupportDialog) {
+            val message = slot<DialogMessage>()
+            verify(exactly = 1) { uiMessageSender.send(capture(message)) }
+            assertThat(message.captured.firstAction).isNotNull()
+        } else {
+            verify(exactly = 1) { uiMessageSender.send(any<SnackbarMessage>()) }
+            verify(exactly = 0) { uiMessageSender.send(any<DialogMessage>()) }
+        }
     }
+
+    data class FailureModel(val error: SocialLoginError, val isSupportDialog: Boolean)
+
+    private fun provideTestModels() = listOf(
+        FailureModel(error = SocialLoginError.SignInCanceled, isSupportDialog = false),
+        FailureModel(error = SocialLoginError.NetworkError, isSupportDialog = false),
+        FailureModel(error = SocialLoginError.SessionExpired, isSupportDialog = false),
+        FailureModel(error = SocialLoginError.ServerError(), isSupportDialog = false),
+        FailureModel(error = SocialLoginError.BackupWriteFailed(), isSupportDialog = false),
+        FailureModel(error = SocialLoginError.BindingConflict, isSupportDialog = false),
+        FailureModel(error = SocialLoginError.BackupNotFound, isSupportDialog = true),
+        FailureModel(error = SocialLoginError.InvalidBackupFile, isSupportDialog = true),
+        FailureModel(error = SocialLoginError.RecoveryKeyDecryptionFailed(), isSupportDialog = true),
+        FailureModel(error = SocialLoginError.PassphraseNotSupported, isSupportDialog = true),
+        FailureModel(error = SocialLoginError.UnsupportedBackupVersion(version = 2), isSupportDialog = true),
+        FailureModel(error = SocialLoginError.CloudUnavailable, isSupportDialog = true),
+    )
 
     @Test
     fun `GIVEN sign-in failed WHEN signIn THEN the entry points reopen only after the sign-out`() = runTest {

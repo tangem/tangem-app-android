@@ -33,6 +33,7 @@ internal class EmailMessageTitleResolver(private val resources: Resources) {
             -> R.string.feedback_preface_support
             is FeedbackEmailType.RateCanBeBetter -> R.string.feedback_preface_rate_negative
             is FeedbackEmailType.ScanningProblem -> R.string.feedback_preface_scan_failed
+            is FeedbackEmailType.SocialLoginProblem -> R.string.feedback_preface_support
             is FeedbackEmailType.TransactionSendingProblem,
             is FeedbackEmailType.StakingProblem,
             is FeedbackEmailType.SwapProblem,

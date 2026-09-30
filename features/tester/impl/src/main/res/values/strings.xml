@@ -21,7 +21,7 @@
     <string name="usedesk_token_ttl_custom" translatable="false">Custom (minutes)</string>
     <string name="share_logs" translatable="false">Share logs</string>
     <string name="test_push" translatable="false">Test push</string>
-    <string name="accounts" translatable="false">Accounts</string>
+    <string name="accounts" translatable="false">Wallets (Accounts)</string>
     <string name="news" translatable="false">News</string>
     <string name="news_details" translatable="false">News details</string>
     <string name="news_details_bottom_sheet" translatable="false">News details (Bottom Sheet)</string>
