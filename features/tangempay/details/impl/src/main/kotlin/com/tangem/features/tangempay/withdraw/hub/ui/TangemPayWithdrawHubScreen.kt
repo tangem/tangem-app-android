@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -123,7 +124,12 @@ private fun SwapSection(state: TangemPayWithdrawHubUM.SwapSectionUM) {
 }
 
 @Composable
-internal fun HubSectionHeader(title: TextReference, subtitle: TextReference, modifier: Modifier = Modifier) {
+internal fun HubSectionHeader(
+    title: TextReference,
+    subtitle: TextReference,
+    modifier: Modifier = Modifier,
+    subtitleColor: Color = TangemTheme.colors3.text.secondary,
+) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -138,7 +144,7 @@ internal fun HubSectionHeader(title: TextReference, subtitle: TextReference, mod
         Text(
             text = subtitle.resolveReference(),
             style = TangemTheme.typography3.caption.medium,
-            color = TangemTheme.colors3.text.secondary,
+            color = subtitleColor,
         )
     }
 }
@@ -222,7 +228,7 @@ private fun RecentTokenCard(state: RecentTokenUM, onClick: () -> Unit) {
 private class BankSectionPreviewProvider : PreviewParameterProvider<BankSectionUM> {
     override val values: Sequence<BankSectionUM> = sequenceOf(
         BankSectionUM.Loading,
-        BankSectionUM.Error(onRetryClick = {}),
+        previewContent(recents = previewRecents(onSeeAllClick = {}), isAvailable = false),
         previewContent(recents = previewRecents(onSeeAllClick = {})),
         previewContent(recents = previewRecents(onSeeAllClick = null)),
         previewContent(recents = RecentsUM.Loading),
@@ -264,17 +270,19 @@ private class SwapRecentsPreviewProvider : PreviewParameterProvider<TokenRecents
     )
 }
 
-private fun previewContent(recents: RecentsUM): BankSectionUM.Content = BankSectionUM.Content(
-    toPersonalAccount = previewActionCard(
-        iconRes = R.drawable.ic_user_filled_16,
-        titleRes = R.string.tangempay_withdraw_hub_to_personal_account,
-    ),
-    toBusinessAccount = previewActionCard(
-        iconRes = R.drawable.ic_briefcase_filled_16,
-        titleRes = R.string.tangempay_withdraw_hub_to_business_account,
-    ),
-    recents = recents,
-)
+private fun previewContent(recents: RecentsUM, isAvailable: Boolean = true): BankSectionUM.Content =
+    BankSectionUM.Content(
+        toPersonalAccount = previewActionCard(
+            iconRes = R.drawable.ic_user_filled_16,
+            titleRes = R.string.tangempay_withdraw_hub_to_personal_account,
+        ),
+        toBusinessAccount = previewActionCard(
+            iconRes = R.drawable.ic_briefcase_filled_16,
+            titleRes = R.string.tangempay_withdraw_hub_to_business_account,
+        ),
+        recents = recents,
+        isAvailable = isAvailable,
+    )
 
 private fun previewActionCard(iconRes: Int, titleRes: Int): TangemPayWithdrawHubUM.ActionCardUM =
     TangemPayWithdrawHubUM.ActionCardUM(
@@ -313,7 +321,6 @@ private fun previewState(
             onRecentRecipientClick = {},
             onSeeAllClick = {},
             onRetryRecentsClick = {},
-            onRetryBankSectionClick = {},
         ),
     ).create(WithdrawHubState())
 
