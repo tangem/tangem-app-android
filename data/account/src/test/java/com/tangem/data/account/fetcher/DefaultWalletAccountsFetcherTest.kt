@@ -191,11 +191,36 @@ class DefaultWalletAccountsFetcherTest {
         }
 
         @Test
-        fun `GIVEN toggle is off and saved v2 document WHEN request fails THEN saved document takes the v1 shape`() =
+        fun `GIVEN toggle is off and saved v2 document WHEN fetch THEN v1 shape is stored before the request`() =
             runTest {
                 // Arrange
                 every { jointAccountFeatureToggles.isJointAccountEnabled } returns false
                 accountsResponseStoreFlow.value = v2Response
+
+                val stored = mutableListOf<suspend (GetWalletAccountsResponse?) -> GetWalletAccountsResponse?>()
+                coEvery { accountsResponseStore.updateData(capture(stored)) } returns v1Response
+                coEvery {
+                    walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = null)
+                } returns ApiResponse.Success(data = v1Response, headers = mapOf(ETAG_HEADER to listOf(eTag)))
+
+                // Act
+                fetcher.fetch(userWalletId)
+
+                // Assert
+                Truth.assertThat(stored.first().invoke(null)).isEqualTo(v1Response)
+                coVerifyOrder {
+                    accountsResponseStore.updateData(any())
+                    walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = null)
+                }
+            }
+
+        @Test
+        fun `GIVEN toggle is off and saved v2 document WHEN request fails THEN handler receives the v1 shape`() =
+            runTest {
+                // Arrange
+                every { jointAccountFeatureToggles.isJointAccountEnabled } returns false
+                accountsResponseStoreFlow.value = v2Response
+                coEvery { accountsResponseStore.updateData(any()) } returns v1Response
 
                 val error = ApiResponseError.NetworkException()
                 coEvery {
