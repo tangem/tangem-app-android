@@ -62,6 +62,31 @@ internal class PolymarketPositionStatusConverterTest {
             TestModel(PolymarketPositionStatus.LOST, result = PolymarketPositionResult.LOST),
             TestModel(PolymarketPositionStatus.SPLIT, result = PolymarketPositionResult.SPLIT),
             TestModel(PolymarketPositionStatus.UNKNOWN, result = PolymarketPositionResult.UNKNOWN),
+            TestModel(
+                PolymarketPositionStatus.PENDING,
+                resolution = PolymarketResolutionStatus.PENDING_RESOLUTION,
+                result = PolymarketPositionResult.UNKNOWN,
+            ),
+            TestModel(
+                PolymarketPositionStatus.PENDING,
+                resolution = PolymarketResolutionStatus.PROPOSED,
+                result = PolymarketPositionResult.UNKNOWN,
+            ),
+            TestModel(
+                PolymarketPositionStatus.DISPUTED,
+                resolution = PolymarketResolutionStatus.DISPUTED,
+                result = PolymarketPositionResult.UNKNOWN,
+            ),
+            TestModel(
+                PolymarketPositionStatus.UNKNOWN,
+                resolution = PolymarketResolutionStatus.RESOLVED,
+                result = PolymarketPositionResult.UNKNOWN,
+            ),
+            TestModel(
+                PolymarketPositionStatus.WON,
+                resolution = PolymarketResolutionStatus.RESOLVED,
+                result = PolymarketPositionResult.WON,
+            ),
             TestModel(PolymarketPositionStatus.CLOSED, closedStatus = PolymarketClosedPositionStatus.CLOSED),
             TestModel(PolymarketPositionStatus.WON, closedStatus = PolymarketClosedPositionStatus.WON),
             TestModel(PolymarketPositionStatus.LOST, closedStatus = PolymarketClosedPositionStatus.LOST),
