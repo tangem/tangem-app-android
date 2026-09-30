@@ -1,37 +1,37 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
-import java.math.BigDecimal
+import com.tangem.domain.models.serialization.SerializedBigDecimal
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * Response of `bff-v2/v1/payment-methods`
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class PaymentMethodsResponse(
-    @Json(name = "result") val result: List<PaymentMethod>?,
+    @SerialName("result") val result: List<PaymentMethod>?,
 ) {
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class PaymentMethod(
-        @Json(name = "id") val id: String?,
-        @Json(name = "name") val name: String?,
-        @Json(name = "country_code") val countryCode: String?,
-        @Json(name = "icon_url") val iconUrl: String?,
-        @Json(name = "fees") val fees: Fees?,
+        @SerialName("id") val id: String?,
+        @SerialName("name") val name: String?,
+        @SerialName("country_code") val countryCode: String?,
+        @SerialName("icon_url") val iconUrl: String?,
+        @SerialName("fees") val fees: Fees?,
     )
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Fees(
-        @Json(name = "receive") val receive: Fee?,
-        @Json(name = "send") val send: Fee?,
+        @SerialName("receive") val receive: Fee?,
+        @SerialName("send") val send: Fee?,
     )
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Fee(
-        @Json(name = "type") val type: String?,
-        @Json(name = "calculation_type") val calculationType: String?,
-        @Json(name = "amount") val amount: BigDecimal?,
-        @Json(name = "currency") val currency: String?,
+        @SerialName("type") val type: String?,
+        @SerialName("calculation_type") val calculationType: String?,
+        @SerialName("amount") val amount: SerializedBigDecimal?,
+        @SerialName("currency") val currency: String?,
     )
 }
