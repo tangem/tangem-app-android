@@ -10,6 +10,7 @@ import com.tangem.core.ui.format.bigdecimal.formatStyled
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.format.bigdecimal.simple
+import com.tangem.domain.polymarket.approval.PolymarketContracts
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -43,7 +44,7 @@ internal fun BigDecimal.formatPolymarketEnteredAmount(): String = format {
 
 /** Formats a collateral balance as the token it is held in, e.g. "1,000.00 USDC". */
 internal fun BigDecimal?.formatPolymarketBalance(tokenSymbol: String): String = format {
-    crypto(symbol = tokenSymbol, decimals = PolymarketConst.COLLATERAL_DECIMALS, ignoreSymbolPosition = true)
+    crypto(symbol = tokenSymbol, decimals = PolymarketConst.COLLATERAL_DISPLAY_DECIMALS, ignoreSymbolPosition = true)
 }
 
 /** Formats a slippage tolerance the way the screens state it, e.g. "0.25%". */
@@ -57,16 +58,13 @@ internal fun BigDecimal.formatSlippagePercent(): String = movePointLeft(2).forma
  * shown as nothing.
  */
 internal fun BigDecimal.formatPolymarketShares(): String {
-    val displayed = if (signum() > 0 && this < SHARES_DISPLAY_STEP) {
+    val displayed = if (signum() > 0 && this < PolymarketConst.SHARES_DISPLAY_STEP) {
         floorToSharePrecision()
     } else {
-        setScale(SHARES_DISPLAY_DECIMALS, RoundingMode.FLOOR)
+        setScale(PolymarketConst.SHARES_DISPLAY_DECIMALS, RoundingMode.FLOOR)
     }
-    return displayed.format { simple(decimals = PolymarketConst.SHARES_DECIMALS) }
+    return displayed.format { simple(decimals = PolymarketContracts.SHARE_DECIMALS) }
 }
-
-private const val SHARES_DISPLAY_DECIMALS = 2
-private val SHARES_DISPLAY_STEP: BigDecimal = BigDecimal.ONE.movePointLeft(SHARES_DISPLAY_DECIMALS)
 
 /** @return a whole-percent share the way the calculator buttons state it, e.g. "25%". */
 internal fun Int.formatPolymarketPercent(): String = BigDecimal(this).movePointLeft(2).format {
