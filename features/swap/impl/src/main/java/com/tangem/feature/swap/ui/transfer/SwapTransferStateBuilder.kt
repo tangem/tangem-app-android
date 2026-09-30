@@ -7,6 +7,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.AccountTitleUM
+import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldConverter
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
@@ -34,7 +35,6 @@ import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.SwapButton.Mode
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.presentation.R
-import com.tangem.feature.swap.ui.toTitleName
 import com.tangem.feature.swap.ui.SwapAmountScreenClickIntents
 import com.tangem.feature.swap.ui.swapSuccessNavigation
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
@@ -297,14 +297,14 @@ internal class SwapTransferStateBuilder @Inject constructor(
         } else {
             R.string.swapping_to_account_title to R.string.swapping_to_title
         }
-        return if (account != null && isAccountsMode) {
-            AccountTitleUM.Account(
+        return when {
+            account == null || !isAccountsMode -> AccountTitleUM.Text(resourceReference(placeholder))
+            account is Account.Prediction -> AccountTitleUM.Account.prediction(prefixText = resourceReference(prefix))
+            else -> AccountTitleUM.Account(
                 prefixText = resourceReference(prefix),
-                name = account.toTitleName(),
+                name = account.accountName.toUM().value,
                 icon = account.toIconUM(),
             )
-        } else {
-            AccountTitleUM.Text(resourceReference(placeholder))
         }
     }
 
@@ -627,11 +627,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
         )
         val successState = requireNotNull(sentState.successState).copy(
             title = resourceReference(R.string.prediction_withdraw_status_sent_title),
-            fromTitle = AccountTitleUM.Account(
-                prefixText = resourceReference(R.string.common_from),
-                name = resourceReference(R.string.prediction_account_title),
-                icon = AccountIconUM.Prediction,
-            ),
+            fromTitle = AccountTitleUM.Account.prediction(prefixText = resourceReference(R.string.common_from)),
         )
         return sentState.copy(successState = successState)
     }
