@@ -28,6 +28,7 @@ dependencies {
     api(projects.domain.visa)
     implementation(projects.domain.models)
     implementation(projects.domain.moneyAccount)
+    implementation(projects.domain.visa.models)
 
     /** Compose */
     implementation(deps.compose.foundation)
