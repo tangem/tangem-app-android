@@ -3082,6 +3082,12 @@
   <string name="transaction_history_fee_for_operation">For operation</string>
   <string name="transaction_history_fee_for_operation_name">For %s</string>
   <string name="transaction_history_fee_for_sending">For sending</string>
+  <string name="transaction_history_fee_for_yield_mode_activation">For Yield mode activation</string>
+  <string name="transaction_history_fee_for_yield_mode_deactivation">For Yield mode deactivation</string>
+  <string name="transaction_history_fee_for_yield_mode_deployment">For Yield mode deployment</string>
+  <string name="transaction_history_fee_for_yield_mode_initialization">For Yield mode initialization</string>
+  <string name="transaction_history_fee_for_yield_mode_reactivation">For Yield mode reactivation</string>
+  <string name="transaction_history_fee_for_yield_mode_top_up">For Yield mode top-up</string>
   <string name="transaction_history_fee_sending_asset">Send %%image%% %s</string>
   <string name="transaction_history_from_inline_address">from: %%image%% %s</string>
   <string name="transaction_history_multiple_addresses">Multiple addresses</string>

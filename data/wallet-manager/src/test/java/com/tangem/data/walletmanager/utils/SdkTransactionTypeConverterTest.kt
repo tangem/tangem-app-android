@@ -547,11 +547,15 @@ internal class SdkTransactionTypeConverterTest {
             val coin = currencyFactory.createCoin(Blockchain.Ethereum)
             val token = currencyFactory.createToken(Blockchain.Ethereum, contractAddress = USDT_CONTRACT)
             return listOf(
-                // A send that moved no coin only cost the fee — left unrecognized, so the history shows a fee row
+                // A send that moved no coin only cost the fee, so the history shows a fee row. The send rides along,
+                // but it changed no yield mode — the row has nothing to name but the method itself.
                 YieldSendModel(
                     currency = coin,
                     amount = BigDecimal.ZERO,
-                    expected = TxInfo.TransactionType.Operation(name = "YieldSend"),
+                    expected = TxInfo.TransactionType.Operation(
+                        name = "YieldSend",
+                        recognized = TxInfo.TransactionType.YieldSupply.Send(isYieldSupplyWithdraw = false),
+                    ),
                 ),
                 YieldSendModel(
                     currency = coin,
@@ -580,6 +584,74 @@ internal class SdkTransactionTypeConverterTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class YieldModuleCall {
+
+        private val converter = createConverter(currency = currencyFactory.createCoin(Blockchain.Ethereum))
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun convert(model: YieldModuleCallModel) {
+            // Arrange
+            val item = item(
+                destination = singleContract(YIELD_MODULE_CONTRACT),
+                methodId = model.methodId,
+                callData = yieldCallData(model.methodId),
+                amount = BigDecimal.ZERO,
+            )
+
+            // Act
+            val actual = converter.convert(item)
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                TxInfo.TransactionType.Operation(name = model.name, recognized = model.recognized),
+            )
+        }
+
+        /**
+         * The coin only paid the gas of a call the token made, so the row is a plain operation — still carrying the
+         * call it was decoded into, which is what the network-fee row names.
+         */
+        private fun provideTestModels() = listOf(
+            YieldModuleCallModel(
+                methodId = ENTER_METHOD_ID,
+                name = "EnterProtocolByOwner",
+                recognized = TxInfo.TransactionType.YieldSupply.Enter(address = USDT_CONTRACT),
+            ),
+            YieldModuleCallModel(
+                methodId = EXIT_METHOD_ID,
+                name = "WithdrawAndDeactivate",
+                recognized = TxInfo.TransactionType.YieldSupply.Exit(address = USDT_CONTRACT),
+            ),
+            YieldModuleCallModel(
+                methodId = TOPUP_METHOD_ID,
+                name = "SupplyTopUp",
+                recognized = TxInfo.TransactionType.YieldSupply.Topup,
+            ),
+            YieldModuleCallModel(
+                methodId = DEPLOY_METHOD_ID,
+                name = "DeployYieldModule",
+                recognized = TxInfo.TransactionType.YieldSupply.DeployContract(address = YIELD_MODULE_CONTRACT),
+            ),
+            YieldModuleCallModel(
+                methodId = INIT_METHOD_ID,
+                name = "InitYieldToken",
+                recognized = TxInfo.TransactionType.YieldSupply.InitializeToken(address = USDT_CONTRACT),
+            ),
+            YieldModuleCallModel(
+                methodId = REACTIVATE_METHOD_ID,
+                name = "ReactivateToken",
+                recognized = TxInfo.TransactionType.YieldSupply.ReactivateToken(address = USDT_CONTRACT),
+            ),
+        )
+
+        /** Every yield-module call carries the token it acts on in its first ABI word. */
+        private fun yieldCallData(methodId: String): String =
+            methodId + USDT_CONTRACT.removePrefix("0x").padStart(WORD_HEX_LENGTH, '0')
+    }
+
     private fun createConverter(
         currency: CryptoCurrency,
         networkTokens: Set<CryptoCurrency.Token> = emptySet(),
@@ -589,6 +661,12 @@ internal class SdkTransactionTypeConverterTest {
             GASLESS_METHOD_ID to SmartContractMethod(info = null, source = null, name = "gaslessTransaction"),
             APPROVE_METHOD_ID to SmartContractMethod(info = null, source = null, name = "approve"),
             TRANSFER_METHOD_ID to SmartContractMethod(info = null, source = null, name = "transfer"),
+            ENTER_METHOD_ID to SmartContractMethod(info = null, source = null, name = "enterProtocolByOwner"),
+            EXIT_METHOD_ID to SmartContractMethod(info = null, source = null, name = "withdrawAndDeactivate"),
+            TOPUP_METHOD_ID to SmartContractMethod(info = null, source = null, name = "supplyTopUp"),
+            DEPLOY_METHOD_ID to SmartContractMethod(info = null, source = null, name = "deployYieldModule"),
+            INIT_METHOD_ID to SmartContractMethod(info = null, source = null, name = "initYieldToken"),
+            REACTIVATE_METHOD_ID to SmartContractMethod(info = null, source = null, name = "reactivateToken"),
         ),
         yieldSupplyAddresses = emptySet(),
         gaslessFeeAddresses = gaslessFeeAddresses,
@@ -635,6 +713,12 @@ internal class SdkTransactionTypeConverterTest {
 
     private fun singleContract(address: String) = TransactionHistoryItem.DestinationType.Single(
         addressType = TransactionHistoryItem.AddressType.Contract(address),
+    )
+
+    internal data class YieldModuleCallModel(
+        val methodId: String,
+        val name: String,
+        val recognized: TxInfo.TransactionType.YieldSupply,
     )
 
     internal data class YieldSendModel(
@@ -688,6 +772,17 @@ internal class SdkTransactionTypeConverterTest {
         const val FEE_RECIPIENT = "0x1111111111111111111111111111111111111111"
         const val SPENDER = "0x3333333333333333333333333333333333333333"
         const val USDT_CONTRACT = "0xdac17f958d2ee523a2206206994597c13d831ec7"
+
+        const val ENTER_METHOD_ID = "0x79be55f7"
+        const val EXIT_METHOD_ID = "0xc65e6dcf"
+        const val TOPUP_METHOD_ID = "0xb9de6a93"
+        const val DEPLOY_METHOD_ID = "0xcbeda14c"
+        const val INIT_METHOD_ID = "0xebd4b81c"
+        const val REACTIVATE_METHOD_ID = "0xc478e956"
+        const val YIELD_MODULE_CONTRACT = "0x4444444444444444444444444444444444444444"
+
+        /** An ABI word, in hex characters: 32 bytes. */
+        const val WORD_HEX_LENGTH = 64
 
         /** 5 USDT in the token's smallest units (6 decimals): 5_000_000 = 0x4c4b40. */
         const val FIVE_USDT_RAW_HEX = "4c4b40"
