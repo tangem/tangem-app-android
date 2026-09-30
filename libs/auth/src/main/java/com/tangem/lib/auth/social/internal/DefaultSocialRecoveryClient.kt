@@ -107,8 +107,8 @@ internal class DefaultSocialRecoveryClient(
                     )
                     is ApiResponse.Error -> {
                         val error = response.cause.toDomainError()
-                        // 404 is the documented "this identity has no wallet yet" answer, not a failure
-                        raise(if (error.isNotFound()) SocialRecoveryError.BindingNotFound else error)
+                        // only this code means "no wallet yet": any other 404 must not start a second wallet
+                        raise(if (error.isBindingNotFound()) SocialRecoveryError.BindingNotFound else error)
                     }
                 }
 
@@ -321,8 +321,8 @@ internal class DefaultSocialRecoveryClient(
         }
     }
 
-    private fun SocialRecoveryError.isNotFound(): Boolean =
-        this is SocialRecoveryError.Api && error is AuthError.NotFound
+    private fun SocialRecoveryError.isBindingNotFound(): Boolean =
+        this is SocialRecoveryError.Api && error is AuthError.NotFound && error.problem?.code == BINDING_NOT_FOUND_CODE
 
     private fun Raise<SocialRecoveryError>.decodeBase64(value: String): ByteArray = try {
         Base64.decode(value, Base64.NO_WRAP)
@@ -332,5 +332,6 @@ internal class DefaultSocialRecoveryClient(
 
     private companion object {
         const val NONCE_NOT_FOUND_DETAIL = "Nonce not found"
+        const val BINDING_NOT_FOUND_CODE = "RECOVERY_BINDING_NOT_FOUND"
     }
 }
