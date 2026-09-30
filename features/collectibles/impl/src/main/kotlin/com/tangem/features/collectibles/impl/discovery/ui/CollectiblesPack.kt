@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -29,10 +30,17 @@ private val GLOW_BLUR_RADIUS = 24.dp
 
 @Composable
 internal fun CollectiblesPackCard(state: CollectiblesDiscoveryUM.PackUM, modifier: Modifier = Modifier) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clickableSingle(onClick = state.onClick),
+            .clickableSingle(
+                onClick = {
+                    keyboardController?.hide()
+                    state.onClick()
+                },
+            ),
     ) {
         PackImage(imageUrl = state.imageUrl)
         SpacerH(8.dp)
