@@ -25,10 +25,12 @@ internal sealed interface CollectiblesMachineDetailsUM {
         val footer: FooterUM,
     ) : CollectiblesMachineDetailsUM
 
+    /** @property isReloading a retry is in flight; the error stays with a spinner in its button */
     data class Error(
         override val onBackClick: () -> Unit,
         val message: TextReference,
         val onReloadClick: () -> Unit,
+        val isReloading: Boolean = false,
     ) : CollectiblesMachineDetailsUM
 
     /**
@@ -80,8 +82,6 @@ internal sealed interface CollectiblesMachineDetailsUM {
             val onReloadClick: () -> Unit,
             val isReloading: Boolean = false,
         ) : PrizePoolUM
-
-        data class Empty(val message: TextReference) : PrizePoolUM
     }
 
     /** @property id id of the first collectible in the row — the row's stable identity as a list item */
