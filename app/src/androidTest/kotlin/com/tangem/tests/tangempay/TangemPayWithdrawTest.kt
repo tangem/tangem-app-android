@@ -121,9 +121,8 @@ class TangemPayWithdrawTest : BaseTestCase() {
             step("Assert balance contains '$zeroBalanceText'") {
                 onTangemPayMainScreen { balance.assertTextContainsSafe(zeroBalanceText, substring = true) }
             }
-            // ACTION_BUTTON exposes no Disabled semantics; a disabled one simply carries no click action.
             step("Assert 'Withdraw' button is disabled") {
-                onTangemPayMainScreen { withdrawButton.assertHasNoClickAction() }
+                onTangemPayMainScreen { withdrawButtonControl.assertIsNotEnabled() }
             }
         }
     }
