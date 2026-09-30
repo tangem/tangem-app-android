@@ -15,7 +15,6 @@ import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToI
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -617,7 +616,6 @@ internal class SwapTransferStateBuilder @Inject constructor(
         uiState: SwapStateHolder,
         dataState: SwapProcessDataState,
     ): SwapStateHolder {
-        val toCurrency = requireNotNull(dataState.toSwapCurrencyStatus).currency
         val sentState = createSuccessState(
             uiState = uiState,
             dataState = dataState,
@@ -633,12 +631,6 @@ internal class SwapTransferStateBuilder @Inject constructor(
                 prefixText = resourceReference(R.string.common_from),
                 name = resourceReference(R.string.prediction_account_title),
                 icon = AccountIconUM.Prediction,
-            ),
-            toTitle = AccountTitleUM.Text(
-                combinedReference(
-                    resourceReference(R.string.common_to),
-                    stringReference(" ${toCurrency.symbol} · ${toCurrency.network.name}"),
-                ),
             ),
         )
         return sentState.copy(successState = successState)

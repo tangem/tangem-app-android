@@ -15,6 +15,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -83,7 +84,9 @@ class SwapTransferInteractorImpl @Inject constructor(
         val toToken = toSwapCurrencyStatus.currency
         val appCurrency = getSelectedAppCurrencyUseCase.unwrap()
         val isBalanceHidden = getBalanceHidingSettingsUseCase.isBalanceHidden().first()
-        val isAccountsMode = isAccountsModeEnabledUseCase.invokeSync()
+        val isAccountsMode = isAccountsModeEnabledUseCase.invokeSync() ||
+            fromSwapCurrencyStatus.account is Account.Prediction ||
+            toSwapCurrencyStatus.account is Account.Prediction
         val fromTokenAmountValue = fromTokenAmount.parseBigDecimalOrNull() ?: return createEmptyAmountState(appCurrency)
         val fromTokenAmountFiat = fromSwapCurrencyStatus.status.value.fiatRate.orZero() * fromTokenAmountValue
         val fromTokenBalance = fromSwapCurrencyStatus.status.value.amount.orZero()

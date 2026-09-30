@@ -10,6 +10,7 @@ import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -203,6 +204,46 @@ internal class SwapTransferInteractorImplTest {
             assertThat(result).isEqualTo(expected)
             coVerify { isAccountsModeEnabledUseCase.invokeSync() }
             verify { getBalanceHidingSettingsUseCase.isBalanceHidden() }
+        }
+
+    @Test
+    fun `GIVEN accounts mode off and a Prediction account on one side WHEN updateTransfer THEN accounts mode is on`() =
+        runTest {
+            // Arrange
+            val fromCurrencyStatus = buildCurrencyStatus(
+                rawCurrencyId = FROM_RAW_CURRENCY_ID,
+                decimals = FROM_DECIMALS,
+                amount = BigDecimal("1.6"),
+                account = mockk<Account.Prediction>(),
+            )
+            val toCurrencyStatus = buildCurrencyStatus(rawCurrencyId = TO_RAW_CURRENCY_ID, decimals = TO_DECIMALS)
+            every { getSelectedAppCurrencyUseCase() } returns flowOf(AppCurrency.Default.right())
+            every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(false)
+            coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
+            coEvery {
+                getCurrencyCheckUseCase(
+                    userWalletId = any(),
+                    currencyStatus = any(),
+                    feeCurrencyStatus = any(),
+                    amount = any(),
+                    fee = any(),
+                    feeCurrencyBalanceAfterTransaction = any(),
+                    recipientAddress = any(),
+                )
+            } returns buildCurrencyCheck()
+            coEvery { isAmountSubtractAvailableUseCase(any(), any(), any()) } returns false.right()
+
+            // Act
+            val result = sut.updateTransfer(
+                fromSwapCurrencyStatus = fromCurrencyStatus,
+                toSwapCurrencyStatus = toCurrencyStatus,
+                fromTokenAmount = "1",
+                feePaidCurrencyStatus = null,
+                fee = null,
+            )
+
+            // Assert
+            assertThat((result as SwapState.Transfer).isAccountsMode).isTrue()
         }
 
     @Test
@@ -1551,6 +1592,7 @@ internal class SwapTransferInteractorImplTest {
         rentWarning = null,
     )
 
+    @Suppress("LongParameterList")
     private fun buildCurrencyStatus(
         rawCurrencyId: CryptoCurrency.RawID?,
         decimals: Int,
@@ -1560,6 +1602,7 @@ internal class SwapTransferInteractorImplTest {
         destinationAddress: String? = null,
         symbol: String = "ETH",
         network: Network = mockk(),
+        account: Account = mockk<Account.CryptoPortfolio>(),
     ): SwapCurrencyStatus {
         val currencyId: CryptoCurrency.ID = mockk {
             every { this@mockk.rawCurrencyId } returns rawCurrencyId
@@ -1588,6 +1631,7 @@ internal class SwapTransferInteractorImplTest {
             every { this@mockk.userWallet } returns userWallet
             every { this@mockk.userWalletId } answers { userWallet.walletId }
             every { this@mockk.status } returns status
+            every { this@mockk.account } returns account
         }
     }
 
@@ -1599,6 +1643,7 @@ internal class SwapTransferInteractorImplTest {
         destinationAddress: String? = null,
         symbol: String = "USDT",
         network: Network = mockk(),
+        account: Account = mockk<Account.CryptoPortfolio>(),
     ): SwapCurrencyStatus {
         val currencyId: CryptoCurrency.ID = mockk {
             every { this@mockk.rawCurrencyId } returns rawCurrencyId
@@ -1628,6 +1673,7 @@ internal class SwapTransferInteractorImplTest {
             every { this@mockk.userWallet } returns userWallet
             every { this@mockk.userWalletId } answers { userWallet.walletId }
             every { this@mockk.status } returns status
+            every { this@mockk.account } returns account
         }
     }
 
