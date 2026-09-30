@@ -1,5 +1,6 @@
 package com.tangem.features.polymarket.impl.common
 
+import com.tangem.domain.polymarket.approval.PolymarketContracts
 import java.math.BigDecimal
 
 internal object PolymarketConst {
@@ -7,7 +8,7 @@ internal object PolymarketConst {
     const val USD_CODE = "USD"
     const val USD_SYMBOL = "$"
     const val COLLATERAL_DECIMALS = 2
-    const val SHARES_DECIMALS = 6
+    const val SHARES_DECIMALS = PolymarketContracts.COLLATERAL_DECIMALS
 
     const val EASTERN_TIME_ZONE = "America/New_York"
 
