@@ -150,21 +150,29 @@ internal class SdkTransactionTypeConverter(
 
         // A call decoded into a protocol interaction (yield supply for now, other protocols may join) describes what
         // the token did. In the coin's own history the same call moved nothing and cost only the fee, so it drops
-        // back to a plain operation — which the history then renders as a network-fee row.
+        // back to a plain operation — which the history then renders as a network-fee row, still carrying the type it
+        // gave up so that row can name what the fee was paid for.
+        val protocolCall = result as? TxInfo.TransactionType.YieldSupply
         val isCoinFeeOnly = currency is CryptoCurrency.Coin &&
             historyItem.amount.value?.isZero() == true &&
-            result is TxInfo.TransactionType.YieldSupply
+            protocolCall != null
         if (isCoinFeeOnly) {
-            result = fallbackOperation(methodName)
+            result = fallbackOperation(methodName, recognized = protocolCall)
         }
         return result
     }
 
-    private fun fallbackOperation(methodName: String?): TxInfo.TransactionType {
+    private fun fallbackOperation(
+        methodName: String?,
+        recognized: TxInfo.TransactionType? = null,
+    ): TxInfo.TransactionType {
         return if (methodName == null) {
             TxInfo.TransactionType.UnknownOperation
         } else {
-            TxInfo.TransactionType.Operation(name = methodName.replaceFirstChar { it.titlecase() })
+            TxInfo.TransactionType.Operation(
+                name = methodName.replaceFirstChar { it.titlecase() },
+                recognized = recognized,
+            )
         }
     }
 
