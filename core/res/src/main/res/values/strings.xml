@@ -1486,6 +1486,11 @@
   <string name="markets_yield_supply_banner_title">Activate Yield Mode</string>
   <string name="mobile_wallet_requires_min_os_warning_body">You must update to %1$s  before creating a mobile wallet</string>
   <string name="mobile_wallet_requires_min_os_warning_title">Mobile Wallet requires %1$s or later</string>
+  <string name="money_account_main_name">Money account</string>
+  <string name="money_account_main_status_action_required">Action required</string>
+  <string name="money_account_main_status_activating">Activating…</string>
+  <string name="money_account_main_status_active">%1$s network</string>
+  <string name="money_account_main_status_verification">Verification in progress…</string>
   <string name="money_account_onboarding_currency_card_caption">Account currency</string>
   <string name="money_account_onboarding_description">Works just like a regular bank account. But powered by crypto and fully under your control.</string>
   <string name="money_account_onboarding_disclaimer">Tangem Pay is a financial technology company, not a bank. Banking services are provided by SSB, Member FDIC. Funds deposited at SSB are eligible for FDIC insurance up to $250,000 per depositor, per insured bank, subject to applicable limitations and FDIC rules.</string>
@@ -1893,7 +1898,7 @@
   <string name="prediction_place_notification_partial_title">Order may fill partially</string>
   <string name="prediction_place_notification_quote_error_description">Couldn\'t get the current price. Check your connection and try again</string>
   <string name="prediction_place_notification_quote_error_title">Price unavailable</string>
-  <string name="prediction_place_price_changed_description">The price moved on while you were deciding. Check the amount and confirm again.</string>
+  <string name="prediction_place_price_changed_description">The price could have moved while you were deciding. Check the amount and confirm again.</string>
   <string name="prediction_place_result_no_fill_banner_description">No shares available on Polymarket exchange — your order might not execute if placed</string>
   <string name="prediction_place_result_no_fill_banner_title">No fill</string>
   <string name="prediction_place_result_no_fill_title">No liquidity for placing</string>
@@ -1952,7 +1957,7 @@
   <string name="prediction_positions_pending_title">Awaiting final result</string>
   <string name="prediction_positions_price_changes">Position Price Changes</string>
   <string name="prediction_positions_quantity">Qty of Tokens</string>
-  <string name="prediction_positions_realized_description">Profit or loss already realised from shares you sold or claimed.</string>
+  <string name="prediction_positions_realized_description">Realized PnL includes all fees and commissions</string>
   <string name="prediction_positions_realized_pnl">Realized P&amp;L</string>
   <string name="prediction_positions_result_amount">%1$s %2$s</string>
   <string name="prediction_positions_split">Split</string>
@@ -3082,6 +3087,12 @@
   <string name="transaction_history_fee_for_operation">For operation</string>
   <string name="transaction_history_fee_for_operation_name">For %s</string>
   <string name="transaction_history_fee_for_sending">For sending</string>
+  <string name="transaction_history_fee_for_yield_mode_activation">For Yield mode activation</string>
+  <string name="transaction_history_fee_for_yield_mode_deactivation">For Yield mode deactivation</string>
+  <string name="transaction_history_fee_for_yield_mode_deployment">For Yield mode deployment</string>
+  <string name="transaction_history_fee_for_yield_mode_initialization">For Yield mode initialization</string>
+  <string name="transaction_history_fee_for_yield_mode_reactivation">For Yield mode reactivation</string>
+  <string name="transaction_history_fee_for_yield_mode_top_up">For Yield mode top-up</string>
   <string name="transaction_history_fee_sending_asset">Send %%image%% %s</string>
   <string name="transaction_history_from_inline_address">from: %%image%% %s</string>
   <string name="transaction_history_multiple_addresses">Multiple addresses</string>
