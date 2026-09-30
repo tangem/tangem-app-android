@@ -8,6 +8,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
@@ -58,6 +59,8 @@ private const val UPDATE_QUOTES_TIMER_MILLIS = 60_000L
  */
 private const val CATEGORIES_FILTER_ID = "crypto_categories"
 
+private val DEFAULT_INTERVAL = MarketPulseInterval.H24
+
 private data class MarketIndicatorsSnapshot(val indicators: MarketIndicators, val appCurrency: AppCurrency)
 
 @Suppress("LongParameterList")
@@ -72,6 +75,7 @@ internal class CryptoFeedTabModel @Inject constructor(
     private val feedEntryController: FeedEntryController,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val router: Router,
+    private val urlOpener: UrlOpener,
 ) : Model() {
 
     /** Expanded/collapsed state of the hosting shtorka — quotes refresh only while expanded. */
@@ -110,7 +114,7 @@ internal class CryptoFeedTabModel @Inject constructor(
         initialValue = AppCurrency.Default,
     )
 
-    private val selectedInterval = MutableStateFlow(MarketPulseInterval.H24)
+    private val selectedInterval = MutableStateFlow(DEFAULT_INTERVAL)
     private val selectedCategory = MutableStateFlow(MarketPulseCategory.MarketCap)
     private val visibleItemIds = MutableStateFlow<List<CryptoCurrency.RawID>>(emptyList())
 
@@ -246,6 +250,7 @@ internal class CryptoFeedTabModel @Inject constructor(
                 categoriesFilter = categoriesFilterItem(categoryFilterController.selection.value),
                 intervalMenu = MarketPulseIntervalUM(
                     selected = selectedInterval.value,
+                    default = DEFAULT_INTERVAL,
                     onOptionClick = ::selectInterval,
                 ),
                 sortTabs = sortTabs(selected = selectedCategory.value),
@@ -344,6 +349,10 @@ internal class CryptoFeedTabModel @Inject constructor(
         if (selectedInterval.value == interval) return
         selectedInterval.value = interval
         sendSortByAnalytics(selectedCategory.value, interval)
+    }
+
+    fun openUrl(url: String) {
+        urlOpener.openUrl(url)
     }
 
     override fun onDestroy() {
