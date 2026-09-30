@@ -15,6 +15,7 @@ import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormFi
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormFields
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderFactory
+import com.tangem.features.tangempay.withdraw.bank.model.isRailLocked
 import com.tangem.features.tangempay.withdraw.bank.model.recipientDetails
 import com.tangem.features.tangempay.withdraw.bank.model.toFormValues
 import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTarget
@@ -88,7 +89,7 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
                 title = railTitle,
                 eta = destination.eta.toTextReference(),
                 fee = fee,
-                onClick = if (isSending) null else callbacks.onRailClick,
+                onClick = if (isSending || draft.isRailLocked) null else callbacks.onRailClick,
             ),
             sendingSummary = resourceReference(
                 R.string.tangempay_withdraw_bank_sending_summary,
