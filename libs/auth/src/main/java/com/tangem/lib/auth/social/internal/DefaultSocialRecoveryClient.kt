@@ -311,9 +311,14 @@ internal class DefaultSocialRecoveryClient(
     }
 
     /** A 409 can only mean the one-to-one rule was broken — re-binding the same pair is allowed */
-    private fun Throwable.toDomainError(): SocialRecoveryError = when (val authError = errorConverter.convert(this)) {
-        is AuthError.Conflict -> SocialRecoveryError.BindingConflict
-        else -> SocialRecoveryError.Api(authError)
+    private fun Throwable.toDomainError(): SocialRecoveryError {
+        val authError = errorConverter.convert(this)
+        return when {
+            authError is AuthError.Conflict -> SocialRecoveryError.BindingConflict
+            authError is AuthError.NotFound && authError.problem?.detail == NONCE_NOT_FOUND_DETAIL ->
+                SocialRecoveryError.NonceExpired
+            else -> SocialRecoveryError.Api(authError)
+        }
     }
 
     private fun SocialRecoveryError.isNotFound(): Boolean =
@@ -323,5 +328,9 @@ internal class DefaultSocialRecoveryClient(
         Base64.decode(value, Base64.NO_WRAP)
     } catch (e: IllegalArgumentException) {
         raise(SocialRecoveryError.DecryptionFailed(e))
+    }
+
+    private companion object {
+        const val NONCE_NOT_FOUND_DETAIL = "Nonce not found"
     }
 }
