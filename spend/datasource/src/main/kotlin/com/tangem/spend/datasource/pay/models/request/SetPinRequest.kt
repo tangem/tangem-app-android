@@ -1,11 +1,11 @@
 package com.tangem.spend.datasource.pay.models.request
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class SetPinRequest(
-    @Json(name = "pin") val pin: String,
-    @Json(name = "session_id") val sessionId: String,
-    @Json(name = "iv") val iv: String,
+    @SerialName("pin") val pin: String,
+    @SerialName("session_id") val sessionId: String,
+    @SerialName("iv") val iv: String,
 )

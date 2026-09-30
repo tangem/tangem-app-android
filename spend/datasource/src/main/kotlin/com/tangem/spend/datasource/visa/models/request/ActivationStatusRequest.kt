@@ -1,10 +1,10 @@
 package com.tangem.spend.datasource.visa.models.request
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class ActivationStatusRequest(
-    @Json(name = "card_id") val cardId: String,
-    @Json(name = "card_public_key") val cardPublicKey: String,
+    @SerialName("card_id") val cardId: String,
+    @SerialName("card_public_key") val cardPublicKey: String,
 )

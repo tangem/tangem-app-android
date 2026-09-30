@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderStep
@@ -45,7 +46,7 @@ internal class ReissuePlasticCardUseCaseTest {
         // Arrange
         givenNoActiveOrders()
         val created = order(id = "created", status = OrderStatus.PROCESSING)
-        coEvery { orderRepository.createPlasticReissueOrder(any(), any(), any(), any()) } returns created.right()
+        coEvery { orderRepository.createOrder(any(), any(), any()) } returns created.right()
 
         // Act
         invokeUseCase()
@@ -59,7 +60,7 @@ internal class ReissuePlasticCardUseCaseTest {
         // Arrange
         givenNoActiveOrders()
         coEvery {
-            orderRepository.createPlasticReissueOrder(any(), any(), any(), any())
+            orderRepository.createOrder(any(), any(), any())
         } returns VisaApiError.CardReissuePlasticInvalidSourceCard.left()
 
         // Act
@@ -75,10 +76,12 @@ internal class ReissuePlasticCardUseCaseTest {
         givenNoActiveOrders()
         val created = order(id = "created", status = OrderStatus.PROCESSING)
         coEvery {
-            orderRepository.createPlasticReissueOrder(
+            orderRepository.createOrder(
                 userWalletId = USER_WALLET_ID,
-                sourceProductInstanceId = SOURCE_PRODUCT_INSTANCE_ID,
-                order = plasticCardOrder(),
+                request = CustomerOrderRequest.PlasticCardReissue(
+                    sourceProductInstanceId = SOURCE_PRODUCT_INSTANCE_ID,
+                    order = plasticCardOrder(),
+                ),
                 idempotencyKey = IDEMPOTENCY_KEY,
             )
         } returns created.right()
@@ -102,7 +105,7 @@ internal class ReissuePlasticCardUseCaseTest {
         // Arrange
         givenNoActiveOrders()
         coEvery {
-            orderRepository.createPlasticReissueOrder(any(), any(), any(), any())
+            orderRepository.createOrder(any(), any(), any())
         } returns order(id = "created", status = OrderStatus.NEW).right()
 
         // Act
@@ -136,7 +139,7 @@ internal class ReissuePlasticCardUseCaseTest {
 
             // Assert
             assertThat(result.leftOrNull()).isEqualTo(VisaApiError.CardReissuePlasticActiveOrderExists)
-            coVerify(exactly = 0) { orderRepository.createPlasticReissueOrder(any(), any(), any(), any()) }
+            coVerify(exactly = 0) { orderRepository.createOrder(any(), any(), any()) }
             coVerify(exactly = 0) { startTangemPayOrderPollingUseCase(any(), any(), any(), any()) }
         }
 
@@ -149,7 +152,7 @@ internal class ReissuePlasticCardUseCaseTest {
             ).right()
         val created = order(id = "created", status = OrderStatus.NEW)
         coEvery {
-            orderRepository.createPlasticReissueOrder(any(), any(), any(), any())
+            orderRepository.createOrder(any(), any(), any())
         } returns created.right()
 
         // Act
@@ -157,7 +160,7 @@ internal class ReissuePlasticCardUseCaseTest {
 
         // Assert
         assertThat(result).isEqualTo(created.right())
-        coVerify(exactly = 1) { orderRepository.createPlasticReissueOrder(any(), any(), any(), any()) }
+        coVerify(exactly = 1) { orderRepository.createOrder(any(), any(), any()) }
     }
 
     @Test
@@ -175,7 +178,7 @@ internal class ReissuePlasticCardUseCaseTest {
                 ).right()
             val created = order(id = "created", status = OrderStatus.NEW)
             coEvery {
-                orderRepository.createPlasticReissueOrder(any(), any(), any(), any())
+                orderRepository.createOrder(any(), any(), any())
             } returns created.right()
 
             // Act
@@ -183,7 +186,7 @@ internal class ReissuePlasticCardUseCaseTest {
 
             // Assert
             assertThat(result).isEqualTo(created.right())
-            coVerify(exactly = 1) { orderRepository.createPlasticReissueOrder(any(), any(), any(), any()) }
+            coVerify(exactly = 1) { orderRepository.createOrder(any(), any(), any()) }
         }
 
     @Test
@@ -199,7 +202,7 @@ internal class ReissuePlasticCardUseCaseTest {
             ).right()
         val created = order(id = "created", status = OrderStatus.NEW)
         coEvery {
-            orderRepository.createPlasticReissueOrder(any(), any(), any(), any())
+            orderRepository.createOrder(any(), any(), any())
         } returns created.right()
 
         // Act
@@ -207,7 +210,7 @@ internal class ReissuePlasticCardUseCaseTest {
 
         // Assert
         assertThat(result).isEqualTo(created.right())
-        coVerify(exactly = 1) { orderRepository.createPlasticReissueOrder(any(), any(), any(), any()) }
+        coVerify(exactly = 1) { orderRepository.createOrder(any(), any(), any()) }
     }
 
     @Test
@@ -221,7 +224,7 @@ internal class ReissuePlasticCardUseCaseTest {
 
         // Assert
         assertThat(result.leftOrNull()).isEqualTo(VisaApiError.ServerUnavailable)
-        coVerify(exactly = 0) { orderRepository.createPlasticReissueOrder(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { orderRepository.createOrder(any(), any(), any()) }
     }
 
     @Test
@@ -230,7 +233,7 @@ internal class ReissuePlasticCardUseCaseTest {
             // Arrange
             givenNoActiveOrders()
             coEvery {
-                orderRepository.createPlasticReissueOrder(any(), any(), any(), any())
+                orderRepository.createOrder(any(), any(), any())
             } returns VisaApiError.CardReissuePlasticInsufficientBalance.left()
 
             // Act
@@ -246,7 +249,7 @@ internal class ReissuePlasticCardUseCaseTest {
         // Arrange
         givenNoActiveOrders()
         coEvery {
-            orderRepository.createPlasticReissueOrder(any(), any(), any(), any())
+            orderRepository.createOrder(any(), any(), any())
         } throws IllegalStateException("Can not find customer address")
 
         // Act
