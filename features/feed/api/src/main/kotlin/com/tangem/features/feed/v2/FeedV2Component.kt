@@ -66,7 +66,7 @@ interface FeedV2Component {
         val TabRowHeight: Dp = 60.dp
 
         /** Gap above the tab row while the top blocks are shown; it closes as they collapse away. */
-        val TabRowTopGap: Dp = 16.dp
+        val TabRowTopGap: Dp = 32.dp
 
         /**
          * Exact height of the semi-open layout below the host's sheet header: the top blocks and
