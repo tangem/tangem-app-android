@@ -1,20 +1,20 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * Response of `bff-v2/v1/eligibility/check`
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class EligibilityCheckResponse(
-    @Json(name = "result") val result: Result,
+    @SerialName("result") val result: Result,
 ) {
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Result(
-        @Json(name = "available") val isAvailable: Boolean,
-        @Json(name = "country") val country: String,
-        @Json(name = "region") val region: String?,
+        @SerialName("available") val isAvailable: Boolean,
+        @SerialName("country") val country: String,
+        @SerialName("region") val region: String?,
     )
 }
