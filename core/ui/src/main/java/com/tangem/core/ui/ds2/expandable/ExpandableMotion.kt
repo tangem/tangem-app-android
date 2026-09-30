@@ -50,6 +50,10 @@ internal data class ExpansionMotion(
      */
     val compactOffset: Dp,
     val arrowAlpha: Float,
+    /**
+     * Opacity of what the row reveals. The body is emitted by the host, so this is handed to it
+     * through [Modifier.expandableRowReveal] rather than applied here.
+     */
     val slotAlpha: Float,
     /**
      * `true` once the transition has come to rest. The title is drawn as scaled `body.medium` while
