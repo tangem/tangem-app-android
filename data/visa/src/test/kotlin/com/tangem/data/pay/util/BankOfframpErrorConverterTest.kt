@@ -11,8 +11,10 @@ internal class BankOfframpErrorConverterTest {
     fun `GIVEN unsupported configuration code WHEN converted THEN unsupported configuration error`() {
         // Act
         val actual = BankOfframpErrorConverter.convert(
-            error = VisaApiError.BankOfframpUnsupportedConfiguration,
-            operation = "createOrder",
+            BankOfframpErrorConverter.Input(
+                error = VisaApiError.BankOfframpUnsupportedConfiguration,
+                operation = "createOrder",
+            ),
         )
 
         // Assert
@@ -23,8 +25,7 @@ internal class BankOfframpErrorConverterTest {
     fun `GIVEN any other api error WHEN converted THEN unknown error with the cause`() {
         // Act
         val actual = BankOfframpErrorConverter.convert(
-            error = VisaApiError.CustomerIsBlocked,
-            operation = "cancelOrder",
+            BankOfframpErrorConverter.Input(error = VisaApiError.CustomerIsBlocked, operation = "cancelOrder"),
         )
 
         // Assert

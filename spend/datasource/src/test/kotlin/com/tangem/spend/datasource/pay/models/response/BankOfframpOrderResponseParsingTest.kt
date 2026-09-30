@@ -1,28 +1,20 @@
 package com.tangem.spend.datasource.pay.models.response
 
 import com.google.common.truth.Truth.assertThat
-import com.squareup.moshi.Moshi
-import com.tangem.spend.datasource.pay.addTangemPayEnumFallbackAdapters
+import com.tangem.core.remote.json.NetworkJsonFactory
 import org.junit.jupiter.api.Test
 
 internal class BankOfframpOrderResponseParsingTest {
 
-    private val moshi = Moshi.Builder()
-        .addTangemPayEnumFallbackAdapters()
-        .add(RawJsonAdapter())
-        .build()
-
-    private val adapter = moshi.adapter(OrderResponse.Result::class.java)
-
-    private val anyAdapter = moshi.adapter(Any::class.java)
+    private val json = NetworkJsonFactory.create()
 
     @Test
     fun `GIVEN order awaiting signature WHEN parsed THEN withdraw data read`() {
         // Arrange
-        val json = orderJson()
+        val raw = orderJson()
 
         // Act
-        val result = adapter.fromJson(json)!!
+        val result = json.decodeFromString(OrderResponse.Result.serializer(), raw)
 
         // Assert
         assertThat(result.data.bankAccountId).isEqualTo(BANK_ACCOUNT_ID)
@@ -39,12 +31,12 @@ internal class BankOfframpOrderResponseParsingTest {
     @Test
     fun `GIVEN withdraw data with the hash only WHEN parsed THEN the order still parses`() {
         // Arrange
-        val json = """{"id":"order_1","status":"PROCESSING","step":"AWAITING_SIGNATURE","data":{""" +
+        val raw = """{"id":"order_1","status":"PROCESSING","step":"AWAITING_SIGNATURE","data":{""" +
             """"type":"BANK_OFFRAMP_RAIN","withdraw_data":{"hash":"$HASH",""" +
             """"structured_data":$STRUCTURED_DATA}}}"""
 
         // Act
-        val result = adapter.fromJson(json)!!
+        val result = json.decodeFromString(OrderResponse.Result.serializer(), raw)
 
         // Assert
         assertThat(result.data.withdrawData).isEqualTo(
@@ -60,10 +52,11 @@ internal class BankOfframpOrderResponseParsingTest {
     @Test
     fun `GIVEN structured data WHEN parsed THEN kept as the raw json`() {
         // Arrange
-        val json = orderJson()
+        val raw = orderJson()
 
         // Act
-        val structuredData = adapter.fromJson(json)!!.data.withdrawData?.structuredData
+        val structuredData = json.decodeFromString(OrderResponse.Result.serializer(), raw).data.withdrawData
+            ?.structuredData
 
         // Assert
         assertThat(structuredData).isEqualTo(STRUCTURED_DATA)
@@ -71,14 +64,11 @@ internal class BankOfframpOrderResponseParsingTest {
 
     @Test
     fun `GIVEN integer chain id in structured data WHEN parsed THEN not turned into a double`() {
-        // Arrange
-        val throughKotlinTypes = anyAdapter.toJson(anyAdapter.fromJson(STRUCTURED_DATA))
-
         // Act
-        val structuredData = adapter.fromJson(orderJson())!!.data.withdrawData?.structuredData
+        val structuredData = json.decodeFromString(OrderResponse.Result.serializer(), orderJson()).data.withdrawData
+            ?.structuredData
 
         // Assert
-        assertThat(throughKotlinTypes).contains("137.0")
         assertThat(structuredData).contains(""""chainId":137""")
         assertThat(structuredData).doesNotContain("137.0")
     }

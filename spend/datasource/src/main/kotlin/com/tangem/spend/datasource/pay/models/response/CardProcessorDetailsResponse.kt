@@ -1,15 +1,16 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class CardProcessorDetailsResponse(
-    @Json(name = "result") val result: Result?,
+    @SerialName("result") val result: Result?,
 ) {
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Result(
-        @Json(name = "card_id") val cardId: String,
-        @Json(name = "card_secret") val cardSecret: String?,
+        @SerialName("card_id") val cardId: String,
+        @SerialName("card_secret") val cardSecret: String?,
     ) {
         override fun toString(): String = "Result(cardId=$cardId, cardSecret=***)"
     }

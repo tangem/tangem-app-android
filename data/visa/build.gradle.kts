@@ -4,7 +4,7 @@ plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
-    alias(deps.plugins.ksp)
+    alias(deps.plugins.kotlin.serialization)
     id("configuration")
 }
 
@@ -26,17 +26,16 @@ dependencies {
 
     // region Kotlin
     implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.serialization)
     // endregion
 
     // region Other libraries
-    api(deps.moshi)
     implementation(deps.androidx.datastore)
     implementation(deps.androidx.paging.runtime)
     implementation(deps.arrow.core)
     implementation(deps.arrow.fx)
     implementation(deps.jodatime)
     implementation(deps.okio)
-    ksp(deps.moshi.kotlin.codegen)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
     // endregion
 
@@ -104,7 +103,6 @@ dependencies {
     // region Test
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
-    testImplementation(deps.moshi.kotlin)
     testImplementation(deps.web3j.core)
     // endregion
 }
