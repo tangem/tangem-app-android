@@ -26,7 +26,6 @@ import com.tangem.features.txhistory.joint.operation.model.JointOperationState
 import com.tangem.features.txhistory.joint.operation.model.JointOperationState.Role
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
-import com.tangem.utils.toBriefAddressFormat
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import com.tangem.core.ui.R as CoreUiR
@@ -56,7 +55,7 @@ internal class JointOperationUMConverter(
             ),
             counterparty = TxHistoryDetailsUM.CounterpartyUM(
                 label = resourceReference(R.string.send_recipient),
-                title = stringReference(state.displayed.recipient.toBriefAddressFormat()),
+                title = TxHistoryDetailsUM.CounterpartyTitle.Address(state.displayed.recipient),
                 avatar = TxHistoryDetailsUM.CounterpartyAvatar.Address(rawAddress = state.displayed.recipient),
                 onCopyClick = onCopyRecipientClick,
             ),

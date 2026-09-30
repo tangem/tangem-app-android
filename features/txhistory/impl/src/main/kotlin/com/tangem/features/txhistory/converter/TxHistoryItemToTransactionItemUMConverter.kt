@@ -39,7 +39,6 @@ import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isZero
-import com.tangem.utils.toBriefAddressFormat
 
 /**
  * Converts [TxInfo] to [TransactionItemUM] for transaction history.
@@ -384,11 +383,7 @@ private fun ResolvedOwner.toSubtitle(direction: ContentSubtitle.Direction): Cont
 }
 
 private fun externalAddressSubtitle(address: String, direction: ContentSubtitle.Direction) =
-    ContentSubtitle.ExternalAddress(
-        direction = direction,
-        rawAddress = address,
-        briefAddress = address.toBriefAddressFormat(),
-    )
+    ContentSubtitle.ExternalAddress(direction = direction, rawAddress = address)
 
 /**
  * A portfolio still on the default `Letter` icon renders the monogram of [name]; an icon picked in the account or
@@ -463,7 +458,6 @@ private fun TxInfo.operationCounterpartySubtitle(): ContentSubtitle {
         is TxInfo.SourceType.Single -> ContentSubtitle.ExternalAddress(
             direction = ContentSubtitle.Direction.FROM,
             rawAddress = source.address,
-            briefAddress = source.address.toBriefAddressFormat(),
         )
         is TxInfo.SourceType.Multiple -> ContentSubtitle.Plain(
             resourceReference(
@@ -476,18 +470,18 @@ private fun TxInfo.operationCounterpartySubtitle(): ContentSubtitle {
 
 private fun TxInfo.extractAddressSubtitle(): ContentSubtitle {
     val text = extractSubtitleByAddressType()
-    val highlight = interactionAddressType.highlightableBriefAddress()
-    return if (highlight == null) {
+    val address = interactionAddressType.displayedAddress()
+    return if (address == null) {
         ContentSubtitle.Plain(text)
     } else {
-        ContentSubtitle.PlainAddress(text = text, highlight = highlight)
+        ContentSubtitle.PlainAddress(text = text, address = address)
     }
 }
 
-private fun TxInfo.InteractionAddressType?.highlightableBriefAddress(): String? = when (this) {
-    is TxInfo.InteractionAddressType.Contract -> address.toBriefAddressFormat()
-    is TxInfo.InteractionAddressType.User -> address.toBriefAddressFormat()
-    is TxInfo.InteractionAddressType.Validator -> address.toBriefAddressFormat()
+private fun TxInfo.InteractionAddressType?.displayedAddress(): String? = when (this) {
+    is TxInfo.InteractionAddressType.Contract -> address
+    is TxInfo.InteractionAddressType.User -> address
+    is TxInfo.InteractionAddressType.Validator -> address
     is TxInfo.InteractionAddressType.Multiple,
     null,
     -> null
@@ -497,7 +491,7 @@ private fun TxInfo.extractSubtitleByAddressType(): TextReference =
     when (val interactionAddress = interactionAddressType) {
         is TxInfo.InteractionAddressType.Contract -> resourceReference(
             id = R.string.transaction_history_contract_address,
-            formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
+            formatArgs = wrappedList(interactionAddress.address),
         )
         is TxInfo.InteractionAddressType.Multiple -> resourceReference(
             id = directionalAddressRes(),
@@ -505,11 +499,11 @@ private fun TxInfo.extractSubtitleByAddressType(): TextReference =
         )
         is TxInfo.InteractionAddressType.User -> resourceReference(
             id = directionalAddressRes(),
-            formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
+            formatArgs = wrappedList(interactionAddress.address),
         )
         is TxInfo.InteractionAddressType.Validator -> resourceReference(
             id = R.string.transaction_history_transaction_validator,
-            formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
+            formatArgs = wrappedList(interactionAddress.address),
         )
         null -> TextReference.EMPTY
     }

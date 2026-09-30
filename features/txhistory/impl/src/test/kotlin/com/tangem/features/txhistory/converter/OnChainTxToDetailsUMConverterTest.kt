@@ -330,7 +330,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(details.counterparty?.avatar).isEqualTo(
             TxHistoryDetailsUM.CounterpartyAvatar.Glyph(icon = TxIcon.Vector(Icons.ic_arrow_up_20)),
         )
-        assertThat(details.counterparty?.title).isEqualTo(stringReference("5.00\u00A0USDT"))
+        assertThat(details.counterparty?.title).isEqualTo(TxHistoryDetailsUM.CounterpartyTitle.Name(stringReference("5.00\u00A0USDT")))
         assertThat(details.header.menu).isEmpty()
     }
 
@@ -745,7 +745,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val counterparty = contactConverter.convert(tx).counterparty
 
         // Assert — the name replaces the address, but the underlying address stays copyable.
-        assertThat(counterparty?.title).isEqualTo(stringReference("Binance"))
+        assertThat(counterparty?.title).isEqualTo(TxHistoryDetailsUM.CounterpartyTitle.Name(stringReference("Binance")))
         assertThat(counterparty?.avatar).isEqualTo(
             TxHistoryDetailsUM.CounterpartyAvatar.Contact(
                 name = "Binance",
@@ -896,7 +896,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
         // Assert
         assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.send_recipient))
-        assertThat(counterparty?.title).isEqualTo(stringReference("Family"))
+        assertThat(counterparty?.title).isEqualTo(TxHistoryDetailsUM.CounterpartyTitle.Name(stringReference("Family")))
         assertThat(counterparty?.avatar).isEqualTo(
             TxHistoryDetailsUM.CounterpartyAvatar.Account(
                 name = stringReference("Family"),
@@ -928,7 +928,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
         // Assert
         assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.send_recipient))
-        assertThat(counterparty?.title).isEqualTo(stringReference("My Wallet"))
+        assertThat(counterparty?.title).isEqualTo(TxHistoryDetailsUM.CounterpartyTitle.Name(stringReference("My Wallet")))
         assertThat(counterparty?.avatar).isEqualTo(
             TxHistoryDetailsUM.CounterpartyAvatar.Wallet(
                 deviceIconUM = DeviceIconUM.Card(mainColor = Color(0xFF1E1E1E), secondColor = null),
@@ -980,7 +980,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(result.header.title).isEqualTo(resourceReference(R.string.common_transferred))
         assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_down_20))
         assertThat(result.counterparty?.label).isEqualTo(resourceReference(R.string.common_from_account))
-        assertThat(result.counterparty?.title).isEqualTo(stringReference("Family"))
+        assertThat(result.counterparty?.title).isEqualTo(TxHistoryDetailsUM.CounterpartyTitle.Name(stringReference("Family")))
         assertThat(result.counterparty?.avatar).isEqualTo(
             TxHistoryDetailsUM.CounterpartyAvatar.Account(
                 name = stringReference("Family"),
@@ -1262,7 +1262,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
-    fun `GIVEN Vote tx with address absent from yield WHEN convert THEN row shows the shortened address`() {
+    fun `GIVEN Vote tx with address absent from yield WHEN convert THEN row shows the raw address`() {
         // Arrange — the tx carries a validator address, but the current yield does not list it.
         val tx = txInfo(type = TransactionType.Staking.Vote(validatorAddress = UNKNOWN_VALIDATOR_ADDRESS))
 
@@ -1273,13 +1273,14 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(rows.single()).isEqualTo(
             TxHistoryDetailsUM.InfoRowUM(
                 label = resourceReference(R.string.staking_validator),
-                value = stringReference("BbM5kJ...mt2x"),
+                value = stringReference(UNKNOWN_VALIDATOR_ADDRESS),
+                isValueAddress = true,
             ),
         )
     }
 
     @Test
-    fun `GIVEN Stake tx with validator address absent from yield WHEN convert THEN row shows the shortened address`() {
+    fun `GIVEN Stake tx with validator address absent from yield WHEN convert THEN row shows the raw address`() {
         // Arrange — a validator dropped from the StakeKit yield must not make the row of an old tx disappear.
         val tx = txInfo(
             type = TransactionType.Staking.Stake,
@@ -1290,11 +1291,11 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val rows = onChainConverter(validators = listOf(validator())).convert(tx).rows
 
         // Assert
-        assertThat(rows.single().value.resolveString()).isEqualTo("BbM5kJ...mt2x")
+        assertThat(rows.single().value.resolveString()).isEqualTo(UNKNOWN_VALIDATOR_ADDRESS)
     }
 
     @Test
-    fun `GIVEN staking tx with validator destination absent from yield WHEN convert THEN shortened address shown`() {
+    fun `GIVEN staking tx with validator destination absent from yield WHEN convert THEN raw address shown`() {
         // Arrange — the validator can also arrive as the destination address type.
         val tx = txInfo(
             type = TransactionType.Staking.Stake,
@@ -1307,7 +1308,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val rows = onChainConverter(validators = listOf(validator())).convert(tx).rows
 
         // Assert
-        assertThat(rows.single().value.resolveString()).isEqualTo("BbM5kJ...mt2x")
+        assertThat(rows.single().value.resolveString()).isEqualTo(UNKNOWN_VALIDATOR_ADDRESS)
     }
 
     @Test
