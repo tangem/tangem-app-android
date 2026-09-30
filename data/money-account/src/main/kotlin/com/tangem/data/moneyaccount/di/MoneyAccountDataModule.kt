@@ -192,11 +192,13 @@ internal interface MoneyAccountDataModule {
             getMoneyAccountSuitableWalletsUseCase: GetMoneyAccountSuitableWalletsUseCase,
             getMoneyAccountStatusUseCase: GetMoneyAccountStatusUseCase,
             deviceSecurityInfoProvider: DeviceSecurityInfoProvider,
+            onboardingRepository: OnboardingRepository,
         ): GetMoneyAccountEligibilityUseCase {
             return GetMoneyAccountEligibilityUseCase(
                 getMoneyAccountSuitableWalletsUseCase = getMoneyAccountSuitableWalletsUseCase,
                 getMoneyAccountStatusUseCase = getMoneyAccountStatusUseCase,
                 deviceSecurityInfoProvider = deviceSecurityInfoProvider,
+                onboardingRepository = onboardingRepository,
             )
         }
 
