@@ -82,6 +82,8 @@ sealed interface SocialRecoveryError {
     /** No authenticated session to run the call on; device registration has to happen first */
     data object NoActiveSession : SocialRecoveryError
 
+    data object NonceExpired : SocialRecoveryError
+
     data object DeviceKeyUnavailable : SocialRecoveryError
 
     data class SigningFailed(val cause: Throwable? = null) : SocialRecoveryError
