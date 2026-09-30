@@ -10,6 +10,8 @@ import com.tangem.core.ui.extensions.TextReference
 internal data class PolymarketPositionDetailsUM(
     val content: Content,
     val onCloseClick: () -> Unit,
+    val isMarketClosedSheetShown: Boolean = false,
+    val onMarketClosedSheetDismiss: () -> Unit = {},
 ) {
     @Immutable
     sealed interface Content {

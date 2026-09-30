@@ -280,6 +280,7 @@
   <string name="cardano_low_ada">O valor enviado e o troco não podem ser inferiores a 1 ADA.</string>
   <string name="cardano_max_amount_has_token_description">Você precisa manter alguns ADA porque possui tokens na blockchain Cardano.</string>
   <string name="cardano_max_amount_has_token_title">Não há ADA suficiente</string>
+  <string name="choose_asset_title">Escolha o ativo</string>
   <plurals name="collectibles_account_collection_cards_count">
     <item quantity="one">%d cartão</item>
     <item quantity="other">%d cartões</item>
@@ -1977,6 +1978,8 @@
   <string name="promo_campaign_reactivation_summary_description">Ganhe 0,5% de cashback em todas as trocas acima de US$ 500, em qualquer par, exceto entre pares de stablecoins. Pagamento máximo de US$ 50 por troca.\n\nConclua cinco trocas qualificadas e desbloqueie um bônus adicional de US$ 10.\n\nAs recompensas são pagas semanalmente em USDT ou USDC no endereço selecionado.</string>
   <string name="promo_campaign_select_cashback_account">Selecionar conta de cashback</string>
   <string name="promo_campaign_select_token">Selecionar token de cashback</string>
+  <string name="promo_campaign_selected_cashback_account">Conta de cashback selecionada</string>
+  <string name="promo_campaign_selected_token">Token de cashback selecionado</string>
   <string name="promo_campaign_summary_title">Inscreva-se em %1$s</string>
   <string name="promo_campaign_terms_agreement">Concordo com %1$s</string>
   <string name="promo_campaign_terms_agreement_android">Concordo com</string>
@@ -2968,6 +2971,7 @@
   <string name="tangempay_withdraw_bank_transfer_type_own">Sua conta</string>
   <string name="tangempay_withdraw_bank_transfer_type_third_party">Conta de terceiros</string>
   <string name="tangempay_withdraw_bank_transfer_type_title">Tipo de transferência</string>
+  <string name="tangempay_withdraw_hub_accounts_load_error">Não foi possível carregar a lista. Toque para recarregar</string>
   <string name="tangempay_withdraw_hub_bank_section_subtitle">Envie para outro banco usando ACH ou FedWire</string>
   <string name="tangempay_withdraw_hub_bank_section_subtitle_unavailable">Disponível apenas para USDC nas redes Polygon, Base e Arbitrum</string>
   <string name="tangempay_withdraw_hub_bank_section_title">Transferência bancária</string>

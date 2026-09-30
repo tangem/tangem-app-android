@@ -3,18 +3,13 @@ package com.tangem.domain.moneyaccount.usecase
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.moneyaccount.model.MoneyAccountFeeTableRow
 import com.tangem.domain.moneyaccount.model.MoneyAccountPaymentMethod
 import com.tangem.domain.moneyaccount.repository.MoneyAccountRepository
-import com.tangem.domain.pay.model.AccountFee
-import com.tangem.domain.pay.model.AccountFeeGroupType
-import com.tangem.domain.pay.usecase.GetAccountFeesUseCase
 import com.tangem.domain.visa.error.VisaApiError
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -23,123 +18,93 @@ import java.math.BigDecimal
 internal class GetMoneyAccountFeeTableUseCaseTest {
 
     private val repository: MoneyAccountRepository = mockk()
-    private val getAccountFeesUseCase: GetAccountFeesUseCase = mockk()
 
-    private val useCase = GetMoneyAccountFeeTableUseCase(
-        moneyAccountRepository = repository,
-        getAccountFeesUseCase = getAccountFeesUseCase,
-    )
-
-    private val types = setOf(AccountFeeGroupType.ONRAMP, AccountFeeGroupType.OFFRAMP)
-
-    private val userWalletId = UserWalletId("011")
+    private lateinit var useCase: GetMoneyAccountFeeTableUseCase
 
     @BeforeEach
-    fun resetMocks() {
-        clearMocks(repository, getAccountFeesUseCase)
+    fun setUp() {
+        clearMocks(repository)
+        useCase = GetMoneyAccountFeeTableUseCase(moneyAccountRepository = repository)
     }
 
     @Test
-    fun `GIVEN fees of both groups WHEN invoke THEN joined by payment method id`() = runTest {
+    fun `GIVEN payment methods with fees WHEN invoke THEN returns them`() = runTest {
         // Arrange
-        val ach = paymentMethod(id = "ACH_ID", name = "ACH")
-        val receive = fee(paymentMethodId = ach.id, group = AccountFeeGroupType.ONRAMP, amount = BigDecimal("1.00"))
-        val send = fee(paymentMethodId = ach.id, group = AccountFeeGroupType.OFFRAMP, amount = BigDecimal("1.50"))
-        coEvery { repository.getPaymentMethods() } returns listOf(ach).right()
-        coEvery { getAccountFeesUseCase(userWalletId, types) } returns listOf(receive, send).right()
+        val paymentMethods = listOf(
+            paymentMethod(
+                receiveFee = fee(type = "ACH_ONRAMP", amount = BigDecimal("1.00")),
+                sendFee = fee(type = "ACH_OFFRAMP", amount = BigDecimal("1.50")),
+            ),
+        )
+        coEvery { repository.getPaymentMethods() } returns paymentMethods.right()
 
         // Act
-        val actual = useCase(userWalletId)
+        val actual = useCase()
 
         // Assert
-        val expected = listOf(MoneyAccountFeeTableRow(paymentMethod = ach, receiveFee = receive, sendFee = send))
-        assertThat(actual).isEqualTo(expected.right())
-    }
-
-    @Test
-    fun `GIVEN fee of a foreign payment method WHEN invoke THEN row columns stay empty`() = runTest {
-        // Arrange
-        val ach = paymentMethod(id = "ACH_ID", name = "ACH")
-        val fedwireFee = fee(paymentMethodId = "FEDWIRE_ID")
-        coEvery { repository.getPaymentMethods() } returns listOf(ach).right()
-        coEvery { getAccountFeesUseCase(userWalletId, types) } returns listOf(fedwireFee).right()
-
-        // Act
-        val actual = useCase(userWalletId)
-
-        // Assert
-        val expected = listOf(MoneyAccountFeeTableRow(paymentMethod = ach, receiveFee = null, sendFee = null))
-        assertThat(actual).isEqualTo(expected.right())
+        assertThat(actual).isEqualTo(paymentMethods.right())
     }
 
     @Test
     fun `GIVEN payment methods unavailable WHEN invoke THEN error`() = runTest {
         // Arrange
         coEvery { repository.getPaymentMethods() } returns VisaApiError.ServerUnavailable.left()
-        coEvery { getAccountFeesUseCase(userWalletId, types) } returns listOf(fee()).right()
 
         // Act
-        val actual = useCase(userWalletId)
+        val actual = useCase()
 
         // Assert
         assertThat(actual).isEqualTo(VisaApiError.ServerUnavailable.left())
     }
 
     @Test
-    fun `GIVEN payment methods pending WHEN invoke THEN fees requested without waiting for them`() = runTest {
+    fun `GIVEN payment methods loaded WHEN invoke again THEN cached result returned`() = runTest {
         // Arrange
-        val ach = paymentMethod()
-        val feesRequested = CompletableDeferred<Unit>()
-        coEvery { repository.getPaymentMethods() } coAnswers {
-            feesRequested.await()
-            listOf(ach).right()
-        }
-        coEvery { getAccountFeesUseCase(userWalletId, types) } coAnswers {
-            feesRequested.complete(Unit)
-            emptyList<AccountFee>().right()
-        }
+        val paymentMethods = listOf(paymentMethod())
+        coEvery { repository.getPaymentMethods() } returns paymentMethods.right()
+        useCase()
 
         // Act
-        val actual = useCase(userWalletId)
+        val actual = useCase()
 
         // Assert
-        val expected = listOf(MoneyAccountFeeTableRow(paymentMethod = ach, receiveFee = null, sendFee = null))
-        assertThat(actual).isEqualTo(expected.right())
+        assertThat(actual).isEqualTo(paymentMethods.right())
+        coVerify(exactly = 1) { repository.getPaymentMethods() }
     }
 
     @Test
-    fun `GIVEN fees unavailable WHEN invoke THEN error`() = runTest {
+    fun `GIVEN previous request failed WHEN invoke again THEN payment methods requested again`() = runTest {
         // Arrange
-        coEvery { repository.getPaymentMethods() } returns listOf(paymentMethod()).right()
-        coEvery { getAccountFeesUseCase(userWalletId, types) } returns VisaApiError.ServerUnavailable.left()
+        val paymentMethods = listOf(paymentMethod())
+        coEvery { repository.getPaymentMethods() } returnsMany listOf(
+            VisaApiError.ServerUnavailable.left(),
+            paymentMethods.right(),
+        )
+        useCase()
 
         // Act
-        val actual = useCase(userWalletId)
+        val actual = useCase()
 
         // Assert
-        assertThat(actual).isEqualTo(VisaApiError.ServerUnavailable.left())
+        assertThat(actual).isEqualTo(paymentMethods.right())
+        coVerify(exactly = 2) { repository.getPaymentMethods() }
     }
+
+    private fun paymentMethod(
+        receiveFee: MoneyAccountPaymentMethod.Fee? = null,
+        sendFee: MoneyAccountPaymentMethod.Fee? = null,
+    ) = MoneyAccountPaymentMethod(
+        id = "ACH",
+        name = "ACH",
+        countryCode = "US",
+        iconUrl = "https://tangem.com/flags/us.png",
+        receiveFee = receiveFee,
+        sendFee = sendFee,
+    )
+
+    private fun fee(type: String, amount: BigDecimal) = MoneyAccountPaymentMethod.Fee(
+        type = type,
+        amount = amount,
+        currency = "USD",
+    )
 }
-
-internal fun paymentMethod(
-    id: String = "ACH_ID",
-    name: String = "ACH",
-    countryCode: String = "US",
-    iconUrl: String = "https://tangem.com/flags/us.png",
-) = MoneyAccountPaymentMethod(id = id, name = name, countryCode = countryCode, iconUrl = iconUrl)
-
-internal fun fee(
-    type: String = "ACH_ONRAMP",
-    name: String = "ACH",
-    paymentMethodId: String? = "ACH_ID",
-    group: AccountFeeGroupType = AccountFeeGroupType.ONRAMP,
-    amount: BigDecimal = BigDecimal.ONE,
-    currency: String = "USD",
-) = AccountFee(
-    type = type,
-    name = name,
-    paymentMethodId = paymentMethodId,
-    group = group,
-    amount = amount,
-    currency = currency,
-)
