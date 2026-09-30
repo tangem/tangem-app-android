@@ -11,10 +11,12 @@ internal sealed interface CollectiblesConfirmOrderUM {
 
     data class Loading(override val onBackClick: () -> Unit) : CollectiblesConfirmOrderUM
 
+    /** @property isReloading a retry is in flight; the error stays with a spinner in its button */
     data class Error(
         override val onBackClick: () -> Unit,
         val message: TextReference,
         val onReloadClick: () -> Unit,
+        val isReloading: Boolean = false,
     ) : CollectiblesConfirmOrderUM
 
     data class Content(
