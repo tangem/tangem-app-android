@@ -7,17 +7,20 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.tooling.preview.Preview
@@ -29,6 +32,7 @@ import com.tangem.core.ui.ds2.expandable.ExpandableAvatar
 import com.tangem.core.ui.ds2.expandable.ExpandableCaptionText
 import com.tangem.core.ui.ds2.expandable.ExpandableCard
 import com.tangem.core.ui.ds2.expandable.ExpandableCardLayoutId
+import com.tangem.core.ui.ds2.expandable.ExpandableCardShape
 import com.tangem.core.ui.ds2.expandable.ExpandableCollapseArrow
 import com.tangem.core.ui.ds2.expandable.ExpandableDot
 import com.tangem.core.ui.ds2.expandable.ExpandableEmptyBody
@@ -48,13 +52,17 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 /**
  * Design-system v2 (DS3) **Expandable Row** — the generic sibling of `TangemAccountRow`: a card that
  * is a summary line while collapsed (avatar, title, optional badge, subtitle, value and caption) and
- * shrinks that line into a compact heading to reveal [content] when expanded.
+ * shrinks that line into a compact heading when expanded.
  *
  * Version: 1.0.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=10496-1617)
  *
  * Behavior notes:
+ * - **The row is the heading only.** What it reveals when it expands is emitted by the host next to
+ *   it, so a `LazyColumn` keeps composing only what is on screen. Continue the card downwards by
+ *   passing a [shape] whose bottom corners are square and giving the sibling items the same
+ *   background — see `Modifier.roundedShapeItemDecoration`.
  * - [isExpanded] is an input, not internal state — the host decides which row is open. Toggle it
  *   from [onClick].
  * - Expanding is a single continuous morph, not a cross-fade: the avatar shrinks 40dp → 16dp and the
@@ -74,12 +82,15 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * expanded. `null` hides it and the dot separating it from the title.
  * @param caption Secondary line under [value]; joins the compact heading run while expanded. `null`
  * hides it and the dot before it.
- * @param isExpanded Whether the card shows [content].
+ * @param isExpandable Whether the row can be opened at all. `false` hides the collapse arrow and
+ * pins the row to its collapsed geometry.
+ * @param isExpanded Whether the row is open. Ignored unless [isExpandable].
+ * @param shape Card background and clip. Keep the default for a standalone row; pass a shape with
+ * square bottom corners when sibling items continue the card below.
  * @param collapseContentDescription Accessibility label of the collapse arrow; supply it when the
  * row is expandable so the affordance is announced.
  * @param onClick Card click handler. `null` with no [onLongClick] makes the card non-interactive.
  * @param onLongClick Card long-press handler. `null` disables long-press.
- * @param content Expanded body. `null` makes the card non-expandable.
  */
 @Suppress("LongParameterList")
 @Composable
@@ -91,11 +102,12 @@ fun TangemExpandableRow(
     subtitle: TextReference? = null,
     value: TextReference? = null,
     caption: TextReference? = null,
+    isExpandable: Boolean = false,
     isExpanded: Boolean = false,
+    shape: Shape = ExpandableCardShape,
     collapseContentDescription: String? = null,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
-    content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
     ExpandableRowScaffold(
         avatar = avatar,
@@ -105,11 +117,12 @@ fun TangemExpandableRow(
         subtitle = subtitle,
         value = value,
         caption = caption,
+        isExpandable = isExpandable,
         isExpanded = isExpanded,
+        shape = shape,
         collapseContentDescription = collapseContentDescription,
         onClick = onClick,
         onLongClick = onLongClick,
-        content = content,
     )
 }
 
@@ -152,36 +165,6 @@ object TangemExpandableRow {
         ) : State()
 
         /**
-         * Empty variant — nothing to reveal yet, so the expanded body is replaced by a prompt to add
-         * the first items.
-         *
-         * @param id Unique id.
-         * @param title Row title.
-         * @param message Localized prompt shown in the expanded body.
-         * @param addTokensLabel Localized label of the button under [message].
-         * @param onAddTokensClick Invoked when that button is tapped.
-         * @param badge Localized badge label beside the title. `null` hides it.
-         * @param subtitle Secondary line under the title. `null` hides it.
-         * @param value Primary value at the end. `null` hides it and its separator dot.
-         * @param caption Secondary line under [value]. `null` hides it and its separator dot.
-         * @param onClick Card click handler. `null` with no [onLongClick] makes it non-interactive.
-         * @param onLongClick Card long-press handler. `null` disables long-press.
-         */
-        data class Empty(
-            override val id: String,
-            val title: TextReference,
-            val message: TextReference,
-            val addTokensLabel: TextReference,
-            val onAddTokensClick: () -> Unit,
-            val badge: TextReference? = null,
-            val subtitle: TextReference? = null,
-            val value: TextReference? = null,
-            val caption: TextReference? = null,
-            val onClick: (() -> Unit)? = null,
-            val onLongClick: (() -> Unit)? = null,
-        ) : State()
-
-        /**
          * Loading variant — avatar and text-line shimmers in the collapsed geometry.
          *
          * @param id Unique id.
@@ -202,19 +185,22 @@ object TangemExpandableRow {
  * expands — pass the state, not a pre-sized composable. See [TangemAvatar.UiState].
  * @param state Card state model. See [TangemExpandableRow.State].
  * @param modifier Modifier applied to the card.
- * @param isExpanded Whether the card shows [content].
+ * @param isExpandable Whether the row can be opened at all.
+ * @param isExpanded Whether the row is open. Ignored unless [isExpandable].
+ * @param shape Card background and clip. Pass a shape with square bottom corners when sibling items
+ * continue the card below.
  * @param collapseContentDescription Accessibility label of the collapse arrow.
- * @param content Expanded body. Ignored by [TangemExpandableRow.State.Empty], which renders its own
- * body, and by [TangemExpandableRow.State.Shimmer].
  */
+@Suppress("LongParameterList")
 @Composable
 fun TangemExpandableRow(
     avatar: TangemAvatar.UiState,
     state: TangemExpandableRow.State,
     modifier: Modifier = Modifier,
+    isExpandable: Boolean = false,
     isExpanded: Boolean = false,
+    shape: Shape = ExpandableCardShape,
     collapseContentDescription: String? = null,
-    content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
     when (state) {
         is TangemExpandableRow.State.Content -> TangemExpandableRow(
@@ -225,90 +211,52 @@ fun TangemExpandableRow(
             subtitle = state.subtitle,
             value = state.value,
             caption = state.caption,
+            isExpandable = isExpandable,
             isExpanded = isExpanded,
+            shape = shape,
             collapseContentDescription = collapseContentDescription,
             onClick = state.onClick,
             onLongClick = state.onLongClick,
-            content = content,
         )
-        is TangemExpandableRow.State.Empty -> TangemExpandableRow.Empty(
-            avatar = avatar,
-            title = state.title,
-            message = state.message,
-            addTokensLabel = state.addTokensLabel,
-            onAddTokensClick = state.onAddTokensClick,
+        is TangemExpandableRow.State.Shimmer -> TangemExpandableRow.Shimmer(
             modifier = modifier,
-            badge = state.badge,
-            subtitle = state.subtitle,
-            value = state.value,
-            caption = state.caption,
-            isExpanded = isExpanded,
-            collapseContentDescription = collapseContentDescription,
-            onClick = state.onClick,
-            onLongClick = state.onLongClick,
+            shape = shape,
         )
-        is TangemExpandableRow.State.Shimmer -> TangemExpandableRow.Shimmer(modifier = modifier)
     }
 }
 
 /**
- * Design-system v2 (DS3) **Expandable Row / Empty** — there is nothing to reveal yet, so expanding
- * shows the prompt to add the first items instead of a body.
+ * Design-system v2 (DS3) **Expandable Row / Empty body** — the prompt shown under an open row that
+ * has nothing to reveal yet.
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=10496-1617)
  *
- * @param avatar Leading avatar. See [TangemAvatar.UiState].
- * @param title Row title.
- * @param message Localized prompt shown in the expanded body.
+ * Place it as the sibling that follows the row, the same way the rows it stands in for are placed,
+ * and give it a [shape] that closes the card.
+ *
+ * @param message Localized prompt.
  * @param addTokensLabel Localized label of the button under [message].
  * @param onAddTokensClick Invoked when that button is tapped.
- * @param modifier Modifier applied to the card.
- * @param badge Localized badge label beside the title. `null` hides it.
- * @param subtitle Secondary line under the title. `null` hides it.
- * @param value Primary value at the end. `null` hides it and its separator dot.
- * @param caption Secondary line under [value]. `null` hides it and its separator dot.
- * @param isExpanded Whether the card shows the prompt.
- * @param collapseContentDescription Accessibility label of the collapse arrow.
- * @param onClick Card click handler. `null` with no [onLongClick] makes it non-interactive.
- * @param onLongClick Card long-press handler. `null` disables long-press.
+ * @param modifier Modifier applied to the body. It always fills the available width.
+ * @param shape Background and clip. Defaults to the standalone 24dp card; under a row, pass a shape
+ * whose top corners are square.
  */
-@Suppress("LongParameterList")
 @Composable
-fun TangemExpandableRow.Empty(
-    avatar: TangemAvatar.UiState,
-    title: TextReference,
+fun TangemExpandableRow.EmptyBody(
     message: TextReference,
     addTokensLabel: TextReference,
     onAddTokensClick: () -> Unit,
     modifier: Modifier = Modifier,
-    badge: TextReference? = null,
-    subtitle: TextReference? = null,
-    value: TextReference? = null,
-    caption: TextReference? = null,
-    isExpanded: Boolean = false,
-    collapseContentDescription: String? = null,
-    onClick: (() -> Unit)? = null,
-    onLongClick: (() -> Unit)? = null,
+    shape: Shape = ExpandableCardShape,
 ) {
-    ExpandableRowScaffold(
-        avatar = avatar,
-        title = title,
-        modifier = modifier,
-        badge = badge,
-        subtitle = subtitle,
-        value = value,
-        caption = caption,
-        isExpanded = isExpanded,
-        collapseContentDescription = collapseContentDescription,
-        onClick = onClick,
-        onLongClick = onLongClick,
-        content = {
-            ExpandableEmptyBody(
-                message = message,
-                addTokensLabel = addTokensLabel,
-                onAddTokensClick = onAddTokensClick,
-            )
-        },
+    ExpandableEmptyBody(
+        message = message,
+        addTokensLabel = addTokensLabel,
+        onAddTokensClick = onAddTokensClick,
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(TangemTheme.colors3.bg.secondary),
     )
 }
 
@@ -319,15 +267,17 @@ fun TangemExpandableRow.Empty(
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=10496-1617)
  *
  * @param modifier Modifier applied to the card.
+ * @param shape Card background and clip.
  */
 @Composable
-fun TangemExpandableRow.Shimmer(modifier: Modifier = Modifier) {
+fun TangemExpandableRow.Shimmer(modifier: Modifier = Modifier, shape: Shape = ExpandableCardShape) {
     val interactionSource = remember { MutableInteractionSource() }
     ExpandableCard(
         motion = rememberExpansionMotion(isExpanded = false),
         interactionSource = interactionSource,
         modifier = modifier,
         contentGap = 12.dp,
+        shape = shape,
     ) {
         TangemAvatar(
             state = TangemAvatar.UiState.Shimmer(shape = TangemAvatar.UiState.Shimmer.Shape.RoundedSquare),
@@ -370,11 +320,13 @@ fun TangemExpandableRow.Shimmer(modifier: Modifier = Modifier) {
  * @param avatar Leading avatar. The row renders it itself, morphing it from 40dp to 16dp as it
  * expands. See [TangemAvatar.UiState].
  * @param modifier Modifier applied to the card.
- * @param isExpanded Whether the card shows [content].
+ * @param isExpandable Whether the row can be opened at all.
+ * @param isExpanded Whether the row is open. Ignored unless [isExpandable].
+ * @param shape Card background and clip. Pass a shape with square bottom corners when sibling items
+ * continue the card below.
  * @param collapseContentDescription Accessibility label of the collapse arrow.
  * @param onClick Card click handler. `null` with no [onLongClick] makes the card non-interactive.
  * @param onLongClick Card long-press handler. `null` disables long-press.
- * @param content Expanded body. `null` makes the card non-expandable.
  * @param headingSlot Compact heading content, shown while expanded. Keep it to one 20dp line — it is
  * laid out beside the 16dp avatar and the collapse arrow.
  * @param contentSlot Collapsed content, shown beside the 40dp avatar as a row with 8dp between its
@@ -386,23 +338,25 @@ fun TangemExpandableRow.Shimmer(modifier: Modifier = Modifier) {
 fun TangemExpandableRow.Slot(
     avatar: TangemAvatar.UiState,
     modifier: Modifier = Modifier,
+    isExpandable: Boolean = false,
     isExpanded: Boolean = false,
+    shape: Shape = ExpandableCardShape,
     collapseContentDescription: String? = null,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
-    content: (@Composable ColumnScope.() -> Unit)? = null,
     headingSlot: @Composable () -> Unit = {},
     contentSlot: @Composable RowScope.() -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val pressAlpha by rememberRowPressAlpha(interactionSource)
-    val motion = rememberExpansionMotion(isExpanded = isExpanded && content != null)
+    val motion = rememberExpansionMotion(isExpanded = isExpanded && isExpandable)
 
     ExpandableCard(
         motion = motion,
         interactionSource = interactionSource,
         modifier = modifier,
         contentGap = 8.dp,
+        shape = shape,
         onClick = onClick,
         onLongClick = onLongClick,
     ) {
@@ -434,12 +388,11 @@ fun TangemExpandableRow.Slot(
             headingSlot()
         }
 
-        ExpandedRowTail(
+        CollapseArrow(
             motion = motion,
             pressAlpha = pressAlpha,
-            isExpanded = isExpanded,
+            isExpandable = isExpandable,
             collapseContentDescription = collapseContentDescription,
-            content = content,
         )
     }
 }
@@ -454,21 +407,23 @@ private fun ExpandableRowScaffold(
     subtitle: TextReference? = null,
     value: TextReference? = null,
     caption: TextReference? = null,
+    isExpandable: Boolean = false,
     isExpanded: Boolean = false,
+    shape: Shape = ExpandableCardShape,
     collapseContentDescription: String? = null,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
-    content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val pressAlpha by rememberRowPressAlpha(interactionSource)
-    val motion = rememberExpansionMotion(isExpanded = isExpanded && content != null)
+    val motion = rememberExpansionMotion(isExpanded = isExpanded && isExpandable)
 
     ExpandableCard(
         motion = motion,
         interactionSource = interactionSource,
         modifier = modifier,
         contentGap = 8.dp,
+        shape = shape,
         onClick = onClick,
         onLongClick = onLongClick,
     ) {
@@ -544,25 +499,23 @@ private fun ExpandableRowScaffold(
             )
         }
 
-        ExpandedRowTail(
+        CollapseArrow(
             motion = motion,
             pressAlpha = pressAlpha,
-            isExpanded = isExpanded,
+            isExpandable = isExpandable,
             collapseContentDescription = collapseContentDescription,
-            content = content,
         )
     }
 }
 
 @Composable
-private fun ExpandedRowTail(
+private fun CollapseArrow(
     motion: ExpansionMotion,
     pressAlpha: Float,
-    isExpanded: Boolean,
+    isExpandable: Boolean,
     collapseContentDescription: String?,
-    content: (@Composable ColumnScope.() -> Unit)?,
 ) {
-    if (content == null) return
+    if (!isExpandable) return
 
     ExpandableCollapseArrow(
         contentDescription = collapseContentDescription,
@@ -570,14 +523,6 @@ private fun ExpandedRowTail(
             .layoutId(ExpandableCardLayoutId.ARROW)
             .graphicsLayer { alpha = pressAlpha * motion.arrowAlpha },
     )
-    if (isExpanded || motion.expansion > 0f) {
-        Column(
-            modifier = Modifier
-                .layoutId(ExpandableCardLayoutId.CONTENT)
-                .graphicsLayer { alpha = motion.slotAlpha },
-            content = content,
-        )
-    }
 }
 
 // region Previews
@@ -594,6 +539,7 @@ private fun TangemExpandableRowCollapsedPreview() {
             subtitle = stringReference("Subtitle"),
             value = stringReference("Value"),
             caption = stringReference("Caption"),
+            isExpandable = true,
             onClick = {},
         )
         TangemExpandableRow(
@@ -615,43 +561,79 @@ private fun TangemExpandableRowCollapsedPreview() {
 @Composable
 private fun TangemExpandableRowExpandedPreview() {
     PreviewContainer { avatar ->
-        TangemExpandableRow(
-            avatar = avatar,
-            title = stringReference("Title"),
-            badge = stringReference("Label"),
-            subtitle = stringReference("Subtitle"),
-            value = stringReference("Value"),
-            caption = stringReference("Caption"),
-            isExpanded = true,
-            collapseContentDescription = "Collapse",
-            onClick = {},
-            content = { PreviewTokenRow() },
-        )
-        TangemExpandableRow.Empty(
-            avatar = avatar,
-            title = stringReference("Title"),
-            message = stringReference("Add tokens to begin tracking your crypto assets and transactions"),
-            addTokensLabel = stringReference("Add tokens"),
-            onAddTokensClick = {},
-            value = stringReference("Value"),
-            caption = stringReference("Caption"),
-            isExpanded = true,
-            collapseContentDescription = "Collapse",
-            onClick = {},
-        )
-        TangemExpandableRow.Slot(
-            avatar = avatar,
-            isExpanded = true,
-            collapseContentDescription = "Collapse",
-            onClick = {},
-            content = { PreviewTokenRow() },
-            headingSlot = { ExpandableCaptionText(text = stringReference("Custom heading slot")) },
-            contentSlot = {
-                ExpandableCaptionText(text = stringReference("Content start"), modifier = Modifier.weight(1f))
-                ExpandableCaptionText(text = stringReference("Content end"))
-            },
-        )
+        PreviewGroup {
+            TangemExpandableRow(
+                avatar = avatar,
+                title = stringReference("Title"),
+                badge = stringReference("Label"),
+                subtitle = stringReference("Subtitle"),
+                value = stringReference("Value"),
+                caption = stringReference("Caption"),
+                isExpandable = true,
+                isExpanded = true,
+                shape = PreviewOpenShape,
+                collapseContentDescription = "Collapse",
+                onClick = {},
+            )
+            PreviewTokenRow()
+        }
+        PreviewGroup {
+            TangemExpandableRow(
+                avatar = avatar,
+                title = stringReference("Title"),
+                value = stringReference("Value"),
+                caption = stringReference("Caption"),
+                isExpandable = true,
+                isExpanded = true,
+                shape = PreviewOpenShape,
+                collapseContentDescription = "Collapse",
+                onClick = {},
+            )
+            TangemExpandableRow.EmptyBody(
+                message = stringReference("Add tokens to begin tracking your crypto assets and transactions"),
+                addTokensLabel = stringReference("Add tokens"),
+                onAddTokensClick = {},
+                shape = PreviewClosingShape,
+            )
+        }
+        PreviewGroup {
+            TangemExpandableRow.Slot(
+                avatar = avatar,
+                isExpandable = true,
+                isExpanded = true,
+                shape = PreviewOpenShape,
+                collapseContentDescription = "Collapse",
+                onClick = {},
+                headingSlot = { ExpandableCaptionText(text = stringReference("Custom heading slot")) },
+                contentSlot = {
+                    ExpandableCaptionText(text = stringReference("Content start"), modifier = Modifier.weight(1f))
+                    ExpandableCaptionText(text = stringReference("Content end"))
+                },
+            )
+            PreviewTokenRow()
+        }
     }
+}
+
+/** Card shape of a row that sibling items continue below it. */
+private val PreviewOpenShape = RoundedCornerShape(
+    topStart = 24.dp,
+    topEnd = 24.dp,
+)
+
+/** Card shape of the item that closes the group. */
+private val PreviewClosingShape = RoundedCornerShape(
+    bottomStart = 24.dp,
+    bottomEnd = 24.dp,
+)
+
+/**
+ * Stands in for the host's list: the row and what follows it are siblings sharing one card, not a
+ * parent and its children.
+ */
+@Composable
+private fun PreviewGroup(content: @Composable () -> Unit) {
+    Column(content = { content() })
 }
 
 @Composable
@@ -666,6 +648,9 @@ private fun PreviewTokenRow() {
         ),
         fiatBalance = stringReference("$583.00"),
         cryptoBalance = stringReference("0,000015 BTC"),
+        modifier = Modifier
+            .clip(PreviewClosingShape)
+            .background(TangemTheme.colors3.bg.secondary),
     )
 }
 
