@@ -62,9 +62,18 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
 
     private val userTokensBackwardCompatibility = UserTokensBackwardCompatibility()
 
+    /** `v1` has neither the joint counter nor typed records; a document written locally has the records but no counter */
+    private val GetWalletAccountsResponse.isJointAware: Boolean
+        get() = wallet.totalJointAccounts != null || accounts.any(WalletAccountDTO::isJoint)
+
     override suspend fun fetch(userWalletId: UserWalletId): GetWalletAccountsResponse {
         val savedAccountsResponse = getAccountsResponseStore(userWalletId = userWalletId).getSyncOrNull()
-        val fetchResult = fetchWalletAccounts(userWalletId, savedAccountsResponse)
+        val eTag = getRevalidationETag(userWalletId, savedAccountsResponse)
+        val fetchResult = fetchWalletAccounts(
+            userWalletId = userWalletId,
+            savedAccountsResponse = savedAccountsResponse?.let { normalizeSaved(userWalletId, it) },
+            eTag = eTag,
+        )
         val accountsResponse = fetchResult.accountsResponse
 
         val updatedResponse = when {
@@ -176,14 +185,12 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     private suspend fun fetchWalletAccounts(
         userWalletId: UserWalletId,
         savedAccountsResponse: GetWalletAccountsResponse?,
+        eTag: String?,
     ): FetchResult {
         return safeApiCall(
             call = {
                 val apiResponse = withContext(dispatchers.io) {
-                    walletAccountsApi.getAccounts(
-                        walletId = userWalletId.stringValue,
-                        eTag = getETag(userWalletId),
-                    )
+                    walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = eTag)
                 }
 
                 saveETag(userWalletId, apiResponse)
@@ -213,21 +220,49 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         )
     }
 
-    /** With the toggle off no joint record reaches the store, so nothing downstream has to tell the two kinds apart */
+    /** The saved document stands in for the answer until the request completes, so it is brought to shape first */
+    private suspend fun normalizeSaved(
+        userWalletId: UserWalletId,
+        savedAccountsResponse: GetWalletAccountsResponse,
+    ): GetWalletAccountsResponse {
+        val normalized = savedAccountsResponse.withoutJointAccountsIfDisabled(userWalletId)
+        if (normalized != savedAccountsResponse) store(userWalletId = userWalletId, response = normalized)
+
+        return normalized
+    }
+
+    /**
+     * `v1` and `api/v2` answer with the same ETag, but a `304` is served from the saved document, so the request is
+     * conditional only when that document was fetched by the version this build speaks now
+     */
+    private suspend fun getRevalidationETag(
+        userWalletId: UserWalletId,
+        savedAccountsResponse: GetWalletAccountsResponse?,
+    ): String? {
+        val isSavedByOtherVersion = savedAccountsResponse != null &&
+            savedAccountsResponse.isJointAware != jointAccountFeatureToggles.isJointAccountEnabled
+
+        return if (isSavedByOtherVersion) null else getETag(userWalletId)
+    }
+
+    /**
+     * With the toggle off the document is brought to the `v1` shape: no joint record reaches the store, so nothing
+     * downstream has to tell the two kinds apart, and no joint counter survives to be compared with them
+     */
     private fun GetWalletAccountsResponse.withoutJointAccountsIfDisabled(
         userWalletId: UserWalletId,
     ): GetWalletAccountsResponse {
-        if (jointAccountFeatureToggles.isJointAccountEnabled) return this
+        if (jointAccountFeatureToggles.isJointAccountEnabled || !isJointAware) return this
 
         val ownAccounts = accounts.filterNot(WalletAccountDTO::isJoint)
-        if (ownAccounts.size == accounts.size) return this
+        if (ownAccounts.size != accounts.size) {
+            TangemLogger.i(
+                "Joint account feature is off: dropped ${accounts.size - ownAccounts.size} joint account(s) " +
+                    "of $userWalletId from the accounts response",
+            )
+        }
 
-        TangemLogger.i(
-            "Joint account feature is off: dropped ${accounts.size - ownAccounts.size} joint account(s) " +
-                "of $userWalletId from the accounts response",
-        )
-
-        return copy(accounts = ownAccounts)
+        return copy(wallet = wallet.copy(totalJointAccounts = null), accounts = ownAccounts)
     }
 
     private suspend fun initializeAccounts(
