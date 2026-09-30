@@ -29,6 +29,7 @@ internal class EmailSubjectResolver(private val resources: Resources) {
             is FeedbackEmailType.BackupProblem -> resources.getStringSafe(R.string.common_backup_error)
             is FeedbackEmailType.RateCanBeBetter -> resources.getStringSafe(R.string.feedback_subject_rate_negative)
             is FeedbackEmailType.ScanningProblem -> resources.getStringSafe(R.string.feedback_subject_scan_failed)
+            is FeedbackEmailType.SocialLoginProblem -> "Social login failed"
             is FeedbackEmailType.TransactionSendingProblem,
             is FeedbackEmailType.StakingProblem,
             is FeedbackEmailType.SwapProblem,

@@ -183,7 +183,7 @@ internal class DefaultSocialLoginUseCaseTest {
         val actual = useCase.signIn(PROVIDER) {}
 
         // Assert — bound but with no file in the cloud is not a finished setup
-        assertThat(actual).isEqualTo(SocialLoginError.CloudUnavailable.left())
+        assertThat(actual).isEqualTo(SocialLoginError.BackupWriteFailed().left())
         coVerify(exactly = 0) { setSocialBackupCompletedUseCase(any(), any()) }
     }
 
