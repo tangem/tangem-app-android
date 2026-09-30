@@ -1,15 +1,15 @@
 package com.tangem.spend.datasource.pay.models.request
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class UpdateCardRequest(
-    @Json(name = "display_name") val displayName: String? = null,
-    @Json(name = "card_limit") val cardLimit: CardLimit? = null,
+    @SerialName("display_name") val displayName: String? = null,
+    @SerialName("card_limit") val cardLimit: CardLimit? = null,
 ) {
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class CardLimit(
-        @Json(name = "amount") val amount: String,
+        @SerialName("amount") val amount: String,
     )
 }
