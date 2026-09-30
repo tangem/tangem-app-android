@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.ds2.DsVersion
+import com.tangem.core.ui.ds2.accountrow.TangemAccountRow
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.button.TangemButtonGroup
@@ -40,6 +41,7 @@ import com.tangem.core.ui.ds2.tokenrow.TangemTokenRowMarket
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tester.presentation.storybook.entity.StoryPageFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.accountrow.tangemAccountRowStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.badge.tangemBadgeV2StoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.button.tangemButtonStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.buttongroup.tangemButtonGroupStoryFactory
@@ -82,6 +84,7 @@ private fun buildDsStories() = listOf(
     DsStoryItem("📋 TangemRow", TangemRow.version, tangemRowStoryFactory),
     DsStoryItem("🪙 TangemTokenRow", TangemTokenRow.version, tangemTokenRowV2StoryFactory),
     DsStoryItem("📈 TangemTokenRowMarket", TangemTokenRowMarket.version, tangemTokenRowMarketStoryFactory),
+    DsStoryItem("🗃️ TangemAccountRow", TangemAccountRow.version, tangemAccountRowStoryFactory),
     DsStoryItem("🔎 TangemSearch", TangemSearch.version, tangemSearchStoryFactory),
     DsStoryItem("✨ TangemShimmer", TangemShimmer.version, tangemShimmerStoryFactory),
     DsStoryItem("🪟 TangemShtorka", TangemShtorka.version, tangemShtorkaStoryFactory),
