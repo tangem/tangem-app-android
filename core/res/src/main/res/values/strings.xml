@@ -1757,6 +1757,7 @@
   <string name="prediction_account_title">Prediction account</string>
   <string name="prediction_account_unavailable">Couldn\'t connect to your prediction account. Refresh or reopen this screen.</string>
   <string name="prediction_add_funds_error_description">Couldn\'t load deposit details. Refresh or re-enter this screen.</string>
+  <string name="prediction_add_funds_max_receive_amount_title">The amount to receive must not exceed %s</string>
   <string name="prediction_add_funds_notification_limits_description">The deposit amount must be at least %1$s. Deposits above $50,000 are not recommended — split a larger amount into several smaller deposits.</string>
   <string name="prediction_add_funds_notification_limits_title">Deposit limits</string>
   <string name="prediction_add_funds_receive_body">Send %1$s from another wallet, minimum %2$s</string>
@@ -1980,6 +1981,8 @@
   <string name="promo_campaign_reactivation_summary_description">Earn 0.5% cashback on every swap over $500, on any pair except stable to stable. Max payout $50 per swap.\n\nComplete five qualifying swaps and unlock an extra $10 bonus.\n\nRewards are paid weekly in USDT or USDC on the address selected.</string>
   <string name="promo_campaign_select_cashback_account">Select cashback account</string>
   <string name="promo_campaign_select_token">Select cashback token</string>
+  <string name="promo_campaign_selected_cashback_account">Selected cashback account</string>
+  <string name="promo_campaign_selected_token">Selected cashback token</string>
   <string name="promo_campaign_summary_title">Enroll in %1$s</string>
   <string name="promo_campaign_terms_agreement">I agree with %1$s</string>
   <string name="promo_campaign_terms_agreement_android">I agree with</string>
@@ -2971,6 +2974,7 @@
   <string name="tangempay_withdraw_bank_transfer_type_own">Your account</string>
   <string name="tangempay_withdraw_bank_transfer_type_third_party">3rd-party account</string>
   <string name="tangempay_withdraw_bank_transfer_type_title">Type of transfer</string>
+  <string name="tangempay_withdraw_hub_accounts_load_error">Couldn’t load list. Tap to reload</string>
   <string name="tangempay_withdraw_hub_bank_section_subtitle">Send to another bank using ACH or FedWire</string>
   <string name="tangempay_withdraw_hub_bank_section_subtitle_unavailable">Available only for USDC on Polygon, Base, Arbitrum</string>
   <string name="tangempay_withdraw_hub_bank_section_title">Bank transfer</string>
