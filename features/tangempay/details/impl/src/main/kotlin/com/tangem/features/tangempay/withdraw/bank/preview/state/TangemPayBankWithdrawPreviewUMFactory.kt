@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.withdraw.bank.preview.state
 
 import androidx.annotation.StringRes
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.pay.model.bankofframp.BankAccountDetails
@@ -141,6 +142,7 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
         PreviewFailure.UnsupportedConfiguration -> unavailable(R.string.tangempay_withdraw_bank_error_region_title)
         PreviewFailure.General -> TangemPayBankWithdrawPreviewUM.Failed(
             title = resourceReference(R.string.tangempay_withdraw_bank_error_general_title),
+            icon = TangemStatusIcon.Kind.Warning,
             onCloseClick = callbacks.onCloseClick,
             onRetryClick = callbacks.onRetryClick,
         )
@@ -148,6 +150,7 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
 
     private fun unavailable(@StringRes titleRes: Int) = TangemPayBankWithdrawPreviewUM.Failed(
         title = resourceReference(titleRes),
+        icon = TangemStatusIcon.Kind.HeartBroken,
         onCloseClick = callbacks.onCloseClick,
         onRetryClick = null,
     )
