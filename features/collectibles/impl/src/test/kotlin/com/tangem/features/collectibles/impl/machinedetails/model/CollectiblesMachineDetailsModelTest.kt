@@ -174,6 +174,42 @@ internal class CollectiblesMachineDetailsModelTest {
     }
 
     @Test
+    fun `GIVEN the pool loaded while the machine failed WHEN the retry succeeds THEN the pool is shown`() =
+        runModelTest {
+            // Arrange
+            coEvery { getMachineUseCase(EXTERNAL_ID, false) } returns CollectiblesError.Api(IllegalStateException()).left()
+            val model = startModel()
+            batchListState.value = loadedPool()
+            runCurrent()
+
+            // Act
+            (model.uiState.value as CollectiblesMachineDetailsUM.Error).onReloadClick()
+            runCurrent()
+
+            // Assert
+            val content = model.uiState.value as CollectiblesMachineDetailsUM.Content
+            assertThat(content.prizePool).isInstanceOf(CollectiblesMachineDetailsUM.PrizePoolUM.Content::class.java)
+        }
+
+    @Test
+    fun `GIVEN the pool loads before the machine WHEN the machine arrives THEN the pool is shown`() = runModelTest {
+        // Arrange
+        val machine = CompletableDeferred<MachineResult>()
+        coEvery { getMachineUseCase(EXTERNAL_ID, false) } coAnswers { machine.await() }
+        val model = startModel()
+        batchListState.value = loadedPool()
+        runCurrent()
+
+        // Act
+        machine.complete(createMachine().right())
+        runCurrent()
+
+        // Assert
+        val content = model.uiState.value as CollectiblesMachineDetailsUM.Content
+        assertThat(content.prizePool).isInstanceOf(CollectiblesMachineDetailsUM.PrizePoolUM.Content::class.java)
+    }
+
+    @Test
     fun `GIVEN the price and expected value WHEN model created THEN the footer reads them`() = runModelTest {
         // Arrange
         coEvery { getMachineUseCase(any(), any()) } returns createMachine(
@@ -433,6 +469,11 @@ internal class CollectiblesMachineDetailsModelTest {
         // Assert
         coVerify(exactly = 1) { getMachineUseCase(EXTERNAL_ID, true) }
     }
+
+    private fun loadedPool() = createNftsBatchListState(
+        batches = listOf(listOf(createNft())),
+        status = PaginationStatus.EndOfPagination,
+    )
 
     /** The model is destroyed inside [runTest]: its closing advanceUntilIdle would spin on the never-idle polling. */
     private fun runModelTest(testBody: suspend TestScope.() -> Unit) = runTest {
