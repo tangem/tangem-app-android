@@ -32,4 +32,8 @@ internal class DefaultNewsDeepLinkHandler @AssistedInject constructor(
     interface Factory : NewsDeepLinkHandler.Factory {
         override fun create(queryParams: Map<String, String>): DefaultNewsDeepLinkHandler
     }
+
+    companion object {
+        const val DEEPLINK_KEY = "tangem://news"
+    }
 }
