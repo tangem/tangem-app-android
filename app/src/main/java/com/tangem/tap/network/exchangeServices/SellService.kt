@@ -2,7 +2,6 @@ package com.tangem.tap.network.exchangeServices
 
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.tap.domain.model.Currency
 import kotlinx.coroutines.flow.StateFlow
 
 typealias SellServiceInitializationStatus = Lce<Throwable, Any>
@@ -13,7 +12,7 @@ interface SellService {
 
     suspend fun update()
 
-    fun availableForSell(currency: Currency): Boolean
+    fun availableForSell(currency: CryptoCurrency): Boolean
 
     fun getUrl(
         cryptoCurrency: CryptoCurrency,
