@@ -2,16 +2,22 @@ package com.tangem.feature.swap.domain.fee
 
 import arrow.core.Either
 import arrow.core.raise.either
+import com.tangem.blockchain.common.address.EstimationFeeAddressFactory
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForGaslessTxUseCase
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForTokenUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
+import com.tangem.domain.utils.convertToSdkAmount
+import com.tangem.lib.crypto.BlockchainUtils.isTron
 import java.math.BigDecimal
 
 /**
@@ -27,7 +33,9 @@ import java.math.BigDecimal
  *    a native or token fee. When it resolves to a **native** Ethereum fee, the 5% gas-limit bump is
  *    applied for parity with the explicit native path; token-paid fees carry their own safety
  *    margins and are **not bumped**.
- *  - non-null + token currency → calls [EstimateFeeForTokenUseCase]. **No gas-limit bump.**
+ *  - non-null + token currency on Tron → calls [GetTronGaslessFeeUseCase]: the fee is the Tron gasless
+ *    compensation charged in the sent token. **No gas-limit bump.**
+ *  - non-null + token currency elsewhere → calls [EstimateFeeForTokenUseCase]. **No gas-limit bump.**
  *  - non-null + native (coin) currency → calls [EstimateFeeUseCase]. **The 5% gas-limit bump is
  *    applied via [patchEthGasLimitForSwap]** for parity with `loadFeeForSwapTransaction` overload 2.
  *    The bump is a no-op for non-Ethereum fees, so this is safe across chains.
@@ -38,8 +46,12 @@ class CexSwapFeeCalculator(
     private val estimateFeeUseCase: EstimateFeeUseCase,
     private val estimateFeeForTokenUseCase: EstimateFeeForTokenUseCase,
     private val estimateFeeForGaslessTxUseCase: EstimateFeeForGaslessTxUseCase,
+    private val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase,
+    private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
     private val patchEthGasLimitForSwap: PatchEthGasLimitForSwap,
 ) {
+
+    private val estimationFeeAddressFactory by lazy { EstimationFeeAddressFactory() }
 
     suspend fun calculate(
         userWallet: UserWallet,
@@ -63,6 +75,16 @@ class CexSwapFeeCalculator(
                         sendingTokenCurrencyStatus = fromSwapCurrencyStatus.status,
                     ).bind()
                     TransactionFeeResult.LoadedExtended(feeExtended.patchIfNativeEthereumFee())
+                }
+                selectedFeeToken.currency is CryptoCurrency.Token &&
+                    isTron(fromSwapCurrencyStatus.currency.network.rawId) -> {
+                    val feeExtended = estimateTronGaslessFee(
+                        userWallet = userWallet,
+                        fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                        amount = amount,
+                        feeToken = selectedFeeToken.currency as CryptoCurrency.Token,
+                    ).bind()
+                    TransactionFeeResult.LoadedExtended(feeExtended)
                 }
                 selectedFeeToken.currency is CryptoCurrency.Token -> {
                     // Explicit gasless-token path — overload 1 in SwapInteractorImpl. No gas-limit bump.
@@ -95,6 +117,29 @@ class CexSwapFeeCalculator(
         }
 
         CexFeeResult(transactionFee = transactionFeeResult)
+    }
+
+    private suspend fun estimateTronGaslessFee(
+        userWallet: UserWallet,
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        amount: BigDecimal,
+        feeToken: CryptoCurrency.Token,
+    ): Either<GetFeeError, TransactionFeeExtended> = either {
+        val network = fromSwapCurrencyStatus.currency.network
+        val estimationDestination = estimationFeeAddressFactory.makeAddress(network.toBlockchain())
+        val transactionData = createTransferTransactionUseCase(
+            amount = amount.convertToSdkAmount(fromSwapCurrencyStatus.status),
+            memo = null,
+            destination = estimationDestination,
+            userWalletId = userWallet.walletId,
+            network = network,
+        ).mapLeft(GetFeeError::DataError).bind()
+
+        getTronGaslessFeeUseCase(
+            userWalletId = userWallet.walletId,
+            transactionData = transactionData,
+            feeToken = feeToken,
+        ).bind()
     }
 
     /**
