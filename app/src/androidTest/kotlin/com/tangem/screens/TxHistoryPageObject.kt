@@ -45,6 +45,11 @@ class TxHistoryPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         useUnmergedTree = true
     }
 
+    fun transactionSubtitle(title: String, subtitle: String): KNode = transactionItem(title).child {
+        hasText(subtitle)
+        useUnmergedTree = true
+    }
+
     fun transactionAddress(title: String, address: String): KNode = transactionItem(title).child {
         hasText(text = address, substring = true)
         useUnmergedTree = true
