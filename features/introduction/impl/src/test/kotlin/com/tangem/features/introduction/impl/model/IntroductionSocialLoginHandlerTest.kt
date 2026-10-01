@@ -258,8 +258,8 @@ internal class IntroductionSocialLoginHandlerTest {
         // Assert
         assertThat(host.progress).hasSize(4)
         assertThat(host.progress[0]).isNull()
-        assertThat(host.progress[1]).isNotNull()
-        assertThat(host.progress[2]).isNotNull()
+        assertThat(host.progress[1]).isEqualTo(SocialLoginProgressUM.Loader)
+        assertThat(host.progress[2]).isInstanceOf(SocialLoginProgressUM.Stage::class.java)
         assertThat(host.progress[3]).isNull()
     }
 
