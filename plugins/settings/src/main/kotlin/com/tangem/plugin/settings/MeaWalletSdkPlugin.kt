@@ -13,6 +13,7 @@ private const val LOCAL_PROPERTIES = "local.properties"
 private const val SDK_PROPERTY = "meawallet.sdk"
 private const val REQUIRE_SDK_VARIABLE = "REQUIRE_MEAWALLET_SDK"
 private const val IMPL_PROJECT = ":spend:push-provisioning:impl"
+private const val PACKAGES_TOKEN_VARIABLE = "GITHUB_PACKAGES_TOKEN"
 
 class MeaWalletSdkPlugin : Plugin<Settings> {
 
@@ -43,7 +44,7 @@ class MeaWalletSdkPlugin : Plugin<Settings> {
                     url = URI(REGISTRY_URL)
                     credentials {
                         username = properties.getProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
-                        password = properties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+                        password = properties.gitHubPackagesToken()
                     }
                 }
             }
@@ -81,3 +82,6 @@ class MeaWalletSdkPlugin : Plugin<Settings> {
         return "$denial; the MeaWallet SDK needs a token with read:packages and SSO for tangem-developments"
     }
 }
+
+internal fun Properties.gitHubPackagesToken(): String? =
+    getProperty("gpr.key") ?: System.getenv(PACKAGES_TOKEN_VARIABLE) ?: System.getenv("GITHUB_TOKEN")
