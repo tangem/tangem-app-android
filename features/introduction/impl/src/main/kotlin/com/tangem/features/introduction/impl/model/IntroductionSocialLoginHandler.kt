@@ -3,6 +3,7 @@ package com.tangem.features.introduction.impl.model
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.TangemBlogUrlBuilder.Post.WhatWalletToChoose
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.navigation.Router
@@ -21,8 +22,7 @@ import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.feedback.SendFeedbackEmailUseCase
-import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
 import com.tangem.domain.sociallogin.usecase.GetAvailableSocialLoginProvidersUseCase
@@ -36,6 +36,7 @@ import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R as CoreUiR
@@ -47,7 +48,6 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
     private val getAvailableSocialLoginProvidersUseCase: GetAvailableSocialLoginProvidersUseCase,
     private val socialLoginUseCase: SocialLoginUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val appCoroutineScope: AppCoroutineScope,
     private val urlOpener: UrlOpener,
     private val router: Router,
@@ -92,6 +92,9 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
     }
 
     suspend fun signIn(provider: SocialLoginProvider, host: Host) {
+        val attemptId = UUID.randomUUID().toString()
+        TangemLogger.i("Social login attempt $attemptId started")
+
         val result = socialLoginUseCase.signIn(
             provider = provider,
             onStageChanged = { stage -> host.onProgress(stage.toProgressUM()) },
@@ -106,7 +109,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         // progress stays up until then too, or the screen would sit locked with nothing on it.
         try {
             result.fold(
-                ifLeft = { error -> onFailure(provider, error) },
+                ifLeft = { error -> onFailure(provider, error, attemptId) },
                 ifRight = { outcome -> onSuccess(outcome) },
             )
         } finally {
@@ -174,7 +177,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
      * Signs out first: the alternative flows offer a plain retry, and on Android the account chooser
      * only comes back for an account the app has not remembered.
      */
-    private suspend fun onFailure(provider: SocialLoginProvider, error: SocialLoginError) {
+    private suspend fun onFailure(provider: SocialLoginProvider, error: SocialLoginError, attemptId: String) {
         socialLoginUseCase.signOut(provider)
 
         when (error) {
@@ -187,6 +190,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
             -> showRestoreFailedDialog(
                 title = resourceReference(CoreResR.string.common_something_went_wrong),
                 message = resourceReference(CoreResR.string.social_login_error_restore_failed_description),
+                attemptId = attemptId,
             )
             SocialLoginError.CloudUnavailable -> showRestoreFailedDialog(
                 title = resourceReference(CoreResR.string.social_login_error_cloud_access_title),
@@ -194,12 +198,13 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
                     id = CoreResR.string.social_login_error_cloud_access_description,
                     formatArgs = wrappedList(provider.cloudName()),
                 ),
+                attemptId = attemptId,
             )
             else -> uiMessageSender.send(SnackbarMessage(error.toMessage(provider)))
         }
     }
 
-    private fun showRestoreFailedDialog(title: TextReference, message: TextReference) {
+    private fun showRestoreFailedDialog(title: TextReference, message: TextReference, attemptId: String) {
         uiMessageSender.send(
             DialogMessage(
                 title = title,
@@ -207,7 +212,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
                 firstActionBuilder = {
                     EventMessageAction(
                         title = resourceReference(CoreResR.string.social_login_error_support),
-                        onClick = { sendSupportRequest() },
+                        onClick = { openSupportChat(attemptId) },
                     )
                 },
                 secondActionBuilder = { cancelAction(onClick = {}) },
@@ -215,8 +220,14 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         )
     }
 
-    private fun sendSupportRequest() {
-        appCoroutineScope.launch { sendFeedbackEmailUseCase(type = FeedbackEmailType.SocialLoginProblem) }
+    private fun openSupportChat(attemptId: String) {
+        router.push(
+            AppRoute.Usedesk(
+                walletMetaInfo = WalletMetaInfo(userWalletId = null),
+                source = AnalyticsParam.ScreensSources.SocialLogin,
+                clientEmail = attemptId,
+            ),
+        )
     }
 
     private fun SocialLoginStage.toProgressUM(): SocialLoginProgressUM? = when (this) {
