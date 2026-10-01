@@ -109,12 +109,14 @@ internal class DefaultSellRedirectDeepLinkHandler @AssistedInject constructor(
         ): DefaultSellRedirectDeepLinkHandler
     }
 
-    private companion object {
-        const val TRANSACTION_ID_KEY = "transactionId"
-        const val CURRENCY_ID_KEY = "currency_id"
-        const val AMOUNT_KEY = "baseCurrencyAmount"
-        const val DESTINATION_ADDRESS_KEY = "depositWalletAddress"
-        const val MEMO_KEY = "depositWalletAddressTag"
-        const val REQUEST_ID_KEY = "request_id"
+    companion object {
+        const val DEEPLINK_KEY = "tangem://redirect_sell"
+
+        private const val TRANSACTION_ID_KEY = "transactionId"
+        private const val CURRENCY_ID_KEY = "currency_id"
+        private const val AMOUNT_KEY = "baseCurrencyAmount"
+        private const val DESTINATION_ADDRESS_KEY = "depositWalletAddress"
+        private const val MEMO_KEY = "depositWalletAddressTag"
+        private const val REQUEST_ID_KEY = "request_id"
     }
 }
