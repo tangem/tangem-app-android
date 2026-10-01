@@ -2,6 +2,7 @@ package com.tangem.common.routing.deeplink
 
 import android.net.Uri
 import com.tangem.utils.logging.TangemLogger
+import java.net.URI
 
 /**
  * Finds the [DeepLinkHandler] for a deep link among the handlers contributed by features, keyed by [DeepLinkKey].
@@ -69,8 +70,19 @@ class DeepLinkHandlerRegistry(handlers: Map<String, DeepLinkHandler>) {
                     "without query and fragment"
             }
             val (scheme, host, path) = match.destructured
+            val pathSegments = path.split('/').filter(String::isNotEmpty).map { segment -> decodeSegment(key, segment) }
 
-            return candidateKeys(scheme = scheme, host = host.ifEmpty { null }, pathSegments = path.split('/')).first()
+            return candidateKeys(scheme = scheme, host = host.ifEmpty { null }, pathSegments = pathSegments).first()
+        }
+
+        /** Percent-decodes a key segment the way [Uri.getPathSegments] decodes the received URI. */
+        private fun decodeSegment(key: String, segment: String): String {
+            val decoded = runCatching { URI("x:/$segment").path.removePrefix("/") }.getOrNull()
+
+            requireNotNull(decoded) { "Invalid deep link key '$key': malformed path segment '$segment'" }
+            require('/' !in decoded) { "Invalid deep link key '$key': encoded slash in path segment '$segment'" }
+
+            return decoded
         }
 
         private fun normalizeKeys(handlers: Map<String, DeepLinkHandler>): Map<String, DeepLinkHandler> {
