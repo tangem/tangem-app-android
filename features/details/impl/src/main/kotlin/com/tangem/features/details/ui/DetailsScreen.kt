@@ -42,6 +42,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chevron_right_20
+import com.tangem.core.ui.res.generated.icons.ic_grid_plus_20
 import com.tangem.core.ui.test.DetailsScreenTestTags
 import com.tangem.features.details.component.preview.PreviewDetailsComponent
 import com.tangem.features.details.entity.DetailsFooterUM
@@ -186,8 +187,8 @@ private fun WalletActionsBlock(
 ) {
     items.fastForEach { item ->
         when (item) {
-            is DetailsItemUM.WalletActionBlock.Item.WalletConnect -> WalletConnectActionRow(
-                onClick = item.onClick,
+            is DetailsItemUM.WalletActionBlock.Item.WalletConnect -> ConnectionsActionRow(
+                item = item,
                 modifier = modifier,
             )
             is DetailsItemUM.WalletActionBlock.Item.AddressBook -> AddressBookActionRow(
@@ -199,33 +200,57 @@ private fun WalletActionsBlock(
 }
 
 @Composable
-private fun WalletConnectActionRow(onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun ConnectionsActionRow(
+    item: DetailsItemUM.WalletActionBlock.Item.WalletConnect,
+    modifier: Modifier = Modifier,
+) {
     TangemRow(
         verticalAlignment = TangemRowVerticalAlignment.Center,
         modifier = modifier,
-        onClick = onClick,
-        startSlot = {
-            TangemIcon(
-                tangemIconUM = TangemIconUM.Image(R.drawable.img_wallet_connect_76),
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(12.dp)),
-            )
-        },
+        onClick = item.onClick,
+        startSlot = { ConnectionsIcon(isMcpEnabled = item.isMcpEnabled) },
         titleSlot = {
             TangemRowText(
-                text = TextReference.Res(R.string.wallet_connect_title),
+                text = TextReference.Res(
+                    if (item.isMcpEnabled) R.string.wc_connections else R.string.wallet_connect_title,
+                ),
                 role = TangemRowTextRole.Title,
             )
         },
         subtitleSlot = {
             TangemRowText(
-                text = TextReference.Res(R.string.wallet_connect_subtitle),
+                text = TextReference.Res(
+                    if (item.isMcpEnabled) R.string.wc_connections_subtitle else R.string.wallet_connect_subtitle,
+                ),
                 role = TangemRowTextRole.Subtitle,
             )
         },
         endSlot = { ActionRowChevron() },
     )
+}
+
+@Composable
+private fun ConnectionsIcon(isMcpEnabled: Boolean) {
+    val iconModifier = Modifier
+        .size(40.dp)
+        .clip(RoundedCornerShape(12.dp))
+
+    if (!isMcpEnabled) {
+        TangemIcon(tangemIconUM = TangemIconUM.Image(R.drawable.img_wallet_connect_76), modifier = iconModifier)
+        return
+    }
+
+    Box(
+        modifier = iconModifier.background(TangemTheme.colors3.bg.status.infoSubtle),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            modifier = Modifier.size(20.dp),
+            imageVector = Icons.ic_grid_plus_20,
+            contentDescription = null,
+            tint = TangemTheme.colors3.icon.status.info,
+        )
+    }
 }
 
 @Composable
