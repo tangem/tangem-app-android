@@ -21,8 +21,16 @@ class DeepLinkHandlerRegistry(handlers: Map<String, DeepLinkHandler>) {
 
     private val handlers: Map<String, DeepLinkHandler> = normalizeKeys(handlers)
 
+    /** Deeper path prefixes can't match any key, so candidates are bounded by the deepest registered key. */
+    private val maxPathSegments: Int = this.handlers.keys.maxOfOrNull(::pathSegmentsCount) ?: 0
+
     fun find(uri: Uri): DeepLinkHandler? {
-        val candidateKeys = candidateKeys(scheme = uri.scheme, host = uri.host, path = uri.path)
+        val candidateKeys = candidateKeys(
+            scheme = uri.scheme,
+            host = uri.host,
+            path = uri.path,
+            maxPathSegments = maxPathSegments,
+        )
         val registeredKeys = candidateKeys.filter(handlers::containsKey)
         val key = registeredKeys.firstOrNull { handlers.getValue(it).isEnabled }
 
@@ -75,17 +83,31 @@ class DeepLinkHandlerRegistry(handlers: Map<String, DeepLinkHandler>) {
             return handlers.mapKeys { (key, _) -> normalizeKey(key) }
         }
 
-        fun candidateKeys(scheme: String?, host: String?, path: String?): List<String> {
+        /** Number of path segments of a normalized key: `https://tangem.com/news/details` → 2, `wc:` → 0. */
+        private fun pathSegmentsCount(normalizedKey: String): Int {
+            return normalizedKey.substringAfter(delimiter = "://", missingDelimiterValue = "").count { it == '/' }
+        }
+
+        fun candidateKeys(
+            scheme: String?,
+            host: String?,
+            path: String?,
+            maxPathSegments: Int = Int.MAX_VALUE,
+        ): List<String> {
             if (scheme.isNullOrBlank()) return emptyList()
 
             val schemeKey = "$scheme:"
             if (host.isNullOrBlank()) return listOf(schemeKey)
 
             val hostKey = "$scheme://$host"
-            val segments = path.orEmpty().split("/").filter(String::isNotEmpty)
-            val pathKeys = segments.indices.reversed().map { lastIndex ->
-                segments.subList(0, lastIndex + 1).joinToString(separator = "/", prefix = "$hostKey/")
-            }
+            val pathKeys = path.orEmpty()
+                .splitToSequence("/")
+                .filter(String::isNotEmpty)
+                .take(maxPathSegments)
+                .runningFold(hostKey) { prefix, segment -> "$prefix/$segment" }
+                .drop(1)
+                .toList()
+                .asReversed()
 
             return pathKeys + hostKey + schemeKey
         }
