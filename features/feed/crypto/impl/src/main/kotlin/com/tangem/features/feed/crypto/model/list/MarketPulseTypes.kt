@@ -33,9 +33,9 @@ internal enum class MarketPulseInterval {
     fun intervalTitle(): TextReference {
         return resourceReference(
             when (this) {
-                H24 -> R.string.markets_real_assets_interval_day
-                D7 -> R.string.markets_real_assets_interval_week
-                M1 -> R.string.markets_real_assets_interval_month
+                H24 -> R.string.markets_selector_interval_24h_title
+                D7 -> R.string.markets_selector_interval_7d_title
+                M1 -> R.string.markets_selector_interval_1m_title
             },
         )
     }
