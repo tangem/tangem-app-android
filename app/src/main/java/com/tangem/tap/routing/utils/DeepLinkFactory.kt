@@ -125,7 +125,12 @@ internal class DeepLinkFactory @Inject constructor(
         }.transformLatest<Pair<Boolean, Boolean>, Unit> { (isRoutePermitted, isCardSdkVisible) ->
             if (isRoutePermitted && !isCardSdkVisible) {
                 parkedDeeplink?.let { (uri, source) ->
-                    val isRouted = launchDeepLink(uri, coroutineScope, isFromOnNewIntent)
+                    val isRouted = launchDeepLink(
+                        deeplinkUri = uri,
+                        coroutineScope = coroutineScope,
+                        isFromOnNewIntent = isFromOnNewIntent,
+                        source = source,
+                    )
 
                     if (!isRouted && source == DeeplinkSource.Push) {
                         openWebLinkFromPush(uri)
@@ -180,9 +185,19 @@ internal class DeepLinkFactory @Inject constructor(
     }
 
     /** Returns `true` when a handler took the deeplink, `false` when nothing matched it. */
-    private fun launchDeepLink(deeplinkUri: Uri, coroutineScope: CoroutineScope, isFromOnNewIntent: Boolean): Boolean {
+    private fun launchDeepLink(
+        deeplinkUri: Uri,
+        coroutineScope: CoroutineScope,
+        isFromOnNewIntent: Boolean,
+        source: DeeplinkSource,
+    ): Boolean {
         if (deepLinkFeatureToggles.isHandlerRegistryEnabled) {
-            return launchRegisteredDeepLink(deeplinkUri, coroutineScope, isFromOnNewIntent)
+            return launchRegisteredDeepLink(
+                deeplinkUri = deeplinkUri,
+                coroutineScope = coroutineScope,
+                isFromOnNewIntent = isFromOnNewIntent,
+                source = source,
+            )
         }
 
         return when (deeplinkUri.scheme) {
@@ -204,13 +219,28 @@ internal class DeepLinkFactory @Inject constructor(
         }
     }
 
-    /** Dispatches [deeplinkUri] to the handler a feature contributed for it. Returns `false` when no feature claims it. */
+    /**
+     * Dispatches [deeplinkUri] to the handler a feature contributed for it. Returns `false` when no feature claims it.
+     * A push deep link to a handler that is not openable from push is consumed without handling, so that no
+     * fallback opens it either.
+     */
     private fun launchRegisteredDeepLink(
         deeplinkUri: Uri,
         coroutineScope: CoroutineScope,
         isFromOnNewIntent: Boolean,
+        source: DeeplinkSource,
     ): Boolean {
         val handler = deepLinkHandlerRegistry.find(deeplinkUri) ?: return false
+
+        if (source == DeeplinkSource.Push && !handler.isOpenableFromPush) {
+            TangemLogger.i(
+                """
+                    Deep link is not openable from push
+                    |- Received URI: $deeplinkUri
+                """.trimIndent(),
+            )
+            return true
+        }
 
         handler.handle(
             request = DeepLinkRequest(
