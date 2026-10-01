@@ -5,7 +5,7 @@ import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 
 internal interface DeepLinkFeatureToggles {
 
-    /** Whether deep links are dispatched to the handlers contributed by features before the legacy routing. */
+    /** Whether deep links are dispatched only to the handlers contributed by features, instead of the legacy routing. */
     val isHandlerRegistryEnabled: Boolean
 }
 

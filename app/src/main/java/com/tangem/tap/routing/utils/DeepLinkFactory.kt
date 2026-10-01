@@ -319,6 +319,9 @@ internal class DeepLinkFactory @Inject constructor(
     }
 
     private fun getQueryParams(uri: Uri): Map<String, String> {
+        // An opaque URI such as `wc:…` has no query: `queryParameterNames` throws for it
+        if (uri.isOpaque) return emptyMap()
+
         val params = mutableMapOf<String, String>()
 
         uri.queryParameterNames.forEach { paramName ->
