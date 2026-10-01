@@ -82,9 +82,11 @@ private fun SectionsContent(state: MarketCategorySelectorUM.ContentUM.Content, m
             }
         }
 
-        item(key = "categoriesHeader") {
-            SectionHeader(title = categories.title, modifier = Modifier.padding(horizontal = 16.dp))
-            SpacerH(8.dp)
+        if (categories.items.isNotEmpty()) {
+            item(key = "categoriesHeader") {
+                SectionHeader(title = categories.title, modifier = Modifier.padding(horizontal = 16.dp))
+                SpacerH(8.dp)
+            }
         }
 
         items(items = categories.items, key = MarketCategoryItemUM::id) { item ->
@@ -132,7 +134,7 @@ private fun FeaturedRail(items: ImmutableList<FeaturedCategoryUM>, modifier: Mod
         items.fastForEach { item ->
             TangemBadge(
                 text = item.label,
-                variant = if (item.isSelected) TangemBadge.Variant.Solid else TangemBadge.Variant.Tinted,
+                variant = if (item.isSelected) TangemBadge.Variant.Inverse else TangemBadge.Variant.Solid,
                 size = TangemBadge.Size.X9,
                 onClick = item.onItemClick,
             )
@@ -407,18 +409,6 @@ private fun previewBody(withFeatured: Boolean, query: String = ""): MarketCatego
         categories = MarketCategoryListUM(
             title = resourceReference(R.string.market_categories),
             items = buildList {
-                if (!isSearching) {
-                    add(
-                        MarketCategoryItemUM(
-                            id = "__all__",
-                            title = resourceReference(R.string.common_all),
-                            subtitle = null,
-                            caption = null,
-                            isSelected = false,
-                            onItemClick = {},
-                        ),
-                    )
-                }
                 all.filter { it.contains(other = query, ignoreCase = true) }.forEach { name ->
                     add(
                         MarketCategoryItemUM(
