@@ -27,6 +27,7 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
@@ -46,6 +47,7 @@ import com.tangem.features.send.sendnft.confirm.NFTSendConfirmComponent
 import com.tangem.features.send.sendnft.success.NFTSendSuccessComponent
 import com.tangem.features.send.sendnft.ui.state.NFTSendUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -167,6 +169,12 @@ internal class NFTSendModel @Inject constructor(
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
+        if (nftAsset.network.derivationPath is Network.DerivationPath.Joint) {
+            TangemLogger.e("NFT send is not available for a joint account network: ${nftAsset.network.id}")
+            alertFactory.getGenericErrorState(::onFailedTxEmailClick)
+            return
+        }
+
         modelScope.launch {
             getUserWalletUseCase(params.userWalletId).fold(
                 ifRight = { wallet ->
