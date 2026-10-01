@@ -19,6 +19,7 @@ import com.tangem.domain.visa.model.sign
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -35,7 +36,11 @@ class TangemPayGenerateAddressAndSignChallengeTask @AssistedInject constructor(
 
     override fun run(session: CardSession, callback: CompletionCallback<TangemPayInitialCredentials>) {
         coroutineScope.launch {
-            callback(runSuspend(session = session))
+            val result = runSuspendCatching { runSuspend(session = session) }
+                .getOrElse { error ->
+                    CompletionResult.Failure(TangemSdkError.ExceptionError(error))
+                }
+            callback(result)
         }
     }
 
