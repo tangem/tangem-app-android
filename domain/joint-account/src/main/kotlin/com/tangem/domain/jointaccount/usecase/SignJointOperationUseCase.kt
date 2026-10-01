@@ -29,6 +29,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.utils.extensions.addHexPrefix
 
 /**
  * Co-signs the operation of a joint account in [Network]: the operation is taken from the store by the id the
@@ -247,11 +248,11 @@ class SignJointOperationUseCase(
             .resolve(
                 network = network,
                 address = operation.safeTx.gasToken,
-                rawCurrencyId = account.cryptoCurrencies
-                    .filterIsInstance<CryptoCurrency.Token>()
-                    .firstOrNull { it.contractAddress.equals(operation.safeTx.gasToken, ignoreCase = true) }
-                    ?.id
-                    ?.rawCurrencyId,
+                rawCurrencyId = gasTokenQuoteId(
+                    account = account,
+                    network = network,
+                    gasToken = operation.safeTx.gasToken,
+                ),
             )
             .mapLeft(JointOperationSignError::Failed)
             .bind()
@@ -266,6 +267,16 @@ class SignJointOperationUseCase(
             networkGasPrice = gasPrice,
             gasToken = gasToken,
         )
+    }
+
+    private fun gasTokenQuoteId(account: Account.Joint, network: Network, gasToken: String): CryptoCurrency.RawID? {
+        val address = gasToken.lowercase().addHexPrefix()
+
+        return account.cryptoCurrencies
+            .filterIsInstance<CryptoCurrency.Token>()
+            .firstOrNull { it.network == network && it.contractAddress.lowercase().addHexPrefix() == address }
+            ?.id
+            ?.rawCurrencyId
     }
 
     private fun toSignError(error: JointOperationCreateError): JointOperationSignError = when (error) {
