@@ -56,7 +56,7 @@ dependencies {
     debugImplementation(deps.meawallet.mpp.test.debug)
     mockedImplementation(deps.meawallet.mpp.test.debug)
     internalImplementation(deps.meawallet.mpp.test)
-    externalImplementation(deps.meawallet.mpp.prod)
+    externalImplementation(deps.meawallet.mpp.test)
     releaseImplementation(deps.meawallet.mpp.prod)
 
     implementation(deps.hilt.android)

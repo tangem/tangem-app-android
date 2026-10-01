@@ -7,7 +7,6 @@ import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.cloudbackup.usecase.ResolveCloudRestoreBackupsUseCase
@@ -66,10 +65,16 @@ internal class HaveWalletSheetController(
         ),
         socialLogin = socialLoginProvider()?.let { provider ->
             WalletOptionUM(
-                iconRes = CoreUiR.drawable.ic_user_24,
-                title = resourceReference(CoreResR.string.introduction_i_have_wallet_sign_in_google_title),
-                // TODO [REDACTED_TASK_KEY]: waiting on introduction_i_have_wallet_google_description in Lokalise.
-                description = stringReference("Restore the wallet stored in your Google account"),
+                iconRes = CoreUiR.drawable.img_google_32,
+                isIconTinted = false,
+                title = resourceReference(
+                    id = CoreResR.string.introduction_i_have_wallet_social_title,
+                    formatArgs = wrappedList(provider.displayName()),
+                ),
+                description = resourceReference(
+                    id = CoreResR.string.introduction_i_have_wallet_social_description,
+                    formatArgs = wrappedList(provider.displayName()),
+                ),
                 isEnabled = !isSigningInSocially(),
                 isLoading = isSigningInSocially(),
                 onClick = { onSocialLoginOptionClick(provider) },

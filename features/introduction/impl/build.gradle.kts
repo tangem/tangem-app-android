@@ -18,6 +18,7 @@ dependencies {
     implementation(projects.features.storiesV2.api)
 
     /** Core */
+    implementation(projects.common)
     implementation(projects.common.routing)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
