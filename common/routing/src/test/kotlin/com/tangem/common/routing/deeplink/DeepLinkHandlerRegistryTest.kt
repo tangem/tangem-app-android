@@ -279,6 +279,8 @@ internal class DeepLinkHandlerRegistryTest {
             NormalizeKeyModel(key = "wc:abc", expected = null),
             NormalizeKeyModel(key = "https://tangem.com/news%2Fdetails", expected = null),
             NormalizeKeyModel(key = "https://tangem.com/%zz", expected = null),
+            NormalizeKeyModel(key = "https://[REDACTED_EMAIL]/news", expected = null),
+            NormalizeKeyModel(key = "https://tangem.com:443/news", expected = null),
         )
     }
 
