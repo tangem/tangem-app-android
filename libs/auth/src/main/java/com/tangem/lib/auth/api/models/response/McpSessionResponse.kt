@@ -22,6 +22,8 @@ data class McpSessionResponse(
      * a label, not an identity. `null` for a self-registered client, whose metadata is never persisted.
      */
     @Json(name = "clientName") val clientName: String?,
+    /** Logo the client gave itself in its metadata document; `null` when it declared none. */
+    @Json(name = "clientIconUrl") val clientIconUrl: String?,
     /** Scopes granted to the client. */
     @Json(name = "scopes") val scopes: List<String>,
     /** IP address the session was established from. */
