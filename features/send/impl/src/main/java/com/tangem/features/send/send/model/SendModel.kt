@@ -365,7 +365,7 @@ internal class SendModel @Inject constructor(
                 userWalletId = userWallet.walletId,
                 currency = cryptoCurrency,
                 feeCoin = feeCryptoCurrencyStatusFlow.value.currency,
-                feeCurrency = maybeToken?.currency,
+                feeCurrencyStatus = maybeToken,
                 amountUM = uiState.value.amountUM,
                 destinationUM = uiState.value.destinationUM,
             )
