@@ -9,6 +9,9 @@ object TangemPayTestTags {
     // KYC (Sumsub) loading screen the onboarding hands over to
     const val KYC_SCREEN = "TANGEM_PAY_KYC_SCREEN"
 
+    // Region restriction screen the onboarding deeplink shows for an INVALID link
+    const val ONBOARDING_UNAVAILABLE_ICON = "TANGEM_PAY_ONBOARDING_UNAVAILABLE_ICON"
+
     // Payment account details screen
     const val PAYMENT_ACCOUNT_CONTENT = "TANGEM_PAY_PAYMENT_ACCOUNT_CONTENT"
     const val PAYMENT_ACCOUNT_BALANCE = "TANGEM_PAY_PAYMENT_ACCOUNT_BALANCE"
