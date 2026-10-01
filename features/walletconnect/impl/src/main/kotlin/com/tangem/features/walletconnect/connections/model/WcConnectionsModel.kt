@@ -86,10 +86,9 @@ internal class WcConnectionsModel @Inject constructor(
     }
 
     private fun loadMcpSessions() {
-        modelScope.launch {
-            val sessions = mcpRepository.getSessions().getOrNull().orEmpty()
-            val agents = sessions
-                .map { session ->
+        mcpRepository.getSessions()
+            .onEach { sessions ->
+                val agents = sessions.map { session ->
                     McpAgentInfo(
                         id = session.id,
                         // clientOrigin is the only verified part of a client's identity
@@ -99,11 +98,11 @@ internal class WcConnectionsModel @Inject constructor(
                             bottomSheetNavigation.activate(WcConnectionsBottomSheetConfig.McpSession(session.id))
                         },
                     )
-                }
-                .toPersistentList()
+                }.toPersistentList()
 
-            uiState.update { state -> state.copy(connectedAgents = agents) }
-        }
+                uiState.update { state -> state.copy(connectedAgents = agents) }
+            }
+            .launchIn(modelScope)
     }
 
     private fun listenQrUpdates() {
