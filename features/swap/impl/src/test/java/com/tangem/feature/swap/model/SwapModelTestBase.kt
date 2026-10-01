@@ -14,6 +14,7 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
+import com.tangem.domain.account.status.supplier.SingleAccountStatusSupplier
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
@@ -118,6 +119,7 @@ internal abstract class SwapModelTestBase {
     protected val initialCurrenciesResolver: InitialCurrenciesResolver = mockk(relaxed = true)
     protected val accountUnderlyingCurrencies: AccountUnderlyingCurrencies = mockk(relaxed = true)
     protected val multiAccountStatusListSupplier: MultiAccountStatusListSupplier = mockk(relaxed = true)
+    protected val singleAccountStatusSupplier: SingleAccountStatusSupplier = mockk(relaxed = true)
     protected val getPredictionWithdrawDestinationsUseCase: GetPredictionWithdrawDestinationsUseCase =
         mockk(relaxed = true)
     protected val polymarketCollateralCurrencyFactory: PolymarketCollateralCurrencyFactory = mockk()
@@ -267,6 +269,7 @@ internal abstract class SwapModelTestBase {
         initialCurrenciesResolver = initialCurrenciesResolver,
         accountUnderlyingCurrencies = accountUnderlyingCurrencies,
         multiAccountStatusListSupplier = multiAccountStatusListSupplier,
+        singleAccountStatusSupplier = singleAccountStatusSupplier,
         getPredictionWithdrawDestinationsUseCase = getPredictionWithdrawDestinationsUseCase,
         polymarketCollateralCurrencyFactory = polymarketCollateralCurrencyFactory,
         submitPredictionWithdrawalInteractor = submitPredictionWithdrawalInteractor,
