@@ -17,7 +17,6 @@ import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -1023,6 +1022,36 @@ internal class SwapTransferStateBuilderTest {
         }
 
     @Test
+    fun `GIVEN a transfer to the prediction account WHEN the success state is built THEN the destination title is localized`() {
+        // Arrange
+        val transferState = buildTransferState(fromAmount = BigDecimal.ONE, toAmount = BigDecimal.ONE, isAccountsMode = true)
+        val dataState = SwapProcessDataState(
+            fromSwapCurrencyStatus = fromCurrencyStatus,
+            toSwapCurrencyStatus = toCurrencyStatus.copy(account = Account.Prediction(toCurrencyStatus.userWalletId)),
+            amount = BigDecimal.ONE.toPlainString(),
+            currentTransferState = transferState,
+        )
+
+        // Act
+        val result = sut.createTangemPayWithdrawalSuccessState(
+            uiState = baseStateHolder(),
+            dataState = dataState,
+            fee = null,
+            onExploreClick = {},
+            onShareClick = {},
+        )
+
+        // Assert
+        assertThat(requireNotNull(result.successState).toTitle).isEqualTo(
+            AccountTitleUM.Account(
+                prefixText = resourceReference(R.string.swapping_to_account_title),
+                name = resourceReference(R.string.prediction_account_title),
+                icon = AccountIconUM.Prediction,
+            ),
+        )
+    }
+
+    @Test
     fun `GIVEN transfer dataState WHEN createTangemPayWithdrawalSuccessState THEN feeless transfer success holder is built`() {
         // from amount comes from dataState.amount, to amount from transferState.sendingAmount — keep them distinct
         val fromAmount = BigDecimal("2.0")
@@ -1101,7 +1130,7 @@ internal class SwapTransferStateBuilderTest {
     }
 
     @Test
-    fun `GIVEN transfer dataState WHEN createPredictionWithdrawalSentState THEN an in-progress transfer holder without fee or explorer is built`() {
+    fun `GIVEN transfer dataState WHEN createPredictionWithdrawalSentState THEN an in-progress transfer holder without fee or explorer shows the destination account`() {
         // Arrange
         val fromAmount = BigDecimal("5")
         val toAmount = BigDecimal("5")
@@ -1153,13 +1182,12 @@ internal class SwapTransferStateBuilderTest {
                 icon = AccountIconUM.Prediction,
             ),
         )
-        val toCurrency = toCurrencyStatus.currency
+        val toAccount = toCurrencyStatus.account as Account.CryptoPortfolio
         assertThat(success.toTitle).isEqualTo(
-            AccountTitleUM.Text(
-                combinedReference(
-                    resourceReference(R.string.common_to),
-                    stringReference(" ${toCurrency.symbol} · ${toCurrency.network.name}"),
-                ),
+            AccountTitleUM.Account(
+                prefixText = resourceReference(R.string.swapping_to_account_title),
+                name = toAccount.accountName.toUM().value,
+                icon = CryptoPortfolioIconConverter.convert(toAccount.icon),
             ),
         )
     }

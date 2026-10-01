@@ -117,8 +117,9 @@ balance only, as on iOS.
   read-only mode too.
 - **Awaiting-funds banner** follows `PredictionFundingWindow.isOpen`; the poller drops to 5 s while open.
   Opened by a completed prediction top-up swap or a sent order, never by Receive (an external transfer's timing is unknown).
-- A position row opens `PositionResult` when resolved (`canOpenPositionResult`), `PositionDetails` when
-  still open (`canOpenPositionDetails`), nothing otherwise.
+- A position row always opens something: `PositionResult` when resolved with a known outcome
+  (`canOpenPositionResult`), `PositionDetails` otherwise — including a market awaiting its result or one
+  whose lookup failed.
 
 ## Order flow (`placeprediction/`)
 
@@ -143,8 +144,12 @@ Status receives the result, market header and position id as route data and owns
   it is placeable: `quote.isPlaceable` (market state; a SELL also places on `BELOW_MIN_ORDER_SIZE`) and
   `isBelowMinAmount` (BUY only, price-weighted — a SELL has no floor beyond one whole share or the whole
   position).
-- **Shares.** `SharesCalculator`: the sellable size is the position floored to the 2-decimal exchange grid
-  (`PolymarketConst.SHARES_DECIMALS`); presets and ± steps move in whole shares with a floor of one share
+- **Shares.** `SharesCalculator`: the sellable size is the whole position at the on-chain share precision
+  (`PolymarketContracts.SHARE_DECIMALS` = `COLLATERAL_DECIMALS`, 6 — shares are minted 1:1 from
+  collateral base units) — it is not floored onto the 2-decimal amount grid, because the BFF
+  quotes the sale of a whole position at the position's own precision (a sub-cent whole position included).
+  Every share count renders cut down to 2 decimals, as on iOS, never more than is held (`formatPolymarketShares`);
+  only a count below 0.01 keeps its own precision, so a sellable remainder is not shown as `0`; presets and ± steps move in whole shares with a floor of one share
   (or the whole position when smaller), and 100 % is the position itself, so a full close reaches the
   last fraction.
 - **Slippage.** Default 3 %, range 0.1–30 % (`SlippagePickerUM`); a fill at the worst-case price counts as filled.
@@ -168,8 +173,7 @@ Status receives the result, market header and position id as route data and owns
 - **View position.** After a buy fills (`Filled` / `PartiallyFilled`), the result screen reads the created
   position back itself — `PolymarketPositionId(market.conditionId, assetId)`, so a market the BFF gave no
   `conditionId` for offers no button. `ViewPositionUM` drives it: `Awaiting` shows the button with a loader
-  and keeps it disabled, `Available` enables it, `Hidden` leaves the single To main button — including when
-  the read comes back a position the details screen would refuse (`canOpenPositionDetails`). The wait is `CREATED_POSITION_READS`
+  and keeps it disabled, `Available` enables it, `Hidden` leaves the single To main button. The wait is `CREATED_POSITION_READS`
   (15, ~30 s) rather than the details screen's 5, because the index answers `null` for several seconds even
   for an outcome the wallet already held — a read that fails is retried like a missing one. The button
   replaces the whole stack with Main + the position details, so back from the position lands on the feed
@@ -188,16 +192,26 @@ parameter is sent, and `PolymarketPositionsFilter` (`ALL/ACTIVE/WON/LOST/DISPUTE
 locally to the fetched pages through `PolymarketPositionStatusConverter`. A position is identified by
 `PolymarketPositionId(conditionId, assetId)`.
 
-The close gate (`PolymarketPositionDetailsConverter.canClosePosition`): not resolved, no result, not
-redeemable, `marketId` known, `isAcceptingOrders`, `size > 0`. A row whose market lookup failed has no
-`marketId` and must not build `ClosePosition`. iOS gates on `isAcceptingOrders` + market ids only.
-Buy more (`PolymarketPositionDetailsModel.buyableMarket`) needs the position `OPEN`, its event loaded and
-the market holding that outcome still `isAcceptingOrders`; it pushes the ordinary `PlacePrediction` route.
+Close and Buy more in `PolymarketPositionDetailsModel` share one rule, `isMarketTradable` =
+`resolutionStatus == OPEN && isAcceptingOrders`, as on iOS. Close is offered at all only when
+`canClosePosition` (`marketId` known, `size > 0`) — a row whose market lookup failed has no `marketId` and
+must not build `ClosePosition`. Otherwise both buttons stay enabled and a tap on a market that is not
+tradable (pending, disputed, resolved, closed early) opens `PolymarketMarketClosedSheet` instead of the
+order flow. Buy more also needs the event loaded and the market holding that outcome still
+`isAcceptingOrders`; it pushes the ordinary `PlacePrediction` route.
 
-`PolymarketPositionResultComponent` renders a resolved position (WON / LOST / SPLIT); `canOpenPositionResult`
-requires `RESOLVED` and, for WON / SPLIT, `isRedeemable`, so a position already redeemed elsewhere opens
-nothing. **Claiming (redeeming) a won position is not implemented** — [REDACTED_TASK_KEY] (the redeem transaction)
-and [REDACTED_TASK_KEY] (the claim action on the result screen).
+Status of an open position (`PolymarketPositionStatusConverter`, shared by the row badge and the local
+filters): a settled `result` (WON / LOST / SPLIT) wins; otherwise `resolutionStatus` decides, so an
+unrecognised `result` never hides Pending or Disputed. The BFF sends `status` only once the market is
+`RESOLVED`, and a resolved market can still arrive without one while the payout price settles — that row
+has no badge and opens `PositionDetails`. The details notice reads `resolutionStatus` directly; the
+details "Status" line follows iOS: `UNKNOWN` resolution (market lookup failed) reads Pending, `RESOLVED`
+reads the outcome.
+
+`PolymarketPositionResultComponent` renders a resolved position (WON / LOST / SPLIT) and owns the claim
+(`SubmitPredictionClaimInteractor`); `canOpenPositionResult` requires `RESOLVED` and a known outcome, not
+`isRedeemable` — a won position whose payout is not on-chain yet opens the result with a payout-pending
+footer.
 
 ## Gotchas
 
@@ -221,7 +235,6 @@ and [REDACTED_TASK_KEY] (the claim action on the result screen).
 
 | Item | Ticket |
 |---|---|
-| Claim (redeem) of a won position: transaction and claim action | [REDACTED_TASK_KEY], [REDACTED_TASK_KEY] |
 | Drop L2 credentials on CLOB `401` and route to the gate | [REDACTED_TASK_KEY] |
 | Tradezone PnL (`/v1/leaderboard`) | not ticketed |
 | Withdraw beyond USDC · Polygon (phase 2), withdrawal tracker on cold start, explorer link on withdraw | not ticketed |
