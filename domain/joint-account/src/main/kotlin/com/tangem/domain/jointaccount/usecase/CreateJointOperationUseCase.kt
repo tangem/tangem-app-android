@@ -46,6 +46,7 @@ class CreateJointOperationUseCase(
         account: Account.Joint,
         network: Network,
         intent: JointTransferIntent,
+        gasToken: SafeGasToken,
     ): Either<JointOperationCreateError, Unit> = either {
         val userWalletId = account.accountId.userWalletId
 
@@ -75,6 +76,7 @@ class CreateJointOperationUseCase(
             call = call,
             chainId = chainId,
             safeAddress = safeAddress,
+            gasToken = gasToken,
         )
 
         created.getOrElse { error ->
@@ -87,6 +89,7 @@ class CreateJointOperationUseCase(
                     call = call,
                     chainId = chainId,
                     safeAddress = safeAddress,
+                    gasToken = gasToken,
                 ).bind()
             } else {
                 raise(error)
@@ -107,6 +110,7 @@ class CreateJointOperationUseCase(
         call: SafeInnerCall,
         chainId: Long,
         safeAddress: String,
+        gasToken: SafeGasToken,
     ): Either<JointOperationCreateError, Unit> = either {
         val userWalletId = account.accountId.userWalletId
 
@@ -121,7 +125,7 @@ class CreateJointOperationUseCase(
             .bind()
 
         val safeTx = gasBuilder
-            .build(userWalletId = userWalletId, network = network, call = call, gasToken = SafeGasToken.Coin)
+            .build(userWalletId = userWalletId, network = network, call = call, gasToken = gasToken)
             .mapLeft(JointOperationCreateError::Failed)
             .bind()
 

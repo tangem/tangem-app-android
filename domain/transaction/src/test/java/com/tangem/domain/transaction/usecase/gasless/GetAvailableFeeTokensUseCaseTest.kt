@@ -11,6 +11,11 @@ import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.OwnerKeyIndex
+import com.tangem.domain.models.account.JointAccountStatusValue
+import com.tangem.domain.models.account.CryptoPortfolioIcon
+import com.tangem.domain.models.account.AccountName
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -73,6 +78,63 @@ internal class GetAvailableFeeTokensUseCaseTest {
             every { status.value.yieldSupplyStatus } returns yieldSupplyStatus
             return status
         }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class JointNetwork {
+
+        private val jointPath = Network.DerivationPath.Joint(value = "m/44'/60'/888888'/0/0")
+        private val jointNetwork = network.copy(
+            id = network.id.copy(derivationPath = jointPath),
+            derivationPath = jointPath,
+        )
+        private val jointCoin = nativeCoin.copy(network = jointNetwork)
+        private val jointUsdc = usdc.copy(network = jointNetwork)
+
+        @BeforeEach
+        fun resetMocks() {
+            clearMocks(singleAccountStatusListSupplier, gaslessTransactionRepository, currencyChecksRepository)
+
+            coEvery { currencyChecksRepository.isNetworkSupportedForGaslessTx(any()) } returns true
+            coEvery { gaslessTransactionRepository.getSupportedTokens(network = any()) } returns setOf(usdc)
+        }
+
+        @Test
+        fun `GIVEN a joint network WHEN invoke THEN the joint account coin and smart gas tokens are offered`() =
+            runTest {
+                // Arrange
+                val personal = accountStatusList(statuses = listOf(nativeCoin.status(), usdc.status()))
+                val joint = AccountStatus.Joint(
+                    account = Account.Joint(
+                        accountId = AccountId.forJointAccount(userWalletId = userWalletId, value = "0".repeat(64))
+                            .getOrNull()!!,
+                        accountName = AccountName("Joint").getOrNull()!!,
+                        icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
+                        ownerKeyIndex = OwnerKeyIndex(0).getOrNull()!!,
+                        cryptoCurrencies = listOf(jointCoin, jointUsdc),
+                    ),
+                    value = JointAccountStatusValue.Loading,
+                    tokenList = TokenList.Ungrouped(
+                        totalFiatBalance = TotalFiatBalance.Loading,
+                        sortedBy = TokensSortType.NONE,
+                        currencies = listOf(jointCoin.status(), jointUsdc.status()),
+                    ),
+                    priceChangeLce = lceLoading(),
+                )
+                coEvery { singleAccountStatusListSupplier.getSyncOrNull(userWalletId) } returns
+                    personal.copy(accountStatuses = personal.accountStatuses + joint, totalJointAccounts = 1)
+
+                // Act
+                val actual = createUseCase().invoke(
+                    userWallet = userWallet,
+                    network = jointNetwork,
+                    sentCurrencyStatus = jointUsdc.status(),
+                )
+
+                // Assert
+                assertThat(actual.offeredCurrencies()).containsExactly(jointCoin, jointUsdc).inOrder()
+            }
     }
 
     @Nested

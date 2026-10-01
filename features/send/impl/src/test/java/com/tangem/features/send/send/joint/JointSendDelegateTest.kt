@@ -1,11 +1,14 @@
 package com.tangem.features.send.send.joint
 
+import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.blockchain.common.transaction.Fee
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.jointaccount.gas.JointGasTokenResolver
 import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
 import com.tangem.domain.jointaccount.model.SafeGasToken
 import com.tangem.domain.jointaccount.model.JointAccount
@@ -39,6 +42,7 @@ internal class JointSendDelegateTest {
     private val gasBuilder: SafeTxGasBuilder = mockk()
     private val createJointOperationUseCase: CreateJointOperationUseCase = mockk()
     private val networkReader: JointNetworkReader = mockk()
+    private val gasTokenResolver: JointGasTokenResolver = mockk()
 
     private val payloadCodec: JointTransferPayloadCodec = mockk {
         every { encode(any()) } returns SafeInnerCall(to = FIXTURE_RECIPIENT, value = BigInteger.ONE, data = "0x")
@@ -51,13 +55,20 @@ internal class JointSendDelegateTest {
         createJointOperationUseCase = createJointOperationUseCase,
         payloadCodec = payloadCodec,
         networkReader = networkReader,
+        gasTokenResolver = gasTokenResolver,
     )
 
     private val userWalletId = UserWalletId("0011223344556677")
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(jointAccountListSupplier, getAccountCurrencyStatusUseCase, gasBuilder, createJointOperationUseCase)
+        clearMocks(
+            jointAccountListSupplier,
+            getAccountCurrencyStatusUseCase,
+            gasBuilder,
+            createJointOperationUseCase,
+            gasTokenResolver,
+        )
     }
 
     @Test
@@ -68,7 +79,9 @@ internal class JointSendDelegateTest {
             recipient = FIXTURE_RECIPIENT,
             amountWei = BigInteger("1000000000000000000"),
         )
-        coEvery { createJointOperationUseCase(account, fixtureCoin.network, expectedIntent) } returns Unit.right()
+        coEvery {
+            createJointOperationUseCase(account, fixtureCoin.network, expectedIntent, SafeGasToken.Coin)
+        } returns Unit.right()
 
         // Act
         val actual = delegate.createOperation(
@@ -76,11 +89,14 @@ internal class JointSendDelegateTest {
             currency = fixtureCoin,
             amount = BigDecimal.ONE,
             destinationUM = createDestinationContent(),
+            feeToken = null,
         )
 
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
-        coVerify(exactly = 1) { createJointOperationUseCase(account, fixtureCoin.network, expectedIntent) }
+        coVerify(exactly = 1) {
+            createJointOperationUseCase(account, fixtureCoin.network, expectedIntent, SafeGasToken.Coin)
+        }
     }
 
     @Test
@@ -92,11 +108,12 @@ internal class JointSendDelegateTest {
                 currency = fixtureCoin,
                 amount = BigDecimal.ONE,
                 destinationUM = DestinationUM.Empty(),
+                feeToken = null,
             )
 
             // Assert
             assertThat(actual).isEqualTo(JointOperationCreateError.InvalidPayload.left())
-            coVerify(exactly = 0) { createJointOperationUseCase(any(), any(), any()) }
+            coVerify(exactly = 0) { createJointOperationUseCase(any(), any(), any(), any()) }
         }
 
     @Test
@@ -147,6 +164,114 @@ internal class JointSendDelegateTest {
 
         // Assert
         assertThat(actual).isEqualTo(GetFeeError.DataError(cause).left())
+    }
+
+    @Test
+    fun `GIVEN no fee token picked WHEN the extended fee is loaded THEN the coin pays it`() = runTest {
+        // Arrange
+        val safeTx = createSafeTx()
+        coEvery { gasBuilder.build(userWalletId, fixtureUsdc.network, any(), SafeGasToken.Coin) } returns safeTx.right()
+
+        // Act
+        val actual = delegate.loadFeeExtended(
+            userWalletId = userWalletId,
+            currency = fixtureUsdc,
+            feeCoin = fixtureCoin,
+            feeCurrency = null,
+            amountUM = createAmountData(crypto = BigDecimal.ONE),
+            destinationUM = createDestinationContent(),
+        )
+
+        // Assert
+        val expected = TransactionFeeExtended(
+            transactionFee = JointSendFeeConverter(network = fixtureUsdc.network).convert(safeTx),
+            feeTokenId = fixtureCoin.id,
+        )
+        assertThat(actual).isEqualTo(expected.right())
+    }
+
+    @Test
+    fun `GIVEN a smart gas token picked WHEN the extended fee is loaded THEN the refund is quoted in it`() = runTest {
+        // Arrange
+        val gasToken = SafeGasToken.Token(
+            address = fixtureUsdc.contractAddress,
+            decimals = fixtureUsdc.decimals,
+            coinDecimals = 18,
+            nativeToTokenRate = BigDecimal("2000"),
+        )
+        val safeTx = createSafeTx(gasPrice = BigInteger.valueOf(40))
+        coEvery {
+            gasTokenResolver.resolve(fixtureUsdc.network, fixtureUsdc.contractAddress, fixtureUsdc.id.rawCurrencyId)
+        } returns gasToken.right()
+        coEvery { gasBuilder.build(userWalletId, fixtureUsdc.network, any(), gasToken) } returns safeTx.right()
+
+        // Act
+        val actual = delegate.loadFeeExtended(
+            userWalletId = userWalletId,
+            currency = fixtureUsdc,
+            feeCoin = fixtureCoin,
+            feeCurrency = fixtureUsdc,
+            amountUM = createAmountData(crypto = BigDecimal.ONE),
+            destinationUM = createDestinationContent(),
+        )
+
+        // Assert
+        val fee = actual.getOrNull()!!
+        assertThat(fee.feeTokenId).isEqualTo(fixtureUsdc.id)
+        val tokenFee = fee.transactionFee.normal as Fee.Ethereum.TokenCurrency
+        // (150 000 + 110 000) gas × 40 base units = 10.4 USDC
+        assertThat(tokenFee.amount.value).isEqualTo(BigDecimal("10.400000"))
+        assertThat(tokenFee.amount.currencySymbol).isEqualTo(fixtureUsdc.symbol)
+    }
+
+    @Test
+    fun `GIVEN a token outside smart gas WHEN the extended fee is loaded THEN a gasless error without a build`() =
+        runTest {
+            // Arrange
+            coEvery { gasTokenResolver.resolve(any(), any(), any()) } returns null.right()
+
+            // Act
+            val actual = delegate.loadFeeExtended(
+                userWalletId = userWalletId,
+                currency = fixtureUsdc,
+                feeCoin = fixtureCoin,
+                feeCurrency = fixtureUsdc,
+                amountUM = createAmountData(crypto = BigDecimal.ONE),
+                destinationUM = createDestinationContent(),
+            )
+
+            // Assert
+            assertThat(actual.leftOrNull()).isInstanceOf(GetFeeError.GaslessError.DataError::class.java)
+            coVerify(exactly = 0) { gasBuilder.build(any(), any(), any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN a smart gas token picked WHEN the operation is created THEN the use case gets it`() = runTest {
+        // Arrange
+        val account: Account.Joint = mockk()
+        val gasToken = SafeGasToken.Token(
+            address = fixtureUsdc.contractAddress,
+            decimals = fixtureUsdc.decimals,
+            coinDecimals = 18,
+            nativeToTokenRate = BigDecimal("2000"),
+        )
+        coEvery {
+            gasTokenResolver.resolve(fixtureUsdc.network, fixtureUsdc.contractAddress, fixtureUsdc.id.rawCurrencyId)
+        } returns gasToken.right()
+        coEvery { createJointOperationUseCase(account, fixtureUsdc.network, any(), gasToken) } returns Unit.right()
+
+        // Act
+        val actual = delegate.createOperation(
+            account = account,
+            currency = fixtureUsdc,
+            amount = BigDecimal.ONE,
+            destinationUM = createDestinationContent(),
+            feeToken = fixtureUsdc,
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+        coVerify(exactly = 1) { createJointOperationUseCase(account, fixtureUsdc.network, any(), gasToken) }
     }
 
     @Test

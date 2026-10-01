@@ -540,7 +540,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             val onSendTransaction: () -> Unit = mockk(relaxed = true)
             coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
             coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
-            coEvery { jointSendDelegate.createOperation(jointAccount, any(), any(), any()) } returns Unit.right()
+            coEvery { jointSendDelegate.createOperation(jointAccount, any(), any(), any(), any()) } returns Unit.right()
             val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction))
             advanceUntilIdle()
 
@@ -567,7 +567,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
                 coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
                 val amountSlot = slot<BigDecimal>()
                 coEvery {
-                    jointSendDelegate.createOperation(jointAccount, any(), capture(amountSlot), any())
+                    jointSendDelegate.createOperation(jointAccount, any(), capture(amountSlot), any(), any())
                 } returns Unit.right()
                 val params = jointConfirmParams(onSendTransaction = mockk(relaxed = true), enteredAmount = BigDecimal.ONE)
                 val sut = createSendConfirmModel(this, params)
@@ -589,7 +589,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
             val amountSlot = slot<BigDecimal>()
             coEvery {
-                jointSendDelegate.createOperation(jointAccount, any(), capture(amountSlot), any())
+                jointSendDelegate.createOperation(jointAccount, any(), capture(amountSlot), any(), any())
             } returns Unit.right()
             val params = jointConfirmParams(onSendTransaction = mockk(relaxed = true), enteredAmount = BigDecimal("0.5"))
             val sut = createSendConfirmModel(this, params)
@@ -609,7 +609,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
             coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
             coEvery {
-                jointSendDelegate.createOperation(jointAccount, any(), any(), any())
+                jointSendDelegate.createOperation(jointAccount, any(), any(), any(), any())
             } returns JointOperationCreateError.SlotBusy.left()
             val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
             advanceUntilIdle()
@@ -629,7 +629,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             // Arrange
             coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
             coEvery {
-                jointSendDelegate.createOperation(jointAccount, any(), any(), any())
+                jointSendDelegate.createOperation(jointAccount, any(), any(), any(), any())
             } returns JointOperationCreateError.AccountNotReady.left()
             val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
             advanceUntilIdle()
@@ -647,7 +647,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             // Arrange
             coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
             coEvery {
-                jointSendDelegate.createOperation(jointAccount, any(), any(), any())
+                jointSendDelegate.createOperation(jointAccount, any(), any(), any(), any())
             } returns JointOperationCreateError.NetworkStateMoved.left()
             val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
             advanceUntilIdle()
@@ -665,7 +665,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             // Arrange
             coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
             coEvery {
-                jointSendDelegate.createOperation(jointAccount, any(), any(), any())
+                jointSendDelegate.createOperation(jointAccount, any(), any(), any(), any())
             } returns JointOperationCreateError.CompositionMismatch.left()
             val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
             advanceUntilIdle()
