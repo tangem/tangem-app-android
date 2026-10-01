@@ -21,6 +21,9 @@ import com.tangem.domain.promo.models.*
 import com.tangem.utils.SupportedLanguages
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
 import org.junit.jupiter.api.BeforeEach
@@ -268,6 +271,28 @@ internal class DefaultPromoRepositoryTest {
         }
 
         @Test
+        fun `GIVEN request in flight WHEN getCampaigns for same wallet THEN one request serves both`() = runTest {
+            // Arrange
+            val repository = createRepository()
+            val responseGate = CompletableDeferred<Unit>()
+            coEvery { tangemApi.getPromotionsV3(any(), any(), any(), any()) } coAnswers {
+                responseGate.await()
+                ApiResponse.Success(PromotionsV3Response(promotions = listOf(createV3Dto())))
+            }
+
+            // Act
+            val first = async { repository.getCampaigns(coldWallet) }
+            val second = async { repository.getCampaigns(coldWallet) }
+            runCurrent()
+            responseGate.complete(Unit)
+
+            // Assert
+            assertThat(first.await()).containsExactly(createExpectedCampaign())
+            assertThat(second.await()).containsExactly(createExpectedCampaign())
+            coVerify(exactly = 1) { tangemApi.getPromotionsV3(any(), any(), any(), any()) }
+        }
+
+        @Test
         fun `GIVEN campaigns cached WHEN getCampaigns with forceRefresh THEN fetches again`() = runTest {
             // Arrange
             val repository = createRepository()
@@ -309,11 +334,16 @@ internal class DefaultPromoRepositoryTest {
         }
 
         private fun createV3Dto() = PromotionsV3Response.PromotionDto(
+            id = 7,
             name = "example_campaign",
             status = PromotionsV3Response.Status.ACTIVE,
             startAt = "2026-06-01T00:00:00Z",
             endAt = "2026-08-31T23:59:59Z",
             isAlreadyEnrolled = false,
+            eligibility = PromotionsV3Response.Eligibility(
+                type = PromotionsV3Response.EligibilityType.PUBLIC,
+                conditions = null,
+            ),
             properties = PromotionsV3Response.Properties(
                 isPayoutNeeded = false,
                 payoutTokens = null,
@@ -330,6 +360,7 @@ internal class DefaultPromoRepositoryTest {
         )
 
         private fun createExpectedCampaign() = PromoCampaign(
+            id = 7,
             name = "example_campaign",
             status = PromoCampaignStatus.Active,
             timeline = PromoTimeline(
@@ -337,6 +368,7 @@ internal class DefaultPromoRepositoryTest {
                 end = Instant.parse("2026-08-31T23:59:59Z"),
             ),
             isAlreadyEnrolled = false,
+            eligibility = PromoEligibility.Public,
             payout = PromoPayout(isNeeded = false, tokens = emptyList()),
             matchMode = PromoMatchMode.Strict,
             content = PromoCampaignContent(
