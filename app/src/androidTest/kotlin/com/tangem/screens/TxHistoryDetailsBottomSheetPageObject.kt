@@ -75,7 +75,7 @@ class TxHistoryDetailsBottomSheetPageObject(semanticsProvider: SemanticsNodeInte
 
 private const val UNICODE_MINUS = "\u2212"
 private const val ASCII_MINUS = "-"
-private val WHITESPACE_REGEX = "\\s".toRegex()
+private val WHITESPACE_REGEX = "[\\s\\u00A0\\u2007\\u202F]".toRegex()
 
 internal fun BaseTestCase.onTxHistoryDetailsBottomSheet(
     function: TxHistoryDetailsBottomSheetPageObject.() -> Unit,
