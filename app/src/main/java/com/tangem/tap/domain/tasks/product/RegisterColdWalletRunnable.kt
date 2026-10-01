@@ -8,7 +8,6 @@ import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * A card operation that must run the in-session COLD wallet registration itself, at a point where the card is
@@ -37,7 +36,7 @@ internal fun interface InSessionColdWalletRegistration {
  * [ColdWalletRegistrationHost], which is handed the registration to run mid-operation instead.
  *
  * The wallet nonce is prefetched in [prepare], which runs *before* the NFC session (no card needed
- * for the nonce), and [prepare] blocks up to [NONCE_PREFETCH_BUDGET_MS] for it. The nonce round-trip
+ * for the nonce), and [prepare] blocks for it within the launcher's time budget. The nonce round-trip
  * is much slower than the wrapped card command, so fetching it before the tap is what lets it be
  * ready in time. Registration then runs only if the nonce has arrived; otherwise this tap skips it
  * (the card binds on a later one).
@@ -70,13 +69,11 @@ internal class RegisterColdWalletRunnable<T>(
         callback: (result: CompletionResult<Unit>) -> Unit,
     ) {
         // prepare() runs before the NFC session starts, so there is no card yet — but the nonce is
-        // card-independent. Fetch it here (blocking up to the budget) so its slow round-trip overlaps
+        // card-independent. Fetch it here (the launcher caps the wait) so its slow round-trip overlaps
         // the "tap your card" wait instead of the fast card command; a null/timed-out nonce simply
         // skips registration in run(). runSuspendCatching keeps a stray throw from failing the child.
         val job = session.scope.launch {
-            nonce = runSuspendCatching {
-                withTimeoutOrNull(NONCE_PREFETCH_BUDGET_MS) { launcher.prefetchColdNonce() }
-            }.getOrNull()
+            nonce = runSuspendCatching { launcher.prefetchColdNonce() }.getOrNull()
         }
         // Always forward prepare's result — even if the fetch was cancelled — so the session never hangs.
         job.invokeOnCompletion { callback(innerResult) }
@@ -126,9 +123,5 @@ internal class RegisterColdWalletRunnable<T>(
         // scope was already cancelled), so the operation always proceeds — it can never be left hanging,
         // while still waiting for the registration to finish.
         job.invokeOnCompletion { onComplete() }
-    }
-
-    private companion object {
-        const val NONCE_PREFETCH_BUDGET_MS = 5_000L
     }
 }
