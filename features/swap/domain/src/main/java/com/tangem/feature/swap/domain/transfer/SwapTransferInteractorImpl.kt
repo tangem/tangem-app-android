@@ -41,6 +41,7 @@ import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.feature.swap.domain.fee.TransactionFeeResult
 import com.tangem.feature.swap.domain.models.SwapAmount
@@ -59,6 +60,7 @@ class SwapTransferInteractorImpl @Inject constructor(
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val getFeeUseCase: GetFeeUseCase,
     private val getFeeForGaslessUseCase: GetFeeForGaslessUseCase,
+    private val getFeeForTokenUseCase: GetFeeForTokenUseCase,
     private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase,
@@ -377,18 +379,27 @@ class SwapTransferInteractorImpl @Inject constructor(
             network = currency.network,
         ).getOrNull() ?: return feeDataError("Failed to build transfer transaction")
 
+        val selectedCurrency = selectedToken?.currency
+        // A token pick needs a fee quoted in that token; relabelling the native fee would show the
+        // native amount priced at the token rate and skip the fee coverage.
+        if (selectedCurrency is CryptoCurrency.Token) {
+            return getFeeForTokenUseCase(
+                userWallet = userWallet,
+                token = selectedCurrency,
+                transactionData = transactionData,
+                // A yield-supply send zeroes the amount inside TransactionData; the fee plan needs the real one.
+                sentAmount = fromTokenAmount,
+            )
+        }
+
         return getFeeForGaslessUseCase(
             userWallet = userWallet,
             network = currency.network,
             transactionData = transactionData,
-            // A yield-supply send zeroes the amount inside TransactionData; the fee plan needs the real one.
             sentAmount = fromTokenAmount,
         ).map { transactionFeeExtended ->
-            selectedToken ?: return@map transactionFeeExtended
-            val selectedTokenId = selectedToken.currency.id
-            transactionFeeExtended.copy(
-                feeTokenId = selectedTokenId,
-            )
+            selectedCurrency ?: return@map transactionFeeExtended
+            transactionFeeExtended.copy(feeTokenId = selectedCurrency.id)
         }
     }
 
