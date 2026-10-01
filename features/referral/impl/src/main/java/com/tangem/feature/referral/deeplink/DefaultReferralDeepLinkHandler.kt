@@ -35,4 +35,8 @@ internal class DefaultReferralDeepLinkHandler @AssistedInject constructor(
     interface Factory : ReferralDeepLinkHandler.Factory {
         override fun create(): DefaultReferralDeepLinkHandler
     }
+
+    companion object {
+        const val DEEPLINK_KEY = "tangem://referral"
+    }
 }
