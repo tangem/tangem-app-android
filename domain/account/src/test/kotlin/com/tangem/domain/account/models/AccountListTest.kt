@@ -204,6 +204,39 @@ internal class AccountListTest {
     }
 
     @Test
+    fun `GIVEN list with a joint account WHEN withAccounts THEN counters are kept and accounts replaced`() {
+        // Arrange
+        val joint = MockAccounts.createJointAccount(ownerKeyIndex = 0)
+        val main = Account.Personal.createMainAccount(userWalletId)
+        val accountList = AccountList(
+            userWalletId = userWalletId,
+            accounts = listOf(main, joint),
+            totalAccounts = 3,
+            totalArchivedAccounts = 2,
+            totalJointAccounts = 1,
+        ).getOrNull()!!
+
+        // Act
+        val actual = accountList.withAccounts(
+            accounts = listOf(joint, main),
+            sortType = TokensSortType.BALANCE,
+            groupType = TokensGroupType.NETWORK,
+        )
+
+        // Assert
+        val expected = AccountList(
+            userWalletId = userWalletId,
+            accounts = listOf(joint, main),
+            totalAccounts = 3,
+            totalArchivedAccounts = 2,
+            totalJointAccounts = 1,
+            sortType = TokensSortType.BALANCE,
+            groupType = TokensGroupType.NETWORK,
+        )
+        Truth.assertThat(actual).isEqualTo(expected)
+    }
+
+    @Test
     fun `GIVEN joint account with currencies WHEN flattenCurrencies THEN joint currencies are excluded`() {
         // Arrange
         val jointCurrency = mockk<CryptoCurrency>()
