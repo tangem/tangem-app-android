@@ -68,8 +68,8 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         onPicked: (SocialLoginProvider) -> Unit,
     ): WalletOptionUM? = provider?.let { provider ->
         WalletOptionUM(
-            // TODO [REDACTED_TASK_KEY]: the coloured provider mark is not in the design system yet.
-            iconRes = CoreUiR.drawable.ic_user_24,
+            iconRes = CoreUiR.drawable.img_google_32,
+            isIconTinted = false,
             title = resourceReference(
                 id = CoreResR.string.introduction_create_wallet_social_title,
                 formatArgs = wrappedList(provider.displayName()),
