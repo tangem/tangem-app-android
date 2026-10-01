@@ -28,7 +28,7 @@ class DeepLinkHandlerRegistry(handlers: Map<String, DeepLinkHandler>) {
         val candidateKeys = candidateKeys(
             scheme = uri.scheme,
             host = uri.host,
-            path = uri.path,
+            pathSegments = uri.pathSegments,
             maxPathSegments = maxPathSegments,
         )
         val registeredKeys = candidateKeys.filter(handlers::containsKey)
@@ -70,7 +70,7 @@ class DeepLinkHandlerRegistry(handlers: Map<String, DeepLinkHandler>) {
             }
             val (scheme, host, path) = match.destructured
 
-            return candidateKeys(scheme = scheme, host = host.ifEmpty { null }, path = path).first()
+            return candidateKeys(scheme = scheme, host = host.ifEmpty { null }, pathSegments = path.split('/')).first()
         }
 
         private fun normalizeKeys(handlers: Map<String, DeepLinkHandler>): Map<String, DeepLinkHandler> {
@@ -88,10 +88,14 @@ class DeepLinkHandlerRegistry(handlers: Map<String, DeepLinkHandler>) {
             return normalizedKey.substringAfter(delimiter = "://", missingDelimiterValue = "").count { it == '/' }
         }
 
+        /**
+         * [pathSegments] are decoded segments, as [Uri.getPathSegments] returns them. A segment with an encoded
+         * slash (`%2F`) can't match a key segment, so no prefixes are built from it on.
+         */
         fun candidateKeys(
             scheme: String?,
             host: String?,
-            path: String?,
+            pathSegments: List<String>,
             maxPathSegments: Int = Int.MAX_VALUE,
         ): List<String> {
             if (scheme.isNullOrBlank()) return emptyList()
@@ -100,9 +104,10 @@ class DeepLinkHandlerRegistry(handlers: Map<String, DeepLinkHandler>) {
             if (host.isNullOrBlank()) return listOf(schemeKey)
 
             val hostKey = "$scheme://$host"
-            val pathKeys = path.orEmpty()
-                .splitToSequence("/")
+            val pathKeys = pathSegments
+                .asSequence()
                 .filter(String::isNotEmpty)
+                .takeWhile { segment -> '/' !in segment }
                 .take(maxPathSegments)
                 .runningFold(hostKey) { prefix, segment -> "$prefix/$segment" }
                 .drop(1)
