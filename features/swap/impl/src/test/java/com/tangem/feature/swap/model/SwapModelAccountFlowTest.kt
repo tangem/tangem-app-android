@@ -5,9 +5,15 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
+import com.tangem.common.ui.account.AccountIconUM
+import com.tangem.common.ui.account.AccountTitleUM
+import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -19,6 +25,7 @@ import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -28,6 +35,7 @@ import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.WithdrawalResult
+import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.interactor.PredictionWithdrawalFailure
 import com.tangem.domain.polymarket.interactor.SubmitPredictionWithdrawalInteractor
@@ -800,6 +808,85 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             assertThat(receiveCard.isSelectionLocked).isTrue()
             assertThat(model.uiState.titleId).isEqualTo(R.string.common_add_funds)
             assertThat(model.uiState.changeCardsButtonState).isEqualTo(ChangeCardsButtonState.HIDDEN)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction top-up with accounts mode off WHEN the state is built THEN both cards show account names`() =
+        runTest {
+            // Arrange
+            val (from, collateral) = stubResolvedTopUpPair()
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.PredictionTopUp)
+            advanceUntilIdle()
+
+            // Assert
+            val sendTitle = (model.uiState.sendCardData as SwapCardState.SwapCardData).type.accountTitleUM
+            val receiveTitle = (model.uiState.receiveCardData as SwapCardState.SwapCardData).type.accountTitleUM
+            assertThat((sendTitle as AccountTitleUM.Account).name).isEqualTo(from.account.accountName.toUM().value)
+            assertThat((receiveTitle as AccountTitleUM.Account).icon).isEqualTo(AccountIconUM.Prediction)
+            assertThat(receiveTitle.name).isEqualTo(resourceReference(R.string.prediction_account_title))
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction top-up WHEN the state is built THEN the receive card shows the prediction account in pUSD`() =
+        runTest {
+            // Arrange
+            val (_, collateral) = stubResolvedTopUpPair()
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.PredictionTopUp)
+            advanceUntilIdle()
+
+            // Assert
+            val receiveCard = model.uiState.receiveCardData as SwapCardState.SwapCardData
+            val expectedBalance = collateral.status.value.amount.format {
+                crypto(
+                    symbol = PolymarketCollateralCurrencyFactory.COLLATERAL_SYMBOL,
+                    decimals = PolymarketContracts.COLLATERAL_DECIMALS,
+                )
+            }
+            assertThat(receiveCard.currencyIconState).isEqualTo(CurrencyIconState.PredictionAccount())
+            assertThat(receiveCard.balance)
+                .isEqualTo(resourceReference(R.string.common_balance, wrappedList(expectedBalance)))
+            assertThat(receiveCard.tokenSymbol).isEqualTo(stringReference(collateral.currency.symbol))
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction top-up WHEN the prediction balance changes THEN the receive card shows the new pUSD balance`() =
+        runTest {
+            // Arrange
+            val (_, collateral) = stubResolvedTopUpPair()
+            val updatedAmount = BigDecimal("7.5")
+            val updatedCollateralStatus = collateral.status.copy(
+                value = mockk<CryptoCurrencyStatus.Value>(relaxed = true) {
+                    every { amount } returns updatedAmount
+                },
+            )
+            val predictionStatusValue = mockk<PredictionAccountStatusValue.Active>(relaxed = true) {
+                every { cryptoCurrencyStatus } returns updatedCollateralStatus
+            }
+            every { singleAccountStatusSupplier(any()) } returns flowOf(
+                AccountStatus.Prediction(account = Account.Prediction(userWalletId), value = predictionStatusValue),
+            )
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.PredictionTopUp)
+            advanceUntilIdle()
+
+            // Assert
+            val receiveCard = model.uiState.receiveCardData as SwapCardState.SwapCardData
+            val expectedBalance = updatedAmount.format {
+                crypto(
+                    symbol = PolymarketCollateralCurrencyFactory.COLLATERAL_SYMBOL,
+                    decimals = PolymarketContracts.COLLATERAL_DECIMALS,
+                )
+            }
+            assertThat(receiveCard.balance)
+                .isEqualTo(resourceReference(R.string.common_balance, wrappedList(expectedBalance)))
             model.onDestroy()
         }
 
