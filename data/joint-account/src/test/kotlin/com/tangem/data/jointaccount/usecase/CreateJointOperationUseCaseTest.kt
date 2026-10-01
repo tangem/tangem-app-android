@@ -85,7 +85,7 @@ internal class CreateJointOperationUseCaseTest {
             safeTx().right()
 
         // Act
-        val actual = useCase(account = account, network = network, intent = intent)
+        val actual = useCase(account = account, network = network, intent = intent, gasToken = SafeGasToken.Coin)
 
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
@@ -137,6 +137,7 @@ internal class CreateJointOperationUseCaseTest {
             account = account,
             network = network,
             intent = JointTransferIntent.Erc20(tokenContract = TOKEN, recipient = RECIPIENT, amountWei = AMOUNT),
+            gasToken = SafeGasToken.Coin,
         )
 
         // Assert
@@ -154,7 +155,7 @@ internal class CreateJointOperationUseCaseTest {
             flowOf(listOf(jointAccount(inFlightOperations = mapOf(CHAIN_ID to jointOperation()))))
 
         // Act
-        val actual = useCase(account = account, network = network, intent = intent)
+        val actual = useCase(account = account, network = network, intent = intent, gasToken = SafeGasToken.Coin)
 
         // Assert
         assertThat(actual).isEqualTo(JointOperationCreateError.SlotBusy.left())
@@ -170,7 +171,7 @@ internal class CreateJointOperationUseCaseTest {
             flowOf(listOf(jointAccount(status = JointAccount.Status.CONFIRMING)))
 
         // Act
-        val actual = useCase(account = account, network = network, intent = intent)
+        val actual = useCase(account = account, network = network, intent = intent, gasToken = SafeGasToken.Coin)
 
         // Assert
         assertThat(actual).isEqualTo(JointOperationCreateError.AccountNotReady.left())
@@ -184,7 +185,7 @@ internal class CreateJointOperationUseCaseTest {
             JointOperationCreateError.CompositionMismatch.left()
 
         // Act
-        val actual = useCase(account = account, network = network, intent = intent)
+        val actual = useCase(account = account, network = network, intent = intent, gasToken = SafeGasToken.Coin)
 
         // Assert
         assertThat(actual).isEqualTo(JointOperationCreateError.CompositionMismatch.left())
@@ -199,6 +200,7 @@ internal class CreateJointOperationUseCaseTest {
             account = account,
             network = network,
             intent = JointTransferIntent.Native(recipient = SAFE_ADDRESS.uppercase().replace("0X", "0x"), amountWei = AMOUNT),
+            gasToken = SafeGasToken.Coin,
         )
 
         // Assert
@@ -217,6 +219,7 @@ internal class CreateJointOperationUseCaseTest {
                 recipient = RECIPIENT,
                 amountWei = BigInteger.ONE.shiftLeft(256),
             ),
+            gasToken = SafeGasToken.Coin,
         )
 
         // Assert
@@ -231,6 +234,7 @@ internal class CreateJointOperationUseCaseTest {
             account = account,
             network = network,
             intent = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = BigInteger.ZERO),
+            gasToken = SafeGasToken.Coin,
         )
 
         // Assert
@@ -247,7 +251,7 @@ internal class CreateJointOperationUseCaseTest {
         )
 
         // Act
-        val actual = useCase(account = account, network = network, intent = intent)
+        val actual = useCase(account = account, network = network, intent = intent, gasToken = SafeGasToken.Coin)
 
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
@@ -265,7 +269,7 @@ internal class CreateJointOperationUseCaseTest {
             JointOperationCreateError.NetworkStateMoved.left()
 
         // Act
-        val actual = useCase(account = account, network = network, intent = intent)
+        val actual = useCase(account = account, network = network, intent = intent, gasToken = SafeGasToken.Coin)
 
         // Assert
         assertThat(actual).isEqualTo(JointOperationCreateError.NetworkStateMoved.left())
@@ -279,7 +283,7 @@ internal class CreateJointOperationUseCaseTest {
             JointOperationSigningError.UserCancelled.left()
 
         // Act
-        val actual = useCase(account = account, network = network, intent = intent)
+        val actual = useCase(account = account, network = network, intent = intent, gasToken = SafeGasToken.Coin)
 
         // Assert
         assertThat(actual).isEqualTo(JointOperationCreateError.UserCancelled.left())
