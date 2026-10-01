@@ -136,7 +136,7 @@ internal class DefaultSocialLoginUseCaseTest {
         coEvery { setSocialBackupCompletedUseCase(any(), any()) } returns Either.Right(Unit)
 
         every { mnemonicRepository.generateMnemonic(any<String>()) } returns mockk()
-        coEvery { hotWalletImporter.import(any(), any(), any(), any(), any()) } returns RESTORED_WALLET_ID.right()
+        coEvery { hotWalletImporter.import(any(), any(), any(), any(), any(), any()) } returns RESTORED_WALLET_ID.right()
         coEvery { registerRestoredWalletUseCase(RESTORED_WALLET_ID) } returns Unit.right()
         coEvery { deleteWalletUseCase(RESTORED_WALLET_ID) } returns false.right()
     }
@@ -311,16 +311,16 @@ internal class DefaultSocialLoginUseCaseTest {
             val actual = useCase.signIn(PROVIDER) { CONSENT }
 
             // Assert
-            assertThat(actual).isEqualTo(SocialLoginOutcome.WalletRestored(RESTORED_WALLET_ID).right())
+            assertThat(actual).isEqualTo(SocialLoginOutcome.WalletRestored(RESTORED_WALLET_ID, isNewOnDevice = true).right())
             coVerifyOrder {
                 setSocialBackupCompletedUseCase(RESTORED_WALLET_ID, true)
-                hotWalletImporter.import(any(), any(), any(), any(), any())
+                hotWalletImporter.import(any(), any(), any(), any(), any(), any())
             }
             coVerify(exactly = 0) { registerSocialRecoveryUseCase(any(), any(), any()) }
         }
 
     @Test
-    fun `GIVEN identity owns a wallet WHEN signIn THEN the imported wallet is registered`() = runTest {
+    fun `GIVEN identity owns a wallet WHEN signIn THEN it is imported without events and registered`() = runTest {
         // Arrange
         bindIdentity()
         coEvery { readSocialBackupUseCase(any()) } returns restoredBackup().right()
@@ -330,7 +330,7 @@ internal class DefaultSocialLoginUseCaseTest {
 
         // Assert
         coVerifyOrder {
-            hotWalletImporter.import(any(), any(), any(), any(), any())
+            hotWalletImporter.import(any(), any(), any(), any(), any(), creationType = null)
             registerRestoredWalletUseCase(RESTORED_WALLET_ID)
         }
     }
@@ -357,7 +357,7 @@ internal class DefaultSocialLoginUseCaseTest {
             // Arrange
             bindIdentity()
             coEvery { readSocialBackupUseCase(any()) } returns restoredBackup().right()
-            coEvery { hotWalletImporter.import(any(), any(), any(), any(), any()) } returns
+            coEvery { hotWalletImporter.import(any(), any(), any(), any(), any(), any()) } returns
                 HotWalletImportError.AlreadySaved.left()
             coEvery { registerRestoredWalletUseCase(RESTORED_WALLET_ID) } returns SocialLoginError.ServerError().left()
 
@@ -381,7 +381,7 @@ internal class DefaultSocialLoginUseCaseTest {
         // Assert
         assertThat(actual).isEqualTo(SocialLoginError.InvalidBackupFile.left())
         coVerify(exactly = 0) {
-            hotWalletImporter.import(any(), any(), any(), any(), any())
+            hotWalletImporter.import(any(), any(), any(), any(), any(), any())
             setSocialBackupCompletedUseCase(any(), any())
         }
     }
@@ -399,7 +399,7 @@ internal class DefaultSocialLoginUseCaseTest {
         // Assert
         assertThat(actual).isEqualTo(SocialLoginError.PassphraseNotSupported.left())
         coVerify(exactly = 0) {
-            hotWalletImporter.import(any(), any(), any(), any(), any())
+            hotWalletImporter.import(any(), any(), any(), any(), any(), any())
             setSocialBackupCompletedUseCase(any(), any())
         }
     }
@@ -410,7 +410,7 @@ internal class DefaultSocialLoginUseCaseTest {
         bindIdentity()
         coEvery { readSocialBackupUseCase(any()) } returns restoredBackup().right()
         val cause = IllegalStateException("sdk")
-        coEvery { hotWalletImporter.import(any(), any(), any(), any(), any()) } returns
+        coEvery { hotWalletImporter.import(any(), any(), any(), any(), any(), any()) } returns
             HotWalletImportError.Unknown(cause).left()
 
         // Act
@@ -437,7 +437,7 @@ internal class DefaultSocialLoginUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(SocialLoginError.PersistenceFailed().left())
-        coVerify(exactly = 0) { hotWalletImporter.import(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { hotWalletImporter.import(any(), any(), any(), any(), any(), any()) }
     }
 
     @Test

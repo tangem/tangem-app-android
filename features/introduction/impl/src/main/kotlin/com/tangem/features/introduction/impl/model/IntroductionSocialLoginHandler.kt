@@ -3,7 +3,9 @@ package com.tangem.features.introduction.impl.model
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.TangemBlogUrlBuilder.Post.WhatWalletToChoose
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.navigation.Router
@@ -29,6 +31,7 @@ import com.tangem.domain.sociallogin.usecase.GetAvailableSocialLoginProvidersUse
 import com.tangem.features.hotwallet.SocialLoginOutcome
 import com.tangem.features.hotwallet.SocialLoginStage
 import com.tangem.features.hotwallet.SocialLoginUseCase
+import com.tangem.features.introduction.impl.analytics.SocialLoginAnalyticsEvents
 import com.tangem.features.introduction.impl.ui.state.SocialLoginConsentUM
 import com.tangem.features.introduction.impl.ui.state.SocialLoginProgressUM
 import com.tangem.features.introduction.impl.ui.state.WalletOptionUM
@@ -49,6 +52,8 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
     private val socialLoginUseCase: SocialLoginUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val appCoroutineScope: AppCoroutineScope,
+    private val analyticsEventHandler: AnalyticsEventHandler,
+    private val referral: IntroductionReferral,
     private val urlOpener: UrlOpener,
     private val router: Router,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
@@ -87,11 +92,16 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
      * Safe to interrupt: the flow resumes a partly finished creation on the next attempt rather than
      * creating a second wallet.
      */
-    fun start(scope: CoroutineScope, provider: SocialLoginProvider, host: Host) {
-        scope.launch { signIn(provider, host) }
+    fun start(
+        scope: CoroutineScope,
+        provider: SocialLoginProvider,
+        source: AnalyticsParam.ScreensSources,
+        host: Host,
+    ) {
+        scope.launch { signIn(provider, source, host) }
     }
 
-    suspend fun signIn(provider: SocialLoginProvider, host: Host) {
+    suspend fun signIn(provider: SocialLoginProvider, source: AnalyticsParam.ScreensSources, host: Host) {
         val attemptId = UUID.randomUUID().toString()
         TangemLogger.i("Social login attempt $attemptId started")
 
@@ -110,7 +120,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         try {
             result.fold(
                 ifLeft = { error -> onFailure(provider, error, attemptId) },
-                ifRight = { outcome -> onSuccess(outcome) },
+                ifRight = { outcome -> onSuccess(outcome, source) },
             )
         } finally {
             host.onProgress(null)
@@ -146,13 +156,38 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         ),
         acknowledgement = providerReference(CoreResR.string.social_login_consent_acknowledge, provider),
         onStateChanged = onConsent,
+        onEvent = ::onConsentEvent,
     )
 
     private fun openHelpArticle() {
         appCoroutineScope.launch { urlOpener.openUrl(TangemBlogUrlBuilder.build(WhatWalletToChoose)) }
     }
 
-    private suspend fun onSuccess(outcome: SocialLoginOutcome) {
+    private fun onConsentEvent(event: SocialLoginConsentPrompt.Event) {
+        analyticsEventHandler.send(
+            when (event) {
+                SocialLoginConsentPrompt.Event.Shown -> SocialLoginAnalyticsEvents.RiskConsentScreenOpened()
+                SocialLoginConsentPrompt.Event.AcknowledgementMissing ->
+                    SocialLoginAnalyticsEvents.RiskConsentNotConfirmed()
+                is SocialLoginConsentPrompt.Event.Confirmed -> SocialLoginAnalyticsEvents.MarketingEmailsConsent(
+                    isGiven = event.isEmailSharingAllowed,
+                    // TODO [REDACTED_TASK_KEY]: the localized social_login_consent_email_sharing the viewer saw, once it exists
+                    consentText = "Share my email with Tangem for product updates",
+                )
+            },
+        )
+    }
+
+    private suspend fun onSuccess(outcome: SocialLoginOutcome, source: AnalyticsParam.ScreensSources) {
+        // Before the selection: the wallet is saved either way, and a retry would come back as a restore.
+        when (outcome) {
+            is SocialLoginOutcome.WalletCreated ->
+                sendWalletCreated(source, AnalyticsParam.WalletCreationType.NewSocialLogin)
+            is SocialLoginOutcome.WalletRestored -> if (outcome.isNewOnDevice) {
+                sendWalletCreated(source, AnalyticsParam.WalletCreationType.SocialLoginImport)
+            }
+        }
+
         // Leaving the previous wallet selected would open its portfolio, as if the sign-in went elsewhere.
         userWalletsListRepository.select(outcome.userWalletId).onLeft { error ->
             TangemLogger.e("Failed to select the social login wallet: $error")
@@ -173,12 +208,32 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         router.replaceAll(AppRoute.Wallet)
     }
 
+    private suspend fun sendWalletCreated(
+        source: AnalyticsParam.ScreensSources,
+        creationType: AnalyticsParam.WalletCreationType,
+    ) {
+        analyticsEventHandler.send(OnboardingAnalyticsEvent.Onboarding.Finished(source = source))
+        analyticsEventHandler.send(
+            OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
+                source = source,
+                creationType = creationType,
+                seedPhraseLength = SEED_PHRASE_LENGTH,
+                passPhraseState = AnalyticsParam.EmptyFull.Empty,
+                referralId = referral.readId(),
+            ),
+        )
+    }
+
     /**
      * Signs out first: the alternative flows offer a plain retry, and on Android the account chooser
      * only comes back for an account the app has not remembered.
      */
     private suspend fun onFailure(provider: SocialLoginProvider, error: SocialLoginError, attemptId: String) {
         socialLoginUseCase.signOut(provider)
+
+        if (error != SocialLoginError.ConsentDeclined) {
+            analyticsEventHandler.send(SocialLoginAnalyticsEvents.ErrorShown(errorMessage = error.toAnalyticsMessage()))
+        }
 
         when (error) {
             SocialLoginError.ConsentDeclined -> Unit
@@ -264,4 +319,25 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
 
     private fun providerReference(@StringRes id: Int, provider: SocialLoginProvider): TextReference =
         resourceReference(id = id, formatArgs = wrappedList(provider.displayName()))
+
+    private fun SocialLoginError.toAnalyticsMessage(): String = when (this) {
+        SocialLoginError.BackupNotFound,
+        SocialLoginError.InvalidBackupFile,
+        is SocialLoginError.UnsupportedBackupVersion,
+        is SocialLoginError.RecoveryKeyDecryptionFailed,
+        SocialLoginError.PassphraseNotSupported,
+        -> "We couldn't restore the wallet for this account"
+        SocialLoginError.CloudUnavailable -> "No access to the cloud storage"
+        SocialLoginError.NetworkError -> "No internet connection"
+        SocialLoginError.SessionExpired -> "Session expired"
+        is SocialLoginError.BackupWriteFailed -> "Couldn't save backup"
+        SocialLoginError.BindingConflict -> "Account is already linked to another wallet"
+        SocialLoginError.NoProviderAccount -> "No account on the device"
+        SocialLoginError.ProviderUnavailable -> "Sign-in is not available on this device"
+        else -> "Something went wrong"
+    }
+
+    private companion object {
+        const val SEED_PHRASE_LENGTH = 12
+    }
 }
