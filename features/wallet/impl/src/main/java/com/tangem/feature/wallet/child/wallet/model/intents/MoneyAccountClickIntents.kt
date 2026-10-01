@@ -13,7 +13,8 @@ import com.tangem.core.ui.extensions.styledResourceReference
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_heart_broken_32
+import com.tangem.core.ui.res.generated.icons.ic_clock_28
+import com.tangem.core.ui.res.generated.icons.ic_heart_broken_28
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
@@ -41,9 +42,9 @@ internal class MoneyAccountClickIntentsImplementor @Inject constructor(
     override fun onMoneyAccountActivatingClicked() {
         val bottomSheet = bottomSheetMessage {
             infoBlock {
-                icon(com.tangem.core.ui.R.drawable.ic_clock_24) {
-                    type = MessageBottomSheetUM.Icon.Type.Informative
-                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Informative
+                vector(Icons.ic_clock_28) {
+                    type = MessageBottomSheetUM.Vector.Type.Informative
+                    backgroundType = MessageBottomSheetUM.Vector.BackgroundType.Informative
                 }
                 title = resourceReference(R.string.money_account_main_status_dialog_activating_title)
                 body = resourceReference(R.string.money_account_main_status_dialog_activating_description)
@@ -60,9 +61,9 @@ internal class MoneyAccountClickIntentsImplementor @Inject constructor(
     override fun onMoneyAccountVerificationClicked(userWalletId: UserWalletId, customerId: String) {
         val bottomSheet = bottomSheetMessage {
             infoBlock {
-                icon(com.tangem.core.ui.R.drawable.ic_clock_24) {
-                    type = MessageBottomSheetUM.Icon.Type.Informative
-                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Informative
+                vector(Icons.ic_clock_28) {
+                    type = MessageBottomSheetUM.Vector.Type.Informative
+                    backgroundType = MessageBottomSheetUM.Vector.BackgroundType.Informative
                 }
                 title = resourceReference(R.string.money_account_main_status_dialog_verification_title)
                 body = resourceReference(R.string.money_account_main_status_dialog_verification_description)
@@ -94,7 +95,7 @@ internal class MoneyAccountClickIntentsImplementor @Inject constructor(
     override fun onMoneyAccountVerificationDeclinedClicked(userWalletId: UserWalletId, customerId: String) {
         val bottomSheet = bottomSheetMessage {
             infoBlock {
-                vector(Icons.ic_heart_broken_32) {
+                vector(Icons.ic_heart_broken_28) {
                     type = MessageBottomSheetUM.Vector.Type.Warning
                     backgroundType = MessageBottomSheetUM.Vector.BackgroundType.Warning
                 }
@@ -134,7 +135,7 @@ internal class MoneyAccountClickIntentsImplementor @Inject constructor(
         )
         val bottomSheet = bottomSheetMessage {
             infoBlock {
-                vector(Icons.ic_heart_broken_32) {
+                vector(Icons.ic_heart_broken_28) {
                     type = MessageBottomSheetUM.Vector.Type.Warning
                     backgroundType = MessageBottomSheetUM.Vector.BackgroundType.Warning
                 }
