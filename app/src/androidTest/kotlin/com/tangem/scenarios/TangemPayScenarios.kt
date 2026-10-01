@@ -1,5 +1,6 @@
 package com.tangem.scenarios
 
+import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.longClick
@@ -29,6 +30,7 @@ import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.test.BaseButtonTestTags
+import com.tangem.core.ui.test.BaseDialogTestTags
 import com.tangem.core.ui.test.HotWalletAccessCodeTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.account.Account
@@ -714,12 +716,37 @@ fun BaseTestCase.chooseWithdrawSourceToken(tokenName: String, networkName: Strin
     }
 }
 
+fun BaseTestCase.awaitTangemPayWithdrawOrderPolls(orderEndpoint: String, expectedCount: Int) {
+    awaitAssert {
+        val actualCount = getWireMockRequestCount("GET", orderEndpoint)
+        if (actualCount < expectedCount) {
+            throw AssertionError("Expected at least $expectedCount requests to $orderEndpoint, got $actualCount")
+        }
+    }
+}
+
+fun BaseTestCase.openTangemPayWithdrawReadyToConfirm(receiveToken: String, amount: String) {
+    step("Open Tangem Pay withdraw Swap screen") { openTangemPayWithdrawSwapScreen() }
+    step("Choose receive token '$receiveToken'") { chooseWithdrawReceiveToken(receiveToken) }
+    enterWithdrawAmount(amount)
+    step("Assert receive amount is displayed") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) { onSwapTokenScreen { receiveAmount.assertIsDisplayed() } }
+    }
+}
+
 // The withdraw HoldToConfirm re-disables during the ~10s quote refresh; re-hold each poll until it takes.
 fun BaseTestCase.confirmTangemPayWithdrawByHolding(accessCode: String) {
     val buttonMatcher = hasTestTag(BaseButtonTestTags.BUTTON)
     val accessCodeInput = hasTestTag(HotWalletAccessCodeTestTags.ACCESS_CODE_INPUT)
     val swapInProgress = hasText(getResourceString(CoreUiR.string.swap_in_progress))
+    val withdrawErrorDialog = hasTestTag(BaseDialogTestTags.CONTAINER) and
+        hasAnyDescendant(hasText(getResourceString(CoreResR.string.common_unknown_error)))
     composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG) {
+        // A failing withdraw/data call ends in this dialog before any access code prompt. Raw Compose on
+        // purpose: a Kakao check would sit out Kaspresso's 10 s flaky-safety retry on every iteration.
+        if (runCatching { composeTestRule.onNode(withdrawErrorDialog).assertExists() }.isSuccess) {
+            return@waitUntil true
+        }
         val buttons = composeTestRule.onAllNodes(buttonMatcher)
         val count = buttons.fetchSemanticsNodes().size
         if (count > 0) {
@@ -733,6 +760,8 @@ fun BaseTestCase.confirmTangemPayWithdrawByHolding(accessCode: String) {
     }
     if (composeTestRule.onAllNodes(accessCodeInput).fetchSemanticsNodes().isNotEmpty()) {
         composeTestRule.onNode(accessCodeInput).performTextInput(accessCode)
+        // A keyboard left open is taken for a system dialog, and every later check stalls on its suppression.
+        Espresso.closeSoftKeyboard()
         waitForIdle()
     }
 }
