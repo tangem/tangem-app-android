@@ -25,6 +25,7 @@ import com.tangem.domain.jointaccount.supplier.find
 import com.tangem.domain.jointaccount.safe.SafeCompositionChecker
 import com.tangem.domain.jointaccount.safe.SafeDeployment
 import com.tangem.domain.jointaccount.verifier.JointOperationVerifier
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
@@ -84,7 +85,7 @@ class SignJointOperationUseCase(
                 operation = operation,
                 displayed = displayed,
                 ownerAddress = ownerAddress,
-                refundBounds = refundBounds(userWalletId = userWalletId, network = network, operation = operation),
+                refundBounds = refundBounds(account = account, network = network, operation = operation),
             )
             .bind()
 
@@ -227,10 +228,11 @@ class SignJointOperationUseCase(
     }
 
     private suspend fun Raise<JointOperationSignError>.refundBounds(
-        userWalletId: UserWalletId,
+        account: Account.Joint,
         network: Network,
         operation: JointOperation,
     ): JointOperationVerifier.RefundBounds {
+        val userWalletId = account.accountId.userWalletId
         val refundReceiver = Either
             .catch { refundReceiverProvider.refundReceiver() }
             .mapLeft(JointOperationSignError::Failed)
@@ -242,7 +244,15 @@ class SignJointOperationUseCase(
             .bind()
 
         val gasToken = gasTokenResolver
-            .resolve(network = network, address = operation.safeTx.gasToken)
+            .resolve(
+                network = network,
+                address = operation.safeTx.gasToken,
+                rawCurrencyId = account.cryptoCurrencies
+                    .filterIsInstance<CryptoCurrency.Token>()
+                    .firstOrNull { it.contractAddress.equals(operation.safeTx.gasToken, ignoreCase = true) }
+                    ?.id
+                    ?.rawCurrencyId,
+            )
             .mapLeft(JointOperationSignError::Failed)
             .bind()
         ensureNotNull(gasToken) {
