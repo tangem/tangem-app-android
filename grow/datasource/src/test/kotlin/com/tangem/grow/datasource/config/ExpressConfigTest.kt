@@ -58,6 +58,13 @@ internal class ExpressConfigTest {
                 ApiEnvironment.STAGE_3 to "[REDACTED_ENV_URL]",
                 ApiEnvironment.MOCK to "[REDACTED_ENV_URL]",
                 ApiEnvironment.PROD to "https://express.tangem.com/v1/",
+                ApiEnvironment.DEV_NEW to "[REDACTED_ENV_URL]",
+                ApiEnvironment.DEV_2_NEW to "[REDACTED_ENV_URL]",
+                ApiEnvironment.DEV_3_NEW to "[REDACTED_ENV_URL]",
+                ApiEnvironment.DEV_4_NEW to "[REDACTED_ENV_URL]",
+                ApiEnvironment.DEV_5_NEW to "[REDACTED_ENV_URL]",
+                ApiEnvironment.DEV_6_NEW to "[REDACTED_ENV_URL]",
+                ApiEnvironment.PROD_NEW to "https://express-new.tangem.com/v1/",
             ),
         )
     }
@@ -88,6 +95,18 @@ internal class ExpressConfigTest {
         )
         // timezone is derived from TimeZone.getDefault() at runtime — assert presence, not a fixed value.
         assertThat(actual["timezone"]).isNotNull()
+    }
+
+    @Test
+    fun `GIVEN config WHEN read PROD_NEW api key THEN prod express api key`() = runBlocking {
+        // Arrange
+        val prodNew = config.environmentConfigs.first { it.environment == ApiEnvironment.PROD_NEW }
+
+        // Act
+        val actual = prodNew.headers.getValue("api-key").invoke()
+
+        // Assert
+        assertThat(actual).isEqualTo(EXPRESS_API_KEY)
     }
 
     private companion object {
