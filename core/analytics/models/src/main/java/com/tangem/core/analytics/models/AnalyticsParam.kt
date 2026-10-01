@@ -225,6 +225,8 @@ sealed class AnalyticsParam {
         data object PrivateKey : WalletCreationType(value = "Private Key")
         data object NewSeed : WalletCreationType(value = "New Seed")
         data object SeedImport : WalletCreationType(value = "Seed Import")
+        data object NewSocialLogin : WalletCreationType(value = "New Social Login")
+        data object SocialLoginImport : WalletCreationType(value = "Social Login Import")
     }
 
     sealed class WalletType(val value: String) {
@@ -298,10 +300,11 @@ sealed class AnalyticsParam {
         Multiple("Multiple"),
     }
 
-    /** Way a mobile wallet secret is backed up: the recovery phrase written down by hand, or a cloud backup */
+    /** Way a mobile wallet secret is backed up: by hand, to a password cloud backup, or through social login */
     enum class BackupType(val value: String) {
         Manual("Manual"),
         Cloud("Cloud"),
+        SocialLogin("Social Login"),
     }
 
     /**
@@ -401,6 +404,7 @@ sealed class AnalyticsParam {
         const val COMPLETED_BACKUPS = "Completed Backups"
         const val CLOUD_BACKUP = "Cloud Backup"
         const val MANUAL_BACKUP = "Manual Backup"
+        const val SOCIAL_BACKUP = "Social Backup"
         const val BACKUP_TYPE = "Backup Type"
         const val BACKUP_COUNT = "Backup Count"
         const val MEMO = "Memo"

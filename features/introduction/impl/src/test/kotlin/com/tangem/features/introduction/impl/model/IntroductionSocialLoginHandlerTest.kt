@@ -4,7 +4,10 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
@@ -20,6 +23,7 @@ import com.tangem.features.hotwallet.SocialLoginConsent
 import com.tangem.features.hotwallet.SocialLoginOutcome
 import com.tangem.features.hotwallet.SocialLoginStage
 import com.tangem.features.hotwallet.SocialLoginUseCase
+import com.tangem.features.introduction.impl.analytics.SocialLoginAnalyticsEvents
 import com.tangem.features.introduction.impl.ui.state.SocialLoginConsentUM
 import com.tangem.features.introduction.impl.ui.state.SocialLoginProgressUM
 import com.tangem.test.core.ProvideTestModels
@@ -39,6 +43,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class IntroductionSocialLoginHandlerTest {
@@ -46,6 +51,8 @@ internal class IntroductionSocialLoginHandlerTest {
     private val socialLoginUseCase: SocialLoginUseCase = mockk(relaxed = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk(relaxed = true)
     private val appCoroutineScope: AppCoroutineScope = mockk(relaxed = true)
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
+    private val referral: IntroductionReferral = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
@@ -57,6 +64,8 @@ internal class IntroductionSocialLoginHandlerTest {
         socialLoginUseCase = socialLoginUseCase,
         userWalletsListRepository = userWalletsListRepository,
         appCoroutineScope = appCoroutineScope,
+        analyticsEventHandler = analyticsEventHandler,
+        referral = referral,
         urlOpener = urlOpener,
         router = router,
         uiMessageSender = uiMessageSender,
@@ -70,6 +79,7 @@ internal class IntroductionSocialLoginHandlerTest {
             getAvailableSocialLoginProvidersUseCase,
             socialLoginUseCase,
             userWalletsListRepository,
+            analyticsEventHandler,
             urlOpener,
             router,
             uiMessageSender,
@@ -85,7 +95,7 @@ internal class IntroductionSocialLoginHandlerTest {
         } returns SocialLoginOutcome.WalletCreated(WALLET_ID).right()
 
         // Act
-        handler.signIn(PROVIDER, host)
+        handler.signIn(PROVIDER, SOURCE, host)
 
         // Assert
         coVerify(exactly = 1) { userWalletsListRepository.select(WALLET_ID) }
@@ -103,7 +113,7 @@ internal class IntroductionSocialLoginHandlerTest {
         coEvery { userWalletsListRepository.select(WALLET_ID) } returns SELECT_ERROR.left()
 
         // Act
-        handler.signIn(PROVIDER, host)
+        handler.signIn(PROVIDER, SOURCE, host)
 
         // Assert
         verify { router wasNot Called }
@@ -116,7 +126,7 @@ internal class IntroductionSocialLoginHandlerTest {
         coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any()) } returns SocialLoginError.ConsentDeclined.left()
 
         // Act
-        handler.signIn(PROVIDER, host)
+        handler.signIn(PROVIDER, SOURCE, host)
 
         // Assert
         coVerify(exactly = 1) { socialLoginUseCase.signOut(PROVIDER) }
@@ -134,7 +144,7 @@ internal class IntroductionSocialLoginHandlerTest {
         host.onFinishedCallback = { order += "finished" }
 
         // Act
-        handler.signIn(PROVIDER, host)
+        handler.signIn(PROVIDER, SOURCE, host)
 
         // Assert
         assertThat(order).containsExactly("signOut", "finished").inOrder()
@@ -147,7 +157,7 @@ internal class IntroductionSocialLoginHandlerTest {
         coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any()) } returns model.error.left()
 
         // Act
-        handler.signIn(PROVIDER, host)
+        handler.signIn(PROVIDER, SOURCE, host)
 
         // Assert
         if (model.isSupportDialog) {
@@ -170,9 +180,9 @@ internal class IntroductionSocialLoginHandlerTest {
         every { router.push(capture(routes), any()) } just Runs
 
         // Act
-        handler.signIn(PROVIDER, host)
+        handler.signIn(PROVIDER, SOURCE, host)
         dialogs.last().firstAction.onClick()
-        handler.signIn(PROVIDER, host)
+        handler.signIn(PROVIDER, SOURCE, host)
         dialogs.last().firstAction.onClick()
 
         // Assert
@@ -192,8 +202,8 @@ internal class IntroductionSocialLoginHandlerTest {
         val routes = mutableListOf<AppRoute>()
         every { uiMessageSender.send(capture(dialogs)) } just Runs
         every { router.push(capture(routes), any()) } just Runs
-        handler.signIn(PROVIDER, host)
-        handler.signIn(PROVIDER, host)
+        handler.signIn(PROVIDER, SOURCE, host)
+        handler.signIn(PROVIDER, SOURCE, host)
 
         // Act
         dialogs[1].firstAction.onClick()
@@ -203,6 +213,83 @@ internal class IntroductionSocialLoginHandlerTest {
         val ids = routes.filterIsInstance<AppRoute.Usedesk>().map { it.clientEmail }
         assertThat(ids).hasSize(2)
         assertThat(ids.distinct()).hasSize(2)
+    }
+
+    @Test
+    fun `GIVEN a failure WHEN signIn THEN it is reported as shown`() = runTest {
+        // Arrange
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any()) } returns SocialLoginError.NetworkError.left()
+
+        // Act
+        handler.signIn(PROVIDER, SOURCE, host)
+
+        // Assert
+        verify(exactly = 1) { analyticsEventHandler.send(ofType<SocialLoginAnalyticsEvents.ErrorShown>()) }
+    }
+
+    @Test
+    fun `GIVEN the consent declined WHEN signIn THEN no error is reported`() = runTest {
+        // Arrange
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any()) } returns SocialLoginError.ConsentDeclined.left()
+
+        // Act
+        handler.signIn(PROVIDER, SOURCE, host)
+
+        // Assert
+        verify(exactly = 0) { analyticsEventHandler.send(ofType<SocialLoginAnalyticsEvents.ErrorShown>()) }
+    }
+
+    @Test
+    fun `GIVEN a wallet created WHEN signIn THEN its creation is reported as a social login one`() = runTest {
+        // Arrange
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any()) } returns
+            SocialLoginOutcome.WalletCreated(WALLET_ID).right()
+        val events = mutableListOf<AnalyticsEvent>()
+        every { analyticsEventHandler.send(capture(events)) } just Runs
+
+        // Act
+        handler.signIn(PROVIDER, SOURCE, host)
+
+        // Assert
+        val created = events.filterIsInstance<OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully>()
+        assertThat(created.single().params["Creation Type"]).isEqualTo("New Social Login")
+        assertThat(created.single().params[AnalyticsParam.SOURCE]).isEqualTo(SOURCE.value)
+    }
+
+    @Test
+    fun `GIVEN the selection fails WHEN a wallet is created THEN its creation is still reported`() = runTest {
+        // Arrange
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any()) } returns
+            SocialLoginOutcome.WalletCreated(WALLET_ID).right()
+        coEvery { userWalletsListRepository.select(WALLET_ID) } returns SELECT_ERROR.left()
+
+        // Act
+        handler.signIn(PROVIDER, SOURCE, host)
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(ofType<OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully>())
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN a wallet restored WHEN signIn THEN an import is reported only for a wallet new on the device`(
+        isNewOnDevice: Boolean,
+    ) = runTest {
+        // Arrange
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any()) } returns
+            SocialLoginOutcome.WalletRestored(WALLET_ID, isNewOnDevice = isNewOnDevice).right()
+        val events = mutableListOf<AnalyticsEvent>()
+        every { analyticsEventHandler.send(capture(events)) } just Runs
+
+        // Act
+        handler.signIn(PROVIDER, SOURCE, host)
+
+        // Assert
+        val created = events.filterIsInstance<OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully>()
+        assertThat(created.map { it.params["Creation Type"] })
+            .isEqualTo(if (isNewOnDevice) listOf("Social Login Import") else emptyList())
     }
 
     data class FailureModel(val error: SocialLoginError, val isSupportDialog: Boolean)
@@ -234,7 +321,7 @@ internal class IntroductionSocialLoginHandlerTest {
         coEvery { socialLoginUseCase.signOut(PROVIDER) } answers { progressDuringSignOut = host.progress.last() }
 
         // Act
-        handler.signIn(PROVIDER, host)
+        handler.signIn(PROVIDER, SOURCE, host)
 
         // Assert
         assertThat(progressDuringSignOut).isNotNull()
@@ -249,11 +336,11 @@ internal class IntroductionSocialLoginHandlerTest {
             onStageChanged.captured(SocialLoginStage.SigningIn)
             onStageChanged.captured(SocialLoginStage.VerifyingAccount)
             onStageChanged.captured(SocialLoginStage.RestoringWallet)
-            SocialLoginOutcome.WalletRestored(WALLET_ID).right()
+            SocialLoginOutcome.WalletRestored(WALLET_ID, isNewOnDevice = false).right()
         }
 
         // Act
-        handler.signIn(PROVIDER, host)
+        handler.signIn(PROVIDER, SOURCE, host)
 
         // Assert
         assertThat(host.progress).hasSize(4)
@@ -278,7 +365,7 @@ internal class IntroductionSocialLoginHandlerTest {
         }
 
         // Act
-        handler.signIn(PROVIDER, host)
+        handler.signIn(PROVIDER, SOURCE, host)
 
         // Assert
         assertThat(host.consent).isNull()
@@ -303,7 +390,7 @@ internal class IntroductionSocialLoginHandlerTest {
         }
 
         // Act
-        handler.signIn(PROVIDER, host)
+        handler.signIn(PROVIDER, SOURCE, host)
 
         // Assert
         assertThat(host.progress).containsExactly(host.progress[0], null, null).inOrder()
@@ -358,5 +445,6 @@ internal class IntroductionSocialLoginHandlerTest {
         val PROVIDER = SocialLoginProvider.Google
         val WALLET_ID = UserWalletId(stringValue = "011")
         val SELECT_ERROR = SelectWalletError.UnableToSelectUserWallet
+        val SOURCE = AnalyticsParam.ScreensSources.ImportWallet
     }
 }
