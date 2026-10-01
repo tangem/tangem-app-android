@@ -182,24 +182,7 @@ internal object WcConnectionsPreviewData {
             lockedWallet,
         )
 
-    private val connectedAgents = persistentListOf(
-        McpAgentInfo(
-            id = "agent_1",
-            name = "claude.ai",
-            subtitle = "wallet:read, wallet:sign",
-            onClick = {},
-        ),
-        McpAgentInfo(
-            id = "agent_2",
-            name = "inspector.modelcontextprotocol.io",
-            subtitle = "wallet:read",
-            onClick = {},
-        ),
-    )
-
     val fullState = stateWithEmptyConnections.copy(connections = WcConnections.WalletMode(connections))
     val accountState = stateWithEmptyConnections.copy(connections = WcConnections.AccountMode(accountStateItems))
     val loadingState = stateWithEmptyConnections.copy(connections = WcConnections.Loading)
-    val agentsWithDappsState = fullState.copy(connectedAgents = connectedAgents)
-    val agentsOnlyState = stateWithEmptyConnections.copy(connectedAgents = connectedAgents)
 }
