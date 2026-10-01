@@ -61,8 +61,11 @@ class DeepLinkHandlerRegistry(handlers: Map<String, DeepLinkHandler>) {
 
     internal companion object {
 
-        /** `scheme:` or `scheme://host[/path]`, without query and fragment. */
-        private val KEY_REGEX = Regex("""^([A-Za-z][A-Za-z0-9+.\-]*):(?://([^/?#\s]+)([^?#\s]*))?$""")
+        /**
+         * `scheme:` or `scheme://host[/path]`, without query and fragment. User info and port are rejected: the
+         * lookup uses [Uri.getHost], which has neither.
+         */
+        private val KEY_REGEX = Regex("""^([A-Za-z][A-Za-z0-9+.\-]*):(?://([^/?#\s@:]+)((?:/[^?#\s]*)?))?$""")
 
         fun normalizeKey(key: String): String {
             val match = requireNotNull(KEY_REGEX.matchEntire(key)) {
