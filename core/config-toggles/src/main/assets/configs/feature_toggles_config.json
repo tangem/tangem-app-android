@@ -142,5 +142,9 @@
     {
         "name": "TWI_1357_HARDWARE_UPGRADE_STORIES_AB_ENABLED",
         "version": "6.5"
+    },
+    {
+        "name": "AND_18183_DEEPLINK_HANDLER_REGISTRY_ENABLED",
+        "version": "undefined"
     }
 ]
