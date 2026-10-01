@@ -7,6 +7,7 @@ import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.data.offramp.model.PendingOfframpEntry
+import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.CardDTO
@@ -19,6 +20,7 @@ import com.tangem.grow.datasource.moonpay.MoonPayUserStatus
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -75,6 +77,64 @@ internal class DefaultOfframpRepositoryTest {
             createMoonPayCurrency(code = "usdc", networkCode = "ethereum", contractAddress = TOKEN_CONTRACT_ADDRESS),
         )
         repository.update()
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Update {
+
+        @Test
+        fun `GIVEN successful api calls WHEN update THEN initializationStatus ends as content`() = runTest {
+            // Arrange
+            coEvery { api.getUserStatus(API_KEY) } returns createUserStatus()
+            coEvery { api.getCurrencies(API_KEY) } returns listOf(
+                createMoonPayCurrency(code = "eth", networkCode = "ethereum", contractAddress = null),
+            )
+
+            // Act
+            repository.update()
+
+            // Assert
+            assertThat(repository.initializationStatus.value).isInstanceOf(Lce.Content::class.java)
+        }
+
+        @Test
+        fun `GIVEN getUserStatus fails WHEN update THEN initializationStatus ends as error and currencies are not fetched`() =
+            runTest {
+                // Arrange
+                val error = IllegalStateException("user status failed")
+                coEvery { api.getUserStatus(API_KEY) } throws error
+
+                // Act
+                repository.update()
+
+                // Assert
+                assertThat(repository.initializationStatus.value).isInstanceOf(Lce.Error::class.java)
+                coVerify(exactly = 0) { api.getCurrencies(any()) }
+            }
+
+        @Test
+        fun `GIVEN getCurrencies fails WHEN update THEN initializationStatus ends as error`() = runTest {
+            // Arrange
+            val error = IllegalStateException("currencies failed")
+            coEvery { api.getUserStatus(API_KEY) } returns createUserStatus()
+            coEvery { api.getCurrencies(API_KEY) } throws error
+
+            // Act
+            repository.update()
+
+            // Assert
+            assertThat(repository.initializationStatus.value).isInstanceOf(Lce.Error::class.java)
+        }
+
+        @Test
+        fun `GIVEN update never called WHEN initializationStatus read THEN starts as loading`() = runTest {
+            // Act
+            val actual = repository.initializationStatus.value
+
+            // Assert
+            assertThat(actual).isInstanceOf(Lce.Loading::class.java)
+        }
     }
 
     @Nested
