@@ -111,6 +111,27 @@ internal class TangemPayAddFundsModelTest {
         assertThat(model.bankTransferRow().onClick).isNotNull()
     }
 
+    @Test
+    fun `GIVEN v2 enabled and no banking details yet WHEN bank transfer clicked THEN onboarding screen opens`() =
+        runTest {
+            // Arrange
+            every { featureToggles.isVisaOnrampV2Enabled } returns true
+            val model = createModel(VirtualAccountOnramp.Eligible)
+
+            // Act
+            model.clickBankTransfer()
+            advanceUntilIdle()
+
+            // Assert
+            verifyOrder {
+                listener.onDismissAddFunds()
+                router.push(TangemPayAccountDetailsInnerRoute.BankTransferOnrampOnboarding, any())
+            }
+            verify(exactly = 0) { listener.onClickBankTransfer() }
+            verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaTopupButtonClicked>()) }
+            coVerify(exactly = 0) { getBankCredentialsUseCase(any(), any()) }
+        }
+
     @ParameterizedTest
     @ProvideTestModels
     fun `GIVEN no v2 screen for the state WHEN bank transfer clicked THEN host flow handles the click`(
@@ -173,7 +194,7 @@ internal class TangemPayAddFundsModelTest {
 
     private fun provideTestModels() = listOf(
         HostFlowModel(isV2Enabled = false, onramp = VirtualAccountOnramp.Available(PRODUCT_INSTANCE_ID)),
-        HostFlowModel(isV2Enabled = true, onramp = VirtualAccountOnramp.Eligible),
+        HostFlowModel(isV2Enabled = false, onramp = VirtualAccountOnramp.Eligible),
         HostFlowModel(isV2Enabled = true, onramp = VirtualAccountOnramp.Processing),
     )
 
