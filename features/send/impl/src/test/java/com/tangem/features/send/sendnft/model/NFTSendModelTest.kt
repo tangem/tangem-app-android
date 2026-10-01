@@ -83,6 +83,7 @@ internal class NFTSendModelTest {
         clearMocks(router, nftSendSuccessTrigger, alertFactory, answers = false, recordedCalls = true, childMocks = false)
 
         every { nftAsset.network } returns network
+        every { network.derivationPath } returns Network.DerivationPath.None
         every { coin.network } returns network
         every { getUserWalletUseCase(testUserWalletId) } returns testUserWallet.right()
         coEvery { getSelectedAppCurrencyUseCase.invokeSync() } returns AppCurrency.Default.right()
@@ -166,6 +167,20 @@ internal class NFTSendModelTest {
 
     @Nested
     inner class SubscribeOnCurrencyStatusUpdates {
+
+        @Test
+        fun `GIVEN asset on a joint account network WHEN init THEN generic error and no currency lookup`() = runTest {
+            // Arrange
+            every { network.derivationPath } returns Network.DerivationPath.Joint(value = "m/44'/60'/888888'/0/0")
+
+            // Act
+            buildModel()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { alertFactory.getGenericErrorState(any(), any()) }
+            coVerify(exactly = 0) { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any(), any()) }
+        }
 
         @Test
         fun `GIVEN get user wallet fails WHEN init THEN show generic error`() = runTest {
