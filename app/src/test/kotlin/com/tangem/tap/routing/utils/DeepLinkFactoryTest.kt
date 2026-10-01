@@ -693,6 +693,7 @@ internal class DeepLinkFactoryTest {
         every { mockedUri.scheme } returns "https"
         every { mockedUri.host } returns "tangem.com"
         every { mockedUri.path } returns "/joint-account/join"
+        every { mockedUri.pathSegments } returns listOf("joint-account", "join")
         every { mockedUri.queryParameterNames } returns emptySet()
 
         // Act
@@ -741,6 +742,7 @@ internal class DeepLinkFactoryTest {
         every { mockedUri.scheme } returns "https"
         every { mockedUri.host } returns "tangem.com"
         every { mockedUri.path } returns "/joint-account/join/invite-id"
+        every { mockedUri.pathSegments } returns listOf("joint-account", "join", "invite-id")
         every { mockedUri.queryParameterNames } returns emptySet()
         every { mockedUri.toString() } returns "https://tangem.com/joint-account/join/invite-id"
 
