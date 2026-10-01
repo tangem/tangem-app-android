@@ -133,6 +133,25 @@ internal class JointOperationVerifierTest {
         assertThat(actual).isEqualTo(VerificationFailed(reason = VerificationFailed.Reason.REFUND_MISMATCH).left())
     }
 
+    /** 30 gwei at 0.25 USDC per coin is 0.0075 base units per gas: ×20 is 0.15, rounded up to 1, not 20 */
+    @Test
+    fun `GIVEN a sub-unit token gas price WHEN verify THEN the ceiling is rounded once after scaling`() = runTest {
+        // Arrange
+        val cheapGasToken = USDC_GAS_TOKEN.copy(nativeToTokenRate = BigDecimal("0.25"))
+
+        // Act
+        val actual = verifier.verify(
+            jointAccount = jointAccount(),
+            ownerAddress = ALICE,
+            operation = operation(safeTx = nativeSafeTx().copy(gasToken = TOKEN, gasPrice = BigInteger.valueOf(2))),
+            displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
+            refundBounds = refundBounds(gasToken = cheapGasToken),
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(VerificationFailed(reason = VerificationFailed.Reason.REFUND_MISMATCH).left())
+    }
+
     @Test
     fun `GIVEN erc20 operation matching what the user sees WHEN verify THEN the signature is allowed`() = runTest {
         // Act
