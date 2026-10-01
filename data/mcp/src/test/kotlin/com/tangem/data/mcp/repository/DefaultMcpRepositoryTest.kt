@@ -8,6 +8,7 @@ import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.mcp.models.McpDeviceVerification
 import com.tangem.domain.mcp.models.McpDeviceVerificationResult
 import com.tangem.domain.mcp.models.McpSession
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.lib.auth.api.AuthApi
 import com.tangem.lib.auth.api.models.request.McpDeviceVerificationConsent
@@ -33,12 +34,19 @@ import com.tangem.lib.auth.api.models.response.McpDeviceVerificationResult as Mc
 internal class DefaultMcpRepositoryTest {
 
     private val authApi: AuthApi = mockk()
+    private val userWalletsListRepository: UserWalletsListRepository = mockk()
 
-    private val repository = DefaultMcpRepository(authApi = authApi)
+    private val repository = DefaultMcpRepository(
+        authApi = authApi,
+        userWalletsListRepository = userWalletsListRepository,
+    )
 
     @BeforeEach
     fun setUp() {
-        clearMocks(authApi)
+        clearMocks(authApi, userWalletsListRepository)
+        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(
+            mockk { every { walletId } returns WALLET_ID },
+        )
         mockkStatic(Base64::class)
         every { Base64.encodeToString(any(), any()) } answers { JavaBase64.getEncoder().encodeToString(firstArg()) }
     }
@@ -132,8 +140,23 @@ internal class DefaultMcpRepositoryTest {
             val actual = repository.getSessions()
 
             // Assert
-            assertThat(actual).isEqualTo(Either.Right(listOf(SESSION)))
+            val sessions = actual.getOrNull().orEmpty()
+            assertThat(sessions.map { it.copy(createdAtMillis = 0) }).containsExactly(SESSION)
         }
+
+        @Test
+        fun `GIVEN no wallets WHEN getSessions THEN the stubbed wallet cannot be picked and nothing is mapped`() =
+            runTest {
+                // Arrange
+                coEvery { authApi.getMcpSessions() } returns ApiResponse.Success(listOf(SESSION_RESPONSE))
+                coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+
+                // Act
+                val actual = repository.getSessions()
+
+                // Assert
+                assertThat(actual).isEqualTo(Either.Right(emptyList<McpSession>()))
+            }
 
         @Test
         fun `GIVEN revoke succeeds WHEN revokeSession THEN calls the api with the id`() = runTest {
@@ -170,6 +193,7 @@ internal class DefaultMcpRepositoryTest {
         const val CLIENT_ID = "mcp-client-42"
         const val ORIGIN = "claude.ai"
         const val CLIENT_NAME = "Claude Code"
+        const val ICON_URL = "https://tangem.api/agents/claudeCode.png"
         const val SCOPE = "wallet:read wallet:sign"
         const val STATE = "state-token"
         const val SESSION_ID = "b3f1c0d2"
@@ -209,6 +233,7 @@ internal class DefaultMcpRepositoryTest {
             clientId = CLIENT_ID,
             clientOrigin = ORIGIN,
             clientName = CLIENT_NAME,
+            clientIconUrl = ICON_URL,
             scopes = listOf("wallet:read"),
             clientIp = "203.0.113.7",
             clientCountry = "DE",
@@ -217,9 +242,12 @@ internal class DefaultMcpRepositoryTest {
 
         val SESSION = McpSession(
             id = SESSION_ID,
+            walletId = WALLET_ID,
+            createdAtMillis = 0,
             clientId = CLIENT_ID,
             clientOrigin = ORIGIN,
             clientName = CLIENT_NAME,
+            clientIconUrl = ICON_URL,
             scopes = listOf("wallet:read"),
             clientIp = "203.0.113.7",
             clientCountry = "DE",
