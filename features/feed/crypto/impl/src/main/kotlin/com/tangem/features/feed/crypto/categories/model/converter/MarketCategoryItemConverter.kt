@@ -2,7 +2,6 @@ package com.tangem.features.feed.crypto.categories.model.converter
 
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.pluralReference
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.compact
@@ -17,22 +16,17 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
 /**
- * Builds the rows of the full category list, prepending the synthetic "All" row unless a search narrows it.
+ * Builds the rows of the full category list — one row per category, and nothing else.
  *
- * "All" stands for *no* category filter, so it emits the empty [MarketCategorySelection] and checks
- * itself when nothing is applied — the in-screen counterpart of the tab chip's clear button. Its id
- * never travels in a selection.
+ * There is no "no filter" row: an unfiltered list simply checks nothing, and clearing an applied
+ * category is the job of the clear button on the tab's filter chip.
  *
- * Re-tapping the selected row republishes the selection unchanged rather than clearing it: clearing
- * has a dedicated row, and a row that both selects and deselects reads as a broken radio group.
- *
- * @property shouldIncludeAllRow false while a search is applied — the list is then a result set, and
- * "no filter" is not one of the results
+ * Re-tapping the selected row republishes the selection unchanged rather than clearing it — a row that
+ * both selects and deselects reads as a broken radio group.
  */
 internal class MarketCategoryItemConverter(
     private val selection: MarketCategorySelection,
     private val appCurrency: AppCurrency,
-    private val shouldIncludeAllRow: Boolean,
     private val onSelectionChange: (MarketCategorySelection) -> Unit,
 ) : Converter<List<MarketCategory>, ImmutableList<MarketCategoryItemUM>> {
 
@@ -74,23 +68,6 @@ internal class MarketCategoryItemConverter(
             )
         }
 
-        return if (shouldIncludeAllRow) {
-            (listOf(createAllRow()) + categoryRows).toImmutableList()
-        } else {
-            categoryRows.toImmutableList()
-        }
-    }
-
-    private fun createAllRow() = MarketCategoryItemUM(
-        id = ALL_CATEGORIES_ID,
-        title = resourceReference(R.string.common_all),
-        subtitle = null,
-        caption = null,
-        isSelected = selection.category == null,
-        onItemClick = { onSelectionChange(MarketCategorySelection()) },
-    )
-
-    private companion object {
-        const val ALL_CATEGORIES_ID = "__all__"
+        return categoryRows.toImmutableList()
     }
 }
