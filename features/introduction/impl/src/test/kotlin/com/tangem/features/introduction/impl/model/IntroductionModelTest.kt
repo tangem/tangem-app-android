@@ -912,7 +912,7 @@ internal class IntroductionModelTest {
             assertThat(sentEvents).containsExactly(
                 SCREEN_OPENED,
                 IntroductionProcess.ButtonIHaveWallet(),
-                OnboardingAnalyticsEvent.SeedPhrase.ButtonImportWallet(),
+                IntroductionProcess.ButtonImportExistingWallet(),
                 OnboardingAnalyticsEvent.Backup.ImportWalletRequest(AnalyticsParam.CloudBackupAvailability.Available),
             ).inOrder()
         }
@@ -1860,9 +1860,69 @@ internal class IntroductionModelTest {
             assertThat(sentEvents).containsExactly(
                 SCREEN_OPENED,
                 IntroductionProcess.ButtonIHaveWallet(),
-                OnboardingAnalyticsEvent.SeedPhrase.ButtonImportWallet(),
+                IntroductionProcess.ButtonImportExistingWallet(),
                 OnboardingAnalyticsEvent.Backup.ImportWalletRequest(AnalyticsParam.CloudBackupAvailability.Available),
                 SheetDismissed(SheetDismissed.Sheet.ImportExisting, SheetDismissed.DismissReason.BackButton),
+            ).inOrder()
+        }
+
+        @Test
+        fun `GIVEN the options step WHEN import picked THEN the import event carries the mobile wallet product type`() {
+            // Arrange
+            val model = createModel()
+            model.uiState.value.onIHaveWalletClick()
+
+            // Act
+            (model.haveWalletStep() as HaveWalletUM.Step.Options).importWallet.onClick()
+
+            // Assert
+            assertThat(
+                sentEvents.filterIsInstance<IntroductionProcess.ButtonImportExistingWallet>().map { it.id to it.params },
+            ).containsExactly(
+                "[Introduction Process] Button - Import Existing Wallet" to mapOf("Product Type" to "Mobile Wallet"),
+            )
+        }
+
+        @Test
+        fun `GIVEN the import step left by back WHEN import picked again THEN the import is reported again`() {
+            // Arrange
+            val model = createModel()
+            model.uiState.value.onIHaveWalletClick()
+            (model.haveWalletStep() as HaveWalletUM.Step.Options).importWallet.onClick()
+            model.currentImportStep().onBack()
+
+            // Act
+            (model.haveWalletStep() as HaveWalletUM.Step.Options).importWallet.onClick()
+
+            // Assert
+            assertThat(sentEvents).containsExactly(
+                SCREEN_OPENED,
+                IntroductionProcess.ButtonIHaveWallet(),
+                IntroductionProcess.ButtonImportExistingWallet(),
+                OnboardingAnalyticsEvent.Backup.ImportWalletRequest(AnalyticsParam.CloudBackupAvailability.Available),
+                SheetDismissed(SheetDismissed.Sheet.ImportExisting, SheetDismissed.DismissReason.BackButton),
+                IntroductionProcess.ButtonImportExistingWallet(),
+                OnboardingAnalyticsEvent.Backup.ImportWalletRequest(AnalyticsParam.CloudBackupAvailability.Available),
+            ).inOrder()
+        }
+
+        @Test
+        fun `GIVEN an unsupported device WHEN import picked THEN the import is still reported`() {
+            // Arrange
+            every { isHotWalletCreationSupported() } returns false
+            every { isHotWalletCreationSupported.getLeastVersionName() } returns LEAST_OS_VERSION
+            val model = createModel()
+            model.uiState.value.onIHaveWalletClick()
+
+            // Act
+            (model.haveWalletStep() as HaveWalletUM.Step.Options).importWallet.onClick()
+
+            // Assert
+            assertThat(sentEvents).containsExactly(
+                SCREEN_OPENED,
+                IntroductionProcess.ButtonIHaveWallet(),
+                IntroductionProcess.ButtonImportExistingWallet(),
+                OnboardingAnalyticsEvent.Backup.ImportWalletRequest(AnalyticsParam.CloudBackupAvailability.Available),
             ).inOrder()
         }
 
