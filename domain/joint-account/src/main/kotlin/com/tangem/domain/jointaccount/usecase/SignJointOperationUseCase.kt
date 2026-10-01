@@ -11,6 +11,7 @@ import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
+import com.tangem.domain.jointaccount.gas.JointGasTokenResolver
 import com.tangem.domain.jointaccount.gas.JointRefundReceiverProvider
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.jointaccount.model.JointOperationSignError
@@ -46,6 +47,7 @@ class SignJointOperationUseCase(
     private val networkReader: JointNetworkReader,
     private val compositionChecker: SafeCompositionChecker,
     private val refundReceiverProvider: JointRefundReceiverProvider,
+    private val gasTokenResolver: JointGasTokenResolver,
 ) {
 
     suspend operator fun invoke(
@@ -82,7 +84,7 @@ class SignJointOperationUseCase(
                 operation = operation,
                 displayed = displayed,
                 ownerAddress = ownerAddress,
-                refundBounds = refundBounds(userWalletId = userWalletId, network = network),
+                refundBounds = refundBounds(userWalletId = userWalletId, network = network, operation = operation),
             )
             .bind()
 
@@ -227,6 +229,7 @@ class SignJointOperationUseCase(
     private suspend fun Raise<JointOperationSignError>.refundBounds(
         userWalletId: UserWalletId,
         network: Network,
+        operation: JointOperation,
     ): JointOperationVerifier.RefundBounds {
         val refundReceiver = Either
             .catch { refundReceiverProvider.refundReceiver() }
@@ -238,7 +241,21 @@ class SignJointOperationUseCase(
             .mapLeft(JointOperationSignError::Failed)
             .bind()
 
-        return JointOperationVerifier.RefundBounds(refundReceiver = refundReceiver, networkGasPrice = gasPrice)
+        val gasToken = gasTokenResolver
+            .resolve(network = network, address = operation.safeTx.gasToken)
+            .mapLeft(JointOperationSignError::Failed)
+            .bind()
+        ensureNotNull(gasToken) {
+            JointOperationSignError.VerificationFailed(
+                reason = JointOperationSignError.VerificationFailed.Reason.REFUND_MISMATCH,
+            )
+        }
+
+        return JointOperationVerifier.RefundBounds(
+            refundReceiver = refundReceiver,
+            networkGasPrice = gasPrice,
+            gasToken = gasToken,
+        )
     }
 
     private fun toSignError(error: JointOperationCreateError): JointOperationSignError = when (error) {
