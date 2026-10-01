@@ -113,6 +113,26 @@ data class AccountList private constructor(
     }
 
     /**
+     * Rebuilds the list with the given [accounts] while keeping every backend counter. Meant for reorderings and
+     * in-place updates of the same accounts; a counter the caller forgets here is a counter the factory refuses.
+     */
+    fun withAccounts(
+        accounts: List<Account>,
+        sortType: TokensSortType = this.sortType,
+        groupType: TokensGroupType = this.groupType,
+    ): Either<Error, AccountList> {
+        return invoke(
+            userWalletId = this.userWalletId,
+            accounts = accounts,
+            totalAccounts = this.totalAccounts,
+            totalArchivedAccounts = this.totalArchivedAccounts,
+            totalJointAccounts = this.totalJointAccounts,
+            sortType = sortType,
+            groupType = groupType,
+        )
+    }
+
+    /**
      * Flattens the list of accounts to extract all crypto currencies contained within them.
      *
      * @return a list of all crypto currencies from all accounts
