@@ -7,34 +7,24 @@ import com.tangem.core.ui.extensions.TextReference
 @Immutable
 internal sealed interface McpPairUM {
 
-    val onDecline: () -> Unit
+    data object Loading : McpPairUM
 
-    data class Loading(override val onDecline: () -> Unit) : McpPairUM
-
-    data class Content(
+    data class AgentInfo(
         val agent: McpAgentUM,
-        val portfolioSelectRow: PortfolioSelectUM,
-        val pushNotificationsWarning: McpPushNotificationsWarningUM?,
+        val wallet: PortfolioSelectUM,
+        val notificationsWarning: McpNotificationsWarningUM?,
         val connectButton: McpConnectButtonUM,
-        override val onDecline: () -> Unit,
+        val onDecline: () -> Unit,
     ) : McpPairUM
+
+    data class Success(val agentName: TextReference, val onDone: () -> Unit) : McpPairUM
 }
 
 @Immutable
-internal data class McpPushNotificationsWarningUM(val onOpenSettingsClick: () -> Unit)
+internal data class McpAgentUM(val name: TextReference, val origin: TextReference?)
 
 @Immutable
-internal data class McpAgentUM(
-    val name: TextReference,
-    val subtitle: TextReference,
-    val iconUrl: String?,
-    /** `getMcpDeviceVerification` response dumped as text, until there is a contract to lay out. */
-    val verificationText: String,
-)
+internal data class McpNotificationsWarningUM(val onOpenSettingsClick: () -> Unit)
 
 @Immutable
-internal data class McpConnectButtonUM(
-    val isEnabled: Boolean,
-    val isLoading: Boolean,
-    val onClick: () -> Unit,
-)
+internal data class McpConnectButtonUM(val isEnabled: Boolean, val isLoading: Boolean, val onClick: () -> Unit)
