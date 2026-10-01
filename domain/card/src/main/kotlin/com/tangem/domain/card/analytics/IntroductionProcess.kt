@@ -94,6 +94,15 @@ sealed class IntroductionProcess(
     class ButtonScanCardLegacy : IntroductionProcess("Button - Scan Card")
 
     /**
+     * Carries its own Product Type: no mobile wallet context is installed when the I have a wallet sheet sends it, and
+     * a card context left over from an abandoned card onboarding must not override it.
+     */
+    class ButtonImportExistingWallet : IntroductionProcess(
+        event = "Button - Import Existing Wallet",
+        params = mapOf(AnalyticsParam.PRODUCT_TYPE to AnalyticsParam.ProductType.MobileWallet.value),
+    )
+
+    /**
      * Tracks opening the Create Wallet introduction screen.
      *
      * @param screenType the wallet type the screen is about; `null` for the Create wallet sheet, which offers both.
