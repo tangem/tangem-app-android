@@ -5,6 +5,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.toNetworkId
@@ -14,9 +15,11 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForGaslessTxUseCase
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForTokenUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
 import com.tangem.feature.swap.domain.buildSwapCurrencyStatus
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
@@ -40,6 +43,8 @@ internal class CexSwapFeeCalculatorTest {
     private val estimateFeeUseCase: EstimateFeeUseCase = mockk(relaxed = true)
     private val estimateFeeForTokenUseCase: EstimateFeeForTokenUseCase = mockk(relaxed = true)
     private val estimateFeeForGaslessTxUseCase: EstimateFeeForGaslessTxUseCase = mockk(relaxed = true)
+    private val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase = mockk(relaxed = true)
+    private val createTransferTransactionUseCase: CreateTransferTransactionUseCase = mockk(relaxed = true)
 
     private val sendBump = PatchEthGasLimitForSwap(percentage = PatchEthGasLimitForSwap.SEND_PERCENTAGE)
 
@@ -48,6 +53,8 @@ internal class CexSwapFeeCalculatorTest {
             estimateFeeUseCase = estimateFeeUseCase,
             estimateFeeForTokenUseCase = estimateFeeForTokenUseCase,
             estimateFeeForGaslessTxUseCase = estimateFeeForGaslessTxUseCase,
+            getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
+            createTransferTransactionUseCase = createTransferTransactionUseCase,
             patchEthGasLimitForSwap = sendBump,
         )
     }
@@ -339,6 +346,94 @@ internal class CexSwapFeeCalculatorTest {
         }
 
     // -------------------------------------------------------------------------
+    // Tron gasless path (selectedFeeToken is a Token on Tron)
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `GIVEN Tron token selectedFeeToken WHEN calculate THEN quotes Tron gasless fee against estimation address`() =
+        runTest {
+            // Arrange
+            val fromStatus = buildSwapCurrencyStatus(
+                networkRawId = Blockchain.Tron.toNetworkId(),
+                contractAddress = TRON_USDT,
+                isCoin = false,
+                decimals = 6,
+            )
+            val txData = mockk<TransactionData.Uncompiled>()
+            val expected = mockk<TransactionFeeExtended>()
+            coEvery {
+                createTransferTransactionUseCase(
+                    amount = any(), memo = any(), destination = any(), userWalletId = any(), network = any(),
+                )
+            } returns txData.right()
+            coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns expected.right()
+
+            // Act
+            val result = sut.calculate(
+                userWallet = fromStatus.userWallet,
+                fromSwapCurrencyStatus = fromStatus,
+                amount = BigDecimal("10"),
+                selectedFeeToken = fromStatus.status,
+                isGasless = true,
+            )
+
+            // Assert
+            val loaded = result.getOrNull()?.transactionFee as? TransactionFeeResult.LoadedExtended
+            assertThat(loaded?.fee).isSameInstanceAs(expected)
+            val userWalletId = fromStatus.userWallet.walletId
+            val network = fromStatus.currency.network
+            val feeToken = fromStatus.currency as CryptoCurrency.Token
+            coVerify(exactly = 1) {
+                createTransferTransactionUseCase(
+                    amount = match { it.value == BigDecimal("10") },
+                    memo = null,
+                    destination = TRON_ESTIMATION_ADDRESS,
+                    userWalletId = userWalletId,
+                    network = network,
+                )
+                getTronGaslessFeeUseCase(userWalletId = userWalletId, transactionData = txData, feeToken = feeToken)
+            }
+            coVerify(exactly = 0) {
+                estimateFeeForTokenUseCase.invoke(
+                    userWallet = any(),
+                    feeTokenCurrencyStatus = any(),
+                    sendingTokenCurrencyStatus = any(),
+                    amount = any(),
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN Tron gasless quote fails WHEN calculate THEN error is propagated`() = runTest {
+        // Arrange
+        val fromStatus = buildSwapCurrencyStatus(
+            networkRawId = Blockchain.Tron.toNetworkId(),
+            contractAddress = TRON_USDT,
+            isCoin = false,
+            decimals = 6,
+        )
+        val error = GetFeeError.GaslessError.TronActivationRateLimited(isPerWallet = true)
+        coEvery {
+            createTransferTransactionUseCase(
+                amount = any(), memo = any(), destination = any(), userWalletId = any(), network = any(),
+            )
+        } returns mockk<TransactionData.Uncompiled>().right()
+        coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns error.left()
+
+        // Act
+        val result = sut.calculate(
+            userWallet = fromStatus.userWallet,
+            fromSwapCurrencyStatus = fromStatus,
+            amount = BigDecimal("10"),
+            selectedFeeToken = fromStatus.status,
+            isGasless = true,
+        )
+
+        // Assert
+        assertThat(result).isEqualTo(error.left())
+    }
+
+    // -------------------------------------------------------------------------
     // Explicit native path (selectedFeeToken is Coin) — applies 5% bump
     // -------------------------------------------------------------------------
 
@@ -544,5 +639,10 @@ internal class CexSwapFeeCalculatorTest {
             ),
             feeTokenId = fromStatus.status.currency.id,
         )
+    }
+
+    private companion object {
+        const val TRON_USDT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
+        const val TRON_ESTIMATION_ADDRESS = "TA4Tkaj2nAJjkVbDHdUQDxYCbLfsZzS8pA"
     }
 }
