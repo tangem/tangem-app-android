@@ -4,21 +4,36 @@ import android.util.Base64
 import arrow.core.Either
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.data.mcp.converter.toDomain
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.mcp.models.McpDeviceVerification
 import com.tangem.domain.mcp.models.McpDeviceVerificationResult
 import com.tangem.domain.mcp.models.McpSession
-import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.mcp.repository.McpRepository
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.lib.auth.api.AuthApi
 import com.tangem.lib.auth.api.models.request.McpDeviceVerificationConsent
 import com.tangem.lib.auth.api.models.response.McpSessionResponse
+import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+private const val TAG = "MCP"
 
 internal class DefaultMcpRepository @Inject constructor(
     private val authApi: AuthApi,
     private val userWalletsListRepository: UserWalletsListRepository,
+    private val appScope: AppCoroutineScope,
 ) : McpRepository {
+
+    private val sessions = MutableStateFlow<List<McpSession>>(value = emptyList())
+    private var loadJob: Job? = null
+
+    override fun getSessions(): Flow<List<McpSession>> = sessions.onStart { loadSessions(force = false) }
 
     override suspend fun getDeviceVerification(userCode: String): Either<Throwable, McpDeviceVerification> {
         val response = authApi.getMcpDeviceVerification(userCode = userCode)
@@ -40,7 +55,9 @@ internal class DefaultMcpRepository @Inject constructor(
             ),
         )
 
-        return response.toEither().map { it.toDomain() }
+        return response.toEither()
+            .map { it.toDomain() }
+            .onRight { if (it.isSuccess) loadSessions(force = true) }
     }
 
     override suspend fun rejectDeviceVerification(verification: McpDeviceVerification): Either<Throwable, Unit> {
@@ -52,10 +69,30 @@ internal class DefaultMcpRepository @Inject constructor(
         return response.toEither()
     }
 
-    override suspend fun getSessions(): Either<Throwable, List<McpSession>> {
-        val response = authApi.getMcpSessions()
+    override suspend fun revokeSession(sessionId: String): Either<Throwable, Unit> {
+        return authApi.revokeMcpSession(sessionId = sessionId)
+            .toEither()
+            .onRight { loadSessions(force = true) }
+    }
 
-        return response.toEither().map { sessions -> sessions.toDomainWithStubbedFields() }
+    /**
+     * Reads the list into [sessions].
+     *
+     * Collectors share one request: a read that is already in flight is left to finish instead of
+     * being duplicated. A change made by this repository passes [force], which restarts the read —
+     * the in-flight one predates the change and would put the old list back.
+     */
+    @Synchronized
+    private fun loadSessions(force: Boolean) {
+        if (!force && loadJob?.isActive == true) return
+
+        loadJob?.cancel()
+        loadJob = appScope.launch {
+            authApi.getMcpSessions().toEither().fold(
+                ifLeft = { TangemLogger.withTag(TAG).e("Failed to load the agent sessions", it) },
+                ifRight = { sessions.value = it.toDomainWithStubbedFields() },
+            )
+        }
     }
 
     /**
@@ -73,10 +110,6 @@ internal class DefaultMcpRepository @Inject constructor(
                 createdAtMillis = System.currentTimeMillis(),
             )
         }
-    }
-
-    override suspend fun revokeSession(sessionId: String): Either<Throwable, Unit> {
-        return authApi.revokeMcpSession(sessionId = sessionId).toEither()
     }
 
     /** The auth service addresses wallets by the Base64 form of the id, the same one wallet registration uses. */

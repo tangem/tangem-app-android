@@ -12,6 +12,9 @@ import com.tangem.features.walletconnect.connections.entity.McpSessionInfoUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -40,14 +43,14 @@ internal class McpSessionInfoModel @Inject constructor(
         loadSession()
     }
 
-    // There is no endpoint for a single session, so the list is refetched and the session picked out of it
+    // There is no endpoint for a single session, so it is picked out of the list the repository keeps
     private fun loadSession() {
-        modelScope.launch {
-            val sessions = mcpRepository.getSessions().getOrNull().orEmpty()
-            val session = sessions.firstOrNull { it.id == params.sessionId } ?: return@launch
-
-            uiState.update { state -> state.copy(debugText = session.toString().toPrettyDebugString()) }
-        }
+        mcpRepository.getSessions()
+            .mapNotNull { sessions -> sessions.firstOrNull { it.id == params.sessionId } }
+            .onEach { session -> uiState.update { state -> state.copy(
+                debugText = session.toString().toPrettyDebugString(),
+            ) } }
+            .launchIn(modelScope)
     }
 
     private fun revokeSession() {
