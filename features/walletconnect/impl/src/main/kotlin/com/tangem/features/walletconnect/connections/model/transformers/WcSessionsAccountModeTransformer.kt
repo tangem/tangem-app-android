@@ -81,10 +81,6 @@ internal class WcSessionsAccountModeTransformer(
                 items.add(accountConnections)
             }
         }
-        return WcConnectionsState(
-            topAppBarConfig = prevState.topAppBarConfig,
-            connections = WcConnections.AccountMode(items.plus(lockedWallet).toPersistentList()),
-            onNewConnectionClick = prevState.onNewConnectionClick,
-        )
+        return prevState.copy(connections = WcConnections.AccountMode(items.plus(lockedWallet).toPersistentList()))
     }
 }
