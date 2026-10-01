@@ -169,12 +169,15 @@ internal class DeepLinkFactoryTest {
     }
     private val registeredWalletHandler = mockk<DeepLinkHandler>(relaxed = true) {
         every { isEnabled } returns true
+        every { isOpenableFromPush } returns true
     }
     private val registeredJointAccountInviteHandler = mockk<DeepLinkHandler>(relaxed = true) {
         every { isEnabled } returns true
+        every { isOpenableFromPush } returns true
     }
     private val registeredWalletConnectHandler = mockk<DeepLinkHandler>(relaxed = true) {
         every { isEnabled } returns true
+        every { isOpenableFromPush } returns true
     }
 
     private val mockedUri = mockk<Uri>(relaxed = true)
@@ -752,6 +755,79 @@ internal class DeepLinkFactoryTest {
                 ),
             )
         }
+    }
+
+    @Test
+    fun `GIVEN registry enabled and handler not openable from push WHEN push link THEN consumed without handling`() =
+        runTest {
+            // Arrange
+            every { deepLinkFeatureToggles.isHandlerRegistryEnabled } returns true
+            every { registeredWalletConnectHandler.isOpenableFromPush } returns false
+            every { mockedUri.isOpaque } returns true
+            every { mockedUri.scheme } returns "wc"
+            every { mockedUri.host } returns null
+            every { mockedUri.toString() } returns "wc:abc@2?relay-protocol=irn"
+
+            // Act
+            deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+            deepLinkFactory.handleDeeplink(
+                deeplinkUri = mockedUri,
+                coroutineScope = testScope,
+                isFromOnNewIntent = isFromOnNewIntent,
+                source = DeeplinkSource.Push,
+            )
+            advanceUntilIdle()
+
+            // Assert
+            verify(inverse = true) {
+                registeredWalletConnectHandler.handle(any())
+                urlOpener.openUrl(any())
+            }
+        }
+
+    @Test
+    fun `GIVEN registry enabled and handler not openable from push WHEN external link THEN handled`() = runTest {
+        // Arrange
+        every { deepLinkFeatureToggles.isHandlerRegistryEnabled } returns true
+        every { registeredWalletConnectHandler.isOpenableFromPush } returns false
+        every { mockedUri.isOpaque } returns true
+        every { mockedUri.scheme } returns "wc"
+        every { mockedUri.host } returns null
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(
+            deeplinkUri = mockedUri,
+            coroutineScope = testScope,
+            isFromOnNewIntent = isFromOnNewIntent,
+            source = DeeplinkSource.External,
+        )
+        advanceUntilIdle()
+
+        // Assert
+        verify { registeredWalletConnectHandler.handle(any()) }
+    }
+
+    @Test
+    fun `GIVEN registry enabled and handler openable from push WHEN push link THEN handled`() = runTest {
+        // Arrange
+        every { deepLinkFeatureToggles.isHandlerRegistryEnabled } returns true
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "main"
+        every { mockedUri.queryParameterNames } returns emptySet()
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(
+            deeplinkUri = mockedUri,
+            coroutineScope = testScope,
+            isFromOnNewIntent = isFromOnNewIntent,
+            source = DeeplinkSource.Push,
+        )
+        advanceUntilIdle()
+
+        // Assert
+        verify { registeredWalletHandler.handle(any()) }
     }
 
     @Test
