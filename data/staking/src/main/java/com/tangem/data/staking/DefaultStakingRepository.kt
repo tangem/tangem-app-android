@@ -3,6 +3,7 @@ package com.tangem.data.staking
 import com.tangem.data.staking.store.StakeKitBalancesStore
 import com.tangem.domain.card.common.TapWorkarounds.isWallet2
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.wallet.UserWallet
@@ -19,6 +20,7 @@ import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.flowOf
 
 import kotlinx.coroutines.withContext
 
@@ -31,10 +33,15 @@ internal class DefaultStakingRepository(
     private val stakingFeatureToggles: StakingFeatureToggles,
 ) : StakingRepository {
 
+    private val CryptoCurrency.isJointAccountCurrency: Boolean
+        get() = network.derivationPath is Network.DerivationPath.Joint
+
     override fun getStakingAvailability(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): Flow<StakingAvailability> {
+        if (cryptoCurrency.isJointAccountCurrency) return flowOf(StakingAvailability.Unavailable)
+
         return channelFlow {
             val stakingIntegration = StakingIntegrationID.create(currencyId = cryptoCurrency.id)
             if (stakingIntegration == null || !stakingFeatureToggles.isIntegrationEnabled(stakingIntegration)) {
@@ -70,6 +77,8 @@ internal class DefaultStakingRepository(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): StakingAvailability {
+        if (cryptoCurrency.isJointAccountCurrency) return StakingAvailability.Unavailable
+
         val stakingIntegration = StakingIntegrationID.create(currencyId = cryptoCurrency.id)
             ?.takeIf(stakingFeatureToggles::isIntegrationEnabled)
             ?: return StakingAvailability.Unavailable
