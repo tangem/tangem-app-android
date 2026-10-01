@@ -113,7 +113,8 @@ class DeepLinkHandlerRegistry(handlers: Map<String, DeepLinkHandler>) {
             if (scheme.isNullOrBlank()) return emptyList()
 
             val schemeKey = "$scheme:"
-            if (host.isNullOrBlank()) return listOf(schemeKey)
+            // A decoded host with a slash (`%2F`) would cross the host/path boundary of the keys
+            if (host.isNullOrBlank() || '/' in host) return listOf(schemeKey)
 
             val hostKey = "$scheme://$host"
             val pathKeys = pathSegments

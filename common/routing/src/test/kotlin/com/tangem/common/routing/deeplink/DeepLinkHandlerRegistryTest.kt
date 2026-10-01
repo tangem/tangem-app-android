@@ -53,6 +53,18 @@ internal class DeepLinkHandlerRegistryTest {
         }
 
         @Test
+        fun `GIVEN encoded slash in the host WHEN find THEN it does not match path keys`() {
+            // Arrange — `https://tangem.com%2Fnews/details`: the decoded host is `tangem.com/news`
+            val uri = createUri(scheme = "https", host = "tangem.com/news", pathSegments = listOf("details"))
+
+            // Act
+            val actual = registry.find(uri)
+
+            // Assert
+            assertThat(actual).isNull()
+        }
+
+        @Test
         fun `GIVEN encoded slash in a segment WHEN find THEN it does not match nested keys`() {
             // Arrange — `https://tangem.com/news%2Fdetails/1`: one decoded segment `news/details`, not two
             val uri = createUri(scheme = "https", host = "tangem.com", pathSegments = listOf("news/details", "1"))
