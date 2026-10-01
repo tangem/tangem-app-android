@@ -4,6 +4,9 @@ import android.net.Uri
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.DeepLinkRoute
 import com.tangem.common.routing.DeepLinkScheme
+import com.tangem.common.routing.deeplink.DeepLinkHandler
+import com.tangem.common.routing.deeplink.DeepLinkHandlerRegistry
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.common.uri.ExternalUrlValidator
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.data.card.sdk.CardSdkProvider
@@ -79,7 +82,10 @@ internal class DeepLinkFactory @Inject constructor(
     private val jointAccountDeepLink: JointAccountDeepLinkHandler.Factory,
     private val jointAccountInviteDeepLink: JointAccountInviteDeepLinkHandler.Factory,
     private val urlOpener: UrlOpener,
+    private val deepLinkFeatureToggles: DeepLinkFeatureToggles,
+    deepLinkHandlers: Map<String, @JvmSuppressWildcards DeepLinkHandler>,
 ) {
+    private val deepLinkHandlerRegistry = DeepLinkHandlerRegistry(deepLinkHandlers)
     private val permittedAppRoute = MutableStateFlow(false)
 
     private var parkedDeeplink: ParkedDeeplink? = null
@@ -171,6 +177,10 @@ internal class DeepLinkFactory @Inject constructor(
 
     /** Returns `true` when a handler took the deeplink, `false` when nothing matched it. */
     private fun launchDeepLink(deeplinkUri: Uri, coroutineScope: CoroutineScope, isFromOnNewIntent: Boolean): Boolean {
+        if (deepLinkFeatureToggles.isHandlerRegistryEnabled) {
+            return launchRegisteredDeepLink(deeplinkUri, coroutineScope, isFromOnNewIntent)
+        }
+
         return when (deeplinkUri.scheme) {
             DeepLinkScheme.Https.scheme -> handleHttpDeepLinks(deeplinkUri, coroutineScope)
             DeepLinkScheme.Tangem.scheme -> handleTangemDeepLinks(deeplinkUri, coroutineScope, isFromOnNewIntent)
@@ -188,6 +198,26 @@ internal class DeepLinkFactory @Inject constructor(
                 false
             }
         }
+    }
+
+    /** Dispatches [deeplinkUri] to the handler a feature contributed for it. Returns `false` when no feature claims it. */
+    private fun launchRegisteredDeepLink(
+        deeplinkUri: Uri,
+        coroutineScope: CoroutineScope,
+        isFromOnNewIntent: Boolean,
+    ): Boolean {
+        val handler = deepLinkHandlerRegistry.find(deeplinkUri) ?: return false
+
+        handler.handle(
+            request = DeepLinkRequest(
+                uri = deeplinkUri,
+                queryParams = getQueryParams(deeplinkUri),
+                scope = coroutineScope,
+                isFromOnNewIntent = isFromOnNewIntent,
+            ),
+        )
+
+        return true
     }
 
     private fun handleHttpDeepLinks(deeplinkUri: Uri, coroutineScope: CoroutineScope): Boolean {
