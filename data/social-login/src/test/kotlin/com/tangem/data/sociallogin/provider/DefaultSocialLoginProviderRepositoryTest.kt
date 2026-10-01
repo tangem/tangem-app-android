@@ -6,6 +6,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.sociallogin.models.SocialProviderIdToken
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
+import com.tangem.google.auth.GoogleAuthError
 import com.tangem.google.auth.GoogleIdToken
 import com.tangem.google.auth.GoogleIdTokenError
 import com.tangem.google.auth.GoogleIdTokenProvider
@@ -17,6 +18,7 @@ import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -42,6 +44,7 @@ internal class DefaultSocialLoginProviderRepositoryTest {
     fun resetMocks() {
         clearMocks(googleIdTokenProvider, appDataTokenProvider, nonceProvider)
         coEvery { nonceProvider.getNonce() } returns NONCE.right()
+        coEvery { appDataTokenProvider.getAccessToken(interactive = true) } returns "drive-token".right()
     }
 
     @Test
@@ -91,6 +94,34 @@ internal class DefaultSocialLoginProviderRepositoryTest {
 
         // Assert
         coVerify(exactly = 1) { appDataTokenProvider.switchAccount(ACCOUNT_NAME) }
+    }
+
+    @Test
+    fun `GIVEN sign-in succeeds WHEN signIn THEN drive access is asked for the pinned account`() = runTest {
+        // Arrange
+        coEvery { googleIdTokenProvider.getIdToken(HASHED_NONCE) } returns ID_TOKEN.right()
+
+        // Act
+        repository.signIn(SocialLoginProvider.Google)
+
+        // Assert
+        coVerifyOrder {
+            appDataTokenProvider.switchAccount(ACCOUNT_NAME)
+            appDataTokenProvider.getAccessToken(interactive = true)
+        }
+    }
+
+    @Test
+    fun `GIVEN drive access is declined WHEN signIn THEN the sign-in counts as canceled`() = runTest {
+        // Arrange
+        coEvery { googleIdTokenProvider.getIdToken(HASHED_NONCE) } returns ID_TOKEN.right()
+        coEvery { appDataTokenProvider.getAccessToken(interactive = true) } returns GoogleAuthError.AuthCanceled.left()
+
+        // Act
+        val actual = repository.signIn(SocialLoginProvider.Google)
+
+        // Assert
+        assertThat(actual).isEqualTo(SocialLoginError.SignInCanceled.left())
     }
 
     @Test
