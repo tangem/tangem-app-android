@@ -121,6 +121,20 @@ interface AuthApi {
     ): ApiResponse<McpDeviceVerificationResult>
 
     /**
+     * Rejects the device verification the agent started, so the agent is told no instead of waiting
+     * for the code to expire.
+     *
+     * @param userCode the code the agent displayed, as scanned by the user.
+     * @param state from the matching [getMcpDeviceVerification] response.
+     */
+    @DELETE("api/authentication/v1/mcp/device_verification")
+    @RequiresSessionAuth
+    suspend fun rejectMcpDeviceVerification(
+        @Query("user_code") userCode: String,
+        @Query("state") state: String,
+    ): ApiResponse<Unit>
+
+    /**
      * List MCP sessions.
      *
      * Returns the OAuth authorizations issued to MCP clients (Claude Code, MCP Inspector, etc.) for

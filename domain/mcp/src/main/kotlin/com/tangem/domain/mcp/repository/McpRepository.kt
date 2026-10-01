@@ -28,6 +28,9 @@ interface McpRepository {
         walletId: UserWalletId,
     ): Either<Throwable, McpDeviceVerificationResult>
 
+    /** Turns [verification] down, so the agent is told no instead of waiting for the code to expire. */
+    suspend fun rejectDeviceVerification(verification: McpDeviceVerification): Either<Throwable, Unit>
+
     /** Returns the authorizations currently issued to MCP clients. */
     suspend fun getSessions(): Either<Throwable, List<McpSession>>
 

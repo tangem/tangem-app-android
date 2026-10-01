@@ -129,6 +129,38 @@ internal class DefaultMcpRepositoryTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class RejectDeviceVerification {
+
+        @Test
+        fun `GIVEN a verification WHEN reject THEN calls the api with its user code and state`() = runTest {
+            // Arrange
+            coEvery { authApi.rejectMcpDeviceVerification(any(), any()) } returns ApiResponse.Success(Unit)
+
+            // Act
+            val actual = repository.rejectDeviceVerification(verification = VERIFICATION)
+
+            // Assert
+            assertThat(actual).isEqualTo(Either.Right(Unit))
+            coVerify(exactly = 1) {
+                authApi.rejectMcpDeviceVerification(userCode = USER_CODE, state = STATE)
+            }
+        }
+
+        @Test
+        fun `GIVEN api error WHEN reject THEN the cause is passed through`() = runTest {
+            // Arrange
+            coEvery { authApi.rejectMcpDeviceVerification(any(), any()) } returns apiError(SERVER_ERROR)
+
+            // Act
+            val actual = repository.rejectDeviceVerification(verification = VERIFICATION)
+
+            // Assert
+            assertThat(actual).isEqualTo(Either.Left(SERVER_ERROR))
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class Sessions {
 
         @Test
