@@ -65,7 +65,8 @@ internal class HaveWalletSheetController(
         ),
         socialLogin = socialLoginProvider()?.let { provider ->
             WalletOptionUM(
-                iconRes = CoreUiR.drawable.ic_user_24,
+                iconRes = CoreUiR.drawable.img_google_32,
+                isIconTinted = false,
                 title = resourceReference(
                     id = CoreResR.string.introduction_i_have_wallet_social_title,
                     formatArgs = wrappedList(provider.displayName()),
