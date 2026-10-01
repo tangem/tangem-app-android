@@ -961,7 +961,7 @@ internal class IntroductionModelTest {
             requireNotNull(options.socialLogin).onClick()
 
             // Assert
-            verify(exactly = 1) { socialLoginHandler.start(any(), SocialLoginProvider.Google, any()) }
+            verify(exactly = 1) { socialLoginHandler.start(any(), SocialLoginProvider.Google, any(), any()) }
             coVerify(exactly = 0) { cardScanner.scanAndOpenWallet(any(), any(), any()) }
         }
 
