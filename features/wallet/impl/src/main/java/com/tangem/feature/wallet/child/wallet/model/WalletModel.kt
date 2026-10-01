@@ -29,6 +29,8 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
 import com.tangem.domain.marketing.WarmUpMarketingCampaignsUseCase
+import com.tangem.domain.mcp.McpRequestService
+import com.tangem.domain.mcp.models.McpRequest
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.wallet.*
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
@@ -70,6 +72,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSend
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedCallbacks
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.biometry.AskBiometryComponent
+import com.tangem.features.mcp.api.McpFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
 import com.tangem.utils.Provider
@@ -130,6 +133,8 @@ internal class WalletModel @Inject constructor(
     private val getWalletIconUseCase: GetWalletIconUseCase,
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val wcPairService: WcPairService,
+    private val mcpRequestService: McpRequestService,
+    private val mcpFeatureToggles: McpFeatureToggles,
     private val resolveQrSendTargetsUseCase: ResolveQrSendTargetsUseCase,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val uiMessageSender: UiMessageSender,
@@ -863,6 +868,11 @@ internal class WalletModel @Inject constructor(
                         screen = WcPairRequest.Screen.MAIN,
                     ),
                 )
+            }
+            is QrSendTarget.McpAuthorization -> {
+                if (mcpFeatureToggles.isMcpEnabled) {
+                    mcpRequestService.request(McpRequest.Pair(userCode = target.userCode))
+                }
             }
             is QrSendTarget.Single -> {
                 innerWalletRouter.openSend(
