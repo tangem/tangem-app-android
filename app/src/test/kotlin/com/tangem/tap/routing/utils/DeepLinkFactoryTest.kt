@@ -163,6 +163,9 @@ internal class DeepLinkFactoryTest {
     private val registeredJointAccountInviteHandler = mockk<DeepLinkHandler>(relaxed = true) {
         every { isEnabled } returns true
     }
+    private val registeredWalletConnectHandler = mockk<DeepLinkHandler>(relaxed = true) {
+        every { isEnabled } returns true
+    }
 
     private val mockedUri = mockk<Uri>(relaxed = true)
     private val isFromOnNewIntent: Boolean = false
@@ -204,6 +207,7 @@ internal class DeepLinkFactoryTest {
         deepLinkHandlers = mapOf(
             "tangem://main" to registeredWalletHandler,
             "https://tangem.com/joint-account/join" to registeredJointAccountInviteHandler,
+            "wc:" to registeredWalletConnectHandler,
         ),
     )
 
@@ -699,6 +703,34 @@ internal class DeepLinkFactoryTest {
         // Assert
         verify { registeredJointAccountInviteHandler.handle(any()) }
         verify(inverse = true) { jointAccountInviteDeepLinkFactory.create(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN registry enabled and opaque uri WHEN handle THEN scheme handler gets empty query`() = runTest {
+        // Arrange
+        every { deepLinkFeatureToggles.isHandlerRegistryEnabled } returns true
+        every { mockedUri.isOpaque } returns true
+        every { mockedUri.scheme } returns "wc"
+        every { mockedUri.host } returns null
+        every { mockedUri.path } returns null
+        every { mockedUri.queryParameterNames } throws UnsupportedOperationException("This isn't a hierarchical URI.")
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+
+        // Assert
+        verify {
+            registeredWalletConnectHandler.handle(
+                DeepLinkRequest(
+                    uri = mockedUri,
+                    queryParams = emptyMap(),
+                    scope = testScope,
+                    isFromOnNewIntent = isFromOnNewIntent,
+                ),
+            )
+        }
     }
 
     @Test
