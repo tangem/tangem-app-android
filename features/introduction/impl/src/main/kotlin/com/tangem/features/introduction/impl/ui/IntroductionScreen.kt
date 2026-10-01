@@ -139,6 +139,7 @@ internal fun IntroductionScreen(
                     BottomActions(state = state)
                 }
                 state.socialLoginProgress?.let { SocialLoginProgress(state = it) }
+                state.socialLoginConsent?.let { SocialLoginConsentScreen(state = it) }
             }
             // One sheet is composed from the first frame, with or without a config of its own: a hidden modal
             // shows nothing, and being composed is what lets it warm the machinery both sheets then reuse.
@@ -255,13 +256,21 @@ private fun SocialLoginProgress(state: SocialLoginProgressUM) {
             },
             label = "SocialLoginProgress",
         ) { stage ->
-            TangemStatusScreen(
-                variant = TangemStatusScreen.Variant.Neutral,
-                title = stage.title,
-                description = stage.description,
-                asset = { TangemLoader(size = TangemLoaderSize.X32) },
-                animated = stage == firstStage,
-            )
+            when (stage) {
+                SocialLoginProgressUM.Loader -> Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    TangemLoader(size = TangemLoaderSize.X32)
+                }
+                is SocialLoginProgressUM.Stage -> TangemStatusScreen(
+                    variant = TangemStatusScreen.Variant.Neutral,
+                    title = stage.title,
+                    description = stage.description,
+                    asset = { TangemLoader(size = TangemLoaderSize.X32) },
+                    animated = stage == firstStage,
+                )
+            }
         }
     }
 }
@@ -347,6 +356,7 @@ private fun IntroductionScreenPreview() {
                 bottomSheetConfig = null,
                 haveWalletBottomSheetConfig = null,
                 socialLoginProgress = null,
+                socialLoginConsent = null,
                 onCreateWalletClick = {},
                 onIHaveWalletClick = {},
                 onCreateWalletSheetCollapsed = {},
