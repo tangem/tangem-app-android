@@ -1,5 +1,6 @@
 package com.tangem.scenarios
 
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -736,7 +737,9 @@ fun BaseTestCase.openTangemPayWithdrawReadyToConfirm(receiveToken: String, amoun
 
 // The withdraw HoldToConfirm re-disables during the ~10s quote refresh; re-hold each poll until it takes.
 fun BaseTestCase.confirmTangemPayWithdrawByHolding(accessCode: String) {
-    val buttonMatcher = hasTestTag(BaseButtonTestTags.BUTTON)
+    // The error dialog can open mid-iteration; its last button is Support, which leaves the app for email.
+    val buttonMatcher = hasTestTag(BaseButtonTestTags.BUTTON) and
+        !hasAnyAncestor(hasTestTag(BaseDialogTestTags.CONTAINER))
     val accessCodeInput = hasTestTag(HotWalletAccessCodeTestTags.ACCESS_CODE_INPUT)
     val swapInProgress = hasText(getResourceString(CoreUiR.string.swap_in_progress))
     val withdrawErrorDialog = hasTestTag(BaseDialogTestTags.CONTAINER) and
