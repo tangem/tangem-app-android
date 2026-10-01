@@ -254,6 +254,8 @@ internal class DeepLinkHandlerRegistryTest {
             NormalizeKeyModel(key = "tangem://staking/", expected = "tangem://staking"),
             NormalizeKeyModel(key = "https://tangem.com//news//", expected = "https://tangem.com/news"),
             NormalizeKeyModel(key = "https://tangem.com/", expected = "https://tangem.com"),
+            // Percent-encoded characters are decoded like Uri.getPathSegments does
+            NormalizeKeyModel(key = "https://tangem.com/foo%20bar", expected = "https://tangem.com/foo bar"),
             // Malformed
             NormalizeKeyModel(key = "", expected = null),
             NormalizeKeyModel(key = "staking", expected = null),
@@ -263,6 +265,8 @@ internal class DeepLinkHandlerRegistryTest {
             NormalizeKeyModel(key = "https://tangem.com/news#top", expected = null),
             NormalizeKeyModel(key = " tangem://staking", expected = null),
             NormalizeKeyModel(key = "wc:abc", expected = null),
+            NormalizeKeyModel(key = "https://tangem.com/news%2Fdetails", expected = null),
+            NormalizeKeyModel(key = "https://tangem.com/%zz", expected = null),
         )
     }
 
@@ -278,6 +282,24 @@ internal class DeepLinkHandlerRegistryTest {
                 every { scheme } returns "tangem"
                 every { host } returns "staking"
                 every { pathSegments } returns emptyList()
+            }
+
+            // Act
+            val actual = registry.find(uri)
+
+            // Assert
+            assertThat(actual).isSameInstanceAs(handler)
+        }
+
+        @Test
+        fun `GIVEN percent encoded key WHEN find decoded segment THEN handler is found`() {
+            // Arrange
+            val handler = DeepLinkHandler {}
+            val registry = DeepLinkHandlerRegistry(handlers = mapOf("https://tangem.com/foo%20bar" to handler))
+            val uri = mockk<Uri> {
+                every { scheme } returns "https"
+                every { host } returns "tangem.com"
+                every { pathSegments } returns listOf("foo bar")
             }
 
             // Act
