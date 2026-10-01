@@ -30,7 +30,9 @@ import kotlinx.coroutines.flow.flowOf
  *  - [hasTangemPayInWallet] delegates to the real repo, so the "existing customer" gate follows the
  *    checkCustomerWalletId mock (the `tangem_pay_eligibility` scenario: `Started` → 404/NotFound →
  *    no Payment account, `PaeraCustomer` → 200 → Payment account);
- *  - [getCustomerInfo] delegates to the real repo (WireMock), so KYC / customer-state scenarios take effect.
+ *  - [getCustomerInfo] delegates to the real repo (WireMock), so KYC / customer-state scenarios take effect;
+ *  - [validateDeeplink] delegates to the real repo, so the `tangem_pay_deeplink_validate` scenario decides
+ *    VALID / INVALID.
  */
 @Singleton
 internal class MockAwareOnboardingRepository @Inject constructor(
@@ -47,10 +49,7 @@ internal class MockAwareOnboardingRepository @Inject constructor(
             .getEnvironmentConfig(TangemPay.Bff.ID)
             .environment == ApiEnvironment.MOCK
 
-    override suspend fun validateDeeplink(link: String): Either<UniversalError, Boolean> {
-        if (isMockMode) return true.right()
-        return real.validateDeeplink(link)
-    }
+    override suspend fun validateDeeplink(link: String): Either<UniversalError, Boolean> = real.validateDeeplink(link)
 
     override suspend fun isTangemPayInitialDataProduced(userWalletId: UserWalletId): Boolean {
         if (isMockMode) return true
