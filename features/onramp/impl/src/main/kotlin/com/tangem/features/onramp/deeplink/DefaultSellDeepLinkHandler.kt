@@ -28,4 +28,8 @@ internal class DefaultSellDeepLinkHandler @AssistedInject constructor(
     interface Factory : SellDeepLinkHandler.Factory {
         override fun create(): DefaultSellDeepLinkHandler
     }
+
+    companion object {
+        const val DEEPLINK_KEY = "tangem://sell"
+    }
 }
