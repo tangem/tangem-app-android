@@ -158,11 +158,14 @@ object TangemBadge {
      * - [Tinted] — soft tinted fill (subtle status color or opaque neutral), no border.
      * - [Outline] — tinted fill with a matching border.
      * - [Solid] — saturated status color fill with static-dark content.
+     * - [Inverse] — inverted surface: the badge reads as the one picked out of a row. It carries no
+     *   status colors, so [Status] is ignored for it.
      */
     enum class Variant {
         Tinted,
         Outline,
         Solid,
+        Inverse,
     }
 
     /** Status color scheme of the badge. */
@@ -327,6 +330,13 @@ private fun resolveColorTokens(variant: TangemBadge.Variant, status: TangemBadge
                 iconTint = colors.icon.staticDark,
             )
         }
+        // the inverted surface flips with the theme, so its content has to flip with it — a static
+        // color would be unreadable in one of the two themes
+        TangemBadge.Variant.Inverse -> BadgeColorTokens(
+            backgroundColor = colors.bg.inverse,
+            textColor = colors.text.inverse.primary,
+            iconTint = colors.icon.inverse,
+        )
     }
 }
 
