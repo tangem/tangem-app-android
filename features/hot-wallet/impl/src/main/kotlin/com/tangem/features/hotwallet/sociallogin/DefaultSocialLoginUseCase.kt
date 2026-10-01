@@ -138,7 +138,7 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
                 return Either.Left(error)
             }
 
-            return Either.Right(SocialLoginOutcome.WalletRestored(imported.walletId))
+            return Either.Right(SocialLoginOutcome.WalletRestored(imported.walletId, isNewOnDevice = imported.isNew))
         } finally {
             recoveryKey.wipe()
         }
@@ -149,7 +149,6 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
         onStageChanged: (SocialLoginStage) -> Unit,
         requestConsent: suspend () -> SocialLoginConsent?,
     ): Either<SocialLoginError, SocialLoginOutcome> {
-        // TODO [REDACTED_TASK_KEY]: the email-sharing opt-in has no sink yet, in analytics or in the backend contract.
         requestConsent() ?: return Either.Left(SocialLoginError.ConsentDeclined)
 
         onStageChanged(SocialLoginStage.CreatingWallet)
@@ -276,6 +275,8 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
             mnemonic = mnemonic,
             passphrase = null,
             isSeedPhraseBackedUp = false,
+            // reported by the caller once the restore is registered, as it may still be rolled back
+            creationType = null,
         ).map { ImportedWallet(walletId = it, isNew = true) }.recover { error ->
             when (error) {
                 // already on this device — the state the restore was after; the id is safe to take from
