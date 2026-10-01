@@ -15,5 +15,6 @@ internal data class TangemPayAddFundsItemUM(
     val icon: TangemIconUM,
     val title: TextReference,
     val description: TextReference,
-    val onClick: () -> Unit,
+    val onClick: (() -> Unit)?,
+    val isLoading: Boolean = false,
 )

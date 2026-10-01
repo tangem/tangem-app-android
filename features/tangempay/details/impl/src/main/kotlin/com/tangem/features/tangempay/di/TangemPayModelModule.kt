@@ -4,6 +4,7 @@ import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.tangempay.account.TangemPayDetailsModel
 import com.tangem.features.tangempay.addfunds.TangemPayAddFundsModel
+import com.tangem.features.tangempay.addfunds.bankTransferOnramp.details.TangemPayBankTransferOnrampDetailsModel
 import com.tangem.features.tangempay.addfunds.va.bank.TangemPayVaBankingDetailsErrorModel
 import com.tangem.features.tangempay.addfunds.va.deposit.TangemPayVirtualAccountDepositModel
 import com.tangem.features.tangempay.campaign.TangemPayCampaignIssueCardModel
@@ -92,6 +93,11 @@ internal interface TangemPayModelModule {
     @IntoMap
     @ClassKey(TangemPayVaBankingDetailsErrorModel::class)
     fun bindTangemPayVaBankingDetailsErrorModel(model: TangemPayVaBankingDetailsErrorModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayBankTransferOnrampDetailsModel::class)
+    fun bindTangemPayBankTransferOnrampDetailsModel(model: TangemPayBankTransferOnrampDetailsModel): Model
 
     @Binds
     @IntoMap
