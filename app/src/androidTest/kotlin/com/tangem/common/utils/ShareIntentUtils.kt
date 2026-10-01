@@ -8,6 +8,7 @@ import androidx.test.espresso.intent.VerificationModes
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasExtra
 import org.hamcrest.CoreMatchers.allOf
+import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.CoreMatchers.equalTo
 
 /** Stubs the system share chooser so tapping 'Share' does not hand the test over to another app. */
@@ -30,12 +31,18 @@ fun assertTextSharedViaChooser(text: String, times: Int) {
     )
 }
 
-/** Asserts the share chooser was opened [times] times in total, each wrapping an [Intent.ACTION_SEND]. */
-fun assertShareChooserOpened(times: Int) {
+/** Asserts the share chooser was opened [times] times in total, each sharing a text that contains every [fragments]. */
+fun assertTextContainingSharedViaChooser(fragments: List<String>, times: Int) {
     Intents.intended(
         allOf(
             hasAction(Intent.ACTION_CHOOSER),
-            hasExtra(equalTo(Intent.EXTRA_INTENT), hasAction(Intent.ACTION_SEND)),
+            hasExtra(
+                equalTo(Intent.EXTRA_INTENT),
+                allOf(
+                    hasAction(Intent.ACTION_SEND),
+                    hasExtra(equalTo(Intent.EXTRA_TEXT), allOf(fragments.map(::containsString))),
+                ),
+            ),
         ),
         VerificationModes.times(times),
     )
