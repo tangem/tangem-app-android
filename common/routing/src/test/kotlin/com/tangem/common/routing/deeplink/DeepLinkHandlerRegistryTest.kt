@@ -41,6 +41,18 @@ internal class DeepLinkHandlerRegistryTest {
         }
 
         @Test
+        fun `GIVEN uri with very long path WHEN find THEN handler of registered prefix is found`() {
+            // Arrange
+            val uri = createUri(scheme = "https", host = "tangem.com", path = "/news" + "/a".repeat(n = 10_000))
+
+            // Act
+            val actual = registry.find(uri)
+
+            // Assert
+            assertThat(actual).isSameInstanceAs(newsHandler)
+        }
+
+        @Test
         fun `GIVEN disabled nested handler WHEN find THEN parent path handler is used`() {
             // Arrange
             var isDetailsEnabled = false
@@ -133,6 +145,7 @@ internal class DeepLinkHandlerRegistryTest {
                 scheme = model.scheme,
                 host = model.host,
                 path = model.path,
+                maxPathSegments = model.maxPathSegments,
             )
 
             // Assert
@@ -167,6 +180,28 @@ internal class DeepLinkHandlerRegistryTest {
             CandidateKeysModel(scheme = "wc", host = "", path = "/x", expected = listOf("wc:")),
             CandidateKeysModel(scheme = null, host = "staking", path = null, expected = emptyList()),
             CandidateKeysModel(scheme = "", host = "staking", path = null, expected = emptyList()),
+            // Prefixes deeper than the deepest registered key are not built
+            CandidateKeysModel(
+                scheme = "https",
+                host = "tangem.com",
+                path = "/joint-account/join/invite-id",
+                maxPathSegments = 1,
+                expected = listOf("https://tangem.com/joint-account", "https://tangem.com", "https:"),
+            ),
+            CandidateKeysModel(
+                scheme = "https",
+                host = "tangem.com",
+                path = "/news",
+                maxPathSegments = 0,
+                expected = listOf("https://tangem.com", "https:"),
+            ),
+            CandidateKeysModel(
+                scheme = "https",
+                host = "tangem.com",
+                path = "/a".repeat(n = 10_000),
+                maxPathSegments = 2,
+                expected = listOf("https://tangem.com/a/a", "https://tangem.com/a", "https://tangem.com", "https:"),
+            ),
         )
     }
 
@@ -269,6 +304,7 @@ internal class DeepLinkHandlerRegistryTest {
         val scheme: String?,
         val host: String?,
         val path: String?,
+        val maxPathSegments: Int = Int.MAX_VALUE,
         val expected: List<String>,
     )
 }
