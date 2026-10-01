@@ -51,7 +51,6 @@ import kotlinx.collections.immutable.ImmutableList
 private const val LOCKED_WALLET_ALPHA = 0.5f
 
 // MVP: no Lokalise keys for the MCP screen yet
-private const val CONNECTED_AGENTS_TITLE = "Connected Agents"
 private const val CONNECTED_DAPPS_TITLE = "Connected dApps"
 
 @Composable
@@ -124,60 +123,14 @@ private fun ConnectionsList(connections: WcConnections, modifier: Modifier = Mod
     }
 }
 
+/**
+ * Connected agents list — a stub until the block is built on the design system.
+ *
+ * [agents] is already loaded and each item already carries its click into the details sheet.
+ */
+@Suppress("UnusedParameter", "EmptyFunctionBlock")
 @Composable
 private fun ConnectedAgentsBlock(agents: ImmutableList<McpAgentInfo>, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.padding(horizontal = TangemTheme.dimens.spacing16),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
-    ) {
-        SectionTitle(
-            text = CONNECTED_AGENTS_TITLE,
-            modifier = Modifier.padding(start = TangemTheme.dimens.spacing8, top = TangemTheme.dimens.spacing12),
-        )
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    color = TangemTheme.colors.background.primary,
-                    shape = RoundedCornerShape(TangemTheme.dimens.radius14),
-                )
-                .clip(RoundedCornerShape(TangemTheme.dimens.radius14)),
-        ) {
-            agents.fastForEach { agent ->
-                key(agent.id) {
-                    AgentItem(
-                        agent = agent,
-                        modifier = Modifier
-                            .clickable(onClick = agent.onClick)
-                            .padding(all = 12.dp),
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun AgentItem(agent: McpAgentInfo, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing2),
-    ) {
-        Text(
-            text = agent.name,
-            color = TangemTheme.colors.text.primary1,
-            style = TangemTheme.typography.subtitle2,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Text(
-            text = agent.subtitle,
-            color = TangemTheme.colors.text.tertiary,
-            style = TangemTheme.typography.caption2,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
 }
 
 @Composable
@@ -541,7 +494,5 @@ private class WcConnectionsStateProvider : CollectionPreviewParameterProvider<Wc
         WcConnectionsPreviewData.stateWithEmptyConnections,
         WcConnectionsPreviewData.fullState,
         WcConnectionsPreviewData.accountState,
-        WcConnectionsPreviewData.agentsWithDappsState,
-        WcConnectionsPreviewData.agentsOnlyState,
     ),
 )
