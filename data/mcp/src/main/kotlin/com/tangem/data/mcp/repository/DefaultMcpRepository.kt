@@ -7,14 +7,17 @@ import com.tangem.data.mcp.converter.toDomain
 import com.tangem.domain.mcp.models.McpDeviceVerification
 import com.tangem.domain.mcp.models.McpDeviceVerificationResult
 import com.tangem.domain.mcp.models.McpSession
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.mcp.repository.McpRepository
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.lib.auth.api.AuthApi
 import com.tangem.lib.auth.api.models.request.McpDeviceVerificationConsent
+import com.tangem.lib.auth.api.models.response.McpSessionResponse
 import javax.inject.Inject
 
 internal class DefaultMcpRepository @Inject constructor(
     private val authApi: AuthApi,
+    private val userWalletsListRepository: UserWalletsListRepository,
 ) : McpRepository {
 
     override suspend fun getDeviceVerification(userCode: String): Either<Throwable, McpDeviceVerification> {
@@ -43,7 +46,24 @@ internal class DefaultMcpRepository @Inject constructor(
     override suspend fun getSessions(): Either<Throwable, List<McpSession>> {
         val response = authApi.getMcpSessions()
 
-        return response.toEither().map { sessions -> sessions.map { it.toDomain() } }
+        return response.toEither().map { sessions -> sessions.toDomainWithStubbedFields() }
+    }
+
+    /**
+     * The service scopes the session list by the access token, so its response carries neither the
+     * wallet the authorization was granted for nor its creation time. Both are stubbed here — spread
+     * over the wallets, timed to now — so the screen can be built against the final model. Delete
+
+     */
+    private suspend fun List<McpSessionResponse>.toDomainWithStubbedFields(): List<McpSession> {
+        val wallets = userWalletsListRepository.userWalletsSync().ifEmpty { return emptyList() }
+
+        return mapIndexed { index, session ->
+            session.toDomain(
+                walletId = wallets[index % wallets.size].walletId,
+                createdAtMillis = System.currentTimeMillis(),
+            )
+        }
     }
 
     override suspend fun revokeSession(sessionId: String): Either<Throwable, Unit> {
