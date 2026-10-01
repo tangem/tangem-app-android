@@ -9,6 +9,14 @@ android {
     namespace = "com.tangem.common.routing"
 }
 
+kotlin {
+    compilerOptions {
+        // Interface defaults (e.g. DeepLinkHandler.isEnabled) become JVM default methods, so implementors in other
+        // modules need no compiled bridges and stay valid when a default member is added
+        freeCompilerArgs.add("-Xjvm-default=all")
+    }
+}
+
 dependencies {
 
     // region Kotlin
