@@ -29,6 +29,7 @@ import com.tangem.features.introduction.impl.engine.IntroductionVideoPlayer
 import com.tangem.features.introduction.impl.ui.state.CreateWalletUM
 import com.tangem.features.introduction.impl.ui.state.WalletOptionUM
 import com.tangem.features.introduction.impl.ui.state.IntroductionUM
+import com.tangem.features.introduction.impl.ui.state.SocialLoginConsentUM
 import com.tangem.features.introduction.impl.ui.state.SocialLoginProgressUM
 import com.tangem.features.storiesv2.StoriesV2PendingAction
 import com.tangem.features.storiesv2.StoriesV2Result
@@ -123,6 +124,7 @@ internal class IntroductionModel @Inject constructor(
                 bottomSheetConfig = null,
                 haveWalletBottomSheetConfig = null,
                 socialLoginProgress = null,
+                socialLoginConsent = null,
                 onCreateWalletClick = ::onCreateWalletClick,
                 onIHaveWalletClick = ::onIHaveWalletClick,
                 onCreateWalletSheetCollapsed = ::onCreateWalletSheetCollapsed,
@@ -339,6 +341,10 @@ internal class IntroductionModel @Inject constructor(
                 haveWalletSheet.dismiss()
             }
             uiState.update { it.copy(socialLoginProgress = progress) }
+        }
+
+        override fun onConsent(consent: SocialLoginConsentUM?) {
+            uiState.update { it.copy(socialLoginConsent = consent) }
         }
 
         override fun onFinished() {
