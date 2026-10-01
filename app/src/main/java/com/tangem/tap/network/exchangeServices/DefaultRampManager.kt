@@ -49,11 +49,7 @@ internal class DefaultRampManager(
     ): Either<ScenarioUnavailabilityReason, Unit> {
         return either {
             val isSellSupportedByService = catch(
-                block = {
-                    val serviceCurrency = CryptoCurrencyConverter.convert(status.currency)
-
-                    sellService.availableForSell(currency = serviceCurrency)
-                },
+                block = { sellService.availableForSell(currency = status.currency) },
                 catch = { raise(ScenarioUnavailabilityReason.NotSupportedBySellService(status.currency.name)) },
             )
 
