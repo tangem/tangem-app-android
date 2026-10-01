@@ -33,6 +33,14 @@ sealed interface AccountTitleUM {
                 )
             }
 
+            fun prediction(prefixText: TextReference = TextReference.EMPTY): Account {
+                return Account(
+                    prefixText = prefixText,
+                    name = resourceReference(R.string.prediction_account_title),
+                    icon = AccountIconUM.Prediction,
+                )
+            }
+
             fun moneyAccount(prefixText: TextReference = TextReference.EMPTY): Account {
                 return Account(
                     prefixText = prefixText,
