@@ -98,6 +98,7 @@ sealed class AnalyticsParam {
         TangemPay("Tangem Pay"),
         WalletSettings("Wallet Settings"),
         Upgrade("Upgrade"),
+        SocialLogin("Social Login"),
         HardwareWallet("Hardware Wallet"),
         ImportWallet("Import Wallet"),
         CreateWalletIntro("Create Wallet Intro"),
