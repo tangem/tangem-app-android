@@ -26,6 +26,7 @@ import com.tangem.domain.notifications.GetApplicationIdUseCase
 import com.tangem.domain.notifications.SendPushTokenUseCase
 import com.tangem.domain.notifications.models.ApplicationId
 import com.tangem.domain.notifications.models.NotificationsError
+import com.tangem.domain.offramp.repository.OfframpRepository
 import com.tangem.domain.onramp.FetchHotCryptoUseCase
 import com.tangem.domain.quotes.multi.MultiQuoteUpdater
 import com.tangem.domain.settings.DeleteDeprecatedLogsUseCase
@@ -39,7 +40,6 @@ import com.tangem.domain.wallets.usecase.GetSavedWalletsCountUseCase
 import com.tangem.domain.wallets.usecase.UpdateRemoteWalletsInfoUseCase
 import com.tangem.feature.swap.analytics.StoriesEvents
 import com.tangem.security.DeviceSecurityInfoProvider
-import com.tangem.tap.network.exchangeServices.SellService
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -77,7 +77,7 @@ internal class MainViewModel @Inject constructor(
     private val apiConfigsManager: ApiConfigsManager,
     private val multiQuoteUpdater: MultiQuoteUpdater,
     private val appRouterConfig: AppRouterConfig,
-    private val sellService: SellService,
+    private val offrampRepository: OfframpRepository,
     private val deviceSecurityInfoProvider: DeviceSecurityInfoProvider,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel() {
@@ -174,7 +174,7 @@ internal class MainViewModel @Inject constructor(
 
     private fun initializeOffRamp() {
         viewModelScope.launch {
-            sellService.update()
+            offrampRepository.update()
         }
     }
 
