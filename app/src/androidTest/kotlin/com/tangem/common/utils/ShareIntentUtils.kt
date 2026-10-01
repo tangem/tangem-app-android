@@ -29,3 +29,14 @@ fun assertTextSharedViaChooser(text: String, times: Int) {
         VerificationModes.times(times),
     )
 }
+
+/** Asserts the share chooser was opened [times] times in total, each wrapping an [Intent.ACTION_SEND]. */
+fun assertShareChooserOpened(times: Int) {
+    Intents.intended(
+        allOf(
+            hasAction(Intent.ACTION_CHOOSER),
+            hasExtra(equalTo(Intent.EXTRA_INTENT), hasAction(Intent.ACTION_SEND)),
+        ),
+        VerificationModes.times(times),
+    )
+}
