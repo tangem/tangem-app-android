@@ -360,6 +360,17 @@ internal class SendModel @Inject constructor(
     }
 
     suspend fun loadFeeExtended(maybeToken: CryptoCurrencyStatus?): Either<GetFeeError, TransactionFeeExtended> {
+        if (accountFlow.value is Account.Joint) {
+            return jointSendDelegate.loadFeeExtended(
+                userWalletId = userWallet.walletId,
+                currency = cryptoCurrency,
+                feeCoin = feeCryptoCurrencyStatusFlow.value.currency,
+                feeCurrency = maybeToken?.currency,
+                amountUM = uiState.value.amountUM,
+                destinationUM = uiState.value.destinationUM,
+            )
+        }
+
         val transferTransaction = prepareTransferTransaction()
             .getOrElse { return GetFeeError.DataError(it).left() }
         // A yield-supply send zeroes the amount inside TransactionData, so pass it explicitly.
