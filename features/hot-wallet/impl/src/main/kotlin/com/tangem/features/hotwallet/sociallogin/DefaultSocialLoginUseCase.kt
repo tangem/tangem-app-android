@@ -15,12 +15,14 @@ import com.tangem.domain.sociallogin.models.SocialProviderIdToken
 import com.tangem.domain.sociallogin.usecase.GenerateRecoveryKeyUseCase
 import com.tangem.domain.sociallogin.usecase.GetSocialRecoveryKeyUseCase
 import com.tangem.domain.sociallogin.usecase.ReadSocialBackupUseCase
+import com.tangem.domain.sociallogin.usecase.RegisterRestoredWalletUseCase
 import com.tangem.domain.sociallogin.usecase.RegisterSocialRecoveryUseCase
 import com.tangem.domain.sociallogin.usecase.SetSocialBackupCompletedUseCase
 import com.tangem.domain.sociallogin.usecase.SignInWithSocialProviderUseCase
 import com.tangem.domain.sociallogin.usecase.SignOutFromSocialProviderUseCase
 import com.tangem.domain.sociallogin.usecase.WriteSocialBackupUseCase
 import com.tangem.domain.wallets.builder.HotUserWalletBuilder
+import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.domain.wallets.usecase.ExportSeedPhraseUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.hotwallet.MnemonicRepository
@@ -51,6 +53,8 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
     private val readSocialBackupUseCase: ReadSocialBackupUseCase,
     private val registerSocialRecoveryUseCase: RegisterSocialRecoveryUseCase,
     private val setSocialBackupCompletedUseCase: SetSocialBackupCompletedUseCase,
+    private val registerRestoredWalletUseCase: RegisterRestoredWalletUseCase,
+    private val deleteWalletUseCase: DeleteWalletUseCase,
     private val tangemHotSdk: TangemHotSdk,
     private val hotUserWalletBuilderFactory: HotUserWalletBuilder.Factory,
     private val saveWalletUseCase: SaveWalletUseCase,
@@ -116,7 +120,7 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
             onStageChanged(SocialLoginStage.PreparingWallet)
             val restored = readSocialBackupUseCase(recoveryKey).getOrElse { return Either.Left(it) }
 
-            val userWalletId = try {
+            val imported = try {
                 // The seed alone builds a different wallet, and a social restore has nowhere to ask for
                 // the passphrase. Only another client can write such a file.
                 if (restored.secret.isPassphraseRequired) {
@@ -128,7 +132,13 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
                 restored.secret.wipe()
             }
 
-            return Either.Right(SocialLoginOutcome.WalletRestored(userWalletId))
+            registerRestoredWalletUseCase(imported.walletId).getOrElse { error ->
+                TangemLogger.e("Failed to register the restored social login wallet: $error")
+                if (imported.isNew) discardImport(imported.walletId)
+                return Either.Left(error)
+            }
+
+            return Either.Right(SocialLoginOutcome.WalletRestored(imported.walletId))
         } finally {
             recoveryKey.wipe()
         }
@@ -238,7 +248,7 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
                 )
             }
 
-    private suspend fun importMarkedWallet(restored: RestoredSocialBackup): Either<SocialLoginError, UserWalletId> {
+    private suspend fun importMarkedWallet(restored: RestoredSocialBackup): Either<SocialLoginError, ImportedWallet> {
         val walletId = restored.info.walletId
         setSocialBackupCompletedUseCase(walletId = walletId, isCompleted = true)
             .getOrElse { return Either.Left(it) }
@@ -249,7 +259,13 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
         }
     }
 
-    private suspend fun importWallet(restored: RestoredSocialBackup): Either<SocialLoginError, UserWalletId> {
+    private suspend fun discardImport(walletId: UserWalletId) {
+        deleteWalletUseCase(walletId).onLeft { TangemLogger.e("Failed to discard the unregistered wallet: $it") }
+        setSocialBackupCompletedUseCase(walletId = walletId, isCompleted = false)
+            .onLeft { TangemLogger.e("Failed to clear the flag of a discarded wallet: $it") }
+    }
+
+    private suspend fun importWallet(restored: RestoredSocialBackup): Either<SocialLoginError, ImportedWallet> {
         // the SDK only parses a String, so this copy of the phrase cannot be wiped
         val mnemonic = runCatching { mnemonicRepository.generateMnemonic(String(restored.secret.mnemonic)) }
             .getOrNull()
@@ -260,17 +276,19 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
             mnemonic = mnemonic,
             passphrase = null,
             isSeedPhraseBackedUp = false,
-        ).recover { error ->
+        ).map { ImportedWallet(walletId = it, isNew = true) }.recover { error ->
             when (error) {
                 // already on this device — the state the restore was after; the id is safe to take from
                 // the header, which survived the AES-GCM check over itself
-                HotWalletImportError.AlreadySaved -> restored.info.walletId
+                HotWalletImportError.AlreadySaved -> ImportedWallet(walletId = restored.info.walletId, isNew = false)
                 is HotWalletImportError.Unknown -> raise(SocialLoginError.Unknown(error.cause))
                 // unreachable: the import above passes no passphrase
                 is HotWalletImportError.PassphraseTooLong -> raise(SocialLoginError.Unknown())
             }
         }
     }
+
+    private data class ImportedWallet(val walletId: UserWalletId, val isNew: Boolean)
 
     /**
      * A creation that got as far as saving the wallet, so a retry carries on with it instead of leaving a
