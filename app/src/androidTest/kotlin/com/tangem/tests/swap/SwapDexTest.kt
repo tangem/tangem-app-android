@@ -8,7 +8,7 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.assertClipboardTextEquals
-import com.tangem.common.utils.assertShareChooserOpened
+import com.tangem.common.utils.assertTextContainingSharedViaChooser
 import com.tangem.common.utils.assertUrlOpened
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.common.utils.stubShareChooserIntent
@@ -162,8 +162,13 @@ class SwapDexTest : BaseTestCase() {
             step("Click on '$shareMenuItem' menu item") {
                 onTxHistoryDetailsBottomSheet { menuItem(shareMenuItem).clickWithAssertion() }
             }
-            step("Assert the swap data is passed to the system share chooser") {
-                flakySafely(WAIT_UNTIL_TIMEOUT) { assertShareChooserOpened(times = 1) }
+            step("Assert the swap ID '$expressTxId' and provider '$providerName' are shared via the system chooser") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    assertTextContainingSharedViaChooser(
+                        fragments = listOf(expressTxId, "$providerName $providerType"),
+                        times = 1,
+                    )
+                }
             }
             step("Stub opening the provider page") {
                 stubUrlOpening(providerUrl)
