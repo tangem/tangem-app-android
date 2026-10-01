@@ -97,7 +97,7 @@ internal class HaveWalletSheetController(
     private fun onImportWalletClick() {
         if (!isShown) return
         if (currentStep() is HaveWalletUM.Step.Import) return
-        analyticsEventHandler.send(OnboardingAnalyticsEvent.SeedPhrase.ButtonImportWallet())
+        analyticsEventHandler.send(IntroductionProcess.ButtonImportExistingWallet())
         analyticsEventHandler.send(
             OnboardingAnalyticsEvent.Backup.ImportWalletRequest(cloudBackup = cloudBackupAvailability()),
         )
