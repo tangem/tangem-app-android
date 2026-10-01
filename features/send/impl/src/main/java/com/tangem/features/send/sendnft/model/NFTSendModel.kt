@@ -224,7 +224,7 @@ internal class NFTSendModel @Inject constructor(
         saveBlockchainErrorUseCase(
             error = BlockchainErrorInfo(
                 errorMessage = errorMessage.orEmpty(),
-                networkId = cryptoCurrency.network.id,
+                networkId = nftAsset.network.id,
                 destinationAddress = "",
                 tokenSymbol = null,
                 amount = "",
@@ -233,7 +233,7 @@ internal class NFTSendModel @Inject constructor(
         )
 
         modelScope.launch {
-            val metaInfo = getWalletMetaInfoUseCase(userWallet.walletId).getOrNull() ?: return@launch
+            val metaInfo = getWalletMetaInfoUseCase(userWalletId).getOrNull() ?: return@launch
             analyticsEventHandler.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.Send))
             sendFeedbackEmailUseCase(type = FeedbackEmailType.TransactionSendingProblem(walletMetaInfo = metaInfo))
         }
