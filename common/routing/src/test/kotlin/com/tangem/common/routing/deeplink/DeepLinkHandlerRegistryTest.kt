@@ -53,6 +53,18 @@ internal class DeepLinkHandlerRegistryTest {
         }
 
         @Test
+        fun `GIVEN encoded slash in a segment WHEN find THEN it does not match nested keys`() {
+            // Arrange — `https://tangem.com/news%2Fdetails/1`: one decoded segment `news/details`, not two
+            val uri = createUri(scheme = "https", host = "tangem.com", pathSegments = listOf("news/details", "1"))
+
+            // Act
+            val actual = registry.find(uri)
+
+            // Assert
+            assertThat(actual).isNull()
+        }
+
+        @Test
         fun `GIVEN disabled nested handler WHEN find THEN parent path handler is used`() {
             // Arrange
             var isDetailsEnabled = false
@@ -126,10 +138,17 @@ internal class DeepLinkHandlerRegistryTest {
             FindModel(scheme = null, host = "staking", path = null, expected = null),
         )
 
-        private fun createUri(scheme: String?, host: String?, path: String?): Uri = mockk {
+        /** [path] holds decoded segments joined by `/`, as [Uri.getPathSegments] would split the raw path. */
+        private fun createUri(scheme: String?, host: String?, path: String?): Uri = createUri(
+            scheme = scheme,
+            host = host,
+            pathSegments = path.orEmpty().split('/').filter(String::isNotEmpty),
+        )
+
+        private fun createUri(scheme: String?, host: String?, pathSegments: List<String>): Uri = mockk {
             every { this@mockk.scheme } returns scheme
             every { this@mockk.host } returns host
-            every { this@mockk.path } returns path
+            every { this@mockk.pathSegments } returns pathSegments
         }
     }
 
@@ -144,7 +163,7 @@ internal class DeepLinkHandlerRegistryTest {
             val actual = DeepLinkHandlerRegistry.candidateKeys(
                 scheme = model.scheme,
                 host = model.host,
-                path = model.path,
+                pathSegments = model.path.orEmpty().split('/'),
                 maxPathSegments = model.maxPathSegments,
             )
 
@@ -258,7 +277,7 @@ internal class DeepLinkHandlerRegistryTest {
             val uri = mockk<Uri> {
                 every { scheme } returns "tangem"
                 every { host } returns "staking"
-                every { path } returns null
+                every { pathSegments } returns emptyList()
             }
 
             // Act
