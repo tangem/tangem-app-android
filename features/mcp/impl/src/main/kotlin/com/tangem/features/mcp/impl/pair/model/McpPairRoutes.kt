@@ -13,4 +13,7 @@ internal sealed interface McpPairRoutes : Route {
 
     @Serializable
     data object PortfolioSelector : McpPairRoutes
+
+    @Serializable
+    data object Success : McpPairRoutes
 }
