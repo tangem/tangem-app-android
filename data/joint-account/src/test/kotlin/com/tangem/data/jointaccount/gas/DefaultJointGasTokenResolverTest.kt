@@ -80,6 +80,19 @@ internal class DefaultJointGasTokenResolverTest {
     }
 
     @Test
+    fun `GIVEN the coin address without the 0x prefix WHEN resolve THEN coin`() = runTest {
+        // Act
+        val actual = resolver.resolve(
+            network = network,
+            address = SafeGasToken.Coin.address.removePrefix(prefix = "0x"),
+            rawCurrencyId = null,
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(SafeGasToken.Coin.right())
+    }
+
+    @Test
     fun `GIVEN a token outside smart gas WHEN resolve THEN null`() = runTest {
         // Act
         val actual = resolver.resolve(
@@ -134,11 +147,12 @@ internal class DefaultJointGasTokenResolverTest {
     private fun quoteParams(rawId: String) =
         SingleQuoteStatusProducer.Params(rawCurrencyId = CryptoCurrency.RawID(rawId))
 
+    /** The app-currency rate is deliberately off: only the USD one is read */
     private fun quote(rawId: String, fiatRate: String) = QuoteStatus(
         rawCurrencyId = CryptoCurrency.RawID(rawId),
         value = QuoteStatus.Data(
             source = StatusSource.ACTUAL,
-            fiatRate = BigDecimal(fiatRate),
+            fiatRate = BigDecimal(fiatRate).multiply(BigDecimal("150")),
             fiatRateUSD = BigDecimal(fiatRate),
             priceChange = BigDecimal.ZERO,
         ),
