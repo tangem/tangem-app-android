@@ -41,7 +41,7 @@ internal class SetTokenListTransformer(
     }
 
     private val moneyAccountConverter by lazy {
-        MoneyAccountMainBlockConverter()
+        MoneyAccountMainBlockConverter(moneyAccountIntents = clickIntents)
     }
 
     private val polymarketConverter by lazy {
