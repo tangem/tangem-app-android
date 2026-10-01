@@ -40,6 +40,7 @@ import com.tangem.domain.nft.EnableWalletNFTUseCase
 import com.tangem.domain.nft.GetWalletNFTEnabledUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.assetsdiscovery.usecase.StartAssetsDiscoveryUseCase
+import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
 import com.tangem.domain.wallets.analytics.Settings
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.analytics.toAnalyticsState
@@ -98,6 +99,7 @@ internal class WalletSettingsModel @Inject constructor(
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
     private val jointAccountFeatureToggles: JointAccountFeatureToggles,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val socialLoginFeatureToggles: SocialLoginFeatureToggles,
     private val getCloudBackupStateUseCase: GetCloudBackupStateUseCase,
     private val getCloudBackupStatusUseCase: GetCloudBackupStatusUseCase,
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
@@ -431,6 +433,7 @@ internal class WalletSettingsModel @Inject constructor(
                     action = WalletSettingsAnalyticEvents.NoticeBackupFirst.Action.AccessCode,
                     cloudBackupState = resolveCloudBackupState(userWallet),
                     isBackedUp = manualBackupState(userWallet.backedUp),
+                    isSocialBackedUp = socialBackupState(),
                 ),
             )
         }
@@ -584,6 +587,8 @@ internal class WalletSettingsModel @Inject constructor(
         }
     }
 
+    private fun socialBackupState(): Boolean? = false.takeIf { socialLoginFeatureToggles.isSocialLoginEnabled }
+
     private fun manualBackupState(isBackedUp: Boolean): Boolean? =
         isBackedUp.takeIf { hotWalletFeatureToggles.isGoogleDriveBackupEnabled }
 
@@ -639,6 +644,7 @@ internal class WalletSettingsModel @Inject constructor(
                     cloudBackupState = AnalyticsParam.CloudBackupState.Incomplete
                         .takeIf { hotWalletFeatureToggles.isGoogleDriveBackupEnabled },
                     isBackedUp = manualBackupState(isBackedUp = false),
+                    isSocialBackedUp = socialBackupState(),
                 ),
             )
         }
