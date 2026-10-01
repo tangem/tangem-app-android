@@ -11,6 +11,7 @@ import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.transaction.GaslessTransactionRepository
+import com.tangem.utils.extensions.addHexPrefix
 import java.math.BigDecimal
 import java.math.MathContext
 import javax.inject.Inject
@@ -26,11 +27,12 @@ internal class DefaultJointGasTokenResolver @Inject constructor(
         address: String,
         rawCurrencyId: CryptoCurrency.RawID?,
     ): Either<Throwable, SafeGasToken?> = Either.catch {
-        if (address.equals(SafeGasToken.Coin.address, ignoreCase = true)) return@catch SafeGasToken.Coin
+        val normalizedAddress = address.lowercase().addHexPrefix()
+        if (normalizedAddress == SafeGasToken.Coin.address) return@catch SafeGasToken.Coin
 
         val token = gaslessTransactionRepository.getSupportedTokens(network)
             .filterIsInstance<CryptoCurrency.Token>()
-            .firstOrNull { it.contractAddress.equals(address, ignoreCase = true) }
+            .firstOrNull { it.contractAddress.lowercase().addHexPrefix() == normalizedAddress }
             ?: return@catch null
 
         val blockchain = network.toBlockchain()
@@ -39,20 +41,21 @@ internal class DefaultJointGasTokenResolver @Inject constructor(
         val tokenRate = fiatRate(rawCurrencyId = tokenQuoteId)
 
         SafeGasToken.Token(
-            address = token.contractAddress.lowercase(),
+            address = normalizedAddress,
             decimals = token.decimals,
             coinDecimals = blockchain.decimals(),
             nativeToTokenRate = coinRate.divide(tokenRate, MathContext.DECIMAL128),
         )
     }
 
+    /** In USD: a quote kept from before an app currency change is still in USD, so both sides share one unit */
     private suspend fun fiatRate(rawCurrencyId: CryptoCurrency.RawID): BigDecimal {
         val quote = singleQuoteStatusSupplier.getSyncOrNull(
             params = SingleQuoteStatusProducer.Params(rawCurrencyId = rawCurrencyId),
         )
         val data = checkNotNull(quote?.value as? QuoteStatus.Data) { "No quote for ${rawCurrencyId.value}" }
-        check(data.fiatRate.signum() > 0) { "Zero quote for ${rawCurrencyId.value}" }
+        check(data.fiatRateUSD.signum() > 0) { "Zero quote for ${rawCurrencyId.value}" }
 
-        return data.fiatRate
+        return data.fiatRateUSD
     }
 }
