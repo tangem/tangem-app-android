@@ -2020,7 +2020,8 @@ internal class IntroductionModelTest {
 
     private fun createWalletSocialOption(isEnabled: Boolean, onPicked: (SocialLoginProvider) -> Unit) =
         WalletOptionUM(
-            iconRes = CoreUiR.drawable.ic_user_24,
+            iconRes = CoreUiR.drawable.img_google_32,
+            isIconTinted = false,
             title = resourceReference(
                 id = CoreResR.string.introduction_create_wallet_social_title,
                 formatArgs = wrappedList("Google"),
