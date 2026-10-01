@@ -21,7 +21,11 @@ internal class DefaultJointGasTokenResolver @Inject constructor(
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
 ) : JointGasTokenResolver {
 
-    override suspend fun resolve(network: Network, address: String): Either<Throwable, SafeGasToken?> = Either.catch {
+    override suspend fun resolve(
+        network: Network,
+        address: String,
+        rawCurrencyId: CryptoCurrency.RawID?,
+    ): Either<Throwable, SafeGasToken?> = Either.catch {
         if (address.equals(SafeGasToken.Coin.address, ignoreCase = true)) return@catch SafeGasToken.Coin
 
         val token = gaslessTransactionRepository.getSupportedTokens(network)
@@ -31,7 +35,8 @@ internal class DefaultJointGasTokenResolver @Inject constructor(
 
         val blockchain = network.toBlockchain()
         val coinRate = fiatRate(rawCurrencyId = CryptoCurrency.RawID(blockchain.toCoinId()))
-        val tokenRate = fiatRate(rawCurrencyId = checkNotNull(token.id.rawCurrencyId) { "No currency id: $address" })
+        val tokenQuoteId = checkNotNull(rawCurrencyId) { "No quote id for the gas token $address" }
+        val tokenRate = fiatRate(rawCurrencyId = tokenQuoteId)
 
         SafeGasToken.Token(
             address = token.contractAddress.lowercase(),

@@ -86,7 +86,9 @@ internal class SignJointOperationUseCaseTest {
             gasTokenResolver,
         )
         coEvery { fetcher.invoke(params = any()) } returns Unit.right()
-        coEvery { gasTokenResolver.resolve(network = network, address = NATIVE) } returns SafeGasToken.Coin.right()
+        coEvery {
+            gasTokenResolver.resolve(network = network, address = NATIVE, rawCurrencyId = null)
+        } returns SafeGasToken.Coin.right()
         coEvery { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns
             flowOf(listOf(jointAccount()))
         coEvery { networkReader.getChainId(network) } returns CHAIN_ID.right()
@@ -163,7 +165,9 @@ internal class SignJointOperationUseCaseTest {
     @Test
     fun `GIVEN gas token outside smart gas WHEN invoke THEN refund mismatch before the verifier runs`() = runTest {
         // Arrange
-        coEvery { gasTokenResolver.resolve(network = network, address = NATIVE) } returns null.right()
+        coEvery {
+            gasTokenResolver.resolve(network = network, address = NATIVE, rawCurrencyId = null)
+        } returns null.right()
 
         // Act
         val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)

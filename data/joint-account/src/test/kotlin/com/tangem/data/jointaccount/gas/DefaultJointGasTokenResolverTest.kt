@@ -53,7 +53,7 @@ internal class DefaultJointGasTokenResolverTest {
     @Test
     fun `GIVEN the coin address WHEN resolve THEN coin without asking the gasless service`() = runTest {
         // Act
-        val actual = resolver.resolve(network = network, address = SafeGasToken.Coin.address)
+        val actual = resolver.resolve(network = network, address = SafeGasToken.Coin.address, rawCurrencyId = null)
 
         // Assert
         assertThat(actual).isEqualTo(SafeGasToken.Coin.right())
@@ -63,7 +63,11 @@ internal class DefaultJointGasTokenResolverTest {
     @Test
     fun `GIVEN a smart gas token WHEN resolve THEN priced with the coin to token fiat rate`() = runTest {
         // Act
-        val actual = resolver.resolve(network = network, address = TOKEN_CONTRACT.uppercase().replace("0X", "0x"))
+        val actual = resolver.resolve(
+            network = network,
+            address = TOKEN_CONTRACT.uppercase().replace("0X", "0x"),
+            rawCurrencyId = TETHER,
+        )
 
         // Assert
         val expected = SafeGasToken.Token(
@@ -78,7 +82,11 @@ internal class DefaultJointGasTokenResolverTest {
     @Test
     fun `GIVEN a token outside smart gas WHEN resolve THEN null`() = runTest {
         // Act
-        val actual = resolver.resolve(network = network, address = "0x1111111111111111111111111111111111111111")
+        val actual = resolver.resolve(
+            network = network,
+            address = "0x1111111111111111111111111111111111111111",
+            rawCurrencyId = TETHER,
+        )
 
         // Assert
         assertThat(actual).isEqualTo(null.right())
@@ -90,7 +98,34 @@ internal class DefaultJointGasTokenResolverTest {
         coEvery { singleQuoteStatusSupplier.getSyncOrNull(params = quoteParams("tether")) } returns null
 
         // Act
-        val actual = resolver.resolve(network = network, address = TOKEN_CONTRACT)
+        val actual = resolver.resolve(network = network, address = TOKEN_CONTRACT, rawCurrencyId = TETHER)
+
+        // Assert
+        assertThat(actual.isLeft()).isTrue()
+    }
+
+    /** The Smart Gas list carries contracts only; its tokens have no quote id of their own */
+    @Test
+    fun `GIVEN a listed token whose own id has no quote id WHEN resolve THEN the caller's quote id prices it`() =
+        runTest {
+            // Arrange
+            val listedWithoutQuoteId = MockCryptoCurrencyFactory().createToken(
+                blockchain = Blockchain.Ethereum,
+                contractAddress = TOKEN_CONTRACT,
+            )
+            coEvery { gaslessTransactionRepository.getSupportedTokens(network) } returns setOf(listedWithoutQuoteId)
+
+            // Act
+            val actual = resolver.resolve(network = network, address = TOKEN_CONTRACT, rawCurrencyId = TETHER)
+
+            // Assert
+            assertThat(actual.getOrNull()).isInstanceOf(SafeGasToken.Token::class.java)
+        }
+
+    @Test
+    fun `GIVEN no quote id from the caller WHEN resolve a token THEN error`() = runTest {
+        // Act
+        val actual = resolver.resolve(network = network, address = TOKEN_CONTRACT, rawCurrencyId = null)
 
         // Assert
         assertThat(actual.isLeft()).isTrue()
@@ -110,6 +145,7 @@ internal class DefaultJointGasTokenResolverTest {
     )
 
     private companion object {
+        val TETHER = CryptoCurrency.RawID("tether")
         const val TOKEN_CONTRACT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
     }
 }
