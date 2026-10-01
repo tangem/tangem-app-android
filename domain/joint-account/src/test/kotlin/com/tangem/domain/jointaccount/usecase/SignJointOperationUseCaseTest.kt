@@ -23,6 +23,7 @@ import com.tangem.domain.jointaccount.signing.JointOperationSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.verifier.JointOperationVerifier
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.test.mock.MockAccounts
 import io.mockk.clearMocks
@@ -180,6 +181,36 @@ internal class SignJointOperationUseCaseTest {
         coVerify(exactly = 0) { verifier.verify(any(), any(), any(), any(), any()) }
         coVerify(exactly = 0) { signer.signOperation(any(), any(), any(), any(), any()) }
     }
+
+    @Test
+    fun `GIVEN token refund WHEN invoke THEN quote id of this network token found by unprefixed address`() =
+        runTest {
+            // Arrange
+            val otherNetwork: Network = mockk()
+            val usdcHere = usdc(network = network, rawId = "usd-coin")
+            val sameAddressElsewhere = usdc(network = otherNetwork, rawId = "bridged-usdc")
+            val tokenAccount = MockAccounts.createJointAccount(
+                ownerKeyIndex = 3,
+                cryptoCurrencies = listOf(sameAddressElsewhere, usdcHere),
+            )
+            val tokenOperation = operation(gasToken = USDC.removePrefix(prefix = "0x").uppercase())
+            coEvery { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns
+                flowOf(listOf(jointAccount(inFlightOperations = mapOf(CHAIN_ID to tokenOperation))))
+            coEvery { gasTokenResolver.resolve(network, tokenOperation.safeTx.gasToken, any()) } returns
+                SafeGasToken.Coin.right()
+
+            // Act
+            useCase(account = tokenAccount, network = network, operationId = OPERATION_ID, displayed = displayed)
+
+            // Assert
+            coVerify(exactly = 1) {
+                gasTokenResolver.resolve(
+                    network = network,
+                    address = tokenOperation.safeTx.gasToken,
+                    rawCurrencyId = CryptoCurrency.RawID("usd-coin"),
+                )
+            }
+        }
 
     @Test
     fun `GIVEN verifier blocks WHEN invoke THEN the signer is never reached`() = runTest {
@@ -403,7 +434,7 @@ internal class SignJointOperationUseCaseTest {
     }
 
     private fun jointAccount(
-        inFlightOperations: Map<Long, JointOperation> = mapOf(CHAIN_ID to operation()),
+        inFlightOperations: Map<Long, JointOperation> = mapOf(CHAIN_ID to operation(gasToken = NATIVE)),
         safeAddress: String? = SAFE_ADDRESS,
     ): JointAccount = JointAccount(
         cryptoAccountId = account.accountId.value,
@@ -420,6 +451,7 @@ internal class SignJointOperationUseCaseTest {
 
     private fun operation(
         status: JointOperation.Status = JointOperation.Status.AWAITING_SIGNATURES,
+        gasToken: String = NATIVE,
     ): JointOperation = JointOperation(
         operationId = OPERATION_ID,
         chainId = CHAIN_ID,
@@ -431,7 +463,7 @@ internal class SignJointOperationUseCaseTest {
             safeTxGas = BigInteger("150000"),
             baseGas = BigInteger("110000"),
             gasPrice = BigInteger("60000000000"),
-            gasToken = NATIVE,
+            gasToken = gasToken,
             refundReceiver = "0x0000000000000000000000000000000000000000",
             nonce = BigInteger.ZERO,
         ),
@@ -440,8 +472,24 @@ internal class SignJointOperationUseCaseTest {
         signatures = emptyList(),
     )
 
+    private fun usdc(network: Network, rawId: String) = CryptoCurrency.Token(
+        id = CryptoCurrency.ID(
+            prefix = CryptoCurrency.ID.Prefix.TOKEN_PREFIX,
+            body = CryptoCurrency.ID.Body.NetworkId(rawId = "polygon-pos"),
+            suffix = CryptoCurrency.ID.Suffix.RawID(rawId = rawId, contractAddress = USDC),
+        ),
+        network = network,
+        name = "USD Coin",
+        symbol = "USDC",
+        decimals = 6,
+        iconUrl = null,
+        isCustom = false,
+        contractAddress = USDC,
+    )
+
     private companion object {
         const val NATIVE = "0x0000000000000000000000000000000000000000"
+        const val USDC = "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359"
         const val ALICE = "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"
         const val RECIPIENT = "0x1111111111111111111111111111111111111111"
         const val SAFE_ADDRESS = "0x5afe000000000000000000000000000000000001"
