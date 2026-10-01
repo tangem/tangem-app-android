@@ -138,7 +138,7 @@ internal fun IntroductionScreen(
                     )
                     BottomActions(state = state)
                 }
-                state.socialLoginProgress?.let { SocialLoginProgress(state = it) }
+                SocialLoginProgressHost(progress = state.socialLoginProgress)
                 state.socialLoginConsent?.let { SocialLoginConsentScreen(state = it) }
             }
             // One sheet is composed from the first frame, with or without a config of its own: a hidden modal
@@ -223,6 +223,22 @@ private fun rememberEverShown(isShown: Boolean): Boolean {
     return wasShown
 }
 
+@Composable
+private fun SocialLoginProgressHost(progress: SocialLoginProgressUM?) {
+    AnimatedContent(
+        targetState = progress,
+        modifier = Modifier.fillMaxSize(),
+        contentKey = { it?.javaClass },
+        transitionSpec = {
+            fadeIn(tween(durationMillis = PROGRESS_FADE_MS)) togetherWith
+                fadeOut(tween(durationMillis = PROGRESS_FADE_MS))
+        },
+        label = "SocialLoginProgressKind",
+    ) { target ->
+        target?.let { SocialLoginProgress(state = it) }
+    }
+}
+
 /**
  * Swallows input and the back gesture on purpose: the buttons underneath stay composed, and leaving now
  * would drop the viewer back on the welcome screen while the wallet is still being written.
@@ -231,6 +247,22 @@ private fun rememberEverShown(isShown: Boolean): Boolean {
 private fun SocialLoginProgress(state: SocialLoginProgressUM) {
     BackHandler(enabled = true) {}
 
+    when (state) {
+        SocialLoginProgressUM.Loader -> Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(TangemTheme.colors3.overlay.modal)
+                .consumeAllPointerInput(),
+            contentAlignment = Alignment.Center,
+        ) {
+            TangemLoader(size = TangemLoaderSize.X32)
+        }
+        is SocialLoginProgressUM.Stage -> SocialLoginStageProgress(state)
+    }
+}
+
+@Composable
+private fun SocialLoginStageProgress(state: SocialLoginProgressUM.Stage) {
     val firstStage = remember { state }
 
     Box(
@@ -238,13 +270,7 @@ private fun SocialLoginProgress(state: SocialLoginProgressUM) {
             .fillMaxSize()
             // opaque, so the cross-fade between two stages never lets the welcome video show through
             .background(TangemTheme.colors3.bg.primary)
-            .pointerInput(Unit) {
-                awaitPointerEventScope {
-                    while (true) {
-                        awaitPointerEvent().changes.forEach { it.consume() }
-                    }
-                }
-            },
+            .consumeAllPointerInput(),
     ) {
         // The status screen centres a block whose height depends on the text, so a longer title would
         // re-centre everything mid-read. The cross-fade hides the move; only the first stage animates in.
@@ -256,21 +282,21 @@ private fun SocialLoginProgress(state: SocialLoginProgressUM) {
             },
             label = "SocialLoginProgress",
         ) { stage ->
-            when (stage) {
-                SocialLoginProgressUM.Loader -> Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    TangemLoader(size = TangemLoaderSize.X32)
-                }
-                is SocialLoginProgressUM.Stage -> TangemStatusScreen(
-                    variant = TangemStatusScreen.Variant.Neutral,
-                    title = stage.title,
-                    description = stage.description,
-                    asset = { TangemLoader(size = TangemLoaderSize.X32) },
-                    animated = stage == firstStage,
-                )
-            }
+            TangemStatusScreen(
+                variant = TangemStatusScreen.Variant.Info,
+                title = stage.title,
+                description = stage.description,
+                asset = { TangemLoader(size = TangemLoaderSize.X32, color = TangemTheme.colors3.icon.brand) },
+                animated = stage == firstStage,
+            )
+        }
+    }
+}
+
+private fun Modifier.consumeAllPointerInput(): Modifier = pointerInput(Unit) {
+    awaitPointerEventScope {
+        while (true) {
+            awaitPointerEvent().changes.forEach { it.consume() }
         }
     }
 }
