@@ -138,7 +138,9 @@ internal class DefaultJointAccountDeepLinkHandler @AssistedInject constructor(
         ): DefaultJointAccountDeepLinkHandler
     }
 
-    private companion object {
-        const val ACCOUNT_APPEARANCE_TIMEOUT_MILLIS = 3_000L
+    companion object {
+        const val DEEPLINK_KEY = "tangem://joint_account"
+
+        private const val ACCOUNT_APPEARANCE_TIMEOUT_MILLIS = 3_000L
     }
 }
