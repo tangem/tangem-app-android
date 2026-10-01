@@ -76,10 +76,15 @@ internal class TangemPayAddFundsModel @Inject constructor(
         }
         when (onramp) {
             is VirtualAccountOnramp.Available -> loadBankingDetails(onramp)
-            VirtualAccountOnramp.Eligible,
-            VirtualAccountOnramp.Processing,
-            -> params.listener.onClickBankTransfer()
+            VirtualAccountOnramp.Eligible -> openOnboarding()
+            VirtualAccountOnramp.Processing -> params.listener.onClickBankTransfer()
         }
+    }
+
+    private fun openOnboarding() {
+        analytics.send(TangemPayAnalyticsEvents.VaTopupButtonClicked())
+        params.listener.onDismissAddFunds()
+        router.push(TangemPayAccountDetailsInnerRoute.BankTransferOnrampOnboarding)
     }
 
     private fun loadBankingDetails(onramp: VirtualAccountOnramp.Available) {

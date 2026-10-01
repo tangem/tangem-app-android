@@ -19,6 +19,7 @@ import com.tangem.domain.pay.usecase.CreateVirtualAccountOrderUseCase
 import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
 import com.tangem.domain.pay.usecase.GetOnrampFeesUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.features.tangempay.addfunds.VIRTUAL_ACCOUNT_TERMS_OF_USE_URL
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
@@ -52,7 +53,7 @@ internal class TangemPayVirtualAccountDepositModel @Inject constructor(
                 isLoading = false,
                 onShowDetailsClick = ::onShowDetailsClick,
                 onDismiss = ::onDismiss,
-                onTermsClick = { urlOpener.openUrl(TERMS_OF_USE_URL) },
+                onTermsClick = { urlOpener.openUrl(VIRTUAL_ACCOUNT_TERMS_OF_USE_URL) },
                 onPrivacyClick = { urlOpener.openUrl(PRIVACY_POLICY_URL) },
             ),
         )
@@ -161,7 +162,6 @@ internal class TangemPayVirtualAccountDepositModel @Inject constructor(
     }
 
     private companion object {
-        const val TERMS_OF_USE_URL = "https://tangem.com/docs/en/virtual-account-terms.pdf"
         const val PRIVACY_POLICY_URL = "https://tangem.com/docs/en/pay-privacy-policy.pdf"
     }
 }
