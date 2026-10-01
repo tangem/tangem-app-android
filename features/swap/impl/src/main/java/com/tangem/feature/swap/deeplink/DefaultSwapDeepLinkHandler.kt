@@ -399,8 +399,10 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
         ): DefaultSwapDeepLinkHandler
     }
 
-    private companion object {
+    companion object {
+        const val DEEPLINK_KEY = "tangem://swap"
+
         /** Max time to wait for [GetWalletTotalBalanceUseCase] before falling back to the first wallet. */
-        const val BALANCE_LOOKUP_TIMEOUT_SECONDS = 5
+        private const val BALANCE_LOOKUP_TIMEOUT_SECONDS = 5
     }
 }
