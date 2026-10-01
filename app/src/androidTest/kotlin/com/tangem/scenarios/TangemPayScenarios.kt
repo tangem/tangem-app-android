@@ -51,6 +51,19 @@ private const val PAY_ACCOUNT_WALLET_ID_STUB = "00"
 /** Endpoint the app calls to disable Tangem Pay for the wallet — the account-removal request. */
 private const val PAY_ENABLED_ENDPOINT = "/bff-v2/v1/customer/pay-enabled"
 
+/** Mirrors UITEST_ACCESS_TOKEN_EXPIRES_AT_KEY in MockAwareTangemPayStorage. */
+private const val ACCESS_TOKEN_EXPIRES_AT_KEY = "uitest.tangempay.access_token_expires_at"
+
+/** Makes the synthetic Tangem Pay access token already expired, so the next Pay request refreshes it. */
+fun expireTangemPayAccessToken() {
+    val expiredAt = System.currentTimeMillis() / 1000 - 1
+    System.setProperty(ACCESS_TOKEN_EXPIRES_AT_KEY, expiredAt.toString())
+}
+
+fun restoreTangemPayAccessToken() {
+    System.clearProperty(ACCESS_TOKEN_EXPIRES_AT_KEY)
+}
+
 fun BaseTestCase.openTangemPay() {
     // Existing customer: callers set the `tangem_pay_eligibility` scenario to PaeraCustomer (in
     // additionalBeforeSection, before this runs), which drives the checkCustomerWalletId mock -> Payment account.
