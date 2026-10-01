@@ -190,8 +190,10 @@ internal class TangemPayDetailsModel @Inject constructor(
             TangemPayDetailsInitialRoute.TIERS_ONBOARDING,
             -> Unit
             TangemPayDetailsInitialRoute.ADD_FUNDS -> openAddFunds()
-            TangemPayDetailsInitialRoute.VA_ONRAMP -> openVirtualAccountOnramp()
-            TangemPayDetailsInitialRoute.VA_ONRAMP_DETAILS -> openVirtualAccountBankingDetails()
+            TangemPayDetailsInitialRoute.VA_ONRAMP -> if (!tryOpenBankTransferOnramp()) openVirtualAccountOnramp()
+            TangemPayDetailsInitialRoute.VA_ONRAMP_DETAILS -> if (!tryOpenBankTransferOnramp()) {
+                openVirtualAccountBankingDetails()
+            }
             TangemPayDetailsInitialRoute.CURRENT_PLAN -> openCurrentPlan()
             TangemPayDetailsInitialRoute.CHANGE_PLAN -> openChangePlan()
             TangemPayDetailsInitialRoute.CASHBACK -> openCashback()
@@ -503,6 +505,10 @@ internal class TangemPayDetailsModel @Inject constructor(
         openVirtualAccountOnramp(shouldSendClickAnalytics = true)
     }
 
+    override fun onBankingDetailsLoadFailed(productInstanceId: String) {
+        showVaBankingDetailsError(productInstanceId)
+    }
+
     private fun openVirtualAccountOnramp(shouldSendClickAnalytics: Boolean = false) {
         val loaded = currentStatus.value.ifLoadedOrNull { it } ?: return
         when (val onramp = loaded.virtualAccount) {
@@ -514,6 +520,20 @@ internal class TangemPayDetailsModel @Inject constructor(
                 if (shouldSendClickAnalytics) analytics.send(TangemPayAnalyticsEvents.VaTopupButtonClicked())
                 openVirtualAccountDeposit(onramp, loaded)
             }
+        }
+    }
+
+    private fun tryOpenBankTransferOnramp(): Boolean {
+        if (!tangemPayFeatureToggles.isVisaOnrampV2Enabled) return false
+        return when (val onramp = currentStatus.value.ifLoadedOrNull { it.virtualAccount }) {
+            is VirtualAccountOnramp.Available -> {
+                fetchVirtualAccountBankingDetails(onramp)
+                true
+            }
+            VirtualAccountOnramp.Eligible,
+            VirtualAccountOnramp.Processing,
+            null,
+            -> false
         }
     }
 
@@ -582,6 +602,10 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     fun onShowVirtualAccountRequisites(bankCredentials: BankCredentials) {
         bottomSheetNavigation.dismiss()
+        if (tangemPayFeatureToggles.isVisaOnrampV2Enabled) {
+            router.push(TangemPayAccountDetailsInnerRoute.BankTransferOnrampDetails(bankCredentials))
+            return
+        }
         bottomSheetNavigation.activate(
             TangemPayDetailsNavigation.VirtualAccountRequisites(
                 userWalletId = userWalletId,

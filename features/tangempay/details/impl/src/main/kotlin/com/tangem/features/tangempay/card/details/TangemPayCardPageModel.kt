@@ -54,6 +54,7 @@ import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.usecase.ChangeCardFrozenStateUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.addfunds.AddFundsListener
 import com.tangem.features.tangempay.card.closure.CloseCardListener
@@ -112,6 +113,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val biometricAuthManager: BiometricAuthManager,
     private val settingsManager: SettingsManager,
     private val onboardingRepository: OnboardingRepository,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     googleWalletControllerFactory: TangemPayAddToGoogleWalletController.Factory,
 ) : Model(), ViewPinListener, ReissueCardListener, AddFundsListener, CloseCardListener, ChooseNetworkListener {
 
@@ -709,6 +711,10 @@ internal class TangemPayCardPageModel @Inject constructor(
         }
     }
 
+    override fun onBankingDetailsLoadFailed(productInstanceId: String) {
+        showVaBankingDetailsError(productInstanceId)
+    }
+
     private fun openVirtualAccountDeposit(onramp: VirtualAccountOnramp, loaded: PaymentAccountStatusValue.Loaded) {
         analytics.send(TangemPayAnalyticsEvents.VaTopupButtonClicked())
         bottomSheetNavigation.dismiss()
@@ -770,6 +776,10 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     fun onShowVirtualAccountRequisites(bankCredentials: BankCredentials) {
         bottomSheetNavigation.dismiss()
+        if (tangemPayFeatureToggles.isVisaOnrampV2Enabled) {
+            router.push(TangemPayAccountDetailsInnerRoute.BankTransferOnrampDetails(bankCredentials))
+            return
+        }
         bottomSheetNavigation.activate(
             TangemPayCardNavigation.VirtualAccountRequisites(
                 userWalletId = userWalletId,
