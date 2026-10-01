@@ -1,25 +1,35 @@
 package com.tangem.features.introduction.impl.model
 
+import com.tangem.common.TangemBlogUrlBuilder
+import com.tangem.common.TangemBlogUrlBuilder.Post.WhatWalletToChoose
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import androidx.annotation.StringRes
+import androidx.compose.ui.text.SpanStyle
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.plus
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.styledResourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
 import com.tangem.domain.sociallogin.usecase.GetAvailableSocialLoginProvidersUseCase
-import com.tangem.features.hotwallet.SocialLoginUseCase
 import com.tangem.features.hotwallet.SocialLoginOutcome
 import com.tangem.features.hotwallet.SocialLoginStage
+import com.tangem.features.hotwallet.SocialLoginUseCase
+import com.tangem.features.introduction.impl.ui.state.SocialLoginConsentUM
 import com.tangem.features.introduction.impl.ui.state.SocialLoginProgressUM
 import com.tangem.features.introduction.impl.ui.state.WalletOptionUM
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -39,6 +49,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val appCoroutineScope: AppCoroutineScope,
+    private val urlOpener: UrlOpener,
     private val router: Router,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
 ) {
@@ -59,9 +70,11 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         WalletOptionUM(
             // TODO [REDACTED_TASK_KEY]: the coloured provider mark is not in the design system yet.
             iconRes = CoreUiR.drawable.ic_user_24,
-            // TODO [REDACTED_TASK_KEY]: waiting on introduction_create_wallet_google_title in Lokalise.
-            title = stringReference("Create with Google"),
-            description = resourceReference(CoreResR.string.introduction_create_wallet_seed_phrase_description),
+            title = resourceReference(
+                id = CoreResR.string.introduction_create_wallet_social_title,
+                formatArgs = wrappedList(provider.displayName()),
+            ),
+            description = resourceReference(CoreResR.string.introduction_create_wallet_social_description),
             isEnabled = isEnabled,
             isLoading = isLoading,
             onClick = { onPicked(provider) },
@@ -81,7 +94,11 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
     suspend fun signIn(provider: SocialLoginProvider, host: Host) {
         val result = socialLoginUseCase.signIn(
             provider = provider,
-            onStageChanged = { stage -> host.onProgress(stage.toProgressUM(provider)) },
+            onStageChanged = { stage -> host.onProgress(stage.toProgressUM()) },
+            requestConsent = {
+                host.onProgress(null)
+                consentPrompt(provider, host::onConsent).await()
+            },
         )
 
         // Only after the result is processed: a failure signs the provider out, and a tap accepted
@@ -98,12 +115,38 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         }
     }
 
-    /** What the screen has to render while the flow runs; `null` takes that surface down */
     interface Host {
 
         fun onProgress(progress: SocialLoginProgressUM?)
 
+        fun onConsent(consent: SocialLoginConsentUM?)
+
         fun onFinished()
+    }
+
+    private fun consentPrompt(
+        provider: SocialLoginProvider,
+        onConsent: (SocialLoginConsentUM?) -> Unit,
+    ): SocialLoginConsentPrompt = SocialLoginConsentPrompt(
+        title = resourceReference(
+            id = CoreResR.string.social_login_consent_title,
+            formatArgs = wrappedList(provider.displayName()),
+        ),
+        description = resourceReference(
+            id = CoreResR.string.social_login_consent_description,
+            formatArgs = wrappedList(provider.displayName()),
+        ) + stringReference(" ") + styledResourceReference(
+            id = CoreResR.string.social_login_consent_learn_more,
+            spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.primary) },
+            // TODO [REDACTED_TASK_KEY]: switch to the social login article once it is published.
+            onClick = ::openHelpArticle,
+        ),
+        acknowledgement = providerReference(CoreResR.string.social_login_consent_acknowledge, provider),
+        onStateChanged = onConsent,
+    )
+
+    private fun openHelpArticle() {
+        appCoroutineScope.launch { urlOpener.openUrl(TangemBlogUrlBuilder.build(WhatWalletToChoose)) }
     }
 
     private suspend fun onSuccess(outcome: SocialLoginOutcome) {
@@ -116,10 +159,11 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
 
         uiMessageSender.send(
             SnackbarMessage(
-                // TODO [REDACTED_TASK_KEY]: social_login_toast_wallet_created / _added are not in Lokalise yet.
                 when (outcome) {
-                    is SocialLoginOutcome.WalletCreated -> stringReference("Wallet created")
-                    is SocialLoginOutcome.WalletRestored -> stringReference("Wallet added")
+                    is SocialLoginOutcome.WalletCreated ->
+                        resourceReference(CoreResR.string.social_login_toast_wallet_created)
+                    is SocialLoginOutcome.WalletRestored ->
+                        resourceReference(CoreResR.string.social_login_toast_wallet_added)
                 },
             ),
         )
@@ -134,26 +178,24 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         socialLoginUseCase.signOut(provider)
 
         when (error) {
+            SocialLoginError.ConsentDeclined -> Unit
             SocialLoginError.BackupNotFound,
             SocialLoginError.InvalidBackupFile,
             is SocialLoginError.UnsupportedBackupVersion,
             is SocialLoginError.RecoveryKeyDecryptionFailed,
             SocialLoginError.PassphraseNotSupported,
             -> showRestoreFailedDialog(
-                // TODO [REDACTED_TASK_KEY]: waiting on social_login_error_restore_failed_message in Lokalise.
                 title = resourceReference(CoreResR.string.common_something_went_wrong),
-                message = stringReference(
-                    "We couldn't restore the wallet for this account. Try again or contact support",
-                ),
+                message = resourceReference(CoreResR.string.social_login_error_restore_failed_description),
             )
             SocialLoginError.CloudUnavailable -> showRestoreFailedDialog(
-                // TODO [REDACTED_TASK_KEY]: waiting on social_login_error_cloud_access_* in Lokalise.
-                title = stringReference("Couldn't restore wallet"),
-                message = stringReference(
-                    "Make sure Tangem has access to your ${provider.cloudName()}, then try again.",
+                title = resourceReference(CoreResR.string.social_login_error_cloud_access_title),
+                message = resourceReference(
+                    id = CoreResR.string.social_login_error_cloud_access_description,
+                    formatArgs = wrappedList(provider.cloudName()),
                 ),
             )
-            else -> uiMessageSender.send(SnackbarMessage(error.toMessage()))
+            else -> uiMessageSender.send(SnackbarMessage(error.toMessage(provider)))
         }
     }
 
@@ -164,7 +206,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
                 message = message,
                 firstActionBuilder = {
                     EventMessageAction(
-                        title = resourceReference(CoreResR.string.common_contact_support),
+                        title = resourceReference(CoreResR.string.social_login_error_support),
                         onClick = { sendSupportRequest() },
                     )
                 },
@@ -177,45 +219,38 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         appCoroutineScope.launch { sendFeedbackEmailUseCase(type = FeedbackEmailType.SocialLoginProblem) }
     }
 
-    private fun SocialLoginProvider.displayName(): String = when (this) {
-        SocialLoginProvider.Google -> "Google"
-    }
-
-    private fun SocialLoginProvider.cloudName(): String = when (this) {
-        SocialLoginProvider.Google -> "Google Drive"
-    }
-
-    // TODO [REDACTED_TASK_KEY]: social_login_verifying_account / _preparing_wallet / _creating_wallet /
-    //  _restoring_wallet and their descriptions are not in Lokalise yet.
-    private fun SocialLoginStage.toProgressUM(provider: SocialLoginProvider): SocialLoginProgressUM? = when (this) {
+    private fun SocialLoginStage.toProgressUM(): SocialLoginProgressUM? = when (this) {
         // the provider shows its own UI here, which an app-side progress state would only cover up
         SocialLoginStage.SigningIn -> null
-        SocialLoginStage.VerifyingAccount -> SocialLoginProgressUM(
-            title = stringReference("Verifying ${provider.displayName()} account"),
+        SocialLoginStage.VerifyingAccount,
+        SocialLoginStage.PreparingWallet,
+        -> SocialLoginProgressUM.Loader
+        SocialLoginStage.CreatingWallet -> SocialLoginProgressUM.Stage(
+            title = resourceReference(CoreResR.string.social_login_creating_wallet),
+            description = resourceReference(CoreResR.string.social_login_creating_wallet_description),
         )
-        SocialLoginStage.PreparingWallet -> SocialLoginProgressUM(
-            title = stringReference("Preparing your wallet"),
-        )
-        SocialLoginStage.CreatingWallet -> SocialLoginProgressUM(
-            title = stringReference("Creating your wallet"),
-            description = stringReference("Your keys are generated on this device"),
-        )
-        SocialLoginStage.RestoringWallet -> SocialLoginProgressUM(
-            title = stringReference("Restoring your wallet"),
-            description = stringReference("Your keys never leave this device unencrypted"),
+        SocialLoginStage.RestoringWallet -> SocialLoginProgressUM.Stage(
+            title = resourceReference(CoreResR.string.social_login_restoring_wallet),
+            description = resourceReference(CoreResR.string.social_login_restoring_wallet_description),
         )
     }
 
-    // TODO [REDACTED_TASK_KEY]: the social_login_error_* texts below are not in Lokalise yet.
-    private fun SocialLoginError.toMessage(): TextReference = when (this) {
+    private fun SocialLoginError.toMessage(provider: SocialLoginProvider): TextReference = when (this) {
         SocialLoginError.NetworkError -> resourceReference(CoreResR.string.hw_cloud_backup_error_network)
-        SocialLoginError.SessionExpired -> stringReference("Session expired. Please try again")
-        is SocialLoginError.BackupWriteFailed ->
-            stringReference("Couldn't save backup — make sure your cloud storage is available and try again")
-        SocialLoginError.BindingConflict -> stringReference("This Google account is already linked to another wallet.")
-        SocialLoginError.NoProviderAccount -> stringReference("Add a Google account to this device to continue.")
-        SocialLoginError.ProviderUnavailable ->
-            stringReference("Google sign-in is not available on this device.")
-        else -> stringReference("Something went wrong. Please try again")
+        SocialLoginError.SessionExpired -> resourceReference(CoreResR.string.social_login_error_session_expired)
+        is SocialLoginError.BackupWriteFailed -> resourceReference(CoreResR.string.social_login_error_backup_not_saved)
+        SocialLoginError.BindingConflict -> providerReference(
+            CoreResR.string.social_login_error_account_linked,
+            provider,
+        )
+        SocialLoginError.NoProviderAccount -> providerReference(CoreResR.string.social_login_error_no_account, provider)
+        SocialLoginError.ProviderUnavailable -> providerReference(
+            CoreResR.string.social_login_error_unavailable,
+            provider,
+        )
+        else -> resourceReference(CoreResR.string.social_login_error_generic)
     }
+
+    private fun providerReference(@StringRes id: Int, provider: SocialLoginProvider): TextReference =
+        resourceReference(id = id, formatArgs = wrappedList(provider.displayName()))
 }
