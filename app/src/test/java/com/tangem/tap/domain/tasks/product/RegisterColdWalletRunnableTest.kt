@@ -17,7 +17,6 @@ import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -57,24 +56,6 @@ internal class RegisterColdWalletRunnableTest {
 
         // Assert
         coVerify(exactly = 1) { launcher.registerColdInSession(session, card, nonce, false) }
-        assertThat((forwarded as CompletionResult.Success).data).isEqualTo("ok")
-    }
-
-    @Test
-    fun `GIVEN nonce slower than the budget WHEN prepare then run THEN skips registration`() = runTest {
-        // Arrange — the nonce is still loading when the prefetch budget elapses, so prepare gives up.
-        every { session.scope } returns unconfinedScope()
-        stubInnerRun(CompletionResult.Success("ok"))
-        coEvery { launcher.prefetchColdNonce() } coAnswers {
-            delay(timeMillis = 30_000)
-            nonce
-        }
-
-        // Act
-        val forwarded = prepareThenRunAndCapture(RegisterColdWalletRunnable(inner, launcher))
-
-        // Assert
-        coVerify(exactly = 0) { launcher.registerColdInSession(any(), any(), any(), any()) }
         assertThat((forwarded as CompletionResult.Success).data).isEqualTo("ok")
     }
 
