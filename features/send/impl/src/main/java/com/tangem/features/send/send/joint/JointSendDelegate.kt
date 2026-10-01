@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.raise.either
+import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.models.AmountState
@@ -26,6 +27,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
+import com.tangem.utils.extensions.orZero
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.firstOrNull
 import java.math.BigDecimal
@@ -95,13 +97,16 @@ internal class JointSendDelegate @Inject constructor(
             .mapLeft(GetFeeError::DataError)
     }
 
-    /** The coin when [feeCurrency] is null or the coin itself, otherwise the Smart Gas token it names */
+    /**
+     * The coin when [feeCurrencyStatus] is null or the coin itself, otherwise the Smart Gas token it names. The coin
+     * figure is always kept as the native fee, which the fee-token list compares with the coin balance.
+     */
     @Suppress("LongParameterList")
     suspend fun loadFeeExtended(
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
         feeCoin: CryptoCurrency,
-        feeCurrency: CryptoCurrency?,
+        feeCurrencyStatus: CryptoCurrencyStatus?,
         amountUM: AmountState,
         destinationUM: DestinationUM,
     ): Either<GetFeeError, TransactionFeeExtended> = either {
@@ -111,25 +116,36 @@ internal class JointSendDelegate @Inject constructor(
         val call = ensureNotNull(payloadCodec.encode(intent)) {
             GetFeeError.DataError(IllegalStateException("The joint transfer cannot be encoded"))
         }
-        val feeToken = feeCurrency as? CryptoCurrency.Token
+        val coinSafeTx = gasBuilder
+            .build(userWalletId = userWalletId, network = currency.network, call = call, gasToken = SafeGasToken.Coin)
+            .mapLeft(GetFeeError::DataError)
+            .bind()
+        val nativeFee = JointSendFeeConverter(network = currency.network).convert(coinSafeTx)
+
+        val feeToken = feeCurrencyStatus?.currency as? CryptoCurrency.Token
+            ?: return@either TransactionFeeExtended(
+                transactionFee = nativeFee,
+                feeTokenId = feeCoin.id,
+                nativeFee = nativeFee,
+            )
+
         val gasToken = resolveGasToken(network = currency.network, feeToken = feeToken)
-            .onLeft { TangemLogger.e("Unable to price the joint fee in ${feeToken?.symbol}", it) }
+            .onLeft { TangemLogger.e("Unable to price the joint fee in ${feeToken.symbol}", it) }
             .mapLeft(GetFeeError.GaslessError::DataError)
             .bind()
 
-        val safeTx = gasBuilder
-            .build(userWalletId = userWalletId, network = currency.network, call = call, gasToken = gasToken)
-            .mapLeft(GetFeeError::DataError)
-            .bind()
-
-        TransactionFeeExtended(
-            transactionFee = JointSendFeeConverter(
-                network = currency.network,
-                feeToken = feeToken,
-                gasToken = gasToken,
-            ).convert(safeTx),
-            feeTokenId = (feeToken ?: feeCoin).id,
+        // The same reading the builder would price in the token: its coin price already carries the margin
+        val tokenSafeTx = coinSafeTx.copy(
+            gasPrice = gasToken.gasPrice(coinGasPrice = coinSafeTx.gasPrice),
+            gasToken = gasToken.address,
         )
+        val tokenFee = JointSendFeeConverter(network = currency.network, feeToken = feeToken, gasToken = gasToken)
+            .convert(tokenSafeTx)
+
+        val feeTokenBalance = feeCurrencyStatus.value.amount ?: BigDecimal.ZERO
+        ensure(feeTokenBalance >= tokenFee.normal.amount.value.orZero()) { GetFeeError.GaslessError.NotEnoughFunds }
+
+        TransactionFeeExtended(transactionFee = tokenFee, feeTokenId = feeToken.id, nativeFee = nativeFee)
     }
 
     suspend fun createOperation(
