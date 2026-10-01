@@ -43,6 +43,15 @@ internal class DefaultMcpRepository @Inject constructor(
         return response.toEither().map { it.toDomain() }
     }
 
+    override suspend fun rejectDeviceVerification(verification: McpDeviceVerification): Either<Throwable, Unit> {
+        val response = authApi.rejectMcpDeviceVerification(
+            userCode = verification.userCode,
+            state = verification.state,
+        )
+
+        return response.toEither()
+    }
+
     override suspend fun getSessions(): Either<Throwable, List<McpSession>> {
         val response = authApi.getMcpSessions()
 
