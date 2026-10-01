@@ -19,6 +19,7 @@ import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.tangempay.addfunds.va.deposit.TangemPayVirtualAccountDepositSuccessComponent
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.details.TangemPayBankTransferOnrampDetailsComponent
+import com.tangem.features.tangempay.addfunds.bankTransferOnramp.onboarding.TangemPayBankTransferOnrampOnboardingComponent
 import com.tangem.features.tangempay.card.details.TangemPayCardPageComponent
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToWalletComponent
 import com.tangem.features.tangempay.cashback.api.TangemPayCashbackComponent
@@ -145,6 +146,13 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
         TangemPayAccountDetailsInnerRoute.VirtualAccountDepositSuccess ->
             TangemPayVirtualAccountDepositSuccessComponent(
                 appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+            )
+        TangemPayAccountDetailsInnerRoute.BankTransferOnrampOnboarding ->
+            TangemPayBankTransferOnrampOnboardingComponent(
+                appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+                params = TangemPayBankTransferOnrampOnboardingComponent.Params(
+                    userWalletId = params.initialStatus.userWalletId,
+                ),
             )
         is TangemPayAccountDetailsInnerRoute.BankTransferOnrampDetails -> TangemPayBankTransferOnrampDetailsComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
