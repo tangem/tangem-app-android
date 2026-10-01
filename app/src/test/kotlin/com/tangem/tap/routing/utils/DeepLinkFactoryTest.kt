@@ -2,6 +2,8 @@ package com.tangem.tap.routing.utils
 
 import android.net.Uri
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.deeplink.DeepLinkHandler
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
@@ -152,6 +154,16 @@ internal class DeepLinkFactoryTest {
 
     private val urlOpener = mockk<UrlOpener>(relaxed = true)
 
+    private val deepLinkFeatureToggles = mockk<DeepLinkFeatureToggles> {
+        every { isHandlerRegistryEnabled } returns false
+    }
+    private val registeredWalletHandler = mockk<DeepLinkHandler>(relaxed = true) {
+        every { isEnabled } returns true
+    }
+    private val registeredJointAccountInviteHandler = mockk<DeepLinkHandler>(relaxed = true) {
+        every { isEnabled } returns true
+    }
+
     private val mockedUri = mockk<Uri>(relaxed = true)
     private val isFromOnNewIntent: Boolean = false
 
@@ -188,6 +200,11 @@ internal class DeepLinkFactoryTest {
         jointAccountDeepLink = jointAccountDeepLinkFactory,
         jointAccountInviteDeepLink = jointAccountInviteDeepLinkFactory,
         urlOpener = urlOpener,
+        deepLinkFeatureToggles = deepLinkFeatureToggles,
+        deepLinkHandlers = mapOf(
+            "tangem://main" to registeredWalletHandler,
+            "https://tangem.com/joint-account/join" to registeredJointAccountInviteHandler,
+        ),
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -635,6 +652,118 @@ internal class DeepLinkFactoryTest {
         verify {
             promoDeepLinkFactory.create(eq(testScope), eq(mapOf("promo_code" to "PROMO123")))
         }
+    }
+
+    @Test
+    fun `GIVEN registry enabled and host registered WHEN handle THEN registered handler gets request`() = runTest {
+        // Arrange
+        every { deepLinkFeatureToggles.isHandlerRegistryEnabled } returns true
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "main"
+        every { mockedUri.queryParameterNames } returns setOf("param")
+        every { mockedUri.getQueryParameter("param") } returns "value"
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+
+        // Assert
+        verify {
+            registeredWalletHandler.handle(
+                DeepLinkRequest(
+                    uri = mockedUri,
+                    queryParams = mapOf("param" to "value"),
+                    scope = testScope,
+                    isFromOnNewIntent = isFromOnNewIntent,
+                ),
+            )
+        }
+        verify(inverse = true) { walletDeepLinkFactory.create() }
+    }
+
+    @Test
+    fun `GIVEN registry enabled and https path registered WHEN handle THEN registered handler is used`() = runTest {
+        // Arrange
+        every { deepLinkFeatureToggles.isHandlerRegistryEnabled } returns true
+        every { mockedUri.scheme } returns "https"
+        every { mockedUri.host } returns "tangem.com"
+        every { mockedUri.path } returns "/joint-account/join"
+        every { mockedUri.queryParameterNames } returns emptySet()
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+
+        // Assert
+        verify { registeredJointAccountInviteHandler.handle(any()) }
+        verify(inverse = true) { jointAccountInviteDeepLinkFactory.create(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN registry enabled and handler disabled WHEN push https link THEN opened in browser`() = runTest {
+        // Arrange
+        every { deepLinkFeatureToggles.isHandlerRegistryEnabled } returns true
+        every { registeredJointAccountInviteHandler.isEnabled } returns false
+        every { mockedUri.scheme } returns "https"
+        every { mockedUri.host } returns "tangem.com"
+        every { mockedUri.path } returns "/joint-account/join/invite-id"
+        every { mockedUri.queryParameterNames } returns emptySet()
+        every { mockedUri.toString() } returns "https://tangem.com/joint-account/join/invite-id"
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(
+            deeplinkUri = mockedUri,
+            coroutineScope = testScope,
+            isFromOnNewIntent = isFromOnNewIntent,
+            source = DeeplinkSource.Push,
+        )
+        advanceUntilIdle()
+
+        // Assert
+        verify(inverse = true) { registeredJointAccountInviteHandler.handle(any()) }
+        verify { urlOpener.openUrl("https://tangem.com/joint-account/join/invite-id") }
+    }
+
+    @Test
+    fun `GIVEN registry enabled and host not registered WHEN handle THEN deep link is not routed`() = runTest {
+        // Arrange
+        every { deepLinkFeatureToggles.isHandlerRegistryEnabled } returns true
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "onramp"
+        every { mockedUri.queryParameterNames } returns setOf("param")
+        every { mockedUri.getQueryParameter("param") } returns "value"
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+
+        // Assert
+        verify(inverse = true) {
+            onrampDeepLinkFactory.create(any(), any())
+            registeredWalletHandler.handle(any())
+            registeredJointAccountInviteHandler.handle(any())
+        }
+    }
+
+    @Test
+    fun `GIVEN registry disabled and host registered WHEN handle THEN legacy routing is used`() = runTest {
+        // Arrange
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "main"
+        every { mockedUri.queryParameterNames } returns emptySet()
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+
+        // Assert
+        verify { walletDeepLinkFactory.create() }
+        verify(inverse = true) { registeredWalletHandler.handle(any()) }
     }
 
     @ParameterizedTest

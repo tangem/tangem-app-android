@@ -15,6 +15,10 @@ dependencies {
     api(deps.kotlin.serialization)
     // endregion
 
+    // region DI
+    implementation(deps.hilt.core)
+    // endregion
+
     // region Core
     api(projects.core.analytics.models)
     api(projects.core.decompose)
