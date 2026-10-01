@@ -55,7 +55,7 @@ internal fun TokenRowPendingDots(modifier: Modifier = Modifier, color: Color = T
 
     Row(
         modifier = modifier.progressSemantics(),
-        horizontalArrangement = Arrangement.spacedBy(3.dp),
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         repeat(DOT_COUNT) { index ->
@@ -73,7 +73,7 @@ internal fun TokenRowPendingDots(modifier: Modifier = Modifier, color: Color = T
 
             Box(
                 modifier = Modifier
-                    .size(4.dp)
+                    .size(3.dp)
                     .graphicsLayer {
                         scaleX = scale
                         scaleY = scale

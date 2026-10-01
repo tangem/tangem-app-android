@@ -17,6 +17,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.lerp
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.rememberIsKeyboardVisible
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -91,6 +92,11 @@ fun TangemFooter(
         animationSpec = TangemAnimationSpec.Alpha,
         label = "TangemFooter.fadeAlpha",
     )
+    val keyboardProgress by animateFloatAsState(
+        targetValue = if (isKeyboardVisible) 1f else 0f,
+        animationSpec = TangemAnimationSpec.Reveal,
+        label = "TangemFooter.keyboardProgress",
+    )
     val isBlurActive by remember(blurBackground) {
         derivedStateOf { blurBackground && fadeAlpha.value > 0f }
     }
@@ -117,11 +123,10 @@ fun TangemFooter(
                 .fillMaxWidth()
                 .windowInsetsPadding(if (isKeyboardVisible) WindowInsets(0) else windowInsets)
                 .padding(
-                    if (isKeyboardVisible) {
-                        contentPadding.copy(top = 12.dp, bottom = 12.dp)
-                    } else {
-                        contentPadding
-                    },
+                    contentPadding.copy(
+                        top = lerp(contentPadding.calculateTopPadding(), 12.dp, keyboardProgress),
+                        bottom = lerp(contentPadding.calculateBottomPadding(), 12.dp, keyboardProgress),
+                    ),
                 ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(space = 12.dp),
