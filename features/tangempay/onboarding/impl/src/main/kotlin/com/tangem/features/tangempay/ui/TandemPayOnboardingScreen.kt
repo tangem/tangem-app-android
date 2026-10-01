@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.painterResource
@@ -33,6 +34,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_heart_broken_32
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.core.ui.utils.WindowInsetsZero
 
 @Composable
@@ -92,7 +94,9 @@ private fun TangemPayOnboardingUnavailable(onBack: () -> Unit, modifier: Modifie
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Icon(
-                    modifier = Modifier.size(32.dp),
+                    modifier = Modifier
+                        .size(32.dp)
+                        .testTag(TangemPayTestTags.ONBOARDING_UNAVAILABLE_ICON),
                     imageVector = Icons.ic_heart_broken_32,
                     contentDescription = null,
                     tint = TangemTheme.colors3.icon.primary,
