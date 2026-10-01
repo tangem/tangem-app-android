@@ -19,9 +19,8 @@ adding any screen that can sign, prompt or move funds.
 "undefined"` in `feature_toggles_config.json` — dev builds only until release.
 
 **Rollout:** the feed's Predictions block (`PredictionsBlockModel`) also needs the Amplitude flag
-`twi_1576_polymarket` = `on`, read once per model and only while the toggle is on; tester builds
-(`isRolloutExperimentBypassed`) skip the flag. Nothing else checks the flag: accounts, balances and the
-wallet screen row follow the toggle alone.
+`twi_1576_polymarket` = `on`, read once per model and only while the toggle is on. Nothing else checks the
+flag: accounts, balances and the wallet screen row follow the toggle alone.
 
 ## How it plugs in
 

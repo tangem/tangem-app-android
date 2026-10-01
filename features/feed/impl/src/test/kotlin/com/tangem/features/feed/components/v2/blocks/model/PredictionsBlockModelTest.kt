@@ -46,23 +46,6 @@ internal class PredictionsBlockModelTest {
         blockModel.onDestroy()
     }
 
-    @Test
-    fun `GIVEN tester build with toggle enabled WHEN created THEN block is visible and experiment is not read`() =
-        runTest {
-            // Arrange
-            every { featureToggles.isPolymarketEnabled } returns true
-            every { featureToggles.isRolloutExperimentBypassed } returns true
-
-            // Act
-            val blockModel = createModel(testScope = this)
-            advanceUntilIdle()
-
-            // Assert
-            assertThat(blockModel.isVisible.value).isTrue()
-            coVerify(exactly = 0) { abTestsManager.getValue(any(), any()) }
-            blockModel.onDestroy()
-        }
-
     @ParameterizedTest
     @ProvideTestModels
     fun `GIVEN toggle enabled WHEN experiment variant resolved THEN block visibility follows it`(
@@ -70,7 +53,6 @@ internal class PredictionsBlockModelTest {
     ) = runTest {
         // Arrange
         every { featureToggles.isPolymarketEnabled } returns true
-        every { featureToggles.isRolloutExperimentBypassed } returns false
         coEvery { abTestsManager.getValue(key = "twi_1576_polymarket", defaultValue = "off") } returns model.variant
 
         // Act

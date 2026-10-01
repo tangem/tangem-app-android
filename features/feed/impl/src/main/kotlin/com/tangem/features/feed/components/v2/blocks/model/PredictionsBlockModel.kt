@@ -23,10 +23,8 @@ internal class PredictionsBlockModel @Inject constructor(
         field = MutableStateFlow(false)
 
     init {
-        when {
-            !featureToggles.isPolymarketEnabled -> Unit
-            featureToggles.isRolloutExperimentBypassed -> isVisible.value = true
-            else -> modelScope.launch {
+        if (featureToggles.isPolymarketEnabled) {
+            modelScope.launch {
                 val variant = abTestsManager.getValue(key = EXPERIMENT_KEY, defaultValue = OFF_VARIANT)
                 isVisible.value = variant == ON_VARIANT
             }
