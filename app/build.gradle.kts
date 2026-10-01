@@ -266,7 +266,7 @@ dependencies {
     implementation(projects.data.manageTokens)
     implementation(projects.data.nft)
     implementation(projects.data.onramp)
-    implementation(projects.data.moonpay)
+    implementation(projects.data.offramp)
     implementation(projects.data.networks)
     implementation(projects.data.quotes)
     implementation(projects.data.blockaid)
