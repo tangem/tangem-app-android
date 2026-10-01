@@ -6,6 +6,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -15,9 +16,11 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
 import com.tangem.domain.sociallogin.usecase.GetAvailableSocialLoginProvidersUseCase
-import com.tangem.features.hotwallet.SocialLoginUseCase
+import com.tangem.features.hotwallet.SocialLoginConsent
 import com.tangem.features.hotwallet.SocialLoginOutcome
 import com.tangem.features.hotwallet.SocialLoginStage
+import com.tangem.features.hotwallet.SocialLoginUseCase
+import com.tangem.features.introduction.impl.ui.state.SocialLoginConsentUM
 import com.tangem.features.introduction.impl.ui.state.SocialLoginProgressUM
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -28,11 +31,11 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import org.junit.jupiter.params.ParameterizedTest
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class IntroductionSocialLoginHandlerTest {
@@ -41,6 +44,7 @@ internal class IntroductionSocialLoginHandlerTest {
     private val userWalletsListRepository: UserWalletsListRepository = mockk(relaxed = true)
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
     private val appCoroutineScope: AppCoroutineScope = mockk(relaxed = true)
+    private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
 
@@ -52,6 +56,7 @@ internal class IntroductionSocialLoginHandlerTest {
         userWalletsListRepository = userWalletsListRepository,
         sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
         appCoroutineScope = appCoroutineScope,
+        urlOpener = urlOpener,
         router = router,
         uiMessageSender = uiMessageSender,
     )
@@ -65,6 +70,7 @@ internal class IntroductionSocialLoginHandlerTest {
             socialLoginUseCase,
             userWalletsListRepository,
             sendFeedbackEmailUseCase,
+            urlOpener,
             router,
             uiMessageSender,
         )
@@ -75,7 +81,7 @@ internal class IntroductionSocialLoginHandlerTest {
     fun `GIVEN wallet created WHEN signIn THEN wallet is selected and the main screen is opened`() = runTest {
         // Arrange
         coEvery {
-            socialLoginUseCase.signIn(PROVIDER, any())
+            socialLoginUseCase.signIn(PROVIDER, any(), any())
         } returns SocialLoginOutcome.WalletCreated(WALLET_ID).right()
 
         // Act
@@ -92,7 +98,7 @@ internal class IntroductionSocialLoginHandlerTest {
     fun `GIVEN the wallet cannot be selected WHEN signIn THEN the main screen stays closed`() = runTest {
         // Arrange — opening the portfolio of whichever wallet was selected before would read as success
         coEvery {
-            socialLoginUseCase.signIn(PROVIDER, any())
+            socialLoginUseCase.signIn(PROVIDER, any(), any())
         } returns SocialLoginOutcome.WalletCreated(WALLET_ID).right()
         coEvery { userWalletsListRepository.select(WALLET_ID) } returns SELECT_ERROR.left()
 
@@ -104,11 +110,41 @@ internal class IntroductionSocialLoginHandlerTest {
         verify(exactly = 1) { uiMessageSender.send(any<SnackbarMessage>()) }
     }
 
+    @Test
+    fun `GIVEN the consent declined WHEN signIn THEN provider is signed out and no message is shown`() = runTest {
+        // Arrange
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any()) } returns SocialLoginError.ConsentDeclined.left()
+
+        // Act
+        handler.signIn(PROVIDER, host)
+
+        // Assert
+        coVerify(exactly = 1) { socialLoginUseCase.signOut(PROVIDER) }
+        verify { uiMessageSender wasNot Called }
+        verify { router wasNot Called }
+        coVerify(exactly = 0) { userWalletsListRepository.select(any()) }
+    }
+
+    @Test
+    fun `GIVEN sign-in failed WHEN signIn THEN the entry points reopen only after the sign-out`() = runTest {
+        // Arrange — a retry entering signIn while the sign-out still runs would read a half-cleared account
+        val order = mutableListOf<String>()
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any()) } returns SocialLoginError.NetworkError.left()
+        coEvery { socialLoginUseCase.signOut(PROVIDER) } answers { order += "signOut" }
+        host.onFinishedCallback = { order += "finished" }
+
+        // Act
+        handler.signIn(PROVIDER, host)
+
+        // Assert
+        assertThat(order).containsExactly("signOut", "finished").inOrder()
+    }
+
     @ParameterizedTest
     @ProvideTestModels
     fun `GIVEN a failure WHEN signIn THEN it is shown the way the spec puts it`(model: FailureModel) = runTest {
         // Arrange
-        coEvery { socialLoginUseCase.signIn(PROVIDER, any()) } returns model.error.left()
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any()) } returns model.error.left()
 
         // Act
         handler.signIn(PROVIDER, host)
@@ -142,25 +178,10 @@ internal class IntroductionSocialLoginHandlerTest {
     )
 
     @Test
-    fun `GIVEN sign-in failed WHEN signIn THEN the entry points reopen only after the sign-out`() = runTest {
-        // Arrange — a retry entering signIn while the sign-out still runs would read a half-cleared account
-        val order = mutableListOf<String>()
-        coEvery { socialLoginUseCase.signIn(PROVIDER, any()) } returns SocialLoginError.NetworkError.left()
-        coEvery { socialLoginUseCase.signOut(PROVIDER) } answers { order += "signOut" }
-        host.onFinishedCallback = { order += "finished" }
-
-        // Act
-        handler.signIn(PROVIDER, host)
-
-        // Assert
-        assertThat(order).containsExactly("signOut", "finished").inOrder()
-    }
-
-    @Test
     fun `GIVEN sign-in failed WHEN signIn THEN the progress stays up until the sign-out finishes`() = runTest {
         // Arrange
         val onStageChanged = slot<(SocialLoginStage) -> Unit>()
-        coEvery { socialLoginUseCase.signIn(PROVIDER, capture(onStageChanged)) } answers {
+        coEvery { socialLoginUseCase.signIn(PROVIDER, capture(onStageChanged), any()) } answers {
             onStageChanged.captured(SocialLoginStage.VerifyingAccount)
             SocialLoginError.NetworkError.left()
         }
@@ -179,7 +200,7 @@ internal class IntroductionSocialLoginHandlerTest {
     fun `GIVEN stages reported WHEN signIn THEN progress is shown and then cleared`() = runTest {
         // Arrange
         val onStageChanged = slot<(SocialLoginStage) -> Unit>()
-        coEvery { socialLoginUseCase.signIn(PROVIDER, capture(onStageChanged)) } answers {
+        coEvery { socialLoginUseCase.signIn(PROVIDER, capture(onStageChanged), any()) } answers {
             onStageChanged.captured(SocialLoginStage.SigningIn)
             onStageChanged.captured(SocialLoginStage.VerifyingAccount)
             onStageChanged.captured(SocialLoginStage.RestoringWallet)
@@ -189,12 +210,59 @@ internal class IntroductionSocialLoginHandlerTest {
         // Act
         handler.signIn(PROVIDER, host)
 
-        // Assert — the provider owns the screen during SigningIn, hence the leading null
+        // Assert
         assertThat(host.progress).hasSize(4)
         assertThat(host.progress[0]).isNull()
         assertThat(host.progress[1]).isNotNull()
         assertThat(host.progress[2]).isNotNull()
         assertThat(host.progress[3]).isNull()
+    }
+
+    @Test
+    fun `GIVEN the consent is confirmed WHEN signIn THEN the choice reaches the flow`() = runTest {
+        // Arrange
+        val requestConsent = slot<suspend () -> SocialLoginConsent?>()
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), capture(requestConsent)) } coAnswers {
+            host.onConsentShown = { consent ->
+                consent.onAcknowledgedChange(true)
+                host.consent!!.onEmailSharingChange(true)
+                host.consent!!.onConfirmClick()
+            }
+            assertThat(requestConsent.captured()).isEqualTo(SocialLoginConsent(isEmailSharingAllowed = true))
+            SocialLoginOutcome.WalletCreated(WALLET_ID).right()
+        }
+
+        // Act
+        handler.signIn(PROVIDER, host)
+
+        // Assert
+        assertThat(host.consent).isNull()
+        verify(exactly = 1) { router.replaceAll(AppRoute.Wallet) }
+    }
+
+    @Test
+    fun `GIVEN the consent is asked WHEN it is shown THEN the progress underneath is taken down`() = runTest {
+        // Arrange
+        val onStageChanged = slot<(SocialLoginStage) -> Unit>()
+        val requestConsent = slot<suspend () -> SocialLoginConsent?>()
+        coEvery {
+            socialLoginUseCase.signIn(PROVIDER, capture(onStageChanged), capture(requestConsent))
+        } coAnswers {
+            onStageChanged.captured(SocialLoginStage.VerifyingAccount)
+            host.onConsentShown = { consent ->
+                consent.onAcknowledgedChange(true)
+                host.consent!!.onConfirmClick()
+            }
+            requestConsent.captured()
+            SocialLoginOutcome.WalletCreated(WALLET_ID).right()
+        }
+
+        // Act
+        handler.signIn(PROVIDER, host)
+
+        // Assert
+        assertThat(host.progress).containsExactly(host.progress[0], null, null).inOrder()
+        assertThat(host.progress[0]).isNotNull()
     }
 
     private class RecordingHost : IntroductionSocialLoginHandler.Host {
@@ -203,11 +271,29 @@ internal class IntroductionSocialLoginHandlerTest {
         var finishedCount = 0
             private set
 
-        var onFinishedCallback: () -> Unit = {}
+        var consent: SocialLoginConsentUM? = null
+            private set
+
+        var onConsentShown: (SocialLoginConsentUM) -> Unit = {}
+
+        private var isDispatching = false
 
         override fun onProgress(progress: SocialLoginProgressUM?) {
             this.progress += progress
         }
+
+        override fun onConsent(consent: SocialLoginConsentUM?) {
+            this.consent = consent
+            if (consent == null || isDispatching) return
+            isDispatching = true
+            try {
+                onConsentShown(consent)
+            } finally {
+                isDispatching = false
+            }
+        }
+
+        var onFinishedCallback: () -> Unit = {}
 
         override fun onFinished() {
             finishedCount++
@@ -216,7 +302,9 @@ internal class IntroductionSocialLoginHandlerTest {
 
         fun reset() {
             progress.clear()
+            consent = null
             finishedCount = 0
+            onConsentShown = {}
             onFinishedCallback = {}
         }
     }
