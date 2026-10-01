@@ -806,6 +806,30 @@ internal data class TangemAccountRowStory(
 }
 
 @Suppress("BooleanPropertyNaming")
+internal data class TangemExpandableRowStory(
+    val variant: Variant,
+    val tokenCount: Int,
+    val isExpanded: Boolean,
+    val hasBadge: Boolean,
+    val hasSubtitle: Boolean,
+    val hasValue: Boolean,
+    val hasCaption: Boolean,
+    val longTitle: Boolean,
+    val onVariantChange: (Variant) -> Unit,
+    val onTokenCountChange: (Int) -> Unit,
+    val onExpandedToggle: () -> Unit,
+    val onBadgeToggle: () -> Unit,
+    val onSubtitleToggle: () -> Unit,
+    val onValueToggle: () -> Unit,
+    val onCaptionToggle: () -> Unit,
+    val onLongTitleToggle: () -> Unit,
+) : DsStoryBookPage {
+
+    /** Which [com.tangem.core.ui.ds2.expandablerow.TangemExpandableRow] variant is rendered. */
+    enum class Variant { Default, Slot, Empty, Shimmer }
+}
+
+@Suppress("BooleanPropertyNaming")
 internal data class TangemAvatarStory(
     val variant: Variant,
     val fillColor: TangemAvatar.FillColor,
