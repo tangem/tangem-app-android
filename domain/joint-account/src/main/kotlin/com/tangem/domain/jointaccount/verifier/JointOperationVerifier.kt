@@ -91,8 +91,10 @@ class JointOperationVerifier(
         ensure(refundReceiver == normalized(bounds.refundReceiver)) { refundMismatch }
         ensure(safeTx.baseGas in ALLOWED_BASE_GAS) { refundMismatch }
         ensure(safeTx.gasPrice.signum() >= 0) { refundMismatch }
-        val gasPriceCeiling = bounds.gasToken.gasPrice(coinGasPrice = bounds.networkGasPrice) *
-            GAS_PRICE_CEILING_MULTIPLIER
+        // Scaled before the conversion: rounding a sub-unit token price up first would multiply the rounding too
+        val gasPriceCeiling = bounds.gasToken.gasPrice(
+            coinGasPrice = bounds.networkGasPrice * GAS_PRICE_CEILING_MULTIPLIER,
+        )
         ensure(safeTx.gasPrice <= gasPriceCeiling) { refundMismatch }
     }
 
