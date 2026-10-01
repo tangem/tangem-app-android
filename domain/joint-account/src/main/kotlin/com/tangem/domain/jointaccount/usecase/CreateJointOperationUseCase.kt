@@ -13,6 +13,7 @@ import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.jointaccount.model.JointOperationSigningError
 import com.tangem.domain.jointaccount.model.JointTransferIntent
+import com.tangem.domain.jointaccount.model.SafeGasToken
 import com.tangem.domain.jointaccount.model.SafeInnerCall
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
@@ -120,7 +121,7 @@ class CreateJointOperationUseCase(
             .bind()
 
         val safeTx = gasBuilder
-            .build(userWalletId = userWalletId, network = network, call = call)
+            .build(userWalletId = userWalletId, network = network, call = call, gasToken = SafeGasToken.Coin)
             .mapLeft(JointOperationCreateError::Failed)
             .bind()
 

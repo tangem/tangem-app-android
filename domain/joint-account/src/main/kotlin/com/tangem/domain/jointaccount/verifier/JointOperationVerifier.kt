@@ -11,6 +11,7 @@ import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.model.JointOperationSignError.VerificationFailed
 import com.tangem.domain.jointaccount.model.JointTransferIntent
+import com.tangem.domain.jointaccount.model.SafeGasToken
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.safe.JointTransferPayloadCodec
 import com.tangem.domain.jointaccount.safe.SafeAddressCalculator
@@ -35,9 +36,14 @@ class JointOperationVerifier(
      * What the refund fields are allowed to say, read from the same sources the creation path used.
      *
      * @param refundReceiver the fee recipient `SafeTxGasBuilder` puts into an operation it creates
-     * @param networkGasPrice the current gas price of the network, the reference the ceiling is taken from
+     * @param networkGasPrice the current gas price of the network in the coin, the reference the ceiling is taken from
+     * @param gasToken the operation's gas token as the creation path prices it
      */
-    data class RefundBounds(val refundReceiver: String, val networkGasPrice: BigInteger)
+    data class RefundBounds(
+        val refundReceiver: String,
+        val networkGasPrice: BigInteger,
+        val gasToken: SafeGasToken,
+    )
 
     fun verify(
         jointAccount: JointAccount,
@@ -63,9 +69,10 @@ class JointOperationVerifier(
 
     /**
      * The Safe pays the refund out of its own balance, so a co-signer who ignores these fields signs away funds
-     * beyond the transfer on screen. Each field is compared to what the creation path would have put there:
-     * the native coin, our fee recipient, and one of the two known `baseGas` values. `gasPrice` is only capped
+     * beyond the transfer on screen. Each field is compared to what the creation path would have put there: the gas
+     * token it was priced in, our fee recipient, and one of the two known `baseGas` values. `gasPrice` is only
 
+     * moment.
      *
      * Two of the fields mean something to the contract that a range check alone would miss. `refundReceiver` of
      * the zero address is not a recipient but an instruction to pay `tx.origin`, so whoever executes the
@@ -79,12 +86,14 @@ class JointOperationVerifier(
 
         // Spelled the same way the digest normalizes them: a receiver without the 0x prefix is still an address
         val refundReceiver = normalized(safeTx.refundReceiver)
-        ensure(normalized(safeTx.gasToken) == SafeTxGasBuilder.NATIVE_GAS_TOKEN) { refundMismatch }
+        ensure(normalized(safeTx.gasToken) == normalized(bounds.gasToken.address)) { refundMismatch }
         ensure(refundReceiver != ZERO_ADDRESS) { refundMismatch }
         ensure(refundReceiver == normalized(bounds.refundReceiver)) { refundMismatch }
         ensure(safeTx.baseGas in ALLOWED_BASE_GAS) { refundMismatch }
         ensure(safeTx.gasPrice.signum() >= 0) { refundMismatch }
-        ensure(safeTx.gasPrice <= bounds.networkGasPrice * GAS_PRICE_CEILING_MULTIPLIER) { refundMismatch }
+        val gasPriceCeiling = bounds.gasToken.gasPrice(coinGasPrice = bounds.networkGasPrice) *
+            GAS_PRICE_CEILING_MULTIPLIER
+        ensure(safeTx.gasPrice <= gasPriceCeiling) { refundMismatch }
     }
 
     private fun Raise<JointOperationSignError>.checkSafeAddress(jointAccount: JointAccount, safeAddress: String) {
