@@ -5,7 +5,6 @@ import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.components.label.entity.LabelStyle
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.walletsettings.entity.WalletSettingsAccountsUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
@@ -204,14 +203,12 @@ internal class ItemsBuilder @Inject constructor() {
             description = resourceReference(R.string.settings_forget_wallet_footer),
             blocks = persistentListOf(
                 BlockUM(
-                    // TODO [REDACTED_TASK_KEY]: waiting on social_wallet_settings_log_out in Lokalise.
-                    text = stringReference("Log out"),
+                    text = resourceReference(R.string.social_wallet_settings_log_out),
                     iconRes = null,
                     onClick = onLogOutClick,
                 ),
                 BlockUM(
-                    // TODO [REDACTED_TASK_KEY]: waiting on social_wallet_settings_delete_wallet in Lokalise.
-                    text = stringReference("Delete wallet"),
+                    text = resourceReference(R.string.social_wallet_settings_delete_wallet),
                     iconRes = null,
                     onClick = onDeleteWalletClick,
                     accentType = BlockUM.AccentType.WARNING,

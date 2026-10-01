@@ -15,6 +15,7 @@ internal object PromoCampaignV3Converter : Converter<PromotionDto, PromoCampaign
 
     override fun convert(value: PromotionDto): PromoCampaign? {
         return PromoCampaign(
+            id = value.id ?: return null,
             name = value.name,
             status = convertStatus(value.status) ?: return null,
             timeline = PromoTimeline(
@@ -22,6 +23,7 @@ internal object PromoCampaignV3Converter : Converter<PromotionDto, PromoCampaign
                 end = parseInstant(value.endAt) ?: return null,
             ),
             isAlreadyEnrolled = value.isAlreadyEnrolled,
+            eligibility = convertEligibility(value.eligibility ?: return null) ?: return null,
             payout = PromoPayout(
                 isNeeded = value.properties.isPayoutNeeded,
                 tokens = value.properties.payoutTokens.orEmpty().mapNotNull(::convertToken),
@@ -39,6 +41,33 @@ internal object PromoCampaignV3Converter : Converter<PromotionDto, PromoCampaign
         Status.PAUSED -> PromoCampaignStatus.Paused
         Status.ARCHIVED -> PromoCampaignStatus.Archived
         Status.UNKNOWN -> null
+    }
+
+    /** An audience rule this app version can't read must not show the campaign to everyone. */
+    private fun convertEligibility(eligibility: Eligibility): PromoEligibility? = when (eligibility.type) {
+        EligibilityType.PUBLIC -> PromoEligibility.Public
+        EligibilityType.PRIVATE -> PromoEligibility.Private(convertConditions(eligibility.conditions))
+        EligibilityType.UNKNOWN -> null
+    }
+
+    private fun convertConditions(conditions: Conditions?) = PromoEligibilityConditions(
+        walletIds = conditions?.walletIds,
+        walletType = conditions?.walletType?.let(::convertWalletType),
+        batchIds = conditions?.batchIds,
+        countryExcluded = conditions?.countryExcluded,
+        minAndroidVersion = conditions?.minAndroidVersion,
+        maxAndroidVersion = conditions?.maxAndroidVersion,
+    )
+
+    /**
+     * A converted (hot, upgraded to a card) wallet is not distinguishable from a card on the app side, so that
+     * condition is left to the backend, which receives the wallet type with the request.
+     */
+    private fun convertWalletType(walletType: EligibilityWalletType): PromoWalletType? = when (walletType) {
+        EligibilityWalletType.MOBILE -> PromoWalletType.Mobile
+        EligibilityWalletType.CARD -> PromoWalletType.Card
+        EligibilityWalletType.UNKNOWN,
+        -> null
     }
 
     private fun convertMatchMode(matchMode: MatchMode): PromoMatchMode? = when (matchMode) {

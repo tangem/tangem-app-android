@@ -6,7 +6,7 @@ import com.tangem.common.ui.R
 import com.tangem.core.ui.components.account.AccountCharIcon
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.account.CollectiblesAccountIcon
-import com.tangem.core.ui.components.account.PredictionAccountIcon
+import com.tangem.core.ui.components.account.PredictionAccountResIcon
 import com.tangem.core.ui.components.account.AccountResIcon
 import com.tangem.core.ui.components.account.PaymentAccountIcon
 import com.tangem.core.ui.extensions.TextReference
@@ -74,12 +74,7 @@ fun AccountIcon(name: TextReference, icon: AccountIconUM, size: AccountIconSize,
             size = size,
             modifier = modifier,
         )
-        is AccountIconUM.Prediction -> AccountResIcon(
-            imageVector = PredictionAccountIcon.imageVector,
-            color = PredictionAccountIcon.color,
-            size = size,
-            modifier = modifier,
-        )
+        is AccountIconUM.Prediction -> PredictionAccountResIcon(size = size, modifier = modifier)
         is AccountIconUM.Collectibles -> AccountResIcon(
             resId = CollectiblesAccountIcon.resId,
             color = CollectiblesAccountIcon.color,
