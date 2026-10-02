@@ -9,6 +9,7 @@ import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
+import com.tangem.domain.jointaccount.model.SafeGasToken
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.safe.JointTransferPayloadCodec
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
@@ -80,7 +81,7 @@ internal class JointSendDelegate @Inject constructor(
             ?: return GetFeeError.DataError(IllegalStateException("The joint transfer cannot be encoded")).left()
 
         return gasBuilder
-            .build(userWalletId = userWalletId, network = currency.network, call = call)
+            .build(userWalletId = userWalletId, network = currency.network, call = call, gasToken = SafeGasToken.Coin)
             .map(JointSendFeeConverter(network = currency.network)::convert)
             .mapLeft(GetFeeError::DataError)
     }
