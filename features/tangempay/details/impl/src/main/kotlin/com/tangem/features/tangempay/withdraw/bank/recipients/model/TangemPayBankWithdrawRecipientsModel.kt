@@ -10,7 +10,6 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
-import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
@@ -36,7 +35,6 @@ internal class TangemPayBankWithdrawRecipientsModel @Inject constructor(
     private val router: Router,
     private val uiMessageSender: UiMessageSender,
     private val getBankAccountsUseCase: GetBankAccountsUseCase,
-    private val markBankAccountUsedUseCase: MarkBankAccountUsedUseCase,
     private val analytics: AnalyticsEventHandler,
 ) : Model() {
 
@@ -105,10 +103,7 @@ internal class TangemPayBankWithdrawRecipientsModel @Inject constructor(
 
     private fun onRecipientClick(account: BankAccount) {
         analytics.send(TangemPayAnalyticsEvents.Offramp.SavedContactOnContactsScreenClicked())
-        modelScope.launch {
-            markBankAccountUsedUseCase(userWalletId = params.userWalletId, bankAccountId = account.id)
-            params.onRecipientSelected(account)
-        }
+        params.onRecipientSelected(account)
     }
 }
 
