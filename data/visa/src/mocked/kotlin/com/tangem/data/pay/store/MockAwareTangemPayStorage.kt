@@ -16,6 +16,7 @@ private const val MOCK_ACCESS_TOKEN = "mock-access-token"
 private const val MOCK_REFRESH_TOKEN = "mock-refresh-token"
 private const val MOCK_IDEMPOTENCY_KEY = "mock-idempotency-key"
 private const val MOCK_TOKEN_EXPIRES_AT = 9_999_999_999L
+private const val UITEST_ACCESS_TOKEN_EXPIRES_AT_KEY = "uitest.tangempay.access_token_expires_at"
 
 /** In MOCK env returns synthetic auth tokens + customer wallet address; otherwise delegates. */
 @Singleton
@@ -29,6 +30,9 @@ internal class MockAwareTangemPayStorage @Inject constructor(
             .getEnvironmentConfig(TangemPay.Bff.ID)
             .environment == ApiEnvironment.MOCK
 
+    @Volatile
+    private var storedMockTokens: TangemPayAuthTokens? = null
+
     override suspend fun storeCustomerWalletAddress(userWalletId: UserWalletId, customerWalletAddress: String) {
         if (isMockMode) return
         real.storeCustomerWalletAddress(userWalletId, customerWalletAddress)
@@ -40,15 +44,19 @@ internal class MockAwareTangemPayStorage @Inject constructor(
     }
 
     override suspend fun storeAuthTokens(customerWalletAddress: String, tokens: TangemPayAuthTokens) {
-        if (isMockMode) return
+        if (isMockMode) {
+            storedMockTokens = tokens
+            return
+        }
         real.storeAuthTokens(customerWalletAddress, tokens)
     }
 
     override suspend fun getAuthTokens(customerWalletAddress: String): TangemPayAuthTokens? {
         if (isMockMode) {
-            return TangemPayAuthTokens(
+            return storedMockTokens ?: TangemPayAuthTokens(
                 accessToken = MOCK_ACCESS_TOKEN,
-                expiresAt = MOCK_TOKEN_EXPIRES_AT,
+                expiresAt = System.getProperty(UITEST_ACCESS_TOKEN_EXPIRES_AT_KEY)?.toLongOrNull()
+                    ?: MOCK_TOKEN_EXPIRES_AT,
                 refreshToken = MOCK_REFRESH_TOKEN,
                 refreshExpiresAt = MOCK_TOKEN_EXPIRES_AT,
                 idempotencyKey = MOCK_IDEMPOTENCY_KEY,
