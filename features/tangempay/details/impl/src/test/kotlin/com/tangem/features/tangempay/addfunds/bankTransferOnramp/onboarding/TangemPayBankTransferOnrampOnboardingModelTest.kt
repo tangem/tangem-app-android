@@ -23,6 +23,7 @@ import com.tangem.domain.pay.usecase.CreateVirtualAccountOrderUseCase
 import com.tangem.domain.pay.usecase.GetOnrampFeesUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.features.tangempay.OUTCOME_UNKNOWN_ERRORS
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesUM
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.onrampFee
@@ -46,6 +47,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.util.Locale
 import com.tangem.core.ui.R as CoreUiR
 
@@ -159,7 +161,11 @@ internal class TangemPayBankTransferOnrampOnboardingModelTest {
     fun `GIVEN order created WHEN continue clicked THEN screen closed and request sent toast shown`() = runTest {
         // Arrange
         coEvery {
-            createVirtualAccountOrderUseCase(userWalletId = userWalletId, paymentAccountAddress = PAYMENT_ACCOUNT_ADDRESS)
+            createVirtualAccountOrderUseCase(
+                userWalletId = userWalletId,
+                paymentAccountAddress = PAYMENT_ACCOUNT_ADDRESS,
+                idempotencyKey = any(),
+            )
         } returns Unit.right()
         val model = createModel()
         advanceUntilIdle()
@@ -186,7 +192,7 @@ internal class TangemPayBankTransferOnrampOnboardingModelTest {
     @Test
     fun `GIVEN order creation fails WHEN continue clicked THEN error shown and screen stays`() = runTest {
         // Arrange
-        coEvery { createVirtualAccountOrderUseCase(any(), any()) } returns VisaApiError.Unspecified.left()
+        coEvery { createVirtualAccountOrderUseCase(any(), any(), any()) } returns VisaApiError.Unspecified.left()
         val model = createModel()
         advanceUntilIdle()
 
@@ -198,6 +204,51 @@ internal class TangemPayBankTransferOnrampOnboardingModelTest {
         assertThat(model.uiState.value.isLoading).isFalse()
         verify(exactly = 0) { router.pop(any()) }
         verify(exactly = 1) { uiMessageSender.send(ToastMessage(resourceReference(R.string.common_unknown_error))) }
+    }
+
+    @ParameterizedTest
+    @MethodSource(OUTCOME_UNKNOWN_ERRORS)
+    fun `GIVEN outcome unknown WHEN continue clicked again THEN the same idempotency key is reused`(
+        error: VisaApiError,
+    ) = runTest {
+        // Arrange
+        val idempotencyKeys = mutableListOf<String>()
+        coEvery {
+            createVirtualAccountOrderUseCase(userWalletId, PAYMENT_ACCOUNT_ADDRESS, capture(idempotencyKeys))
+        } returns error.left()
+        val model = createModel()
+        advanceUntilIdle()
+        model.uiState.value.onContinueClick()
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.onContinueClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(idempotencyKeys).hasSize(2)
+        assertThat(idempotencyKeys.toSet()).hasSize(1)
+    }
+
+    @Test
+    fun `GIVEN a definitive error WHEN continue clicked again THEN a new idempotency key is used`() = runTest {
+        // Arrange
+        val idempotencyKeys = mutableListOf<String>()
+        coEvery {
+            createVirtualAccountOrderUseCase(userWalletId, PAYMENT_ACCOUNT_ADDRESS, capture(idempotencyKeys))
+        } returns VisaApiError.Unspecified.left()
+        val model = createModel()
+        advanceUntilIdle()
+        model.uiState.value.onContinueClick()
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.onContinueClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(idempotencyKeys).hasSize(2)
+        assertThat(idempotencyKeys.toSet()).hasSize(2)
     }
 
     @Test
@@ -212,7 +263,7 @@ internal class TangemPayBankTransferOnrampOnboardingModelTest {
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 0) { createVirtualAccountOrderUseCase(any(), any()) }
+        coVerify(exactly = 0) { createVirtualAccountOrderUseCase(any(), any(), any()) }
         verify(exactly = 1) { uiMessageSender.send(ToastMessage(resourceReference(R.string.common_unknown_error))) }
     }
 
@@ -228,7 +279,7 @@ internal class TangemPayBankTransferOnrampOnboardingModelTest {
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 0) { createVirtualAccountOrderUseCase(any(), any()) }
+        coVerify(exactly = 0) { createVirtualAccountOrderUseCase(any(), any(), any()) }
         verify(exactly = 0) { router.pop(any()) }
         verify(exactly = 1) { uiMessageSender.send(ToastMessage(resourceReference(R.string.common_unknown_error))) }
         assertThat(model.uiState.value.isLoading).isFalse()
@@ -239,7 +290,7 @@ internal class TangemPayBankTransferOnrampOnboardingModelTest {
         // Arrange
         val status = paymentStatus(virtualAccount = VirtualAccountOnramp.Failed)
         every { paymentAccountStatusSupplier(userWalletId) } returns flowOf(status)
-        coEvery { createVirtualAccountOrderUseCase(userWalletId, PAYMENT_ACCOUNT_ADDRESS) } returns Unit.right()
+        coEvery { createVirtualAccountOrderUseCase(userWalletId, PAYMENT_ACCOUNT_ADDRESS, any()) } returns Unit.right()
         val model = createModel()
         advanceUntilIdle()
 
@@ -248,7 +299,7 @@ internal class TangemPayBankTransferOnrampOnboardingModelTest {
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 1) { createVirtualAccountOrderUseCase(userWalletId, PAYMENT_ACCOUNT_ADDRESS) }
+        coVerify(exactly = 1) { createVirtualAccountOrderUseCase(userWalletId, PAYMENT_ACCOUNT_ADDRESS, any()) }
         verify(exactly = 1) { router.pop(any()) }
     }
 
@@ -269,14 +320,16 @@ internal class TangemPayBankTransferOnrampOnboardingModelTest {
 
         // Assert
         verify(exactly = 1) { router.pop(any()) }
-        coVerify(exactly = 0) { createVirtualAccountOrderUseCase(any(), any()) }
+        coVerify(exactly = 0) { createVirtualAccountOrderUseCase(any(), any(), any()) }
         verify(exactly = 0) { uiMessageSender.send(any()) }
     }
 
     @Test
     fun `GIVEN order in progress WHEN continue clicked again THEN order requested once`() = runTest {
         // Arrange
-        coEvery { createVirtualAccountOrderUseCase(any(), any()) } coAnswers { CompletableDeferred<Nothing>().await() }
+        coEvery {
+            createVirtualAccountOrderUseCase(any(), any(), any())
+        } coAnswers { CompletableDeferred<Nothing>().await() }
         val model = createModel()
         advanceUntilIdle()
 
@@ -286,7 +339,7 @@ internal class TangemPayBankTransferOnrampOnboardingModelTest {
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 1) { createVirtualAccountOrderUseCase(any(), any()) }
+        coVerify(exactly = 1) { createVirtualAccountOrderUseCase(any(), any(), any()) }
         verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaShowDetailsFirstTimeClicked>()) }
         model.onDestroy()
     }
@@ -294,7 +347,9 @@ internal class TangemPayBankTransferOnrampOnboardingModelTest {
     @Test
     fun `GIVEN order in progress WHEN close clicked THEN screen stays`() = runTest {
         // Arrange
-        coEvery { createVirtualAccountOrderUseCase(any(), any()) } coAnswers { CompletableDeferred<Nothing>().await() }
+        coEvery {
+            createVirtualAccountOrderUseCase(any(), any(), any())
+        } coAnswers { CompletableDeferred<Nothing>().await() }
         val model = createModel()
         advanceUntilIdle()
         model.uiState.value.onContinueClick()
