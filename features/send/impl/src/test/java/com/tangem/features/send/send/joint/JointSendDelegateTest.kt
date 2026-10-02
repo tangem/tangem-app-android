@@ -7,6 +7,7 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
+import com.tangem.domain.jointaccount.model.SafeGasToken
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
@@ -102,7 +103,7 @@ internal class JointSendDelegateTest {
     fun `GIVEN a complete form WHEN the fee is loaded THEN the safe tx is mapped to a single fee`() = runTest {
         // Arrange
         val safeTx = createSafeTx()
-        coEvery { gasBuilder.build(userWalletId, fixtureCoin.network, any()) } returns safeTx.right()
+        coEvery { gasBuilder.build(userWalletId, fixtureCoin.network, any(), SafeGasToken.Coin) } returns safeTx.right()
 
         // Act
         val actual = delegate.loadFee(
@@ -134,7 +135,7 @@ internal class JointSendDelegateTest {
     fun `GIVEN the build fails WHEN the fee is loaded THEN the cause is wrapped into a data error`() = runTest {
         // Arrange
         val cause = IllegalStateException("node is down")
-        coEvery { gasBuilder.build(userWalletId, fixtureCoin.network, any()) } returns cause.left()
+        coEvery { gasBuilder.build(userWalletId, fixtureCoin.network, any(), SafeGasToken.Coin) } returns cause.left()
 
         // Act
         val actual = delegate.loadFee(
