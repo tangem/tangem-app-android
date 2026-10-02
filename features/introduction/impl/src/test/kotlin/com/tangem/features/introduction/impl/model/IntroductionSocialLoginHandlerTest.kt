@@ -11,6 +11,7 @@ import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -42,7 +43,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
+import com.tangem.core.res.R as CoreResR
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class IntroductionSocialLoginHandlerTest {
@@ -269,14 +270,11 @@ internal class IntroductionSocialLoginHandlerTest {
         }
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `GIVEN a wallet restored WHEN signIn THEN an import is reported only for a wallet new on the device`(
-        isNewOnDevice: Boolean,
-    ) = runTest {
+    @Test
+    fun `GIVEN a wallet restored WHEN signIn THEN it is reported as a social login import`() = runTest {
         // Arrange
         coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any()) } returns
-            SocialLoginOutcome.WalletRestored(WALLET_ID, isNewOnDevice = isNewOnDevice).right()
+            SocialLoginOutcome.WalletRestored(WALLET_ID).right()
         val events = mutableListOf<AnalyticsEvent>()
         every { analyticsEventHandler.send(capture(events)) } just Runs
 
@@ -285,8 +283,23 @@ internal class IntroductionSocialLoginHandlerTest {
 
         // Assert
         val created = events.filterIsInstance<OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully>()
-        assertThat(created.map { it.params["Creation Type"] })
-            .isEqualTo(if (isNewOnDevice) listOf("Social Login Import") else emptyList())
+        assertThat(created.single().params["Creation Type"]).isEqualTo("Social Login Import")
+    }
+
+    @Test
+    fun `GIVEN the wallet is already on the device WHEN signIn THEN the already saved dialog is shown`() = runTest {
+        // Arrange
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any()) } returns
+            SocialLoginError.WalletAlreadySaved.left()
+        val message = slot<DialogMessage>()
+        every { uiMessageSender.send(capture(message)) } just Runs
+
+        // Act
+        handler.signIn(PROVIDER, SOURCE, host)
+
+        // Assert
+        assertThat(message.captured.message)
+            .isEqualTo(resourceReference(CoreResR.string.user_wallet_list_error_wallet_already_saved))
     }
 
     data class FailureModel(val error: SocialLoginError, val isSupportDialog: Boolean)
@@ -333,7 +346,7 @@ internal class IntroductionSocialLoginHandlerTest {
             onStageChanged.captured(SocialLoginStage.SigningIn)
             onStageChanged.captured(SocialLoginStage.VerifyingAccount)
             onStageChanged.captured(SocialLoginStage.RestoringWallet)
-            SocialLoginOutcome.WalletRestored(WALLET_ID, isNewOnDevice = false).right()
+            SocialLoginOutcome.WalletRestored(WALLET_ID).right()
         }
 
         // Act
