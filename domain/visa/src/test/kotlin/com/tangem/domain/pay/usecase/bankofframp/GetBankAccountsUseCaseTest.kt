@@ -23,7 +23,7 @@ internal class GetBankAccountsUseCaseTest {
     }
 
     @Test
-    fun `GIVEN unsorted accounts WHEN invoke THEN sorted by display name ignoring case`() = runTest {
+    fun `GIVEN saved accounts WHEN invoke THEN backend order kept`() = runTest {
         // Arrange
         val accounts = listOf(
             bankAccount(id = "3", displayName = "saburo Arasaka"),
@@ -36,7 +36,7 @@ internal class GetBankAccountsUseCaseTest {
         val actual = useCase(TEST_USER_WALLET_ID)
 
         // Assert
-        assertThat(actual.getOrNull()?.map { it.id }).containsExactly("1", "2", "3").inOrder()
+        assertThat(actual).isEqualTo(accounts.right())
     }
 
     @Test
