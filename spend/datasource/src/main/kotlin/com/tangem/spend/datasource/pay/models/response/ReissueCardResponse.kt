@@ -1,15 +1,15 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class ReissueCardResponse(
-    @Json(name = "result") val result: Result,
+    @SerialName("result") val result: Result,
 ) {
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Result(
-        @Json(name = "order_id") val orderId: String,
-        @Json(name = "status") val status: OrderResponse.Result.Status,
+        @SerialName("order_id") val orderId: String,
+        @SerialName("status") val status: OrderResponse.Result.Status = OrderResponse.Result.Status.UNKNOWN,
     )
 }

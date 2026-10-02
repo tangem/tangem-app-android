@@ -1,29 +1,18 @@
 package com.tangem.spend.datasource.pay.models.response
 
 import com.google.common.truth.Truth.assertThat
-import com.squareup.moshi.FromJson
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.ToJson
+import com.tangem.core.remote.json.NetworkJsonFactory
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 internal class CustomerMeProfileParsingTest {
 
-    private class BigDecimalAdapter {
-        @FromJson
-        fun fromJson(value: String) = BigDecimal(value)
-
-        @ToJson
-        fun toJson(value: BigDecimal) = value.toString()
-    }
-
-    private val moshi = Moshi.Builder().add(BigDecimalAdapter()).build()
-    private val adapter = moshi.adapter(CustomerMeResponse.Result::class.java)
+    private val json = NetworkJsonFactory.create()
 
     @Test
     fun `GIVEN profile with country phone_mask email and emboss_name WHEN parse THEN maps all fields`() {
         // Arrange
-        val json = """
+        val body = """
             {
               "id": "c1", "state": "ACTIVE", "created_at": "2026-01-01T00:00:00Z",
               "product_instances": [], "cards": [],
@@ -39,7 +28,7 @@ internal class CustomerMeProfileParsingTest {
         """.trimIndent()
 
         // Act
-        val result = adapter.fromJson(json)!!
+        val result = json.decodeFromString(CustomerMeResponse.Result.serializer(), body)
 
         // Assert
         assertThat(result.profile).isEqualTo(
@@ -55,7 +44,7 @@ internal class CustomerMeProfileParsingTest {
     @Test
     fun `GIVEN response without a profile WHEN parse THEN profile is null`() {
         // Arrange
-        val json = """
+        val body = """
             {
               "id": "c1", "state": "ACTIVE", "created_at": "2026-01-01T00:00:00Z",
               "product_instances": [], "cards": [],
@@ -67,7 +56,7 @@ internal class CustomerMeProfileParsingTest {
         """.trimIndent()
 
         // Act
-        val result = adapter.fromJson(json)!!
+        val result = json.decodeFromString(CustomerMeResponse.Result.serializer(), body)
 
         // Assert
         assertThat(result.profile).isNull()
@@ -76,7 +65,7 @@ internal class CustomerMeProfileParsingTest {
     @Test
     fun `GIVEN a partially filled profile WHEN parse THEN the absent fields are null`() {
         // Arrange
-        val json = """
+        val body = """
             {
               "id": "c1", "state": "ACTIVE", "created_at": "2026-01-01T00:00:00Z",
               "product_instances": [], "cards": [],
@@ -85,7 +74,7 @@ internal class CustomerMeProfileParsingTest {
         """.trimIndent()
 
         // Act
-        val result = adapter.fromJson(json)!!
+        val result = json.decodeFromString(CustomerMeResponse.Result.serializer(), body)
 
         // Assert
         assertThat(result.profile).isEqualTo(

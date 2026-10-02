@@ -233,7 +233,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
         @Test
         fun `GIVEN DM Empty WHEN convertBack THEN returns domain Empty`() {
             // GIVEN
-            val dm = PaymentAccountStatusValueDM.Empty()
+            val dm = PaymentAccountStatusValueDM.Empty
 
             // WHEN
             val result = converter.convertBack(userWalletId, dm)
@@ -301,7 +301,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
         @Test
         fun `GIVEN DM NotCreated WHEN convertBack THEN returns domain NotCreated`() {
             // GIVEN
-            val dm = PaymentAccountStatusValueDM.NotCreated()
+            val dm = PaymentAccountStatusValueDM.NotCreated
 
             // WHEN
             val result = converter.convertBack(userWalletId, dm)

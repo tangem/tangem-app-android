@@ -1,5 +1,6 @@
 package com.tangem.test.core.datastore
 
+import androidx.datastore.core.DataMigration
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.Serializer
@@ -27,11 +28,17 @@ fun createAppDataStoreFactory(
     appScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
 ): AppDataStoreFactory = object : AppDataStoreFactory {
 
-    override fun <T> create(serializer: Serializer<T>, scope: CoroutineScope, produceFile: () -> File): DataStore<T> {
+    override fun <T> create(
+        serializer: Serializer<T>,
+        scope: CoroutineScope,
+        produceFile: () -> File,
+        migrations: List<DataMigration<T>>,
+    ): DataStore<T> {
         val file = produceFile()
         return DataStoreFactory.create(
             serializer = serializer,
             corruptionHandler = ReplaceFileCorruptionHandler { serializer.defaultValue },
+            migrations = migrations,
             scope = scope,
             produceFile = { file },
         )

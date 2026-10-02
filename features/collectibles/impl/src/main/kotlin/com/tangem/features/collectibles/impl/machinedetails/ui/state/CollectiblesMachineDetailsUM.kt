@@ -21,15 +21,16 @@ internal sealed interface CollectiblesMachineDetailsUM {
         val imageUrl: String?,
         val tiers: ImmutableList<TierUM>,
         val details: ImmutableList<DetailUM>,
-        val onPoweredByClick: () -> Unit,
         val prizePool: PrizePoolUM,
         val footer: FooterUM,
     ) : CollectiblesMachineDetailsUM
 
+    /** @property isReloading a retry is in flight; the error stays with a spinner in its button */
     data class Error(
         override val onBackClick: () -> Unit,
         val message: TextReference,
         val onReloadClick: () -> Unit,
+        val isReloading: Boolean = false,
     ) : CollectiblesMachineDetailsUM
 
     /**
@@ -75,9 +76,12 @@ internal sealed interface CollectiblesMachineDetailsUM {
             val isLoadingNextPage: Boolean,
         ) : PrizePoolUM
 
-        data class Error(val message: TextReference, val onReloadClick: () -> Unit) : PrizePoolUM
-
-        data class Empty(val message: TextReference) : PrizePoolUM
+        /** @property isReloading a retry is in flight; the error stays with a spinner in its button */
+        data class Error(
+            val message: TextReference,
+            val onReloadClick: () -> Unit,
+            val isReloading: Boolean = false,
+        ) : PrizePoolUM
     }
 
     /** @property id id of the first collectible in the row — the row's stable identity as a list item */
