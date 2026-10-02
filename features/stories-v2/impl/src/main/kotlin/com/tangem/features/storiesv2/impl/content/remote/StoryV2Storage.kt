@@ -7,15 +7,16 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Where remote stories live on the device. Files rather than cache: the contract wants downloaded assets and the last
- * response to survive a restart, and the system must not clear a file from under the player.
+ * Where remote story files live on the device. Cache rather than files: nothing else removes them once a device stops
+ * asking for the story, so the system may reclaim them when space runs low. A file gone that way is downloaded again on
+ * the next open; the last response and the shown stories are kept in DataStore and stay.
  */
 @Singleton
 internal class StoryV2Storage @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
 
-    val root: File get() = File(context.filesDir, ROOT_DIRECTORY)
+    val root: File get() = File(context.cacheDir, ROOT_DIRECTORY)
 
     val assets: File get() = File(root, ASSETS_DIRECTORY)
 
