@@ -31,4 +31,8 @@ internal class DefaultMcpDeepLinkHandler @AssistedInject constructor(
     interface Factory : McpDeepLinkHandler.Factory {
         override fun create(queryParams: Map<String, String>): DefaultMcpDeepLinkHandler
     }
+
+    companion object {
+        const val DEEPLINK_KEY = "tangem://mcp.authorization"
+    }
 }
