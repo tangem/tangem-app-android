@@ -111,7 +111,7 @@ internal class JointAccountPollingCoordinatorTest {
         }
 
     @Test
-    fun `GIVEN a subscriber stays collecting WHEN time advances THEN a fetch fires every 60 seconds, starting at the first interval`() =
+    fun `GIVEN a subscriber stays collecting WHEN time advances THEN a fetch fires every poll interval, starting at the first interval`() =
         runTest {
             // Arrange
             val coordinator = createCoordinator(testScope = this)
@@ -155,15 +155,15 @@ internal class JointAccountPollingCoordinatorTest {
             val coordinator = createCoordinator(testScope = this)
             val flow = coordinator.poll(walletId = WALLET_ID)
 
-            // Act — the first fetch fires 60s in, then 10s later the subscriber drops and stays gone 1s past the
-            // grace period
+            // Act — the first fetch fires one interval in, then the subscriber drops shortly after and stays gone
+            // 1s past the grace period; the ticker keeps running during the grace period and fetches once more
             val firstJob = backgroundScope.launch { flow.collect { } }
             runCurrent()
             advanceTimeBy(POLL_INTERVAL_MILLIS)
             runCurrent()
             coVerify(exactly = 1) { fetcher.invoke(userWalletId = WALLET_ID) }
 
-            advanceTimeBy(TEN_SECONDS_MILLIS)
+            advanceTimeBy(LEAVE_OFFSET_MILLIS)
             firstJob.cancel()
             advanceTimeBy(GRACE_PERIOD_MILLIS + 1_000)
 
@@ -171,19 +171,21 @@ internal class JointAccountPollingCoordinatorTest {
             backgroundScope.launch { flow.collect { secondReceived += it } }
             runCurrent()
 
-            // Assert — no immediate fetch: only 16s of the next 60s window have actually elapsed since the first fetch
-            coVerify(exactly = 1) { fetcher.invoke(userWalletId = WALLET_ID) }
+            // Assert — no immediate fetch: the last one (inside the grace period) was less than an interval ago
+            coVerify(exactly = 2) { fetcher.invoke(userWalletId = WALLET_ID) }
             assertThat(secondReceived).isEmpty()
 
-            val alreadyElapsed = TEN_SECONDS_MILLIS + GRACE_PERIOD_MILLIS + 1_000
+            val lastFetchAt = POLL_INTERVAL_MILLIS * 2
+            val returnedAt = POLL_INTERVAL_MILLIS + LEAVE_OFFSET_MILLIS + GRACE_PERIOD_MILLIS + 1_000
+            val alreadyElapsed = returnedAt - lastFetchAt
             advanceTimeBy(POLL_INTERVAL_MILLIS - alreadyElapsed - 1)
             runCurrent()
-            coVerify(exactly = 1) { fetcher.invoke(userWalletId = WALLET_ID) }
+            coVerify(exactly = 2) { fetcher.invoke(userWalletId = WALLET_ID) }
             assertThat(secondReceived).isEmpty()
 
             advanceTimeBy(1)
             runCurrent()
-            coVerify(exactly = 2) { fetcher.invoke(userWalletId = WALLET_ID) }
+            coVerify(exactly = 3) { fetcher.invoke(userWalletId = WALLET_ID) }
             assertThat(secondReceived).hasSize(1)
         }
 
@@ -201,15 +203,18 @@ internal class JointAccountPollingCoordinatorTest {
             runCurrent()
             coVerify(exactly = 1) { fetcher.invoke(userWalletId = WALLET_ID) }
 
+            // The ticker keeps running during the grace period and fetches once more before it is torn down
+            advanceTimeBy(LEAVE_OFFSET_MILLIS)
             firstJob.cancel()
-            advanceTimeBy(POLL_INTERVAL_MILLIS + TEN_SECONDS_MILLIS)
+            advanceTimeBy(GRACE_PERIOD_MILLIS + POLL_INTERVAL_MILLIS)
+            coVerify(exactly = 2) { fetcher.invoke(userWalletId = WALLET_ID) }
 
             val secondReceived = mutableListOf<Unit>()
             backgroundScope.launch { flow.collect { secondReceived += it } }
             runCurrent()
 
             // Assert — already overdue by the time it returns, so it fetches right away like a brand-new ticker
-            coVerify(exactly = 2) { fetcher.invoke(userWalletId = WALLET_ID) }
+            coVerify(exactly = 3) { fetcher.invoke(userWalletId = WALLET_ID) }
             assertThat(secondReceived).hasSize(1)
         }
 
@@ -226,7 +231,7 @@ internal class JointAccountPollingCoordinatorTest {
         advanceTimeBy(POLL_INTERVAL_MILLIS)
         runCurrent()
 
-        // Assert — a failed fetch still emits and still paces the next one 60s out
+        // Assert — a failed fetch still emits and still paces the next one an interval out
         coVerify(exactly = 1) { fetcher.invoke(userWalletId = WALLET_ID) }
         assertThat(received).hasSize(1)
 
@@ -272,22 +277,22 @@ internal class JointAccountPollingCoordinatorTest {
             val coordinator = createCoordinator(testScope = this)
             val firstReceived = mutableListOf<Unit>()
 
-            // Act — wallet A starts first and gets its fetch 60s in
+            // Act — wallet A starts first and gets its fetch one interval in
             backgroundScope.launch { coordinator.poll(walletId = WALLET_ID).collect { firstReceived += it } }
             runCurrent()
             advanceTimeBy(POLL_INTERVAL_MILLIS)
             runCurrent()
             coVerify(exactly = 1) { fetcher.invoke(userWalletId = WALLET_ID) }
 
-            // 30s later, wallet B starts on its own clock
-            advanceTimeBy(THIRTY_SECONDS_MILLIS)
+            // Half an interval later, wallet B starts on its own clock
+            advanceTimeBy(HALF_INTERVAL_MILLIS)
             val secondReceived = mutableListOf<Unit>()
             backgroundScope.launch { coordinator.poll(walletId = OTHER_WALLET_ID).collect { secondReceived += it } }
             runCurrent()
             coVerify(exactly = 0) { fetcher.invoke(userWalletId = OTHER_WALLET_ID) }
 
-            // Assert — wallet A is due 30s after this point (60s from its own fetch), wallet B needs a full 60s
-            advanceTimeBy(THIRTY_SECONDS_MILLIS - 1)
+            // Assert — wallet A is due half an interval after this point, wallet B needs a full interval
+            advanceTimeBy(HALF_INTERVAL_MILLIS - 1)
             runCurrent()
             coVerify(exactly = 1) { fetcher.invoke(userWalletId = WALLET_ID) }
             coVerify(exactly = 0) { fetcher.invoke(userWalletId = OTHER_WALLET_ID) }
@@ -299,8 +304,8 @@ internal class JointAccountPollingCoordinatorTest {
             assertThat(firstReceived).hasSize(2)
             assertThat(secondReceived).isEmpty()
 
-            // Wallet B's own first fetch still needs another 30s (60s total from its own subscribe)
-            advanceTimeBy(THIRTY_SECONDS_MILLIS)
+            // Wallet B's own first fetch still needs another half interval (a full one from its own subscribe)
+            advanceTimeBy(HALF_INTERVAL_MILLIS)
             runCurrent()
             coVerify(exactly = 1) { fetcher.invoke(userWalletId = OTHER_WALLET_ID) }
             assertThat(secondReceived).hasSize(1)
@@ -317,9 +322,9 @@ internal class JointAccountPollingCoordinatorTest {
     private companion object {
         val WALLET_ID = UserWalletId("011")
         val OTHER_WALLET_ID = UserWalletId("012")
-        const val POLL_INTERVAL_MILLIS = 60_000L
+        const val POLL_INTERVAL_MILLIS = 5_000L
         const val GRACE_PERIOD_MILLIS = 5_000L
-        const val TEN_SECONDS_MILLIS = 10_000L
-        const val THIRTY_SECONDS_MILLIS = 30_000L
+        const val HALF_INTERVAL_MILLIS = POLL_INTERVAL_MILLIS / 2
+        const val LEAVE_OFFSET_MILLIS = 1_000L
     }
 }
