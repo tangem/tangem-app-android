@@ -20,9 +20,9 @@ import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
-import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
+import com.tangem.domain.polymarket.usecase.ObservePolymarketCredentialsPresenceUseCase
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
@@ -94,7 +94,7 @@ internal class PolymarketMainModel @Inject constructor(
     private val predictionPositionsValueFetcher: PredictionPositionsValueFetcher,
     private val predictionBalancePoller: PredictionBalancePoller,
     private val predictionFundingWindow: PredictionFundingWindow,
-    private val getPolymarketApiCredentialsUseCase: GetPolymarketApiCredentialsUseCase,
+    private val observePolymarketCredentialsPresenceUseCase: ObservePolymarketCredentialsPresenceUseCase,
 ) : Model(), PolymarketAddFundsComponent.ModelCallback {
 
     private val params = paramsContainer.require<PolymarketMainParams>()
@@ -153,8 +153,6 @@ internal class PolymarketMainModel @Inject constructor(
 
     private val staleDataReporter = PolymarketStaleDataReporter(onReport = ::reportStaleData)
 
-    private var isScreenResumed = false
-
     init {
         combine(
             flow = predictionAccountStatusSupplier(userWalletId = params.userWalletId),
@@ -191,10 +189,10 @@ internal class PolymarketMainModel @Inject constructor(
             .onEach { fundingRequisites.prefetchOnce() }
             .launchIn(modelScope)
 
-        predictionAccountStatusSupplier(userWalletId = params.userWalletId)
-            .filterIsInstance<PredictionAccountStatusValue.Onboarded>()
-            .filter { isScreenResumed }
-            .onEach { returnToGateWithoutCredentials() }
+        observePolymarketCredentialsPresenceUseCase(userWalletId = params.userWalletId)
+            .filter { hasCredentials -> !hasCredentials }
+            .take(count = 1)
+            .onEach { returnToGate() }
             .launchIn(modelScope)
     }
 
@@ -205,6 +203,7 @@ internal class PolymarketMainModel @Inject constructor(
 
     private var categories: List<PolymarketCategory> = emptyList()
     private var selectedCategoryId: Int? = null
+    private var isScreenResumed = false
 
     private val categoriesJob = JobHolder()
 
@@ -214,7 +213,6 @@ internal class PolymarketMainModel @Inject constructor(
         observeEvents()
         loadCategories()
         modelScope.launch { tradingAllowance.refresh() }
-        returnToGateWithoutCredentials()
     }
 
     fun onBackClick() {
@@ -266,16 +264,11 @@ internal class PolymarketMainModel @Inject constructor(
         predictionBalancePoller.subscribe(userWalletId = params.userWalletId)
             .launchIn(modelScope)
             .saveIn(balancePollJobHolder)
-        returnToGateWithoutCredentials()
     }
 
-    private fun returnToGateWithoutCredentials() {
-        modelScope.launch {
-            if (getPolymarketApiCredentialsUseCase(userWalletId = params.userWalletId) != null) return@launch
-
-            TangemLogger.i("Main: no credentials to sign with, returning to the gate")
-            router.replaceAll(PolymarketRoute.Onboarding(userWalletId = params.userWalletId))
-        }
+    private fun returnToGate() {
+        TangemLogger.i("Main: no credentials to sign with, returning to the gate")
+        router.replaceAll(PolymarketRoute.Onboarding(userWalletId = params.userWalletId))
     }
 
     fun onPause() {
