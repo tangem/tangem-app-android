@@ -76,10 +76,10 @@ internal fun createStock(
 )
 
 internal fun createTierRanges(
-    common: CollectibleGachaMachine.TierRange = CollectibleGachaMachine.TierRange(start = 1, end = 10),
-    uncommon: CollectibleGachaMachine.TierRange = CollectibleGachaMachine.TierRange(start = 11, end = 50),
-    rare: CollectibleGachaMachine.TierRange = CollectibleGachaMachine.TierRange(start = 51, end = 200),
-    epic: CollectibleGachaMachine.TierRange? = CollectibleGachaMachine.TierRange(start = 201, end = 1000),
+    common: CollectibleGachaMachine.TierRange = CollectibleGachaMachine.TierRange(start = BigDecimal("1"), end = BigDecimal("10")),
+    uncommon: CollectibleGachaMachine.TierRange = CollectibleGachaMachine.TierRange(start = BigDecimal("11"), end = BigDecimal("50")),
+    rare: CollectibleGachaMachine.TierRange = CollectibleGachaMachine.TierRange(start = BigDecimal("51"), end = BigDecimal("200")),
+    epic: CollectibleGachaMachine.TierRange? = CollectibleGachaMachine.TierRange(start = BigDecimal("201"), end = BigDecimal("1000")),
 ): CollectibleGachaMachine.TierRanges = CollectibleGachaMachine.TierRanges(
     common = common,
     uncommon = uncommon,

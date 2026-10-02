@@ -8,9 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
@@ -22,6 +20,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.collectibles.impl.R
 import com.tangem.features.collectibles.impl.common.ui.CollectiblesLoadMoreEffect
 import com.tangem.features.collectibles.impl.common.ui.CollectiblesPackImage
+import com.tangem.features.collectibles.impl.common.ui.CollectiblesPackImageErrorCard
 import com.tangem.features.collectibles.impl.common.ui.CollectiblesStatus
 import com.tangem.features.collectibles.impl.machinedetails.ui.components.*
 import com.tangem.features.collectibles.impl.machinedetails.ui.state.CollectiblesMachineDetailsUM
@@ -68,7 +67,11 @@ internal fun CollectiblesMachineDetailsScreen(
                     .padding(contentPadding),
                 contentAlignment = Alignment.Center,
             ) {
-                CollectiblesStatus(message = state.message, onReloadClick = state.onReloadClick)
+                CollectiblesStatus(
+                    message = state.message,
+                    onReloadClick = state.onReloadClick,
+                    isReloading = state.isReloading,
+                )
             }
             is CollectiblesMachineDetailsUM.Content -> MachineDetailsInfoList(
                 state = state,
@@ -112,6 +115,7 @@ private fun MachineDetailsInfoList(
                     imageUrl = state.imageUrl,
                     glowRadius = 48.dp,
                     modifier = Modifier.size(width = 204.dp, height = 294.dp),
+                    errorContent = { CollectiblesPackImageErrorCard() },
                 )
             }
         }
@@ -129,7 +133,7 @@ private fun MachineDetailsInfoList(
                 SpacerH(24.dp)
                 CollectiblesSectionHeading(title = resourceReference(R.string.collectibles_machine_details_section))
                 CardGrid(items = state.details) { detail -> CollectiblesDetailCard(state = detail) }
-                PoweredBy(onClick = state.onPoweredByClick)
+                PoweredBy()
             }
         }
 
@@ -156,14 +160,7 @@ private fun LazyListScope.prizePool(state: CollectiblesMachineDetailsUM.Content)
             CollectiblesStatus(
                 message = prizePool.message,
                 onReloadClick = prizePool.onReloadClick,
-                modifier = Modifier.padding(top = 118.dp, bottom = 88.dp),
-            )
-        }
-
-        is CollectiblesMachineDetailsUM.PrizePoolUM.Empty -> item(key = PackDetailsKeys.PRIZE_POOL_STATUS) {
-            CollectiblesStatus(
-                message = prizePool.message,
-                onReloadClick = null,
+                isReloading = prizePool.isReloading,
                 modifier = Modifier.padding(top = 118.dp, bottom = 88.dp),
             )
         }
@@ -227,15 +224,13 @@ private fun <T> CardGrid(items: ImmutableList<T>, modifier: Modifier = Modifier,
 }
 
 @Composable
-private fun PoweredBy(onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun PoweredBy(modifier: Modifier = Modifier) {
     Text(
         text = resourceReference(
             id = R.string.collectibles_machine_powered_by,
             formatArgs = wrappedList(
                 annotatedReference {
-                    withLink(LinkAnnotation.Clickable(tag = PROVIDER_NAME, linkInteractionListener = { onClick() })) {
-                        withStyle(SpanStyle(color = TangemTheme.colors3.text.primary)) { append(PROVIDER_NAME) }
-                    }
+                    withStyle(SpanStyle(color = TangemTheme.colors3.text.primary)) { append(PROVIDER_NAME) }
                 },
             ),
         ).resolveAnnotatedReference(),

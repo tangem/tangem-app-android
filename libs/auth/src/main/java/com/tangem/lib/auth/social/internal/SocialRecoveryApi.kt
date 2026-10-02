@@ -62,7 +62,10 @@ internal data class WalletRecoverApiRequest(
     // `metadata`, not the `deviceMetadata` the OpenAPI schema shows — the deployed endpoint and the
     // iOS client both use the former, and the schema's name makes the request unreadable
     @Json(name = "metadata") val metadata: DeviceMetadata,
-)
+) {
+
+    override fun toString(): String = "WalletRecoverApiRequest(***)"
+}
 
 /**
  * @property enc base64 encapsulated HPKE key, 32 bytes
@@ -72,7 +75,10 @@ internal data class WalletRecoverApiRequest(
 internal data class WalletRecoverApiResponse(
     @Json(name = "enc") val enc: String,
     @Json(name = "ct") val ct: String,
-)
+) {
+
+    override fun toString(): String = "WalletRecoverApiResponse(***)"
+}
 
 /**
  * @property modulus base64url, unsigned big-endian
@@ -107,4 +113,7 @@ internal data class SocialWalletRegistrationApiRequest(
     @Json(name = "encryptedRecoveryKey") val encryptedRecoveryKey: String,
     @Json(name = "attestationToken") val attestationToken: String?,
     @Json(name = "metadata") val metadata: DeviceMetadata,
-)
+) {
+
+    override fun toString(): String = "SocialWalletRegistrationApiRequest(***)"
+}

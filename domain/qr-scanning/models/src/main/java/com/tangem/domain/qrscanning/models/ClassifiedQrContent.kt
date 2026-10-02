@@ -7,6 +7,8 @@ sealed interface ClassifiedQrContent {
 
     data class WalletConnect(val uri: String) : ClassifiedQrContent
 
+    data class McpAuthorization(val userCode: String) : ClassifiedQrContent
+
     data class PaymentUri(
         val address: String,
         val amount: BigDecimal?,

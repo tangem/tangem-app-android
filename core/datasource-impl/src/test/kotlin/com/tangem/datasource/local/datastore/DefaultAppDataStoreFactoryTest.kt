@@ -7,6 +7,7 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapter
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
+import com.tangem.core.local.datastore.DeleteObsoleteFileMigration
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.create
 import com.tangem.datasource.utils.listTypes
@@ -123,6 +124,25 @@ internal class DefaultAppDataStoreFactoryTest {
         // Assert
         assertThat(value).containsExactly("a", "b").inOrder()
         assertThat(reported).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN obsolete file migration WHEN store is read THEN the obsolete file is deleted`() = runBlocking {
+        // Arrange
+        val obsolete = File(tempDir, "obsolete_list").apply { writeText("[]") }
+        val store = factory.create(
+            serializer = MoshiDataStoreSerializer(moshi, listTypes<String>(), defaultValue = emptyList<String>()),
+            scope = scope,
+            produceFile = { File(tempDir, "migrated_list") },
+            migrations = listOf(DeleteObsoleteFileMigration { obsolete }),
+        )
+
+        // Act
+        val value = store.data.first()
+
+        // Assert
+        assertThat(value).isEmpty()
+        assertThat(obsolete.exists()).isFalse()
     }
 
     @Test
