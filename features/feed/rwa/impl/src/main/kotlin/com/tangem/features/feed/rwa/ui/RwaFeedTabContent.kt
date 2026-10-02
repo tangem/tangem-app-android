@@ -45,6 +45,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
@@ -207,7 +208,9 @@ private fun FeaturedAssetCard(asset: RwaFeaturedAssetUM, modifier: Modifier = Mo
             .padding(all = 12.dp),
     ) {
         TangemTokenIcon(
-            state = TangemTokenIcon.UiState.Token(TangemTokenIcon.State(url = asset.iconUrl)),
+            state = TangemTokenIcon.UiState.Token(
+                TangemTokenIcon.State(url = asset.iconUrl, indicator = asset.indicator),
+            ),
             size = TangemTokenIcon.Size.X40,
         )
         SpacerH(22.dp)
@@ -468,7 +471,10 @@ private fun previewRwaFeedTabUM(): RwaFeedTabUM {
         ),
         regionRestriction = TangemMessageBanner.State(
             title = resourceReference(R.string.markets_real_assets_region_restriction_title),
-            description = resourceReference(R.string.markets_real_assets_region_restriction_description),
+            description = resourceReference(
+                id = R.string.markets_real_assets_region_restriction_description_region,
+                formatArgs = wrappedList("United States"),
+            ),
             variant = TangemMessageBanner.Variant.Warning,
             iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_info_20),
         ),
@@ -479,6 +485,7 @@ private fun previewFeaturedAsset(id: String, name: String, ticker: String, price
     return RwaFeaturedAssetUM(
         id = id,
         iconUrl = "",
+        indicator = null,
         name = stringReference(name),
         ticker = stringReference(ticker),
         price = stringReference(price),
