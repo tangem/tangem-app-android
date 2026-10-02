@@ -113,7 +113,8 @@ private fun ProviderContentState(
                 modifier = Modifier
                     .padding(start = TangemTheme.dimens.spacing12)
                     .size(size = TangemTheme.dimens.size40)
-                    .clip(TangemTheme.shapes.roundedCorners8),
+                    .clip(TangemTheme.shapes.roundedCorners8)
+                    .testTag(SwapTokenScreenTestTags.PROVIDER_ICON),
                 model = ImageRequest.Builder(context = LocalContext.current).data(state.iconUrl)
                     .crossfade(enable = true).allowHardware(false).build(),
                 loading = { RectangleShimmer(radius = TangemTheme.dimens.radius8) },
@@ -150,6 +151,7 @@ private fun ProviderContentState(
                             text = name,
                             style = TangemTheme.typography.caption2,
                             color = TangemTheme.colors.text.primary1,
+                            modifier = Modifier.testTag(SwapTokenScreenTestTags.PROVIDER_NAME),
                         )
                     }
                     AnimatedContent(targetState = state.type, label = "") { type ->
@@ -157,7 +159,9 @@ private fun ProviderContentState(
                             text = type,
                             style = TangemTheme.typography.caption2,
                             color = TangemTheme.colors.text.tertiary,
-                            modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
+                            modifier = Modifier
+                                .padding(start = TangemTheme.dimens.spacing4)
+                                .testTag(SwapTokenScreenTestTags.PROVIDER_TYPE),
                         )
                     }
                     val badgeModifier = Modifier.padding(start = TangemTheme.dimens.spacing4)
@@ -183,6 +187,7 @@ private fun ProviderContentState(
                             color = TangemTheme.colors.text.tertiary,
                             overflow = TextOverflow.Ellipsis,
                             maxLines = 1,
+                            modifier = Modifier.testTag(SwapTokenScreenTestTags.PROVIDER_RATE),
                         )
                     }
                     if (state.percentLowerThenBest is PercentDifference.Value &&

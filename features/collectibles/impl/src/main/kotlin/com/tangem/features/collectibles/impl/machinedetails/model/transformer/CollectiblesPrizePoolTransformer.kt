@@ -2,7 +2,6 @@ package com.tangem.features.collectibles.impl.machinedetails.model.transformer
 
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchListState
 import com.tangem.domain.collectibles.models.CollectibleGachaMachineNft
 import com.tangem.features.collectibles.impl.machinedetails.model.converter.CollectiblesPrizeConverter
@@ -60,8 +59,12 @@ internal class CollectiblesPrizePoolTransformer(
             .flatMap { batch -> batch.data }
             .distinctBy(CollectibleGachaMachineNft::id)
 
+        // An empty pool is not a state the backend is expected to serve, so it is reported as a failure
         if (nfts.isEmpty()) {
-            return CollectiblesMachineDetailsUM.PrizePoolUM.Empty(message = stringReference(EMPTY_MESSAGE))
+            return CollectiblesMachineDetailsUM.PrizePoolUM.Error(
+                message = resourceReference(R.string.collectibles_machine_prize_pool_load_error),
+                onReloadClick = onReloadClick,
+            )
         }
 
         val rows = nfts
@@ -75,8 +78,6 @@ internal class CollectiblesPrizePoolTransformer(
     }
 
     private companion object {
-
         const val PRIZES_PER_ROW = 2
-        const val EMPTY_MESSAGE = "This pack has no cards in its prize pool yet" // TODO clarify the text
     }
 }

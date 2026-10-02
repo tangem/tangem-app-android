@@ -50,6 +50,9 @@ import kotlinx.collections.immutable.ImmutableList
 
 private const val LOCKED_WALLET_ALPHA = 0.5f
 
+// MVP: no Lokalise keys for the MCP screen yet
+private const val CONNECTED_DAPPS_TITLE = "Connected dApps"
+
 @Composable
 internal fun WcConnectionsContent(state: WcConnectionsState, modifier: Modifier = Modifier) {
     Scaffold(
@@ -78,30 +81,66 @@ internal fun WcConnectionsContent(state: WcConnectionsState, modifier: Modifier 
                 modifier = Modifier
                     .padding(innerPadding)
                     .fillMaxSize(),
-                connections = state.connections,
-                onNewConnectionClick = state.onNewConnectionClick,
+                state = state,
             )
         },
     )
 }
 
 @Composable
-private fun Content(connections: WcConnections, onNewConnectionClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun Content(state: WcConnectionsState, modifier: Modifier = Modifier) {
+    val connections = state.connections
+    val agents = state.connectedAgents
     when {
         connections is WcConnections.Loading -> return
-        !connections.isNotEmpty() -> EmptyConnectionsBlock(
+        !connections.isNotEmpty() && agents.isEmpty() -> EmptyConnectionsBlock(
             modifier = modifier,
-            onNewConnectionClick = onNewConnectionClick,
+            onNewConnectionClick = state.onNewConnectionClick,
         )
-        connections is WcConnections.AccountMode -> AccountModeContent(
-            modifier = modifier,
-            items = connections.items,
-        )
-        connections is WcConnections.WalletMode -> ConnectionsBlock(
-            modifier = modifier,
-            connections = connections.connections,
-        )
+        else -> Column(modifier = modifier) {
+            if (agents.isNotEmpty()) {
+                ConnectedAgentsBlock(agents = agents)
+                SectionTitle(
+                    text = CONNECTED_DAPPS_TITLE,
+                    modifier = Modifier.padding(
+                        start = TangemTheme.dimens.spacing24,
+                        end = TangemTheme.dimens.spacing16,
+                        top = TangemTheme.dimens.spacing16,
+                    ),
+                )
+            }
+            ConnectionsList(connections = connections, modifier = Modifier.weight(1f))
+        }
     }
+}
+
+@Composable
+private fun ConnectionsList(connections: WcConnections, modifier: Modifier = Modifier) {
+    when (connections) {
+        is WcConnections.Loading -> Unit
+        is WcConnections.AccountMode -> AccountModeContent(modifier = modifier, items = connections.items)
+        is WcConnections.WalletMode -> ConnectionsBlock(modifier = modifier, connections = connections.connections)
+    }
+}
+
+/**
+ * Connected agents list — a stub until the block is built on the design system.
+ *
+ * [agents] is already loaded and each item already carries its click into the details sheet.
+ */
+@Suppress("UnusedParameter", "EmptyFunctionBlock")
+@Composable
+private fun ConnectedAgentsBlock(agents: ImmutableList<McpAgentInfo>, modifier: Modifier = Modifier) {
+}
+
+@Composable
+private fun SectionTitle(text: String, modifier: Modifier = Modifier) {
+    Text(
+        modifier = modifier,
+        text = text,
+        color = TangemTheme.colors.text.primary1,
+        style = TangemTheme.typography.subtitle1,
+    )
 }
 
 @Composable

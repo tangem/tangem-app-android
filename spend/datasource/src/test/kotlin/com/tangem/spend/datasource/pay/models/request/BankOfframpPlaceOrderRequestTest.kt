@@ -1,10 +1,10 @@
 package com.tangem.spend.datasource.pay.models.request
 
 import com.google.common.truth.Truth.assertThat
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.Types
-import com.tangem.spend.datasource.pay.addTangemPayEnumFallbackAdapters
-import com.tangem.spend.datasource.pay.models.response.RawJsonAdapter
+import com.tangem.core.remote.json.NetworkJsonFactory
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
 import org.junit.jupiter.api.Test
 
 /**
@@ -13,16 +13,7 @@ import org.junit.jupiter.api.Test
  */
 internal class BankOfframpPlaceOrderRequestTest {
 
-    private val moshi = Moshi.Builder()
-        .addTangemPayEnumFallbackAdapters()
-        .add(RawJsonAdapter())
-        .build()
-
-    private val requestAdapter = moshi.adapter(BankOfframpPlaceOrderRequest::class.java)
-
-    private val mapAdapter = moshi.adapter<Map<String, Any?>>(
-        Types.newParameterizedType(Map::class.java, String::class.java, Any::class.java),
-    )
+    private val json = NetworkJsonFactory.create()
 
     @Test
     fun `GIVEN saved recipient WHEN serialized THEN data has exactly the mode A keys`() {
@@ -30,12 +21,12 @@ internal class BankOfframpPlaceOrderRequestTest {
         val request = createRequest(bankAccountId = BANK_ACCOUNT_ID)
 
         // Act
-        val json = serialize(request)
+        val serialized = serialize(request)
 
         // Assert
-        assertThat(json.keys).containsExactly("data", "idempotency_key")
-        assertThat(json["idempotency_key"]).isEqualTo(IDEMPOTENCY_KEY)
-        assertThat(json.child("data")).isEqualTo(
+        assertThat(serialized.keys).containsExactly("data", "idempotency_key")
+        assertThat(serialized["idempotency_key"]).isEqualTo(JsonPrimitive(IDEMPOTENCY_KEY))
+        assertThat(serialized.child("data")).isEqualTo(
             parse(
                 """{"type":"BANK_OFFRAMP_RAIN","chain_id":137,"amount_in_cents":10000,""" +
                     """"token_contract_address":"$TOKEN_CONTRACT_ADDRESS","bank_account_id":"$BANK_ACCOUNT_ID"}""",
@@ -54,7 +45,7 @@ internal class BankOfframpPlaceOrderRequestTest {
         // Assert
         assertThat(data.keys)
             .containsExactly("type", "chain_id", "amount_in_cents", "token_contract_address", "bank_account")
-        assertThat(data["type"]).isEqualTo("BANK_OFFRAMP_RAIN")
+        assertThat(data["type"]).isEqualTo(JsonPrimitive("BANK_OFFRAMP_RAIN"))
     }
 
     @Test
@@ -141,12 +132,13 @@ internal class BankOfframpPlaceOrderRequestTest {
         countryCode = "US",
     )
 
-    private fun serialize(request: BankOfframpPlaceOrderRequest): Map<String, Any?> = parse(requestAdapter.toJson(request))
+    private fun serialize(request: BankOfframpPlaceOrderRequest): JsonObject {
+        return json.encodeToJsonElement(BankOfframpPlaceOrderRequest.serializer(), request).jsonObject
+    }
 
-    private fun parse(json: String): Map<String, Any?> = requireNotNull(mapAdapter.fromJson(json))
+    private fun parse(raw: String): JsonObject = json.parseToJsonElement(raw).jsonObject
 
-    @Suppress("UNCHECKED_CAST")
-    private fun Map<String, Any?>.child(key: String): Map<String, Any?> = this[key] as Map<String, Any?>
+    private fun JsonObject.child(key: String): JsonObject = getValue(key).jsonObject
 
     private companion object {
         const val IDEMPOTENCY_KEY = "a3f1c0de"

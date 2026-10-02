@@ -1,11 +1,11 @@
 package com.tangem.spend.datasource.visa.models.request
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class GenerateNoneByCardWalletRequest(
-    @Json(name = "auth_type") val authType: String = "card_wallet",
-    @Json(name = "card_wallet_address") val cardWalletAddress: String,
-    @Json(name = "card_id") val cardId: String,
+    @SerialName("auth_type") val authType: String = "card_wallet",
+    @SerialName("card_wallet_address") val cardWalletAddress: String,
+    @SerialName("card_id") val cardId: String,
 )

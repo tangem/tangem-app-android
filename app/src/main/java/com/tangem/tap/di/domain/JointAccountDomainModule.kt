@@ -4,6 +4,7 @@ import com.tangem.domain.account.fetcher.SingleAccountListFetcher
 import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
 import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
+import com.tangem.domain.jointaccount.gas.JointGasTokenResolver
 import com.tangem.domain.jointaccount.gas.JointRefundReceiverProvider
 import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
 import com.tangem.domain.jointaccount.network.JointNetworkReader
@@ -234,6 +235,7 @@ internal object JointAccountDomainModule {
         networkReader: JointNetworkReader,
         compositionChecker: SafeCompositionChecker,
         refundReceiverProvider: JointRefundReceiverProvider,
+        gasTokenResolver: JointGasTokenResolver,
     ): SignJointOperationUseCase {
         return SignJointOperationUseCase(
             repository = repository,
@@ -246,6 +248,7 @@ internal object JointAccountDomainModule {
             networkReader = networkReader,
             compositionChecker = compositionChecker,
             refundReceiverProvider = refundReceiverProvider,
+            gasTokenResolver = gasTokenResolver,
         )
     }
 
