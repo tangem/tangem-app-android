@@ -27,6 +27,20 @@ class DeriveApiCredentialsUseCase(
         ownerAddress: String,
         l1Signature: String,
         timestamp: String,
+    ): Either<PolymarketOnboardingError, PolymarketApiCredentials> = credentialsLock.withLock(userWalletId) {
+        storedOrDerived(
+            userWalletId = userWalletId,
+            ownerAddress = ownerAddress,
+            l1Signature = l1Signature,
+            timestamp = timestamp,
+        )
+    }
+
+    private suspend fun storedOrDerived(
+        userWalletId: UserWalletId,
+        ownerAddress: String,
+        l1Signature: String,
+        timestamp: String,
     ): Either<PolymarketOnboardingError, PolymarketApiCredentials> {
         credentialsStore.get(userWalletId = userWalletId)?.let { return it.right() }
 
@@ -45,11 +59,7 @@ class DeriveApiCredentialsUseCase(
         }
 
         return credentials
-            .onRight { stored ->
-                credentialsLock.withLock(userWalletId) {
-                    credentialsStore.store(userWalletId = userWalletId, credentials = stored)
-                }
-            }
+            .onRight { credentialsStore.store(userWalletId = userWalletId, credentials = it) }
             .mapLeft { it.toOnboardingError() }
     }
 
