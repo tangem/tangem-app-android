@@ -17,9 +17,6 @@ import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchAction
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
-import com.tangem.domain.polymarket.model.PolymarketPositionsTab
-import com.tangem.domain.polymarket.model.PolymarketPosition
-import com.tangem.features.polymarket.impl.positionresult.model.canOpenPositionResult
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
@@ -93,7 +90,6 @@ internal class PolymarketMainModel @Inject constructor(
     private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
     private val predictionPositionsValueSupplier: PredictionPositionsValueSupplier,
     private val predictionPositionsValueFetcher: PredictionPositionsValueFetcher,
-    private val positionsPreviewLoader: PolymarketPositionsPreviewLoader,
     private val predictionBalancePoller: PredictionBalancePoller,
     private val predictionFundingWindow: PredictionFundingWindow,
 ) : Model(), PolymarketAddFundsComponent.ModelCallback {
@@ -123,6 +119,8 @@ internal class PolymarketMainModel @Inject constructor(
 
     private val refreshJobHolder = JobHolder()
 
+    val blocksRefresh = PolymarketMainBlocksRefresh()
+
     val fundingSheetNavigation = SlotNavigation<PolymarketFundingSheetConfig>()
 
     val uiState: StateFlow<PolymarketMainUM>
@@ -140,8 +138,6 @@ internal class PolymarketMainModel @Inject constructor(
                 categories = persistentListOf(),
                 content = PolymarketMainUM.ContentUM.Loading,
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = { onRefresh() }),
-                onActivePositionsClick = { openPositions(PolymarketPositionsTab.ACTIVE) },
-                onFinishedPositionsClick = { openPositions(PolymarketPositionsTab.FINISHED) },
             ),
         )
 
@@ -189,10 +185,6 @@ internal class PolymarketMainModel @Inject constructor(
             .take(count = 1)
             .onEach { fundingRequisites.prefetchOnce() }
             .launchIn(modelScope)
-
-        positionsPreviewLoader.state
-            .onEach { positions -> uiState.update { it.copy(positions = positions) } }
-            .launchIn(modelScope)
     }
 
     // Kept for as long as the screen lives: coming back to a tab must not cost a reload.
@@ -224,19 +216,6 @@ internal class PolymarketMainModel @Inject constructor(
 
     fun onHistoryClick() {
         router.push(PolymarketRoute.History(userWalletId = params.userWalletId))
-    }
-
-    private fun openPositions(tab: PolymarketPositionsTab) {
-        router.push(PolymarketRoute.Positions(userWalletId = params.userWalletId, initialTab = tab))
-    }
-
-    private fun openPosition(position: PolymarketPosition.Open) {
-        val route = if (position.canOpenPositionResult) {
-            PolymarketRoute.PositionResult(params.userWalletId, position)
-        } else {
-            PolymarketRoute.PositionDetails(params.userWalletId, position.id)
-        }
-        router.push(route)
     }
 
     fun onLoadMore() {
@@ -271,7 +250,6 @@ internal class PolymarketMainModel @Inject constructor(
 
     fun onResume() {
         isScreenResumed = true
-        positionsPreviewLoader.resume(modelScope, params.userWalletId, ::openPosition)
         activeFeed.value?.poller?.resume()
         fundingRequisites.retryIfFailed()
         predictionBalancePoller.subscribe(userWalletId = params.userWalletId)
@@ -281,7 +259,6 @@ internal class PolymarketMainModel @Inject constructor(
 
     fun onPause() {
         isScreenResumed = false
-        positionsPreviewLoader.pause()
         activeFeed.value?.poller?.pause()
         balancePollJobHolder.cancel()
     }
@@ -398,7 +375,7 @@ internal class PolymarketMainModel @Inject constructor(
                 coroutineScope {
                     listOf(
                         async { tradingAllowance.refresh() },
-                        async { positionsPreviewLoader.refresh(modelScope, params.userWalletId, ::openPosition) },
+                        async { blocksRefresh.refreshAll() },
                         async {
                             predictionAccountStatusFetcher(
                                 PredictionAccountStatusFetcher.Params(userWalletId = params.userWalletId),
