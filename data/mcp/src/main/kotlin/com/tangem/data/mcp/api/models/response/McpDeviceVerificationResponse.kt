@@ -1,4 +1,4 @@
-package com.tangem.lib.auth.api.models.response
+package com.tangem.data.mcp.api.models.response
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
@@ -12,7 +12,7 @@ import com.squareup.moshi.JsonClass
  * @property state one-time value tying the consent to this verification, passed back as a query parameter.
  */
 @JsonClass(generateAdapter = true)
-data class McpDeviceVerificationResponse(
+internal data class McpDeviceVerificationResponse(
     @Json(name = "client_id") val clientId: String,
     @Json(name = "client_origin") val clientOrigin: String?,
     @Json(name = "client_name") val clientName: String?,
