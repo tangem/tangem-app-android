@@ -136,7 +136,7 @@ internal class JointSendDelegate @Inject constructor(
 
         // The same reading the builder would price in the token: its coin price already carries the margin
         val tokenSafeTx = coinSafeTx.copy(
-            gasPrice = gasToken.gasPrice(coinGasPrice = coinSafeTx.gasPrice),
+            gasPrice = gasToken.gasPriceInTokenCurrency(coinGasPrice = coinSafeTx.gasPrice),
             gasToken = gasToken.address,
         )
         val tokenFee = JointSendFeeConverter(network = currency.network, feeToken = feeToken, gasToken = gasToken)
