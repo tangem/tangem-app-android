@@ -224,7 +224,10 @@ internal class HaveWalletSheetController(
 
     private fun onCloseClick() = dismissByViewer(IntroductionProcess.SheetDismissed.DismissReason.CloseButton)
 
-    private fun onDismissRequest() = dismissByViewer(IntroductionProcess.SheetDismissed.DismissReason.Dismissed)
+    private fun onDismissRequest() {
+        if (isSigningInSocially()) return
+        dismissByViewer(IntroductionProcess.SheetDismissed.DismissReason.Dismissed)
+    }
 
     /** Only a viewer leaving without picking a row is a dismissal; rows dismiss programmatically and stay silent. */
     private fun dismissByViewer(reason: IntroductionProcess.SheetDismissed.DismissReason) {
