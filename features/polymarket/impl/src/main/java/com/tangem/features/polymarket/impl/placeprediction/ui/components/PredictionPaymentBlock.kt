@@ -81,7 +81,7 @@ private fun SourceHeader(collateral: CollateralUM, order: OrderSideUM) {
                 color = PredictionAccountIcon.color,
                 size = AccountIconSize.ExtraSmall,
             )
-            HeaderText(text = stringResourceSafe(R.string.prediction_place_summary_account))
+            HeaderText(text = stringResourceSafe(R.string.prediction_account_title))
         }
         HeaderText(
             text = stringResourceSafe(
@@ -122,7 +122,7 @@ private fun BuyAmountRow(amountValue: String, payout: BigDecimal?, collateral: C
                 )
             }
         }
-        collateral.iconState?.let { CurrencyIcon(state = it, shouldDisplayNetwork = false) }
+        collateral.iconState?.let { CurrencyIcon(state = it, shouldDisplayNetwork = true) }
     }
 }
 
@@ -151,7 +151,7 @@ private fun SellAmountRow(amountValue: String, payout: BigDecimal?, collateral: 
                 color = TangemTheme.colors3.text.secondary,
             )
         }
-        collateral.iconState?.let { CurrencyIcon(state = it, shouldDisplayNetwork = false) }
+        collateral.iconState?.let { CurrencyIcon(state = it, shouldDisplayNetwork = true) }
     }
 }
 
