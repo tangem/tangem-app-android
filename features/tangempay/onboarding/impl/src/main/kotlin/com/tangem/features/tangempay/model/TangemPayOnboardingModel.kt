@@ -141,7 +141,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
         if (featureToggles.isResidencyStepEnabled) {
             modelScope.launch {
                 val walletsIds = eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true)
-                if (walletsIds.isEmpty()) back() else proceedWithWallets(walletsIds)
+                if (walletsIds.isEmpty()) showNotAvailable() else proceedWithWallets(walletsIds)
             }
         } else if (params is TangemPayOnboardingComponent.Params.Deeplink ||
             params is TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink
