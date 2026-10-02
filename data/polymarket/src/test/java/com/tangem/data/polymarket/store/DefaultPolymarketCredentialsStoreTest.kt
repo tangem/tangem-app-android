@@ -9,11 +9,13 @@ import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import com.tangem.utils.logging.Severity
 import com.tangem.utils.logging.TangemLogger
+import app.cash.turbine.test
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
@@ -28,15 +30,12 @@ internal class DefaultPolymarketCredentialsStoreTest {
     private val secureStorage: SecureStorage = mockk(relaxed = true)
     private val json = Json { ignoreUnknownKeys = true }
 
-    private val store = DefaultPolymarketCredentialsStore(
-        secureStorage = secureStorage,
-        json = json,
-        dispatchers = TestingCoroutineDispatcherProvider(),
-    )
+    private lateinit var store: DefaultPolymarketCredentialsStore
 
     @BeforeEach
     fun resetMocks() {
         clearMocks(secureStorage)
+        store = createStore(secureStorage = secureStorage)
     }
 
     @AfterEach
@@ -164,11 +163,7 @@ internal class DefaultPolymarketCredentialsStoreTest {
     fun `GIVEN in-memory storage WHEN store THEN the entry is keyed by the wallet and holds the credentials`() = runTest {
         // Arrange
         val storage = InMemorySecureStorage()
-        val storeOverRealStorage = DefaultPolymarketCredentialsStore(
-            secureStorage = storage,
-            json = json,
-            dispatchers = TestingCoroutineDispatcherProvider(),
-        )
+        val storeOverRealStorage = createStore(secureStorage = storage)
 
         // Act
         storeOverRealStorage.store(userWalletId = USER_WALLET_ID, credentials = CREDENTIALS)
@@ -177,6 +172,103 @@ internal class DefaultPolymarketCredentialsStoreTest {
         assertThat(storage.entries.keys).containsExactly(EXPECTED_KEY)
         assertThat(storeOverRealStorage.get(userWalletId = USER_WALLET_ID)).isEqualTo(CREDENTIALS)
     }
+
+    @Test
+    fun `GIVEN stored credentials WHEN observed THEN the first value is present`() = runTest {
+        // Arrange
+        val storage = InMemorySecureStorage()
+        storage.entries[EXPECTED_KEY] = encode(CREDENTIALS)
+
+        // Act
+        val actual = createStore(secureStorage = storage).hasCredentials(userWalletId = USER_WALLET_ID).first()
+
+        // Assert
+        assertThat(actual).isTrue()
+    }
+
+    @Test
+    fun `GIVEN nothing stored WHEN observed THEN the first value is absent`() = runTest {
+        // Act
+        val actual = createStore(secureStorage = InMemorySecureStorage())
+            .hasCredentials(userWalletId = USER_WALLET_ID)
+            .first()
+
+        // Assert
+        assertThat(actual).isFalse()
+    }
+
+    @Test
+    fun `GIVEN an observer WHEN credentials are stored and cleared THEN each change is emitted once`() = runTest {
+        // Arrange
+        val credentialsStore = createStore(secureStorage = InMemorySecureStorage())
+
+        credentialsStore.hasCredentials(userWalletId = USER_WALLET_ID).test {
+            assertThat(awaitItem()).isFalse()
+
+            // Act
+            credentialsStore.store(userWalletId = USER_WALLET_ID, credentials = CREDENTIALS)
+            credentialsStore.store(userWalletId = OTHER_WALLET_ID, credentials = CREDENTIALS)
+            credentialsStore.clear(userWalletId = USER_WALLET_ID)
+
+            // Assert
+            assertThat(awaitItem()).isTrue()
+            assertThat(awaitItem()).isFalse()
+            expectNoEvents()
+        }
+    }
+
+    @Test
+    fun `GIVEN the credentials a request was signed with WHEN cleared if current THEN they are removed`() = runTest {
+        // Arrange
+        val storage = InMemorySecureStorage()
+        storage.entries[EXPECTED_KEY] = encode(CREDENTIALS)
+        val credentialsStore = createStore(secureStorage = storage)
+        val signedWith = requireNotNull(credentialsStore.get(userWalletId = USER_WALLET_ID))
+
+        // Act
+        credentialsStore.clearIfCurrent(userWalletId = USER_WALLET_ID, rejected = signedWith)
+
+        // Assert
+        assertThat(credentialsStore.get(userWalletId = USER_WALLET_ID)).isNull()
+        assertThat(storage.entries).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN equal credentials stored since the request WHEN cleared if current THEN they are kept`() = runTest {
+        // Arrange
+        val storage = InMemorySecureStorage()
+        storage.entries[EXPECTED_KEY] = encode(CREDENTIALS)
+        val credentialsStore = createStore(secureStorage = storage)
+        val signedWith = requireNotNull(credentialsStore.get(userWalletId = USER_WALLET_ID))
+        credentialsStore.store(userWalletId = USER_WALLET_ID, credentials = CREDENTIALS.copy())
+
+        // Act
+        credentialsStore.clearIfCurrent(userWalletId = USER_WALLET_ID, rejected = signedWith)
+
+        // Assert
+        assertThat(credentialsStore.get(userWalletId = USER_WALLET_ID)).isEqualTo(CREDENTIALS)
+        assertThat(storage.entries.keys).containsExactly(EXPECTED_KEY)
+    }
+
+    @Test
+    fun `GIVEN corrupted json WHEN observed THEN the credentials are reported absent`() = runTest {
+        // Arrange
+        val storage = InMemorySecureStorage()
+        storage.entries[EXPECTED_KEY] = "{not a json"
+
+        // Act
+        val actual = createStore(secureStorage = storage).hasCredentials(userWalletId = USER_WALLET_ID).first()
+
+        // Assert
+        assertThat(actual).isFalse()
+        assertThat(storage.entries).isEmpty()
+    }
+
+    private fun createStore(secureStorage: SecureStorage) = DefaultPolymarketCredentialsStore(
+        secureStorage = secureStorage,
+        json = json,
+        dispatchers = TestingCoroutineDispatcherProvider(),
+    )
 
     private class InMemorySecureStorage : SecureStorage {
 
@@ -203,6 +295,7 @@ internal class DefaultPolymarketCredentialsStoreTest {
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("FE7F9D116CF285B694715DAE477AF6DC1CFCA02DBD9DCDA2EE2AF523A93E920F")
+        val OTHER_WALLET_ID = UserWalletId("0A")
         const val EXPECTED_KEY =
             "polymarket_api_credentials_FE7F9D116CF285B694715DAE477AF6DC1CFCA02DBD9DCDA2EE2AF523A93E920F"
 
