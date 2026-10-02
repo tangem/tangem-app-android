@@ -38,6 +38,7 @@ import com.tangem.features.introduction.impl.ui.state.SocialLoginProgressUM
 import com.tangem.features.introduction.impl.ui.state.WalletOptionUM
 import com.tangem.utils.SupportedLanguages
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -109,6 +110,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         val result = socialLoginUseCase.signIn(
             provider = provider,
             onStageChanged = { stage -> host.onProgress(stage.toProgressUM()) },
+            requestBackupRetry = ::askBackupRetry,
             requestConsent = {
                 host.onProgress(null)
                 consentPrompt(
@@ -253,15 +255,42 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
      * Signs out first: the alternative flows offer a plain retry, and on Android the account chooser
      * only comes back for an account the app has not remembered.
      */
+    /** Kept over the progress on purpose: the wallet, its key and its binding live only in this attempt */
+    private suspend fun askBackupRetry(): Boolean {
+        analyticsEventHandler.send(
+            SocialLoginAnalyticsEvents.ErrorShown(
+                errorMessage = SocialLoginError.BackupWriteFailed().toAnalyticsMessage(),
+            ),
+        )
+        val answer = CompletableDeferred<Boolean>()
+        uiMessageSender.send(
+            DialogMessage(
+                message = resourceReference(CoreResR.string.social_login_error_backup_not_saved),
+                isDismissable = false,
+                firstActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(CoreResR.string.common_retry),
+                        onClick = { answer.complete(true) },
+                    )
+                },
+                secondActionBuilder = { cancelAction(onClick = { answer.complete(false) }) },
+            ),
+        )
+        return answer.await()
+    }
+
     private suspend fun onFailure(provider: SocialLoginProvider, error: SocialLoginError, attemptId: String) {
         socialLoginUseCase.signOut(provider)
 
-        if (error != SocialLoginError.ConsentDeclined) {
+        // an abandoned backup was already reported when its retry was offered
+        if (error != SocialLoginError.ConsentDeclined && error != SocialLoginError.BackupAbandoned) {
             analyticsEventHandler.send(SocialLoginAnalyticsEvents.ErrorShown(errorMessage = error.toAnalyticsMessage()))
         }
 
         when (error) {
-            SocialLoginError.ConsentDeclined -> Unit
+            SocialLoginError.ConsentDeclined,
+            SocialLoginError.BackupAbandoned,
+            -> Unit
             SocialLoginError.BackupNotFound,
             SocialLoginError.InvalidBackupFile,
             is SocialLoginError.UnsupportedBackupVersion,

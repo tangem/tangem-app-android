@@ -15,6 +15,7 @@ import com.tangem.domain.sociallogin.usecase.GetSocialRecoveryKeyUseCase
 import com.tangem.domain.sociallogin.usecase.ReadSocialBackupUseCase
 import com.tangem.domain.sociallogin.usecase.RegisterRestoredWalletUseCase
 import com.tangem.domain.sociallogin.usecase.RegisterSocialRecoveryUseCase
+import com.tangem.domain.sociallogin.usecase.RevokeSocialRecoveryUseCase
 import com.tangem.domain.sociallogin.usecase.SignInWithSocialProviderUseCase
 import com.tangem.domain.sociallogin.usecase.SignOutFromSocialProviderUseCase
 import com.tangem.domain.sociallogin.usecase.WriteSocialBackupUseCase
@@ -55,6 +56,7 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
     private val registerSocialRecoveryUseCase: RegisterSocialRecoveryUseCase,
     private val registerRestoredWalletUseCase: RegisterRestoredWalletUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val revokeSocialRecoveryUseCase: RevokeSocialRecoveryUseCase,
     private val tangemHotSdk: TangemHotSdk,
     private val hotUserWalletBuilderFactory: HotUserWalletBuilder.Factory,
     private val saveWalletUseCase: SaveWalletUseCase,
@@ -69,6 +71,7 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
     override suspend fun signIn(
         provider: SocialLoginProvider,
         onStageChanged: (SocialLoginStage) -> Unit,
+        requestBackupRetry: suspend () -> Boolean,
         requestConsent: suspend () -> SocialLoginConsent?,
     ): Either<SocialLoginError, SocialLoginOutcome> = mutex.withLock {
         onStageChanged(SocialLoginStage.SigningIn)
@@ -76,7 +79,12 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
         val idToken = signInWithSocialProviderUseCase(provider)
             .getOrElse { return@withLock Either.Left(it) }
 
-        resolve(idToken, onStageChanged, requestConsent)
+        resolve(
+            idToken = idToken,
+            onStageChanged = onStageChanged,
+            requestBackupRetry = requestBackupRetry,
+            requestConsent = requestConsent,
+        )
     }
 
     override suspend fun signOut(provider: SocialLoginProvider) = mutex.withLock {
@@ -87,13 +95,19 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
     private suspend fun resolve(
         idToken: SocialProviderIdToken,
         onStageChanged: (SocialLoginStage) -> Unit,
+        requestBackupRetry: suspend () -> Boolean,
         requestConsent: suspend () -> SocialLoginConsent?,
     ): Either<SocialLoginError, SocialLoginOutcome> {
         onStageChanged(SocialLoginStage.VerifyingAccount)
 
         val recoveryKey = getSocialRecoveryKeyUseCase(idToken).getOrElse { error ->
             return if (error == SocialLoginError.BindingNotFound) {
-                create(idToken, onStageChanged, requestConsent)
+                create(
+                    idToken = idToken,
+                    onStageChanged = onStageChanged,
+                    requestBackupRetry = requestBackupRetry,
+                    requestConsent = requestConsent,
+                )
             } else {
                 Either.Left(error)
             }
@@ -152,6 +166,7 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
     private suspend fun create(
         idToken: SocialProviderIdToken,
         onStageChanged: (SocialLoginStage) -> Unit,
+        requestBackupRetry: suspend () -> Boolean,
         requestConsent: suspend () -> SocialLoginConsent?,
     ): Either<SocialLoginError, SocialLoginOutcome> {
         requestConsent() ?: return Either.Left(SocialLoginError.ConsentDeclined)
@@ -161,7 +176,7 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
         val userWallet = createHotWallet().getOrElse { return Either.Left(it) }
 
         return discardOnCancel(userWallet) {
-            backUpCreatedWallet(idToken, userWallet).getOrElse { error ->
+            backUpCreatedWallet(idToken, userWallet, requestBackupRetry).getOrElse { error ->
                 discardFromSdk(userWallet)
                 return Either.Left(error)
             }
@@ -181,28 +196,49 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
         throw e
     }
 
+    /**
+     * A failed write is retried on the same wallet, key and phrase, without binding again: the binding is
+     * already there, and only this attempt still holds the key it was made with. Giving up releases it, or
+     * the identity would come back to a restore with no file to restore from.
+     */
     private suspend fun backUpCreatedWallet(
         idToken: SocialProviderIdToken,
         userWallet: UserWallet.Hot,
+        requestBackupRetry: suspend () -> Boolean,
     ): Either<SocialLoginError, Unit> {
         val secret = exportSecret(userWallet).getOrElse { return Either.Left(it) }
         val recoveryKey = generateRecoveryKeyUseCase()
         try {
             // The binding comes first: the folder holds one file per account, so writing before the backend
             // accepts the binding could overwrite another wallet's backup on the way to a binding conflict.
+            // A failed or unanswered register may still have created the binding on the backend, and a binding
+            // without a file would turn the next sign-in of this identity into a failed restore.
             registerSocialRecoveryUseCase(
                 idToken = idToken,
                 userWallet = userWallet,
                 recoveryKey = recoveryKey,
-            ).getOrElse { return Either.Left(it) }
-
-            return writeSocialBackupUseCase(
-                walletId = userWallet.walletId,
-                secret = secret,
-                recoveryKey = recoveryKey,
-            ).mapLeft { error ->
-                if (error == SocialLoginError.CloudUnavailable) SocialLoginError.BackupWriteFailed() else error
+            ).getOrElse { error ->
+                releaseBinding(userWallet.walletId)
+                return Either.Left(error)
             }
+
+            while (true) {
+                val error = writeSocialBackupUseCase(
+                    walletId = userWallet.walletId,
+                    secret = secret,
+                    recoveryKey = recoveryKey,
+                ).leftOrNull() ?: return Either.Right(Unit)
+
+                TangemLogger.e("Failed to write the social backup: $error")
+                if (!requestBackupRetry()) {
+                    releaseBinding(userWallet.walletId)
+                    return Either.Left(SocialLoginError.BackupAbandoned)
+                }
+            }
+        } catch (e: CancellationException) {
+            // leaving the screen is giving up too, and the binding must not outlive the attempt
+            withContext(NonCancellable) { releaseBinding(userWallet.walletId) }
+            throw e
         } finally {
             secret.wipe()
             recoveryKey.wipe()
@@ -231,6 +267,11 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
         val listed = getUserWalletUseCase(userWallet.walletId).getOrNull() as? UserWallet.Hot
         listed?.hotWalletId == userWallet.hotWalletId
     }.getOrDefault(false)
+
+    private suspend fun releaseBinding(walletId: UserWalletId) {
+        revokeSocialRecoveryUseCase(walletId)
+            .onLeft { TangemLogger.e("Failed to release the binding of a wallet left without a backup: $it") }
+    }
 
     private suspend fun discardFromSdk(userWallet: UserWallet.Hot) {
         runSuspendCatching { tangemHotSdk.delete(userWallet.hotWalletId) }
