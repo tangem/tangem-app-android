@@ -1,6 +1,6 @@
 package com.tangem.data.jointaccount.di
 
-import com.tangem.data.jointaccount.gas.DefaultJointGasTokenResolver
+import com.tangem.data.jointaccount.gas.EvmJointGasTokenResolver
 import com.tangem.domain.jointaccount.gas.JointGasTokenResolver
 import android.content.Context
 import androidx.datastore.dataStoreFile
@@ -61,7 +61,7 @@ internal interface JointAccountDataModule {
 
     @Binds
     @Singleton
-    fun bindJointGasTokenResolver(resolver: DefaultJointGasTokenResolver): JointGasTokenResolver
+    fun bindJointGasTokenResolver(resolver: EvmJointGasTokenResolver): JointGasTokenResolver
 
     @Binds
     @Singleton

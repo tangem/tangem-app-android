@@ -30,8 +30,9 @@ sealed interface SafeGasToken {
 
         /** Rounded up: the refund is an integer per unit of gas and must never come out short */
         override fun gasPrice(coinGasPrice: BigInteger): BigInteger = coinGasPrice.toBigDecimal()
+            .movePointLeft(coinDecimals)
             .multiply(nativeToTokenRate)
-            .movePointRight(decimals - coinDecimals)
+            .movePointRight(decimals)
             .setScale(0, RoundingMode.UP)
             .toBigInteger()
     }
