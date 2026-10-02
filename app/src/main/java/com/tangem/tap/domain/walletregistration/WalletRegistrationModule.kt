@@ -1,7 +1,7 @@
 package com.tangem.tap.domain.walletregistration
 
+import com.tangem.data.sociallogin.recovery.HotWalletSignerFactory
 import com.tangem.domain.wallets.registration.WalletRegistrationTrigger
-import com.tangem.lib.auth.session.WalletSignerProvider
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -15,5 +15,5 @@ internal interface WalletRegistrationModule {
     fun bindWalletRegistrationTrigger(impl: DefaultWalletRegistrationTrigger): WalletRegistrationTrigger
 
     @Binds
-    fun bindWalletSignerProvider(impl: DefaultWalletSignerProvider): WalletSignerProvider
+    fun bindHotWalletSignerFactory(impl: MobileWalletRegistrationSigner): HotWalletSignerFactory
 }
