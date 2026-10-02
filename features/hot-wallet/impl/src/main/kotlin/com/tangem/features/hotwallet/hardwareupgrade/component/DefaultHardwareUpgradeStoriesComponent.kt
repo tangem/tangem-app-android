@@ -30,6 +30,8 @@ internal class DefaultHardwareUpgradeStoriesComponent @AssistedInject constructo
             // Every button leads to the Hardware wallet screen, where the story ends anyway.
             onAction = StoriesV2PendingAction::end,
             onResult = { openHardwareWallet() },
+            // Without the story the upgrade goes on to the Hardware wallet screen rather than waiting on a retry.
+            shouldSkipOnDeliveryFailure = true,
         ),
     )
 
