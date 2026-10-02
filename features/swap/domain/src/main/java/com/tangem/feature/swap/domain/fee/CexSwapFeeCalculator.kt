@@ -20,6 +20,7 @@ import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForTokenUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
 import com.tangem.domain.utils.convertToSdkAmount
+import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
@@ -57,6 +58,7 @@ class CexSwapFeeCalculator(
     private val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase,
     private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
     private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
+    private val swapFeatureToggles: SwapFeatureToggles,
     private val patchEthGasLimitForSwap: PatchEthGasLimitForSwap,
 ) {
 
@@ -90,7 +92,8 @@ class CexSwapFeeCalculator(
                     ).bind().patchIfNativeEthereumFee()
                     TransactionFeeResult.LoadedExtended(feeExtended)
                 }
-                selectedFeeToken.currency is CryptoCurrency.Token &&
+                swapFeatureToggles.isTronGaslessSwapEnabled &&
+                    selectedFeeToken.currency is CryptoCurrency.Token &&
                     isTron(fromSwapCurrencyStatus.currency.network.rawId) -> {
                     val feeExtended = estimateTronGaslessFee(
                         userWallet = userWallet,
@@ -138,6 +141,7 @@ class CexSwapFeeCalculator(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         amount: BigDecimal,
     ): Either<GetFeeError, TransactionFeeExtended?> = either {
+        if (!swapFeatureToggles.isTronGaslessSwapEnabled) return@either null
         val token = fromSwapCurrencyStatus.currency as? CryptoCurrency.Token ?: return@either null
         if (!isTronGaslessSupportedUseCase(userWallet.walletId, token.network, token)) return@either null
 

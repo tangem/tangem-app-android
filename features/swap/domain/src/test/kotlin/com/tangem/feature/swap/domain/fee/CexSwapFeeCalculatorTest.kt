@@ -22,9 +22,11 @@ import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForTokenUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
 import com.tangem.feature.swap.domain.buildSwapCurrencyStatus
+import com.tangem.features.swap.SwapFeatureToggles
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
@@ -47,6 +49,7 @@ internal class CexSwapFeeCalculatorTest {
     private val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase = mockk(relaxed = true)
     private val createTransferTransactionUseCase: CreateTransferTransactionUseCase = mockk(relaxed = true)
     private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase = mockk(relaxed = true)
+    private val swapFeatureToggles: SwapFeatureToggles = mockk()
 
     private val sendBump = PatchEthGasLimitForSwap(percentage = PatchEthGasLimitForSwap.SEND_PERCENTAGE)
 
@@ -58,8 +61,14 @@ internal class CexSwapFeeCalculatorTest {
             getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
             createTransferTransactionUseCase = createTransferTransactionUseCase,
             isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
+            swapFeatureToggles = swapFeatureToggles,
             patchEthGasLimitForSwap = sendBump,
         )
+    }
+
+    @BeforeEach
+    fun setUp() {
+        every { swapFeatureToggles.isTronGaslessSwapEnabled } returns true
     }
 
     @AfterEach
@@ -517,6 +526,38 @@ internal class CexSwapFeeCalculatorTest {
             estimateFeeForGaslessTxUseCase(amount = any(), userWallet = any(), sendingTokenCurrencyStatus = any())
         }
     }
+
+    @Test
+    fun `GIVEN Tron gasless swap toggle disabled WHEN calculate without fee token THEN native fee path is used`() =
+        runTest {
+            // Arrange
+            val fromStatus = tronUsdtStatus()
+            val nativeFee = TransactionFeeExtended(
+                transactionFee = TransactionFee.Single(normal = mockk<Fee.Common>(relaxed = true)),
+                feeTokenId = fromStatus.currency.id,
+            )
+            every { swapFeatureToggles.isTronGaslessSwapEnabled } returns false
+            coEvery {
+                estimateFeeForGaslessTxUseCase(amount = any(), userWallet = any(), sendingTokenCurrencyStatus = any())
+            } returns nativeFee.right()
+
+            // Act
+            val result = sut.calculate(
+                userWallet = fromStatus.userWallet,
+                fromSwapCurrencyStatus = fromStatus,
+                amount = BigDecimal("10"),
+                selectedFeeToken = null,
+                isGasless = true,
+            )
+
+            // Assert
+            val loaded = result.getOrNull()?.transactionFee as? TransactionFeeResult.LoadedExtended
+            assertThat(loaded?.fee).isSameInstanceAs(nativeFee)
+            coVerify(exactly = 0) {
+                isTronGaslessSupportedUseCase(any(), any(), any())
+                getTronGaslessFeeUseCase(any(), any(), any())
+            }
+        }
 
     private fun tronUsdtStatus(): SwapCurrencyStatus = buildSwapCurrencyStatus(
         networkRawId = Blockchain.Tron.toNetworkId(),
