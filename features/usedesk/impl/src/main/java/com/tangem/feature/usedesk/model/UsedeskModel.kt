@@ -11,6 +11,7 @@ import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.domain.feedback.GetSupportChatLogsUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.feedback.models.SupportChatTopic
 import com.tangem.domain.settings.UsedeskTokenTtlManager
 import com.tangem.feature.usedesk.analytics.UsedeskAnalyticsEvents
 import com.tangem.feature.usedesk.api.UsedeskComponent
@@ -41,6 +42,8 @@ internal class UsedeskModel @Inject constructor(
 ) : Model() {
 
     private val params = paramsContainer.require<UsedeskComponent.Params>()
+
+    private val logsTopic = logsTopicFor(params.source)
 
     val state: StateFlow<UsedeskState>
         field = MutableStateFlow(UsedeskState(usedeskChatConfiguration = null))
@@ -96,7 +99,9 @@ internal class UsedeskModel @Inject constructor(
      */
     fun provideLogsFile(onReady: (File?) -> Unit) {
         modelScope.launch {
-            val file = runSuspendCatching { getSupportChatLogsUseCase(params.walletMetaInfo) }.getOrNull()
+            val file = runSuspendCatching {
+                getSupportChatLogsUseCase(walletMetaInfo = params.walletMetaInfo, topic = logsTopic)
+            }.getOrNull()
             withContext(dispatchers.main) { onReady(file) }
         }
     }
@@ -109,7 +114,13 @@ internal class UsedeskModel @Inject constructor(
     private fun additionalFieldsFor(source: ScreensSources): Map<Long, String> = when (source) {
         ScreensSources.Swap -> mapOf(SOURCE_ADDITIONAL_FIELD_ID to SWAP_ADDITIONAL_FIELD_VALUE)
         ScreensSources.SocialLogin -> mapOf(SOURCE_ADDITIONAL_FIELD_ID to SOCIAL_LOGIN_ADDITIONAL_FIELD_VALUE)
+        ScreensSources.Predictions -> mapOf(SOURCE_ADDITIONAL_FIELD_ID to PREDICTIONS_ADDITIONAL_FIELD_VALUE)
         else -> emptyMap()
+    }
+
+    private fun logsTopicFor(source: ScreensSources): SupportChatTopic? = when (source) {
+        ScreensSources.Predictions -> SupportChatTopic.PREDICTIONS
+        else -> null
     }
 
     private suspend fun getOrCreateClientId(): String {
@@ -134,5 +145,6 @@ internal class UsedeskModel @Inject constructor(
         const val SOURCE_ADDITIONAL_FIELD_ID = 245L
         const val SWAP_ADDITIONAL_FIELD_VALUE = "swap"
         const val SOCIAL_LOGIN_ADDITIONAL_FIELD_VALUE = "social_login"
+        const val PREDICTIONS_ADDITIONAL_FIELD_VALUE = "polymarket"
     }
 }
