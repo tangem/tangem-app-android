@@ -32,7 +32,9 @@ internal data class AmountState(
         return AmountSelection(
             currency = options.currency,
             minAmount = options.minAmount,
-            maxAmount = BankWithdrawAmountValidator.maxAmount(
+            maxAmount = options.maxAmount,
+            sendableAmount = BankWithdrawAmountValidator.sendableAmount(
+                maxAmount = options.maxAmount,
                 balance = source.fiatBalance,
                 fee = destination.fee.amount,
             ),
@@ -45,6 +47,7 @@ internal data class AmountState(
             validation = BankWithdrawAmountValidator.validate(
                 amount = amount,
                 minAmount = options.minAmount,
+                maxAmount = options.maxAmount,
                 balance = source.fiatBalance,
                 fee = destination.fee.amount,
             ),
@@ -64,6 +67,7 @@ internal data class AmountSelection(
     val currency: Currency,
     val minAmount: BigDecimal,
     val maxAmount: BigDecimal,
+    val sendableAmount: BigDecimal,
     val sources: ImmutableList<BankWithdrawSource>,
     val destinations: ImmutableList<OfframpDestination>,
     val source: BankWithdrawSource,
