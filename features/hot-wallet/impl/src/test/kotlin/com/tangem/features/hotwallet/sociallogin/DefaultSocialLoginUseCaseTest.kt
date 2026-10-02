@@ -19,6 +19,7 @@ import com.tangem.domain.sociallogin.usecase.GetSocialRecoveryKeyUseCase
 import com.tangem.domain.sociallogin.usecase.ReadSocialBackupUseCase
 import com.tangem.domain.sociallogin.usecase.RegisterRestoredWalletUseCase
 import com.tangem.domain.sociallogin.usecase.RegisterSocialRecoveryUseCase
+import com.tangem.domain.sociallogin.usecase.RevokeSocialRecoveryUseCase
 import com.tangem.domain.sociallogin.usecase.SignInWithSocialProviderUseCase
 import com.tangem.domain.sociallogin.usecase.SignOutFromSocialProviderUseCase
 import com.tangem.domain.sociallogin.usecase.WriteSocialBackupUseCase
@@ -52,6 +53,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
@@ -75,6 +78,7 @@ internal class DefaultSocialLoginUseCaseTest {
     private val hotWalletImporter: HotWalletImporter = mockk()
     private val registerRestoredWalletUseCase: RegisterRestoredWalletUseCase = mockk()
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
+    private val revokeSocialRecoveryUseCase: RevokeSocialRecoveryUseCase = mockk()
 
     private val hotWalletId: HotWalletId = mockk()
     private val userWallet = UserWallet.Hot(
@@ -107,6 +111,7 @@ internal class DefaultSocialLoginUseCaseTest {
         registerSocialRecoveryUseCase = registerSocialRecoveryUseCase,
         registerRestoredWalletUseCase = registerRestoredWalletUseCase,
         getUserWalletUseCase = getUserWalletUseCase,
+        revokeSocialRecoveryUseCase = revokeSocialRecoveryUseCase,
         tangemHotSdk = tangemHotSdk,
         hotUserWalletBuilderFactory = hotUserWalletBuilderFactory,
         saveWalletUseCase = saveWalletUseCase,
@@ -133,6 +138,7 @@ internal class DefaultSocialLoginUseCaseTest {
             hotWalletImporter,
             registerRestoredWalletUseCase,
             getUserWalletUseCase,
+            revokeSocialRecoveryUseCase,
         )
 
         useCase = createUseCase()
@@ -154,6 +160,7 @@ internal class DefaultSocialLoginUseCaseTest {
         coEvery { exportSeedPhraseUseCase(hotWalletId) } returns privateInfo.right()
         coEvery { registerSocialRecoveryUseCase(any(), any(), any()) } returns Either.Right(Unit)
         coEvery { writeSocialBackupUseCase(any(), any(), any()) } returns Either.Right(Unit)
+        coEvery { revokeSocialRecoveryUseCase(any()) } returns Unit.right()
 
         every { mnemonicRepository.generateMnemonic(any<String>()) } returns mockk()
         every { getUserWalletUseCase(any()) } returns GetUserWalletError.UserWalletNotFound.left()
@@ -189,10 +196,12 @@ internal class DefaultSocialLoginUseCaseTest {
             coVerify(exactly = 0) { tangemHotSdk.delete(any()) }
         }
 
-    @Test
-    fun `GIVEN binding is refused WHEN signIn THEN nothing is written AND the wallet is deleted`() = runTest {
+    @ParameterizedTest
+    @MethodSource("provideRegisterErrors")
+    fun `GIVEN register fails WHEN signIn THEN the binding is released AND the wallet deleted`(
+        error: SocialLoginError,
+    ) = runTest {
         // Arrange
-        val error = SocialLoginError.BindingConflict
         coEvery { registerSocialRecoveryUseCase(any(), any(), any()) } returns error.left()
 
         // Act
@@ -200,25 +209,101 @@ internal class DefaultSocialLoginUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(error.left())
+        coVerifyOrder {
+            revokeSocialRecoveryUseCase(WALLET_ID)
+            tangemHotSdk.delete(hotWalletId)
+        }
         coVerify(exactly = 0) {
             writeSocialBackupUseCase(any(), any(), any())
             saveWalletUseCase(any())
         }
-        coVerify(exactly = 1) { tangemHotSdk.delete(hotWalletId) }
     }
 
+    private fun provideRegisterErrors() = listOf(
+        SocialLoginError.BindingConflict,
+        SocialLoginError.NetworkError,
+        SocialLoginError.ServerError(),
+    )
+
     @Test
-    fun `GIVEN the cloud write fails WHEN signIn THEN the wallet is deleted instead of listed`() = runTest {
+    fun `GIVEN the cloud write fails AND no retry WHEN signIn THEN the binding is released AND the wallet deleted`() =
+        runTest {
+            // Arrange
+            coEvery { writeSocialBackupUseCase(any(), any(), any()) } returns SocialLoginError.CloudUnavailable.left()
+
+            // Act
+            val actual = useCase.signIn(PROVIDER, requestBackupRetry = { false }) { CONSENT }
+
+            // Assert
+            assertThat(actual).isEqualTo(SocialLoginError.BackupAbandoned.left())
+            coVerifyOrder {
+                revokeSocialRecoveryUseCase(WALLET_ID)
+                tangemHotSdk.delete(hotWalletId)
+            }
+            coVerify(exactly = 0) { saveWalletUseCase(any()) }
+        }
+
+    @ParameterizedTest
+    @MethodSource("provideWriteErrors")
+    fun `GIVEN the cloud write fails WHEN signIn THEN the retry is offered`(error: SocialLoginError) = runTest {
         // Arrange
-        coEvery { writeSocialBackupUseCase(any(), any(), any()) } returns SocialLoginError.CloudUnavailable.left()
+        coEvery { writeSocialBackupUseCase(any(), any(), any()) } returns error.left()
+        var retries = 0
 
         // Act
-        val actual = useCase.signIn(PROVIDER) { CONSENT }
+        val actual = useCase.signIn(
+            provider = PROVIDER,
+            requestBackupRetry = {
+                retries++
+                false
+            },
+            requestConsent = { CONSENT },
+        )
 
         // Assert
-        assertThat(actual).isEqualTo(SocialLoginError.BackupWriteFailed().left())
-        coVerify(exactly = 0) { saveWalletUseCase(any()) }
-        coVerify(exactly = 1) { tangemHotSdk.delete(hotWalletId) }
+        assertThat(actual).isEqualTo(SocialLoginError.BackupAbandoned.left())
+        assertThat(retries).isEqualTo(1)
+    }
+
+    private fun provideWriteErrors() = listOf(
+        SocialLoginError.NetworkError,
+        SocialLoginError.CloudUnavailable,
+        SocialLoginError.BackupWriteFailed(),
+    )
+
+    @Test
+    fun `GIVEN the cloud write fails WHEN retried THEN only the write repeats on the same wallet and key`() = runTest {
+        // Arrange
+        coEvery { writeSocialBackupUseCase(any(), any(), any()) } returnsMany listOf(
+            SocialLoginError.CloudUnavailable.left(),
+            Unit.right(),
+        )
+        var retries = 0
+
+        // Act
+        val actual = useCase.signIn(
+            provider = PROVIDER,
+            requestBackupRetry = {
+                retries++
+                true
+            },
+            requestConsent = { CONSENT },
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(SocialLoginOutcome.WalletCreated(WALLET_ID).right())
+        assertThat(retries).isEqualTo(1)
+        coVerify(exactly = 1) {
+            tangemHotSdk.generateWallet(any(), any())
+            generateRecoveryKeyUseCase()
+            registerSocialRecoveryUseCase(any(), any(), any())
+            saveWalletUseCase(savedWallet)
+        }
+        coVerify(exactly = 2) { writeSocialBackupUseCase(WALLET_ID, any(), any()) }
+        coVerify(exactly = 0) {
+            revokeSocialRecoveryUseCase(any())
+            tangemHotSdk.delete(any())
+        }
     }
 
     @Test
@@ -258,7 +343,10 @@ internal class DefaultSocialLoginUseCaseTest {
 
         // Assert
         assertThat(actual).isInstanceOf(CancellationException::class.java)
-        coVerify(exactly = 1) { tangemHotSdk.delete(hotWalletId) }
+        coVerifyOrder {
+            revokeSocialRecoveryUseCase(WALLET_ID)
+            tangemHotSdk.delete(hotWalletId)
+        }
     }
 
     @Test
