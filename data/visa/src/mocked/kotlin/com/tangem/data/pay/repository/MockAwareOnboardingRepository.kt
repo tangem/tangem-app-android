@@ -99,12 +99,13 @@ internal class MockAwareOnboardingRepository @Inject constructor(
     override suspend fun createOrder(
         userWalletId: UserWalletId,
         request: CustomerOrderRequest.CardIssue,
+        idempotencyKey: String,
     ): Either<VisaApiError, String> {
         if (isMockMode) {
             mockOrderIds.add(userWalletId)
             return MOCK_ORDER_ID.right()
         }
-        return real.createOrder(userWalletId = userWalletId, request = request)
+        return real.createOrder(userWalletId = userWalletId, request = request, idempotencyKey = idempotencyKey)
     }
 
     override suspend fun clearOrderId(userWalletId: UserWalletId) {
