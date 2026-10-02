@@ -331,6 +331,31 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             }
 
         @Test
+        fun `GIVEN the exchange refuses the credentials WHEN place clicked THEN the flow returns to idle silently`() =
+            runTest {
+                // Arrange
+                val amountModel = createAmountModel(testScope = this)
+                advanceUntilIdle()
+                amountModel.onResume()
+                amountModel.onAmountChange(value = "10")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+                val model = createSummaryModel(testScope = this, amountModel = amountModel)
+                coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                    PredictionPlaceOrderError.Unauthorized(detail = "Unauthorized/Invalid api key").left()
+                amountModel.onPause()
+
+                // Act
+                model.onPlaceClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+                verify(exactly = 0) { messageSender.send(any()) }
+
+                model.onDestroy()
+            }
+
+        @Test
         fun `GIVEN a matched order filled no shares WHEN place clicked THEN the flow reports a failure`() = runTest {
             // Arrange
             val amountModel = createAmountModel(testScope = this)

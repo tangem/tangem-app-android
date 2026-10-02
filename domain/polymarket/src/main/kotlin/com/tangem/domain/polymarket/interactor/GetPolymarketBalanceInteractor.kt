@@ -18,7 +18,8 @@ import com.tangem.domain.polymarket.usecase.InvalidatePolymarketCredentialsUseCa
  * The read is preceded by a refresh, because the CLOB serves a cached view that it only recomputes when
  * asked: without this, a wallet funded after onboarding would report the balance it had at onboarding — zero
  * — for as long as it exists. The refresh is best-effort, so a failure to recompute falls back to reporting
- * the cached figure rather than turning a stale number into an error.
+ * the cached figure rather than turning a stale number into an error — except
+ * [PolymarketAuthError.InvalidSignature] from either call, which drops the rejected credentials and is returned.
  */
 class GetPolymarketBalanceInteractor(
     private val polymarketRepository: PolymarketRepository,
@@ -38,7 +39,7 @@ class GetPolymarketBalanceInteractor(
         )
 
         if (refresh.leftOrNull() == PolymarketAuthError.InvalidSignature) {
-            invalidateCredentials(userWalletId = addresses.userWalletId)
+            invalidateCredentials(userWalletId = addresses.userWalletId, rejected = credentials)
 
             return PolymarketAuthError.InvalidSignature.left()
         }
@@ -48,7 +49,7 @@ class GetPolymarketBalanceInteractor(
             credentials = credentials,
         ).onLeft { error ->
             if (error == PolymarketAuthError.InvalidSignature) {
-                invalidateCredentials(userWalletId = addresses.userWalletId)
+                invalidateCredentials(userWalletId = addresses.userWalletId, rejected = credentials)
             }
         }
     }

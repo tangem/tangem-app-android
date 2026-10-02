@@ -88,11 +88,11 @@ feature was opened with, so children never read it from the feature params.
    collapsed into the button spinner; a failure leaves the screen idle and reports through a snackbar. The
    screen's button is the only retry.
 
-Main sends the user back here (`router.replaceAll(Onboarding)`) whenever it has no stored CLOB
-credentials — a `401` drops them, and the gate then shows Reconnect. It checks on open, on resume, and
-whenever the account status turns `Onboarded` while the screen is in front (the balance poll that took
-the `401` commits that status). A status change while a child screen is on top waits for the resume
-check, so an order flow is never torn down mid-way.
+Main sends the user back here (`router.replaceAll(Onboarding)`) as soon as the wallet has no stored CLOB
+credentials — a `401` drops them, and the gate then shows Reconnect. It observes
+`ObservePolymarketCredentialsPresenceUseCase` for its whole life, starting with the stored state, so the
+redirect also happens from under a child screen: without credentials nothing above Main can sign. The order
+summary therefore answers an `Unauthorized` placement silently and leaves the gate to explain it.
 
 Region-restricted users (`PolymarketAccessMode.READ_ONLY`) still reach `Main`, browse and withdraw; the
 place-prediction flow re-checks the region itself before an order.
