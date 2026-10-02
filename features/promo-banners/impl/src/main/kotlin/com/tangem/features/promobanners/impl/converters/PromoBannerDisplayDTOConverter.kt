@@ -20,6 +20,7 @@ internal class PromoBannerDisplayDTOConverter : Converter<PromoBannerDisplayDTO,
             isButtonEnabled = value.buttonEnabled,
             buttonText = value.buttonText,
             isDismissable = value.dismissable,
+            campaignId = value.campaignId,
         )
     }
 
