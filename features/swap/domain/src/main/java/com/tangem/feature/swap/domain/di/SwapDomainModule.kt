@@ -23,6 +23,7 @@ import com.tangem.feature.swap.domain.fee.DexSwapFeeCalculator
 import com.tangem.feature.swap.domain.fee.PatchEthGasLimitForSwap
 import com.tangem.feature.swap.domain.transfer.SwapTransferInteractor
 import com.tangem.feature.swap.domain.transfer.SwapTransferInteractorImpl
+import com.tangem.features.swap.SwapFeatureToggles
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -98,6 +99,7 @@ internal class SwapDomainModule {
         getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase,
         createTransferTransactionUseCase: CreateTransferTransactionUseCase,
         isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
+        swapFeatureToggles: SwapFeatureToggles,
         @SwapSendGasLimit patchEthGasLimitForSwap: PatchEthGasLimitForSwap,
     ): CexSwapFeeCalculator = CexSwapFeeCalculator(
         estimateFeeUseCase = estimateFeeUseCase,
@@ -106,6 +108,7 @@ internal class SwapDomainModule {
         getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
         createTransferTransactionUseCase = createTransferTransactionUseCase,
         isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
+        swapFeatureToggles = swapFeatureToggles,
         patchEthGasLimitForSwap = patchEthGasLimitForSwap,
     )
 
