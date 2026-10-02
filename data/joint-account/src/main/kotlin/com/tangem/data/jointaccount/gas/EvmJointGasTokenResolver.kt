@@ -17,7 +17,7 @@ import java.math.MathContext
 import javax.inject.Inject
 
 /** Smart Gas tokens are the gasless service's list, and the rate is the one the regular gasless fee is priced with */
-internal class DefaultJointGasTokenResolver @Inject constructor(
+internal class EvmJointGasTokenResolver @Inject constructor(
     private val gaslessTransactionRepository: GaslessTransactionRepository,
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
 ) : JointGasTokenResolver {
