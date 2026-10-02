@@ -64,7 +64,7 @@ internal class TangemPayBankWithdrawAmountUMFactory(
         Result.Empty,
         Result.Valid,
         -> null
-        Result.BelowMinimum -> resourceReference(
+        Result.OutOfRange -> resourceReference(
             R.string.tangempay_withdraw_bank_amount_error_range,
             wrappedList(
                 selection.minAmount.formatFiat(selection.currency),
