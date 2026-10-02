@@ -53,6 +53,13 @@ internal class WcConnectionsComponent(
     ): ComposableBottomSheetComponent {
         val context = childByContext(componentContext = componentContext, messageHandler = messageHandler)
         return when (config) {
+            is WcConnectionsBottomSheetConfig.McpSession -> McpSessionInfoComponent(
+                appComponentContext = context,
+                params = McpSessionInfoComponent.Params(
+                    sessionId = config.sessionId,
+                    onDismiss = model.bottomSheetNavigation::dismiss,
+                ),
+            )
             is WcConnectionsBottomSheetConfig.ConnectedApp -> WcConnectedAppInfoContainerComponent(
                 appComponentContext = context,
                 params = WcConnectedAppInfoContainerComponent.Params(
