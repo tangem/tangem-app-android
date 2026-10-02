@@ -2,6 +2,7 @@ package com.tangem.domain.polymarket.usecase
 
 import arrow.core.Either
 import arrow.core.left
+import com.tangem.domain.polymarket.PolymarketCredentialsLock
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
@@ -12,9 +13,19 @@ class PlacePredictionOrderUseCase(
     private val polymarketRepository: PolymarketRepository,
     private val getApiCredentials: GetPolymarketApiCredentialsUseCase,
     private val invalidateCredentials: InvalidatePolymarketCredentialsUseCase,
+    private val credentialsLock: PolymarketCredentialsLock,
 ) {
 
     suspend operator fun invoke(
+        addresses: PolymarketAddresses,
+        signedOrder: PredictionSignedOrder,
+        isNegRisk: Boolean,
+    ): Either<PredictionPlaceOrderError, PredictionPlaceOrderResult> =
+        credentialsLock.withLock(addresses.userWalletId) {
+            place(addresses = addresses, signedOrder = signedOrder, isNegRisk = isNegRisk)
+        }
+
+    private suspend fun place(
         addresses: PolymarketAddresses,
         signedOrder: PredictionSignedOrder,
         isNegRisk: Boolean,
@@ -29,7 +40,7 @@ class PlacePredictionOrderUseCase(
             isNegRisk = isNegRisk,
         ).onLeft { error ->
             if (error is PredictionPlaceOrderError.Unauthorized) {
-                invalidateCredentials(userWalletId = addresses.userWalletId, rejected = credentials)
+                invalidateCredentials(userWalletId = addresses.userWalletId)
             }
         }
     }
