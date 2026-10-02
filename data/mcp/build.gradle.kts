@@ -2,6 +2,7 @@ plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.ksp)
     alias(deps.plugins.hilt.android)
     id("configuration")
 }
@@ -20,6 +21,8 @@ dependencies {
     implementation(projects.libs.auth)
 
     implementation(deps.arrow.core)
+    implementation(deps.moshi)
+    ksp(deps.moshi.kotlin.codegen)
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 

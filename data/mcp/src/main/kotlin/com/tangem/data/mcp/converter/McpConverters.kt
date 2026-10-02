@@ -4,9 +4,9 @@ import com.tangem.domain.mcp.models.McpDeviceVerification
 import com.tangem.domain.mcp.models.McpDeviceVerificationResult
 import com.tangem.domain.mcp.models.McpSession
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.lib.auth.api.models.response.McpDeviceVerificationResponse
-import com.tangem.lib.auth.api.models.response.McpSessionResponse
-import com.tangem.lib.auth.api.models.response.McpDeviceVerificationResult as McpDeviceVerificationResultResponse
+import com.tangem.data.mcp.api.models.response.McpDeviceVerificationResponse
+import com.tangem.data.mcp.api.models.response.McpSessionResponse
+import com.tangem.data.mcp.api.models.response.McpDeviceVerificationResult as McpDeviceVerificationResultResponse
 
 internal fun McpDeviceVerificationResponse.toDomain(): McpDeviceVerification = McpDeviceVerification(
     clientId = clientId,

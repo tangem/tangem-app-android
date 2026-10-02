@@ -10,10 +10,10 @@ import com.tangem.domain.mcp.models.McpDeviceVerificationResult
 import com.tangem.domain.mcp.models.McpSession
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.lib.auth.api.AuthApi
-import com.tangem.lib.auth.api.models.request.McpDeviceVerificationConsent
-import com.tangem.lib.auth.api.models.response.McpDeviceVerificationResponse
-import com.tangem.lib.auth.api.models.response.McpSessionResponse
+import com.tangem.data.mcp.api.McpApi
+import com.tangem.data.mcp.api.models.request.McpDeviceVerificationConsent
+import com.tangem.data.mcp.api.models.response.McpDeviceVerificationResponse
+import com.tangem.data.mcp.api.models.response.McpSessionResponse
 import com.tangem.utils.coroutines.AppCoroutineScope
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -34,25 +34,25 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.util.Base64 as JavaBase64
-import com.tangem.lib.auth.api.models.response.McpDeviceVerificationResult as McpDeviceVerificationResultResponse
+import com.tangem.data.mcp.api.models.response.McpDeviceVerificationResult as McpDeviceVerificationResultResponse
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultMcpRepositoryTest {
 
-    private val authApi: AuthApi = mockk()
+    private val mcpApi: McpApi = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val testScope = TestScope(UnconfinedTestDispatcher())
     private val appScope = object : AppCoroutineScope, CoroutineScope by testScope {}
 
     private val repository = DefaultMcpRepository(
-        authApi = authApi,
+        mcpApi = mcpApi,
         userWalletsListRepository = userWalletsListRepository,
         appScope = appScope,
     )
 
     @BeforeEach
     fun setUp() {
-        clearMocks(authApi, userWalletsListRepository)
+        clearMocks(mcpApi, userWalletsListRepository)
         coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(
             mockk { every { walletId } returns WALLET_ID },
         )
@@ -72,7 +72,7 @@ internal class DefaultMcpRepositoryTest {
         @Test
         fun `GIVEN verification response WHEN getDeviceVerification THEN maps it field by field`() = runTest {
             // Arrange
-            coEvery { authApi.getMcpDeviceVerification(USER_CODE) } returns ApiResponse.Success(VERIFICATION_RESPONSE)
+            coEvery { mcpApi.getDeviceVerification(USER_CODE) } returns ApiResponse.Success(VERIFICATION_RESPONSE)
 
             // Act
             val actual = repository.getDeviceVerification(USER_CODE)
@@ -84,7 +84,7 @@ internal class DefaultMcpRepositoryTest {
         @Test
         fun `GIVEN api error WHEN getDeviceVerification THEN the cause is passed through`() = runTest {
             // Arrange
-            coEvery { authApi.getMcpDeviceVerification(USER_CODE) } returns apiError(NETWORK_ERROR)
+            coEvery { mcpApi.getDeviceVerification(USER_CODE) } returns apiError(NETWORK_ERROR)
 
             // Act
             val actual = repository.getDeviceVerification(USER_CODE)
@@ -101,22 +101,22 @@ internal class DefaultMcpRepositoryTest {
         @Test
         fun `GIVEN approve succeeds WHEN approve THEN the session list is re-read`() = runTest {
             // Arrange
-            coEvery { authApi.getMcpSessions() } returns ApiResponse.Success(listOf(SESSION_RESPONSE))
-            coEvery { authApi.approveMcpDeviceVerification(any(), any(), any()) } returns
+            coEvery { mcpApi.getSessions() } returns ApiResponse.Success(listOf(SESSION_RESPONSE))
+            coEvery { mcpApi.approveDeviceVerification(any(), any(), any()) } returns
                 ApiResponse.Success(McpDeviceVerificationResultResponse(isSuccess = true))
 
             // Act
             repository.approveDeviceVerification(verification = VERIFICATION, walletId = WALLET_ID)
 
             // Assert
-            coVerify(exactly = 1) { authApi.getMcpSessions() }
+            coVerify(exactly = 1) { mcpApi.getSessions() }
         }
 
         @Test
         fun `GIVEN a verification WHEN approve THEN echoes the consent with a Base64 wallet id`() = runTest {
             // Arrange
-            coEvery { authApi.getMcpSessions() } returns ApiResponse.Success(listOf(SESSION_RESPONSE))
-            coEvery { authApi.approveMcpDeviceVerification(any(), any(), any()) } returns
+            coEvery { mcpApi.getSessions() } returns ApiResponse.Success(listOf(SESSION_RESPONSE))
+            coEvery { mcpApi.approveDeviceVerification(any(), any(), any()) } returns
                 ApiResponse.Success(McpDeviceVerificationResultResponse(isSuccess = true))
 
             // Act
@@ -125,7 +125,7 @@ internal class DefaultMcpRepositoryTest {
             // Assert
             assertThat(actual).isEqualTo(Either.Right(McpDeviceVerificationResult(isSuccess = true)))
             coVerify(exactly = 1) {
-                authApi.approveMcpDeviceVerification(
+                mcpApi.approveDeviceVerification(
                     userCode = USER_CODE,
                     state = STATE,
                     consent = McpDeviceVerificationConsent(
@@ -140,7 +140,7 @@ internal class DefaultMcpRepositoryTest {
         @Test
         fun `GIVEN service refuses WHEN approve THEN the refusal is a result, not a failure`() = runTest {
             // Arrange
-            coEvery { authApi.approveMcpDeviceVerification(any(), any(), any()) } returns
+            coEvery { mcpApi.approveDeviceVerification(any(), any(), any()) } returns
                 ApiResponse.Success(McpDeviceVerificationResultResponse(isSuccess = false))
 
             // Act
@@ -158,7 +158,7 @@ internal class DefaultMcpRepositoryTest {
         @Test
         fun `GIVEN a verification WHEN reject THEN calls the api with its user code and state`() = runTest {
             // Arrange
-            coEvery { authApi.rejectMcpDeviceVerification(any(), any()) } returns ApiResponse.Success(Unit)
+            coEvery { mcpApi.rejectDeviceVerification(any(), any()) } returns ApiResponse.Success(Unit)
 
             // Act
             val actual = repository.rejectDeviceVerification(verification = VERIFICATION)
@@ -166,14 +166,14 @@ internal class DefaultMcpRepositoryTest {
             // Assert
             assertThat(actual).isEqualTo(Either.Right(Unit))
             coVerify(exactly = 1) {
-                authApi.rejectMcpDeviceVerification(userCode = USER_CODE, state = STATE)
+                mcpApi.rejectDeviceVerification(userCode = USER_CODE, state = STATE)
             }
         }
 
         @Test
         fun `GIVEN api error WHEN reject THEN the cause is passed through`() = runTest {
             // Arrange
-            coEvery { authApi.rejectMcpDeviceVerification(any(), any()) } returns apiError(SERVER_ERROR)
+            coEvery { mcpApi.rejectDeviceVerification(any(), any()) } returns apiError(SERVER_ERROR)
 
             // Act
             val actual = repository.rejectDeviceVerification(verification = VERIFICATION)
@@ -190,7 +190,7 @@ internal class DefaultMcpRepositoryTest {
         @Test
         fun `GIVEN sessions response WHEN getSessions THEN maps every session`() = runTest {
             // Arrange
-            coEvery { authApi.getMcpSessions() } returns ApiResponse.Success(listOf(SESSION_RESPONSE))
+            coEvery { mcpApi.getSessions() } returns ApiResponse.Success(listOf(SESSION_RESPONSE))
 
             // Act
             val actual = repository.getSessions().first()
@@ -203,7 +203,7 @@ internal class DefaultMcpRepositoryTest {
         fun `GIVEN no wallets WHEN getSessions THEN the stubbed wallet cannot be picked and nothing is mapped`() =
             runTest {
                 // Arrange
-                coEvery { authApi.getMcpSessions() } returns ApiResponse.Success(listOf(SESSION_RESPONSE))
+                coEvery { mcpApi.getSessions() } returns ApiResponse.Success(listOf(SESSION_RESPONSE))
                 coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
 
                 // Act
@@ -217,7 +217,7 @@ internal class DefaultMcpRepositoryTest {
         fun `GIVEN a read in flight WHEN getSessions collected again THEN the read is not duplicated`() = runTest {
             // Arrange
             val release = CompletableDeferred<Unit>()
-            coEvery { authApi.getMcpSessions() } coAnswers {
+            coEvery { mcpApi.getSessions() } coAnswers {
                 release.await()
                 ApiResponse.Success(listOf(SESSION_RESPONSE))
             }
@@ -228,28 +228,28 @@ internal class DefaultMcpRepositoryTest {
             release.complete(Unit)
 
             // Assert
-            coVerify(exactly = 1) { authApi.getMcpSessions() }
+            coVerify(exactly = 1) { mcpApi.getSessions() }
         }
 
         @Test
         fun `GIVEN the previous read finished WHEN getSessions collected again THEN the list is read again`() =
             runTest {
                 // Arrange
-                coEvery { authApi.getMcpSessions() } returns ApiResponse.Success(listOf(SESSION_RESPONSE))
+                coEvery { mcpApi.getSessions() } returns ApiResponse.Success(listOf(SESSION_RESPONSE))
 
                 // Act
                 repository.getSessions().first()
                 repository.getSessions().first()
 
                 // Assert
-                coVerify(exactly = 2) { authApi.getMcpSessions() }
+                coVerify(exactly = 2) { mcpApi.getSessions() }
             }
 
         @Test
         fun `GIVEN revoke succeeds WHEN revokeSession THEN calls the api and re-reads the list`() = runTest {
             // Arrange
-            coEvery { authApi.getMcpSessions() } returns ApiResponse.Success(listOf(SESSION_RESPONSE))
-            coEvery { authApi.revokeMcpSession(any()) } returns ApiResponse.Success(Unit)
+            coEvery { mcpApi.getSessions() } returns ApiResponse.Success(listOf(SESSION_RESPONSE))
+            coEvery { mcpApi.revokeSession(any()) } returns ApiResponse.Success(Unit)
             repository.getSessions().first()
 
             // Act
@@ -257,28 +257,28 @@ internal class DefaultMcpRepositoryTest {
 
             // Assert
             assertThat(actual).isEqualTo(Either.Right(Unit))
-            coVerify(exactly = 1) { authApi.revokeMcpSession(sessionId = SESSION_ID) }
-            coVerify(exactly = 2) { authApi.getMcpSessions() }
+            coVerify(exactly = 1) { mcpApi.revokeSession(sessionId = SESSION_ID) }
+            coVerify(exactly = 2) { mcpApi.getSessions() }
         }
 
         @Test
         fun `GIVEN revoke fails WHEN revokeSession THEN the list is not re-read`() = runTest {
             // Arrange
-            coEvery { authApi.getMcpSessions() } returns ApiResponse.Success(listOf(SESSION_RESPONSE))
-            coEvery { authApi.revokeMcpSession(any()) } returns apiError(SERVER_ERROR)
+            coEvery { mcpApi.getSessions() } returns ApiResponse.Success(listOf(SESSION_RESPONSE))
+            coEvery { mcpApi.revokeSession(any()) } returns apiError(SERVER_ERROR)
             repository.getSessions().first()
 
             // Act
             repository.revokeSession(SESSION_ID)
 
             // Assert
-            coVerify(exactly = 1) { authApi.getMcpSessions() }
+            coVerify(exactly = 1) { mcpApi.getSessions() }
         }
 
         @Test
         fun `GIVEN api error WHEN revokeSession THEN the cause is passed through`() = runTest {
             // Arrange
-            coEvery { authApi.revokeMcpSession(any()) } returns apiError(SERVER_ERROR)
+            coEvery { mcpApi.revokeSession(any()) } returns apiError(SERVER_ERROR)
 
             // Act
             val actual = repository.revokeSession(SESSION_ID)
