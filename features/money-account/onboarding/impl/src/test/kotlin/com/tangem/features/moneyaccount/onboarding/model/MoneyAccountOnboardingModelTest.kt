@@ -188,7 +188,7 @@ internal class MoneyAccountOnboardingModelTest {
     }
 
     @Test
-    fun `GIVEN no eligible wallets WHEN get started clicked THEN screen closed`() = runTest {
+    fun `GIVEN no eligible wallets WHEN get started clicked THEN error shown AND screen kept`() = runTest {
         // Arrange
         coEvery { getMoneyAccountEligibilityUseCase() } returns MoneyAccountEligibility.NotAvailable
         val model = createModel(testScope = this)
@@ -199,8 +199,10 @@ internal class MoneyAccountOnboardingModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 1) { router.pop(any()) }
+        verify(exactly = 1) { uiMessageSender.send(any()) }
+        verify(exactly = 0) { router.pop(any()) }
         verify(exactly = 0) { router.push(any(), any()) }
+        assertThat(model.content().isLoading).isFalse()
 
         model.onDestroy()
     }
