@@ -3,6 +3,7 @@ package com.tangem.features.txhistory.joint.operation.model
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.account.models.AccountList
@@ -124,6 +125,54 @@ internal class JointOperationDelegateTest {
         // Assert
         assertThat(values).containsExactly(expectedState)
         coVerify(exactly = 0) { jointAccountListFetcher(userWalletId = any()) }
+    }
+
+    @Test
+    fun `GIVEN a token refund WHEN observe THEN the fee is in the account's token on that network`() = runTest {
+        // Arrange
+        val account = MockAccounts.createJointAccount(
+            cryptoCurrencies = listOf(jointCurrency, jointUsdc),
+            userWalletId = USER_WALLET_ID,
+        )
+        every { accountListSupplier(USER_WALLET_ID) } returns flowOf(accountListWith(account))
+        every { jointAccountListSupplier(USER_WALLET_ID) } returns flowOf(
+            listOf(
+                createJointAccount(
+                    cryptoAccountId = account.accountId.value,
+                    inFlightOperations = mapOf(
+                        CHAIN_ID to createOperation(safeTx = createSafeTx(gasToken = USDC_ADDRESS.uppercase())),
+                    ),
+                ),
+            ),
+        )
+
+        // Act
+        val values = getEmittedValues(flow = createDelegate().observe(USER_WALLET_ID, jointCurrency, OPERATION_ID))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(values).containsExactly(expectedState.copy(account = account, feeCurrency = jointUsdc))
+    }
+
+    @Test
+    fun `GIVEN a gas token outside the account WHEN observe THEN the state has no fee currency`() = runTest {
+        // Arrange
+        every { jointAccountListSupplier(USER_WALLET_ID) } returns flowOf(
+            listOf(
+                createJointAccount(
+                    inFlightOperations = mapOf(
+                        CHAIN_ID to createOperation(safeTx = createSafeTx(gasToken = USDC_ADDRESS)),
+                    ),
+                ),
+            ),
+        )
+
+        // Act
+        val values = getEmittedValues(flow = createDelegate().observe(USER_WALLET_ID, jointCurrency, OPERATION_ID))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(values).containsExactly(expectedState.copy(feeCurrency = null))
     }
 
     @Test
@@ -309,6 +358,7 @@ internal class JointOperationDelegateTest {
         const val RECIPIENT = "0xrecipient"
         const val OWNER_ADDRESS = "0xowner"
         const val ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
+        const val USDC_ADDRESS = "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359"
 
         val SAFE_TX_GAS: BigInteger = BigInteger.valueOf(21_000)
         val BASE_GAS: BigInteger = BigInteger.valueOf(30_000)
@@ -346,20 +396,25 @@ internal class JointOperationDelegateTest {
             )
         }
 
+        val jointUsdc: CryptoCurrency.Token = MockCryptoCurrencyFactory()
+            .createToken(Blockchain.Ethereum, contractAddress = USDC_ADDRESS)
+            .copy(network = jointCurrency.network)
+
         val portfolioAccount: Account.Joint = MockAccounts.createJointAccount(
             cryptoCurrencies = listOf(jointCurrency),
             userWalletId = USER_WALLET_ID,
         )
 
-        val accountListWithJointAccount: AccountList =
-            (MockAccounts.createAccountList(activeAccounts = 1, userWalletId = USER_WALLET_ID) + portfolioAccount)
-                .getOrNull()!!
+        val accountListWithJointAccount: AccountList = accountListWith(portfolioAccount)
+
+        fun accountListWith(account: Account.Joint): AccountList =
+            (MockAccounts.createAccountList(activeAccounts = 1, userWalletId = USER_WALLET_ID) + account).getOrNull()!!
 
         val expectedState = JointOperationState(
             account = portfolioAccount,
             displayed = TRANSFER_INTENT,
-            feeWei = GAS_PRICE * (SAFE_TX_GAS + BASE_GAS),
-            feeCoin = jointCurrency,
+            feeAmount = GAS_PRICE * (SAFE_TX_GAS + BASE_GAS),
+            feeCurrency = jointCurrency,
             threshold = THRESHOLD,
             membersCount = MEMBERS_COUNT,
             signers = SIGNERS,
