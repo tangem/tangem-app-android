@@ -13,8 +13,9 @@ import java.util.Currency
 /** Turns the backend's off-ramp options and the payment account's networks into the wizard's [BankWithdrawOptions]. */
 internal object BankWithdrawOptionsFactory {
 
-    /** The off-ramp options carry no lower bound, so the withdrawal minimum agreed with the backend lives here. */
+    /** The off-ramp options carry no bounds, so the withdrawal range agreed with the backend lives here. */
     private val MIN_AMOUNT = BigDecimal("1.00")
+    private val MAX_AMOUNT = BigDecimal("10000.00")
 
     /**
      * Null when a bank withdrawal cannot start: the off-ramp offers no rail, the account holds none of the tokens it
@@ -34,6 +35,7 @@ internal object BankWithdrawOptionsFactory {
             sources = sources.toImmutableList(),
             destinations = destinations.toImmutableList(),
             minAmount = MIN_AMOUNT,
+            maxAmount = MAX_AMOUNT,
             currency = currency,
         )
     }
