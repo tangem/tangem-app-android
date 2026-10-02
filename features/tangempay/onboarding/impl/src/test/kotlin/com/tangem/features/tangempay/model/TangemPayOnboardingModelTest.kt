@@ -8,6 +8,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.error.UniversalError
 import com.tangem.core.navigation.url.UrlOpener
@@ -52,6 +53,7 @@ internal class TangemPayOnboardingModelTest {
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
+    private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
 
     private val deeplink = "tangem://onboard-visa"
 
@@ -65,6 +67,7 @@ internal class TangemPayOnboardingModelTest {
             produceInitialDataUseCase,
             urlOpener,
             userWalletsListRepository,
+            uiMessageSender,
         )
         every { tangemPayFeatureToggles.isResidencyStepEnabled } returns false
         coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(mockk<UserWallet>())
@@ -305,7 +308,7 @@ internal class TangemPayOnboardingModelTest {
         }
 
     @Test
-    fun `GIVEN residency step enabled AND no wallets WHEN get card clicked THEN screen closed`() = runTest {
+    fun `GIVEN residency step enabled AND no wallets WHEN get card clicked THEN error shown`() = runTest {
         // Arrange
         every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
         coEvery { eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true) } returns emptyList()
@@ -318,7 +321,8 @@ internal class TangemPayOnboardingModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 1) { router.pop(any()) }
+        verify(exactly = 1) { uiMessageSender.send(any()) }
+        verify(exactly = 0) { router.pop(any()) }
         model.onDestroy()
     }
 
@@ -381,6 +385,7 @@ internal class TangemPayOnboardingModelTest {
                 tangemPayFeatureToggles = tangemPayFeatureToggles,
             ),
             userWalletsListRepository = userWalletsListRepository,
+            uiMessageSender = uiMessageSender,
         )
     }
 
