@@ -25,6 +25,7 @@ import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.domain.models.pay.TangemPayEligibilityType
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
@@ -610,6 +611,51 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 coVerify(exactly = 1) { onboardingRepository.clearVirtualAccountOrderId(userWalletId) }
                 assertThat(storedStatuses.lastLoaded().virtualAccount).isEqualTo(VirtualAccountOnramp.Eligible)
             }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ResidencyStepNotPassed {
+
+        @BeforeEach
+        fun clearEligibilityCalls() {
+            clearMocks(eligibilityManager, answers = false)
+        }
+
+        @Test
+        fun `GIVEN KYC required AND wallet eligible WHEN invoke THEN NotCreated stored AND eligibility reset`() =
+            runTest {
+                // Arrange
+                stubHappyPath(buildCustomerInfo().copy(kycStatus = KycStatus.REQUIRED))
+                val userWallet: UserWallet = mockk { every { walletId } returns userWalletId }
+                coEvery {
+                    eligibilityManager.getEligibleWallets(shouldExcludePaeraCustomers = false, entryPoint = any())
+                } returns listOf(userWallet)
+                val storedStatuses = captureStoredStatuses()
+
+                // Act
+                fetcher.invoke(params)
+
+                // Assert
+                assertThat(storedStatuses.map { it.value }.last()).isEqualTo(PaymentAccountStatusValue.NotCreated)
+                verify(exactly = 1) { eligibilityManager.reset() }
+            }
+
+        @Test
+        fun `GIVEN KYC required customer AND wallet not eligible WHEN invoke THEN Empty stored`() = runTest {
+            // Arrange
+            stubHappyPath(buildCustomerInfo().copy(kycStatus = KycStatus.REQUIRED))
+            coEvery {
+                eligibilityManager.getEligibleWallets(shouldExcludePaeraCustomers = false, entryPoint = any())
+            } returns emptyList()
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.map { it.value }.last()).isEqualTo(PaymentAccountStatusValue.Empty)
+        }
     }
 
     /**

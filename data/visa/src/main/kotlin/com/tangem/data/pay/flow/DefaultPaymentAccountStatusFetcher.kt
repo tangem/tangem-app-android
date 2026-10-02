@@ -320,6 +320,8 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         logger.i("proceedWithOrderId ${account.userWalletId} kycStatus: ${customerInfo.kycStatus}")
 
         when (customerInfo.kycStatus) {
+            KycStatus.UNKNOWN,
+            KycStatus.REQUIRED,
             KycStatus.PENDING,
             KycStatus.INIT,
             KycStatus.REJECTED,
@@ -427,6 +429,10 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             tangemPayCurrencyFactory.createNetworkStatuses(userWalletId, networks, quotesData?.fiatRate)
         }
         return when {
+            kycStatus == KycStatus.REQUIRED -> {
+                eligibilityManager.reset()
+                constructNotCreatedOrEmptyStatus(userWalletId)
+            }
             customerId.isNullOrEmpty() -> PaymentAccountStatusValue.IssuingCard(
                 source = StatusSource.ACTUAL,
             )
