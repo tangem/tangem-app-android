@@ -124,10 +124,12 @@ internal fun bankWithdrawOptions(
         offrampDestination(rail = BankRail.WIRE, fee = BigDecimal("11.00"), minDays = 0, maxDays = 0),
     ),
     minAmount: BigDecimal = BigDecimal("1.00"),
+    maxAmount: BigDecimal = BigDecimal("10000.00"),
     currency: Currency = Currency.getInstance("USD"),
 ): BankWithdrawOptions = BankWithdrawOptions(
     sources = sources.toImmutableList(),
     destinations = destinations.toImmutableList(),
     minAmount = minAmount,
+    maxAmount = maxAmount,
     currency = currency,
 )
