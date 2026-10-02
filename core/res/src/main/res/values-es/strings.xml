@@ -37,7 +37,7 @@
   <string name="account_details_archive_joint_description">Esto solo oculta su cuenta y desactiva las notificaciones. Los demás miembros conservan su acceso y siempre puede recuperarlo.</string>
   <string name="account_details_archiving">Archivando...</string>
   <plurals name="account_details_joint_members_count">
-    <item quantity="one">[&amp;i] persona</item>
+    <item quantity="one">%d persona</item>
     <item quantity="other">%d personas</item>
   </plurals>
   <string name="account_details_joint_members_progress">%1$s/%2$s personas</string>
@@ -1218,7 +1218,7 @@
   <string name="markets_real_assets_interval_day">Día</string>
   <string name="markets_real_assets_interval_month">Mes</string>
   <string name="markets_real_assets_interval_week">Semana</string>
-  <string name="markets_real_assets_region_restriction_description_region">Las acciones, los ETF y los bonos no están disponibles en el Reino Unido ni en EE. UU.</string>
+  <string name="markets_real_assets_region_restriction_description_region">Las acciones, los ETF y los bonos no están disponibles en %1$s</string>
   <string name="markets_real_assets_region_restriction_title">No disponible en su región</string>
   <string name="markets_real_assets_sector_xstocks_communication">Servicios de Comunicación</string>
   <string name="markets_real_assets_sector_xstocks_consumer">Consumidor</string>

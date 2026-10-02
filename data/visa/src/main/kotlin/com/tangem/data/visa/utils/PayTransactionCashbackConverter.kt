@@ -52,6 +52,7 @@ internal object PayTransactionCashbackConverter : Converter<TransactionCashbackR
         "monthly_cap_reached" -> ExclusionReason.MONTHLY_CAP_REACHED
         "merchant_country_excluded" -> ExclusionReason.MERCHANT_COUNTRY_EXCLUDED
         "below-min" -> ExclusionReason.BELOW_MIN
+        "compliance_risk" -> ExclusionReason.COMPLIANCE_RISK
         else -> ExclusionReason.UNKNOWN
     }
 }
