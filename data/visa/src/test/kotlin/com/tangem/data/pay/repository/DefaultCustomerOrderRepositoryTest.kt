@@ -46,7 +46,7 @@ internal class DefaultCustomerOrderRepositoryTest {
             }
         }
         coEvery { requestHelper.getCustomerWalletAddress(userWalletId) } returns WALLET_ADDRESS
-        coEvery { tangemPayApi.createOrder(any(), any()) } returns ApiResponse.Success(orderResponse())
+        coEvery { tangemPayApi.createOrder(any(), any(), any()) } returns ApiResponse.Success(orderResponse())
     }
 
     @Test
@@ -59,9 +59,19 @@ internal class DefaultCustomerOrderRepositoryTest {
     }
 
     @Test
+    fun `GIVEN an idempotency key WHEN createOrder THEN it is passed to the idempotency header`() = runTest {
+        // Act
+        repository.createOrder(userWalletId, plasticIssueRequest(), IDEMPOTENCY_KEY)
+
+        // Assert
+        coVerify(exactly = 1) { tangemPayApi.createOrder(AUTH_HEADER, IDEMPOTENCY_KEY, any()) }
+    }
+
+    @Test
     fun `GIVEN a response without result WHEN createOrder THEN an error is returned`() = runTest {
         // Arrange
-        coEvery { tangemPayApi.createOrder(any(), any()) } returns ApiResponse.Success(OrderResponse(result = null))
+        coEvery { tangemPayApi.createOrder(any(), any(), any()) } returns
+            ApiResponse.Success(OrderResponse(result = null))
 
         // Act
         val result = repository.createOrder(userWalletId, plasticIssueRequest(), IDEMPOTENCY_KEY)
@@ -82,7 +92,7 @@ internal class DefaultCustomerOrderRepositoryTest {
 
         // Assert
         assertThat(result.leftOrNull()).isEqualTo(VisaApiError.UnknownWithoutCode)
-        coVerify(exactly = 0) { tangemPayApi.createOrder(any(), any()) }
+        coVerify(exactly = 0) { tangemPayApi.createOrder(any(), any(), any()) }
     }
 
     @Test
@@ -118,7 +128,6 @@ internal class DefaultCustomerOrderRepositoryTest {
                         phoneNumber = "+12345678901",
                     ),
                 ),
-                idempotencyKey = IDEMPOTENCY_KEY,
             ),
         )
     }
@@ -147,7 +156,6 @@ internal class DefaultCustomerOrderRepositoryTest {
                     specificationName = "SP_000009",
                     deeplinkValue = "tpay_for_oxford",
                 ),
-                idempotencyKey = IDEMPOTENCY_KEY,
             ),
         )
     }
@@ -164,13 +172,13 @@ internal class DefaultCustomerOrderRepositoryTest {
 
             // Assert
             assertThat(result.leftOrNull()).isEqualTo(VisaApiError.Unspecified)
-            coVerify(exactly = 0) { tangemPayApi.createOrder(any(), any()) }
+            coVerify(exactly = 0) { tangemPayApi.createOrder(any(), any(), any()) }
         }
 
     private fun captureCreateOrderBody(): CapturingSlot<OrderRequest> {
         val body = slot<OrderRequest>()
         coEvery {
-            tangemPayApi.createOrder(any(), capture(body))
+            tangemPayApi.createOrder(any(), any(), capture(body))
         } returns ApiResponse.Success(orderResponse())
         return body
     }

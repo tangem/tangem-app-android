@@ -187,6 +187,8 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
             )
             return
         }
+        val isOutcomeUnknown = error is BankOfframpError.Unknown && error.isOutcomeUnknown
+        if (!isOutcomeUnknown) idempotencyKey = null
         fail(failure = error.toFailure(), resumableOrderId = null)
     }
 
