@@ -5,6 +5,7 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.assertTextContainsSafe
+import com.tangem.common.extensions.assertVisibility
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.extractText
 import com.tangem.common.utils.assertClipboardTextEquals
@@ -226,7 +227,7 @@ class TangemPayTest : BaseTestCase() {
         ).run {
             step("Open Tangem Pay") { openTangemPay() }
             step("Assert 'Add funds' button is disabled") {
-                flakySafely { onTangemPayMainScreen { topUpButtonControl.assertIsNotEnabled() } }
+                flakySafely { onTangemPayMainScreen { addFundsButtonControl.assertIsNotEnabled() } }
             }
             step("Click on 'Withdraw' button") {
                 onTangemPayMainScreen { withdrawButton.clickWithAssertion() }
@@ -244,7 +245,7 @@ class TangemPayTest : BaseTestCase() {
                 onTangemPayServiceUnavailableSheet { gotItButton.clickWithAssertion() }
             }
             step("Assert 'Service temporarily unavailable' sheet is not displayed") {
-                flakySafely { onTangemPayServiceUnavailableSheet { title.assertIsNotDisplayed() } }
+                flakySafely { onTangemPayServiceUnavailableSheet { title.assertVisibility(shouldBeDisplayed = false) } }
             }
             step("Assert payment account balance is displayed") {
                 onTangemPayMainScreen { balance.assertIsDisplayed() }
