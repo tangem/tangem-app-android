@@ -11,7 +11,6 @@ import com.tangem.data.pay.flow.DefaultPaymentAccountStatusFetcher
 import com.tangem.data.pay.flow.DefaultPaymentAccountStatusProducer
 import com.tangem.data.pay.repository.*
 import com.tangem.data.pay.store.CashbackSummaryStore
-import com.tangem.data.pay.store.DefaultBankOfframpRecentsStore
 import com.tangem.data.pay.store.DefaultPaymentAccountRecentsStore
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCurrencyStatusUseCase
@@ -45,7 +44,6 @@ import com.tangem.domain.pay.usecase.bankofframp.FindActiveBankOfframpOrderUseCa
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetBankOfframpOptionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetRecentBankAccountsUseCase
-import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
 import com.tangem.domain.pay.usecase.bankofframp.SignBankOfframpOrderUseCase
 import com.tangem.domain.pay.usecase.recents.GetRecentTokenTransfersUseCase
 import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSendUseCase
@@ -604,15 +602,6 @@ internal interface TangemPayDataModule {
 
         @Provides
         @Singleton
-        fun provideBankOfframpRecentsStore(
-            prefs: AppPreferencesStore,
-            spendPreferencesKeys: SpendPreferencesKeys,
-        ): BankOfframpRecentsStore {
-            return DefaultBankOfframpRecentsStore(prefs = prefs, spendPreferencesKeys = spendPreferencesKeys)
-        }
-
-        @Provides
-        @Singleton
         fun providePaymentAccountRecentsStore(
             prefs: AppPreferencesStore,
             spendPreferencesKeys: SpendPreferencesKeys,
@@ -655,16 +644,8 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
-        fun provideGetRecentBankAccountsUseCase(
-            repository: BankOfframpRepository,
-            recentsStore: BankOfframpRecentsStore,
-        ): GetRecentBankAccountsUseCase {
-            return GetRecentBankAccountsUseCase(repository = repository, recentsStore = recentsStore)
-        }
-
-        @Provides
-        fun provideMarkBankAccountUsedUseCase(recentsStore: BankOfframpRecentsStore): MarkBankAccountUsedUseCase {
-            return MarkBankAccountUsedUseCase(recentsStore = recentsStore)
+        fun provideGetRecentBankAccountsUseCase(repository: BankOfframpRepository): GetRecentBankAccountsUseCase {
+            return GetRecentBankAccountsUseCase(repository = repository)
         }
 
         @Provides

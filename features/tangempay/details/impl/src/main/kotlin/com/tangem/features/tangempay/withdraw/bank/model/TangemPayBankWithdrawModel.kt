@@ -12,7 +12,6 @@ import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.pay.usecase.GetTangemPayCountriesUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayRegionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
-import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.TangemPayBankWithdrawComponent
@@ -34,7 +33,6 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getBankAccountsUseCase: GetBankAccountsUseCase,
-    private val markBankAccountUsedUseCase: MarkBankAccountUsedUseCase,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val getTangemPayCountriesUseCase: GetTangemPayCountriesUseCase,
     private val getTangemPayRegionsUseCase: GetTangemPayRegionsUseCase,
@@ -60,14 +58,10 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
     }
 
     /**
-     * A suggested account replaces the recipient being typed, so it also moves to the top of the recents. The typed
-     * forms leave the stack with it, and their values and picked names go too: the preview would otherwise show
-     * them next to the saved account's details.
+     * A suggested account replaces the recipient being typed. The typed forms leave the stack with it, and their
+     * values and picked names go too: the preview would otherwise show them next to the saved account's details.
      */
     fun onSavedRecipientSelected(account: BankAccount) {
-        modelScope.launch {
-            markBankAccountUsedUseCase(userWalletId = params.userWalletId, bankAccountId = account.id)
-        }
         draft.update { it.withSavedRecipient(account).copy(newRecipient = NewRecipientDraft.forEntry(it.entry)) }
     }
 
@@ -100,15 +94,10 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
         draft.update { it.copy(order = result) }
     }
 
-    /** The transfer is on its way: the recipient moves to the top of the recents and the balance is refetched. */
+    /** The transfer is on its way, so the balance is refetched. */
     fun onOrderSigned() {
-        val draft = draft.value
-        analytics.send(TangemPayAnalyticsEvents.Offramp.SendSuccessScreenShowed(rail = draft.destination?.rail))
-        val bankAccountId = draft.order?.bankAccountId ?: draft.recipient?.id
+        analytics.send(TangemPayAnalyticsEvents.Offramp.SendSuccessScreenShowed(rail = draft.value.destination?.rail))
         modelScope.launch {
-            bankAccountId?.let {
-                markBankAccountUsedUseCase(userWalletId = params.userWalletId, bankAccountId = it)
-            }
             paymentAccountStatusFetcher(params.userWalletId).onLeft { error ->
                 TangemLogger.withTag(TAG).e("Failed to refresh the payment account after a bank withdraw: $error")
             }
