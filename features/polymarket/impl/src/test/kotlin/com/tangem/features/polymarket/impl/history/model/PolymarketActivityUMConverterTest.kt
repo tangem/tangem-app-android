@@ -7,6 +7,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.polymarket.model.PolymarketActivity
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketActivityRowUM
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketActivitySubtitleUM
+import com.tangem.utils.StringsSigns.MINUS
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -59,7 +60,7 @@ internal class PolymarketActivityUMConverterTest {
             type = PolymarketActivityRowUM.Type.LOST,
             title = resourceReference(R.string.prediction_positions_lost),
             subtitle = PolymarketActivitySubtitleUM.Plain(stringReference("")),
-            amount = stringReference("−"),
+            amount = stringReference(MINUS),
         )
 
         // Act
@@ -94,7 +95,7 @@ internal class PolymarketActivityUMConverterTest {
         val actual = PolymarketActivityUMConverter(clock).convert(listOf(activity)).single().activities.single()
 
         // Assert
-        assertThat(actual.amount).isEqualTo(stringReference("− $10.00"))
+        assertThat(actual.amount).isEqualTo(stringReference("- $10.00"))
         assertThat(actual.subtitle).isEqualTo(PolymarketActivitySubtitleUM.Plain(stringReference("0xtransaction")))
     }
 }

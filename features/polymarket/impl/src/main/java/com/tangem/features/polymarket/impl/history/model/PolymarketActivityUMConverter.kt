@@ -9,6 +9,8 @@ import com.tangem.features.polymarket.impl.history.ui.state.PolymarketActivityRo
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketActivityRowUM.Type
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketActivitySubtitleUM
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketHistoryUM.DateGroup
+import com.tangem.utils.StringsSigns.MINUS
+import com.tangem.utils.StringsSigns.PLUS
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import java.time.Clock
@@ -40,6 +42,7 @@ internal class PolymarketActivityUMConverter(
 
     private fun convertRow(activity: PolymarketActivity): PolymarketActivityRowUM {
         val type = activity.rowType()
+        val money = activity.amount.abs().formatPolymarketMoney()
         return PolymarketActivityRowUM(
             id = activity.id,
             type = type,
@@ -51,9 +54,9 @@ internal class PolymarketActivityUMConverter(
             ),
             amount = stringReference(
                 when (type) {
-                    Type.LOST -> "−"
-                    Type.BOUGHT, Type.WITHDRAWN -> "− ${activity.amount.abs().formatPolymarketMoney()}"
-                    Type.SOLD, Type.FUNDS_ADDED, Type.REDEEMED -> "+ ${activity.amount.abs().formatPolymarketMoney()}"
+                    Type.LOST -> MINUS
+                    Type.BOUGHT, Type.WITHDRAWN -> "$MINUS $money"
+                    Type.SOLD, Type.FUNDS_ADDED, Type.REDEEMED -> "$PLUS $money"
                 },
             ),
             iconUrl = activity.market?.icon ?: activity.market?.image
