@@ -1,7 +1,7 @@
 package com.tangem.spend.datasource.pay.models.response
 
 import com.google.common.truth.Truth.assertThat
-import com.squareup.moshi.Moshi
+import com.tangem.core.remote.json.NetworkJsonFactory
 import org.junit.jupiter.api.Test
 
 /**
@@ -10,12 +10,12 @@ import org.junit.jupiter.api.Test
  */
 internal class GeoResponsesParsingTest {
 
-    private val moshi = Moshi.Builder().build()
+    private val json = NetworkJsonFactory.create()
 
     @Test
     fun `GIVEN countries response from the backend WHEN parse THEN countries are read from the result array`() {
         // Arrange
-        val json = """
+        val raw = """
             {
               "result": [
                 { "code": "AF", "name": "Afghanistan", "flag_url": null, "suggested": false, "has_regions": false },
@@ -26,7 +26,7 @@ internal class GeoResponsesParsingTest {
         """.trimIndent()
 
         // Act
-        val actual = moshi.adapter(GeoCountriesResponse::class.java).fromJson(json)
+        val actual = json.decodeFromString(GeoCountriesResponse.serializer(), raw)
 
         // Assert
         assertThat(actual).isEqualTo(
@@ -54,7 +54,7 @@ internal class GeoResponsesParsingTest {
     @Test
     fun `GIVEN regions response from the backend WHEN parse THEN regions are read from the result array`() {
         // Arrange
-        val json = """
+        val raw = """
             {
               "result": [
                 { "code": "AL", "name": "Alabama", "suggested": false },
@@ -65,7 +65,7 @@ internal class GeoResponsesParsingTest {
         """.trimIndent()
 
         // Act
-        val actual = moshi.adapter(GeoRegionsResponse::class.java).fromJson(json)
+        val actual = json.decodeFromString(GeoRegionsResponse.serializer(), raw)
 
         // Assert
         assertThat(actual).isEqualTo(
@@ -81,10 +81,10 @@ internal class GeoResponsesParsingTest {
     @Test
     fun `GIVEN empty regions response WHEN parse THEN the result is an empty list`() {
         // Arrange
-        val json = """{ "result": [], "error": null }"""
+        val raw = """{ "result": [], "error": null }"""
 
         // Act
-        val actual = moshi.adapter(GeoRegionsResponse::class.java).fromJson(json)
+        val actual = json.decodeFromString(GeoRegionsResponse.serializer(), raw)
 
         // Assert
         assertThat(actual).isEqualTo(GeoRegionsResponse(result = emptyList()))

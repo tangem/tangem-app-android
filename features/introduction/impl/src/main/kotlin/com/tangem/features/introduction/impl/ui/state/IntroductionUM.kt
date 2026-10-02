@@ -14,6 +14,7 @@ internal data class IntroductionUM(
     val bottomSheetConfig: TangemBottomSheetConfig?,
     val haveWalletBottomSheetConfig: TangemBottomSheetConfig?,
     val socialLoginProgress: SocialLoginProgressUM?,
+    val socialLoginConsent: SocialLoginConsentUM?,
     val onCreateWalletClick: () -> Unit,
     val onIHaveWalletClick: () -> Unit,
     val onCreateWalletSheetCollapsed: () -> Unit,
@@ -22,5 +23,5 @@ internal data class IntroductionUM(
 ) {
 
     val isSocialLoginShown: Boolean
-        get() = socialLoginProgress != null
+        get() = socialLoginProgress != null || socialLoginConsent != null
 }

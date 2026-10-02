@@ -20,10 +20,13 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.collectibles.impl.R
 import com.tangem.features.collectibles.impl.common.ui.CollectiblesLoadMoreEffect
 import com.tangem.features.collectibles.impl.common.ui.CollectiblesPackImage
+import com.tangem.features.collectibles.impl.common.ui.CollectiblesPackImageErrorCard
 import com.tangem.features.collectibles.impl.common.ui.CollectiblesStatus
 import com.tangem.features.collectibles.impl.machinedetails.ui.components.*
 import com.tangem.features.collectibles.impl.machinedetails.ui.state.CollectiblesMachineDetailsUM
 import kotlinx.collections.immutable.ImmutableList
+import kotlin.collections.chunked
+import kotlin.collections.forEach
 
 @Composable
 internal fun CollectiblesMachineDetailsScreen(
@@ -66,7 +69,11 @@ internal fun CollectiblesMachineDetailsScreen(
                     .padding(contentPadding),
                 contentAlignment = Alignment.Center,
             ) {
-                CollectiblesStatus(message = state.message, onReloadClick = state.onReloadClick)
+                CollectiblesStatus(
+                    message = state.message,
+                    onReloadClick = state.onReloadClick,
+                    isReloading = state.isReloading,
+                )
             }
             is CollectiblesMachineDetailsUM.Content -> MachineDetailsInfoList(
                 state = state,
@@ -110,6 +117,7 @@ private fun MachineDetailsInfoList(
                     imageUrl = state.imageUrl,
                     glowRadius = 48.dp,
                     modifier = Modifier.size(width = 204.dp, height = 294.dp),
+                    errorContent = { CollectiblesPackImageErrorCard() },
                 )
             }
         }
@@ -118,7 +126,14 @@ private fun MachineDetailsInfoList(
                 CollectiblesSectionHeading(
                     title = resourceReference(R.string.collectibles_machine_value_and_odds_section),
                 )
-                CardGrid(items = state.tiers) { tier -> CollectiblesTierCard(state = tier) }
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    state.tiers.forEach { tier ->
+                        CollectiblesTierCard(state = tier)
+                    }
+                }
             }
         }
 
@@ -155,14 +170,6 @@ private fun LazyListScope.prizePool(state: CollectiblesMachineDetailsUM.Content)
                 message = prizePool.message,
                 onReloadClick = prizePool.onReloadClick,
                 isReloading = prizePool.isReloading,
-                modifier = Modifier.padding(top = 118.dp, bottom = 88.dp),
-            )
-        }
-
-        is CollectiblesMachineDetailsUM.PrizePoolUM.Empty -> item(key = PackDetailsKeys.PRIZE_POOL_STATUS) {
-            CollectiblesStatus(
-                message = prizePool.message,
-                onReloadClick = null,
                 modifier = Modifier.padding(top = 118.dp, bottom = 88.dp),
             )
         }

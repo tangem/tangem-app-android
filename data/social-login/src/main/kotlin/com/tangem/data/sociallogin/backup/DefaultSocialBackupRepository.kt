@@ -18,6 +18,7 @@ import com.tangem.domain.sociallogin.models.SocialBackupInfo
 import com.tangem.domain.sociallogin.models.SocialBackupSecret
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.repository.SocialBackupRepository
+import com.tangem.data.sociallogin.toDomainError
 import com.tangem.google.auth.GoogleAuthError
 import com.tangem.google.drive.DriveFile
 import com.tangem.google.drive.DriveFileMetadata
@@ -376,16 +377,4 @@ private fun Raise<SocialLoginError>.parseSecret(bytes: ByteArray): SocialBackupS
 private fun SocialBackupCryptoError.toDomainError(): SocialLoginError = when (this) {
     is SocialBackupCryptoError.UnsupportedVersion -> SocialLoginError.UnsupportedBackupVersion(version)
     is SocialBackupCryptoError.InvalidFormat -> SocialLoginError.InvalidBackupFile
-}
-
-private fun GoogleAuthError.toDomainError(): SocialLoginError = when (this) {
-    // kept out of [SocialLoginError.CloudUnavailable] on purpose: that one is what the silent retry keys
-    // on, and asking again for a grant the viewer just declined can only fail a second time
-    GoogleAuthError.AuthCanceled -> SocialLoginError.SignInCanceled
-    GoogleAuthError.AuthRequired,
-    GoogleAuthError.PermissionsMissing,
-    GoogleAuthError.Unavailable,
-    -> SocialLoginError.CloudUnavailable
-    GoogleAuthError.NetworkError -> SocialLoginError.NetworkError
-    is GoogleAuthError.Unknown -> SocialLoginError.Unknown(cause)
 }

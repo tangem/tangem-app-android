@@ -1,87 +1,87 @@
 package com.tangem.spend.datasource.visa.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
-import org.joda.time.DateTime
-import java.math.BigDecimal
+import com.tangem.domain.models.serialization.SerializedBigDecimal
+import com.tangem.domain.models.serialization.SerializedIsoDateTime
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class VisaTxHistoryResponse(
-    @Json(name = "card_wallet_address")
+    @SerialName("card_wallet_address")
     val cardWalletAddress: String,
-    @Json(name = "transactions")
+    @SerialName("transactions")
     val transactions: List<Transaction>,
 ) {
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Transaction(
-        @Json(name = "auth_code")
+        @SerialName("auth_code")
         val authCode: String?,
-        @Json(name = "billing_amount")
-        val billingAmount: BigDecimal,
-        @Json(name = "billing_currency_code")
+        @SerialName("billing_amount")
+        val billingAmount: SerializedBigDecimal,
+        @SerialName("billing_currency_code")
         val billingCurrencyCode: Int,
-        @Json(name = "blockchain_amount")
-        val blockchainAmount: BigDecimal,
-        @Json(name = "blockchain_coin_name")
+        @SerialName("blockchain_amount")
+        val blockchainAmount: SerializedBigDecimal,
+        @SerialName("blockchain_coin_name")
         val blockchainCoinName: String,
-        @Json(name = "blockchain_fee")
-        val blockchainFee: BigDecimal,
-        // @Json(name = "local_dt")
-        // val localDate: DateTime?,
-        @Json(name = "merchant_category_code")
+        @SerialName("blockchain_fee")
+        val blockchainFee: SerializedBigDecimal,
+        // @SerialName("local_dt")
+        // val localDate: SerializedIsoDateTime?,
+        @SerialName("merchant_category_code")
         val merchantCategoryCode: String?,
-        @Json(name = "merchant_city")
+        @SerialName("merchant_city")
         val merchantCity: String?,
-        @Json(name = "merchant_country_code")
+        @SerialName("merchant_country_code")
         val merchantCountryCode: String?,
-        @Json(name = "merchant_name")
+        @SerialName("merchant_name")
         val merchantName: String?,
-        @Json(name = "requests")
+        @SerialName("requests")
         val requests: List<Request>,
-        @Json(name = "rrn")
+        @SerialName("rrn")
         val rrn: String?,
-        @Json(name = "transaction_amount")
-        val transactionAmount: BigDecimal,
-        @Json(name = "transaction_currency_code")
+        @SerialName("transaction_amount")
+        val transactionAmount: SerializedBigDecimal,
+        @SerialName("transaction_currency_code")
         val transactionCurrencyCode: Int,
-        @Json(name = "transaction_dt")
-        val transactionDt: DateTime,
-        @Json(name = "transaction_id")
+        @SerialName("transaction_dt")
+        val transactionDt: SerializedIsoDateTime,
+        @SerialName("transaction_id")
         val transactionId: Long,
-        @Json(name = "transaction_status")
+        @SerialName("transaction_status")
         val transactionStatus: String,
-        @Json(name = "transaction_type")
+        @SerialName("transaction_type")
         val transactionType: String,
     ) {
 
-        @JsonClass(generateAdapter = true)
+        @Serializable
         data class Request(
-            @Json(name = "billing_amount")
-            val billingAmount: BigDecimal,
-            @Json(name = "billing_currency_code")
+            @SerialName("billing_amount")
+            val billingAmount: SerializedBigDecimal,
+            @SerialName("billing_currency_code")
             val billingCurrencyCode: Int,
-            @Json(name = "blockchain_amount")
-            val blockchainAmount: BigDecimal,
-            @Json(name = "blockchain_fee")
-            val blockchainFee: BigDecimal,
-            @Json(name = "error_code")
+            @SerialName("blockchain_amount")
+            val blockchainAmount: SerializedBigDecimal,
+            @SerialName("blockchain_fee")
+            val blockchainFee: SerializedBigDecimal,
+            @SerialName("error_code")
             val errorCode: Int,
-            @Json(name = "request_dt")
-            val requestDt: DateTime,
-            @Json(name = "request_status")
+            @SerialName("request_dt")
+            val requestDt: SerializedIsoDateTime,
+            @SerialName("request_status")
             val requestStatus: String,
-            @Json(name = "request_type")
+            @SerialName("request_type")
             val requestType: String,
-            @Json(name = "transaction_amount")
-            val transactionAmount: BigDecimal,
-            @Json(name = "transaction_currency_code")
+            @SerialName("transaction_amount")
+            val transactionAmount: SerializedBigDecimal,
+            @SerialName("transaction_currency_code")
             val transactionCurrencyCode: Int,
-            @Json(name = "transaction_request_id")
+            @SerialName("transaction_request_id")
             val transactionRequestId: Long,
-            @Json(name = "tx_hash")
+            @SerialName("tx_hash")
             val txHash: String?,
-            @Json(name = "tx_status")
+            @SerialName("tx_status")
             val txStatus: String?,
         )
     }

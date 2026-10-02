@@ -3,6 +3,7 @@ package com.tangem.domain.jointaccount.gas
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.jointaccount.model.SafeGasToken
 import com.tangem.domain.jointaccount.model.SafeInnerCall
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.network.JointNetworkReader
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import java.math.BigDecimal
 import java.math.BigInteger
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -51,7 +53,7 @@ internal class SafeTxGasBuilderTest {
         coEvery { networkReader.getCode(userWalletId, network) } returns model.code.right()
 
         // Act
-        val actual = builder.build(userWalletId = userWalletId, network = network, call = CALL)
+        val actual = buildForCoin()
 
         // Assert
         val expected = SafeTx(
@@ -91,12 +93,33 @@ internal class SafeTxGasBuilderTest {
     )
 
     @Test
+    fun `GIVEN a smart gas token WHEN build THEN the refund is priced in that token`() = runTest {
+        // Arrange
+        val usdc = SafeGasToken.Token(
+            address = USDC,
+            decimals = 6,
+            coinDecimals = 18,
+            nativeToTokenRate = BigDecimal("2000.5"),
+        )
+
+        // Act
+        val actual = builder.build(userWalletId = userWalletId, network = network, call = CALL, gasToken = usdc)
+
+        // Assert
+        val safeTx = actual.getOrNull()!!
+        assertThat(safeTx.gasToken).isEqualTo(USDC)
+        // 2 × 30 gwei × 2000.5 USDC per coin = 120.03 base units per gas, rounded up
+        assertThat(safeTx.gasPrice).isEqualTo(BigInteger.valueOf(121))
+        assertThat(safeTx.baseGas).isEqualTo(BigInteger.valueOf(110_000))
+    }
+
+    @Test
     fun `GIVEN undeployed safe WHEN build THEN the contract nonce is never requested`() = runTest {
         // Arrange
         coEvery { networkReader.getCode(userWalletId, network) } returns "0x".right()
 
         // Act
-        builder.build(userWalletId = userWalletId, network = network, call = CALL)
+        buildForCoin()
 
         // Assert
         coVerify(exactly = 0) { networkReader.getContractNonce(any(), any()) }
@@ -110,7 +133,7 @@ internal class SafeTxGasBuilderTest {
         } returns BigInteger.valueOf(100_001).right()
 
         // Act
-        val actual = builder.build(userWalletId = userWalletId, network = network, call = CALL)
+        val actual = buildForCoin()
 
         // Assert
         assertThat(actual.getOrNull()?.safeTxGas).isEqualTo(BigInteger.valueOf(150_002))
@@ -125,7 +148,7 @@ internal class SafeTxGasBuilderTest {
         } returns cause.left()
 
         // Act
-        val actual = builder.build(userWalletId = userWalletId, network = network, call = CALL)
+        val actual = buildForCoin()
 
         // Assert
         assertEitherLeft(actual, cause)
@@ -140,7 +163,7 @@ internal class SafeTxGasBuilderTest {
         )
 
         // Act
-        val actual = checksummedBuilder.build(userWalletId = userWalletId, network = network, call = CALL)
+        val actual = checksummedBuilder.buildForCoin()
 
         // Assert
         assertThat(actual.getOrNull()?.refundReceiver).isEqualTo(TREASURY)
@@ -156,7 +179,7 @@ internal class SafeTxGasBuilderTest {
             )
 
             // Act
-            val actual = invalidBuilder.build(userWalletId = userWalletId, network = network, call = CALL)
+            val actual = invalidBuilder.buildForCoin()
 
             // Assert
             assertThat(actual.leftOrNull()).isInstanceOf(IllegalStateException::class.java)
@@ -172,7 +195,7 @@ internal class SafeTxGasBuilderTest {
         )
 
         // Act
-        val actual = failingBuilder.build(userWalletId = userWalletId, network = network, call = CALL)
+        val actual = failingBuilder.buildForCoin()
 
         // Assert
         assertEitherLeft(actual, cause)
@@ -181,7 +204,7 @@ internal class SafeTxGasBuilderTest {
     @Test
     fun `GIVEN inner call WHEN build THEN the estimate is requested from the safe with the call fields`() = runTest {
         // Act
-        builder.build(userWalletId = userWalletId, network = network, call = CALL)
+        buildForCoin()
 
         // Assert
         coVerify(exactly = 1) {
@@ -195,7 +218,13 @@ internal class SafeTxGasBuilderTest {
         }
     }
 
+    private suspend fun buildForCoin() = builder.buildForCoin()
+
+    private suspend fun SafeTxGasBuilder.buildForCoin() =
+        build(userWalletId = userWalletId, network = network, call = CALL, gasToken = SafeGasToken.Coin)
+
     private companion object {
+        const val USDC = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
         val CALL = SafeInnerCall(
             to = "0x1111111111111111111111111111111111111111",
             value = BigInteger("1000000000000000000"),

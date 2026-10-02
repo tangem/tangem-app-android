@@ -106,6 +106,9 @@ internal class StoriesV2Model @Inject constructor(
     private var loadJob: Job? = null
     private var isStatusResultDelivered = false
 
+    /** Kept while the story loads, so one that finishes loading behind another screen doesn't play unseen. */
+    private var isInForeground = false
+
     init {
         loadJob = modelScope.launch { open() }
     }
@@ -119,6 +122,7 @@ internal class StoriesV2Model @Inject constructor(
     }
 
     fun setInForeground(inForeground: Boolean) {
+        isInForeground = inForeground
         controller?.setInForeground(inForeground)
     }
 
@@ -245,6 +249,7 @@ internal class StoriesV2Model @Inject constructor(
         }
 
         controller.setReducedMotion(enabled = isReducedMotionEnabled())
+        controller.setInForeground(isInForeground)
         controller.onOpened()
         modelScope.launch { contentRepository.markShown(params.type) }
 

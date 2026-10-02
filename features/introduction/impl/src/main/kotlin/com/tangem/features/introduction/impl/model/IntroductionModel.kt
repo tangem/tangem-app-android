@@ -25,10 +25,12 @@ import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.introduction.IntroductionComponent
 import com.tangem.features.introduction.impl.R
+import com.tangem.features.introduction.impl.analytics.SocialLoginAnalyticsEvents
 import com.tangem.features.introduction.impl.engine.IntroductionVideoPlayer
 import com.tangem.features.introduction.impl.ui.state.CreateWalletUM
 import com.tangem.features.introduction.impl.ui.state.WalletOptionUM
 import com.tangem.features.introduction.impl.ui.state.IntroductionUM
+import com.tangem.features.introduction.impl.ui.state.SocialLoginConsentUM
 import com.tangem.features.introduction.impl.ui.state.SocialLoginProgressUM
 import com.tangem.features.storiesv2.StoriesV2PendingAction
 import com.tangem.features.storiesv2.StoriesV2Result
@@ -96,7 +98,7 @@ internal class IntroductionModel @Inject constructor(
         resolveCloudRestoreBackups = resolveCloudRestoreBackups,
         socialLoginProvider = socialLoginHandler::provider,
         isSigningInSocially = { isSigningInSocially },
-        onSocialLoginClick = ::onSocialLoginClick,
+        onSocialLoginClick = { provider -> onSocialLoginClick(provider, AnalyticsParam.ScreensSources.ImportWallet) },
     )
 
     private val stories = IntroductionStories(
@@ -123,6 +125,7 @@ internal class IntroductionModel @Inject constructor(
                 bottomSheetConfig = null,
                 haveWalletBottomSheetConfig = null,
                 socialLoginProgress = null,
+                socialLoginConsent = null,
                 onCreateWalletClick = ::onCreateWalletClick,
                 onIHaveWalletClick = ::onIHaveWalletClick,
                 onCreateWalletSheetCollapsed = ::onCreateWalletSheetCollapsed,
@@ -252,7 +255,7 @@ internal class IntroductionModel @Inject constructor(
                 isLoading = isSigningInSocially,
             ) { provider ->
                 if (isCreateWalletSheetShown() && !isCreatingMobileWallet && !isSigningInSocially) {
-                    onSocialLoginClick(provider)
+                    onSocialLoginClick(provider, AnalyticsParam.ScreensSources.CreateWallet)
                 }
             },
             seedPhrase = WalletOptionUM(
@@ -306,15 +309,22 @@ internal class IntroductionModel @Inject constructor(
         withTimeoutOrNull(SHEET_COLLAPSE_TIMEOUT) { createWalletSheetCollapsed.first() }
     }
 
-    private fun onSocialLoginClick(provider: SocialLoginProvider) {
+    private fun onSocialLoginClick(provider: SocialLoginProvider, source: AnalyticsParam.ScreensSources) {
+        analyticsEventHandler.send(SocialLoginAnalyticsEvents.ButtonContinue(provider = provider, source = source))
         // Checked before the account chooser: failing later ends a whole sign-in on a generic error.
         if (!ensureHotWalletCreationSupported()) {
+            analyticsEventHandler.send(SocialLoginAnalyticsEvents.MinOsNotSupported())
             onBottomSheetDismissed()
             haveWalletSheet.dismiss()
             return
         }
         setSigningInSocially(isSigningIn = true)
-        socialLoginHandler.start(modelScope, provider, SocialLoginHost())
+        socialLoginHandler.start(
+            scope = modelScope,
+            provider = provider,
+            source = source,
+            host = SocialLoginHost(),
+        )
     }
 
     private fun setSigningInSocially(isSigningIn: Boolean) {
@@ -339,6 +349,10 @@ internal class IntroductionModel @Inject constructor(
                 haveWalletSheet.dismiss()
             }
             uiState.update { it.copy(socialLoginProgress = progress) }
+        }
+
+        override fun onConsent(consent: SocialLoginConsentUM?) {
+            uiState.update { it.copy(socialLoginConsent = consent) }
         }
 
         override fun onFinished() {

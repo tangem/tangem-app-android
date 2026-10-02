@@ -1,39 +1,39 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * Response of `v1/account/bank-credentials/{product_instance_id}`
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class BankCredentialsResponse(
-    @Json(name = "result") val result: Result?,
+    @SerialName("result") val result: Result?,
 ) {
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Result(
-        @Json(name = "type") val type: String?,
-        @Json(name = "beneficiary_name") val beneficiaryName: String?,
-        @Json(name = "beneficiary_address") val beneficiaryAddress: String?,
-        @Json(name = "beneficiary_bank_name") val beneficiaryBankName: String?,
-        @Json(name = "beneficiary_bank_address") val beneficiaryBankAddress: String?,
-        @Json(name = "account_number") val accountNumber: String?,
-        @Json(name = "routing_number") val routingNumber: String?,
-        @Json(name = "rail") val rail: String?,
-        @Json(name = "transfer_message") val transferMessage: String?,
-        @Json(name = "fee") val fee: Fee?,
-        @Json(name = "deposit_limit") val depositLimit: DepositLimit?,
+        @SerialName("type") val type: String?,
+        @SerialName("beneficiary_name") val beneficiaryName: String?,
+        @SerialName("beneficiary_address") val beneficiaryAddress: String?,
+        @SerialName("beneficiary_bank_name") val beneficiaryBankName: String?,
+        @SerialName("beneficiary_bank_address") val beneficiaryBankAddress: String?,
+        @SerialName("account_number") val accountNumber: String?,
+        @SerialName("routing_number") val routingNumber: String?,
+        @SerialName("rail") val rail: String?,
+        @SerialName("transfer_message") val transferMessage: String?,
+        @SerialName("fee") val fee: Fee?,
+        @SerialName("deposit_limit") val depositLimit: DepositLimit?,
     )
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Fee(
-        @Json(name = "type") val type: String?,
-        @Json(name = "amount") val amount: String?,
+        @SerialName("type") val type: String?,
+        @SerialName("amount") val amount: String?,
     )
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class DepositLimit(
-        @Json(name = "amount") val amount: String?,
-        @Json(name = "period") val period: String?,
+        @SerialName("amount") val amount: String?,
+        @SerialName("period") val period: String?,
     )
 }
