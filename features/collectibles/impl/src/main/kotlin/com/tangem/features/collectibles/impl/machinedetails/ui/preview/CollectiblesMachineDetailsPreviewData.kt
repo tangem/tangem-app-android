@@ -37,7 +37,6 @@ internal object CollectiblesMachineDetailsPreviewData {
                 value = stringReference("85% of value"),
             ),
         ),
-        onPoweredByClick = {},
         prizePool = prizePool(
             prize,
             prize.copy(id = "nft_2", title = stringReference("Charizard V")),
@@ -68,12 +67,6 @@ internal object CollectiblesMachineDetailsPreviewData {
         prizePool = CollectiblesMachineDetailsUM.PrizePoolUM.Error(
             message = stringReference("Failed to load the prize pool.\nTap to reload"),
             onReloadClick = {},
-        ),
-    )
-
-    val poolEmpty = content.copy(
-        prizePool = CollectiblesMachineDetailsUM.PrizePoolUM.Empty(
-            message = stringReference("This pack has no cards in its prize pool yet"),
         ),
     )
 

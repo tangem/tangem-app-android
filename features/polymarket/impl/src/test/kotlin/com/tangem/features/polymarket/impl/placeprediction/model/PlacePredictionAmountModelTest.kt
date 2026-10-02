@@ -778,7 +778,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
 
             // Assert
             val order = model.uiState.value.order as OrderSideUM.Sell
-            assertThat(order.position).isEqualTo(SellPositionUM.Held(available = BigDecimal("51.23")))
+            assertThat(order.position).isEqualTo(SellPositionUM.Held(available = BigDecimal("51.234567")))
             assertThat(order.balance).isEqualTo(BigDecimal("100"))
             assertThat(model.uiState.value.market.title).isEqualTo("Will the event happen?")
             assertThat(model.uiState.value.market.outcomeTitle).isEqualTo("Yes")
@@ -790,7 +790,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         }
 
         @Test
-        fun `GIVEN a position too small to quote WHEN screen shown THEN the live price is the best bid`() = runTest {
+        fun `GIVEN a position below a cent WHEN screen shown THEN the whole position is quoted`() = runTest {
             // Arrange
             coEvery { positionsRepository.getPosition(addresses = any(), id = any()) } returns
                 createPosition(size = BigDecimal("0.005")).right()
@@ -802,7 +802,9 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             runCurrent()
 
             // Assert
-            coVerify(exactly = 1) { getPriceUseCase(assetId = ASSET_ID, side = PredictionOrderSide.BUY) }
+            coVerify(exactly = 1) {
+                getQuoteUseCase(request = match { it.side == PredictionOrderSide.SELL && it.amount == BigDecimal("0.005") })
+            }
 
             model.onDestroy()
         }
@@ -814,7 +816,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             advanceUntilIdle()
 
             // Assert
-            assertThat(model.uiState.value.amountValue).isEqualTo("51.23")
+            assertThat(model.uiState.value.amountValue).isEqualTo("51.234567")
 
             model.onDestroy()
         }
@@ -890,7 +892,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
 
             // Assert
             val order = model.uiState.value.order as OrderSideUM.Sell
-            assertThat(order.position).isEqualTo(SellPositionUM.Held(available = BigDecimal("51.23")))
+            assertThat(order.position).isEqualTo(SellPositionUM.Held(available = BigDecimal("51.234567")))
             assertThat(model.uiState.value.notifications)
                 .doesNotContain(PredictionNotificationUM.PositionUnavailable)
 
@@ -913,7 +915,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
 
             // Assert
             assertThat((model.uiState.value.order as OrderSideUM.Sell).position)
-                .isEqualTo(SellPositionUM.Held(available = BigDecimal("51.23")))
+                .isEqualTo(SellPositionUM.Held(available = BigDecimal("51.234567")))
 
             model.onDestroy()
         }

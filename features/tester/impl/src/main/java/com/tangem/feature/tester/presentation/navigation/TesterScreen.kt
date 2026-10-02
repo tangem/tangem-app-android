@@ -19,4 +19,5 @@ internal enum class TesterScreen {
     SURVEY_SPARROW,
     BACKEND_AUTH_STATUS,
     SELL_REDIRECT_GENERATOR,
+    SOCIAL_LOGIN,
 }
