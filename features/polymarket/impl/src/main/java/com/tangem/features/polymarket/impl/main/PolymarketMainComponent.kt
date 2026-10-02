@@ -8,6 +8,7 @@ import com.arkivanov.essenty.lifecycle.doOnPause
 import com.arkivanov.essenty.lifecycle.doOnResume
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
@@ -37,6 +38,14 @@ internal class PolymarketMainComponent(
         params = PolymarketMainParams(userWalletId = userWalletId),
     )
 
+    private val positionsPreview = PolymarketPositionsPreviewComponent(
+        context = child(key = PolymarketPositionsPreviewComponent.KEY),
+        params = PolymarketPositionsPreviewComponent.Params(
+            userWalletId = userWalletId,
+            blocksRefresh = model.blocksRefresh,
+        ),
+    )
+
     private val fundingSheetSlot = polymarketFundingSheetSlot(
         navigation = model.fundingSheetNavigation,
         callback = model,
@@ -57,6 +66,7 @@ internal class PolymarketMainComponent(
 
         PolymarketMainScreen(
             state = state,
+            positions = { positionsModifier -> positionsPreview.Content(modifier = positionsModifier) },
             onBackClick = model::onBackClick,
             onSearchClick = model::onSearchClick,
             onHistoryClick = model::onHistoryClick,

@@ -1,12 +1,12 @@
 package com.tangem.features.polymarket.impl.main
 
 import arrow.core.right
-import com.arkivanov.essenty.statekeeper.StateKeeperDispatcher
+import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import com.arkivanov.essenty.backhandler.BackDispatcher
-import com.arkivanov.essenty.instancekeeper.InstanceKeeperDispatcher
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.DefaultAppComponentContext
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ModelsEntryPoint
@@ -29,18 +29,17 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainModel
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainParams
 import com.tangem.features.polymarket.impl.main.model.PolymarketPositionsPreviewLoader
+import com.tangem.features.polymarket.impl.main.model.PolymarketPositionsPreviewModel
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketPositionsPreviewUM
 import com.tangem.pagination.BatchListState
 import com.tangem.pagination.BatchUpdateResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import dagger.hilt.EntryPoints
-import io.mockk.CapturingSlot
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
-import io.mockk.slot
 import io.mockk.unmockkStatic
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -98,8 +97,8 @@ internal class PolymarketMainComponentTest {
     @Test
     fun `GIVEN the feed is created WHEN its model is resolved THEN the params are handed over`() {
         // Arrange
-        val paramsContainerSlot = slot<ParamsContainer>()
-        val appComponentContext = createAppComponentContext(paramsContainerSlot = paramsContainerSlot)
+        val paramsContainers = mutableListOf<ParamsContainer>()
+        val appComponentContext = createAppComponentContext(paramsContainers = paramsContainers)
 
         // Act
         PolymarketMainComponent(
@@ -109,33 +108,42 @@ internal class PolymarketMainComponentTest {
         )
 
         // Assert
-        assertThat(paramsContainerSlot.captured.require<PolymarketMainParams>())
+        assertThat(paramsContainers.first().require<PolymarketMainParams>())
             .isEqualTo(PolymarketMainParams(userWalletId = userWalletId))
+        assertThat(paramsContainers.last().require<PolymarketPositionsPreviewComponent.Params>().userWalletId)
+            .isEqualTo(userWalletId)
     }
 
-    private fun createAppComponentContext(paramsContainerSlot: CapturingSlot<ParamsContainer>): AppComponentContext {
+    private fun createAppComponentContext(paramsContainers: MutableList<ParamsContainer>): AppComponentContext {
         val hiltComponentBuilder: ModelComponent.Builder = mockk()
         every { hiltComponentBuilder.router(any()) } returns hiltComponentBuilder
         every { hiltComponentBuilder.uiMessageSender(any()) } returns hiltComponentBuilder
-        every { hiltComponentBuilder.paramsContainer(capture(paramsContainerSlot)) } returns hiltComponentBuilder
+        every { hiltComponentBuilder.paramsContainer(capture(paramsContainers)) } returns hiltComponentBuilder
         every { hiltComponentBuilder.build() } returns mockk()
 
         val entryPoint: ModelsEntryPoint = mockk()
         every { entryPoint.models() } returns mapOf(
-            PolymarketMainModel::class.java to Provider<Model> { createModel(paramsContainerSlot.captured) },
+            PolymarketMainModel::class.java to Provider<Model> { createModel(paramsContainers.last()) },
+            PolymarketPositionsPreviewModel::class.java to Provider<Model> {
+                PolymarketPositionsPreviewModel(
+                    paramsContainer = paramsContainers.last(),
+                    router = router,
+                    dispatchers = TestingCoroutineDispatcherProvider(),
+                    loader = positionsPreviewLoader,
+                )
+            },
         )
         mockkStatic(EntryPoints::class)
         every { EntryPoints.get(any(), ModelsEntryPoint::class.java) } returns entryPoint
 
-        return mockk<AppComponentContext>(relaxed = true).also {
-            every { it.instanceKeeper } returns InstanceKeeperDispatcher()
-            every { it.stateKeeper } returns StateKeeperDispatcher()
-            every { it.lifecycle } returns LifecycleRegistry()
-            every { it.backHandler } returns BackDispatcher()
-            every { it.tags } returns HashMap()
-            every { it.hiltComponentBuilder } returns hiltComponentBuilder
-            every { it.router } returns router
-        }
+        return DefaultAppComponentContext(
+            componentContext = DefaultComponentContext(lifecycle = LifecycleRegistry(), backHandler = BackDispatcher()),
+            dispatchers = TestingCoroutineDispatcherProvider(),
+            hiltComponentBuilder = hiltComponentBuilder,
+            messageSender = messageSender,
+            activity = mockk(relaxed = true),
+            replaceRouter = router,
+        )
     }
 
     private fun createModel(paramsContainer: ParamsContainer) = PolymarketMainModel(
@@ -153,7 +161,6 @@ internal class PolymarketMainComponentTest {
             every { this@mockk.invoke(any<UserWalletId>()) } returns flowOf(PredictionPositionsValue.Unknown)
         },
         predictionPositionsValueFetcher = mockk(relaxed = true),
-        positionsPreviewLoader = positionsPreviewLoader,
         predictionBalancePoller = mockk(relaxed = true),
         predictionFundingWindow = fundingWindow,
     )

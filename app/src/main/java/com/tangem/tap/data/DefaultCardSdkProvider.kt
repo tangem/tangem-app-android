@@ -229,7 +229,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
             filter = CardFilter(
                 allowedCardTypes = FirmwareVersion.FirmwareType.entries.toList(),
                 maxFirmwareVersion = if (firmwareFeatureToggles.isNewFirmwareSupportEnabled) {
-                    FirmwareVersion(major = 8, minor = 58)
+                    FirmwareVersion(major = 8, minor = 59)
                 } else {
                     FirmwareVersion(major = 6, minor = 33)
                 },

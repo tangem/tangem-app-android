@@ -20,7 +20,10 @@ import com.tangem.domain.promo.models.*
 import com.tangem.utils.SupportedLanguages
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.util.concurrent.ConcurrentHashMap
 
 internal class DefaultPromoRepository(
     private val promotionsSupplier: PromotionsSupplier,
@@ -29,6 +32,9 @@ internal class DefaultPromoRepository(
     private val campaignsStore: RuntimeSharedStore<Map<UserWalletId, List<PromoCampaign>>>,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PromoRepository {
+
+    /** Every promo banner block asks for its wallet's campaigns on start; one request per wallet serves them all. */
+    private val campaignsMutexes = ConcurrentHashMap<UserWalletId, Mutex>()
 
     override suspend fun getCampaignState(
         campaign: PromoCampaignId,
@@ -78,28 +84,30 @@ internal class DefaultPromoRepository(
 
     override suspend fun getCampaigns(userWallet: UserWallet, forceRefresh: Boolean): List<PromoCampaign> {
         val userWalletId = userWallet.walletId
-        if (!forceRefresh) {
-            campaignsStore.getSyncOrNull()?.get(userWalletId)?.let { return it }
-        }
 
-        val campaigns = withContext(dispatchers.io) {
-            safeApiCall(
-                call = {
-                    tangemApi.getPromotionsV3(
-                        walletId = userWalletId.stringValue,
-                        walletType = PromotionWalletType.from(userWallet),
-                        batchId = (userWallet as? UserWallet.Cold)?.scanResponse?.card?.batchId,
-                        languageISOCode = SupportedLanguages.getCurrentSupportedLanguageCode(),
-                    ).getOrThrow().promotions.mapNotNull(PromoCampaignV3Converter::convert)
-                },
-                onError = { error ->
-                    TangemLogger.w("Unable to fetch promotion", error)
-                    throw error
-                },
-            )
+        return campaignsMutexes.getOrPut(userWalletId, ::Mutex).withLock {
+            val cached = if (forceRefresh) null else campaignsStore.getSyncOrNull()?.get(userWalletId)
+            cached ?: fetchCampaigns(userWallet).also { campaigns ->
+                campaignsStore.update(emptyMap()) { it + (userWalletId to campaigns) }
+            }
         }
-        campaignsStore.update(emptyMap()) { it + (userWalletId to campaigns) }
-        return campaigns
+    }
+
+    private suspend fun fetchCampaigns(userWallet: UserWallet): List<PromoCampaign> = withContext(dispatchers.io) {
+        safeApiCall(
+            call = {
+                tangemApi.getPromotionsV3(
+                    walletId = userWallet.walletId.stringValue,
+                    walletType = PromotionWalletType.from(userWallet),
+                    batchId = (userWallet as? UserWallet.Cold)?.scanResponse?.card?.batchId,
+                    languageISOCode = SupportedLanguages.getCurrentSupportedLanguageCode(),
+                ).getOrThrow().promotions.mapNotNull(PromoCampaignV3Converter::convert)
+            },
+            onError = { error ->
+                TangemLogger.w("Unable to fetch promotion", error)
+                throw error
+            },
+        )
     }
 
     private fun parseConflict(body: String?): PromotionRegistrationResponse? {
