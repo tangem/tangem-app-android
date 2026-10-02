@@ -20,6 +20,7 @@ import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForGaslessTxUseCase
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForTokenUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
+import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
 import com.tangem.feature.swap.domain.buildSwapCurrencyStatus
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
@@ -45,6 +46,7 @@ internal class CexSwapFeeCalculatorTest {
     private val estimateFeeForGaslessTxUseCase: EstimateFeeForGaslessTxUseCase = mockk(relaxed = true)
     private val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase = mockk(relaxed = true)
     private val createTransferTransactionUseCase: CreateTransferTransactionUseCase = mockk(relaxed = true)
+    private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase = mockk(relaxed = true)
 
     private val sendBump = PatchEthGasLimitForSwap(percentage = PatchEthGasLimitForSwap.SEND_PERCENTAGE)
 
@@ -55,6 +57,7 @@ internal class CexSwapFeeCalculatorTest {
             estimateFeeForGaslessTxUseCase = estimateFeeForGaslessTxUseCase,
             getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
             createTransferTransactionUseCase = createTransferTransactionUseCase,
+            isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
             patchEthGasLimitForSwap = sendBump,
         )
     }
@@ -431,6 +434,103 @@ internal class CexSwapFeeCalculatorTest {
 
         // Assert
         assertThat(result).isEqualTo(error.left())
+    }
+
+    @Test
+    fun `GIVEN no fee token and Tron gasless supported WHEN calculate THEN quotes Tron gasless fee`() = runTest {
+        // Arrange
+        val fromStatus = tronUsdtStatus()
+        val expected = mockk<TransactionFeeExtended>()
+        coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
+        stubTronTransferTransaction()
+        coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns expected.right()
+
+        // Act
+        val result = sut.calculate(
+            userWallet = fromStatus.userWallet,
+            fromSwapCurrencyStatus = fromStatus,
+            amount = BigDecimal("10"),
+            selectedFeeToken = null,
+            isGasless = true,
+        )
+
+        // Assert
+        val loaded = result.getOrNull()?.transactionFee as? TransactionFeeResult.LoadedExtended
+        assertThat(loaded?.fee).isSameInstanceAs(expected)
+        coVerify(exactly = 0) {
+            estimateFeeForGaslessTxUseCase(amount = any(), userWallet = any(), sendingTokenCurrencyStatus = any())
+        }
+    }
+
+    @Test
+    fun `GIVEN no fee token and Tron gasless quote unavailable WHEN calculate THEN falls back to native fee`() =
+        runTest {
+            // Arrange
+            val fromStatus = tronUsdtStatus()
+            val nativeFee = TransactionFeeExtended(
+                transactionFee = TransactionFee.Single(normal = mockk<Fee.Common>(relaxed = true)),
+                feeTokenId = fromStatus.currency.id,
+            )
+            coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
+            stubTronTransferTransaction()
+            coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns
+                GetFeeError.GaslessError.DataError(null).left()
+            coEvery {
+                estimateFeeForGaslessTxUseCase(amount = any(), userWallet = any(), sendingTokenCurrencyStatus = any())
+            } returns nativeFee.right()
+
+            // Act
+            val result = sut.calculate(
+                userWallet = fromStatus.userWallet,
+                fromSwapCurrencyStatus = fromStatus,
+                amount = BigDecimal("10"),
+                selectedFeeToken = null,
+                isGasless = true,
+            )
+
+            // Assert
+            val loaded = result.getOrNull()?.transactionFee as? TransactionFeeResult.LoadedExtended
+            assertThat(loaded?.fee).isSameInstanceAs(nativeFee)
+        }
+
+    @Test
+    fun `GIVEN no fee token and Tron activation refused WHEN calculate THEN error is propagated`() = runTest {
+        // Arrange
+        val fromStatus = tronUsdtStatus()
+        val error = GetFeeError.GaslessError.TronActivationRateLimited(isPerWallet = true)
+        coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
+        stubTronTransferTransaction()
+        coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns error.left()
+
+        // Act
+        val result = sut.calculate(
+            userWallet = fromStatus.userWallet,
+            fromSwapCurrencyStatus = fromStatus,
+            amount = BigDecimal("10"),
+            selectedFeeToken = null,
+            isGasless = true,
+        )
+
+        // Assert
+        assertThat(result).isEqualTo(error.left())
+        coVerify(exactly = 0) {
+            estimateFeeForGaslessTxUseCase(amount = any(), userWallet = any(), sendingTokenCurrencyStatus = any())
+        }
+    }
+
+    private fun tronUsdtStatus(): SwapCurrencyStatus = buildSwapCurrencyStatus(
+        networkRawId = Blockchain.Tron.toNetworkId(),
+        contractAddress = TRON_USDT,
+        isCoin = false,
+        decimals = 6,
+    )
+
+    private fun stubTronTransferTransaction() {
+        coEvery {
+            createTransferTransactionUseCase(
+                amount = any(), memo = any(), destination = any(), userWalletId = any(), network = any(),
+            )
+        } returns mockk<TransactionData.Uncompiled>().right()
     }
 
     // -------------------------------------------------------------------------
