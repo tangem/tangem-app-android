@@ -13,6 +13,7 @@ import com.tangem.features.tangempay.withdraw.bank.recipients.model.BankRecipien
 import com.tangem.features.tangempay.withdraw.bank.recipients.model.RecipientsState
 import com.tangem.features.tangempay.withdraw.bank.recipients.state.TangemPayBankWithdrawRecipientsUM.ContentUM
 import com.tangem.features.tangempay.withdraw.bank.recipients.state.TangemPayBankWithdrawRecipientsUM.RecipientUM
+import com.tangem.features.tangempay.withdraw.toFullName
 import kotlinx.collections.immutable.toImmutableList
 
 internal class TangemPayBankWithdrawRecipientsUMFactory(private val callbacks: Callbacks) {
@@ -35,16 +36,22 @@ internal class TangemPayBankWithdrawRecipientsUMFactory(private val callbacks: C
         val accounts = state.accounts ?: return ContentUM.Loading
         val matched = BankRecipientSearch.filter(accounts = accounts, query = state.query)
         if (matched.isEmpty()) return ContentUM.NoResults
-        return ContentUM.Recipients(items = matched.map(::toRecipient).toImmutableList())
+        val recipients = matched
+            .map(::toRecipient)
+            .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER, RecipientUM::name))
+        return ContentUM.Recipients(items = recipients.toImmutableList())
     }
 
-    private fun toRecipient(account: BankAccount): RecipientUM = RecipientUM(
-        id = account.id,
-        initial = account.displayName.take(1).uppercase(),
-        name = account.displayName,
-        subtitle = createSubtitle(account.details),
-        onClick = { callbacks.onRecipientClick(account) },
-    )
+    private fun toRecipient(account: BankAccount): RecipientUM {
+        val name = account.details.beneficiary.toFullName()
+        return RecipientUM(
+            id = account.id,
+            initial = name.take(1).uppercase(),
+            name = name,
+            subtitle = createSubtitle(account.details),
+            onClick = { callbacks.onRecipientClick(account) },
+        )
+    }
 
     private fun createSubtitle(details: BankAccountDetails): TextReference = when (details.beneficiary) {
         is Beneficiary.Individual -> stringReference(details.accountNumber)
