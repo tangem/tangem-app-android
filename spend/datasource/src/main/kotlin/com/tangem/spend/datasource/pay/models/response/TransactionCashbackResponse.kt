@@ -1,14 +1,14 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
-import java.math.BigDecimal
+import com.tangem.domain.models.serialization.SerializedBigDecimal
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class TransactionCashbackResponse(
-    @Json(name = "status") val status: String,
-    @Json(name = "amount") val amount: BigDecimal? = null,
-    @Json(name = "currency") val currency: String? = null,
-    @Json(name = "cap_trimmed") val isCapTrimmed: Boolean? = null,
-    @Json(name = "exclusion_reason") val exclusionReason: String? = null,
+    @SerialName("status") val status: String,
+    @SerialName("amount") val amount: SerializedBigDecimal? = null,
+    @SerialName("currency") val currency: String? = null,
+    @SerialName("cap_trimmed") val isCapTrimmed: Boolean? = null,
+    @SerialName("exclusion_reason") val exclusionReason: String? = null,
 )

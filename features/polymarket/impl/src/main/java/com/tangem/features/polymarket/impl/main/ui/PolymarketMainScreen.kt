@@ -105,6 +105,7 @@ private val TabRimBrush = Brush.verticalGradient(
 @Composable
 internal fun PolymarketMainScreen(
     state: PolymarketMainUM,
+    positions: (@Composable (Modifier) -> Unit)?,
     onBackClick: () -> Unit,
     onSearchClick: () -> Unit,
     onHistoryClick: () -> Unit,
@@ -148,6 +149,7 @@ internal fun PolymarketMainScreen(
             Box(modifier = modifier.fillMaxSize()) {
                 PolymarketMainScaffold(
                     state = state,
+                    positions = positions,
                     listState = listState,
                     tabRowState = tabRowState,
                     isTabBandPinned = isTabBandPinned,
@@ -173,6 +175,7 @@ internal fun PolymarketMainScreen(
 @Suppress("LongParameterList")
 private fun PolymarketMainScaffold(
     state: PolymarketMainUM,
+    positions: (@Composable (Modifier) -> Unit)?,
     listState: LazyListState,
     tabRowState: LazyListState,
     isTabBandPinned: Boolean,
@@ -225,6 +228,7 @@ private fun PolymarketMainScaffold(
             FeedList(
                 modifier = Modifier.fillMaxSize(),
                 state = state,
+                positions = positions,
                 listState = listState,
                 tabRowState = tabRowState,
                 isTabBandPinned = isTabBandPinned,
@@ -234,9 +238,11 @@ private fun PolymarketMainScaffold(
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun FeedList(
     state: PolymarketMainUM,
+    positions: (@Composable (Modifier) -> Unit)?,
     listState: LazyListState,
     tabRowState: LazyListState,
     isTabBandPinned: Boolean,
@@ -259,9 +265,7 @@ private fun FeedList(
                 PolymarketMainHeader(
                     balance = state.balance,
                     isAwaitingFunds = state.isAwaitingFunds,
-                    positions = state.positions,
-                    onActivePositionsClick = state.onActivePositionsClick,
-                    onFinishedPositionsClick = state.onFinishedPositionsClick,
+                    positions = positions,
                 )
             }
 
@@ -466,6 +470,9 @@ private fun PolymarketMainScreenContentPreview() {
                 ),
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             ),
+            positions = { modifier ->
+                PolymarketPositionsPreview(state = PolymarketPositionsPreviewUM.Loading, modifier = modifier)
+            },
             onBackClick = {},
             onSearchClick = {},
             onHistoryClick = {},
@@ -498,6 +505,9 @@ private fun PolymarketMainScreenAwaitingFundsPreview() {
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
                 isAwaitingFunds = true,
             ),
+            positions = { modifier ->
+                PolymarketPositionsPreview(state = PolymarketPositionsPreviewUM.Loading, modifier = modifier)
+            },
             onBackClick = {},
             onSearchClick = {},
             onHistoryClick = {},
@@ -526,9 +536,9 @@ private fun PolymarketMainScreenErrorPreview() {
                 balance = previewPredictionBalance(BigDecimal("1234.56")),
                 categories = previewCategories(),
                 content = PolymarketMainUM.ContentUM.Error(onReloadClick = {}),
-                positions = PolymarketPositionsPreviewUM.Content(persistentListOf()),
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             ),
+            positions = null,
             onBackClick = {},
             onSearchClick = {},
             onHistoryClick = {},
@@ -558,11 +568,16 @@ private fun PolymarketMainScreenLoadingPreview() {
                 categories = persistentListOf(),
                 isCategoriesLoading = true,
                 content = PolymarketMainUM.ContentUM.Loading,
-                positions = PolymarketPositionsPreviewUM.Loading,
-                onActivePositionsClick = {},
-                onFinishedPositionsClick = {},
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             ),
+            positions = { modifier ->
+                PolymarketPositionsPreview(
+                    state = PolymarketPositionsPreviewUM.Loading,
+                    modifier = modifier,
+                    onActiveClick = {},
+                    onFinishedClick = {},
+                )
+            },
             onBackClick = {},
             onSearchClick = {},
             onHistoryClick = {},

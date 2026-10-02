@@ -40,10 +40,12 @@ import com.tangem.domain.nft.EnableWalletNFTUseCase
 import com.tangem.domain.nft.GetWalletNFTEnabledUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.assetsdiscovery.usecase.StartAssetsDiscoveryUseCase
+import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
 import com.tangem.domain.wallets.analytics.Settings
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.analytics.toAnalyticsState
 import com.tangem.domain.wallets.usecase.*
+import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.feature.walletsettings.entity.*
 import com.tangem.feature.walletsettings.impl.R
@@ -52,10 +54,13 @@ import com.tangem.feature.walletsettings.utils.AccountListSortingSaver
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
 import com.tangem.feature.walletsettings.utils.WalletCardItemDelegate
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
+import com.tangem.features.hotwallet.HardwareUpgradeLauncher
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
@@ -94,14 +99,19 @@ internal class WalletSettingsModel @Inject constructor(
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
     private val jointAccountFeatureToggles: JointAccountFeatureToggles,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val socialLoginFeatureToggles: SocialLoginFeatureToggles,
     private val getCloudBackupStateUseCase: GetCloudBackupStateUseCase,
     private val getCloudBackupStatusUseCase: GetCloudBackupStatusUseCase,
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
+    private val isSocialBackupCompletedUseCase: IsSocialBackupCompletedUseCase,
+    private val hardwareUpgradeLauncher: HardwareUpgradeLauncher,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
     val dialogNavigation = SlotNavigation<DialogConfig>()
     val bottomSheetNavigation: SlotNavigation<WalletSettingsBSConfig> = SlotNavigation()
+
+    private val upgradeJobHolder = JobHolder()
 
     private val isJointAccountEnabled: Boolean
         get() = jointAccountFeatureToggles.isJointAccountEnabled
@@ -151,12 +161,14 @@ internal class WalletSettingsModel @Inject constructor(
             flow2 = walletCardItemDelegate.cardItemFlow(wallet),
             flow3 = accountItemsDelegate.loadAccount(wallet, onAddAccountClick = ::onAddAccountClick),
             flow4 = isWalletBackedUpUseCase.flow(wallet),
-        ) { nftEnabled, cardItem, accountList, isWalletBackedUp ->
+            flow5 = isSocialWalletFlow(wallet),
+        ) { nftEnabled, cardItem, accountList, isWalletBackedUp, isSocialWallet ->
             state.update { value ->
                 value.copy(
                     items = buildItems(
                         userWallet = wallet,
                         isWalletBackedUp = isWalletBackedUp,
+                        isSocialWallet = isSocialWallet,
                         cardItem = cardItem,
                         isNFTEnabled = nftEnabled,
                         accountList = accountList,
@@ -184,9 +196,15 @@ internal class WalletSettingsModel @Inject constructor(
         trackingContextProxy.removeContext()
     }
 
+    private fun isSocialWalletFlow(wallet: UserWallet): Flow<Boolean> = when (wallet) {
+        is UserWallet.Cold -> flowOf(false)
+        is UserWallet.Hot -> isSocialBackupCompletedUseCase.flow(wallet.walletId)
+    }
+
     private fun buildItems(
         userWallet: UserWallet,
         isWalletBackedUp: Boolean,
+        isSocialWallet: Boolean,
         cardItem: WalletSettingsItemUM.CardBlock,
         isNFTEnabled: Boolean,
         accountList: List<WalletSettingsAccountsUM>,
@@ -199,6 +217,7 @@ internal class WalletSettingsModel @Inject constructor(
         return itemsBuilder.buildItems(
             userWallet = userWallet,
             isWalletBackedUp = isWalletBackedUp,
+            isSocialWallet = isSocialWallet,
             cardItem = cardItem,
             isReferralAvailable = when (userWallet) {
                 is UserWallet.Cold -> userWallet.cardTypesResolver.isTangemWallet()
@@ -218,6 +237,10 @@ internal class WalletSettingsModel @Inject constructor(
             onCheckedNFTChange = ::onCheckedNFTChange,
             forgetWallet = {
                 onForgetWalletClick(userWallet)
+            },
+            onLogOutClick = ::onLogOutClick,
+            onDeleteWalletClick = {
+                if (userWallet is UserWallet.Hot) onDeleteWalletClick(userWallet)
             },
             onLinkMoreCardsClick = {
                 when (userWallet) {
@@ -247,7 +270,7 @@ internal class WalletSettingsModel @Inject constructor(
         router.push(AppRoute.PushNotificationSettings(userWalletId = params.userWalletId))
     }
 
-    private fun forgetWallet() = modelScope.launch {
+    private fun forgetWallet(onForgotten: () -> Unit = {}) = modelScope.launch {
         val userWallet = getUserWalletUseCase(params.userWalletId)
             .getOrNull()
 
@@ -264,6 +287,8 @@ internal class WalletSettingsModel @Inject constructor(
 
             return@launch
         }
+
+        onForgotten()
 
         if (hasUserWallets) {
             router.pop()
@@ -373,7 +398,17 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onUpgradeWalletClick() {
-        router.push(AppRoute.WalletHardwareBackup(userWalletId = params.userWalletId))
+        modelScope.launch {
+            hardwareUpgradeLauncher.launch(
+                userWalletId = params.userWalletId,
+                source = AppRoute.HardwareUpgradeStories.Source.WALLET_SETTINGS,
+            )
+        }.saveIn(upgradeJobHolder)
+    }
+
+    /** Drops a pending upgrade launch, so it doesn't navigate after the user has left the screen. */
+    fun onPause() {
+        upgradeJobHolder.cancel()
     }
 
     private fun onBackupClick() {
@@ -398,6 +433,7 @@ internal class WalletSettingsModel @Inject constructor(
                     action = WalletSettingsAnalyticEvents.NoticeBackupFirst.Action.AccessCode,
                     cloudBackupState = resolveCloudBackupState(userWallet),
                     isBackedUp = manualBackupState(userWallet.backedUp),
+                    isSocialBackedUp = socialBackupState(),
                 ),
             )
         }
@@ -489,7 +525,7 @@ internal class WalletSettingsModel @Inject constructor(
         state.update { prevState ->
             prevState.copy(
                 items = prevState.items.mutate {
-                    it.add(toIndex - 1, it.removeAt(fromIndex - 1))
+                    it.add(toIndex, it.removeAt(fromIndex))
                 },
             )
         }
@@ -551,6 +587,8 @@ internal class WalletSettingsModel @Inject constructor(
         }
     }
 
+    private fun socialBackupState(): Boolean? = false.takeIf { socialLoginFeatureToggles.isSocialLoginEnabled }
+
     private fun manualBackupState(isBackedUp: Boolean): Boolean? =
         isBackedUp.takeIf { hotWalletFeatureToggles.isGoogleDriveBackupEnabled }
 
@@ -595,7 +633,7 @@ internal class WalletSettingsModel @Inject constructor(
     @Suppress("LongMethod")
     private fun sendForgetSeedBackupSheet(userWallet: UserWallet.Hot) {
         // Any backup, not the seed phrase alone: a wallet kept by social recovery survives being
-        // forgotten, so it must not be offered the "forget anyway" wording (FR-11, FR-15).
+        // forgotten, so it must not be offered the "forget anyway" wording.
         val isBackedUp = state.value.isWalletBackedUp
 
         if (!isBackedUp) {
@@ -606,6 +644,7 @@ internal class WalletSettingsModel @Inject constructor(
                     cloudBackupState = AnalyticsParam.CloudBackupState.Incomplete
                         .takeIf { hotWalletFeatureToggles.isGoogleDriveBackupEnabled },
                     isBackedUp = manualBackupState(isBackedUp = false),
+                    isSocialBackedUp = socialBackupState(),
                 ),
             )
         }
@@ -670,4 +709,77 @@ internal class WalletSettingsModel @Inject constructor(
             },
         )
     }
+
+    private fun onLogOutClick() {
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.LogOutRequest())
+        messageSender.send(
+            DialogMessage(
+                title = resourceReference(R.string.social_wallet_log_out_title),
+                message = resourceReference(R.string.social_wallet_log_out_description),
+                firstActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(R.string.social_wallet_settings_log_out),
+                        isWarning = true,
+                        onClick = {
+                            forgetWallet(
+                                onForgotten = {
+                                    analyticsEventHandler.send(WalletSettingsAnalyticEvents.WalletLoggedOut())
+                                },
+                            )
+                        },
+                    )
+                },
+                secondActionBuilder = { cancelAction() },
+            ),
+        )
+    }
+
+    private fun onDeleteWalletClick(userWallet: UserWallet.Hot) {
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.DeleteWalletRequest())
+        messageSender.send(
+            bottomSheetMessage {
+                infoBlock {
+                    icon(R.drawable.ic_alert_triangle_20) {
+                        type = MessageBottomSheetUM.Icon.Type.Attention
+                        backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
+                    }
+                    title = resourceReference(R.string.social_wallet_delete_title)
+                    body = resourceReference(R.string.social_wallet_delete_description, wrappedList(PROVIDER_NAME))
+                }
+                secondaryButton {
+                    text = resourceReference(R.string.social_wallet_delete_anyway)
+                    onClick {
+                        router.push(AppRoute.ForgetWallet(userWallet.walletId, shouldDeleteSocialRecovery = true))
+                        closeBs()
+                    }
+                }
+                if (userWallet.backedUp) {
+                    primaryButton {
+                        text = resourceReference(R.string.hw_remove_wallet_notification_action_backup_view_v2)
+                        onClick {
+                            unlockWalletIfNeedAndProceed {
+                                router.push(AppRoute.ViewPhrase(userWallet.walletId))
+                            }
+                            closeBs()
+                        }
+                    }
+                } else {
+                    primaryButton {
+                        text = resourceReference(R.string.hw_remove_wallet_notification_action_backup_go)
+                        onClick {
+                            router.push(
+                                AppRoute.WalletBackup(
+                                    userWalletId = userWallet.walletId,
+                                    isColdWalletOptionShown = false,
+                                ),
+                            )
+                            closeBs()
+                        }
+                    }
+                }
+            },
+        )
+    }
 }
+
+private const val PROVIDER_NAME = "Google"

@@ -1,6 +1,7 @@
 package com.tangem.features.polymarket.impl.placeprediction.model
 
 import com.tangem.features.polymarket.impl.common.PolymarketConst
+import com.tangem.features.polymarket.impl.common.floorToSharePrecision
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -11,10 +12,10 @@ internal object SharesCalculator {
     private const val FULL_PERCENT = 100
 
     /**
-     * @return the largest amount of [held] shares the market can accept, truncated onto its 2-decimal grid.
-     *  This is the only amount that closes a position completely, so it is never rounded to whole shares.
+     * @return the whole of [held], at most at the on-chain share precision. This is the only amount that closes a
+     *  position completely, so it is never rounded to whole shares or onto a coarser grid.
      */
-    fun available(held: BigDecimal): BigDecimal = held.setScale(PolymarketConst.SHARES_DECIMALS, RoundingMode.FLOOR)
+    fun available(held: BigDecimal): BigDecimal = held.floorToSharePrecision()
 
     /** @return the smallest amount that can be selected out of [available] — a sale never leaves zero behind. */
     fun minimum(available: BigDecimal): BigDecimal = available.coerceAtMost(BigDecimal.ONE)

@@ -112,6 +112,7 @@ internal class TangemPayAddToGoogleWalletController @AssistedInject constructor(
             return
         }
 
+        logger.i("Add to Google Wallet tapped, card status: $walletStatus")
         analytics.send(TangemPayAnalyticsEvents.AddToWalletClicked())
         val isVerificationPending = walletStatus == CardStatus.Incomplete
         setAddingCard(isAddingCard = true)
@@ -166,7 +167,7 @@ internal class TangemPayAddToGoogleWalletController @AssistedInject constructor(
     private fun onAddResult(card: TangemPayCard, result: AddResult) {
         when (result) {
             AddResult.Added, AddResult.AlreadyAdded -> markAsAdded(card)
-            AddResult.Cancelled -> logger.i("Adding the card to Google Wallet was cancelled")
+            AddResult.Cancelled -> Unit
             is AddResult.Failed -> showFailure(result.reason)
         }
         checkWalletStatus()
@@ -184,7 +185,8 @@ internal class TangemPayAddToGoogleWalletController @AssistedInject constructor(
             FailureReason.TOKENIZATION_DECLINED,
             -> Unit
             FailureReason.NETWORK_ERROR -> showNetworkError()
-            FailureReason.UNSUPPORTED,
+            FailureReason.TOO_MANY_ATTEMPTS -> showRateLimitError()
+            FailureReason.UNSUPPORTED -> showWalletUnavailableError()
             FailureReason.NO_ACTIVITY,
             FailureReason.ENVIRONMENT_MISMATCH,
             FailureReason.TOKEN_LOOKUP_FAILED,
@@ -202,6 +204,14 @@ internal class TangemPayAddToGoogleWalletController @AssistedInject constructor(
 
     private fun showNetworkError() {
         uiMessageSender.send(TangemPayMessagesFactory.createAddToGoogleWalletNetworkError())
+    }
+
+    private fun showRateLimitError() {
+        uiMessageSender.send(TangemPayMessagesFactory.createAddToGoogleWalletRateLimitError())
+    }
+
+    private fun showWalletUnavailableError() {
+        uiMessageSender.send(TangemPayMessagesFactory.createAddToGoogleWalletUnavailableError())
     }
 
     private fun checkWalletStatus() {

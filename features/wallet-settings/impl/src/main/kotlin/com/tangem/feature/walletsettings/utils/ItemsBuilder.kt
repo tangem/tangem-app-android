@@ -22,6 +22,7 @@ internal class ItemsBuilder @Inject constructor() {
     fun buildItems(
         userWallet: UserWallet,
         isWalletBackedUp: Boolean,
+        isSocialWallet: Boolean,
         cardItem: WalletSettingsItemUM.CardBlock,
         accountsUM: List<WalletSettingsAccountsUM>,
         isLinkMoreCardsAvailable: Boolean,
@@ -32,6 +33,8 @@ internal class ItemsBuilder @Inject constructor() {
         onCheckedNFTChange: (Boolean) -> Unit,
         onNotificationSettingsClick: () -> Unit,
         forgetWallet: () -> Unit,
+        onLogOutClick: () -> Unit,
+        onDeleteWalletClick: () -> Unit,
         onLinkMoreCardsClick: () -> Unit,
         onReferralClick: () -> Unit,
         onManageTokensClick: () -> Unit,
@@ -64,7 +67,13 @@ internal class ItemsBuilder @Inject constructor() {
                 onCheckedNFTChange = onCheckedNFTChange,
             ),
         )
-        .add(buildForgetItem(forgetWallet))
+        .add(
+            if (isSocialWallet) {
+                buildLogOutAndDeleteItem(onLogOutClick = onLogOutClick, onDeleteWalletClick = onDeleteWalletClick)
+            } else {
+                buildForgetItem(forgetWallet)
+            },
+        )
 
     private fun buildNFTItems(
         isNFTFeatureEnabled: Boolean,
@@ -187,6 +196,25 @@ internal class ItemsBuilder @Inject constructor() {
             ),
         ),
     )
+
+    private fun buildLogOutAndDeleteItem(onLogOutClick: () -> Unit, onDeleteWalletClick: () -> Unit) =
+        WalletSettingsItemUM.WithItems(
+            id = "forget",
+            description = resourceReference(R.string.settings_forget_wallet_footer),
+            blocks = persistentListOf(
+                BlockUM(
+                    text = resourceReference(R.string.social_wallet_settings_log_out),
+                    iconRes = null,
+                    onClick = onLogOutClick,
+                ),
+                BlockUM(
+                    text = resourceReference(R.string.social_wallet_settings_delete_wallet),
+                    iconRes = null,
+                    onClick = onDeleteWalletClick,
+                    accentType = BlockUM.AccentType.WARNING,
+                ),
+            ),
+        )
 
     private fun buildAccessCodeItem(userWallet: UserWallet, onItemClick: () -> Unit): List<WalletSettingsItemUM> {
         return when (userWallet) {
