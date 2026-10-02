@@ -15,13 +15,16 @@ import com.tangem.core.analytics.models.event.TransferAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetCryptoCurrencyActionsUseCaseV2
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
-import com.tangem.domain.jointaccount.usecase.IsJointOperationSlotBusyUseCase
+import com.tangem.domain.jointaccount.model.JointOperationSlot
+import com.tangem.domain.jointaccount.usecase.GetJointOperationSlotUseCase
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.isMainAccount
 import com.tangem.domain.models.account.derivationIndex
@@ -60,7 +63,8 @@ internal class ManageFundsModel @Inject constructor(
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val appRouter: AppRouter,
-    private val isJointOperationSlotBusyUseCase: IsJointOperationSlotBusyUseCase,
+    private val getJointOperationSlotUseCase: GetJointOperationSlotUseCase,
+    private val messageSender: UiMessageSender,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model(), TokenActionsComponent.Callbacks {
 
@@ -341,9 +345,14 @@ internal class ManageFundsModel @Inject constructor(
     private suspend fun isTransferBlocked(account: AccountStatus.CryptoPortfolio, currency: CryptoCurrency): Boolean {
         if (flowType != ManageFundsComponent.FlowType.Transfer) return false
         val jointAccount = (account as? AccountStatus.Joint)?.account ?: return false
-        if (!isJointOperationSlotBusyUseCase(account = jointAccount, network = currency.network)) return false
 
-        jointSlotBusyNavigation.activate(currency.network.name)
+        when (getJointOperationSlotUseCase(account = jointAccount, network = currency.network)) {
+            JointOperationSlot.FREE -> return false
+            JointOperationSlot.BUSY -> jointSlotBusyNavigation.activate(currency.network.name)
+            JointOperationSlot.UNKNOWN -> messageSender.send(
+                SnackbarMessage(resourceReference(R.string.common_unknown_error)),
+            )
+        }
         return true
     }
 
