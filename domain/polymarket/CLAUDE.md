@@ -102,8 +102,8 @@ onboarded. It must match iOS and the SDK byte for byte; `PolymarketDerivationCon
    `GetPolymarketBalanceInteractor` on `InvalidSignature` and by `PlacePredictionOrderUseCase` on a remote
    `Unauthorized`. The local "no stored credentials" refusal clears nothing. Both run under
    `PolymarketCredentialsLock` (one `Mutex` per wallet) from reading the credentials to clearing them, and
-   `DeriveApiCredentialsUseCase` stores under the same lock, so a `401` always answers the credentials that
-   are stored now: a Reconnect waits for a request in flight instead of having its fresh set wiped by that
+   `DeriveApiCredentialsUseCase` reads, derives and stores under the same lock, so a `401` always answers
+   the credentials that are stored now: a Reconnect waits for a request in flight instead of having its fresh set wiped by that
    request's late `401`. The lock is not reentrant — never call a locking use case from inside it. The `401`
    of `GET data/order/{id}` (the delayed-fill read) does not clear anything and is not locked.
 9. **Withdrawal is persisted before it is submitted.** `SubmitPredictionWithdrawalInteractor` stores the
