@@ -9,9 +9,9 @@ import com.tangem.features.feed.analytics.FeedSortType
 import com.tangem.features.feed.rwa.categories.CategorySelection
 
 internal enum class RwaInterval(val title: TextReference) {
-    H24(title = resourceReference(R.string.markets_real_assets_interval_day)),
-    D7(title = resourceReference(R.string.markets_real_assets_interval_week)),
-    M1(title = resourceReference(R.string.markets_real_assets_interval_month)),
+    H24(title = resourceReference(R.string.markets_selector_interval_24h_title)),
+    D7(title = resourceReference(R.string.markets_selector_interval_7d_title)),
+    M1(title = resourceReference(R.string.markets_selector_interval_1m_title)),
     ;
 
     fun toBatchRequestInterval(): TokenMarketListConfig.Interval {

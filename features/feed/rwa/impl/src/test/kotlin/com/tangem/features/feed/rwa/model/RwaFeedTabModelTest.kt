@@ -174,6 +174,23 @@ internal class RwaFeedTabModelTest {
     }
 
     @Test
+    fun `GIVEN a resolved country WHEN the rail is requested THEN it travels with the request`() = runTest {
+        // Arrange — without it the curated tokens come back unrestricted, and the rail opens a
+        // blocked asset past the region gate on the token screen
+        coEvery { userCountryResolver.resolve() } returns "US"
+        coEvery { getCoinCategoriesUseCase(country = "US") } returns Either.Right(
+            listOf(umbrellaCategory(), featuredCategory(), commoditiesCategory()),
+        )
+
+        // Act
+        createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(reloadConfigs(featuredActions).map { it.country }).containsExactly("US")
+    }
+
+    @Test
     fun `GIVEN featured-assets is missing WHEN categories load THEN the rail is empty and the list still loads`() =
         runTest {
             // Arrange
