@@ -212,9 +212,9 @@ internal class JointOperationUMConverter(
 
     /** The fee is the refund cap the Safe pays the relayer, the actual gas comes in lower, hence the tilde */
     private fun feeRow(state: JointOperationState): TxHistoryDetailsUM.InfoRowUM? {
-        val coin = state.feeCoin ?: return null
-        val fee = state.feeWei.toBigDecimal().movePointLeft(coin.decimals)
-        val formatted = fee.format { crypto(cryptoCurrency = coin, ignoreSymbolPosition = true) }
+        val feeCurrency = state.feeCurrency ?: return null
+        val fee = state.feeAmount.toBigDecimal().movePointLeft(feeCurrency.decimals)
+        val formatted = fee.format { crypto(cryptoCurrency = feeCurrency, ignoreSymbolPosition = true) }
 
         return TxHistoryDetailsUM.InfoRowUM(
             label = resourceReference(R.string.common_network_fee_title),
