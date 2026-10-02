@@ -28,7 +28,6 @@ import com.tangem.domain.pay.model.recents.RecentTokenTransfer
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.pay.usecase.bankofframp.GetBankOfframpOptionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetRecentBankAccountsUseCase
-import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
 import com.tangem.domain.pay.usecase.recents.GetRecentTokenTransfersUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
@@ -66,7 +65,6 @@ internal class TangemPayWithdrawHubModelTest {
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val getRecentBankAccountsUseCase: GetRecentBankAccountsUseCase = mockk()
     private val getRecentTokenTransfersUseCase: GetRecentTokenTransfersUseCase = mockk()
-    private val markBankAccountUsedUseCase: MarkBankAccountUsedUseCase = mockk(relaxed = true)
     private val getBankOfframpOptionsUseCase: GetBankOfframpOptionsUseCase = mockk()
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
@@ -90,7 +88,6 @@ internal class TangemPayWithdrawHubModelTest {
             uiMessageSender,
             getRecentBankAccountsUseCase,
             getRecentTokenTransfersUseCase,
-            markBankAccountUsedUseCase,
             getBankOfframpOptionsUseCase,
             paymentAccountStatusSupplier,
             analytics,
@@ -438,7 +435,7 @@ internal class TangemPayWithdrawHubModelTest {
     }
 
     @Test
-    fun `GIVEN recents content WHEN recipient clicked THEN account marked used and saved entry opened`() {
+    fun `GIVEN recents content WHEN recipient clicked THEN saved entry opened`() {
         // Arrange
         coEvery { getRecentBankAccountsUseCase(userWalletId) } returns
             recentBankAccounts(recents = listOf(bankAccount(id = "acc-1"))).right()
@@ -448,7 +445,6 @@ internal class TangemPayWithdrawHubModelTest {
         (model.recents() as RecentsUM.Content).onRecipientClick("acc-1")
 
         // Assert
-        coVerify(exactly = 1) { markBankAccountUsedUseCase(userWalletId = userWalletId, bankAccountId = "acc-1") }
         assertThat(opened.single().first).isEqualTo(BankWithdrawEntry.Saved(bankAccountId = "acc-1"))
         model.onDestroy()
     }
@@ -619,7 +615,6 @@ internal class TangemPayWithdrawHubModelTest {
         uiMessageSender = uiMessageSender,
         getRecentBankAccountsUseCase = getRecentBankAccountsUseCase,
         getRecentTokenTransfersUseCase = getRecentTokenTransfersUseCase,
-        markBankAccountUsedUseCase = markBankAccountUsedUseCase,
         getBankOfframpOptionsUseCase = getBankOfframpOptionsUseCase,
         paymentAccountStatusSupplier = paymentAccountStatusSupplier,
         analytics = analytics,

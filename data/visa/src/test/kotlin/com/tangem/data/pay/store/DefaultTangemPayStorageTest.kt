@@ -95,19 +95,6 @@ internal class DefaultTangemPayStorageTest {
     }
 
     @Test
-    fun `GIVEN bank offramp recents WHEN clearAll THEN the recents key is removed`() = runTest {
-        // Arrange
-        val key = spendPreferencesKeys.bankOfframpRecents(WALLET)
-        prefs.editData { preferences -> preferences[key] = """{"acc-1":{"usedAtMillis":1}}""" }
-
-        // Act
-        storage.clearAll(userWalletId = WALLET, customerWalletAddress = null)
-
-        // Assert
-        assertThat(prefs.data.first()[key]).isNull()
-    }
-
-    @Test
     fun `GIVEN payment account recents WHEN clearAll THEN the recents key is removed`() = runTest {
         // Arrange
         val key = spendPreferencesKeys.paymentAccountRecents(WALLET)

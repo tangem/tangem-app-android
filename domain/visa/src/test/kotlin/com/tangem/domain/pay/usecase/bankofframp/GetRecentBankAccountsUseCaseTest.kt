@@ -1,10 +1,10 @@
 package com.tangem.domain.pay.usecase.bankofframp
 
+import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.pay.model.bankofframp.BankAccount
+import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.RecentBankAccounts
-import com.tangem.domain.pay.repository.BankOfframpRecentsStore
 import com.tangem.domain.pay.repository.BankOfframpRepository
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
@@ -21,28 +21,25 @@ import org.junit.jupiter.params.ParameterizedTest
 internal class GetRecentBankAccountsUseCaseTest {
 
     private val repository: BankOfframpRepository = mockk()
-    private val recentsStore: BankOfframpRecentsStore = mockk()
-    private val useCase = GetRecentBankAccountsUseCase(repository = repository, recentsStore = recentsStore)
+    private val useCase = GetRecentBankAccountsUseCase(repository = repository)
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(repository, recentsStore)
+        clearMocks(repository)
     }
 
     @Test
-    fun `GIVEN usage log WHEN invoke THEN three most recent returned newest first`() = runTest {
+    fun `GIVEN saved accounts WHEN invoke THEN first three returned in backend order`() = runTest {
         // Arrange
-        val accounts = listOf("a", "b", "c", "d", "e").map { bankAccount(id = it, displayName = it) }
+        val accounts = listOf("Dave", "charlie", "Bob", "alice").map { bankAccount(id = it, displayName = it) }
         coEvery { repository.getBankAccounts(TEST_USER_WALLET_ID) } returns accounts.right()
-        coEvery { recentsStore.getUsage(TEST_USER_WALLET_ID) } returns
-            mapOf("a" to 10L, "b" to 40L, "c" to 30L, "d" to 20L)
 
         // Act
         val actual = useCase(TEST_USER_WALLET_ID)
 
         // Assert
         val expected = RecentBankAccounts(
-            recents = listOf("b", "c", "d").map { bankAccount(id = it, displayName = it) },
+            recents = listOf("Dave", "charlie", "Bob").map { bankAccount(id = it, displayName = it) },
             hasMoreAccounts = true,
         )
         assertThat(actual).isEqualTo(expected.right())
@@ -50,53 +47,15 @@ internal class GetRecentBankAccountsUseCaseTest {
     }
 
     @Test
-    fun `GIVEN usage of a deleted account WHEN invoke THEN it is skipped`() = runTest {
+    fun `GIVEN repository error WHEN invoke THEN error is returned`() = runTest {
         // Arrange
-        coEvery { repository.getBankAccounts(TEST_USER_WALLET_ID) } returns listOf(bankAccount(id = "a")).right()
-        coEvery { recentsStore.getUsage(TEST_USER_WALLET_ID) } returns mapOf("a" to 1L, "gone" to 2L)
+        coEvery { repository.getBankAccounts(TEST_USER_WALLET_ID) } returns BankOfframpError.Unknown(cause = null).left()
 
         // Act
         val actual = useCase(TEST_USER_WALLET_ID)
 
         // Assert
-        val expected = RecentBankAccounts(recents = listOf(bankAccount(id = "a")), hasMoreAccounts = false)
-        assertThat(actual).isEqualTo(expected.right())
-    }
-
-    @Test
-    fun `GIVEN saved accounts without usage WHEN invoke THEN first three in see all order returned`() = runTest {
-        // Arrange
-        val accounts = listOf("Dave", "charlie", "Bob", "alice").map { bankAccount(id = it, displayName = it) }
-        coEvery { repository.getBankAccounts(TEST_USER_WALLET_ID) } returns accounts.right()
-        coEvery { recentsStore.getUsage(TEST_USER_WALLET_ID) } returns emptyMap()
-
-        // Act
-        val actual = useCase(TEST_USER_WALLET_ID)
-
-        // Assert
-        val expected = RecentBankAccounts(
-            recents = listOf("alice", "Bob", "charlie").map { bankAccount(id = it, displayName = it) },
-            hasMoreAccounts = true,
-        )
-        assertThat(actual).isEqualTo(expected.right())
-    }
-
-    @Test
-    fun `GIVEN some accounts used WHEN invoke THEN used ones first and the rest in see all order`() = runTest {
-        // Arrange
-        val accounts = listOf("c", "b", "a", "d").map { bankAccount(id = it, displayName = it) }
-        coEvery { repository.getBankAccounts(TEST_USER_WALLET_ID) } returns accounts.right()
-        coEvery { recentsStore.getUsage(TEST_USER_WALLET_ID) } returns mapOf("d" to 5L)
-
-        // Act
-        val actual = useCase(TEST_USER_WALLET_ID)
-
-        // Assert
-        val expected = RecentBankAccounts(
-            recents = listOf("d", "a", "b").map { bankAccount(id = it, displayName = it) },
-            hasMoreAccounts = true,
-        )
-        assertThat(actual).isEqualTo(expected.right())
+        assertThat(actual).isEqualTo(BankOfframpError.Unknown(cause = null).left())
     }
 
     @ParameterizedTest
@@ -106,7 +65,6 @@ internal class GetRecentBankAccountsUseCaseTest {
             // Arrange
             val accounts = List(model.count) { bankAccount(id = "acc-$it", displayName = "acc-$it") }
             coEvery { repository.getBankAccounts(TEST_USER_WALLET_ID) } returns accounts.right()
-            coEvery { recentsStore.getUsage(TEST_USER_WALLET_ID) } returns emptyMap()
 
             // Act
             val actual = useCase(TEST_USER_WALLET_ID)

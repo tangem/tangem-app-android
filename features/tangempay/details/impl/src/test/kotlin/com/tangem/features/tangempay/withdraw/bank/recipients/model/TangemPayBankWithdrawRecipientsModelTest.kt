@@ -16,7 +16,6 @@ import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
-import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.recipients.TangemPayBankWithdrawRecipientsComponent
@@ -26,8 +25,6 @@ import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.coVerifyOrder
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
@@ -40,7 +37,6 @@ internal class TangemPayBankWithdrawRecipientsModelTest {
     private val router: Router = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val getBankAccountsUseCase: GetBankAccountsUseCase = mockk()
-    private val markBankAccountUsedUseCase: MarkBankAccountUsedUseCase = mockk(relaxed = true)
     private val onRecipientSelected: (BankAccount) -> Unit = mockk(relaxed = true)
     private val onCloseFlow: () -> Unit = mockk(relaxed = true)
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
@@ -68,7 +64,6 @@ internal class TangemPayBankWithdrawRecipientsModelTest {
             router,
             uiMessageSender,
             getBankAccountsUseCase,
-            markBankAccountUsedUseCase,
             onRecipientSelected,
             onCloseFlow,
             analytics,
@@ -187,7 +182,7 @@ internal class TangemPayBankWithdrawRecipientsModelTest {
     }
 
     @Test
-    fun `GIVEN recipients WHEN recipient clicked THEN account marked used then selection reported`() {
+    fun `GIVEN recipients WHEN recipient clicked THEN selection reported`() {
         // Arrange
         val model = createModel()
 
@@ -195,11 +190,7 @@ internal class TangemPayBankWithdrawRecipientsModelTest {
         (model.uiState.value.content as ContentUM.Recipients).items.first().onClick()
 
         // Assert
-        coVerifyOrder {
-            markBankAccountUsedUseCase(userWalletId = userWalletId, bankAccountId = "acc-1")
-            onRecipientSelected(basit)
-        }
-        coVerify(exactly = 1) { markBankAccountUsedUseCase(any(), any()) }
+        verify(exactly = 1) { onRecipientSelected(basit) }
         model.onDestroy()
     }
 
@@ -321,7 +312,6 @@ internal class TangemPayBankWithdrawRecipientsModelTest {
         router = router,
         uiMessageSender = uiMessageSender,
         getBankAccountsUseCase = getBankAccountsUseCase,
-        markBankAccountUsedUseCase = markBankAccountUsedUseCase,
         analytics = analytics,
     )
 }
