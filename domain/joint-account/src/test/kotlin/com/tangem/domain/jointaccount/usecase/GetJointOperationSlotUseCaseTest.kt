@@ -3,8 +3,10 @@ package com.tangem.domain.jointaccount.usecase
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
+import com.tangem.domain.jointaccount.model.JointOperationSlot
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
@@ -14,6 +16,7 @@ import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.MockAccounts
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.emptyFlow
@@ -23,28 +26,35 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.math.BigInteger
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class IsJointOperationSlotBusyUseCaseTest {
+internal class GetJointOperationSlotUseCaseTest {
 
     private val supplier: SingleJointAccountListSupplier = mockk()
+    private val fetcher: SingleJointAccountListFetcher = mockk()
     private val networkReader: JointNetworkReader = mockk()
     private val network: Network = mockk()
 
-    private val useCase = IsJointOperationSlotBusyUseCase(supplier = supplier, networkReader = networkReader)
+    private val useCase = GetJointOperationSlotUseCase(
+        supplier = supplier,
+        fetcher = fetcher,
+        networkReader = networkReader,
+    )
 
     private val account = MockAccounts.createJointAccount(ownerKeyIndex = 3)
+    private val fetcherParams = SingleJointAccountListFetcher.Params(userWalletId = account.accountId.userWalletId)
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(supplier, networkReader)
+        clearMocks(supplier, fetcher, networkReader)
         coEvery { networkReader.getChainId(network = network) } returns CHAIN_ID.right()
     }
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN operation in the network WHEN invoke THEN slot is busy`(model: BusyModel) = runTest {
+    fun `GIVEN actual account WHEN invoke THEN slot follows its operations`(model: SlotModel) = runTest {
         // Arrange
         every { supplier(userWalletId = account.accountId.userWalletId) } returns flowOf(
             listOf(jointAccount(inFlightOperations = model.inFlightOperations)),
@@ -55,36 +65,71 @@ internal class IsJointOperationSlotBusyUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)
+        coVerify(exactly = 0) { fetcher(params = any()) }
     }
 
     @Test
-    fun `GIVEN account unknown to the supplier WHEN invoke THEN slot is free`() = runTest {
+    fun `GIVEN stale account and fetch succeeds WHEN invoke THEN slot follows the fetched account`() = runTest {
+        // Arrange
+        every { supplier(userWalletId = account.accountId.userWalletId) } returnsMany listOf(
+            flowOf(listOf(jointAccount(inFlightOperations = emptyMap(), source = StatusSource.ONLY_CACHE))),
+            flowOf(listOf(jointAccount())),
+        )
+        coEvery { fetcher(params = fetcherParams) } returns Unit.right()
+
+        // Act
+        val actual = useCase(account = account, network = network)
+
+        // Assert
+        assertThat(actual).isEqualTo(JointOperationSlot.BUSY)
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = StatusSource::class, names = ["CACHE", "ONLY_CACHE"])
+    fun `GIVEN stale account and fetch fails WHEN invoke THEN slot is unknown`(source: StatusSource) = runTest {
+        // Arrange
+        every { supplier(userWalletId = account.accountId.userWalletId) } returns flowOf(
+            listOf(jointAccount(inFlightOperations = emptyMap(), source = source)),
+        )
+        coEvery { fetcher(params = fetcherParams) } returns IllegalStateException("503").left()
+
+        // Act
+        val actual = useCase(account = account, network = network)
+
+        // Assert
+        assertThat(actual).isEqualTo(JointOperationSlot.UNKNOWN)
+    }
+
+    @Test
+    fun `GIVEN supplier emits nothing and fetch fails WHEN invoke THEN slot is unknown`() = runTest {
+        // Arrange
+        every { supplier(userWalletId = account.accountId.userWalletId) } returns emptyFlow()
+        coEvery { fetcher(params = fetcherParams) } returns IllegalStateException("503").left()
+
+        // Act
+        val actual = useCase(account = account, network = network)
+
+        // Assert
+        assertThat(actual).isEqualTo(JointOperationSlot.UNKNOWN)
+    }
+
+    @Test
+    fun `GIVEN account unknown to the backend WHEN invoke THEN slot is unknown`() = runTest {
         // Arrange
         every { supplier(userWalletId = account.accountId.userWalletId) } returns flowOf(
             listOf(jointAccount(cryptoAccountId = "f".repeat(64))),
         )
+        coEvery { fetcher(params = fetcherParams) } returns Unit.right()
 
         // Act
         val actual = useCase(account = account, network = network)
 
         // Assert
-        assertThat(actual).isFalse()
+        assertThat(actual).isEqualTo(JointOperationSlot.UNKNOWN)
     }
 
     @Test
-    fun `GIVEN supplier emits nothing WHEN invoke THEN slot is free`() = runTest {
-        // Arrange
-        every { supplier(userWalletId = account.accountId.userWalletId) } returns emptyFlow()
-
-        // Act
-        val actual = useCase(account = account, network = network)
-
-        // Assert
-        assertThat(actual).isFalse()
-    }
-
-    @Test
-    fun `GIVEN network without chain id WHEN invoke THEN slot is free`() = runTest {
+    fun `GIVEN network without chain id WHEN invoke THEN slot is unknown`() = runTest {
         // Arrange
         coEvery { networkReader.getChainId(network = network) } returns IllegalArgumentException("no chain").left()
         every { supplier(userWalletId = account.accountId.userWalletId) } returns flowOf(listOf(jointAccount()))
@@ -93,28 +138,29 @@ internal class IsJointOperationSlotBusyUseCaseTest {
         val actual = useCase(account = account, network = network)
 
         // Assert
-        assertThat(actual).isFalse()
+        assertThat(actual).isEqualTo(JointOperationSlot.UNKNOWN)
     }
 
-    data class BusyModel(val inFlightOperations: Map<Long, JointOperation>, val expected: Boolean)
+    data class SlotModel(val inFlightOperations: Map<Long, JointOperation>, val expected: JointOperationSlot)
 
     private fun provideTestModels() = listOf(
-        BusyModel(inFlightOperations = emptyMap(), expected = false),
-        BusyModel(inFlightOperations = mapOf(OTHER_CHAIN_ID to operation()), expected = false),
-        BusyModel(inFlightOperations = mapOf(CHAIN_ID to operation()), expected = true),
-        BusyModel(
+        SlotModel(inFlightOperations = emptyMap(), expected = JointOperationSlot.FREE),
+        SlotModel(inFlightOperations = mapOf(OTHER_CHAIN_ID to operation()), expected = JointOperationSlot.FREE),
+        SlotModel(inFlightOperations = mapOf(CHAIN_ID to operation()), expected = JointOperationSlot.BUSY),
+        SlotModel(
             inFlightOperations = mapOf(CHAIN_ID to operation(status = JointOperation.Status.PENDING)),
-            expected = true,
+            expected = JointOperationSlot.BUSY,
         ),
-        BusyModel(
+        SlotModel(
             inFlightOperations = mapOf(CHAIN_ID to operation(status = JointOperation.Status.UNKNOWN)),
-            expected = true,
+            expected = JointOperationSlot.BUSY,
         ),
     )
 
     private fun jointAccount(
         inFlightOperations: Map<Long, JointOperation> = mapOf(CHAIN_ID to operation()),
         cryptoAccountId: String = account.accountId.value.uppercase(),
+        source: StatusSource = StatusSource.ACTUAL,
     ): JointAccount = JointAccount(
         cryptoAccountId = cryptoAccountId,
         membersCount = 2,
@@ -122,7 +168,7 @@ internal class IsJointOperationSlotBusyUseCaseTest {
         safeAddress = SAFE_ADDRESS,
         status = JointAccount.Status.ACTIVE,
         members = listOf(JointAccount.Member(name = "Alice", address = ALICE, role = JointAccount.Role.CREATOR)),
-        source = StatusSource.ACTUAL,
+        source = source,
         inFlightOperations = inFlightOperations,
     )
 
