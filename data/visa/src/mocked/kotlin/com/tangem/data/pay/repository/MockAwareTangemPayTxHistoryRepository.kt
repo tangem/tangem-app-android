@@ -175,6 +175,14 @@ internal class MockAwareTangemPayTxHistoryRepository @Inject constructor(
                 date = yesterday.minusHours(6),
                 cashback = mockCashback(Status.EXCLUDED, "0.00"),
             ),
+            mockSpend(
+                id = "tx_12",
+                merchantName = "Western Union",
+                category = "Money transfer",
+                amount = BigDecimal("250.00"),
+                date = yesterday.minusHours(7),
+                cashback = mockCashback(Status.EXCLUDED, "0.00"),
+            ),
             // Non-spend transaction — no cashback.
             TangemPayTxHistoryItem.Payment(
                 id = "tx_7",

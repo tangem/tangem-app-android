@@ -142,6 +142,10 @@ internal class PayTransactionCashbackConverterTest {
             dto = dto(status = "excluded", exclusionReason = "below-min"),
             expected = cashback(status = Status.EXCLUDED, exclusionReason = ExclusionReason.BELOW_MIN),
         ),
+        ConvertModel(
+            dto = dto(status = "excluded", exclusionReason = "compliance_risk"),
+            expected = cashback(status = Status.EXCLUDED, exclusionReason = ExclusionReason.COMPLIANCE_RISK),
+        ),
         // Deprecated / unknown reason maps to UNKNOWN.
         ConvertModel(
             dto = dto(status = "excluded", exclusionReason = "currency_excluded"),

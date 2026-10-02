@@ -133,6 +133,10 @@ internal class TangemPayCashbackDetailUmConverterTest {
             ),
         ),
         CashbackRowModel(
+            cashback = cashback(status = Status.EXCLUDED, amount = ZERO, exclusionReason = Reason.COMPLIANCE_RISK),
+            expected = excluded(R.string.tangem_pay_transaction_details_cashback_compliance_risk),
+        ),
+        CashbackRowModel(
             cashback = cashback(status = Status.EXCLUDED, amount = ZERO),
             expected = CashbackDetailUM.Content(
                 value = resourceReference(R.string.tangem_pay_transaction_details_cashback_none),
