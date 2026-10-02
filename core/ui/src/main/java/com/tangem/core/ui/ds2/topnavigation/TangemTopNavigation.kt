@@ -92,7 +92,7 @@ private fun Modifier.revealFromBehindGroup(progress: () -> Float): Modifier = la
  *   [TangemButtonStack]. Expected to emit its entries — see [TangemButton.GroupEntry].
  * @param isEndButtonsGroupBackgroundShown Whether the grouped secondary actions keep the stack's
  *   material pill ([TangemButtonStack.Variant.Material]) or drop it
- *   ([TangemButtonStack.Variant.Ghost]). Toggling cross-fades the pill. Defaults to true.
+ *   ([TangemButtonStack.Variant.Ghost]). Toggling fades the pill in place. Defaults to true.
  * @param endButton Trailing slot. Typically, a close button (see [TangemButton.Close]).
  * @param contentColumn Center slot. Place title/subtitle children here.
  */
