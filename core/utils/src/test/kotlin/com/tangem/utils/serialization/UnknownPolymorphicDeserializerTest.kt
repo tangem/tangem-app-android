@@ -24,6 +24,14 @@ internal class UnknownPolymorphicDeserializerTest {
 
     private val eventsSerializer = ListSerializer(PolymorphicSerializer(Event::class))
 
+    private val sealedJson = Json {
+        serializersModule = SerializersModule {
+            polymorphicUnknownFallback<Shape> { type, _ -> Shape.Unknown(type = type) }
+        }
+    }
+
+    private val shapesSerializer = ListSerializer(Shape.serializer())
+
     @Test
     fun `GIVEN known and unknown types WHEN decode THEN the unknown one keeps its type and payload`() {
         // Arrange
@@ -40,6 +48,15 @@ internal class UnknownPolymorphicDeserializerTest {
     }
 
     @Test
+    fun `GIVEN open base and registered type in another case WHEN decode THEN the subclass is matched ignoring case`() {
+        // Act
+        val actual = json.decodeFromString(eventsSerializer, """[{"type":"CREATED","id":"1"}]""")
+
+        // Assert
+        assertThat(actual).containsExactly(Created(id = "1"))
+    }
+
+    @Test
     fun `GIVEN item without type WHEN decode THEN the fallback receives a null type`() {
         // Arrange
         val encoded = """[{"id":"3"}]"""
@@ -53,21 +70,32 @@ internal class UnknownPolymorphicDeserializerTest {
 
     @Test
     fun `GIVEN sealed base with fallback WHEN decode THEN unknown subtype is resolved as well`() {
-        // Arrange
-        val sealedJson = Json {
-            serializersModule = SerializersModule {
-                polymorphicUnknownFallback<Shape> { type, _ -> Shape.Unknown(type = type) }
-            }
-        }
-
         // Act
         val actual = sealedJson.decodeFromString(
-            ListSerializer(Shape.serializer()),
+            shapesSerializer,
             """[{"type":"circle","radius":1},{"type":"hexagon"}]""",
         )
 
         // Assert
         assertThat(actual).containsExactly(Shape.Circle(radius = 1), Shape.Unknown(type = "hexagon")).inOrder()
+    }
+
+    @Test
+    fun `GIVEN sealed base and known type in another case WHEN decode THEN the subtype is matched ignoring case`() {
+        // Act
+        val actual = sealedJson.decodeFromString(shapesSerializer, """[{"type":"CIRCLE","radius":1}]""")
+
+        // Assert
+        assertThat(actual).containsExactly(Shape.Circle(radius = 1))
+    }
+
+    @Test
+    fun `GIVEN known type in another case and payload it cannot decode WHEN decode THEN it falls back to Unknown`() {
+        // Act
+        val actual = sealedJson.decodeFromString(shapesSerializer, """[{"type":"Circle"}]""")
+
+        // Assert
+        assertThat(actual).containsExactly(Shape.Unknown(type = "Circle"))
     }
 
     private fun parse(raw: String): JsonObject = json.parseToJsonElement(raw).jsonObject

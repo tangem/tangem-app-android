@@ -2,6 +2,8 @@ package com.tangem.feature.wallet.child.wallet.model.intents
 
 import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.message.DialogMessage
@@ -14,15 +16,24 @@ import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.wallets.usecase.DerivationOutcome
 import com.tangem.domain.wallets.usecase.DeriveCurrencyAndOwnerKeysUseCase
+import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
+import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
+import com.tangem.features.hotwallet.HardwareUpgradeLauncher
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import io.mockk.slot
 import io.mockk.verify
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -40,6 +51,9 @@ internal class WalletWarningsClickIntentsTest {
     private val multiStakingBalanceFetcher: MultiStakingBalanceFetcher = mockk()
     private val stakingIdFactory: StakingIdFactory = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxUnitFun = true)
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
+    private val hardwareUpgradeLauncher: HardwareUpgradeLauncher = mockk()
+    private val screenLifecycleProvider = ScreenLifecycleProvider()
 
     private val userWalletId = UserWalletId(stringValue = "0123456789ABCDEF")
     private val currencies = listOf<CryptoCurrency>(mockk(relaxed = true))
@@ -53,7 +67,11 @@ internal class WalletWarningsClickIntentsTest {
             multiStakingBalanceFetcher,
             stakingIdFactory,
             uiMessageSender,
+            analyticsEventHandler,
+            hardwareUpgradeLauncher,
         )
+        screenLifecycleProvider.onResume()
+        coEvery { hardwareUpgradeLauncher.launch(any(), any()) } just runs
         coEvery { multiNetworkStatusFetcher(params = any()) } returns Either.Right(Unit)
         coEvery { multiQuoteStatusFetcher(params = any()) } returns Either.Right(Unit)
         coEvery { multiStakingBalanceFetcher(params = any()) } returns Either.Right(Unit)
@@ -116,9 +134,47 @@ internal class WalletWarningsClickIntentsTest {
         coVerify(exactly = 0) { multiStakingBalanceFetcher(params = any()) }
     }
 
+    @Test
+    fun `GIVEN hot wallet banner WHEN upgrade click THEN the launcher opens the upgrade from Main`() = runTest {
+        // Act
+        createImplementor(scope = this).onUpgradeHotWalletClick(userWalletId)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { analyticsEventHandler.send(any<WalletScreenAnalyticsEvent.MainScreen.ButtonUpgrade>()) }
+        coVerify(exactly = 1) {
+            hardwareUpgradeLauncher.launch(userWalletId, AppRoute.HardwareUpgradeStories.Source.MAIN)
+        }
+    }
+
+    @Test
+    fun `GIVEN upgrade launch pending WHEN screen paused THEN the launch is cancelled`() = runTest {
+        // Arrange
+        val launchCancelled = CompletableDeferred<Boolean>()
+        coEvery { hardwareUpgradeLauncher.launch(any(), any()) } coAnswers {
+            try {
+                awaitCancellation()
+            } catch (e: CancellationException) {
+                launchCancelled.complete(true)
+                throw e
+            }
+        }
+        createImplementor(scope = this).onUpgradeHotWalletClick(userWalletId)
+        advanceUntilIdle()
+        val isCancelledBeforePause = launchCancelled.isCompleted
+
+        // Act
+        screenLifecycleProvider.onPause()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(isCancelledBeforePause).isFalse()
+        assertThat(launchCancelled.isCompleted).isTrue()
+    }
+
     private fun provideTestModels() = listOf(DerivationOutcome.DERIVED, DerivationOutcome.NOTHING_MISSING)
 
-    private fun createImplementor(scope: CoroutineScope): WalletWarningsClickIntentsImplementor {
+    private fun createImplementor(scope: TestScope): WalletWarningsClickIntentsImplementor {
         val implementor = WalletWarningsClickIntentsImplementor(
             stateHolder = mockk(relaxed = true),
             walletEventSender = mockk(relaxed = true),
@@ -128,8 +184,8 @@ internal class WalletWarningsClickIntentsTest {
             remindToRateAppLaterUseCase = mockk(relaxed = true),
             getUserWalletUseCase = mockk(relaxed = true),
             nonBiometricUnlockWalletUseCase = mockk(relaxed = true),
-            analyticsEventHandler = mockk(relaxed = true),
-            dispatchers = mockk(relaxed = true),
+            analyticsEventHandler = analyticsEventHandler,
+            dispatchers = scope.createTestingCoroutineDispatcherProvider(),
             getWalletMetaInfoUseCase = mockk(relaxed = true),
             sendFeedbackEmailUseCase = mockk(relaxed = true),
             appStoreOpener = mockk(relaxed = true),
@@ -146,6 +202,8 @@ internal class WalletWarningsClickIntentsTest {
             closeHotWalletUpgradeBannerUseCase = mockk(relaxed = true),
             acknowledgeAssetsDiscoveryCompletionUseCase = mockk(relaxed = true),
             yieldSupplySetShouldShowMainPromoUseCase = mockk(relaxed = true),
+            hardwareUpgradeLauncher = hardwareUpgradeLauncher,
+            screenLifecycleProvider = screenLifecycleProvider,
         )
         implementor.initialize(router = mockk(relaxed = true), coroutineScope = scope)
 
