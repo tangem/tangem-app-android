@@ -76,7 +76,7 @@ class JointAccountPollingCoordinator(
     }
 
     private companion object {
-        val POLL_INTERVAL = 60.seconds
+        val POLL_INTERVAL = 5.seconds
         const val STOP_TIMEOUT_MILLIS = 5_000L
     }
 }
