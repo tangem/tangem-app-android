@@ -5,6 +5,7 @@ import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderType
@@ -59,10 +60,12 @@ class IssuePlasticCardUseCase(
         val order = catch(
             block = {
                 customerOrderRepository
-                    .createPlasticIssueOrder(
+                    .createOrder(
                         userWalletId = userWalletId,
-                        specificationName = specificationName,
-                        order = plasticCardOrder,
+                        request = CustomerOrderRequest.PlasticCardIssue(
+                            specificationName = specificationName,
+                            order = plasticCardOrder,
+                        ),
                         idempotencyKey = idempotencyKey,
                     )
                     .bind()

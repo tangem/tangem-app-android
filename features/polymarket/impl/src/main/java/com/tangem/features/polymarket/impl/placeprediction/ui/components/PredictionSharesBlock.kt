@@ -133,8 +133,7 @@ private fun ProceedsFigure(proceeds: SharesProceedsUM) {
 @Composable
 private fun CalculatorRow(selected: BigDecimal, position: SellPositionUM, onAmountChange: (String) -> Unit) {
     val available = position.availableOrZero
-    val hasShares = position is SellPositionUM.Held && available > BigDecimal.ZERO
-    val isSteppable = SharesCalculator.isSteppable(available)
+    val isSteppable = position is SellPositionUM.Held && SharesCalculator.isSteppable(available)
 
     Row(
         modifier = Modifier
@@ -150,7 +149,7 @@ private fun CalculatorRow(selected: BigDecimal, position: SellPositionUM, onAmou
                 variant = TangemButton.Variant.Secondary,
                 size = TangemButton.Size.X8,
                 text = fraction.label(),
-                isEnabled = hasShares,
+                isEnabled = isSteppable,
                 onClick = {
                     onAmountChange(SharesCalculator.fraction(available, fraction.percent).toPlainString())
                 },

@@ -1,11 +1,13 @@
 package com.tangem.spend.datasource.pay.store
 
 import com.tangem.core.local.datastore.RuntimeSharedMapStore
+import com.tangem.core.remote.json.NetworkJson
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.serialization.json.Json
 import javax.inject.Singleton
 
 @Module
@@ -39,9 +41,10 @@ internal object TangemPayStoresModule {
 
     @Provides
     @Singleton
-    fun provideTangemPayIssueCardStore(prefs: AppPreferencesStore): TangemPayIssueCardStore {
+    fun provideTangemPayIssueCardStore(prefs: AppPreferencesStore, @NetworkJson json: Json): TangemPayIssueCardStore {
         return DefaultTangemPayIssueCardStore(
             prefs = prefs,
+            json = json,
         )
     }
 }
