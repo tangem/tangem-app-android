@@ -193,6 +193,15 @@ draft, the deposit wallet, the market and the quote age before anything is sent.
   place (see invariant 9) — only the submit itself clears it on a rejection, as above. Known gap: the
   tracker is started from the withdraw flow only, not on cold start.
 
+## Activity history
+
+`PolymarketActivitySession` owns one wallet's History visit. It resolves only stored addresses, retains
+rows during refresh, reloads from the first cursor on filter changes and refills the previously displayed
+row count before replacing a refreshed list. Pagination deduplicates operation ids and continues through
+pages that add no rows. Pause cancels active reads; resume reloads the selected filter. Entry and manual
+refresh request deposit reconciliation, followed by one history reread after the server's delay, without
+repeatedly submitting scans. A failed refresh preserves rows and exposes retry.
+
 ## Prediction account in the rest of the app
 
 The account type itself is `Account.Prediction` / `AccountId.forPredictionAccount` /

@@ -2,6 +2,7 @@ package com.tangem.tap.di.domain
 
 import com.tangem.domain.polymarket.PolymarketBridgeRepository
 import com.tangem.domain.polymarket.PolymarketCredentialsLock
+import com.tangem.domain.polymarket.PolymarketActivityRepository
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketRedeemRepository
@@ -30,6 +31,7 @@ import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.BuildPredictionOrderDraftUseCase
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.CreatePolymarketPositionsSessionUseCase
+import com.tangem.domain.polymarket.usecase.CreatePolymarketActivitySessionUseCase
 import com.tangem.domain.polymarket.usecase.DeployDepositWalletUseCase
 import com.tangem.domain.polymarket.usecase.DeriveApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
@@ -61,6 +63,18 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 @Suppress("TooManyFunctions")
 internal object PolymarketDomainModule {
+
+    @Provides
+    @Singleton
+    fun provideCreatePolymarketActivitySessionUseCase(
+        repository: PolymarketActivityRepository,
+        deriveAddresses: DerivePolymarketAddressesUseCase,
+        dispatchers: CoroutineDispatcherProvider,
+    ): CreatePolymarketActivitySessionUseCase = CreatePolymarketActivitySessionUseCase(
+        repository = repository,
+        deriveAddresses = deriveAddresses,
+        dispatchers = dispatchers,
+    )
 
     @Provides
     @Singleton

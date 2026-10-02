@@ -18,7 +18,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_chevron_double_vertical_16
+import com.tangem.core.ui.res.generated.icons.ic_info_16
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
@@ -32,7 +32,7 @@ internal fun PredictionDetailsBlock(state: PlacePredictionUM, onFeeClick: () -> 
             TangemRow(
                 divider = true,
                 verticalAlignment = TangemRowVerticalAlignment.Center,
-                titleSlot = { DetailTitle(text = stringResourceSafe(R.string.prediction_place_fee)) },
+                titleSlot = { FeeTitle() },
                 valueSlot = {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
@@ -47,7 +47,6 @@ internal fun PredictionDetailsBlock(state: PlacePredictionUM, onFeeClick: () -> 
                         )
                     }
                 },
-                endSlot = { DetailChevron() },
                 onClick = onFeeClick.takeIf { state.canShowFeeBreakdown() },
             )
             PredictionSlippageRow(slippage = state.slippage)
@@ -56,12 +55,22 @@ internal fun PredictionDetailsBlock(state: PlacePredictionUM, onFeeClick: () -> 
 }
 
 @Composable
-private fun DetailTitle(text: String) {
-    Text(
-        text = text,
-        style = TangemTheme.typography3.body.medium,
-        color = TangemTheme.colors3.text.primary,
-    )
+private fun FeeTitle() {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(space = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = stringResourceSafe(R.string.prediction_place_fee),
+            style = TangemTheme.typography3.body.medium,
+            color = TangemTheme.colors3.text.primary,
+        )
+        Icon(
+            imageVector = Icons.ic_info_16,
+            contentDescription = null,
+            tint = TangemTheme.colors3.icon.tertiary,
+        )
+    }
 }
 
 @Composable
@@ -70,14 +79,5 @@ private fun DetailValue(text: String) {
         text = text,
         style = TangemTheme.typography3.body.medium,
         color = TangemTheme.colors3.text.secondary,
-    )
-}
-
-@Composable
-private fun DetailChevron() {
-    Icon(
-        imageVector = Icons.ic_chevron_double_vertical_16,
-        contentDescription = null,
-        tint = TangemTheme.colors3.icon.tertiary,
     )
 }

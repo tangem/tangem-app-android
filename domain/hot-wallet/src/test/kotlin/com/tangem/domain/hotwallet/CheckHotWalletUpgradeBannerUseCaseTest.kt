@@ -191,6 +191,26 @@ class CheckHotWalletUpgradeBannerUseCaseTest {
     }
 
     @Test
+    fun `GIVEN wallet older than reshow period WHEN first top-up detected THEN return false`() = runTest {
+        // Arrange
+        val creationTimestamp = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(31)
+        coEvery { hotWalletRepository.getWalletCreationTimestamp(walletId) } returns creationTimestamp
+        coEvery { hotWalletRepository.hasHadFirstTopUp(walletId) } returns false
+        every { hotWalletRepository.isFirstTopUpDetectedThisSession(walletId) } returns false
+
+        // Act
+        val result = useCase(
+            walletId = walletId,
+            hasBalance = true,
+            shouldShowUpgradeBanner = false,
+            closureTimestamp = null,
+        )
+
+        // Assert
+        assertThat(result).isEqualTo(Either.Right(false))
+    }
+
+    @Test
     fun `GIVEN first top-up detected this session WHEN invoke THEN return false`() = runTest {
         val creationTimestamp = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(5)
         coEvery { hotWalletRepository.getWalletCreationTimestamp(walletId) } returns creationTimestamp

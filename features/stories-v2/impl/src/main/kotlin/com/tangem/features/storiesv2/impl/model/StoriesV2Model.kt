@@ -185,7 +185,8 @@ internal class StoriesV2Model @Inject constructor(
 
     /**
      * A remote story may still be downloading when the player opens, so the viewer waits on a loading screen, as on
-     * iOS. A failed delivery offers a retry; a story that simply is not there hands control straight back to the host.
+     * iOS. A failed delivery offers a retry unless the host skips it; a story that simply is not there hands control
+     * straight back to the host.
      */
     private suspend fun open() {
         when (val load = contentRepository.load(params.type)) {
@@ -207,7 +208,11 @@ internal class StoriesV2Model @Inject constructor(
             StoryV2ContentLoad.AlreadyShown -> deliverStatusResult(
                 StoriesV2Result.Unavailable(reason = StoriesV2Result.Unavailable.Reason.NO_CONTENT),
             )
-            StoryV2ContentLoad.Failed -> {
+            StoryV2ContentLoad.Failed -> if (params.shouldSkipOnDeliveryFailure) {
+                deliverStatusResult(
+                    StoriesV2Result.Unavailable(reason = StoriesV2Result.Unavailable.Reason.DELIVERY_FAILED),
+                )
+            } else {
                 uiState.value = StoriesV2ScreenUM.Error(onReloadClick = ::onReloadClick, onCloseClick = ::onStatusClose)
             }
         }
