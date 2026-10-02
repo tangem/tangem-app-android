@@ -22,23 +22,24 @@ import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.operations.sign.SignHashCommand
 import com.tangem.operations.sign.SignHashResponse
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
+import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-class TangemPayGenerateMoneyAccountAddressTask @AssistedInject constructor(
-    @Assisted private val coroutineScope: CoroutineScope,
+class TangemPayGenerateMoneyAccountAddressTask @Inject constructor(
     private val dispatchersProvider: CoroutineDispatcherProvider,
     private val tangemPayRemoteDataSource: TangemPayRemoteDataSource,
 ) : CardSessionRunnable<MoneyAccountActivationData> {
 
     override fun run(session: CardSession, callback: CompletionCallback<MoneyAccountActivationData>) {
-        coroutineScope.launch {
-            callback(runSuspend(session = session))
+        session.scope.launch {
+            val result = runSuspendCatching { runSuspend(session = session) }
+                .getOrElse { error ->
+                    CompletionResult.Failure(TangemSdkError.ExceptionError(error))
+                }
+            callback(result)
         }
     }
 
@@ -195,10 +196,5 @@ class TangemPayGenerateMoneyAccountAddressTask @AssistedInject constructor(
                 ),
             )
         }
-    }
-
-    @AssistedFactory
-    interface Factory {
-        fun create(coroutineScope: CoroutineScope): TangemPayGenerateMoneyAccountAddressTask
     }
 }
