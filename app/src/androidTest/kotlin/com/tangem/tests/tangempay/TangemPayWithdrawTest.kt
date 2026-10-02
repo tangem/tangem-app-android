@@ -29,7 +29,6 @@ class TangemPayWithdrawTest : BaseTestCase() {
     private val withdrawOrderEndpoint = "/bff-v2/v1/order/mock-tangempay-withdraw-order-001"
     private val exchangeSentEndpoint = "/v1/exchange-sent"
 
-    // Two requests after Close prove a running poll loop rather than a one-off fetch.
     private val minPollsToProveContinuation = 2
 
     @AllureId("4972")
