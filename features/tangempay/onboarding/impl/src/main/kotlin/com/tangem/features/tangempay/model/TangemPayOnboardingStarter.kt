@@ -14,6 +14,7 @@ import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
@@ -190,9 +191,11 @@ internal class TangemPayOnboardingStarter @Inject constructor(
 
         return repository.createOrder(
             userWalletId = userWalletId,
-            deeplinkValue = campaignKey,
-            specificationName = specificationName,
-            type = offer.data.orderType,
+            request = CustomerOrderRequest.CardIssue(
+                type = offer.data.orderType,
+                specificationName = specificationName,
+                deeplinkValue = campaignKey,
+            ),
         )
             .onLeft { error ->
                 TangemLogger.e("[TangemPay][Campaign] Failed to create campaign order: $error")

@@ -24,6 +24,7 @@ private class CollectiblesConfirmOrderProvider : PreviewParameterProvider<Collec
     override val values = sequenceOf(
         CollectiblesConfirmOrderPreviewData.content,
         CollectiblesConfirmOrderPreviewData.notEnoughFunds,
+        CollectiblesConfirmOrderPreviewData.loading,
         CollectiblesConfirmOrderPreviewData.error,
     )
 }

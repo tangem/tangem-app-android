@@ -41,6 +41,8 @@ internal object CollectiblesConfirmOrderPreviewData {
         ),
     )
 
+    val loading = CollectiblesConfirmOrderUM.Loading(onBackClick = {})
+
     val error = CollectiblesConfirmOrderUM.Error(
         onBackClick = {},
         message = stringReference("Failed to load the pack.\nTap to reload"),

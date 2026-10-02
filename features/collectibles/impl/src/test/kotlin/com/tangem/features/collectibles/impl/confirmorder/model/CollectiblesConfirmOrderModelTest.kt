@@ -1,5 +1,6 @@
 package com.tangem.features.collectibles.impl.confirmorder.model
 
+import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
@@ -7,6 +8,7 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
+import com.tangem.domain.collectibles.models.CollectibleGachaMachine
 import com.tangem.domain.collectibles.models.CollectiblesError
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
@@ -22,10 +24,12 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -84,20 +88,59 @@ internal class CollectiblesConfirmOrderModelTest {
     }
 
     @Test
-    fun `GIVEN the machine failed WHEN reload tapped THEN the pack is fetched again`() = runTest {
+    fun `GIVEN the machine failed WHEN reload tapped twice THEN one cache-bypassing retry runs with a spinner`() =
+        runTest {
+            // Arrange
+            coEvery { getMachineUseCase(EXTERNAL_ID, false) } returns CollectiblesError.Api(IllegalStateException()).left()
+            coEvery { getMachineUseCase(EXTERNAL_ID, true) } coAnswers { CompletableDeferred<MachineResult>().await() }
+            val model = startModel()
+            val error = model.uiState.value as CollectiblesConfirmOrderUM.Error
+
+            // Act
+            error.onReloadClick()
+            error.onReloadClick()
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value).isEqualTo(error.copy(isReloading = true))
+            coVerify(exactly = 1) { getMachineUseCase(EXTERNAL_ID, true) }
+        }
+
+    @Test
+    fun `GIVEN a retry in flight WHEN it succeeds THEN the order is rendered`() = runTest {
         // Arrange
-        coEvery { getMachineUseCase(any(), any()) } returns CollectiblesError.Api(IllegalStateException()).left()
+        val retry = CompletableDeferred<MachineResult>()
+        coEvery { getMachineUseCase(EXTERNAL_ID, false) } returns CollectiblesError.Api(IllegalStateException()).left()
+        coEvery { getMachineUseCase(EXTERNAL_ID, true) } coAnswers { retry.await() }
         val model = startModel()
-        val error = model.uiState.value as CollectiblesConfirmOrderUM.Error
-        coEvery { getMachineUseCase(any(), any()) } returns createMachine().right()
+        (model.uiState.value as CollectiblesConfirmOrderUM.Error).onReloadClick()
+        runCurrent()
 
         // Act
-        error.onReloadClick()
+        retry.complete(createMachine().right())
         advanceUntilIdle()
 
         // Assert
         assertThat(model.uiState.value).isInstanceOf(CollectiblesConfirmOrderUM.Content::class.java)
-        coVerify(exactly = 2) { getMachineUseCase(externalId = EXTERNAL_ID, skipCache = false) }
+    }
+
+    @Test
+    fun `GIVEN a retry in flight WHEN it fails again THEN the error is shown without the spinner`() = runTest {
+        // Arrange
+        val retry = CompletableDeferred<MachineResult>()
+        coEvery { getMachineUseCase(EXTERNAL_ID, false) } returns CollectiblesError.Api(IllegalStateException()).left()
+        coEvery { getMachineUseCase(EXTERNAL_ID, true) } coAnswers { retry.await() }
+        val model = startModel()
+        val error = model.uiState.value as CollectiblesConfirmOrderUM.Error
+        error.onReloadClick()
+        runCurrent()
+
+        // Act
+        retry.complete(CollectiblesError.Api(IllegalStateException()).left())
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value).isEqualTo(error)
     }
 
     @Test
@@ -223,3 +266,5 @@ internal class CollectiblesConfirmOrderModelTest {
         val USER_WALLET_ID = UserWalletId("011")
     }
 }
+
+private typealias MachineResult = Either<CollectiblesError, CollectibleGachaMachine>
