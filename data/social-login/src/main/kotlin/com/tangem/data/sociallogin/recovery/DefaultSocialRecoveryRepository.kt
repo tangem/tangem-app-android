@@ -51,6 +51,14 @@ internal class DefaultSocialRecoveryRepository @Inject constructor(
         ).mapLeft(SocialRecoveryError::toDomainError)
     }
 
+    override suspend fun registerRestoredWallet(walletId: UserWalletId): Either<SocialLoginError, Unit> {
+        val backendWalletId = walletId.toBackendId()
+        val signer = walletSignerProvider.signerFor(backendWalletId) ?: return Either.Left(SocialLoginError.Unknown())
+
+        return client.registerWallet(walletId = backendWalletId, signer = signer)
+            .mapLeft(SocialRecoveryError::toDomainError)
+    }
+
     override suspend fun unbindWallet(walletId: UserWalletId): Either<SocialLoginError, Unit> =
         client.unbindWallet(walletId.toBackendId()).mapLeft(SocialRecoveryError::toDomainError)
 }

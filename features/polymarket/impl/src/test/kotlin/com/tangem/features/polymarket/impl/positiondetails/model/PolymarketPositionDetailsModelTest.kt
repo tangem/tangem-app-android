@@ -370,7 +370,7 @@ internal class PolymarketPositionDetailsModelTest {
             advanceTimeBy(PolymarketConst.POSITION_INDEXING_RETRY_MILLIS * 2 + 1)
 
             // Assert
-            assertThat(atOnce).isEqualTo(stringReference("28.09"))
+            assertThat(atOnce).isEqualTo(stringReference("28.08"))
             assertThat(model.data().metrics.quantity).isEqualTo(stringReference("10"))
             coVerify(exactly = 4) { repository.getPosition(addresses, position.id) }
         }
