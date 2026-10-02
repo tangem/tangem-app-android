@@ -17,14 +17,14 @@ internal class OrderRequestSerializationTest {
     @ProvideTestModels
     fun `GIVEN order data WHEN encode THEN type discriminator and declared fields are written`(model: EncodeModel) {
         // Arrange
-        val request = OrderRequest(data = model.data, idempotencyKey = IDEMPOTENCY_KEY)
+        val request = OrderRequest(data = model.data)
 
         // Act
         val encoded = json.encodeToJsonElement(OrderRequest.serializer(), request).jsonObject
         val data = encoded.getValue("data").jsonObject
 
         // Assert
-        assertThat(encoded.getValue("idempotency_key").jsonPrimitive.content).isEqualTo(IDEMPOTENCY_KEY)
+        assertThat(encoded.keys).containsExactly("data")
         assertThat(data.getValue("type").jsonPrimitive.content).isEqualTo(model.expectedType)
         assertThat(data.keys).containsExactlyElementsIn(model.expectedKeys + "type")
     }
@@ -134,7 +134,6 @@ internal class OrderRequestSerializationTest {
     )
 
     private companion object {
-        const val IDEMPOTENCY_KEY = "6f1c9e2a-0b3d-4c5e-8a7b-9d0e1f2a3b4c"
         const val WALLET = "0xWALLET"
         const val SPEC = "SP_000010"
     }

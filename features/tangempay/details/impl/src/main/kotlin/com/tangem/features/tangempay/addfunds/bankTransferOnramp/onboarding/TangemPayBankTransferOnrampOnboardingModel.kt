@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 import com.tangem.core.ui.R as CoreUiR
 
@@ -48,6 +49,7 @@ internal class TangemPayBankTransferOnrampOnboardingModel @Inject constructor(
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankTransferOnrampOnboardingComponent.Params>()
+    private var orderIdempotencyKey: String? = null
 
     private val feesLoader = TangemPayOnrampFeesLoader(
         getOnrampFeesUseCase = getOnrampFeesUseCase,
@@ -96,12 +98,17 @@ internal class TangemPayBankTransferOnrampOnboardingModel @Inject constructor(
     }
 
     private suspend fun createOrder(paymentAccountAddress: String) {
+        val idempotencyKey = orderIdempotencyKey ?: UUID.randomUUID().toString().also { orderIdempotencyKey = it }
         createVirtualAccountOrderUseCase(
             userWalletId = params.userWalletId,
             paymentAccountAddress = paymentAccountAddress,
+            idempotencyKey = idempotencyKey,
         )
             .onRight { onOrderCreated() }
-            .onLeft { onOrderFailed() }
+            .onLeft { error ->
+                if (!error.isOutcomeUnknown()) orderIdempotencyKey = null
+                onOrderFailed()
+            }
     }
 
     private fun onOrderCreated() {

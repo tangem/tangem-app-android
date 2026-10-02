@@ -29,10 +29,22 @@ internal class BankOfframpErrorConverterTest {
         )
 
         // Assert
-        val cause = (actual as BankOfframpError.Unknown).cause
-        assertThat(cause).isInstanceOf(IllegalStateException::class.java)
-        assertThat(cause).hasMessageThat().isEqualTo(
+        val unknown = actual as BankOfframpError.Unknown
+        assertThat(unknown.cause).isInstanceOf(IllegalStateException::class.java)
+        assertThat(unknown.cause).hasMessageThat().isEqualTo(
             "Bank off-ramp cancelOrder failed: ${VisaApiError.CustomerIsBlocked}",
         )
+        assertThat(unknown.isOutcomeUnknown).isFalse()
+    }
+
+    @Test
+    fun `GIVEN an outcome unknown api error WHEN converted THEN unknown error marked as outcome unknown`() {
+        // Act
+        val actual = BankOfframpErrorConverter.convert(
+            BankOfframpErrorConverter.Input(error = VisaApiError.ServerUnavailable, operation = "createOrder"),
+        )
+
+        // Assert
+        assertThat((actual as BankOfframpError.Unknown).isOutcomeUnknown).isTrue()
     }
 }

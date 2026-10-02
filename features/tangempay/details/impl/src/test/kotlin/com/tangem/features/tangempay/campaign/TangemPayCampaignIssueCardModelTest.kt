@@ -25,14 +25,12 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.IssueAdditionalCardError
 import com.tangem.domain.pay.model.IssueAdditionalCardResult
-import com.tangem.domain.pay.model.Order
-import com.tangem.domain.pay.model.OrderStatus
-import com.tangem.domain.pay.model.OrderStep
-import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.usecase.IssueAdditionalCardUseCase
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.features.tangempay.OUTCOME_UNKNOWN_ERRORS
 import com.tangem.features.tangempay.components.TangemPayCampaignIssueCardComponent
 import com.tangem.features.tangempay.customerTariffPlan
+import com.tangem.features.tangempay.payOrder
 import com.tangem.features.tangempay.tariffPlan
 import com.tangem.features.tangempay.tariffPlanState
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -58,6 +56,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.util.Currency
 
@@ -109,8 +109,8 @@ internal class TangemPayCampaignIssueCardModelTest {
         @Test
         fun `GIVEN order created WHEN issue clicked THEN Payment account opened`() = runTest {
             // Arrange
-            coEvery { issueAdditionalCardUseCase(WALLET_ID, CAMPAIGN_KEY) } returns
-                IssueAdditionalCardResult.Created(order()).right()
+            coEvery { issueAdditionalCardUseCase(WALLET_ID, any(), CAMPAIGN_KEY) } returns
+                IssueAdditionalCardResult.Created(payOrder()).right()
             val model = createModel(testScope = this)
 
             // Act
@@ -128,8 +128,8 @@ internal class TangemPayCampaignIssueCardModelTest {
         @Test
         fun `GIVEN active order resumed WHEN issue clicked THEN Payment account opened`() = runTest {
             // Arrange
-            coEvery { issueAdditionalCardUseCase(WALLET_ID, CAMPAIGN_KEY) } returns
-                IssueAdditionalCardResult.Resumed(order()).right()
+            coEvery { issueAdditionalCardUseCase(WALLET_ID, any(), CAMPAIGN_KEY) } returns
+                IssueAdditionalCardResult.Resumed(payOrder()).right()
             val model = createModel(testScope = this)
 
             // Act
@@ -145,7 +145,7 @@ internal class TangemPayCampaignIssueCardModelTest {
         @Test
         fun `GIVEN issue in progress WHEN issue clicked THEN button loading AND request not repeated`() = runTest {
             // Arrange
-            coEvery { issueAdditionalCardUseCase(WALLET_ID, CAMPAIGN_KEY) } coAnswers { awaitCancellation() }
+            coEvery { issueAdditionalCardUseCase(WALLET_ID, any(), CAMPAIGN_KEY) } coAnswers { awaitCancellation() }
             val model = createModel(testScope = this)
 
             // Act
@@ -155,7 +155,7 @@ internal class TangemPayCampaignIssueCardModelTest {
 
             // Assert
             assertThat(model.uiState.value.isIssuing).isTrue()
-            coVerify(exactly = 1) { issueAdditionalCardUseCase(WALLET_ID, CAMPAIGN_KEY) }
+            coVerify(exactly = 1) { issueAdditionalCardUseCase(WALLET_ID, any(), CAMPAIGN_KEY) }
             verify { router wasNot Called }
         }
 
@@ -163,7 +163,7 @@ internal class TangemPayCampaignIssueCardModelTest {
         fun `GIVEN offer not available on basic plan WHEN issue clicked THEN cards limit for plan sheet shown`() =
             runTest {
                 // Arrange
-                coEvery { issueAdditionalCardUseCase(WALLET_ID, CAMPAIGN_KEY) } returns
+                coEvery { issueAdditionalCardUseCase(WALLET_ID, any(), CAMPAIGN_KEY) } returns
                     IssueAdditionalCardError.OfferNotAvailable.left()
                 every { paymentAccountStatusSupplier.invoke(WALLET_ID) } returns
                     flowOf(paymentStatus(planState = BASIC_PLAN_STATE))
@@ -184,7 +184,7 @@ internal class TangemPayCampaignIssueCardModelTest {
         @Test
         fun `GIVEN offer not available on paid plan WHEN issue clicked THEN cards limit sheet shown`() = runTest {
             // Arrange
-            coEvery { issueAdditionalCardUseCase(WALLET_ID, CAMPAIGN_KEY) } returns
+            coEvery { issueAdditionalCardUseCase(WALLET_ID, any(), CAMPAIGN_KEY) } returns
                 IssueAdditionalCardError.OfferNotAvailable.left()
             every { paymentAccountStatusSupplier.invoke(WALLET_ID) } returns
                 flowOf(paymentStatus(planState = tariffPlanState()))
@@ -203,7 +203,7 @@ internal class TangemPayCampaignIssueCardModelTest {
         @Test
         fun `GIVEN cards limit sheet WHEN upgrade plan clicked THEN current plan opened`() = runTest {
             // Arrange
-            coEvery { issueAdditionalCardUseCase(WALLET_ID, CAMPAIGN_KEY) } returns
+            coEvery { issueAdditionalCardUseCase(WALLET_ID, any(), CAMPAIGN_KEY) } returns
                 IssueAdditionalCardError.OfferNotAvailable.left()
             val status = paymentStatus(planState = BASIC_PLAN_STATE)
             every { paymentAccountStatusSupplier.invoke(WALLET_ID) } returns flowOf(status)
@@ -228,7 +228,7 @@ internal class TangemPayCampaignIssueCardModelTest {
         fun `GIVEN no campaign offer WHEN issue clicked THEN unavailable dialog shown AND OK opens Payment account`() =
             runTest {
                 // Arrange
-                coEvery { issueAdditionalCardUseCase(WALLET_ID, CAMPAIGN_KEY) } returns
+                coEvery { issueAdditionalCardUseCase(WALLET_ID, any(), CAMPAIGN_KEY) } returns
                     IssueAdditionalCardError.NoCampaignOffer.left()
                 val message = captureMessage()
                 val model = createModel(testScope = this)
@@ -255,7 +255,7 @@ internal class TangemPayCampaignIssueCardModelTest {
         @Test
         fun `GIVEN other error WHEN issue clicked THEN snackbar shown AND screen stays`() = runTest {
             // Arrange
-            coEvery { issueAdditionalCardUseCase(WALLET_ID, CAMPAIGN_KEY) } returns
+            coEvery { issueAdditionalCardUseCase(WALLET_ID, any(), CAMPAIGN_KEY) } returns
                 IssueAdditionalCardError.Other(VisaApiError.ServerUnavailable).left()
             val message = captureMessage()
             val model = createModel(testScope = this)
@@ -274,6 +274,48 @@ internal class TangemPayCampaignIssueCardModelTest {
             )
             verify { router wasNot Called }
         }
+
+        @ParameterizedTest
+        @MethodSource(OUTCOME_UNKNOWN_ERRORS)
+        fun `GIVEN outcome unknown WHEN issue clicked again THEN the same idempotency key is reused`(
+            error: VisaApiError,
+        ) = runTest {
+            // Arrange
+            val idempotencyKeys = mutableListOf<String>()
+            coEvery { issueAdditionalCardUseCase(WALLET_ID, capture(idempotencyKeys), CAMPAIGN_KEY) } returns
+                IssueAdditionalCardError.Other(error).left()
+            val model = createModel(testScope = this)
+            model.uiState.value.onIssueClick()
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.onIssueClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(idempotencyKeys).hasSize(2)
+            assertThat(idempotencyKeys.toSet()).hasSize(1)
+        }
+
+        @Test
+        fun `GIVEN server rejected the request WHEN issue clicked again THEN a new idempotency key is used`() =
+            runTest {
+                // Arrange
+                val idempotencyKeys = mutableListOf<String>()
+                coEvery { issueAdditionalCardUseCase(WALLET_ID, capture(idempotencyKeys), CAMPAIGN_KEY) } returns
+                    IssueAdditionalCardError.Other(VisaApiError.CardIssueActiveOrderExists).left()
+                val model = createModel(testScope = this)
+                model.uiState.value.onIssueClick()
+                advanceUntilIdle()
+
+                // Act
+                model.uiState.value.onIssueClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(idempotencyKeys).hasSize(2)
+                assertThat(idempotencyKeys.toSet()).hasSize(2)
+            }
     }
 
     @Nested
@@ -293,7 +335,7 @@ internal class TangemPayCampaignIssueCardModelTest {
                 paymentAccountStatusFetcher.invoke(WALLET_ID)
                 router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayDetails(status = paymentStatus()))
             }
-            coVerify(exactly = 0) { issueAdditionalCardUseCase(any(), any()) }
+            coVerify(exactly = 0) { issueAdditionalCardUseCase(any(), any(), any()) }
         }
 
         @Test
@@ -334,22 +376,6 @@ internal class TangemPayCampaignIssueCardModelTest {
             value = PaymentAccountStatusValue.Error.CardIssueFailed(customerId = "customer", tariffPlan = planState),
         )
     }
-
-    private fun order(): Order = Order(
-        id = "order",
-        customerId = "customer",
-        type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
-        status = OrderStatus.NEW,
-        step = OrderStep.UNKNOWN,
-        stepChangeCode = null,
-        productInstanceId = null,
-        paymentAccountId = null,
-        cardId = null,
-        toTariffPlanId = null,
-        withdrawTxHash = null,
-        createdAt = null,
-        updatedAt = null,
-    )
 
     private fun createModel(testScope: TestScope): TangemPayCampaignIssueCardModel {
         val testDispatcher = StandardTestDispatcher(testScope.testScheduler)

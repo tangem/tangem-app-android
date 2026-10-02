@@ -23,6 +23,7 @@ import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.OUTCOME_UNKNOWN_ERRORS
 import com.tangem.features.tangempay.tangemPayCard
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -480,6 +481,99 @@ internal class TangemPayCardActivationModelTest {
         verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.ActivationContinueClicked>()) }
         verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.CardActivationSuccess>()) }
     }
+
+    @ParameterizedTest
+    @MethodSource(OUTCOME_UNKNOWN_ERRORS)
+    fun `GIVEN outcome unknown WHEN the same digits are submitted again THEN the same key is reused`(
+        error: VisaApiError,
+    ) = runTest {
+        // Arrange
+        val idempotencyKeys = mutableListOf<String>()
+        coEvery { activatePlasticCard(any(), any(), capture(idempotencyKeys)) } returns error.left()
+        val model = createModel(testScope = this)
+        model.uiState.value.onLastDigitsChange("1234")
+        model.uiState.value.onContinueClick()
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.onContinueClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(idempotencyKeys).hasSize(2)
+        assertThat(idempotencyKeys.toSet()).hasSize(1)
+    }
+
+    @Test
+    fun `GIVEN outcome unknown WHEN digits changed THEN a new idempotency key is used`() = runTest {
+        // Arrange
+        val idempotencyKeys = mutableListOf<String>()
+        coEvery { activatePlasticCard(any(), any(), capture(idempotencyKeys)) } returns
+            VisaApiError.ServerUnavailable.left()
+        val model = createModel(testScope = this)
+        model.uiState.value.onLastDigitsChange("1234")
+        model.uiState.value.onContinueClick()
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.onLastDigitsChange("5678")
+        model.uiState.value.onContinueClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(idempotencyKeys).hasSize(2)
+        assertThat(idempotencyKeys.toSet()).hasSize(2)
+    }
+
+    @Test
+    fun `GIVEN outcome unknown WHEN the digits are edited and restored THEN a new idempotency key is used`() = runTest {
+        // Arrange
+        val idempotencyKeys = mutableListOf<String>()
+        coEvery { activatePlasticCard(any(), any(), capture(idempotencyKeys)) } returns
+            VisaApiError.ServerUnavailable.left()
+        val model = createModel(testScope = this)
+        model.uiState.value.onLastDigitsChange("1234")
+        model.uiState.value.onContinueClick()
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.onLastDigitsChange("123")
+        model.uiState.value.onLastDigitsChange("1234")
+        model.uiState.value.onContinueClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(idempotencyKeys).hasSize(2)
+        assertThat(idempotencyKeys.toSet()).hasSize(2)
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideDefinitiveErrors")
+    fun `GIVEN a definitive error WHEN the same digits are submitted again THEN a new idempotency key is used`(
+        error: VisaApiError,
+    ) = runTest {
+        // Arrange
+        val idempotencyKeys = mutableListOf<String>()
+        coEvery { activatePlasticCard(any(), any(), capture(idempotencyKeys)) } returns error.left()
+        val model = createModel(testScope = this)
+        submit(model, "1234")
+        advanceUntilIdle()
+
+        // Act
+        submit(model, "1234")
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(idempotencyKeys).hasSize(2)
+        assertThat(idempotencyKeys.toSet()).hasSize(2)
+    }
+
+    private fun provideDefinitiveErrors() = provideRejectionModels().map { it.error } + listOf(
+        VisaApiError.CardActivationInvalidCardData,
+        VisaApiError.Unknown(errorCode = 104000429),
+        VisaApiError.CustomerIsBlocked,
+        VisaApiError.Unspecified,
+    )
 
     @Test
     fun `GIVEN wrong last digits WHEN submitted THEN the validation error event is sent and no success`() = runTest {

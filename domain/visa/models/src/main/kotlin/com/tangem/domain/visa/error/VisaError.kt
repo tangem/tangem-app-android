@@ -68,6 +68,8 @@ sealed class VisaApiError(
 
     fun isRetryable() = this == ServerUnavailable || this == UnknownWithoutCode
 
+    fun isOutcomeUnknown() = this == ServerUnavailable || this == UnknownWithoutCode || this == RefreshTokenExpired
+
     data object RefreshTokenExpired : VisaApiError(104004001)
     data object NotFound : VisaApiError(104004002)
     data object WithdrawalDataError : VisaApiError(104004003)

@@ -339,7 +339,7 @@ internal class TangemPayOnboardingModelTest {
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 0) { repository.createOrder(any(), any()) }
+        coVerify(exactly = 0) { repository.createOrder(any(), any(), any()) }
         verify(exactly = 1) {
             router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(userWalletId = userWalletId), onComplete = any())
         }

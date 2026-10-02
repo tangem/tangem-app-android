@@ -20,24 +20,22 @@ import com.tangem.utils.converter.Converter
  * anything missing ends the call as [BankOfframpError.Validation] instead of reaching the wire half-filled.
  */
 internal object BankOfframpOrderRequestConverter :
-    Converter<BankOfframpOrderRequestConverter.Input, Either<BankOfframpError, BankOfframpPlaceOrderRequest>> {
+    Converter<BankOfframpOrderRequest, Either<BankOfframpError, BankOfframpPlaceOrderRequest>> {
 
     private const val INDIVIDUAL_TYPE = "INDIVIDUAL"
     private const val BUSINESS_TYPE = "BUSINESS"
 
-    data class Input(val request: BankOfframpOrderRequest, val idempotencyKey: String)
-
-    override fun convert(value: Input): Either<BankOfframpError, BankOfframpPlaceOrderRequest> = either {
-        val request = value.request
-        val data = when (val recipient = request.recipient) {
-            is BankOfframpRecipient.Saved -> data(request = request, bankAccountId = recipient.bankAccountId)
-            is BankOfframpRecipient.New -> data(
-                request = request,
-                bankAccount = convertBankAccount(details = recipient.details, rail = request.rail),
-            )
+    override fun convert(value: BankOfframpOrderRequest): Either<BankOfframpError, BankOfframpPlaceOrderRequest> =
+        either {
+            val data = when (val recipient = value.recipient) {
+                is BankOfframpRecipient.Saved -> data(request = value, bankAccountId = recipient.bankAccountId)
+                is BankOfframpRecipient.New -> data(
+                    request = value,
+                    bankAccount = convertBankAccount(details = recipient.details, rail = value.rail),
+                )
+            }
+            BankOfframpPlaceOrderRequest(data = data)
         }
-        BankOfframpPlaceOrderRequest(data = data, idempotencyKey = value.idempotencyKey)
-    }
 
     private fun data(
         request: BankOfframpOrderRequest,

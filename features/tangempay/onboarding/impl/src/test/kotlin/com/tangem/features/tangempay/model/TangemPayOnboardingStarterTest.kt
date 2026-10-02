@@ -110,7 +110,7 @@ internal class TangemPayOnboardingStarterTest {
                     getCustomerOffersUseCase.campaignOffer(USER_WALLET_ID, CAMPAIGN_KEY)
                 } returns campaignOffer().right()
                 coEvery {
-                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST)
+                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST, any())
                 } returns ORDER_ID.right()
 
                 // Act
@@ -118,11 +118,122 @@ internal class TangemPayOnboardingStarterTest {
 
                 // Assert
                 coVerify(exactly = 1) {
-                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST)
+                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST, any())
                 }
                 verify(exactly = 1) {
                     router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(USER_WALLET_ID), onComplete = any())
                 }
+            }
+
+        @Test
+        fun `GIVEN outcome unknown WHEN startOnboarding is repeated THEN the same idempotency key is reused`() =
+            runTest {
+                // Arrange
+                val idempotencyKeys = mutableListOf<String>()
+                coEvery {
+                    getCustomerOffersUseCase.campaignOffer(USER_WALLET_ID, CAMPAIGN_KEY)
+                } returns campaignOffer().right()
+                coEvery {
+                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST, capture(idempotencyKeys))
+                } returns VisaApiError.ServerUnavailable.left()
+                starter.startOnboarding(USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
+
+                // Act
+                starter.startOnboarding(USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
+
+                // Assert
+                assertThat(idempotencyKeys).hasSize(2)
+                assertThat(idempotencyKeys.toSet()).hasSize(1)
+            }
+
+        @Test
+        fun `GIVEN a definitive error WHEN startOnboarding is repeated THEN a new idempotency key is used`() =
+            runTest {
+                // Arrange
+                val idempotencyKeys = mutableListOf<String>()
+                coEvery {
+                    getCustomerOffersUseCase.campaignOffer(USER_WALLET_ID, CAMPAIGN_KEY)
+                } returns campaignOffer().right()
+                coEvery {
+                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST, capture(idempotencyKeys))
+                } returns VisaApiError.CardIssueActiveOrderExists.left()
+                starter.startOnboarding(USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
+
+                // Act
+                starter.startOnboarding(USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
+
+                // Assert
+                assertThat(idempotencyKeys).hasSize(2)
+                assertThat(idempotencyKeys.toSet()).hasSize(2)
+            }
+
+        @Test
+        fun `GIVEN the order was created WHEN startOnboarding runs again THEN a new idempotency key is used`() =
+            runTest {
+                // Arrange
+                val idempotencyKeys = mutableListOf<String>()
+                coEvery {
+                    getCustomerOffersUseCase.campaignOffer(USER_WALLET_ID, CAMPAIGN_KEY)
+                } returns campaignOffer().right()
+                coEvery {
+                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST, capture(idempotencyKeys))
+                } returns ORDER_ID.right()
+                starter.startOnboarding(USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
+
+                // Act
+                starter.startOnboarding(USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
+
+                // Assert
+                assertThat(idempotencyKeys).hasSize(2)
+                assertThat(idempotencyKeys.toSet()).hasSize(2)
+            }
+
+        @Test
+        fun `GIVEN outcome unknown WHEN the campaign offer changes THEN a new idempotency key is used`() =
+            runTest {
+                // Arrange
+                val idempotencyKeys = mutableListOf<String>()
+                coEvery {
+                    getCustomerOffersUseCase.campaignOffer(USER_WALLET_ID, CAMPAIGN_KEY)
+                } returnsMany listOf(campaignOffer().right(), campaignOffer(OTHER_SPECIFICATION_NAME).right())
+                coEvery {
+                    repository.createOrder(USER_WALLET_ID, any(), capture(idempotencyKeys))
+                } returns VisaApiError.ServerUnavailable.left()
+                starter.startOnboarding(USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
+
+                // Act
+                starter.startOnboarding(USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
+
+                // Assert
+                assertThat(idempotencyKeys).hasSize(2)
+                assertThat(idempotencyKeys.toSet()).hasSize(2)
+            }
+
+        @Test
+        fun `GIVEN outcome unknown on two wallets WHEN the first wallet retries THEN its own key is reused`() =
+            runTest {
+                // Arrange
+                val idempotencyKeys = mutableListOf<String>()
+                coEvery { produceInitialDataUseCase(OTHER_USER_WALLET_ID) } returns Unit.right()
+                coEvery {
+                    repository.getCustomerInfo(OTHER_USER_WALLET_ID)
+                } returns customerInfo(KycStatus.PENDING).right()
+                coEvery {
+                    getCustomerOffersUseCase.campaignOffer(any(), CAMPAIGN_KEY)
+                } returns campaignOffer().right()
+                coEvery {
+                    repository.createOrder(any(), CAMPAIGN_REQUEST, capture(idempotencyKeys))
+                } returns VisaApiError.ServerUnavailable.left()
+                starter.startOnboarding(USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
+                starter.startOnboarding(OTHER_USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
+
+                // Act
+                starter.startOnboarding(USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
+
+                // Assert
+                assertThat(idempotencyKeys).hasSize(3)
+                assertThat(idempotencyKeys[1]).isNotEqualTo(idempotencyKeys[0])
+                assertThat(idempotencyKeys[2]).isEqualTo(idempotencyKeys[0])
             }
 
         @Test
@@ -136,7 +247,7 @@ internal class TangemPayOnboardingStarterTest {
 
                 // Assert
                 verify(exactly = 1) { uiMessageSender.send(any<DialogMessage>()) }
-                coVerify(exactly = 0) { repository.createOrder(any(), any()) }
+                coVerify(exactly = 0) { repository.createOrder(any(), any(), any()) }
                 verify(exactly = 0) { router.replaceAll(*anyVararg()) }
                 assertThat(loadingChanges).containsExactly(true, false).inOrder()
             }
@@ -169,7 +280,7 @@ internal class TangemPayOnboardingStarterTest {
 
                 // Assert
                 verify(exactly = 1) { uiMessageSender.send(any<SnackbarMessage>()) }
-                coVerify(exactly = 0) { repository.createOrder(any(), any()) }
+                coVerify(exactly = 0) { repository.createOrder(any(), any(), any()) }
                 verify(exactly = 0) { router.replaceAll(*anyVararg()) }
                 assertThat(loadingChanges).containsExactly(true, false).inOrder()
             }
@@ -182,7 +293,7 @@ internal class TangemPayOnboardingStarterTest {
                     getCustomerOffersUseCase.campaignOffer(USER_WALLET_ID, CAMPAIGN_KEY)
                 } returns campaignOffer().right()
                 coEvery {
-                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST)
+                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST, any())
                 } returns VisaApiError.Unspecified.left()
 
                 // Act
@@ -202,7 +313,7 @@ internal class TangemPayOnboardingStarterTest {
                     getCustomerOffersUseCase.campaignOffer(USER_WALLET_ID, CAMPAIGN_KEY)
                 } returns campaignOffer().right()
                 coEvery {
-                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST)
+                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST, any())
                 } returns ORDER_ID.right()
 
                 // Act
@@ -215,7 +326,7 @@ internal class TangemPayOnboardingStarterTest {
 
                 // Assert
                 coVerify(exactly = 1) {
-                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST)
+                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST, any())
                 }
                 verify(exactly = 1) {
                     router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(USER_WALLET_ID), onComplete = any())
@@ -246,7 +357,7 @@ internal class TangemPayOnboardingStarterTest {
                 assertThat(exitCount).isEqualTo(0)
                 coVerify(exactly = 0) { produceInitialDataUseCase(any()) }
                 coVerify(exactly = 0) { getCustomerOffersUseCase.campaignOffer(any(), any()) }
-                coVerify(exactly = 0) { repository.createOrder(any(), any()) }
+                coVerify(exactly = 0) { repository.createOrder(any(), any(), any()) }
             }
 
         @Test
@@ -263,7 +374,7 @@ internal class TangemPayOnboardingStarterTest {
                 assertThat(exitCount).isEqualTo(0)
                 coVerify(exactly = 1) { produceInitialDataUseCase(USER_WALLET_ID) }
                 coVerify(exactly = 0) { getCustomerOffersUseCase.campaignOffer(any(), any()) }
-                coVerify(exactly = 0) { repository.createOrder(any(), any()) }
+                coVerify(exactly = 0) { repository.createOrder(any(), any(), any()) }
             }
 
         @Test
@@ -313,7 +424,7 @@ internal class TangemPayOnboardingStarterTest {
 
                 // Assert
                 coVerify(exactly = 0) { getCustomerOffersUseCase.campaignOffer(any(), any()) }
-                coVerify(exactly = 0) { repository.createOrder(any(), any()) }
+                coVerify(exactly = 0) { repository.createOrder(any(), any(), any()) }
                 verify(exactly = 1) {
                     router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(USER_WALLET_ID), onComplete = any())
                 }
@@ -471,7 +582,7 @@ internal class TangemPayOnboardingStarterTest {
                     getCustomerOffersUseCase.campaignOffer(USER_WALLET_ID, CAMPAIGN_KEY)
                 } returns campaignOffer().right()
                 coEvery {
-                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST)
+                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST, any())
                 } returns ORDER_ID.right()
 
                 // Act
@@ -479,7 +590,7 @@ internal class TangemPayOnboardingStarterTest {
 
                 // Assert
                 coVerify(exactly = 1) {
-                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST)
+                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST, any())
                 }
                 verify(exactly = 1) {
                     router.replaceAll(
@@ -519,17 +630,19 @@ internal class TangemPayOnboardingStarterTest {
         tariffPlan = null,
     )
 
-    private fun campaignOffer() = Offer(
+    private fun campaignOffer(specificationName: String = SPECIFICATION_NAME) = Offer(
         type = Offer.Type.CARD_ISSUE_VIRTUAL_RAIN_DEEPLINK,
         fee = Offer.Fee(amount = BigDecimal.ZERO, currency = Currency.getInstance("USD")),
-        data = Offer.Data(specificationName = SPECIFICATION_NAME, orderType = ORDER_TYPE),
+        data = Offer.Data(specificationName = specificationName, orderType = ORDER_TYPE),
     )
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("011")
+        val OTHER_USER_WALLET_ID = UserWalletId("022")
         val ORDER_TYPE = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2
         const val CAMPAIGN_KEY = "tpay_for_oxford"
         const val SPECIFICATION_NAME = "SP_000009"
+        const val OTHER_SPECIFICATION_NAME = "SP_000010"
         val CAMPAIGN_REQUEST = CustomerOrderRequest.CardIssue(
             type = ORDER_TYPE,
             specificationName = SPECIFICATION_NAME,
