@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.PolymarketCredentialsLock
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
@@ -28,6 +29,7 @@ internal class DeriveApiCredentialsUseCaseTest {
     private val useCase = DeriveApiCredentialsUseCase(
         polymarketRepository = polymarketRepository,
         credentialsStore = credentialsStore,
+        credentialsLock = PolymarketCredentialsLock(),
     )
 
     @BeforeEach
