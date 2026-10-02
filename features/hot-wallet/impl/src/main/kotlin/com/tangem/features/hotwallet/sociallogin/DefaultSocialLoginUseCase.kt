@@ -11,6 +11,7 @@ import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
 import com.tangem.domain.sociallogin.models.SocialProviderIdToken
 import com.tangem.domain.sociallogin.usecase.GenerateRecoveryKeyUseCase
+import com.tangem.domain.sociallogin.usecase.GetSocialBackupInfoUseCase
 import com.tangem.domain.sociallogin.usecase.GetSocialRecoveryKeyUseCase
 import com.tangem.domain.sociallogin.usecase.ReadSocialBackupUseCase
 import com.tangem.domain.sociallogin.usecase.RegisterRestoredWalletUseCase
@@ -53,6 +54,7 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
     private val generateRecoveryKeyUseCase: GenerateRecoveryKeyUseCase,
     private val writeSocialBackupUseCase: WriteSocialBackupUseCase,
     private val readSocialBackupUseCase: ReadSocialBackupUseCase,
+    private val getSocialBackupInfoUseCase: GetSocialBackupInfoUseCase,
     private val registerSocialRecoveryUseCase: RegisterSocialRecoveryUseCase,
     private val registerRestoredWalletUseCase: RegisterRestoredWalletUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
@@ -91,7 +93,11 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
         signOutFromSocialProviderUseCase(provider)
     }
 
-    /** The recover call decides the branch: a stored key means restore, "no binding" means create */
+    /**
+     * The recover call decides the branch: a stored key means restore, "no binding" means create. The consent
+     * comes before it and only when the cloud holds no backup: a file means this identity has already been
+     * through social login and gave its consent then.
+     */
     private suspend fun resolve(
         idToken: SocialProviderIdToken,
         onStageChanged: (SocialLoginStage) -> Unit,
@@ -100,13 +106,16 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
     ): Either<SocialLoginError, SocialLoginOutcome> {
         onStageChanged(SocialLoginStage.VerifyingAccount)
 
+        if (getSocialBackupInfoUseCase().isLeft()) {
+            requestConsent() ?: return Either.Left(SocialLoginError.ConsentDeclined)
+        }
+
         val recoveryKey = getSocialRecoveryKeyUseCase(idToken).getOrElse { error ->
             return if (error == SocialLoginError.BindingNotFound) {
                 create(
                     idToken = idToken,
                     onStageChanged = onStageChanged,
                     requestBackupRetry = requestBackupRetry,
-                    requestConsent = requestConsent,
                 )
             } else {
                 Either.Left(error)
@@ -167,10 +176,7 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
         idToken: SocialProviderIdToken,
         onStageChanged: (SocialLoginStage) -> Unit,
         requestBackupRetry: suspend () -> Boolean,
-        requestConsent: suspend () -> SocialLoginConsent?,
     ): Either<SocialLoginError, SocialLoginOutcome> {
-        requestConsent() ?: return Either.Left(SocialLoginError.ConsentDeclined)
-
         onStageChanged(SocialLoginStage.CreatingWallet)
 
         val userWallet = createHotWallet().getOrElse { return Either.Left(it) }
