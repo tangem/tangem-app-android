@@ -28,7 +28,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * ticker, rank badge + capitalization, price with a [TangemPriceChange] indicator and a trailing
  * mini-graph slot.
  *
- * Version: 1.1.0
+ * Version: 1.1.1
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=5724-3510&m=dev)
  *
@@ -153,7 +153,7 @@ fun TangemTokenRowMarket(
 /** Public API surface of [TangemTokenRowMarket]. */
 object TangemTokenRowMarket {
 
-    val version = DsVersion(major = 1, minor = 1, patch = 0)
+    val version = DsVersion(major = 1, minor = 1, patch = 1)
 
     /**
      * State model of [TangemTokenRowMarket]. Render it with the `TangemTokenRowMarket(state = …)`
@@ -258,7 +258,7 @@ fun TangemTokenRowMarket.Shimmer(modifier: Modifier = Modifier) {
         ) {
             TangemShimmer(
                 radius = 4.dp,
-                modifier = Modifier.size(width = 24.dp, height = 12.dp),
+                modifier = Modifier.size(width = 24.dp, height = 16.dp),
             )
         }
     }

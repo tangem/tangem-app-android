@@ -20,6 +20,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
@@ -361,8 +362,13 @@ internal class SendAmountModel @Inject constructor(
         // Allowed only in multicurrency wallets
         val isMultiCurrency = userWallet?.isMultiCurrency == true
 
+        val isJointCurrency = params.cryptoCurrency.network.derivationPath is Network.DerivationPath.Joint
+
         isSendWithSwapAvailable.update {
-            !params.cryptoCurrency.isCustom && isMultiCurrency && !params.predefinedValues.isFromMainScreenQr
+            !params.cryptoCurrency.isCustom &&
+                isMultiCurrency &&
+                !isJointCurrency &&
+                !params.predefinedValues.isFromMainScreenQr
         }
     }
 }
