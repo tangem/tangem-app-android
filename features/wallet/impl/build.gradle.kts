@@ -135,6 +135,7 @@ dependencies {
     api(projects.features.collectibles.api)
     api(projects.features.commonFeatures.api)
     api(projects.features.feed.api)
+    implementation(projects.features.hotWallet.api)
     api(projects.features.jointAccount.api)
     implementation(projects.domain.jointAccount)
     api(projects.features.mcp.api)

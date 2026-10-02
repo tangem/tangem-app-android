@@ -14,11 +14,13 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotificationUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
+import com.tangem.features.hotwallet.HardwareUpgradeLauncher
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CoroutineScope
@@ -42,6 +44,7 @@ internal class WalletNotificationsSubscriberTest {
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender = mockk(relaxed = true)
     private val walletWarningsSingleEventSender: WalletWarningsSingleEventSender = mockk(relaxed = true)
     private val getStoryContentUseCase: GetStoryContentUseCase = mockk()
+    private val hardwareUpgradeLauncher: HardwareUpgradeLauncher = mockk(relaxUnitFun = true)
     private val userWallet: UserWallet = mockk(relaxed = true)
 
     private val subscriber = WalletNotificationsSubscriber(
@@ -53,6 +56,7 @@ internal class WalletNotificationsSubscriberTest {
         walletWarningsAnalyticsSender = walletWarningsAnalyticsSender,
         walletWarningsSingleEventSender = walletWarningsSingleEventSender,
         getStoryContentUseCase = getStoryContentUseCase,
+        hardwareUpgradeLauncher = hardwareUpgradeLauncher,
     )
 
     @BeforeEach
@@ -62,6 +66,7 @@ internal class WalletNotificationsSubscriberTest {
             getWalletNotificationsFactory,
             getWalletNotificationsCarouselFactory,
             getStoryContentUseCase,
+            hardwareUpgradeLauncher,
             userWallet,
         )
         every { userWallet.walletId } returns WALLET_ID
@@ -111,6 +116,58 @@ internal class WalletNotificationsSubscriberTest {
         coVerify(exactly = 0) {
             getStoryContentUseCase.invokeSync(id = StoryContentIds.STORY_FIRST_TIME_YIELD_PROMO.id, refresh = true)
         }
+    }
+
+    @Test
+    fun `GIVEN upgrade banner stays then reappears WHEN notifications re-emit THEN prefetch once per appearance`() =
+        runTest {
+            // Arrange
+            val notifications = MutableStateFlow(upgradeNotifications())
+            every { getWalletNotificationsFactory.create(any(), any()) } returns notifications
+            every { getWalletNotificationsCarouselFactory.create(any(), any()) } returns flowOf(persistentListOf())
+            val dispatcher = UnconfinedTestDispatcher(testScheduler)
+            val scope = CoroutineScope(dispatcher)
+            subscriber.subscribe(scope, dispatcher)
+            advanceUntilIdle()
+
+            // Act
+            notifications.value = upgradeNotifications()
+            advanceUntilIdle()
+            notifications.value = persistentListOf()
+            advanceUntilIdle()
+            notifications.value = upgradeNotifications()
+            advanceUntilIdle()
+            scope.cancel()
+
+            // Assert
+            verify(exactly = 2) { hardwareUpgradeLauncher.prefetch() }
+        }
+
+    @Test
+    fun `GIVEN no upgrade banner WHEN subscribed THEN upgrade story prefetch is not requested`() = runTest {
+        // Arrange
+        every { getWalletNotificationsCarouselFactory.create(any(), any()) } returns flowOf(persistentListOf())
+
+        // Act
+        val dispatcher = UnconfinedTestDispatcher(testScheduler)
+        val scope = CoroutineScope(dispatcher)
+        subscriber.subscribe(scope, dispatcher)
+        advanceUntilIdle()
+        scope.cancel()
+
+        // Assert
+        verify(exactly = 0) { hardwareUpgradeLauncher.prefetch() }
+    }
+
+    /** Capturing lambdas, as in production: each list is a new value, so the flow re-emits it. */
+    private fun upgradeNotifications(): ImmutableList<WalletNotificationUM> {
+        val clickTarget = Any()
+        return persistentListOf(
+            WalletNotificationUM.UpgradeHotWalletPromo(
+                onLaterClick = { clickTarget.hashCode() },
+                onUpgradeClick = { clickTarget.hashCode() },
+            ),
+        )
     }
 
     private fun yieldBoostCarousel(): ImmutableList<WalletNotificationUM> = persistentListOf(
