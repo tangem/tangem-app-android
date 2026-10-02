@@ -5,7 +5,11 @@ import com.tangem.domain.jointaccount.model.SafeGasToken
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 
-/** The creation and the co-signing paths price a gas token from the same source, so both apply the same tolerance */
+/**
+ * Prices one given gas token — the one the user picked on send, or the one a co-signed operation names — and is not
+ * the list the user picks from. The creation and the co-signing paths price it from the same source, so both apply
+ * the same tolerance.
+ */
 fun interface JointGasTokenResolver {
 
     /**

@@ -10,12 +10,12 @@ sealed interface SafeGasToken {
 
     val address: String
 
-    fun gasPrice(coinGasPrice: BigInteger): BigInteger
+    fun gasPriceInTokenCurrency(coinGasPrice: BigInteger): BigInteger
 
     data object Coin : SafeGasToken {
         override val address: String = SafeTxGasBuilder.NATIVE_GAS_TOKEN
 
-        override fun gasPrice(coinGasPrice: BigInteger): BigInteger = coinGasPrice
+        override fun gasPriceInTokenCurrency(coinGasPrice: BigInteger): BigInteger = coinGasPrice
     }
 
     /**
@@ -29,7 +29,7 @@ sealed interface SafeGasToken {
     ) : SafeGasToken {
 
         /** Rounded up: the refund is an integer per unit of gas and must never come out short */
-        override fun gasPrice(coinGasPrice: BigInteger): BigInteger = coinGasPrice.toBigDecimal()
+        override fun gasPriceInTokenCurrency(coinGasPrice: BigInteger): BigInteger = coinGasPrice.toBigDecimal()
             .movePointLeft(coinDecimals)
             .multiply(nativeToTokenRate)
             .movePointRight(decimals)
