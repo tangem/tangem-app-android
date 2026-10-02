@@ -865,6 +865,19 @@ internal class IntroductionModelTest {
             assertThat(sentEvents.filterIsInstance<IntroductionProcess.ButtonCreateNewWallet>()).hasSize(2)
         }
 
+        @Test
+        fun `GIVEN social login running WHEN the create sheet asks to close THEN it stays open`() {
+            // Arrange
+            val model = createModel()
+            requireNotNull(model.openSheet().socialLogin).onClick()
+
+            // Act
+            model.closeCreateWalletSheet()
+
+            // Assert
+            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isTrue()
+        }
+
         private fun IntroductionModel.openSheet(): CreateWalletUM {
             uiState.value.onCreateWalletClick()
             return uiState.value.bottomSheetConfig?.content as? CreateWalletUM
@@ -963,6 +976,19 @@ internal class IntroductionModelTest {
             // Assert
             verify(exactly = 1) { socialLoginHandler.start(any(), SocialLoginProvider.Google, any(), any()) }
             coVerify(exactly = 0) { cardScanner.scanAndOpenWallet(any(), any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN social login running WHEN the sheet asks to close THEN it stays open`() {
+            // Arrange
+            val model = createModel()
+            requireNotNull(model.openHaveWallet().socialLogin).onClick()
+
+            // Act
+            model.closeHaveWalletSheet()
+
+            // Assert
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isTrue()
         }
 
         @Test
