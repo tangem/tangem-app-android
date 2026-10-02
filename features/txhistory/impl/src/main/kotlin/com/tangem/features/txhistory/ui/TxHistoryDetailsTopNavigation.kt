@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -36,6 +37,7 @@ import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.*
+import com.tangem.core.ui.test.TxHistoryDetailsTestTags
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.HeaderUM.StatusStyle
@@ -80,6 +82,7 @@ internal fun TxHistoryDetailsTopNavigation(
                 style = TangemTheme.typography3.body.medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.testTag(TxHistoryDetailsTestTags.HEADER_TITLE),
             )
             Text(
                 text = header.subtitle.resolveReference(),
@@ -87,6 +90,7 @@ internal fun TxHistoryDetailsTopNavigation(
                 color = header.subtitleStyle.color,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.testTag(TxHistoryDetailsTestTags.HEADER_SUBTITLE),
             )
         },
     )
