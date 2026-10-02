@@ -284,7 +284,6 @@ class TangemPayMultipleCardsTest : BaseTestCase() {
             step("Click on the card being issued") {
                 onTangemPayMainScreen { cardButtonAt(issuingCardIndex).performClick() }
             }
-            // The Payment account banner carries the same issuing title, so first prove the card page opened.
             step("Assert 'Card page' screen is displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) { onTangemPayCardPageScreen { moreButton.assertIsDisplayed() } }
             }
@@ -335,7 +334,6 @@ class TangemPayMultipleCardsTest : BaseTestCase() {
             step("Click on the card being issued") {
                 onTangemPayMainScreen { cardButtonAt(issuingCardIndex).performClick() }
             }
-            // The Payment account banner carries the same issuing title, so first prove the card page opened.
             step("Assert 'Card page' screen is displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) { onTangemPayCardPageScreen { moreButton.assertIsDisplayed() } }
             }
