@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.sociallogin.models.RecoveryKey
@@ -18,13 +19,13 @@ import com.tangem.domain.sociallogin.usecase.GetSocialRecoveryKeyUseCase
 import com.tangem.domain.sociallogin.usecase.ReadSocialBackupUseCase
 import com.tangem.domain.sociallogin.usecase.RegisterRestoredWalletUseCase
 import com.tangem.domain.sociallogin.usecase.RegisterSocialRecoveryUseCase
-import com.tangem.domain.sociallogin.usecase.SetSocialBackupCompletedUseCase
 import com.tangem.domain.sociallogin.usecase.SignInWithSocialProviderUseCase
 import com.tangem.domain.sociallogin.usecase.SignOutFromSocialProviderUseCase
 import com.tangem.domain.sociallogin.usecase.WriteSocialBackupUseCase
 import com.tangem.domain.wallets.builder.HotUserWalletBuilder
-import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
+import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.ExportSeedPhraseUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.hotwallet.SocialLoginConsent
@@ -41,6 +42,8 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.every
+import io.mockk.just
+import io.mockk.Runs
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -48,8 +51,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
 /**
- * Covers the two orderings it cannot get wrong: the binding before the cloud file, and the
- * completion flag only once the wallet is actually restorable.
+ * Covers the orderings it cannot get wrong: the binding before the cloud file, and the wallet reaching the
+ * wallets list only after the backend and the cloud are both done with it — deleted from the Hot SDK otherwise.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultSocialLoginUseCaseTest {
@@ -63,12 +66,30 @@ internal class DefaultSocialLoginUseCaseTest {
     private val hotUserWalletBuilderFactory: HotUserWalletBuilder.Factory = mockk()
     private val saveWalletUseCase: SaveWalletUseCase = mockk()
     private val exportSeedPhraseUseCase: ExportSeedPhraseUseCase = mockk()
-    private val setSocialBackupCompletedUseCase: SetSocialBackupCompletedUseCase = mockk(relaxed = true)
     private val readSocialBackupUseCase: ReadSocialBackupUseCase = mockk(relaxed = true)
     private val mnemonicRepository: MnemonicRepository = mockk()
     private val hotWalletImporter: HotWalletImporter = mockk()
     private val registerRestoredWalletUseCase: RegisterRestoredWalletUseCase = mockk()
-    private val deleteWalletUseCase: DeleteWalletUseCase = mockk()
+    private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
+
+    private val hotWalletId: HotWalletId = mockk()
+    private val userWallet = UserWallet.Hot(
+        name = "Wallet",
+        walletId = WALLET_ID,
+        hotWalletId = hotWalletId,
+        wallets = emptyList(),
+        backedUp = false,
+    )
+    private val savedWallet = userWallet.copy(isSocialBackupCompleted = true)
+    private val restoredHotWalletId: HotWalletId = mockk()
+    private val restoredWallet = UserWallet.Hot(
+        name = "Restored",
+        walletId = RESTORED_WALLET_ID,
+        hotWalletId = restoredHotWalletId,
+        wallets = emptyList(),
+        backedUp = false,
+    )
+    private val savedRestoredWallet = restoredWallet.copy(isSocialBackupCompleted = true)
 
     private lateinit var useCase: DefaultSocialLoginUseCase
 
@@ -80,9 +101,8 @@ internal class DefaultSocialLoginUseCaseTest {
         writeSocialBackupUseCase = writeSocialBackupUseCase,
         readSocialBackupUseCase = readSocialBackupUseCase,
         registerSocialRecoveryUseCase = registerSocialRecoveryUseCase,
-        setSocialBackupCompletedUseCase = setSocialBackupCompletedUseCase,
         registerRestoredWalletUseCase = registerRestoredWalletUseCase,
-        deleteWalletUseCase = deleteWalletUseCase,
+        getUserWalletUseCase = getUserWalletUseCase,
         tangemHotSdk = tangemHotSdk,
         hotUserWalletBuilderFactory = hotUserWalletBuilderFactory,
         saveWalletUseCase = saveWalletUseCase,
@@ -104,21 +124,15 @@ internal class DefaultSocialLoginUseCaseTest {
             hotUserWalletBuilderFactory,
             saveWalletUseCase,
             exportSeedPhraseUseCase,
-            setSocialBackupCompletedUseCase,
             readSocialBackupUseCase,
             mnemonicRepository,
             hotWalletImporter,
             registerRestoredWalletUseCase,
-            deleteWalletUseCase,
+            getUserWalletUseCase,
         )
 
         useCase = createUseCase()
 
-        val hotWalletId: HotWalletId = mockk()
-        val userWallet: UserWallet.Hot = mockk {
-            every { walletId } returns WALLET_ID
-            every { this@mockk.hotWalletId } returns hotWalletId
-        }
         val builder: HotUserWalletBuilder = mockk {
             coEvery { build() } returns userWallet
         }
@@ -126,19 +140,22 @@ internal class DefaultSocialLoginUseCaseTest {
         coEvery { signInWithSocialProviderUseCase(PROVIDER) } returns ID_TOKEN.right()
         coEvery { getSocialRecoveryKeyUseCase(ID_TOKEN) } returns SocialLoginError.BindingNotFound.left()
         coEvery { tangemHotSdk.generateWallet(any(), any()) } returns hotWalletId
+        coEvery { tangemHotSdk.delete(any()) } just Runs
         every { hotUserWalletBuilderFactory.create(hotWalletId) } returns builder
-        coEvery { saveWalletUseCase(userWallet) } returns Either.Right(Unit)
+        coEvery { saveWalletUseCase(savedWallet) } returns Either.Right(Unit)
         every { generateRecoveryKeyUseCase() } returns RecoveryKey(ByteArray(RecoveryKey.SIZE_BYTES) { 7 })
         val privateInfo: SeedPhrasePrivateInfo = mockk {
             every { mnemonic.mnemonicComponents } returns listOf("abandon", "ability")
         }
         coEvery { exportSeedPhraseUseCase(hotWalletId) } returns privateInfo.right()
-        coEvery { setSocialBackupCompletedUseCase(any(), any()) } returns Either.Right(Unit)
+        coEvery { registerSocialRecoveryUseCase(any(), any(), any()) } returns Either.Right(Unit)
+        coEvery { writeSocialBackupUseCase(any(), any(), any()) } returns Either.Right(Unit)
 
         every { mnemonicRepository.generateMnemonic(any<String>()) } returns mockk()
-        coEvery { hotWalletImporter.import(any(), any(), any(), any(), any(), any()) } returns RESTORED_WALLET_ID.right()
-        coEvery { registerRestoredWalletUseCase(RESTORED_WALLET_ID) } returns Unit.right()
-        coEvery { deleteWalletUseCase(RESTORED_WALLET_ID) } returns false.right()
+        every { getUserWalletUseCase(RESTORED_WALLET_ID) } returns GetUserWalletError.UserWalletNotFound.left()
+        coEvery { hotWalletImporter.materialize(any(), any(), any()) } returns restoredWallet.right()
+        coEvery { hotWalletImporter.save(any(), savedRestoredWallet, any()) } returns Unit.right()
+        coEvery { registerRestoredWalletUseCase(restoredWallet) } returns Unit.right()
     }
 
     private fun restoredBackup() = RestoredSocialBackup(
@@ -149,27 +166,27 @@ internal class DefaultSocialLoginUseCaseTest {
     private fun bindIdentity() {
         coEvery { getSocialRecoveryKeyUseCase(ID_TOKEN) } returns
             RecoveryKey(ByteArray(RecoveryKey.SIZE_BYTES) { 3 }).right()
+        coEvery { readSocialBackupUseCase(any()) } returns restoredBackup().right()
     }
 
     @Test
-    fun `GIVEN identity has no wallet WHEN signIn THEN binding is registered before the cloud file`() = runTest {
-        // Arrange
-        coEvery { registerSocialRecoveryUseCase(any(), any(), any()) } returns Either.Right(Unit)
-        coEvery { writeSocialBackupUseCase(any(), any(), any()) } returns Either.Right(Unit)
+    fun `GIVEN identity has no wallet WHEN signIn THEN the wallet is listed only after the binding and the file`() =
+        runTest {
+            // Act
+            val actual = useCase.signIn(PROVIDER) { CONSENT }
 
-        // Act
-        val actual = useCase.signIn(PROVIDER) { CONSENT }
-
-        // Assert
-        assertThat(actual).isEqualTo(SocialLoginOutcome.WalletCreated(WALLET_ID).right())
-        coVerifyOrder {
-            registerSocialRecoveryUseCase(any(), any(), any())
-            writeSocialBackupUseCase(any(), any(), any())
+            // Assert
+            assertThat(actual).isEqualTo(SocialLoginOutcome.WalletCreated(WALLET_ID).right())
+            coVerifyOrder {
+                registerSocialRecoveryUseCase(ID_TOKEN, userWallet, any())
+                writeSocialBackupUseCase(WALLET_ID, any(), any())
+                saveWalletUseCase(savedWallet)
+            }
+            coVerify(exactly = 0) { tangemHotSdk.delete(any()) }
         }
-    }
 
     @Test
-    fun `GIVEN binding is refused WHEN signIn THEN no backup is written over the cloud folder`() = runTest {
+    fun `GIVEN binding is refused WHEN signIn THEN nothing is written AND the wallet is deleted`() = runTest {
         // Arrange
         val error = SocialLoginError.BindingConflict
         coEvery { registerSocialRecoveryUseCase(any(), any(), any()) } returns error.left()
@@ -179,265 +196,134 @@ internal class DefaultSocialLoginUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(error.left())
-        coVerify(exactly = 0) { writeSocialBackupUseCase(any(), any(), any()) }
+        coVerify(exactly = 0) {
+            writeSocialBackupUseCase(any(), any(), any())
+            saveWalletUseCase(any())
+        }
+        coVerify(exactly = 1) { tangemHotSdk.delete(hotWalletId) }
     }
 
     @Test
-    fun `GIVEN the cloud write fails WHEN signIn THEN the wallet is not marked as backed up`() = runTest {
+    fun `GIVEN the cloud write fails WHEN signIn THEN the wallet is deleted instead of listed`() = runTest {
         // Arrange
-        coEvery { registerSocialRecoveryUseCase(any(), any(), any()) } returns Either.Right(Unit)
         coEvery { writeSocialBackupUseCase(any(), any(), any()) } returns SocialLoginError.CloudUnavailable.left()
 
         // Act
         val actual = useCase.signIn(PROVIDER) { CONSENT }
 
-        // Assert — bound but with no file in the cloud is not a finished setup
+        // Assert
         assertThat(actual).isEqualTo(SocialLoginError.BackupWriteFailed().left())
-        coVerify(exactly = 0) { setSocialBackupCompletedUseCase(any(), any()) }
+        coVerify(exactly = 0) { saveWalletUseCase(any()) }
+        coVerify(exactly = 1) { tangemHotSdk.delete(hotWalletId) }
     }
 
     @Test
-    fun `GIVEN the write failed WHEN signing in again THEN the creation resumes on the bound key`() = runTest {
-        // Arrange — the first attempt registers the binding and then fails to write
-        coEvery { registerSocialRecoveryUseCase(any(), any(), any()) } returns Either.Right(Unit)
-        coEvery { writeSocialBackupUseCase(any(), any(), any()) } returns SocialLoginError.CloudUnavailable.left()
-        useCase.signIn(PROVIDER) { CONSENT }
-
-        // the backend now answers with the key it was given, as it would for any bound identity
-        val boundKey = RecoveryKey(ByteArray(RecoveryKey.SIZE_BYTES) { 7 })
-        coEvery { getSocialRecoveryKeyUseCase(ID_TOKEN) } returns boundKey.right()
-        coEvery { writeSocialBackupUseCase(any(), any(), any()) } returns Either.Right(Unit)
+    fun `GIVEN the created wallet cannot be listed WHEN signIn THEN it is deleted from the SDK`() = runTest {
+        // Arrange
+        coEvery { saveWalletUseCase(savedWallet) } returns mockk<SaveWalletError>().left()
 
         // Act
         val actual = useCase.signIn(PROVIDER) { CONSENT }
 
-        // Assert — resumed, not restored from a file that was never written
-        assertThat(actual).isEqualTo(SocialLoginOutcome.WalletCreated(WALLET_ID).right())
-        coVerify(exactly = 1) { registerSocialRecoveryUseCase(any(), any(), any()) }
-        coVerify(exactly = 1) { setSocialBackupCompletedUseCase(WALLET_ID, true) }
-        coVerify(exactly = 0) { readSocialBackupUseCase(any()) }
+        // Assert
+        assertThat(actual).isInstanceOf(Either.Left::class.java)
+        coVerify(exactly = 1) { tangemHotSdk.delete(hotWalletId) }
     }
 
     @Test
-    fun `GIVEN the registration timed out WHEN signing in again THEN the binding it left is recognised`() = runTest {
-        // Arrange — the backend persisted the binding and the answer was lost on the way back
-        coEvery { registerSocialRecoveryUseCase(any(), any(), any()) } returns SocialLoginError.NetworkError.left()
-        useCase.signIn(PROVIDER) { CONSENT }
-
-        val boundKey = RecoveryKey(ByteArray(RecoveryKey.SIZE_BYTES) { 7 })
-        coEvery { getSocialRecoveryKeyUseCase(ID_TOKEN) } returns boundKey.right()
-        coEvery { writeSocialBackupUseCase(any(), any(), any()) } returns Either.Right(Unit)
+    fun `GIVEN identity owns a wallet WHEN signIn THEN it is registered before it is listed`() = runTest {
+        // Arrange
+        bindIdentity()
 
         // Act
         val actual = useCase.signIn(PROVIDER) { CONSENT }
 
-        // Assert — the same wallet is finished, not left stranded behind a file that was never written
-        assertThat(actual).isEqualTo(SocialLoginOutcome.WalletCreated(WALLET_ID).right())
-        coVerify(exactly = 1) { tangemHotSdk.generateWallet(any(), any()) }
-        coVerify(exactly = 0) { readSocialBackupUseCase(any()) }
+        // Assert
+        assertThat(actual).isEqualTo(SocialLoginOutcome.WalletRestored(RESTORED_WALLET_ID).right())
+        coVerifyOrder {
+            hotWalletImporter.materialize(any(), null, any())
+            registerRestoredWalletUseCase(restoredWallet)
+            hotWalletImporter.save(any(), savedRestoredWallet, false)
+        }
     }
 
     @Test
-    fun `GIVEN the registration timed out WHEN another identity creates THEN that wallet is left alone`() = runTest {
-        // Arrange — the answer was lost, so the binding may exist and the wallet is nobody's to give away
-        coEvery { registerSocialRecoveryUseCase(any(), any(), any()) } returns SocialLoginError.NetworkError.left()
-        useCase.signIn(PROVIDER) { CONSENT }
+    fun `GIVEN the restored wallet is already on the device WHEN signIn THEN nothing is imported`() = runTest {
+        // Arrange
+        bindIdentity()
+        every { getUserWalletUseCase(RESTORED_WALLET_ID) } returns restoredWallet.right()
 
-        coEvery { registerSocialRecoveryUseCase(any(), any(), any()) } returns Either.Right(Unit)
-        coEvery { writeSocialBackupUseCase(any(), any(), any()) } returns Either.Right(Unit)
-        every { generateRecoveryKeyUseCase() } returns RecoveryKey(ByteArray(RecoveryKey.SIZE_BYTES) { 9 })
+        // Act
+        val actual = useCase.signIn(PROVIDER) { CONSENT }
 
-        // Act — another identity, with no binding of its own
-        useCase.signIn(PROVIDER) { CONSENT }
-
-        // Assert — a wallet of its own, rather than a second key over a binding that may already hold one
-        coVerify(exactly = 2) { tangemHotSdk.generateWallet(any(), any()) }
+        // Assert
+        assertThat(actual).isEqualTo(SocialLoginError.WalletAlreadySaved.left())
+        coVerify(exactly = 0) {
+            hotWalletImporter.materialize(any(), any(), any())
+            registerRestoredWalletUseCase(any())
+            tangemHotSdk.delete(any())
+        }
     }
 
     @Test
-    fun `GIVEN a bound pending creation WHEN another identity creates a wallet THEN the bound one survives`() =
+    fun `GIVEN the registration fails WHEN signIn THEN the restored wallet is deleted from the SDK unlisted`() =
         runTest {
-            // Arrange — the first identity binds a wallet and then fails to write
-            coEvery { registerSocialRecoveryUseCase(any(), any(), any()) } returns Either.Right(Unit)
-            coEvery { writeSocialBackupUseCase(any(), any(), any()) } returns SocialLoginError.CloudUnavailable.left()
-            useCase.signIn(PROVIDER) { CONSENT }
-
-            // another identity, with no binding of its own, goes through the create branch
-            every { generateRecoveryKeyUseCase() } returns RecoveryKey(ByteArray(RecoveryKey.SIZE_BYTES) { 9 })
-            useCase.signIn(PROVIDER) { CONSENT }
-
-            // the first identity comes back
-            val boundKey = RecoveryKey(ByteArray(RecoveryKey.SIZE_BYTES) { 7 })
-            coEvery { getSocialRecoveryKeyUseCase(ID_TOKEN) } returns boundKey.right()
-            coEvery { writeSocialBackupUseCase(any(), any(), any()) } returns Either.Right(Unit)
+            // Arrange
+            bindIdentity()
+            coEvery { registerRestoredWalletUseCase(restoredWallet) } returns SocialLoginError.NetworkError.left()
 
             // Act
             val actual = useCase.signIn(PROVIDER) { CONSENT }
 
-            // Assert — its creation is still resumable, not replaced by the second one
-            assertThat(actual).isEqualTo(SocialLoginOutcome.WalletCreated(WALLET_ID).right())
-            coVerify(exactly = 0) { readSocialBackupUseCase(any()) }
+            // Assert
+            assertThat(actual).isEqualTo(SocialLoginError.NetworkError.left())
+            coVerify(exactly = 1) { tangemHotSdk.delete(restoredHotWalletId) }
+            coVerify(exactly = 0) { hotWalletImporter.save(any(), any(), any()) }
         }
 
     @Test
-    fun `GIVEN a pending creation WHEN another identity signs in THEN the pending wallet is not resumed`() = runTest {
-        // Arrange — the first identity registers a binding and then fails to write
-        coEvery { registerSocialRecoveryUseCase(any(), any(), any()) } returns Either.Right(Unit)
-        coEvery { writeSocialBackupUseCase(any(), any(), any()) } returns SocialLoginError.CloudUnavailable.left()
-        useCase.signIn(PROVIDER) { CONSENT }
+    fun `GIVEN the restored wallet cannot be listed WHEN signIn THEN it is deleted from the SDK`() = runTest {
+        // Arrange
+        bindIdentity()
+        coEvery { hotWalletImporter.save(any(), savedRestoredWallet, any()) } returns
+            HotWalletImportError.Unknown().left()
 
-        // another identity, with a wallet and so a key of its own
-        val otherKey = RecoveryKey(ByteArray(RecoveryKey.SIZE_BYTES) { 9 })
-        coEvery { getSocialRecoveryKeyUseCase(ID_TOKEN) } returns otherKey.right()
+        // Act
+        val actual = useCase.signIn(PROVIDER) { CONSENT }
+
+        // Assert
+        assertThat(actual).isInstanceOf(Either.Left::class.java)
+        coVerify(exactly = 1) { tangemHotSdk.delete(restoredHotWalletId) }
+    }
+
+    @Test
+    fun `GIVEN the backup cannot be read WHEN signIn THEN nothing is imported`() = runTest {
+        // Arrange
+        bindIdentity()
         coEvery { readSocialBackupUseCase(any()) } returns SocialLoginError.BackupNotFound.left()
 
         // Act
         val actual = useCase.signIn(PROVIDER) { CONSENT }
 
-        // Assert — the restore branch, not the pending wallet
+        // Assert
         assertThat(actual).isEqualTo(SocialLoginError.BackupNotFound.left())
-        coVerify(exactly = 1) { readSocialBackupUseCase(otherKey) }
-        coVerify(exactly = 0) { setSocialBackupCompletedUseCase(WALLET_ID, true) }
-    }
-
-    @Test
-    fun `GIVEN identity owns a wallet WHEN signIn THEN it is marked as backed up before it is imported`() =
-        runTest {
-            // Arrange
-            bindIdentity()
-            coEvery { readSocialBackupUseCase(any()) } returns restoredBackup().right()
-
-            // Act
-            val actual = useCase.signIn(PROVIDER) { CONSENT }
-
-            // Assert
-            assertThat(actual).isEqualTo(SocialLoginOutcome.WalletRestored(RESTORED_WALLET_ID, isNewOnDevice = true).right())
-            coVerifyOrder {
-                setSocialBackupCompletedUseCase(RESTORED_WALLET_ID, true)
-                hotWalletImporter.import(any(), any(), any(), any(), any(), any())
-            }
-            coVerify(exactly = 0) { registerSocialRecoveryUseCase(any(), any(), any()) }
-        }
-
-    @Test
-    fun `GIVEN identity owns a wallet WHEN signIn THEN it is imported without events and registered`() = runTest {
-        // Arrange
-        bindIdentity()
-        coEvery { readSocialBackupUseCase(any()) } returns restoredBackup().right()
-
-        // Act
-        useCase.signIn(PROVIDER) { CONSENT }
-
-        // Assert
-        coVerifyOrder {
-            hotWalletImporter.import(any(), any(), any(), any(), any(), creationType = null)
-            registerRestoredWalletUseCase(RESTORED_WALLET_ID)
-        }
-    }
-
-    @Test
-    fun `GIVEN the registration fails WHEN signIn THEN the imported wallet is discarded`() = runTest {
-        // Arrange
-        bindIdentity()
-        coEvery { readSocialBackupUseCase(any()) } returns restoredBackup().right()
-        coEvery { registerRestoredWalletUseCase(RESTORED_WALLET_ID) } returns SocialLoginError.NetworkError.left()
-
-        // Act
-        val actual = useCase.signIn(PROVIDER) { CONSENT }
-
-        // Assert
-        assertThat(actual).isEqualTo(SocialLoginError.NetworkError.left())
-        coVerify(exactly = 1) { deleteWalletUseCase(RESTORED_WALLET_ID) }
-        coVerify(exactly = 1) { setSocialBackupCompletedUseCase(RESTORED_WALLET_ID, false) }
-    }
-
-    @Test
-    fun `GIVEN the wallet was already on the device AND the registration fails WHEN signIn THEN it is kept`() =
-        runTest {
-            // Arrange
-            bindIdentity()
-            coEvery { readSocialBackupUseCase(any()) } returns restoredBackup().right()
-            coEvery { hotWalletImporter.import(any(), any(), any(), any(), any(), any()) } returns
-                HotWalletImportError.AlreadySaved.left()
-            coEvery { registerRestoredWalletUseCase(RESTORED_WALLET_ID) } returns SocialLoginError.ServerError().left()
-
-            // Act
-            val actual = useCase.signIn(PROVIDER) { CONSENT }
-
-            // Assert
-            assertThat(actual).isEqualTo(SocialLoginError.ServerError().left())
-            coVerify(exactly = 0) { deleteWalletUseCase(any()) }
-        }
-
-    @Test
-    fun `GIVEN the backup cannot be read WHEN signIn THEN nothing is imported or marked`() = runTest {
-        // Arrange
-        bindIdentity()
-        coEvery { readSocialBackupUseCase(any()) } returns SocialLoginError.InvalidBackupFile.left()
-
-        // Act
-        val actual = useCase.signIn(PROVIDER) { CONSENT }
-
-        // Assert
-        assertThat(actual).isEqualTo(SocialLoginError.InvalidBackupFile.left())
-        coVerify(exactly = 0) {
-            hotWalletImporter.import(any(), any(), any(), any(), any(), any())
-            setSocialBackupCompletedUseCase(any(), any())
-        }
+        coVerify(exactly = 0) { hotWalletImporter.materialize(any(), any(), any()) }
     }
 
     @Test
     fun `GIVEN the backup needs a passphrase WHEN signIn THEN it is refused instead of imported`() = runTest {
-        // Arrange — importing without the passphrase would hand back a different wallet, silently
+        // Arrange
         bindIdentity()
-        val secret = SocialBackupSecret(mnemonic = "abandon ability".toCharArray(), isPassphraseRequired = true)
-        coEvery { readSocialBackupUseCase(any()) } returns restoredBackup().copy(secret = secret).right()
+        coEvery { readSocialBackupUseCase(any()) } returns restoredBackup().copy(
+            secret = SocialBackupSecret(mnemonic = "abandon ability".toCharArray(), isPassphraseRequired = true),
+        ).right()
 
         // Act
         val actual = useCase.signIn(PROVIDER) { CONSENT }
 
         // Assert
         assertThat(actual).isEqualTo(SocialLoginError.PassphraseNotSupported.left())
-        coVerify(exactly = 0) {
-            hotWalletImporter.import(any(), any(), any(), any(), any(), any())
-            setSocialBackupCompletedUseCase(any(), any())
-        }
-    }
-
-    @Test
-    fun `GIVEN the import fails WHEN signIn THEN the flag is taken back`() = runTest {
-        // Arrange
-        bindIdentity()
-        coEvery { readSocialBackupUseCase(any()) } returns restoredBackup().right()
-        val cause = IllegalStateException("sdk")
-        coEvery { hotWalletImporter.import(any(), any(), any(), any(), any(), any()) } returns
-            HotWalletImportError.Unknown(cause).left()
-
-        // Act
-        val actual = useCase.signIn(PROVIDER) { CONSENT }
-
-        // Assert
-        assertThat(actual).isEqualTo(SocialLoginError.Unknown(cause).left())
-        coVerifyOrder {
-            setSocialBackupCompletedUseCase(RESTORED_WALLET_ID, true)
-            setSocialBackupCompletedUseCase(RESTORED_WALLET_ID, false)
-        }
-    }
-
-    @Test
-    fun `GIVEN the flag cannot be stored WHEN signIn THEN the wallet is not imported`() = runTest {
-        // Arrange
-        bindIdentity()
-        coEvery { readSocialBackupUseCase(any()) } returns restoredBackup().right()
-        coEvery { setSocialBackupCompletedUseCase(RESTORED_WALLET_ID, true) } returns
-            SocialLoginError.PersistenceFailed().left()
-
-        // Act
-        val actual = useCase.signIn(PROVIDER) { CONSENT }
-
-        // Assert
-        assertThat(actual).isEqualTo(SocialLoginError.PersistenceFailed().left())
-        coVerify(exactly = 0) { hotWalletImporter.import(any(), any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { hotWalletImporter.materialize(any(), any(), any()) }
     }
 
     @Test
