@@ -332,7 +332,6 @@ internal class DefaultTangemPayStorage @Inject constructor(
             preferences.remove(spendPreferencesKeys.getCheckCustomerByWalletId(userWalletId))
             preferences.remove(spendPreferencesKeys.getCustomerWalletAddressKey(userWalletId))
             preferences.remove(spendPreferencesKeys.getHideOnboardingKey(userWalletId))
-            preferences.remove(spendPreferencesKeys.bankOfframpRecents(userWalletId))
             preferences.remove(spendPreferencesKeys.paymentAccountRecents(userWalletId))
             // Both withdraw stores live inside a single preference holding a map, so the wallet's entry is
             // removed from it rather than the key itself.
