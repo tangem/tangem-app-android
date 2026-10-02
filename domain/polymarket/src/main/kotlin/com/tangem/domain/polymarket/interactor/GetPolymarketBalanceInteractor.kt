@@ -2,6 +2,7 @@ package com.tangem.domain.polymarket.interactor
 
 import arrow.core.Either
 import arrow.core.left
+import com.tangem.domain.polymarket.PolymarketCredentialsLock
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketAuthError
@@ -25,11 +26,16 @@ class GetPolymarketBalanceInteractor(
     private val polymarketRepository: PolymarketRepository,
     private val getApiCredentials: GetPolymarketApiCredentialsUseCase,
     private val invalidateCredentials: InvalidatePolymarketCredentialsUseCase,
+    private val credentialsLock: PolymarketCredentialsLock,
 ) {
 
     suspend operator fun invoke(
         addresses: PolymarketAddresses,
-    ): Either<PolymarketAuthError, PolymarketBalanceAllowance> {
+    ): Either<PolymarketAuthError, PolymarketBalanceAllowance> = credentialsLock.withLock(addresses.userWalletId) {
+        read(addresses)
+    }
+
+    private suspend fun read(addresses: PolymarketAddresses): Either<PolymarketAuthError, PolymarketBalanceAllowance> {
         val credentials = getApiCredentials(userWalletId = addresses.userWalletId)
             ?: return PolymarketAuthError.KeyNotFound.left()
 
@@ -39,7 +45,7 @@ class GetPolymarketBalanceInteractor(
         )
 
         if (refresh.leftOrNull() == PolymarketAuthError.InvalidSignature) {
-            invalidateCredentials(userWalletId = addresses.userWalletId, rejected = credentials)
+            invalidateCredentials(userWalletId = addresses.userWalletId)
 
             return PolymarketAuthError.InvalidSignature.left()
         }
@@ -49,7 +55,7 @@ class GetPolymarketBalanceInteractor(
             credentials = credentials,
         ).onLeft { error ->
             if (error == PolymarketAuthError.InvalidSignature) {
-                invalidateCredentials(userWalletId = addresses.userWalletId, rejected = credentials)
+                invalidateCredentials(userWalletId = addresses.userWalletId)
             }
         }
     }

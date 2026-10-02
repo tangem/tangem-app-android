@@ -23,8 +23,6 @@ import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.datastore.MockStateDataStore
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -131,13 +129,6 @@ internal class PolymarketUserWalletDataCleanerTest {
             override suspend fun clear(userWalletId: UserWalletId) {
                 entries.remove(userWalletId)
             }
-
-            override suspend fun clearIfCurrent(userWalletId: UserWalletId, rejected: PolymarketApiCredentials) {
-                if (entries[userWalletId] === rejected) entries.remove(userWalletId)
-            }
-
-            override fun hasCredentials(userWalletId: UserWalletId): Flow<Boolean> =
-                flowOf(entries[userWalletId] != null)
         }
 
         // Act
