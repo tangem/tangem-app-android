@@ -13,6 +13,7 @@ import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onCompose
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import androidx.compose.ui.test.hasTestTag as withTestTag
+import androidx.compose.ui.test.hasText as withText
 
 /**
  * Details sheet of a transaction-history row (the new tx history). Swap rows open it in place of the
@@ -30,6 +31,13 @@ class TxHistoryDetailsBottomSheetPageObject(semanticsProvider: SemanticsNodeInte
     /** Value of an info row: amounts read "<amount> <SYMBOL>" and the provider "<name> • <CEX|DEX>". */
     fun rowValueContaining(value: String): KNode = child {
         hasText(text = value, substring = true)
+        useUnmergedTree = true
+    }
+
+    /** The clickable info row (e.g. the provider row that opens the provider page) whose value contains [value]. */
+    fun clickableRowContaining(value: String): KNode = child {
+        hasClickAction()
+        hasAnyDescendant(withText(value, substring = true))
         useUnmergedTree = true
     }
 
