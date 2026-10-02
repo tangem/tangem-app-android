@@ -6,6 +6,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -26,6 +27,7 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.TestScope
@@ -38,12 +40,13 @@ import java.math.BigDecimal
 internal class MoneyAccountOnboardingModelTest {
 
     private val router: Router = mockk(relaxed = true)
+    private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val onboardingRepository: OnboardingRepository = mockk()
     private val getMoneyAccountFeeTableUseCase: GetMoneyAccountFeeTableUseCase = mockk()
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(router, onboardingRepository, getMoneyAccountFeeTableUseCase)
+        clearMocks(router, urlOpener, onboardingRepository, getMoneyAccountFeeTableUseCase)
     }
 
     @Test
@@ -148,10 +151,26 @@ internal class MoneyAccountOnboardingModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN content shown WHEN terms clicked THEN terms of use opened`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.content().onTermsClick()
+
+        // Assert
+        verify(exactly = 1) { urlOpener.openUrl("https://tangem.com/docs/en/virtual-account-terms.pdf") }
+
+        model.onDestroy()
+    }
+
     private fun createModel(testScope: TestScope) = MoneyAccountOnboardingModel(
         paramsContainer = MutableParamsContainer(value = MoneyAccountOnboardingComponent.Params.FromMain),
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
         router = router,
+        urlOpener = urlOpener,
         onboardingRepository = onboardingRepository,
         getMoneyAccountFeeTableUseCase = getMoneyAccountFeeTableUseCase,
     )
