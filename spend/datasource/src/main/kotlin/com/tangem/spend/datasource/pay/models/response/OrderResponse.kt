@@ -13,6 +13,10 @@ data class OrderResponse(
         @SerialName("id") val id: String,
         @SerialName("customer_id") val customerId: String?,
         @SerialName("type") val type: String?,
+        /**
+         * A status this build does not know falls back to [Status.UNKNOWN] since app version 6.4. Older versions
+         * fail to parse the whole response on it.
+         */
         @SerialName("status") val status: Status = Status.UNKNOWN,
         @SerialName("step") val step: String?,
         @SerialName("data") val data: Data,
