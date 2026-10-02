@@ -23,6 +23,14 @@ import org.junit.Test
 @HiltAndroidTest
 class TangemPayWithdrawTest : BaseTestCase() {
 
+    private val withdrawScenario = "tangem_pay_withdraw"
+    private val withdrawDataEndpoint = "/bff-v2/v1/customer/card/withdraw/data"
+    private val withdrawEndpoint = "/bff-v2/v1/customer/card/withdraw"
+    private val withdrawOrderEndpoint = "/bff-v2/v1/order/mock-tangempay-withdraw-order-001"
+    private val exchangeSentEndpoint = "/v1/exchange-sent"
+
+    private val minPollsToProveContinuation = 2
+
     @AllureId("4972")
     @DisplayName("Tangem Pay: withdraw swaps USDC to Bitcoin and appends withdrawal to history")
     @Test
@@ -526,6 +534,196 @@ class TangemPayWithdrawTest : BaseTestCase() {
                         expandPaymentAccount = index == 0,
                     )
                 }
+            }
+        }
+    }
+
+    @AllureId("9605")
+    @DisplayName("Tangem Pay: a failing withdraw data request shows an error and nothing is submitted")
+    @Test
+    fun withdrawDataErrorShowsErrorTest() {
+        val bitcoinScenario = "bitcoin_utxo"
+        val expressAssetsScenario = "express_api_assets"
+        val exchangeStatusScenario = "exchange_status_provider"
+        val balanceScenario = "tangem_pay_balance_update"
+        val historyScenario = "tangem_pay_transaction_history"
+        val eligibilityState = "PaeraCustomer"
+        val bitcoinStartedState = "Started"
+        val expressAssetsState = "BitcoinExchangeEnabled"
+        val exchangeStatusState = "Changelly"
+        val balanceInitialState = "InitialBalance"
+        val historyInitialState = "InitialEmpty"
+        val withdrawAmount = "5"
+        val receiveToken = "Bitcoin"
+        val withdrawDataErrorState = "WithdrawDataError"
+        val unknownErrorText = getResourceString(com.tangem.core.res.R.string.common_unknown_error)
+
+        setupHooks(
+            additionalBeforeSection = {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
+                setWireMockScenarioState(bitcoinScenario, bitcoinStartedState)
+                setWireMockScenarioState(expressAssetsScenario, expressAssetsState)
+                setWireMockScenarioState(exchangeStatusScenario, exchangeStatusState)
+                setWireMockScenarioState(balanceScenario, balanceInitialState)
+                setWireMockScenarioState(historyScenario, historyInitialState)
+                setWireMockScenarioState(withdrawScenario, withdrawDataErrorState)
+            }
+        ).run {
+            step("Open the withdraw to '$receiveToken' ready to confirm") {
+                openTangemPayWithdrawReadyToConfirm(receiveToken, withdrawAmount)
+            }
+            val withdrawDataBefore = getWireMockRequestCount("POST", withdrawDataEndpoint)
+            val withdrawBefore = getWireMockRequestCount("POST", withdrawEndpoint)
+            val exchangeSentBefore = getWireMockRequestCount("POST", exchangeSentEndpoint)
+            step("Confirm swap by holding the button") {
+                confirmTangemPayWithdrawByHolding(TANGEM_PAY_ACCESS_CODE)
+            }
+            step("Assert the withdrawal error dialog is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onDialog { containerWithText(unknownErrorText).assertIsDisplayed() }
+                }
+            }
+            step("Assert the withdrawal stopped before submitting") {
+                assertEquals(
+                    "Withdrawal data should be requested once",
+                    1,
+                    getWireMockRequestCount("POST", withdrawDataEndpoint) - withdrawDataBefore,
+                )
+                assertEquals(
+                    "Withdrawal should not be submitted without signing data",
+                    withdrawBefore,
+                    getWireMockRequestCount("POST", withdrawEndpoint),
+                )
+                assertEquals(
+                    "Failed withdrawal should not be reported to Express",
+                    exchangeSentBefore,
+                    getWireMockRequestCount("POST", exchangeSentEndpoint),
+                )
+            }
+        }
+    }
+
+    @AllureId("9606")
+    @DisplayName("Tangem Pay: a withdraw failing after signing shows an error")
+    @Test
+    fun withdrawErrorAfterSigningShowsErrorTest() {
+        val bitcoinScenario = "bitcoin_utxo"
+        val expressAssetsScenario = "express_api_assets"
+        val exchangeStatusScenario = "exchange_status_provider"
+        val balanceScenario = "tangem_pay_balance_update"
+        val historyScenario = "tangem_pay_transaction_history"
+        val eligibilityState = "PaeraCustomer"
+        val bitcoinStartedState = "Started"
+        val expressAssetsState = "BitcoinExchangeEnabled"
+        val exchangeStatusState = "Changelly"
+        val balanceInitialState = "InitialBalance"
+        val historyInitialState = "InitialEmpty"
+        val withdrawAmount = "5"
+        val receiveToken = "Bitcoin"
+        val withdrawErrorState = "WithdrawError"
+        val unknownErrorText = getResourceString(com.tangem.core.res.R.string.common_unknown_error)
+
+        setupHooks(
+            additionalBeforeSection = {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
+                setWireMockScenarioState(bitcoinScenario, bitcoinStartedState)
+                setWireMockScenarioState(expressAssetsScenario, expressAssetsState)
+                setWireMockScenarioState(exchangeStatusScenario, exchangeStatusState)
+                setWireMockScenarioState(balanceScenario, balanceInitialState)
+                setWireMockScenarioState(historyScenario, historyInitialState)
+                setWireMockScenarioState(withdrawScenario, withdrawErrorState)
+            }
+        ).run {
+            step("Open the withdraw to '$receiveToken' ready to confirm") {
+                openTangemPayWithdrawReadyToConfirm(receiveToken, withdrawAmount)
+            }
+            val withdrawBefore = getWireMockRequestCount("POST", withdrawEndpoint)
+            val orderBefore = getWireMockRequestCount("GET", withdrawOrderEndpoint)
+            val exchangeSentBefore = getWireMockRequestCount("POST", exchangeSentEndpoint)
+            step("Confirm swap by holding the button") {
+                confirmTangemPayWithdrawByHolding(TANGEM_PAY_ACCESS_CODE)
+            }
+            step("Assert the withdrawal error dialog is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onDialog { containerWithText(unknownErrorText).assertIsDisplayed() }
+                }
+            }
+            step("Assert the signed withdrawal was submitted once and not followed up") {
+                assertEquals(
+                    "Signed withdrawal should be submitted once",
+                    1,
+                    getWireMockRequestCount("POST", withdrawEndpoint) - withdrawBefore,
+                )
+                assertEquals(
+                    "Failed withdrawal should not poll the order",
+                    orderBefore,
+                    getWireMockRequestCount("GET", withdrawOrderEndpoint),
+                )
+                assertEquals(
+                    "Failed withdrawal should not be reported to Express",
+                    exchangeSentBefore,
+                    getWireMockRequestCount("POST", exchangeSentEndpoint),
+                )
+            }
+        }
+    }
+
+    @AllureId("9658")
+    @DisplayName("Tangem Pay: the withdraw order without a transaction hash keeps being polled after Close")
+    @Test
+    fun withdrawOrderWithoutHashKeepsPollingAfterCloseTest() {
+        val bitcoinScenario = "bitcoin_utxo"
+        val expressAssetsScenario = "express_api_assets"
+        val exchangeStatusScenario = "exchange_status_provider"
+        val balanceScenario = "tangem_pay_balance_update"
+        val historyScenario = "tangem_pay_transaction_history"
+        val eligibilityState = "PaeraCustomer"
+        val bitcoinStartedState = "Started"
+        val expressAssetsState = "BitcoinExchangeEnabled"
+        val exchangeStatusState = "Changelly"
+        val balanceInitialState = "InitialBalance"
+        val historyInitialState = "InitialEmpty"
+        val withdrawAmount = "5"
+        val receiveToken = "Bitcoin"
+        val orderWithoutHashState = "OrderWithoutHash"
+        setupHooks(
+            additionalBeforeSection = {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
+                setWireMockScenarioState(bitcoinScenario, bitcoinStartedState)
+                setWireMockScenarioState(expressAssetsScenario, expressAssetsState)
+                setWireMockScenarioState(exchangeStatusScenario, exchangeStatusState)
+                setWireMockScenarioState(balanceScenario, balanceInitialState)
+                setWireMockScenarioState(historyScenario, historyInitialState)
+                setWireMockScenarioState(withdrawScenario, orderWithoutHashState)
+            }
+        ).run {
+            step("Open the withdraw to '$receiveToken' ready to confirm") {
+                openTangemPayWithdrawReadyToConfirm(receiveToken, withdrawAmount)
+            }
+            val exchangeSentBefore = getWireMockRequestCount("POST", exchangeSentEndpoint)
+            val ordersBeforeConfirm = getWireMockRequestCount("GET", withdrawOrderEndpoint)
+            step("Confirm swap by holding the button") {
+                confirmTangemPayWithdrawByHolding(TANGEM_PAY_ACCESS_CODE)
+            }
+            step("Assert 'Swap in progress' screen is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_VERY_LONG) { onSwapSuccessScreen { title.assertIsDisplayed() } }
+            }
+            step("Assert the order without a transaction hash was fetched after the withdraw") {
+                awaitTangemPayWithdrawOrderPolls(withdrawOrderEndpoint, ordersBeforeConfirm + 1)
+            }
+            step("Click on 'Close' button") {
+                onSwapSuccessScreen { closeButton.performClick() }
+            }
+            val ordersAfterClose = getWireMockRequestCount("GET", withdrawOrderEndpoint)
+            step("Assert the order keeps being polled after Close") {
+                awaitTangemPayWithdrawOrderPolls(withdrawOrderEndpoint, ordersAfterClose + minPollsToProveContinuation)
+            }
+            step("Assert the withdrawal without a transaction hash was not reported to Express") {
+                assertEquals(
+                    "Withdrawal without a transaction hash should not be reported to Express",
+                    exchangeSentBefore,
+                    getWireMockRequestCount("POST", exchangeSentEndpoint),
+                )
             }
         }
     }
