@@ -98,7 +98,7 @@ date here; when you ingest a change, update this table in the same PR.
 | | `502` | `RelayerUnavailable` | relayer down, retry later |
 | CLOB `POST order` | `400` + "no match" marker | `PredictionPlaceOrderError.NoLiquidity` | fill-and-kill found nothing |
 | | `400` other | `Rejected` | |
-| | `401` | `Unauthorized` | credentials stale — `PlacePredictionOrderUseCase` clears them; the summary shows no dialog, Main returns to the gate |
+| | `401` | `Unauthorized` | credentials stale — `PlacePredictionOrderUseCase` clears them |
 | | network/timeout, other | `Ambiguous` | the order may have been placed; the feature reports it as submitted, never as failed |
 | BFF `/withdraw*` | `409` | `PredictionWithdrawError.NonceTaken` | same nonce already submitted |
 | | `422` | `RelayerRejected` | |
@@ -114,7 +114,7 @@ order may have been placed.
 
 | Store | Backing | Survives restart | Cleared on wallet deletion |
 |---|---|---|---|
-| `DefaultPolymarketCredentialsStore` | `SecureStorage` (AES-256-GCM, Keystore), JSON per wallet, behind a runtime cache that `hasCredentials` observes and `clearIfCurrent` compares by identity (each entry is wrapped in a class without structural equality, or the `StateFlow` would keep the old instance of equal re-derived credentials) | yes | yes |
+| `DefaultPolymarketCredentialsStore` | `SecureStorage` (AES-256-GCM, Keystore), JSON per wallet | yes | yes |
 | `PredictionAccountStatusStore` | `RuntimeSharedStore` + `DataStore<…DTO>` | value only, restored as `StatusSource.CACHE`; no fiat rate, no loading/error states | yes |
 | `DefaultPolymarketOnboardedStore` | `DataStore<Set<String>>` | yes — an optimisation over asking the BFF; every read degrades to "not recorded" | yes |
 | `DefaultPredictionWithdrawalStore` | `RuntimeSharedStore` + `DataStore` | yes — the signed batch awaiting the relayer | yes |
