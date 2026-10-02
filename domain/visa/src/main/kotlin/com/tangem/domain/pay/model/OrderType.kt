@@ -34,7 +34,9 @@ enum class OrderType(val wireValue: String) {
 
         fun fromString(value: String?): OrderType {
             if (value.isNullOrBlank()) return UNKNOWN
-            return entries.firstOrNull { it.wireValue == value || it.name == value } ?: UNKNOWN
+            return entries.firstOrNull { type ->
+                type.wireValue.equals(value, ignoreCase = true) || type.name.equals(value, ignoreCase = true)
+            } ?: UNKNOWN
         }
     }
 }
