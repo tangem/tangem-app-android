@@ -63,7 +63,7 @@ class SafeTxGasBuilder(
             operation = SafeTx.OPERATION_CALL,
             safeTxGas = estimate.withSafeTxGasMargin(),
             baseGas = if (isDeployed) SAFE_BASE_GAS else SAFE_BASE_GAS + DEPLOY_GAS,
-            gasPrice = gasToken.gasPrice(coinGasPrice = gasPrice.withGasPriceMargin()),
+            gasPrice = gasToken.gasPriceInTokenCurrency(coinGasPrice = gasPrice.withGasPriceMargin()),
             gasToken = gasToken.address,
             refundReceiver = refundReceiver,
             nonce = nonce,
