@@ -1641,6 +1641,59 @@ internal class PolymarketMainModelTest {
         verify(exactly = 1) { router.replaceAll(PolymarketRoute.Onboarding(userWalletId = USER_WALLET_ID)) }
     }
 
+    @Test
+    fun `GIVEN the screen is shown WHEN the account loses its credentials THEN the gate replaces the feed`() =
+        runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            model.onResume()
+            runCurrent()
+            coEvery { getApiCredentials(USER_WALLET_ID) } returns null
+
+            // Act
+            statusFlow.value = PredictionAccountStatusValue.Onboarded(source = StatusSource.ACTUAL)
+            runCurrent()
+            model.onDestroy()
+
+            // Assert
+            verify(exactly = 1) { router.replaceAll(PolymarketRoute.Onboarding(userWalletId = USER_WALLET_ID)) }
+        }
+
+    @Test
+    fun `GIVEN the screen is shown WHEN the account is onboarded with credentials THEN the feed stays`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        model.onResume()
+        runCurrent()
+
+        // Act
+        statusFlow.value = PredictionAccountStatusValue.Onboarded(source = StatusSource.ACTUAL)
+        runCurrent()
+        model.onDestroy()
+
+        // Assert
+        verify(exactly = 0) { router.replaceAll(any()) }
+    }
+
+    @Test
+    fun `GIVEN the screen is paused WHEN the account loses its credentials THEN the feed is not replaced`() =
+        runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            model.onResume()
+            runCurrent()
+            model.onPause()
+            coEvery { getApiCredentials(USER_WALLET_ID) } returns null
+
+            // Act
+            statusFlow.value = PredictionAccountStatusValue.Onboarded(source = StatusSource.ACTUAL)
+            runCurrent()
+            model.onDestroy()
+
+            // Assert
+            verify(exactly = 0) { router.replaceAll(any()) }
+        }
+
     private companion object {
         const val DEPOSIT_ADDRESS = "0xbridge0000000000000000000000000000000001"
         const val STATUS_FETCH_MS = 1_000L
