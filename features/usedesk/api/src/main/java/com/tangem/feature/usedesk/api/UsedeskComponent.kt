@@ -9,8 +9,8 @@ interface UsedeskComponent : ComposableContentComponent {
 
     data class Params(
         /**
-         * Wallet meta info. Its user wallet id (hex string) is sent to Usedesk as the client email to
-         * identify the user, and it is also used to compose the support email if the chat fails to load.
+         * Wallet meta info. Its user wallet id (hex string) is the Usedesk client email unless [clientEmail]
+         * is set, and it is also used to compose the support email if the chat fails to load.
          */
         val walletMetaInfo: WalletMetaInfo,
         /**
@@ -20,6 +20,8 @@ interface UsedeskComponent : ComposableContentComponent {
         val source: AnalyticsParam.ScreensSources = AnalyticsParam.ScreensSources.Settings,
         /** Optional message sent to the chat on behalf of the user right after initialization. */
         val prefilledMessage: String? = null,
+        /** Client email for Usedesk, for flows that have no wallet yet. Takes precedence over the wallet id. */
+        val clientEmail: String? = null,
     )
 
     interface Factory : ComponentFactory<Params, UsedeskComponent>

@@ -40,7 +40,7 @@ internal class PolymarketPositionDetailsConverterTest {
         )
         assertThat(actual.metrics).isEqualTo(
             PolymarketPositionDetailsUM.Metrics(
-                quantity = stringReference("28.09"),
+                quantity = stringReference("28.08"),
                 priceChanges = stringReference("35.6¢ → 35.5¢"),
                 unrealizedPnl = stringReference("-$0.03"),
                 realizedPnl = stringReference("+$12.00"),
@@ -61,7 +61,7 @@ internal class PolymarketPositionDetailsConverterTest {
     @ProvideTestModels
     fun `GIVEN resolution state and past end date WHEN converted THEN uses backend state`(case: StatusCase) {
         // Arrange
-        val position = createPolymarketPosition(resolutionStatus = case.status).copy(
+        val position = createPolymarketPosition(resolutionStatus = case.status, result = case.result).copy(
             endDate = LocalDate.of(2000, 1, 1),
             avgPrice = BigDecimal("0.0004"),
             curPrice = BigDecimal("0.9995"),
@@ -73,13 +73,13 @@ internal class PolymarketPositionDetailsConverterTest {
         // Assert
         assertThat(actual.notice).isEqualTo(case.notice)
         assertThat(actual.information.status).isEqualTo(resourceReference(case.label))
-        assertThat(position.canOpenPositionDetails).isEqualTo(case.canOpen)
+        assertThat(position.isMarketTradable).isEqualTo(case.isTradable)
         assertThat(actual.metrics.priceChanges).isEqualTo(stringReference(case.expectedPriceChanges))
     }
 
     @ParameterizedTest
     @EnumSource(PolymarketPositionResult::class)
-    fun `GIVEN settlement result WHEN checking details THEN no action or payout estimate`(result: PolymarketPositionResult) {
+    fun `GIVEN settlement result WHEN converted THEN no payout estimate`(result: PolymarketPositionResult) {
         // Arrange
         val position = createPolymarketPosition(result = result)
 
@@ -87,17 +87,28 @@ internal class PolymarketPositionDetailsConverterTest {
         val actual = converter.convert(PolymarketPositionDetailsConverter.Input(position = position))
 
         // Assert
-        assertThat(position.canOpenPositionDetails).isFalse()
         assertThat(actual.summary.payout).isNull()
     }
 
     @Test
-    fun `GIVEN redeemable position WHEN checking details THEN claim remains outside details`() {
+    fun `GIVEN redeemable position WHEN converted THEN no payout estimate`() {
         // Arrange
         val position = createPolymarketPosition().copy(isRedeemable = true)
 
         // Act
-        val actual = position.canOpenPositionDetails
+        val actual = converter.convert(PolymarketPositionDetailsConverter.Input(position = position))
+
+        // Assert
+        assertThat(actual.summary.payout).isNull()
+    }
+
+    @Test
+    fun `GIVEN open market that refuses orders WHEN checked THEN it is not tradable`() {
+        // Arrange
+        val position = createPolymarketPosition().copy(isAcceptingOrders = false)
+
+        // Act
+        val actual = position.isMarketTradable
 
         // Assert
         assertThat(actual).isFalse()
@@ -120,7 +131,7 @@ internal class PolymarketPositionDetailsConverterTest {
     }
 
     private fun provideTestModels() = listOf(
-        StatusCase(PolymarketResolutionStatus.OPEN, null, R.string.prediction_positions_open),
+        StatusCase(PolymarketResolutionStatus.OPEN, null, R.string.prediction_positions_open, isTradable = true),
         StatusCase(
             PolymarketResolutionStatus.PENDING_RESOLUTION,
             Notice.Pending,
@@ -128,12 +139,39 @@ internal class PolymarketPositionDetailsConverterTest {
         ),
         StatusCase(PolymarketResolutionStatus.PROPOSED, Notice.Pending, R.string.prediction_positions_pending),
         StatusCase(PolymarketResolutionStatus.DISPUTED, Notice.Disputed, R.string.prediction_positions_disputed),
-        StatusCase(PolymarketResolutionStatus.UNKNOWN, null, R.string.prediction_positions_unknown),
+        StatusCase(PolymarketResolutionStatus.UNKNOWN, null, R.string.prediction_positions_pending),
         StatusCase(
             PolymarketResolutionStatus.RESOLVED,
             null,
             R.string.prediction_positions_unknown,
-            canOpen = false,
+            expectedPriceChanges = "0¢ → 100¢",
+        ),
+        StatusCase(
+            PolymarketResolutionStatus.RESOLVED,
+            null,
+            R.string.prediction_positions_unknown,
+            result = PolymarketPositionResult.UNKNOWN,
+            expectedPriceChanges = "0¢ → 100¢",
+        ),
+        StatusCase(
+            PolymarketResolutionStatus.RESOLVED,
+            null,
+            R.string.prediction_positions_won,
+            result = PolymarketPositionResult.WON,
+            expectedPriceChanges = "0¢ → 100¢",
+        ),
+        StatusCase(
+            PolymarketResolutionStatus.RESOLVED,
+            null,
+            R.string.prediction_positions_lost,
+            result = PolymarketPositionResult.LOST,
+            expectedPriceChanges = "0¢ → 100¢",
+        ),
+        StatusCase(
+            PolymarketResolutionStatus.RESOLVED,
+            null,
+            R.string.prediction_positions_split,
+            result = PolymarketPositionResult.SPLIT,
             expectedPriceChanges = "0¢ → 100¢",
         ),
     )
@@ -142,7 +180,8 @@ internal class PolymarketPositionDetailsConverterTest {
         val status: PolymarketResolutionStatus,
         val notice: Notice?,
         val label: Int,
-        val canOpen: Boolean = true,
+        val isTradable: Boolean = false,
+        val result: PolymarketPositionResult? = null,
         val expectedPriceChanges: String = "0.1¢ → 99.9¢",
     )
 }

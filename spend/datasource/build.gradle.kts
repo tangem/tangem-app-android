@@ -5,7 +5,6 @@ plugins {
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
-    alias(deps.plugins.ksp)
     alias(deps.plugins.kotlin.serialization)
     id("configuration")
 }
@@ -18,12 +17,7 @@ dependencies {
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.serialization)
     implementation(deps.jodatime)
-    implementation(deps.okio)
 
-    api(deps.moshi)
-    implementation(deps.moshi.adapters.ext)
-    implementation(deps.okio)
-    ksp(deps.moshi.kotlin.codegen)
     api(deps.retrofit)
     api(deps.jodatime)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
@@ -42,5 +36,4 @@ dependencies {
     implementation(projects.core.local)
 
     testImplementation(projects.test.core)
-    testImplementation(deps.moshi.kotlin)
 }

@@ -9,6 +9,7 @@ interface ForgetWalletComponent : ComposableContentComponent {
     data class Params(
         val userWalletId: UserWalletId,
         val shouldDeleteCloudBackup: Boolean = false,
+        val shouldDeleteSocialRecovery: Boolean = false,
     )
 
     interface Factory : ComponentFactory<Params, ForgetWalletComponent>

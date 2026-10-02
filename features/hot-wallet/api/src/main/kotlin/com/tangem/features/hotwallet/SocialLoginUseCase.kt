@@ -6,17 +6,21 @@ import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
 
 /**
- * Scenarios 1 and 2 of UC-08 behind one call: sign in, then create a wallet or restore the existing one.
+ * Social login behind one call: sign in, then create a wallet or restore the existing one.
  *
  * The backend decides which, not the caller — the same entry point serves both "Create wallet" and
- * "I have a wallet" (FR-02).
+ * "I have a wallet".
  */
 interface SocialLoginUseCase {
 
-    /** @param onStageChanged called on the calling coroutine, never after signIn returns */
+    /**
+     * @param onStageChanged called on the calling coroutine, never after signIn returns
+
+     */
     suspend fun signIn(
         provider: SocialLoginProvider,
         onStageChanged: (SocialLoginStage) -> Unit = {},
+        requestConsent: suspend () -> SocialLoginConsent?,
     ): Either<SocialLoginError, SocialLoginOutcome>
 
     /** Forgets the picked account, so the next [signIn] shows the chooser again ("switch account") */
@@ -39,11 +43,17 @@ enum class SocialLoginStage {
     RestoringWallet,
 }
 
+data class SocialLoginConsent(val isEmailSharingAllowed: Boolean)
+
 sealed interface SocialLoginOutcome {
 
     val userWalletId: UserWalletId
 
     data class WalletCreated(override val userWalletId: UserWalletId) : SocialLoginOutcome
 
-    data class WalletRestored(override val userWalletId: UserWalletId) : SocialLoginOutcome
+    /** @property isNewOnDevice false when the wallet was already on this device before the restore */
+    data class WalletRestored(
+        override val userWalletId: UserWalletId,
+        val isNewOnDevice: Boolean,
+    ) : SocialLoginOutcome
 }

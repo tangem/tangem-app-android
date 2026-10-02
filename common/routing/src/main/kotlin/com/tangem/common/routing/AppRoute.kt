@@ -115,16 +115,18 @@ sealed class AppRoute(val path: String) : Route {
     /**
      * Support chat (Usedesk) screen.
      *
-     * @property walletMetaInfo   wallet meta info; its user wallet id is sent to Usedesk as the client email
-     * @property source           source of the chat opening (Settings by default, Swap for FR-02). Drives both
+     * @property walletMetaInfo   wallet meta info; its user wallet id is the client email unless [clientEmail] is set
+     * @property source           source of the chat opening (Settings by default). Drives both
      *                            analytics and the Usedesk additional fields mapped by the component.
      * @property prefilledMessage optional message sent to the chat on behalf of the user right after init
+     * @property clientEmail      client email for Usedesk, for flows that have no wallet yet
      */
     @Serializable
     data class Usedesk(
         val walletMetaInfo: WalletMetaInfo,
         val source: AnalyticsParam.ScreensSources = AnalyticsParam.ScreensSources.Settings,
         val prefilledMessage: String? = null,
+        val clientEmail: String? = null,
     ) : AppRoute(path = "/usedesk/${walletMetaInfo.userWalletId}")
 
     @Serializable
@@ -344,6 +346,18 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/wallet_hardware_backup/${userWalletId.stringValue}")
 
     @Serializable
+    data class HardwareUpgradeStories(
+        val userWalletId: UserWalletId,
+        val source: Source,
+    ) : AppRoute(path = "/hardware_upgrade_stories/${userWalletId.stringValue}") {
+
+        enum class Source {
+            MAIN,
+            WALLET_SETTINGS,
+        }
+    }
+
+    @Serializable
     data class CreateCloudBackup(
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/create_cloud_backup/${userWalletId.stringValue}")
@@ -514,6 +528,7 @@ sealed class AppRoute(val path: String) : Route {
     data class ForgetWallet(
         val userWalletId: UserWalletId,
         val shouldDeleteCloudBackup: Boolean = false,
+        val shouldDeleteSocialRecovery: Boolean = false,
     ) : AppRoute(path = "/forget_wallet/${userWalletId.stringValue}")
 
     @Serializable

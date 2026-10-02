@@ -303,7 +303,7 @@ internal class RestoreCloudBackupModelTest {
 
             // Assert
             assertThat(model.uiState.value).isInstanceOf(RestoreCloudBackupUM.EnterPassphrase::class.java)
-            coVerify(exactly = 0) { hotWalletImporter.import(any(), any(), any(), any(), any()) }
+            coVerify(exactly = 0) { hotWalletImporter.import(any(), any(), any(), any(), any(), any()) }
             model.onDestroy()
         }
 
@@ -414,7 +414,7 @@ internal class RestoreCloudBackupModelTest {
             val state = model.uiState.value
             assertThat(state).isInstanceOf(RestoreCloudBackupUM.EnterPassword::class.java)
             assertThat((state as RestoreCloudBackupUM.EnterPassword).isError).isTrue()
-            coVerify(exactly = 0) { hotWalletImporter.import(any(), any(), any(), any(), any()) }
+            coVerify(exactly = 0) { hotWalletImporter.import(any(), any(), any(), any(), any(), any()) }
             verify(exactly = 0) { callbacks.onWalletImported(any()) }
             model.onDestroy()
         }

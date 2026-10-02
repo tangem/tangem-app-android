@@ -1,13 +1,13 @@
 package com.tangem.spend.datasource.pay.models.request
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class WaitlistRequest(
-    @Json(name = "email") val email: String,
-    @Json(name = "product") val product: String,
-    @Json(name = "country") val country: String,
-    @Json(name = "region") val region: String?,
-    @Json(name = "marketing_consent") val hasMarketingConsent: Boolean,
+    @SerialName("email") val email: String,
+    @SerialName("product") val product: String,
+    @SerialName("country") val country: String,
+    @SerialName("region") val region: String?,
+    @SerialName("marketing_consent") val hasMarketingConsent: Boolean,
 )

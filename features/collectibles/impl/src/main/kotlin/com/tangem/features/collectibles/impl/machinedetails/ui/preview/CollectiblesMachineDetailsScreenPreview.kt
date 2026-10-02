@@ -27,7 +27,6 @@ private class CollectiblesPackDetailsProvider : PreviewParameterProvider<Collect
         CollectiblesMachineDetailsPreviewData.withoutEpicTier,
         CollectiblesMachineDetailsPreviewData.poolLoading,
         CollectiblesMachineDetailsPreviewData.poolError,
-        CollectiblesMachineDetailsPreviewData.poolEmpty,
         CollectiblesMachineDetailsPreviewData.loading,
         CollectiblesMachineDetailsPreviewData.error,
     )
