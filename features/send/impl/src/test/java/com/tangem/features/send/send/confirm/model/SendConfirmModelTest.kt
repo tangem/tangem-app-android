@@ -678,16 +678,67 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             verify(exactly = 1) { sendConfirmAlertFactory.getJointSendBlockedState(onSupportClick = any()) }
         }
 
+        @Test
+        fun `GIVEN a Smart Gas token fee WHEN onSendClick THEN the operation is created with that token`() = runTest {
+            // Arrange
+            val feeTokens = mutableListOf<CryptoCurrency.Token?>()
+            stubJointCreation(feeTokens)
+            val params = jointConfirmParams(
+                onSendTransaction = mockk(relaxed = true),
+                transactionFeeExtended = TransactionFeeExtended(
+                    transactionFee = TransactionFee.Single(normal = tokenFee()),
+                    feeTokenId = ethereumUsdc.id,
+                ),
+                feeCryptoCurrencyStatus = com.tangem.features.send.loadedStatus(ethereumUsdc),
+            )
+            val sut = createSendConfirmModel(this, params)
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(feeTokens).containsExactly(ethereumUsdc)
+        }
+
+        @Test
+        fun `GIVEN a coin fee WHEN onSendClick THEN the operation is created without a fee token`() = runTest {
+            // Arrange
+            val feeTokens = mutableListOf<CryptoCurrency.Token?>()
+            stubJointCreation(feeTokens)
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(feeTokens).containsExactly(null)
+        }
+
+        private fun stubJointCreation(feeTokens: MutableList<CryptoCurrency.Token?>) {
+            coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+            coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
+            coEvery {
+                jointSendDelegate.createOperation(jointAccount, any(), any(), any(), captureNullable(feeTokens))
+            } returns Unit.right()
+        }
+
         /** Confirm starts empty so the model builds the real Content with the signatures itself */
         private fun jointConfirmParams(
             onSendTransaction: () -> Unit,
             enteredAmount: BigDecimal = BigDecimal.ONE,
+            transactionFeeExtended: TransactionFeeExtended? = null,
+            feeCryptoCurrencyStatus: CryptoCurrencyStatus = loadedFeeStatus,
         ) = MutableParamsContainer(
             defaultSendConfirmParams(
                 state = contentState(
                     fee = realFee(),
-                    transactionFeeExtended = null,
+                    transactionFeeExtended = transactionFeeExtended,
                     enteredAmount = enteredAmount,
+                    feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                 ).copy(confirmUM = ConfirmUM.Empty),
                 cryptoCurrencyStatus = loadedFeeStatus,
                 feeCryptoCurrencyStatus = loadedFeeStatus,
