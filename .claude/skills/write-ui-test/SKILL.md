@@ -81,6 +81,8 @@ added or edited** (production `testTag` files included), check and remove:
   A `BaseTestCase`-extension scenario that only calls annotated page-object methods + stable `waitUntil`
   needs no `@OptIn` — drop it (and its `import androidx.compose.ui.test.ExperimentalTestApi`).
 - **Dead vals / matchers / page-object members** you introduced and then stopped referencing.
+- **Comments left over from debugging or from explaining a choice to the user** — re-read every added
+  comment against "Comment hygiene" and delete what a name or a step already says.
 
 ### Mechanical gates live in `scripts/check.sh` — run it, do not eyeball
 
@@ -95,7 +97,9 @@ JSON / body files. `error` lines must be fixed. `warn` lines need a decision, no
   retries a *mutating* action (a click, a hold) and carries a one-line WHY.
 - `enabled-semantics` — read the target in production before choosing the assertion: see
   `reference/pitfalls.md` ("Before asserting enabled state…").
-- `production-non-tag`, `comment`, `long-timeout`, `private-helper-in-test`, `mock-*` — the reviewer
+- `comment` / `kdoc` — delete by default (see "Comment hygiene"); keep only a one-line comment whose
+  removal would get the code broken or reverted.
+- `production-non-tag`, `long-timeout`, `private-helper-in-test`, `mock-*` — the reviewer
   in workflow step 6 triages them; fix the ones it confirms.
 
 The script only matches text. Walk the **whole** Waits/sync section against the diff by meaning too.
@@ -320,10 +324,33 @@ Native first, by need:
 
 ### Comment hygiene
 
-This repo enforces "no comments unless WHY is non-obvious", in test code too. One line max, WHY-only —
-encode a hidden constraint, not what the code does. Example that earns its keep:
-`// Create+confirm screens share ACCESS_CODE_INPUT — gate on confirm-screen title.`
-Delete anything explaining WHAT a step does.
+**Default: write no comments.** Reviewers read a comment-heavy diff as generated ("looks like Claude
+just generated it" — the review on PR #6434, where 11 of 12 added comment lines had to go). This
+covers every file you touch: tests, scenarios, page objects, and production / `src/mocked` code.
+
+Before keeping a comment, try to delete it:
+
+1. Can a name say it? Rename the val / function / matcher (`buttonOutsideDialog` instead of a
+   comment explaining the dialog filter).
+2. Does a `step("…")` name, the function name, or the constant name already say it? Then the comment
+   is a duplicate.
+3. Would someone break or revert the code without it? Only then keep it, in **one line**.
+
+Never write:
+
+- KDoc that paraphrases the function or constant name (`/** Makes the token expired */` on
+  `expireTangemPayAccessToken()`, `/** Mirrors KEY in Foo */` on a constant of the same name).
+- A comment in production or `src/mocked` code that explains how a UI test uses it.
+- The same comment in two places, or a comment block of two lines or more.
+- A comment that restates the next `step(...)` text or narrates the change.
+- An explanation of a deviation from the manual case — that goes into the report and Allure, not code.
+
+What earns its keep (one line, a hidden constraint the code cannot show):
+`// Raw Compose on purpose: a Kakao check here waits out Kaspresso's 10 s flaky-safety retry.`
+
+`scripts/check.sh` now flags `comment-block`, `comment-duplicate` and `comment-restates-code` as
+errors in **every** changed `.kt` file. A `comment` / `kdoc` warning is resolved by deleting the comment;
+keeping one needs the step-3 reason, not just "it states a WHY".
 
 ## Reference docs
 
