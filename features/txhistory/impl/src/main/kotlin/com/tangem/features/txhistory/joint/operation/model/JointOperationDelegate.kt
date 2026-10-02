@@ -7,6 +7,7 @@ import com.tangem.common.routing.entity.AddressBookOpenMode
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.addressbook.usecase.IsAddressBookCompatibleUseCase
+import com.tangem.domain.models.currency.isJoint
 import kotlinx.coroutines.flow.map
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -114,7 +115,7 @@ internal class JointOperationDelegate @Inject constructor(
     }
 
     fun observe(userWalletId: UserWalletId, currency: CryptoCurrency, operationId: String): Flow<JointOperationState?> {
-        if (currency.network.derivationPath !is Network.DerivationPath.Joint) return flowOf(null)
+        if (!currency.isJoint) return flowOf(null)
 
         return combine(
             flow = accountListSupplier.ownJointAccount(userWalletId = userWalletId, currency = currency),
