@@ -180,6 +180,24 @@ internal class RwaFeedSearchTabModelTest {
         }
 
     @Test
+    fun `GIVEN a resolved country WHEN a query is searched THEN the request carries it`() = runTest {
+        // Arrange — the country is written outside scheduleReload, so nothing else pins it to the request
+        val query = MutableStateFlow("")
+        val model = createModel(testScope = this, query = query)
+        model.becomeVisible()
+        advanceUntilIdle()
+
+        // Act
+        query.value = "tsla"
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(reloads().map { it.country }).containsExactly("DE")
+
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN categories resolved WHEN a query is searched THEN the request is scoped to the umbrella`() = runTest {
         // Arrange
         val query = MutableStateFlow("")

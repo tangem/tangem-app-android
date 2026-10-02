@@ -139,7 +139,7 @@ private fun SectorsRail(tags: ImmutableList<CategorySectorUM>, modifier: Modifie
         tags.fastForEach { tag ->
             TangemBadge(
                 text = tag.label,
-                variant = if (tag.isSelected) TangemBadge.Variant.Solid else TangemBadge.Variant.Tinted,
+                variant = if (tag.isSelected) TangemBadge.Variant.Inverse else TangemBadge.Variant.Solid,
                 size = TangemBadge.Size.X9,
                 onClick = tag.onItemClick,
             )
