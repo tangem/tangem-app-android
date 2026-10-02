@@ -41,9 +41,9 @@ internal class DefaultMoneyAccountOrderRepository @Inject constructor(
         requestHelper.performRequest(userWalletId) { authHeader ->
             tangemPayApi.createOrder(
                 authHeader = authHeader,
+                idempotencyKey = UUID.randomUUID().toString(),
                 body = OrderRequest(
                     data = OrderRequest.BankingAccountIssue(depositAddress = depositAddress, signature = signature),
-                    idempotencyKey = UUID.randomUUID().toString(),
                 ),
             )
         }.flatMap { response ->
