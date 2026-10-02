@@ -2,6 +2,7 @@ package com.tangem.domain.polymarket
 
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Secure storage of the Polymarket CLOB L2 API credentials, keyed by the wallet they belong to.
@@ -22,4 +23,7 @@ interface PolymarketCredentialsStore {
 
     /** Removes the credentials stored for [userWalletId] */
     suspend fun clear(userWalletId: UserWalletId)
+
+    /** Emits whether credentials are stored for [userWalletId], starting with the stored state */
+    fun hasCredentials(userWalletId: UserWalletId): Flow<Boolean>
 }
