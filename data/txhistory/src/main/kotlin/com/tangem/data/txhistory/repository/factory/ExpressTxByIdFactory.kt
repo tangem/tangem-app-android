@@ -8,6 +8,7 @@ import com.tangem.store.datasource.txhistory.db.entity.express.ExpressExchangeEn
 import com.tangem.store.datasource.txhistory.db.entity.express.ExpressOnrampEntity
 import com.tangem.store.datasource.txhistory.db.entity.express.ExpressProviderEntity
 import com.tangem.store.datasource.txhistory.db.entity.express.OnrampCurrencyEntity
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.model.ExpressTx
 import javax.inject.Inject
@@ -26,7 +27,12 @@ internal class ExpressTxByIdFactory @Inject constructor(
     private val onrampConverter = ExpressOnrampConverter()
     private val onrampCurrencyConverter = OnrampCurrencyConverter()
 
-    suspend fun create(userWalletId: UserWalletId, outgoingAddresses: List<String>, sources: Sources): ExpressTx? {
+    suspend fun create(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+        outgoingAddresses: List<String>,
+        sources: Sources,
+    ): ExpressTx? {
         fun String.expressProvider() = sources.providers[this]?.let(expressProviderConverter::convert)
         fun String.onrampFiatCurrency() = sources.fiatCurrencies[this]?.let(onrampCurrencyConverter::convert)
 
@@ -35,6 +41,7 @@ internal class ExpressTxByIdFactory @Inject constructor(
                 val exchange = sources.exchange
                 val currencies = expressTransactionAssetFactory.create(
                     userWalletId = userWalletId,
+                    historyCurrency = currency,
                     outgoingSwaps = listOf(exchange),
                     incomingSwaps = emptyList(),
                     onramps = emptyList(),
@@ -53,6 +60,7 @@ internal class ExpressTxByIdFactory @Inject constructor(
                 val onramp = sources.onramp
                 val currencies = expressTransactionAssetFactory.create(
                     userWalletId = userWalletId,
+                    historyCurrency = currency,
                     outgoingSwaps = emptyList(),
                     incomingSwaps = emptyList(),
                     onramps = listOf(onramp),
