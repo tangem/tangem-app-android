@@ -53,7 +53,7 @@ internal class CreatePaymentNetworkContractUseCaseTest {
             } returns listOf(activeOrder).right()
             coEvery { pollingUseCase.invoke(any(), any(), any(), any(), any()) } returns true
 
-            val result = useCase(userWalletId, network)
+            val result = useCase(userWalletId, network, IDEMPOTENCY_KEY)
 
             assertThat(result.isRight()).isTrue()
             coVerify(exactly = 0) {
@@ -89,7 +89,7 @@ internal class CreatePaymentNetworkContractUseCaseTest {
         } returns createdOrder.right()
         coEvery { pollingUseCase.invoke(any(), any(), any(), any(), any()) } returns true
 
-        val result = useCase(userWalletId, network)
+        val result = useCase(userWalletId, network, IDEMPOTENCY_KEY)
 
         assertThat(result.isRight()).isTrue()
         coVerify(exactly = 1) {
@@ -124,14 +124,14 @@ internal class CreatePaymentNetworkContractUseCaseTest {
             awaitCancellation() // a poll that never terminates must not block invoke
         }
 
-        val result = useCase(userWalletId, network)
+        val result = useCase(userWalletId, network, IDEMPOTENCY_KEY)
 
         assertThat(result.isRight()).isTrue()
     }
 
     @Test
     fun `GIVEN network without derivable chain id WHEN invoke THEN returns Left without backend calls`() = runTest {
-        val result = useCase(userWalletId, network(Blockchain.Tron))
+        val result = useCase(userWalletId, network(Blockchain.Tron), IDEMPOTENCY_KEY)
 
         assertThat(result.leftOrNull()).isEqualTo(VisaApiError.Unspecified)
         coVerify(exactly = 0) { customerOrderRepository.findOrders(any(), any(), any()) }
@@ -159,7 +159,7 @@ internal class CreatePaymentNetworkContractUseCaseTest {
                 )
             } returns VisaApiError.CustomerIsBlocked.left()
 
-            val result = useCase(userWalletId, network)
+            val result = useCase(userWalletId, network, IDEMPOTENCY_KEY)
 
             assertThat(result.leftOrNull()).isEqualTo(VisaApiError.CustomerIsBlocked)
             coVerify(exactly = 1) {
@@ -197,11 +197,10 @@ internal class CreatePaymentNetworkContractUseCaseTest {
             )
             coEvery { pollingUseCase.invoke(any(), any(), any(), any(), any()) } returns true
 
-            val result = useCase(userWalletId, network)
+            val result = useCase(userWalletId, network, IDEMPOTENCY_KEY)
 
             assertThat(result.isRight()).isTrue()
-            assertThat(idempotencyKeys).hasSize(3)
-            assertThat(idempotencyKeys.toSet()).hasSize(1) // same key reused across retries
+            assertThat(idempotencyKeys).containsExactly(IDEMPOTENCY_KEY, IDEMPOTENCY_KEY, IDEMPOTENCY_KEY)
             coVerify(exactly = 3) {
                 customerOrderRepository.createOrder(
                     userWalletId = userWalletId,
@@ -255,4 +254,8 @@ internal class CreatePaymentNetworkContractUseCaseTest {
         createdAt = null,
         updatedAt = null,
     )
+
+    private companion object {
+        const val IDEMPOTENCY_KEY = "caller-owned-key"
+    }
 }
