@@ -50,17 +50,17 @@ internal class TangemPayBankWithdrawRecipientsModelTest {
         id = "acc-1",
         beneficiary = Beneficiary.Individual(firstName = "Basit", lastName = "Didenko"),
         accountNumber = "4830019271",
-    )
+    ).copy(displayName = "Primary checking")
     private val raxanax = bankAccount(
         id = "acc-2",
         beneficiary = Beneficiary.Business(name = "Raxanax"),
         accountNumber = "1120938475",
-    )
+    ).copy(displayName = "Business payroll")
     private val saburo = bankAccount(
         id = "acc-3",
         beneficiary = Beneficiary.Individual(firstName = "Saburo", lastName = "Arasaka"),
         accountNumber = "7719004432",
-    )
+    ).copy(displayName = "Arasaka savings")
 
     @BeforeEach
     fun resetMocks() {
@@ -73,7 +73,7 @@ internal class TangemPayBankWithdrawRecipientsModelTest {
             onCloseFlow,
             analytics,
         )
-        coEvery { getBankAccountsUseCase(userWalletId) } returns listOf(basit, raxanax, saburo).right()
+        coEvery { getBankAccountsUseCase(userWalletId) } returns listOf(saburo, basit, raxanax).right()
     }
 
     @Test
@@ -95,7 +95,7 @@ internal class TangemPayBankWithdrawRecipientsModelTest {
     }
 
     @Test
-    fun `GIVEN accounts WHEN loaded THEN recipients keep use case order with initial name and account number`() {
+    fun `GIVEN accounts WHEN loaded THEN recipients sorted by beneficiary name with initial and account number`() {
         // Act
         val model = createModel()
 
