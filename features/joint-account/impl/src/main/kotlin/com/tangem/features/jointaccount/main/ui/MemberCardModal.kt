@@ -127,7 +127,7 @@ private fun MemberCardContent(
 
         TangemButton(
             modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-            variant = TangemButton.Variant.Secondary,
+            variant = TangemButton.Variant.Primary,
             size = TangemButton.Size.X12,
             text = resourceReference(CoreUiR.string.common_close),
             onClick = onCloseClick,
