@@ -15,14 +15,13 @@ import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.util.OrderResolver
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.spend.datasource.pay.TangemPayApi
-import com.tangem.spend.datasource.pay.models.request.AccountOrderRequest
+import com.tangem.spend.datasource.pay.models.request.OrderRequest
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
-private const val MONEY_ACCOUNT_SPECIFICATION_NAME = "SP_000006"
 private val MONEY_ACCOUNT_ORDER_TYPES = setOf(OrderType.ACCOUNT_ISSUE_BANKING_RAIN)
 
 internal class DefaultMoneyAccountOrderRepository @Inject constructor(
@@ -40,15 +39,10 @@ internal class DefaultMoneyAccountOrderRepository @Inject constructor(
         signature: String,
     ): Either<VisaApiError, Order> = withContext(dispatcherProvider.io) {
         requestHelper.performRequest(userWalletId) { authHeader ->
-            tangemPayApi.createAccountOrder(
+            tangemPayApi.createOrder(
                 authHeader = authHeader,
-                body = AccountOrderRequest(
-                    data = AccountOrderRequest.Data(
-                        depositAddress = depositAddress,
-                        type = OrderType.ACCOUNT_ISSUE_BANKING_RAIN.wireValue,
-                        specificationName = MONEY_ACCOUNT_SPECIFICATION_NAME,
-                        signature = signature,
-                    ),
+                body = OrderRequest(
+                    data = OrderRequest.BankingAccountIssue(depositAddress = depositAddress, signature = signature),
                     idempotencyKey = UUID.randomUUID().toString(),
                 ),
             )

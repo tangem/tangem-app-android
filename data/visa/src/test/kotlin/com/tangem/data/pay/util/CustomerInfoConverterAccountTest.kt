@@ -1,6 +1,7 @@
 package com.tangem.data.pay.util
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.spend.datasource.pay.models.response.BalanceResponse
 import com.tangem.spend.datasource.pay.models.response.CustomerMeResponse
@@ -83,6 +84,39 @@ internal class CustomerInfoConverterAccountTest {
     }
 
     @Test
+    fun `GIVEN unknown status and specification type WHEN convert THEN instance is mapped as unknown`() {
+        // Arrange
+        val result = result(
+            paymentAccount = null,
+            productInstances = listOf(
+                productInstance(
+                    status = CustomerMeResponse.ProductInstance.Status.UNKNOWN,
+                    specificationDataType = CustomerMeResponse.ProductInstance.SpecificationDataType.UNKNOWN,
+                ),
+            ),
+        )
+
+        // Act
+        val info = CustomerInfoConverter.convert(result)
+
+        // Assert
+        assertThat(info.productInstances).containsExactly(
+            CustomerInfo.ProductInstance(
+                id = "pi_1",
+                cardId = "card_1",
+                frozenState = TangemPayCardFrozenState.Frozen,
+                displayName = null,
+                actualCardLimit = null,
+                adminCardLimit = null,
+                status = CustomerInfo.ProductInstance.Status.UNKNOWN,
+                specificationDataType = CustomerInfo.ProductInstance.SpecificationDataType.UNKNOWN,
+            ),
+        )
+        assertThat(info.cardProductInstances).isEmpty()
+        assertThat(info.accountProductInstance).isNull()
+    }
+
+    @Test
     fun `GIVEN neither account nor instances nor balances WHEN convert THEN customer is not enrolled`() {
         // Act
         val info = CustomerInfoConverter.convert(result(paymentAccount = null))
@@ -132,7 +166,11 @@ internal class CustomerInfoConverterAccountTest {
         customerTariffPlan = null,
     )
 
-    private fun productInstance(status: CustomerMeResponse.ProductInstance.Status) =
+    private fun productInstance(
+        status: CustomerMeResponse.ProductInstance.Status,
+        specificationDataType: CustomerMeResponse.ProductInstance.SpecificationDataType =
+            CustomerMeResponse.ProductInstance.SpecificationDataType.CARD,
+    ) =
         CustomerMeResponse.ProductInstance(
             id = "pi_1",
             cid = null,
@@ -144,7 +182,7 @@ internal class CustomerInfoConverterAccountTest {
             displayName = null,
             actualCardLimit = null,
             adminCardLimit = null,
-            specificationDataType = CustomerMeResponse.ProductInstance.SpecificationDataType.CARD,
+            specificationDataType = specificationDataType,
         )
 
     private fun card(id: String) = CustomerMeResponse.Card(

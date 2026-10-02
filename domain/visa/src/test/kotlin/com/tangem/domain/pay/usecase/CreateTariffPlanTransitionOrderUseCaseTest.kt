@@ -9,6 +9,7 @@ import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.CustomerOrderRepository
@@ -51,7 +52,7 @@ internal class CreateTariffPlanTransitionOrderUseCaseTest {
         // THEN
         assertThat(result.leftOrNull()).isEqualTo(VisaApiError.Unspecified)
         coVerify(exactly = 0) {
-            customerOrderRepository.createOrder(any(), any(), any(), any(), any(), any())
+            customerOrderRepository.createOrder(any(), any(), any())
         }
         coVerify(exactly = 0) { issueCardRepository.storeIssueOrderId(any(), any()) }
         coVerify(exactly = 0) { paymentAccountStatusFetcher.invoke(any<UserWalletId>()) }
@@ -71,7 +72,7 @@ internal class CreateTariffPlanTransitionOrderUseCaseTest {
         // THEN
         assertThat(result.isRight()).isTrue()
         coVerify(exactly = 0) {
-            customerOrderRepository.createOrder(any(), any(), any(), any(), any(), any())
+            customerOrderRepository.createOrder(any(), any(), any())
         }
         coVerify(exactly = 1) { issueCardRepository.storeIssueOrderId(USER_WALLET_ID, existing.id) }
     }
@@ -85,10 +86,10 @@ internal class CreateTariffPlanTransitionOrderUseCaseTest {
         coEvery {
             customerOrderRepository.createOrder(
                 userWalletId = USER_WALLET_ID,
-                type = OrderType.TARIFF_PLAN_TRANSITION,
-                specificationName = null,
-                targetTariffPlanId = TARGET_PLAN_ID,
-                transitionType = TangemPayTariffPlanTransition.Type.UPGRADE,
+                request = CustomerOrderRequest.TariffPlanTransition(
+                    targetTariffPlanId = TARGET_PLAN_ID,
+                    transitionType = TangemPayTariffPlanTransition.Type.UPGRADE,
+                ),
                 idempotencyKey = any(),
             )
         } returns VisaApiError.Unspecified.left()
@@ -111,10 +112,10 @@ internal class CreateTariffPlanTransitionOrderUseCaseTest {
         coEvery {
             customerOrderRepository.createOrder(
                 userWalletId = USER_WALLET_ID,
-                type = OrderType.TARIFF_PLAN_TRANSITION,
-                specificationName = null,
-                targetTariffPlanId = TARGET_PLAN_ID,
-                transitionType = TangemPayTariffPlanTransition.Type.UPGRADE,
+                request = CustomerOrderRequest.TariffPlanTransition(
+                    targetTariffPlanId = TARGET_PLAN_ID,
+                    transitionType = TangemPayTariffPlanTransition.Type.UPGRADE,
+                ),
                 idempotencyKey = any(),
             )
         } returns newOrder.right()
@@ -215,10 +216,10 @@ internal class CreateTariffPlanTransitionOrderUseCaseTest {
         coEvery {
             customerOrderRepository.createOrder(
                 userWalletId = USER_WALLET_ID,
-                type = OrderType.TARIFF_PLAN_TRANSITION,
-                specificationName = null,
-                targetTariffPlanId = TARGET_PLAN_ID,
-                transitionType = TangemPayTariffPlanTransition.Type.UPGRADE,
+                request = CustomerOrderRequest.TariffPlanTransition(
+                    targetTariffPlanId = TARGET_PLAN_ID,
+                    transitionType = TangemPayTariffPlanTransition.Type.UPGRADE,
+                ),
                 idempotencyKey = any(),
             )
         } returns newOrder.right()

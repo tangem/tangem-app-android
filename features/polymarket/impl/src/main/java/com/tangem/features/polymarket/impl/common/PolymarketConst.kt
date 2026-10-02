@@ -6,8 +6,9 @@ internal object PolymarketConst {
     const val CENT_SIGN = "¢"
     const val USD_CODE = "USD"
     const val USD_SYMBOL = "$"
-    const val COLLATERAL_DECIMALS = 2
-    const val SHARES_DECIMALS = 2
+    const val COLLATERAL_DISPLAY_DECIMALS = 2
+    const val SHARES_DISPLAY_DECIMALS = 2
+    val SHARES_DISPLAY_STEP: BigDecimal = BigDecimal.ONE.movePointLeft(SHARES_DISPLAY_DECIMALS)
 
     const val EASTERN_TIME_ZONE = "America/New_York"
 

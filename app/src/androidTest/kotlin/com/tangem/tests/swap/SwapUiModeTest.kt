@@ -3,7 +3,9 @@ package com.tangem.tests.swap
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
+import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.ui.R
 import com.tangem.scenarios.openSwapAmountScreen
@@ -27,7 +29,7 @@ class SwapUiModeTest : BaseTestCase() {
     private val assetsExchangeEnabledState = "BitcoinExchangeEnabled"
 
     @AllureId("9984")
-    @DisplayName("Swap: toggling the swap mode switches the provider block between the detailed and simple layouts")
+    @DisplayName("Swap: switching from the simple to the detailed mode shows the detailed provider block")
     @Test
     fun checkTurnOnDetailedModeTest() {
         val simpleMode = getResourceString(R.string.swap_simple_mode)
@@ -51,12 +53,12 @@ class SwapUiModeTest : BaseTestCase() {
                     amount = inputAmount,
                 )
             }
-            step("Assert the detailed provider block is displayed by default") {
+            step("Assert the provider block is displayed") {
                 onSwapTokenScreen {
                     flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { providersBlock.assertIsDisplayed() }
                 }
             }
-            step("Switch the swap mode to '$simpleMode'") {
+            step("Switch the swap mode to '$simpleMode' as the precondition") {
                 switchSwapMode(simpleMode)
             }
             step("Assert the simple provider block is displayed") {
@@ -64,23 +66,53 @@ class SwapUiModeTest : BaseTestCase() {
                     flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { simpleProvidersBlock.assertIsDisplayed() }
                 }
             }
-            step("Assert the detailed provider block is not displayed") {
+            step("Click on 'More' button") {
+                onSwapTokenScreen { moreButton.clickWithAssertion() }
+            }
+            step("Assert '$simpleMode' mode is displayed in the menu") {
+                onSwapTokenScreen { swapModeMenuRow(simpleMode).assertIsDisplayed() }
+            }
+            step("Assert '$detailedMode' mode is displayed in the menu") {
+                onSwapTokenScreen { swapModeMenuRow(detailedMode).assertIsDisplayed() }
+            }
+            step("Assert '$simpleMode' mode is selected") {
+                onSwapTokenScreen { swapModeMenuRow(simpleMode).assertIsSelected() }
+            }
+            step("Assert '$detailedMode' mode is not selected") {
+                onSwapTokenScreen { swapModeMenuRow(detailedMode).assertIsNotSelected() }
+            }
+            step("Click on '$detailedMode' mode") {
+                onSwapTokenScreen { swapModeMenuItem(detailedMode).clickWithAssertion() }
+            }
+            step("Assert the swap mode menu is closed") {
                 onSwapTokenScreen {
-                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { providersBlock.assertDoesNotExist() }
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { swapModeMenuRow(simpleMode).assertDoesNotExist() }
                 }
             }
-            step("Switch the swap mode to '$detailedMode'") {
-                switchSwapMode(detailedMode)
+            step("Assert the receive fiat amount is displayed") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { receiveFiatAmount.assertIsDisplayed() }
+                }
             }
-            step("Assert the detailed provider block is displayed again") {
+            step("Assert the detailed provider block is displayed") {
                 onSwapTokenScreen {
                     flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { providersBlock.assertIsDisplayed() }
                 }
             }
-            step("Assert the simple provider block is not displayed") {
-                onSwapTokenScreen {
-                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { simpleProvidersBlock.assertDoesNotExist() }
-                }
+            step("Assert the provider logo is displayed") {
+                onSwapTokenScreen { providerIcon.assertIsDisplayed() }
+            }
+            step("Assert the provider name is displayed") {
+                onSwapTokenScreen { providerNameText.assertIsDisplayed() }
+            }
+            step("Assert the provider type is displayed") {
+                onSwapTokenScreen { providerTypeText.assertIsDisplayed() }
+            }
+            step("Assert the 'Best rate' badge is displayed") {
+                onSwapTokenScreen { bestRateText.assertIsDisplayed() }
+            }
+            step("Assert the provider rate is displayed") {
+                onSwapTokenScreen { providerRateText.assertIsDisplayed() }
             }
         }
     }
