@@ -132,7 +132,9 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
         getPolymarketBalanceInteractor(addresses = addresses).fold(
             ifLeft = { error ->
                 when (error) {
-                    is PolymarketAuthError.KeyNotFound -> constant(
+                    is PolymarketAuthError.KeyNotFound,
+                    is PolymarketAuthError.InvalidSignature,
+                    -> constant(
                         PredictionAccountStatusValue.Onboarded(source = StatusSource.ACTUAL),
                     )
                     // Throttled, offline or rejected: the balance is unknown, not zero
