@@ -11,4 +11,5 @@ internal data class PromoBannerDisplay(
     val isButtonEnabled: Boolean,
     val buttonText: String?,
     val isDismissable: Boolean,
+    val campaignId: Int?,
 )

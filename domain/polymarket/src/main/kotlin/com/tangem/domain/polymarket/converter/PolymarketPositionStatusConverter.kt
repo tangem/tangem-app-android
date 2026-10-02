@@ -20,13 +20,13 @@ object PolymarketPositionStatusConverter : Converter<PolymarketPosition, Polymar
         }
     }
 
-    private fun openStatus(value: PolymarketPosition.Open): PolymarketPositionStatus = when (value.result) {
-        PolymarketPositionResult.WON -> PolymarketPositionStatus.WON
-        PolymarketPositionResult.LOST -> PolymarketPositionStatus.LOST
-        PolymarketPositionResult.SPLIT -> PolymarketPositionStatus.SPLIT
-        PolymarketPositionResult.UNKNOWN -> PolymarketPositionStatus.UNKNOWN
-        null -> when (value.resolutionStatus) {
-            PolymarketResolutionStatus.OPEN -> PolymarketPositionStatus.ACTIVE
+    private fun openStatus(value: PolymarketPosition.Open): PolymarketPositionStatus =
+        settledStatus(value.result) ?: when (value.resolutionStatus) {
+            PolymarketResolutionStatus.OPEN -> if (value.result == null) {
+                PolymarketPositionStatus.ACTIVE
+            } else {
+                PolymarketPositionStatus.UNKNOWN
+            }
             PolymarketResolutionStatus.PENDING_RESOLUTION,
             PolymarketResolutionStatus.PROPOSED,
             -> PolymarketPositionStatus.PENDING
@@ -35,5 +35,11 @@ object PolymarketPositionStatusConverter : Converter<PolymarketPosition, Polymar
             PolymarketResolutionStatus.UNKNOWN,
             -> PolymarketPositionStatus.UNKNOWN
         }
+
+    private fun settledStatus(result: PolymarketPositionResult?): PolymarketPositionStatus? = when (result) {
+        PolymarketPositionResult.WON -> PolymarketPositionStatus.WON
+        PolymarketPositionResult.LOST -> PolymarketPositionStatus.LOST
+        PolymarketPositionResult.SPLIT -> PolymarketPositionStatus.SPLIT
+        PolymarketPositionResult.UNKNOWN, null -> null
     }
 }

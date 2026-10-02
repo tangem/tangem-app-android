@@ -13,7 +13,7 @@ import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.spend.datasource.pay.TangemPayApi
-import com.tangem.spend.datasource.pay.models.request.AccountOrderRequest
+import com.tangem.spend.datasource.pay.models.request.OrderRequest
 import com.tangem.spend.datasource.pay.models.response.OrderResponse
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -53,25 +53,24 @@ internal class DefaultMoneyAccountOrderRepositoryTest {
                 is ApiResponse.Error -> VisaApiError.Unspecified.left()
             }
         }
-        coEvery { tangemPayApi.createAccountOrder(any(), any()) } returns ApiResponse.Success(createResponse())
+        coEvery { tangemPayApi.createOrder(any(), any()) } returns ApiResponse.Success(createResponse())
     }
 
     @Test
     fun `GIVEN deposit address and signature WHEN createOrder THEN money account order is requested`() = runTest {
         // Arrange
-        val body = slot<AccountOrderRequest>()
-        coEvery { tangemPayApi.createAccountOrder(any(), capture(body)) } returns ApiResponse.Success(createResponse())
+        val body = slot<OrderRequest>()
+        coEvery { tangemPayApi.createOrder(any(), capture(body)) } returns ApiResponse.Success(createResponse())
 
         // Act
         repository.createOrder(USER_WALLET_ID, DEPOSIT_ADDRESS, SIGNATURE)
 
         // Assert
         assertThat(body.captured.data).isEqualTo(
-            AccountOrderRequest.Data(
+            OrderRequest.BankingAccountIssue(
                 depositAddress = DEPOSIT_ADDRESS,
-                type = "ACCOUNT_ISSUE_BANKING_RAIN",
-                specificationName = "SP_000006",
                 signature = SIGNATURE,
+                specificationName = "SP_000006",
             ),
         )
         assertThat(body.captured.idempotencyKey).isNotEmpty()
@@ -92,7 +91,7 @@ internal class DefaultMoneyAccountOrderRepositoryTest {
     fun `GIVEN an empty result WHEN createOrder THEN an error is returned`() = runTest {
         // Arrange
         coEvery {
-            tangemPayApi.createAccountOrder(any(), any())
+            tangemPayApi.createOrder(any(), any())
         } returns ApiResponse.Success(OrderResponse(result = null))
 
         // Act
