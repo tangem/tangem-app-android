@@ -124,6 +124,26 @@ internal class DefaultSocialLoginProviderRepositoryTest {
         assertThat(actual).isEqualTo(SocialLoginError.SignInCanceled.left())
     }
 
+    @ParameterizedTest
+    @MethodSource("provideUnavailableDriveErrors")
+    fun `GIVEN drive access cannot be granted WHEN signIn THEN the sign-in fails`(error: GoogleAuthError) = runTest {
+        // Arrange
+        coEvery { googleIdTokenProvider.getIdToken(HASHED_NONCE) } returns ID_TOKEN.right()
+        coEvery { appDataTokenProvider.getAccessToken(interactive = true) } returns error.left()
+
+        // Act
+        val actual = repository.signIn(SocialLoginProvider.Google)
+
+        // Assert
+        assertThat(actual).isEqualTo(SocialLoginError.SignInFailed().left())
+    }
+
+    private fun provideUnavailableDriveErrors() = listOf(
+        GoogleAuthError.AuthRequired,
+        GoogleAuthError.PermissionsMissing,
+        GoogleAuthError.Unavailable,
+    )
+
     @Test
     fun `GIVEN sign-in fails WHEN signIn THEN no account is pinned`() = runTest {
         // Arrange
