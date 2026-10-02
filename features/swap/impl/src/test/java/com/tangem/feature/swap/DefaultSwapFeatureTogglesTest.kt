@@ -67,4 +67,32 @@ internal class DefaultSwapFeatureTogglesTest {
         // Assert
         assertThat(actual).isFalse()
     }
+
+    @Test
+    fun `GIVEN Tron gasless swap toggle enabled WHEN read isTronGaslessSwapEnabled THEN true`() {
+        // Arrange
+        every {
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1803_TRON_GASLESS_SWAP_ENABLED)
+        } returns true
+
+        // Act
+        val actual = toggles.isTronGaslessSwapEnabled
+
+        // Assert
+        assertThat(actual).isTrue()
+    }
+
+    @Test
+    fun `GIVEN Tron gasless swap toggle disabled WHEN read isTronGaslessSwapEnabled THEN false`() {
+        // Arrange
+        every {
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1803_TRON_GASLESS_SWAP_ENABLED)
+        } returns false
+
+        // Act
+        val actual = toggles.isTronGaslessSwapEnabled
+
+        // Assert
+        assertThat(actual).isFalse()
+    }
 }
