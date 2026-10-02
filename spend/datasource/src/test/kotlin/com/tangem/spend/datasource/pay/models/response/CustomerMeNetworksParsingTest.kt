@@ -1,33 +1,17 @@
 package com.tangem.spend.datasource.pay.models.response
 
 import com.google.common.truth.Truth.assertThat
-import com.squareup.moshi.FromJson
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.ToJson
+import com.tangem.core.remote.json.NetworkJsonFactory
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 internal class CustomerMeNetworksParsingTest {
 
-    // `Result` already has other BigDecimal fields (via ProductInstance.actualCardLimit), so the
-    // codegen'd Result adapter eagerly needs a BigDecimal adapter to be constructed at all,
-    // independent of the new `balance.networks` field under test here. The production adapter lives
-    // in core:datasource and is internal to it, so the test declares its own equivalent instead of
-    // widening that module's API.
-    private class BigDecimalAdapter {
-        @FromJson
-        fun fromJson(value: String) = BigDecimal(value)
-
-        @ToJson
-        fun toJson(value: BigDecimal) = value.toString()
-    }
-
-    private val moshi = Moshi.Builder().add(BigDecimalAdapter()).build()
-    private val adapter = moshi.adapter(CustomerMeResponse.Result::class.java)
+    private val json = NetworkJsonFactory.create()
 
     @Test
     fun `GIVEN networks json WHEN parse THEN maps enabled and disabled entries`() {
-        val json = """
+        val body = """
             {
               "id": "c1", "state": "ACTIVE", "created_at": "2026-01-01T00:00:00Z",
               "product_instances": [], "cards": [],
@@ -48,7 +32,7 @@ internal class CustomerMeNetworksParsingTest {
             }
         """.trimIndent()
 
-        val result = adapter.fromJson(json)!!
+        val result = json.decodeFromString(CustomerMeResponse.Result.serializer(), body)
 
         val networks = result.balance!!.networks
         assertThat(networks).hasSize(2)
@@ -69,7 +53,7 @@ internal class CustomerMeNetworksParsingTest {
     fun `GIVEN not issued network WHEN parse THEN it has no deposit address and an empty token list`() {
         // A NOT_ISSUED network has no contract yet, so the backend reports it without a deposit address and
         // with an empty token list — the entry itself must still survive.
-        val json = """
+        val body = """
             {
               "id": "c1", "state": "ACTIVE", "created_at": "2026-01-01T00:00:00Z",
               "product_instances": [], "cards": [],
@@ -85,7 +69,7 @@ internal class CustomerMeNetworksParsingTest {
             }
         """.trimIndent()
 
-        val networks = adapter.fromJson(json)!!.balance!!.networks!!
+        val networks = json.decodeFromString(CustomerMeResponse.Result.serializer(), body).balance!!.networks!!
 
         assertThat(networks).hasSize(2)
         val notIssued = networks[1]
@@ -99,7 +83,7 @@ internal class CustomerMeNetworksParsingTest {
 
     @Test
     fun `GIVEN token without contract address WHEN parse THEN contract address is null`() {
-        val json = """
+        val body = """
             {
               "id": "c1", "state": "ACTIVE", "created_at": "2026-01-01T00:00:00Z",
               "product_instances": [], "cards": [],
@@ -112,7 +96,8 @@ internal class CustomerMeNetworksParsingTest {
             }
         """.trimIndent()
 
-        val token = adapter.fromJson(json)!!.balance!!.networks!![0].tokens[0]
+        val result = json.decodeFromString(CustomerMeResponse.Result.serializer(), body)
+        val token = result.balance!!.networks!![0].tokens[0]
 
         assertThat(token.token).isEqualTo("USDC")
         assertThat(token.tokenContractAddress).isNull()
@@ -120,25 +105,25 @@ internal class CustomerMeNetworksParsingTest {
 
     @Test
     fun `GIVEN balance json without networks WHEN parse THEN networks is null`() {
-        val json = """
+        val body = """
             { "id": "c1", "state": "ACTIVE", "created_at": "2026-01-01T00:00:00Z",
               "product_instances": [], "cards": [],
               "balance": {} }
         """.trimIndent()
 
-        val result = adapter.fromJson(json)!!
+        val result = json.decodeFromString(CustomerMeResponse.Result.serializer(), body)
 
         assertThat(result.balance!!.networks).isNull()
     }
 
     @Test
     fun `GIVEN json without balance WHEN parse THEN balance is null`() {
-        val json = """
+        val body = """
             { "id": "c1", "state": "ACTIVE", "created_at": "2026-01-01T00:00:00Z",
               "product_instances": [], "cards": [] }
         """.trimIndent()
 
-        val result = adapter.fromJson(json)!!
+        val result = json.decodeFromString(CustomerMeResponse.Result.serializer(), body)
 
         assertThat(result.balance).isNull()
     }

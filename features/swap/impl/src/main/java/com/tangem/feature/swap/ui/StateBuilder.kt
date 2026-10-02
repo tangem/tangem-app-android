@@ -8,8 +8,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.AccountTitleUM
-import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldConverter
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
@@ -74,6 +74,7 @@ internal class StateBuilder(
     private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
     private val appRouter: AppRouter,
     private val isChooseTokenPulseEnabled: Boolean,
+    private val predictionTopUpLimitsProvider: Provider<PredictionTopUpLimits?> = Provider { null },
 ) {
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
 
@@ -83,6 +84,7 @@ internal class StateBuilder(
         actions = actions,
         isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
         appCurrencyProvider = appCurrencyProvider,
+        predictionTopUpLimitsProvider = predictionTopUpLimitsProvider,
     )
 
     fun createInitialLoadingState(swapUIMode: SwapUIMode = SwapUIMode.Detailed): SwapStateHolder {
@@ -799,6 +801,8 @@ internal class StateBuilder(
                 notification is SwapNotificationUM.Warning.NoAvailableTokensToSwap ||
                 notification is SwapNotificationUM.Warning.SwapNotSupported ||
                 notification is SwapNotificationUM.Warning.NeedReserveToCreateAccount ||
+                notification is SwapNotificationUM.Warning.PredictionMinimumDeposit ||
+                notification is SwapNotificationUM.Warning.PredictionMaximumDeposit ||
                 notification is SwapNotificationUM.Info.PermissionNeeded
         } && !priceImpact.shouldDisableButton()
     }
@@ -1111,23 +1115,23 @@ internal class StateBuilder(
         val toSwapCurrencyStatus = requireNotNull(dataState.toSwapCurrencyStatus)
         val fromAmount = swapTransactionState.fromAmountValue ?: BigDecimal.ZERO
         val toAmount = swapTransactionState.toAmountValue ?: BigDecimal.ZERO
-        val providerState = uiState.providerState as ProviderState.Content
+        val providerState = uiState.providerState as? ProviderState.Content
 
         val fromFiatAmount = getFormattedFiatAmount(fromSwapCurrencyStatus.status.value.fiatRate?.multiply(fromAmount))
         val toFiatAmount = getFormattedFiatAmount(toSwapCurrencyStatus.status.value.fiatRate?.multiply(toAmount))
 
-        val shouldShowStatus = providerState.type == ExchangeProviderType.CEX.providerName
+        val shouldShowStatus = providerState?.type == ExchangeProviderType.CEX.providerName
         val isFloatRate = dataState.selectedProvider?.rateTypes?.contains(RateType.FLOAT) == true
         return uiState.copy(
             successState = SwapSuccessStateHolder(
                 timestamp = swapTransactionState.timestamp,
                 txUrl = txUrl,
-                providerName = stringReference(providerState.name),
-                providerType = stringReference(providerState.type),
+                providerName = stringReference(providerState?.name.orEmpty()),
+                providerType = stringReference(providerState?.type.orEmpty()),
                 shouldShowStatusButton = shouldShowStatus,
                 isTransferMode = false,
-                providerIcon = providerState.iconUrl,
-                rate = providerState.subtitle,
+                providerIcon = providerState?.iconUrl.orEmpty(),
+                rate = providerState?.subtitle ?: TextReference.EMPTY,
                 fee = swapFee?.let { fee -> formatSwapFeeForSuccess(fee) },
                 fromTitle = getCardAccountTitle(fromSwapCurrencyStatus.account, isFromCard = true),
                 toTitle = getCardAccountTitle(toSwapCurrencyStatus.account, isFromCard = false),
@@ -1157,7 +1161,7 @@ internal class StateBuilder(
         val toSwapCurrencyStatus = requireNotNull(dataState.toSwapCurrencyStatus)
         val fromAmount = swapTransactionState.fromAmountValue ?: BigDecimal.ZERO
         val toAmount = swapTransactionState.toAmountValue ?: BigDecimal.ZERO
-        val providerState = uiState.providerState as ProviderState.Content
+        val providerState = uiState.providerState as? ProviderState.Content
 
         val fromFiatAmount = getFormattedFiatAmount(fromSwapCurrencyStatus.status.value.fiatRate?.multiply(fromAmount))
         val toFiatAmount = getFormattedFiatAmount(toSwapCurrencyStatus.status.value.fiatRate?.multiply(toAmount))
@@ -1166,12 +1170,12 @@ internal class StateBuilder(
             successState = SwapSuccessStateHolder(
                 timestamp = System.currentTimeMillis(),
                 txUrl = txUrl,
-                providerName = stringReference(providerState.name),
-                providerType = stringReference(providerState.type),
+                providerName = stringReference(providerState?.name.orEmpty()),
+                providerType = stringReference(providerState?.type.orEmpty()),
                 shouldShowStatusButton = false,
                 isTransferMode = false,
-                providerIcon = providerState.iconUrl,
-                rate = providerState.subtitle,
+                providerIcon = providerState?.iconUrl.orEmpty(),
+                rate = providerState?.subtitle ?: TextReference.EMPTY,
                 fee = TextReference.EMPTY,
                 fromTitle = getCardAccountTitle(fromSwapCurrencyStatus.account, isFromCard = true),
                 toTitle = getCardAccountTitle(toSwapCurrencyStatus.account, isFromCard = false),
@@ -1408,14 +1412,14 @@ internal class StateBuilder(
         } else {
             R.string.swapping_to_account_title to R.string.swapping_to_title
         }
-        return if (account != null && isAccountsModeProvider()) {
-            AccountTitleUM.Account(
+        return when {
+            account == null || !isAccountsModeProvider() -> AccountTitleUM.Text(resourceReference(placeholder))
+            account is Account.Prediction -> AccountTitleUM.Account.prediction(prefixText = resourceReference(prefix))
+            else -> AccountTitleUM.Account(
                 prefixText = resourceReference(prefix),
                 name = account.accountName.toUM().value,
                 icon = account.toIconUM(),
             )
-        } else {
-            AccountTitleUM.Text(resourceReference(placeholder))
         }
     }
 

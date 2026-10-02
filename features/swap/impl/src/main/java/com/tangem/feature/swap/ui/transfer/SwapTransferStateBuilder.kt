@@ -7,15 +7,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.AccountTitleUM
-import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldConverter
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -62,6 +61,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
         feePaidCryptoCurrencyStatus: CryptoCurrencyStatus?,
         feeSelectorUM: FeeSelectorUM?,
         isHighNetworkFee: Boolean = false,
+        predictionTopUpLimits: PredictionTopUpLimits? = null,
     ): SwapStateHolder {
         val fromTokenSwapInfo = transferState.fromTokenInfo
         val isInsufficientBalance = transferState.isInsufficientBalance
@@ -73,6 +73,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
             feeCryptoCurrencyStatus = feePaidCryptoCurrencyStatus,
             actions = actions,
             isHighNetworkFee = isHighNetworkFee,
+            predictionTopUpLimits = predictionTopUpLimits,
         )
         return uiStateHolder.copy(
             sendCardData = createSendSwapCardState(
@@ -296,14 +297,14 @@ internal class SwapTransferStateBuilder @Inject constructor(
         } else {
             R.string.swapping_to_account_title to R.string.swapping_to_title
         }
-        return if (account != null && isAccountsMode) {
-            AccountTitleUM.Account(
+        return when {
+            account == null || !isAccountsMode -> AccountTitleUM.Text(resourceReference(placeholder))
+            account is Account.Prediction -> AccountTitleUM.Account.prediction(prefixText = resourceReference(prefix))
+            else -> AccountTitleUM.Account(
                 prefixText = resourceReference(prefix),
                 name = account.accountName.toUM().value,
                 icon = account.toIconUM(),
             )
-        } else {
-            AccountTitleUM.Text(resourceReference(placeholder))
         }
     }
 
@@ -349,6 +350,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
         isTangemPayWithdrawal: Boolean,
         feeSelectorUM: FeeSelectorUM?,
         isHighNetworkFee: Boolean = false,
+        predictionTopUpLimits: PredictionTopUpLimits? = null,
     ): SwapStateHolder {
         val notifications = notificationsFactory.getNotifications(
             transferState = transferState,
@@ -356,6 +358,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
             feeSelectorUM = feeSelectorUM,
             actions = actions,
             isHighNetworkFee = isHighNetworkFee,
+            predictionTopUpLimits = predictionTopUpLimits,
         )
         return uiStateHolder.copy(
             notifications = notifications,
@@ -389,6 +392,8 @@ internal class SwapTransferStateBuilder @Inject constructor(
                 notification is SwapNotificationUM.Warning.NoAvailableTokensToSwap ||
                 notification is SwapNotificationUM.Warning.SwapNotSupported ||
                 notification is SwapNotificationUM.Warning.NeedReserveToCreateAccount ||
+                notification is SwapNotificationUM.Warning.PredictionMinimumDeposit ||
+                notification is SwapNotificationUM.Warning.PredictionMaximumDeposit ||
                 notification is SwapNotificationUM.Info.PermissionNeeded
         }
     }
@@ -611,7 +616,6 @@ internal class SwapTransferStateBuilder @Inject constructor(
         uiState: SwapStateHolder,
         dataState: SwapProcessDataState,
     ): SwapStateHolder {
-        val toCurrency = requireNotNull(dataState.toSwapCurrencyStatus).currency
         val sentState = createSuccessState(
             uiState = uiState,
             dataState = dataState,
@@ -623,17 +627,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
         )
         val successState = requireNotNull(sentState.successState).copy(
             title = resourceReference(R.string.prediction_withdraw_status_sent_title),
-            fromTitle = AccountTitleUM.Account(
-                prefixText = resourceReference(R.string.common_from),
-                name = resourceReference(R.string.prediction_account_title),
-                icon = AccountIconUM.Prediction,
-            ),
-            toTitle = AccountTitleUM.Text(
-                combinedReference(
-                    resourceReference(R.string.common_to),
-                    stringReference(" ${toCurrency.symbol} · ${toCurrency.network.name}"),
-                ),
-            ),
+            fromTitle = AccountTitleUM.Account.prediction(prefixText = resourceReference(R.string.common_from)),
         )
         return sentState.copy(successState = successState)
     }

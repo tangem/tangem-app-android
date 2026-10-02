@@ -67,10 +67,18 @@ internal class AccessCodeModel @Inject constructor(
 
     private val settingCodeJobHolder = JobHolder()
 
+    /**
+     * The PIN field keeps calling the `onAccessCodeChange` of its last composition until the swap to `{}` recomposes,
+     * so a completed code can arrive several times; only the first one may be handled.
+     */
+    private val completedCodeJobHolder = JobHolder()
+
     internal val uiState: StateFlow<AccessCodeUM>
         field = MutableStateFlow(getInitialState())
 
     internal fun onResume() {
+        if (completedCodeJobHolder.isActive) return
+
         uiState.update { currentState ->
             currentState.copy(
                 onAccessCodeChange = ::onAccessCodeChange,
@@ -91,6 +99,7 @@ internal class AccessCodeModel @Inject constructor(
         val accessCodeLength = uiState.value.accessCodeLength
 
         if (value.length > accessCodeLength) return
+        if (completedCodeJobHolder.isActive || value == uiState.value.accessCode) return
 
         uiState.update { currentState ->
             currentState.copy(
@@ -113,9 +122,9 @@ internal class AccessCodeModel @Inject constructor(
                     } else {
                         showErrorAndReset()
                     }
-                }
+                }.saveIn(completedCodeJobHolder)
             } else {
-                onNewCodeSet()
+                onNewCodeSet(value)
             }
         }
     }
@@ -132,20 +141,20 @@ internal class AccessCodeModel @Inject constructor(
         }
     }
 
-    private fun onNewCodeSet() {
+    private fun onNewCodeSet(accessCode: String) {
         modelScope.launch {
             delay(timeMillis = SUCCESS_DISPLAY_DURATION_MS)
 
-            if (isAccessCodeSimpleUseCase(uiState.value.accessCode)) {
-                showSimpleAccessCodeDialog()
+            if (isAccessCodeSimpleUseCase(accessCode)) {
+                showSimpleAccessCodeDialog(accessCode)
             } else {
-                setNewCode()
+                setNewCode(accessCode)
             }
-        }
+        }.saveIn(completedCodeJobHolder)
     }
 
-    private fun setNewCode() {
-        params.callbacks.onNewAccessCodeInput(params.userWalletId, uiState.value.accessCode)
+    private fun setNewCode(accessCode: String) {
+        params.callbacks.onNewAccessCodeInput(params.userWalletId, accessCode)
 
         uiState.update { currentState ->
             currentState.copy(
@@ -154,7 +163,7 @@ internal class AccessCodeModel @Inject constructor(
         }
     }
 
-    private fun showSimpleAccessCodeDialog() {
+    private fun showSimpleAccessCodeDialog(accessCode: String) {
         uiMessageSender.send(
             DialogMessage(
                 title = resourceReference(R.string.access_code_alert_validation_title),
@@ -172,7 +181,7 @@ internal class AccessCodeModel @Inject constructor(
                 ),
                 secondAction = EventMessageAction(
                     title = resourceReference(R.string.access_code_alert_validation_ok),
-                    onClick = ::setNewCode,
+                    onClick = { setNewCode(accessCode) },
                 ),
                 isDismissable = false,
             ),

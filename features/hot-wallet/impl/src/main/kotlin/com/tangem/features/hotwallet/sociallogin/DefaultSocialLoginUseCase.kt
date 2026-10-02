@@ -15,18 +15,21 @@ import com.tangem.domain.sociallogin.models.SocialProviderIdToken
 import com.tangem.domain.sociallogin.usecase.GenerateRecoveryKeyUseCase
 import com.tangem.domain.sociallogin.usecase.GetSocialRecoveryKeyUseCase
 import com.tangem.domain.sociallogin.usecase.ReadSocialBackupUseCase
+import com.tangem.domain.sociallogin.usecase.RegisterRestoredWalletUseCase
 import com.tangem.domain.sociallogin.usecase.RegisterSocialRecoveryUseCase
 import com.tangem.domain.sociallogin.usecase.SetSocialBackupCompletedUseCase
 import com.tangem.domain.sociallogin.usecase.SignInWithSocialProviderUseCase
 import com.tangem.domain.sociallogin.usecase.SignOutFromSocialProviderUseCase
 import com.tangem.domain.sociallogin.usecase.WriteSocialBackupUseCase
 import com.tangem.domain.wallets.builder.HotUserWalletBuilder
+import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.domain.wallets.usecase.ExportSeedPhraseUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.hotwallet.MnemonicRepository
-import com.tangem.features.hotwallet.SocialLoginUseCase
+import com.tangem.features.hotwallet.SocialLoginConsent
 import com.tangem.features.hotwallet.SocialLoginOutcome
 import com.tangem.features.hotwallet.SocialLoginStage
+import com.tangem.features.hotwallet.SocialLoginUseCase
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImportError
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImporter
 import com.tangem.hot.sdk.TangemHotSdk
@@ -39,11 +42,6 @@ import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Ordering follows NFR-01: social recovery counts as set up only once both the backend binding and the
- * cloud file are in place, so the completion flag is written last and a failure in between leaves an
- * ordinary hot wallet behind.
- */
 @Suppress("LongParameterList")
 @Singleton
 internal class DefaultSocialLoginUseCase @Inject constructor(
@@ -55,6 +53,8 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
     private val readSocialBackupUseCase: ReadSocialBackupUseCase,
     private val registerSocialRecoveryUseCase: RegisterSocialRecoveryUseCase,
     private val setSocialBackupCompletedUseCase: SetSocialBackupCompletedUseCase,
+    private val registerRestoredWalletUseCase: RegisterRestoredWalletUseCase,
+    private val deleteWalletUseCase: DeleteWalletUseCase,
     private val tangemHotSdk: TangemHotSdk,
     private val hotUserWalletBuilderFactory: HotUserWalletBuilder.Factory,
     private val saveWalletUseCase: SaveWalletUseCase,
@@ -64,7 +64,6 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
     private val appCoroutineScope: AppCoroutineScope,
 ) : SocialLoginUseCase {
 
-    /** Serializes the whole flow, so a double tap cannot run two creations against the same identity */
     private val mutex = Mutex()
 
     /** Wallets created and saved but not backed up yet, kept so a retry resumes one (see [PendingCreate]) */
@@ -73,16 +72,16 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
     override suspend fun signIn(
         provider: SocialLoginProvider,
         onStageChanged: (SocialLoginStage) -> Unit,
+        requestConsent: suspend () -> SocialLoginConsent?,
     ): Either<SocialLoginError, SocialLoginOutcome> = mutex.withLock {
         onStageChanged(SocialLoginStage.SigningIn)
 
         val idToken = signInWithSocialProviderUseCase(provider)
             .getOrElse { return@withLock Either.Left(it) }
 
-        resolve(idToken, onStageChanged)
+        resolve(idToken, onStageChanged, requestConsent)
     }
 
-    /** Same lock as [signIn]: clearing the provider mid-flow would strand it on a gone authorization */
     override suspend fun signOut(provider: SocialLoginProvider) = mutex.withLock {
         signOutFromSocialProviderUseCase(provider)
     }
@@ -91,12 +90,13 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
     private suspend fun resolve(
         idToken: SocialProviderIdToken,
         onStageChanged: (SocialLoginStage) -> Unit,
+        requestConsent: suspend () -> SocialLoginConsent?,
     ): Either<SocialLoginError, SocialLoginOutcome> {
         onStageChanged(SocialLoginStage.VerifyingAccount)
 
         val recoveryKey = getSocialRecoveryKeyUseCase(idToken).getOrElse { error ->
             return if (error == SocialLoginError.BindingNotFound) {
-                create(idToken, onStageChanged)
+                create(idToken, onStageChanged, requestConsent)
             } else {
                 Either.Left(error)
             }
@@ -120,22 +120,25 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
             onStageChanged(SocialLoginStage.PreparingWallet)
             val restored = readSocialBackupUseCase(recoveryKey).getOrElse { return Either.Left(it) }
 
-            val userWalletId = try {
+            val imported = try {
                 // The seed alone builds a different wallet, and a social restore has nowhere to ask for
                 // the passphrase. Only another client can write such a file.
                 if (restored.secret.isPassphraseRequired) {
                     return Either.Left(SocialLoginError.PassphraseNotSupported)
                 }
                 onStageChanged(SocialLoginStage.RestoringWallet)
-                importWallet(restored).getOrElse { return Either.Left(it) }
+                importMarkedWallet(restored).getOrElse { return Either.Left(it) }
             } finally {
                 restored.secret.wipe()
             }
 
-            setSocialBackupCompletedUseCase(walletId = userWalletId, isCompleted = true)
-                .getOrElse { return Either.Left(it) }
+            registerRestoredWalletUseCase(imported.walletId).getOrElse { error ->
+                TangemLogger.e("Failed to register the restored social login wallet: $error")
+                if (imported.isNew) discardImport(imported.walletId)
+                return Either.Left(error)
+            }
 
-            return Either.Right(SocialLoginOutcome.WalletRestored(userWalletId))
+            return Either.Right(SocialLoginOutcome.WalletRestored(imported.walletId, isNewOnDevice = imported.isNew))
         } finally {
             recoveryKey.wipe()
         }
@@ -144,7 +147,10 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
     private suspend fun create(
         idToken: SocialProviderIdToken,
         onStageChanged: (SocialLoginStage) -> Unit,
+        requestConsent: suspend () -> SocialLoginConsent?,
     ): Either<SocialLoginError, SocialLoginOutcome> {
+        requestConsent() ?: return Either.Left(SocialLoginError.ConsentDeclined)
+
         onStageChanged(SocialLoginStage.CreatingWallet)
 
         // Taken over only if no registration was ever attempted on it. An attempt that failed still may
@@ -163,7 +169,7 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
         pending.rememberRegistration(recoveryKey)
 
         // The binding comes first: the folder holds one file per account, so writing before the backend
-        // accepts the binding could overwrite another wallet's backup on the way to an FR-14 conflict.
+        // accepts the binding could overwrite another wallet's backup on the way to a binding conflict.
         registerSocialRecoveryUseCase(
             idToken = idToken,
             walletId = pending.userWallet.walletId,
@@ -192,7 +198,11 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
                     walletId = userWallet.walletId,
                     secret = secret,
                     recoveryKey = recoveryKey,
-                ).getOrElse { return Either.Left(it) }
+                ).getOrElse { error ->
+                    return Either.Left(
+                        if (error == SocialLoginError.CloudUnavailable) SocialLoginError.BackupWriteFailed() else error,
+                    )
+                }
             } finally {
                 secret.wipe()
             }
@@ -237,7 +247,24 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
                 )
             }
 
-    private suspend fun importWallet(restored: RestoredSocialBackup): Either<SocialLoginError, UserWalletId> {
+    private suspend fun importMarkedWallet(restored: RestoredSocialBackup): Either<SocialLoginError, ImportedWallet> {
+        val walletId = restored.info.walletId
+        setSocialBackupCompletedUseCase(walletId = walletId, isCompleted = true)
+            .getOrElse { return Either.Left(it) }
+
+        return importWallet(restored).onLeft {
+            setSocialBackupCompletedUseCase(walletId = walletId, isCompleted = false)
+                .onLeft { error -> TangemLogger.e("Failed to clear the flag of a wallet not imported: $error") }
+        }
+    }
+
+    private suspend fun discardImport(walletId: UserWalletId) {
+        deleteWalletUseCase(walletId).onLeft { TangemLogger.e("Failed to discard the unregistered wallet: $it") }
+        setSocialBackupCompletedUseCase(walletId = walletId, isCompleted = false)
+            .onLeft { TangemLogger.e("Failed to clear the flag of a discarded wallet: $it") }
+    }
+
+    private suspend fun importWallet(restored: RestoredSocialBackup): Either<SocialLoginError, ImportedWallet> {
         // the SDK only parses a String, so this copy of the phrase cannot be wiped
         val mnemonic = runCatching { mnemonicRepository.generateMnemonic(String(restored.secret.mnemonic)) }
             .getOrNull()
@@ -248,17 +275,21 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
             mnemonic = mnemonic,
             passphrase = null,
             isSeedPhraseBackedUp = false,
-        ).recover { error ->
+            // reported by the caller once the restore is registered, as it may still be rolled back
+            creationType = null,
+        ).map { ImportedWallet(walletId = it, isNew = true) }.recover { error ->
             when (error) {
                 // already on this device — the state the restore was after; the id is safe to take from
                 // the header, which survived the AES-GCM check over itself
-                HotWalletImportError.AlreadySaved -> restored.info.walletId
+                HotWalletImportError.AlreadySaved -> ImportedWallet(walletId = restored.info.walletId, isNew = false)
                 is HotWalletImportError.Unknown -> raise(SocialLoginError.Unknown(error.cause))
                 // unreachable: the import above passes no passphrase
                 is HotWalletImportError.PassphraseTooLong -> raise(SocialLoginError.Unknown())
             }
         }
     }
+
+    private data class ImportedWallet(val walletId: UserWalletId, val isNew: Boolean)
 
     /**
      * A creation that got as far as saving the wallet, so a retry carries on with it instead of leaving a

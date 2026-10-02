@@ -1,28 +1,29 @@
 package com.tangem.domain.models.kyc
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+private const val INIT_KYC_STATUS = "init"
 private const val APPROVED_KYC_STATUS = "approved"
 private const val IN_PROGRESS_KYC_STATUS = "in_progress"
 private const val DECLINED_KYC_STATUS = "declined"
 
-@JsonClass(generateAdapter = false)
+@Serializable
 enum class KycStatus {
     /** Initial state */
-    @Json(name = "init")
+    @SerialName(INIT_KYC_STATUS)
     INIT,
 
     /** Performing the check */
-    @Json(name = "in_progress")
+    @SerialName(IN_PROGRESS_KYC_STATUS)
     PENDING,
 
     /** SumSub approved */
-    @Json(name = "approved")
+    @SerialName(APPROVED_KYC_STATUS)
     APPROVED,
 
     /** The check failed, documents rejected */
-    @Json(name = "declined")
+    @SerialName(DECLINED_KYC_STATUS)
     REJECTED,
 
     ;

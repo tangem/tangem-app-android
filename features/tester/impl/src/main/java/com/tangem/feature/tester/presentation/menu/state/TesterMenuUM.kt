@@ -30,5 +30,6 @@ data class TesterMenuUM(
         SURVEY_SPARROW(R.string.survey_sparrow),
         BACKEND_AUTH_STATUS(R.string.backend_auth_status),
         SELL_REDIRECT_GENERATOR(R.string.sell_redirect_generator),
+        SOCIAL_LOGIN(R.string.social_login),
     }
 }

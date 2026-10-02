@@ -313,7 +313,6 @@ internal class DefaultStoryV2ContentRepositoryTest {
 
     private fun remoteComposition(slides: List<StoryV2Slide> = listOf(slide(id = "1"))) = StoryV2Composition(
         id = HARDWARE_UPGRADE_SLUG,
-        version = 0,
         origin = StoryV2Origin.REMOTE,
         endBehavior = StoryV2EndBehavior.LOOP,
         actions = emptyList(),

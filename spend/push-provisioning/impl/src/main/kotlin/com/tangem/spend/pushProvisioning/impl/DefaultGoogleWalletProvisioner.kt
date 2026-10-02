@@ -73,7 +73,7 @@ internal class DefaultGoogleWalletProvisioner @Inject constructor(
         )
         val status = reconcileWithRecentlyAdded(lastFourDigits = lastFourDigits, status = walletStatus)
 
-        if (status == CardStatus.NotAdded && !hasEligibleTokenizationTarget(lastFourDigits)) {
+        if (status == CardStatus.NotAdded && !canPushCard(lastFourDigits)) {
             CardStatus.Unsupported
         } else {
             status
@@ -91,6 +91,7 @@ internal class DefaultGoogleWalletProvisioner @Inject constructor(
 
         return addFromActivity(card.lastFourDigits) { activity ->
             checkStableHardwareId() ?: awaitAddition { complete ->
+                logger.i("Push provisioning started: push, $environment SDK")
                 sdk.push(card = card, activity = activity, listener = pushListener(complete))
             }
         }
@@ -171,19 +172,32 @@ internal class DefaultGoogleWalletProvisioner @Inject constructor(
             .getOrElse { true }
     }
 
+    private suspend fun canPushCard(lastFourDigits: String): Boolean {
+        if (!hasEligibleTokenizationTarget(lastFourDigits)) return false
+
+        val hardwareIdError = findStableHardwareIdError() ?: return true
+        logger.e("$STABLE_HARDWARE_ID_UNAVAILABLE_REASON: $hardwareIdError, card treated as unsupported")
+        return false
+    }
+
     private suspend fun checkStableHardwareId(): AddResult.Failed? {
-        val errorCode = awaitWalletCheck(sdk::checkStableHardwareId) ?: return null
-        val reason = when {
-            errorCode == TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE -> FailureReason.UNSUPPORTED
-            isWalletMissing() -> return null
-            else -> FailureReason.GOOGLE_WALLET_ERROR
-        }
+        val errorCode = findStableHardwareIdError() ?: return null
 
         return AddResult.Failed(
-            reason = reason,
+            reason = if (errorCode == TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE) {
+                FailureReason.UNSUPPORTED
+            } else {
+                FailureReason.GOOGLE_WALLET_ERROR
+            },
             description = "$STABLE_HARDWARE_ID_UNAVAILABLE_REASON: $errorCode",
             walletErrorCode = errorCode,
         )
+    }
+
+    private suspend fun findStableHardwareIdError(): Int? {
+        val errorCode = awaitWalletCheck(sdk::checkStableHardwareId) ?: return null
+        val isAppUnverified = errorCode == TapAndPayStatusCodes.TAP_AND_PAY_UNAVAILABLE
+        return if (isAppUnverified || !isWalletMissing()) errorCode else null
     }
 
     private suspend fun isWalletMissing(): Boolean =
@@ -200,6 +214,7 @@ internal class DefaultGoogleWalletProvisioner @Inject constructor(
 
         return when {
             pendingToken != null -> awaitAddition { complete ->
+                logger.i("Push provisioning started: tokenize, $environment SDK")
                 sdk.tokenize(
                     token = pendingToken,
                     displayName = displayName,
@@ -254,13 +269,23 @@ internal class DefaultGoogleWalletProvisioner @Inject constructor(
 
     private fun onAddResult(lastFourDigits: String, result: AddResult): AddResult {
         when (result) {
-            AddResult.Added -> recentlyAddedCards += lastFourDigits
-            AddResult.AlreadyAdded -> {
-                logger.i("Card is already in the wallet")
+            AddResult.Added -> {
+                logger.i("Push provisioning succeeded")
                 recentlyAddedCards += lastFourDigits
             }
-            AddResult.Cancelled -> Unit
-            is AddResult.Failed -> logger.e("Adding card failed: ${result.description}")
+            AddResult.AlreadyAdded -> {
+                logger.i("Push provisioning found the card already in the wallet")
+                recentlyAddedCards += lastFourDigits
+            }
+            AddResult.Cancelled -> logger.i("Push provisioning cancelled")
+            is AddResult.Failed -> if (result.reason == FailureReason.ADDITION_IN_PROGRESS) {
+                logger.i("Push provisioning skipped: another card is being added")
+            } else {
+                logger.e(
+                    "Push provisioning failed: ${result.reason}, SDK code ${result.sdkErrorCode}, " +
+                        "wallet code ${result.walletErrorCode}, $environment SDK, ${result.description}",
+                )
+            }
         }
         return result
     }

@@ -1,11 +1,11 @@
 package com.tangem.spend.datasource.pay.models.request
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class GenerateNonceByCustomerWalletRequest(
-    @Json(name = "auth_type") val authType: String = "customer_wallet",
-    @Json(name = "customer_wallet_address") val customerWalletAddress: String,
-    @Json(name = "customer_wallet_id") val customerWalletId: String,
+    @SerialName("auth_type") val authType: String = "customer_wallet",
+    @SerialName("customer_wallet_address") val customerWalletAddress: String,
+    @SerialName("customer_wallet_id") val customerWalletId: String,
 )

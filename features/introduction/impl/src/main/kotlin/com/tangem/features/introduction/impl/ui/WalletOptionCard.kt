@@ -1,5 +1,6 @@
 package com.tangem.features.introduction.impl.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,7 +29,7 @@ internal fun WalletOptionCard(option: WalletOptionUM, modifier: Modifier = Modif
             .alpha(if (option.isEnabled) 1f else DISABLED_CONTENT_ALPHA),
         onClick = if (option.isEnabled && !option.isLoading) option.onClick else null,
         verticalAlignment = TangemRowVerticalAlignment.Center,
-        startSlot = { OptionIcon(iconRes = option.iconRes) },
+        startSlot = { OptionIcon(iconRes = option.iconRes, isTinted = option.isIconTinted) },
         titleSlot = { TangemRowText(text = option.title, role = TangemRowTextRole.Title) },
         subtitleSlot = {
             TangemRowText(
@@ -50,18 +51,26 @@ internal fun WalletOptionCard(option: WalletOptionUM, modifier: Modifier = Modif
 private const val DISABLED_CONTENT_ALPHA = 0.4f
 
 @Composable
-private fun OptionIcon(iconRes: Int) {
+private fun OptionIcon(iconRes: Int, isTinted: Boolean) {
     Box(
         modifier = Modifier
             .size(40.dp)
             .background(color = TangemTheme.colors3.bg.opaque.primary, shape = CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            modifier = Modifier.size(20.dp),
-            painter = painterResource(id = iconRes),
-            contentDescription = null,
-            tint = TangemTheme.colors3.icon.primary,
-        )
+        if (isTinted) {
+            Icon(
+                modifier = Modifier.size(20.dp),
+                painter = painterResource(id = iconRes),
+                contentDescription = null,
+                tint = TangemTheme.colors3.icon.primary,
+            )
+        } else {
+            Image(
+                modifier = Modifier.size(20.dp),
+                painter = painterResource(id = iconRes),
+                contentDescription = null,
+            )
+        }
     }
 }

@@ -433,7 +433,6 @@ internal class RemoteStoryV2ContentSourceTest {
     private fun expectedComposition(slides: List<StoryV2Slide> = listOf(videoSlide(), lottieSlide(), imageSlide())) =
         StoryV2Composition(
             id = SLUG,
-            version = 0,
             origin = StoryV2Origin.REMOTE,
             endBehavior = StoryV2EndBehavior.LOOP,
             actions = listOf(storyAction()),

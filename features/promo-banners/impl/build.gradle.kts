@@ -25,6 +25,7 @@ dependencies {
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.promo)
     implementation(projects.domain.promo.models)
+    implementation(projects.domain.settings)
     implementation(projects.domain.markets.models)
 
     /** Data */

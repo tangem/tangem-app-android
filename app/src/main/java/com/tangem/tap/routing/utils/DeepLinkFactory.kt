@@ -18,6 +18,8 @@ import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.YieldDeepLinkHandler
 import com.tangem.features.jointaccount.deeplink.JointAccountDeepLinkHandler
 import com.tangem.features.jointaccount.deeplink.JointAccountInviteDeepLinkHandler
+import com.tangem.features.mcp.api.McpFeatureToggles
+import com.tangem.features.mcp.api.deeplink.McpDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SellDeepLinkHandler
@@ -78,6 +80,8 @@ internal class DeepLinkFactory @Inject constructor(
     private val promoCampaignsDeepLink: CampaignsDeepLinkHandler.Factory,
     private val jointAccountDeepLink: JointAccountDeepLinkHandler.Factory,
     private val jointAccountInviteDeepLink: JointAccountInviteDeepLinkHandler.Factory,
+    private val mcpDeepLink: McpDeepLinkHandler.Factory,
+    private val mcpFeatureToggles: McpFeatureToggles,
     private val urlOpener: UrlOpener,
 ) {
     private val permittedAppRoute = MutableStateFlow(false)
@@ -268,6 +272,10 @@ internal class DeepLinkFactory @Inject constructor(
             DeepLinkRoute.PayAccount.host -> tangemPayAccountDeepLink.create(coroutineScope, queryParams)
             DeepLinkRoute.Survey.host -> surveyDeepLink.create(queryParams)
             DeepLinkRoute.Campaigns.host -> promoCampaignsDeepLink.create(queryParams)
+            DeepLinkRoute.McpAuthorization.host -> {
+                if (!mcpFeatureToggles.isMcpEnabled) return false
+                mcpDeepLink.create(queryParams)
+            }
             DeepLinkRoute.JointAccount.host -> jointAccountDeepLink.create(
                 coroutineScope = coroutineScope,
                 queryParams = queryParams,

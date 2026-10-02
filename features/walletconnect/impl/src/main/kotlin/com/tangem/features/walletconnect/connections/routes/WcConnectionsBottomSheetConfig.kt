@@ -6,4 +6,7 @@ import kotlinx.serialization.Serializable
 internal sealed class WcConnectionsBottomSheetConfig {
     @Serializable
     data class ConnectedApp(val topic: String) : WcConnectionsBottomSheetConfig()
+
+    @Serializable
+    data class McpSession(val sessionId: String) : WcConnectionsBottomSheetConfig()
 }

@@ -1,7 +1,7 @@
 package com.tangem.data.pay.util
 
 import com.google.common.truth.Truth.assertThat
-import com.squareup.moshi.Moshi
+import com.tangem.core.remote.json.NetworkJsonFactory
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.domain.visa.error.VisaApiError
@@ -12,7 +12,7 @@ import org.junit.jupiter.params.provider.MethodSource
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayErrorConverterTest {
 
-    private val converter = TangemPayErrorConverter(moshi = Moshi.Builder().build())
+    private val converter = TangemPayErrorConverter(json = NetworkJsonFactory.create())
 
     @ParameterizedTest
     @MethodSource("provideTestModels")

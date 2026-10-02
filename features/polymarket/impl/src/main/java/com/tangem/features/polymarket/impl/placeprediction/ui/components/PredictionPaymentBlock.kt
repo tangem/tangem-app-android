@@ -21,6 +21,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.parseToBigDecimal
+import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.formatPolymarketBalance
 import com.tangem.features.polymarket.impl.common.formatPolymarketEnteredAmount
@@ -103,7 +104,7 @@ private fun BuyAmountRow(amountValue: String, payout: BigDecimal?, collateral: C
             verticalArrangement = Arrangement.spacedBy(space = 4.dp),
         ) {
             Text(
-                text = amountValue.parseToBigDecimal(PolymarketConst.COLLATERAL_DECIMALS)
+                text = amountValue.parseToBigDecimal(PolymarketConst.COLLATERAL_DISPLAY_DECIMALS)
                     .formatPolymarketEnteredAmount(),
                 style = TangemTheme.typography3.heading.medium,
                 color = TangemTheme.colors3.text.primary,
@@ -144,7 +145,7 @@ private fun SellAmountRow(amountValue: String, payout: BigDecimal?, collateral: 
             Text(
                 text = stringResourceSafe(
                     R.string.prediction_close_selling_tokens,
-                    amountValue.parseToBigDecimal(PolymarketConst.SHARES_DECIMALS).formatPolymarketShares(),
+                    amountValue.parseToBigDecimal(PolymarketContracts.SHARE_DECIMALS).formatPolymarketShares(),
                 ),
                 style = TangemTheme.typography3.caption.medium,
                 color = TangemTheme.colors3.text.secondary,

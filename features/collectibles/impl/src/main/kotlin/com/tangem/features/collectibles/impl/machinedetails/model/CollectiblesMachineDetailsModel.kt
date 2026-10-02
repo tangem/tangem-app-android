@@ -7,9 +7,9 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchAction
+import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchListState
 import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchingContext
 import com.tangem.domain.collectibles.models.CollectibleGachaMachine
 import com.tangem.domain.collectibles.models.CollectibleGachaMachineNftsListConfig
@@ -43,7 +43,6 @@ internal class CollectiblesMachineDetailsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getMachineUseCase: GetCollectibleGachaMachineUseCase,
     private val router: Router,
-    private val urlOpener: UrlOpener,
     paramsContainer: ParamsContainer,
     getPrizePoolBatchFlowUseCase: GetCollectibleGachaMachineNftsBatchFlowUseCase,
 ) : Model() {
@@ -99,26 +98,28 @@ internal class CollectiblesMachineDetailsModel @Inject constructor(
 
     private fun observePrizePool() {
         prizePoolBatchFlow.state
-            .onEach { batchListState ->
-                uiState.update { prev ->
-                    CollectiblesPrizePoolTransformer(
-                        batchListState = batchListState,
-                        onReloadClick = ::reloadPrizePool,
-                    ).transform(prev)
-                }
-            }
+            .onEach(::applyPrizePool)
             .launchIn(modelScope)
     }
 
-    private fun loadMachine() {
+    private fun applyPrizePool(batchListState: CollectibleGachaMachineNftsBatchListState) {
+        uiState.update { prev ->
+            CollectiblesPrizePoolTransformer(
+                batchListState = batchListState,
+                onReloadClick = ::reloadPrizePool,
+            ).transform(prev)
+        }
+    }
+
+    private fun loadMachine(skipCache: Boolean = false) {
         modelScope.launch {
-            getMachineUseCase(externalId = params.externalId)
+            getMachineUseCase(externalId = params.externalId, skipCache = skipCache)
                 .fold(
                     ifLeft = {
                         uiState.value = CollectiblesMachineDetailsUM.Error(
                             onBackClick = ::onBackClick,
                             message = resourceReference(R.string.collectibles_machine_load_error),
-                            onReloadClick = ::loadMachine,
+                            onReloadClick = ::reloadMachine,
                         )
                     },
                     ifRight = { machine ->
@@ -129,12 +130,21 @@ internal class CollectiblesMachineDetailsModel @Inject constructor(
                                 onBuyClick = ::onBuyClick,
                                 onTurboCheckedChange = ::onTurboCheckedChange,
                                 onTurboInfoClick = ::onTurboInfoClick,
-                                onPoweredByClick = ::onPoweredByClick,
                             ),
                         )
+                        // A pool that settled before the machine was shown was dropped, and its StateFlow won't replay
+                        applyPrizePool(prizePoolBatchFlow.state.value)
                     },
                 )
         }.saveIn(machineJob)
+    }
+
+    private fun reloadMachine() {
+        val error = uiState.value as? CollectiblesMachineDetailsUM.Error ?: return
+        if (error.isReloading) return
+
+        uiState.value = error.copy(isReloading = true)
+        loadMachine(skipCache = true)
     }
 
     // Driven by state, not by the load: a load landing after onPause must not poll behind a stopped screen
@@ -167,6 +177,9 @@ internal class CollectiblesMachineDetailsModel @Inject constructor(
     }
 
     private fun reloadPrizePool() {
+        val prizePool = (uiState.value as? CollectiblesMachineDetailsUM.Content)?.prizePool
+        if (prizePool is CollectiblesMachineDetailsUM.PrizePoolUM.Error && prizePool.isReloading) return
+
         modelScope.launch {
             actionsFlow.emit(
                 BatchAction.Reload(
@@ -197,10 +210,6 @@ internal class CollectiblesMachineDetailsModel @Inject constructor(
         router.push(CollectiblesRoute.ConfirmOrder(externalId = params.externalId, isTurboEnabled = isTurboEnabled))
     }
 
-    private fun onPoweredByClick() {
-        urlOpener.openUrl(COLLECTOR_CRYPT_URL)
-    }
-
     private fun onBackClick() {
         router.pop()
     }
@@ -208,6 +217,5 @@ internal class CollectiblesMachineDetailsModel @Inject constructor(
     private companion object {
 
         const val EXPECTED_VALUE_POLLING_DELAY_MS = 10_000L
-        const val COLLECTOR_CRYPT_URL = "https://collectorcrypt.com" // TODO confirm the correct Collector Crypt link
     }
 }
