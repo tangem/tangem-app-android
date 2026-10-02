@@ -140,10 +140,10 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     }
 
     @Test
-    fun `GIVEN unknown error WHEN send and retry THEN general failure and the idempotency key is reused`() {
+    fun `GIVEN outcome unknown WHEN send and retry THEN general failure and the idempotency key is reused`() {
         // Arrange
         coEvery { createBankOfframpOrderUseCase(userWalletId, any(), any()) }
-            .returns(BankOfframpError.Unknown(null).left())
+            .returns(BankOfframpError.Unknown(cause = null, isOutcomeUnknown = true).left())
         val model = createModel()
 
         // Act
@@ -157,6 +157,24 @@ internal class TangemPayBankWithdrawPreviewModelTest {
         coVerify(exactly = 2) { createBankOfframpOrderUseCase(userWalletId, any(), capture(keys)) }
         assertThat(keys.toSet()).hasSize(1)
         assertThat(model.uiState.value).isInstanceOf(Failed::class.java)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a definitive error WHEN send and retry THEN a new idempotency key is used`() {
+        // Arrange
+        coEvery { createBankOfframpOrderUseCase(userWalletId, any(), any()) }
+            .returns(BankOfframpError.Unknown(cause = null, isOutcomeUnknown = false).left())
+        val model = createModel()
+
+        // Act
+        summary(model).onSendClick()
+        requireNotNull((model.uiState.value as Failed).onRetryClick).invoke()
+
+        // Assert
+        val keys = mutableListOf<String>()
+        coVerify(exactly = 2) { createBankOfframpOrderUseCase(userWalletId, any(), capture(keys)) }
+        assertThat(keys.toSet()).hasSize(2)
         model.onDestroy()
     }
 

@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 @Stable
@@ -45,6 +46,8 @@ internal class TangemPayVirtualAccountDepositModel @Inject constructor(
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayVirtualAccountDepositComponent.Params>()
+
+    private var orderIdempotencyKey: String? = null
 
     val uiState: StateFlow<TangemPayVirtualAccountDepositUM>
         field = MutableStateFlow(
@@ -147,12 +150,15 @@ internal class TangemPayVirtualAccountDepositModel @Inject constructor(
     private fun createVirtualAccountOrder() {
         if (uiState.value.isLoading) return
         uiState.update { it.copy(isLoading = true) }
+        val idempotencyKey = orderIdempotencyKey ?: UUID.randomUUID().toString().also { orderIdempotencyKey = it }
         modelScope.launch {
             createVirtualAccountOrderUseCase(
                 userWalletId = params.userWalletId,
                 paymentAccountAddress = params.paymentAccountAddress,
+                idempotencyKey = idempotencyKey,
             ).fold(
-                ifLeft = {
+                ifLeft = { error ->
+                    if (!error.isOutcomeUnknown()) orderIdempotencyKey = null
                     uiState.update { state -> state.copy(isLoading = false) }
                     uiMessageSender.send(ToastMessage(resourceReference(R.string.common_unknown_error)))
                 },

@@ -30,6 +30,7 @@ import com.tangem.domain.pay.usecase.IssuePlasticCardUseCase
 import com.tangem.domain.pay.usecase.ReissuePlasticCardUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.features.tangempay.OUTCOME_UNKNOWN_ERRORS
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardIntent
 import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardDataComponent
@@ -853,6 +854,99 @@ internal class TangemPayOrderCardDataModelTest {
         assertThat(submittedKeys[1]).isEqualTo(submittedKeys[0])
         assertThat(submitted).isEqualTo(firstOrder)
     }
+
+    @ParameterizedTest
+    @MethodSource(OUTCOME_UNKNOWN_ERRORS)
+    fun `GIVEN outcome unknown WHEN the same order is clicked again THEN the same key is reused`(
+        error: VisaApiError,
+    ) = runTest {
+        // Arrange
+        coEvery { issuePlasticCard(userWalletId, any(), any()) } coAnswers {
+            submittedKeys += thirdArg<String>()
+            error.left()
+        }
+        val model = createLoadedModel()
+        model.fillValidForm()
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Act
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(submittedKeys).hasSize(2)
+        assertThat(submittedKeys[1]).isEqualTo(submittedKeys[0])
+    }
+
+    @Test
+    fun `GIVEN a definitive error WHEN the order is clicked again THEN a new key is used`() = runTest {
+        // Arrange
+        coEvery { issuePlasticCard(userWalletId, any(), any()) } coAnswers {
+            submittedKeys += thirdArg<String>()
+            VisaApiError.Unspecified.left()
+        }
+        val model = createLoadedModel()
+        model.fillValidForm()
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Act
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(submittedKeys).hasSize(2)
+        assertThat(submittedKeys[1]).isNotEqualTo(submittedKeys[0])
+    }
+
+    @Test
+    fun `GIVEN outcome unknown WHEN the form changes before the next click THEN a new key is used`() = runTest {
+        // Arrange
+        coEvery { issuePlasticCard(userWalletId, any(), any()) } coAnswers {
+            submittedKeys += thirdArg<String>()
+            VisaApiError.ServerUnavailable.left()
+        }
+        val model = createLoadedModel()
+        model.fillValidForm()
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Act
+        model.form.city.onValueChange("Pacifica")
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(submittedKeys).hasSize(2)
+        assertThat(submittedKeys[1]).isNotEqualTo(submittedKeys[0])
+    }
+
+    @Test
+    fun `GIVEN outcome unknown for an edited form WHEN the original form is restored THEN its key is reused`() =
+        runTest {
+            // Arrange
+            coEvery { issuePlasticCard(userWalletId, any(), any()) } coAnswers {
+                submittedKeys += thirdArg<String>()
+                VisaApiError.ServerUnavailable.left()
+            }
+            val model = createLoadedModel()
+            model.fillValidForm()
+            model.form.onOrderClick()
+            advanceUntilIdle()
+            model.form.city.onValueChange("Pacifica")
+            model.form.onOrderClick()
+            advanceUntilIdle()
+
+            // Act
+            model.form.city.onValueChange("Night City")
+            model.form.onOrderClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(submittedKeys).hasSize(3)
+            assertThat(submittedKeys[2]).isEqualTo(submittedKeys[0])
+        }
 
     @Test
     fun `GIVEN a non-retryable rejection WHEN order clicked THEN the sheet offers no retry`() = runTest {
