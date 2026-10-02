@@ -15,7 +15,9 @@ internal class SharesCalculatorTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN held shares WHEN available THEN truncated down onto the two-decimal grid`(model: AvailableModel) {
+        fun `GIVEN held shares WHEN available THEN the whole position at the on-chain precision`(
+            model: AvailableModel,
+        ) {
             // Arrange
             val held = BigDecimal(model.held)
 
@@ -27,13 +29,12 @@ internal class SharesCalculatorTest {
         }
 
         private fun provideTestModels(): List<AvailableModel> = listOf(
-            AvailableModel(held = "51.234567", expected = "51.23"),
-            AvailableModel(held = "51.239999", expected = "51.23"),
+            AvailableModel(held = "15.1663", expected = "15.1663"),
+            AvailableModel(held = "51.234567", expected = "51.234567"),
+            AvailableModel(held = "51.2345678", expected = "51.234567"),
             AvailableModel(held = "51.23", expected = "51.23"),
-            AvailableModel(held = "51.2", expected = "51.20"),
-            AvailableModel(held = "0.634567", expected = "0.63"),
-            AvailableModel(held = "0.004567", expected = "0.00"),
-            AvailableModel(held = "0", expected = "0.00"),
+            AvailableModel(held = "0.0063", expected = "0.0063"),
+            AvailableModel(held = "0", expected = "0"),
         )
     }
 
@@ -190,6 +191,7 @@ internal class SharesCalculatorTest {
             SteppableModel(available = "0.00", expected = false),
             SteppableModel(available = "0.63", expected = false),
             SteppableModel(available = "1.00", expected = false),
+            SteppableModel(available = "1.01", expected = true),
             SteppableModel(available = "2.00", expected = true),
             SteppableModel(available = "51.23", expected = true),
         )

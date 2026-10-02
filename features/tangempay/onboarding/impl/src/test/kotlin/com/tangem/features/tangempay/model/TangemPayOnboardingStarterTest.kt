@@ -16,6 +16,7 @@ import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CustomerInfo
+import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.repository.OnboardingRepository
@@ -109,7 +110,7 @@ internal class TangemPayOnboardingStarterTest {
                     getCustomerOffersUseCase.campaignOffer(USER_WALLET_ID, CAMPAIGN_KEY)
                 } returns campaignOffer().right()
                 coEvery {
-                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_KEY, SPECIFICATION_NAME, ORDER_TYPE)
+                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST)
                 } returns ORDER_ID.right()
 
                 // Act
@@ -117,7 +118,7 @@ internal class TangemPayOnboardingStarterTest {
 
                 // Assert
                 coVerify(exactly = 1) {
-                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_KEY, SPECIFICATION_NAME, ORDER_TYPE)
+                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST)
                 }
                 verify(exactly = 1) {
                     router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(USER_WALLET_ID), onComplete = any())
@@ -135,7 +136,7 @@ internal class TangemPayOnboardingStarterTest {
 
                 // Assert
                 verify(exactly = 1) { uiMessageSender.send(any<DialogMessage>()) }
-                coVerify(exactly = 0) { repository.createOrder(any(), any(), any(), any()) }
+                coVerify(exactly = 0) { repository.createOrder(any(), any()) }
                 verify(exactly = 0) { router.replaceAll(*anyVararg()) }
                 assertThat(loadingChanges).containsExactly(true, false).inOrder()
             }
@@ -168,7 +169,7 @@ internal class TangemPayOnboardingStarterTest {
 
                 // Assert
                 verify(exactly = 1) { uiMessageSender.send(any<SnackbarMessage>()) }
-                coVerify(exactly = 0) { repository.createOrder(any(), any(), any(), any()) }
+                coVerify(exactly = 0) { repository.createOrder(any(), any()) }
                 verify(exactly = 0) { router.replaceAll(*anyVararg()) }
                 assertThat(loadingChanges).containsExactly(true, false).inOrder()
             }
@@ -181,7 +182,7 @@ internal class TangemPayOnboardingStarterTest {
                     getCustomerOffersUseCase.campaignOffer(USER_WALLET_ID, CAMPAIGN_KEY)
                 } returns campaignOffer().right()
                 coEvery {
-                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_KEY, SPECIFICATION_NAME, ORDER_TYPE)
+                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST)
                 } returns VisaApiError.Unspecified.left()
 
                 // Act
@@ -201,7 +202,7 @@ internal class TangemPayOnboardingStarterTest {
                     getCustomerOffersUseCase.campaignOffer(USER_WALLET_ID, CAMPAIGN_KEY)
                 } returns campaignOffer().right()
                 coEvery {
-                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_KEY, SPECIFICATION_NAME, ORDER_TYPE)
+                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST)
                 } returns ORDER_ID.right()
 
                 // Act
@@ -214,7 +215,7 @@ internal class TangemPayOnboardingStarterTest {
 
                 // Assert
                 coVerify(exactly = 1) {
-                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_KEY, SPECIFICATION_NAME, ORDER_TYPE)
+                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST)
                 }
                 verify(exactly = 1) {
                     router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(USER_WALLET_ID), onComplete = any())
@@ -245,7 +246,7 @@ internal class TangemPayOnboardingStarterTest {
                 assertThat(exitCount).isEqualTo(0)
                 coVerify(exactly = 0) { produceInitialDataUseCase(any()) }
                 coVerify(exactly = 0) { getCustomerOffersUseCase.campaignOffer(any(), any()) }
-                coVerify(exactly = 0) { repository.createOrder(any(), any(), any(), any()) }
+                coVerify(exactly = 0) { repository.createOrder(any(), any()) }
             }
 
         @Test
@@ -262,7 +263,7 @@ internal class TangemPayOnboardingStarterTest {
                 assertThat(exitCount).isEqualTo(0)
                 coVerify(exactly = 1) { produceInitialDataUseCase(USER_WALLET_ID) }
                 coVerify(exactly = 0) { getCustomerOffersUseCase.campaignOffer(any(), any()) }
-                coVerify(exactly = 0) { repository.createOrder(any(), any(), any(), any()) }
+                coVerify(exactly = 0) { repository.createOrder(any(), any()) }
             }
 
         @Test
@@ -312,7 +313,7 @@ internal class TangemPayOnboardingStarterTest {
 
                 // Assert
                 coVerify(exactly = 0) { getCustomerOffersUseCase.campaignOffer(any(), any()) }
-                coVerify(exactly = 0) { repository.createOrder(any(), any(), any(), any()) }
+                coVerify(exactly = 0) { repository.createOrder(any(), any()) }
                 verify(exactly = 1) {
                     router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(USER_WALLET_ID), onComplete = any())
                 }
@@ -470,7 +471,7 @@ internal class TangemPayOnboardingStarterTest {
                     getCustomerOffersUseCase.campaignOffer(USER_WALLET_ID, CAMPAIGN_KEY)
                 } returns campaignOffer().right()
                 coEvery {
-                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_KEY, SPECIFICATION_NAME, ORDER_TYPE)
+                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST)
                 } returns ORDER_ID.right()
 
                 // Act
@@ -478,7 +479,7 @@ internal class TangemPayOnboardingStarterTest {
 
                 // Assert
                 coVerify(exactly = 1) {
-                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_KEY, SPECIFICATION_NAME, ORDER_TYPE)
+                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST)
                 }
                 verify(exactly = 1) {
                     router.replaceAll(
@@ -529,6 +530,11 @@ internal class TangemPayOnboardingStarterTest {
         val ORDER_TYPE = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2
         const val CAMPAIGN_KEY = "tpay_for_oxford"
         const val SPECIFICATION_NAME = "SP_000009"
+        val CAMPAIGN_REQUEST = CustomerOrderRequest.CardIssue(
+            type = ORDER_TYPE,
+            specificationName = SPECIFICATION_NAME,
+            deeplinkValue = CAMPAIGN_KEY,
+        )
         const val ORDER_ID = "order_1"
     }
 }

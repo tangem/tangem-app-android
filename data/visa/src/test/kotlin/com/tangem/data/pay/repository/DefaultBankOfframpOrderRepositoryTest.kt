@@ -227,7 +227,7 @@ internal class DefaultBankOfframpOrderRepositoryTest {
     @Test
     fun `GIVEN order id WHEN cancelOrder THEN the cancel endpoint called`() = runTest {
         // Arrange
-        coEvery { tangemPayApi.cancelOrder(AUTH_HEADER, ORDER_ID) } returns ApiResponse.Success(Any())
+        coEvery { tangemPayApi.cancelOrder(AUTH_HEADER, ORDER_ID) } returns ApiResponse.Success(Unit)
 
         // Act
         val actual = repository.cancelOrder(WALLET_ID, ORDER_ID)
