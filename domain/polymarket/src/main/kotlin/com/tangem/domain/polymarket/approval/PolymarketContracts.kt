@@ -29,6 +29,7 @@ object PolymarketContracts {
     const val ROUTER_V3: String = "0x12121212006e4CD160D18e3f00711DA5c3372600"
 
     const val COLLATERAL_DECIMALS: Int = 6
+    const val SHARE_DECIMALS: Int = COLLATERAL_DECIMALS
 
     const val SIGNATURE_TYPE_DEPOSIT_WALLET: Int = 3
     const val SIGNATURE_RSV_HEX_LENGTH: Int = 130
