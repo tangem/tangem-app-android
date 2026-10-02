@@ -17,7 +17,7 @@ import com.tangem.domain.jointaccount.model.SafeExecution
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.safe.SafeExecTransactionDecoder
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.currency.isJoint
 import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.SdkAmountType
 import com.tangem.domain.models.network.TxInfo
@@ -37,7 +37,7 @@ internal class SdkTransactionTypeConverter(
     private val safeAddress: String? = null,
 ) : Converter<TransactionHistoryItem, TxInfo.TransactionType> {
 
-    private val isJointAccount = currency.network.derivationPath is Network.DerivationPath.Joint
+    private val isJointAccount = currency.isJoint
 
     /** The SDK reports a selector prefixed or bare depending on the source; the asset is keyed prefixed. */
     private val smartContractMethods: Map<String, SmartContractMethod> =
