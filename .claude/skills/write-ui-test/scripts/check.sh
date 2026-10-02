@@ -143,9 +143,6 @@ check_test_lines() {
             n = substr(code, RSTART, RLENGTH); gsub(/[_L]/, "", n)
             if (code ~ /[Tt]imeout/ && n + 0 >= 180000) emit("error", "timeout-over-marathon", "a wait of >= 180 s equals Marathon testOutputTimeoutMillis: the test is killed as incomplete instead of failing")
         }
-        code ~ /(^|[[:space:]])\/\/|\/\*/ {
-            emit("warn", "comment", "keep only a WHY comment the code cannot express: " text)
-        }
     ' "$lines_file" >> "$report"
 }
 
@@ -197,6 +194,37 @@ check_unused_imports() {
             }
         ' "$repo_root/$file" "$repo_root/$file" >> "$report"
     done
+}
+
+# Comments in every changed Kotlin file — test, production and mocked source sets alike. The default
+# outcome of a comment finding is deleting the comment, not justifying it.
+check_comments() {
+    awk -F '\t' '
+        function emit(level, rule, msg) { printf "%s:%s: [%s] %s: %s\n", file, line, level, rule, msg }
+        $1 !~ /\.kt$/ || $3 != "+" { prev_file = ""; next }
+        {
+            file = $1; line = $2; text = $4
+            for (i = 5; i <= NF; i++) text = text "\t" $i
+            code = text; gsub(/"([^"\\]|\\.)*"/, "\"\"", code)
+            is_comment = code ~ /^[[:space:]]*(\/\/|\/\*|\*)/
+            trailing = !is_comment && code ~ /[^[:space:]].*[[:space:]]\/\/[[:space:]]/
+        }
+        is_comment || trailing {
+            body = text
+            if (trailing) sub(/^.*[[:space:]]\/\/[[:space:]]*/, "", body)
+            else sub(/^[[:space:]]*(\/\/+|\/\*\*?|\*)[[:space:]]*/, "", body)
+            sub(/[[:space:]]*\*\/[[:space:]]*$/, "", body)
+            emit("warn", "comment", "delete it unless removing it would get the code broken or reverted; try a better name first: " text)
+            if (code ~ /^[[:space:]]*\/\*\*/) emit("warn", "kdoc", "a KDoc that paraphrases the name is noise; keep it only for a contract the signature cannot state")
+            if (tolower(body) ~ /^(mirrors|see|same as|matches|wraps|helper|stubs|makes|returns|opens|asserts|clicks|waits) /) emit("error", "comment-restates-code", "the comment describes what the code does; delete it or rename the symbol")
+            run = (prev_file == file && prev_line == line - 1 && prev_comment) ? run + 1 : 1
+            if (run == 2 && body != "") emit("error", "comment-block", "one line max: a comment that needs two lines is a sign the code needs a better name or the note belongs in the PR")
+            if (body != "" && length(body) > 15) { seen[body]++; if (seen[body] == 2) emit("error", "comment-duplicate", "the same comment is added twice; keep at most one, or none") }
+            prev_comment = 1
+        }
+        !(is_comment || trailing) { prev_comment = 0 }
+        { prev_file = file; prev_line = line }
+    ' "$lines_file" >> "$report"
 }
 
 # Production code may change only to add test tags; a new tag constant must reach a composable.
@@ -289,6 +317,7 @@ full_diff "$repo_root" "$android_mb" 0 | diff_lines > "$lines_file"
 check_test_lines
 check_test_methods
 check_unused_imports
+check_comments
 check_production
 
 if git -C "$mocks_root" rev-parse --git-dir > /dev/null 2>&1; then

@@ -1,5 +1,7 @@
 package com.tangem.scenarios
 
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.longClick
@@ -29,6 +31,7 @@ import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.test.BaseButtonTestTags
+import com.tangem.core.ui.test.BaseDialogTestTags
 import com.tangem.core.ui.test.HotWalletAccessCodeTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.account.Account
@@ -50,6 +53,17 @@ private const val PAY_ACCOUNT_WALLET_ID_STUB = "00"
 
 /** Endpoint the app calls to disable Tangem Pay for the wallet — the account-removal request. */
 private const val PAY_ENABLED_ENDPOINT = "/bff-v2/v1/customer/pay-enabled"
+
+private const val ACCESS_TOKEN_EXPIRES_AT_KEY = "uitest.tangempay.access_token_expires_at"
+
+fun expireTangemPayAccessToken() {
+    val expiredAt = System.currentTimeMillis() / 1000 - 1
+    System.setProperty(ACCESS_TOKEN_EXPIRES_AT_KEY, expiredAt.toString())
+}
+
+fun restoreTangemPayAccessToken() {
+    System.clearProperty(ACCESS_TOKEN_EXPIRES_AT_KEY)
+}
 
 fun BaseTestCase.openTangemPay() {
     // Existing customer: callers set the `tangem_pay_eligibility` scenario to PaeraCustomer (in
@@ -701,13 +715,38 @@ fun BaseTestCase.chooseWithdrawSourceToken(tokenName: String, networkName: Strin
     }
 }
 
+fun BaseTestCase.awaitTangemPayWithdrawOrderPolls(orderEndpoint: String, expectedCount: Int) {
+    awaitAssert {
+        val actualCount = getWireMockRequestCount("GET", orderEndpoint)
+        if (actualCount < expectedCount) {
+            throw AssertionError("Expected at least $expectedCount requests to $orderEndpoint, got $actualCount")
+        }
+    }
+}
+
+fun BaseTestCase.openTangemPayWithdrawReadyToConfirm(receiveToken: String, amount: String) {
+    step("Open Tangem Pay withdraw Swap screen") { openTangemPayWithdrawSwapScreen() }
+    step("Choose receive token '$receiveToken'") { chooseWithdrawReceiveToken(receiveToken) }
+    enterWithdrawAmount(amount)
+    step("Assert receive amount is displayed") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) { onSwapTokenScreen { receiveAmount.assertIsDisplayed() } }
+    }
+}
+
 // The withdraw HoldToConfirm re-disables during the ~10s quote refresh; re-hold each poll until it takes.
 fun BaseTestCase.confirmTangemPayWithdrawByHolding(accessCode: String) {
-    val buttonMatcher = hasTestTag(BaseButtonTestTags.BUTTON)
+    val buttonOutsideDialog = hasTestTag(BaseButtonTestTags.BUTTON) and
+        !hasAnyAncestor(hasTestTag(BaseDialogTestTags.CONTAINER))
     val accessCodeInput = hasTestTag(HotWalletAccessCodeTestTags.ACCESS_CODE_INPUT)
     val swapInProgress = hasText(getResourceString(CoreUiR.string.swap_in_progress))
+    val withdrawErrorDialog = hasTestTag(BaseDialogTestTags.CONTAINER) and
+        hasAnyDescendant(hasText(getResourceString(CoreResR.string.common_unknown_error)))
     composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG) {
-        val buttons = composeTestRule.onAllNodes(buttonMatcher)
+        // Raw Compose on purpose: a Kakao check here waits out Kaspresso's 10 s flaky-safety retry.
+        if (runCatching { composeTestRule.onNode(withdrawErrorDialog).assertExists() }.isSuccess) {
+            return@waitUntil true
+        }
+        val buttons = composeTestRule.onAllNodes(buttonOutsideDialog)
         val count = buttons.fetchSemanticsNodes().size
         if (count > 0) {
             // HoldToConfirm is always last — withdraw renders an extra BASE_BUTTON for notifications.
@@ -720,6 +759,8 @@ fun BaseTestCase.confirmTangemPayWithdrawByHolding(accessCode: String) {
     }
     if (composeTestRule.onAllNodes(accessCodeInput).fetchSemanticsNodes().isNotEmpty()) {
         composeTestRule.onNode(accessCodeInput).performTextInput(accessCode)
+        // Kaspresso treats an open keyboard as a system dialog and stalls every later check on it.
+        Espresso.closeSoftKeyboard()
         waitForIdle()
     }
 }

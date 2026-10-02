@@ -63,6 +63,11 @@ class TangemPayCurrentPlanPageObject(semanticsProvider: SemanticsNodeInteraction
         hasTestTag(TangemPayTestTags.CURRENT_PLAN_CHANGE_BUTTON)
         useUnmergedTree = true
     }
+
+    val fullTermsButton: KNode = child {
+        hasTestTag(TangemPayTestTags.CURRENT_PLAN_FULL_TERMS_BUTTON)
+        useUnmergedTree = true
+    }
 }
 
 internal fun BaseTestCase.onTangemPayCurrentPlanScreen(function: TangemPayCurrentPlanPageObject.() -> Unit) =
