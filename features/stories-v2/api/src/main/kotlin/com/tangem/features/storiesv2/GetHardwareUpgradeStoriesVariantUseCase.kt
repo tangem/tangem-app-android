@@ -10,6 +10,9 @@ package com.tangem.features.storiesv2
 interface GetHardwareUpgradeStoriesVariantUseCase {
 
     suspend operator fun invoke(): HardwareUpgradeStoriesVariant
+
+    /** The variant from what is already on the device, without waiting or tracking an exposure; control until then. */
+    fun peek(): HardwareUpgradeStoriesVariant
 }
 
 enum class HardwareUpgradeStoriesVariant {

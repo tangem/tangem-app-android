@@ -149,7 +149,7 @@
   <string name="tangempay_bank_transfer_fee_ach">ACH</string>
   <string name="tangempay_bank_transfer_fee_error_subtitle">Tocca per ricaricare</string>
   <string name="tangempay_bank_transfer_fee_error_title">Errore nel caricamento delle commissioni</string>
-  <string name="tangempay_bank_transfer_fee_fedwire">FedWire</string>
+  <string name="tangempay_bank_transfer_fee_fedwire">Wire</string>
   <string name="tangempay_bank_transfer_fee_header">Commissione onramp</string>
   <string name="tangempay_bank_transfer_intro_subtitle">USD ricevuti convertiti in USDC al tasso 1:1</string>
   <string name="tangempay_bank_transfer_intro_title">Bonifico bancario: 1-2 giorni lavorativi</string>
@@ -502,7 +502,7 @@
   <string name="tangempay_tangem_visa_card">Spendi le tue crypto nel mondo reale</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay è temporaneamente non disponibile</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Ricevi USD da un conto bancario tramite ACH/FedWire</string>
+  <string name="tangempay_topup_bank_transfer_body">Ricevi USD da un conto bancario tramite ACH/Wire</string>
   <string name="tangempay_topup_bank_transfer_title">Da un conto bancario</string>
   <string name="tangempay_topup_receive_body_multichain">Invia USDC o USDT all\'indirizzo del tuo conto</string>
   <string name="tangempay_topup_receive_title">Da un altro wallet o exchange</string>

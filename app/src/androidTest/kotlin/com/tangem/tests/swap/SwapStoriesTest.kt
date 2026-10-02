@@ -3,6 +3,8 @@ package com.tangem.tests.swap
 import androidx.compose.ui.test.longClick
 import androidx.test.InstrumentationRegistry.getTargetContext
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
+import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.restartApp
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
@@ -222,7 +224,7 @@ class SwapStoriesTest : BaseTestCase() {
     }
 
     @AllureId("5476")
-    @DisplayName("Check 'Swap' stories on 'Markets' screen")
+    @DisplayName("Check 'Swap' stories on 'Markets' token details screen")
     @Test
     fun checkSwapStoriesOnMarketTokenDetailsScreenTest() {
         val tokenName = "Ethereum"
@@ -235,11 +237,16 @@ class SwapStoriesTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            step("Open 'Token details' from 'Markets' screen for token '$tokenName'") {
-                openTokenDetailsFromMarketsScreen(blockchainName = tokenName, tokenName = tokenName)
+            step("Open 'Markets' token details for token '$tokenName'") {
+                openMarketsTokenDetailsFromMainScreen(tokenName)
             }
-            step("Click on 'Swap' button on 'Markets' token details screen") {
-                onTokenDetailsScreen { swapButton.performClick() }
+            step("Click on 'Add funds' button on 'Markets' token details screen") {
+                onMarketsTokenDetailsScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { addFundsButton.clickWithAssertion() }
+                }
+            }
+            step("Click on 'Swap' action in the bottom sheet") {
+                onAddFundsBottomSheet { swapButton.clickWithAssertion() }
             }
             step("Check stories changes") {
                 checkStoriesChanges()
@@ -253,8 +260,8 @@ class SwapStoriesTest : BaseTestCase() {
             step("Click on 'Close' button") {
                 onSwapTokenScreen { closeButton.performClick() }
             }
-            step("Open 'Swap' screen without stories") {
-                openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = false)
+            step("Open 'Swap' screen from 'Markets' token details without stories") {
+                openSwapScreen(from = SwapEntryPoint.MarketsTokenDetails, storiesExist = false)
             }
         }
     }

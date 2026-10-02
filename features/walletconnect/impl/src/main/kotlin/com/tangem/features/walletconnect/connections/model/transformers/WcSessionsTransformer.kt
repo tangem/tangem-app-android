@@ -33,10 +33,6 @@ internal class WcSessionsTransformer(
                 }.toPersistentList(),
             )
         }.toPersistentList()
-        return WcConnectionsState(
-            topAppBarConfig = prevState.topAppBarConfig,
-            connections = WcConnections.WalletMode(newConnections),
-            onNewConnectionClick = prevState.onNewConnectionClick,
-        )
+        return prevState.copy(connections = WcConnections.WalletMode(newConnections))
     }
 }
