@@ -10,11 +10,13 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultGetHardwareUpgradeStoriesVariantUseCaseTest {
@@ -58,6 +60,40 @@ internal class DefaultGetHardwareUpgradeStoriesVariantUseCaseTest {
         assertThat(actual).isEqualTo(HardwareUpgradeStoriesVariant.CONTROL)
         coVerify(exactly = 0) { abTestsManager.getValue(any(), any()) }
     }
+
+    @ParameterizedTest
+    @MethodSource("providePeekModels")
+    fun `GIVEN a value on the device WHEN peek THEN only treatment shows the story`(model: PeekModel) {
+        // Arrange
+        every { abTestsManager.peekValue(KEY) } returns model.value
+
+        // Act
+        val actual = useCase.peek()
+
+        // Assert
+        assertThat(actual).isEqualTo(model.expected)
+    }
+
+    @Test
+    fun `GIVEN the release gate is closed WHEN peek THEN control without reading the experiment`() {
+        // Arrange
+        every { featureToggles.isHardwareUpgradeStoriesAbEnabled } returns false
+
+        // Act
+        val actual = useCase.peek()
+
+        // Assert
+        assertThat(actual).isEqualTo(HardwareUpgradeStoriesVariant.CONTROL)
+        verify(exactly = 0) { abTestsManager.peekValue(any()) }
+    }
+
+    private fun providePeekModels() = listOf(
+        PeekModel(value = "treatment", expected = HardwareUpgradeStoriesVariant.TREATMENT),
+        PeekModel(value = "control", expected = HardwareUpgradeStoriesVariant.CONTROL),
+        PeekModel(value = null, expected = HardwareUpgradeStoriesVariant.CONTROL),
+    )
+
+    internal data class PeekModel(val value: String?, val expected: HardwareUpgradeStoriesVariant)
 
     private fun provideTestModels() = listOf(
         ValueModel(value = "treatment", expected = HardwareUpgradeStoriesVariant.TREATMENT),
