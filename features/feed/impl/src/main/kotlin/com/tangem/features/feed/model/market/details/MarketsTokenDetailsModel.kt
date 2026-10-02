@@ -82,6 +82,7 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.CountryNames
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
@@ -470,7 +471,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         if (!params.token.isRestrictedForCountry) return null
 
         val regionName = getUserCountryUseCase.invokeSync().getOrNull()
-            ?.let { RegionDisplayName.resolve(countryCode = it.code) }
+            ?.let { CountryNames.resolveDisplayName(countryCode = it.code) }
 
         return TangemMessageBanner.State(
             title = resourceReference(R.string.buy_swap_region_restriction_title),
