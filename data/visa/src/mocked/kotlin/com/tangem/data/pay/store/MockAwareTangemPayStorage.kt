@@ -18,13 +18,7 @@ private const val MOCK_IDEMPOTENCY_KEY = "mock-idempotency-key"
 private const val MOCK_TOKEN_EXPIRES_AT = 9_999_999_999L
 private const val UITEST_ACCESS_TOKEN_EXPIRES_AT_KEY = "uitest.tangempay.access_token_expires_at"
 
-/**
- * In MOCK env returns synthetic auth tokens + customer wallet address; otherwise delegates.
- *
- * The token refresh UI test expires the synthetic access token through the [UITEST_ACCESS_TOKEN_EXPIRES_AT_KEY]
- * system property (epoch seconds). In MOCK env only the token refresh stores tokens; they are kept in memory and
- * served instead of the synthetic ones, so the property no longer applies once a refresh has happened.
- */
+/** In MOCK env returns synthetic auth tokens + customer wallet address; otherwise delegates. */
 @Singleton
 internal class MockAwareTangemPayStorage @Inject constructor(
     private val real: DefaultTangemPayStorage,
