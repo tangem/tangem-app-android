@@ -70,6 +70,7 @@ internal class PolymarketMainComponent(
             onBackClick = model::onBackClick,
             onSearchClick = model::onSearchClick,
             onHistoryClick = model::onHistoryClick,
+            onSupportChatClick = model::onSupportChatClick,
             onLoadMore = model::onLoadMore,
             onVisibleEventsChange = model::onVisibleEventsChange,
             onScrollIdle = model::onScrollIdle,
