@@ -88,12 +88,6 @@ feature was opened with, so children never read it from the feature params.
    collapsed into the button spinner; a failure leaves the screen idle and reports through a snackbar. The
    screen's button is the only retry.
 
-Main sends the user back here (`router.replaceAll(Onboarding)`) as soon as the wallet has no stored CLOB
-credentials — a `401` drops them, and the gate then shows Reconnect. It observes
-`ObservePolymarketCredentialsPresenceUseCase` for its whole life, starting with the stored state, so the
-redirect also happens from under a child screen: without credentials nothing above Main can sign. The order
-summary therefore answers an `Unauthorized` placement silently and leaves the gate to explain it.
-
 Region-restricted users (`PolymarketAccessMode.READ_ONLY`) still reach `Main`, browse and withdraw; the
 place-prediction flow re-checks the region itself before an order.
 
@@ -237,6 +231,7 @@ footer.
 
 | Item | Ticket |
 |---|---|
+| Drop L2 credentials on CLOB `401` and route to the gate | [REDACTED_TASK_KEY] |
 | Tradezone PnL (`/v1/leaderboard`) | not ticketed |
 | Withdraw beyond USDC · Polygon (phase 2), withdrawal tracker on cold start, explorer link on withdraw | not ticketed |
 | Prediction-withdraw analytics event | waiting for analysts |

@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.PolymarketCredentialsLock
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketAddresses
@@ -31,13 +32,14 @@ internal class GetPolymarketBalanceInteractorTest {
         polymarketRepository = repository,
         getApiCredentials = GetPolymarketApiCredentialsUseCase(credentialsStore = credentialsStore),
         invalidateCredentials = InvalidatePolymarketCredentialsUseCase(credentialsStore = credentialsStore),
+        credentialsLock = PolymarketCredentialsLock(),
     )
 
     @BeforeEach
     fun resetMocks() {
         clearMocks(repository, credentialsStore)
 
-        coEvery { credentialsStore.clearIfCurrent(any(), any()) } returns Unit
+        coEvery { credentialsStore.clear(any()) } returns Unit
     }
 
     @Test
@@ -127,7 +129,7 @@ internal class GetPolymarketBalanceInteractorTest {
 
         // Assert
         assertThat(actual).isEqualTo(PolymarketAuthError.InvalidSignature.left())
-        coVerify(exactly = 1) { credentialsStore.clearIfCurrent(USER_WALLET_ID, refEq(CREDENTIALS)) }
+        coVerify(exactly = 1) { credentialsStore.clear(USER_WALLET_ID) }
         coVerify(exactly = 0) { repository.getBalanceAllowance(any(), any()) }
     }
 
@@ -144,7 +146,7 @@ internal class GetPolymarketBalanceInteractorTest {
 
         // Assert
         assertThat(actual).isEqualTo(PolymarketAuthError.InvalidSignature.left())
-        coVerify(exactly = 1) { credentialsStore.clearIfCurrent(USER_WALLET_ID, refEq(CREDENTIALS)) }
+        coVerify(exactly = 1) { credentialsStore.clear(USER_WALLET_ID) }
     }
 
     @Test
@@ -158,7 +160,7 @@ internal class GetPolymarketBalanceInteractorTest {
         interactor(addresses = ADDRESSES)
 
         // Assert
-        coVerify(exactly = 0) { credentialsStore.clearIfCurrent(any(), any()) }
+        coVerify(exactly = 0) { credentialsStore.clear(any()) }
     }
 
     @Test
@@ -172,7 +174,7 @@ internal class GetPolymarketBalanceInteractorTest {
         interactor(addresses = ADDRESSES)
 
         // Assert
-        coVerify(exactly = 0) { credentialsStore.clearIfCurrent(any(), any()) }
+        coVerify(exactly = 0) { credentialsStore.clear(any()) }
     }
 
     @Test
@@ -184,7 +186,7 @@ internal class GetPolymarketBalanceInteractorTest {
         interactor(addresses = ADDRESSES)
 
         // Assert
-        coVerify(exactly = 0) { credentialsStore.clearIfCurrent(any(), any()) }
+        coVerify(exactly = 0) { credentialsStore.clear(any()) }
     }
 
     private companion object {

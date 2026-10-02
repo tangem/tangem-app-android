@@ -1,6 +1,7 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.polymarket.PolymarketBridgeRepository
+import com.tangem.domain.polymarket.PolymarketCredentialsLock
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketRedeemRepository
@@ -42,7 +43,6 @@ import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawDestinationsUse
 import com.tangem.domain.polymarket.usecase.GetPredictionTopUpMinimumUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawalStateUseCase
 import com.tangem.domain.polymarket.usecase.InvalidatePolymarketCredentialsUseCase
-import com.tangem.domain.polymarket.usecase.ObservePolymarketCredentialsPresenceUseCase
 import com.tangem.domain.polymarket.usecase.SearchPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
@@ -192,21 +192,19 @@ internal object PolymarketDomainModule {
 
     @Provides
     @Singleton
-    fun provideObservePolymarketCredentialsPresenceUseCase(
+    fun provideDeriveApiCredentialsUseCase(
+        polymarketRepository: PolymarketRepository,
         credentialsStore: PolymarketCredentialsStore,
-    ): ObservePolymarketCredentialsPresenceUseCase = ObservePolymarketCredentialsPresenceUseCase(
+        credentialsLock: PolymarketCredentialsLock,
+    ): DeriveApiCredentialsUseCase = DeriveApiCredentialsUseCase(
+        polymarketRepository = polymarketRepository,
         credentialsStore = credentialsStore,
+        credentialsLock = credentialsLock,
     )
 
     @Provides
     @Singleton
-    fun provideDeriveApiCredentialsUseCase(
-        polymarketRepository: PolymarketRepository,
-        credentialsStore: PolymarketCredentialsStore,
-    ): DeriveApiCredentialsUseCase = DeriveApiCredentialsUseCase(
-        polymarketRepository = polymarketRepository,
-        credentialsStore = credentialsStore,
-    )
+    fun providePolymarketCredentialsLock(): PolymarketCredentialsLock = PolymarketCredentialsLock()
 
     @Provides
     @Singleton
@@ -244,10 +242,12 @@ internal object PolymarketDomainModule {
         polymarketRepository: PolymarketRepository,
         getApiCredentials: GetPolymarketApiCredentialsUseCase,
         invalidateCredentials: InvalidatePolymarketCredentialsUseCase,
+        credentialsLock: PolymarketCredentialsLock,
     ): PlacePredictionOrderUseCase = PlacePredictionOrderUseCase(
         polymarketRepository = polymarketRepository,
         getApiCredentials = getApiCredentials,
         invalidateCredentials = invalidateCredentials,
+        credentialsLock = credentialsLock,
     )
 
     @Provides
@@ -266,10 +266,12 @@ internal object PolymarketDomainModule {
         polymarketRepository: PolymarketRepository,
         getApiCredentials: GetPolymarketApiCredentialsUseCase,
         invalidateCredentials: InvalidatePolymarketCredentialsUseCase,
+        credentialsLock: PolymarketCredentialsLock,
     ): GetPolymarketBalanceInteractor = GetPolymarketBalanceInteractor(
         polymarketRepository = polymarketRepository,
         getApiCredentials = getApiCredentials,
         invalidateCredentials = invalidateCredentials,
+        credentialsLock = credentialsLock,
     )
 
     @Provides
