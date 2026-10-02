@@ -2,8 +2,6 @@ package com.tangem.screens
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
-import com.tangem.core.ui.test.MarketTokenDetailsBottomSheetTestTags
-import com.tangem.features.onramp.impl.R
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
@@ -14,9 +12,9 @@ import com.tangem.core.ui.R as CoreUiR
 class MarketsTokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<MarketsTokenDetailsPageObject>(semanticsProvider = semanticsProvider) {
 
-    val swapPortfolioQuickActionButton: KNode = child {
-        hasTestTag(MarketTokenDetailsBottomSheetTestTags.PORTFOLIO_QUICK_ACTION_BUTTON)
-        hasText(getResourceString(R.string.common_swap), substring = true)
+    val addFundsButton: KNode = child {
+        hasText(getResourceString(CoreUiR.string.common_add_funds))
+        hasClickAction()
     }
 
     val inYourPortfolioBlock: KNode = child {
