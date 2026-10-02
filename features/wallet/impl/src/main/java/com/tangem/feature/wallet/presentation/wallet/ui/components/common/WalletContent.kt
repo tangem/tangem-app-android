@@ -3,7 +3,6 @@ package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.runtime.Composable
@@ -12,16 +11,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import androidx.paging.compose.LazyPagingItems
 import com.tangem.common.ui.notifications.notifications
 import com.tangem.common.ui.notifications.notificationsCarousel
-import com.tangem.core.ui.components.transactions.state.TxHistoryState
-import com.tangem.core.ui.components.transactions.txHistoryItems
+import com.tangem.core.ui.decorations.ProvideRoundedItemGroups
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.MainScreenTestTags
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
-import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.tokensListItems
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.tokensListItems2
 import com.tangem.feature.wallet.presentation.wallet.ui.components.nftCollections2
 import com.tangem.feature.wallet.presentation.wallet.ui.components.organizeTokens2
@@ -37,7 +32,7 @@ import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.moneyaccount.main.component.MoneyAccountMainBlockComponent
 import kotlinx.collections.immutable.toPersistentList
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LongMethod")
 @Composable
 internal fun WalletListContent(
     currentWallet: WalletUM,
@@ -57,103 +52,80 @@ internal fun WalletListContent(
     val movableItemModifier = Modifier.padding(horizontal = TangemTheme.dimens2.x3)
     val itemModifier = movableItemModifier.padding(top = TangemTheme.dimens2.x3)
 
-    LazyColumn(
-        modifier = modifier.testTag(MainScreenTestTags.SCREEN_CONTAINER),
-        state = listState,
-        contentPadding = contentPadding,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        overscrollEffect = rememberOverscrollEffect(),
-    ) {
-        notifications(
-            notifications = currentWallet.notifications.map { it.messageUM }.toPersistentList(),
-            modifier = movableItemModifier,
-        )
-        notificationsCarousel(
-            modifier = movableItemModifier,
-            notifications = currentWallet.notificationsCarousel.map { it.messageUM }.toPersistentList(),
-        )
+    ProvideRoundedItemGroups {
+        LazyColumn(
+            modifier = modifier.testTag(MainScreenTestTags.SCREEN_CONTAINER),
+            state = listState,
+            contentPadding = contentPadding,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            overscrollEffect = rememberOverscrollEffect(),
+        ) {
+            notifications(
+                notifications = currentWallet.notifications.map { it.messageUM }.toPersistentList(),
+                modifier = movableItemModifier,
+            )
+            notificationsCarousel(
+                modifier = movableItemModifier,
+                notifications = currentWallet.notificationsCarousel.map { it.messageUM }.toPersistentList(),
+            )
 
-        jointOperationBanners(
-            banners = currentWallet.jointOperationBanners,
-            modifier = movableItemModifier,
-        )
+            jointOperationBanners(
+                banners = currentWallet.jointOperationBanners,
+                modifier = movableItemModifier,
+            )
 
-        promoBannersBlockComponent?.let { component ->
-            item(key = "PromoBannersBlock") {
-                component.ContentWithPadding(
-                    horizontalItemPadding = 12.dp,
-                    modifier = Modifier.padding(top = 12.dp),
-                    walletId = walletId,
-                )
+            promoBannersBlockComponent?.let { component ->
+                item(key = "PromoBannersBlock") {
+                    component.ContentWithPadding(
+                        horizontalItemPadding = 12.dp,
+                        modifier = Modifier.padding(top = 12.dp),
+                        walletId = walletId,
+                    )
+                }
             }
-        }
 
-        tangemPay(
-            tangemPayComponent = tangemPayComponent,
-            tangemPayUM = currentWallet.tangemPayMainUM,
-            isBalanceHidden = isBalanceHidden,
-            modifier = itemModifier,
-        )
+            tangemPay(
+                tangemPayComponent = tangemPayComponent,
+                tangemPayUM = currentWallet.tangemPayMainUM,
+                isBalanceHidden = isBalanceHidden,
+                modifier = itemModifier,
+            )
 
-        moneyAccount(
-            moneyAccountComponent = moneyAccountComponent,
-            moneyAccountUM = currentWallet.moneyAccountMainUM,
-            isBalanceHidden = isBalanceHidden,
-            modifier = itemModifier,
-        )
+            moneyAccount(
+                moneyAccountComponent = moneyAccountComponent,
+                moneyAccountUM = currentWallet.moneyAccountMainUM,
+                isBalanceHidden = isBalanceHidden,
+                modifier = itemModifier,
+            )
 
-        tokensListItems2(
-            walletTokensListUM = currentWallet.tokensListUM,
-            jointAccountComponent = jointAccountComponent,
-            modifier = movableItemModifier,
-            isBalanceHidden = isBalanceHidden,
-        )
+            tokensListItems2(
+                walletTokensListUM = currentWallet.tokensListUM,
+                jointAccountComponent = jointAccountComponent,
+                modifier = movableItemModifier,
+                isBalanceHidden = isBalanceHidden,
+            )
 
-        polymarketWalletBlock(
-            polymarketComponent = polymarketComponent,
-            polymarketUM = currentWallet.polymarketWalletBlockUM,
-            isBalanceHidden = isBalanceHidden,
-            modifier = itemModifier,
-        )
+            polymarketWalletBlock(
+                polymarketComponent = polymarketComponent,
+                polymarketUM = currentWallet.polymarketWalletBlockUM,
+                isBalanceHidden = isBalanceHidden,
+                modifier = itemModifier,
+            )
 
-        collectiblesWalletBlock(
-            collectiblesComponent = collectiblesComponent,
-            collectiblesUM = currentWallet.collectiblesWalletBlockUM,
-            isBalanceHidden = isBalanceHidden,
-            modifier = itemModifier,
-        )
+            collectiblesWalletBlock(
+                collectiblesComponent = collectiblesComponent,
+                collectiblesUM = currentWallet.collectiblesWalletBlockUM,
+                isBalanceHidden = isBalanceHidden,
+                modifier = itemModifier,
+            )
 
-        nftCollections2(state = currentWallet, itemModifier = itemModifier)
+            nftCollections2(state = currentWallet, itemModifier = itemModifier)
 
-        organizeTokens2(
-            state = currentWallet,
-            itemModifier = itemModifier,
-            onButtonBoundsChange = onOrganizeButtonBoundsChange,
-        )
-    }
-}
-
-/**
- * Wallet content
- *
- * @param state          wallet state
- * @param txHistoryItems transaction history items
- * @param modifier       modifier
- *
-[REDACTED_AUTHOR]
- */
-internal fun LazyListScope.contentItems(
-    state: WalletState,
-    txHistoryItems: LazyPagingItems<TxHistoryState.TxHistoryItemState>?,
-    isBalanceHidden: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    when (state) {
-        is WalletState.MultiCurrency -> {
-            tokensListItems(state.tokensListState, modifier, isBalanceHidden)
-        }
-        is WalletState.SingleCurrency -> {
-            txHistoryItems(state.txHistoryState, txHistoryItems, isBalanceHidden, modifier)
+            organizeTokens2(
+                state = currentWallet,
+                itemModifier = itemModifier,
+                onButtonBoundsChange = onOrganizeButtonBoundsChange,
+            )
         }
     }
 }
