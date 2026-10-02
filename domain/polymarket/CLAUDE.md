@@ -100,7 +100,10 @@ onboarded. It must match iOS and the SDK byte for byte; `PolymarketDerivationCon
    wallet in the same state on purpose: `InvalidatePolymarketCredentialsUseCase` drops only the
    credentials (never `PolymarketOnboardedStore`, or the gate would ask for a full onboarding), called by
    `GetPolymarketBalanceInteractor` on `InvalidSignature` and by `PlacePredictionOrderUseCase` on a remote
-   `Unauthorized`. The local "no stored credentials" refusal clears nothing.
+   `Unauthorized`. The local "no stored credentials" refusal clears nothing. The clear is
+   `clearIfCurrent(rejected)` by **identity**, not equality: derivation is deterministic (`POLY_NONCE = "0"`),
+   so a Reconnect stores credentials equal to the rejected ones, and a slow `401` from a request signed before
+   it must not wipe them. The `401` of `GET data/order/{id}` (the delayed-fill read) does not clear anything.
 9. **Withdrawal is persisted before it is submitted.** `SubmitPredictionWithdrawalInteractor` stores the
    signed batch, then posts it; the relayer keys submissions on `(deposit wallet, nonce)`, so a resend of the
    same batch returns the same receipt. `prepare()` refuses while a record is in flight (`AlreadyInFlight`).
