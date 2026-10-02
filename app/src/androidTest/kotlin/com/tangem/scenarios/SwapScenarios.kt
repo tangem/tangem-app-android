@@ -51,8 +51,13 @@ fun BaseTestCase.openSwapScreen(
             onTokenDetailsScreen { swapButton.clickWhenEnabled() }
             }
 
-        SwapEntryPoint.MarketsTokenDetails -> step("Click on 'Swap' button on 'Markets' token details screen") {
-            onMarketsTokenDetailsScreen { swapPortfolioQuickActionButton.performClick() }
+        SwapEntryPoint.MarketsTokenDetails -> {
+            step("Click on 'Add funds' button on 'Markets' token details screen") {
+                onMarketsTokenDetailsScreen { addFundsButton.clickWithAssertion() }
+            }
+            step("Click on 'Swap' action in the bottom sheet") {
+                onAddFundsBottomSheet { swapButton.clickWithAssertion() }
+            }
         }
 
         SwapEntryPoint.TokenActionsBottomSheet -> step("Click on 'Swap' button on token actions bottom sheet") {
