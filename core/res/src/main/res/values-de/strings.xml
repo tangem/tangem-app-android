@@ -2287,7 +2287,7 @@
   <string name="social_login_creating_wallet_description">Ihre Schlüssel werden auf diesem Gerät generiert</string>
   <string name="social_login_error_account_linked">Dieses „ %s “-Konto ist bereits mit einer anderen Geldbörse verknüpft.</string>
   <string name="social_login_error_backup_not_saved">Die Sicherung konnte nicht gespeichert werden – stellen Sie sicher, dass Ihr Cloud-Speicher verfügbar ist, und versuchen Sie es erneut</string>
-  <string name="social_login_error_cloud_access_description">Stellen Sie sicher, dass Tangem Zugriff auf Ihre %shat, und versuchen Sie es dann erneut.</string>
+  <string name="social_login_error_cloud_access_description">Stellen Sie sicher, dass Tangem Zugriff auf Ihre %s hat, und versuchen Sie es dann erneut.</string>
   <string name="social_login_error_cloud_access_title">Die Wallet konnte nicht wiederhergestellt werden</string>
   <string name="social_login_error_generic">Es ist ein Fehler aufgetreten. Bitte versuche es erneut.</string>
   <string name="social_login_error_no_account">Fügen Sie diesem Gerät ein „ %s “-Konto hinzu, um fortzufahren.</string>

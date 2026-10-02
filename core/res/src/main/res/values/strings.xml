@@ -1156,7 +1156,7 @@
   <string name="introduction_title">Store all your assets</string>
   <string name="joint_account_activated_snackbar">Account activated</string>
   <string name="joint_account_activation_account_button_title">Activate account</string>
-  <string name="joint_account_activation_subtitle">Everyone in this account shares one balance. Other members can move the funds without your approval once they collect enough signatures</string>
+  <string name="joint_account_activation_subtitle">All members will manage one shared balance. Transactions follow the approval rule you selected and may not always require your approval.</string>
   <string name="joint_account_activation_title">You\'re activating a shared account</string>
   <string name="joint_account_coming_soon_description">This action isn\'t supported for joint accounts yet. We\'re working on it</string>
   <string name="joint_account_coming_soon_title">Coming soon to joint accounts</string>
@@ -1183,7 +1183,7 @@
   <string name="joint_account_invite_members_title">Invite members</string>
   <string name="joint_account_invite_members_to_join">Invite members to join</string>
   <string name="joint_account_invite_members_waiting_title">Waiting for members</string>
-  <string name="joint_account_join_confirm_sheet_subtitle">Everyone in this account shares one balance. Other members can move the funds without your approval once they collect enough signatures</string>
+  <string name="joint_account_join_confirm_sheet_subtitle">This account has its own shared balance, separate from your personal funds. Members can manage the funds together, and some transactions may be approved without you.</string>
   <string name="joint_account_join_confirm_sheet_title">You\'re joining a shared account</string>
   <string name="joint_account_join_invalid_link_subtitle">Check that you opened the correct link, or ask the account creator to send it again</string>
   <string name="joint_account_join_invalid_link_title">Invitation link isn\'t valid</string>
@@ -2576,6 +2576,7 @@
   <string name="tangem_pay_transaction_declined_notification_text">The bank rejected this transaction request.</string>
   <string name="tangem_pay_transaction_details_cashback_below_min">Below min trx amount</string>
   <string name="tangem_pay_transaction_details_cashback_cap_reached">Monthly cap reached</string>
+  <string name="tangem_pay_transaction_details_cashback_compliance_risk">Compliance risk</string>
   <string name="tangem_pay_transaction_details_cashback_mcc_excluded">MCC excluded</string>
   <string name="tangem_pay_transaction_details_cashback_none">—</string>
   <string name="tangem_pay_transaction_details_cashback_refund">Return of purchase</string>

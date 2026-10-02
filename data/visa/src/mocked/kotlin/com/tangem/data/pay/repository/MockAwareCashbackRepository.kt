@@ -233,6 +233,11 @@ internal class MockAwareCashbackRepository @Inject constructor(
                 exclusionReason = ExclusionReason.MERCHANT_COUNTRY_EXCLUDED,
             )
             "tx_11" -> details(status = Status.EXCLUDED, amount = "0.00", exclusionReason = ExclusionReason.BELOW_MIN)
+            "tx_12" -> details(
+                status = Status.EXCLUDED,
+                amount = "0.00",
+                exclusionReason = ExclusionReason.COMPLIANCE_RISK,
+            )
             else -> null
         }
 
