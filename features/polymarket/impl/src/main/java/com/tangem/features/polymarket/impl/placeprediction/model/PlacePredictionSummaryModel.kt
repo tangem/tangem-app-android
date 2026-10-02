@@ -293,6 +293,10 @@ internal class PlacePredictionSummaryModel @Inject constructor(
                 logger.e("The exchange found no match for the order: $error")
                 showResult(result = PlaceResultUM.NotFilled(placedAt = System.currentTimeMillis()))
             }
+            is PredictionPlaceOrderError.Unauthorized -> {
+                logger.e("The exchange refused the credentials, leaving the gate to reconnect: $error")
+                returnToIdle()
+            }
             else -> showPlaceFailure(reason = "Order refused: $error")
         }
     }

@@ -29,7 +29,7 @@ class PlacePredictionOrderUseCase(
             isNegRisk = isNegRisk,
         ).onLeft { error ->
             if (error is PredictionPlaceOrderError.Unauthorized) {
-                invalidateCredentials(userWalletId = addresses.userWalletId)
+                invalidateCredentials(userWalletId = addresses.userWalletId, rejected = credentials)
             }
         }
     }
