@@ -20,22 +20,18 @@ import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-class TangemPayGenerateAddressAndSignChallengeTask @AssistedInject constructor(
-    @Assisted private val coroutineScope: CoroutineScope,
+class TangemPayGenerateAddressAndSignChallengeTask @Inject constructor(
     private val dispatchersProvider: CoroutineDispatcherProvider,
     private val tangemPayRemoteDataSource: TangemPayRemoteDataSource,
 ) : CardSessionRunnable<TangemPayInitialCredentials> {
 
     override fun run(session: CardSession, callback: CompletionCallback<TangemPayInitialCredentials>) {
-        coroutineScope.launch {
+        session.scope.launch {
             val result = runSuspendCatching { runSuspend(session = session) }
                 .getOrElse { error ->
                     CompletionResult.Failure(TangemSdkError.ExceptionError(error))
@@ -125,10 +121,5 @@ class TangemPayGenerateAddressAndSignChallengeTask @AssistedInject constructor(
         )
         task.run(session = session, callback = deferred::complete)
         return deferred.await()
-    }
-
-    @AssistedFactory
-    interface Factory {
-        fun create(coroutineScope: CoroutineScope): TangemPayGenerateAddressAndSignChallengeTask
     }
 }
