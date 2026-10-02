@@ -8,15 +8,15 @@ import com.tangem.domain.models.wallet.UserWalletId
  * The derivation path of the collectibles (gacha) vault owner key.
  *
  * Every node is hardened on purpose: the key is an ed25519 (SLIP-0010) one, and that curve cannot derive a
- * non-hardened node at all, so a path like `m/44'/501'/999700'/0/0` would yield no key and no address.
+ * non-hardened node at all, so a path like `m/44'/501'/999799'/0/0` would yield no key and no address.
  *
- * `999700'` continues the app's range of reserved keys (`999999'` Visa, `999998'` money account, `999899'`
+ * `999799'` continues the app's range of reserved keys (`999999'` Visa, `999998'` money account, `999899'`
  * Polymarket owner, `888888'` joint account owners) rather than naming a chain account.
  *
  * Must match iOS byte-for-byte — the vault address is `PDA(["vault", owner])`, so a different path means a
  * different vault for the same wallet.
  */
-const val COLLECTIBLES_OWNER_DERIVATION_PATH: String = "m/44'/501'/999700'/0'/0'"
+const val COLLECTIBLES_OWNER_DERIVATION_PATH: String = "m/44'/501'/999799'/0'/0'"
 
 /**
  * Derives the collectibles vault owner — the ed25519 key at [COLLECTIBLES_OWNER_DERIVATION_PATH], base58-encoded
