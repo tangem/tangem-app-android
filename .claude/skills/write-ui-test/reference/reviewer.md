@@ -87,8 +87,11 @@ fix them.
    - a test that relies on a scenario state without setting it.
 7. **Known pitfalls.** Check the diff against every item in `pitfalls.md` and `compose-traps.md`, both
    next to this file.
-8. **Comments.** Each `comment` warning must state a non-obvious WHY in one line. Report comments that
-   restate the code or narrate the change.
+8. **Comments.** Treat every added comment, KDoc included and in any file (tests, production,
+   `src/mocked`), as a finding unless deleting it would get the code broken or reverted. Report as
+   `CONFIRMED` a comment that a better name, the function / constant name or the adjacent `step(...)`
+   already expresses; KDoc that paraphrases the signature; a comment in production code about how a
+   test uses it; the same comment twice; any block of two lines or more.
 9. **Anything else.** Any other defect that would make the test fail on CI while passing locally, or
    pass while the feature is broken.
 
