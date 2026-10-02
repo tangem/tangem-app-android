@@ -5,6 +5,8 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.storiesv2.GetHardwareUpgradeStoriesVariantUseCase
 import com.tangem.features.storiesv2.HardwareUpgradeStoriesVariant
+import com.tangem.features.storiesv2.StoriesV2Prefetcher
+import com.tangem.features.storiesv2.StoryV2Type
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -18,21 +20,24 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultHardwareUpgradeLauncherTest {
 
     private val appRouter: AppRouter = mockk()
     private val getHardwareUpgradeStoriesVariantUseCase: GetHardwareUpgradeStoriesVariantUseCase = mockk()
+    private val storiesV2Prefetcher: StoriesV2Prefetcher = mockk(relaxUnitFun = true)
 
     private val launcher = DefaultHardwareUpgradeLauncher(
         appRouter = appRouter,
         getHardwareUpgradeStoriesVariantUseCase = getHardwareUpgradeStoriesVariantUseCase,
+        storiesV2Prefetcher = storiesV2Prefetcher,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(appRouter, getHardwareUpgradeStoriesVariantUseCase)
+        clearMocks(appRouter, getHardwareUpgradeStoriesVariantUseCase, storiesV2Prefetcher)
         every { appRouter.stack } returns emptyList()
         every { appRouter.push(any(), any()) } just runs
     }
@@ -64,6 +69,26 @@ internal class DefaultHardwareUpgradeLauncherTest {
         // Assert
         verify(exactly = 0) { appRouter.push(any(), any()) }
     }
+
+    @ParameterizedTest
+    @MethodSource("providePrefetchModels")
+    fun `GIVEN a variant on the device WHEN prefetch THEN only treatment warms the story`(model: PrefetchModel) {
+        // Arrange
+        every { getHardwareUpgradeStoriesVariantUseCase.peek() } returns model.variant
+
+        // Act
+        launcher.prefetch()
+
+        // Assert
+        verify(exactly = model.expectedPrefetches) { storiesV2Prefetcher.prefetch(StoryV2Type.HARDWARE_UPGRADE) }
+    }
+
+    private fun providePrefetchModels() = listOf(
+        PrefetchModel(variant = HardwareUpgradeStoriesVariant.TREATMENT, expectedPrefetches = 1),
+        PrefetchModel(variant = HardwareUpgradeStoriesVariant.CONTROL, expectedPrefetches = 0),
+    )
+
+    internal data class PrefetchModel(val variant: HardwareUpgradeStoriesVariant, val expectedPrefetches: Int)
 
     private fun provideTestModels() = listOf(
         VariantModel(

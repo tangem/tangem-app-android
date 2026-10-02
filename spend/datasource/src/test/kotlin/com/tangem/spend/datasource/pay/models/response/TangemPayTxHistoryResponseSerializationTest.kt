@@ -40,6 +40,32 @@ internal class TangemPayTxHistoryResponseSerializationTest {
     }
 
     @Test
+    fun `GIVEN known types in another case WHEN decode THEN each item is resolved to its subtype ignoring case`() {
+        // Arrange
+        val body = """
+            {"result":{"transactions":[
+              {"id":"1","type":"SPEND","spend":$SPEND},
+              {"id":"2","type":"Refund","refund":$REFUND},
+              {"id":"3","type":"COLLATERAL","collateral":$COLLATERAL},
+              {"id":"4","type":"Payment","payment":$PAYMENT},
+              {"id":"5","type":"FEE","fee":$FEE}
+            ]}}
+        """.trimIndent()
+
+        // Act
+        val actual = json.decodeFromString(TangemPayTxHistoryResponse.serializer(), body).result.transactions
+
+        // Assert
+        assertThat(actual.map { it::class }).containsExactly(
+            TangemPayTxHistoryResponse.Transaction.Spend::class,
+            TangemPayTxHistoryResponse.Transaction.Refund::class,
+            TangemPayTxHistoryResponse.Transaction.Collateral::class,
+            TangemPayTxHistoryResponse.Transaction.Payment::class,
+            TangemPayTxHistoryResponse.Transaction.Fee::class,
+        ).inOrder()
+    }
+
+    @Test
     fun `GIVEN spend transaction WHEN decode THEN numbers and dates are parsed`() {
         // Arrange
         val body = """{"result":{"transactions":[{"id":"1","type":"spend","spend":$SPEND}]}}"""
