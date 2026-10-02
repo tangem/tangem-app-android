@@ -88,10 +88,11 @@ feature was opened with, so children never read it from the feature params.
    collapsed into the button spinner; a failure leaves the screen idle and reports through a snackbar. The
    screen's button is the only retry.
 
-Main sends the user back here (`router.replaceAll(Onboarding)`) whenever it opens or resumes without
-stored CLOB credentials — a `401` drops them, and the gate then shows Reconnect. The store is read, not
-observed: the rejection lands on a background refresh, and the check runs again once the screen is back
-in front of the user.
+Main sends the user back here (`router.replaceAll(Onboarding)`) whenever it has no stored CLOB
+credentials — a `401` drops them, and the gate then shows Reconnect. It checks on open, on resume, and
+whenever the account status turns `Onboarded` while the screen is in front (the balance poll that took
+the `401` commits that status). A status change while a child screen is on top waits for the resume
+check, so an order flow is never torn down mid-way.
 
 Region-restricted users (`PolymarketAccessMode.READ_ONLY`) still reach `Main`, browse and withdraw; the
 place-prediction flow re-checks the region itself before an order.
