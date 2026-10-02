@@ -275,6 +275,23 @@ internal class PayloadToDeeplinkConverterTest {
     }
 
     @Test
+    fun `GIVEN tangem pay push type in another case WHEN convert THEN should return pay-app-main deeplink`() {
+        // Arrange
+        val payload = mapOf(
+            TYPE_KEY to "CARD_READY",
+            CUSTOMER_WALLET_ID_KEY to "wallet123",
+        )
+
+        // Act
+        val result = PayloadToDeeplinkConverter.convert(payload)
+
+        // Assert
+        assertThat(result).isEqualTo(
+            "tangem://pay-app-main?type=CARD_READY&customer_wallet_id=wallet123",
+        )
+    }
+
+    @Test
     fun `GIVEN tangem pay push payload with missing customer_wallet_id WHEN convert THEN should return null`() {
         // GIVEN
         val payload = mapOf(

@@ -40,6 +40,15 @@ internal class TangemPayPushNotificationTypeTest {
     }
 
     @Test
+    fun `GIVEN type in another case WHEN fromValue THEN resolves ignoring case`() {
+        // Act
+        val type = TangemPayPushNotificationType.fromValue("Transaction_Spend")
+
+        // Assert
+        assertThat(type).isEqualTo(TangemPayPushNotificationType.TRANSACTION_SPEND)
+    }
+
+    @Test
     fun `GIVEN unknown type WHEN fromValue THEN returns null`() {
         // GIVEN
         val value = TangemPayPushNotificationType.fromValue("declined_reason18")
