@@ -37,6 +37,13 @@ class PromoBannerDisplayDTOConverterTest {
         assertThat(result.isButtonEnabled).isTrue()
         assertThat(result.buttonText).isEqualTo("Click me")
         assertThat(result.isDismissable).isTrue()
+        assertThat(result.campaignId).isEqualTo(42)
+    }
+
+    @Test
+    fun `GIVEN no campaign id WHEN convert THEN campaign id is null`() {
+        val result = converter.convert(createDTO(campaignId = null))
+        assertThat(result.campaignId).isNull()
     }
 
     @Test
