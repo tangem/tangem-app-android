@@ -191,6 +191,7 @@ internal class SharesCalculatorTest {
             SteppableModel(available = "0.00", expected = false),
             SteppableModel(available = "0.63", expected = false),
             SteppableModel(available = "1.00", expected = false),
+            SteppableModel(available = "1.01", expected = true),
             SteppableModel(available = "2.00", expected = true),
             SteppableModel(available = "51.23", expected = true),
         )
