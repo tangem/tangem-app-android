@@ -3,7 +3,10 @@ package com.tangem.tests.tangempay
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.utils.assertUrlOpenedStartingWith
+import com.tangem.common.utils.stubExternalUrlOpening
 import com.tangem.core.res.R as CoreResR
+import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.scenarios.*
 import com.tangem.screens.tangempay.*
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -668,6 +671,32 @@ class TangemPayTariffPlansTest : BaseTestCase() {
             step("Open plan selection") { openTangemPayChangePlan() }
             step("Assert '$plusPlan' plan is displayed") {
                 onTangemPaySelectPlanScreen { title.assertTextEquals(plusPlan) }
+            }
+        }
+    }
+
+    @AllureId("9592")
+    @DisplayName("Tangem Pay: 'Full terms' on the current plan opens the tariffs document")
+    @Test
+    fun fullTermsOpensTariffsDocumentFromCurrentPlanTest() {
+        setupHooks(
+            additionalBeforeSection = {
+                setTangemPayTariffPlanScenarios(
+                    plan = planBasicState,
+                    transitions = transitionsFromBasicState,
+                )
+            }
+        ).run {
+            step("Open Tangem Pay payment account") { openTangemPay() }
+            step("Open 'Current plan' screen") { openTangemPayCurrentPlan() }
+            step("Stub the external browser so the tariffs document is not actually opened") {
+                stubExternalUrlOpening()
+            }
+            step("Click on 'Full terms' button") {
+                onTangemPayCurrentPlanScreen { fullTermsButton.clickWithAssertion() }
+            }
+            step("Assert the tariffs document is opened") {
+                assertUrlOpenedStartingWith(TangemPayConstants.TERMS_AND_LIMITS_URL)
             }
         }
     }
