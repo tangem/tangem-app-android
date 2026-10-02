@@ -3,7 +3,7 @@ package com.tangem.domain.sociallogin.usecase
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.sociallogin.models.SocialProviderIdToken
 import com.tangem.domain.sociallogin.models.RecoveryKey
 import com.tangem.domain.sociallogin.models.SocialLoginError
@@ -23,7 +23,7 @@ internal class RegisterSocialRecoveryUseCaseTest {
     private val useCase = RegisterSocialRecoveryUseCase(socialRecoveryRepository)
 
     private val idToken = SocialProviderIdToken(value = "id-token", nonce = "nonce")
-    private val walletId = UserWalletId(stringValue = "0011")
+    private val userWallet: UserWallet.Hot = mockk()
     private val recoveryKey = RecoveryKey(ByteArray(RecoveryKey.SIZE_BYTES) { 1 })
 
     @BeforeEach
@@ -34,25 +34,25 @@ internal class RegisterSocialRecoveryUseCaseTest {
     @Test
     fun `GIVEN repository accepts WHEN invoke THEN the binding is registered`() = runTest {
         // Arrange
-        coEvery { socialRecoveryRepository.registerRecoveryKey(idToken, walletId, recoveryKey) } returns Unit.right()
+        coEvery { socialRecoveryRepository.registerRecoveryKey(idToken, userWallet, recoveryKey) } returns Unit.right()
 
         // Act
-        val actual = useCase(idToken = idToken, walletId = walletId, recoveryKey = recoveryKey)
+        val actual = useCase(idToken = idToken, userWallet = userWallet, recoveryKey = recoveryKey)
 
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
-        coVerify(exactly = 1) { socialRecoveryRepository.registerRecoveryKey(idToken, walletId, recoveryKey) }
+        coVerify(exactly = 1) { socialRecoveryRepository.registerRecoveryKey(idToken, userWallet, recoveryKey) }
     }
 
     @Test
     fun `GIVEN registration fails WHEN invoke THEN the failure is reported as is`() = runTest {
         // Arrange
         coEvery {
-            socialRecoveryRepository.registerRecoveryKey(idToken, walletId, recoveryKey)
+            socialRecoveryRepository.registerRecoveryKey(idToken, userWallet, recoveryKey)
         } returns SocialLoginError.BindingConflict.left()
 
         // Act
-        val actual = useCase(idToken = idToken, walletId = walletId, recoveryKey = recoveryKey)
+        val actual = useCase(idToken = idToken, userWallet = userWallet, recoveryKey = recoveryKey)
 
         // Assert
         assertThat(actual).isEqualTo(SocialLoginError.BindingConflict.left())
