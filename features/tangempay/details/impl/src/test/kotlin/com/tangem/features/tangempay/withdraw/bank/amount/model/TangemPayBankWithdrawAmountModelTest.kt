@@ -146,7 +146,24 @@ internal class TangemPayBankWithdrawAmountModelTest {
         // Assert
         val state = model.uiState.value
         assertThat(state.amount.error).isEqualTo(
-            resourceReference(R.string.tangempay_withdraw_bank_amount_error_range, wrappedList("$1", "$2,324.55")),
+            resourceReference(R.string.tangempay_withdraw_bank_amount_error_range, wrappedList("$1", "$10,000")),
+        )
+        assertThat(state.isContinueEnabled).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN balance below limit WHEN amount above limit entered THEN range error instead of not enough funds`() {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        model.uiState.value.amount.onValueChange("10001")
+
+        // Assert
+        val state = model.uiState.value
+        assertThat(state.amount.error).isEqualTo(
+            resourceReference(R.string.tangempay_withdraw_bank_amount_error_range, wrappedList("$1", "$10,000")),
         )
         assertThat(state.isContinueEnabled).isFalse()
         model.onDestroy()
@@ -214,6 +231,23 @@ internal class TangemPayBankWithdrawAmountModelTest {
         // Assert
         val state = model.uiState.value
         assertThat(state.amount.value).isEqualTo("2324.55")
+        assertThat(state.amount.error).isNull()
+        assertThat(state.isContinueEnabled).isTrue()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN balance above limit WHEN max clicked THEN limit`() {
+        // Arrange
+        val options = bankWithdrawOptions(sources = listOf(bankWithdrawSource(fiatBalance = BigDecimal("20000"))))
+        val model = createModel(options = options)
+
+        // Act
+        model.uiState.value.source.onMaxClick()
+
+        // Assert
+        val state = model.uiState.value
+        assertThat(state.amount.value).isEqualTo("10000")
         assertThat(state.amount.error).isNull()
         assertThat(state.isContinueEnabled).isTrue()
         model.onDestroy()

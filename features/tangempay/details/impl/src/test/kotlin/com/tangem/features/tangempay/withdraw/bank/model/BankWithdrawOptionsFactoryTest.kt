@@ -50,6 +50,7 @@ internal class BankWithdrawOptionsFactoryTest {
         assertThat(actual?.sources?.map { it.token }).containsExactly(usdcPolygon, usdcBase).inOrder()
         assertThat(actual?.currency).isEqualTo(Currency.getInstance("USD"))
         assertThat(actual?.minAmount).isEqualTo(BigDecimal("1.00"))
+        assertThat(actual?.maxAmount).isEqualTo(BigDecimal("10000.00"))
     }
 
     @Test
