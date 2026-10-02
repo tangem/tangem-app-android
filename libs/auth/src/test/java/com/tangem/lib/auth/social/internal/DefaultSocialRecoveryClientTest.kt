@@ -399,6 +399,31 @@ internal class DefaultSocialRecoveryClientTest {
     }
 
     @Test
+    fun `GIVEN the registrar succeeds WHEN registerWallet THEN the wallet is registered`() = runTest {
+        // Arrange
+        coEvery { walletRegistrar.register(WALLET_ID, signer) } returns Either.Right(Unit)
+
+        // Act
+        val result = client.registerWallet(walletId = WALLET_ID, signer = signer)
+
+        // Assert
+        assertThat(result).isEqualTo(Either.Right(Unit))
+    }
+
+    @Test
+    fun `GIVEN no session WHEN registerWallet THEN NoActiveSession is returned`() = runTest {
+        // Arrange
+        coEvery { walletRegistrar.register(WALLET_ID, signer) } returns
+            Either.Left(WalletRegistrationError.NoActiveSession)
+
+        // Act
+        val result = client.registerWallet(walletId = WALLET_ID, signer = signer)
+
+        // Assert
+        assertThat(result.leftOrNull()).isEqualTo(SocialRecoveryError.NoActiveSession)
+    }
+
+    @Test
     fun `GIVEN authentication is toggled off WHEN unbindWallet THEN the teardown is not reported as done`() =
         runTest {
             // Arrange

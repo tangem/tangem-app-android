@@ -53,6 +53,15 @@ date here; when you ingest a change, update this table in the same PR.
 
 ## Wire-format traps (each one cost a device session)
 
+- **Activity history** (`GET /activity`, `POST /activity/deposits/reconcile`) requires both the
+  `wallet-id` header and the `depositWalletAddress` query. The supplied OpenAPI export was checked on
+  28.09.2026: history has opaque cursors and optional `type` / `redeemResult` filters; amounts and prices
+  are decimal strings, and market/order/redemption metadata may be absent. Reconciliation returns
+  `202 {state: SCANNING, retryAfterSeconds}`; it starts or joins a scan, rather than reporting completion.
+  `DefaultPolymarketActivityRepository` preserves decimal precision, converts timestamps to `Instant`
+  and reports malformed pages as errors. `PolymarketActivityBatchFetcher` keeps cursors across retries,
+  resets them on filter changes and rejects cursor cycles.
+
 - **`chainId` in bridge `/supported-assets` is a string**, not a number. `minCheckoutUsd` arrives as either;
   `PolymarketBridgeWireFormatTest` pins both readings.
 - **Express answers with lower-cased addresses and matches pairs by string equality.**
