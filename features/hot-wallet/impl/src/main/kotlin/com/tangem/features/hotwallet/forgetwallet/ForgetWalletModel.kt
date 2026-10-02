@@ -10,7 +10,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
@@ -64,14 +64,12 @@ internal class ForgetWalletModel @Inject constructor(
             ForgetWalletUM(
                 onBackClick = ::onBackClick,
                 description = if (isSocialDeletion) {
-                    // TODO [REDACTED_TASK_KEY]: waiting on social_wallet_delete_attention_description in Lokalise.
-                    stringReference("This wallet will be permanently removed from your device and Google account")
+                    resourceReference(R.string.social_wallet_delete_attention_description, wrappedList(PROVIDER_NAME))
                 } else {
                     resourceReference(R.string.hw_remove_wallet_attention_description)
                 },
                 buttonText = if (isSocialDeletion) {
-                    // TODO [REDACTED_TASK_KEY]: waiting on social_wallet_settings_delete_wallet in Lokalise.
-                    stringReference("Delete wallet")
+                    resourceReference(R.string.social_wallet_settings_delete_wallet)
                 } else {
                     resourceReference(R.string.hw_remove_wallet_action_forget_title)
                 },
@@ -156,8 +154,7 @@ internal class ForgetWalletModel @Inject constructor(
         uiMessageSender.send(
             DialogMessage(
                 title = resourceReference(R.string.common_something_went_wrong),
-                // TODO [REDACTED_TASK_KEY]: waiting on social_wallet_delete_error_description in Lokalise.
-                message = stringReference("We couldn't delete this wallet. Please try again"),
+                message = resourceReference(R.string.social_wallet_delete_error_description),
                 firstActionBuilder = {
                     EventMessageAction(title = resourceReference(R.string.common_ok), onClick = {})
                 },
@@ -253,3 +250,5 @@ internal class ForgetWalletModel @Inject constructor(
         }
     }
 }
+
+private const val PROVIDER_NAME = "Google"
