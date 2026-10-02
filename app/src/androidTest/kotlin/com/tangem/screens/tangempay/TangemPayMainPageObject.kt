@@ -207,6 +207,8 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
 
     val withdrawButtonControl: KNode = actionButtonControl(CoreResR.string.tangempay_card_details_withdraw)
 
+    val topUpButtonControl: KNode = actionButtonControl(CoreResR.string.tangempay_card_details_add_funds)
+
     fun transactionRowWithText(text: String): KNode = child {
         hasText(text)
         useUnmergedTree = true
