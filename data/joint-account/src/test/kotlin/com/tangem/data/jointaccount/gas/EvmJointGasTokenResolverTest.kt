@@ -23,12 +23,12 @@ import java.math.BigDecimal
 import java.math.MathContext
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class DefaultJointGasTokenResolverTest {
+internal class EvmJointGasTokenResolverTest {
 
     private val gaslessTransactionRepository: GaslessTransactionRepository = mockk()
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier = mockk()
 
-    private val resolver = DefaultJointGasTokenResolver(
+    private val resolver = EvmJointGasTokenResolver(
         gaslessTransactionRepository = gaslessTransactionRepository,
         singleQuoteStatusSupplier = singleQuoteStatusSupplier,
     )
