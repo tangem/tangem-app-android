@@ -35,6 +35,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.math.BigDecimal
 import java.math.BigInteger
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -260,6 +261,30 @@ internal class CreateJointOperationUseCaseTest {
         coVerify(exactly = 2) { gasBuilder.build(any(), any(), any(), any()) }
         coVerify(exactly = 2) { signer.signOperation(any(), any(), any(), any(), any()) }
         coVerify(exactly = 2) { repository.createOperation(any(), any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN a token gas and the network moved WHEN invoke THEN both attempts are priced in that token`() = runTest {
+        // Arrange
+        val gasToken = SafeGasToken.Token(
+            address = TOKEN.lowercase(),
+            decimals = 6,
+            coinDecimals = 18,
+            nativeToTokenRate = BigDecimal("0.2"),
+        )
+        coEvery { gasBuilder.build(any(), any(), call = any(), gasToken = gasToken) } returns safeTx().right()
+        coEvery { repository.createOperation(any(), any(), any(), any(), any()) } returnsMany listOf(
+            JointOperationCreateError.NetworkStateMoved.left(),
+            Unit.right(),
+        )
+
+        // Act
+        val actual = useCase(account = account, network = network, intent = intent, gasToken = gasToken)
+
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+        coVerify(exactly = 2) { gasBuilder.build(any(), any(), any(), gasToken = gasToken) }
+        coVerify(exactly = 0) { gasBuilder.build(any(), any(), any(), gasToken = SafeGasToken.Coin) }
     }
 
     @Test
