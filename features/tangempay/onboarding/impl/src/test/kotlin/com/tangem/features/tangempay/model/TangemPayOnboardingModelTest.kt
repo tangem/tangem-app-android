@@ -22,6 +22,7 @@ import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
+import com.tangem.features.tangempay.ui.TangemPayOnboardingNavigation
 import com.tangem.features.tangempay.ui.TangemPayOnboardingScreenState
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -211,31 +212,115 @@ internal class TangemPayOnboardingModelTest {
         }
 
     @Test
-    fun `GIVEN residency step enabled WHEN get card clicked THEN residency step opened AND wallets not requested`() =
+    fun `GIVEN residency step enabled AND single wallet WHEN get card clicked THEN residency step opened for it`() =
         runTest {
-            // GIVEN
+            // Arrange
             every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
-            val model = createModel(TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink)
+            val userWalletId = UserWalletId("011")
+            coEvery { eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true) } returns
+                listOf(userWalletId)
+            coEvery { produceInitialDataUseCase(userWalletId) } returns Unit.right()
+            coEvery { repository.getCustomerInfo(userWalletId) } returns
+                buildCustomerInfo(kycStatus = KycStatus.PENDING).right()
+            val model = createModel(TangemPayOnboardingComponent.Params.FromBannerOnMain)
             advanceUntilIdle()
             val content = model.uiState.value as TangemPayOnboardingScreenState.Content
 
-            // WHEN
+            // Act
             content.buttonConfig.onClick.invoke()
             advanceUntilIdle()
 
-            // THEN
+            // Assert
+            coVerify(exactly = 1) { produceInitialDataUseCase(userWalletId) }
             verify(exactly = 1) {
-                router.push(
-                    route = AppRoute.TangemPayEligibility(
+                router.replaceAll(
+                    AppRoute.Wallet,
+                    AppRoute.TangemPayEligibility(
                         product = TangemPayProduct.PAYMENT_ACCOUNT,
-                        userWalletId = null,
+                        userWalletId = userWalletId,
                     ),
                     onComplete = any(),
                 )
             }
-            coVerify(exactly = 0) { eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = any()) }
             model.onDestroy()
         }
+
+    @Test
+    fun `GIVEN residency step enabled AND several wallets WHEN get card clicked THEN wallet selector opened`() =
+        runTest {
+            // Arrange
+            every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
+            val walletsIds = listOf(UserWalletId("011"), UserWalletId("022"))
+            coEvery { eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true) } returns
+                walletsIds
+            val model = createModel(TangemPayOnboardingComponent.Params.FromBannerOnMain)
+            val openedSheets = mutableListOf<TangemPayOnboardingNavigation?>()
+            model.bottomSheetNavigation.subscribe { event -> openedSheets += event.transformer(null) }
+            advanceUntilIdle()
+            val content = model.uiState.value as TangemPayOnboardingScreenState.Content
+
+            // Act
+            content.buttonConfig.onClick.invoke()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(openedSheets).containsExactly(TangemPayOnboardingNavigation.WalletSelector(walletsIds))
+            coVerify(exactly = 0) { produceInitialDataUseCase(any()) }
+            verify(exactly = 0) { router.replaceAll(routes = anyVararg(), onComplete = any()) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN residency step enabled AND wallet selector shown WHEN wallet selected THEN residency step opened`() =
+        runTest {
+            // Arrange
+            every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
+            val userWalletId = UserWalletId("022")
+            coEvery { eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true) } returns
+                listOf(UserWalletId("011"), userWalletId)
+            coEvery { produceInitialDataUseCase(userWalletId) } returns Unit.right()
+            coEvery { repository.getCustomerInfo(userWalletId) } returns
+                buildCustomerInfo(kycStatus = KycStatus.PENDING).right()
+            val model = createModel(TangemPayOnboardingComponent.Params.FromBannerOnMain)
+            advanceUntilIdle()
+            (model.uiState.value as TangemPayOnboardingScreenState.Content).buttonConfig.onClick.invoke()
+            advanceUntilIdle()
+
+            // Act
+            model.onWalletSelected(userWalletId)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                router.replaceAll(
+                    AppRoute.Wallet,
+                    AppRoute.TangemPayEligibility(
+                        product = TangemPayProduct.PAYMENT_ACCOUNT,
+                        userWalletId = userWalletId,
+                    ),
+                    onComplete = any(),
+                )
+            }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN residency step enabled AND no wallets WHEN get card clicked THEN screen closed`() = runTest {
+        // Arrange
+        every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
+        coEvery { eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true) } returns emptyList()
+        val model = createModel(TangemPayOnboardingComponent.Params.FromBannerOnMain)
+        advanceUntilIdle()
+        val content = model.uiState.value as TangemPayOnboardingScreenState.Content
+
+        // Act
+        content.buttonConfig.onClick.invoke()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { router.pop(any()) }
+        model.onDestroy()
+    }
 
     @Test
     fun `GIVEN KYC not approved WHEN onboarding starts THEN order not created before KYC`() = runTest {
