@@ -37,7 +37,7 @@ internal class GetPolymarketBalanceInteractorTest {
     fun resetMocks() {
         clearMocks(repository, credentialsStore)
 
-        coEvery { credentialsStore.clear(any()) } returns Unit
+        coEvery { credentialsStore.clearIfCurrent(any(), any()) } returns Unit
     }
 
     @Test
@@ -127,7 +127,7 @@ internal class GetPolymarketBalanceInteractorTest {
 
         // Assert
         assertThat(actual).isEqualTo(PolymarketAuthError.InvalidSignature.left())
-        coVerify(exactly = 1) { credentialsStore.clear(USER_WALLET_ID) }
+        coVerify(exactly = 1) { credentialsStore.clearIfCurrent(USER_WALLET_ID, refEq(CREDENTIALS)) }
         coVerify(exactly = 0) { repository.getBalanceAllowance(any(), any()) }
     }
 
@@ -144,7 +144,7 @@ internal class GetPolymarketBalanceInteractorTest {
 
         // Assert
         assertThat(actual).isEqualTo(PolymarketAuthError.InvalidSignature.left())
-        coVerify(exactly = 1) { credentialsStore.clear(USER_WALLET_ID) }
+        coVerify(exactly = 1) { credentialsStore.clearIfCurrent(USER_WALLET_ID, refEq(CREDENTIALS)) }
     }
 
     @Test
@@ -158,7 +158,7 @@ internal class GetPolymarketBalanceInteractorTest {
         interactor(addresses = ADDRESSES)
 
         // Assert
-        coVerify(exactly = 0) { credentialsStore.clear(any()) }
+        coVerify(exactly = 0) { credentialsStore.clearIfCurrent(any(), any()) }
     }
 
     @Test
@@ -172,7 +172,7 @@ internal class GetPolymarketBalanceInteractorTest {
         interactor(addresses = ADDRESSES)
 
         // Assert
-        coVerify(exactly = 0) { credentialsStore.clear(any()) }
+        coVerify(exactly = 0) { credentialsStore.clearIfCurrent(any(), any()) }
     }
 
     @Test
@@ -184,7 +184,7 @@ internal class GetPolymarketBalanceInteractorTest {
         interactor(addresses = ADDRESSES)
 
         // Assert
-        coVerify(exactly = 0) { credentialsStore.clear(any()) }
+        coVerify(exactly = 0) { credentialsStore.clearIfCurrent(any(), any()) }
     }
 
     private companion object {
