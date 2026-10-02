@@ -1,4 +1,4 @@
-package com.tangem.lib.auth.api.models.request
+package com.tangem.data.mcp.api.models.request
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
@@ -12,7 +12,7 @@ import com.squareup.moshi.JsonClass
  * identifies wallets everywhere else.
  */
 @JsonClass(generateAdapter = true)
-data class McpDeviceVerificationConsent(
+internal data class McpDeviceVerificationConsent(
     @Json(name = "client_id") val clientId: String,
     @Json(name = "scope") val scope: String,
     @Json(name = "wallet_id") val walletId: String,
