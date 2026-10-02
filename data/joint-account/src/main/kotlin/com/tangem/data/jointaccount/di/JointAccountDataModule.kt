@@ -1,5 +1,7 @@
 package com.tangem.data.jointaccount.di
 
+import com.tangem.data.jointaccount.gas.EvmJointGasTokenResolver
+import com.tangem.domain.jointaccount.gas.JointGasTokenResolver
 import android.content.Context
 import androidx.datastore.dataStoreFile
 import com.tangem.common.services.secure.SecureStorage
@@ -56,6 +58,10 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal interface JointAccountDataModule {
+
+    @Binds
+    @Singleton
+    fun bindJointGasTokenResolver(resolver: EvmJointGasTokenResolver): JointGasTokenResolver
 
     @Binds
     @Singleton
