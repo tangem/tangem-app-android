@@ -491,13 +491,19 @@ internal fun rememberModalTransition(
     config: TangemBottomSheetConfig,
     dismissOnClickOutside: Boolean,
 ): ModalTransition {
+    // Read through a state by a lambda that never changes: the sheet state is keyed on the lambda, so a fresh
+    // one per value would rebuild the sheet hidden and replay its show animation under the viewer.
+    val isDismissEnabled by rememberUpdatedState(dismissOnClickOutside)
+    val confirmValueChange = remember {
+        { sheetValue: TangemSheetValue ->
+            // Ignoring transitions to hidden prevents dismiss on drag down / outside click.
+            isDismissEnabled || sheetValue != TangemSheetValue.Hidden
+        }
+    }
     val sheetState = rememberSheetState(
         skipPartiallyExpanded = true,
         initialValue = TangemSheetValue.Hidden,
-        confirmValueChange = { sheetValue ->
-            // Ignoring transitions to hidden prevents dismiss on drag down / outside click.
-            dismissOnClickOutside || sheetValue != TangemSheetValue.Hidden
-        },
+        confirmValueChange = confirmValueChange,
     )
     val transition = remember(sheetState) {
         ModalTransition(
