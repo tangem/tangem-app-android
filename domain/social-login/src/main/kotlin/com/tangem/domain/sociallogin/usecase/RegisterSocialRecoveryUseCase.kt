@@ -1,7 +1,7 @@
 package com.tangem.domain.sociallogin.usecase
 
 import arrow.core.Either
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.sociallogin.models.SocialProviderIdToken
 import com.tangem.domain.sociallogin.models.RecoveryKey
 import com.tangem.domain.sociallogin.models.SocialLoginError
@@ -20,11 +20,11 @@ class RegisterSocialRecoveryUseCase @Inject constructor(
 
     suspend operator fun invoke(
         idToken: SocialProviderIdToken,
-        walletId: UserWalletId,
+        userWallet: UserWallet.Hot,
         recoveryKey: RecoveryKey,
     ): Either<SocialLoginError, Unit> = socialRecoveryRepository.registerRecoveryKey(
         idToken = idToken,
-        walletId = walletId,
+        userWallet = userWallet,
         recoveryKey = recoveryKey,
     )
 }
