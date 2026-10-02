@@ -174,7 +174,7 @@ class SwapDexTest : BaseTestCase() {
                 stubUrlOpening(providerUrl)
             }
             step("Click on the provider '$providerName' row") {
-                onTxHistoryDetailsBottomSheet { rowValueContaining("$providerName • $providerType").performClick() }
+                onTxHistoryDetailsBottomSheet { clickableRowContaining("$providerName • $providerType").performClick() }
             }
             step("Assert the provider page '$providerUrl' is opened") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) { assertUrlOpened(providerUrl) }
