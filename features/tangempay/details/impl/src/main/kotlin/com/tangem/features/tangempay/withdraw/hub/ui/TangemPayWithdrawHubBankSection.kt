@@ -31,7 +31,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
-import com.tangem.core.ui.res.generated.icons.ic_chevron_right_20
+import com.tangem.core.ui.res.generated.icons.ic_dots_horizontal_20
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.BankSectionUM
@@ -165,7 +165,7 @@ private fun RecentRecipientCard(state: TangemPayWithdrawHubUM.RecentRecipientUM,
 @Composable
 private fun SeeAllCard(onClick: (() -> Unit)?) {
     RecentsCard(onClick = onClick) {
-        SecondaryIconCircle(imageVector = Icons.ic_chevron_right_20)
+        SecondaryIconCircle(imageVector = Icons.ic_dots_horizontal_20)
         Text(
             text = resourceReference(R.string.common_see_all).resolveReference(),
             style = TangemTheme.typography3.subheading.medium,
