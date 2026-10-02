@@ -5,6 +5,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.data.card.sdk.CardSdkProvider
+import com.tangem.domain.mcp.McpRequestService
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.WcRequestService
 import com.tangem.domain.walletconnect.model.WcBitcoinMethodName
@@ -20,6 +21,7 @@ import javax.inject.Inject
 internal class WcRoutingModel @Inject constructor(
     private val requestService: WcRequestService,
     private val pairService: WcPairService,
+    private val mcpRequestService: McpRequestService,
     private val cardSdkProvider: CardSdkProvider,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
@@ -83,7 +85,10 @@ internal class WcRoutingModel @Inject constructor(
         val pairFlow = pairService.pairFlow
             .map { request -> WcInnerRoute.Pair(request) }
 
-        merge(requestFlow, pairFlow)
+        val mcpFlow = mcpRequestService.requestFlow
+            .map { request -> WcInnerRoute.McpRequestRoute(request) }
+
+        merge(requestFlow, pairFlow, mcpFlow)
             .onEach { configuration ->
                 TangemLogger.d("WC Queue: Received configuration $configuration, waiting for queue ready")
                 awaitQueueReady()

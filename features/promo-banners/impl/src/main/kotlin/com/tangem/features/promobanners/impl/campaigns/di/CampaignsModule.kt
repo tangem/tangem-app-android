@@ -10,6 +10,7 @@ import com.tangem.features.promobanners.impl.campaigns.model.ActivateCampaignsMo
 import com.tangem.features.promobanners.impl.campaigns.model.CampaignsModel
 import com.tangem.features.promobanners.impl.campaigns.service.CampaignsService
 import com.tangem.features.promobanners.impl.campaigns.service.DefaultCampaignsService
+import com.tangem.features.promobanners.impl.campaigns.v2.model.PromoCampaignModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -50,4 +51,9 @@ internal interface CampaignsModelModule {
     @IntoMap
     @ClassKey(ActivateCampaignsModel::class)
     fun bindCampaignActivateModel(model: ActivateCampaignsModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(PromoCampaignModel::class)
+    fun bindPromoCampaignModel(model: PromoCampaignModel): Model
 }
