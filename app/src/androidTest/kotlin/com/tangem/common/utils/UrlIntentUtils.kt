@@ -16,7 +16,6 @@ fun stubExternalUrlOpening() {
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
 }
 
-// Links like the Tangem Pay tariffs carry a per-tap `?t=<timestamp>`, so only the prefix is stable.
 fun assertUrlOpenedStartingWith(urlPrefix: String) {
     Intents.intended(allOf(hasAction(Intent.ACTION_VIEW), hasData(hasToString<Uri>(startsWith(urlPrefix)))))
 }
