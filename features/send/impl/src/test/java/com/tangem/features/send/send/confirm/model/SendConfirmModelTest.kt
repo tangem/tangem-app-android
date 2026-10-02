@@ -718,6 +718,27 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             assertThat(feeTokens).containsExactly(null)
         }
 
+        @Test
+        fun `GIVEN a coin fee and the sent token as the fee status WHEN onSendClick THEN no fee token is passed`() =
+            runTest {
+                // Arrange
+                val feeTokens = mutableListOf<CryptoCurrency.Token?>()
+                stubJointCreation(feeTokens)
+                val params = jointConfirmParams(
+                    onSendTransaction = mockk(relaxed = true),
+                    paramsFeeCryptoCurrencyStatus = com.tangem.features.send.loadedStatus(ethereumUsdc),
+                )
+                val sut = createSendConfirmModel(this, params)
+                advanceUntilIdle()
+
+                // Act
+                sut.onSendClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(feeTokens).containsExactly(null)
+            }
+
         private fun stubJointCreation(feeTokens: MutableList<CryptoCurrency.Token?>) {
             coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
             coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
@@ -732,6 +753,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             enteredAmount: BigDecimal = BigDecimal.ONE,
             transactionFeeExtended: TransactionFeeExtended? = null,
             feeCryptoCurrencyStatus: CryptoCurrencyStatus = loadedFeeStatus,
+            paramsFeeCryptoCurrencyStatus: CryptoCurrencyStatus = loadedFeeStatus,
         ) = MutableParamsContainer(
             defaultSendConfirmParams(
                 state = contentState(
@@ -741,7 +763,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
                     feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                 ).copy(confirmUM = ConfirmUM.Empty),
                 cryptoCurrencyStatus = loadedFeeStatus,
-                feeCryptoCurrencyStatus = loadedFeeStatus,
+                feeCryptoCurrencyStatus = paramsFeeCryptoCurrencyStatus,
             ).copy(
                 accountFlow = MutableStateFlow(jointAccount),
                 onSendTransaction = onSendTransaction,
