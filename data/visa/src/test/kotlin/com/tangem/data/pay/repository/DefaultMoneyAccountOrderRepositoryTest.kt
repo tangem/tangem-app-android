@@ -53,14 +53,17 @@ internal class DefaultMoneyAccountOrderRepositoryTest {
                 is ApiResponse.Error -> VisaApiError.Unspecified.left()
             }
         }
-        coEvery { tangemPayApi.createOrder(any(), any()) } returns ApiResponse.Success(createResponse())
+        coEvery { tangemPayApi.createOrder(any(), any(), any()) } returns ApiResponse.Success(createResponse())
     }
 
     @Test
     fun `GIVEN deposit address and signature WHEN createOrder THEN money account order is requested`() = runTest {
         // Arrange
+        val idempotencyKey = slot<String>()
         val body = slot<OrderRequest>()
-        coEvery { tangemPayApi.createOrder(any(), capture(body)) } returns ApiResponse.Success(createResponse())
+        coEvery {
+            tangemPayApi.createOrder(any(), capture(idempotencyKey), capture(body))
+        } returns ApiResponse.Success(createResponse())
 
         // Act
         repository.createOrder(USER_WALLET_ID, DEPOSIT_ADDRESS, SIGNATURE)
@@ -73,7 +76,7 @@ internal class DefaultMoneyAccountOrderRepositoryTest {
                 specificationName = "SP_000006",
             ),
         )
-        assertThat(body.captured.idempotencyKey).isNotEmpty()
+        assertThat(idempotencyKey.captured).isNotEmpty()
     }
 
     @Test
@@ -91,7 +94,7 @@ internal class DefaultMoneyAccountOrderRepositoryTest {
     fun `GIVEN an empty result WHEN createOrder THEN an error is returned`() = runTest {
         // Arrange
         coEvery {
-            tangemPayApi.createOrder(any(), any())
+            tangemPayApi.createOrder(any(), any(), any())
         } returns ApiResponse.Success(OrderResponse(result = null))
 
         // Act
