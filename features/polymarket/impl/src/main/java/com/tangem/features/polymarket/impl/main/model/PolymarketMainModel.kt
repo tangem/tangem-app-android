@@ -58,6 +58,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
@@ -152,6 +153,8 @@ internal class PolymarketMainModel @Inject constructor(
 
     private val staleDataReporter = PolymarketStaleDataReporter(onReport = ::reportStaleData)
 
+    private var isScreenResumed = false
+
     init {
         combine(
             flow = predictionAccountStatusSupplier(userWalletId = params.userWalletId),
@@ -187,6 +190,12 @@ internal class PolymarketMainModel @Inject constructor(
             .take(count = 1)
             .onEach { fundingRequisites.prefetchOnce() }
             .launchIn(modelScope)
+
+        predictionAccountStatusSupplier(userWalletId = params.userWalletId)
+            .filterIsInstance<PredictionAccountStatusValue.Onboarded>()
+            .filter { isScreenResumed }
+            .onEach { returnToGateWithoutCredentials() }
+            .launchIn(modelScope)
     }
 
     // Kept for as long as the screen lives: coming back to a tab must not cost a reload.
@@ -196,7 +205,6 @@ internal class PolymarketMainModel @Inject constructor(
 
     private var categories: List<PolymarketCategory> = emptyList()
     private var selectedCategoryId: Int? = null
-    private var isScreenResumed = false
 
     private val categoriesJob = JobHolder()
 
