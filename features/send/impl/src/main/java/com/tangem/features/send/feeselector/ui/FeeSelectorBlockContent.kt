@@ -195,7 +195,9 @@ private fun FeeLoading() {
     TextShimmer(
         radius = TangemTheme.dimens.radius3,
         style = TangemTheme.typography.body1,
-        modifier = Modifier.width(width = TangemTheme.dimens.size90),
+        modifier = Modifier
+            .width(width = TangemTheme.dimens.size90)
+            .testTag(FeeSelectorBlockTestTags.FEE_LOADING),
     )
 }
 
