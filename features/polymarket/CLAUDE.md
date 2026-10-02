@@ -18,6 +18,10 @@ adding any screen that can sign, prompt or move funds.
 **Toggle:** `AND_16204_POLYMARKET_ENABLED` (`PolymarketFeatureToggles.isPolymarketEnabled`), `"version":
 "undefined"` in `feature_toggles_config.json` — dev builds only until release.
 
+**Rollout:** the feed's Predictions block (`PredictionsBlockModel`) also needs the Amplitude flag
+`twi_1576_polymarket` = `on`, read once per model and only while the toggle is on. Nothing else checks the
+flag: accounts, balances and the wallet screen row follow the toggle alone.
+
 ## How it plugs in
 
 - **Entry points** — `AppRoute.Polymarket(userWalletId?)` built in `app/.../ChildFactory` from
@@ -144,8 +148,12 @@ Status receives the result, market header and position id as route data and owns
   it is placeable: `quote.isPlaceable` (market state; a SELL also places on `BELOW_MIN_ORDER_SIZE`) and
   `isBelowMinAmount` (BUY only, price-weighted — a SELL has no floor beyond one whole share or the whole
   position).
-- **Shares.** `SharesCalculator`: the sellable size is the position floored to the 2-decimal exchange grid
-  (`PolymarketConst.SHARES_DECIMALS`); presets and ± steps move in whole shares with a floor of one share
+- **Shares.** `SharesCalculator`: the sellable size is the whole position at the on-chain share precision
+  (`PolymarketContracts.SHARE_DECIMALS` = `COLLATERAL_DECIMALS`, 6 — shares are minted 1:1 from
+  collateral base units) — it is not floored onto the 2-decimal amount grid, because the BFF
+  quotes the sale of a whole position at the position's own precision (a sub-cent whole position included).
+  Every share count renders cut down to 2 decimals, as on iOS, never more than is held (`formatPolymarketShares`);
+  only a count below 0.01 keeps its own precision, so a sellable remainder is not shown as `0`; presets and ± steps move in whole shares with a floor of one share
   (or the whole position when smaller), and 100 % is the position itself, so a full close reaches the
   last fraction.
 - **Slippage.** Default 3 %, range 0.1–30 % (`SlippagePickerUM`); a fill at the worst-case price counts as filled.
@@ -208,6 +216,15 @@ reads the outcome.
 (`SubmitPredictionClaimInteractor`); `canOpenPositionResult` requires `RESOLVED` and a known outcome, not
 `isRedeemable` — a won position whose payout is not on-chain yet opens the result with a payout-pending
 footer.
+
+## History
+
+`PolymarketHistoryModel` opens a `PolymarketActivitySession` for the route's wallet and binds it to the
+component's resume/pause lifecycle. Rows are grouped by local calendar date and displayed newest first;
+BUY/WITHDRAW amounts are outgoing, SELL/DEPOSIT/REDEEM are incoming, and a lost redemption shows a dash.
+All/Buy/Sell/Funds Added/Withdrawn tabs use backend type filters. Pull-to-refresh retains loaded rows,
+pagination errors offer retry, and an empty filtered result keeps the tabs available. Search and CSV
+are inert placeholders; row-detail sheets and funding source/destination metadata are deferred.
 
 ## Gotchas
 

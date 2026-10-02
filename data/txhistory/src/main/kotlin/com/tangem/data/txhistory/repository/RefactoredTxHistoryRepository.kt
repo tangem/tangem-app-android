@@ -128,6 +128,7 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
             transform = { outgoingSwaps, incomingSwaps, onramps, providers, fiatCurrencies ->
                 buildExpressHistory(
                     userWalletId = userWalletId,
+                    currency = currency,
                     sources = ExpressHistorySources(
                         outgoingSwaps = outgoingSwaps,
                         incomingSwaps = incomingSwaps,
@@ -179,6 +180,7 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
             transform = { exchange, onramp, providers, fiatCurrencies ->
                 expressTxByIdFactory.create(
                     userWalletId = userWalletId,
+                    currency = currency,
                     outgoingAddresses = addresses,
                     sources = ExpressTxByIdFactory.Sources(
                         exchange = exchange,
@@ -216,10 +218,12 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
 
     private suspend fun buildExpressHistory(
         userWalletId: UserWalletId,
+        currency: CryptoCurrency,
         sources: ExpressHistorySources,
     ): List<ExpressTx> {
         val currencies = expressTransactionAssetFactory.create(
             userWalletId = userWalletId,
+            historyCurrency = currency,
             outgoingSwaps = sources.outgoingSwaps,
             incomingSwaps = sources.incomingSwaps,
             onramps = sources.onramps,

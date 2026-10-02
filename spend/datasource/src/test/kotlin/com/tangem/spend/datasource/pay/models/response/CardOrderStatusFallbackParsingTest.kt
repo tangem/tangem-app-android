@@ -44,6 +44,7 @@ internal class CardOrderStatusFallbackParsingTest {
 
     private fun provideTestModels() = listOf(
         StatusModel(raw = orderJson(status = ""","status":"PROCESSING""""), expected = Status.PROCESSING),
+        StatusModel(raw = orderJson(status = ""","status":"processing""""), expected = Status.PROCESSING),
         StatusModel(raw = orderJson(status = ""","status":"AWAITING_SOMETHING_NEW""""), expected = Status.UNKNOWN),
         StatusModel(raw = orderJson(status = ""), expected = Status.UNKNOWN),
     )

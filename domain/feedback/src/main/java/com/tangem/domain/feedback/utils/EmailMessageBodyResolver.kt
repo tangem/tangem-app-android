@@ -29,7 +29,6 @@ class EmailMessageBodyResolver(
             is FeedbackEmailType.PreActivatedWallet -> addUserRequestBody(type.walletMetaInfo)
             is FeedbackEmailType.BackupProblem -> addUserRequestBody(type.walletMetaInfo)
             is FeedbackEmailType.ScanningProblem,
-            is FeedbackEmailType.SocialLoginProblem,
             is FeedbackEmailType.CardAttestationFailed,
             is FeedbackEmailType.BiometricsAuthenticationFailed,
             is FeedbackEmailType.AppUpdateProblem,
