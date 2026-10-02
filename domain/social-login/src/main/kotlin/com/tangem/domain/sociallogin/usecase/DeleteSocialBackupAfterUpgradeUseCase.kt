@@ -1,21 +1,19 @@
 package com.tangem.domain.sociallogin.usecase
 
 import arrow.core.Either
-import arrow.core.raise.either
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.repository.SocialBackupRepository
 import javax.inject.Inject
 
+/**
+ * Deletes the cloud file only: the upgrade has already replaced the hot wallet's record, and its social
+ * backup mark went with it. The caller decides whether there is a backup, before the record is replaced.
+ */
 class DeleteSocialBackupAfterUpgradeUseCase @Inject constructor(
     private val socialBackupRepository: SocialBackupRepository,
 ) {
 
-    suspend operator fun invoke(walletId: UserWalletId): Either<SocialLoginError, Boolean> = either {
-        if (!socialBackupRepository.isSocialBackupCompleted(walletId)) return@either false
-
-        socialBackupRepository.deleteBackup(walletId).bind()
-        socialBackupRepository.setSocialBackupCompleted(walletId = walletId, isCompleted = false).bind()
-        true
-    }
+    suspend operator fun invoke(walletId: UserWalletId): Either<SocialLoginError, Unit> =
+        socialBackupRepository.deleteBackup(walletId)
 }

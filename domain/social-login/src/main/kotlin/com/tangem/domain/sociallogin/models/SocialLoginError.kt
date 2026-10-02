@@ -49,6 +49,9 @@ sealed interface SocialLoginError {
     /** The file declares a format version this app cannot read */
     data class UnsupportedBackupVersion(val version: Int) : SocialLoginError
 
+    /** The restored wallet is already on this device, so nothing is imported */
+    data object WalletAlreadySaved : SocialLoginError
+
     /** The backup needs a passphrase a social restore cannot ask for; the seed alone builds another wallet */
     data object PassphraseNotSupported : SocialLoginError
 
