@@ -158,6 +158,11 @@ once (`price_change_percentage` holds `24h`/`1w`/`30d` regardless of the `interv
 re-maps what it already has — the same reason the list skips its reload under `RwaSort.MarketCap`. The rail
 also ignores the applied category/sector filter, which scopes only the list below it.
 
+**The rail does send the country, though.** It is the one filter the rail shares with the list, because
+`openTokenDetails` resolves a tapped id through the list *and then* the rail — a rail token fetched without
+a country arrives `isRestrictedForCountry = false` and walks straight past the region gate on the token
+screen (`MarketsTokenDetailsModel`), notice and Add-to-portfolio block included.
+
 ## Gotchas
 
 **Everything under `impl/.../model/list/` has a twin in `features/feed/crypto/impl`.** This module was
@@ -237,10 +242,15 @@ list, so the list scope was never affected.
 **Geo: the country only decides `restricted`, it narrows nothing.** `getCoinCategories(country)` sends
 ISO 3166-1 alpha-2 as a query param; omitting it returns the same categories with every `restricted`
 false. That is why the tab's default category cannot be derived from the flag — the umbrella is
-restricted nowhere. `US`/`GB` open on `commodities` instead (`RwaDefaultCategory`), applied once per
-model so a later reload cannot overwrite the user's pick. `UserCountryResolver` waits up to 3s for the start-up geo fetch — the synchronous read is an
-in-memory flow rebuilt every process, so every launch races it — and falls back to the device region
-rather than asking without a country.
+restricted nowhere. `US`/`GB` open on `commodities` instead — or, if the backend stops serving it or
+blocks it too, on the first **allowed** category by `displayOrder` that the selector would offer, and on a
+blocked one only when every category is blocked (`RwaDefaultCategory`), never on the umbrella. It is applied once per model so a later reload cannot overwrite the user's pick, and it is also
+what the Category selector's **Reset** restores: reset goes back to the scope the region opens on, not to
+the scope the screen was opened with.
+
+`UserCountryResolver` waits up to 3s for the start-up geo fetch — the synchronous read is an in-memory
+flow rebuilt every process, so every launch races it — and falls back to the device region rather than
+asking without a country.
 
 **The categories endpoint is deliberately uncached.** Every `getCoinCategories` call goes to the
 network — no `CacheRegistry` entry, no in-memory store, no persisted snapshot. The response carries the

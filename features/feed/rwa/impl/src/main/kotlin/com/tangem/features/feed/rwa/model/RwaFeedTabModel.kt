@@ -315,7 +315,7 @@ internal class RwaFeedTabModel @Inject constructor(
 
     private fun reloadFeatured() {
         val categoryId = categoriesState.value.featuredCategoryId ?: return
-        featuredManager.load(categoryId = categoryId)
+        featuredManager.load(categoryId = categoryId, country = categoriesState.value.country)
     }
 
     /** Reloading before the umbrella id is known would request the whole coin universe, so re-resolve it first. */
@@ -451,6 +451,7 @@ internal class RwaFeedTabModel @Inject constructor(
         val banner = RwaRegionRestriction.banner(
             restrictedIds = categoriesState.value.restrictedCategoryIds,
             selection = selection,
+            country = categoriesState.value.country,
         )
         uiState.update { it.copy(regionRestriction = banner) }
 
