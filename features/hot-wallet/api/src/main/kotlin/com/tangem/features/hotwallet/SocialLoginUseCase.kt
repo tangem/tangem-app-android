@@ -17,7 +17,8 @@ interface SocialLoginUseCase {
      * @param onStageChanged called on the calling coroutine, never after signIn returns
      * @param requestBackupRetry asked when a new wallet is bound but its cloud file could not be written: `true`
      * repeats only the write, `false` releases the binding and drops the wallet
-
+     * @param requestConsent asked before the backend lookup when the cloud holds no backup of this identity; `null`
+     * aborts the sign-in
      */
     suspend fun signIn(
         provider: SocialLoginProvider,

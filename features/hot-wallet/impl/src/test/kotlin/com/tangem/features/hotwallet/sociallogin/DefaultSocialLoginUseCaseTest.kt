@@ -15,6 +15,7 @@ import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
 import com.tangem.domain.sociallogin.models.SocialProviderIdToken
 import com.tangem.domain.sociallogin.usecase.GenerateRecoveryKeyUseCase
+import com.tangem.domain.sociallogin.usecase.GetSocialBackupInfoUseCase
 import com.tangem.domain.sociallogin.usecase.GetSocialRecoveryKeyUseCase
 import com.tangem.domain.sociallogin.usecase.ReadSocialBackupUseCase
 import com.tangem.domain.sociallogin.usecase.RegisterRestoredWalletUseCase
@@ -73,6 +74,7 @@ internal class DefaultSocialLoginUseCaseTest {
     private val hotUserWalletBuilderFactory: HotUserWalletBuilder.Factory = mockk()
     private val saveWalletUseCase: SaveWalletUseCase = mockk()
     private val exportSeedPhraseUseCase: ExportSeedPhraseUseCase = mockk()
+    private val getSocialBackupInfoUseCase: GetSocialBackupInfoUseCase = mockk()
     private val readSocialBackupUseCase: ReadSocialBackupUseCase = mockk(relaxed = true)
     private val mnemonicRepository: MnemonicRepository = mockk()
     private val hotWalletImporter: HotWalletImporter = mockk()
@@ -108,6 +110,7 @@ internal class DefaultSocialLoginUseCaseTest {
         generateRecoveryKeyUseCase = generateRecoveryKeyUseCase,
         writeSocialBackupUseCase = writeSocialBackupUseCase,
         readSocialBackupUseCase = readSocialBackupUseCase,
+        getSocialBackupInfoUseCase = getSocialBackupInfoUseCase,
         registerSocialRecoveryUseCase = registerSocialRecoveryUseCase,
         registerRestoredWalletUseCase = registerRestoredWalletUseCase,
         getUserWalletUseCase = getUserWalletUseCase,
@@ -134,6 +137,7 @@ internal class DefaultSocialLoginUseCaseTest {
             saveWalletUseCase,
             exportSeedPhraseUseCase,
             readSocialBackupUseCase,
+            getSocialBackupInfoUseCase,
             mnemonicRepository,
             hotWalletImporter,
             registerRestoredWalletUseCase,
@@ -149,6 +153,7 @@ internal class DefaultSocialLoginUseCaseTest {
 
         coEvery { signInWithSocialProviderUseCase(PROVIDER) } returns ID_TOKEN.right()
         coEvery { getSocialRecoveryKeyUseCase(ID_TOKEN) } returns SocialLoginError.BindingNotFound.left()
+        coEvery { getSocialBackupInfoUseCase() } returns SocialLoginError.BackupNotFound.left()
         coEvery { tangemHotSdk.generateWallet(any(), any()) } returns hotWalletId
         coEvery { tangemHotSdk.delete(any()) } just Runs
         every { hotUserWalletBuilderFactory.create(hotWalletId) } returns builder
@@ -178,6 +183,7 @@ internal class DefaultSocialLoginUseCaseTest {
         coEvery { getSocialRecoveryKeyUseCase(ID_TOKEN) } returns
             RecoveryKey(ByteArray(RecoveryKey.SIZE_BYTES) { 3 }).right()
         coEvery { readSocialBackupUseCase(any()) } returns restoredBackup().right()
+        coEvery { getSocialBackupInfoUseCase() } returns restoredBackup().info.right()
     }
 
     @Test
@@ -513,6 +519,60 @@ internal class DefaultSocialLoginUseCaseTest {
             writeSocialBackupUseCase(any(), any(), any())
         }
     }
+
+    @Test
+    fun `GIVEN the consent is declined WHEN signIn THEN the backend is not asked for the key`() = runTest {
+        // Act
+        useCase.signIn(PROVIDER) { null }
+
+        // Assert
+        coVerify(exactly = 0) { getSocialRecoveryKeyUseCase(any()) }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideMissingBackupErrors")
+    fun `GIVEN no readable backup AND a bound identity WHEN signIn THEN consent is asked before the recovery`(
+        error: SocialLoginError,
+    ) = runTest {
+        // Arrange
+        bindIdentity()
+        coEvery { getSocialBackupInfoUseCase() } returns error.left()
+        var wasConsentAsked = false
+
+        // Act
+        useCase.signIn(PROVIDER) {
+            wasConsentAsked = true
+            coVerify(exactly = 0) { getSocialRecoveryKeyUseCase(any()) }
+            CONSENT
+        }
+
+        // Assert
+        assertThat(wasConsentAsked).isTrue()
+    }
+
+    private fun provideMissingBackupErrors() = listOf(
+        SocialLoginError.BackupNotFound,
+        SocialLoginError.CloudUnavailable,
+        SocialLoginError.NetworkError,
+    )
+
+    @Test
+    fun `GIVEN a backup file AND no binding WHEN signIn THEN the wallet is created without asking again`() =
+        runTest {
+            // Arrange
+            coEvery { getSocialBackupInfoUseCase() } returns restoredBackup().info.right()
+            var wasConsentAsked = false
+
+            // Act
+            val actual = useCase.signIn(PROVIDER) {
+                wasConsentAsked = true
+                CONSENT
+            }
+
+            // Assert
+            assertThat(actual).isEqualTo(SocialLoginOutcome.WalletCreated(WALLET_ID).right())
+            assertThat(wasConsentAsked).isFalse()
+        }
 
     @Test
     fun `GIVEN the create branch WHEN signIn THEN consent is asked before the wallet is generated`() = runTest {
