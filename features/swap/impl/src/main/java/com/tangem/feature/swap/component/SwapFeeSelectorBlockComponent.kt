@@ -50,6 +50,7 @@ class SwapFeeSelectorBlockComponent @AssistedInject constructor(
                 analyticsCategoryName = params.analyticsParams.analyticsCategoryName,
                 analyticsSendSource = params.analyticsParams.analyticsSendSource,
                 bottomSheetShown = params.repository::choosingInProgress,
+                isTronGaslessSupported = !params.isTransferMode,
             ),
             onResult = params.repository::onResult,
         )

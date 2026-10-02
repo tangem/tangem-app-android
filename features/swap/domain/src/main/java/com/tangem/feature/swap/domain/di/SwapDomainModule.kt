@@ -10,6 +10,7 @@ import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForGaslessTxUseC
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForTokenUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
+import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.usecase.WrapYieldSwapCallDataWithUpgradeUseCase
 import com.tangem.feature.swap.domain.*
@@ -96,6 +97,7 @@ internal class SwapDomainModule {
         estimateFeeForGaslessTxUseCase: EstimateFeeForGaslessTxUseCase,
         getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase,
         createTransferTransactionUseCase: CreateTransferTransactionUseCase,
+        isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
         @SwapSendGasLimit patchEthGasLimitForSwap: PatchEthGasLimitForSwap,
     ): CexSwapFeeCalculator = CexSwapFeeCalculator(
         estimateFeeUseCase = estimateFeeUseCase,
@@ -103,6 +105,7 @@ internal class SwapDomainModule {
         estimateFeeForGaslessTxUseCase = estimateFeeForGaslessTxUseCase,
         getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
         createTransferTransactionUseCase = createTransferTransactionUseCase,
+        isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
         patchEthGasLimitForSwap = patchEthGasLimitForSwap,
     )
 
