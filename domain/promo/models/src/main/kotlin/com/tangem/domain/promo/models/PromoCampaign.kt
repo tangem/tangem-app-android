@@ -3,13 +3,16 @@ package com.tangem.domain.promo.models
 import java.math.BigDecimal
 
 /**
- * Campaign the backend reports as eligible for a single wallet.
+ * Campaign the backend returns for a single wallet. Whether it is available is decided on the app side from
+ * [status] and [eligibility].
  */
 data class PromoCampaign(
+    val id: Int,
     val name: String,
-    val status: String,
+    val status: PromoCampaignStatus,
     val timeline: PromoTimeline,
     val isAlreadyEnrolled: Boolean,
+    val eligibility: PromoEligibility,
     val payout: PromoPayout,
     val matchMode: PromoMatchMode,
     val content: PromoCampaignContent,
@@ -19,6 +22,35 @@ data class PromoPayout(
     val isNeeded: Boolean,
     val tokens: List<PromoPayoutToken>,
 )
+
+enum class PromoCampaignStatus {
+    Draft,
+    Active,
+    Paused,
+    Archived,
+}
+
+sealed interface PromoEligibility {
+
+    data object Public : PromoEligibility
+
+    data class Private(val conditions: PromoEligibilityConditions) : PromoEligibility
+}
+
+/** Every condition is optional; a `null` one is not checked. Versions are `major.minor[.fix]` strings. */
+data class PromoEligibilityConditions(
+    val walletIds: List<String>?,
+    val walletType: PromoWalletType?,
+    val batchIds: List<String>?,
+    val countryExcluded: List<String>?,
+    val minAndroidVersion: String?,
+    val maxAndroidVersion: String?,
+)
+
+enum class PromoWalletType {
+    Mobile,
+    Card,
+}
 
 /** How the device's wallets are registered on enrollment. */
 enum class PromoMatchMode {
@@ -43,7 +75,10 @@ data class PromoLink(
 
 sealed interface PromoDescriptionBlock {
 
-    data class Text(val textKey: String) : PromoDescriptionBlock
+    data class Text(
+        val titleKey: String?,
+        val textKey: String,
+    ) : PromoDescriptionBlock
 
     data class Items(
         val titleKey: String?,

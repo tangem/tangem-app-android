@@ -38,10 +38,10 @@ interface TangemPayApi {
     suspend fun setPendingTariffPlanTransition(
         @Header("Authorization") authHeader: String,
         @Body body: SetPendingTariffPlanTransitionRequest,
-    ): ApiResponse<Any>
+    ): ApiResponse<Unit>
 
     @POST("v1/customer/tariff-plan/pending-transition/cancel")
-    suspend fun cancelPendingTariffPlanTransition(@Header("Authorization") authHeader: String): ApiResponse<Any>
+    suspend fun cancelPendingTariffPlanTransition(@Header("Authorization") authHeader: String): ApiResponse<Unit>
 
     /** Fiat bank requisites for the Virtual Account on-ramp (VA MVP0, TWI-1638). */
     @GET("v1/account/bank-credentials/{product_instance_id}")
@@ -69,7 +69,7 @@ interface TangemPayApi {
     suspend fun setTangemPayEnabledStatus(
         @Header("Authorization") authHeader: String,
         @Body body: SetTangemPayEnabledRequest,
-    ): ApiResponse<Any>
+    ): ApiResponse<Unit>
 
     @POST("v1/deeplink/validate")
     suspend fun validateDeeplink(@Body body: DeeplinkValidityRequest): ApiResponse<DeeplinkValidityResponse>
@@ -136,13 +136,6 @@ interface TangemPayApi {
         @Body body: OrderRequest,
     ): ApiResponse<OrderResponse>
 
-    // TODO: Doston: [REDACTED_TASK_KEY] Unify with method above
-    @POST("v1/order")
-    suspend fun createAccountOrder(
-        @Header("Authorization") authHeader: String,
-        @Body body: AccountOrderRequest,
-    ): ApiResponse<OrderResponse>
-
     @POST("v1/order")
     suspend fun createBankOfframpOrder(
         @Header("Authorization") authHeader: String,
@@ -163,7 +156,7 @@ interface TangemPayApi {
     suspend fun cancelOrder(
         @Header("Authorization") authHeader: String,
         @Path("order_id") orderId: String,
-    ): ApiResponse<Any>
+    ): ApiResponse<Unit>
 
     /** Customer offers — used to gate the issue-additional-card flow. */
     @GET("v1/customer/offers")

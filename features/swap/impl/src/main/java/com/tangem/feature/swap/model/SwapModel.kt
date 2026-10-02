@@ -48,7 +48,9 @@ import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.status.producer.SingleAccountStatusProducer
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
+import com.tangem.domain.account.status.supplier.SingleAccountStatusSupplier
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
@@ -67,6 +69,7 @@ import com.tangem.domain.markets.RawMarketToken
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -197,6 +200,7 @@ internal class SwapModel @Inject constructor(
     private val initialCurrenciesResolver: InitialCurrenciesResolver,
     private val accountUnderlyingCurrencies: AccountUnderlyingCurrencies,
     private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
+    private val singleAccountStatusSupplier: SingleAccountStatusSupplier,
     private val getPredictionWithdrawDestinationsUseCase: GetPredictionWithdrawDestinationsUseCase,
     polymarketCollateralCurrencyFactory: PolymarketCollateralCurrencyFactory,
     private val submitPredictionWithdrawalInteractor: SubmitPredictionWithdrawalInteractor,
@@ -574,7 +578,9 @@ internal class SwapModel @Inject constructor(
 
     private fun initTokens() {
         modelScope.launch(dispatchers.default) {
-            isAccountsMode = isAccountsModeEnabledUseCase.invokeSync()
+            isAccountsMode = isAccountsModeEnabledUseCase.invokeSync() ||
+                isPredictionTopUpFlow ||
+                isPredictionWithdrawFlow
 
             val (resolvedFromCurrencyStatus, resolvedToCurrencyStatus) = initialCurrenciesResolver(
                 userWalletId = params.userWalletId,
@@ -2125,7 +2131,12 @@ internal class SwapModel @Inject constructor(
             ).map { (_, status) -> status }
             // Virtual account isn't a swap source in the MVP (withdrawal reuses the send flow)
             is Account.Money -> emptyFlow()
-            is Account.Prediction -> emptyFlow()
+            is Account.Prediction -> singleAccountStatusSupplier(
+                SingleAccountStatusProducer.Params(swapCurrencyStatus.account.accountId),
+            ).mapNotNull { accountStatus ->
+                val predictionValue = (accountStatus as? AccountStatus.Prediction)?.value
+                (predictionValue as? PredictionAccountStatusValue.Active)?.cryptoCurrencyStatus
+            }
             // Collectibles account holds no spendable currencies of its own — its funds live in the gacha vault
             is Account.Collectibles -> emptyFlow()
             // A joint account isn't a swap source either — spending from a Safe is a future co-signed operation
@@ -2899,6 +2910,7 @@ internal class SwapModel @Inject constructor(
     private fun SwapStateHolder.withAccountFlowPresentation(): SwapStateHolder = withAccountFlowPresentation(
         accountFlow = accountFlow,
         isReverseLocked = isReverseLocked,
+        predictionCollateralBalance = dataState.toSwapCurrencyStatus?.status?.value?.amount,
     )
 
     // Mode-based detection (accountFlow is Withdraw) covers the Tangem Pay withdraw-via-swap entry

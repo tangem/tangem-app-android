@@ -1,14 +1,13 @@
 package com.tangem.tap.data
 
 import android.content.Context
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.tangem.spend.datasource.visa.storage.VisaAuthTokenStorage
 import com.tangem.domain.visa.model.VisaAuthTokens
 import com.tangem.sdk.storage.AndroidSecureStorageV2
+import com.tangem.spend.datasource.visa.storage.VisaAuthTokenStorage
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -26,19 +25,13 @@ internal class DefaultVisaAuthTokenStorage @Inject constructor(
         )
     }
 
-    private val moshi by lazy {
-        Moshi.Builder()
-            .add(KotlinJsonAdapterFactory())
-            .build()
-    }
-
-    private val tokensAdapter by lazy { moshi.adapter(VisaAuthTokens::class.java) }
+    private val json = Json { ignoreUnknownKeys = true }
 
     override suspend fun store(cardId: String, tokens: VisaAuthTokens) = withContext(dispatcherProvider.io) {
-        val json = tokensAdapter.toJson(tokens)
+        val encoded = json.encodeToString(VisaAuthTokens.serializer(), tokens)
 
         secureStorage.store(
-            json.encodeToByteArray(throwOnInvalidSequence = true),
+            encoded.encodeToByteArray(throwOnInvalidSequence = true),
             createKey(cardId),
         )
     }
@@ -46,7 +39,7 @@ internal class DefaultVisaAuthTokenStorage @Inject constructor(
     override suspend fun get(cardId: String): VisaAuthTokens? = withContext(dispatcherProvider.io) {
         secureStorage.get(createKey(cardId))
             ?.decodeToString(throwOnInvalidSequence = true)
-            ?.let(tokensAdapter::fromJson)
+            ?.let { encoded -> json.decodeFromString(VisaAuthTokens.serializer(), encoded) }
     }
 
     override fun remove(cardId: String) {

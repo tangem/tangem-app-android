@@ -3,14 +3,20 @@ package com.tangem.domain.moneyaccount.usecase
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.MoneyAccountStatusValue
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.model.MoneyAccountEligibility
+import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.security.DeviceSecurityInfoProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -26,11 +32,15 @@ internal class GetMoneyAccountEligibilityUseCaseTest {
     private val getMoneyAccountSuitableWalletsUseCase: GetMoneyAccountSuitableWalletsUseCase = mockk()
     private val getMoneyAccountStatusUseCase: GetMoneyAccountStatusUseCase = mockk()
     private val deviceSecurityInfoProvider: DeviceSecurityInfoProvider = mockk()
+    private val onboardingRepository: OnboardingRepository = mockk()
+    private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
 
     private val useCase = GetMoneyAccountEligibilityUseCase(
         getMoneyAccountSuitableWalletsUseCase = getMoneyAccountSuitableWalletsUseCase,
         getMoneyAccountStatusUseCase = getMoneyAccountStatusUseCase,
         deviceSecurityInfoProvider = deviceSecurityInfoProvider,
+        onboardingRepository = onboardingRepository,
+        singleAccountListSupplier = singleAccountListSupplier,
     )
 
     @BeforeEach
@@ -39,7 +49,11 @@ internal class GetMoneyAccountEligibilityUseCaseTest {
             getMoneyAccountSuitableWalletsUseCase,
             getMoneyAccountStatusUseCase,
             deviceSecurityInfoProvider,
+            onboardingRepository,
+            singleAccountListSupplier,
         )
+        coEvery { singleAccountListSupplier.getSyncOrNull(any<UserWalletId>()) } returns null
+        coEvery { onboardingRepository.isTangemPayInitialDataProduced(any()) } returns true
         every { deviceSecurityInfoProvider.isRooted } returns false
         every { deviceSecurityInfoProvider.isBootloaderUnlocked } returns false
         every { deviceSecurityInfoProvider.isXposed } returns false
@@ -81,6 +95,21 @@ internal class GetMoneyAccountEligibilityUseCaseTest {
 
         // Assert
         assertThat(result).isEqualTo(MoneyAccountEligibility.Available(listOf(wallet)))
+    }
+
+    @Test
+    fun `GIVEN wallet without auth tokens WHEN invoke THEN returns Available without status loading`() = runTest {
+        // Arrange
+        val wallet = mockWallet()
+        every { getMoneyAccountSuitableWalletsUseCase() } returns listOf(wallet)
+        coEvery { onboardingRepository.isTangemPayInitialDataProduced(wallet.walletId) } returns false
+
+        // Act
+        val result = useCase()
+
+        // Assert
+        assertThat(result).isEqualTo(MoneyAccountEligibility.Available(listOf(wallet)))
+        coVerify(exactly = 0) { getMoneyAccountStatusUseCase(any()) }
     }
 
     @Test
@@ -130,6 +159,38 @@ internal class GetMoneyAccountEligibilityUseCaseTest {
         assertThat(result).isEqualTo(MoneyAccountEligibility.Available(listOf(walletWithoutAccount)))
     }
 
+    @Test
+    fun `GIVEN user currency on money account path WHEN invoke THEN wallet is excluded`() = runTest {
+        // Arrange
+        val walletWithConflict = mockWallet()
+        val walletWithoutConflict = mockWallet()
+        every { getMoneyAccountSuitableWalletsUseCase() } returns listOf(walletWithConflict, walletWithoutConflict)
+        coEvery { onboardingRepository.isTangemPayInitialDataProduced(any()) } returns false
+        mockCurrencies(walletWithConflict, derivationPath = "m/44'/60'/999998'/0/0")
+        mockCurrencies(walletWithoutConflict, derivationPath = "m/44'/60'/1'/0/0")
+
+        // Act
+        val result = useCase()
+
+        // Assert
+        assertThat(result).isEqualTo(MoneyAccountEligibility.Available(listOf(walletWithoutConflict)))
+    }
+
+    @Test
+    fun `GIVEN only wallet has currency on money account path WHEN invoke THEN returns NotAvailable`() = runTest {
+        // Arrange
+        val wallet = mockWallet()
+        every { getMoneyAccountSuitableWalletsUseCase() } returns listOf(wallet)
+        mockCurrencies(wallet, derivationPath = "m/44'/60'/999998'/0/0")
+
+        // Act
+        val result = useCase()
+
+        // Assert
+        assertThat(result).isEqualTo(MoneyAccountEligibility.NotAvailable)
+        coVerify(exactly = 0) { getMoneyAccountStatusUseCase(any()) }
+    }
+
     private fun provideNotEligibleStatuses() = listOf(
         MoneyAccountStatusValue.Empty,
         MoneyAccountStatusValue.Loading,
@@ -175,6 +236,14 @@ internal class GetMoneyAccountEligibilityUseCaseTest {
 
     private fun mockStatus(wallet: UserWallet, status: MoneyAccountStatusValue) {
         coEvery { getMoneyAccountStatusUseCase(wallet.walletId) } returns status.right()
+    }
+
+    private fun mockCurrencies(wallet: UserWallet, derivationPath: String) {
+        val currency = mockk<CryptoCurrency> {
+            every { network.derivationPath } returns Network.DerivationPath.Custom(value = derivationPath)
+        }
+        val accountList = mockk<AccountList> { every { flattenCurrencies() } returns listOf(currency) }
+        coEvery { singleAccountListSupplier.getSyncOrNull(wallet.walletId) } returns accountList
     }
 
     private fun mockWallet(): UserWallet {
