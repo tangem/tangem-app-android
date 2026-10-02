@@ -3,12 +3,12 @@ package com.tangem.data.sociallogin.recovery
 import android.util.Base64
 import arrow.core.Either
 import arrow.core.flatMap
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.sociallogin.models.RecoveryKey
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialProviderIdToken
 import com.tangem.domain.sociallogin.repository.SocialRecoveryRepository
-import com.tangem.lib.auth.session.WalletSignerProvider
 import com.tangem.lib.auth.social.SocialRecoveryClient
 import com.tangem.lib.auth.social.SocialRecoveryError
 import javax.inject.Inject
@@ -19,7 +19,7 @@ import javax.inject.Inject
  */
 internal class DefaultSocialRecoveryRepository @Inject constructor(
     private val client: SocialRecoveryClient,
-    private val walletSignerProvider: WalletSignerProvider,
+    private val hotWalletSignerFactory: HotWalletSignerFactory,
 ) : SocialRecoveryRepository {
 
     override suspend fun getRecoveryKey(idToken: SocialProviderIdToken): Either<SocialLoginError, RecoveryKey> =
@@ -33,31 +33,20 @@ internal class DefaultSocialRecoveryRepository @Inject constructor(
 
     override suspend fun registerRecoveryKey(
         idToken: SocialProviderIdToken,
-        walletId: UserWalletId,
+        userWallet: UserWallet.Hot,
         recoveryKey: RecoveryKey,
-    ): Either<SocialLoginError, Unit> {
-        val backendWalletId = walletId.toBackendId()
-        // Nothing reached the backend: the wallet is not a hot one, or the list it lives in is not
-        // loaded yet. Reporting a server error would send the user retrying against a server that was
-        // never asked.
-        val signer = walletSignerProvider.signerFor(backendWalletId)
-            ?: return Either.Left(SocialLoginError.Unknown())
+    ): Either<SocialLoginError, Unit> = client.registerBinding(
+        walletId = userWallet.walletId.toBackendId(),
+        providerIdToken = idToken.value,
+        recoveryKey = recoveryKey.value,
+        signer = hotWalletSignerFactory.signerFor(userWallet),
+    ).mapLeft(SocialRecoveryError::toDomainError)
 
-        return client.registerBinding(
-            walletId = backendWalletId,
-            providerIdToken = idToken.value,
-            recoveryKey = recoveryKey.value,
-            signer = signer,
+    override suspend fun registerRestoredWallet(userWallet: UserWallet.Hot): Either<SocialLoginError, Unit> =
+        client.registerWallet(
+            walletId = userWallet.walletId.toBackendId(),
+            signer = hotWalletSignerFactory.signerFor(userWallet),
         ).mapLeft(SocialRecoveryError::toDomainError)
-    }
-
-    override suspend fun registerRestoredWallet(walletId: UserWalletId): Either<SocialLoginError, Unit> {
-        val backendWalletId = walletId.toBackendId()
-        val signer = walletSignerProvider.signerFor(backendWalletId) ?: return Either.Left(SocialLoginError.Unknown())
-
-        return client.registerWallet(walletId = backendWalletId, signer = signer)
-            .mapLeft(SocialRecoveryError::toDomainError)
-    }
 
     override suspend fun unbindWallet(walletId: UserWalletId): Either<SocialLoginError, Unit> =
         client.unbindWallet(walletId.toBackendId()).mapLeft(SocialRecoveryError::toDomainError)

@@ -61,6 +61,7 @@ sealed interface UserWallet {
         val hotWalletId: HotWalletId,
         val wallets: List<MobileWallet>?,
         val backedUp: Boolean,
+        val isSocialBackupCompleted: Boolean = false,
     ) : UserWallet {
 
         val isLocked: Boolean get() = wallets == null
