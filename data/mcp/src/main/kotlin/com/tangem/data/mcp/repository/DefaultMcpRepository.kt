@@ -10,9 +10,9 @@ import com.tangem.domain.mcp.models.McpDeviceVerificationResult
 import com.tangem.domain.mcp.models.McpSession
 import com.tangem.domain.mcp.repository.McpRepository
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.lib.auth.api.AuthApi
-import com.tangem.lib.auth.api.models.request.McpDeviceVerificationConsent
-import com.tangem.lib.auth.api.models.response.McpSessionResponse
+import com.tangem.data.mcp.api.McpApi
+import com.tangem.data.mcp.api.models.request.McpDeviceVerificationConsent
+import com.tangem.data.mcp.api.models.response.McpSessionResponse
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.Job
@@ -25,7 +25,7 @@ import javax.inject.Inject
 private const val TAG = "MCP"
 
 internal class DefaultMcpRepository @Inject constructor(
-    private val authApi: AuthApi,
+    private val mcpApi: McpApi,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val appScope: AppCoroutineScope,
 ) : McpRepository {
@@ -36,7 +36,7 @@ internal class DefaultMcpRepository @Inject constructor(
     override fun getSessions(): Flow<List<McpSession>> = sessions.onStart { loadSessions(force = false) }
 
     override suspend fun getDeviceVerification(userCode: String): Either<Throwable, McpDeviceVerification> {
-        val response = authApi.getMcpDeviceVerification(userCode = userCode)
+        val response = mcpApi.getDeviceVerification(userCode = userCode)
 
         return response.toEither().map { it.toDomain() }
     }
@@ -45,7 +45,7 @@ internal class DefaultMcpRepository @Inject constructor(
         verification: McpDeviceVerification,
         walletId: UserWalletId,
     ): Either<Throwable, McpDeviceVerificationResult> {
-        val response = authApi.approveMcpDeviceVerification(
+        val response = mcpApi.approveDeviceVerification(
             userCode = verification.userCode,
             state = verification.state,
             consent = McpDeviceVerificationConsent(
@@ -61,7 +61,7 @@ internal class DefaultMcpRepository @Inject constructor(
     }
 
     override suspend fun rejectDeviceVerification(verification: McpDeviceVerification): Either<Throwable, Unit> {
-        val response = authApi.rejectMcpDeviceVerification(
+        val response = mcpApi.rejectDeviceVerification(
             userCode = verification.userCode,
             state = verification.state,
         )
@@ -70,7 +70,7 @@ internal class DefaultMcpRepository @Inject constructor(
     }
 
     override suspend fun revokeSession(sessionId: String): Either<Throwable, Unit> {
-        return authApi.revokeMcpSession(sessionId = sessionId)
+        return mcpApi.revokeSession(sessionId = sessionId)
             .toEither()
             .onRight { loadSessions(force = true) }
     }
@@ -88,7 +88,7 @@ internal class DefaultMcpRepository @Inject constructor(
 
         loadJob?.cancel()
         loadJob = appScope.launch {
-            authApi.getMcpSessions().toEither().fold(
+            mcpApi.getSessions().toEither().fold(
                 ifLeft = { TangemLogger.withTag(TAG).e("Failed to load the agent sessions", it) },
                 ifRight = { sessions.value = it.toDomainWithStubbedFields() },
             )
