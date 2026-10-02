@@ -8,6 +8,12 @@ import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -24,12 +30,15 @@ internal class DefaultPolymarketCredentialsStore(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PolymarketCredentialsStore {
 
+    private val version = MutableStateFlow(value = 0L)
+
     override suspend fun store(userWalletId: UserWalletId, credentials: PolymarketApiCredentials) {
         withContext(dispatchers.io) {
             val dto = PolymarketApiCredentialsConverter.convert(credentials)
             val payload = json.encodeToString(PolymarketApiCredentialsDTO.serializer(), dto)
 
             secureStorage.store(createKey(userWalletId), payload)
+            version.update { it + 1 }
         }
     }
 
@@ -43,6 +52,7 @@ internal class DefaultPolymarketCredentialsStore(
         } catch (e: SerializationException) {
             TangemLogger.e("Failed to decode the stored API credentials; clearing them")
             secureStorage.delete(key)
+            version.update { it + 1 }
             null
         }
     }
@@ -50,8 +60,14 @@ internal class DefaultPolymarketCredentialsStore(
     override suspend fun clear(userWalletId: UserWalletId) {
         withContext(dispatchers.io) {
             secureStorage.delete(createKey(userWalletId))
+            version.update { it + 1 }
         }
     }
+
+    override fun hasCredentials(userWalletId: UserWalletId): Flow<Boolean> = version
+        .map { get(userWalletId) != null }
+        .distinctUntilChanged()
+        .catch { error -> TangemLogger.e("Failed to observe the API credentials of $userWalletId", error) }
 
     private fun createKey(userWalletId: UserWalletId): String = KEY_PREFIX + userWalletId.stringValue
 
