@@ -1,11 +1,11 @@
-package com.tangem.lib.auth.api.models.response
+package com.tangem.data.mcp.api.models.response
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 /** One MCP OAuth authorization issued to an MCP client, as shown to the wallet owner. */
 @JsonClass(generateAdapter = true)
-data class McpSessionResponse(
+internal data class McpSessionResponse(
     /** Authorization id — pass to `DELETE api/authentication/v1/mcp/sessions/{id}` to revoke. */
     @Json(name = "id") val id: String,
     /** OAuth `client_id` of the MCP client. */
