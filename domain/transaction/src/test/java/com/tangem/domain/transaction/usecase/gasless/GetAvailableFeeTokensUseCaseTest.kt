@@ -90,7 +90,15 @@ internal class GetAvailableFeeTokensUseCaseTest {
             derivationPath = jointPath,
         )
         private val jointCoin = nativeCoin.copy(network = jointNetwork)
-        private val jointUsdc = usdc.copy(network = jointNetwork)
+        private val jointUsdc = usdc.copy(
+            id = CryptoCurrency.ID(
+                prefix = CryptoCurrency.ID.Prefix.TOKEN_PREFIX,
+                body = CryptoCurrency.ID.Body.NetworkId(rawId = "base"),
+                suffix = CryptoCurrency.ID.Suffix.RawID(rawId = "usd-coin", contractAddress = USDC_CONTRACT),
+            ),
+            network = jointNetwork,
+        )
+        private val customJointUsdc = usdc.copy(network = jointNetwork, isCustom = true)
 
         @BeforeEach
         fun resetMocks() {
@@ -104,26 +112,7 @@ internal class GetAvailableFeeTokensUseCaseTest {
         fun `GIVEN a joint network WHEN invoke THEN the joint account coin and smart gas tokens are offered`() =
             runTest {
                 // Arrange
-                val personal = accountStatusList(statuses = listOf(nativeCoin.status(), usdc.status()))
-                val joint = AccountStatus.Joint(
-                    account = Account.Joint(
-                        accountId = AccountId.forJointAccount(userWalletId = userWalletId, value = "0".repeat(64))
-                            .getOrNull()!!,
-                        accountName = AccountName("Joint").getOrNull()!!,
-                        icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
-                        ownerKeyIndex = OwnerKeyIndex(0).getOrNull()!!,
-                        cryptoCurrencies = listOf(jointCoin, jointUsdc),
-                    ),
-                    value = JointAccountStatusValue.Loading,
-                    tokenList = TokenList.Ungrouped(
-                        totalFiatBalance = TotalFiatBalance.Loading,
-                        sortedBy = TokensSortType.NONE,
-                        currencies = listOf(jointCoin.status(), jointUsdc.status()),
-                    ),
-                    priceChangeLce = lceLoading(),
-                )
-                coEvery { singleAccountStatusListSupplier.getSyncOrNull(userWalletId) } returns
-                    personal.copy(accountStatuses = personal.accountStatuses + joint, totalJointAccounts = 1)
+                givenJointAccount(currencies = listOf(jointCoin, jointUsdc))
 
                 // Act
                 val actual = createUseCase().invoke(
@@ -135,6 +124,45 @@ internal class GetAvailableFeeTokensUseCaseTest {
                 // Assert
                 assertThat(actual.offeredCurrencies()).containsExactly(jointCoin, jointUsdc).inOrder()
             }
+
+        @Test
+        fun `GIVEN a custom smart gas token on a joint network WHEN invoke THEN only the coin is offered`() = runTest {
+            // Arrange
+            givenJointAccount(currencies = listOf(jointCoin, customJointUsdc))
+
+            // Act
+            val actual = createUseCase().invoke(
+                userWallet = userWallet,
+                network = jointNetwork,
+                sentCurrencyStatus = customJointUsdc.status(),
+            )
+
+            // Assert
+            assertThat(actual.offeredCurrencies()).containsExactly(jointCoin)
+        }
+
+        private fun givenJointAccount(currencies: List<CryptoCurrency>) {
+            val personal = accountStatusList(statuses = listOf(nativeCoin.status(), usdc.status()))
+            val joint = AccountStatus.Joint(
+                account = Account.Joint(
+                    accountId = AccountId.forJointAccount(userWalletId = userWalletId, value = "0".repeat(64))
+                        .getOrNull()!!,
+                    accountName = AccountName("Joint").getOrNull()!!,
+                    icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
+                    ownerKeyIndex = OwnerKeyIndex(0).getOrNull()!!,
+                    cryptoCurrencies = currencies,
+                ),
+                value = JointAccountStatusValue.Loading,
+                tokenList = TokenList.Ungrouped(
+                    totalFiatBalance = TotalFiatBalance.Loading,
+                    sortedBy = TokensSortType.NONE,
+                    currencies = currencies.map { it.status() },
+                ),
+                priceChangeLce = lceLoading(),
+            )
+            coEvery { singleAccountStatusListSupplier.getSyncOrNull(userWalletId) } returns
+                personal.copy(accountStatuses = personal.accountStatuses + joint, totalJointAccounts = 1)
+        }
     }
 
     @Nested

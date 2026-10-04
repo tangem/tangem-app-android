@@ -18,6 +18,7 @@ import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperationSignerState
 import com.tangem.domain.jointaccount.model.JointOperationSignerState.Answer
 import com.tangem.domain.jointaccount.model.JointTransferIntent
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.txhistory.joint.operation.model.JointOperationState
 import com.tangem.test.mock.MockAccounts
 import org.junit.jupiter.api.Test
@@ -129,8 +130,33 @@ internal class JointOperationUMConverterTest {
             stringReference(BigDecimal("2000").format { fiat(fiatCurrencyCode = "USD", fiatCurrencySymbol = "$") }),
         )
         assertThat(actual.rows.single().value).isEqualTo(
-            stringReference("~" + BigDecimal.ZERO.format { crypto(cryptoCurrency = feeCoin, ignoreSymbolPosition = true) }),
+            stringReference("~" + BigDecimal.ZERO.format { crypto(cryptoCurrency = feeCurrency, ignoreSymbolPosition = true) }),
         )
+    }
+
+    @Test
+    fun `GIVEN a token refund WHEN converted THEN the fee is shown in the gas token`() {
+        // Arrange
+        val usdc = MockCryptoCurrencyFactory().createToken(Blockchain.Polygon).copy(symbol = "USDC", decimals = 6)
+
+        // Act
+        val actual = converter.convert(
+            input(state(isSending = false, feeAmount = BigInteger.valueOf(200_000), feeCurrency = usdc)),
+        )
+
+        // Assert
+        assertThat(actual.rows.single().value).isEqualTo(
+            stringReference("~" + BigDecimal("0.2").format { crypto(cryptoCurrency = usdc, ignoreSymbolPosition = true) }),
+        )
+    }
+
+    @Test
+    fun `GIVEN a gas token outside the account WHEN converted THEN there is no fee row`() {
+        // Act
+        val actual = converter.convert(input(state(isSending = false, feeCurrency = null)))
+
+        // Assert
+        assertThat(actual.rows).isEmpty()
     }
 
     @Test
@@ -167,11 +193,16 @@ internal class JointOperationUMConverterTest {
         fiat = JointOperationFiat(rate = fiatRate, appCurrency = AppCurrency(name = "US Dollar", code = "USD", symbol = "$")),
     )
 
-    private fun state(isSending: Boolean, ownAnswer: Answer = Answer.WAITING) = JointOperationState(
+    private fun state(
+        isSending: Boolean,
+        ownAnswer: Answer = Answer.WAITING,
+        feeAmount: BigInteger = BigInteger.ZERO,
+        feeCurrency: CryptoCurrency? = this.feeCurrency,
+    ) = JointOperationState(
         account = MockAccounts.createJointAccount(),
         displayed = JointTransferIntent.Native(recipient = OTHER, amountWei = BigInteger.TEN.pow(18)),
-        feeWei = BigInteger.ZERO,
-        feeCoin = feeCoin,
+        feeAmount = feeAmount,
+        feeCurrency = feeCurrency,
         threshold = 2,
         membersCount = 3,
         signers = listOf(
@@ -190,7 +221,7 @@ internal class JointOperationUMConverterTest {
         at = null,
     )
 
-    private val feeCoin = MockCryptoCurrencyFactory().createCoin(Blockchain.Ethereum)
+    private val feeCurrency = MockCryptoCurrencyFactory().createCoin(Blockchain.Ethereum)
 
     private companion object {
         const val OWN = "0xowner"
