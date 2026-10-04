@@ -134,6 +134,8 @@ class GetAvailableFeeTokensUseCase(
                 val token = currencyStatus.currency
                 token is CryptoCurrency.Token && supportedGaslessTokens.contains(token.contractAddress.lowercase())
             }
+            // The Safe refund is priced by the token's quote, and a custom token has none
+            .filter { network.derivationPath !is Network.DerivationPath.Joint || it.currency.id.rawCurrencyId != null }
             .toList()
     }
 
