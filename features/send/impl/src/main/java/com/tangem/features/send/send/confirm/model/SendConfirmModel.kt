@@ -280,7 +280,7 @@ internal class SendConfirmModel @Inject constructor(
                     currency = cryptoCurrency,
                     amount = sendingAmount,
                     destinationUM = uiState.value.destinationUM,
-                    feeToken = feeCurrencyStatus.currency as? CryptoCurrency.Token,
+                    feeToken = feeCurrencyStatus.currency.takeIf { isFeeInSmartGasToken() } as? CryptoCurrency.Token,
                 )
                 .fold(
                     ifLeft = ::showJointOperationError,
@@ -577,6 +577,9 @@ internal class SendConfirmModel @Inject constructor(
             },
         )
     }
+
+    private fun isFeeInSmartGasToken(): Boolean =
+        feeUMV2?.feeExtraInfo?.transactionFeeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency
 
     private fun getCurrencyStatusForFeePayment(): CryptoCurrencyStatus {
         val feeExtended = feeUMV2?.feeExtraInfo?.transactionFeeExtended

@@ -23,6 +23,7 @@ import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
 import com.tangem.domain.jointaccount.model.JointOperationSignError
+import com.tangem.domain.jointaccount.model.SafeGasToken
 import com.tangem.domain.jointaccount.safe.JointOperationSignersResolver
 import com.tangem.domain.jointaccount.safe.JointOperationTransferResolver
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
@@ -37,6 +38,7 @@ import com.tangem.features.txhistory.joint.ownJointAccount
 import com.tangem.features.txhistory.model.ContactCandidate
 import com.tangem.features.txhistory.model.TxHistoryOwnerLookupProducer
 import com.tangem.features.txhistory.model.isSavableAsContact
+import com.tangem.utils.extensions.addHexPrefix
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -210,10 +212,12 @@ internal class JointOperationDelegate @Inject constructor(
         return JointOperationState(
             account = account,
             displayed = transfer.intent,
-            feeWei = operation.safeTx.gasPrice * (operation.safeTx.safeTxGas + operation.safeTx.baseGas),
-            feeCoin = account.cryptoCurrencies
-                .filterIsInstance<CryptoCurrency.Coin>()
-                .firstOrNull { it.network == currency.network },
+            feeAmount = operation.safeTx.gasPrice * (operation.safeTx.safeTxGas + operation.safeTx.baseGas),
+            feeCurrency = feeCurrency(
+                account = account,
+                network = currency.network,
+                gasToken = operation.safeTx.gasToken,
+            ),
             threshold = jointAccount.threshold,
             membersCount = jointAccount.membersCount,
             signers = signers,
@@ -226,5 +230,16 @@ internal class JointOperationDelegate @Inject constructor(
             initiator = operation.initiator,
             isSending = operation.status == JointOperation.Status.PENDING,
         )
+    }
+
+    private fun feeCurrency(account: Account.Joint, network: Network, gasToken: String): CryptoCurrency? {
+        val address = gasToken.lowercase().addHexPrefix()
+
+        return account.cryptoCurrencies.firstOrNull { currency ->
+            currency.network == network && when (currency) {
+                is CryptoCurrency.Coin -> address == SafeGasToken.Coin.address
+                is CryptoCurrency.Token -> currency.contractAddress.lowercase().addHexPrefix() == address
+            }
+        }
     }
 }
