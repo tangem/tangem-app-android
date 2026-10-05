@@ -16,7 +16,7 @@ import java.io.File
  */
 class GetSupportChatLogsUseCase(
     private val feedbackRepository: FeedbackRepository,
-    private val infoProviders: Set<SupportChatInfoProvider>,
+    private val infoProviders: Map<SupportChatTopic, SupportChatInfoProvider>,
 ) {
 
     private val emailMessageBodyResolver = EmailMessageBodyResolver(feedbackRepository)
@@ -39,7 +39,7 @@ class GetSupportChatLogsUseCase(
 
     private suspend fun getTopicInfo(topic: SupportChatTopic, walletMetaInfo: WalletMetaInfo): String? {
         val userWalletId = walletMetaInfo.userWalletId ?: return null
-        val provider = infoProviders.firstOrNull { it.topic == topic } ?: return null
+        val provider = infoProviders[topic] ?: return null
 
         return runSuspendCatching { provider.getInfo(userWalletId) }
             .onFailure { TangemLogger.e("Failed to collect $topic info for the support chat", it) }
