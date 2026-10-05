@@ -1273,6 +1273,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             coEvery { submitPredictionWithdrawalInteractor.prepare(any()) } returns prepared.right()
             coEvery { submitPredictionWithdrawalInteractor.confirm(prepared) } returns receipt.right()
             val model = createModel(accountFlow = AccountFlow.PredictionWithdraw, dispatchers = deferredDispatchers())
+            val bottomSheetSlot = SlotTracker(model.flatSheetSlotNavigation)
             advanceUntilIdle()
             model.enterAmount("5")
             advanceUntilIdle()
@@ -1290,7 +1291,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             verify { swapTransferStateBuilder.createPredictionWithdrawalSentState(any(), any()) }
             verify { router.replaceAll(SwapRoute.Success) }
             verify(exactly = 0) { messageSender.send(any()) }
-            assertThat(model.uiState.bottomSheetConfig).isNull()
+            assertThat(bottomSheetSlot.results).isEmpty()
             coVerify(exactly = 0) { swapTransferInteractor.withdrawTangemPay(any(), any(), any(), any()) }
             model.onDestroy()
         }
