@@ -1,5 +1,6 @@
 package com.tangem.features.introduction.impl.model
 
+import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
@@ -8,6 +9,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
@@ -16,6 +18,7 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SelectWalletError
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
@@ -38,11 +41,14 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import com.tangem.core.res.R as CoreResR
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -51,6 +57,7 @@ internal class IntroductionSocialLoginHandlerTest {
     private val socialLoginUseCase: SocialLoginUseCase = mockk(relaxed = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
+    private val trackingContextProxy: TrackingContextProxy = mockk(relaxed = true)
     private val referral: IntroductionReferral = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
@@ -58,11 +65,14 @@ internal class IntroductionSocialLoginHandlerTest {
 
     private val getAvailableSocialLoginProvidersUseCase: GetAvailableSocialLoginProvidersUseCase = mockk()
 
+    private val userWallet: UserWallet = mockk { every { walletId } returns WALLET_ID }
+
     private val handler = IntroductionSocialLoginHandler(
         getAvailableSocialLoginProvidersUseCase = getAvailableSocialLoginProvidersUseCase,
         socialLoginUseCase = socialLoginUseCase,
         userWalletsListRepository = userWalletsListRepository,
         analyticsEventHandler = analyticsEventHandler,
+        trackingContextProxy = trackingContextProxy,
         referral = referral,
         urlOpener = urlOpener,
         router = router,
@@ -78,10 +88,12 @@ internal class IntroductionSocialLoginHandlerTest {
             socialLoginUseCase,
             userWalletsListRepository,
             analyticsEventHandler,
+            trackingContextProxy,
             urlOpener,
             router,
             uiMessageSender,
         )
+        coEvery { userWalletsListRepository.select(WALLET_ID) } returns userWallet.right()
         host.reset()
     }
 
@@ -368,7 +380,7 @@ internal class IntroductionSocialLoginHandlerTest {
             host.onConsentShown = { consent ->
                 consent.onAcknowledgedChange(true)
                 host.consent!!.onEmailSharingChange(true)
-                host.consent!!.onConfirmClick()
+                host.consent!!.onConfirmClick(CONSENT_TEXT)
             }
             assertThat(requestConsent.captured()).isEqualTo(SocialLoginConsent(isEmailSharingAllowed = true))
             SocialLoginOutcome.WalletCreated(WALLET_ID).right()
@@ -393,7 +405,7 @@ internal class IntroductionSocialLoginHandlerTest {
             onStageChanged.captured(SocialLoginStage.VerifyingAccount)
             host.onConsentShown = { consent ->
                 consent.onAcknowledgedChange(true)
-                host.consent!!.onConfirmClick()
+                host.consent!!.onConfirmClick(CONSENT_TEXT)
             }
             requestConsent.captured()
             SocialLoginOutcome.WalletCreated(WALLET_ID).right()
@@ -405,6 +417,160 @@ internal class IntroductionSocialLoginHandlerTest {
         // Assert
         assertThat(host.progress).containsExactly(host.progress[0], null, null).inOrder()
         assertThat(host.progress[0]).isNotNull()
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN the consent is confirmed WHEN a wallet is created THEN the marketing consent is reported once`(
+        isEmailSharingAllowed: Boolean,
+    ) = runTest {
+        // Arrange
+        stubSignIn(
+            consentAction = ConsentAction.Confirm(isEmailSharingAllowed),
+            result = SocialLoginOutcome.WalletCreated(WALLET_ID).right(),
+        )
+        val events = mutableListOf<AnalyticsEvent>()
+        every { analyticsEventHandler.send(capture(events)) } just Runs
+
+        // Act
+        handler.signIn(PROVIDER, SOURCE, host)
+
+        // Assert
+        val consent = events.filterIsInstance<SocialLoginAnalyticsEvents.MarketingEmailsConsent>().single()
+        assertThat(consent.params).isEqualTo(
+            mapOf(
+                "Consent Type" to "Offers & Updates by email",
+                "Consent Given" to if (isEmailSharingAllowed) "Yes" else "No",
+                "Consent Text" to CONSENT_TEXT,
+                "walletId" to WALLET_ID.stringValue,
+                AnalyticsParam.PRODUCT_TYPE to AnalyticsParam.ProductType.MobileWallet.value,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN the consent is confirmed WHEN a wallet is created THEN the tracking context is set first`() =
+        runTest {
+            // Arrange
+            stubSignIn(
+                consentAction = ConsentAction.Confirm(isEmailSharingAllowed = true),
+                result = SocialLoginOutcome.WalletCreated(WALLET_ID).right(),
+            )
+
+            // Act
+            handler.signIn(PROVIDER, SOURCE, host)
+
+            // Assert
+            verifyOrder {
+                trackingContextProxy.setContext(userWallet)
+                analyticsEventHandler.send(ofType<SocialLoginAnalyticsEvents.MarketingEmailsConsent>())
+            }
+        }
+
+    @Test
+    fun `GIVEN the consent is confirmed WHEN the prompt returns THEN the marketing consent is not reported yet`() =
+        runTest {
+            // Arrange
+            val requestConsent = slot<suspend () -> SocialLoginConsent?>()
+            coEvery { socialLoginUseCase.signIn(PROVIDER, any(), capture(requestConsent)) } coAnswers {
+                host.onConsentShown = { consent ->
+                    consent.onAcknowledgedChange(true)
+                    host.consent!!.onConfirmClick(CONSENT_TEXT)
+                }
+                requestConsent.captured()
+                verify(exactly = 0) {
+                    analyticsEventHandler.send(ofType<SocialLoginAnalyticsEvents.MarketingEmailsConsent>())
+                }
+                verify(exactly = 0) { trackingContextProxy.setContext(any<UserWallet>()) }
+                SocialLoginOutcome.WalletCreated(WALLET_ID).right()
+            }
+
+            // Act
+            handler.signIn(PROVIDER, SOURCE, host)
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(ofType<SocialLoginAnalyticsEvents.MarketingEmailsConsent>())
+            }
+        }
+
+    @ParameterizedTest
+    @MethodSource("provideConsentNotReportedModels")
+    fun `GIVEN no confirmed consent or no selected new wallet WHEN signIn THEN the consent is not reported`(
+        model: ConsentNotReportedModel,
+    ) = runTest {
+        // Arrange
+        stubSignIn(consentAction = model.consentAction, result = model.result)
+        if (model.isSelectFailing) {
+            coEvery { userWalletsListRepository.select(WALLET_ID) } returns SELECT_ERROR.left()
+        }
+
+        // Act
+        handler.signIn(PROVIDER, SOURCE, host)
+
+        // Assert
+        verify(exactly = 0) {
+            analyticsEventHandler.send(ofType<SocialLoginAnalyticsEvents.MarketingEmailsConsent>())
+        }
+        verify(exactly = 0) { trackingContextProxy.setContext(any<UserWallet>()) }
+    }
+
+    private fun provideConsentNotReportedModels() = listOf(
+        ConsentNotReportedModel(
+            name = "sign-in failed after the consent",
+            consentAction = ConsentAction.Confirm(isEmailSharingAllowed = true),
+            result = SocialLoginError.NetworkError.left(),
+        ),
+        ConsentNotReportedModel(
+            name = "consent closed",
+            consentAction = ConsentAction.Close,
+            result = SocialLoginError.ConsentDeclined.left(),
+        ),
+        ConsentNotReportedModel(
+            name = "wallet restored",
+            consentAction = ConsentAction.None,
+            result = SocialLoginOutcome.WalletRestored(WALLET_ID).right(),
+        ),
+        ConsentNotReportedModel(
+            name = "selection failed",
+            consentAction = ConsentAction.Confirm(isEmailSharingAllowed = true),
+            result = SocialLoginOutcome.WalletCreated(WALLET_ID).right(),
+            isSelectFailing = true,
+        ),
+    )
+
+    data class ConsentNotReportedModel(
+        val name: String,
+        val consentAction: ConsentAction,
+        val result: Either<SocialLoginError, SocialLoginOutcome>,
+        val isSelectFailing: Boolean = false,
+    ) {
+        override fun toString(): String = name
+    }
+
+    sealed interface ConsentAction {
+        data class Confirm(val isEmailSharingAllowed: Boolean) : ConsentAction
+        data object Close : ConsentAction
+        data object None : ConsentAction
+    }
+
+    private fun stubSignIn(consentAction: ConsentAction, result: Either<SocialLoginError, SocialLoginOutcome>) {
+        val requestConsent = slot<suspend () -> SocialLoginConsent?>()
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), capture(requestConsent)) } coAnswers {
+            host.onConsentShown = { consent ->
+                when (consentAction) {
+                    is ConsentAction.Confirm -> {
+                        consent.onAcknowledgedChange(true)
+                        host.consent!!.onEmailSharingChange(consentAction.isEmailSharingAllowed)
+                        host.consent!!.onConfirmClick(CONSENT_TEXT)
+                    }
+                    ConsentAction.Close -> consent.onCloseClick()
+                    ConsentAction.None -> Unit
+                }
+            }
+            if (consentAction != ConsentAction.None) requestConsent.captured()
+            result
+        }
     }
 
     private class RecordingHost : IntroductionSocialLoginHandler.Host {
@@ -455,6 +621,7 @@ internal class IntroductionSocialLoginHandlerTest {
         val PROVIDER = SocialLoginProvider.Google
         val WALLET_ID = UserWalletId(stringValue = "011")
         val SELECT_ERROR = SelectWalletError.UnableToSelectUserWallet
+        const val CONSENT_TEXT = "Teilen Sie meine E-Mail mit Tangem"
         val SOURCE = AnalyticsParam.ScreensSources.ImportWallet
     }
 }
