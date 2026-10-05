@@ -289,7 +289,7 @@ internal class SendConfirmModel @Inject constructor(
                 .fold(
                     ifLeft = ::showJointOperationError,
                     ifRight = {
-                        sendJointOperationCreatedAnalytics(account)
+                        sendJointOperationCreatedAnalytics(account = account, feeToken = feeCurrencyStatus.currency)
                         _uiState.update(
                             SendConfirmJointOperationCreatedTransformer(createdAt = System.currentTimeMillis()),
                         )
@@ -300,14 +300,13 @@ internal class SendConfirmModel @Inject constructor(
         }
     }
 
-    private fun sendJointOperationCreatedAnalytics(account: Account.Joint) {
+    private fun sendJointOperationCreatedAnalytics(account: Account.Joint, feeToken: CryptoCurrency) {
         val sendUM = uiState.value
         val signaturesUM = (sendUM.confirmUM as? ConfirmUM.Content)?.signaturesUM
         if (signaturesUM == null) {
             TangemLogger.e("Send confirm: no joint composition on the confirm step, the success events are not sent")
             return
         }
-        val feeToken = getCurrencyStatusForFeePayment().currency
         // The success screen replaces this step right away and cancels modelScope
         appScope.launch(dispatchers.default) {
             sendAnalyticHelper.sendSuccessAnalytics(

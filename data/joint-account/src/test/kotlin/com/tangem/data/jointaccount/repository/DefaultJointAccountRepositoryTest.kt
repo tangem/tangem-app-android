@@ -337,14 +337,15 @@ internal class DefaultJointAccountRepositoryTest {
     @Test
     fun `GIVEN conflict response WHEN getInvitePreview THEN InvalidLink`() = runTest {
         // Arrange
-        coEvery { jointAccountApi.getJointAccountInvite(any(), any()) } returns
-            invitePreviewErrorResponse(code = ApiResponseError.HttpException.Code.CONFLICT)
+        val response = invitePreviewErrorResponse(code = ApiResponseError.HttpException.Code.CONFLICT)
+        coEvery { jointAccountApi.getJointAccountInvite(any(), any()) } returns response
 
         // Act
         val actual = repository.getInvitePreview(walletId = WALLET_ID, inviteId = INVITE_A)
 
         // Assert
-        assertThat(actual).isEqualTo(Either.Left(JointAccountInvitePreviewError.InvalidLink))
+        val cause = (response as ApiResponse.Error).cause
+        assertThat(actual).isEqualTo(Either.Left(JointAccountInvitePreviewError.InvalidLink(cause = cause)))
     }
 
     /** A link the backend does not know is as dead as one it refuses — retrying it can only fail again */
@@ -358,7 +359,8 @@ internal class DefaultJointAccountRepositoryTest {
         val actual = repository.getInvitePreview(walletId = WALLET_ID, inviteId = INVITE_A)
 
         // Assert
-        assertThat(actual).isEqualTo(Either.Left(JointAccountInvitePreviewError.InvalidLink))
+        val cause = (response as ApiResponse.Error).cause
+        assertThat(actual).isEqualTo(Either.Left(JointAccountInvitePreviewError.InvalidLink(cause = cause)))
     }
 
     /** A link opened right after a Quick Share transfer finds the phone still reconnecting: worth a retry, not a dead end */
