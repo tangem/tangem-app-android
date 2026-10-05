@@ -51,6 +51,7 @@ internal class GetTronGaslessFeeUseCaseTest {
     private val quote = TronGaslessQuote(
         quoteId = "q_1",
         quotedAmountRaw = BigInteger("50000000"),
+        quotedToAddress = "TTo",
         feeRecipient = "TFee",
         compensationToken = usdtContract,
         // Raw matches the mock fee token's 8 decimals (MockCryptoCurrencyFactory): 2.75 * 10^8.

@@ -707,7 +707,10 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.JointAccountCreation -> {
                 createComponentChild(
                     context = context,
-                    params = JointAccountCreationComponent.Params(userWalletId = route.userWalletId),
+                    params = JointAccountCreationComponent.Params(
+                        userWalletId = route.userWalletId,
+                        source = route.source,
+                    ),
                     componentFactory = jointAccountCreationComponentFactory,
                 )
             }

@@ -3,9 +3,10 @@ package com.tangem.data.mcp.converter
 import com.tangem.domain.mcp.models.McpDeviceVerification
 import com.tangem.domain.mcp.models.McpDeviceVerificationResult
 import com.tangem.domain.mcp.models.McpSession
-import com.tangem.lib.auth.api.models.response.McpDeviceVerificationResponse
-import com.tangem.lib.auth.api.models.response.McpSessionResponse
-import com.tangem.lib.auth.api.models.response.McpDeviceVerificationResult as McpDeviceVerificationResultResponse
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.data.mcp.api.models.response.McpDeviceVerificationResponse
+import com.tangem.data.mcp.api.models.response.McpSessionResponse
+import com.tangem.data.mcp.api.models.response.McpDeviceVerificationResult as McpDeviceVerificationResultResponse
 
 internal fun McpDeviceVerificationResponse.toDomain(): McpDeviceVerification = McpDeviceVerification(
     clientId = clientId,
@@ -20,11 +21,14 @@ internal fun McpDeviceVerificationResponse.toDomain(): McpDeviceVerification = M
 internal fun McpDeviceVerificationResultResponse.toDomain(): McpDeviceVerificationResult =
     McpDeviceVerificationResult(isSuccess = isSuccess)
 
-internal fun McpSessionResponse.toDomain(): McpSession = McpSession(
+internal fun McpSessionResponse.toDomain(walletId: UserWalletId, createdAtMillis: Long): McpSession = McpSession(
     id = id,
+    walletId = walletId,
+    createdAtMillis = createdAtMillis,
     clientId = clientId,
     clientOrigin = clientOrigin,
     clientName = clientName,
+    clientIconUrl = clientIconUrl,
     scopes = scopes,
     clientIp = clientIp,
     clientCountry = clientCountry,

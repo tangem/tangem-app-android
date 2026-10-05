@@ -83,10 +83,10 @@ sealed class PredictionAccountStatusValue {
     }
 
     /**
-     * The deposit wallet exists, but reading its collateral needs the locally derived L2 credentials, which a
-     * wallet set up elsewhere does not have here. The amount is unknown rather than zero, and the state lasts
-     * until the user reconnects, so contributing [TotalFiatBalance.Failed] would blank the wallet total for as
-     * long as it holds.
+     * The deposit wallet exists, but reading its collateral needs the locally derived L2 credentials, which a wallet
+     * set up elsewhere does not have here, and which are dropped once the exchange rejects them. The amount is unknown
+     * rather than zero, and the state lasts until the user reconnects, so contributing [TotalFiatBalance.Failed] would
+     * blank the wallet total for as long as it holds.
      */
     @Serializable
     data class Onboarded(override val source: StatusSource) : PredictionAccountStatusValue()

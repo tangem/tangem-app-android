@@ -47,7 +47,10 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
 8. **A ready backend status is not enough to trade.** L2 credentials live only on this device. Reinstall,
    new phone or a re-added wallet → `READY_TO_TRADE` with nothing to sign with → `PolymarketEntry.Reconnect`:
    the same onboarding run signs both digests, uses only ClobAuth to re-derive credentials, deploys and
-   approves nothing.
+   approves nothing. A CLOB `401` on balance or order drops only the credentials, never
+   `PolymarketOnboardedStore`, so the gate offers Reconnect, not a full onboarding. Reading, clearing and
+   re-deriving one wallet's credentials share one non-reentrant `PolymarketCredentialsLock`, so a late `401`
+   cannot wipe a set a Reconnect has just stored.
 9. **A withdrawal is persisted before it is submitted.** The relayer keys submissions on
    `(deposit wallet, nonce)`, so resending the same batch returns the same receipt. Only a rejection of the
    submit itself (`RelayerRejected`, `InvalidRequest` — the relayer recorded nothing) clears the record;
