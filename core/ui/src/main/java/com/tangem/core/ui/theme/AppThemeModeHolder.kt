@@ -14,4 +14,7 @@ interface AppThemeModeHolder {
      * A [State] representing the current application theme mode.
      */
     val appThemeMode: State<AppThemeMode>
+
+    /** Whether dark theme is currently active, resolving [AppThemeMode.DEFAULT] against the system setting. */
+    val isDarkThemeActive: Boolean
 }
