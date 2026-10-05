@@ -68,6 +68,7 @@ internal class DefaultJointAccountRepositoryTest {
         converter = JointAccountDtoConverter(operationConverter = JointOperationConverter(safeTxConverter = SafeTxConverter())),
         previewConverter = JointAccountInvitePreviewDtoConverter(),
         safeTxConverter = SafeTxConverter(),
+        operationConverter = JointOperationConverter(safeTxConverter = SafeTxConverter()),
         dispatchers = TestingCoroutineDispatcherProvider(),
         moshi = Moshi.Builder().build(),
     )
@@ -595,6 +596,47 @@ internal class DefaultJointAccountRepositoryTest {
         val cause = ApiResponseError.HttpException(code = code, message = null, errorBody = null)
 
         return ApiResponse.Error(cause = cause) as ApiResponse<JointAccountInvitePreviewDto>
+    }
+
+    @Test
+    fun `GIVEN the backend counted the signature WHEN signOperation THEN the operation it reports is returned`() =
+        runTest {
+            // Arrange
+            val response = createJointOperationDto().copy(
+                status = "pending",
+                votes = listOf(JointOperationDto.VoteDto(address = OWNER_ADDRESS, vote = "approve", votedAt = null)),
+            )
+            coEvery { jointAccountApi.signJointOperation(any(), any(), any()) } returns ApiResponse.Success(response)
+
+            // Act
+            val actual = repository.signOperation(
+                userWalletId = WALLET_ID,
+                operationId = OPERATION_ID,
+                safeTx = createSafeTx(),
+                signature = SIGNATURE,
+            )
+
+            // Assert
+            val expected = JointOperationConverter(safeTxConverter = SafeTxConverter()).convert(response)
+            assertThat(actual).isEqualTo(expected.right())
+        }
+
+    @Test
+    fun `GIVEN an unreadable answer WHEN signOperation THEN the signature still counts as sent`() = runTest {
+        // Arrange
+        val unreadable = createJointOperationDto().let { dto -> dto.copy(safeTx = dto.safeTx.copy(value = "n/a")) }
+        coEvery { jointAccountApi.signJointOperation(any(), any(), any()) } returns ApiResponse.Success(unreadable)
+
+        // Act
+        val actual = repository.signOperation(
+            userWalletId = WALLET_ID,
+            operationId = OPERATION_ID,
+            safeTx = createSafeTx(),
+            signature = SIGNATURE,
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(null.right())
     }
 
     @Test
