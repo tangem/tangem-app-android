@@ -14,8 +14,10 @@ import com.tangem.data.mcp.api.McpApi
 import com.tangem.data.mcp.api.models.request.McpDeviceVerificationConsent
 import com.tangem.data.mcp.api.models.response.McpSessionResponse
 import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.onStart
@@ -28,10 +30,11 @@ internal class DefaultMcpRepository @Inject constructor(
     private val mcpApi: McpApi,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val appScope: AppCoroutineScope,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : McpRepository {
 
     private val sessions = MutableStateFlow<List<McpSession>>(value = emptyList())
-    private var loadJob: Job? = null
+    private val loadJobHolder = JobHolder()
 
     override fun getSessions(): Flow<List<McpSession>> = sessions.onStart { loadSessions(force = false) }
 
@@ -84,15 +87,15 @@ internal class DefaultMcpRepository @Inject constructor(
      */
     @Synchronized
     private fun loadSessions(force: Boolean) {
-        if (!force && loadJob?.isActive == true) return
+        if (!force && loadJobHolder.isActive) return
 
-        loadJob?.cancel()
-        loadJob = appScope.launch {
+        appScope.launch(dispatchers.io) {
             mcpApi.getSessions().toEither().fold(
                 ifLeft = { TangemLogger.withTag(TAG).e("Failed to load the agent sessions", it) },
                 ifRight = { sessions.value = it.toDomainWithStubbedFields() },
             )
         }
+            .saveIn(loadJobHolder)
     }
 
     /**
