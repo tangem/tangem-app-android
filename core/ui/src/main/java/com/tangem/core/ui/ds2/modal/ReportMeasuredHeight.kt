@@ -1,4 +1,4 @@
-package com.tangem.features.introduction.impl.ui
+package com.tangem.core.ui.ds2.modal
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -28,7 +28,7 @@ private const val UNMEASURED = -1
  * snapshot state, so reading it in the card's measure block re-measures the card on every frame of whatever
  * animation the content is running, in both directions.
  */
-internal fun Modifier.reportMeasuredHeight(): Modifier = this then ReportMeasuredHeightElement
+fun Modifier.reportMeasuredHeight(): Modifier = this then ReportMeasuredHeightElement
 
 private object ReportMeasuredHeightElement : ModifierNodeElement<ReportMeasuredHeightNode>() {
 
