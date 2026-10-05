@@ -1,6 +1,7 @@
 package com.tangem.domain.visa.model
 
 import com.tangem.domain.visa.model.TangemPayPushNotificationType.*
+import java.util.Locale
 
 enum class TangemPayPushNotificationType {
     CARD_READY,
@@ -41,7 +42,7 @@ enum class TangemPayPushNotificationType {
 
         val all: Set<String> = entries.map { it.value() }.toSet()
 
-        fun fromValue(value: String): TangemPayPushNotificationType? = map[value]
+        fun fromValue(value: String): TangemPayPushNotificationType? = map[value.lowercase(Locale.US)]
 
         @Suppress("CyclomaticComplexMethod")
         private fun TangemPayPushNotificationType.value(): String = when (this) {

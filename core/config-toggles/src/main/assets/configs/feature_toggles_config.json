@@ -142,5 +142,9 @@
     {
         "name": "TWI_1357_HARDWARE_UPGRADE_STORIES_AB_ENABLED",
         "version": "6.5"
+    },
+    {
+        "name": "TWI_1721_MCP_ENABLED",
+        "version": "undefined"
     }
 ]

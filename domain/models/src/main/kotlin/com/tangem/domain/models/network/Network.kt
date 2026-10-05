@@ -194,3 +194,6 @@ data class Network(
         ENS,
     }
 }
+
+val Network.isJoint: Boolean
+    get() = derivationPath is Network.DerivationPath.Joint

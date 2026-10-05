@@ -14,6 +14,7 @@ android {
 dependencies {
     implementation(projects.features.commonFeatures.api)
     implementation(projects.features.walletconnect.api)
+    implementation(projects.features.mcp.api)
     implementation(projects.features.send.api)
 
     /** Common */
@@ -31,6 +32,7 @@ dependencies {
     implementation(projects.domain.account)
     implementation(projects.domain.account.status)
     implementation(projects.domain.blockaid.models)
+    implementation(projects.domain.mcp)
     implementation(projects.domain.models)
     implementation(projects.domain.qrScanning.models)
     implementation(projects.domain.tokens.models)
