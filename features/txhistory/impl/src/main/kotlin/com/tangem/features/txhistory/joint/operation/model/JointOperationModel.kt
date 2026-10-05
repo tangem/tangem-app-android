@@ -17,6 +17,8 @@ import com.tangem.domain.jointaccount.model.JointOperationRejectError
 import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.model.JointOperationSignerState.Answer
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
 import com.tangem.features.txhistory.joint.operation.JointOperationComponent
 import com.tangem.features.txhistory.joint.operation.converter.JointOperationUMConverter
 import com.tangem.features.txhistory.joint.operation.route.JointOperationRoutes
@@ -227,7 +229,7 @@ internal class JointOperationModel @Inject constructor(
                     .onRight { onRefused(operation) }
                     .onLeft { error ->
                         if (error is JointOperationRejectError.OperationNotFound) isGoneLocally.value = true
-                        showRejectError(error)
+                        showRejectError(error = error, role = operation.role)
                     }
             } finally {
                 isRefusing.value = false
@@ -280,6 +282,11 @@ internal class JointOperationModel @Inject constructor(
             ?: return
 
         TangemLogger.e("Unable to sign the joint operation: $error")
+        val analyticsEvent = when (error) {
+            is JointOperationSignError.Failed -> JointAccountError(source = ErrorSource.Sign, cause = error.cause)
+            else -> JointAccountError(source = ErrorSource.Sign, errorMessage = error.toString())
+        }
+        analyticsEventHandler.send(analyticsEvent)
         uiMessageSender.send(message)
     }
 
@@ -287,10 +294,16 @@ internal class JointOperationModel @Inject constructor(
         modelScope.launch { delegate.openSupport(userWalletId = params.userWalletId) }
     }
 
-    private fun showRejectError(error: JointOperationRejectError) {
+    private fun showRejectError(error: JointOperationRejectError, role: Role) {
         val message = refusalMessages.error(error) ?: return
 
         TangemLogger.e("Unable to reject the joint operation: $error")
+        val source = if (role == Role.INITIATOR) ErrorSource.Delete else ErrorSource.Decline
+        val analyticsEvent = when (error) {
+            is JointOperationRejectError.Failed -> JointAccountError(source = source, cause = error.cause)
+            else -> JointAccountError(source = source, errorMessage = error.toString())
+        }
+        analyticsEventHandler.send(analyticsEvent)
         uiMessageSender.send(message)
     }
 
