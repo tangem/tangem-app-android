@@ -1,5 +1,6 @@
 package com.tangem.data.jointaccount.usecase
 
+import com.tangem.domain.jointaccount.model.SafeGasToken
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
@@ -34,6 +35,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.math.BigDecimal
 import java.math.BigInteger
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -71,7 +73,7 @@ internal class CreateJointOperationUseCaseTest {
         coEvery { networkReader.getChainId(network) } returns CHAIN_ID.right()
         coEvery { compositionChecker.ensureMatches(any(), any(), any(), any(), any()) } returns
             SafeDeployment.DEPLOYED.right()
-        coEvery { gasBuilder.build(userWalletId = any(), network = any(), call = any()) } returns safeTx().right()
+        coEvery { gasBuilder.build(any(), any(), call = any(), gasToken = SafeGasToken.Coin) } returns safeTx().right()
         coEvery { signer.signOperation(any(), any(), any(), any(), any()) } returns SIGNATURE.right()
         coEvery { repository.createOperation(any(), any(), any(), any(), any()) } returns Unit.right()
     }
@@ -80,11 +82,11 @@ internal class CreateJointOperationUseCaseTest {
     fun `GIVEN active account WHEN invoke THEN gate check build sign create fetch in order`() = runTest {
         // Arrange
         val callSlot = slot<SafeInnerCall>()
-        coEvery { gasBuilder.build(userWalletId = any(), network = any(), call = capture(callSlot)) } returns
+        coEvery { gasBuilder.build(any(), any(), call = capture(callSlot), gasToken = SafeGasToken.Coin) } returns
             safeTx().right()
 
         // Act
-        val actual = useCase(account = account, network = network, intent = intent)
+        val actual = useCase(account = account, network = network, intent = intent, gasToken = SafeGasToken.Coin)
 
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
@@ -100,7 +102,12 @@ internal class CreateJointOperationUseCaseTest {
                 owners = listOf(ALICE, BOB),
                 threshold = 2,
             )
-            gasBuilder.build(userWalletId = MockAccounts.userWalletId, network = network, call = any())
+            gasBuilder.build(
+                userWalletId = MockAccounts.userWalletId,
+                network = network,
+                call = any(),
+                gasToken = SafeGasToken.Coin,
+            )
             signer.signOperation(
                 userWalletId = MockAccounts.userWalletId,
                 ownerKeyIndex = account.ownerKeyIndex,
@@ -123,7 +130,7 @@ internal class CreateJointOperationUseCaseTest {
     fun `GIVEN erc20 intent WHEN invoke THEN the inner call carries transfer calldata and zero value`() = runTest {
         // Arrange
         val callSlot = slot<SafeInnerCall>()
-        coEvery { gasBuilder.build(userWalletId = any(), network = any(), call = capture(callSlot)) } returns
+        coEvery { gasBuilder.build(any(), any(), call = capture(callSlot), gasToken = SafeGasToken.Coin) } returns
             safeTx().right()
 
         // Act
@@ -131,6 +138,7 @@ internal class CreateJointOperationUseCaseTest {
             account = account,
             network = network,
             intent = JointTransferIntent.Erc20(tokenContract = TOKEN, recipient = RECIPIENT, amountWei = AMOUNT),
+            gasToken = SafeGasToken.Coin,
         )
 
         // Assert
@@ -148,11 +156,11 @@ internal class CreateJointOperationUseCaseTest {
             flowOf(listOf(jointAccount(inFlightOperations = mapOf(CHAIN_ID to jointOperation()))))
 
         // Act
-        val actual = useCase(account = account, network = network, intent = intent)
+        val actual = useCase(account = account, network = network, intent = intent, gasToken = SafeGasToken.Coin)
 
         // Assert
         assertThat(actual).isEqualTo(JointOperationCreateError.SlotBusy.left())
-        coVerify(exactly = 0) { gasBuilder.build(any(), any(), any()) }
+        coVerify(exactly = 0) { gasBuilder.build(any(), any(), any(), any()) }
         coVerify(exactly = 0) { signer.signOperation(any(), any(), any(), any(), any()) }
         coVerify(exactly = 0) { repository.createOperation(any(), any(), any(), any(), any()) }
     }
@@ -164,7 +172,7 @@ internal class CreateJointOperationUseCaseTest {
             flowOf(listOf(jointAccount(status = JointAccount.Status.CONFIRMING)))
 
         // Act
-        val actual = useCase(account = account, network = network, intent = intent)
+        val actual = useCase(account = account, network = network, intent = intent, gasToken = SafeGasToken.Coin)
 
         // Assert
         assertThat(actual).isEqualTo(JointOperationCreateError.AccountNotReady.left())
@@ -178,7 +186,7 @@ internal class CreateJointOperationUseCaseTest {
             JointOperationCreateError.CompositionMismatch.left()
 
         // Act
-        val actual = useCase(account = account, network = network, intent = intent)
+        val actual = useCase(account = account, network = network, intent = intent, gasToken = SafeGasToken.Coin)
 
         // Assert
         assertThat(actual).isEqualTo(JointOperationCreateError.CompositionMismatch.left())
@@ -193,6 +201,7 @@ internal class CreateJointOperationUseCaseTest {
             account = account,
             network = network,
             intent = JointTransferIntent.Native(recipient = SAFE_ADDRESS.uppercase().replace("0X", "0x"), amountWei = AMOUNT),
+            gasToken = SafeGasToken.Coin,
         )
 
         // Assert
@@ -211,6 +220,7 @@ internal class CreateJointOperationUseCaseTest {
                 recipient = RECIPIENT,
                 amountWei = BigInteger.ONE.shiftLeft(256),
             ),
+            gasToken = SafeGasToken.Coin,
         )
 
         // Assert
@@ -225,6 +235,7 @@ internal class CreateJointOperationUseCaseTest {
             account = account,
             network = network,
             intent = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = BigInteger.ZERO),
+            gasToken = SafeGasToken.Coin,
         )
 
         // Assert
@@ -241,15 +252,39 @@ internal class CreateJointOperationUseCaseTest {
         )
 
         // Act
-        val actual = useCase(account = account, network = network, intent = intent)
+        val actual = useCase(account = account, network = network, intent = intent, gasToken = SafeGasToken.Coin)
 
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
         // Every signature request is preceded by its own composition check
         coVerify(exactly = 2) { compositionChecker.ensureMatches(any(), any(), any(), any(), any()) }
-        coVerify(exactly = 2) { gasBuilder.build(any(), any(), any()) }
+        coVerify(exactly = 2) { gasBuilder.build(any(), any(), any(), any()) }
         coVerify(exactly = 2) { signer.signOperation(any(), any(), any(), any(), any()) }
         coVerify(exactly = 2) { repository.createOperation(any(), any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN a token gas and the network moved WHEN invoke THEN both attempts are priced in that token`() = runTest {
+        // Arrange
+        val gasToken = SafeGasToken.Token(
+            address = TOKEN.lowercase(),
+            decimals = 6,
+            coinDecimals = 18,
+            nativeToTokenRate = BigDecimal("0.2"),
+        )
+        coEvery { gasBuilder.build(any(), any(), call = any(), gasToken = gasToken) } returns safeTx().right()
+        coEvery { repository.createOperation(any(), any(), any(), any(), any()) } returnsMany listOf(
+            JointOperationCreateError.NetworkStateMoved.left(),
+            Unit.right(),
+        )
+
+        // Act
+        val actual = useCase(account = account, network = network, intent = intent, gasToken = gasToken)
+
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+        coVerify(exactly = 2) { gasBuilder.build(any(), any(), any(), gasToken = gasToken) }
+        coVerify(exactly = 0) { gasBuilder.build(any(), any(), any(), gasToken = SafeGasToken.Coin) }
     }
 
     @Test
@@ -259,7 +294,7 @@ internal class CreateJointOperationUseCaseTest {
             JointOperationCreateError.NetworkStateMoved.left()
 
         // Act
-        val actual = useCase(account = account, network = network, intent = intent)
+        val actual = useCase(account = account, network = network, intent = intent, gasToken = SafeGasToken.Coin)
 
         // Assert
         assertThat(actual).isEqualTo(JointOperationCreateError.NetworkStateMoved.left())
@@ -273,7 +308,7 @@ internal class CreateJointOperationUseCaseTest {
             JointOperationSigningError.UserCancelled.left()
 
         // Act
-        val actual = useCase(account = account, network = network, intent = intent)
+        val actual = useCase(account = account, network = network, intent = intent, gasToken = SafeGasToken.Coin)
 
         // Assert
         assertThat(actual).isEqualTo(JointOperationCreateError.UserCancelled.left())
