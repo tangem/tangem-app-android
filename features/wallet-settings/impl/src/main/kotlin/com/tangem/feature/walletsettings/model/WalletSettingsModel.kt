@@ -20,7 +20,6 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.ui.components.bottomsheets.message.*
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
@@ -41,6 +40,7 @@ import com.tangem.domain.nft.EnableWalletNFTUseCase
 import com.tangem.domain.nft.GetWalletNFTEnabledUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.assetsdiscovery.usecase.StartAssetsDiscoveryUseCase
+import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
 import com.tangem.domain.wallets.analytics.Settings
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.analytics.toAnalyticsState
@@ -101,6 +101,7 @@ internal class WalletSettingsModel @Inject constructor(
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
     private val jointAccountFeatureToggles: JointAccountFeatureToggles,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val socialLoginFeatureToggles: SocialLoginFeatureToggles,
     private val getCloudBackupStateUseCase: GetCloudBackupStateUseCase,
     private val getCloudBackupStatusUseCase: GetCloudBackupStatusUseCase,
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
@@ -434,6 +435,7 @@ internal class WalletSettingsModel @Inject constructor(
                     action = WalletSettingsAnalyticEvents.NoticeBackupFirst.Action.AccessCode,
                     cloudBackupState = resolveCloudBackupState(userWallet),
                     isBackedUp = manualBackupState(userWallet.backedUp),
+                    isSocialBackedUp = socialBackupState(),
                 ),
             )
         }
@@ -528,7 +530,7 @@ internal class WalletSettingsModel @Inject constructor(
         state.update { prevState ->
             prevState.copy(
                 items = prevState.items.mutate {
-                    it.add(toIndex - 1, it.removeAt(fromIndex - 1))
+                    it.add(toIndex, it.removeAt(fromIndex))
                 },
             )
         }
@@ -590,6 +592,8 @@ internal class WalletSettingsModel @Inject constructor(
         }
     }
 
+    private fun socialBackupState(): Boolean? = false.takeIf { socialLoginFeatureToggles.isSocialLoginEnabled }
+
     private fun manualBackupState(isBackedUp: Boolean): Boolean? =
         isBackedUp.takeIf { hotWalletFeatureToggles.isGoogleDriveBackupEnabled }
 
@@ -645,6 +649,7 @@ internal class WalletSettingsModel @Inject constructor(
                     cloudBackupState = AnalyticsParam.CloudBackupState.Incomplete
                         .takeIf { hotWalletFeatureToggles.isGoogleDriveBackupEnabled },
                     isBackedUp = manualBackupState(isBackedUp = false),
+                    isSocialBackedUp = socialBackupState(),
                 ),
             )
         }
@@ -714,13 +719,11 @@ internal class WalletSettingsModel @Inject constructor(
         analyticsEventHandler.send(WalletSettingsAnalyticEvents.LogOutRequest())
         messageSender.send(
             DialogMessage(
-                // TODO [REDACTED_TASK_KEY]: waiting on social_wallet_log_out_title / _description in Lokalise.
-                title = stringReference("Are you sure you want to log out?"),
-                message = stringReference("You can always sign in at any time."),
+                title = resourceReference(R.string.social_wallet_log_out_title),
+                message = resourceReference(R.string.social_wallet_log_out_description),
                 firstActionBuilder = {
                     EventMessageAction(
-                        // TODO [REDACTED_TASK_KEY]: waiting on social_wallet_settings_log_out in Lokalise.
-                        title = stringReference("Log out"),
+                        title = resourceReference(R.string.social_wallet_settings_log_out),
                         isWarning = true,
                         onClick = {
                             forgetWallet(
@@ -745,17 +748,11 @@ internal class WalletSettingsModel @Inject constructor(
                         type = MessageBottomSheetUM.Icon.Type.Attention
                         backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
                     }
-                    // TODO [REDACTED_TASK_KEY]: waiting on social_wallet_delete_title / _description in Lokalise.
-                    title = stringReference("Delete wallet?")
-                    body = stringReference(
-                        "This wallet will be permanently removed from the app, and your Google account will no " +
-                            "longer be linked to it. Back up your seed phrase first - otherwise you'll " +
-                            "permanently lose access to any crypto it holds.",
-                    )
+                    title = resourceReference(R.string.social_wallet_delete_title)
+                    body = resourceReference(R.string.social_wallet_delete_description, wrappedList(PROVIDER_NAME))
                 }
                 secondaryButton {
-                    // TODO [REDACTED_TASK_KEY]: waiting on social_wallet_delete_anyway in Lokalise.
-                    text = stringReference("Delete anyway")
+                    text = resourceReference(R.string.social_wallet_delete_anyway)
                     onClick {
                         router.push(AppRoute.ForgetWallet(userWallet.walletId, shouldDeleteSocialRecovery = true))
                         closeBs()
@@ -789,3 +786,5 @@ internal class WalletSettingsModel @Inject constructor(
         )
     }
 }
+
+private const val PROVIDER_NAME = "Google"

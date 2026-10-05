@@ -7,4 +7,6 @@ sealed class DerivationPathValidationException {
     data object Invalid : DerivationPathValidationException()
 
     data object ReservedForJointAccounts : DerivationPathValidationException()
+
+    data object ReservedForMoneyAccount : DerivationPathValidationException()
 }

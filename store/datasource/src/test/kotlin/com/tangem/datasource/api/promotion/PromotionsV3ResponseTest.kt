@@ -7,6 +7,10 @@ import com.squareup.moshi.ToJson
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.BlockItem
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.BlockType
+import com.tangem.datasource.api.promotion.models.PromotionsV3Response.Conditions
+import com.tangem.datasource.api.promotion.models.PromotionsV3Response.Eligibility
+import com.tangem.datasource.api.promotion.models.PromotionsV3Response.EligibilityType
+import com.tangem.datasource.api.promotion.models.PromotionsV3Response.EligibilityWalletType
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.Content
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.DescriptionBlock
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.Link
@@ -32,9 +36,11 @@ internal class PromotionsV3ResponseTest {
     fun `GIVEN full campaign json WHEN parsed THEN every block type mapped`() {
         // Arrange
         val json = """
-            {"promotions":[{"name":"example_campaign","status":"active",
+            {"promotions":[{"id":7,"name":"example_campaign","status":"active",
             "startAt":"2026-06-01T00:00:00Z","endAt":"2026-08-31T23:59:59Z","alreadyEnrolled":false,
-            "eligibility":{"type":"private","conditions":{"walletType":"card","batchIds":["AF99 0088"]}},
+            "eligibility":{"type":"private","conditions":{"walletIds":["UID_001"],"partnerIds":["partner_a"],
+            "walletType":"card","batchIds":["AF99 0088"],"minIosVersion":"6.1.0","minAndroidVersion":"6.1.0",
+            "maxAndroidVersion":"6.3.0","countryExcluded":["US","CN"]}},
             "properties":{"payoutNeeded":true,"matchMode":"linked_wallet","payoutTokens":[
               {"tokenAddress":"0xdAC","networkId":"ethereum","tokenId":"tether","tokenName":"Tether",
               "tokenSymbol":"USDT","decimals":6}]},
@@ -66,6 +72,17 @@ internal class PromotionsV3ResponseTest {
             promotions = listOf(
                 createPromotion(
                     alreadyEnrolled = false,
+                    eligibility = Eligibility(
+                        type = EligibilityType.PRIVATE,
+                        conditions = Conditions(
+                            walletIds = listOf("UID_001"),
+                            walletType = EligibilityWalletType.CARD,
+                            batchIds = listOf("AF99 0088"),
+                            countryExcluded = listOf("US", "CN"),
+                            minAndroidVersion = "6.1.0",
+                            maxAndroidVersion = "6.3.0",
+                        ),
+                    ),
                     properties = Properties(
                         isPayoutNeeded = true,
                         payoutTokens = listOf(
@@ -145,7 +162,7 @@ internal class PromotionsV3ResponseTest {
     fun `GIVEN unknown block type and no optional fields WHEN parsed THEN campaign still mapped`() {
         // Arrange
         val json = """
-            {"promotions":[{"name":"example_campaign","status":"active",
+            {"promotions":[{"id":7,"name":"example_campaign","status":"active",
             "startAt":"2026-06-01T00:00:00Z","endAt":"2026-08-31T23:59:59Z","alreadyEnrolled":true,
             "eligibility":{"type":"public"},
             "properties":{"payoutNeeded":false,"matchMode":"strict"},
@@ -164,6 +181,7 @@ internal class PromotionsV3ResponseTest {
             promotions = listOf(
                 createPromotion(
                     alreadyEnrolled = true,
+                    eligibility = Eligibility(type = EligibilityType.PUBLIC, conditions = null),
                     properties = Properties(isPayoutNeeded = false, payoutTokens = null, matchMode = MatchMode.STRICT),
                     publicDescription = listOf(createBlock(type = BlockType.UNKNOWN)),
                     learnMoreLink = null,
@@ -174,11 +192,12 @@ internal class PromotionsV3ResponseTest {
     }
 
     @Test
-    fun `GIVEN unknown status, match mode and value types WHEN parsed THEN mapped to UNKNOWN`() {
+    fun `GIVEN unknown status, match mode, eligibility and value types WHEN parsed THEN mapped to UNKNOWN`() {
         // Arrange
         val json = """
             {"promotions":[{"name":"example_campaign","status":"expired",
             "startAt":"2026-06-01T00:00:00Z","endAt":"2026-08-31T23:59:59Z","alreadyEnrolled":false,
+            "eligibility":{"type":"segment","conditions":{"walletType":"tablet"}},
             "properties":{"payoutNeeded":false,"matchMode":"all_wallets"},
             "content":{"campaignNameKey":"campaign.example_campaign.title",
             "publicDescription":[
@@ -196,8 +215,20 @@ internal class PromotionsV3ResponseTest {
         val expected = PromotionsV3Response(
             promotions = listOf(
                 createPromotion(
+                    id = null,
                     status = Status.UNKNOWN,
                     alreadyEnrolled = false,
+                    eligibility = Eligibility(
+                        type = EligibilityType.UNKNOWN,
+                        conditions = Conditions(
+                            walletIds = null,
+                            walletType = EligibilityWalletType.UNKNOWN,
+                            batchIds = null,
+                            countryExcluded = null,
+                            minAndroidVersion = null,
+                            maxAndroidVersion = null,
+                        ),
+                    ),
                     properties = Properties(isPayoutNeeded = false, payoutTokens = null, matchMode = MatchMode.UNKNOWN),
                     publicDescription = listOf(
                         createBlock(
@@ -226,16 +257,20 @@ internal class PromotionsV3ResponseTest {
 
     private fun createPromotion(
         alreadyEnrolled: Boolean,
+        eligibility: Eligibility,
         properties: Properties,
         publicDescription: List<DescriptionBlock>,
         learnMoreLink: Link?,
         status: Status = Status.ACTIVE,
+        id: Int? = 7,
     ) = PromotionDto(
+        id = id,
         name = "example_campaign",
         status = status,
         startAt = "2026-06-01T00:00:00Z",
         endAt = "2026-08-31T23:59:59Z",
         isAlreadyEnrolled = alreadyEnrolled,
+        eligibility = eligibility,
         properties = properties,
         content = Content(
             campaignNameKey = "campaign.example_campaign.title",

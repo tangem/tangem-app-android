@@ -252,6 +252,7 @@ private fun LazyListScope.portfolioItem(
                             addDefaultPadding = false,
                             lastIndex = lastIndex,
                             backgroundColor = TangemTheme.colors3.bg.secondary,
+                            groupKey = listItem.tokenRowUM.id,
                         ),
                     visible = listItem.isExpanded,
                 ) {
@@ -322,6 +323,7 @@ private fun LazyListScope.accountItem(
                 addDefaultPadding = false,
                 lastIndex = effectiveLastIndex,
                 backgroundColor = TangemTheme.colors3.bg.secondary,
+                groupKey = listItem.tokenRowUM.id,
             )
         if (listItem.isCollapsable) {
             PortfolioRowItem(
@@ -541,6 +543,7 @@ private fun LazyListScope.nonContentAccountItem(listItem: TokensListItemUM2.Port
                     currentIndex = 1,
                     lastIndex = 1,
                     backgroundColor = TangemTheme.colors3.bg.secondary,
+                    groupKey = listItem.tokenRowUM.id,
                 ),
             visible = listItem.isExpanded,
         ) {

@@ -76,6 +76,7 @@ import com.tangem.features.send.send.confirm.SendConfirmComponent
 import com.tangem.features.send.send.confirm.model.transformers.*
 import com.tangem.features.send.send.joint.JointSendDelegate
 import com.tangem.features.send.send.ui.state.SendUM
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.extensions.stripZeroPlainString
@@ -125,6 +126,7 @@ internal class SendConfirmModel @Inject constructor(
     private val jointSendDelegate: JointSendDelegate,
     private val recordTokenTransferFromSendUseCase: RecordTokenTransferFromSendUseCase,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
+    private val appScope: AppCoroutineScope,
 ) : Model(), SendConfirmClickIntents, FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
 
     private val params: SendConfirmComponent.Params = paramsContainer.require()
@@ -267,9 +269,10 @@ internal class SendConfirmModel @Inject constructor(
 
         // The Safe never takes the fee out of the amount by itself, so what the confirm step showed as subtracted
         // has to be subtracted here, the same way the regular send does before building its transaction
+        val feeCurrencyStatus = getCurrencyStatusForFeePayment()
         val sendingAmount = checkAndCalculateSubtractedAmount(
             isAmountSubtractAvailable = isAmountSubtractAvailable,
-            cryptoCurrencyStatus = getCurrencyStatusForFeePayment(),
+            cryptoCurrencyStatus = feeCurrencyStatus,
             amountValue = amountValue,
             feeValue = feeValue,
             reduceAmountBy = confirmData.reduceAmountBy.orZero(),
@@ -281,6 +284,7 @@ internal class SendConfirmModel @Inject constructor(
                     currency = cryptoCurrency,
                     amount = sendingAmount,
                     destinationUM = uiState.value.destinationUM,
+                    feeToken = feeCurrencyStatus.currency.takeIf { isFeeInSmartGasToken() } as? CryptoCurrency.Token,
                 )
                 .fold(
                     ifLeft = ::showJointOperationError,
@@ -299,7 +303,8 @@ internal class SendConfirmModel @Inject constructor(
     private fun sendJointOperationCreatedAnalytics(account: Account.Joint) {
         val sendUM = uiState.value
         val feeToken = getCurrencyStatusForFeePayment().currency
-        modelScope.launch(dispatchers.default) {
+        // The success screen replaces this step right away and cancels modelScope
+        appScope.launch(dispatchers.default) {
             val storedAccount = jointSendDelegate.findJointAccount(
                 userWalletId = userWallet.walletId,
                 account = account,
@@ -616,6 +621,9 @@ internal class SendConfirmModel @Inject constructor(
             },
         )
     }
+
+    private fun isFeeInSmartGasToken(): Boolean =
+        feeUMV2?.feeExtraInfo?.transactionFeeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency
 
     private fun getCurrencyStatusForFeePayment(): CryptoCurrencyStatus {
         val feeExtended = feeUMV2?.feeExtraInfo?.transactionFeeExtended
