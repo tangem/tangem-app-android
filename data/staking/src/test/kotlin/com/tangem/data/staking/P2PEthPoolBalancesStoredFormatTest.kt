@@ -16,7 +16,8 @@ import java.math.BigDecimal
 
 /**
  * Guards the stored format of the P2P ETH pool balances: files written by the Moshi serializer must read back
- * unchanged after the store moved to kotlinx, and new writes keep that format.
+ * unchanged after the store moved to kotlinx, and new writes keep that format, so the Moshi serializer still used
+ * while the kotlinx DataStore toggle is off reads them too.
  */
 @OptIn(ExperimentalStdlibApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -30,6 +31,16 @@ internal class P2PEthPoolBalancesStoredFormatTest {
 
         // Assert
         assertThat(actual).isEqualTo(model.json)
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN stored format WHEN decoded by Moshi THEN balances are kept`(model: FormatModel) {
+        // Act
+        val actual = legacyDataStoreMoshi.adapter<Map<String, Set<P2PEthPoolAccountResponse>>>().fromJson(model.json)
+
+        // Assert
+        assertThat(actual).isEqualTo(model.value)
     }
 
     @ParameterizedTest
