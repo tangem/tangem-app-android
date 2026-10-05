@@ -776,6 +776,32 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             }
 
         @Test
+        fun `GIVEN the account leaves the store after confirm WHEN created THEN success analytics are still sent`() =
+            runTest {
+                // Arrange
+                stubCreateOperation(result = Unit.right())
+                coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returnsMany
+                    listOf(storedJointAccount, null)
+                val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+                advanceUntilIdle()
+
+                // Act
+                sut.onSendClick()
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 1) {
+                    sendAnalyticHelper.sendSuccessAnalytics(
+                        cryptoCurrency = any(),
+                        sendUM = any(),
+                        feeToken = any(),
+                        account = jointAccount,
+                        jointComposition = AnalyticsParam.JointComposition(membersCount = 3, threshold = 2),
+                    )
+                }
+            }
+
+        @Test
         fun `GIVEN the request fails WHEN onSendClick THEN Joint Account Error carries the cause`() = runTest {
             // Arrange
             val cause = IllegalStateException("Request failed")
