@@ -52,9 +52,9 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
    re-deriving one wallet's credentials share one non-reentrant `PolymarketCredentialsLock`, so a late `401`
    cannot wipe a set a Reconnect has just stored.
 9. **A withdrawal is persisted before it is submitted.** The relayer keys submissions on
-   `(deposit wallet, nonce)`, so resending the same batch returns the same receipt. Only a rejection of the
-   submit itself (`RelayerRejected`, `InvalidRequest` — the relayer recorded nothing) clears the record;
-   never clear it on an ambiguous error. A double withdrawal is worse than a stuck record.
+   `(deposit wallet, nonce)`, so resending the same batch returns the same receipt. The record is cleared
+   on a terminal receipt or on a rejection of the submit itself (`RelayerRejected`, `InvalidRequest` — the
+   relayer recorded nothing), never on an ambiguous error. A double withdrawal is worse than a stuck record.
 
 ## Onboarding
 
