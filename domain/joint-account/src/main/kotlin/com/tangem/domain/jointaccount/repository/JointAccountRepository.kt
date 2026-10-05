@@ -10,6 +10,7 @@ import com.tangem.domain.jointaccount.model.JointAccountJoinPayload
 import com.tangem.domain.jointaccount.model.JointAccountJoinResult
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
+import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.models.wallet.UserWalletId
@@ -121,13 +122,16 @@ interface JointAccountRepository {
      * A 404 (the operation finished or was removed while the sheet was open) comes back as
      * [JointOperationSignError.OperationNotFound], a 409 (the threshold is already reached) as
      * [JointOperationSignError.ThresholdReached]. The function never throws.
+     *
+     * Returns the operation as the backend reports it right after counting the signature, `null` when that answer
+     * could not be read — the signature is accepted either way.
      */
     suspend fun signOperation(
         userWalletId: UserWalletId,
         operationId: String,
         safeTx: SafeTx,
         signature: String,
-    ): Either<JointOperationSignError, Unit>
+    ): Either<JointOperationSignError, JointOperation?>
 
     /** Cancels the operation when the caller is its initiator, records a decline otherwise */
     suspend fun rejectOperation(
