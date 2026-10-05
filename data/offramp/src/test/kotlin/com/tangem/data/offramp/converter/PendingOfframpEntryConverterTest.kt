@@ -1,9 +1,9 @@
-package com.tangem.tap.data.converter
+package com.tangem.data.offramp.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.data.offramp.model.PendingOfframpEntry
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.offramp.model.PendingOfframp
-import com.tangem.tap.data.model.PendingOfframpEntry
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -39,8 +39,8 @@ internal class PendingOfframpEntryConverterTest {
     fun `GIVEN entries WHEN convertList THEN converts each preserving order`() {
         // Arrange
         val entries = listOf(
-            PendingOfframpEntry("id-1", "0011", "bitcoin", 1L),
-            PendingOfframpEntry("id-2", "0022", "ethereum", 2L),
+            PendingOfframpEntry(requestId = "id-1", userWalletId = "0011", currencyId = "bitcoin", createdAt = 1L),
+            PendingOfframpEntry(requestId = "id-2", userWalletId = "0022", currencyId = "ethereum", createdAt = 2L),
         )
 
         // Act
@@ -48,8 +48,18 @@ internal class PendingOfframpEntryConverterTest {
 
         // Assert
         assertThat(result).containsExactly(
-            PendingOfframp("id-1", UserWalletId("0011"), "bitcoin", 1L),
-            PendingOfframp("id-2", UserWalletId("0022"), "ethereum", 2L),
+            PendingOfframp(
+                requestId = "id-1",
+                userWalletId = UserWalletId("0011"),
+                currencyId = "bitcoin",
+                createdAt = 1L,
+            ),
+            PendingOfframp(
+                requestId = "id-2",
+                userWalletId = UserWalletId("0022"),
+                currencyId = "ethereum",
+                createdAt = 2L,
+            ),
         ).inOrder()
     }
 }
