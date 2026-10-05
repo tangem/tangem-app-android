@@ -108,7 +108,7 @@ date here; when you ingest a change, update this table in the same PR.
 | CLOB `POST order` | `400` + "no match" marker | `PredictionPlaceOrderError.NoLiquidity` | fill-and-kill found nothing |
 | | `400` other | `Rejected` | |
 | | `401` | `Unauthorized` | credentials stale, cleared |
-| | network/timeout, other | `Ambiguous` | the order may have been placed; the feature reports it as submitted, never as failed |
+| | network/timeout, other | `Ambiguous` | the order may have been placed; the feature shows the existing error dialog with Support and refreshes balance/positions ([REDACTED_TASK_KEY]) |
 | BFF `/withdraw*` | `409` | `PredictionWithdrawError.NonceTaken` | same nonce already submitted |
 | | `422` | `RelayerRejected` | |
 | | `404` | `NotFound` | tracker stops, record kept |
