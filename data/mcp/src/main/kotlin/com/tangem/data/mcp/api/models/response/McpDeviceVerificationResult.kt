@@ -1,10 +1,10 @@
 package com.tangem.data.mcp.api.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /** Outcome of approving a device verification. */
-@JsonClass(generateAdapter = true)
+@Serializable
 internal data class McpDeviceVerificationResult(
-    @Json(name = "success") val isSuccess: Boolean,
+    @SerialName("success") val isSuccess: Boolean,
 )
