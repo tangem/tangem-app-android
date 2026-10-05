@@ -1,109 +1,96 @@
-@file:Suppress("BooleanPropertyNaming")
 package com.tangem.spend.datasource.visa.entity
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.serialization.SerializedBigDecimal
-import dev.onenowy.moshipolymorphicadapter.PolymorphicAdapterType
-import dev.onenowy.moshipolymorphicadapter.annotations.NameLabel
-import java.math.BigDecimal
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * Payment account status for storage in the local cache.
  *
  * @see [com.tangem.domain.models.account.AccountStatus.Payment]
  */
-@JsonClass(generateAdapter = true, generator = PolymorphicAdapterType.NAME_POLYMORPHIC_ADAPTER)
+@Serializable
 sealed interface PaymentAccountStatusValueDM {
 
-    @NameLabel("empty")
-    @JsonClass(generateAdapter = true)
-    data class Empty(
-        @Json(name = "empty") val marker: Boolean = true,
-    ) : PaymentAccountStatusValueDM
+    @Serializable
+    @SerialName("empty")
+    data object Empty : PaymentAccountStatusValueDM
 
-    @NameLabel("not_created")
-    @JsonClass(generateAdapter = true)
-    data class NotCreated(
-        @Json(name = "not_created") val marker: Boolean = true,
-    ) : PaymentAccountStatusValueDM
+    @Serializable
+    @SerialName("not_created")
+    data object NotCreated : PaymentAccountStatusValueDM
 
-    @NameLabel("kyc_status")
-    @JsonClass(generateAdapter = true)
+    @Serializable
+    @SerialName("kyc_status")
     data class UnderReview(
-        @Json(name = "kyc_status") val kycStatus: KycStatus,
-        @Json(name = "customer_id") val customerId: String,
+        @SerialName("kyc_status") val kycStatus: KycStatus,
+        @SerialName("customer_id") val customerId: String,
     ) : PaymentAccountStatusValueDM
 
-    @NameLabel("issuing_card")
-    @JsonClass(generateAdapter = true)
-    data class IssuingCard(
-        @Json(name = "issuing_card") val marker: Boolean = true,
-    ) : PaymentAccountStatusValueDM
+    @Serializable
+    @SerialName("issuing_card")
+    data object IssuingCard : PaymentAccountStatusValueDM
 
-    @NameLabel("active_account")
-    @JsonClass(generateAdapter = true)
+    @Serializable
+    @SerialName("active_account")
     data class ActiveAccount(
-        @Json(name = "active_account") val marker: Boolean = true,
-        @Json(name = "customer_id") val customerId: String,
-        @Json(name = "currency_code") val currencyCode: String?,
-        @Json(name = "payment_account_address") val paymentAccountAddress: String?,
-        @Json(name = "fiat_balance") val fiatBalance: FiatBalanceDM?,
-        @Json(name = "fiat_rate") val fiatRate: BigDecimal?,
-        @Json(name = "cards") val cards: List<TangemPayCard>,
+        @SerialName("customer_id") val customerId: String,
+        @SerialName("currency_code") val currencyCode: String?,
+        @SerialName("payment_account_address") val paymentAccountAddress: String?,
+        @SerialName("fiat_balance") val fiatBalance: FiatBalanceDM?,
+        @SerialName("fiat_rate") val fiatRate: SerializedBigDecimal?,
+        @SerialName("cards") val cards: List<TangemPayCard>,
     ) : PaymentAccountStatusValueDM
 
-    @NameLabel("card_issue_failed")
-    @JsonClass(generateAdapter = true)
+    @Serializable
+    @SerialName("card_issue_failed")
     data class CardIssueFailed(
-        @Json(name = "card_issue_failed") val marker: Boolean = true,
-        @Json(name = "customer_id") val customerId: String,
-        @Json(name = "fiat_rate") val fiatRate: BigDecimal? = null,
-        @Json(name = "balance") val balance: BalanceDM? = null,
+        @SerialName("customer_id") val customerId: String,
+        @SerialName("fiat_rate") val fiatRate: SerializedBigDecimal? = null,
+        @SerialName("balance") val balance: BalanceDM? = null,
     ) : PaymentAccountStatusValueDM
 
-    @NameLabel("deactivated_account")
-    @JsonClass(generateAdapter = true)
+    @Serializable
+    @SerialName("deactivated_account")
     data class DeactivatedAccount(
-        @Json(name = "deactivated_account") val marker: Boolean = true,
-        @Json(name = "customer_id") val customerId: String,
-        @Json(name = "fiat_rate") val fiatRate: BigDecimal?,
-        @Json(name = "fiat_balance") val fiatBalance: FiatBalanceDM?,
+        @SerialName("customer_id") val customerId: String,
+        @SerialName("fiat_rate") val fiatRate: SerializedBigDecimal?,
+        @SerialName("fiat_balance") val fiatBalance: FiatBalanceDM?,
     ) : PaymentAccountStatusValueDM
 
     /** @see [com.tangem.domain.models.account.PaymentAccountStatusValue.Balance] */
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class BalanceDM(
-        @Json(name = "fiat_balance") val fiatBalance: FiatBalanceDM,
+        @SerialName("fiat_balance") val fiatBalance: FiatBalanceDM,
     )
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class FiatBalanceDM(
-        @Json(name = "available_balance") val availableBalance: BigDecimal,
-        @Json(name = "currency") val currency: String,
+        @SerialName("available_balance") val availableBalance: SerializedBigDecimal,
+        @SerialName("currency") val currency: String,
     )
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class TangemPayCard(
-        @Json(name = "id") val id: String,
-        @Json(name = "product_instance_id") val productInstanceId: String,
-        @Json(name = "card_status") val cardStatus: String,
-        @Json(name = "has_pin_code") val hasPinCode: Boolean,
-        @Json(name = "display_name") val displayName: String?,
-        @Json(name = "actual_daily_limit") val actualDailyLimit: SerializedBigDecimal?,
-        @Json(name = "admin_daily_limit") val adminDailyLimit: SerializedBigDecimal?,
-        @Json(name = "frozen_state") val frozenState: String,
-        @Json(name = "last_digits") val lastDigits: String,
-        @Json(name = "images") val images: List<ImageDM>,
-        @Json(name = "state") val state: String,
-        @Json(name = "emboss_name") val embossName: String?,
-        @Json(name = "card_type") val cardType: String? = null,
+        @SerialName("id") val id: String,
+        @SerialName("product_instance_id") val productInstanceId: String,
+        @SerialName("card_status") val cardStatus: String,
+        @SerialName("has_pin_code") val hasPinCode: Boolean,
+        @SerialName("display_name") val displayName: String?,
+        @SerialName("actual_daily_limit") val actualDailyLimit: SerializedBigDecimal?,
+        @SerialName("admin_daily_limit") val adminDailyLimit: SerializedBigDecimal?,
+        @SerialName("frozen_state") val frozenState: String,
+        @SerialName("last_digits") val lastDigits: String,
+        @SerialName("images") val images: List<ImageDM>,
+        @SerialName("state") val state: String,
+        @SerialName("emboss_name") val embossName: String?,
+        @SerialName("card_type") val cardType: String? = null,
     )
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class ImageDM(
-        @Json(name = "type") val type: String,
-        @Json(name = "url") val url: String,
+        @SerialName("type") val type: String,
+        @SerialName("url") val url: String,
     )
 }

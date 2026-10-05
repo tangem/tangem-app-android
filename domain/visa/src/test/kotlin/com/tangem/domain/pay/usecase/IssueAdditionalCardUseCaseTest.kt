@@ -7,6 +7,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.IssueAdditionalCardError
 import com.tangem.domain.pay.model.IssueAdditionalCardResult
 import com.tangem.domain.pay.model.CustomerOffers
+import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderStatus
@@ -115,7 +116,7 @@ internal class IssueAdditionalCardUseCaseTest {
             coEvery {
                 orderRepository.findOrders(userWalletId = USER_WALLET_ID, types = any(), statuses = any())
             } returns listOf(existing).right()
-            coEvery { orderRepository.createOrder(any(), any(), any(), any(), any(), any(), any(), any()) } returns
+            coEvery { orderRepository.createOrder(any(), any(), any()) } returns
                 created.right()
 
             // Act
@@ -132,10 +133,12 @@ internal class IssueAdditionalCardUseCaseTest {
             coEvery {
                 orderRepository.createOrder(
                     userWalletId = USER_WALLET_ID,
-                    type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
-                    specificationName = SPEC,
+                    request = CustomerOrderRequest.CardIssue(
+                        type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
+                        specificationName = SPEC,
+                        deeplinkValue = null,
+                    ),
                     idempotencyKey = any(),
-                    deeplinkValue = null,
                 )
             } returns VisaApiError.CardIssueInsufficientBalance.left()
 
@@ -155,10 +158,12 @@ internal class IssueAdditionalCardUseCaseTest {
             coEvery {
                 orderRepository.createOrder(
                     userWalletId = USER_WALLET_ID,
-                    type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
-                    specificationName = SPEC,
+                    request = CustomerOrderRequest.CardIssue(
+                        type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
+                        specificationName = SPEC,
+                        deeplinkValue = null,
+                    ),
                     idempotencyKey = any(),
-                    deeplinkValue = null,
                 )
             } returns created.right()
 
@@ -185,10 +190,12 @@ internal class IssueAdditionalCardUseCaseTest {
                 coEvery {
                     orderRepository.createOrder(
                         userWalletId = USER_WALLET_ID,
-                        type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
-                        specificationName = CAMPAIGN_SPEC,
+                        request = CustomerOrderRequest.CardIssue(
+                            type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
+                            specificationName = CAMPAIGN_SPEC,
+                            deeplinkValue = DEEPLINK_VALUE,
+                        ),
                         idempotencyKey = any(),
-                        deeplinkValue = DEEPLINK_VALUE,
                     )
                 } returns created.right()
 
@@ -217,7 +224,7 @@ internal class IssueAdditionalCardUseCaseTest {
         fun `GIVEN backend rejects the offer WHEN invoked with deeplink THEN OfferNotAvailable`() = runTest {
             // Arrange
             coEvery { offersRepository.getOffers(USER_WALLET_ID, DEEPLINK_VALUE) } returns customerOffers(CAMPAIGN_OFFER).right()
-            coEvery { orderRepository.createOrder(any(), any(), any(), any(), any(), any(), any(), any()) } returns
+            coEvery { orderRepository.createOrder(any(), any(), any()) } returns
                 VisaApiError.CardIssueOfferNotAvailable.left()
 
             // Act
@@ -272,7 +279,7 @@ internal class IssueAdditionalCardUseCaseTest {
             coEvery {
                 orderRepository.findOrders(userWalletId = USER_WALLET_ID, types = any(), statuses = any())
             } returns listOf(plastic).right()
-            coEvery { orderRepository.createOrder(any(), any(), any(), any(), any(), any(), any(), any()) } returns
+            coEvery { orderRepository.createOrder(any(), any(), any()) } returns
                 created.right()
 
             // Act
@@ -284,7 +291,7 @@ internal class IssueAdditionalCardUseCaseTest {
     }
 
     private fun verifyNoOrderCreated() {
-        coVerify(exactly = 0) { orderRepository.createOrder(any(), any(), any(), any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { orderRepository.createOrder(any(), any(), any()) }
     }
 
     private fun order(id: String, type: OrderType, status: OrderStatus): Order = Order(

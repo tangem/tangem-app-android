@@ -175,6 +175,7 @@ sealed class WalletSettingsAnalyticEvents(
         val action: Action,
         val cloudBackupState: AnalyticsParam.CloudBackupState? = null,
         val isBackedUp: Boolean? = null,
+        val isSocialBackedUp: Boolean? = null,
     ) : WalletSettingsAnalyticEvents(
         event = "Notice - Backup First",
         params = buildMap {
@@ -182,6 +183,7 @@ sealed class WalletSettingsAnalyticEvents(
             put(ACTION, action.value)
             cloudBackupState?.let { put(AnalyticsParam.CLOUD_BACKUP, it.value) }
             isBackedUp?.let { put(AnalyticsParam.MANUAL_BACKUP, it.toYesNo()) }
+            isSocialBackedUp?.let { put(AnalyticsParam.SOCIAL_BACKUP, it.toYesNo()) }
         },
     ) {
         enum class Action(val value: String) {

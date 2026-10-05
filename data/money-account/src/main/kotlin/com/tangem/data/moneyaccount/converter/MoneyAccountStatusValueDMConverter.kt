@@ -5,20 +5,21 @@ import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM
+import com.tangem.utils.converter.Converter
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 internal class MoneyAccountStatusValueDMConverter @Inject constructor(
     private val tangemPayCurrencyFactory: TangemPayCurrencyFactory,
-) {
+) : Converter<MoneyAccountStatusValue, MoneyAccountStatusValueDM?> {
 
-    fun convert(value: MoneyAccountStatusValue): MoneyAccountStatusValueDM? {
+    override fun convert(value: MoneyAccountStatusValue): MoneyAccountStatusValueDM? {
         return when (value) {
-            is MoneyAccountStatusValue.Empty -> MoneyAccountStatusValueDM.Empty()
-            is MoneyAccountStatusValue.NotCreated -> MoneyAccountStatusValueDM.NotCreated()
+            is MoneyAccountStatusValue.Empty -> MoneyAccountStatusValueDM.Empty
+            is MoneyAccountStatusValue.NotCreated -> MoneyAccountStatusValueDM.NotCreated
             is MoneyAccountStatusValue.Onboarding.CountryNotSupported -> {
-                MoneyAccountStatusValueDM.CountryNotSupported()
+                MoneyAccountStatusValueDM.CountryNotSupported
             }
             is MoneyAccountStatusValue.Onboarding.Issuing -> MoneyAccountStatusValueDM.Issuing(
                 step = value.step,

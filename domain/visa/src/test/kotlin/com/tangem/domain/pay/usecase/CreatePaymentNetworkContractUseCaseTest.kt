@@ -7,6 +7,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderStep
@@ -56,7 +57,7 @@ internal class CreatePaymentNetworkContractUseCaseTest {
 
             assertThat(result.isRight()).isTrue()
             coVerify(exactly = 0) {
-                customerOrderRepository.createOrder(any(), any(), any(), any(), any(), any(), any())
+                customerOrderRepository.createOrder(any(), any(), any())
             }
             coVerify(exactly = 1) {
                 pollingUseCase.invoke(
@@ -82,10 +83,8 @@ internal class CreatePaymentNetworkContractUseCaseTest {
         coEvery {
             customerOrderRepository.createOrder(
                 userWalletId = userWalletId,
-                type = OrderType.SMART_CONTRACT_ISSUE_RAIN,
-                specificationName = null,
+                request = CustomerOrderRequest.SmartContractIssue(chainId = chainId),
                 idempotencyKey = any(),
-                chainId = chainId,
             )
         } returns createdOrder.right()
         coEvery { pollingUseCase.invoke(any(), any(), any(), any(), any()) } returns true
@@ -96,10 +95,8 @@ internal class CreatePaymentNetworkContractUseCaseTest {
         coVerify(exactly = 1) {
             customerOrderRepository.createOrder(
                 userWalletId = userWalletId,
-                type = OrderType.SMART_CONTRACT_ISSUE_RAIN,
-                specificationName = null,
+                request = CustomerOrderRequest.SmartContractIssue(chainId = chainId),
                 idempotencyKey = any(),
-                chainId = chainId,
             )
         }
         coVerify(exactly = 1) {
@@ -139,7 +136,7 @@ internal class CreatePaymentNetworkContractUseCaseTest {
         assertThat(result.leftOrNull()).isEqualTo(VisaApiError.Unspecified)
         coVerify(exactly = 0) { customerOrderRepository.findOrders(any(), any(), any()) }
         coVerify(exactly = 0) {
-            customerOrderRepository.createOrder(any(), any(), any(), any(), any(), any(), any())
+            customerOrderRepository.createOrder(any(), any(), any())
         }
         coVerify(exactly = 0) { pollingUseCase.invoke(any(), any(), any(), any(), any()) }
     }
@@ -157,10 +154,8 @@ internal class CreatePaymentNetworkContractUseCaseTest {
             coEvery {
                 customerOrderRepository.createOrder(
                     userWalletId = userWalletId,
-                    type = OrderType.SMART_CONTRACT_ISSUE_RAIN,
-                    specificationName = null,
+                    request = CustomerOrderRequest.SmartContractIssue(chainId = chainId),
                     idempotencyKey = any(),
-                    chainId = chainId,
                 )
             } returns VisaApiError.CustomerIsBlocked.left()
 
@@ -170,10 +165,8 @@ internal class CreatePaymentNetworkContractUseCaseTest {
             coVerify(exactly = 1) {
                 customerOrderRepository.createOrder(
                     userWalletId = userWalletId,
-                    type = OrderType.SMART_CONTRACT_ISSUE_RAIN,
-                    specificationName = null,
+                    request = CustomerOrderRequest.SmartContractIssue(chainId = chainId),
                     idempotencyKey = any(),
-                    chainId = chainId,
                 )
             }
             coVerify(exactly = 0) { pollingUseCase.invoke(any(), any(), any(), any(), any()) }
@@ -194,10 +187,8 @@ internal class CreatePaymentNetworkContractUseCaseTest {
             coEvery {
                 customerOrderRepository.createOrder(
                     userWalletId = userWalletId,
-                    type = OrderType.SMART_CONTRACT_ISSUE_RAIN,
-                    specificationName = null,
+                    request = CustomerOrderRequest.SmartContractIssue(chainId = chainId),
                     idempotencyKey = capture(idempotencyKeys),
-                    chainId = chainId,
                 )
             } returnsMany listOf(
                 VisaApiError.ServerUnavailable.left(),
@@ -214,10 +205,8 @@ internal class CreatePaymentNetworkContractUseCaseTest {
             coVerify(exactly = 3) {
                 customerOrderRepository.createOrder(
                     userWalletId = userWalletId,
-                    type = OrderType.SMART_CONTRACT_ISSUE_RAIN,
-                    specificationName = null,
+                    request = CustomerOrderRequest.SmartContractIssue(chainId = chainId),
                     idempotencyKey = any(),
-                    chainId = chainId,
                 )
             }
             coVerify(exactly = 1) {

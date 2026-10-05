@@ -23,6 +23,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.cloudbackup.usecase.GetCloudBackupStatusUseCase
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.analytics.toAnalyticsState
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
@@ -58,6 +59,7 @@ internal class WalletHardwareBackupModel @Inject constructor(
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val getCloudBackupStatusUseCase: GetCloudBackupStatusUseCase,
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
+    private val socialLoginFeatureToggles: SocialLoginFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<WalletHardwareBackupComponent.Params>()
@@ -104,6 +106,7 @@ internal class WalletHardwareBackupModel @Inject constructor(
                 action = WalletSettingsAnalyticEvents.NoticeBackupFirst.Action.Upgrade,
                 cloudBackupState = cloudBackupState,
                 isBackedUp = false.takeIf { hotWalletFeatureToggles.isGoogleDriveBackupEnabled },
+                isSocialBackedUp = false.takeIf { socialLoginFeatureToggles.isSocialLoginEnabled },
             ),
         )
         bottomSheetMessage {

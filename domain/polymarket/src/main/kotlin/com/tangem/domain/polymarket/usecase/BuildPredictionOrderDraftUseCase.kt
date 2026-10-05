@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.right
+import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.model.PredictionOrderDraft
 import com.tangem.domain.polymarket.model.PredictionOrderDraftError
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
@@ -54,17 +55,15 @@ class BuildPredictionOrderDraftUseCase {
     private fun BigDecimal.toOnChainUnit(): Either<PredictionOrderDraftError, BigInteger> {
         val trimmed = stripTrailingZeros()
 
-        return if (trimmed.scale() > ON_CHAIN_DECIMALS) {
+        return if (trimmed.scale() > PolymarketContracts.COLLATERAL_DECIMALS) {
             PredictionOrderDraftError.AmountNotRepresentable(value = this).left()
         } else {
-            trimmed.movePointRight(ON_CHAIN_DECIMALS).toBigIntegerExact().right()
+            trimmed.movePointRight(PolymarketContracts.COLLATERAL_DECIMALS).toBigIntegerExact().right()
         }
     }
 
-    private fun BigDecimal.onChainQuantum(): BigInteger =
-        BigInteger.TEN.pow(ON_CHAIN_DECIMALS - scale().coerceIn(0, ON_CHAIN_DECIMALS))
-
-    private companion object {
-        const val ON_CHAIN_DECIMALS = 6
+    private fun BigDecimal.onChainQuantum(): BigInteger {
+        val decimals = PolymarketContracts.COLLATERAL_DECIMALS
+        return BigInteger.TEN.pow(decimals - scale().coerceIn(0, decimals))
     }
 }
