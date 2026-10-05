@@ -6,13 +6,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.common.ui.cosign.CosignRequestBanner
 import com.tangem.common.ui.cosign.CosignRequestBannerUM
-import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.features.send.common.ui.state.SendSignaturesUM
 import com.tangem.features.send.impl.R
 
@@ -31,10 +27,6 @@ internal fun SignaturesBanner(signaturesUM: SendSignaturesUM, modifier: Modifier
                 } else {
                     R.string.joint_account_send_sends_automatically
                 },
-            ),
-            trailingIcon = TangemIconUM.Icon(
-                imageVector = Icons.ic_info_20,
-                tintReference = { TangemTheme.colors3.icon.secondary },
             ),
         ),
     )
