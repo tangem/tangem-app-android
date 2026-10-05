@@ -84,7 +84,8 @@ internal class JointAccountMembersModelTest {
     private val getSharedInvitesUseCase: GetSharedJointAccountInvitesUseCase = mockk()
     private val markInviteSharedUseCase: MarkJointAccountInviteSharedUseCase = mockk()
     private val sharedInvites = MutableStateFlow<Set<String>>(emptySet())
-    private val sharedTexts = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    /** Fresh per test: with one instance for the class, models of earlier tests would stay subscribed to it */
+    private var sharedTexts = MutableSharedFlow<String>(extraBufferCapacity = 1)
     private val ownerAddressResolver: JointOwnerAddressResolver = mockk()
     private val singleAccountSupplier: SingleAccountSupplier = mockk()
     private val activateUseCase: ActivateJointAccountUseCase = mockk()
@@ -118,6 +119,7 @@ internal class JointAccountMembersModelTest {
         every { singleAccountSupplier.filterJointAccount(accountId = any()) } returns emptyFlow()
         coEvery { ownerAddressResolver.resolve(userWalletId = any(), ownerKeyIndex = any()) } returns null.right()
         sharedInvites.value = emptySet()
+        sharedTexts = MutableSharedFlow(extraBufferCapacity = 1)
         every { shareManager.sharedTexts } returns sharedTexts
         every { getSharedInvitesUseCase(userWalletId = any(), cryptoAccountId = any()) } returns sharedInvites
         coEvery { markInviteSharedUseCase(userWalletId = any(), cryptoAccountId = any(), inviteId = any()) } answers {
@@ -260,6 +262,34 @@ internal class JointAccountMembersModelTest {
             markInviteSharedUseCase(userWalletId = USER_WALLET_ID, cryptoAccountId = ACCOUNT_ID, inviteId = INVITE_A)
         }
     }
+
+    @Test
+    fun `GIVEN the account updates while a pick is recorded WHEN the write finishes THEN the slot reads Invited`() =
+        runTest {
+            // Arrange
+            val account = pendingAccount(members = listOf(creator))
+            val accounts = MutableStateFlow(listOf(account))
+            every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns accounts
+            coEvery { getInvitesUseCase(userWalletId = USER_WALLET_ID, cryptoAccountId = ACCOUNT_ID) } returns
+                listOf(INVITE_A)
+            coEvery {
+                markInviteSharedUseCase(userWalletId = any(), cryptoAccountId = any(), inviteId = any())
+            } coAnswers {
+                delay(timeMillis = 1_000)
+                sharedInvites.value += thirdArg<String>()
+            }
+            val model = createModel()
+
+            // Act
+            sharedTexts.emit("$INVITE_LINK_PREFIX$INVITE_A")
+            runCurrent()
+            accounts.value = listOf(account.copy(source = StatusSource.CACHE))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.freeSlots.first().status)
+                .isEqualTo(resourceReference(CoreUiR.string.joint_account_invite_members_invited))
+        }
 
     @Test
     fun `GIVEN another text is shared WHEN it is reported THEN no invite is recorded`() = runTest {
