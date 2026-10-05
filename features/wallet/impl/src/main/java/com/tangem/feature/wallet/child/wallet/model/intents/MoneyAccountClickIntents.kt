@@ -21,7 +21,6 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.repository.MoneyAccountRepository
-import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.MoneyAccountHideStateTransformer

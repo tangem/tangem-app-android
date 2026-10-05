@@ -101,7 +101,8 @@ internal class AccountListSubscriber @AssistedInject constructor(
                     "promo=$shouldShowMainPromo, " +
                     "stakingMap=${stakingAvailabilityMap.size}, " +
                     "isBackedUp=$isHotBackedUp, " +
-                    "pendingOperations=${jointPendingOperations.size}",
+                    "pendingOperations=${jointPendingOperations.size}, " +
+                    "isMoneyAccountHidden=$isMoneyAccountHidden",
             )
             updateState2(
                 accountList = accountList,
