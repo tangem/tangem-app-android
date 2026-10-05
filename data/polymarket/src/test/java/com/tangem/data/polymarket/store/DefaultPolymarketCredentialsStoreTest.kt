@@ -235,6 +235,26 @@ internal class DefaultPolymarketCredentialsStoreTest {
         assertThat(storage.entries).isEmpty()
     }
 
+    @Test
+    fun `GIVEN an unreadable storage WHEN observed THEN the credentials are reported absent and later changes still arrive`() =
+        runTest {
+            // Arrange
+            val storage = InMemorySecureStorage()
+            storage.failReads = true
+            val credentialsStore = createStore(secureStorage = storage)
+
+            credentialsStore.hasCredentials(userWalletId = USER_WALLET_ID).test {
+                assertThat(awaitItem()).isFalse()
+
+                // Act
+                storage.failReads = false
+                credentialsStore.store(userWalletId = USER_WALLET_ID, credentials = CREDENTIALS)
+
+                // Assert
+                assertThat(awaitItem()).isTrue()
+            }
+        }
+
     private fun createStore(secureStorage: SecureStorage) = DefaultPolymarketCredentialsStore(
         secureStorage = secureStorage,
         json = json,
@@ -244,6 +264,7 @@ internal class DefaultPolymarketCredentialsStoreTest {
     private class InMemorySecureStorage : SecureStorage {
 
         val entries = mutableMapOf<String, String>()
+        var failReads = false
 
         override fun store(key: String, value: String) {
             entries[key] = value
@@ -255,7 +276,10 @@ internal class DefaultPolymarketCredentialsStoreTest {
 
         override fun storeKey(key: ByteArray, account: String) = store(key, account)
 
-        override fun getAsString(key: String): String? = entries[key]
+        override fun getAsString(key: String): String? {
+            if (failReads) throw IllegalStateException("Keystore is unavailable")
+            return entries[key]
+        }
 
         override fun get(account: String): ByteArray? = entries[account]?.encodeToByteArray()
 
