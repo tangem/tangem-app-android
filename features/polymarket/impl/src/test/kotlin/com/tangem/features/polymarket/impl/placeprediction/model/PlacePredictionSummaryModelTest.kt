@@ -876,7 +876,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 // Assert
                 assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
                 assertThat((model.uiState.value.order as OrderSideUM.Sell).position)
-                    .isEqualTo(SellPositionUM.Held(available = BigDecimal("12.79")))
+                    .isEqualTo(SellPositionUM.Held(available = BigDecimal("12.799")))
                 assertThat(model.uiState.value.amountValue).isEqualTo("12.80")
                 assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
                 verify { messageSender.send(any()) }

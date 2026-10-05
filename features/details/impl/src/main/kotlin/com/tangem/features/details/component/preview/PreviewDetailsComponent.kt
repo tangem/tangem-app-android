@@ -13,6 +13,7 @@ import com.tangem.features.details.entity.DetailsUM
 import com.tangem.features.details.ui.DetailsScreen
 import com.tangem.features.details.utils.ItemsBuilder
 import com.tangem.features.details.utils.SocialsBuilder
+import com.tangem.features.mcp.api.McpFeatureToggles
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.runBlocking
@@ -26,6 +27,9 @@ internal class PreviewDetailsComponent : DetailsComponent {
                 override fun isCreationEnabled(): StateFlow<Boolean> = MutableStateFlow(true)
                 override fun isCreationEnabledSync(): Boolean = true
                 override suspend fun toggleCreationEnabled() = Unit
+            },
+            mcpFeatureToggles = object : McpFeatureToggles {
+                override val isMcpEnabled: Boolean = true
             },
         ).buildAll(
             isWalletConnectAvailable = true,

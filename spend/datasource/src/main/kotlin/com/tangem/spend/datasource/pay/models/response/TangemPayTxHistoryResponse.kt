@@ -16,6 +16,10 @@ data class TangemPayTxHistoryResponse(
         @SerialName("transactions") val transactions: List<Transaction>,
     )
 
+    /**
+     * A transaction of a type this build does not know is decoded as [Unknown] and skipped. Older app versions skip
+     * it too, so a new type never fails the whole history response.
+     */
     @Serializable
     sealed interface Transaction {
 

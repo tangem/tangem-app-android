@@ -33,7 +33,7 @@ import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_chart_bar_vertical_16
+import com.tangem.core.ui.res.generated.icons.ic_chart_line_vertical_16
 import com.tangem.feature.tester.presentation.storybook.entity.TangemTokenRowV2Story
 
 private const val SAMPLE_ICON_URL = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/bitcoin.png"
@@ -72,8 +72,7 @@ private fun ComponentPreview(state: TangemTokenRowV2Story) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(TangemTheme.colors3.bg.primary)
-            .padding(vertical = 16.dp),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         when (state.variant) {
             TangemTokenRowV2Story.Variant.Default -> DefaultRowPreview(
@@ -121,8 +120,7 @@ private fun DefaultRowPreview(
         badge = if (state.hasBadge) {
             TangemTokenRow.Badge(
                 text = stringReference("APY 5.47%"),
-                variant = if (state.isBadgeFilled) TangemBadge.Variant.Solid else TangemBadge.Variant.Tinted,
-                status = if (state.isBadgeFilled) TangemBadge.Status.Success else TangemBadge.Status.Neutral,
+                status = if (state.isBadgeActive) TangemBadge.Status.Success else TangemBadge.Status.Neutral,
             )
         } else {
             null
@@ -142,7 +140,7 @@ private fun DefaultRowPreview(
                 TangemMessageBubble(
                     text = stringReference("Enable 5.47% APY on your balance"),
                     variant = TangemMessageBubble.Variant.Success,
-                    icon = Icons.ic_chart_bar_vertical_16,
+                    icon = Icons.ic_chart_line_vertical_16,
                     onClick = {},
                     onClose = {},
                     closeContentDescription = "Dismiss",
@@ -192,7 +190,7 @@ private fun Toggles(state: TangemTokenRowV2Story) {
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             ToggleRow(label = "badge", checked = state.hasBadge, onToggle = state.onBadgeToggle)
-            ToggleRow(label = "badgeFilled", checked = state.isBadgeFilled, onToggle = state.onBadgeFilledToggle)
+            ToggleRow(label = "badgeActive", checked = state.isBadgeActive, onToggle = state.onBadgeActiveToggle)
             ToggleRow(label = "pending", checked = state.hasPending, onToggle = state.onPendingToggle)
             ToggleRow(label = "quote", checked = state.hasQuote, onToggle = state.onQuoteToggle)
             ToggleRow(label = "priceChange", checked = state.hasPriceChange, onToggle = state.onPriceChangeToggle)

@@ -13,7 +13,10 @@ import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.hotwallet.CheckHotWalletUpgradeBannerUseCase
 import com.tangem.domain.hotwallet.GetAccessCodeSkippedUseCase
+import com.tangem.domain.hotwallet.GetUpgradeBannerClosureTimestampUseCase
+import com.tangem.domain.hotwallet.ShouldShowUpgradeHotWalletBannerUseCase
 import com.tangem.domain.jointaccount.usecase.GetMissingJointOwnerKeysCountUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
@@ -39,6 +42,7 @@ import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.crypto.BlockchainUtils
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -72,6 +76,9 @@ internal class GetWalletNotificationsFactoryTest {
     private val getMissingJointOwnerKeysCountUseCase: GetMissingJointOwnerKeysCountUseCase = mockk()
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
     private val onboardingRepository: OnboardingRepository = mockk()
+    private val shouldShowUpgradeHotWalletBannerUseCase: ShouldShowUpgradeHotWalletBannerUseCase = mockk()
+    private val getUpgradeBannerClosureTimestampUseCase: GetUpgradeBannerClosureTimestampUseCase = mockk()
+    private val checkHotWalletUpgradeBannerUseCase: CheckHotWalletUpgradeBannerUseCase = mockk()
     private val clickIntents: WalletClickIntents = mockk(relaxed = true)
 
     private val currencyFactory = MockCryptoCurrencyFactory()
@@ -93,6 +100,9 @@ internal class GetWalletNotificationsFactoryTest {
         getUserWalletUseCase = getUserWalletUseCase,
         getMissingJointOwnerKeysCountUseCase = getMissingJointOwnerKeysCountUseCase,
         onboardingRepository = onboardingRepository,
+        shouldShowUpgradeHotWalletBannerUseCase = shouldShowUpgradeHotWalletBannerUseCase,
+        getUpgradeBannerClosureTimestampUseCase = getUpgradeBannerClosureTimestampUseCase,
+        checkHotWalletUpgradeBannerUseCase = checkHotWalletUpgradeBannerUseCase,
     )
 
     @BeforeEach
@@ -111,6 +121,9 @@ internal class GetWalletNotificationsFactoryTest {
             getUserWalletUseCase,
             getMissingJointOwnerKeysCountUseCase,
             singleAccountStatusListSupplier,
+            shouldShowUpgradeHotWalletBannerUseCase,
+            getUpgradeBannerClosureTimestampUseCase,
+            checkHotWalletUpgradeBannerUseCase,
             clickIntents,
             coldResolver,
             coldWallet,
@@ -132,6 +145,9 @@ internal class GetWalletNotificationsFactoryTest {
         every { getUserWalletUseCase.invokeFlow(any()) } returns
             flowOf(GetUserWalletError.UserWalletNotFound.left())
         coEvery { getMissingJointOwnerKeysCountUseCase(any(), any()) } returns 0
+        every { shouldShowUpgradeHotWalletBannerUseCase(any()) } returns flowOf(false)
+        every { getUpgradeBannerClosureTimestampUseCase(any()) } returns flowOf(null)
+        coEvery { checkHotWalletUpgradeBannerUseCase(any(), any(), any(), any()) } returns false.right()
         // Balance is loaded and non-zero, so both the outdated-data and add-funds banners stay hidden.
         stubAccountStatusList(balance = LOADED_NON_ZERO)
 
@@ -849,6 +865,101 @@ internal class GetWalletNotificationsFactoryTest {
     }
     // endregion
 
+    // region UpgradeHotWalletPromo (hot wallet only)
+    @ParameterizedTest
+    @MethodSource("provideUpgradePromoModels")
+    fun `GIVEN banner rules and balance WHEN create THEN upgrade banner visibility matches`(
+        model: UpgradePromoModel,
+    ) = runTest {
+        // Arrange
+        coEvery { checkHotWalletUpgradeBannerUseCase(any(), any(), any(), any()) } returns model.isDue.right()
+        stubAccountStatusList(balance = model.balance)
+
+        // Act
+        val result = factory.create(hotWallet, clickIntents).first()
+
+        // Assert
+        assertThat(result.any { it is WalletNotificationUM.UpgradeHotWalletPromo }).isEqualTo(model.expectedShown)
+    }
+
+    internal data class UpgradePromoModel(
+        val isDue: Boolean,
+        val balance: TotalFiatBalance,
+        val expectedShown: Boolean,
+    )
+
+    private fun provideUpgradePromoModels() = listOf(
+        UpgradePromoModel(isDue = true, balance = LOADED_NON_ZERO, expectedShown = true),
+        UpgradePromoModel(isDue = false, balance = LOADED_NON_ZERO, expectedShown = false),
+        UpgradePromoModel(isDue = true, balance = TotalFiatBalance.Failed, expectedShown = true),
+        // The Add funds banner may still take its place.
+        UpgradePromoModel(isDue = true, balance = TotalFiatBalance.Loading, expectedShown = false),
+        UpgradePromoModel(
+            isDue = true,
+            balance = TotalFiatBalance.Loaded(BigDecimal.ZERO, StatusSource.ACTUAL),
+            expectedShown = false,
+        ),
+    )
+
+    @ParameterizedTest
+    @MethodSource("provideUnsettledBalances")
+    fun `GIVEN balance loading or Add funds shown WHEN create THEN upgrade banner rules are not checked`(
+        balance: TotalFiatBalance,
+    ) = runTest {
+        // Arrange
+        stubAccountStatusList(balance = balance)
+
+        // Act
+        factory.create(hotWallet, clickIntents).first()
+
+        // Assert
+        coVerify(exactly = 0) { checkHotWalletUpgradeBannerUseCase(any(), any(), any(), any()) }
+    }
+
+    private fun provideUnsettledBalances() = listOf(
+        TotalFiatBalance.Loading,
+        TotalFiatBalance.Loaded(BigDecimal.ZERO, StatusSource.ACTUAL),
+    )
+
+    @Test
+    fun `GIVEN stored banner state and a funded currency WHEN create THEN the rules get both`() = runTest {
+        // Arrange
+        val fundedStatus = CryptoCurrencyStatus(
+            currency = currencyFactory.ethereum,
+            value = mockk<CryptoCurrencyStatus.NoQuote> { every { amount } returns BigDecimal.ONE },
+        )
+        every { shouldShowUpgradeHotWalletBannerUseCase(WALLET_ID) } returns flowOf(true)
+        every { getUpgradeBannerClosureTimestampUseCase(WALLET_ID) } returns flowOf(CLOSURE_TIMESTAMP)
+        stubAccountStatusList(balance = LOADED_NON_ZERO, currencies = listOf(fundedStatus))
+
+        // Act
+        factory.create(hotWallet, clickIntents).first()
+
+        // Assert
+        coVerify(exactly = 1) {
+            checkHotWalletUpgradeBannerUseCase(
+                walletId = WALLET_ID,
+                hasBalance = true,
+                shouldShowUpgradeBanner = true,
+                closureTimestamp = CLOSURE_TIMESTAMP,
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN cold wallet WHEN create THEN upgrade banner is hidden without checking the rules`() = runTest {
+        // Arrange
+        coEvery { checkHotWalletUpgradeBannerUseCase(any(), any(), any(), any()) } returns true.right()
+
+        // Act
+        val result = factory.create(coldWallet, clickIntents).first()
+
+        // Assert
+        assertThat(result.none { it is WalletNotificationUM.UpgradeHotWalletPromo }).isTrue()
+        coVerify(exactly = 0) { checkHotWalletUpgradeBannerUseCase(any(), any(), any(), any()) }
+    }
+    // endregion
+
     private fun stubAccountStatusList(
         balance: TotalFiatBalance,
         currencies: List<CryptoCurrencyStatus> = emptyList(),
@@ -889,6 +1000,7 @@ internal class GetWalletNotificationsFactoryTest {
     private companion object {
         val WALLET_ID = UserWalletId("01")
         const val CARD_ID = "cardId"
+        const val CLOSURE_TIMESTAMP = 5L
         val LOADED_NON_ZERO = TotalFiatBalance.Loaded(BigDecimal.ONE, StatusSource.ACTUAL)
     }
 }

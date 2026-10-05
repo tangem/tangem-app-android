@@ -77,13 +77,21 @@ class YieldSupply(
         return when (apiEnvironment) {
             ApiEnvironment.MOCK,
             ApiEnvironment.DEV,
+            ApiEnvironment.DEV_NEW,
             ApiEnvironment.DEV_2,
+            ApiEnvironment.DEV_2_NEW,
             ApiEnvironment.DEV_3,
+            ApiEnvironment.DEV_3_NEW,
             ApiEnvironment.STAGE,
+            ApiEnvironment.DEV_4_NEW,
             ApiEnvironment.STAGE_2,
+            ApiEnvironment.DEV_5_NEW,
             ApiEnvironment.STAGE_3,
+            ApiEnvironment.DEV_6_NEW,
             -> growEnvironmentConfig.yieldModuleApiKeyDev
-            ApiEnvironment.PROD -> growEnvironmentConfig.yieldModuleApiKey
+            ApiEnvironment.PROD,
+            ApiEnvironment.PROD_NEW,
+            -> growEnvironmentConfig.yieldModuleApiKey
         } ?: error("No tangem tech api config provided")
     }
 

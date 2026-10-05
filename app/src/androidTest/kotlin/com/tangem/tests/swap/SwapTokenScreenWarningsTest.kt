@@ -8,6 +8,7 @@ import com.tangem.common.annotations.ApiEnv
 import com.tangem.common.annotations.ApiEnvConfig
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.*
 import com.tangem.common.utils.setWireMockScenarioState
@@ -490,7 +491,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
     fun solanaRemainingBalanceEqualToZeroWarningTest() {
         val tokenTitle = "Solana"
         val receiveTokenName = "USDC"
-        val inputAmount = "0.00168933"
+        val inputAmount = "0.03781706"
         val tokensScenarioState = "SolanaUSDC"
         val rentAmount = "SOL 0.00089088"
         val notificationTitle = getResourceString(R.string.send_notification_invalid_amount_title)
@@ -529,11 +530,20 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             step("Choose receive token") {
                 chooseReceiveToken(receiveTokenName)
             }
+            step("Assert 'Swap tokens on screen' button is enabled") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { replaceTokensButton.assertIsEnabled() }
+                }
+            }
             step("Input swap amount = '$inputAmount'") {
-                waitForIdle()
                 onSwapTokenScreen {
                     textInput.clickWithAssertion()
                     textInput.performTextReplacement(inputAmount)
+                }
+            }
+            step("Assert 'Swap' button is enabled") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { swapButton.assertIsEnabled() }
                 }
             }
             step("Assert 'Invalid amount' warning is not displayed") {
@@ -721,6 +731,11 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             step("Choose receive token") {
                 chooseReceiveToken(receiveTokenName)
             }
+            step("Assert 'Swap tokens on screen' button is enabled") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { replaceTokensButton.assertIsEnabled() }
+                }
+            }
             step("Input swap amount = '$inputAmount'") {
                 waitForIdle()
                 onSwapTokenScreen {
@@ -735,6 +750,9 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                         message = notificationMessage
                     )
                 }
+            }
+            step("Assert 'Swap' button is not enabled") {
+                onSwapTokenScreen { swapButton.assertIsNotEnabled() }
             }
         }
     }

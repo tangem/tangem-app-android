@@ -1,459 +1,349 @@
 package com.tangem.features.walletconnect.connections.ui
 
 import android.content.res.Configuration
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastForEach
 import coil.compose.AsyncImage
 import com.tangem.common.ui.account.AccountTitle
-import com.tangem.core.ui.components.BottomFade
-import com.tangem.core.ui.components.PrimaryButton
-import com.tangem.core.ui.components.appbar.TopAppBarButton
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownItem
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenu
-import com.tangem.core.ui.extensions.conditional
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.button.GroupEntry
+import com.tangem.core.ui.ds2.footer.TangemFooter
+import com.tangem.core.ui.ds2.row.*
+import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
+import com.tangem.core.ui.ds2.surface.TangemSurface
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_dots_horizontal_20
 import com.tangem.core.ui.test.WalletConnectScreenTestTags
 import com.tangem.features.walletconnect.connections.entity.*
 import com.tangem.features.walletconnect.connections.ui.preview.WcConnectionsPreviewData
 import com.tangem.features.walletconnect.impl.R
-import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
-private const val LOCKED_WALLET_ALPHA = 0.5f
+private val CardShape = RoundedCornerShape(24.dp)
 
 @Composable
 internal fun WcConnectionsContent(state: WcConnectionsState, modifier: Modifier = Modifier) {
-    Scaffold(
+    val connections = state.connections
+    // The footer floats over the list, which has to end above it.
+    var footerHeight by remember { mutableIntStateOf(0) }
+    TangemTopBarScaffold(
         modifier = modifier,
-        containerColor = TangemTheme.colors.background.secondary,
+        containerColor = TangemTheme.colors3.bg.primary,
         topBar = {
             ConnectionsTopBar(
-                modifier = Modifier.statusBarsPadding(),
                 config = state.topAppBarConfig,
-                showEndButton = state.connections.isNotEmpty(),
+                showEndButton = connections is WcConnections.Content,
             )
         },
-        floatingActionButton = {
-            if (state.connections.isNotEmpty()) {
-                NewConnectionButton(
+        overlay = {
+            if (connections is WcConnections.Content) {
+                NewConnectionFooter(
                     onClick = state.onNewConnectionClick,
                     modifier = Modifier
-                        .padding(horizontal = TangemTheme.dimens.spacing16)
-                        .fillMaxWidth(),
+                        .align(Alignment.BottomCenter)
+                        .onSizeChanged { size -> footerHeight = size.height },
                 )
             }
         },
-        floatingActionButtonPosition = FabPosition.Center,
-        content = { innerPadding ->
-            Content(
+        content = { contentPadding ->
+            when (connections) {
+                is WcConnections.Loading -> Unit
+                is WcConnections.Empty -> EmptyConnections(
+                    onNewConnectionClick = state.onNewConnectionClick,
+                    modifier = Modifier.padding(contentPadding),
+                )
+                is WcConnections.Content -> Connections(
+                    connections = connections,
+                    contentPadding = contentPadding,
+                    footerHeight = with(LocalDensity.current) { footerHeight.toDp() },
+                )
+            }
+        },
+    )
+}
+
+@Composable
+private fun Connections(connections: WcConnections.Content, contentPadding: PaddingValues, footerHeight: Dp) {
+    Column(modifier = Modifier.padding(top = contentPadding.calculateTopPadding())) {
+        // One wallet has nothing to switch between, so the row would only take up room.
+        if (connections.wallets.size > 1) {
+            WalletTabs(connections = connections)
+        }
+        ConnectionsList(wallet = connections.selectedWallet, bottomPadding = footerHeight)
+    }
+}
+
+@Composable
+private fun WalletTabs(connections: WcConnections.Content) {
+    val walletIcon = TangemIconUM.Icon(ImageVector.vectorResource(R.drawable.ic_key_card_20))
+    val tabs = remember(connections, walletIcon) {
+        connections.wallets.map { wallet ->
+            TangemTabItemUM.Content(
+                id = wallet.userWalletId,
+                label = stringReference(wallet.walletName),
+                iconStart = walletIcon,
+                isSelected = wallet.userWalletId == connections.selectedWalletId,
+                onClick = { connections.onWalletSelect(wallet.userWalletId) },
+            )
+        }.toImmutableList()
+    }
+
+    TangemTabNavigation(tabs = tabs, modifier = Modifier.padding(bottom = 8.dp))
+}
+
+@Composable
+private fun ConnectionsList(wallet: WcWalletConnectionsUM, bottomPadding: Dp) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = bottomPadding + 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        if (wallet.agents.isNotEmpty()) {
+            item(key = "agents_title") { SectionTitle(stringResourceSafe(R.string.wc_connections_agents_title)) }
+            items(items = wallet.agents, key = { it.id }) { agent ->
+                Card { AgentItem(agent = agent) }
+            }
+        }
+        if (wallet.dAppGroups.isNotEmpty()) {
+            item(key = "dapps_title") { SectionTitle(stringResourceSafe(R.string.wc_connections_dapps_title)) }
+            items(items = wallet.dAppGroups, key = { it.id }) { group ->
+                Card { DAppGroup(group = group) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SectionTitle(text: String, modifier: Modifier = Modifier) {
+    Text(
+        modifier = modifier.padding(start = 8.dp, top = 8.dp, bottom = 4.dp),
+        text = text,
+        color = TangemTheme.colors3.text.secondary,
+        style = TangemTheme.typography3.caption.medium,
+    )
+}
+
+@Composable
+private fun AgentItem(agent: McpAgentInfo) {
+    TangemRow(
+        contentLead = TangemRowContentLead.Start,
+        verticalAlignment = TangemRowVerticalAlignment.Center,
+        onClick = agent.onClick,
+        startSlot = { McpAgentAvatar(iconUrl = agent.iconUrl) },
+        titleSlot = { TangemRowText(text = agent.name, role = TangemRowTextRole.Title) },
+        subtitleSlot = { TangemRowText(text = agent.subtitle, role = TangemRowTextRole.Subtitle) },
+    )
+}
+
+@Composable
+private fun DAppGroup(group: WcDAppGroupUM) {
+    group.title?.let { title ->
+        AccountTitle(
+            accountTitleUM = title,
+            textStyle = TangemTheme.typography3.caption.medium,
+            textColor = TangemTheme.colors3.text.primary,
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp),
+        )
+    }
+    group.connectedApps.forEach { appInfo ->
+        key(group.id, appInfo.name, appInfo.iconUrl) {
+            AppInfoItem(appInfo = appInfo)
+        }
+    }
+}
+
+@Composable
+private fun AppInfoItem(appInfo: WcConnectedAppInfo) {
+    TangemRow(
+        contentLead = TangemRowContentLead.Start,
+        verticalAlignment = TangemRowVerticalAlignment.Center,
+        onClick = appInfo.onClick,
+        startSlot = {
+            AsyncImage(
                 modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize(),
-                connections = state.connections,
-                onNewConnectionClick = state.onNewConnectionClick,
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .testTag(WalletConnectScreenTestTags.APP_ICON),
+                model = appInfo.iconUrl,
+                error = painterResource(R.drawable.img_wc_dapp_icon_placeholder_48),
+                fallback = painterResource(R.drawable.img_wc_dapp_icon_placeholder_48),
+                contentDescription = appInfo.name,
+            )
+        },
+        titleSlot = {
+            TangemRowText(
+                modifier = Modifier
+                    .weight(1f, fill = false)
+                    .testTag(WalletConnectScreenTestTags.APP_NAME),
+                text = appInfo.name,
+                role = TangemRowTextRole.Title,
+            )
+            if (appInfo.verifiedState is VerifiedDAppState.Verified) {
+                Icon(
+                    modifier = Modifier
+                        .size(20.dp)
+                        .testTag(WalletConnectScreenTestTags.APPROVE_ICON),
+                    painter = painterResource(R.drawable.img_approvale2_20),
+                    contentDescription = null,
+                    tint = Color.Unspecified,
+                )
+            }
+        },
+        subtitleSlot = {
+            TangemRowText(
+                modifier = Modifier.testTag(WalletConnectScreenTestTags.APP_URL),
+                text = appInfo.subtitle,
+                role = TangemRowTextRole.Subtitle,
             )
         },
     )
 }
 
 @Composable
-private fun Content(connections: WcConnections, onNewConnectionClick: () -> Unit, modifier: Modifier = Modifier) {
-    when {
-        connections is WcConnections.Loading -> return
-        !connections.isNotEmpty() -> EmptyConnectionsBlock(
-            modifier = modifier,
-            onNewConnectionClick = onNewConnectionClick,
-        )
-        connections is WcConnections.AccountMode -> AccountModeContent(
-            modifier = modifier,
-            items = connections.items,
-        )
-        connections is WcConnections.WalletMode -> ConnectionsBlock(
-            modifier = modifier,
-            connections = connections.connections,
-        )
+private fun Card(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+    TangemSurface(
+        modifier = modifier.fillMaxWidth(),
+        color = TangemTheme.colors3.bg.secondary,
+        shape = CardShape,
+    ) {
+        Column(content = content)
     }
 }
 
 @Composable
-private fun EmptyConnectionsBlock(onNewConnectionClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun EmptyConnections(onNewConnectionClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier,
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Image(
             painter = painterResource(R.drawable.img_wallet_connect_76),
-            contentDescription = "Wallet Connect",
+            contentDescription = null,
             modifier = Modifier
                 .size(76.dp)
                 .testTag(WalletConnectScreenTestTags.WALLET_CONNECT_IMAGE),
         )
         Text(
-            modifier = Modifier.padding(top = TangemTheme.dimens.spacing24),
+            modifier = Modifier.padding(top = 24.dp),
             text = stringResourceSafe(R.string.wc_no_sessions_title),
-            color = TangemTheme.colors.text.primary1,
-            style = TangemTheme.typography.h3,
+            color = TangemTheme.colors3.text.primary,
+            style = TangemTheme.typography3.heading.small,
         )
         Text(
-            modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
+            modifier = Modifier.padding(top = 8.dp),
             text = stringResourceSafe(R.string.wc_no_sessions_desc),
-            color = TangemTheme.colors.text.secondary,
-            style = TangemTheme.typography.body1,
+            color = TangemTheme.colors3.text.secondary,
+            style = TangemTheme.typography3.body.medium,
             textAlign = TextAlign.Center,
         )
-        NewConnectionButton(
-            modifier = Modifier.padding(top = TangemTheme.dimens.spacing48),
+        TangemButton(
+            modifier = Modifier.padding(top = 48.dp),
+            variant = TangemButton.Variant.Primary,
+            size = TangemButton.Size.X12,
+            text = resourceReference(R.string.wc_new_connection),
             onClick = onNewConnectionClick,
         )
     }
 }
 
 @Composable
-private fun ConnectionsBlock(connections: ImmutableList<WcConnectionsUM>, modifier: Modifier = Modifier) {
-    Box(modifier = modifier) {
-        val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(
-                start = TangemTheme.dimens.spacing16,
-                end = TangemTheme.dimens.spacing16,
-                top = TangemTheme.dimens.spacing12,
-                bottom = TangemTheme.dimens.spacing76 + bottomBarHeight,
-            ),
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
-        ) {
-            items(
-                items = connections,
-                key = { it.userWalletId },
-                itemContent = {
-                    ConnectionItem(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(
-                                color = TangemTheme.colors.background.primary,
-                                shape = RoundedCornerShape(TangemTheme.dimens.radius14),
-                            )
-                            .clip(RoundedCornerShape(TangemTheme.dimens.radius14)),
-                        connection = it,
-                    )
-                },
-            )
-        }
-        BottomFade(modifier = Modifier.align(Alignment.BottomCenter))
-    }
-}
-
-@Composable
-private fun AccountModeContent(items: ImmutableList<WcConnectionsItem>, modifier: Modifier = Modifier) {
-    Box(modifier = modifier) {
-        val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(
-                start = TangemTheme.dimens.spacing16,
-                end = TangemTheme.dimens.spacing16,
-                bottom = TangemTheme.dimens.spacing76 + bottomBarHeight,
-            ),
-        ) {
-            itemsIndexed(
-                items = items,
-                key = { _, item -> item.id },
-                itemContent = { index, item ->
-                    val previousItem = items.getOrNull(index.dec())
-
-                    val itemModifier = Modifier
-                        .fillMaxWidth()
-                        .getOffsetModifier(item, previousItem)
-                    when (item) {
-                        is WcConnectionsItem.WalletHeader -> WalletHeader(item, itemModifier)
-                        is WcConnectionsItem.PortfolioConnections -> PortfolioItem(
-                            modifier = itemModifier
-                                .background(
-                                    color = TangemTheme.colors.background.primary,
-                                    shape = RoundedCornerShape(TangemTheme.dimens.radius14),
-                                )
-                                .clip(RoundedCornerShape(TangemTheme.dimens.radius14)),
-                            connection = item,
-                        )
-                    }
-                },
-            )
-        }
-        BottomFade(modifier = Modifier.align(Alignment.BottomCenter))
-    }
-}
-
-private fun Modifier.getOffsetModifier(item: WcConnectionsItem, previousItem: WcConnectionsItem?): Modifier = when {
-    item is WcConnectionsItem.WalletHeader && previousItem == null -> padding(top = 8.dp)
-    item is WcConnectionsItem.WalletHeader && previousItem !is WcConnectionsItem.WalletHeader ->
-        padding(top = 16.dp)
-    item is WcConnectionsItem.WalletHeader && previousItem is WcConnectionsItem.WalletHeader ->
-        padding(top = 8.dp)
-    item is WcConnectionsItem.PortfolioConnections && previousItem is WcConnectionsItem.WalletHeader ->
-        padding(top = 8.dp)
-    item is WcConnectionsItem.PortfolioConnections && previousItem is WcConnectionsItem.PortfolioConnections ->
-        padding(top = 8.dp)
-    else -> this
-}
-
-@Composable
-private fun ConnectionItem(connection: WcConnectionsUM, modifier: Modifier = Modifier) {
-    Column(modifier = modifier) {
-        key("${connection.userWalletId}_${connection.walletName}") {
-            Text(
-                modifier = Modifier
-                    .padding(top = 12.dp, bottom = 4.dp, start = 12.dp, end = 12.dp)
-                    .testTag(WalletConnectScreenTestTags.WALLET_NAME),
-                text = connection.walletName,
-                color = TangemTheme.colors.text.tertiary,
-                style = TangemTheme.typography.subtitle2,
-            )
-        }
-        connection.connectedApps.fastForEach { appInfo ->
-            key("${connection.userWalletId}_${connection.walletName}_${appInfo.name}_${appInfo.iconUrl}") {
-                AppInfoItem(
-                    appInfo = appInfo,
-                    modifier = Modifier
-                        .clickable(onClick = appInfo.onClick)
-                        .padding(all = 12.dp),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun WalletHeader(connection: WcConnectionsItem.WalletHeader, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier
-            .padding(horizontal = 8.dp, vertical = 2.dp)
-            .conditional(connection.isLocked) { alpha(LOCKED_WALLET_ALPHA) },
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
-    ) {
-        Text(
-            modifier = Modifier.weight(1f),
-            text = connection.walletName,
-            style = TangemTheme.typography.subtitle1,
-            color = TangemTheme.colors.text.primary1,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-
-        if (connection.isLocked) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .background(
-                        color = TangemTheme.colors.button.secondary,
-                        shape = CircleShape,
-                    )
-                    .padding(4.dp),
-            ) {
-                Icon(
-                    modifier = Modifier.size(16.dp),
-                    tint = TangemTheme.colors.icon.informative,
-                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_locked_24),
-                    contentDescription = null,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun PortfolioItem(connection: WcConnectionsItem.PortfolioConnections, modifier: Modifier = Modifier) {
-    Column(modifier = modifier) {
-        key(connection.id) {
-            AccountTitle(
-                textStyle = TangemTheme.typography.caption1,
-                textColor = TangemTheme.colors.text.primary1,
-                accountTitleUM = connection.portfolioTitle,
-                modifier = Modifier.padding(top = 12.dp, bottom = 4.dp, start = 12.dp, end = 12.dp),
-            )
-        }
-        connection.connectedApps.fastForEach { appInfo ->
-            key("${connection.id}_${appInfo.name}_${appInfo.iconUrl}") {
-                AppInfoItem(
-                    appInfo = appInfo,
-                    modifier = Modifier
-                        .clickable(onClick = appInfo.onClick)
-                        .padding(all = 12.dp),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun AppInfoItem(appInfo: WcConnectedAppInfo, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
-    ) {
-        AsyncImage(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(TangemTheme.dimens.radius8))
-                .testTag(WalletConnectScreenTestTags.APP_ICON),
-            model = appInfo.iconUrl,
-            error = painterResource(R.drawable.img_wc_dapp_icon_placeholder_48),
-            fallback = painterResource(R.drawable.img_wc_dapp_icon_placeholder_48),
-            contentDescription = appInfo.name,
-        )
-        Column(
+private fun NewConnectionFooter(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    TangemFooter(modifier = modifier) {
+        TangemButton(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing2),
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    modifier = Modifier
-                        .weight(1f, fill = false)
-                        .testTag(WalletConnectScreenTestTags.APP_NAME),
-                    text = appInfo.name,
-                    color = TangemTheme.colors.text.primary1,
-                    style = TangemTheme.typography.subtitle2,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (appInfo.verifiedState is VerifiedDAppState.Verified) {
-                    Icon(
-                        modifier = Modifier
-                            .size(20.dp)
-                            .testTag(WalletConnectScreenTestTags.APPROVE_ICON),
-                        painter = painterResource(R.drawable.img_approvale2_20),
-                        contentDescription = null,
-                        tint = Color.Unspecified,
-                    )
-                }
-            }
-            Text(
-                text = appInfo.subtitle,
-                color = TangemTheme.colors.text.tertiary,
-                style = TangemTheme.typography.caption2,
-                modifier = Modifier.testTag(WalletConnectScreenTestTags.APP_URL),
-            )
-        }
+            variant = TangemButton.Variant.Primary,
+            size = TangemButton.Size.X12,
+            text = resourceReference(R.string.wc_new_connection),
+            onClick = onClick,
+        )
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ConnectionsTopBar(
-    config: WcConnectionsTopAppBarConfig,
-    showEndButton: Boolean,
-    modifier: Modifier = Modifier,
-) {
+private fun ConnectionsTopBar(config: WcConnectionsTopAppBarConfig, showEndButton: Boolean) {
     var showDropdownMenu by rememberSaveable { mutableStateOf(false) }
-    // TangemTopAppBar is not friendly with dropdown menu
-    TopAppBar(
-        modifier = modifier,
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = TangemTheme.colors.background.secondary,
-            titleContentColor = TangemTheme.colors.icon.primary1,
-            actionIconContentColor = TangemTheme.colors.icon.primary1,
-        ),
-        navigationIcon = {
-            TopAppBarButton(
-                button = config.startButtonUM,
-                tint = TangemTheme.colors.icon.primary1,
-                modifier = Modifier.testTag(WalletConnectScreenTestTags.MORE_BUTTON),
-            )
-        },
-        title = {
-            Text(
-                text = stringResourceSafe(R.string.wc_connections),
-                style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        },
-        actions = {
-            AnimatedVisibility(showEndButton) {
-                IconButton(onClick = { showDropdownMenu = true }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_more_vertical_24),
-                        tint = TangemTheme.colors.icon.primary1,
-                        contentDescription = "More",
-                    )
-                }
+
+    TangemTopNavigation(
+        title = resourceReference(R.string.wc_connections),
+        contentAlign = TangemTopNavigation.ContentAlign.Center,
+        onBack = config.startButtonUM.onClicked,
+        endButtonsGroup = {
+            if (!showEndButton) return@TangemTopNavigation
+            Box {
+                TangemButton.GroupEntry(
+                    imageVector = Icons.ic_dots_horizontal_20,
+                    modifier = Modifier.testTag(WalletConnectScreenTestTags.MORE_BUTTON),
+                    onClick = { showDropdownMenu = true },
+                )
+                TangemDropdownMenu(
+                    expanded = showDropdownMenu,
+                    modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
+                    onDismissRequest = { showDropdownMenu = false },
+                    content = {
+                        TangemDropdownItem(
+                            item = config.disconnectAllItem,
+                            dismissParent = { showDropdownMenu = false },
+                        )
+                    },
+                )
             }
-
-            TangemDropdownMenu(
-                expanded = showDropdownMenu,
-                modifier = Modifier.background(TangemTheme.colors.background.primary),
-                onDismissRequest = { showDropdownMenu = false },
-                content = {
-                    TangemDropdownItem(
-                        item = config.disconnectAllItem,
-                        dismissParent = { showDropdownMenu = false },
-                    )
-                },
-            )
         },
     )
 }
 
-@Composable
-private fun NewConnectionButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    PrimaryButton(
-        modifier = modifier,
-        text = stringResourceSafe(R.string.wc_new_connection),
-        onClick = onClick,
-    )
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(showBackground = true, widthDp = 360, heightDp = 800)
+@Preview(showBackground = true, widthDp = 360, heightDp = 800, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun WcConnectionsContentPreview(
     @PreviewParameter(WcConnectionsStateProvider::class) params: WcConnectionsState,
 ) {
-    TangemThemePreview {
+    TangemThemePreviewRedesign {
         WcConnectionsContent(state = params)
     }
 }
 
 private class WcConnectionsStateProvider : CollectionPreviewParameterProvider<WcConnectionsState>(
     listOf(
-        WcConnectionsPreviewData.loadingState,
-        WcConnectionsPreviewData.stateWithEmptyConnections,
-        WcConnectionsPreviewData.fullState,
-        WcConnectionsPreviewData.accountState,
+        WcConnectionsPreviewData.emptyState,
+        WcConnectionsPreviewData.singleWalletState,
+        WcConnectionsPreviewData.multiWalletState,
     ),
 )

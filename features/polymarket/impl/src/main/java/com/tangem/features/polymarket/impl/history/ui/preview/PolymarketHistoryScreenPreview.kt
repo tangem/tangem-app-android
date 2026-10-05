@@ -35,7 +35,9 @@ private fun PolymarketHistoryScreenPreview(@PreviewParameter(HistoryPreviewProvi
             HistoryPreviewCase.Data -> previewHistoryContent(groupCount = 2)
             HistoryPreviewCase.LongList -> previewHistoryContent(groupCount = 10)
         }
-        PolymarketHistoryScreen(state = PolymarketHistoryUM(content = content, onBackClick = {}))
+        PolymarketHistoryScreen(
+            state = PolymarketHistoryUM(content = content, onBackClick = {}, tabs = previewHistoryTabs()),
+        )
     }
 }
 
@@ -50,7 +52,6 @@ internal class HistoryPreviewProvider : CollectionPreviewParameterProvider<Histo
 private fun previewHistoryContent(groupCount: Int): Content.Data {
     var query by remember { mutableStateOf("") }
     var isSearchActive by remember { mutableStateOf(false) }
-    var selectedTab by remember { mutableStateOf(R.string.common_all) }
     val iconUrl = "android.resource://${LocalContext.current.packageName}/${R.drawable.img_eth_22}"
     val rows = ActivityRowPreviewProvider().values.take(6).map { it.state }.toList()
     return Content.Data(
@@ -67,20 +68,6 @@ private fun previewHistoryContent(groupCount: Int): Content.Data {
                 }.toImmutableList(),
             )
         }.toImmutableList(),
-        tabs = listOf(
-            R.string.common_all,
-            R.string.prediction_history_bought,
-            R.string.prediction_history_sold,
-            R.string.prediction_history_funds_added,
-            R.string.transaction_history_withdrawn,
-        ).map { title ->
-            TangemTabItemUM.Content(
-                id = title.toString(),
-                label = resourceReference(title),
-                isSelected = selectedTab == title,
-                onClick = { selectedTab = title },
-            )
-        }.toImmutableList(),
         search = TangemSearch.State(
             placeholderText = resourceReference(R.string.common_search),
             query = query,
@@ -94,4 +81,23 @@ private fun previewHistoryContent(groupCount: Int): Content.Data {
         ),
         onDownloadCsvClick = {},
     )
+}
+
+@Composable
+private fun previewHistoryTabs(): kotlinx.collections.immutable.ImmutableList<TangemTabItemUM> {
+    var selectedTab by remember { mutableStateOf(R.string.common_all) }
+    return listOf(
+        R.string.common_all,
+        R.string.prediction_history_bought,
+        R.string.prediction_history_sold,
+        R.string.prediction_history_funds_added,
+        R.string.transaction_history_withdrawn,
+    ).map { title ->
+        TangemTabItemUM.Content(
+            id = title.toString(),
+            label = resourceReference(title),
+            isSelected = selectedTab == title,
+            onClick = { selectedTab = title },
+        )
+    }.toImmutableList()
 }

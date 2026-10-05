@@ -114,5 +114,6 @@ class PromoBannerDisplayToNotificationConverterTest {
         isButtonEnabled = isButtonEnabled,
         buttonText = buttonText,
         isDismissable = isDismissable,
+        campaignId = null,
     )
 }

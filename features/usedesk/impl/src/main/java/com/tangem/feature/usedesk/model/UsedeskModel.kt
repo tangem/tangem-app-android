@@ -58,7 +58,7 @@ internal class UsedeskModel @Inject constructor(
                         companyId = COMPANY_ID,
                         channelId = CHANNEL_ID,
                         clientId = clientId,
-                        clientEmail = params.walletMetaInfo.userWalletId?.stringValue,
+                        clientEmail = params.clientEmail ?: params.walletMetaInfo.userWalletId?.stringValue,
                         clientInitMessage = params.prefilledMessage,
                         additionalFields = additionalFieldsFor(params.source),
                         tokenTtlMillis = usedeskTokenTtlManager.getTokenTtlMillisSync(),
@@ -107,7 +107,8 @@ internal class UsedeskModel @Inject constructor(
     }
 
     private fun additionalFieldsFor(source: ScreensSources): Map<Long, String> = when (source) {
-        ScreensSources.Swap -> mapOf(SWAP_ADDITIONAL_FIELD_ID to SWAP_ADDITIONAL_FIELD_VALUE)
+        ScreensSources.Swap -> mapOf(SOURCE_ADDITIONAL_FIELD_ID to SWAP_ADDITIONAL_FIELD_VALUE)
+        ScreensSources.SocialLogin -> mapOf(SOURCE_ADDITIONAL_FIELD_ID to SOCIAL_LOGIN_ADDITIONAL_FIELD_VALUE)
         else -> emptyMap()
     }
 
@@ -130,7 +131,8 @@ internal class UsedeskModel @Inject constructor(
         const val COMPANY_ID = "2"
         const val CHANNEL_ID = "54"
 
-        const val SWAP_ADDITIONAL_FIELD_ID = 245L
+        const val SOURCE_ADDITIONAL_FIELD_ID = 245L
         const val SWAP_ADDITIONAL_FIELD_VALUE = "swap"
+        const val SOCIAL_LOGIN_ADDITIONAL_FIELD_VALUE = "social_login"
     }
 }

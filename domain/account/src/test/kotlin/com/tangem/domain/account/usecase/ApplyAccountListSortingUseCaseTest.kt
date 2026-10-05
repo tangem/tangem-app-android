@@ -177,6 +177,37 @@ class ApplyAccountListSortingUseCaseTest {
         }
     }
 
+    @Test
+    fun `GIVEN list with an active joint account WHEN invoke THEN reordered list keeps the joint counter`() = runTest {
+        // Arrange
+        val accountList = MockAccounts.createAccountList(activeAccounts = 2, jointAccounts = 1)
+        val accountIds = accountList.toAccountIds().reversed()
+
+        val updatedAccountList = AccountList(
+            userWalletId = accountList.userWalletId,
+            accounts = accountList.accounts.reversed(),
+            totalAccounts = accountList.totalAccounts,
+            totalArchivedAccounts = accountList.totalArchivedAccounts,
+            totalJointAccounts = accountList.totalJointAccounts,
+            sortType = accountList.sortType,
+            groupType = accountList.groupType,
+        ).getOrNull()!!
+
+        coEvery { accountsCRUDRepository.getAccountListSync(userWalletId) } returns accountList.some()
+
+        // Act
+        val actual = useCase(accountIds)
+
+        // Assert
+        val expected = Unit.right()
+        Truth.assertThat(actual).isEqualTo(expected)
+
+        coVerifyOrder {
+            accountsCRUDRepository.getAccountListSync(userWalletId)
+            accountsCRUDRepository.saveAccounts(updatedAccountList)
+        }
+    }
+
     private fun AccountList.toAccountIds(): List<AccountId> {
         return this.accounts.map { it.accountId }
     }

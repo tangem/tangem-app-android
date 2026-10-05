@@ -6,6 +6,8 @@ sealed interface SocialLoginError {
     /** User dismissed the provider sign-in */
     data object SignInCanceled : SocialLoginError
 
+    data object ConsentDeclined : SocialLoginError
+
     data object SessionExpired : SocialLoginError
 
     /** Provider sign-in finished without an id token */
