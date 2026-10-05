@@ -134,7 +134,7 @@ internal class JointAccountJoinModelTest {
         val model = createModelWithDraft()
         coEvery {
             joinUseCase(userWalletId = any(), inviteId = any(), config = any(), memberName = any())
-        } returns JointAccountJoinError.InvalidInvite.left()
+        } returns JointAccountJoinError.InvalidInvite(cause = failure).left()
 
         // Act
         val action = model.join(inviteId = INVITE_ID, memberName = NAME)
@@ -143,7 +143,7 @@ internal class JointAccountJoinModelTest {
         assertThat(action).isEqualTo(JoinResultAction.CloseFlow)
         verify(exactly = 1) { uiMessageSender.send(any()) }
         verify(exactly = 1) {
-            analyticsEventHandler.send(JointAccountError(source = ErrorSource.Join, errorMessage = "InvalidInvite"))
+            analyticsEventHandler.send(JointAccountError(source = ErrorSource.Join, cause = failure))
         }
     }
 
