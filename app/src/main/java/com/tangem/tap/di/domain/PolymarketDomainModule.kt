@@ -1,6 +1,7 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.feedback.models.SupportChatInfoProvider
+import com.tangem.domain.feedback.models.SupportChatTopic
 import com.tangem.domain.polymarket.PolymarketBridgeRepository
 import com.tangem.domain.polymarket.PolymarketCredentialsLock
 import com.tangem.domain.polymarket.PolymarketActivityRepository
@@ -62,7 +63,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import dagger.multibindings.IntoSet
+import dagger.multibindings.IntoMap
 import javax.inject.Singleton
 
 @Module
@@ -401,7 +402,8 @@ internal object PolymarketDomainModule {
 
     @Provides
     @Singleton
-    @IntoSet
+    @IntoMap
+    @SupportChatTopicKey(SupportChatTopic.PREDICTIONS)
     fun providePredictionSupportChatInfoProvider(
         predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
         predictionPositionsValueSupplier: PredictionPositionsValueSupplier,
