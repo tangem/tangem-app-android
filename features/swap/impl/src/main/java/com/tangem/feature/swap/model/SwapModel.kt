@@ -30,6 +30,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.ScreensSources
 import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.models.event.JointAccountFakedoorAnalyticsEvent
 import com.tangem.core.analytics.models.event.SwapAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -691,7 +692,7 @@ internal class SwapModel @Inject constructor(
         val selectedAccount = result.account.account
 
         if (isFromDirection && selectedAccount is Account.Joint) {
-            showJointAccountSwapSourceUnavailableAlert()
+            showJointAccountSwapSourceUnavailableAlert(currency = selectedCurrencyStatus.currency)
             return
         }
 
@@ -2384,7 +2385,15 @@ internal class SwapModel @Inject constructor(
         )
     }
 
-    private fun showJointAccountSwapSourceUnavailableAlert() {
+    private fun showJointAccountSwapSourceUnavailableAlert(currency: CryptoCurrency) {
+        analyticsEventHandler.send(
+            JointAccountFakedoorAnalyticsEvent(
+                source = JointAccountFakedoorAnalyticsEvent.Source.MainScreenSwap,
+                action = JointAccountFakedoorAnalyticsEvent.Action.Swap,
+                blockchain = currency.network.name,
+                token = currency.symbol,
+            ),
+        )
         messageSender.send(
             DialogMessage(
                 title = ScenarioUnavailabilityReason.JointAccount.getUnavailabilityReasonTitle(),
