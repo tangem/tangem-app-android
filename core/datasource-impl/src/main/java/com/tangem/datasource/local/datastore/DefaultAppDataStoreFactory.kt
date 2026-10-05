@@ -10,6 +10,8 @@ import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.dataStoreFile
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
+import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.core.remote.json.NetworkJson
@@ -34,11 +36,19 @@ internal class DefaultAppDataStoreFactory @Inject constructor(
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val appScope: AppCoroutineScope,
     @NetworkJson private val json: Json,
+    private val featureTogglesManager: FeatureTogglesManager,
 ) : AppDataStoreFactory {
+
+    override val isKotlinxDataStoreEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_18288_KOTLINX_DATASTORE_ENABLED)
 
     override fun <T> create(defaultValue: T, serializer: KSerializer<T>, fileName: String): DataStore<T> {
         return create(
-            serializer = KotlinxDataStoreSerializer(defaultValue = defaultValue, serializer = serializer, json = json),
+            serializer = if (isKotlinxDataStoreEnabled) {
+                KotlinxDataStoreSerializer(defaultValue = defaultValue, serializer = serializer, json = json)
+            } else {
+                KotlinxDataStoreSerializer(defaultValue = defaultValue, serializer = serializer)
+            },
             scope = appScope,
             produceFile = { context.dataStoreFile(fileName) },
         )

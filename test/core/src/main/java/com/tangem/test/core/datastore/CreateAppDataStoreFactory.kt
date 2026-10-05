@@ -25,12 +25,17 @@ import java.io.File
  *   app context's DataStore directory).
  * @param appScope scope used by the [KSerializer] overload (the production factory injects the app scope there).
  * @param json config used by the [KSerializer] overload (the production factory injects `@NetworkJson` there).
+ * @param isKotlinxEnabled value of the kotlinx DataStore toggle; while off, the [KSerializer] overload keeps
+ *   the default kotlinx config, as the production factory does.
  */
 fun createAppDataStoreFactory(
     filesDir: File = File(System.getProperty("java.io.tmpdir")),
     appScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
     json: Json = NetworkJsonFactory.create(),
+    isKotlinxEnabled: Boolean = true,
 ): AppDataStoreFactory = object : AppDataStoreFactory {
+
+    override val isKotlinxDataStoreEnabled: Boolean = isKotlinxEnabled
 
     override fun <T> create(
         serializer: Serializer<T>,
@@ -50,7 +55,11 @@ fun createAppDataStoreFactory(
 
     override fun <T> create(defaultValue: T, serializer: KSerializer<T>, fileName: String): DataStore<T> {
         return create(
-            serializer = KotlinxDataStoreSerializer(defaultValue = defaultValue, serializer = serializer, json = json),
+            serializer = if (isKotlinxDataStoreEnabled) {
+                KotlinxDataStoreSerializer(defaultValue = defaultValue, serializer = serializer, json = json)
+            } else {
+                KotlinxDataStoreSerializer(defaultValue = defaultValue, serializer = serializer)
+            },
             scope = appScope,
             produceFile = { File(filesDir, fileName) },
         )
