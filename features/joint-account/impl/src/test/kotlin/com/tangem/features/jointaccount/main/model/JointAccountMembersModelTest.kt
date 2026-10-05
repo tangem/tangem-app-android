@@ -24,6 +24,8 @@ import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
+import com.tangem.domain.jointaccount.usecase.GetSharedJointAccountInvitesUseCase
+import com.tangem.domain.jointaccount.usecase.MarkJointAccountInviteSharedUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.Account
@@ -79,6 +81,10 @@ internal class JointAccountMembersModelTest {
     private val jointAccountListFetcher: SingleJointAccountListFetcher = mockk(relaxed = true)
     private val pollingCoordinator: JointAccountPollingCoordinator = mockk()
     private val getInvitesUseCase: GetJointAccountInvitesUseCase = mockk()
+    private val getSharedInvitesUseCase: GetSharedJointAccountInvitesUseCase = mockk()
+    private val markInviteSharedUseCase: MarkJointAccountInviteSharedUseCase = mockk()
+    private val sharedInvites = MutableStateFlow<Set<String>>(emptySet())
+    private val sharedTexts = MutableSharedFlow<String>(extraBufferCapacity = 1)
     private val ownerAddressResolver: JointOwnerAddressResolver = mockk()
     private val singleAccountSupplier: SingleAccountSupplier = mockk()
     private val activateUseCase: ActivateJointAccountUseCase = mockk()
@@ -96,6 +102,8 @@ internal class JointAccountMembersModelTest {
             jointAccountListFetcher,
             pollingCoordinator,
             getInvitesUseCase,
+            getSharedInvitesUseCase,
+            markInviteSharedUseCase,
             ownerAddressResolver,
             singleAccountSupplier,
             activateUseCase,
@@ -109,6 +117,12 @@ internal class JointAccountMembersModelTest {
         every { pollingCoordinator.poll(walletId = any()) } returns emptyFlow()
         every { singleAccountSupplier.filterJointAccount(accountId = any()) } returns emptyFlow()
         coEvery { ownerAddressResolver.resolve(userWalletId = any(), ownerKeyIndex = any()) } returns null.right()
+        sharedInvites.value = emptySet()
+        every { shareManager.sharedTexts } returns sharedTexts
+        every { getSharedInvitesUseCase(userWalletId = any(), cryptoAccountId = any()) } returns sharedInvites
+        coEvery { markInviteSharedUseCase(userWalletId = any(), cryptoAccountId = any(), inviteId = any()) } answers {
+            sharedInvites.value += thirdArg<String>()
+        }
     }
 
     @Test
@@ -225,7 +239,88 @@ internal class JointAccountMembersModelTest {
         slot.onInviteClick()
 
         // Assert
-        verify(exactly = 1) { shareManager.shareText("$INVITE_LINK_PREFIX$INVITE_A") }
+        verify(exactly = 1) { shareManager.shareTrackedText(text = "$INVITE_LINK_PREFIX$INVITE_A") }
+    }
+
+    @Test
+    fun `GIVEN a not invited slot WHEN a target is picked THEN the slot reads Invited`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A))
+        val model = createModel()
+
+        // Act
+        model.uiState.value.freeSlots.first().onInviteClick()
+        sharedTexts.emit("$INVITE_LINK_PREFIX$INVITE_A")
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.freeSlots.first().status)
+            .isEqualTo(resourceReference(CoreUiR.string.joint_account_invite_members_invited))
+        coVerify(exactly = 1) {
+            markInviteSharedUseCase(userWalletId = USER_WALLET_ID, cryptoAccountId = ACCOUNT_ID, inviteId = INVITE_A)
+        }
+    }
+
+    @Test
+    fun `GIVEN another text is shared WHEN it is reported THEN no invite is recorded`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A))
+        createModel()
+
+        // Act
+        sharedTexts.emit("https://tangem.com/somewhere-else")
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { markInviteSharedUseCase(any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN the share sheet is dismissed WHEN no target is picked THEN the slot stays not invited`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A))
+        val model = createModel()
+
+        // Act
+        model.uiState.value.freeSlots.first().onInviteClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.freeSlots.first().status)
+            .isEqualTo(resourceReference(CoreUiR.string.joint_account_invite_members_not_invited))
+        coVerify(exactly = 0) { markInviteSharedUseCase(any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN an invited slot WHEN invite clicked again THEN the same link is shared`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A))
+        sharedInvites.value = setOf(INVITE_A)
+        val model = createModel()
+
+        // Act
+        model.uiState.value.freeSlots.first().onInviteClick()
+
+        // Assert
+        verify(exactly = 1) { shareManager.shareTrackedText(text = "$INVITE_LINK_PREFIX$INVITE_A") }
+        assertThat(model.uiState.value.freeSlots.first().status)
+            .isEqualTo(resourceReference(CoreUiR.string.joint_account_invite_members_invited))
+    }
+
+    @Test
+    fun `GIVEN an invite shared before WHEN model created THEN its slot reads Invited`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A))
+        sharedInvites.value = setOf(INVITE_A)
+
+        // Act
+        val model = createModel()
+
+        // Assert
+        assertThat(model.uiState.value.freeSlots.map { it.status }).containsExactly(
+            resourceReference(CoreUiR.string.joint_account_invite_members_invited),
+            resourceReference(CoreUiR.string.joint_account_invite_members_not_invited),
+        ).inOrder()
     }
 
     @Test
@@ -628,17 +723,22 @@ internal class JointAccountMembersModelTest {
             router = router,
             clipboardManager = clipboardManager,
             uiMessageSender = uiMessageSender,
-            shareManager = shareManager,
             jointAccountListSupplier = supplier,
             jointAccountListFetcher = jointAccountListFetcher,
             pollingCoordinator = pollingCoordinator,
             getJointAccountInvitesUseCase = getInvitesUseCase,
+            getSharedJointAccountInvitesUseCase = getSharedInvitesUseCase,
             ownerAddressResolver = ownerAddressResolver,
             singleAccountSupplier = singleAccountSupplier,
             activateJointAccountUseCase = activateUseCase,
             archiveCryptoPortfolioUseCase = archiveCryptoPortfolioUseCase,
             userWalletsListRepository = userWalletsListRepository,
             stateController = JointAccountMembersStateController(),
+            inviteSharing = JointAccountInviteSharing(
+                shareManager = shareManager,
+                getJointAccountInvitesUseCase = getInvitesUseCase,
+                markJointAccountInviteSharedUseCase = markInviteSharedUseCase,
+            ),
         )
         advanceUntilIdle()
 
