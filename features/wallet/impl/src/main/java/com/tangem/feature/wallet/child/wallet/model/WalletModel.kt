@@ -14,6 +14,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.notifications.SystemNotificationsStateProvider
 import com.tangem.core.ui.utils.parseBigDecimal
+import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
@@ -27,10 +28,14 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.assetsdiscovery.usecase.StartAssetsDiscoveryUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
+import com.tangem.domain.jointaccount.producer.SingleJointAccountListProducer
+import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.marketing.WarmUpMarketingCampaignsUseCase
 import com.tangem.domain.mcp.McpRequestService
 import com.tangem.domain.mcp.models.McpRequest
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.wallet.*
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
@@ -126,6 +131,7 @@ internal class WalletModel @Inject constructor(
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
     private val jointAccountPollingCoordinator: JointAccountPollingCoordinator,
+    private val jointAccountListSupplier: SingleJointAccountListSupplier,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val bindRefcodeWithWalletUseCase: BindRefcodeWithWalletUseCase,
     private val appsFlyerRepository: AppsFlyerRepository,
@@ -280,13 +286,17 @@ internal class WalletModel @Inject constructor(
                     val hasMobileWallet = userWalletsListRepository.userWalletsSync()
                         .any { it is UserWallet.Hot }
 
-                    val accountsCount = if (isAccountsModeEnabledUseCase.invokeSync()) {
-                        singleAccountListSupplier(selectedWallet.walletId)
-                            .first()
-                            .accounts
-                            .size
+                    val accountList = if (isAccountsModeEnabledUseCase.invokeSync()) {
+                        singleAccountListSupplier(selectedWallet.walletId).first()
                     } else {
                         null
+                    }
+                    val jointAccountsCounts = accountList?.let { list ->
+                        val jointAccounts = jointAccountListSupplier.getSyncOrNull(
+                            params = SingleJointAccountListProducer.Params(userWalletId = selectedWallet.walletId),
+                            timeMillis = JOINT_ACCOUNTS_WAIT_MILLIS,
+                        ) ?: return@let null
+                        jointAccountsCounts(accountList = list, jointAccounts = jointAccounts)
                     }
                     val result = getAppThemeModeUseCase().firstOrNull()
                     val theme = result?.getOrElse { AppThemeMode.FOLLOW_SYSTEM } ?: AppThemeMode.FOLLOW_SYSTEM
@@ -294,7 +304,8 @@ internal class WalletModel @Inject constructor(
                     analyticsEventsHandler.send(
                         WalletScreenAnalyticsEvent.MainScreen.ScreenOpened(
                             hasMobileWallet = hasMobileWallet,
-                            accountsCount = accountsCount,
+                            accountsCount = accountList?.accounts?.size,
+                            jointAccountsCounts = jointAccountsCounts,
                             isBackedUp = isWalletBackedUpUseCase(selectedWallet),
                             completedBackups = getCompletedBackupsUseCase(selectedWallet),
                             theme = theme.value,
@@ -992,7 +1003,28 @@ internal class WalletModel @Inject constructor(
     private companion object {
         const val REFRESH_WALLET_BACKGROUND_TIMER_MILLIS = 10000L
         const val EXPRESS_STATUS_UPDATE_DELAY = 10000L
+
+        /** The joint list may not be loaded yet; the screen event is not held back for it */
+        const val JOINT_ACCOUNTS_WAIT_MILLIS = 1000L
     }
+}
+
+/** Archived joint accounts are not in [accountList], so only the statuses of the accounts it holds are counted */
+internal fun jointAccountsCounts(
+    accountList: AccountList,
+    jointAccounts: List<JointAccount>,
+): WalletScreenAnalyticsEvent.MainScreen.ScreenOpened.JointAccountsCounts {
+    val listedIds = accountList.accounts
+        .filterIsInstance<Account.Joint>()
+        .mapTo(mutableSetOf()) { it.accountId.value.lowercase() }
+    val statuses = jointAccounts
+        .filter { it.cryptoAccountId.lowercase() in listedIds }
+        .map(JointAccount::status)
+
+    return WalletScreenAnalyticsEvent.MainScreen.ScreenOpened.JointAccountsCounts(
+        active = statuses.count { it == JointAccount.Status.ACTIVE },
+        pending = statuses.count { it == JointAccount.Status.PENDING || it == JointAccount.Status.CONFIRMING },
+    )
 }
 
 /**
