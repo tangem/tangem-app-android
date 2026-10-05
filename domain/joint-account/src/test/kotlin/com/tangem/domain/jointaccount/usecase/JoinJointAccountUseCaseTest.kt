@@ -96,7 +96,7 @@ internal class JoinJointAccountUseCaseTest {
     fun `GIVEN conflict WHEN invoke THEN own account is resolved from the list`() = runTest {
         // Arrange — "address already registered" and a spent invite are the same 409; being a member decides
         coEvery { repository.getFreeOwnerDerivationIndex(WALLET_ID) } returns 0
-        coEvery { repository.join(any(), any(), any()) } returns JointAccountJoinResult.Conflict
+        coEvery { repository.join(any(), any(), any()) } returns JointAccountJoinResult.Conflict(cause = conflict)
         // The backend returns checksummed addresses; the comparison must not depend on the case
         val own = account(memberAddress = OWNER_ADDRESS.lowercase())
         every { supplier.invoke(userWalletId = WALLET_ID) } returns flowOf(listOf(otherAccount(), own))
@@ -114,7 +114,7 @@ internal class JoinJointAccountUseCaseTest {
     fun `GIVEN account list refetch fails on conflict WHEN invoke THEN own account is still resolved`() = runTest {
         // Arrange — the joint list is the source of the account; the document only feeds the wallet screen row
         coEvery { repository.getFreeOwnerDerivationIndex(WALLET_ID) } returns 0
-        coEvery { repository.join(any(), any(), any()) } returns JointAccountJoinResult.Conflict
+        coEvery { repository.join(any(), any(), any()) } returns JointAccountJoinResult.Conflict(cause = conflict)
         coEvery { accountListFetcher.invoke(params = any()) } returns IllegalStateException("no network").left()
         val own = account()
         every { supplier.invoke(userWalletId = WALLET_ID) } returns flowOf(listOf(own))
@@ -130,14 +130,14 @@ internal class JoinJointAccountUseCaseTest {
     fun `GIVEN conflict and no own account WHEN invoke THEN InvalidInvite`() = runTest {
         // Arrange
         coEvery { repository.getFreeOwnerDerivationIndex(WALLET_ID) } returns 0
-        coEvery { repository.join(any(), any(), any()) } returns JointAccountJoinResult.Conflict
+        coEvery { repository.join(any(), any(), any()) } returns JointAccountJoinResult.Conflict(cause = conflict)
         every { supplier.invoke(userWalletId = WALLET_ID) } returns flowOf(listOf(otherAccount()))
 
         // Act
         val actual = useCase(userWalletId = WALLET_ID, inviteId = INVITE_ID, config = config(), memberName = NAME)
 
         // Assert
-        assertThat(actual).isEqualTo(JointAccountJoinError.InvalidInvite.left())
+        assertThat(actual).isEqualTo(JointAccountJoinError.InvalidInvite(cause = conflict).left())
     }
 
     @Test
@@ -145,7 +145,7 @@ internal class JoinJointAccountUseCaseTest {
         // Arrange — the refresh is the only way to tell "already joined" from a dead invite, so its failure
         // is the real cause: blaming the link for a network problem would stop the user from retrying
         coEvery { repository.getFreeOwnerDerivationIndex(WALLET_ID) } returns 0
-        coEvery { repository.join(any(), any(), any()) } returns JointAccountJoinResult.Conflict
+        coEvery { repository.join(any(), any(), any()) } returns JointAccountJoinResult.Conflict(cause = conflict)
         val cause = IllegalStateException("no network")
         coEvery { fetcher.invoke(params = any()) } returns cause.left()
 
@@ -277,6 +277,7 @@ internal class JoinJointAccountUseCaseTest {
 
     private companion object {
         val WALLET_ID = UserWalletId("011121314151617181910A0B0C0D0E0F011121314151617181910A0B0C0D0E0F")
+        val conflict = IllegalStateException("409 Conflict")
         const val OWNER_ADDRESS = "0x7e5f4552091a69125d5DfCb7b8C2659029395Bdf"
         const val SIGNATURE = "0xdeadbeef"
         const val NAME = " Bob "
