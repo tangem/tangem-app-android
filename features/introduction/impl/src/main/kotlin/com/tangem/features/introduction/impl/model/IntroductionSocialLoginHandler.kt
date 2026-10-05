@@ -1,9 +1,11 @@
 package com.tangem.features.introduction.impl.model
 
+import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.navigation.Router
@@ -23,6 +25,7 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.models.WalletMetaInfo
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
 import com.tangem.domain.sociallogin.usecase.GetAvailableSocialLoginProvidersUseCase
@@ -50,6 +53,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
     private val socialLoginUseCase: SocialLoginUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val trackingContextProxy: TrackingContextProxy,
     private val referral: IntroductionReferral,
     private val urlOpener: UrlOpener,
     private val router: Router,
@@ -101,12 +105,17 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         val attemptId = UUID.randomUUID().toString()
         TangemLogger.i("Social login attempt $attemptId started")
 
+        var marketingConsent: MarketingConsent? = null
         val result = socialLoginUseCase.signIn(
             provider = provider,
             onStageChanged = { stage -> host.onProgress(stage.toProgressUM()) },
             requestConsent = {
                 host.onProgress(null)
-                consentPrompt(provider, host::onConsent).await()
+                consentPrompt(
+                    provider = provider,
+                    onConsent = host::onConsent,
+                    onConfirmed = { marketingConsent = it },
+                ).await()
             },
         )
 
@@ -116,7 +125,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         try {
             result.fold(
                 ifLeft = { error -> onFailure(provider, error, attemptId) },
-                ifRight = { outcome -> onSuccess(outcome, source) },
+                ifRight = { outcome -> onSuccess(outcome, source, marketingConsent) },
             )
         } finally {
             host.onProgress(null)
@@ -136,6 +145,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
     private fun consentPrompt(
         provider: SocialLoginProvider,
         onConsent: (SocialLoginConsentUM?) -> Unit,
+        onConfirmed: (MarketingConsent) -> Unit,
     ): SocialLoginConsentPrompt = SocialLoginConsentPrompt(
         title = resourceReference(
             id = CoreResR.string.social_login_consent_title,
@@ -151,7 +161,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         ),
         acknowledgement = providerReference(CoreResR.string.social_login_consent_acknowledge, provider),
         onStateChanged = onConsent,
-        onEvent = ::onConsentEvent,
+        onEvent = { event -> onConsentEvent(event, onConfirmed) },
     )
 
     private fun openHelpArticle() {
@@ -159,22 +169,27 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         urlOpener.openUrl("https://tangem.com/$language/$HELP_ARTICLE_PATH")
     }
 
-    private fun onConsentEvent(event: SocialLoginConsentPrompt.Event) {
-        analyticsEventHandler.send(
-            when (event) {
-                SocialLoginConsentPrompt.Event.Shown -> SocialLoginAnalyticsEvents.RiskConsentScreenOpened()
-                SocialLoginConsentPrompt.Event.AcknowledgementMissing ->
-                    SocialLoginAnalyticsEvents.RiskConsentNotConfirmed()
-                is SocialLoginConsentPrompt.Event.Confirmed -> SocialLoginAnalyticsEvents.MarketingEmailsConsent(
-                    isGiven = event.isEmailSharingAllowed,
-                    // TODO [REDACTED_TASK_KEY]: the localized social_login_consent_email_sharing the viewer saw, once it exists
-                    consentText = "Share my email with Tangem for product updates",
-                )
-            },
-        )
+    /**
+     * The marketing consent is only remembered here: without a wallet the event has no User ID to be linked
+
+     */
+    private fun onConsentEvent(event: SocialLoginConsentPrompt.Event, onConfirmed: (MarketingConsent) -> Unit) {
+        when (event) {
+            SocialLoginConsentPrompt.Event.Shown ->
+                analyticsEventHandler.send(SocialLoginAnalyticsEvents.RiskConsentScreenOpened())
+            SocialLoginConsentPrompt.Event.AcknowledgementMissing ->
+                analyticsEventHandler.send(SocialLoginAnalyticsEvents.RiskConsentNotConfirmed())
+            is SocialLoginConsentPrompt.Event.Confirmed -> onConfirmed(
+                MarketingConsent(isGiven = event.isEmailSharingAllowed, consentText = event.consentText),
+            )
+        }
     }
 
-    private suspend fun onSuccess(outcome: SocialLoginOutcome, source: AnalyticsParam.ScreensSources) {
+    private suspend fun onSuccess(
+        outcome: SocialLoginOutcome,
+        source: AnalyticsParam.ScreensSources,
+        marketingConsent: MarketingConsent?,
+    ) {
         // Before the selection: the wallet is saved either way, and a retry would come back as a restore.
         val creationType = when (outcome) {
             is SocialLoginOutcome.WalletCreated -> AnalyticsParam.WalletCreationType.NewSocialLogin
@@ -183,10 +198,14 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         sendWalletCreated(source, creationType)
 
         // Leaving the previous wallet selected would open its portfolio, as if the sign-in went elsewhere.
-        userWalletsListRepository.select(outcome.userWalletId).onLeft { error ->
+        val userWallet = userWalletsListRepository.select(outcome.userWalletId).getOrElse { error ->
             TangemLogger.e("Failed to select the social login wallet: $error")
             uiMessageSender.send(SnackbarMessage(resourceReference(CoreResR.string.common_unknown_error)))
             return
+        }
+
+        if (outcome is SocialLoginOutcome.WalletCreated && marketingConsent != null) {
+            sendMarketingConsent(userWallet, marketingConsent)
         }
 
         uiMessageSender.send(
@@ -214,6 +233,18 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
                 seedPhraseLength = SEED_PHRASE_LENGTH,
                 passPhraseState = AnalyticsParam.EmptyFull.Empty,
                 referralId = referral.readId(),
+            ),
+        )
+    }
+
+    private fun sendMarketingConsent(userWallet: UserWallet, consent: MarketingConsent) {
+        // Sets the User ID the event is linked by; both go through the same queue, so it lands first
+        trackingContextProxy.setContext(userWallet)
+        analyticsEventHandler.send(
+            SocialLoginAnalyticsEvents.MarketingEmailsConsent(
+                isGiven = consent.isGiven,
+                consentText = consent.consentText,
+                userWalletId = userWallet.walletId,
             ),
         )
     }
@@ -334,6 +365,8 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         SocialLoginError.WalletAlreadySaved -> "This wallet has already been saved"
         else -> "Something went wrong"
     }
+
+    private data class MarketingConsent(val isGiven: Boolean, val consentText: String)
 
     private companion object {
         const val SEED_PHRASE_LENGTH = 12
