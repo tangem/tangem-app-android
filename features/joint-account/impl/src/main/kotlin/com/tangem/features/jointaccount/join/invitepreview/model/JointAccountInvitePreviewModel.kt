@@ -155,6 +155,10 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
             stateController.update(SetLoadingTransformer(onCloseClick = ::onCloseClick))
 
             if (walletId == null) {
+                // On a cold start the wallets load before the selection derived from them: wait for it to catch up
+                val hasUnlockedWallet = userWalletsListRepository.userWallets.value.orEmpty().any { !it.isLocked }
+                if (hasUnlockedWallet) return@launch
+
                 analyticsEventHandler.send(JointAccountError(source = ErrorSource.Join, errorMessage = "No wallet"))
                 stateController.update(SetFailedTransformer(onRetryClick = ::retry, onCloseClick = ::onCloseClick))
                 return@launch
@@ -193,10 +197,7 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     }
 
     private fun JointAccountInvitePreviewError.toAnalyticsEvent(): JointAccountError = when (this) {
-        is JointAccountInvitePreviewError.InvalidLink -> JointAccountError(
-            source = ErrorSource.Join,
-            errorMessage = toString(),
-        )
+        is JointAccountInvitePreviewError.InvalidLink -> JointAccountError(source = ErrorSource.Join, cause = cause)
         is JointAccountInvitePreviewError.Unreachable -> JointAccountError(source = ErrorSource.Join, cause = cause)
         is JointAccountInvitePreviewError.LoadFailed -> JointAccountError(source = ErrorSource.Join, cause = cause)
     }
