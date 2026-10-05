@@ -85,6 +85,8 @@ class SendViaSwapTest : BaseTestCase() {
     fun sendViaSwapFlowWithTokenSearchAndDataChangesTest() {
         val tokenName = "Bitcoin"
         val swapTokenName = "Ethereum"
+        val notAddedTokenName = "XRP"
+        val notAddedTokenNetwork = "XRP Ledger"
         val main = "MAIN"
         val firstInputAmount = "0.001"
         val secondInputAmount = "0.002"
@@ -96,7 +98,9 @@ class SendViaSwapTest : BaseTestCase() {
         val bitcoinBalanceScenarioName = "bitcoin_utxo"
         val bitcoinBalanceScenarioState = "Balance"
         val assetsScenarioName = "express_api_assets"
-        val assetsScenarioState = "BitcoinExchangeEnabled"
+        val assetsScenarioState = "BitcoinExchangeEnabledWithXRP"
+        val coinsScenarioName = "coins_api"
+        val coinsScenarioState = "WithXRP"
         val userTokensScenarioState = "Wallet2"
 
         setupHooks().run {
@@ -110,6 +114,9 @@ class SendViaSwapTest : BaseTestCase() {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensScenarioState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensScenarioState)
             }
+            step("Set WireMock scenario: '$coinsScenarioName' to state: '$coinsScenarioState'") {
+                setWireMockScenarioState(scenarioName = coinsScenarioName, state = coinsScenarioState)
+            }
 
             step("Open 'Send' screen") {
                 openSendScreen(tokenName, mockContent = Wallet2WithDerivationsMockContent)
@@ -120,11 +127,33 @@ class SendViaSwapTest : BaseTestCase() {
             step("Click on 'Swap to another token' button") {
                 onSendScreen { swapToAnotherTokenButton.performClick() }
             }
-            step("Type '$swapTokenName' in search text field") {
+            step("Type '$notAddedTokenName' in search text field") {
                 onSendViaSwapScreen {
                     searchField.performClick()
-                    searchField.performTextInput(swapTokenName)
+                    searchField.performTextInput(notAddedTokenName)
                 }
+            }
+            step("Assert token '$notAddedTokenName' that is not in the wallet is found") {
+                onSendViaSwapScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { tokenItem(notAddedTokenName).assertIsDisplayed() }
+                }
+            }
+            step("Click on token: '$notAddedTokenName'") {
+                onSendViaSwapScreen { tokenItem(notAddedTokenName).performClick() }
+            }
+            step("Assert network '$notAddedTokenNetwork' is offered for '$notAddedTokenName'") {
+                onChooseNetworkBottomSheet {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { networkItem(notAddedTokenNetwork).assertIsDisplayed() }
+                }
+            }
+            step("Press 'Back' button to close network selection") {
+                device.uiDevice.pressBack()
+                onChooseNetworkBottomSheet {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { networkItem(notAddedTokenNetwork).assertDoesNotExist() }
+                }
+            }
+            step("Type '$swapTokenName' in search text field") {
+                onSendViaSwapScreen { searchField.performTextReplacement(swapTokenName) }
             }
             step("Click on token: '$swapTokenName'") {
                 onSendViaSwapScreen { tokenItem(swapTokenName).performClick() }
