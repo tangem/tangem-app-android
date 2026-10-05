@@ -8,5 +8,5 @@ internal sealed class WcConnectionsBottomSheetConfig {
     data class ConnectedApp(val topic: String) : WcConnectionsBottomSheetConfig()
 
     @Serializable
-    data class McpSession(val sessionId: String) : WcConnectionsBottomSheetConfig()
+    data class McpSession(val sessionId: String, val walletName: String) : WcConnectionsBottomSheetConfig()
 }

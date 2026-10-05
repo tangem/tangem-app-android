@@ -11,21 +11,21 @@ import com.tangem.features.walletconnect.connections.ui.McpSessionInfoBS
 
 internal class McpSessionInfoComponent(
     appComponentContext: AppComponentContext,
-    params: Params,
+    private val params: Params,
 ) : AppComponentContext by appComponentContext, ComposableBottomSheetComponent {
 
     private val model: McpSessionInfoModel = getOrCreateModel(params)
 
     override fun dismiss() {
-        model.uiState.value.onDismiss()
+        params.onDismiss()
     }
 
     @Composable
     override fun BottomSheet() {
         val state by model.uiState.collectAsStateWithLifecycle()
 
-        McpSessionInfoBS(state = state)
+        state?.let { McpSessionInfoBS(state = it) }
     }
 
-    data class Params(val sessionId: String, val onDismiss: () -> Unit)
+    data class Params(val sessionId: String, val walletName: String, val onDismiss: () -> Unit)
 }

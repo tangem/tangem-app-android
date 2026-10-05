@@ -1,10 +1,15 @@
 package com.tangem.features.walletconnect.connections.entity
 
+import com.tangem.common.ui.account.PortfolioSelectUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 
-/** MVP details of one MCP session: the session model pretty-printed plus the revoke action. */
+/** Details of one connected MCP agent: who it is, where it is connected, and the revoke action. */
 internal data class McpSessionInfoUM(
-    val debugText: String,
+    val agentName: String,
+    val agentOrigin: String,
+    val agentIconUrl: String?,
+    val connectedAt: String,
+    val wallet: PortfolioSelectUM,
     val isRevoking: Boolean,
     val onRevokeClick: () -> Unit,
     val onDismiss: () -> Unit,
