@@ -3,6 +3,11 @@ package com.tangem.features.polymarket.impl.placeprediction.model
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.interactor.PredictionSignRequest
@@ -34,6 +39,8 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -356,7 +363,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         }
 
         @Test
-        fun `GIVEN no answer from the exchange WHEN place clicked THEN the outcome is submitted and not retried`() =
+        fun `GIVEN no answer from the exchange WHEN place clicked THEN summary shows the support dialog`() =
             runTest {
                 // Arrange
                 val amountModel = createAmountModel(testScope = this)
@@ -367,16 +374,35 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 val model = createSummaryModel(testScope = this, amountModel = amountModel)
                 coEvery { placeOrderUseCase(any(), any(), any()) } returns
                     PredictionPlaceOrderError.Ambiguous(detail = "timeout").left()
+                val dialog = slot<DialogMessage>()
+                every { messageSender.send(capture(dialog)) } returns Unit
+                val walletMetaInfo = mockk<WalletMetaInfo>()
+                coEvery { getWalletMetaInfoUseCase(userWalletId = USER_WALLET_ID) } returns walletMetaInfo.right()
 
                 // Act
                 model.onPlaceClick()
                 advanceUntilIdle()
 
                 // Assert
-                assertThat(model.uiState.value.submit).isInstanceOf(SubmitUM.Result::class.java)
-                assertThat((model.uiState.value.submit as SubmitUM.Result).result)
-                    .isInstanceOf(PlaceResultUM.Submitted::class.java)
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+                assertThat(dialog.captured.title).isEqualTo(resourceReference(R.string.common_something_went_wrong))
+                assertThat(dialog.captured.message)
+                    .isEqualTo(resourceReference(R.string.prediction_place_error_description))
+                assertThat(dialog.captured.firstAction.title).isEqualTo(resourceReference(R.string.common_support))
+                assertThat(dialog.captured.secondAction).isNotNull()
+                verify(exactly = 1) { messageSender.send(any<DialogMessage>()) }
+                verify(exactly = 0) { router.replaceAll(any<PlacePredictionRoute.Status>(), onComplete = any()) }
                 coVerify(exactly = 1) { placeOrderUseCase(any(), any(), any()) }
+                coVerify(exactly = 0) { sendFeedbackEmailUseCase(any()) }
+
+                // Act
+                dialog.captured.firstAction.onClick()
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 1) {
+                    sendFeedbackEmailUseCase(type = FeedbackEmailType.DirectUserRequest(walletMetaInfo = walletMetaInfo))
+                }
 
                 model.onDestroy()
             }
