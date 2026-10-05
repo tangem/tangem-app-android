@@ -106,8 +106,8 @@ internal class JointAccountJoinModel @Inject constructor(
 
     private fun handleErrorAction(error: JointAccountJoinError): JoinResultAction = when (error) {
         JointAccountFlowError.UserCancelled -> JoinResultAction.None
-        JointAccountJoinError.InvalidInvite -> {
-            showInvalidInvite()
+        is JointAccountJoinError.InvalidInvite -> {
+            showInvalidInvite(cause = error.cause)
             JoinResultAction.CloseFlow
         }
         is JointAccountFlowError.InvalidDerivationIndex -> {
@@ -122,10 +122,8 @@ internal class JointAccountJoinModel @Inject constructor(
         }
     }
 
-    private fun showInvalidInvite() {
-        analyticsEventHandler.send(
-            JointAccountError(source = ErrorSource.Join, errorMessage = JointAccountJoinError.InvalidInvite.toString()),
-        )
+    private fun showInvalidInvite(cause: Throwable) {
+        analyticsEventHandler.send(JointAccountError(source = ErrorSource.Join, cause = cause))
         uiMessageSender.send(
             DialogMessage(
                 title = resourceReference(CoreUiR.string.joint_account_join_invalid_link_title),
