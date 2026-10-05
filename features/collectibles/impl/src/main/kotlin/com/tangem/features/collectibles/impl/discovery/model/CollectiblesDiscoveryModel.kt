@@ -164,6 +164,10 @@ internal class CollectiblesDiscoveryModel @Inject constructor(
         }
     }
 
+    private fun onNextPageRetryClick() {
+        modelScope.launch { actionsFlow.emit(BatchAction.LoadMore()) }
+    }
+
     private suspend fun reloadMachines() {
         val config = CollectibleGachaMachinesListConfig(
             categoryId = selectedCategoryId,
@@ -180,6 +184,7 @@ internal class CollectiblesDiscoveryModel @Inject constructor(
                     batchListState = batchState,
                     packConverter = packConverter,
                     onReloadClick = ::reload,
+                    onNextPageRetryClick = ::onNextPageRetryClick,
                 )
                 uiState.update(transformer::transform)
             }
