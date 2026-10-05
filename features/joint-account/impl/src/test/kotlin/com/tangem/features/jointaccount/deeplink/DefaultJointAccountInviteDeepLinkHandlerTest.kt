@@ -3,8 +3,10 @@ package com.tangem.features.jointaccount.deeplink
 import android.net.Uri
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.Runs
 import io.mockk.clearMocks
@@ -25,10 +27,11 @@ internal class DefaultJointAccountInviteDeepLinkHandlerTest {
 
     private val appRouter: AppRouter = mockk()
     private val jointAccountFeatureToggles: JointAccountFeatureToggles = mockk()
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
 
     @BeforeEach
     fun setUp() {
-        clearMocks(appRouter, jointAccountFeatureToggles)
+        clearMocks(appRouter, jointAccountFeatureToggles, analyticsEventHandler)
         every { jointAccountFeatureToggles.isJointAccountEnabled } returns true
         every { appRouter.stack } returns emptyList()
         every { appRouter.push(any<AppRoute>(), any()) } just Runs
@@ -50,9 +53,11 @@ internal class DefaultJointAccountInviteDeepLinkHandlerTest {
             verify {
                 appRouter.push(route = AppRoute.JointAccountJoin(inviteId = model.expectedInviteId), onComplete = any())
             }
+            verify(exactly = 1) { analyticsEventHandler.send(JointAccountAnalyticsEvent.InviteLinkOpened()) }
         } else {
             verify(exactly = 0) { appRouter.push(any<AppRoute>(), any()) }
             verify { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
+            verify(exactly = 0) { analyticsEventHandler.send(any()) }
         }
     }
 
@@ -88,6 +93,7 @@ internal class DefaultJointAccountInviteDeepLinkHandlerTest {
         // Assert
         verify(exactly = 0) { appRouter.push(any<AppRoute>(), any()) }
         verify(exactly = 0) { appRouter.popTo(any<AppRoute>(), any()) }
+        verify(exactly = 0) { analyticsEventHandler.send(any()) }
     }
 
     @Test
@@ -131,6 +137,7 @@ internal class DefaultJointAccountInviteDeepLinkHandlerTest {
             deeplinkUri = deeplinkUri,
             appRouter = appRouter,
             jointAccountFeatureToggles = jointAccountFeatureToggles,
+            analyticsEventHandler = analyticsEventHandler,
         )
     }
 }
