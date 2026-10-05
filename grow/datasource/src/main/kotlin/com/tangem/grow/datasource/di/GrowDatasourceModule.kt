@@ -1,8 +1,5 @@
 package com.tangem.grow.datasource.di
 
-import android.content.Context
-import androidx.datastore.dataStoreFile
-import com.squareup.moshi.Moshi
 import com.tangem.core.remote.RetrofitApiSpec
 import com.tangem.core.remote.RetrofitFactory
 import com.tangem.core.remote.Timeouts
@@ -10,11 +7,9 @@ import com.tangem.core.remote.build
 import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.config.TangemGatewayApiConfig
 import com.tangem.core.remote.header.CardAuthHeaderProvider
-import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
 import com.tangem.datasource.utils.AppDataStoreFactory
-import com.tangem.datasource.utils.MoshiDataStoreSerializer
-import com.tangem.datasource.utils.listTypes
+import com.tangem.datasource.utils.create
 import com.tangem.grow.datasource.collectibles.CollectiblesApi
 import com.tangem.grow.datasource.collectibles.CollectiblesAuthProvider
 import com.tangem.grow.datasource.collectibles.models.response.model.DefaultCollectiblesAuthProvider
@@ -41,12 +36,10 @@ import com.tangem.grow.datasource.yield.YieldSupplyApi
 import com.tangem.grow.datasource.yield.local.DefaultYieldMarketsStore
 import com.tangem.grow.datasource.yield.local.YieldMarketsStore
 import com.tangem.grow.datasource.yield.models.YieldSupplyMarketTokenDto
-import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.info.AppInfoProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import dagger.multibindings.IntoSet
@@ -253,21 +246,11 @@ internal object GrowDatasourceModule {
 
     @Provides
     @Singleton
-    fun provideYieldMarketsStore(
-        @NetworkMoshi moshi: Moshi,
-        @ApplicationContext context: Context,
-        appScope: AppCoroutineScope,
-        dataStoreFactory: AppDataStoreFactory,
-    ): YieldMarketsStore {
+    fun provideYieldMarketsStore(dataStoreFactory: AppDataStoreFactory): YieldMarketsStore {
         return DefaultYieldMarketsStore(
             persistenceStore = dataStoreFactory.create(
-                serializer = MoshiDataStoreSerializer(
-                    moshi = moshi,
-                    types = listTypes<YieldSupplyMarketTokenDto>(),
-                    defaultValue = emptyList(),
-                ),
-                produceFile = { context.dataStoreFile(fileName = "yield_markets_cache") },
-                scope = appScope,
+                defaultValue = emptyList<YieldSupplyMarketTokenDto>(),
+                fileName = "yield_markets_cache",
             ),
         )
     }
