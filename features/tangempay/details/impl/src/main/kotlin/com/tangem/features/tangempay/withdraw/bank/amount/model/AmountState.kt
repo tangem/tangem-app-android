@@ -26,7 +26,8 @@ internal data class AmountState(
         val preferredRail = draft.recipient?.details?.rail ?: selectedRail ?: draft.destination?.rail
         val destination = options.destinations.firstOrNull { it.rail == preferredRail } ?: options.destinations.first()
         val preferredSourceId = selectedSourceId ?: draft.source?.id
-        val source = options.sources.firstOrNull { it.id == preferredSourceId } ?: options.sources.first()
+        val source = options.sources.firstOrNull { it.isAvailable && it.id == preferredSourceId }
+            ?: options.sources.first(BankWithdrawSource::isAvailable)
         val displayValue = displayValue(draft = draft, currency = options.currency)
         val amount = displayValue.parseBigDecimalOrNull()
         return AmountSelection(
