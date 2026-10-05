@@ -548,7 +548,14 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class JointAccountCreation(
         val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/joint_account_creation/${userWalletId.stringValue}")
+        val source: Source,
+    ) : AppRoute(path = "/joint_account_creation/${userWalletId.stringValue}") {
+
+        enum class Source {
+            AddAccount,
+            MainScreen,
+        }
+    }
 
     @Serializable
     data class JointAccountJoin(

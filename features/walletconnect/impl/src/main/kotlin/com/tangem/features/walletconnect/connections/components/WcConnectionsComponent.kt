@@ -57,6 +57,7 @@ internal class WcConnectionsComponent(
                 appComponentContext = context,
                 params = McpSessionInfoComponent.Params(
                     sessionId = config.sessionId,
+                    walletName = config.walletName,
                     onDismiss = model.bottomSheetNavigation::dismiss,
                 ),
             )
