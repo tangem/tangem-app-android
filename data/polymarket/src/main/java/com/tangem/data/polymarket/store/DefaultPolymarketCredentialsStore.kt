@@ -7,10 +7,10 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -65,9 +65,12 @@ internal class DefaultPolymarketCredentialsStore(
     }
 
     override fun hasCredentials(userWalletId: UserWalletId): Flow<Boolean> = version
-        .map { get(userWalletId) != null }
+        .map { isReadable(userWalletId) }
         .distinctUntilChanged()
-        .catch { error -> TangemLogger.e("Failed to observe the API credentials of $userWalletId", error) }
+
+    private suspend fun isReadable(userWalletId: UserWalletId): Boolean = runSuspendCatching { get(userWalletId) }
+        .onFailure { error -> TangemLogger.e("Failed to read the API credentials of $userWalletId", error) }
+        .getOrNull() != null
 
     private fun createKey(userWalletId: UserWalletId): String = KEY_PREFIX + userWalletId.stringValue
 
