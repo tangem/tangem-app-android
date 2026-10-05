@@ -72,6 +72,10 @@
         "version": "undefined"
     },
     {
+        "name": "TWI_1803_TRON_GASLESS_SWAP_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "TWI_1586_CARD_LINKED_STATUS_UPDATE",
         "version": "undefined"
     },
