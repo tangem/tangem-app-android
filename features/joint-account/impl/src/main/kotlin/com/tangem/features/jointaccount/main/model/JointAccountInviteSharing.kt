@@ -9,7 +9,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.jointaccount.deeplink.JointAccountInviteLinkBuilder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
@@ -28,23 +28,24 @@ internal class JointAccountInviteSharing @Inject constructor(
         shareManager.shareTrackedText(text = JointAccountInviteLinkBuilder.build(inviteId = inviteId))
     }
 
-    /** Records the invites of [account] whose link was sent, not when the share sheet merely opens */
+    /**
+     * Records the invites of [account] whose link was sent, not when the share sheet merely opens. Keyed to the
+     * account id: the account updates on every poll, and restarting on each would cancel a write or drop a pick
+     */
     @OptIn(ExperimentalCoroutinesApi::class)
     fun recordShared(userWalletId: UserWalletId, account: Flow<JointAccount?>): Flow<Unit> = account
-        .filterNotNull()
-        .flatMapLatest { jointAccount ->
-            val invites = getJointAccountInvitesUseCase(
-                userWalletId = userWalletId,
-                cryptoAccountId = jointAccount.cryptoAccountId,
-            )
+        .mapNotNull { it?.cryptoAccountId }
+        .distinctUntilChanged()
+        .flatMapLatest { cryptoAccountId ->
             shareManager.sharedTexts
                 .mapNotNull { text ->
-                    invites.firstOrNull { inviteId -> JointAccountInviteLinkBuilder.build(inviteId = inviteId) == text }
+                    getJointAccountInvitesUseCase(userWalletId = userWalletId, cryptoAccountId = cryptoAccountId)
+                        .firstOrNull { inviteId -> JointAccountInviteLinkBuilder.build(inviteId = inviteId) == text }
                 }
                 .map { inviteId ->
                     markJointAccountInviteSharedUseCase(
                         userWalletId = userWalletId,
-                        cryptoAccountId = jointAccount.cryptoAccountId,
+                        cryptoAccountId = cryptoAccountId,
                         inviteId = inviteId,
                     )
                 }
