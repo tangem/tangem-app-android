@@ -28,7 +28,7 @@ internal class GetSupportChatLogsUseCaseTest {
 
     private val useCase = GetSupportChatLogsUseCase(
         feedbackRepository = feedbackRepository,
-        infoProviders = setOf(predictionsInfoProvider),
+        infoProviders = mapOf(SupportChatTopic.PREDICTIONS to predictionsInfoProvider),
     )
 
     @BeforeEach
@@ -44,7 +44,6 @@ internal class GetSupportChatLogsUseCaseTest {
             osVersion = "36",
             appVersion = "1.0",
         )
-        every { predictionsInfoProvider.topic } returns SupportChatTopic.PREDICTIONS
     }
 
     @Test
