@@ -5,6 +5,7 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
@@ -27,6 +28,8 @@ import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelecto
 import com.tangem.features.feed.components.v2.blocks.AddAccountBlockComponent
 import com.tangem.features.feed.impl.R
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.LimitSource
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -47,6 +50,7 @@ internal class AddAccountBlockModel @Inject constructor(
     private val router: Router,
     private val messageSender: UiMessageSender,
     private val jointAccountFeatureToggles: JointAccountFeatureToggles,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     userWalletsListRepository: UserWalletsListRepository,
     multiAccountListSupplier: MultiAccountListSupplier,
     portfolioFetcherFactory: PortfolioFetcher.Factory,
@@ -108,7 +112,10 @@ internal class AddAccountBlockModel @Inject constructor(
 
         val walletsWithRoom = knownWallets.filter { (_, accounts) -> accounts.hasRoomForAnyAccount() }
         when (walletsWithRoom.size) {
-            0 -> messageSender.send(accountLimitReachedDialog())
+            0 -> {
+                if (jointAccountFeatureToggles.isJointAccountEnabled) sendJointLimitReached()
+                messageSender.send(accountLimitReachedDialog())
+            }
             1 -> openAccountTypeChoice(walletsWithRoom.single().first.walletId)
             else -> openWalletChooser(eligibleWallets = walletsWithRoom.mapTo(mutableSetOf()) { it.first.walletId })
         }
@@ -158,12 +165,19 @@ internal class AddAccountBlockModel @Inject constructor(
     }
 
     fun onJointAccountClick(config: AddAccountBlockComponent.BottomSheetConfig.AccountType) {
+        val source = AppRoute.JointAccountCreation.Source.MainScreen
+        analyticsEventHandler.send(JointAccountAnalyticsEvent.ButtonCreateJointAccount(source = source))
         bottomSheetNavigation.dismiss()
         if (config.isJointAccountLimitReached) {
+            sendJointLimitReached()
             messageSender.send(jointAccountLimitReachedDialog())
         } else {
-            router.push(AppRoute.JointAccountCreation(userWalletId = config.userWalletId))
+            router.push(AppRoute.JointAccountCreation(userWalletId = config.userWalletId, source = source))
         }
+    }
+
+    private fun sendJointLimitReached() {
+        analyticsEventHandler.send(JointAccountAnalyticsEvent.NoticeAccountsLimitReached(LimitSource.Create))
     }
 
     /**

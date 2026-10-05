@@ -24,6 +24,7 @@ dependencies {
     // endregion
 
     // region Domain
+    api(projects.domain.account)
     api(projects.domain.common)
     api(projects.domain.core)
     api(projects.domain.networks)

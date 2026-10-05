@@ -1,5 +1,6 @@
 package com.tangem.datasource.utils
 
+import androidx.datastore.core.DataMigration
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.Serializer
 import kotlinx.coroutines.CoroutineScope
@@ -23,8 +24,14 @@ interface AppDataStoreFactory {
      * @param serializer serializer that encodes/decodes the stored value and provides the fallback default.
      * @param scope coroutine scope the store runs its work on; should outlive every reader (typically the app scope).
 
+     * @param migrations run once before the first read or write, e.g. to drop the file of an earlier format.
      */
-    fun <T> create(serializer: Serializer<T>, scope: CoroutineScope, produceFile: () -> File): DataStore<T>
+    fun <T> create(
+        serializer: Serializer<T>,
+        scope: CoroutineScope,
+        produceFile: () -> File,
+        migrations: List<DataMigration<T>> = emptyList(),
+    ): DataStore<T>
 
     /**
      * Persists [T] with kotlinx-serialization in the DataStore file named [fileName]. Runs on the application scope,

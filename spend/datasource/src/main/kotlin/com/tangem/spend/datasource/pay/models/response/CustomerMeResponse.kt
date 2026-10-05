@@ -1,176 +1,187 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
-import java.math.BigDecimal
+import com.tangem.domain.models.serialization.SerializedBigDecimal
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class CustomerMeResponse(
-    @Json(name = "result") val result: Result?,
+    @SerialName("result") val result: Result?,
 ) {
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Result(
-        @Json(name = "id") val id: String,
-        @Json(name = "state") val state: String,
-        @Json(name = "created_at") val createdAt: String,
-        @Json(name = "payment_account") val paymentAccount: PaymentAccount?,
-        @Json(name = "kyc") val kyc: Kyc?,
-        @Json(name = "balance") val balance: BalanceResponse?,
-        @Json(name = "product_instances") val productInstances: List<ProductInstance>,
-        @Json(name = "cards") val cards: List<Card>,
-        @Json(name = "customer_tariff_plan") val customerTariffPlan: CustomerTariffPlan? = null,
-        @Json(name = "profile") val profile: Profile? = null,
+        @SerialName("id") val id: String,
+        @SerialName("state") val state: String,
+        @SerialName("created_at") val createdAt: String,
+        @SerialName("payment_account") val paymentAccount: PaymentAccount?,
+        @SerialName("kyc") val kyc: Kyc?,
+        @SerialName("balance") val balance: BalanceResponse?,
+        @SerialName("product_instances") val productInstances: List<ProductInstance>,
+        @SerialName("cards") val cards: List<Card>,
+        @SerialName("customer_tariff_plan") val customerTariffPlan: CustomerTariffPlan? = null,
+        @SerialName("profile") val profile: Profile? = null,
     )
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Profile(
-        @Json(name = "country") val country: String? = null,
-        @Json(name = "phone_mask") val phoneMask: String? = null,
-        @Json(name = "email") val email: String? = null,
-        @Json(name = "emboss_name") val embossName: String? = null,
+        @SerialName("country") val country: String? = null,
+        @SerialName("phone_mask") val phoneMask: String? = null,
+        @SerialName("email") val email: String? = null,
+        @SerialName("emboss_name") val embossName: String? = null,
     )
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class CustomerTariffPlan(
-        @Json(name = "status") val status: String?,
-        @Json(name = "source") val source: String?,
-        @Json(name = "next_billing_at") val nextBillingAt: String?,
-        @Json(name = "pending_transition_at") val pendingTransitionAt: String?,
-        @Json(name = "tariff_plan") val tariffPlan: TariffPlan?,
-        @Json(name = "pending_tariff_plan") val pendingTariffPlan: TariffPlan?,
+        @SerialName("status") val status: String?,
+        @SerialName("source") val source: String?,
+        @SerialName("next_billing_at") val nextBillingAt: String?,
+        @SerialName("pending_transition_at") val pendingTransitionAt: String?,
+        @SerialName("tariff_plan") val tariffPlan: TariffPlan?,
+        @SerialName("pending_tariff_plan") val pendingTariffPlan: TariffPlan?,
     )
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class TariffPlan(
-        @Json(name = "id") val id: String?,
-        @Json(name = "type") val type: String?,
-        @Json(name = "name") val name: String?,
-        @Json(name = "program_name") val programName: String?,
-        @Json(name = "description_items") val descriptionItems: List<DescriptionItem>?,
-        @Json(name = "images") val images: List<Image>? = null,
-        @Json(name = "fees") val fees: List<Fee>? = null,
+        @SerialName("id") val id: String?,
+        @SerialName("type") val type: String?,
+        @SerialName("name") val name: String?,
+        @SerialName("program_name") val programName: String?,
+        @SerialName("description_items") val descriptionItems: List<DescriptionItem>?,
+        @SerialName("images") val images: List<Image>? = null,
+        @SerialName("fees") val fees: List<Fee>? = null,
     )
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Fee(
-        @Json(name = "type") val type: String?,
-        @Json(name = "amount") val amount: BigDecimal?,
-        @Json(name = "currency") val currency: String?,
-        @Json(name = "description") val description: String?,
-        @Json(name = "period") val period: String?,
+        @SerialName("type") val type: String?,
+        @SerialName("amount") val amount: SerializedBigDecimal?,
+        @SerialName("currency") val currency: String?,
+        @SerialName("description") val description: String?,
+        @SerialName("period") val period: String?,
     )
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Image(
-        @Json(name = "type") val type: String?,
-        @Json(name = "url") val url: String?,
+        @SerialName("type") val type: String?,
+        @SerialName("url") val url: String?,
     )
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class DescriptionItem(
-        @Json(name = "type") val type: String?,
-        @Json(name = "order") val order: Int?,
-        @Json(name = "title") val title: String?,
-        @Json(name = "body") val body: String?,
+        @SerialName("type") val type: String?,
+        @SerialName("order") val order: Int?,
+        @SerialName("title") val title: String?,
+        @SerialName("body") val body: String?,
     )
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class ProductInstance(
-        @Json(name = "id") val id: String,
-        @Json(name = "cid") val cid: String?,
-        @Json(name = "card_id") val cardId: String?,
-        @Json(name = "card_wallet_address") val cardWalletAddress: String?,
-        @Json(name = "status") val status: Status,
-        @Json(name = "updated_at") val updatedAt: String,
-        @Json(name = "payment_account_id") val paymentAccountId: String,
-        @Json(name = "display_name") val displayName: String?,
-        @Json(name = "actual_card_limit") val actualCardLimit: CardLimit?,
-        @Json(name = "admin_card_limit") val adminCardLimit: CardLimit?,
-        @Json(name = "product_specification_data_type") val specificationDataType: SpecificationDataType,
+        @SerialName("id") val id: String,
+        @SerialName("cid") val cid: String?,
+        @SerialName("card_id") val cardId: String?,
+        @SerialName("card_wallet_address") val cardWalletAddress: String?,
+        /**
+         * A status this build does not know falls back to [Status.UNKNOWN] since app version 6.5. Older versions
+         * fail to parse the whole `customer/me` response on it.
+         */
+        @SerialName("status") val status: Status = Status.UNKNOWN,
+        @SerialName("updated_at") val updatedAt: String,
+        @SerialName("payment_account_id") val paymentAccountId: String,
+        @SerialName("display_name") val displayName: String?,
+        @SerialName("actual_card_limit") val actualCardLimit: CardLimit?,
+        @SerialName("admin_card_limit") val adminCardLimit: CardLimit?,
+        /**
+         * A type this build does not know falls back to [SpecificationDataType.UNKNOWN] since app version 6.5. Older
+         * versions fail to parse the whole `customer/me` response on it.
+         */
+        @SerialName("product_specification_data_type") val specificationDataType: SpecificationDataType =
+            SpecificationDataType.UNKNOWN,
     ) {
-        @JsonClass(generateAdapter = false)
+        @Serializable
         enum class SpecificationDataType {
-            @Json(name = "ACCOUNT")
+            @SerialName("ACCOUNT")
             ACCOUNT,
 
-            @Json(name = "CARD")
+            @SerialName("CARD")
             CARD,
+
+            UNKNOWN,
         }
 
-        @JsonClass(generateAdapter = false)
+        @Serializable
         enum class Status {
-            @Json(name = "NEW")
+            @SerialName("NEW")
             NEW,
 
-            @Json(name = "READY_FOR_MANUFACTURING")
+            @SerialName("READY_FOR_MANUFACTURING")
             READY_FOR_MANUFACTURING,
 
-            @Json(name = "MANUFACTURING")
+            @SerialName("MANUFACTURING")
             MANUFACTURING,
 
-            @Json(name = "SENT_TO_DELIVERY")
+            @SerialName("SENT_TO_DELIVERY")
             SENT_TO_DELIVERY,
 
-            @Json(name = "DELIVERED")
+            @SerialName("DELIVERED")
             DELIVERED,
 
-            @Json(name = "ACTIVATING")
+            @SerialName("ACTIVATING")
             ACTIVATING,
 
-            @Json(name = "ACTIVE")
+            @SerialName("ACTIVE")
             ACTIVE,
 
-            @Json(name = "BLOCKED")
+            @SerialName("BLOCKED")
             BLOCKED,
 
-            @Json(name = "DEACTIVATING")
+            @SerialName("DEACTIVATING")
             DEACTIVATING,
 
-            @Json(name = "DEACTIVATED")
+            @SerialName("DEACTIVATED")
             DEACTIVATED,
 
-            @Json(name = "CANCELED")
+            @SerialName("CANCELED")
             CANCELED,
 
-            @Json(name = "UNKNOWN")
+            @SerialName("UNKNOWN")
             UNKNOWN,
         }
     }
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class CardLimit(
-        @Json(name = "amount") val amount: BigDecimal,
-        @Json(name = "period_type") val periodType: String,
+        @SerialName("amount") val amount: SerializedBigDecimal,
+        @SerialName("period_type") val periodType: String,
     )
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class PaymentAccount(
-        @Json(name = "id") val id: String,
-        @Json(name = "address") val address: String?,
-        @Json(name = "customer_wallet_address") val customerWalletAddress: String,
+        @SerialName("id") val id: String,
+        @SerialName("address") val address: String?,
+        @SerialName("customer_wallet_address") val customerWalletAddress: String,
     )
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Kyc(
-        @Json(name = "id") val id: String,
-        @Json(name = "provider") val provider: String,
-        @Json(name = "status") val status: String,
-        @Json(name = "risk") val risk: String,
-        @Json(name = "review_answer") val reviewAnswer: String,
-        @Json(name = "created_at") val createdAt: String,
+        @SerialName("id") val id: String,
+        @SerialName("provider") val provider: String,
+        @SerialName("status") val status: String,
+        @SerialName("risk") val risk: String,
+        @SerialName("review_answer") val reviewAnswer: String,
+        @SerialName("created_at") val createdAt: String,
     )
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Card(
-        @Json(name = "id") val id: String?,
-        @Json(name = "token") val token: String,
-        @Json(name = "expiration_month") val expirationMonth: String,
-        @Json(name = "expiration_year") val expirationYear: String,
-        @Json(name = "emboss_name") val embossName: String?,
-        @Json(name = "card_type") val cardType: String,
-        @Json(name = "card_status") val cardStatus: String,
-        @Json(name = "card_number_end") val cardNumberEnd: String,
-        @Json(name = "is_pin_set") val isPinSet: Boolean?,
-        @Json(name = "images") val images: List<Image>?,
+        @SerialName("id") val id: String?,
+        @SerialName("token") val token: String,
+        @SerialName("expiration_month") val expirationMonth: String,
+        @SerialName("expiration_year") val expirationYear: String,
+        @SerialName("emboss_name") val embossName: String?,
+        @SerialName("card_type") val cardType: String,
+        @SerialName("card_status") val cardStatus: String,
+        @SerialName("card_number_end") val cardNumberEnd: String,
+        @SerialName("is_pin_set") val isPinSet: Boolean?,
+        @SerialName("images") val images: List<Image>?,
     )
 }

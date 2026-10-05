@@ -1,9 +1,9 @@
 package com.tangem.features.promobanners.impl.converters
 
+import com.google.common.truth.Truth.assertThat
 import com.tangem.datasource.api.tangemTech.models.promobanners.PromoBannerDisplayDTO
 import com.tangem.features.promobanners.impl.model.PromoBannerPriority
 import org.junit.jupiter.api.Test
-import com.google.common.truth.Truth.assertThat
 
 class PromoBannerDisplayDTOConverterTest {
 
@@ -22,6 +22,7 @@ class PromoBannerDisplayDTOConverterTest {
             buttonEnabled = true,
             buttonText = "Click me",
             dismissable = true,
+            campaignId = 42,
         )
 
         val result = converter.convert(dto)
@@ -36,6 +37,13 @@ class PromoBannerDisplayDTOConverterTest {
         assertThat(result.isButtonEnabled).isTrue()
         assertThat(result.buttonText).isEqualTo("Click me")
         assertThat(result.isDismissable).isTrue()
+        assertThat(result.campaignId).isEqualTo(42)
+    }
+
+    @Test
+    fun `GIVEN no campaign id WHEN convert THEN campaign id is null`() {
+        val result = converter.convert(createDTO(campaignId = null))
+        assertThat(result.campaignId).isNull()
     }
 
     @Test
@@ -62,6 +70,7 @@ class PromoBannerDisplayDTOConverterTest {
     private fun createDTO(
         placeholder: String = "MAIN",
         priority: String = "MEDIUM",
+        campaignId: Int? = null,
     ) = PromoBannerDisplayDTO(
         id = 1,
         placeholder = placeholder,
@@ -73,5 +82,6 @@ class PromoBannerDisplayDTOConverterTest {
         buttonEnabled = false,
         buttonText = null,
         dismissable = false,
+        campaignId = campaignId,
     )
 }
