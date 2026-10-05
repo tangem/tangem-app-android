@@ -2,6 +2,7 @@ package com.tangem.features.feed.components.v2.blocks.model
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.account.models.AccountList
@@ -18,12 +19,14 @@ import com.tangem.features.feed.components.v2.blocks.AddAccountBlockComponent.Bo
 import com.tangem.features.feed.components.v2.createTestingCoroutineDispatcherProvider
 import com.tangem.features.feed.components.v2.trackSlot
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
@@ -39,6 +42,7 @@ internal class AddAccountBlockModelTest {
     private val router: Router = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val jointAccountFeatureToggles: JointAccountFeatureToggles = mockk()
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val multiAccountListSupplier: MultiAccountListSupplier = mockk()
     private val portfolioSelectorController: PortfolioSelectorController = mockk(relaxed = true)
@@ -59,6 +63,7 @@ internal class AddAccountBlockModelTest {
             router,
             messageSender,
             jointAccountFeatureToggles,
+            analyticsEventHandler,
             userWalletsListRepository,
             multiAccountListSupplier,
             portfolioSelectorController,
@@ -267,6 +272,33 @@ internal class AddAccountBlockModelTest {
             // Assert
             verify(exactly = 1) { messageSender.send(message = any()) }
             verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
+            verify(exactly = 0) { analyticsEventHandler.send(event = any()) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN joint accounts are on AND the only wallet is at both caps WHEN tapped THEN joint limit is tracked`() =
+        runTest {
+            // Arrange
+            every { jointAccountFeatureToggles.isJointAccountEnabled } returns true
+            wallets.value = listOf(wallet(walletAId))
+            accountLists.value = listOf(accountList(walletAId, canAddCrypto = false, canAddJoint = false))
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.onClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { messageSender.send(message = any()) }
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    event = JointAccountAnalyticsEvent.NoticeAccountsLimitReached(
+                        source = JointAccountAnalyticsEvent.LimitSource.Create,
+                    ),
+                )
+            }
             model.onDestroy()
         }
 
@@ -375,8 +407,18 @@ internal class AddAccountBlockModelTest {
         model.onJointAccountClick(config)
 
         // Assert
+        val source = AppRoute.JointAccountCreation.Source.MainScreen
         verify(exactly = 1) {
-            router.push(route = AppRoute.JointAccountCreation(userWalletId = walletAId), onComplete = any())
+            router.push(
+                route = AppRoute.JointAccountCreation(userWalletId = walletAId, source = source),
+                onComplete = any(),
+            )
+        }
+        verify(exactly = 1) {
+            analyticsEventHandler.send(event = JointAccountAnalyticsEvent.ButtonCreateJointAccount(source = source))
+        }
+        verify(exactly = 0) {
+            analyticsEventHandler.send(event = ofType<JointAccountAnalyticsEvent.NoticeAccountsLimitReached>())
         }
         model.onDestroy()
     }
@@ -398,6 +440,18 @@ internal class AddAccountBlockModelTest {
         // Assert
         verify(exactly = 1) { messageSender.send(message = any()) }
         verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
+        verifyOrder {
+            analyticsEventHandler.send(
+                event = JointAccountAnalyticsEvent.ButtonCreateJointAccount(
+                    source = AppRoute.JointAccountCreation.Source.MainScreen,
+                ),
+            )
+            analyticsEventHandler.send(
+                event = JointAccountAnalyticsEvent.NoticeAccountsLimitReached(
+                    source = JointAccountAnalyticsEvent.LimitSource.Create,
+                ),
+            )
+        }
         model.onDestroy()
     }
 
@@ -406,6 +460,7 @@ internal class AddAccountBlockModelTest {
         router = router,
         messageSender = messageSender,
         jointAccountFeatureToggles = jointAccountFeatureToggles,
+        analyticsEventHandler = analyticsEventHandler,
         userWalletsListRepository = userWalletsListRepository,
         multiAccountListSupplier = multiAccountListSupplier,
         portfolioFetcherFactory = portfolioFetcherFactory,
