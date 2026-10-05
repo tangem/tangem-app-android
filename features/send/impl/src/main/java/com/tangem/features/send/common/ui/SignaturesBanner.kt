@@ -7,6 +7,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.common.ui.cosign.CosignRequestBanner
 import com.tangem.common.ui.cosign.CosignRequestBannerUM
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
@@ -21,9 +22,10 @@ internal fun SignaturesBanner(signaturesUM: SendSignaturesUM, modifier: Modifier
     CosignRequestBanner(
         modifier = modifier,
         state = CosignRequestBannerUM(
-            title = resourceReference(
-                id = R.string.joint_account_send_signatures_required,
-                formatArgs = wrappedList(signaturesUM.threshold.toString(), signaturesUM.membersCount.toString()),
+            title = pluralReference(
+                id = R.plurals.joint_account_send_signatures_required_banner,
+                count = signaturesUM.threshold,
+                formatArgs = wrappedList(signaturesUM.threshold),
             ),
             subtitle = resourceReference(
                 if (signaturesUM.isFirstOperation) {
