@@ -53,6 +53,7 @@ dependencies {
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.material3)
     implementation(deps.lifecycle.compose)
+    implementation(deps.compose.coil)
 
     /** Other */
     implementation(deps.androidx.appCompat)
@@ -74,5 +75,6 @@ dependencies {
     testImplementation(projects.test.core)
     testImplementation(projects.common.test)
     testImplementation(deps.arrow.core)
+    testImplementation(deps.kotlin.datetime)
     testImplementation(tangemDeps.blockchain)
 }
