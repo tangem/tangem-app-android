@@ -54,6 +54,8 @@ import com.tangem.feature.walletsettings.utils.AccountListSortingSaver
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
 import com.tangem.feature.walletsettings.utils.WalletCardItemDelegate
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.LimitSource
 import com.tangem.features.hotwallet.HardwareUpgradeLauncher
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
@@ -509,10 +511,13 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     fun onAddJointAccountClick(isEnabled: Boolean) {
+        val source = AppRoute.JointAccountCreation.Source.AddAccount
+        analyticsEventHandler.send(JointAccountAnalyticsEvent.ButtonCreateJointAccount(source = source))
         bottomSheetNavigation.dismiss()
         if (isEnabled) {
-            router.push(AppRoute.JointAccountCreation(params.userWalletId))
+            router.push(AppRoute.JointAccountCreation(userWalletId = params.userWalletId, source = source))
         } else {
+            analyticsEventHandler.send(JointAccountAnalyticsEvent.NoticeAccountsLimitReached(LimitSource.Create))
             accountItemsDelegate.canNotAddAccountDialog()
         }
     }
