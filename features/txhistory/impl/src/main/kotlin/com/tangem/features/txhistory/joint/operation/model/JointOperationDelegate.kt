@@ -135,7 +135,7 @@ internal class JointOperationDelegate @Inject constructor(
         state: JointOperationState,
         network: Network,
         operationId: String,
-    ): Either<JointOperationSignError, Unit> {
+    ): Either<JointOperationSignError, JointOperation?> {
         return signJointOperationUseCase(
             account = state.account,
             network = network,
