@@ -3,6 +3,7 @@ package com.tangem.features.txhistory.joint.operation.model
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -11,9 +12,11 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
 import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.model.JointOperationSignerState.Answer
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
 import com.tangem.features.txhistory.joint.operation.JointOperationComponent
 import com.tangem.features.txhistory.joint.operation.converter.JointOperationUMConverter
 import com.tangem.features.txhistory.joint.operation.route.JointOperationRoutes
@@ -38,6 +41,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.tangem.core.ui.R as CoreUiR
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class JointOperationModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -45,6 +49,7 @@ internal class JointOperationModel @Inject constructor(
     private val delegate: JointOperationDelegate,
     private val uiMessageSender: UiMessageSender,
     private val clipboardManager: ClipboardManager,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : Model() {
 
@@ -168,7 +173,10 @@ internal class JointOperationModel @Inject constructor(
                     network = params.currency.network,
                     operationId = params.operationId,
                 )
-                    .onRight { localAnswer.value = Answer.SIGNED }
+                    .onRight { signedOperation ->
+                        localAnswer.value = Answer.SIGNED
+                        signedOperation?.let { sendOperationSigned(state = operation, signedOperation = it) }
+                    }
                     .onLeft(::showSignError)
             } finally {
                 isSigning.value = false
@@ -236,6 +244,25 @@ internal class JointOperationModel @Inject constructor(
             Role.MEMBER -> localAnswer.value = Answer.DECLINED
             Role.UNKNOWN -> Unit
         }
+    }
+
+    private fun sendOperationSigned(state: JointOperationState, signedOperation: JointOperation) {
+        val signedBy = signedOperation.signatures
+            .filter { it.state == JointOperation.MemberSignature.State.SIGNED }
+            .map(JointOperation.MemberSignature::address)
+            .plus(listOfNotNull(signedOperation.initiator))
+            .distinct()
+
+        analyticsEventHandler.send(
+            JointAccountAnalyticsEvent.OperationSigned(
+                signaturesCollected = signedBy.size,
+                membersCount = state.membersCount,
+                threshold = state.threshold,
+                isThresholdReached = signedOperation.status == JointOperation.Status.PENDING,
+                blockchain = params.currency.network.name,
+                token = params.currency.symbol,
+            ),
+        )
     }
 
     private fun showDeleted() {
