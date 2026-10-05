@@ -14,6 +14,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic.ButtonSupport
+import com.tangem.core.analytics.models.event.JointAccountFakedoorAnalyticsEvent
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.analytics.models.event.OfframpAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
@@ -377,6 +378,17 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                 blockchain = cryptoCurrencyStatus.currency.network.name,
             ),
         )
+
+        if (unavailabilityReason == ScenarioUnavailabilityReason.JointAccount) {
+            analyticsEventHandler.send(
+                event = JointAccountFakedoorAnalyticsEvent(
+                    source = JointAccountFakedoorAnalyticsEvent.Source.MainScreenSwap,
+                    action = JointAccountFakedoorAnalyticsEvent.Action.Swap,
+                    blockchain = cryptoCurrencyStatus.currency.network.name,
+                    token = cryptoCurrencyStatus.currency.symbol,
+                ),
+            )
+        }
 
         if (handleUnavailabilityReason(unavailabilityReason)) return
 
