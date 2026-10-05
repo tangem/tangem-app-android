@@ -200,6 +200,23 @@ internal class DefaultSocialRecoveryClient(
         }
     }
 
+    override suspend fun registerWallet(walletId: String, signer: WalletSigner): Either<SocialRecoveryError, Unit> =
+        withContext(dispatchers.io) {
+            walletRegistrar.register(walletId = walletId, signer = signer).mapLeft { error ->
+                when (error) {
+                    WalletRegistrationError.Disabled,
+                    WalletRegistrationError.NoActiveSession,
+                    -> SocialRecoveryError.NoActiveSession
+                    is WalletRegistrationError.Api -> SocialRecoveryError.Api(error.cause)
+                    WalletRegistrationError.DeviceKeyUnavailable -> SocialRecoveryError.DeviceKeyUnavailable
+                    is WalletRegistrationError.SigningFailed -> SocialRecoveryError.SigningFailed(error.cause)
+                    is WalletRegistrationError.PersistenceFailed -> SocialRecoveryError.Unknown(error.cause)
+                    is WalletRegistrationError.NonceDecodingFailed -> SocialRecoveryError.Unknown(error.cause)
+                    is WalletRegistrationError.NonceDecryptionFailed -> SocialRecoveryError.Unknown(error.cause)
+                }
+            }
+        }
+
     /**
      * Delegated rather than calling the endpoint here: unregistering also clears the local
      * registered-wallet marker under the per-wallet lock, and a wallet the server has forgotten while

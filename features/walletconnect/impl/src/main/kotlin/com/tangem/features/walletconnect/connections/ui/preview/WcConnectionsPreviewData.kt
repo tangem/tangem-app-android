@@ -9,180 +9,94 @@ import com.tangem.features.walletconnect.connections.entity.*
 import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.ui.sign.accountPortfolioName
 import kotlinx.collections.immutable.persistentListOf
-import com.tangem.utils.logging.TangemLogger
-import java.util.UUID
 
 internal object WcConnectionsPreviewData {
+
     private const val BASE_URL = "https://raw.githubusercontent.com/TaranVH/LOGOS/refs/heads/master/Crypto"
-    private val connections = persistentListOf(
-        WcConnectionsUM(
-            userWalletId = "wallet_id_1",
-            walletName = "Wallet 2.0",
-            connectedApps = persistentListOf(
-                WcConnectedAppInfo(
-                    name = "Moralis",
-                    iconUrl = "$BASE_URL/satoshi.png",
-                    subtitle = "https://react-app.walletconnect.com/",
-                    verifiedState = VerifiedDAppState.Verified {},
-                    onClick = { TangemLogger.d("Moralis clicked") },
-                ),
-                WcConnectedAppInfo(
-                    name = "website.com",
-                    iconUrl = "$BASE_URL/doge_again_lol.jpg",
-                    subtitle = "https://react-app.walletconnect.com/",
-                    onClick = { TangemLogger.d("website.com clicked") },
-                    verifiedState = VerifiedDAppState.Unknown,
-                ),
-            ),
+
+    private val agents = persistentListOf(
+        McpAgentInfo(
+            id = "agent_1",
+            name = "Claude Agent",
+            subtitle = "mcp.claude.com",
+            iconUrl = null,
+            onClick = {},
         ),
-        WcConnectionsUM(
-            userWalletId = "wallet_id_2",
-            walletName = "Bitcoin",
-            connectedApps = persistentListOf(
-                WcConnectedAppInfo(
-                    name = "React app React app React app React app React app",
-                    iconUrl = "$BASE_URL/LiteCoin.png",
-                    subtitle = "https://react-app.walletconnect.com/",
-                    verifiedState = VerifiedDAppState.Verified {},
-                    onClick = { TangemLogger.d("React app clicked") },
-                ),
-            ),
+        McpAgentInfo(
+            id = "agent_2",
+            name = "Jira agent",
+            subtitle = "mcp.atlassian.com",
+            iconUrl = null,
+            onClick = {},
         ),
-        WcConnectionsUM(
-            userWalletId = "wallet_id_3",
-            walletName = "Wallet 2.0",
-            connectedApps = persistentListOf(
-                WcConnectedAppInfo(
-                    name = "Moralis",
-                    iconUrl = "$BASE_URL/satoshi.png",
-                    subtitle = "https://react-app.walletconnect.com/",
-                    verifiedState = VerifiedDAppState.Verified {},
-                    onClick = { TangemLogger.d("Moralis clicked") },
-                ),
-                WcConnectedAppInfo(
-                    name = "website.com",
-                    iconUrl = "$BASE_URL/doge_again_lol.jpg",
-                    subtitle = "https://react-app.walletconnect.com/",
-                    verifiedState = VerifiedDAppState.Unknown,
-                    onClick = { TangemLogger.d("website.com clicked") },
-                ),
-            ),
+    )
+
+    private val dApps = persistentListOf(
+        WcConnectedAppInfo(
+            name = "React App",
+            iconUrl = "$BASE_URL/satoshi.png",
+            subtitle = "react-app.walletconnect.com",
+            verifiedState = VerifiedDAppState.Verified {},
+            onClick = {},
         ),
-        WcConnectionsUM(
-            userWalletId = "wallet_id_4",
-            walletName = "Bitcoin",
-            connectedApps = persistentListOf(
-                WcConnectedAppInfo(
-                    name = "React app",
-                    iconUrl = "$BASE_URL/LiteCoin.png",
-                    subtitle = "https://react-app.walletconnect.com/",
-                    onClick = { TangemLogger.d("React app clicked") },
-                    verifiedState = VerifiedDAppState.Verified {},
-                ),
-            ),
+        WcConnectedAppInfo(
+            name = "website",
+            iconUrl = "$BASE_URL/doge_again_lol.jpg",
+            subtitle = "wc.website.com",
+            verifiedState = VerifiedDAppState.Unknown,
+            onClick = {},
         ),
-        WcConnectionsUM(
-            userWalletId = "wallet_id_5",
-            walletName = "Wallet 2.0",
-            connectedApps = persistentListOf(
-                WcConnectedAppInfo(
-                    name = "Moralis",
-                    iconUrl = "$BASE_URL/satoshi.png",
-                    subtitle = "https://react-app.walletconnect.com/",
-                    verifiedState = VerifiedDAppState.Verified {},
-                    onClick = { TangemLogger.d("Moralis clicked") },
-                ),
-                WcConnectedAppInfo(
-                    name = "website.com",
-                    iconUrl = "$BASE_URL/doge_again_lol.jpg",
-                    subtitle = "https://react-app.walletconnect.com/",
-                    onClick = { TangemLogger.d("website.com clicked") },
-                    verifiedState = VerifiedDAppState.Unknown,
-                ),
-            ),
-        ),
-        WcConnectionsUM(
-            userWalletId = "wallet_id_6",
-            walletName = "Bitcoin",
-            connectedApps = persistentListOf(
-                WcConnectedAppInfo(
-                    name = "React app",
-                    iconUrl = "$BASE_URL/LiteCoin.png",
-                    subtitle = "https://react-app.walletconnect.com/",
-                    verifiedState = VerifiedDAppState.Verified {},
-                    onClick = { TangemLogger.d("React app clicked") },
-                ),
+    )
+
+    private val mainWallet = WcWalletConnectionsUM(
+        userWalletId = "wallet_id_1",
+        walletName = "New Wallet",
+        agents = agents,
+        dAppGroups = persistentListOf(
+            WcDAppGroupUM(id = "group_1", title = accountPortfolioName, connectedApps = dApps),
+            WcDAppGroupUM(
+                id = "group_2",
+                title = accountPortfolioName,
+                connectedApps = persistentListOf(dApps.first()),
             ),
         ),
     )
-    val stateWithEmptyConnections = WcConnectionsState(
+
+    private val secondWallet = WcWalletConnectionsUM(
+        userWalletId = "wallet_id_2",
+        walletName = "My Wallet",
+        agents = persistentListOf(),
+        dAppGroups = persistentListOf(
+            WcDAppGroupUM(id = "group_3", title = null, connectedApps = persistentListOf(dApps.last())),
+        ),
+    )
+
+    val emptyState = WcConnectionsState(
         topAppBarConfig = WcConnectionsTopAppBarConfig(
-            startButtonUM = TopAppBarButtonUM.Back(
-                onBackClicked = {},
-                enabled = true,
-            ),
+            startButtonUM = TopAppBarButtonUM.Back(onBackClicked = {}),
             disconnectAllItem = TangemDropdownMenuItem(
                 title = resourceReference(R.string.wc_disconnect_all),
                 textColor = themedColor { TangemTheme.colors.text.warning },
-                onClick = { },
+                onClick = {},
             ),
         ),
-        connections = WcConnections.WalletMode(persistentListOf()),
+        connections = WcConnections.Empty,
         onNewConnectionClick = {},
     )
 
-    val connectedDapp
-        get() = WcConnectedAppInfo(
-            name = "React app",
-            iconUrl = "$BASE_URL/LiteCoin.png",
-            subtitle = "https://react-app.walletconnect.com/",
-            verifiedState = VerifiedDAppState.Verified {},
-            onClick = { TangemLogger.d("React app clicked") },
-        )
+    val singleWalletState = emptyState.copy(
+        connections = WcConnections.Content(
+            wallets = persistentListOf(mainWallet),
+            selectedWalletId = mainWallet.userWalletId,
+            onWalletSelect = {},
+        ),
+    )
 
-    val walletHeader
-        get() = WcConnectionsItem.WalletHeader(
-            id = UUID.randomUUID().toString(),
-            walletName = "User Wallet",
-            isLocked = false,
-        )
-
-    val lockedWallet
-        get() = WcConnectionsItem.WalletHeader(
-            id = UUID.randomUUID().toString(),
-            walletName = "Locked Wallet",
-            isLocked = true,
-        )
-
-    val accountStateItems
-        get() = persistentListOf(
-            walletHeader,
-            WcConnectionsItem.PortfolioConnections(
-                id = UUID.randomUUID().toString(),
-                portfolioTitle = accountPortfolioName,
-                connectedApps = persistentListOf(connectedDapp),
-            ),
-            walletHeader,
-            WcConnectionsItem.PortfolioConnections(
-                id = UUID.randomUUID().toString(),
-                portfolioTitle = accountPortfolioName,
-                connectedApps = persistentListOf(connectedDapp, connectedDapp),
-            ),
-            WcConnectionsItem.PortfolioConnections(
-                id = UUID.randomUUID().toString(),
-                portfolioTitle = accountPortfolioName,
-                connectedApps = persistentListOf(connectedDapp),
-            ),
-            WcConnectionsItem.PortfolioConnections(
-                id = UUID.randomUUID().toString(),
-                portfolioTitle = accountPortfolioName,
-                connectedApps = persistentListOf(connectedDapp),
-            ),
-            lockedWallet,
-            lockedWallet,
-        )
-
-    val fullState = stateWithEmptyConnections.copy(connections = WcConnections.WalletMode(connections))
-    val accountState = stateWithEmptyConnections.copy(connections = WcConnections.AccountMode(accountStateItems))
-    val loadingState = stateWithEmptyConnections.copy(connections = WcConnections.Loading)
+    val multiWalletState = emptyState.copy(
+        connections = WcConnections.Content(
+            wallets = persistentListOf(mainWallet, secondWallet),
+            selectedWalletId = mainWallet.userWalletId,
+            onWalletSelect = {},
+        ),
+    )
 }
