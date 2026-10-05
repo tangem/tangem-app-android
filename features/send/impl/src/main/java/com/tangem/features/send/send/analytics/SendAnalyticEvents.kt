@@ -33,6 +33,9 @@ internal sealed class SendAnalyticEvents(
         private val feeAssetType: AnalyticsParam.FeeAssetType,
         private val fromDerivationIndex: Int?,
         private val toDerivationIndex: Int?,
+        private val fromAccountType: AnalyticsParam.AccountType,
+        private val toAccountType: AnalyticsParam.AccountType?,
+        private val jointComposition: AnalyticsParam.JointComposition?,
     ) : SendAnalyticEvents(
         event = "Transaction Sent Screen Opened",
         params = buildMap {
@@ -49,6 +52,12 @@ internal sealed class SendAnalyticEvents(
             put(ENS_ADDRESS, ensAddress)
             put(FEE_TOKEN, feeToken)
             put(AnalyticsParam.FEE_ASSET_TYPE, feeAssetType.value)
+            put(AnalyticsParam.ACCOUNT_TYPE_FROM, fromAccountType.value)
+            toAccountType?.let { put(AnalyticsParam.ACCOUNT_TYPE_TO, it.value) }
+            jointComposition?.let { composition ->
+                put(AnalyticsParam.MEMBERS_COUNT, composition.membersCount.toString())
+                put(AnalyticsParam.THRESHOLD, composition.threshold.toString())
+            }
         },
     ), AppsFlyerIncludedEvent
 
