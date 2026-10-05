@@ -224,15 +224,14 @@ internal class DefaultJointAccountRepositoryTest {
     @Test
     fun `GIVEN conflict WHEN join THEN Conflict result`() = runTest {
         // Arrange — a spent invite and an already-registered address are the same 409; the domain resolves it
-        coEvery { jointAccountApi.joinJointAccount(any(), any()) } returns errorResponse(
-            code = ApiResponseError.HttpException.Code.CONFLICT,
-        )
+        val response = errorResponse<JointAccountDto>(code = ApiResponseError.HttpException.Code.CONFLICT)
+        coEvery { jointAccountApi.joinJointAccount(any(), any()) } returns response
 
         // Act
         val actual = repository.join(userWalletId = WALLET_ID, payload = joinPayload(), signature = SIGNATURE)
 
         // Assert
-        assertThat(actual).isEqualTo(JointAccountJoinResult.Conflict)
+        assertThat(actual).isEqualTo(JointAccountJoinResult.Conflict(cause = (response as ApiResponse.Error).cause))
     }
 
     @Test
