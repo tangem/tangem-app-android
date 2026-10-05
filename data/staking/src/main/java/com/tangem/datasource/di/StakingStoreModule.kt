@@ -17,6 +17,7 @@ import com.tangem.datasource.local.token.StakingActionsStore
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import com.tangem.datasource.utils.AppDataStoreFactory
+import com.tangem.datasource.utils.create
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.listTypes
 import com.tangem.datasource.utils.mapWithStringKeyTypes
@@ -82,39 +83,18 @@ internal object StakingStoreModule {
     @Provides
     @Singleton
     fun provideP2PEthPoolBalancesPersistenceStore(
-        @NetworkMoshi moshi: Moshi,
-        @ApplicationContext context: Context,
-        appScope: AppCoroutineScope,
         dataStoreFactory: AppDataStoreFactory,
     ): DataStore<Map<String, Set<P2PEthPoolAccountResponse>>> {
-        return dataStoreFactory.create(
-            serializer = MoshiDataStoreSerializer(
-                moshi = moshi,
-                types = mapWithStringKeyTypes(valueTypes = setTypes<P2PEthPoolAccountResponse>()),
-                defaultValue = emptyMap(),
-            ),
-            produceFile = { context.dataStoreFile(fileName = "p2p_eth_pool_balances") },
-            scope = appScope,
-        )
+        return dataStoreFactory.create(defaultValue = emptyMap(), fileName = "p2p_eth_pool_balances")
     }
 
     @Provides
     @Singleton
-    fun provideP2PEthPoolVaultsStore(
-        @NetworkMoshi moshi: Moshi,
-        @ApplicationContext context: Context,
-        appScope: AppCoroutineScope,
-        dataStoreFactory: AppDataStoreFactory,
-    ): P2PEthPoolVaultsStore {
+    fun provideP2PEthPoolVaultsStore(dataStoreFactory: AppDataStoreFactory): P2PEthPoolVaultsStore {
         return DefaultP2PEthPoolVaultsStore(
             dataStore = dataStoreFactory.create(
-                serializer = MoshiDataStoreSerializer(
-                    moshi = moshi,
-                    types = listTypes<P2PEthPoolVault>(),
-                    defaultValue = emptyList(),
-                ),
-                produceFile = { context.dataStoreFile(fileName = "p2p_eth_pool_vaults") },
-                scope = appScope,
+                defaultValue = emptyList<P2PEthPoolVault>(),
+                fileName = "p2p_eth_pool_vaults",
             ),
         )
     }
