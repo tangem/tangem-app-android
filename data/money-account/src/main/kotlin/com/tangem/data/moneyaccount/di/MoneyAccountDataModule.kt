@@ -2,19 +2,18 @@ package com.tangem.data.moneyaccount.di
 
 import android.content.Context
 import androidx.datastore.dataStoreFile
-import com.squareup.moshi.Moshi
+import com.tangem.core.local.datastore.DeleteObsoleteFileMigration
 import com.tangem.data.moneyaccount.converter.MoneyAccountStatusValueDMConverter
 import com.tangem.data.moneyaccount.flow.DefaultMoneyAccountStatusFetcher
 import com.tangem.data.moneyaccount.flow.DefaultMoneyAccountStatusProducer
 import com.tangem.data.moneyaccount.repository.DefaultMoneyAccountActivationRepository
 import com.tangem.data.moneyaccount.store.MoneyAccountStatusesStore
-import com.tangem.core.remote.moshi.NetworkMoshi
+import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.moneyaccount.repository.MoneyAccountOrderRepository
 import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM
 import com.tangem.datasource.utils.AppDataStoreFactory
-import com.tangem.datasource.utils.MoshiDataStoreSerializer
-import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusProducer
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
@@ -44,6 +43,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -70,7 +71,6 @@ internal interface MoneyAccountDataModule {
         @Provides
         @Singleton
         fun provideMoneyAccountStatusesStore(
-            @NetworkMoshi moshi: Moshi,
             @ApplicationContext context: Context,
             scope: AppCoroutineScope,
             converter: MoneyAccountStatusValueDMConverter,
@@ -79,12 +79,16 @@ internal interface MoneyAccountDataModule {
             return MoneyAccountStatusesStore(
                 runtimeStore = RuntimeSharedStore(),
                 persistenceDataStore = dataStoreFactory.create(
-                    serializer = MoshiDataStoreSerializer(
-                        moshi = moshi,
-                        types = mapWithStringKeyTypes<MoneyAccountStatusValueDM>(),
+                    serializer = KotlinxDataStoreSerializer(
                         defaultValue = emptyMap(),
+                        serializer = MapSerializer(String.serializer(), MoneyAccountStatusValueDM.serializer()),
+                        json = KotlinxDataStoreSerializer.jsonBuilder { classDiscriminator = "__type" },
                     ),
-                    produceFile = { context.dataStoreFile(fileName = "money_account_statuses") },
+                    produceFile = { context.dataStoreFile(fileName = "money_account_statuses_v2") },
+                    migrations = listOf(
+                        DeleteObsoleteFileMigration { context.dataStoreFile(fileName = "money_account_statuses") },
+                        DeleteObsoleteFileMigration { context.dataStoreFile(fileName = "virtual_account_statuses") },
+                    ),
                     scope = scope,
                 ),
                 converter = converter,
@@ -189,11 +193,15 @@ internal interface MoneyAccountDataModule {
             getMoneyAccountSuitableWalletsUseCase: GetMoneyAccountSuitableWalletsUseCase,
             getMoneyAccountStatusUseCase: GetMoneyAccountStatusUseCase,
             deviceSecurityInfoProvider: DeviceSecurityInfoProvider,
+            onboardingRepository: OnboardingRepository,
+            singleAccountListSupplier: SingleAccountListSupplier,
         ): GetMoneyAccountEligibilityUseCase {
             return GetMoneyAccountEligibilityUseCase(
                 getMoneyAccountSuitableWalletsUseCase = getMoneyAccountSuitableWalletsUseCase,
                 getMoneyAccountStatusUseCase = getMoneyAccountStatusUseCase,
                 deviceSecurityInfoProvider = deviceSecurityInfoProvider,
+                onboardingRepository = onboardingRepository,
+                singleAccountListSupplier = singleAccountListSupplier,
             )
         }
 

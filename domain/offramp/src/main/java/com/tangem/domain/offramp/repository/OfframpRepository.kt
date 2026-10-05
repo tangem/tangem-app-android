@@ -1,13 +1,31 @@
 package com.tangem.domain.offramp.repository
 
+import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.offramp.model.PendingOfframp
+import kotlinx.coroutines.flow.StateFlow
+
+typealias OfframpInitializationStatus = Lce<Throwable, Any>
 
 /**
- * Repository for offramp (sell crypto) operations
+ * Repository for offramp (sell crypto) operations.
+ *
+ * [availableForSell], and [getOfframpUrl] for a mainnet currency, rely on the sell listing fetched by [update] -
+ * until [update] has completed at least once, they return `false`/`null` rather than throwing or suspending. A
+ * testnet currency's [getOfframpUrl] does not need [update]: it returns a blockchain-specific testnet top-up URL
+ * without consulting the listing.
  */
 interface OfframpRepository {
+
+    val initializationStatus: StateFlow<OfframpInitializationStatus>
+
+    suspend fun update()
+
+    /**
+     * Whether [cryptoCurrency] can currently be sold through the offramp provider.
+     */
+    fun availableForSell(cryptoCurrency: CryptoCurrency): Boolean
 
     /**
      * Get offramp (sell) URL for the given cryptocurrency

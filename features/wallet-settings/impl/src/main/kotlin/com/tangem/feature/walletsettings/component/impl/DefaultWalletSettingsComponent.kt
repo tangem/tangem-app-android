@@ -75,7 +75,10 @@ internal class DefaultWalletSettingsComponent @AssistedInject constructor(
     init {
         lifecycle.subscribe(
             onResume = { showMigrationAlertIfNeeded() },
-            onPause = { accountMigrationJobHolder.cancel() },
+            onPause = {
+                accountMigrationJobHolder.cancel()
+                model.onPause()
+            },
         )
     }
 

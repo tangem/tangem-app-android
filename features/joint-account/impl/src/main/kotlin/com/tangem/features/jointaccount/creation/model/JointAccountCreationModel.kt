@@ -2,6 +2,7 @@ package com.tangem.features.jointaccount.creation.model
 
 import androidx.compose.runtime.Stable
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
@@ -14,6 +15,9 @@ import com.tangem.domain.jointaccount.model.JointAccountCreationError
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.usecase.CreateJointAccountUseCase
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
@@ -25,6 +29,7 @@ internal class JointAccountCreationModel @Inject constructor(
     private val createJointAccount: CreateJointAccountUseCase,
     private val router: Router,
     private val uiMessageSender: UiMessageSender,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val logger = TangemLogger.withTag(tag = "JointAccountCreation")
@@ -44,7 +49,7 @@ internal class JointAccountCreationModel @Inject constructor(
 
         if (config == null || composition == null) {
             logger.e(messageString = "Creation draft is incomplete: config or composition is missing")
-            showError()
+            showError(JointAccountError(source = ErrorSource.Create, errorMessage = "Incomplete draft"))
             return
         }
 
@@ -60,10 +65,15 @@ internal class JointAccountCreationModel @Inject constructor(
             creatorName = displayName,
         ).fold(
             ifLeft = ::onCreationError,
-            ifRight = { account -> openMembers(
-                userWalletId = config.walletId,
-                cryptoAccountId = account.cryptoAccountId,
-            ) },
+            ifRight = { account ->
+                analyticsEventHandler.send(
+                    JointAccountAnalyticsEvent.JointAccountCreated(
+                        membersCount = account.membersCount,
+                        threshold = account.threshold,
+                    ),
+                )
+                openMembers(userWalletId = config.walletId, cryptoAccountId = account.cryptoAccountId)
+            },
         )
     }
 
@@ -77,11 +87,11 @@ internal class JointAccountCreationModel @Inject constructor(
             is JointAccountFlowError.InvalidDerivationIndex,
             -> {
                 logger.e(messageString = "Joint account creation failed: $error")
-                showError()
+                showError(JointAccountError(source = ErrorSource.Create, errorMessage = error.toString()))
             }
             is JointAccountFlowError.Failed -> {
                 logger.e(messageString = "Joint account creation failed", throwable = error.cause)
-                showError()
+                showError(JointAccountError(source = ErrorSource.Create, cause = error.cause))
             }
         }
     }
@@ -94,7 +104,8 @@ internal class JointAccountCreationModel @Inject constructor(
         )
     }
 
-    private fun showError() {
+    private fun showError(analyticsEvent: JointAccountError) {
+        analyticsEventHandler.send(analyticsEvent)
         uiMessageSender.send(
             DialogMessage(
                 title = resourceReference(CoreUiR.string.common_something_went_wrong),

@@ -15,6 +15,7 @@ dependencies {
     api(projects.core.decompose)
     api(projects.core.utils)
     implementation(projects.core.error)
+    implementation(projects.core.navigation)
     implementation(projects.core.ui)
 
     /** Common */

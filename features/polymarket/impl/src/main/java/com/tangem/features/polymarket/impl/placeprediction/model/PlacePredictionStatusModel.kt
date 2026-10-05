@@ -13,7 +13,6 @@ import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.ViewPositionUM
-import com.tangem.features.polymarket.impl.positiondetails.model.canOpenPositionDetails
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.delay
@@ -56,7 +55,7 @@ internal class PlacePredictionStatusModel @Inject constructor(
         )
     }
 
-    /** The exchange may take up to 30 seconds to index a fill; unavailable positions must not open details. */
+    /** The exchange may take up to 30 seconds to index a fill. */
     private fun awaitCreatedPosition() {
         if (params.side != PredictionOrderSide.BUY) return
         val result = params.result
@@ -81,9 +80,8 @@ internal class PlacePredictionStatusModel @Inject constructor(
                 }.getOrNull()
 
                 if (position != null) {
-                    val canOpen = position.canOpenPositionDetails
-                    if (canOpen) indexedPositionId = positionId
-                    viewPosition.value = if (canOpen) ViewPositionUM.Available else ViewPositionUM.Hidden
+                    indexedPositionId = positionId
+                    viewPosition.value = ViewPositionUM.Available
                     return@launch
                 }
                 if (read < PolymarketConst.CREATED_POSITION_READS - 1) {

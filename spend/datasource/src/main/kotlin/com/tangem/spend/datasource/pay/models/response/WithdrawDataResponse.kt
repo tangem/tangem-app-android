@@ -1,16 +1,16 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class WithdrawDataResponse(
-    @Json(name = "result") val result: Result?,
+    @SerialName("result") val result: Result?,
 ) {
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Result(
-        @Json(name = "hash") val hash: String,
-        @Json(name = "salt") val salt: String,
-        @Json(name = "sender_address") val senderAddress: String,
+        @SerialName("hash") val hash: String,
+        @SerialName("salt") val salt: String,
+        @SerialName("sender_address") val senderAddress: String,
     )
 }
