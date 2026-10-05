@@ -76,6 +76,7 @@ import com.tangem.features.send.send.confirm.SendConfirmComponent
 import com.tangem.features.send.send.confirm.model.transformers.*
 import com.tangem.features.send.send.joint.JointSendDelegate
 import com.tangem.features.send.send.ui.state.SendUM
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.extensions.stripZeroPlainString
@@ -125,6 +126,7 @@ internal class SendConfirmModel @Inject constructor(
     private val jointSendDelegate: JointSendDelegate,
     private val recordTokenTransferFromSendUseCase: RecordTokenTransferFromSendUseCase,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
+    private val appScope: AppCoroutineScope,
 ) : Model(), SendConfirmClickIntents, FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
 
     private val params: SendConfirmComponent.Params = paramsContainer.require()
@@ -299,7 +301,8 @@ internal class SendConfirmModel @Inject constructor(
     private fun sendJointOperationCreatedAnalytics(account: Account.Joint) {
         val sendUM = uiState.value
         val feeToken = getCurrencyStatusForFeePayment().currency
-        modelScope.launch(dispatchers.default) {
+        // The success screen replaces this step right away and cancels modelScope
+        appScope.launch(dispatchers.default) {
             val storedAccount = jointSendDelegate.findJointAccount(
                 userWalletId = userWallet.walletId,
                 account = account,

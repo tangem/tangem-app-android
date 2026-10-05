@@ -260,7 +260,8 @@ internal class JointOperationModel @Inject constructor(
                 signaturesCollected = signedBy.size,
                 membersCount = state.membersCount,
                 threshold = state.threshold,
-                isThresholdReached = signedOperation.status == JointOperation.Status.PENDING,
+                // An operation executed or failed right after this signature comes back with an unknown status
+                isThresholdReached = signedBy.size >= state.threshold,
                 blockchain = params.currency.network.name,
                 token = params.currency.symbol,
             ),
