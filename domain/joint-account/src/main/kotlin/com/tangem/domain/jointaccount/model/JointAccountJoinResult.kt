@@ -11,5 +11,5 @@ sealed interface JointAccountJoinResult {
      * apart, so the caller resolves it by re-reading the list: finding itself among the members means the join
      * had already happened, anything else means the invite is dead.
      */
-    data object Conflict : JointAccountJoinResult
+    data class Conflict(val cause: Throwable) : JointAccountJoinResult
 }
