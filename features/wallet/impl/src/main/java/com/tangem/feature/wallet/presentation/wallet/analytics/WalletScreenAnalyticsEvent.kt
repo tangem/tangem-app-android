@@ -12,13 +12,13 @@ sealed class WalletScreenAnalyticsEvent {
         data class ScreenOpened(
             private val hasMobileWallet: Boolean,
             private val accountsCount: Int?,
-            private val jointAccountsCounts: JointAccountsCounts?,
             private val isBackedUp: Boolean,
             private val completedBackups: Set<AnalyticsParam.BackupType>,
             val theme: String,
             val isImported: Boolean,
             val referralId: String?,
             val appCurrency: String,
+            private val jointAccountsCounts: JointAccountsCounts? = null,
         ) : MainScreen(
             event = "Screen opened",
             params = buildMap {
