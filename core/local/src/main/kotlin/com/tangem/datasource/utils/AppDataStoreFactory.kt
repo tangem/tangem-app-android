@@ -35,7 +35,8 @@ interface AppDataStoreFactory {
 
     /**
      * Persists [T] with kotlinx-serialization in the DataStore file named [fileName]. Runs on the application scope,
-     * so callers pass neither a scope nor a file.
+     * so callers pass neither a scope nor a file. Uses the network JSON config: `null` fields are not written and a
+     * missing nullable field reads as `null`, matching files written by the Moshi DataStore serializer.
      *
      * Prefer the reified [create] extension, which derives the [serializer] for `@Serializable` types.
      *
