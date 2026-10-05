@@ -14,6 +14,7 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
@@ -680,6 +681,30 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             // Assert
             verify(exactly = 1) { sendConfirmAlertFactory.getJointSendBlockedState(onSupportClick = any()) }
         }
+
+        @Test
+        fun `GIVEN the operation is created WHEN onSendClick THEN send success analytics carry the composition`() =
+            runTest {
+                // Arrange
+                stubCreateOperation(result = Unit.right())
+                val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+                advanceUntilIdle()
+
+                // Act
+                sut.onSendClick()
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 1) {
+                    sendAnalyticHelper.sendSuccessAnalytics(
+                        cryptoCurrency = any(),
+                        sendUM = any(),
+                        feeToken = any(),
+                        account = jointAccount,
+                        jointComposition = AnalyticsParam.JointComposition(membersCount = 3, threshold = 2),
+                    )
+                }
+            }
 
         @Test
         fun `GIVEN the request fails WHEN onSendClick THEN Joint Account Error carries the cause`() = runTest {
