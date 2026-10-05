@@ -28,7 +28,9 @@ import com.tangem.domain.jointaccount.usecase.GetJointAccountSupportedNetworksUs
 import com.tangem.domain.jointaccount.usecase.GetJointOperationSlotUseCase
 import com.tangem.domain.jointaccount.usecase.GetMissingJointOwnerKeysCountUseCase
 import com.tangem.domain.jointaccount.usecase.GetPendingJointOperationsUseCase
+import com.tangem.domain.jointaccount.usecase.GetSharedJointAccountInvitesUseCase
 import com.tangem.domain.jointaccount.usecase.JoinJointAccountUseCase
+import com.tangem.domain.jointaccount.usecase.MarkJointAccountInviteSharedUseCase
 import com.tangem.domain.jointaccount.usecase.RejectJointOperationUseCase
 import com.tangem.domain.jointaccount.usecase.SignJointOperationUseCase
 import com.tangem.domain.jointaccount.verifier.JointOperationVerifier
@@ -39,6 +41,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+@Suppress("TooManyFunctions")
 @Module
 @InstallIn(SingletonComponent::class)
 internal object JointAccountDomainModule {
@@ -55,6 +58,22 @@ internal object JointAccountDomainModule {
     @Singleton
     fun provideGetJointAccountInvitesUseCase(repository: JointAccountRepository): GetJointAccountInvitesUseCase {
         return GetJointAccountInvitesUseCase(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetSharedJointAccountInvitesUseCase(
+        repository: JointAccountRepository,
+    ): GetSharedJointAccountInvitesUseCase {
+        return GetSharedJointAccountInvitesUseCase(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideMarkJointAccountInviteSharedUseCase(
+        repository: JointAccountRepository,
+    ): MarkJointAccountInviteSharedUseCase {
+        return MarkJointAccountInviteSharedUseCase(repository)
     }
 
     @Provides
