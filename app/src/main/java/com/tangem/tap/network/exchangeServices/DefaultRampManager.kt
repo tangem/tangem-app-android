@@ -14,6 +14,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.offramp.repository.OfframpRepository
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
@@ -25,7 +26,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 
 internal class DefaultRampManager(
-    private val sellService: SellService,
+    private val offrampRepository: OfframpRepository,
     private val expressServiceFetcher: ExpressServiceFetcher,
     private val currenciesRepository: CurrenciesRepository,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -49,11 +50,7 @@ internal class DefaultRampManager(
     ): Either<ScenarioUnavailabilityReason, Unit> {
         return either {
             val isSellSupportedByService = catch(
-                block = {
-                    val serviceCurrency = CryptoCurrencyConverter.convert(status.currency)
-
-                    sellService.availableForSell(currency = serviceCurrency)
-                },
+                block = { offrampRepository.availableForSell(cryptoCurrency = status.currency) },
                 catch = { raise(ScenarioUnavailabilityReason.NotSupportedBySellService(status.currency.name)) },
             )
 
@@ -108,17 +105,17 @@ internal class DefaultRampManager(
         }
     }
 
-    override fun getSellInitializationStatus(): Flow<SellServiceInitializationStatus> {
-        return sellService.initializationStatus
+    override fun getSellInitializationStatus(): Flow<Lce<Throwable, Any>> {
+        return offrampRepository.initializationStatus
     }
 
     override suspend fun fetchSellServiceData() {
         runCatching(dispatchers.io) {
-            sellService.update()
+            offrampRepository.update()
         }
     }
 
-    override fun getExpressInitializationStatus(userWalletId: UserWalletId): Flow<SellServiceInitializationStatus> {
+    override fun getExpressInitializationStatus(userWalletId: UserWalletId): Flow<Lce<Throwable, Any>> {
         return expressServiceFetcher.getInitializationStatus(userWalletId)
     }
 
