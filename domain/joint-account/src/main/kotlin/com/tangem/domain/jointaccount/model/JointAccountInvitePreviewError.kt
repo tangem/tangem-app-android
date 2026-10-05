@@ -9,7 +9,7 @@ sealed interface JointAccountInvitePreviewError {
      * The invite cannot be joined: it does not exist, is already redeemed, or this wallet already holds a slot.
      * The invitee is asked to check the link or request a new one — there is nothing to retry.
      */
-    data object InvalidLink : JointAccountInvitePreviewError
+    data class InvalidLink(val cause: Throwable) : JointAccountInvitePreviewError
 
     /**
      * The request never reached the backend: no connection, or no answer in time. A link received over Quick Share
