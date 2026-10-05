@@ -1,7 +1,6 @@
 package com.tangem.domain.polymarket.support
 
 import com.tangem.domain.feedback.models.SupportChatInfoProvider
-import com.tangem.domain.feedback.models.SupportChatTopic
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
@@ -17,8 +16,6 @@ class PredictionSupportChatInfoProvider(
     private val predictionPositionsValueSupplier: PredictionPositionsValueSupplier,
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
 ) : SupportChatInfoProvider {
-
-    override val topic: SupportChatTopic = SupportChatTopic.PREDICTIONS
 
     override suspend fun getInfo(userWalletId: UserWalletId): String {
         val status = withTimeoutOrNull(READ_TIMEOUT_MILLIS) {
