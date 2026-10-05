@@ -285,6 +285,7 @@ internal class SendConfirmModel @Inject constructor(
                 .fold(
                     ifLeft = ::showJointOperationError,
                     ifRight = {
+                        sendJointOperationCreatedAnalytics(account)
                         _uiState.update(
                             SendConfirmJointOperationCreatedTransformer(createdAt = System.currentTimeMillis()),
                         )
@@ -292,6 +293,31 @@ internal class SendConfirmModel @Inject constructor(
                         params.onSendTransaction()
                     },
                 )
+        }
+    }
+
+    private fun sendJointOperationCreatedAnalytics(account: Account.Joint) {
+        val sendUM = uiState.value
+        val feeToken = getCurrencyStatusForFeePayment().currency
+        modelScope.launch(dispatchers.default) {
+            val storedAccount = jointSendDelegate.findJointAccount(
+                userWalletId = userWallet.walletId,
+                account = account,
+            )
+            if (storedAccount == null) {
+                TangemLogger.e("Joint account is gone, the send success events are not sent")
+                return@launch
+            }
+            sendAnalyticHelper.sendSuccessAnalytics(
+                cryptoCurrency = cryptoCurrency,
+                sendUM = sendUM,
+                feeToken = feeToken,
+                account = account,
+                jointComposition = AnalyticsParam.JointComposition(
+                    membersCount = storedAccount.membersCount,
+                    threshold = storedAccount.threshold,
+                ),
+            )
         }
     }
 
