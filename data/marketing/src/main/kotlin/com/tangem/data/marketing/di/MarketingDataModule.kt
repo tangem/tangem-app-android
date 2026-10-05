@@ -14,8 +14,8 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
+import com.tangem.datasource.utils.create
 import com.tangem.datasource.utils.mapWithStringKeyTypes
-import com.tangem.datasource.utils.setTypes
 import com.tangem.domain.marketing.MarketingRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -51,22 +51,14 @@ internal object MarketingDataModule {
 
     @Provides
     @Singleton
-    fun provideMarketingDismissStore(
-        @NetworkMoshi moshi: Moshi,
-        @ApplicationContext context: Context,
-        appScope: AppCoroutineScope,
-        dataStoreFactory: AppDataStoreFactory,
-    ): MarketingDismissStore = DefaultMarketingDismissStore(
-        dataStore = dataStoreFactory.create(
-            serializer = MoshiDataStoreSerializer(
-                moshi = moshi,
-                types = setTypes<Int>(),
-                defaultValue = emptySet(),
+    fun provideMarketingDismissStore(dataStoreFactory: AppDataStoreFactory): MarketingDismissStore {
+        return DefaultMarketingDismissStore(
+            dataStore = dataStoreFactory.create(
+                defaultValue = emptySet<Int>(),
+                fileName = "marketing_dismissed_banner_ids",
             ),
-            produceFile = { context.dataStoreFile(fileName = "marketing_dismissed_banner_ids") },
-            scope = appScope,
-        ),
-    )
+        )
+    }
 
     @Provides
     @Singleton
