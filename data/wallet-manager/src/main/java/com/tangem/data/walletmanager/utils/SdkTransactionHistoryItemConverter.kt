@@ -4,8 +4,6 @@ import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.network.SdkAmount
-import com.tangem.domain.models.network.SdkAmountType
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.domain.txhistory.TxHistoryFeatureToggles
@@ -22,6 +20,7 @@ internal class SdkTransactionHistoryItemConverter(
     smartContractMethods: Map<String, SmartContractMethod>,
     yieldSupplyAddresses: Set<String>,
     gaslessFeeAddresses: Set<String>,
+    jointRefundReceiver: String?,
     currency: CryptoCurrency,
     networkTokens: Set<CryptoCurrency.Token>,
     getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
@@ -36,6 +35,7 @@ internal class SdkTransactionHistoryItemConverter(
             smartContractMethods = smartContractMethods,
             yieldSupplyAddresses = yieldSupplyAddresses,
             gaslessFeeAddresses = gaslessFeeAddresses,
+            jointRefundReceiver = jointRefundReceiver,
             currency = currency,
             networkTokens = networkTokens,
             getCachedTokenInfoUseCase = getCachedTokenInfoUseCase,
@@ -47,11 +47,15 @@ internal class SdkTransactionHistoryItemConverter(
         .mapTo(mutableSetOf()) { it.value.lowercase() }
 
     override fun convertList(input: Collection<SdkTransactionHistoryItem>): List<TxInfo> {
-        if (!txHistoryFeatureToggles.isNewTxHistoryEnabled) return input.map(::convert)
+        val items = input
+            .filterNot(typeConverter::isOwnSafeZeroCall)
+            .map(typeConverter::withRefundStatus)
+        if (!txHistoryFeatureToggles.isNewTxHistoryEnabled) return items.map(::convert)
 
-        return input.groupBy(SdkTransactionHistoryItem::txHash)
+        return items.groupBy(SdkTransactionHistoryItem::txHash)
             .flatMap { (_, items) ->
-                val transfers = items.map(::convert)
+                // A MultiTransfer takes its status from its first leg, and the fee leg must not speak for the payload
+                val transfers = items.map(::convert).sortedBy { it.type is TransactionType.GaslessFee }
 
                 transfers.singleOrNull()?.let { listOf(it) } ?: transfers.toMultiTransfer()
             }
@@ -169,47 +173,26 @@ internal class SdkTransactionHistoryItemConverter(
         fee = value.fee.toDomain(),
     )
 
-    /** The record is the relayer's zero-value call to the Safe; the row is what the Safe did, and the type knows it */
+    /** The record is the token transfer of the Safe's execution; the type carries the fee it was signed with */
     private fun jointRow(
         value: SdkTransactionHistoryItem,
         type: TransactionType.Joint,
         safeAddress: String,
     ): TxInfo.Single {
-        val (counterparty, interaction, amount) = when (type) {
-            is TransactionType.Joint.Transfer -> Triple(
-                TxInfo.AddressType.User(type.recipient),
-                TxInfo.InteractionAddressType.User(type.recipient),
-                type.amount,
-            )
-            is TransactionType.Joint.TokenFee -> Triple(
-                TxInfo.AddressType.Contract(type.tokenContract),
-                TxInfo.InteractionAddressType.Contract(type.tokenContract),
-                BigDecimal.ZERO,
-            )
-            is TransactionType.Joint.Call -> Triple(
-                TxInfo.AddressType.Contract(type.contract),
-                TxInfo.InteractionAddressType.Contract(type.contract),
-                type.value,
-            )
+        val transfer = when (type) {
+            is TransactionType.Joint.Transfer -> type
         }
-        val feeCoin = value.fee
-
         return TxInfo.Single(
             txHash = value.txHash,
             timestampInMillis = value.timestamp,
             isOutgoing = true,
-            destinationType = TxInfo.DestinationType.Single(counterparty),
+            destinationType = TxInfo.DestinationType.Single(TxInfo.AddressType.User(transfer.recipient)),
             sourceType = TxInfo.SourceType.Single(safeAddress),
-            interactionAddressType = interaction,
+            interactionAddressType = TxInfo.InteractionAddressType.User(transfer.recipient),
             status = value.status.toDomain(),
             type = type,
-            amount = amount,
-            fee = SdkAmount(
-                currencySymbol = feeCoin.currencySymbol,
-                value = type.refundCapWei.movePointLeft(feeCoin.decimals),
-                decimals = feeCoin.decimals,
-                type = SdkAmountType.Coin,
-            ),
+            amount = transfer.amount,
+            fee = type.refundCap,
         )
     }
 
