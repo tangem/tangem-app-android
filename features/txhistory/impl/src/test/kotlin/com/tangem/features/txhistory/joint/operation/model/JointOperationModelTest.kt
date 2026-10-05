@@ -140,6 +140,35 @@ internal class JointOperationModelTest {
         }
 
     @Test
+    fun `GIVEN the sign response has no initiator WHEN sign THEN the initiator of the sheet is counted`() = runTest {
+        // Arrange
+        val signedOperation = createOperation(
+            status = JointOperation.Status.PENDING,
+            signatures = listOf(signature(address = OWN)),
+        ).copy(initiator = null)
+        coEvery { delegate.sign(state = any(), network = any(), operationId = any()) } returns signedOperation.right()
+        val model = createModel()
+
+        // Act
+        model.onSignClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(
+                event = JointAccountAnalyticsEvent.OperationSigned(
+                    signaturesCollected = 2,
+                    membersCount = 3,
+                    threshold = 2,
+                    isThresholdReached = true,
+                    blockchain = currency.network.name,
+                    token = currency.symbol,
+                ),
+            )
+        }
+    }
+
+    @Test
     fun `GIVEN signatures still below the threshold WHEN sign THEN threshold not reached`() = runTest {
         // Arrange
         every { delegate.observe(userWalletId = any(), currency = any(), operationId = any()) } returns
