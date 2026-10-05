@@ -18,11 +18,13 @@ import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.mcp.models.McpRequest
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
+import com.tangem.features.mcp.impl.R
 import com.tangem.features.mcp.impl.pair.model.McpPairModel
 import com.tangem.features.mcp.impl.pair.model.McpPairRoutes
-import com.tangem.features.mcp.impl.pair.model.McpPairTexts
 import com.tangem.features.mcp.impl.pair.ui.McpPairBottomSheet
 import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
 import dagger.assisted.Assisted
@@ -48,6 +50,11 @@ internal class McpPairComponent @AssistedInject constructor(
 
     private val agentInfoComponent = McpAgentInfoComponent(
         appComponentContext = child(key = "mcpAgentInfo", router = innerRouter),
+        model = model,
+    )
+
+    private val successComponent = McpSuccessComponent(
+        appComponentContext = child(key = "mcpSuccess", router = innerRouter),
         model = model,
     )
 
@@ -87,11 +94,12 @@ internal class McpPairComponent @AssistedInject constructor(
             stack = stack,
             state = state,
             title = when (stack.active.configuration) {
-                McpPairRoutes.AgentInfo -> McpPairTexts.connectionTitle
+                McpPairRoutes.AgentInfo -> resourceReference(R.string.wc_new_connection)
                 McpPairRoutes.PortfolioSelector -> selectorTitle
+                McpPairRoutes.Success -> TextReference.EMPTY
             },
             onBack = ::onBack,
-            onDismiss = model::onDecline,
+            onDismiss = model::onClose,
         )
     }
 
@@ -112,12 +120,13 @@ internal class McpPairComponent @AssistedInject constructor(
     }
 
     private fun onBack() {
-        if (contentStack.backStack.isEmpty()) model.onDecline() else model.stackNavigation.pop()
+        if (contentStack.backStack.isEmpty()) model.onClose() else model.stackNavigation.pop()
     }
 
     private fun contentChild(config: McpPairRoutes): ComposableContentComponent = when (config) {
         McpPairRoutes.AgentInfo -> agentInfoComponent
         McpPairRoutes.PortfolioSelector -> portfolioSelectorComponent
+        McpPairRoutes.Success -> successComponent
     }
 
     internal data class Params(val request: McpRequest.Pair)

@@ -4,13 +4,11 @@ import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 
 internal data class WcConnectionsState(
     val topAppBarConfig: WcConnectionsTopAppBarConfig,
     val connections: WcConnections,
     val onNewConnectionClick: () -> Unit,
-    val connectedAgents: ImmutableList<McpAgentInfo> = persistentListOf(),
 )
 
 internal data class WcConnectionsTopAppBarConfig(
@@ -19,41 +17,39 @@ internal data class WcConnectionsTopAppBarConfig(
 )
 
 internal sealed interface WcConnections {
+
     data object Loading : WcConnections
-    data class WalletMode(
-        val connections: ImmutableList<WcConnectionsUM>,
-    ) : WcConnections
 
-    data class AccountMode(
-        val items: ImmutableList<WcConnectionsItem>,
-    ) : WcConnections
+    data object Empty : WcConnections
 
-    fun isNotEmpty(): Boolean = when (this) {
-        is AccountMode -> items.isNotEmpty()
-        is WalletMode -> connections.isNotEmpty()
-        Loading -> false
+    /**
+     * Wallets the screen can show, and the one it is on.
+     *
+     * A wallet is listed only when it has agents or dApps of its own, so [wallets] doubles as the tab
+     * row: one entry means there is nothing to switch between.
+     */
+    data class Content(
+        val wallets: ImmutableList<WcWalletConnectionsUM>,
+        val selectedWalletId: String,
+        val onWalletSelect: (String) -> Unit,
+    ) : WcConnections {
+
+        val selectedWallet: WcWalletConnectionsUM
+            get() = wallets.first { it.userWalletId == selectedWalletId }
     }
 }
 
-internal sealed interface WcConnectionsItem {
-    val id: String
-
-    data class WalletHeader(
-        override val id: String,
-        val walletName: String,
-        val isLocked: Boolean,
-    ) : WcConnectionsItem
-
-    data class PortfolioConnections(
-        override val id: String,
-        val portfolioTitle: AccountTitleUM,
-        val connectedApps: ImmutableList<WcConnectedAppInfo>,
-    ) : WcConnectionsItem
-}
-
-internal data class WcConnectionsUM(
+internal data class WcWalletConnectionsUM(
     val userWalletId: String,
     val walletName: String,
+    val agents: ImmutableList<McpAgentInfo>,
+    val dAppGroups: ImmutableList<WcDAppGroupUM>,
+)
+
+/** dApps of one account — or of the whole wallet when accounts are off, and then [title] is null. */
+internal data class WcDAppGroupUM(
+    val id: String,
+    val title: AccountTitleUM?,
     val connectedApps: ImmutableList<WcConnectedAppInfo>,
 )
 
@@ -69,5 +65,6 @@ internal data class McpAgentInfo(
     val id: String,
     val name: String,
     val subtitle: String,
+    val iconUrl: String?,
     val onClick: () -> Unit,
 )
