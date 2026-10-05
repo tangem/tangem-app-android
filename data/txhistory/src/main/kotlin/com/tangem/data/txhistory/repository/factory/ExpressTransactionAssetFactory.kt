@@ -30,9 +30,14 @@ internal class ExpressTransactionAssetFactory @Inject constructor(
     /**
      * Builds a `assetId -> resolved currency` map covering both legs of every swap and the to-leg of every onramp.
      * Entries whose currency could not be resolved at all are omitted.
+     *
+     * [historyCurrency] is the currency whose history the records belong to and resolves its own asset first: a
+     * joint account currency shares the network and contract with the personal one yet is not among the portfolio
+     * candidates.
      */
     suspend fun create(
         userWalletId: UserWalletId,
+        historyCurrency: CryptoCurrency,
         outgoingSwaps: List<ExpressExchangeEntity>,
         incomingSwaps: List<ExpressExchangeEntity>,
         onramps: List<ExpressOnrampEntity>,
@@ -47,7 +52,7 @@ internal class ExpressTransactionAssetFactory @Inject constructor(
         }
         if (assetIds.isEmpty()) return emptyMap()
 
-        val portfolioCurrencies = multiAccountListSupplier.invoke()
+        val candidates = listOf(historyCurrency) + multiAccountListSupplier.invoke()
             .first()
             .flatMap { accountList -> accountList.flattenCurrencies() }
 
@@ -58,7 +63,7 @@ internal class ExpressTransactionAssetFactory @Inject constructor(
 
         return buildMap {
             assetIds.forEach { id ->
-                val currency = portfolioCurrencies.findMatching(id) ?: resolveUnmatched(id, cachedTokens, userWallet)
+                val currency = candidates.findMatching(id) ?: resolveUnmatched(id, cachedTokens, userWallet)
                 if (currency != null) put(id, currency)
             }
         }

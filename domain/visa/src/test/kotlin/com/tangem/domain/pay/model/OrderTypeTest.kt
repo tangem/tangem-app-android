@@ -23,6 +23,8 @@ internal class OrderTypeTest {
         FromStringModel(value = "WITHDRAW", expected = OrderType.WITHDRAW),
         FromStringModel(value = "ACCOUNT_ISSUE_VIRTUAL_RAIN", expected = OrderType.ACCOUNT_ISSUE_VIRTUAL_RAIN),
         FromStringModel(value = "ACCOUNT_ISSUE_BANKING_RAIN", expected = OrderType.ACCOUNT_ISSUE_BANKING_RAIN),
+        FromStringModel(value = "card_reissue", expected = OrderType.CARD_REISSUE),
+        FromStringModel(value = "Bank_Offramp_Rain", expected = OrderType.BANK_OFFRAMP_RAIN),
         FromStringModel(value = "SOMETHING_NEW", expected = OrderType.UNKNOWN),
         FromStringModel(value = "", expected = OrderType.UNKNOWN),
         FromStringModel(value = null, expected = OrderType.UNKNOWN),

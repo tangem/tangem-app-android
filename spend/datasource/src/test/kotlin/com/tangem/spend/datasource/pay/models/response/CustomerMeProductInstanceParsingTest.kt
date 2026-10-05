@@ -23,6 +23,32 @@ internal class CustomerMeProductInstanceParsingTest {
     }
 
     @Test
+    fun `GIVEN status and specification type in lowercase WHEN parsed THEN matched ignoring case`() {
+        // Arrange
+        val raw = productInstanceJson(status = "\"active\"", specificationType = "\"card\"")
+
+        // Act
+        val actual = json.decodeFromString(ProductInstance.serializer(), raw)
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            ProductInstance(
+                id = INSTANCE_ID,
+                cid = null,
+                cardId = null,
+                cardWalletAddress = null,
+                status = ProductInstance.Status.ACTIVE,
+                updatedAt = "2026-01-02T03:04:05Z",
+                paymentAccountId = "pa-1",
+                displayName = null,
+                actualCardLimit = null,
+                adminCardLimit = null,
+                specificationDataType = ProductInstance.SpecificationDataType.CARD,
+            ),
+        )
+    }
+
+    @Test
     fun `GIVEN unknown status and specification type WHEN parsed THEN both fall back to UNKNOWN`() {
         // Arrange
         val raw = productInstanceJson(status = "\"SUSPENDED\"", specificationType = "\"WEARABLE\"")

@@ -8,6 +8,7 @@ import com.tangem.domain.jointaccount.derivation.isJointAccountReservedPath
 import com.tangem.domain.managetokens.model.exceptoin.DerivationPathValidationException
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.moneyaccount.derivation.isMoneyAccountReservedPath
 
 class ValidateDerivationPathUseCase(
     private val repository: CustomTokensRepository,
@@ -23,6 +24,10 @@ class ValidateDerivationPathUseCase(
 
             ensure(!isJointAccountReservedPath(rawValue)) {
                 DerivationPathValidationException.ReservedForJointAccounts
+            }
+
+            ensure(!isMoneyAccountReservedPath(rawValue)) {
+                DerivationPathValidationException.ReservedForMoneyAccount
             }
 
             path
