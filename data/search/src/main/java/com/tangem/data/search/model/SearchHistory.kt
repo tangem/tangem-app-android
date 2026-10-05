@@ -1,14 +1,17 @@
 package com.tangem.data.search.model
 
+import com.squareup.moshi.JsonClass
 import kotlinx.serialization.Serializable
 
 @Serializable
+@JsonClass(generateAdapter = true)
 internal data class SearchHistoryDTO(
     val textHints: List<TextHintDTO> = emptyList(),
     val recentTokens: List<RecentTokenDTO> = emptyList(),
 )
 
 @Serializable
+@JsonClass(generateAdapter = true)
 internal data class TextHintDTO(
     val text: String,
     val timestamp: Long,
@@ -18,6 +21,7 @@ internal data class TextHintDTO(
  * @param appCurrencyCode currency code (e.g. "USD") the [pricePlain] was quoted in
  */
 @Serializable
+@JsonClass(generateAdapter = true)
 internal data class RecentTokenDTO(
     val id: String,
     val name: String,
