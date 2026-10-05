@@ -12,10 +12,12 @@ import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
+import com.tangem.core.remote.json.NetworkJson
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.json.Json
 import java.io.File
 import javax.inject.Inject
 
@@ -31,11 +33,12 @@ internal class DefaultAppDataStoreFactory @Inject constructor(
     @ApplicationContext private val context: Context,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val appScope: AppCoroutineScope,
+    @NetworkJson private val json: Json,
 ) : AppDataStoreFactory {
 
     override fun <T> create(defaultValue: T, serializer: KSerializer<T>, fileName: String): DataStore<T> {
         return create(
-            serializer = KotlinxDataStoreSerializer(defaultValue = defaultValue, serializer = serializer),
+            serializer = KotlinxDataStoreSerializer(defaultValue = defaultValue, serializer = serializer, json = json),
             scope = appScope,
             produceFile = { context.dataStoreFile(fileName) },
         )
