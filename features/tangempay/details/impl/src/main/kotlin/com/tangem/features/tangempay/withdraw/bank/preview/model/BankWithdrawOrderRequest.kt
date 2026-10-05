@@ -19,6 +19,7 @@ internal fun BankWithdrawDraft.toOrderRequest(): BankOfframpOrderRequest? {
         amountInCents = amount.movePointRight(CENTS_SCALE).setScale(0, RoundingMode.DOWN).longValueExact(),
         chainId = source.chainId,
         tokenContractAddress = source.token.contractAddress,
+        tokenDecimals = source.token.decimals,
         rail = destination.rail,
         recipient = recipient,
     )
