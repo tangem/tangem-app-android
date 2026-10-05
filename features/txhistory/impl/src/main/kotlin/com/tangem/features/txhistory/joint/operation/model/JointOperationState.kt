@@ -7,6 +7,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import java.math.BigInteger
 
 /**
+ * @property feeAmount in the smallest units of [feeCurrency]: the Safe refunds the gas in the coin or in a token
  * @property displayed handed back to the sign use case, which refuses to sign an operation that no longer matches
  * what the screen showed
  * @property ownAddress this member's owner address, `null` where it is not resolvable here
@@ -18,8 +19,8 @@ import java.math.BigInteger
 internal data class JointOperationState(
     val account: Account.Joint,
     val displayed: JointTransferIntent,
-    val feeWei: BigInteger,
-    val feeCoin: CryptoCurrency.Coin?,
+    val feeAmount: BigInteger,
+    val feeCurrency: CryptoCurrency?,
     val threshold: Int,
     val membersCount: Int,
     val signers: List<JointOperationSignerState>,

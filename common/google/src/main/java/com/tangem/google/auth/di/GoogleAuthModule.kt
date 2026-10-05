@@ -12,8 +12,6 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 internal interface GoogleAuthModule {
 
-    // No app-wide GoogleAuthorizer binding: its picked account is per Drive scope — see GoogleDriveModule
-
     @Binds
     @Singleton
     fun bindGoogleIdTokenProvider(impl: CredentialManagerGoogleIdTokenProvider): GoogleIdTokenProvider

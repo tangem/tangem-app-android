@@ -6,6 +6,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -33,6 +34,7 @@ internal class MoneyAccountOnboardingModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
+    private val urlOpener: UrlOpener,
     private val onboardingRepository: OnboardingRepository,
     private val getMoneyAccountFeeTableUseCase: GetMoneyAccountFeeTableUseCase,
 ) : Model() {
@@ -118,7 +120,7 @@ internal class MoneyAccountOnboardingModel @Inject constructor(
     }
 
     private fun onTermsClick() {
-        // TODO v_rodionov: #[REDACTED_TASK_KEY] open the provider Terms of Use link.
+        urlOpener.openUrl(TERMS_OF_USE_URL)
     }
 
     private fun onGetStartedClick() {
@@ -141,5 +143,9 @@ internal class MoneyAccountOnboardingModel @Inject constructor(
 
     private fun back() {
         router.pop()
+    }
+
+    private companion object {
+        const val TERMS_OF_USE_URL = "https://tangem.com/docs/en/virtual-account-terms.pdf"
     }
 }
