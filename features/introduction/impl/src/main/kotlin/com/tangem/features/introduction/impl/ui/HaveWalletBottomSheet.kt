@@ -32,6 +32,7 @@ import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.modal.TopNavigation
+import com.tangem.core.ui.ds2.modal.reportMeasuredHeight
 import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
