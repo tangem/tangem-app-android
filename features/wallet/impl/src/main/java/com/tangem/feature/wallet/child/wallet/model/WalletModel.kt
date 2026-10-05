@@ -30,7 +30,6 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
-import com.tangem.domain.jointaccount.producer.SingleJointAccountListProducer
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.marketing.WarmUpMarketingCampaignsUseCase
 import com.tangem.domain.mcp.McpRequestService
@@ -87,6 +86,8 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration.Companion.milliseconds
 
 private const val TANGEM_PAY_UPDATE_INTERVAL = 60_000L
 
@@ -291,13 +292,7 @@ internal class WalletModel @Inject constructor(
                     } else {
                         null
                     }
-                    val jointAccountsCounts = accountList?.let { list ->
-                        val jointAccounts = jointAccountListSupplier.getSyncOrNull(
-                            params = SingleJointAccountListProducer.Params(userWalletId = selectedWallet.walletId),
-                            timeMillis = JOINT_ACCOUNTS_WAIT_MILLIS,
-                        ) ?: return@let null
-                        jointAccountsCounts(accountList = list, jointAccounts = jointAccounts)
-                    }
+                    val jointAccountsCounts = if (accountList != null) loadJointAccountsCounts(accountList) else null
                     val result = getAppThemeModeUseCase().firstOrNull()
                     val theme = result?.getOrElse { AppThemeMode.FOLLOW_SYSTEM } ?: AppThemeMode.FOLLOW_SYSTEM
                     val appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }.code
@@ -316,6 +311,28 @@ internal class WalletModel @Inject constructor(
                     )
                 }
         }
+    }
+
+    /**
+     * The joint list can replay a cache older than [accountList] while its refresh runs, so it is awaited until it
+     * holds every listed joint account; without any there is nothing to wait for
+     */
+    private suspend fun loadJointAccountsCounts(
+        accountList: AccountList,
+    ): WalletScreenAnalyticsEvent.MainScreen.ScreenOpened.JointAccountsCounts? {
+        val listedIds = accountList.listedJointAccountIds()
+        val jointAccounts = if (listedIds.isEmpty()) {
+            emptyList()
+        } else {
+            withTimeoutOrNull(JOINT_ACCOUNTS_WAIT_MILLIS.milliseconds) {
+                jointAccountListSupplier(accountList.userWalletId).first { jointAccounts ->
+                    val loadedIds = jointAccounts.mapTo(mutableSetOf()) { it.cryptoAccountId.lowercase() }
+                    loadedIds.containsAll(listedIds)
+                }
+            } ?: return null
+        }
+
+        return jointAccountsCounts(accountList = accountList, jointAccounts = jointAccounts)
     }
 
     private suspend fun shouldShowAskBiometryBottomSheet(): Boolean {
@@ -1003,20 +1020,20 @@ internal class WalletModel @Inject constructor(
     private companion object {
         const val REFRESH_WALLET_BACKGROUND_TIMER_MILLIS = 10000L
         const val EXPRESS_STATUS_UPDATE_DELAY = 10000L
-
-        /** The joint list may not be loaded yet; the screen event is not held back for it */
-        const val JOINT_ACCOUNTS_WAIT_MILLIS = 1000L
+        const val JOINT_ACCOUNTS_WAIT_MILLIS = 3000L
     }
 }
+
+private fun AccountList.listedJointAccountIds(): Set<String> = accounts
+    .filterIsInstance<Account.Joint>()
+    .mapTo(mutableSetOf()) { it.accountId.value.lowercase() }
 
 /** Archived joint accounts are not in [accountList], so only the statuses of the accounts it holds are counted */
 internal fun jointAccountsCounts(
     accountList: AccountList,
     jointAccounts: List<JointAccount>,
 ): WalletScreenAnalyticsEvent.MainScreen.ScreenOpened.JointAccountsCounts {
-    val listedIds = accountList.accounts
-        .filterIsInstance<Account.Joint>()
-        .mapTo(mutableSetOf()) { it.accountId.value.lowercase() }
+    val listedIds = accountList.listedJointAccountIds()
     val statuses = jointAccounts
         .filter { it.cryptoAccountId.lowercase() in listedIds }
         .map(JointAccount::status)
