@@ -9,4 +9,7 @@ interface ABTestsManager {
     fun removeUserProperties()
 
     suspend fun getValue(key: String, defaultValue: String): String
+
+    /** The value already on the device: never waits for a fetch and tracks no exposure. Null if there is none yet. */
+    fun peekValue(key: String): String?
 }
