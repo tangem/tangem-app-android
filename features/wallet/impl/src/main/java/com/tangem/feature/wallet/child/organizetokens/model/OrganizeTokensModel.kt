@@ -33,6 +33,7 @@ import com.tangem.feature.wallet.child.organizetokens.model.transformer.Organize
 import com.tangem.feature.wallet.child.organizetokens.model.transformer.OrganizeSortingProgressStateTransformer
 import com.tangem.feature.wallet.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.*
@@ -170,12 +171,9 @@ internal class OrganizeTokensModel @Inject constructor(
             )
 
             result.fold(
-                ifLeft = {
-                    uiState.update {
-                        it.copy(
-                            organizeMenuUM = it.organizeMenuUM.copy(isEnabled = false),
-                        )
-                    }
+                ifLeft = { error ->
+                    TangemLogger.e("Unable to apply the token list sorting: $error")
+                    uiState.update(OrganizeSortingProgressStateTransformer(false))
                 },
                 ifRight = {
                     onBackClick()

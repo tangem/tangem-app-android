@@ -448,6 +448,9 @@ include(":features:for-you:impl")
 
 include(":features:collectibles:api")
 include(":features:collectibles:impl")
+
+include(":features:mcp:api")
+include(":features:mcp:impl")
 // endregion Feature modules
 
 // region Domain modules
@@ -541,6 +544,8 @@ include(":domain:news")
 include(":domain:earn")
 include(":domain:search")
 include(":domain:feed:search")
+include(":domain:mcp")
+include(":domain:mcp:models")
 // endregion Domain modules
 
 // region Data modules
@@ -595,4 +600,5 @@ include(":data:search")
 include(":data:joint-account")
 include(":data:feed:search")
 include(":data:collectibles")
+include(":data:mcp")
 // endregion Data modules

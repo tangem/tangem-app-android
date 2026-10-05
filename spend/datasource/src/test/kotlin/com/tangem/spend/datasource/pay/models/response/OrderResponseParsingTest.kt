@@ -52,7 +52,7 @@ internal class OrderResponseParsingTest {
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN known statuses WHEN order parsed THEN mapped one to one`(model: StatusModel) {
+    fun `GIVEN known status in any case WHEN order parsed THEN mapped one to one`(model: StatusModel) {
         // Arrange
         val raw = orderJson(status = "\"${model.wireValue}\"")
 
@@ -68,6 +68,8 @@ internal class OrderResponseParsingTest {
         StatusModel(wireValue = "PROCESSING", expected = Status.PROCESSING),
         StatusModel(wireValue = "COMPLETED", expected = Status.COMPLETED),
         StatusModel(wireValue = "CANCELED", expected = Status.CANCELED),
+        StatusModel(wireValue = "completed", expected = Status.COMPLETED),
+        StatusModel(wireValue = "Processing", expected = Status.PROCESSING),
     )
 
     private fun orderJson(status: String) = """{ "id": "$ORDER_ID", "status": $status, "data": {} }"""

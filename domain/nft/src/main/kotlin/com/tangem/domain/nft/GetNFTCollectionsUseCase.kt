@@ -19,7 +19,7 @@ class GetNFTCollectionsUseCase(
     operator fun invoke(userWalletId: UserWalletId): Flow<WalletNFTCollections> {
         return singleAccountListSupplier(userWalletId)
             .mapLatest { statusList ->
-                statusList.accounts.filterIsInstance<Account.CryptoPortfolio>().mapNotNull(::flowOfNFTCollections)
+                statusList.accounts.filterIsInstance<Account.Personal>().mapNotNull(::flowOfNFTCollections)
             }
             .flatMapLatest { flows ->
                 combine(flows) { WalletNFTCollections(it.toMap()) }
@@ -27,7 +27,7 @@ class GetNFTCollectionsUseCase(
     }
 
     private fun flowOfNFTCollections(
-        account: Account.CryptoPortfolio,
+        account: Account.Personal,
     ): Flow<Pair<Account.CryptoPortfolio, List<NFTCollections>>>? {
         val currencies = account.cryptoCurrencies
 

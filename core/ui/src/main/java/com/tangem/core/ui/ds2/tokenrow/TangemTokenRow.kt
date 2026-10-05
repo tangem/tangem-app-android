@@ -29,7 +29,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_chart_bar_vertical_16
+import com.tangem.core.ui.res.generated.icons.ic_chart_line_vertical_16
 import com.tangem.core.ui.res.generated.icons.ic_sign_equal_24
 
 /**
@@ -37,15 +37,15 @@ import com.tangem.core.ui.res.generated.icons.ic_sign_equal_24
  * badge, quote + price change, fiat/crypto balances and an optional message-bubble promo line
  * underneath. DS3 replacement for the legacy `ds/row/token` `TangemTokenRow`.
  *
- * Version: 1.2.0
+ * Version: 1.2.1
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=5723-2473)
  *
  * @param icon Token icon state, rendered at 40dp. See [TangemTokenIcon.UiState].
  * @param title Token name. Single line, ellipsized.
  * @param modifier Modifier applied to the row container.
- * @param badge Optional [TangemTokenRow.Badge] after the title (e.g. an `"APY 5.47%"` chip; use a
- * [TangemBadge.Variant.Solid] badge for the filled look). `null` hides it.
+ * @param badge Optional [TangemTokenRow.Badge] after the title (e.g. an `"APY 5.47%"` chip). `null`
+ * hides it.
  * @param hasPending Shows the animated pending dots after the title while a transaction is pending.
  * @param quote Fiat quote for one token (e.g. `"$1.00"`). `null` hides it.
  * @param priceChange Price change indicator next to the quote. `null` hides it.
@@ -129,7 +129,7 @@ fun TangemTokenRow(
             Box(
                 modifier = Modifier
                     .layoutId(layoutId = TokenRowLayoutId.EXTRA_BOTTOM)
-                    .padding(start = 40.dp, bottom = 8.dp)
+                    .padding(start = 36.dp)
                     .fillMaxWidth(),
             ) {
                 messageBubble()
@@ -141,22 +141,19 @@ fun TangemTokenRow(
 /** Public API surface of [TangemTokenRow]. */
 object TangemTokenRow {
 
-    val version = DsVersion(major = 1, minor = 2, patch = 0)
+    val version = DsVersion(major = 1, minor = 2, patch = 1)
 
     /**
-     * Badge shown after the title (e.g. an `"APY 5.47%"` chip). Wraps [TangemBadge] so callers can
-     * pick a tinted or a filled ([TangemBadge.Variant.Solid]) look with a status color, as in
-     * production usage.
+     * Badge shown after the title (e.g. an `"APY 5.47%"` chip). Always a tinted [TangemBadge].
      *
      * @param text Badge label.
-     * @param variant Badge appearance — [TangemBadge.Variant.Tinted] (default) or
-     * [TangemBadge.Variant.Solid] for the filled look. See [TangemBadge.Variant].
-     * @param status Status color scheme. See [TangemBadge.Status].
+     * @param status Status color scheme: [TangemBadge.Status.Neutral] for an inactive yield or
+     * staking offer, [TangemBadge.Status.Success] for active yield, [TangemBadge.Status.Info] for
+     * active staking. See [TangemBadge.Status].
      */
     @Immutable
     data class Badge(
         val text: TextReference,
-        val variant: TangemBadge.Variant = TangemBadge.Variant.Tinted,
         val status: TangemBadge.Status = TangemBadge.Status.Neutral,
     )
 
@@ -397,6 +394,7 @@ private fun TokenRowMessageBubble(bubble: TangemTokenRow.MessageBubble) {
         onClick = bubble.onClick,
         onClose = bubble.onClose,
         closeContentDescription = bubble.closeContentDescription,
+        modifier = Modifier.padding(top = if (bubble.shouldShowTip) 0.dp else 8.dp),
     )
 }
 
@@ -632,8 +630,7 @@ private fun TangemTokenRowPreview() {
             title = stringReference("Bitcoin"),
             badge = TangemTokenRow.Badge(
                 text = stringReference("APY 5.47%"),
-                variant = TangemBadge.Variant.Solid,
-                status = TangemBadge.Status.Info,
+                status = TangemBadge.Status.Success,
             ),
             quote = stringReference("$1.00"),
             priceChange = TangemPriceChange.State(
@@ -648,7 +645,7 @@ private fun TangemTokenRowPreview() {
                 TangemMessageBubble(
                     text = stringReference("Enable 5.47% APY on your balance"),
                     variant = TangemMessageBubble.Variant.Success,
-                    icon = Icons.ic_chart_bar_vertical_16,
+                    icon = Icons.ic_chart_line_vertical_16,
                     onClick = {},
                     onClose = {},
                     closeContentDescription = "Dismiss",

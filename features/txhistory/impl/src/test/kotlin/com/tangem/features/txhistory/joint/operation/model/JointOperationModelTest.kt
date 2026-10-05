@@ -307,8 +307,8 @@ internal class JointOperationModelTest {
     private fun createState(ownAddress: String = OWN, threshold: Int = 2) = JointOperationState(
         account = MockAccounts.createJointAccount(),
         displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = BigInteger.ONE),
-        feeWei = BigInteger.ZERO,
-        feeCoin = null,
+        feeAmount = BigInteger.ZERO,
+        feeCurrency = null,
         threshold = threshold,
         membersCount = 3,
         signers = listOf(

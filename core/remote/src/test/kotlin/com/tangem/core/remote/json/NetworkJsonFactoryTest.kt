@@ -83,6 +83,15 @@ internal class NetworkJsonFactoryTest {
     }
 
     @Test
+    fun `GIVEN known enum value in another case WHEN decode THEN the entry is matched`() {
+        // Act
+        val actual = json.decodeFromString(WithFallbackStatus.serializer(), """{"status":"new"}""")
+
+        // Assert
+        assertThat(actual).isEqualTo(WithFallbackStatus(status = FallbackStatus.NEW))
+    }
+
+    @Test
     fun `GIVEN null for a non-null field with default WHEN decode THEN the default is used`() {
         // Act
         val actual = json.decodeFromString(Request.serializer(), """{"name":"x","kind":null}""")

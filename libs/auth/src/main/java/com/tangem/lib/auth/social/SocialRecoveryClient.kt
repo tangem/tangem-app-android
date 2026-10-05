@@ -48,6 +48,9 @@ interface SocialRecoveryClient {
         signer: WalletSigner,
     ): Either<SocialRecoveryError, Unit>
 
+    /** Registers a restored wallet with the auth service; the binding it was restored through already exists */
+    suspend fun registerWallet(walletId: String, signer: WalletSigner): Either<SocialRecoveryError, Unit>
+
     /**
      * Drops the binding of [walletId] and the recovery key stored with it, so the identity can no
      * longer restore this wallet. Unbinding a wallet that has no binding is a success.

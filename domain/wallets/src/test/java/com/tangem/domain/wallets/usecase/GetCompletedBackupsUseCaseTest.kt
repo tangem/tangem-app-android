@@ -5,17 +5,40 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 internal class GetCompletedBackupsUseCaseTest {
 
     private val cloudBackupRepository: CloudBackupRepository = mockk()
+    private val isSocialBackupCompletedUseCase: IsSocialBackupCompletedUseCase = mockk()
 
-    private val useCase = GetCompletedBackupsUseCase(cloudBackupRepository)
+    private val useCase = GetCompletedBackupsUseCase(cloudBackupRepository, isSocialBackupCompletedUseCase)
+
+    @BeforeEach
+    fun resetMocks() {
+        clearMocks(cloudBackupRepository, isSocialBackupCompletedUseCase)
+        coEvery { isSocialBackupCompletedUseCase(UserWalletId(WALLET_ID)) } returns false
+    }
+
+    @Test
+    fun `GIVEN hot wallet with social recovery WHEN invoke THEN Social Login reported`() = runTest {
+        // Arrange
+        coEvery { cloudBackupRepository.isBackedUp(WALLET_ID) } returns false
+        coEvery { isSocialBackupCompletedUseCase(UserWalletId(WALLET_ID)) } returns true
+
+        // Act
+        val actual = useCase(hotWallet(backedUp = false))
+
+        // Assert
+        assertThat(actual).containsExactly(AnalyticsParam.BackupType.SocialLogin)
+    }
 
     @Test
     fun `GIVEN hot wallet with both backups WHEN invoke THEN both types reported`() = runTest {

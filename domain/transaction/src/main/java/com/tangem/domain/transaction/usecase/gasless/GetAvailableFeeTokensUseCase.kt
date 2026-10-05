@@ -1,7 +1,6 @@
 package com.tangem.domain.transaction.usecase.gasless
 
 import arrow.core.Either
-import arrow.core.getOrElse
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
@@ -50,11 +49,19 @@ class GetAvailableFeeTokensUseCase(
                     val accountStatusList = singleAccountStatusListSupplier.getSyncOrNull(userWallet.walletId)
                         ?: raiseIllegalStateError("AccountStatusList is null for ${userWallet.walletId}")
 
-                    val userCurrenciesStatuses = accountStatusList.flattenPersonalCurrencies()
-
-                    val nativeCurrencyStatus = accountStatusList.getCoinStatus(network).getOrElse {
-                        raiseIllegalStateError("No native currency found: ${network.id}")
+                    val isJointNetwork = network.derivationPath is Network.DerivationPath.Joint
+                    // A joint network belongs to one Safe, so its fee tokens are that account's own currencies
+                    val userCurrenciesStatuses = if (isJointNetwork) {
+                        accountStatusList.flattenCurrencies().filter { it.currency.network.id == network.id }
+                    } else {
+                        accountStatusList.flattenPersonalCurrencies()
                     }
+
+                    val nativeCurrencyStatus = if (isJointNetwork) {
+                        userCurrenciesStatuses.firstOrNull { it.currency is CryptoCurrency.Coin }
+                    } else {
+                        accountStatusList.getCoinStatus(network).getOrNull()
+                    } ?: raiseIllegalStateError("No native currency found: ${network.id}")
 
                     // Tron gasless is a parallel path: its supported fee tokens come from the Tron
                     // gasless backend, not the EVM gasless service. Its fee is a backend compensation
@@ -127,6 +134,8 @@ class GetAvailableFeeTokensUseCase(
                 val token = currencyStatus.currency
                 token is CryptoCurrency.Token && supportedGaslessTokens.contains(token.contractAddress.lowercase())
             }
+            // The Safe refund is priced by the token's quote, and a custom token has none
+            .filter { network.derivationPath !is Network.DerivationPath.Joint || it.currency.id.rawCurrencyId != null }
             .toList()
     }
 

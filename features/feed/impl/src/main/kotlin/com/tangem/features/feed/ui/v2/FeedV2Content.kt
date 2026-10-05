@@ -33,6 +33,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -40,6 +41,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 import com.tangem.core.ui.components.haze.hazeSourceTangem
+import com.tangem.core.ui.test.MarketsTestTags
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.features.feed.ui.FeedTabRow
@@ -117,6 +119,7 @@ internal fun FeedV2Content(
     Box(
         modifier = modifier
             .fillMaxSize()
+            .testTag(MarketsTestTags.FEED_CONTENT)
             .nestedScroll(topBlocksCollapseConnection),
     ) {
         Box(

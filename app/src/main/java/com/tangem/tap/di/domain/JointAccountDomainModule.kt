@@ -4,6 +4,7 @@ import com.tangem.domain.account.fetcher.SingleAccountListFetcher
 import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
 import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
+import com.tangem.domain.jointaccount.gas.JointGasTokenResolver
 import com.tangem.domain.jointaccount.gas.JointRefundReceiverProvider
 import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
 import com.tangem.domain.jointaccount.network.JointNetworkReader
@@ -24,9 +25,9 @@ import com.tangem.domain.jointaccount.usecase.CreateJointOperationUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitePreviewUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountSupportedNetworksUseCase
+import com.tangem.domain.jointaccount.usecase.GetJointOperationSlotUseCase
 import com.tangem.domain.jointaccount.usecase.GetMissingJointOwnerKeysCountUseCase
 import com.tangem.domain.jointaccount.usecase.GetPendingJointOperationsUseCase
-import com.tangem.domain.jointaccount.usecase.IsJointOperationSlotBusyUseCase
 import com.tangem.domain.jointaccount.usecase.JoinJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.RejectJointOperationUseCase
 import com.tangem.domain.jointaccount.usecase.SignJointOperationUseCase
@@ -122,12 +123,6 @@ internal object JointAccountDomainModule {
 
     @Provides
     @Singleton
-    fun provideJointRefundReceiverProvider(): JointRefundReceiverProvider {
-        return JointRefundReceiverProvider { JointRefundReceiverProvider.TREASURY }
-    }
-
-    @Provides
-    @Singleton
     fun provideSafeTxGasBuilder(
         networkReader: JointNetworkReader,
         refundReceiverProvider: JointRefundReceiverProvider,
@@ -214,11 +209,12 @@ internal object JointAccountDomainModule {
 
     @Provides
     @Singleton
-    fun provideIsJointOperationSlotBusyUseCase(
+    fun provideGetJointOperationSlotUseCase(
         supplier: SingleJointAccountListSupplier,
+        fetcher: SingleJointAccountListFetcher,
         networkReader: JointNetworkReader,
-    ): IsJointOperationSlotBusyUseCase {
-        return IsJointOperationSlotBusyUseCase(supplier = supplier, networkReader = networkReader)
+    ): GetJointOperationSlotUseCase {
+        return GetJointOperationSlotUseCase(supplier = supplier, fetcher = fetcher, networkReader = networkReader)
     }
 
     @Provides
@@ -234,6 +230,7 @@ internal object JointAccountDomainModule {
         networkReader: JointNetworkReader,
         compositionChecker: SafeCompositionChecker,
         refundReceiverProvider: JointRefundReceiverProvider,
+        gasTokenResolver: JointGasTokenResolver,
     ): SignJointOperationUseCase {
         return SignJointOperationUseCase(
             repository = repository,
@@ -246,6 +243,7 @@ internal object JointAccountDomainModule {
             networkReader = networkReader,
             compositionChecker = compositionChecker,
             refundReceiverProvider = refundReceiverProvider,
+            gasTokenResolver = gasTokenResolver,
         )
     }
 
