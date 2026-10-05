@@ -71,11 +71,14 @@ internal class PushNotificationsModel @Inject constructor(
 
     private var resolvedVariant: String = DoubleAskVariant.Off.key
 
+    private var isAnswered = false
+
     init {
         analyticHandler.send(PushNotificationAnalyticEvents.NotificationsScreenOpened(source))
     }
 
     override fun onAllowClick() {
+        isAnswered = true
         modelScope.launch {
             notificationsRepository.setUserAllowToSubscribeOnPushNotifications(true)
         }
@@ -85,6 +88,7 @@ internal class PushNotificationsModel @Inject constructor(
     override fun onLaterClick() {
         analyticHandler.send(PushNotificationAnalyticEvents.ButtonLater(source))
         if (isOnWalletScreen()) {
+            isAnswered = true
             modelScope.launch { proceedAfterLater() }
             return
         }
@@ -114,6 +118,18 @@ internal class PushNotificationsModel @Inject constructor(
 
     override fun onDoubleAskDismiss() {
         _isDoubleAskSheetShown.value = false
+    }
+
+    /**
+     * The wallet-screen sheet is asked once, so closing it without a choice (close icon, swipe, scrim, back) counts as
+     * "Later" — an unanswered close would bring it back on every launch.
+     */
+    fun onSheetDismissed() {
+        // Every answer closes the sheet itself once it is stored, so a close after it has nothing to add.
+        if (isAnswered) return
+        isAnswered = true
+        analyticHandler.send(PushNotificationAnalyticEvents.ButtonCancel(source))
+        modelScope.launch { proceedAfterLater() }
     }
 
     private fun isOnWalletScreen(): Boolean =
