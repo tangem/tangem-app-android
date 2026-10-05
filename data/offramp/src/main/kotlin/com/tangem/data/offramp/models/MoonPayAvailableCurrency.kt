@@ -1,4 +1,4 @@
-package com.tangem.tap.network.exchangeServices.moonpay.models
+package com.tangem.data.offramp.models
 
 internal data class MoonPayAvailableCurrency(
     val currencyCode: String,
