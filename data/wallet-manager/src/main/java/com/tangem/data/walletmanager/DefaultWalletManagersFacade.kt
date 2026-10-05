@@ -42,6 +42,7 @@ import com.tangem.domain.jointaccount.derivation.isJointAccountReservedPath
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.models.network.isJoint
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.GaslessTransactionRepository
@@ -319,7 +320,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
      * once the account is active. For any other network the absence is a defect and stays loud.
      */
     private fun requireJointNetwork(network: Network) {
-        require(network.derivationPath is Network.DerivationPath.Joint) {
+        require(network.isJoint) {
             "Unable to get a transaction history source for blockchain: $network"
         }
     }
