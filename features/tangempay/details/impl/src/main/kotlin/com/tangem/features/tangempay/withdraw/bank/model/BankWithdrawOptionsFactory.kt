@@ -27,7 +27,9 @@ internal object BankWithdrawOptionsFactory {
         balanceCurrencyCode: String?,
     ): BankWithdrawOptions? {
         val destinations = options.destinations.ifEmpty { return null }
-        val sources = resolveSources(networks = networks, sources = options.sources).ifEmpty { return null }
+        val sources = resolveSources(networks = networks, sources = options.sources)
+            .takeIf { resolved -> resolved.any(BankWithdrawSource::isAvailable) }
+            ?: return null
         val currency = currencyOrNull(balanceCurrencyCode)
             ?: currencyOrNull(destinations.first().fee.currency)
             ?: return null
@@ -41,8 +43,9 @@ internal object BankWithdrawOptionsFactory {
     }
 
     /**
-     * Payment-account tokens the off-ramp accepts and the user can actually send, grouped by symbol: USDC first, then
-     * every other symbol in the order it first appears among the account's networks, and inside a group that order.
+     * Payment-account tokens holding a positive balance, available when the off-ramp accepts them, grouped by symbol:
+     * USDC first, then every other symbol in the order it first appears among the account's networks, and inside a
+     * group that order.
      */
     private fun resolveSources(
         networks: List<PaymentNetworkStatus>,
@@ -56,14 +59,13 @@ internal object BankWithdrawOptionsFactory {
             .flatMap { network ->
                 network.cryptoCurrencyStatuses.mapNotNull { status ->
                     val token = status.currency as? CryptoCurrency.Token ?: return@mapNotNull null
-                    val fiatBalance = status.value.fiatAmount ?: return@mapNotNull null
-                    val isAccepted = network.chainId to token.contractAddress.lowercase() in accepted
-                    if (!isAccepted || !fiatBalance.isPositive()) return@mapNotNull null
+                    val fiatBalance = status.value.fiatAmount?.takeIf { it.isPositive() } ?: return@mapNotNull null
                     BankWithdrawSource(
                         network = network.network,
                         chainId = network.chainId,
                         token = token,
                         fiatBalance = fiatBalance,
+                        isAvailable = network.chainId to token.contractAddress.lowercase() in accepted,
                     )
                 }
             }
