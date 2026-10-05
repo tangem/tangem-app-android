@@ -6,6 +6,7 @@ import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
 import com.tangem.test.core.ProvideTestModels
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
@@ -20,6 +21,32 @@ internal class JointAccountAnalyticsEventTest {
 
         // Assert
         assertThat(event.params).isEqualTo(model.expectedParams)
+    }
+
+    @Test
+    fun `GIVEN a counted signature WHEN Operation Signed built THEN params match the spec`() {
+        // Act
+        val event = JointAccountAnalyticsEvent.OperationSigned(
+            signaturesCollected = 2,
+            membersCount = 3,
+            threshold = 2,
+            isThresholdReached = true,
+            blockchain = "Polygon",
+            token = "POL",
+        )
+
+        // Assert
+        assertThat(event.id).isEqualTo("[Joint Account] Operation Signed")
+        assertThat(event.params).isEqualTo(
+            mapOf(
+                "Signatures Collected" to "2",
+                "Members Count" to "3",
+                "Threshold" to "2",
+                "Threshold Reached" to "Yes",
+                AnalyticsParam.BLOCKCHAIN to "Polygon",
+                AnalyticsParam.TOKEN_PARAM to "POL",
+            ),
+        )
     }
 
     data class ErrorModel(val cause: Throwable, val expectedParams: Map<String, String>)
