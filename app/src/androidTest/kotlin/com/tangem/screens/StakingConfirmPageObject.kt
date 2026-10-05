@@ -5,6 +5,7 @@ import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.R
 import com.tangem.core.ui.test.BaseAmountBlockTestTags
 import com.tangem.core.ui.test.BaseButtonTestTags
+import com.tangem.core.ui.test.GiveApprovalTestTags
 import com.tangem.core.ui.test.NotificationTestTags
 import com.tangem.core.ui.test.SendScreenTestTags
 import com.tangem.core.ui.test.StakingSendDetailsScreenTestTags
@@ -13,6 +14,7 @@ import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import androidx.compose.ui.test.hasText as withText
 
 class StakingConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<StakingConfirmPageObject>(semanticsProvider = semanticsProvider) {
@@ -44,6 +46,35 @@ class StakingConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
 
     val validatorBlock: KNode = child {
         hasTestTag(StakingSendDetailsScreenTestTags.VALIDATOR_BLOCK)
+        useUnmergedTree = true
+    }
+
+    val givePermissionButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(R.string.give_permission_title))
+        useUnmergedTree = true
+    }
+
+    val approvalInProgressNotification: KNode = child {
+        hasTestTag(NotificationTestTags.TITLE)
+        hasText(getResourceString(R.string.warning_approval_in_progress_title))
+        useUnmergedTree = true
+    }
+
+    val approveButton: KNode = child {
+        hasTestTag(GiveApprovalTestTags.APPROVE_BUTTON)
+    }
+
+    fun validatorBlockWithName(name: String): KNode = child {
+        hasTestTag(StakingSendDetailsScreenTestTags.VALIDATOR_BLOCK)
+        hasAnyDescendant(withText(name))
+        useUnmergedTree = true
+    }
+
+    /** A validator row in the 'Validators' list, opened from the validator block (the rows carry no test tags). */
+    fun validatorListItem(name: String): KNode = child {
+        hasClickAction()
+        hasAnyDescendant(withText(name))
         useUnmergedTree = true
     }
 
