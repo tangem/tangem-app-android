@@ -4,6 +4,7 @@ import com.tangem.common.services.secure.SecureStorage
 import com.tangem.domain.jointaccount.store.JointAccountInvitesStore
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -66,7 +67,13 @@ internal class DefaultJointAccountInvitesStore(
     override fun observeShared(userWalletId: UserWalletId, cryptoAccountId: String): Flow<Set<String>> {
         return writes
             .map {
-                mutex.withLock { read(createSharedKey(userWalletId))?.get(cryptoAccountId).orEmpty().toSet() }
+                // Caught per read: a failure ending the flow would hide every later write from the screen
+                runSuspendCatching {
+                    mutex.withLock { read(createSharedKey(userWalletId))?.get(cryptoAccountId).orEmpty().toSet() }
+                }.getOrElse { throwable ->
+                    logger.e(messageString = "Failed to read the shared invites", throwable = throwable)
+                    emptySet()
+                }
             }
             .distinctUntilChanged()
             .flowOn(dispatchers.io)
