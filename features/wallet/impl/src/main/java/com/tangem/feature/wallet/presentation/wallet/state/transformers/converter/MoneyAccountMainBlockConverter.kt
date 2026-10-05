@@ -1,19 +1,17 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
-import androidx.compose.ui.text.SpanStyle
 import com.tangem.common.ui.R
-import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
-import com.tangem.core.ui.format.bigdecimal.formatStyled
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
 import com.tangem.utils.converter.Converter
-import java.math.BigDecimal
 
 internal class MoneyAccountMainBlockConverter : Converter<AccountStatus.Money, MoneyAccountMainUM> {
 
@@ -21,65 +19,69 @@ internal class MoneyAccountMainBlockConverter : Converter<AccountStatus.Money, M
         return when (val statusValue = value.value) {
             is MoneyAccountStatusValue.Empty,
             is MoneyAccountStatusValue.NotCreated,
+            is MoneyAccountStatusValue.Error.ExposedDevice,
             -> MoneyAccountMainUM.Empty
             is MoneyAccountStatusValue.Loading -> MoneyAccountMainUM.Loading
             is MoneyAccountStatusValue.Onboarding -> statusValue.toUM()
             is MoneyAccountStatusValue.Account -> statusValue.toUM()
-            is MoneyAccountStatusValue.Error.Unavailable -> MoneyAccountMainUM.TemporaryUnavailable
-            is MoneyAccountStatusValue.Error.NotSynced -> MoneyAccountMainUM.SyncNeeded
-            is MoneyAccountStatusValue.Error.ExposedDevice -> MoneyAccountMainUM.ExposedDevice
+            is MoneyAccountStatusValue.Error.Unavailable,
+            is MoneyAccountStatusValue.Error.NotSynced,
+            -> MoneyAccountMainUM.Unavailable
         }
     }
 
     private fun MoneyAccountStatusValue.Onboarding.toUM(): MoneyAccountMainUM {
         return when (this) {
-            is MoneyAccountStatusValue.Onboarding.UnderReview -> MoneyAccountMainUM.UnderReview(
-                subtitle = TextReference.Res(R.string.tangempay_kyc_in_progress),
-                onClick = ::onAccountClick,
-            )
-            is MoneyAccountStatusValue.Onboarding.VerificationDeclined -> MoneyAccountMainUM.UnderReview(
-                subtitle = TextReference.Res(R.string.tangempay_kyc_has_failed),
-                onClick = ::onAccountClick,
-            )
-            is MoneyAccountStatusValue.Onboarding.CountryNotSupported -> MoneyAccountMainUM.CountryNotSupported(
-                onClick = ::onAccountClick,
-            )
             is MoneyAccountStatusValue.Onboarding.Issuing,
             is MoneyAccountStatusValue.Onboarding.Activating,
-            -> MoneyAccountMainUM.Provisioning(onClick = ::onAccountClick)
+            -> MoneyAccountMainUM.Onboarding(
+                subtitle = resourceReference(R.string.money_account_main_status_activating),
+                onClick = ::onAccountClick,
+            )
+            is MoneyAccountStatusValue.Onboarding.UnderReview -> MoneyAccountMainUM.Onboarding(
+                subtitle = resourceReference(R.string.money_account_main_status_verification),
+                onClick = ::onAccountClick,
+            )
+            is MoneyAccountStatusValue.Onboarding.VerificationDeclined,
+            is MoneyAccountStatusValue.Onboarding.CountryNotSupported,
+            -> MoneyAccountMainUM.ActionRequired(
+                balance = balance?.toUM(source),
+                onClick = ::onAccountClick,
+            )
         }
     }
 
     private fun MoneyAccountStatusValue.Account.toUM(): MoneyAccountMainUM {
-        return when (this) {
-            is MoneyAccountStatusValue.Account.Deactivated -> MoneyAccountMainUM.Empty
-            is MoneyAccountStatusValue.Account.Active -> {
-                val balance = balance ?: return MoneyAccountMainUM.Loading
+        val balance = balance ?: return MoneyAccountMainUM.Loading
 
-                MoneyAccountMainUM.Content(
-                    subtitle = stringReference(balance.cryptoCurrency.symbol),
-                    isBalanceFlickering = source == StatusSource.CACHE,
-                    balance = getBalanceText(currencyCode = balance.currencyCode, balance = balance.cryptoAmount),
-                    balanceSubtitle = stringReference(balance.cryptoCurrency.symbol),
-                    shouldShowOnlyCacheWarning = source == StatusSource.ONLY_CACHE,
-                    onClick = ::onAccountClick,
-                )
-            }
-        }
+        return MoneyAccountMainUM.Content(
+            subtitle = resourceReference(
+                id = R.string.money_account_main_status_active,
+                formatArgs = wrappedList(balance.cryptoCurrency.network.name),
+            ),
+            balance = balance.toUM(source),
+            onClick = ::onAccountClick,
+        )
+    }
+
+    private fun MoneyAccountStatusValue.Balance.toUM(source: StatusSource): MoneyAccountMainUM.BalanceUM {
+        val currency = getJavaCurrencyByCode(currencyCode)
+        return MoneyAccountMainUM.BalanceUM(
+            amount = stringReference(
+                cryptoAmount.format {
+                    fiat(
+                        fiatCurrencyCode = currency.currencyCode,
+                        fiatCurrencySymbol = currency.symbol,
+                    )
+                },
+            ),
+            currency = stringReference(currencyCode),
+            isFlickering = source == StatusSource.CACHE,
+            isFromCache = source == StatusSource.ONLY_CACHE,
+        )
     }
 
     private fun onAccountClick() {
-        // TODO([REDACTED_TASK_KEY]): navigate to VA screen
-    }
-
-    private fun getBalanceText(currencyCode: String, balance: BigDecimal): TextReference {
-        val currency = getJavaCurrencyByCode(currencyCode)
-        return balance.formatStyled {
-            fiat(
-                fiatCurrencyCode = currency.currencyCode,
-                fiatCurrencySymbol = currency.symbol,
-                spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
-            )
-        }
+        // TODO v_rodionov: #[REDACTED_TASK_KEY] navigate to MA screen
     }
 }

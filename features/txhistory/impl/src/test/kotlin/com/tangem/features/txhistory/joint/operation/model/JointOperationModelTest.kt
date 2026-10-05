@@ -109,11 +109,44 @@ internal class JointOperationModelTest {
         }
 
     @Test
-    fun `GIVEN the initiator is among the votes WHEN sign THEN it is counted once`() = runTest {
+    fun `GIVEN the operation executed at once WHEN sign THEN the initiator counts once and threshold is reached`() =
+        runTest {
+            // Arrange
+            val signedOperation = createOperation(
+                status = JointOperation.Status.UNKNOWN,
+                signatures = listOf(signature(address = INITIATOR), signature(address = OWN)),
+            )
+            coEvery { delegate.sign(state = any(), network = any(), operationId = any()) } returns
+                signedOperation.right()
+            val model = createModel()
+
+            // Act
+            model.onSignClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    event = JointAccountAnalyticsEvent.OperationSigned(
+                        signaturesCollected = 2,
+                        membersCount = 3,
+                        threshold = 2,
+                        isThresholdReached = true,
+                        blockchain = currency.network.name,
+                        token = currency.symbol,
+                    ),
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN signatures still below the threshold WHEN sign THEN threshold not reached`() = runTest {
         // Arrange
+        every { delegate.observe(userWalletId = any(), currency = any(), operationId = any()) } returns
+            flowOf(createState(threshold = 3))
         val signedOperation = createOperation(
             status = JointOperation.Status.AWAITING_SIGNATURES,
-            signatures = listOf(signature(address = INITIATOR), signature(address = OWN)),
+            signatures = listOf(signature(address = OWN)),
         )
         coEvery { delegate.sign(state = any(), network = any(), operationId = any()) } returns signedOperation.right()
         val model = createModel()
@@ -128,7 +161,7 @@ internal class JointOperationModelTest {
                 event = JointAccountAnalyticsEvent.OperationSigned(
                     signaturesCollected = 2,
                     membersCount = 3,
-                    threshold = 2,
+                    threshold = 3,
                     isThresholdReached = false,
                     blockchain = currency.network.name,
                     token = currency.symbol,
@@ -271,12 +304,12 @@ internal class JointOperationModelTest {
         return model
     }
 
-    private fun createState(ownAddress: String = OWN) = JointOperationState(
+    private fun createState(ownAddress: String = OWN, threshold: Int = 2) = JointOperationState(
         account = MockAccounts.createJointAccount(),
         displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = BigInteger.ONE),
-        feeWei = BigInteger.ZERO,
-        feeCoin = null,
-        threshold = 2,
+        feeAmount = BigInteger.ZERO,
+        feeCurrency = null,
+        threshold = threshold,
         membersCount = 3,
         signers = listOf(
             signer(address = INITIATOR, answer = Answer.CREATED),
