@@ -175,40 +175,22 @@ sealed interface TxInfo {
         ) : TransactionType
 
         /**
-         * A joint account's executed Safe operation, read from the `execTransaction` calldata: the provider record
-         * itself is the relayer's zero-value call to the Safe. [refundCapWei] is the fee the operation was signed
-         * with, in wei of the network coin; the actual refund is not in the record.
+         * A joint account's executed Safe operation in the token's history, read from the `execTransaction` calldata of
+         * the token transfer record. [refundCap] is the fee the operation was signed with, in the coin or the token the
+         * Safe refunds in; the actual refund is not in the record. The coin's history reads the Safe's internal
+         * transfers instead.
          */
         @Serializable
         sealed interface Joint : TransactionType {
-            val refundCapWei: SerializedBigDecimal
+            val refundCap: SdkAmount
             val signaturesCount: Int
 
-            /** The coin, or the token whose history this is, sent from the Safe */
+            /** The token whose history this is, sent from the Safe */
             @Serializable
             data class Transfer(
                 val recipient: String,
                 val amount: SerializedBigDecimal,
-                override val refundCapWei: SerializedBigDecimal,
-                override val signaturesCount: Int,
-            ) : Joint
-
-            /** A token transfer seen from the coin history, which only paid the refund. Mirrors [NetworkFee]. */
-            @Serializable
-            data class TokenFee(
-                val tokenContract: String,
-                val tokenAmount: SdkAmount?,
-                val recipient: String,
-                override val refundCapWei: SerializedBigDecimal,
-                override val signaturesCount: Int,
-            ) : Joint
-
-            /** An inner call the app does not read */
-            @Serializable
-            data class Call(
-                val contract: String,
-                val value: SerializedBigDecimal,
-                override val refundCapWei: SerializedBigDecimal,
+                override val refundCap: SdkAmount,
                 override val signaturesCount: Int,
             ) : Joint
         }
