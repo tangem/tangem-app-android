@@ -56,8 +56,8 @@ deliberate exceptions:
 
 - The pagination fetchers (events, positions, activity) throw into the pagination layer — that layer's
   contract.
-- CLOB `POST order` maps network / timeout to `Ambiguous`, not `Network`: the order may have been placed,
-  so the feature reports it as submitted, never as failed.
+- CLOB `POST order` maps network / timeout to `Ambiguous`, not `Network`: the order may have been placed
+  despite the failed response.
 
 BFF `/wallet*` `409` means approvals were sent before the deploy finished; `/withdraw*` `409` means the same
 nonce was already submitted — neither is a generic conflict.
