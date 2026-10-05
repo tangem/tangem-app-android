@@ -252,7 +252,7 @@ internal class JointOperationModel @Inject constructor(
         val signedBy = signedOperation.signatures
             .filter { it.state == JointOperation.MemberSignature.State.SIGNED }
             .map(JointOperation.MemberSignature::address)
-            .plus(listOfNotNull(signedOperation.initiator))
+            .plus(listOfNotNull(signedOperation.initiator ?: state.initiator))
             .distinct()
 
         analyticsEventHandler.send(
