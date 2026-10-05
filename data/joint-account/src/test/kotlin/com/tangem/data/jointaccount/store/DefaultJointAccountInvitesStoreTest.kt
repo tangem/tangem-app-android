@@ -227,6 +227,34 @@ internal class DefaultJointAccountInvitesStoreTest {
     }
 
     @Test
+    fun `GIVEN a failed read WHEN an invite is shared later THEN the observer still gets it`() = runTest {
+        // Arrange
+        val storage = InMemorySecureStorage()
+        val failingOnce = object : SecureStorage by storage {
+            private var hasFailed = false
+
+            override fun getAsString(key: String): String? {
+                if (!hasFailed) {
+                    hasFailed = true
+                    error("Keystore is unavailable")
+                }
+                return storage.getAsString(key)
+            }
+        }
+        val store = createStore(failingOnce)
+        val emitted = mutableListOf<Set<String>>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            store.observeShared(userWalletId = USER_WALLET_ID, cryptoAccountId = ACCOUNT_ID).toList(emitted)
+        }
+
+        // Act
+        store.markShared(userWalletId = USER_WALLET_ID, cryptoAccountId = ACCOUNT_ID, inviteId = INVITES[0])
+
+        // Assert
+        assertThat(emitted).containsExactly(emptySet<String>(), setOf(INVITES[0])).inOrder()
+    }
+
+    @Test
     fun `GIVEN the only account with a shared invite WHEN clear it THEN nothing is left in storage`() = runTest {
         // Arrange
         val storage = InMemorySecureStorage()
