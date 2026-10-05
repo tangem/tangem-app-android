@@ -32,6 +32,13 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         useUnmergedTree = true
     }
 
+    fun tileWithSubtitleAndBalance(subtitle: String, balance: String): KNode = child {
+        hasTestTag(TangemPayTestTags.MAIN_SCREEN_TILE)
+        hasAnyDescendant(withText(subtitle))
+        hasAnyDescendant(withText(balance, substring = true))
+        useUnmergedTree = true
+    }
+
     val tileBalance: KNode = child {
         hasTestTag(TangemPayTestTags.MAIN_SCREEN_TILE_BALANCE)
         useUnmergedTree = true
@@ -49,6 +56,11 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
 
     val cardButton: KNode = child {
         hasTestTag(TangemPayTestTags.PAYMENT_ACCOUNT_CARD_BUTTON)
+        useUnmergedTree = true
+    }
+
+    val cardFrozenIcon: KNode = child {
+        hasTestTag(TangemPayTestTags.PAYMENT_ACCOUNT_CARD_FROZEN_ICON)
         useUnmergedTree = true
     }
 
@@ -210,6 +222,11 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
     fun transactionRowWithText(text: String): KNode = child {
         hasText(text)
         useUnmergedTree = true
+    }
+
+    fun transactionRowWithAmount(name: String, amount: String): KNode = child {
+        hasText(name)
+        hasText(amount)
     }
 
     private val paymentAccountContent: KNode = child {

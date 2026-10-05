@@ -38,6 +38,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.screens.*
 import com.tangem.screens.tangempay.*
+import com.tangem.tap.domain.sdk.mocks.content.WalletMockContent
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.Allure.step
 import org.junit.Assert
@@ -56,6 +57,8 @@ private const val PAY_ENABLED_ENDPOINT = "/bff-v2/v1/customer/pay-enabled"
 
 private const val ACCESS_TOKEN_EXPIRES_AT_KEY = "uitest.tangempay.access_token_expires_at"
 
+private const val PER_WALLET_CUSTOMER_KEY = "uitest.tangempay.per_wallet_customer"
+
 fun expireTangemPayAccessToken() {
     val expiredAt = System.currentTimeMillis() / 1000 - 1
     System.setProperty(ACCESS_TOKEN_EXPIRES_AT_KEY, expiredAt.toString())
@@ -63,6 +66,14 @@ fun expireTangemPayAccessToken() {
 
 fun restoreTangemPayAccessToken() {
     System.clearProperty(ACCESS_TOKEN_EXPIRES_AT_KEY)
+}
+
+fun enableTangemPayPerWalletCustomers() {
+    System.setProperty(PER_WALLET_CUSTOMER_KEY, "1")
+}
+
+fun disableTangemPayPerWalletCustomers() {
+    System.clearProperty(PER_WALLET_CUSTOMER_KEY)
 }
 
 fun BaseTestCase.openTangemPay() {
@@ -1225,5 +1236,93 @@ fun BaseTestCase.reopenTangemPayFromMain() {
     }
     step("Assert payment account balance is displayed") {
         awaitSuccess { onTangemPayMainScreen { balance.assertIsDisplayed() } }
+    }
+}
+
+fun BaseTestCase.openMainScreenWithHotAndCardWallets() {
+    step("Import hot wallet from Tangem Pay seed phrase (with access code)") {
+        openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
+    }
+    step("Add a second card wallet") { addNewCardWallet(WalletMockContent) }
+}
+
+fun BaseTestCase.clickGetCardOnTangemPayOnboarding() {
+    awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+        onTangemPayOnboardingScreen { getCardButton.assertIsDisplayed() }
+    }
+    onTangemPayOnboardingScreen { getCardButton.performClick() }
+}
+
+fun BaseTestCase.assertTangemPayWalletSelectorListsWallets(vararg walletNames: String) {
+    walletNames.forEach { walletName ->
+        step("Assert '$walletName' wallet is displayed in the wallet selection sheet") {
+            awaitSuccess { onPortfolioSelectorSheet { portfolioOption(walletName).assertIsDisplayed() } }
+        }
+    }
+}
+
+fun BaseTestCase.openAndCloseTangemPayKycInProgressSheet() {
+    val kycInProgressText = getResourceString(CoreResR.string.tangempay_kyc_in_progress)
+    val viewStatusText = getResourceString(CoreResR.string.tangempay_kyc_in_progress_notification_button)
+    step("Click on Tangem Pay tile") {
+        onTangemPayMainScreen { mainScreenTile.clickWithAssertion() }
+    }
+    step("Assert KYC in progress sheet is displayed") {
+        awaitSuccess {
+            onTangemPayKycSheet {
+                title(kycInProgressText).assertIsDisplayed()
+                primaryButtonWithText(viewStatusText).assertIsDisplayed()
+            }
+        }
+    }
+    step("Click on 'Close' button") {
+        onTangemPayKycSheet { closeButton.clickWithAssertion() }
+    }
+    step("Assert KYC in progress sheet is not displayed") {
+        awaitSuccess { onTangemPayKycSheet { primaryButtonWithText(viewStatusText).assertDoesNotExist() } }
+    }
+}
+
+fun BaseTestCase.assertTangemPayTileOfDisplayedWallet(tileSubtitle: String, fiatBalance: String) {
+    step("Assert Tangem Pay tile shows '$tileSubtitle' and '$fiatBalance'") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onTangemPayMainScreen { tileWithSubtitleAndBalance(tileSubtitle, fiatBalance).assertIsDisplayed() }
+        }
+    }
+}
+
+fun BaseTestCase.openTangemPayFromTileWithSubtitle(tileSubtitle: String) {
+    step("Click on Tangem Pay tile with '$tileSubtitle'") {
+        onTangemPayMainScreen { tileWithSubtitle(tileSubtitle).performClick() }
+    }
+    step("Assert payment account balance is displayed") {
+        awaitSuccess { onTangemPayMainScreen { balance.assertIsDisplayed() } }
+    }
+}
+
+fun BaseTestCase.assertTangemPayPaymentAccountData(
+    fiatBalance: String,
+    cardDigits: List<String>,
+    transaction: String,
+    otherWalletTransaction: String,
+) {
+    step("Assert payment account balance contains '$fiatBalance'") {
+        awaitSuccess { onTangemPayMainScreen { balance.assertTextContainsSafe(fiatBalance, substring = true) } }
+    }
+    cardDigits.forEach { digits ->
+        step("Assert card '$digits' is displayed") {
+            onTangemPayMainScreen { cardTileWithDigits(digits).assertIsDisplayed() }
+        }
+    }
+    assertTangemPayTransactionRowDisplayed(transaction)
+    step("Assert '$otherWalletTransaction' transaction row is not displayed") {
+        onTangemPayMainScreen { transactionRowWithText(otherWalletTransaction).assertDoesNotExist() }
+    }
+}
+
+fun BaseTestCase.returnToMainFromTangemPay() {
+    step("Click on 'Back' button") { device.uiDevice.pressBack() }
+    step("Assert 'Main' screen is displayed") {
+        awaitSuccess { onMainScreenTopBar { moreButton.assertIsDisplayed() } }
     }
 }
