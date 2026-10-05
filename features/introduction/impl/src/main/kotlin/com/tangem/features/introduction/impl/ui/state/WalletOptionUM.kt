@@ -5,6 +5,7 @@ import com.tangem.core.ui.extensions.TextReference
 
 internal data class WalletOptionUM(
     @DrawableRes val iconRes: Int,
+    val isIconTinted: Boolean = true,
     val title: TextReference,
     val description: TextReference,
     val isEnabled: Boolean = true,

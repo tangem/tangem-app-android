@@ -19,10 +19,13 @@ import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.collectibles.impl.common.ui.CollectiblesPackImage
+import com.tangem.features.collectibles.impl.common.ui.CollectiblesPackImageErrorCard
 import com.tangem.features.collectibles.impl.common.ui.CollectiblesStatus
+import com.tangem.features.collectibles.impl.common.ui.PACK_IMAGE_CARD_RADIUS
 import com.tangem.features.collectibles.impl.confirmorder.ui.state.CollectiblesConfirmOrderUM
 import com.tangem.features.collectibles.impl.confirmorder.ui.state.CollectiblesConfirmOrderUM.OrderUM
 import com.tangem.features.collectibles.impl.confirmorder.ui.state.CollectiblesConfirmOrderUM.PriceRowUM
@@ -63,8 +66,14 @@ internal fun CollectiblesConfirmOrderScreen(state: CollectiblesConfirmOrderUM, m
             )
         },
         overlay = {
-            if (state is CollectiblesConfirmOrderUM.Content) {
-                ConfirmFooter(
+            when (state) {
+                is CollectiblesConfirmOrderUM.Loading -> CollectiblesConfirmOrderFooterSkeleton(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .onSizeChanged { size -> footerHeight = size.height },
+                )
+                is CollectiblesConfirmOrderUM.Error -> Unit
+                is CollectiblesConfirmOrderUM.Content -> ConfirmFooter(
                     order = state.order,
                     onConfirm = {
                         state.onApproveClick()
@@ -88,21 +97,30 @@ internal fun CollectiblesConfirmOrderScreen(state: CollectiblesConfirmOrderUM, m
         },
     ) { contentPadding ->
         when (state) {
-            is CollectiblesConfirmOrderUM.Loading -> Unit
-            is CollectiblesConfirmOrderUM.Error -> Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(contentPadding),
-                contentAlignment = Alignment.Center,
-            ) {
-                CollectiblesStatus(message = state.message, onReloadClick = state.onReloadClick)
-            }
+            is CollectiblesConfirmOrderUM.Loading -> CollectiblesConfirmOrderSkeleton(footerHeight = footerHeight)
+            is CollectiblesConfirmOrderUM.Error -> ConfirmOrderError(state = state, contentPadding = contentPadding)
             is CollectiblesConfirmOrderUM.Content -> ConfirmOrderContent(
                 order = state.order,
                 progress = progress,
                 footerHeight = footerHeight,
             )
         }
+    }
+}
+
+@Composable
+private fun ConfirmOrderError(state: CollectiblesConfirmOrderUM.Error, contentPadding: PaddingValues) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(contentPadding),
+        contentAlignment = Alignment.Center,
+    ) {
+        CollectiblesStatus(
+            message = state.message,
+            onReloadClick = state.onReloadClick,
+            isReloading = state.isReloading,
+        )
     }
 }
 
@@ -139,9 +157,9 @@ private fun Modifier.dropAway(exit: Float, isDelayed: Boolean): Modifier = graph
 
 @Composable
 private fun PackImage(imageUrl: String?, progress: ConfirmProgress, modifier: Modifier = Modifier) {
-    CollectiblesPackImage(
-        imageUrl = imageUrl,
-        glowRadius = PACK_GLOW_RADIUS,
+    var isImageLoading by remember(imageUrl) { mutableStateOf(true) }
+
+    Box(
         modifier = modifier
             .offset(x = PackLaunch.offsetX(progress), y = PackLaunch.offsetY(progress))
             .graphicsLayer {
@@ -151,7 +169,19 @@ private fun PackImage(imageUrl: String?, progress: ConfirmProgress, modifier: Mo
                 rotationZ = PackLaunch.rotation(progress)
                 alpha = PackLaunch.alpha(progress)
             },
-    )
+    ) {
+        CollectiblesPackImage(
+            imageUrl = imageUrl,
+            glowRadius = PACK_GLOW_RADIUS,
+            onLoadingChange = { isImageLoading = it },
+            modifier = Modifier.matchParentSize(),
+            errorContent = { CollectiblesPackImageErrorCard() },
+        )
+
+        if (isImageLoading) {
+            TangemShimmer(modifier = Modifier.matchParentSize(), radius = PACK_IMAGE_CARD_RADIUS)
+        }
+    }
 }
 
 @Composable

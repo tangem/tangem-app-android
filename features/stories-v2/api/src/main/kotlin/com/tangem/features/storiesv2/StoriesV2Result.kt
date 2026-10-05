@@ -29,6 +29,9 @@ sealed interface StoriesV2Result {
 
             /** A composition exists, but neither an asset nor a poster could produce a first frame. */
             NO_USABLE_FRAME,
+
+            /** The story exists, but its request or the download of its files failed. */
+            DELIVERY_FAILED,
         }
     }
 }
