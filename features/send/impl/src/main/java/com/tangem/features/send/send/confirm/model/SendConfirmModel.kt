@@ -302,25 +302,22 @@ internal class SendConfirmModel @Inject constructor(
 
     private fun sendJointOperationCreatedAnalytics(account: Account.Joint) {
         val sendUM = uiState.value
+        val signaturesUM = (sendUM.confirmUM as? ConfirmUM.Content)?.signaturesUM
+        if (signaturesUM == null) {
+            TangemLogger.e("Send confirm: no joint composition on the confirm step, the success events are not sent")
+            return
+        }
         val feeToken = getCurrencyStatusForFeePayment().currency
         // The success screen replaces this step right away and cancels modelScope
         appScope.launch(dispatchers.default) {
-            val storedAccount = jointSendDelegate.findJointAccount(
-                userWalletId = userWallet.walletId,
-                account = account,
-            )
-            if (storedAccount == null) {
-                TangemLogger.e("Joint account is gone, the send success events are not sent")
-                return@launch
-            }
             sendAnalyticHelper.sendSuccessAnalytics(
                 cryptoCurrency = cryptoCurrency,
                 sendUM = sendUM,
                 feeToken = feeToken,
                 account = account,
                 jointComposition = AnalyticsParam.JointComposition(
-                    membersCount = storedAccount.membersCount,
-                    threshold = storedAccount.threshold,
+                    membersCount = signaturesUM.membersCount,
+                    threshold = signaturesUM.threshold,
                 ),
             )
         }
