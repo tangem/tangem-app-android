@@ -5,13 +5,16 @@ import arrow.core.right
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
+import com.tangem.domain.jointaccount.model.JointOperationRejectError
 import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.model.JointOperationSignerState
 import com.tangem.domain.jointaccount.model.JointOperationSignerState.Answer
@@ -19,6 +22,8 @@ import com.tangem.domain.jointaccount.model.JointTransferIntent
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
 import com.tangem.features.txhistory.joint.operation.JointOperationComponent
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.MockAccounts
@@ -36,9 +41,11 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigInteger
 
-/** Covers the `Operation Signed` analytics sent once the backend accepts this member's signature */
+/** Covers the analytics of the sheet: `Operation Signed` and the errors it shows when signing or refusing fails */
 @OptIn(ExperimentalCoroutinesApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class JointOperationModelTest {
@@ -159,6 +166,87 @@ internal class JointOperationModelTest {
         verify(exactly = 0) { analyticsEventHandler.send(any()) }
     }
 
+    @ParameterizedTest
+    @MethodSource("provideSignErrorModels")
+    fun `GIVEN signing fails with a shown error WHEN sign THEN Joint Account Error is sent`(model: SignErrorModel) =
+        runTest {
+            // Arrange
+            coEvery { delegate.sign(state = any(), network = any(), operationId = any()) } returns model.error.left()
+            val sheet = createModel()
+
+            // Act
+            sheet.onSignClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { analyticsEventHandler.send(event = model.expected) }
+        }
+
+    data class SignErrorModel(val error: JointOperationSignError, val expected: JointAccountError)
+
+    private fun provideSignErrorModels() = listOf(
+        SignErrorModel(
+            error = JointOperationSignError.Failed(cause = failure),
+            expected = JointAccountError(source = ErrorSource.Sign, cause = failure),
+        ),
+        SignErrorModel(
+            error = JointOperationSignError.ThresholdReached,
+            expected = JointAccountError(source = ErrorSource.Sign, errorMessage = "ThresholdReached"),
+        ),
+    )
+
+    @ParameterizedTest
+    @MethodSource("provideRejectErrorModels")
+    fun `GIVEN refusing fails WHEN refusal confirmed THEN Joint Account Error carries the refusal kind`(
+        model: RejectErrorModel,
+    ) = runTest {
+        // Arrange
+        every { delegate.observe(userWalletId = any(), currency = any(), operationId = any()) } returns
+            flowOf(createState(ownAddress = model.ownAddress))
+        coEvery { delegate.reject(state = any(), network = any(), operationId = any()) } returns
+            JointOperationRejectError.Failed(cause = failure).left()
+        val sheet = createModel()
+
+        // Act
+        sheet.confirmRefusal()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(event = JointAccountError(source = model.expectedSource, cause = failure))
+        }
+    }
+
+    data class RejectErrorModel(val ownAddress: String, val expectedSource: ErrorSource)
+
+    private fun provideRejectErrorModels() = listOf(
+        RejectErrorModel(ownAddress = OWN, expectedSource = ErrorSource.Decline),
+        RejectErrorModel(ownAddress = INITIATOR, expectedSource = ErrorSource.Delete),
+    )
+
+    @Test
+    fun `GIVEN the operation is already gone WHEN refusal confirmed THEN no error is sent`() = runTest {
+        // Arrange
+        coEvery { delegate.reject(state = any(), network = any(), operationId = any()) } returns
+            JointOperationRejectError.OperationNotFound.left()
+        val sheet = createModel()
+
+        // Act
+        sheet.confirmRefusal()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { analyticsEventHandler.send(any()) }
+    }
+
+    /** The refusal runs from the confirmation dialog the sheet shows first */
+    private fun JointOperationModel.confirmRefusal() {
+        val dialogs = mutableListOf<UiMessage>()
+        every { uiMessageSender.send(capture(dialogs)) } returns Unit
+        onRefuseClick()
+        (dialogs.single() as DialogMessage).firstAction.onClick()
+    }
+
     /** The actions read the state the sheet shows, so the test collects it the way the sheet does */
     private fun TestScope.createModel(): JointOperationModel {
         val model = JointOperationModel(
@@ -183,7 +271,7 @@ internal class JointOperationModelTest {
         return model
     }
 
-    private fun createState() = JointOperationState(
+    private fun createState(ownAddress: String = OWN) = JointOperationState(
         account = MockAccounts.createJointAccount(),
         displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = BigInteger.ONE),
         feeWei = BigInteger.ZERO,
@@ -196,7 +284,7 @@ internal class JointOperationModelTest {
             signer(address = THIRD, answer = Answer.WAITING),
         ),
         canSign = true,
-        ownAddress = OWN,
+        ownAddress = ownAddress,
         initiator = INITIATOR,
     )
 
@@ -241,5 +329,7 @@ internal class JointOperationModelTest {
         const val THIRD = "0xthird"
         const val RECIPIENT = "0xrecipient"
         const val ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
+
+        val failure = IllegalStateException("Request failed")
     }
 }
