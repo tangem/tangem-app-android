@@ -1,15 +1,19 @@
-package com.tangem.tap.di.domain
+package com.tangem.data.offramp.di
 
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
+import com.tangem.core.ui.theme.AppThemeModeHolder
+import com.tangem.data.offramp.DefaultOfframpRepository
+import com.tangem.data.offramp.MoonPayCredentials
+import com.tangem.data.offramp.model.PendingOfframpEntry
 import com.tangem.domain.offramp.GetOfframpUrlUseCase
 import com.tangem.domain.offramp.repository.OfframpRepository
-import com.tangem.tap.data.DefaultOfframpRepository
-import com.tangem.tap.data.model.PendingOfframpEntry
-import com.tangem.tap.network.exchangeServices.SellService
+import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
+import com.tangem.grow.datasource.config.GrowEnvironmentConfig
+import com.tangem.grow.datasource.moonpay.MoonPayApi
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -22,7 +26,7 @@ import kotlinx.serialization.builtins.ListSerializer
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal object OfframpDomainModule {
+internal object OfframpDataModule {
 
     @Provides
     @Singleton
@@ -41,11 +45,24 @@ internal object OfframpDomainModule {
     @Provides
     @Singleton
     fun provideOfframpRepository(
-        sellService: SellService,
+        api: MoonPayApi,
+        growEnvironmentConfig: GrowEnvironmentConfig,
+        getSelectedWalletUseCase: GetSelectedWalletUseCase,
+        appThemeModeHolder: AppThemeModeHolder,
         pendingOfframpStore: DataStore<List<PendingOfframpEntry>>,
         dispatchers: CoroutineDispatcherProvider,
     ): OfframpRepository {
-        return DefaultOfframpRepository(sellService, pendingOfframpStore, dispatchers)
+        return DefaultOfframpRepository(
+            api = api,
+            credentials = MoonPayCredentials(
+                apiKey = growEnvironmentConfig.moonPayApiKey,
+                secretKey = growEnvironmentConfig.moonPayApiSecretKey,
+            ),
+            userWalletProvider = { getSelectedWalletUseCase.sync().getOrNull() },
+            appThemeModeHolder = appThemeModeHolder,
+            pendingOfframpStore = pendingOfframpStore,
+            dispatchers = dispatchers,
+        )
     }
 
     @Provides
