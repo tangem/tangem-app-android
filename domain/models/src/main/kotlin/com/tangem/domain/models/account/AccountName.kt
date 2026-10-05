@@ -44,6 +44,21 @@ sealed interface AccountName {
 
                 Custom(value = trimmedValue)
             }
+
+            /**
+             * Creates an [AccountName.Custom] from a name another client has already saved. iOS counts [MAX_LENGTH] in
+             * the characters the user sees, so a name with emoji it accepted can be longer here; only a blank name is
+             * refused, since it cannot be shown at all.
+             *
+             * @param value the stored account name
+             */
+            fun fromStored(value: String): Either<Error, Custom> = either {
+                val trimmedValue = value.trim()
+
+                ensure(trimmedValue.isNotBlank()) { Error.Empty }
+
+                Custom(value = trimmedValue)
+            }
         }
     }
 
