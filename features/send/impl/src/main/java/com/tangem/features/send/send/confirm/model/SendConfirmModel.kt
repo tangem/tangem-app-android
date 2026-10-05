@@ -48,6 +48,8 @@ import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransac
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendTronGaslessTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.api.subcomponents.amount.SendAmountReduceTrigger
@@ -295,6 +297,7 @@ internal class SendConfirmModel @Inject constructor(
 
     private fun showJointOperationError(error: JointOperationCreateError) {
         _uiState.update(SendConfirmSendingStateTransformer(isSending = false))
+        sendJointOperationError(error)
         when (error) {
             is JointOperationCreateError.UserCancelled -> Unit
             is JointOperationCreateError.SlotBusy -> alertFactory.getJointSlotBusyState()
@@ -315,6 +318,18 @@ internal class SendConfirmModel @Inject constructor(
                 alertFactory.getGenericErrorState(onFailedTxEmailClick = { onFailedTxEmailClick(error.toString()) })
             }
         }
+    }
+
+    private fun sendJointOperationError(error: JointOperationCreateError) {
+        val analyticsEvent = when (error) {
+            is JointOperationCreateError.UserCancelled -> return
+            is JointOperationCreateError.Failed -> JointAccountError(
+                source = ErrorSource.CreateOperation,
+                cause = error.cause,
+            )
+            else -> JointAccountError(source = ErrorSource.CreateOperation, errorMessage = error.toString())
+        }
+        analyticsEventHandler.send(analyticsEvent)
     }
 
     private fun startSending() {
