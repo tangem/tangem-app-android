@@ -61,9 +61,9 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
   the 2-decimal grid — the BFF quotes a whole-position sale at the position's own precision. Display cuts
   to 2 decimals, never more than held; a count below 0.01 keeps its precision so a remainder is not shown
   as `0`. Steps move in whole shares; 100 % is the position itself, so a full close reaches the last fraction.
-- **Outcomes.** `Ambiguous` (transport failure after send) is shown as **Submitted**, never as failed — the
-  order may be live. `NoLiquidity` (fill-and-kill found nothing) is NotFilled. Filled / PartiallyFilled /
-  Submitted open the funding window.
+- **Ambiguous orders.** A transport or inconclusive HTTP error does not prove rejection. Summary shows
+  the existing error dialog with Support; keep balance/position refreshes and never resubmit
+  automatically, because the order may already be live.
 - **Position indexing.** `/positions/outcome` answers `null` until the position is indexed — for several
   seconds even for an outcome the wallet already held. Details shows Unavailable at once on a first `null`
   and retries only for a shown position whose size lags the last order. The result screen waits longer
