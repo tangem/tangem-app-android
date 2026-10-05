@@ -1,8 +1,8 @@
-package com.tangem.tap.network.exchangeServices.moonpay
+package com.tangem.data.offramp
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Blockchain.*
-import com.tangem.tap.network.exchangeServices.moonpay.models.MoonPaySupportedCurrency
+import com.tangem.data.offramp.models.MoonPaySupportedCurrency
 
 /**
  * Map [Blockchain] to [MoonPaySupportedCurrency.networkCode] and [MoonPaySupportedCurrency.currencyCode]

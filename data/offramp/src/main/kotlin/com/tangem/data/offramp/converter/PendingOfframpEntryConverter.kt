@@ -1,8 +1,8 @@
-package com.tangem.tap.data.converter
+package com.tangem.data.offramp.converter
 
+import com.tangem.data.offramp.model.PendingOfframpEntry
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.offramp.model.PendingOfframp
-import com.tangem.tap.data.model.PendingOfframpEntry
 import com.tangem.utils.converter.Converter
 
 /**
