@@ -18,8 +18,9 @@ import java.io.File
 interface AppDataStoreFactory {
 
     /**
-     * Whether stores move from the Moshi serializer to kotlinx. While off, call sites keep their Moshi serializer and
-     * the fileName [create] keeps the default kotlinx config. Both write the same JSON, so switching keeps the data.
+     * Whether stores move from the Moshi serializer to kotlinx. While off, migrated call sites keep their Moshi
+     * serializer and the fileName [create] keeps the default kotlinx config. The gated Moshi stores use compatible
+     * JSON in both modes; switching fileName stores back off may lose values that rely on an omitted nullable field.
      */
     @RemoveWithToggle("AND_18288_KOTLINX_DATASTORE_ENABLED")
     val isKotlinxDataStoreEnabled: Boolean
