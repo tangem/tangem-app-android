@@ -8,6 +8,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.models.TransactionFeeExtended
@@ -52,7 +53,7 @@ internal class SendModelTronGaslessFeeTest : SendModelTestBase() {
             }
         }
         val accountStatus: AccountCryptoCurrencyStatus = mockk(relaxed = true) {
-            every { component1() } returns mockk(relaxed = true)
+            every { component1() } returns mockk<Account.Personal>(relaxed = true)
             every { component2() } returns sentStatus
         }
         every { getAccountCurrencyStatusUseCase(any(), any<CryptoCurrency>()) } returns flowOf(accountStatus)

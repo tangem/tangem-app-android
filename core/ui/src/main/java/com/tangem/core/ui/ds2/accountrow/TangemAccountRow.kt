@@ -6,31 +6,41 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.account.AccountIconSize
-import com.tangem.core.ui.components.account.AccountResIcon
 import com.tangem.core.ui.ds2.DsVersion
+import com.tangem.core.ui.ds2.avatar.TangemAvatar
 import com.tangem.core.ui.ds2.badge.TangemBadge
-import com.tangem.core.ui.ds2.shimmers.TangemShimmer
+import com.tangem.core.ui.ds2.expandable.ExpandableAvatar
+import com.tangem.core.ui.ds2.expandable.ExpandableCard
+import com.tangem.core.ui.ds2.expandable.ExpandableCardLayoutId
+import com.tangem.core.ui.ds2.expandable.ExpandableCardShape
+import com.tangem.core.ui.ds2.expandable.ExpandableCollapseArrow
+import com.tangem.core.ui.ds2.expandable.ExpandableDot
+import com.tangem.core.ui.ds2.expandable.ExpandableEmptyBody
+import com.tangem.core.ui.ds2.expandable.ExpandableShimmerLine
+import com.tangem.core.ui.ds2.expandable.ExpandableTitle
+import com.tangem.core.ui.ds2.expandable.ExpandableTitleAnchor
+import com.tangem.core.ui.ds2.expandable.rememberExpansionMotion
+import com.tangem.core.ui.ds2.expandable.rememberRowPressAlpha
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.core.ui.ds2.util.TangemPriceChange
@@ -43,8 +53,8 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 /**
  * Design-system v2 (DS3) **Account Row** — a portfolio card for one account. Collapsed it is a
  * summary line (avatar, name, `2 tokens · 2 members`, fiat balance and price change); expanded it
- * shrinks that line into a compact heading and reveals [content], normally the account's
- * [TangemTokenRow]s.
+ * shrinks that line into a compact heading. The account's [TangemTokenRow]s are emitted by the
+ * host next to the row, not nested inside it.
  *
  * Version: 1.0.0
  *
@@ -60,6 +70,8 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * - The title is always one line and ellipsized, in both states.
  * - Holding the row down dims its heading to 60 %.
  *
+ * @param avatar Leading account avatar. The row renders it itself, morphing it from 40dp to 16dp as
+ * it expands — pass the state, not a pre-sized composable. See [TangemAvatar.UiState].
  * @param title Account name. Single line, ellipsized.
  * @param modifier Modifier applied to the card. The card always fills the available width.
  * @param tokensAmount Localized token count (e.g. `"2 tokens"`). `null` hides it.
@@ -71,19 +83,21 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * @param showUpdateWarning Shows the cloud update-error icon before the collapsed balance.
  * @param isBalanceHidden When `true`, [balance] is masked with stars.
  * @param isBalanceFlickering Runs the blade animation over [balance] while it is being refreshed.
- * @param isExpanded Whether the card shows [content].
+ * @param showCompactBalance Whether [balance] also joins the compact heading while expanded. An
+ * account with no tokens passes `false` — its open heading carries nothing but its name.
+ * @param isExpanded Whether the row is open. Ignored unless [isExpandable].
  * @param collapseContentDescription Accessibility label of the collapse arrow; supply it when the
  * row is expandable so the affordance is announced.
  * @param onClick Card click handler. `null` with no [onLongClick] makes the card non-interactive.
  * @param onLongClick Card long-press handler. `null` disables long-press.
- * @param content Expanded body — the account's token rows. `null` makes the card non-expandable.
- * @param avatar Leading account avatar. Render it at [AccountIconSize.Default] (40dp) and do not
- * animate it — the row shrinks it itself while expanding. `AccountResIcon` / `AccountCharIcon` /
- * `PaymentAccountIcon` all fit.
+ * @param isExpandable Whether the row can be opened at all. `false` hides the collapse arrow.
+ * @param shape Card background and clip. Pass a shape with square bottom corners when sibling
+ * items continue the card below.
  */
 @Suppress("LongParameterList")
 @Composable
 fun TangemAccountRow(
+    avatar: TangemAvatar.UiState,
     title: TextReference,
     modifier: Modifier = Modifier,
     tokensAmount: TextReference? = null,
@@ -93,12 +107,13 @@ fun TangemAccountRow(
     showUpdateWarning: Boolean = false,
     isBalanceHidden: Boolean = false,
     isBalanceFlickering: Boolean = false,
+    showCompactBalance: Boolean = true,
     isExpanded: Boolean = false,
     collapseContentDescription: String? = null,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
-    content: (@Composable ColumnScope.() -> Unit)? = null,
-    avatar: @Composable () -> Unit,
+    isExpandable: Boolean = false,
+    shape: Shape = ExpandableCardShape,
 ) {
     AccountRowScaffold(
         avatar = avatar,
@@ -111,11 +126,13 @@ fun TangemAccountRow(
         showUpdateWarning = showUpdateWarning,
         isBalanceHidden = isBalanceHidden,
         isBalanceFlickering = isBalanceFlickering,
+        showCompactBalance = showCompactBalance,
         isExpanded = isExpanded,
         collapseContentDescription = collapseContentDescription,
         onClick = onClick,
         onLongClick = onLongClick,
-        content = content,
+        isExpandable = isExpandable,
+        shape = shape,
     )
 }
 
@@ -204,38 +221,6 @@ object TangemAccountRow {
         ) : State()
 
         /**
-         * Empty variant — an account with no tokens yet. Expanded, the balance drops out of the
-         * heading and the body is replaced by the prompt to add the first ones.
-         *
-         * @param id Unique id.
-         * @param title Account name.
-         * @param message Localized prompt shown in the expanded body.
-         * @param addTokensLabel Localized label of the button under [message].
-         * @param onAddTokensClick Invoked when that button is tapped.
-         * @param tokensAmount Localized token count (e.g. `"0 tokens"`). `null` hides it.
-         * @param membersAmount Localized member count. `null` hides it and the separating dot.
-         * @param balance Total fiat balance (e.g. `"$0.00"`), shown while collapsed only. `null`
-         * hides it.
-         * @param priceChange Price change under the collapsed balance — normally
-         * [TangemPriceChange.Direction.Neutral]. `null` hides it.
-         * @param onClick Card click handler. `null` with no [onLongClick] makes it non-interactive.
-         * @param onLongClick Card long-press handler. `null` disables long-press.
-         */
-        data class Empty(
-            override val id: String,
-            val title: TextReference,
-            val message: TextReference,
-            val addTokensLabel: TextReference,
-            val onAddTokensClick: () -> Unit,
-            val tokensAmount: TextReference? = null,
-            val membersAmount: TextReference? = null,
-            val balance: TextReference? = null,
-            val priceChange: TangemPriceChange.State? = null,
-            val onClick: (() -> Unit)? = null,
-            val onLongClick: (() -> Unit)? = null,
-        ) : State()
-
-        /**
          * Loading variant — avatar and text-line shimmers in the collapsed geometry.
          *
          * @param id Unique id.
@@ -252,28 +237,29 @@ object TangemAccountRow {
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=10694-21239)
  *
+ * @param avatar Leading account avatar. The row renders it itself, morphing it from 40dp to 16dp as
+ * it expands — pass the state, not a pre-sized composable. See [TangemAvatar.UiState].
  * @param state Card state model. See [TangemAccountRow.State].
  * @param modifier Modifier applied to the card.
- * @param isExpanded Whether the card shows [content].
+ * @param isExpanded Whether the row is open. Ignored unless [isExpandable].
  * @param isBalanceHidden When `true`, the balance is masked with stars. Kept outside [state] because
  * it is an app-wide setting, as on [TangemTokenRow].
  * @param collapseContentDescription Accessibility label of the collapse arrow.
- * @param content Expanded body — the account's token rows. Ignored by
- * [TangemAccountRow.State.Empty], which renders its own body, and by
- * [TangemAccountRow.State.Shimmer].
- * @param avatar Leading account avatar, rendered at [AccountIconSize.Default]. It stays outside
- * [state] because it is a composable slot.
+ * @param isExpandable Whether the row can be opened at all. `false` hides the collapse arrow.
+ * @param shape Card background and clip. Pass a shape with square bottom corners when sibling
+ * items continue the card below.
  */
 @Suppress("LongParameterList")
 @Composable
 fun TangemAccountRow(
+    avatar: TangemAvatar.UiState,
     state: TangemAccountRow.State,
     modifier: Modifier = Modifier,
     isExpanded: Boolean = false,
     isBalanceHidden: Boolean = false,
     collapseContentDescription: String? = null,
-    content: (@Composable ColumnScope.() -> Unit)? = null,
-    avatar: @Composable () -> Unit,
+    isExpandable: Boolean = false,
+    shape: Shape = ExpandableCardShape,
 ) {
     when (state) {
         is TangemAccountRow.State.Content -> TangemAccountRow(
@@ -291,7 +277,8 @@ fun TangemAccountRow(
             collapseContentDescription = collapseContentDescription,
             onClick = state.onClick,
             onLongClick = state.onLongClick,
-            content = content,
+            isExpandable = isExpandable,
+            shape = shape,
         )
         is TangemAccountRow.State.Unreachable -> TangemAccountRow.Unreachable(
             avatar = avatar,
@@ -304,7 +291,8 @@ fun TangemAccountRow(
             collapseContentDescription = collapseContentDescription,
             onClick = state.onClick,
             onLongClick = state.onLongClick,
-            content = content,
+            isExpandable = isExpandable,
+            shape = shape,
         )
         is TangemAccountRow.State.BalanceError -> TangemAccountRow.BalanceError(
             avatar = avatar,
@@ -316,26 +304,13 @@ fun TangemAccountRow(
             collapseContentDescription = collapseContentDescription,
             onClick = state.onClick,
             onLongClick = state.onLongClick,
-            content = content,
+            isExpandable = isExpandable,
+            shape = shape,
         )
-        is TangemAccountRow.State.Empty -> TangemAccountRow.Empty(
-            avatar = avatar,
-            title = state.title,
-            message = state.message,
-            addTokensLabel = state.addTokensLabel,
-            onAddTokensClick = state.onAddTokensClick,
+        is TangemAccountRow.State.Shimmer -> TangemAccountRow.Shimmer(
             modifier = modifier,
-            tokensAmount = state.tokensAmount,
-            membersAmount = state.membersAmount,
-            balance = state.balance,
-            priceChange = state.priceChange,
-            isBalanceHidden = isBalanceHidden,
-            isExpanded = isExpanded,
-            collapseContentDescription = collapseContentDescription,
-            onClick = state.onClick,
-            onLongClick = state.onLongClick,
+            shape = shape,
         )
-        is TangemAccountRow.State.Shimmer -> TangemAccountRow.Shimmer(modifier = modifier)
     }
 }
 
@@ -345,21 +320,25 @@ fun TangemAccountRow(
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=10694-21239)
  *
+ * @param avatar Leading account avatar. The row renders it itself, morphing it from 40dp to 16dp as
+ * it expands — pass the state, not a pre-sized composable. See [TangemAvatar.UiState].
  * @param title Account name.
  * @param badge Localized badge label (e.g. `"Unreachable"`).
  * @param modifier Modifier applied to the card.
  * @param tokensAmount Localized token count. `null` hides it.
  * @param membersAmount Localized member count. `null` hides it and the separating dot.
- * @param isExpanded Whether the card shows [content].
+ * @param isExpanded Whether the row is open. Ignored unless [isExpandable].
  * @param collapseContentDescription Accessibility label of the collapse arrow.
  * @param onClick Card click handler. `null` with no [onLongClick] makes it non-interactive.
  * @param onLongClick Card long-press handler. `null` disables long-press.
- * @param content Expanded body — the account's token rows, themselves usually unreachable.
- * @param avatar Leading account avatar, rendered at [AccountIconSize.Default].
+ * @param isExpandable Whether the row can be opened at all. `false` hides the collapse arrow.
+ * @param shape Card background and clip. Pass a shape with square bottom corners when sibling
+ * items continue the card below.
  */
 @Suppress("LongParameterList")
 @Composable
 fun TangemAccountRow.Unreachable(
+    avatar: TangemAvatar.UiState,
     title: TextReference,
     badge: TextReference,
     modifier: Modifier = Modifier,
@@ -369,8 +348,8 @@ fun TangemAccountRow.Unreachable(
     collapseContentDescription: String? = null,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
-    content: (@Composable ColumnScope.() -> Unit)? = null,
-    avatar: @Composable () -> Unit,
+    isExpandable: Boolean = false,
+    shape: Shape = ExpandableCardShape,
 ) {
     AccountRowScaffold(
         avatar = avatar,
@@ -383,7 +362,8 @@ fun TangemAccountRow.Unreachable(
         collapseContentDescription = collapseContentDescription,
         onClick = onClick,
         onLongClick = onLongClick,
-        content = content,
+        isExpandable = isExpandable,
+        shape = shape,
     )
 }
 
@@ -393,20 +373,24 @@ fun TangemAccountRow.Unreachable(
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=10694-21239)
  *
+ * @param avatar Leading account avatar. The row renders it itself, morphing it from 40dp to 16dp as
+ * it expands — pass the state, not a pre-sized composable. See [TangemAvatar.UiState].
  * @param title Account name.
  * @param modifier Modifier applied to the card.
  * @param tokensAmount Localized token count. `null` hides it.
  * @param membersAmount Localized member count. `null` hides it and the separating dot.
- * @param isExpanded Whether the card shows [content].
+ * @param isExpanded Whether the row is open. Ignored unless [isExpandable].
  * @param collapseContentDescription Accessibility label of the collapse arrow.
  * @param onClick Card click handler. `null` with no [onLongClick] makes it non-interactive.
  * @param onLongClick Card long-press handler. `null` disables long-press.
- * @param content Expanded body — the account's token rows.
- * @param avatar Leading account avatar, rendered at [AccountIconSize.Default].
+ * @param isExpandable Whether the row can be opened at all. `false` hides the collapse arrow.
+ * @param shape Card background and clip. Pass a shape with square bottom corners when sibling
+ * items continue the card below.
  */
 @Suppress("LongParameterList")
 @Composable
 fun TangemAccountRow.BalanceError(
+    avatar: TangemAvatar.UiState,
     title: TextReference,
     modifier: Modifier = Modifier,
     tokensAmount: TextReference? = null,
@@ -415,8 +399,8 @@ fun TangemAccountRow.BalanceError(
     collapseContentDescription: String? = null,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
-    content: (@Composable ColumnScope.() -> Unit)? = null,
-    avatar: @Composable () -> Unit,
+    isExpandable: Boolean = false,
+    shape: Shape = ExpandableCardShape,
 ) {
     AccountRowScaffold(
         avatar = avatar,
@@ -429,75 +413,43 @@ fun TangemAccountRow.BalanceError(
         collapseContentDescription = collapseContentDescription,
         onClick = onClick,
         onLongClick = onLongClick,
-        content = content,
+        isExpandable = isExpandable,
+        shape = shape,
     )
 }
 
 /**
- * Design-system v2 (DS3) **Account Row / Empty** — an account with no tokens. Collapsed it reads
- * like the default variant with a zero balance; expanded, the balance drops out of the heading and
- * the prompt to add the first tokens takes the place of the token list.
+ * Design-system v2 (DS3) **Account Row / Empty body** — the prompt to add the first tokens, shown
+ * under an open account that has none.
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=10694-21239)
  *
- * @param title Account name.
- * @param message Localized prompt shown in the expanded body.
+ * Place it as the sibling that follows the row, where the token rows would otherwise go, and give it
+ * a [shape] that closes the card.
+ *
+ * @param message Localized prompt.
  * @param addTokensLabel Localized label of the button under [message].
  * @param onAddTokensClick Invoked when that button is tapped.
- * @param modifier Modifier applied to the card.
- * @param tokensAmount Localized token count (e.g. `"0 tokens"`). `null` hides it.
- * @param membersAmount Localized member count. `null` hides it and the separating dot.
- * @param balance Total fiat balance (e.g. `"$0.00"`), shown while collapsed only — the expanded
- * heading of an empty account carries nothing but its name. `null` hides it.
- * @param priceChange Price change under the collapsed balance — normally
- * [TangemPriceChange.Direction.Neutral]. `null` hides it.
- * @param isBalanceHidden When `true`, [balance] is masked with stars.
- * @param isExpanded Whether the card shows the add-tokens body.
- * @param collapseContentDescription Accessibility label of the collapse arrow.
- * @param onClick Card click handler. `null` with no [onLongClick] makes it non-interactive.
- * @param onLongClick Card long-press handler. `null` disables long-press.
- * @param avatar Leading account avatar, rendered at [AccountIconSize.Default].
+ * @param modifier Modifier applied to the body. It always fills the available width.
+ * @param shape Background and clip. Defaults to the standalone 24dp card; under a row, pass a shape
+ * whose top corners are square.
  */
-@Suppress("LongParameterList")
 @Composable
-fun TangemAccountRow.Empty(
-    title: TextReference,
+fun TangemAccountRow.EmptyBody(
     message: TextReference,
     addTokensLabel: TextReference,
     onAddTokensClick: () -> Unit,
     modifier: Modifier = Modifier,
-    tokensAmount: TextReference? = null,
-    membersAmount: TextReference? = null,
-    balance: TextReference? = null,
-    priceChange: TangemPriceChange.State? = null,
-    isBalanceHidden: Boolean = false,
-    isExpanded: Boolean = false,
-    collapseContentDescription: String? = null,
-    onClick: (() -> Unit)? = null,
-    onLongClick: (() -> Unit)? = null,
-    avatar: @Composable () -> Unit,
+    shape: Shape = ExpandableCardShape,
 ) {
-    AccountRowScaffold(
-        avatar = avatar,
-        title = title,
-        modifier = modifier,
-        tokensAmount = tokensAmount,
-        membersAmount = membersAmount,
-        balance = balance,
-        priceChange = priceChange,
-        showCompactBalance = false,
-        isBalanceHidden = isBalanceHidden,
-        isExpanded = isExpanded,
-        collapseContentDescription = collapseContentDescription,
-        onClick = onClick,
-        onLongClick = onLongClick,
-        content = {
-            AccountRowEmptyBody(
-                message = message,
-                addTokensLabel = addTokensLabel,
-                onAddTokensClick = onAddTokensClick,
-            )
-        },
+    ExpandableEmptyBody(
+        message = message,
+        addTokensLabel = addTokensLabel,
+        onAddTokensClick = onAddTokensClick,
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(TangemTheme.colors3.bg.secondary),
     )
 }
 
@@ -507,40 +459,41 @@ fun TangemAccountRow.Empty(
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=10694-21239)
  *
  * @param modifier Modifier applied to the card.
+ * @param shape Card background and clip.
  */
 @Composable
-fun TangemAccountRow.Shimmer(modifier: Modifier = Modifier) {
+fun TangemAccountRow.Shimmer(modifier: Modifier = Modifier, shape: Shape = ExpandableCardShape) {
     val interactionSource = remember { MutableInteractionSource() }
-    AccountRowContainer(
-        motion = rememberAccountRowMotion(isExpanded = false),
+    ExpandableCard(
+        motion = rememberExpansionMotion(isExpanded = false),
         interactionSource = interactionSource,
         modifier = modifier,
+        shape = shape,
     ) {
-        TangemShimmer(
-            radius = 12.dp,
-            modifier = Modifier
-                .layoutId(AccountRowLayoutId.AVATAR)
-                .size(40.dp),
+        TangemAvatar(
+            state = TangemAvatar.UiState.Shimmer(shape = TangemAvatar.UiState.Shimmer.Shape.RoundedSquare),
+            size = TangemAvatar.Size.X40,
+            modifier = Modifier.layoutId(ExpandableCardLayoutId.AVATAR),
         )
-        AccountRowShimmerLine(
+        ExpandableShimmerLine(
             lineHeight = 20.dp,
             width = 72.dp,
-            modifier = Modifier.layoutId(AccountRowLayoutId.TITLE),
+            modifier = Modifier.layoutId(ExpandableCardLayoutId.TITLE),
         )
-        AccountRowShimmerLine(
+        ExpandableShimmerLine(
             lineHeight = 16.dp,
             width = 44.dp,
-            modifier = Modifier.layoutId(AccountRowLayoutId.SUBTITLE),
+            modifier = Modifier.layoutId(ExpandableCardLayoutId.SUBTITLE),
         )
-        AccountRowShimmerLine(
+        ExpandableShimmerLine(
             lineHeight = 20.dp,
             width = 72.dp,
-            modifier = Modifier.layoutId(AccountRowLayoutId.BALANCE_LARGE),
+            modifier = Modifier.layoutId(ExpandableCardLayoutId.END_TOP),
         )
-        AccountRowShimmerLine(
+        ExpandableShimmerLine(
             lineHeight = 16.dp,
             width = 44.dp,
-            modifier = Modifier.layoutId(AccountRowLayoutId.PRICE_CHANGE),
+            modifier = Modifier.layoutId(ExpandableCardLayoutId.END_BOTTOM),
         )
     }
 }
@@ -551,27 +504,28 @@ fun TangemAccountRow.Shimmer(modifier: Modifier = Modifier) {
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=11031-3048)
  *
+ * Place it as the sibling that precedes the rows it names, and give it a [shape] that continues the
+ * card — both its neighbours share the same background.
+ *
  * @param title Localized section title.
- * @param modifier Modifier applied to the section column.
- * @param content Rows belonging to the section, laid out without extra insets — they bring their own.
+ * @param modifier Modifier applied to the section header. It always fills the available width.
+ * @param shape Background and clip. Between a row and its rows this is normally a square-cornered
+ * shape; it only rounds where the header starts or ends the card.
  */
 @Composable
-fun TangemAccountRow.Section(
-    title: TextReference,
-    modifier: Modifier = Modifier,
-    content: @Composable ColumnScope.() -> Unit,
-) {
-    Column(modifier = modifier.fillMaxWidth()) {
-        Text(
-            text = title.resolveReference(),
-            style = TangemTheme.typography3.caption.medium,
-            color = TangemTheme.colors3.text.secondary,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 8.dp),
-        )
-        content()
-    }
+fun TangemAccountRow.Section(title: TextReference, modifier: Modifier = Modifier, shape: Shape = RectangleShape) {
+    Text(
+        text = title.resolveReference(),
+        style = TangemTheme.typography3.caption.medium,
+        color = TangemTheme.colors3.text.secondary,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(TangemTheme.colors3.bg.secondary)
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 8.dp),
+    )
 }
 
 /**
@@ -581,6 +535,7 @@ fun TangemAccountRow.Section(
 @Suppress("LongParameterList", "LongMethod", "CyclomaticComplexMethod")
 @Composable
 private fun AccountRowScaffold(
+    avatar: TangemAvatar.UiState,
     title: TextReference,
     modifier: Modifier = Modifier,
     isExpanded: Boolean = false,
@@ -597,49 +552,44 @@ private fun AccountRowScaffold(
     showCompactBalance: Boolean = true,
     isBalanceHidden: Boolean = false,
     isBalanceFlickering: Boolean = false,
-    content: (@Composable ColumnScope.() -> Unit)? = null,
-    avatar: @Composable () -> Unit,
+    isExpandable: Boolean = false,
+    shape: Shape = ExpandableCardShape,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val pressAlpha by rememberAccountRowPressAlpha(interactionSource)
-    val motion = rememberAccountRowMotion(isExpanded = isExpanded && content != null)
+    val pressAlpha by rememberRowPressAlpha(interactionSource)
+    val motion = rememberExpansionMotion(isExpanded = isExpanded && isExpandable)
 
-    AccountRowContainer(
+    ExpandableCard(
         motion = motion,
         interactionSource = interactionSource,
         modifier = modifier,
+        shape = shape,
         onClick = onClick,
         onLongClick = onLongClick,
     ) {
-        val avatarScale = motion.avatarScale
-        Box(
+        ExpandableAvatar(
+            state = avatar,
+            motion = motion,
             modifier = Modifier
-                .layoutId(AccountRowLayoutId.AVATAR)
-                .graphicsLayer {
-                    alpha = pressAlpha
-                    scaleX = avatarScale
-                    scaleY = avatarScale
-                    transformOrigin = TransformOrigin(pivotFractionX = 0f, pivotFractionY = 0f)
-                },
-        ) {
-            avatar()
-        }
+                .layoutId(ExpandableCardLayoutId.AVATAR)
+                .graphicsLayer { alpha = pressAlpha },
+        )
 
-        AccountRowTitle(
+        ExpandableTitle(
             title = title,
             motion = motion,
             modifier = Modifier
-                .layoutId(AccountRowLayoutId.TITLE)
+                .layoutId(ExpandableCardLayoutId.TITLE)
                 .graphicsLayer { alpha = pressAlpha },
         )
-        AccountRowTitleAnchor(title = title, modifier = Modifier.layoutId(AccountRowLayoutId.TITLE_ANCHOR))
+        ExpandableTitleAnchor(title = title, modifier = Modifier.layoutId(ExpandableCardLayoutId.TITLE_ANCHOR))
 
         if (tokensAmount != null || membersAmount != null) {
             AccountRowSubtitle(
                 tokensAmount = tokensAmount,
                 membersAmount = membersAmount,
                 modifier = Modifier
-                    .layoutId(AccountRowLayoutId.SUBTITLE)
+                    .layoutId(ExpandableCardLayoutId.SUBTITLE)
                     .graphicsLayer { alpha = pressAlpha * motion.subtitleAlpha },
             )
         }
@@ -651,13 +601,13 @@ private fun AccountRowScaffold(
                 status = TangemBadge.Status.Warning,
                 size = TangemBadge.Size.X6,
                 modifier = Modifier
-                    .layoutId(AccountRowLayoutId.END_BADGE)
-                    .graphicsLayer { alpha = pressAlpha * motion.largeBalanceAlpha },
+                    .layoutId(ExpandableCardLayoutId.END_SINGLE)
+                    .graphicsLayer { alpha = pressAlpha * motion.endTopAlpha },
             )
             hasBalanceError -> AccountRowBalanceError(
                 modifier = Modifier
-                    .layoutId(AccountRowLayoutId.BALANCE_LARGE)
-                    .graphicsLayer { alpha = pressAlpha * motion.largeBalanceAlpha },
+                    .layoutId(ExpandableCardLayoutId.END_TOP)
+                    .graphicsLayer { alpha = pressAlpha * motion.endTopAlpha },
             )
             balance != null -> AccountRowLargeBalance(
                 balance = balance,
@@ -665,8 +615,8 @@ private fun AccountRowScaffold(
                 isBalanceHidden = isBalanceHidden,
                 isFlickering = isBalanceFlickering,
                 modifier = Modifier
-                    .layoutId(AccountRowLayoutId.BALANCE_LARGE)
-                    .graphicsLayer { alpha = pressAlpha * motion.largeBalanceAlpha },
+                    .layoutId(ExpandableCardLayoutId.END_TOP)
+                    .graphicsLayer { alpha = pressAlpha * motion.endTopAlpha },
             )
         }
 
@@ -674,15 +624,15 @@ private fun AccountRowScaffold(
             TangemPriceChange(
                 state = priceChange,
                 modifier = Modifier
-                    .layoutId(AccountRowLayoutId.PRICE_CHANGE)
-                    .graphicsLayer { alpha = pressAlpha * motion.priceChangeAlpha },
+                    .layoutId(ExpandableCardLayoutId.END_BOTTOM)
+                    .graphicsLayer { alpha = pressAlpha * motion.endBottomAlpha },
             )
         }
 
         if (balance != null && showCompactBalance) {
-            AccountRowDot(
+            ExpandableDot(
                 modifier = Modifier
-                    .layoutId(AccountRowLayoutId.DOT)
+                    .layoutId(ExpandableCardLayoutId.INLINE_1)
                     .graphicsLayer { alpha = pressAlpha * motion.dotAlpha },
             )
             AccountRowSmallBalance(
@@ -690,27 +640,19 @@ private fun AccountRowScaffold(
                 isBalanceHidden = isBalanceHidden,
                 isFlickering = isBalanceFlickering,
                 modifier = Modifier
-                    .layoutId(AccountRowLayoutId.BALANCE_SMALL)
-                    .offset(x = motion.smallBalanceOffset)
-                    .graphicsLayer { alpha = pressAlpha * motion.smallBalanceAlpha },
+                    .layoutId(ExpandableCardLayoutId.INLINE_2)
+                    .offset(x = motion.compactOffset)
+                    .graphicsLayer { alpha = pressAlpha * motion.compactAlpha },
             )
         }
 
-        if (content != null) {
-            AccountRowCollapseArrow(
+        if (isExpandable) {
+            ExpandableCollapseArrow(
                 contentDescription = collapseContentDescription,
                 modifier = Modifier
-                    .layoutId(AccountRowLayoutId.ARROW)
+                    .layoutId(ExpandableCardLayoutId.ARROW)
                     .graphicsLayer { alpha = pressAlpha * motion.arrowAlpha },
             )
-            if (isExpanded || motion.expansion > 0f) {
-                Column(
-                    modifier = Modifier
-                        .layoutId(AccountRowLayoutId.CONTENT)
-                        .graphicsLayer { alpha = motion.slotAlpha },
-                    content = content,
-                )
-            }
         }
     }
 }
@@ -756,33 +698,44 @@ private fun TangemAccountRowCollapsedPreview() {
 @Composable
 private fun TangemAccountRowExpandedPreview() {
     PreviewContainer { avatar ->
-        TangemAccountRow(
-            avatar = avatar,
-            title = stringReference("Title"),
-            tokensAmount = stringReference("2 tokens"),
-            membersAmount = stringReference("2 members"),
-            balance = stringReference("$12,000.00"),
-            priceChange = TangemPriceChange.State(
-                value = stringReference("2.08%"),
-                direction = TangemPriceChange.Direction.Up,
-            ),
-            isExpanded = true,
-            collapseContentDescription = "Collapse",
-            onClick = {},
-            content = { PreviewTokenRow() },
-        )
-        TangemAccountRow.Empty(
-            avatar = avatar,
-            title = stringReference("Title"),
-            message = stringReference("Add tokens to begin tracking your crypto assets and transactions"),
-            addTokensLabel = stringReference("Add tokens"),
-            onAddTokensClick = {},
-            tokensAmount = stringReference("0 tokens"),
-            membersAmount = stringReference("2 members"),
-            isExpanded = true,
-            collapseContentDescription = "Collapse",
-            onClick = {},
-        )
+        PreviewGroup {
+            TangemAccountRow(
+                avatar = avatar,
+                title = stringReference("Title"),
+                tokensAmount = stringReference("2 tokens"),
+                membersAmount = stringReference("2 members"),
+                balance = stringReference("$12,000.00"),
+                priceChange = TangemPriceChange.State(
+                    value = stringReference("2.08%"),
+                    direction = TangemPriceChange.Direction.Up,
+                ),
+                isExpandable = true,
+                isExpanded = true,
+                shape = PreviewOpenShape,
+                collapseContentDescription = "Collapse",
+                onClick = {},
+            )
+            PreviewTokenRow(shape = PreviewClosingShape)
+        }
+        PreviewGroup {
+            TangemAccountRow(
+                avatar = avatar,
+                title = stringReference("Title"),
+                tokensAmount = stringReference("0 tokens"),
+                membersAmount = stringReference("2 members"),
+                isExpandable = true,
+                isExpanded = true,
+                shape = PreviewOpenShape,
+                collapseContentDescription = "Collapse",
+                onClick = {},
+            )
+            TangemAccountRow.EmptyBody(
+                message = stringReference("Add tokens to begin tracking your crypto assets and transactions"),
+                addTokensLabel = stringReference("Add tokens"),
+                onAddTokensClick = {},
+                shape = PreviewClosingShape,
+            )
+        }
     }
 }
 
@@ -790,17 +743,41 @@ private fun TangemAccountRowExpandedPreview() {
 @Preview(name = "Section Dark", showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun TangemAccountRowSectionPreview() {
-    TangemThemePreviewRedesign {
-        Column(modifier = Modifier.background(TangemTheme.colors3.bg.primary)) {
-            TangemAccountRow.Section(title = stringReference("Section Title")) {
-                PreviewTokenRow()
-            }
+    PreviewContainer { avatar ->
+        PreviewGroup {
+            TangemAccountRow(
+                avatar = avatar,
+                title = stringReference("Title"),
+                tokensAmount = stringReference("2 tokens"),
+                isExpandable = true,
+                isExpanded = true,
+                shape = PreviewOpenShape,
+                collapseContentDescription = "Collapse",
+                onClick = {},
+            )
+            TangemAccountRow.Section(title = stringReference("Section Title"))
+            PreviewTokenRow(shape = PreviewClosingShape)
         }
     }
 }
 
+/** Card shape of a row that sibling items continue below it. */
+private val PreviewOpenShape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+
+/** Card shape of the item that closes the group. */
+private val PreviewClosingShape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
+
+/**
+ * Stands in for the host's list: the row and what follows it are siblings sharing one card, not a
+ * parent and its children.
+ */
 @Composable
-private fun PreviewTokenRow() {
+private fun PreviewGroup(content: @Composable () -> Unit) {
+    Column(content = { content() })
+}
+
+@Composable
+private fun PreviewTokenRow(shape: Shape = RectangleShape) {
     TangemTokenRow(
         icon = TangemTokenIcon.UiState.Token(TangemTokenIcon.State(url = null)),
         title = stringReference("Bitcoin"),
@@ -811,18 +788,18 @@ private fun PreviewTokenRow() {
         ),
         fiatBalance = stringReference("$583.00"),
         cryptoBalance = stringReference("0,000015 BTC"),
+        modifier = Modifier
+            .clip(shape)
+            .background(TangemTheme.colors3.bg.secondary),
     )
 }
 
 @Composable
-private fun PreviewContainer(content: @Composable (avatar: @Composable () -> Unit) -> Unit) {
-    val avatar: @Composable () -> Unit = {
-        AccountResIcon(
-            resId = R.drawable.ic_airplane_mode_24,
-            color = TangemTheme.colors3.bg.accent.blue,
-            size = AccountIconSize.Default,
-        )
-    }
+private fun PreviewContainer(content: @Composable (avatar: TangemAvatar.UiState) -> Unit) {
+    val avatar = TangemAvatar.UiState.Account(
+        iconRes = R.drawable.ic_airplane_mode_24,
+        color = TangemAvatar.FillColor.DarkBlue,
+    )
     TangemThemePreviewRedesign {
         Column(
             verticalArrangement = Arrangement.spacedBy(12.dp),

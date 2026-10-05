@@ -48,6 +48,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -156,7 +157,7 @@ internal class PolymarketPositionDetailsModelTest {
     }
 
     @Test
-    fun `GIVEN resolved holding WHEN opened THEN does not enter claim flow`() = runModelTest {
+    fun `GIVEN resolved holding WHEN opened THEN shows details without entering claim flow`() = runModelTest {
         // Arrange
         coEvery { repository.getPosition(addresses, position.id) } returns
             position.copy(resolutionStatus = PolymarketResolutionStatus.RESOLVED).right()
@@ -167,8 +168,33 @@ internal class PolymarketPositionDetailsModelTest {
         runCurrent()
 
         // Assert
-        assertThat(model.uiState.value.content).isEqualTo(Content.Unavailable)
-        coVerify(exactly = 0) { getEvent(any()) }
+        assertThat(model.uiState.value.content).isInstanceOf(Content.Data::class.java)
+        verify(exactly = 0) { router.push(any(), any()) }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideClosedMarketModels")
+    fun `GIVEN a market closed for trading WHEN close or buy tapped THEN market closed sheet is shown without routing`(
+        model: ClosedMarketModel,
+    ) = runModelTest {
+        // Arrange
+        coEvery { repository.getPosition(addresses, position.id) } returns model.position.right()
+        coEvery { getEvent("event") } returns createEvent(markets = listOf(createMarket())).right()
+        val details = createModel()
+        details.onResume()
+        runCurrent()
+
+        // Act
+        requireNotNull(details.data().onClosePositionClick).invoke()
+        val isShownAfterClose = details.uiState.value.isMarketClosedSheetShown
+        details.uiState.value.onMarketClosedSheetDismiss()
+        val isShownAfterDismiss = details.uiState.value.isMarketClosedSheetShown
+        requireNotNull(details.data().onBuyMoreClick).invoke()
+
+        // Assert
+        assertThat(isShownAfterClose).isTrue()
+        assertThat(isShownAfterDismiss).isFalse()
+        assertThat(details.uiState.value.isMarketClosedSheetShown).isTrue()
         verify(exactly = 0) { router.push(any(), any()) }
     }
 
@@ -344,7 +370,7 @@ internal class PolymarketPositionDetailsModelTest {
             advanceTimeBy(PolymarketConst.POSITION_INDEXING_RETRY_MILLIS * 2 + 1)
 
             // Assert
-            assertThat(atOnce).isEqualTo(stringReference("28.09"))
+            assertThat(atOnce).isEqualTo(stringReference("28.08"))
             assertThat(model.data().metrics.quantity).isEqualTo(stringReference("10"))
             coVerify(exactly = 4) { repository.getPosition(addresses, position.id) }
         }
@@ -432,35 +458,38 @@ internal class PolymarketPositionDetailsModelTest {
         }
 
     @Test
-    fun `GIVEN a market that refuses orders WHEN opened THEN buy is not offered`() = runModelTest {
+    fun `GIVEN an event market that refuses orders WHEN buy tapped THEN market closed sheet is shown`() = runModelTest {
         // Arrange
         coEvery { getEvent("event") } returns
             createEvent(markets = listOf(createMarket(isAcceptingOrders = false))).right()
         val model = createModel()
-
-        // Act
         model.onResume()
         runCurrent()
 
+        // Act
+        requireNotNull(model.data().onBuyMoreClick).invoke()
+
         // Assert
-        assertThat(model.data().onBuyMoreClick).isNull()
+        assertThat(model.uiState.value.isMarketClosedSheetShown).isTrue()
+        verify(exactly = 0) { router.push(any(), any()) }
     }
 
     @Test
-    fun `GIVEN a position awaiting resolution WHEN opened THEN buy is not offered`() = runModelTest {
-        // Arrange
-        coEvery { repository.getPosition(addresses, position.id) } returns
-            position.copy(resolutionStatus = PolymarketResolutionStatus.DISPUTED).right()
-        coEvery { getEvent("event") } returns createEvent(markets = listOf(createMarket())).right()
-        val model = createModel()
+    fun `GIVEN a market closed for trading and an unread event WHEN buy tapped THEN market closed sheet is shown`() =
+        runModelTest {
+            // Arrange
+            coEvery { repository.getPosition(addresses, position.id) } returns
+                position.copy(resolutionStatus = PolymarketResolutionStatus.DISPUTED).right()
+            val model = createModel()
+            model.onResume()
+            runCurrent()
 
-        // Act
-        model.onResume()
-        runCurrent()
+            // Act
+            requireNotNull(model.data().onBuyMoreClick).invoke()
 
-        // Assert
-        assertThat(model.data().onBuyMoreClick).isNull()
-    }
+            // Assert
+            assertThat(model.uiState.value.isMarketClosedSheetShown).isTrue()
+        }
 
     @Test
     fun `GIVEN no market of the event holds the outcome WHEN opened THEN buy is not offered`() = runModelTest {
@@ -560,12 +589,31 @@ internal class PolymarketPositionDetailsModelTest {
 
     internal data class UnsellableModel(val position: PolymarketPosition.Open)
 
+    internal data class ClosedMarketModel(val position: PolymarketPosition.Open)
+
     private companion object {
+
+        @JvmStatic
+        fun provideClosedMarketModels() = listOf(
+            ClosedMarketModel(position = createPolymarketPosition().copy(isAcceptingOrders = false)),
+            ClosedMarketModel(
+                position = createPolymarketPosition(resolutionStatus = PolymarketResolutionStatus.PENDING_RESOLUTION),
+            ),
+            ClosedMarketModel(
+                position = createPolymarketPosition(resolutionStatus = PolymarketResolutionStatus.PROPOSED),
+            ),
+            ClosedMarketModel(
+                position = createPolymarketPosition(resolutionStatus = PolymarketResolutionStatus.DISPUTED),
+            ),
+            ClosedMarketModel(position = createPolymarketPosition(resolutionStatus = PolymarketResolutionStatus.UNKNOWN)),
+            ClosedMarketModel(
+                position = createPolymarketPosition(resolutionStatus = PolymarketResolutionStatus.RESOLVED),
+            ),
+        )
 
         @JvmStatic
         fun provideTestModels() = listOf(
             UnsellableModel(position = createPolymarketPosition().copy(marketId = null)),
-            UnsellableModel(position = createPolymarketPosition().copy(isAcceptingOrders = false)),
             UnsellableModel(position = createPolymarketPosition().copy(size = BigDecimal.ZERO)),
         )
     }

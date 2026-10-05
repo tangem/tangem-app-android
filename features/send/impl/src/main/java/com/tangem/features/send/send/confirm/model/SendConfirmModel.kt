@@ -265,9 +265,10 @@ internal class SendConfirmModel @Inject constructor(
 
         // The Safe never takes the fee out of the amount by itself, so what the confirm step showed as subtracted
         // has to be subtracted here, the same way the regular send does before building its transaction
+        val feeCurrencyStatus = getCurrencyStatusForFeePayment()
         val sendingAmount = checkAndCalculateSubtractedAmount(
             isAmountSubtractAvailable = isAmountSubtractAvailable,
-            cryptoCurrencyStatus = getCurrencyStatusForFeePayment(),
+            cryptoCurrencyStatus = feeCurrencyStatus,
             amountValue = amountValue,
             feeValue = feeValue,
             reduceAmountBy = confirmData.reduceAmountBy.orZero(),
@@ -279,6 +280,7 @@ internal class SendConfirmModel @Inject constructor(
                     currency = cryptoCurrency,
                     amount = sendingAmount,
                     destinationUM = uiState.value.destinationUM,
+                    feeToken = feeCurrencyStatus.currency.takeIf { isFeeInSmartGasToken() } as? CryptoCurrency.Token,
                 )
                 .fold(
                     ifLeft = ::showJointOperationError,
@@ -575,6 +577,9 @@ internal class SendConfirmModel @Inject constructor(
             },
         )
     }
+
+    private fun isFeeInSmartGasToken(): Boolean =
+        feeUMV2?.feeExtraInfo?.transactionFeeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency
 
     private fun getCurrencyStatusForFeePayment(): CryptoCurrencyStatus {
         val feeExtended = feeUMV2?.feeExtraInfo?.transactionFeeExtended

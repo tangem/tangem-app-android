@@ -1,17 +1,17 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /** Response of `bff-v2/v1/waitlist`. */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class WaitlistResponse(
-    @Json(name = "result") val result: Result,
+    @SerialName("result") val result: Result,
 ) {
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Result(
-        @Json(name = "status") val status: String,
-        @Json(name = "joined_at") val joinedAt: String?,
+        @SerialName("status") val status: String,
+        @SerialName("joined_at") val joinedAt: String?,
     )
 }

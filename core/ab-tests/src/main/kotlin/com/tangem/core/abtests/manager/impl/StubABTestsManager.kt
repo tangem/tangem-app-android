@@ -19,4 +19,6 @@ internal class StubABTestsManager : ABTestsManager {
     override suspend fun getValue(key: String, defaultValue: String): String {
         return defaultValue
     }
+
+    override fun peekValue(key: String): String? = null
 }

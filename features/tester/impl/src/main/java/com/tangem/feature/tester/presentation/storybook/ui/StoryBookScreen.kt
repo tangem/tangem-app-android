@@ -40,7 +40,9 @@ import com.tangem.feature.tester.presentation.storybook.page.buttons.ButtonsStor
 import com.tangem.feature.tester.presentation.storybook.page.checkbox.TangemCheckboxStory
 import com.tangem.feature.tester.presentation.storybook.page.contextmenu.TangemContextMenuStory
 import com.tangem.feature.tester.presentation.storybook.page.deviceicon.DeviceIconStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.avatar.TangemAvatarStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.accountrow.TangemAccountRowStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.expandablerow.TangemExpandableRowStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.DsComponentsListStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.badge.TangemBadgeV2Story
 import com.tangem.feature.tester.presentation.storybook.page.ds.button.TangemButtonStory
@@ -82,7 +84,7 @@ import com.tangem.feature.tester.presentation.storybook.page.tokenrow.TangemToke
 import com.tangem.feature.tester.presentation.storybook.page.topbar.TangemTopBarStory
 import com.tangem.feature.tester.presentation.storybook.page.typography.TypographyStory
 
-@Suppress("CyclomaticComplexMethod")
+@Suppress("CyclomaticComplexMethod", "LongMethod")
 @Composable
 internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) {
     BackHandler(onBack = state.onBackClick)
@@ -144,6 +146,8 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
                 is TangemMessageBannerStory -> TangemMessageBannerStory(state = storyState)
                 is TangemStatusScreenStory -> TangemStatusScreenStory(state = storyState)
                 is TangemAccountRowStory -> TangemAccountRowStory(state = storyState)
+                is TangemExpandableRowStory -> TangemExpandableRowStory(state = storyState)
+                is TangemAvatarStory -> TangemAvatarStory(state = storyState)
                 is TangemTokenRowV2Story -> TangemTokenRowV2Story(state = storyState)
                 is TangemTokenRowMarketStory -> TangemTokenRowMarketStory(state = storyState)
                 is TangemFilterGroupStory -> TangemFilterGroupStory(state = storyState)

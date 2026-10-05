@@ -7,4 +7,5 @@ data class MoneyAccountActivationData(
     val address: String,
     val signature: String,
     val derivedKeys: Map<ByteArrayKey, ExtendedPublicKeysMap>,
+    val initialCredentials: TangemPayInitialCredentials,
 )

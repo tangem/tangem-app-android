@@ -24,7 +24,7 @@ internal class P2PEthPoolVaultJsonFormatTest {
         fun fromJson(value: String): BigDecimal = BigDecimal(value)
 
         @ToJson
-        fun toJson(value: BigDecimal): String = value.toPlainString()
+        fun toJson(value: BigDecimal): String = value.toString()
     }
 
     private val adapter = Moshi.Builder().add(BigDecimalAdapter).build().adapter(P2PEthPoolVault::class.java)

@@ -9,6 +9,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchAction
+import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchListState
 import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchingContext
 import com.tangem.domain.collectibles.models.CollectibleGachaMachine
 import com.tangem.domain.collectibles.models.CollectibleGachaMachineNftsListConfig
@@ -97,26 +98,28 @@ internal class CollectiblesMachineDetailsModel @Inject constructor(
 
     private fun observePrizePool() {
         prizePoolBatchFlow.state
-            .onEach { batchListState ->
-                uiState.update { prev ->
-                    CollectiblesPrizePoolTransformer(
-                        batchListState = batchListState,
-                        onReloadClick = ::reloadPrizePool,
-                    ).transform(prev)
-                }
-            }
+            .onEach(::applyPrizePool)
             .launchIn(modelScope)
     }
 
-    private fun loadMachine() {
+    private fun applyPrizePool(batchListState: CollectibleGachaMachineNftsBatchListState) {
+        uiState.update { prev ->
+            CollectiblesPrizePoolTransformer(
+                batchListState = batchListState,
+                onReloadClick = ::reloadPrizePool,
+            ).transform(prev)
+        }
+    }
+
+    private fun loadMachine(skipCache: Boolean = false) {
         modelScope.launch {
-            getMachineUseCase(externalId = params.externalId)
+            getMachineUseCase(externalId = params.externalId, skipCache = skipCache)
                 .fold(
                     ifLeft = {
                         uiState.value = CollectiblesMachineDetailsUM.Error(
                             onBackClick = ::onBackClick,
                             message = resourceReference(R.string.collectibles_machine_load_error),
-                            onReloadClick = ::loadMachine,
+                            onReloadClick = ::reloadMachine,
                         )
                     },
                     ifRight = { machine ->
@@ -129,9 +132,19 @@ internal class CollectiblesMachineDetailsModel @Inject constructor(
                                 onTurboInfoClick = ::onTurboInfoClick,
                             ),
                         )
+                        // A pool that settled before the machine was shown was dropped, and its StateFlow won't replay
+                        applyPrizePool(prizePoolBatchFlow.state.value)
                     },
                 )
         }.saveIn(machineJob)
+    }
+
+    private fun reloadMachine() {
+        val error = uiState.value as? CollectiblesMachineDetailsUM.Error ?: return
+        if (error.isReloading) return
+
+        uiState.value = error.copy(isReloading = true)
+        loadMachine(skipCache = true)
     }
 
     // Driven by state, not by the load: a load landing after onPause must not poll behind a stopped screen

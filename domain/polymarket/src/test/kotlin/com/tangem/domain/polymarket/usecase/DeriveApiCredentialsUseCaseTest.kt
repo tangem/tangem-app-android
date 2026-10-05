@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.PolymarketCredentialsLock
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
@@ -16,18 +17,26 @@ import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.mockk
 import io.mockk.slot
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class DeriveApiCredentialsUseCaseTest {
 
     private val polymarketRepository: PolymarketRepository = mockk()
     private val credentialsStore: PolymarketCredentialsStore = mockk()
+    private val credentialsLock = PolymarketCredentialsLock()
 
     private val useCase = DeriveApiCredentialsUseCase(
         polymarketRepository = polymarketRepository,
         credentialsStore = credentialsStore,
+        credentialsLock = credentialsLock,
     )
 
     @BeforeEach
@@ -139,11 +148,41 @@ internal class DeriveApiCredentialsUseCaseTest {
         coVerify(exactly = 0) { credentialsStore.store(any(), any()) }
     }
 
+    @Test
+    fun `GIVEN a request in flight that rejects the stored credentials WHEN invoke THEN new ones are derived after it`() =
+        runTest {
+            // Arrange
+            var stored: PolymarketApiCredentials? = REJECTED_CREDENTIALS
+            coEvery { credentialsStore.get(USER_WALLET_ID) } answers { stored }
+            coEvery { credentialsStore.store(USER_WALLET_ID, any()) } answers { stored = secondArg() }
+            coEvery { polymarketRepository.deriveApiCredentials(any()) } returns CREDENTIALS.right()
+            val response = CompletableDeferred<Unit>()
+            launch {
+                credentialsLock.withLock(USER_WALLET_ID) {
+                    response.await()
+                    stored = null
+                }
+            }
+            runCurrent()
+
+            // Act
+            val actual = async {
+                useCase(userWalletId = USER_WALLET_ID, ownerAddress = OWNER, l1Signature = SIGNATURE, timestamp = TIMESTAMP)
+            }
+            runCurrent()
+            response.complete(Unit)
+
+            // Assert
+            assertThat(actual.await()).isEqualTo(CREDENTIALS.right())
+            assertThat(stored).isEqualTo(CREDENTIALS)
+        }
+
     private companion object {
         val USER_WALLET_ID = UserWalletId("011")
         const val OWNER = "0x1111111111111111111111111111111111111111"
         const val SIGNATURE = "0xaa"
         const val TIMESTAMP = "1735689600"
         val CREDENTIALS = PolymarketApiCredentials(apiKey = "key", secret = "secret", passphrase = "pass")
+        val REJECTED_CREDENTIALS = PolymarketApiCredentials(apiKey = "old", secret = "old", passphrase = "old")
     }
 }

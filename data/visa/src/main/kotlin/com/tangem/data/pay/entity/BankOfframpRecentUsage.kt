@@ -1,9 +1,9 @@
 package com.tangem.data.pay.entity
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 internal data class BankOfframpRecentUsage(
-    @Json(name = "usedAtMillis") val usedAtMillis: Long,
+    @SerialName("usedAtMillis") val usedAtMillis: Long,
 )

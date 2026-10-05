@@ -1,7 +1,13 @@
 package com.tangem.features.collectibles.impl.common.ui
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -11,21 +17,33 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
-import coil.compose.AsyncImage
-import coil.compose.SubcomposeAsyncImage
+import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImagePainter
+import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
+import com.tangem.core.ui.ds.image.TangemIcon
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_error_20_filled
 
 /**
  * The pack, lit by its own artwork: the same image is drawn twice, blurred underneath and sharp on top.
  *
+ * Both layers draw one painter, so the artwork is requested once and the glow and the pack load and crossfade
+ * together; two image composables would each run a request of their own and could settle at different times.
+ *
  * [Modifier.blur] is a no-op below API 31, where the pack is drawn without its glow.
+ *
+ * @param onLoadingChange reports whether the artwork is still on its way, so the host can draw a placeholder
  */
 @Composable
 internal fun CollectiblesPackImage(
     imageUrl: String?,
     glowRadius: Dp,
     modifier: Modifier = Modifier,
-    errorContent: (@Composable () -> Unit)? = null,
+    errorContent: @Composable () -> Unit = { CollectiblesPackImageErrorIcon() },
+    onLoadingChange: (isLoading: Boolean) -> Unit = {},
 ) {
     val context = LocalContext.current
     val model = remember(imageUrl, context) {
@@ -34,31 +52,60 @@ internal fun CollectiblesPackImage(
             .crossfade(true)
             .build()
     }
+    val painter = rememberAsyncImagePainter(
+        model = model,
+        onLoading = { onLoadingChange(true) },
+        onSuccess = { onLoadingChange(false) },
+        onError = { onLoadingChange(false) },
+    )
 
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        AsyncImage(
-            model = model,
+        Image(
+            painter = painter,
             contentDescription = null,
             contentScale = ContentScale.Fit,
             modifier = Modifier
                 .fillMaxSize()
                 .blur(radius = glowRadius, edgeTreatment = BlurredEdgeTreatment.Unbounded),
         )
-        if (errorContent == null) {
-            AsyncImage(
-                model = model,
-                contentDescription = null,
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxSize(),
-            )
-        } else {
-            SubcomposeAsyncImage(
-                model = model,
-                contentDescription = null,
-                contentScale = ContentScale.Fit,
-                error = { errorContent() },
-                modifier = Modifier.fillMaxSize(),
-            )
+        Image(
+            painter = painter,
+            contentDescription = null,
+            contentScale = ContentScale.Fit,
+            modifier = Modifier.fillMaxSize(),
+        )
+        if (painter.state is AsyncImagePainter.State.Error) {
+            errorContent()
         }
     }
+}
+
+@Composable
+internal fun CollectiblesPackImageErrorIcon(modifier: Modifier = Modifier) {
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        TangemIcon(
+            tangemIconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_error_20_filled,
+                tintReference = { TangemTheme.colors3.icon.tertiary },
+            ),
+            modifier = Modifier
+                .size(40.dp)
+                .background(color = TangemTheme.colors3.bg.opaque.primary, shape = CircleShape)
+                .padding(10.dp)
+                .size(20.dp),
+        )
+    }
+}
+
+/** Corner radius of the cards that stand in for the pack — the error card and the loading shimmer. */
+internal val PACK_IMAGE_CARD_RADIUS = 20.dp
+
+/** The error icon on a card of its own, for screens where nothing behind the pack outlines it. */
+@Composable
+internal fun CollectiblesPackImageErrorCard() {
+    CollectiblesPackImageErrorIcon(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = TangemTheme.colors3.bg.secondary, shape = RoundedCornerShape(PACK_IMAGE_CARD_RADIUS)),
+    )
 }

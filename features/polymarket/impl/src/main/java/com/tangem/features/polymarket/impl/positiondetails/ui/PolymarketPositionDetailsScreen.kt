@@ -94,6 +94,10 @@ internal fun PolymarketPositionDetailsScreen(state: PolymarketPositionDetailsUM,
                 }
             }
         }
+        PolymarketMarketClosedSheet(
+            isShown = state.isMarketClosedSheetShown,
+            onDismiss = state.onMarketClosedSheetDismiss,
+        )
     }
 }
 

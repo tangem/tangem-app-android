@@ -32,4 +32,6 @@ data class PromoBannerDisplayDTO(
     val buttonText: String?,
     @Json(name = "dismissable")
     val dismissable: Boolean,
+    @Json(name = "campaignId")
+    val campaignId: Int?,
 )

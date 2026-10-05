@@ -8,7 +8,7 @@ import com.tangem.domain.jointaccount.safe.JointOperationTransferResolver
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.currency.isJoint
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.txhistory.joint.ownJointAccount
 import kotlinx.coroutines.flow.Flow
@@ -29,7 +29,7 @@ internal class JointCosignRequestsDelegate @Inject constructor(
 ) {
 
     fun observe(userWalletId: UserWalletId, currency: CryptoCurrency): Flow<JointCosignRequest?> {
-        if (currency.network.derivationPath !is Network.DerivationPath.Joint) return flowOf(null)
+        if (!currency.isJoint) return flowOf(null)
 
         return combine(
             flow = accountListSupplier.ownJointAccount(userWalletId = userWalletId, currency = currency),
