@@ -54,6 +54,7 @@ internal class MockBankOfframpOrderRepository(
     override suspend fun getOrderState(
         userWalletId: UserWalletId,
         orderId: String,
+        request: BankOfframpOrderRequest,
     ): Either<BankOfframpError, BankOfframpOrderState> = mutex.withLock {
         val order = orders[orderId] ?: return@withLock unknownOrder(orderId).left()
         stateOf(orderId, order).right()
