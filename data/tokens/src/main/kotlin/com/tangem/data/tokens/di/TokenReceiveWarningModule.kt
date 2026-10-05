@@ -1,12 +1,20 @@
 package com.tangem.data.tokens.di
 
+import android.content.Context
+import androidx.datastore.dataStoreFile
+import com.squareup.moshi.Moshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.data.tokens.store.DefaultTokenReceiveWarningActionStore
 import com.tangem.data.tokens.store.TokenReceiveWarningActionStore
 import com.tangem.datasource.utils.AppDataStoreFactory
+import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.create
+import com.tangem.datasource.utils.setTypes
+import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -16,12 +24,29 @@ internal object TokenReceiveWarningModule {
 
     @Provides
     @Singleton
-    fun provideTokenReceiveWarningStore(dataStoreFactory: AppDataStoreFactory): TokenReceiveWarningActionStore {
+    fun provideTokenReceiveWarningStore(
+        @NetworkMoshi moshi: Moshi,
+        @ApplicationContext context: Context,
+        appScope: AppCoroutineScope,
+        dataStoreFactory: AppDataStoreFactory,
+    ): TokenReceiveWarningActionStore {
         return DefaultTokenReceiveWarningActionStore(
-            persistenceStore = dataStoreFactory.create(
-                defaultValue = emptySet<String>(),
-                fileName = "token_receive_warnings_viewed",
-            ),
+            persistenceStore = if (dataStoreFactory.isKotlinxDataStoreEnabled) {
+                dataStoreFactory.create(
+                    defaultValue = emptySet<String>(),
+                    fileName = "token_receive_warnings_viewed",
+                )
+            } else {
+                dataStoreFactory.create(
+                    serializer = MoshiDataStoreSerializer(
+                        moshi = moshi,
+                        types = setTypes<String>(),
+                        defaultValue = emptySet(),
+                    ),
+                    produceFile = { context.dataStoreFile(fileName = "token_receive_warnings_viewed") },
+                    scope = appScope,
+                )
+            },
         )
     }
 }

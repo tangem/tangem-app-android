@@ -3,6 +3,7 @@ plugins {
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.serialization)
     alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.ksp)
     id("configuration")
 }
 
@@ -18,6 +19,8 @@ dependencies {
 
     // region Other libraries
     api(deps.androidx.datastore)
+    api(deps.moshi)
+    ksp(deps.moshi.kotlin.codegen)
     // endregion
 
     // region DI
@@ -27,6 +30,7 @@ dependencies {
 
     // region Project - Core
     implementation(projects.core.local)
+    implementation(projects.core.remote)
     api(projects.core.utils)
     // endregion
 
