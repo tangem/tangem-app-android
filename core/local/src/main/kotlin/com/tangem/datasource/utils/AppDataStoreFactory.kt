@@ -3,6 +3,7 @@ package com.tangem.datasource.utils
 import androidx.datastore.core.DataMigration
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.Serializer
+import com.tangem.utils.annotations.RemoveWithToggle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer
@@ -15,6 +16,13 @@ import java.io.File
  * The concrete implementation is internal and supplied via DI.
  */
 interface AppDataStoreFactory {
+
+    /**
+     * Whether stores move from the Moshi serializer to kotlinx. While off, call sites keep their Moshi serializer and
+     * the fileName [create] keeps the default kotlinx config. Both write the same JSON, so switching keeps the data.
+     */
+    @RemoveWithToggle("AND_18288_KOTLINX_DATASTORE_ENABLED")
+    val isKotlinxDataStoreEnabled: Boolean
 
     /**
      * Creates a [DataStore] backed by [serializer], running on [scope] and persisting to the file returned by
@@ -35,8 +43,9 @@ interface AppDataStoreFactory {
 
     /**
      * Persists [T] with kotlinx-serialization in the DataStore file named [fileName]. Runs on the application scope,
-     * so callers pass neither a scope nor a file. Uses the network JSON config: `null` fields are not written and a
-     * missing nullable field reads as `null`, matching files written by the Moshi DataStore serializer.
+     * so callers pass neither a scope nor a file. While [isKotlinxDataStoreEnabled], uses the network JSON config:
+     * `null` fields are not written and a missing nullable field reads as `null`, matching files written by the Moshi
+     * DataStore serializer.
      *
      * Prefer the reified [create] extension, which derives the [serializer] for `@Serializable` types.
      *
