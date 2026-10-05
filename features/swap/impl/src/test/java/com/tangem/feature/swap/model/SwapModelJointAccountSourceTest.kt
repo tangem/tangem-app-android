@@ -2,6 +2,7 @@ package com.tangem.feature.swap.model
 
 import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.models.event.JointAccountFakedoorAnalyticsEvent
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.express.models.ExpressError
@@ -60,6 +61,17 @@ internal class SwapModelJointAccountSourceTest : SwapModelTestBase() {
             assertThat(model.dataState.fromSwapCurrencyStatus).isNull()
             verify(exactly = 1) { messageSender.send(match { it is DialogMessage }) }
             verify(exactly = 0) { router.pop() }
+            val currency = result.currency.currency
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    JointAccountFakedoorAnalyticsEvent(
+                        source = JointAccountFakedoorAnalyticsEvent.Source.MainScreenSwap,
+                        action = JointAccountFakedoorAnalyticsEvent.Action.Swap,
+                        blockchain = currency.network.name,
+                        token = currency.symbol,
+                    ),
+                )
+            }
         }
 
     @Test
@@ -75,6 +87,7 @@ internal class SwapModelJointAccountSourceTest : SwapModelTestBase() {
         // Assert
         assertThat(model.dataState.toSwapCurrencyStatus?.account).isInstanceOf(Account.Joint::class.java)
         verify(exactly = 1) { router.pop() }
+        verify(exactly = 0) { analyticsEventHandler.send(ofType<JointAccountFakedoorAnalyticsEvent>()) }
     }
 
     private fun jointChooseTokenResult(): ChooseTokenResult {
