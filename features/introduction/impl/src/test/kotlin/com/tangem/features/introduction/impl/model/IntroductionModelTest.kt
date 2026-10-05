@@ -23,6 +23,7 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.domain.card.analytics.IntroductionProcess.LegalOpened
 import com.tangem.domain.card.analytics.IntroductionProcess.SheetDismissed
 import com.tangem.domain.card.analytics.IntroductionProcess.WelcomeMediaError
+import com.tangem.domain.card.analytics.Shop
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupInfo
@@ -1408,6 +1409,7 @@ internal class IntroductionModelTest {
                 generateBuyTangemCardLinkUseCase(GenerateBuyTangemCardLinkUseCase.Source.Creation)
             } returns BUY_LINK
             val action = pendingAction(actionId = "learn_more")
+            sentEvents.clear()
 
             // Act
             model.onStoryAction(action)
@@ -1416,8 +1418,10 @@ internal class IntroductionModelTest {
             verify(exactly = 1) { urlOpener.openUrl(BUY_LINK) }
             verify(exactly = 0) { action.end() }
             verify(exactly = 0) { action.resume() }
-            assertThat(sentEvents.last())
-                .isEqualTo(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.Stories))
+            assertThat(sentEvents).containsExactly(
+                Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.Stories),
+                Shop.ScreenOpened(),
+            ).inOrder()
         }
 
         @Test

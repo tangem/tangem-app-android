@@ -7,6 +7,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.card.analytics.Shop
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.features.storiesv2.StoriesV2PendingAction
 import com.tangem.features.storiesv2.StoriesV2Result
@@ -156,6 +157,7 @@ internal class IntroductionStories(
 
     private fun openTangemStore(action: StoriesV2PendingAction) {
         analyticsEventHandler.send(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.Stories))
+        analyticsEventHandler.send(Shop.ScreenOpened())
         // The browser is a layer over the screen rather than a flow that replaces it, so the story stays suspended
         // on its slide: closing the store puts the viewer back where they were reading, not on a bare welcome.
         pendingStoreAction = action
