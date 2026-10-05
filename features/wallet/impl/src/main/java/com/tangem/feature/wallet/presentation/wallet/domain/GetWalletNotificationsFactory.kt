@@ -29,6 +29,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
@@ -70,6 +71,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
     private val shouldShowUpgradeHotWalletBannerUseCase: ShouldShowUpgradeHotWalletBannerUseCase,
     private val getUpgradeBannerClosureTimestampUseCase: GetUpgradeBannerClosureTimestampUseCase,
     private val checkHotWalletUpgradeBannerUseCase: CheckHotWalletUpgradeBannerUseCase,
+    private val isSocialBackupCompletedUseCase: IsSocialBackupCompletedUseCase,
 ) {
     private fun assetsDiscoveryProgressFlow(userWallet: UserWallet): Flow<AssetsDiscoveryProgress> =
         if (userWallet is UserWallet.Hot) {
@@ -93,6 +95,16 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             .flatMapLatest { wallet -> isWalletBackedUpUseCase.flow(wallet).map { wallet to it } }
             .distinctUntilChanged()
     }
+
+    /**
+     * A social login wallet has to get an actual access code to finish its setup: skipping the code is
+     * honoured only for wallets without social recovery.
+     */
+    private fun isAccessCodeSkipHonouredFlow(userWallet: UserWallet): Flow<Boolean> = combine(
+        getAccessCodeSkippedUseCase(userWallet.walletId),
+        isSocialBackupCompletedUseCase.flow(userWallet.walletId),
+    ) { isSkipped, hasSocialBackup -> isSkipped && !hasSocialBackup }
+        .distinctUntilChanged()
 
     private fun accountStatusListWithPromoFlow(userWallet: UserWallet): Flow<Pair<AccountStatusList, Boolean>> {
         val params = SingleAccountStatusListProducer.Params(userWallet.walletId)
@@ -123,7 +135,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
         return combine7(
             flow1 = accountStatusListWithPromoFlow(userWallet),
             flow2 = isNeedToBackupUseCase(userWallet.walletId).distinctUntilChanged(),
-            flow3 = getAccessCodeSkippedUseCase(userWallet.walletId).distinctUntilChanged(),
+            flow3 = isAccessCodeSkipHonouredFlow(userWallet),
             flow4 = assetsDiscoveryProgressFlow(userWallet),
             flow5 = getAppUpdateStateUseCase.getBannerStateFlow(),
             flow6 = freshWalletWithBackupFlow(userWallet),
