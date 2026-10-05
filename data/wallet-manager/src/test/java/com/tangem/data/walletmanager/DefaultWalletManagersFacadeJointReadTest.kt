@@ -69,6 +69,7 @@ internal class DefaultWalletManagersFacadeJointReadTest {
         jointAccountSafeAddressResolver = { safeAddressResolver },
         getCachedTokenInfoUseCase = getCachedTokenInfoUseCase,
         txHistoryFeatureToggles = txHistoryFeatureToggles,
+        jointRefundReceiverProvider = { SafeTestFixtures.REFUND_RECEIVER },
         blockchainSDKFactory = blockchainSDKFactory,
     )
 
@@ -102,7 +103,11 @@ internal class DefaultWalletManagersFacadeJointReadTest {
     fun `GIVEN a Safe manager WHEN getTxHistoryState THEN the history of the Safe address`() = runTest {
         // Arrange
         coEvery {
-            manager.getTransactionHistoryState(SAFE_ADDRESS, TransactionHistoryRequest.FilterType.Coin)
+            manager.getTransactionHistoryState(
+                SAFE_ADDRESS,
+                TransactionHistoryRequest.FilterType.Coin,
+                shouldIncludeInternalTransfers = true,
+            )
         } returns TransactionHistoryState.Success.HasTransactions(txCount = 3)
 
         // Act
@@ -172,6 +177,33 @@ internal class DefaultWalletManagersFacadeJointReadTest {
     }
 
     @Test
+    fun `GIVEN the joint coin WHEN getTxHistoryItems THEN internal transfers are requested`() = runTest {
+        // Arrange
+        val request = slot<TransactionHistoryRequest>()
+        coEvery { manager.getTransactionsHistory(capture(request)) } returns Result.Success(emptyPage())
+
+        // Act
+        facade.getTxHistoryItems(userWalletId, jointEthereum, Page.Initial, pageSize = 20)
+
+        // Assert
+        assertThat(request.captured.shouldIncludeInternalTransfers).isTrue()
+    }
+
+    @Test
+    fun `GIVEN a joint token WHEN getTxHistoryItems THEN internal transfers are not requested`() = runTest {
+        // Arrange
+        val jointUsdc = cryptoCurrencyFactory.createToken(Blockchain.Ethereum).copy(network = jointNetwork)
+        val request = slot<TransactionHistoryRequest>()
+        coEvery { manager.getTransactionsHistory(capture(request)) } returns Result.Success(emptyPage())
+
+        // Act
+        facade.getTxHistoryItems(userWalletId, jointUsdc, Page.Initial, pageSize = 20)
+
+        // Assert
+        assertThat(request.captured.shouldIncludeInternalTransfers).isFalse()
+    }
+
+    @Test
     fun `GIVEN a personal network without a wallet manager WHEN getTxHistoryState THEN it still fails loudly`() =
         runTest {
             // Arrange
@@ -222,6 +254,11 @@ internal class DefaultWalletManagersFacadeJointReadTest {
     private fun noSafeAddressYet() {
         coEvery { walletManagersStore.getSyncOrNull(userWalletId, Blockchain.Ethereum, OWNER_PATH) } returns null
         coEvery { safeAddressResolver.resolveByOwnerPath(userWalletId, setOf(OWNER_PATH)) } returns emptyMap()
+    }
+
+    private fun emptyPage(): PaginationWrapper<TransactionHistoryItem> = mockk {
+        every { nextPage } returns Page.LastPage
+        every { items } returns emptyList()
     }
 
     private fun historyItem() = TransactionHistoryItem(
