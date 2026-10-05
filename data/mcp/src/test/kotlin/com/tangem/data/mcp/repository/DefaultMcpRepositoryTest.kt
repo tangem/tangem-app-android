@@ -15,6 +15,7 @@ import com.tangem.data.mcp.api.models.request.McpDeviceVerificationConsent
 import com.tangem.data.mcp.api.models.response.McpDeviceVerificationResponse
 import com.tangem.data.mcp.api.models.response.McpSessionResponse
 import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -48,6 +49,7 @@ internal class DefaultMcpRepositoryTest {
         mcpApi = mcpApi,
         userWalletsListRepository = userWalletsListRepository,
         appScope = appScope,
+        dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
     @BeforeEach

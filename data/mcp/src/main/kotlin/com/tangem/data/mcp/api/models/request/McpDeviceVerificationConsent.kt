@@ -1,7 +1,7 @@
 package com.tangem.data.mcp.api.models.request
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * Consent body for approving a device verification.
@@ -11,9 +11,9 @@ import com.squareup.moshi.JsonClass
  * @property walletId the wallet the user granted access to, Base64-encoded the way the auth service
  * identifies wallets everywhere else.
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 internal data class McpDeviceVerificationConsent(
-    @Json(name = "client_id") val clientId: String,
-    @Json(name = "scope") val scope: String,
-    @Json(name = "wallet_id") val walletId: String,
+    @SerialName("client_id") val clientId: String,
+    @SerialName("scope") val scope: String,
+    @SerialName("wallet_id") val walletId: String,
 )

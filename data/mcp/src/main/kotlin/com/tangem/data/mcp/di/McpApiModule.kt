@@ -1,5 +1,6 @@
 package com.tangem.data.mcp.di
 
+import com.tangem.core.remote.ApiSerialization
 import com.tangem.core.remote.RetrofitApiSpec
 import com.tangem.core.remote.RetrofitFactory
 import com.tangem.core.remote.build
@@ -27,6 +28,7 @@ internal object McpApiModule {
                 shouldUseSessionAuth = true,
                 shouldSaveLogs = true,
                 isLoggable = true,
+                serialization = ApiSerialization.KOTLINX,
             ),
         )
     }
