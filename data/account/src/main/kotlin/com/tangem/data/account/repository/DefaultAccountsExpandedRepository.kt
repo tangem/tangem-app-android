@@ -1,17 +1,27 @@
 package com.tangem.data.account.repository
 
+import android.content.Context
 import androidx.datastore.core.DataStore
+import androidx.datastore.dataStoreFile
+import com.squareup.moshi.JsonClass
+import com.squareup.moshi.Moshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.data.account.converter.toAccountId
 import com.tangem.datasource.utils.AppDataStoreFactory
+import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.create
+import com.tangem.datasource.utils.mapWithStringKeyTypes
+import com.tangem.datasource.utils.setTypes
 import com.tangem.domain.account.models.AccountExpandedState
 import com.tangem.domain.account.repository.AccountsExpandedRepository
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.utils.coroutines.AppCoroutineScope
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
-import javax.inject.Inject
 
 internal class DefaultAccountsExpandedRepository constructor(
     private val store: DataStore<Map<String, Set<AccountsExpandedDTO>>>,
@@ -63,13 +73,28 @@ internal class DefaultAccountsExpandedRepository constructor(
     }
 
     internal class Factory @Inject constructor(
+        @NetworkMoshi private val moshi: Moshi,
+        @ApplicationContext private val context: Context,
+        private val appScope: AppCoroutineScope,
         private val dataStoreFactory: AppDataStoreFactory,
     ) : AccountsExpandedRepository.Factory {
         override fun create(storeFileName: String): DefaultAccountsExpandedRepository {
-            val store = dataStoreFactory.create<Map<String, Set<AccountsExpandedDTO>>>(
-                defaultValue = emptyMap(),
-                fileName = storeFileName,
-            )
+            val store = if (dataStoreFactory.isKotlinxDataStoreEnabled) {
+                dataStoreFactory.create<Map<String, Set<AccountsExpandedDTO>>>(
+                    defaultValue = emptyMap(),
+                    fileName = storeFileName,
+                )
+            } else {
+                dataStoreFactory.create<Map<String, Set<AccountsExpandedDTO>>>(
+                    serializer = MoshiDataStoreSerializer(
+                        moshi = moshi,
+                        types = mapWithStringKeyTypes(valueTypes = setTypes<AccountsExpandedDTO>()),
+                        defaultValue = emptyMap(),
+                    ),
+                    produceFile = { context.dataStoreFile(fileName = storeFileName) },
+                    scope = appScope,
+                )
+            }
 
             return DefaultAccountsExpandedRepository(
                 store = store,
@@ -79,6 +104,7 @@ internal class DefaultAccountsExpandedRepository constructor(
 }
 
 @Serializable
+@JsonClass(generateAdapter = true)
 internal data class AccountsExpandedDTO(
     val accountId: String,
     val isExpanded: Boolean,
