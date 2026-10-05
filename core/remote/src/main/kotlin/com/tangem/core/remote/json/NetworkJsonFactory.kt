@@ -14,6 +14,7 @@ object NetworkJsonFactory {
         encodeDefaults = true
         explicitNulls = false
         coerceInputValues = true
+        decodeEnumsCaseInsensitive = true
         this.serializersModule = serializersModule
     }
 }
