@@ -107,7 +107,7 @@ date here; when you ingest a change, update this table in the same PR.
 | | `502` | `RelayerUnavailable` | relayer down, retry later |
 | CLOB `POST order` | `400` + "no match" marker | `PredictionPlaceOrderError.NoLiquidity` | fill-and-kill found nothing |
 | | `400` other | `Rejected` | |
-| | `401` | `Unauthorized` | credentials stale — `PlacePredictionOrderUseCase` clears them |
+| | `401` | `Unauthorized` | credentials stale, cleared |
 | | network/timeout, other | `Ambiguous` | the order may have been placed; the feature reports it as submitted, never as failed |
 | BFF `/withdraw*` | `409` | `PredictionWithdrawError.NonceTaken` | same nonce already submitted |
 | | `422` | `RelayerRejected` | |
@@ -163,9 +163,8 @@ reads by owner address, without them it falls back to the `byWalletId` read (`GE
 `getWalletStatusByWalletId`), which serves a wallet onboarded on another device — that path knows the
 status but has no credentials, so it yields no balance. It maps `PolymarketWalletStatus` to
 `PredictionAccountStatusValue` and on any failure leaves the cached value in place and marks it
-un-refreshed — it never writes "empty" on the strength of a failed question. The exceptions are
-`KeyNotFound` and `InvalidSignature` on the balance read, which commit `Onboarded`: after a `401` the
-credentials are gone, so a ready account with nothing to sign with is a fact, not a failed read.
+un-refreshed — it never writes "empty" on the strength of a failed question. Except a balance
+`KeyNotFound` / `InvalidSignature`: the credentials are gone, so `Onboarded` is a fact, not a failed read.
 `DefaultPredictionAccountStatusProducer` mixes the fiat rate in on every emission, starting with
 `Pending` so the combined account list is never stalled by this account.
 
