@@ -164,11 +164,13 @@ Status receives the result, market header and position id as route data and owns
 - **Placing.** `SignPredictionOrderInteractor` (one signing session: card for Cold, unlock for Hot) →
   `PlacePredictionOrderUseCase`.
   Outcomes: filled (with the actual filled amounts); `Delayed` → `AwaitDelayedPredictionOrderUseCase` polls
-  `GET data/order/{id}`; `Ambiguous` (transport failure after send) is shown as **Submitted**, never as
-  failed — the order may be live; `NoLiquidity` (fill-and-kill found no match) is shown as NotFilled.
+  `GET data/order/{id}`; `Ambiguous` (network/timeout or an inconclusive HTTP error after submission) shows
+  the existing "Something went wrong" dialog with Support/Cancel on summary ([REDACTED_TASK_KEY]). The app does not
+  automatically submit again. `NoLiquidity` (fill-and-kill found no match) is shown as NotFilled.
   Any result that moves the balance (`Filled` / `PartiallyFilled` / `Submitted`) opens
   `PredictionFundingWindow`, so the feed shows the awaiting-funds banner and polls faster until the balance
-  settles.
+  settles. An ambiguous submission also keeps this refresh window and triggers a positions update because
+  the order may have reached the exchange despite the error.
 - **Position reads.** `/positions/outcome` may answer `null` until the position is indexed.
   `PolymarketPositionDetailsModel` shows Unavailable at once when the first read is `null`; the retry loop
   (`POSITION_INDEXING_READS` reads, `POSITION_INDEXING_RETRY_MILLIS` apart) serves a position already shown
