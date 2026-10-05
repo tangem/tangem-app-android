@@ -12,7 +12,7 @@ import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.collectibles.impl.machinedetails.ui.components.PRIZE_CARD_ASPECT_RATIO
 
-private const val TIER_ROWS = 3
+private const val TIER_CARDS = 4
 private const val PRIZE_ROWS = 2
 private const val CARDS_PER_ROW = 2
 
@@ -34,7 +34,8 @@ internal fun CollectiblesPackDetailsSkeleton(contentPadding: PaddingValues, modi
                 TangemShimmer(modifier = Modifier.size(width = 204.dp, height = 294.dp), radius = 20.dp)
             }
 
-            repeat(TIER_ROWS) { HeadingAndCards(showHeading = it == 0) }
+            TiersSkeleton()
+            DetailsSkeleton()
 
             CollectiblesPrizeGridSkeleton()
         }
@@ -74,27 +75,42 @@ internal fun CollectiblesPrizeGridSkeleton(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun HeadingAndCards(showHeading: Boolean, modifier: Modifier = Modifier) {
+private fun TiersSkeleton(modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
-        if (showHeading) {
-            Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
-                TangemShimmer(style = TangemTheme.typography3.subheading.medium, modifier = Modifier.width(140.dp))
-            }
+        Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
+            TangemShimmer(style = TangemTheme.typography3.subheading.medium, modifier = Modifier.width(140.dp))
         }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            repeat(CARDS_PER_ROW) {
+            repeat(TIER_CARDS) {
                 TangemShimmer(
                     modifier = Modifier
-                        .weight(1f)
+                        .fillMaxWidth()
                         .height(72.dp),
                     radius = 20.dp,
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun DetailsSkeleton(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        repeat(CARDS_PER_ROW) {
+            TangemShimmer(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(72.dp),
+                radius = 20.dp,
+            )
         }
     }
 }

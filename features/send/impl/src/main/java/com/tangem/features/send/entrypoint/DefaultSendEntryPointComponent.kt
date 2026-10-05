@@ -23,6 +23,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.models.network.Network
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.send.api.SendComponent
 import com.tangem.features.send.api.SendEntryPointComponent
@@ -98,7 +99,8 @@ internal class DefaultSendEntryPointComponent @AssistedInject constructor(
                 model.currentRoute.emit(stack.active.configuration)
             }
         }
-        if (params.shouldStartWithSwap) {
+        val isJointCurrency = params.cryptoCurrency.network.derivationPath is Network.DerivationPath.Joint
+        if (params.shouldStartWithSwap && !isJointCurrency) {
             // Direct Swap&Send entry: replicate the canonical "send with swap" trigger so the receive-token
             // selector opens like the regular Send -> Send&Swap flow (this was the less-broken behaviour).
             model.onConvertToAnotherToken(lastAmount = "", isEnterInFiatSelected = false)
