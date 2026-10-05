@@ -50,8 +50,10 @@ internal class SafeExecutionTypeDecoder(
         TxInfo.TransactionType.GaslessFee.takeIf { isRefund(item) }
 
     /** The refund is paid even when the operation failed, and Blockbook gives it the transaction's status */
-    fun withRefundStatus(item: TransactionHistoryItem): TransactionHistoryItem =
-        if (isRefund(item)) item.copy(status = TransactionHistoryItem.TransactionStatus.Confirmed) else item
+    fun withRefundStatus(item: TransactionHistoryItem): TransactionHistoryItem {
+        val isFailedRefund = item.status == TransactionHistoryItem.TransactionStatus.Failed && isRefund(item)
+        return if (isFailedRefund) item.copy(status = TransactionHistoryItem.TransactionStatus.Confirmed) else item
+    }
 
     private fun isRefund(item: TransactionHistoryItem): Boolean {
         if (!isJointAccount || safeAddress == null) return false
