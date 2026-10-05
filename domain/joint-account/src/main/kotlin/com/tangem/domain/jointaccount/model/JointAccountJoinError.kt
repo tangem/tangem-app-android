@@ -10,5 +10,5 @@ sealed interface JointAccountJoinError : JointAccountFlowError {
      * The invite cannot be redeemed: it is spent, or the config no longer matches the account. Terminal for
      * this link — a retry can only fail the same way.
      */
-    data object InvalidInvite : JointAccountJoinError
+    data class InvalidInvite(val cause: Throwable) : JointAccountJoinError
 }

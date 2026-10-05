@@ -86,12 +86,12 @@ class JoinJointAccountUseCase(
 
         when (result) {
             is JointAccountJoinResult.Joined -> result.account
-            JointAccountJoinResult.Conflict -> {
+            is JointAccountJoinResult.Conflict -> {
                 refresh.mapLeft(JointAccountFlowError::Failed).bind()
 
                 val own = supplier.findByMember(userWalletId = userWalletId, ownerAddress = signResult.ownerAddress)
 
-                ensureNotNull(own) { JointAccountJoinError.InvalidInvite }
+                ensureNotNull(own) { JointAccountJoinError.InvalidInvite(cause = result.cause) }
             }
         }
     }
