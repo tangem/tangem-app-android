@@ -84,7 +84,18 @@ internal object CollectiblesDiscoveryPreviewData {
     )
 
     val loadingNextPage = default.copy(
-        content = (default.content as CollectiblesDiscoveryUM.ContentUM.Content).copy(isLoadingNextPage = true),
+        content = (default.content as CollectiblesDiscoveryUM.ContentUM.Content).copy(
+            nextPage = CollectiblesDiscoveryUM.NextPageUM.Loading,
+        ),
+    )
+
+    val nextPageError = default.copy(
+        content = (default.content as CollectiblesDiscoveryUM.ContentUM.Content).copy(
+            nextPage = CollectiblesDiscoveryUM.NextPageUM.Error(
+                message = stringReference("Unable to load data…"),
+                onRetryClick = {},
+            ),
+        ),
     )
 
     private fun content(vararg packs: CollectiblesDiscoveryUM.PackUM) = CollectiblesDiscoveryUM.ContentUM.Content(
@@ -93,7 +104,7 @@ internal object CollectiblesDiscoveryPreviewData {
                 CollectiblesDiscoveryUM.PackRowUM(id = chunk.first().id, packs = chunk.toImmutableList())
             }
             .toImmutableList(),
-        isLoadingNextPage = false,
+        nextPage = CollectiblesDiscoveryUM.NextPageUM.Idle,
         isReloading = false,
     )
 
