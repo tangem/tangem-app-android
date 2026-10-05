@@ -36,6 +36,8 @@ interface SocialRecoveryRepository {
         recoveryKey: RecoveryKey,
     ): Either<SocialLoginError, Unit>
 
+    suspend fun registerRestoredWallet(walletId: UserWalletId): Either<SocialLoginError, Unit>
+
     /**
      * Drops the binding of [walletId] and the recovery key stored with it, so the identity can no longer
      * restore this wallet. Used when the wallet is deleted. Unbinding a wallet that has no binding is a success.

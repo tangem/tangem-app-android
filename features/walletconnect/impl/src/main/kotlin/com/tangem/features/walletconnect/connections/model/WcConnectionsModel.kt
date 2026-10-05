@@ -1,9 +1,13 @@
 package com.tangem.features.walletconnect.connections.model
 
+import android.net.Uri
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.DeepLinkRoute
+import com.tangem.common.routing.DeepLinkScheme
+import com.tangem.common.routing.deeplink.DeeplinkConst.USER_CODE_KEY
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -18,8 +22,12 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.account.supplier.MultiAccountListSupplier
+import com.tangem.domain.mcp.McpRequestService
+import com.tangem.domain.mcp.models.McpRequest
+import com.tangem.domain.mcp.models.McpSession
+import com.tangem.domain.mcp.repository.McpRepository
 import com.tangem.domain.qrscanning.models.QrResultSource
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
@@ -28,17 +36,17 @@ import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.usecase.WcSessionsUseCase
+import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.walletconnect.usecase.disconnect.WcDisconnectUseCase
+import com.tangem.features.mcp.api.McpFeatureToggles
 import com.tangem.features.walletconnect.connections.components.WcConnectionsComponent
 import com.tangem.features.walletconnect.connections.entity.WcConnections
 import com.tangem.features.walletconnect.connections.entity.WcConnectionsState
 import com.tangem.features.walletconnect.connections.entity.WcConnectionsTopAppBarConfig
-import com.tangem.features.walletconnect.connections.model.transformers.WcSessionsAccountModeTransformer
-import com.tangem.features.walletconnect.connections.model.transformers.WcSessionsTransformer
+import com.tangem.features.walletconnect.connections.model.transformers.WcConnectionsTransformer
 import com.tangem.features.walletconnect.connections.routes.WcConnectionsBottomSheetConfig
 import com.tangem.features.walletconnect.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.transformer.Transformer
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -51,10 +59,14 @@ internal class WcConnectionsModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val wcSessionsUseCase: WcSessionsUseCase,
+    private val getWalletsUseCase: GetWalletsUseCase,
     private val wcDisconnectUseCase: WcDisconnectUseCase,
     private val multiAccountListSupplier: MultiAccountListSupplier,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val wcPairService: WcPairService,
+    private val mcpRequestService: McpRequestService,
+    private val mcpFeatureToggles: McpFeatureToggles,
+    private val mcpRepository: McpRepository,
     override val dispatchers: CoroutineDispatcherProvider,
     analytics: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
@@ -64,6 +76,15 @@ internal class WcConnectionsModel @Inject constructor(
     val uiState: StateFlow<WcConnectionsState>
         field = MutableStateFlow<WcConnectionsState>(getInitialState())
     val bottomSheetNavigation: SlotNavigation<WcConnectionsBottomSheetConfig> = SlotNavigation()
+
+    private val selectedWalletId = MutableStateFlow<String?>(value = null)
+
+    /** The repository keeps the list hot, so the screen only has to collect it. */
+    private val mcpSessions: Flow<List<McpSession>> = if (mcpFeatureToggles.isMcpEnabled) {
+        mcpRepository.getSessions()
+    } else {
+        flowOf(emptyList())
+    }
 
     init {
         analytics.send(WcAnalyticEvents.ScreenOpened())
@@ -75,6 +96,11 @@ internal class WcConnectionsModel @Inject constructor(
         listenToQrScanningUseCase.listen(SourceType.WALLET_CONNECT)
             .getOrElse { emptyFlow() }
             .onEach { result ->
+                val mcpUserCode = parseMcpUserCode(result.qrCode)
+                if (mcpUserCode != null) {
+                    mcpRequestService.request(McpRequest.Pair(userCode = mcpUserCode))
+                    return@onEach
+                }
                 val source = when (result.resultSource) {
                     QrResultSource.CLIPBOARD -> WcPairRequest.Source.CLIPBOARD
                     QrResultSource.CAMERA,
@@ -93,29 +119,50 @@ internal class WcConnectionsModel @Inject constructor(
             .launchIn(modelScope)
     }
 
+    /**
+     * The screen lists connected MCP agents next to the dApp sessions, so its scanner accepts an MCP pairing link
+     * too — anything else stays on the WalletConnect path.
+     */
+    private fun parseMcpUserCode(qrCode: String): String? {
+        if (!mcpFeatureToggles.isMcpEnabled) return null
+
+        val uri = runCatching { Uri.parse(qrCode) }.getOrNull() ?: return null
+        if (uri.scheme != DeepLinkScheme.Tangem.scheme) return null
+        if (uri.host != DeepLinkRoute.McpAuthorization.host) return null
+
+        return runCatching { uri.getQueryParameter(USER_CODE_KEY) }.getOrNull()?.takeIf { it.isNotBlank() }
+    }
+
     private fun listenWcSessions() {
         combine(
-            flow = wcSessionsUseCase.invoke().distinctUntilChanged(),
+            flow = combine(getWalletsUseCase(), wcSessionsUseCase.invoke().distinctUntilChanged(), ::Pair),
             flow2 = isAccountsModeEnabledUseCase(),
             flow3 = multiAccountListSupplier(Unit),
-            transform = { sessionsMap, isAccountMode, accountList ->
-                val transformer: Transformer<WcConnectionsState> =
-                    if (isAccountMode) {
-                        WcSessionsAccountModeTransformer(
-                            sessionsMap = sessionsMap,
-                            accountList = accountList,
-                            openAppInfoModal = ::openAppInfoModal,
-                        )
-                    } else {
-                        WcSessionsTransformer(
-                            sessionsMap = sessionsMap,
-                            openAppInfoModal = ::openAppInfoModal,
-                        )
-                    }
-                uiState.update(transformer)
+            flow4 = mcpSessions,
+            flow5 = selectedWalletId,
+            transform = { (wallets, sessionsMap), isAccountMode, accountLists, agentSessions, selectedWalletId ->
+                uiState.update(
+                    WcConnectionsTransformer(
+                        wallets = wallets,
+                        sessionsMap = sessionsMap,
+                        accountLists = accountLists,
+                        mcpSessions = agentSessions,
+                        isAccountMode = isAccountMode,
+                        selectedWalletId = selectedWalletId,
+                        onWalletSelect = { walletId -> this.selectedWalletId.value = walletId },
+                        openAppInfoModal = ::openAppInfoModal,
+                        openMcpSessionModal = ::openMcpSessionModal,
+                    ),
+                )
             },
         )
             .launchIn(modelScope)
+    }
+
+    private fun openMcpSessionModal(session: McpSession, walletName: String) {
+        bottomSheetNavigation.activate(
+            WcConnectionsBottomSheetConfig.McpSession(sessionId = session.id, walletName = walletName),
+        )
     }
 
     private fun openAppInfoModal(session: WcSession) {

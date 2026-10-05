@@ -31,6 +31,21 @@ fun BaseTestCase.openTokenDetailsFromMarketsScreen(blockchainName: String, token
     }
 }
 
+/** Opens the 'Markets' token details of [tokenName] from the main screen, staying on the markets screen. */
+fun BaseTestCase.openMarketsTokenDetailsFromMainScreen(tokenName: String) {
+    step("Open 'Markets' screen") {
+        onMainScreen { marketsSheetDragHandle.clickWithAssertion() }
+        waitForIdle()
+    }
+    step("Search for $tokenName token") {
+        searchTokenInMarkets(tokenName)
+    }
+    step("Click on $tokenName token") {
+        waitForIdle()
+        onMarketsScreen { tokenWithTitle(tokenName).clickWithAssertion() }
+    }
+}
+
 fun BaseTestCase.assertMarketsExchangesScreen() {
     step("Assert 'Title' is displayed") {
         onMarketsExchangesScreen { exchangesTitle.assertIsDisplayed() }

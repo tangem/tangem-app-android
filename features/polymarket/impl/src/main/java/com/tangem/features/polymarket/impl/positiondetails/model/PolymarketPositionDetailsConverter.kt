@@ -7,6 +7,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketPosition
+import com.tangem.domain.polymarket.model.PolymarketPositionResult
 import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.common.formatPolymarketPrice
@@ -67,7 +68,7 @@ internal class PolymarketPositionDetailsConverter :
             ),
             information = PolymarketPositionDetailsUM.Information(
                 invested = stringReference(position.initialValue.formatPolymarketMoney()),
-                status = resourceReference(statusLabel(position.resolutionStatus)),
+                status = resourceReference(statusLabel(position)),
                 endDate = position.endDate?.let {
                     stringReference(it.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)))
                 },
@@ -80,15 +81,21 @@ internal class PolymarketPositionDetailsConverter :
         )
     }
 
-    private fun statusLabel(status: PolymarketResolutionStatus): Int = when (status) {
+    private fun statusLabel(position: PolymarketPosition.Open): Int = when (position.resolutionStatus) {
         PolymarketResolutionStatus.OPEN -> R.string.prediction_positions_open
         PolymarketResolutionStatus.PENDING_RESOLUTION,
         PolymarketResolutionStatus.PROPOSED,
+        PolymarketResolutionStatus.UNKNOWN,
         -> R.string.prediction_positions_pending
         PolymarketResolutionStatus.DISPUTED -> R.string.prediction_positions_disputed
-        PolymarketResolutionStatus.RESOLVED,
-        PolymarketResolutionStatus.UNKNOWN,
-        -> R.string.prediction_positions_unknown
+        PolymarketResolutionStatus.RESOLVED -> settlementLabel(position.result)
+    }
+
+    private fun settlementLabel(result: PolymarketPositionResult?): Int = when (result) {
+        PolymarketPositionResult.WON -> R.string.prediction_positions_won
+        PolymarketPositionResult.LOST -> R.string.prediction_positions_lost
+        PolymarketPositionResult.SPLIT -> R.string.prediction_positions_split
+        PolymarketPositionResult.UNKNOWN, null -> R.string.prediction_positions_unknown
     }
 
     private fun event(position: PolymarketPosition.Open, event: PolymarketEvent?): PolymarketPositionDetailsUM.Event? {
