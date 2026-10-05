@@ -239,6 +239,19 @@ internal class SdkTransactionHistoryItemConverterTest {
     }
 
     @Test
+    fun `GIVEN an unconfirmed Safe refund WHEN convertList THEN the fee row stays unconfirmed`() {
+        // Arrange
+        val converter = jointCoinConverter()
+        val unconfirmed = TransactionHistoryItem.TransactionStatus.Unconfirmed
+
+        // Act
+        val actual = converter.convertList(listOf(safeCoinLeg(to = RELAYER, value = REFUND, status = unconfirmed)))
+
+        // Assert
+        assertThat((actual.single() as TxInfo.Single).status).isEqualTo(TxInfo.TransactionStatus.Unconfirmed)
+    }
+
+    @Test
     fun `GIVEN only the relayer's zero call WHEN convertList THEN nothing`() {
         // Arrange — a token operation refunded in the token: no coin moved at all
         val converter = jointCoinConverter()
