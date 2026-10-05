@@ -237,6 +237,7 @@ private fun Modifier.materialFill(style: TangemSurface.MaterialStyle, opacity: F
             blurRadius = 32.dp,
             tints = listOf(
                 HazeTint(material.fillBlur),
+                HazeTint(material.tintBlur),
             ),
         ),
     ) {
@@ -265,6 +266,7 @@ private fun materialColors(style: TangemSurface.MaterialStyle): MaterialColors {
     return when (style) {
         TangemSurface.MaterialStyle.Default -> MaterialColors(
             fillBlur = colors.material.fill.blur,
+            tintBlur = colors.material.tint.blur,
             fillSolid = colors.material.fill.solid,
             tintSolid = colors.material.tint.solid,
             borderStart = colors.material.border.start,
@@ -272,6 +274,7 @@ private fun materialColors(style: TangemSurface.MaterialStyle): MaterialColors {
         )
         TangemSurface.MaterialStyle.Inverted -> MaterialColors(
             fillBlur = colors.materialInverted.fill.blur,
+            tintBlur = colors.materialInverted.tint.blur,
             fillSolid = colors.materialInverted.fill.solid,
             tintSolid = colors.materialInverted.tint.solid,
             borderStart = colors.materialInverted.border.start,
@@ -279,6 +282,7 @@ private fun materialColors(style: TangemSurface.MaterialStyle): MaterialColors {
         )
         TangemSurface.MaterialStyle.Modal -> MaterialColors(
             fillBlur = colors.materialModal.fill.blur,
+            tintBlur = colors.materialModal.tint.blur,
             fillSolid = colors.materialModal.fill.solid,
             tintSolid = colors.materialModal.tint.solid,
             borderStart = colors.materialModal.border.start,
@@ -290,6 +294,7 @@ private fun materialColors(style: TangemSurface.MaterialStyle): MaterialColors {
 
 private class MaterialColors(
     val fillBlur: Color,
+    val tintBlur: Color,
     val fillSolid: Color,
     val tintSolid: Color,
     val borderStart: Color,

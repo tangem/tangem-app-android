@@ -21,8 +21,8 @@ abstract class MeaWalletSdkAccessDenial : ValueSource<String, MeaWalletSdkAccess
         val gprProperties = Properties()
         parameters.localProperties.get().asFile.takeIf { it.isFile }?.inputStream()?.use { gprProperties.load(it) }
         val user = gprProperties.getProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR").orEmpty()
-        val token = gprProperties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
-            ?: return "there is no gpr.key or GITHUB_TOKEN for GitHub Packages"
+        val token = gprProperties.gitHubPackagesToken()
+            ?: return "there is no gpr.key, GITHUB_PACKAGES_TOKEN or GITHUB_TOKEN for GitHub Packages"
         val credentials = Base64.getEncoder().encodeToString("$user:$token".toByteArray())
         val answer = try {
             val connection = URI(parameters.metadataUrl.get()).toURL().openConnection() as HttpURLConnection
