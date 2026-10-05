@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.child.wallet.model.intents
 
 import androidx.compose.ui.text.SpanStyle
+import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -19,6 +20,11 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.repository.MoneyAccountRepository
+import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.MoneyAccountHideStateTransformer
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -30,13 +36,15 @@ internal interface MoneyAccountIntents {
 
     fun onMoneyAccountVerificationDeclinedClicked(userWalletId: UserWalletId, customerId: String)
 
-    fun onMoneyAccountCountryNotSupportedClicked(userWalletId: UserWalletId)
+    fun onMoneyAccountCountryNotSupportedClicked(userWalletId: UserWalletId, countryCode: String?)
 }
 
 @ModelScoped
 internal class MoneyAccountClickIntentsImplementor @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val moneyAccountRepository: MoneyAccountRepository,
+    private val stateHolder: WalletStateController,
 ) : BaseWalletClickIntents(), MoneyAccountIntents {
 
     override fun onMoneyAccountActivatingClicked() {
@@ -116,14 +124,17 @@ internal class MoneyAccountClickIntentsImplementor @Inject constructor(
             }
             primaryButton {
                 text = resourceReference(R.string.money_account_main_status_dialog_hide_account)
-                onClick { closeBs() }
+                onClick {
+                    hideMoneyAccount(userWalletId)
+                    closeBs()
+                }
             }
         }
 
         uiMessageSender.send(bottomSheet)
     }
 
-    override fun onMoneyAccountCountryNotSupportedClicked(userWalletId: UserWalletId) {
+    override fun onMoneyAccountCountryNotSupportedClicked(userWalletId: UserWalletId, countryCode: String?) {
         val contactSupportLink = styledResourceReference(
             id = R.string.common_contact_support,
             spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.primary) },
@@ -144,17 +155,35 @@ internal class MoneyAccountClickIntentsImplementor @Inject constructor(
                     stringReference(" ") +
                     contactSupportLink
             }
-            secondaryButton {
-                text = resourceReference(R.string.money_account_main_status_dialog_join_waitlist)
-                onClick { closeBs() }
+            if (countryCode != null) {
+                secondaryButton {
+                    text = resourceReference(R.string.money_account_main_status_dialog_join_waitlist)
+                    onClick {
+                        router.dialogNavigation.activate(
+                            configuration = WalletDialogConfig.TangemPayWaitlist(
+                                userWalletId = userWalletId,
+                                countryCode = countryCode,
+                            ),
+                        )
+                        closeBs()
+                    }
+                }
             }
             primaryButton {
                 text = resourceReference(R.string.money_account_main_status_dialog_hide_account)
-                onClick { closeBs() }
+                onClick {
+                    hideMoneyAccount(userWalletId)
+                    closeBs()
+                }
             }
         }
 
         uiMessageSender.send(bottomSheet)
+    }
+
+    private fun hideMoneyAccount(userWalletId: UserWalletId) {
+        stateHolder.update(transformer = MoneyAccountHideStateTransformer(userWalletId))
+        modelScope.launch { moneyAccountRepository.hideMainBlock(userWalletId) }
     }
 
     private fun sendFeedbackEmail(type: FeedbackEmailType) {
