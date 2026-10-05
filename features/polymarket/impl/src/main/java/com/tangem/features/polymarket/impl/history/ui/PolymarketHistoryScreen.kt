@@ -43,7 +43,6 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_globe_20
 import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadMoreEffect
-import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadingState
 import com.tangem.features.polymarket.impl.common.ui.PolymarketNextPageLoader
 import com.tangem.features.polymarket.impl.common.ui.PolymarketReloadPrompt
 import com.tangem.features.polymarket.impl.common.ui.PolymarketSearchBarClearance
@@ -91,13 +90,13 @@ internal fun PolymarketHistoryScreen(state: PolymarketHistoryUM, modifier: Modif
 private fun HistoryContent(content: Content, contentPadding: PaddingValues) {
     when (content) {
         is Content.Data -> HistoryList(content, contentPadding)
+        Content.Loading -> PolymarketHistorySkeleton(contentPadding = contentPadding)
         else -> Box(
             modifier = Modifier.fillMaxSize().padding(contentPadding).padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState()),
             contentAlignment = Alignment.Center,
         ) {
             when (content) {
-                Content.Loading -> PolymarketLoadingState()
                 Content.NoResults -> Text(
                     text = stringResourceSafe(R.string.common_no_results),
                     color = TangemTheme.colors3.text.secondary,
@@ -108,7 +107,7 @@ private fun HistoryContent(content: Content, contentPadding: PaddingValues) {
                     text = resourceReference(R.string.common_something_went_wrong),
                     onReloadClick = content.onRetry,
                 )
-                is Content.Data -> Unit
+                is Content.Data, Content.Loading -> Unit
             }
         }
     }

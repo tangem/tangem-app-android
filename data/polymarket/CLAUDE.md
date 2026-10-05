@@ -80,7 +80,8 @@ nonce was already submitted — neither is a generic conflict.
   it never derives. Without stored addresses it reads `GET /wallet?walletId` — that serves a wallet
   onboarded on another device but yields no balance (no credentials here).
 - On failure it keeps the cached value and marks it un-refreshed; it never writes "empty" on the strength
-  of a failed question.
+  of a failed question. Exception: a balance `KeyNotFound` / `InvalidSignature` commits `Onboarded` — after
+  a `401` the credentials are gone, so that is a fact, not a failed read.
 - `Active` has two writers — the fetcher owns the balance, `DefaultPredictionDepositAddressWriter` the
   deposit address — so both commit through `PredictionAccountStatusStore.update` with a transform over the
   value current at commit time, never a whole value read earlier. Accepted race: the slower of two

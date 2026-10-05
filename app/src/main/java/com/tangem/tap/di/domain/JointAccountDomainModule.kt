@@ -123,12 +123,6 @@ internal object JointAccountDomainModule {
 
     @Provides
     @Singleton
-    fun provideJointRefundReceiverProvider(): JointRefundReceiverProvider {
-        return JointRefundReceiverProvider { JointRefundReceiverProvider.TREASURY }
-    }
-
-    @Provides
-    @Singleton
     fun provideSafeTxGasBuilder(
         networkReader: JointNetworkReader,
         refundReceiverProvider: JointRefundReceiverProvider,
