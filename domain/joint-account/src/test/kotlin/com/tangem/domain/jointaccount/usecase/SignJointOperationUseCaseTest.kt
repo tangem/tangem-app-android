@@ -65,6 +65,7 @@ internal class SignJointOperationUseCaseTest {
 
     private val account = MockAccounts.createJointAccount(ownerKeyIndex = 3)
     private val displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT)
+    private val signedOperation = operation(status = JointOperation.Status.PENDING)
 
     @BeforeEach
     fun resetMocks() {
@@ -93,7 +94,7 @@ internal class SignJointOperationUseCaseTest {
         coEvery { blockaidGate.verify(any(), any(), any(), any(), any()) } returns
             JointOperationBlockaidGate.Verdict.SAFE
         coEvery { signer.signOperation(any(), any(), any(), any(), any()) } returns SIGNATURE.right()
-        coEvery { repository.signOperation(any(), any(), any(), any()) } returns Unit.right()
+        coEvery { repository.signOperation(any(), any(), any(), any()) } returns signedOperation.right()
     }
 
     @Test
@@ -117,7 +118,7 @@ internal class SignJointOperationUseCaseTest {
         val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
         // Assert
-        assertThat(actual).isEqualTo(Unit.right())
+        assertThat(actual).isEqualTo(signedOperation.right())
         coVerifyOrder {
             verifier.verify(
                 jointAccount = jointAccount(),
@@ -233,7 +234,7 @@ internal class SignJointOperationUseCaseTest {
         val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
         // Assert
-        assertThat(actual).isEqualTo(Unit.right())
+        assertThat(actual).isEqualTo(signedOperation.right())
         coVerify(exactly = 1) { signer.signOperation(any(), any(), any(), any(), any()) }
     }
 
