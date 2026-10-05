@@ -10,8 +10,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -23,6 +21,7 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.checkbox.TangemCheckmark
+import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.R
@@ -163,32 +162,33 @@ private fun Footer(state: CategorySelectorFooterUM, isEnabled: Boolean, modifier
         visible = isEnabled,
         modifier = modifier.fillMaxWidth(),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, TangemTheme.colors3.bg.primary),
-                    ),
+        Box {
+            TangemFade(
+                position = TangemFade.Position.Bottom,
+                variant = TangemFade.Variant.Hard,
+                modifier = Modifier.matchParentSize(),
+            )
+            Column(
+                modifier = Modifier
+                    .navigationBarsPadding()
+                    .padding(all = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(space = 8.dp),
+            ) {
+                TangemButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    variant = TangemButton.Variant.Secondary,
+                    size = TangemButton.Size.X12,
+                    text = resourceReference(R.string.common_reset),
+                    onClick = state.onReset,
                 )
-                .navigationBarsPadding()
-                .padding(all = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(space = 8.dp),
-        ) {
-            TangemButton(
-                modifier = Modifier.fillMaxWidth(),
-                variant = TangemButton.Variant.Secondary,
-                size = TangemButton.Size.X12,
-                text = resourceReference(R.string.common_reset),
-                onClick = state.onReset,
-            )
-            TangemButton(
-                modifier = Modifier.fillMaxWidth(),
-                variant = TangemButton.Variant.Primary,
-                size = TangemButton.Size.X12,
-                text = resourceReference(R.string.common_apply),
-                onClick = state.onApply,
-            )
+                TangemButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    variant = TangemButton.Variant.Primary,
+                    size = TangemButton.Size.X12,
+                    text = resourceReference(R.string.common_apply),
+                    onClick = state.onApply,
+                )
+            }
         }
     }
 }
@@ -267,7 +267,7 @@ private fun CategorySelectorContent_Preview(
     @PreviewParameter(CategorySelectorContentPreviewProvider::class) params: CategorySelectorUM,
 ) {
     TangemThemePreviewRedesign {
-        CategorySelectorContent(params, modifier = Modifier.background(TangemTheme.colors3.bg.secondary))
+        CategorySelectorContent(params, modifier = Modifier.background(TangemTheme.colors3.bg.primary))
     }
 }
 
