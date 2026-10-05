@@ -5,6 +5,7 @@ import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.features.tangempay.withdraw.bank.BASE_CHAIN_ID
 import com.tangem.features.tangempay.withdraw.bank.USDC_BASE
 import com.tangem.features.tangempay.withdraw.bank.availableNetwork
+import com.tangem.features.tangempay.withdraw.bank.bankWithdrawSource
 import com.tangem.features.tangempay.withdraw.bank.currencyStatus
 import com.tangem.features.tangempay.withdraw.bank.offrampDestination
 import com.tangem.features.tangempay.withdraw.bank.offrampOptions
@@ -54,12 +55,12 @@ internal class BankWithdrawOptionsFactoryTest {
     }
 
     @Test
-    fun `GIVEN token not accepted or without balance WHEN create THEN dropped`() {
+    fun `GIVEN tokens without balance WHEN create THEN dropped whether accepted or not`() {
         // Arrange
         val networks = listOf(
             availableNetwork(
                 token = usdtPolygon,
-                fiatBalance = BigDecimal("5"),
+                fiatBalance = BigDecimal.ZERO,
                 extraStatuses = listOf(currencyStatus(usdcPolygon, fiatBalance = BigDecimal("100"))),
             ),
             availableNetwork(token = usdcBase, chainId = BASE_CHAIN_ID, fiatBalance = BigDecimal.ZERO),
@@ -69,7 +70,49 @@ internal class BankWithdrawOptionsFactoryTest {
         val actual = BankWithdrawOptionsFactory.create(bothSources, networks, balanceCurrencyCode = "USD")
 
         // Assert
-        assertThat(actual?.sources?.map { it.token }).containsExactly(usdcPolygon)
+        assertThat(actual?.sources).containsExactly(
+            bankWithdrawSource(token = usdcPolygon, fiatBalance = BigDecimal("100")),
+        )
+    }
+
+    @Test
+    fun `GIVEN tokens not accepted with balance WHEN create THEN listed unavailable inside their symbol group`() {
+        // Arrange
+        val networks = listOf(
+            availableNetwork(
+                token = usdtPolygon,
+                fiatBalance = BigDecimal("5"),
+                extraStatuses = listOf(currencyStatus(usdcPolygon, fiatBalance = BigDecimal("100"))),
+            ),
+            availableNetwork(token = usdcBase, chainId = BASE_CHAIN_ID, fiatBalance = BigDecimal("40")),
+        )
+
+        // Act
+        val actual = BankWithdrawOptionsFactory.create(offrampOptions(), networks, balanceCurrencyCode = "USD")
+
+        // Assert
+        assertThat(actual?.sources).containsExactly(
+            bankWithdrawSource(token = usdcPolygon, fiatBalance = BigDecimal("100")),
+            bankWithdrawSource(
+                token = usdcBase,
+                chainId = BASE_CHAIN_ID,
+                fiatBalance = BigDecimal("40"),
+                isAvailable = false,
+            ),
+            bankWithdrawSource(token = usdtPolygon, fiatBalance = BigDecimal("5"), isAvailable = false),
+        ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN only tokens the off-ramp does not accept WHEN create THEN null`() {
+        // Arrange
+        val networks = listOf(availableNetwork(token = usdtPolygon, fiatBalance = BigDecimal("5")))
+
+        // Act
+        val actual = BankWithdrawOptionsFactory.create(offrampOptions(), networks, balanceCurrencyCode = "USD")
+
+        // Assert
+        assertThat(actual).isNull()
     }
 
     @Test

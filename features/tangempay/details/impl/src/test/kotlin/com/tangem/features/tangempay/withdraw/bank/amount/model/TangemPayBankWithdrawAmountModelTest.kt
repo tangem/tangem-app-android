@@ -344,6 +344,66 @@ internal class TangemPayBankWithdrawAmountModelTest {
     }
 
     @Test
+    fun `GIVEN token the off-ramp does not accept WHEN token sheet opened THEN listed unavailable`() {
+        // Arrange
+        val options = bankWithdrawOptions(sources = listOf(bankWithdrawSource(), baseSource.copy(isAvailable = false)))
+        val model = createModel(options = options)
+
+        // Act
+        model.uiState.value.source.onClick()
+
+        // Assert
+        val sheet = model.uiState.value.sheet as SheetUM.Tokens
+        assertThat(sheet.items.map { Triple(it.subtitle, it.isAvailable, it.isSelected) }).containsExactly(
+            Triple(
+                resourceReference(R.string.tangempay_withdraw_bank_source_subtitle, wrappedList("Polygon", "$2,325.55")),
+                true,
+                true,
+            ),
+            Triple(
+                resourceReference(
+                    R.string.tangempay_withdraw_bank_source_subtitle,
+                    wrappedList("Base", resourceReference(R.string.tangempay_withdraw_bank_offramp_unavailable)),
+                ),
+                false,
+                false,
+            ),
+        ).inOrder()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN unavailable token listed first WHEN model created THEN first available token preselected`() {
+        // Arrange
+        val options = bankWithdrawOptions(sources = listOf(baseSource.copy(isAvailable = false), bankWithdrawSource()))
+
+        // Act
+        val model = createModel(options = options)
+
+        // Assert
+        assertThat(model.uiState.value.source.subtitle).isEqualTo(
+            resourceReference(R.string.tangempay_withdraw_bank_source_subtitle, wrappedList("Polygon", "$2,325.55")),
+        )
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN draft source became unavailable WHEN model created THEN falls back to the first available source`() {
+        // Arrange
+        val draft = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal, source = baseSource)
+        val options = bankWithdrawOptions(sources = listOf(baseSource.copy(isAvailable = false), bankWithdrawSource()))
+
+        // Act
+        val model = createModel(draft = draft, options = options)
+
+        // Assert
+        assertThat(model.uiState.value.source.subtitle).isEqualTo(
+            resourceReference(R.string.tangempay_withdraw_bank_source_subtitle, wrappedList("Polygon", "$2,325.55")),
+        )
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN draft with source and rail WHEN model created THEN preselected from draft`() {
         // Arrange
         val draft = BankWithdrawDraft(
