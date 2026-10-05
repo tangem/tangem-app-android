@@ -38,6 +38,10 @@ internal class MockAwareTangemPayStorage @Inject constructor(
 
     private val storedMockTokens = ConcurrentHashMap<String, TangemPayAuthTokens>()
 
+    // Onboarding stores tokens under the SDK-derived address while requests read the fixed mock one.
+    private fun tokensKey(customerWalletAddress: String): String =
+        if (isPerWalletCustomer) customerWalletAddress else MOCK_CUSTOMER_WALLET_ADDRESS
+
     override suspend fun storeCustomerWalletAddress(userWalletId: UserWalletId, customerWalletAddress: String) {
         if (isMockMode) return
         real.storeCustomerWalletAddress(userWalletId, customerWalletAddress)
@@ -56,7 +60,7 @@ internal class MockAwareTangemPayStorage @Inject constructor(
 
     override suspend fun storeAuthTokens(customerWalletAddress: String, tokens: TangemPayAuthTokens) {
         if (isMockMode) {
-            storedMockTokens[customerWalletAddress] = tokens
+            storedMockTokens[tokensKey(customerWalletAddress)] = tokens
             return
         }
         real.storeAuthTokens(customerWalletAddress, tokens)
@@ -64,7 +68,7 @@ internal class MockAwareTangemPayStorage @Inject constructor(
 
     override suspend fun getAuthTokens(customerWalletAddress: String): TangemPayAuthTokens? {
         if (isMockMode) {
-            return storedMockTokens[customerWalletAddress] ?: TangemPayAuthTokens(
+            return storedMockTokens[tokensKey(customerWalletAddress)] ?: TangemPayAuthTokens(
                 accessToken = if (isPerWalletCustomer) {
                     "$MOCK_ACCESS_TOKEN-$customerWalletAddress"
                 } else {
