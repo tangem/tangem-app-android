@@ -6,6 +6,8 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.core.datastore.readStoredJson
+import com.tangem.test.core.datastore.writeStoredJson
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
@@ -14,7 +16,8 @@ import java.math.BigDecimal
  * Guards the stored JSON format of [P2PEthPoolVault] now that it has a generated Moshi adapter. The expected
  * strings are what the reflective `KotlinJsonAdapterFactory` wrote before, so vaults already cached on devices
  * must still read back unchanged. The Moshi instance has no reflective factory on purpose: without the generated
- * adapter it could not serialize the class at all.
+ * adapter it could not serialize the class at all. The kotlinx cases check that the DataStore reads and writes the
+ * same format.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class P2PEthPoolVaultJsonFormatTest {
@@ -47,6 +50,26 @@ internal class P2PEthPoolVaultJsonFormatTest {
 
         // Assert
         assertThat(actual).isEqualTo(model.json)
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN json in the stored format WHEN read from DataStore THEN reads the same vault`(model: FormatModel) {
+        // Act
+        val actual = readStoredJson(json = "[${model.json}]", defaultValue = emptyList<P2PEthPoolVault>())
+
+        // Assert
+        assertThat(actual).containsExactly(model.vault)
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN vault WHEN written to DataStore THEN writes the stored format`(model: FormatModel) {
+        // Act
+        val actual = writeStoredJson(value = listOf(model.vault), defaultValue = emptyList())
+
+        // Assert
+        assertThat(actual).isEqualTo("[${model.json}]")
     }
 
     private fun provideTestModels() = listOf(
