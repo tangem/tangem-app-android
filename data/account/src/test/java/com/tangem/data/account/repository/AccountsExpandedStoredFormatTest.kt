@@ -11,7 +11,8 @@ import org.junit.jupiter.params.ParameterizedTest
 
 /**
  * Guards the stored format of the expanded accounts: files written by the Moshi serializer must read back unchanged
- * after the store moved to kotlinx, and new writes keep that format.
+ * after the store moved to kotlinx, and new writes keep that format, so the Moshi serializer still used while the
+ * kotlinx DataStore toggle is off reads them too.
  */
 @OptIn(ExperimentalStdlibApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -25,6 +26,16 @@ internal class AccountsExpandedStoredFormatTest {
 
         // Assert
         assertThat(actual).isEqualTo(model.json)
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN stored format WHEN decoded by Moshi THEN states are kept`(model: FormatModel) {
+        // Act
+        val actual = legacyDataStoreMoshi.adapter<Map<String, Set<AccountsExpandedDTO>>>().fromJson(model.json)
+
+        // Assert
+        assertThat(actual).isEqualTo(model.value)
     }
 
     @ParameterizedTest
