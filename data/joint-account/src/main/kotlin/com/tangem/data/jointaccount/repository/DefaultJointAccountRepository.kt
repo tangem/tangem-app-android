@@ -123,7 +123,7 @@ internal class DefaultJointAccountRepository @Inject constructor(
                 onError = { error ->
                     // The HTTP code stays in the data layer: the domain branches on the result, not on 409
                     if (error is ApiResponseError.HttpException && error.code == Code.CONFLICT) {
-                        JointAccountJoinResult.Conflict
+                        JointAccountJoinResult.Conflict(cause = error)
                     } else {
                         throw error
                     }
