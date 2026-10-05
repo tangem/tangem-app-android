@@ -4,7 +4,7 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import java.math.BigDecimal
 
-/** Campaigns eligible for a single wallet. Eligibility is resolved by the backend, so it is not modelled here. */
+/** Campaigns returned for a single wallet, with the eligibility rules the app re-checks on its side. */
 @JsonClass(generateAdapter = true)
 data class PromotionsV3Response(
     @Json(name = "promotions") val promotions: List<PromotionDto>,
@@ -12,13 +12,33 @@ data class PromotionsV3Response(
 
     @JsonClass(generateAdapter = true)
     data class PromotionDto(
+        @Json(name = "id") val id: Int?,
         @Json(name = "name") val name: String,
-        @Json(name = "status") val status: String,
+        @Json(name = "status") val status: Status,
         @Json(name = "startAt") val startAt: String,
         @Json(name = "endAt") val endAt: String,
         @Json(name = "alreadyEnrolled") val isAlreadyEnrolled: Boolean,
+        @Json(name = "eligibility") val eligibility: Eligibility?,
         @Json(name = "properties") val properties: Properties,
         @Json(name = "content") val content: Content,
+    )
+
+    /** [conditions] is required for [EligibilityType.PRIVATE] and may be absent for [EligibilityType.PUBLIC]. */
+    @JsonClass(generateAdapter = true)
+    data class Eligibility(
+        @Json(name = "type") val type: EligibilityType,
+        @Json(name = "conditions") val conditions: Conditions?,
+    )
+
+    /** Every condition is optional; a `null` one is not checked. */
+    @JsonClass(generateAdapter = true)
+    data class Conditions(
+        @Json(name = "walletIds") val walletIds: List<String>?,
+        @Json(name = "walletType") val walletType: EligibilityWalletType?,
+        @Json(name = "batchIds") val batchIds: List<String>?,
+        @Json(name = "countryExcluded") val countryExcluded: List<String>?,
+        @Json(name = "minAndroidVersion") val minAndroidVersion: String?,
+        @Json(name = "maxAndroidVersion") val maxAndroidVersion: String?,
     )
 
     @JsonClass(generateAdapter = true)
@@ -84,6 +104,45 @@ data class PromotionsV3Response(
     )
 
     /** Values unknown to this app version parse as `UNKNOWN`, see `addPromotionEnumFallbackAdapters`. */
+    @JsonClass(generateAdapter = false)
+    enum class Status {
+        @Json(name = "draft")
+        DRAFT,
+
+        @Json(name = "active")
+        ACTIVE,
+
+        @Json(name = "paused")
+        PAUSED,
+
+        @Json(name = "archived")
+        ARCHIVED,
+
+        UNKNOWN,
+    }
+
+    @JsonClass(generateAdapter = false)
+    enum class EligibilityType {
+        @Json(name = "public")
+        PUBLIC,
+
+        @Json(name = "private")
+        PRIVATE,
+
+        UNKNOWN,
+    }
+
+    @JsonClass(generateAdapter = false)
+    enum class EligibilityWalletType {
+        @Json(name = "mobile")
+        MOBILE,
+
+        @Json(name = "card")
+        CARD,
+
+        UNKNOWN,
+    }
+
     @JsonClass(generateAdapter = false)
     enum class MatchMode {
         @Json(name = "strict")

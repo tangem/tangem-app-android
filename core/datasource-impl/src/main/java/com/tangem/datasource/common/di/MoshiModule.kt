@@ -25,8 +25,6 @@ class MoshiModule {
             .add(SerializeNullsFactory)
             .apply { commonAdapters().forEach(::add) }
             .add(LocalDateAdapter())
-            // .add(VisaActivationRemoteState.jsonAdapter)
-            // .add(VisaCardActivationStatus.jsonAdapter)
             .addLast(KotlinJsonAdapterFactory())
 
         // Enum-fallback (and future) adapters are contributed via @IntoSet so stream modules can register

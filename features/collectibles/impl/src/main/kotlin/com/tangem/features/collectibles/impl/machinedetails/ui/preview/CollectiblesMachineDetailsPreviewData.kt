@@ -70,12 +70,6 @@ internal object CollectiblesMachineDetailsPreviewData {
         ),
     )
 
-    val poolEmpty = content.copy(
-        prizePool = CollectiblesMachineDetailsUM.PrizePoolUM.Empty(
-            message = stringReference("This pack has no cards in its prize pool yet"),
-        ),
-    )
-
     /** A pack whose backend carries no epic tier, so the odds grid is three cards wide. */
     val withoutEpicTier = content.copy(tiers = content.tiers.dropLast(1).toImmutableList())
 

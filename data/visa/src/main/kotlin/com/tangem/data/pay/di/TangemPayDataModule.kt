@@ -2,7 +2,7 @@ package com.tangem.data.pay.di
 
 import android.content.Context
 import androidx.datastore.dataStoreFile
-import com.squareup.moshi.Moshi
+import com.tangem.core.local.datastore.DeleteObsoleteFileMigration
 import com.tangem.data.pay.DefaultTangemPayEligibilityManager
 import com.tangem.data.pay.TangemPayUserWalletDataCleaner
 import com.tangem.data.pay.converter.PaymentAccountStatusValueDMConverter
@@ -17,14 +17,13 @@ import com.tangem.data.pay.usecase.DefaultGetTangemPayCurrencyStatusUseCase
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCustomerIdUseCase
 import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawUseCase
 import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawWithSwapUseCase
-import com.tangem.core.remote.moshi.NetworkMoshi
+import com.tangem.core.remote.json.NetworkJson
+import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.spend.datasource.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.spend.datasource.preferences.SpendPreferencesKeys
 import com.tangem.datasource.utils.AppDataStoreFactory
-import com.tangem.datasource.utils.MoshiDataStoreSerializer
-import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -64,6 +63,9 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
 import javax.inject.Singleton
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.Json
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -191,7 +193,6 @@ internal interface TangemPayDataModule {
         @Provides
         @Singleton
         fun providePaymentAccountStatusesStore(
-            @NetworkMoshi moshi: Moshi,
             @ApplicationContext context: Context,
             dispatchers: CoroutineDispatcherProvider,
             scope: AppCoroutineScope,
@@ -201,12 +202,15 @@ internal interface TangemPayDataModule {
             return PaymentAccountStatusesStore(
                 runtimeStore = RuntimeSharedStore(),
                 persistenceDataStore = dataStoreFactory.create(
-                    serializer = MoshiDataStoreSerializer(
-                        moshi = moshi,
-                        types = mapWithStringKeyTypes<PaymentAccountStatusValueDM>(),
+                    serializer = KotlinxDataStoreSerializer(
                         defaultValue = emptyMap(),
+                        serializer = MapSerializer(String.serializer(), PaymentAccountStatusValueDM.serializer()),
+                        json = KotlinxDataStoreSerializer.jsonBuilder { classDiscriminator = "__type" },
                     ),
-                    produceFile = { context.dataStoreFile(fileName = "payment_account_statuses") },
+                    produceFile = { context.dataStoreFile(fileName = "payment_account_statuses_v2") },
+                    migrations = listOf(
+                        DeleteObsoleteFileMigration { context.dataStoreFile(fileName = "payment_account_statuses") },
+                    ),
                     scope = scope,
                 ),
                 converter = converter,
@@ -601,8 +605,13 @@ internal interface TangemPayDataModule {
         fun provideBankOfframpRecentsStore(
             prefs: AppPreferencesStore,
             spendPreferencesKeys: SpendPreferencesKeys,
+            @NetworkJson json: Json,
         ): BankOfframpRecentsStore {
-            return DefaultBankOfframpRecentsStore(prefs = prefs, spendPreferencesKeys = spendPreferencesKeys)
+            return DefaultBankOfframpRecentsStore(
+                prefs = prefs,
+                spendPreferencesKeys = spendPreferencesKeys,
+                json = json,
+            )
         }
 
         @Provides
@@ -610,8 +619,13 @@ internal interface TangemPayDataModule {
         fun providePaymentAccountRecentsStore(
             prefs: AppPreferencesStore,
             spendPreferencesKeys: SpendPreferencesKeys,
+            @NetworkJson json: Json,
         ): PaymentAccountRecentsStore {
-            return DefaultPaymentAccountRecentsStore(prefs = prefs, spendPreferencesKeys = spendPreferencesKeys)
+            return DefaultPaymentAccountRecentsStore(
+                prefs = prefs,
+                spendPreferencesKeys = spendPreferencesKeys,
+                json = json,
+            )
         }
 
         @Provides

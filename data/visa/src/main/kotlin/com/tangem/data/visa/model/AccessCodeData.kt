@@ -1,10 +1,10 @@
 package com.tangem.data.visa.model
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 internal data class AccessCodeData(
-    @Json(name = "pid") val productInstanceId: String,
-    @Json(name = "sub") val customerId: String,
+    @SerialName("pid") val productInstanceId: String,
+    @SerialName("sub") val customerId: String,
 )
