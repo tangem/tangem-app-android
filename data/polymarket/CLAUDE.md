@@ -27,7 +27,8 @@ Activity history (`/activity`, `/activity/deposits/reconcile`) was checked again
 ## Wire-format traps (each one cost a device session)
 
 - **The CLOB answers `400 "Could not derive api key!"`, not `404`, for an address with no key yet.** That
-  body is the only thing that sends `DeriveApiCredentialsUseCase` to `POST auth/api-key`.
+  body, and the `404` the spec documents, are the only answers that send `DeriveApiCredentialsUseCase` to
+  `POST auth/api-key`.
 - **The deposit wallet is a beacon proxy, not UUPS.** The CREATE2 init code was verified against 60 real
   factory deployments; a wrong one shows up only as `400 "depositWalletAddress does not match the derived
   deposit wallet"` from `/wallet/deploy`.
