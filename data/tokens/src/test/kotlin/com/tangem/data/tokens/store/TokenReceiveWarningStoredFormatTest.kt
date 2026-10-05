@@ -9,7 +9,8 @@ import org.junit.jupiter.api.Test
 
 /**
  * Guards the stored format of the viewed token receive warnings: files written by the Moshi serializer must read back
- * unchanged after the store moved to kotlinx, and new writes keep that format.
+ * unchanged after the store moved to kotlinx, and new writes keep that format, so the Moshi serializer still used
+ * while the kotlinx DataStore toggle is off reads them too.
  */
 @OptIn(ExperimentalStdlibApi::class)
 internal class TokenReceiveWarningStoredFormatTest {
@@ -21,6 +22,15 @@ internal class TokenReceiveWarningStoredFormatTest {
 
         // Assert
         assertThat(actual).isEqualTo(JSON)
+    }
+
+    @Test
+    fun `GIVEN stored format WHEN decoded by Moshi THEN keys are kept`() {
+        // Act
+        val actual = legacyDataStoreMoshi.adapter<Set<String>>().fromJson(JSON)
+
+        // Assert
+        assertThat(actual).containsExactlyElementsIn(KEYS).inOrder()
     }
 
     @Test
