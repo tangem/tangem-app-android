@@ -98,6 +98,7 @@ internal class JointAccountInvitePreviewModelTest {
             assertThat(whileLoading).isInstanceOf(JointAccountInvitePreviewUM.Loading::class.java)
             assertThat(model.uiState.value).isInstanceOf(JointAccountInvitePreviewUM.Content::class.java)
             coVerify(exactly = 1) { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) }
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<JointAccountError>()) }
             model.onDestroy()
         }
 
@@ -192,18 +193,17 @@ internal class JointAccountInvitePreviewModelTest {
     fun `GIVEN a spent invite WHEN model created THEN the invalid link screen is reported as a join error`() =
         runTest {
             // Arrange
+            val cause = IllegalStateException("Conflict")
             every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet))
             coEvery { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) } returns
-                JointAccountInvitePreviewError.InvalidLink.left()
+                JointAccountInvitePreviewError.InvalidLink(cause = cause).left()
 
             // Act
             val model = createModel(testScope = this)
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 1) {
-                analyticsEventHandler.send(JointAccountError(source = ErrorSource.Join, errorMessage = "InvalidLink"))
-            }
+            verify(exactly = 1) { analyticsEventHandler.send(JointAccountError(source = ErrorSource.Join, cause = cause)) }
             model.onDestroy()
         }
 
