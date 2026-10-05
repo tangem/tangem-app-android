@@ -1,44 +1,31 @@
 package com.tangem.spend.datasource.visa.entity
 
 import com.google.common.truth.Truth.assertThat
-import com.squareup.moshi.FromJson
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.ToJson
+import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.domain.models.kyc.KycStatus
-import com.tangem.spend.datasource.di.SpendDatasourceModule
 import com.tangem.test.core.ProvideTestModels
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 /**
- * Guards the stored JSON format of every [PaymentAccountStatusValueDM] subtype now that the subtypes have
- * generated adapters. The expected strings are what the reflective `KotlinJsonAdapterFactory` wrote before,
- * so statuses already cached on devices must still read back unchanged. The Moshi instance has no reflective
- * factory on purpose: a subtype without a generated adapter would not serialize at all.
+ * Guards the stored JSON format of every [PaymentAccountStatusValueDM] subtype. The expected strings are what the
+ * store writes to `payment_account_statuses_v2`, so statuses cached by one app version must read back unchanged in
+ * the next one.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class PaymentAccountStatusValueDMJsonFormatTest {
 
-    private object BigDecimalAdapter {
-        @FromJson
-        fun fromJson(value: String): BigDecimal = BigDecimal(value)
-
-        @ToJson
-        fun toJson(value: BigDecimal): String = value.toPlainString()
-    }
-
-    private val adapter = SpendDatasourceModule
-        .provideVisaMoshiConfigurer()
-        .configure(Moshi.Builder().add(BigDecimalAdapter))
-        .build()
-        .adapter(PaymentAccountStatusValueDM::class.java)
+    private val json = KotlinxDataStoreSerializer.jsonBuilder { classDiscriminator = "__type" }
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN json in the stored format WHEN fromJson THEN reads the same status`(model: FormatModel) {
+    fun `GIVEN json in the stored format WHEN decode THEN reads the same status`(model: FormatModel) {
         // Act
-        val actual = adapter.fromJson(model.json)
+        val actual = json.decodeFromString(PaymentAccountStatusValueDM.serializer(), model.json)
 
         // Assert
         assertThat(actual).isEqualTo(model.status)
@@ -46,22 +33,46 @@ internal class PaymentAccountStatusValueDMJsonFormatTest {
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN status WHEN toJson THEN writes the stored format`(model: FormatModel) {
+    fun `GIVEN status WHEN encode THEN writes the stored format`(model: FormatModel) {
         // Act
-        val actual = adapter.toJson(model.status)
+        val actual = json.encodeToString(PaymentAccountStatusValueDM.serializer(), model.status)
 
         // Assert
         assertThat(actual).isEqualTo(model.json)
     }
 
+    @Test
+    fun `GIVEN statuses keyed by wallet WHEN encode and decode as map THEN every entry is restored`() {
+        // Arrange
+        val serializer = MapSerializer(String.serializer(), PaymentAccountStatusValueDM.serializer())
+        val statuses = provideTestModels().mapIndexed { index, model -> "wallet_$index" to model.status }.toMap()
+
+        // Act
+        val restored = json.decodeFromString(serializer, json.encodeToString(serializer, statuses))
+
+        // Assert
+        assertThat(restored).isEqualTo(statuses)
+    }
+
+    @Test
+    fun `GIVEN status in the previous Moshi format WHEN decode THEN it fails`() {
+        // Act
+        val error = runCatching {
+            json.decodeFromString(PaymentAccountStatusValueDM.serializer(), """{"not_created":true}""")
+        }.exceptionOrNull()
+
+        // Assert
+        assertThat(error).isNotNull()
+    }
+
     private fun provideTestModels() = listOf(
-        FormatModel(status = PaymentAccountStatusValueDM.Empty(), json = """{"empty":true}"""),
-        FormatModel(status = PaymentAccountStatusValueDM.NotCreated(), json = """{"not_created":true}"""),
+        FormatModel(status = PaymentAccountStatusValueDM.Empty, json = """{"__type":"empty"}"""),
+        FormatModel(status = PaymentAccountStatusValueDM.NotCreated, json = """{"__type":"not_created"}"""),
         FormatModel(
             status = PaymentAccountStatusValueDM.UnderReview(kycStatus = KycStatus.PENDING, customerId = "cust-1"),
-            json = """{"kyc_status":"in_progress","customer_id":"cust-1"}""",
+            json = """{"__type":"kyc_status","kyc_status":"in_progress","customer_id":"cust-1"}""",
         ),
-        FormatModel(status = PaymentAccountStatusValueDM.IssuingCard(), json = """{"issuing_card":true}"""),
+        FormatModel(status = PaymentAccountStatusValueDM.IssuingCard, json = """{"__type":"issuing_card"}"""),
         FormatModel(
             status = PaymentAccountStatusValueDM.ActiveAccount(
                 customerId = "cust-1",
@@ -71,16 +82,25 @@ internal class PaymentAccountStatusValueDMJsonFormatTest {
                 fiatRate = BigDecimal("0.99"),
                 cards = listOf(CARD),
             ),
-            json = """{"active_account":true,"customer_id":"cust-1","currency_code":"USD",""" +
-                """"payment_account_address":"0xpay","fiat_balance":{"available_balance":"12.50","currency":"USD"},""" +
-                """"fiat_rate":"0.99","cards":[{"id":"card-1","product_instance_id":"pi-1","card_status":"active",""" +
-                """"has_pin_code":true,"actual_daily_limit":"1000","frozen_state":"unfrozen","last_digits":"4242",""" +
-                """"images":[{"type":"front","url":"https://img/front.png"}],"state":"ready",""" +
-                """"emboss_name":"JOHN DOE","card_type":"virtual"}]}""",
+            json = """{"__type":"active_account","customer_id":"cust-1","currency_code":"USD",""" +
+                """"payment_account_address":"0xpay","fiat_balance":$FIAT_BALANCE_JSON,"fiat_rate":"0.99",""" +
+                """"cards":[$CARD_JSON]}""",
+        ),
+        FormatModel(
+            status = PaymentAccountStatusValueDM.ActiveAccount(
+                customerId = "cust-2",
+                currencyCode = null,
+                paymentAccountAddress = null,
+                fiatBalance = null,
+                fiatRate = null,
+                cards = emptyList(),
+            ),
+            json = """{"__type":"active_account","customer_id":"cust-2","currency_code":null,""" +
+                """"payment_account_address":null,"fiat_balance":null,"fiat_rate":null,"cards":[]}""",
         ),
         FormatModel(
             status = PaymentAccountStatusValueDM.CardIssueFailed(customerId = "cust-1"),
-            json = """{"card_issue_failed":true,"customer_id":"cust-1"}""",
+            json = """{"__type":"card_issue_failed","customer_id":"cust-1","fiat_rate":null,"balance":null}""",
         ),
         FormatModel(
             status = PaymentAccountStatusValueDM.CardIssueFailed(
@@ -88,8 +108,8 @@ internal class PaymentAccountStatusValueDMJsonFormatTest {
                 fiatRate = BigDecimal("1.01"),
                 balance = PaymentAccountStatusValueDM.BalanceDM(fiatBalance = FIAT_BALANCE),
             ),
-            json = """{"card_issue_failed":true,"customer_id":"cust-1","fiat_rate":"1.01",""" +
-                """"balance":{"fiat_balance":{"available_balance":"12.50","currency":"USD"}}}""",
+            json = """{"__type":"card_issue_failed","customer_id":"cust-1","fiat_rate":"1.01",""" +
+                """"balance":{"fiat_balance":$FIAT_BALANCE_JSON}}""",
         ),
         FormatModel(
             status = PaymentAccountStatusValueDM.DeactivatedAccount(
@@ -97,8 +117,8 @@ internal class PaymentAccountStatusValueDMJsonFormatTest {
                 fiatRate = null,
                 fiatBalance = FIAT_BALANCE,
             ),
-            json = """{"deactivated_account":true,"customer_id":"cust-1",""" +
-                """"fiat_balance":{"available_balance":"12.50","currency":"USD"}}""",
+            json = """{"__type":"deactivated_account","customer_id":"cust-1","fiat_rate":null,""" +
+                """"fiat_balance":$FIAT_BALANCE_JSON}""",
         ),
     )
 
@@ -109,6 +129,7 @@ internal class PaymentAccountStatusValueDMJsonFormatTest {
             availableBalance = BigDecimal("12.50"),
             currency = "USD",
         )
+        const val FIAT_BALANCE_JSON = """{"available_balance":"12.50","currency":"USD"}"""
         val CARD = PaymentAccountStatusValueDM.TangemPayCard(
             id = "card-1",
             productInstanceId = "pi-1",
@@ -124,5 +145,10 @@ internal class PaymentAccountStatusValueDMJsonFormatTest {
             embossName = "JOHN DOE",
             cardType = "virtual",
         )
+        const val CARD_JSON = """{"id":"card-1","product_instance_id":"pi-1","card_status":"active",""" +
+            """"has_pin_code":true,"display_name":null,"actual_daily_limit":"1000","admin_daily_limit":null,""" +
+            """"frozen_state":"unfrozen","last_digits":"4242",""" +
+            """"images":[{"type":"front","url":"https://img/front.png"}],"state":"ready",""" +
+            """"emboss_name":"JOHN DOE","card_type":"virtual"}"""
     }
 }

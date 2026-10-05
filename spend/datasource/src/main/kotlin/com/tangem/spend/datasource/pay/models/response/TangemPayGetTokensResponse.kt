@@ -1,12 +1,12 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class TangemPayGetTokensResponse(
-    @Json(name = "access_token") val accessToken: String,
-    @Json(name = "expires_at") val expiresAt: Long,
-    @Json(name = "refresh_token") val refreshToken: String,
-    @Json(name = "refresh_expires_at") val refreshExpiresAt: Long,
+    @SerialName("access_token") val accessToken: String,
+    @SerialName("expires_at") val expiresAt: Long,
+    @SerialName("refresh_token") val refreshToken: String,
+    @SerialName("refresh_expires_at") val refreshExpiresAt: Long,
 )

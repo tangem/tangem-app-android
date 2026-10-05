@@ -1,12 +1,15 @@
 package com.tangem.data.sociallogin.provider
 
 import arrow.core.Either
+import arrow.core.flatMap
 import arrow.core.getOrElse
+import com.tangem.data.sociallogin.toDomainError
 import com.tangem.data.sociallogin.recovery.toDomainError
 import com.tangem.domain.sociallogin.models.SocialProviderIdToken
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
 import com.tangem.domain.sociallogin.repository.SocialLoginProviderRepository
+import com.tangem.google.auth.GoogleAuthError
 import com.tangem.google.auth.GoogleIdTokenProvider
 import com.tangem.google.drive.AppDataDrive
 import com.tangem.google.drive.GoogleDriveTokenProvider
@@ -36,11 +39,17 @@ internal class DefaultSocialLoginProviderRepository @Inject constructor(
         return when (provider) {
             SocialLoginProvider.Google -> googleIdTokenProvider
                 .getIdToken(nonce = nonce.forProvider)
-                // The Drive authorization that follows would otherwise ask again for the account just
-                // chosen here, or reuse a token cached for a previous attempt's account.
-                .onRight { idToken -> appDataTokenProvider.switchAccount(idToken.accountName) }
-                .map { idToken -> SocialProviderIdToken(value = idToken.value, nonce = nonce.forRequest) }
                 .mapLeft(GoogleIdTokenErrorConverter::convert)
+                .flatMap { idToken ->
+                    // The Drive authorization that follows would otherwise ask again for the account just
+                    // chosen here, or reuse a token cached for a previous attempt's account.
+                    appDataTokenProvider.switchAccount(idToken.accountName)
+                    // Asked right after the account picker, so both Google prompts come before the app's
+                    // own progress instead of popping up over it.
+                    appDataTokenProvider.getAccessToken(interactive = true)
+                        .mapLeft(GoogleAuthError::toDomainError)
+                        .map { SocialProviderIdToken(value = idToken.value, nonce = nonce.forRequest) }
+                }
         }
     }
 

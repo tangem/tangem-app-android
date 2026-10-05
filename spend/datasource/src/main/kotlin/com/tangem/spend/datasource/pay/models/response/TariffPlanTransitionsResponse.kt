@@ -1,15 +1,15 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class TariffPlanTransitionsResponse(
-    @Json(name = "result") val result: List<TariffPlanTransitionResponse>?,
+    @SerialName("result") val result: List<TariffPlanTransitionResponse>?,
 )
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class TariffPlanTransitionResponse(
-    @Json(name = "type") val type: String?,
-    @Json(name = "tariff_plan") val tariffPlan: CustomerMeResponse.TariffPlan?,
+    @SerialName("type") val type: String?,
+    @SerialName("tariff_plan") val tariffPlan: CustomerMeResponse.TariffPlan?,
 )

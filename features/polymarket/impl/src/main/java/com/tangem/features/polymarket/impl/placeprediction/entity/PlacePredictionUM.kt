@@ -70,11 +70,16 @@ internal data class PlacePredictionUM(
 /**
  * The sum to quote, or `null` while what the user typed is not one yet.
  *
- * Anything below a cent is not one: the BFF normalises amounts onto a 2-decimal grid, so a finer figure
- * becomes zero there and comes back as a `400` rather than a quote.
+ * Anything below a cent is not one — the BFF normalises it to zero and answers `400` — except the sale of a whole
+ * position, which the BFF quotes at the position's own precision so that no remainder is left behind.
  */
 internal fun PlacePredictionUM.enteredAmount(): BigDecimal? =
-    amountValue.parseBigDecimalOrNull()?.takeIf { it >= MIN_QUOTABLE_AMOUNT }
+    amountValue.parseBigDecimalOrNull()?.takeIf { it >= MIN_QUOTABLE_AMOUNT || isWholePosition(amount = it) }
+
+private fun PlacePredictionUM.isWholePosition(amount: BigDecimal): Boolean {
+    val position = (order as? OrderSideUM.Sell)?.position as? SellPositionUM.Held ?: return false
+    return amount.signum() > 0 && amount.compareTo(position.available) == 0
+}
 
 private val MIN_QUOTABLE_AMOUNT: BigDecimal = BigDecimal("0.01")
 
@@ -169,7 +174,7 @@ internal sealed interface SellPositionUM {
 
     data object Loading : SellPositionUM
 
-    /** @property available the held shares the market can accept, truncated onto its 2-decimal grid */
+    /** @property available the whole held position, at the on-chain share precision */
     data class Held(val available: BigDecimal) : SellPositionUM
 
     data object NotHeld : SellPositionUM

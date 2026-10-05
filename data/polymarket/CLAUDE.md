@@ -53,6 +53,15 @@ date here; when you ingest a change, update this table in the same PR.
 
 ## Wire-format traps (each one cost a device session)
 
+- **Activity history** (`GET /activity`, `POST /activity/deposits/reconcile`) requires both the
+  `wallet-id` header and the `depositWalletAddress` query. The supplied OpenAPI export was checked on
+  28.09.2026: history has opaque cursors and optional `type` / `redeemResult` filters; amounts and prices
+  are decimal strings, and market/order/redemption metadata may be absent. Reconciliation returns
+  `202 {state: SCANNING, retryAfterSeconds}`; it starts or joins a scan, rather than reporting completion.
+  `DefaultPolymarketActivityRepository` preserves decimal precision, converts timestamps to `Instant`
+  and reports malformed pages as errors. `PolymarketActivityBatchFetcher` keeps cursors across retries,
+  resets them on filter changes and rejects cursor cycles.
+
 - **`chainId` in bridge `/supported-assets` is a string**, not a number. `minCheckoutUsd` arrives as either;
   `PolymarketBridgeWireFormatTest` pins both readings.
 - **Express answers with lower-cased addresses and matches pairs by string equality.**
@@ -98,7 +107,7 @@ date here; when you ingest a change, update this table in the same PR.
 | | `502` | `RelayerUnavailable` | relayer down, retry later |
 | CLOB `POST order` | `400` + "no match" marker | `PredictionPlaceOrderError.NoLiquidity` | fill-and-kill found nothing |
 | | `400` other | `Rejected` | |
-| | `401` | `Unauthorized` | credentials stale — [REDACTED_TASK_KEY] will clear them |
+| | `401` | `Unauthorized` | credentials stale, cleared |
 | | network/timeout, other | `Ambiguous` | the order may have been placed; the feature reports it as submitted, never as failed |
 | BFF `/withdraw*` | `409` | `PredictionWithdrawError.NonceTaken` | same nonce already submitted |
 | | `422` | `RelayerRejected` | |
@@ -154,7 +163,8 @@ reads by owner address, without them it falls back to the `byWalletId` read (`GE
 `getWalletStatusByWalletId`), which serves a wallet onboarded on another device — that path knows the
 status but has no credentials, so it yields no balance. It maps `PolymarketWalletStatus` to
 `PredictionAccountStatusValue` and on any failure leaves the cached value in place and marks it
-un-refreshed — it never writes "empty" on the strength of a failed question.
+un-refreshed — it never writes "empty" on the strength of a failed question. Except a balance
+`KeyNotFound` / `InvalidSignature`: the credentials are gone, so `Onboarded` is a fact, not a failed read.
 `DefaultPredictionAccountStatusProducer` mixes the fiat rate in on every emission, starting with
 `Pending` so the combined account list is never stalled by this account.
 
