@@ -72,6 +72,7 @@ internal class DefaultTronGaslessTransactionRepositoryTest {
         // Assert
         assertThat(quote.quoteId).isEqualTo("q_1")
         assertThat(quote.quotedAmountRaw).isEqualTo(BigInteger("50000000"))
+        assertThat(quote.quotedToAddress).isEqualTo(params.toAddress)
         assertThat(quote.feeRecipient).isEqualTo("TFee")
         assertThat(quote.compensationToken).isEqualTo("TUSDT")
         assertThat(quote.compensationAmountRaw).isEqualTo(BigInteger("2750000"))
