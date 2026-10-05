@@ -2,7 +2,6 @@ package com.tangem.data.walletmanager.utils
 
 import com.tangem.blockchain.blockchains.ethereum.tokenmethods.ApprovalERC20TokenCallData
 import com.tangem.blockchain.blockchains.ethereum.tokenmethods.TransferERC20TokenCallData
-import com.tangem.blockchain.common.HEX_PREFIX
 import com.tangem.blockchain.extensions.formatHex
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem.TransactionType
@@ -12,12 +11,7 @@ import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldS
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyReactivateTokenCallData
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.domain.express.models.ExpressAsset
-import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
-import com.tangem.domain.jointaccount.model.SafeExecution
-import com.tangem.domain.jointaccount.model.SafeTx
-import com.tangem.domain.jointaccount.safe.SafeExecTransactionDecoder
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.currency.isJoint
 import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.SdkAmountType
 import com.tangem.domain.models.network.TxInfo
@@ -31,13 +25,19 @@ internal class SdkTransactionTypeConverter(
     smartContractMethods: Map<String, SmartContractMethod>,
     private val yieldSupplyAddresses: Set<String>,
     gaslessFeeAddresses: Set<String>,
+    jointRefundReceiver: String? = null,
     private val currency: CryptoCurrency,
     private val networkTokens: Set<CryptoCurrency.Token> = emptySet(),
     private val getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
-    private val safeAddress: String? = null,
+    safeAddress: String? = null,
 ) : Converter<TransactionHistoryItem, TxInfo.TransactionType> {
 
-    private val isJointAccount = currency.isJoint
+    private val safeExecutionDecoder = SafeExecutionTypeDecoder(
+        currency = currency,
+        networkTokens = networkTokens,
+        safeAddress = safeAddress,
+        jointRefundReceiver = jointRefundReceiver,
+    )
 
     /** The SDK reports a selector prefixed or bare depending on the source; the asset is keyed prefixed. */
     private val smartContractMethods: Map<String, SmartContractMethod> =
@@ -46,6 +46,8 @@ internal class SdkTransactionTypeConverter(
     private val gaslessFeeAddressesLowercase: Set<String> = gaslessFeeAddresses.map { it.lowercase() }.toSet()
 
     override fun convert(value: TransactionHistoryItem): TxInfo.TransactionType {
+        safeExecutionDecoder.refund(value)?.let { return it }
+
         return when (val type = value.type) {
             is TransactionType.ContractMethod -> {
                 getTransactionType(
@@ -149,7 +151,7 @@ internal class SdkTransactionTypeConverter(
             "gaslessTransaction" -> getTypeForGaslessMethod(destination, source, methodName)
             "execTransaction",
             "aggregate3",
-            -> decodeSafeExecution(callData, destination)
+            -> safeExecutionDecoder.decode(callData = callData, item = historyItem)
             else -> fallbackOperation(methodName)
         } ?: fallbackOperation(methodName)
 
@@ -251,76 +253,12 @@ internal class SdkTransactionTypeConverter(
         return result
     }
 
-    private fun CryptoCurrency.Token.toSdkAmount(rawValue: BigDecimal?): SdkAmount = SdkAmount(
-        currencySymbol = symbol,
-        value = rawValue?.movePointLeft(decimals),
-        decimals = decimals,
-        type = SdkAmountType.Token(contractAddress = contractAddress, id = id.rawCurrencyId?.value),
-    )
-
     private fun String.toSelectorKey(): String = lowercase().formatHex()
 
-    /**
-     * The Safe execution in [callData] when this joint account's own Safe ran it: another Safe paying this account
-     * lands in its history too, and a refund in an ERC-20 gas token cannot be shown as the network fee.
-     */
-    private fun readOwnSafeExecution(
-        callData: String?,
-        destination: TransactionHistoryItem.DestinationType,
-    ): SafeExecution? {
-        if (!isJointAccount) return null
-        val execution = SafeExecTransactionDecoder.decode(callData ?: return null) ?: return null
-        val executingSafe = execution.safe
-            ?: (destination as? TransactionHistoryItem.DestinationType.Single)?.addressType?.address
-        return execution.takeIf {
-            execution.operation == SafeTx.OPERATION_CALL &&
-                execution.refund.gasToken.equals(SafeTxGasBuilder.NATIVE_GAS_TOKEN, ignoreCase = true) &&
-                safeAddress != null && safeAddress.equals(executingSafe, ignoreCase = true)
-        }
-    }
+    fun isOwnSafeZeroCall(item: TransactionHistoryItem): Boolean = safeExecutionDecoder.isOwnSafeZeroCall(item)
 
-    private fun decodeSafeExecution(
-        callData: String?,
-        destination: TransactionHistoryItem.DestinationType,
-    ): TxInfo.TransactionType.Joint? {
-        val execution = readOwnSafeExecution(callData, destination) ?: return null
-
-        val call = execution.call
-        val tokenTransfer = TransferERC20TokenCallData(compiledData = call.data)
-        val refundCapWei = execution.refund.maxPayment.toBigDecimal()
-        val isNativeTransfer = call.data.removePrefix(HEX_PREFIX).isEmpty() && call.value.signum() > 0
-        return when {
-            currency is CryptoCurrency.Token -> tokenTransfer?.let { transfer ->
-                TxInfo.TransactionType.Joint.Transfer(
-                    recipient = transfer.destination,
-                    amount = transfer.amount.value?.movePointLeft(currency.decimals) ?: return null,
-                    refundCapWei = refundCapWei,
-                    signaturesCount = execution.signaturesCount,
-                )
-            }
-            isNativeTransfer -> TxInfo.TransactionType.Joint.Transfer(
-                recipient = call.to,
-                amount = call.value.toBigDecimal().movePointLeft(currency.decimals),
-                refundCapWei = refundCapWei,
-                signaturesCount = execution.signaturesCount,
-            )
-            tokenTransfer != null && call.value.signum() == 0 -> TxInfo.TransactionType.Joint.TokenFee(
-                tokenContract = call.to,
-                tokenAmount = networkTokens
-                    .firstOrNull { it.contractAddress.equals(call.to, ignoreCase = true) }
-                    ?.toSdkAmount(rawValue = tokenTransfer.amount.value),
-                recipient = tokenTransfer.destination,
-                refundCapWei = refundCapWei,
-                signaturesCount = execution.signaturesCount,
-            )
-            else -> TxInfo.TransactionType.Joint.Call(
-                contract = call.to,
-                value = call.value.toBigDecimal().movePointLeft(currency.decimals),
-                refundCapWei = refundCapWei,
-                signaturesCount = execution.signaturesCount,
-            )
-        }
-    }
+    fun withRefundStatus(item: TransactionHistoryItem): TransactionHistoryItem =
+        safeExecutionDecoder.withRefundStatus(item)
 
     private fun getTypeForGaslessMethod(
         destination: TransactionHistoryItem.DestinationType,
