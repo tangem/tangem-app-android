@@ -110,11 +110,13 @@ internal fun bankWithdrawSource(
     token: CryptoCurrency.Token = paymentToken(),
     chainId: Long = POLYGON_CHAIN_ID,
     fiatBalance: BigDecimal = BigDecimal("2325.55"),
+    isAvailable: Boolean = true,
 ): BankWithdrawSource = BankWithdrawSource(
     network = token.network,
     chainId = chainId,
     token = token,
     fiatBalance = fiatBalance,
+    isAvailable = isAvailable,
 )
 
 internal fun bankWithdrawOptions(
