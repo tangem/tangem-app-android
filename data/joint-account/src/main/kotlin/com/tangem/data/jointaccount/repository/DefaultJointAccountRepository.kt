@@ -40,6 +40,8 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -205,6 +207,28 @@ internal class DefaultJointAccountRepository @Inject constructor(
             }.getOrElse { throwable ->
                 logger.e(messageString = "Failed to read the stored invites", throwable = throwable)
                 emptyList()
+            }
+        }
+    }
+
+    override fun getSharedInvites(userWalletId: UserWalletId, cryptoAccountId: String): Flow<Set<String>> {
+        return invitesStore.observeShared(userWalletId = userWalletId, cryptoAccountId = cryptoAccountId)
+            .catch { throwable ->
+                logger.e(messageString = "Failed to read the shared invites", throwable = throwable)
+                emit(emptySet())
+            }
+    }
+
+    override suspend fun markInviteShared(userWalletId: UserWalletId, cryptoAccountId: String, inviteId: String) {
+        withContext(dispatchers.io) {
+            runSuspendCatching {
+                invitesStore.markShared(
+                    userWalletId = userWalletId,
+                    cryptoAccountId = cryptoAccountId,
+                    inviteId = inviteId,
+                )
+            }.onFailure { throwable ->
+                logger.e(messageString = "Failed to record a shared invite", throwable = throwable)
             }
         }
     }
