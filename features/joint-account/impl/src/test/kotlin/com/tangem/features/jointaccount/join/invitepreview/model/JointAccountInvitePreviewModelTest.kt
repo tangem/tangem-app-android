@@ -3,6 +3,7 @@ package com.tangem.features.jointaccount.join.invitepreview.model
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -18,6 +19,8 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
 import com.tangem.features.jointaccount.join.invitepreview.state.JointAccountInvitePreviewStateController
 import com.tangem.features.jointaccount.join.invitepreview.ui.state.JointAccountInvitePreviewUM
 import com.tangem.features.jointaccount.join.model.JointAccountJoinChildParams
@@ -28,6 +31,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -52,6 +56,7 @@ internal class JointAccountInvitePreviewModelTest {
     private val portfolioFetcherFactory: PortfolioFetcher.Factory = mockk()
     private val clipboardManager: ClipboardManager = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
 
     private val wallet: UserWallet = mockWallet(id = WALLET_ID, locked = false)
     private val portfolioData = MutableSharedFlow<PortfolioFetcher.Data>(replay = 1)
@@ -59,6 +64,7 @@ internal class JointAccountInvitePreviewModelTest {
     @BeforeEach
     fun resetMocks() {
         clearMocks(
+            analyticsEventHandler,
             router,
             getJointAccountInvitePreviewUseCase,
             userWalletsListRepository,
@@ -147,8 +153,9 @@ internal class JointAccountInvitePreviewModelTest {
     fun `GIVEN backend stays unreachable WHEN model created THEN state is Failed after the retries`() = runTest {
         // Arrange
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet))
+        val cause = IOException()
         coEvery { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) } returns
-            JointAccountInvitePreviewError.Unreachable(cause = IOException()).left()
+            JointAccountInvitePreviewError.Unreachable(cause = cause).left()
 
         // Act
         val model = createModel(testScope = this)
@@ -157,6 +164,8 @@ internal class JointAccountInvitePreviewModelTest {
         // Assert
         assertThat(model.uiState.value).isInstanceOf(JointAccountInvitePreviewUM.Failed::class.java)
         coVerify(exactly = 4) { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) }
+        // Only the failure the user ends up seeing is reported, not every retried attempt
+        verify(exactly = 1) { analyticsEventHandler.send(JointAccountError(source = ErrorSource.Join, cause = cause)) }
         model.onDestroy()
     }
 
@@ -164,8 +173,9 @@ internal class JointAccountInvitePreviewModelTest {
     fun `GIVEN server error WHEN model created THEN state is Failed without a retry`() = runTest {
         // Arrange
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet))
+        val cause = IllegalStateException()
         coEvery { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) } returns
-            JointAccountInvitePreviewError.LoadFailed(cause = IllegalStateException()).left()
+            JointAccountInvitePreviewError.LoadFailed(cause = cause).left()
 
         // Act
         val model = createModel(testScope = this)
@@ -174,8 +184,28 @@ internal class JointAccountInvitePreviewModelTest {
         // Assert
         assertThat(model.uiState.value).isInstanceOf(JointAccountInvitePreviewUM.Failed::class.java)
         coVerify(exactly = 1) { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) }
+        verify(exactly = 1) { analyticsEventHandler.send(JointAccountError(source = ErrorSource.Join, cause = cause)) }
         model.onDestroy()
     }
+
+    @Test
+    fun `GIVEN a spent invite WHEN model created THEN the invalid link screen is reported as a join error`() =
+        runTest {
+            // Arrange
+            every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet))
+            coEvery { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) } returns
+                JointAccountInvitePreviewError.InvalidLink.left()
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(JointAccountError(source = ErrorSource.Join, errorMessage = "InvalidLink"))
+            }
+            model.onDestroy()
+        }
 
     @Test
     fun `GIVEN selector data missing WHEN preview loaded THEN content waits for the data`() = runTest {
@@ -271,6 +301,9 @@ internal class JointAccountInvitePreviewModelTest {
         // Assert
         assertThat(model.uiState.value).isInstanceOf(JointAccountInvitePreviewUM.Failed::class.java)
         coVerify(exactly = 0) { getJointAccountInvitePreviewUseCase(any(), any()) }
+        verify(exactly = 1) {
+            analyticsEventHandler.send(JointAccountError(source = ErrorSource.Join, errorMessage = "No wallet"))
+        }
         model.onDestroy()
     }
 
@@ -287,6 +320,7 @@ internal class JointAccountInvitePreviewModelTest {
         portfolioFetcherFactory = portfolioFetcherFactory,
         clipboardManager = clipboardManager,
         uiMessageSender = uiMessageSender,
+        analyticsEventHandler = analyticsEventHandler,
     )
 
     private fun portfolioData(vararg walletIds: UserWalletId): PortfolioFetcher.Data = PortfolioFetcher.Data(

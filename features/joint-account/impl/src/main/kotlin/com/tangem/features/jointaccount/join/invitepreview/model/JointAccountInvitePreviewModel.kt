@@ -5,6 +5,7 @@ import arrow.core.Either
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -24,6 +25,8 @@ import com.tangem.domain.models.wallet.isLocked
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
 import com.tangem.features.jointaccount.join.confirmation.ui.state.JointAccountJoinConfirmationUM
 import com.tangem.features.jointaccount.join.invitepreview.state.JointAccountInvitePreviewStateController
 import com.tangem.features.jointaccount.join.invitepreview.state.transformers.SetContentTransformer
@@ -72,6 +75,7 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     portfolioFetcherFactory: PortfolioFetcher.Factory,
     private val clipboardManager: ClipboardManager,
     private val uiMessageSender: UiMessageSender,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<JointAccountJoinChildParams>()
@@ -151,12 +155,14 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
             stateController.update(SetLoadingTransformer(onCloseClick = ::onCloseClick))
 
             if (walletId == null) {
+                analyticsEventHandler.send(JointAccountError(source = ErrorSource.Join, errorMessage = "No wallet"))
                 stateController.update(SetFailedTransformer(onRetryClick = ::retry, onCloseClick = ::onCloseClick))
                 return@launch
             }
 
             loadPreview(walletId).fold(
                 ifLeft = { error ->
+                    analyticsEventHandler.send(error.toAnalyticsEvent())
                     when (error) {
                         is JointAccountInvitePreviewError.InvalidLink ->
                             stateController.update(SetInvalidLinkTransformer(onGotItClick = ::onCloseClick))
@@ -184,6 +190,15 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
                 },
             )
         }
+    }
+
+    private fun JointAccountInvitePreviewError.toAnalyticsEvent(): JointAccountError = when (this) {
+        is JointAccountInvitePreviewError.InvalidLink -> JointAccountError(
+            source = ErrorSource.Join,
+            errorMessage = toString(),
+        )
+        is JointAccountInvitePreviewError.Unreachable -> JointAccountError(source = ErrorSource.Join, cause = cause)
+        is JointAccountInvitePreviewError.LoadFailed -> JointAccountError(source = ErrorSource.Join, cause = cause)
     }
 
     private suspend fun loadPreview(

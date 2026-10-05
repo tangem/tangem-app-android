@@ -3,6 +3,7 @@ package com.tangem.features.jointaccount.join.model
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
@@ -15,6 +16,10 @@ import com.tangem.domain.jointaccount.model.JointAccountJoinError
 import com.tangem.domain.jointaccount.usecase.JoinJointAccountUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.LimitSource
 import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -35,10 +40,11 @@ internal class JointAccountJoinModelTest {
     private val joinUseCase: JoinJointAccountUseCase = mockk()
     private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(joinUseCase, singleAccountListSupplier, uiMessageSender)
+        clearMocks(joinUseCase, singleAccountListSupplier, uiMessageSender, analyticsEventHandler)
         coEvery { singleAccountListSupplier.getSyncOrNull(USER_WALLET_ID) } returns MockAccounts.onlyMainAccount
     }
 
@@ -61,6 +67,9 @@ internal class JointAccountJoinModelTest {
         assertThat(message.captured.message)
             .isEqualTo(resourceReference(CoreUiR.string.joint_account_join_success_message))
         assertThat(message.captured.startIconId).isEqualTo(CoreUiR.drawable.ic_success_20)
+        verify(exactly = 1) {
+            analyticsEventHandler.send(JointAccountAnalyticsEvent.AccountJoined(membersCount = 3, threshold = 2))
+        }
     }
 
     @Test
@@ -80,6 +89,9 @@ internal class JointAccountJoinModelTest {
         val message = slot<DialogMessage>()
         verify(exactly = 1) { uiMessageSender.send(capture(message)) }
         assertThat(message.captured.title).isEqualTo(resourceReference(CoreUiR.string.account_add_limit_dialog_title))
+        verify(exactly = 1) {
+            analyticsEventHandler.send(JointAccountAnalyticsEvent.NoticeAccountsLimitReached(LimitSource.Join))
+        }
     }
 
     @Test
@@ -113,6 +125,7 @@ internal class JointAccountJoinModelTest {
         // Assert
         assertThat(action).isEqualTo(JoinResultAction.None)
         verify(exactly = 0) { uiMessageSender.send(any()) }
+        verify(exactly = 0) { analyticsEventHandler.send(any()) }
     }
 
     @Test
@@ -129,6 +142,9 @@ internal class JointAccountJoinModelTest {
         // Assert
         assertThat(action).isEqualTo(JoinResultAction.CloseFlow)
         verify(exactly = 1) { uiMessageSender.send(any()) }
+        verify(exactly = 1) {
+            analyticsEventHandler.send(JointAccountError(source = ErrorSource.Join, errorMessage = "InvalidInvite"))
+        }
     }
 
     @Test
@@ -137,7 +153,7 @@ internal class JointAccountJoinModelTest {
         val model = createModelWithDraft()
         coEvery {
             joinUseCase(userWalletId = any(), inviteId = any(), config = any(), memberName = any())
-        } returns JointAccountFlowError.Failed(cause = IllegalStateException("boom")).left()
+        } returns JointAccountFlowError.Failed(cause = failure).left()
 
         // Act
         val action = model.join(inviteId = INVITE_ID, memberName = NAME)
@@ -145,6 +161,9 @@ internal class JointAccountJoinModelTest {
         // Assert
         assertThat(action).isEqualTo(JoinResultAction.None)
         verify(exactly = 1) { uiMessageSender.send(any()) }
+        verify(exactly = 1) {
+            analyticsEventHandler.send(JointAccountError(source = ErrorSource.Join, cause = failure))
+        }
     }
 
     @Test
@@ -160,6 +179,9 @@ internal class JointAccountJoinModelTest {
         assertThat(action).isEqualTo(JoinResultAction.None)
         coVerify(exactly = 0) { joinUseCase(any(), any(), any(), any()) }
         verify(exactly = 1) { uiMessageSender.send(any()) }
+        verify(exactly = 1) {
+            analyticsEventHandler.send(JointAccountError(source = ErrorSource.Join, errorMessage = "Incomplete draft"))
+        }
     }
 
     private fun createModelWithDraft(): JointAccountJoinModel {
@@ -174,12 +196,14 @@ internal class JointAccountJoinModelTest {
         joinJointAccountUseCase = joinUseCase,
         singleAccountListSupplier = singleAccountListSupplier,
         uiMessageSender = uiMessageSender,
+        analyticsEventHandler = analyticsEventHandler,
     )
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("011")
         const val INVITE_ID = "invite-a"
         const val NAME = "Bob"
+        val failure = IllegalStateException("boom")
         val ACCOUNT_ID = "a1".repeat(n = 32)
 
         val CONFIG = JointAccountConfig(
