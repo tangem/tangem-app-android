@@ -101,13 +101,26 @@ internal class PaymentAccountStatusesStore(
      */
     suspend fun markVirtualAccountProcessing(userWalletId: UserWalletId) {
         logger.i("markVirtualAccountProcessing($userWalletId)")
+        updateVirtualAccount(userWalletId) { VirtualAccountOnramp.Processing }
+    }
+
+    suspend fun markVirtualAccountEligible(userWalletId: UserWalletId) {
+        logger.i("markVirtualAccountEligible($userWalletId)")
+        updateVirtualAccount(userWalletId) { current ->
+            if (current == VirtualAccountOnramp.Failed) VirtualAccountOnramp.Eligible else current
+        }
+    }
+
+    private suspend fun updateVirtualAccount(
+        userWalletId: UserWalletId,
+        transform: (VirtualAccountOnramp?) -> VirtualAccountOnramp?,
+    ) {
         runtimeStore.update(emptyMap()) { stored ->
             stored.toMutableMap().apply {
                 val paymentAccountStatus = this[userWalletId.stringValue] ?: return@update stored
                 val loaded = paymentAccountStatus.value as? PaymentAccountStatusValue.Loaded ?: return@update stored
-                val newValue = paymentAccountStatus.copy(
-                    value = loaded.copy(virtualAccount = VirtualAccountOnramp.Processing),
-                )
+                val virtualAccount = transform(loaded.virtualAccount)
+                val newValue = paymentAccountStatus.copy(value = loaded.copy(virtualAccount = virtualAccount))
                 put(key = userWalletId.stringValue, value = newValue)
             }
         }

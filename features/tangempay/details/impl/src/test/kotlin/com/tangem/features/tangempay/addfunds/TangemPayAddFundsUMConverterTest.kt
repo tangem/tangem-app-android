@@ -123,6 +123,14 @@ internal class TangemPayAddFundsUMConverterTest {
         ),
         BankTransferRowModel(
             isV2Enabled = true,
+            onramp = VirtualAccountOnramp.Failed,
+            expectedIcon = Icons.ic_government_20,
+            expectedDescription = resourceReference(R.string.tangempay_topup_bank_transfer_body),
+            isClickable = true,
+            expectedAccent = TangemPayAddFundsItemUM.Accent.Info,
+        ),
+        BankTransferRowModel(
+            isV2Enabled = true,
             onramp = VirtualAccountOnramp.Processing,
             expectedIcon = Icons.ic_clock_20,
             expectedDescription = resourceReference(R.string.tangempay_topup_bank_transfer_pending_body),
