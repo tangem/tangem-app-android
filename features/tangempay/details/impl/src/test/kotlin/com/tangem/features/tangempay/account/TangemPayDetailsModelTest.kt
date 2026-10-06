@@ -1556,27 +1556,53 @@ internal class TangemPayDetailsModelTest {
             payModel.onDestroy()
         }
 
-        @Test
-        fun `GIVEN v2 enabled and no v2 screen for the state WHEN va onramp deeplink handled THEN v1 sheet opens`() =
-            runTest {
-                // Arrange
-                every { tangemPayFeatureToggles.isVisaOnrampV2Enabled } returns true
-                val payModel = createModel(
-                    testScope = this,
-                    initialRoute = TangemPayDetailsInitialRoute.VA_ONRAMP,
-                    virtualAccount = VirtualAccountOnramp.Eligible,
-                )
-                val openedSheets = payModel.bottomSheetNavigation.trackSlot()
+        @ParameterizedTest
+        @EnumSource(value = TangemPayDetailsInitialRoute::class, names = ["VA_ONRAMP", "VA_ONRAMP_DETAILS"])
+        fun `GIVEN v2 enabled and no banking details yet WHEN va onramp deeplink handled THEN onboarding opens`(
+            initialRoute: TangemPayDetailsInitialRoute,
+        ) = runTest {
+            // Arrange
+            every { tangemPayFeatureToggles.isVisaOnrampV2Enabled } returns true
+            val payModel = createModel(
+                testScope = this,
+                initialRoute = initialRoute,
+                virtualAccount = VirtualAccountOnramp.Eligible,
+            )
+            val openedSheets = payModel.bottomSheetNavigation.trackSlot()
 
-                // Act
-                advanceUntilIdle()
+            // Act
+            advanceUntilIdle()
 
-                // Assert
-                assertThat(openedSheets.filterIsInstance<TangemPayDetailsNavigation.VirtualAccountDeposit>())
-                    .containsExactly(expectedDepositSheet())
-                verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
-                payModel.onDestroy()
+            // Assert
+            verify(exactly = 1) {
+                router.push(route = TangemPayAccountDetailsInnerRoute.BankTransferOnrampOnboarding, onComplete = any())
             }
+            assertThat(openedSheets.filterNotNull()).isEmpty()
+            coVerify(exactly = 0) { getBankCredentialsUseCase(any(), any()) }
+            payModel.onDestroy()
+        }
+
+        @ParameterizedTest
+        @EnumSource(value = TangemPayDetailsInitialRoute::class, names = ["VA_ONRAMP", "VA_ONRAMP_DETAILS"])
+        fun `GIVEN v2 enabled and details being created WHEN va onramp deeplink handled THEN v1 popup shows`(
+            initialRoute: TangemPayDetailsInitialRoute,
+        ) = runTest {
+            // Arrange
+            every { tangemPayFeatureToggles.isVisaOnrampV2Enabled } returns true
+            val payModel = createModel(
+                testScope = this,
+                initialRoute = initialRoute,
+                virtualAccount = VirtualAccountOnramp.Processing,
+            )
+
+            // Act
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaPreparationPopupShowed>()) }
+            verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
+            payModel.onDestroy()
+        }
 
         private fun expectedDepositSheet() = TangemPayDetailsNavigation.VirtualAccountDeposit(
             virtualAccountOnramp = VirtualAccountOnramp.Eligible,

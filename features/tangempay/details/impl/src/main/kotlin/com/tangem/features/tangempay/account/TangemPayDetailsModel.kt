@@ -530,7 +530,10 @@ internal class TangemPayDetailsModel @Inject constructor(
                 fetchVirtualAccountBankingDetails(onramp)
                 true
             }
-            VirtualAccountOnramp.Eligible,
+            VirtualAccountOnramp.Eligible -> {
+                router.push(TangemPayAccountDetailsInnerRoute.BankTransferOnrampOnboarding)
+                true
+            }
             VirtualAccountOnramp.Processing,
             null,
             -> false
