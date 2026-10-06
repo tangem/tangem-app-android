@@ -16,6 +16,7 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.addressbook.model.ContactId
 import com.tangem.features.addressbook.addressinfo.DefaultAddressInfoComponent
+import com.tangem.features.addressbook.analytics.AddressBookEvents
 import com.tangem.features.addressbook.editcontact.model.EditContactModel
 import com.tangem.features.addressbook.editcontact.ui.EditContactContent
 import com.tangem.features.addressbook.editcontact.ui.state.ValidatedAddress
@@ -86,6 +87,8 @@ internal class DefaultEditContactComponent(
     data class Params(
         val contactId: ContactId?,
         val predefinedAddress: ValidatedAddress? = null,
+        /** Entry point that opened the editor for contact creation; `null` when it was opened from the contacts list. */
+        val creationSource: AddressBookEvents.AddContactTapped.Source? = null,
         val onBackClick: () -> Unit,
         val onAddAddressClick: (walletId: String, excludeContactId: String?, prefill: ValidatedAddress?) -> Unit,
     )
