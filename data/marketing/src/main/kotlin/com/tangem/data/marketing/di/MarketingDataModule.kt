@@ -39,15 +39,22 @@ internal object MarketingDataModule {
         appScope: AppCoroutineScope,
         dataStoreFactory: AppDataStoreFactory,
     ): MarketingCampaignsCacheStore = DefaultMarketingCampaignsCacheStore(
-        dataStore = dataStoreFactory.create(
-            serializer = MoshiDataStoreSerializer(
-                moshi = moshi,
-                types = mapWithStringKeyTypes<MarketingCampaignsCacheEntry>(),
-                defaultValue = emptyMap(),
-            ),
-            produceFile = { context.dataStoreFile(fileName = "marketing_campaigns_cache") },
-            scope = appScope,
-        ),
+        dataStore = if (dataStoreFactory.isKotlinxDataStoreEnabled) {
+            dataStoreFactory.create(
+                defaultValue = emptyMap<String, MarketingCampaignsCacheEntry>(),
+                fileName = "marketing_campaigns_cache",
+            )
+        } else {
+            dataStoreFactory.create(
+                serializer = MoshiDataStoreSerializer(
+                    moshi = moshi,
+                    types = mapWithStringKeyTypes<MarketingCampaignsCacheEntry>(),
+                    defaultValue = emptyMap(),
+                ),
+                produceFile = { context.dataStoreFile(fileName = "marketing_campaigns_cache") },
+                scope = appScope,
+            )
+        },
     )
 
     @Provides
