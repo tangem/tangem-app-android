@@ -402,6 +402,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             is PaymentAccountStatusValue.Inactive,
             is PaymentAccountStatusValue.Loaded,
             is PaymentAccountStatusValue.Loading,
+            is PaymentAccountStatusValue.KycRequired,
             is PaymentAccountStatusValue.UnderReview,
             is PaymentAccountStatusValue.Empty,
             is PaymentAccountStatusValue.Deactivated,
