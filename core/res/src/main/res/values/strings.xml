@@ -1240,6 +1240,10 @@
   <string name="joint_account_send_sends_automatically_setup_fee">Sends automatically once collected. First send includes a one-time setup fee</string>
   <string name="joint_account_send_setup_fee_note">First transaction in %1$s. The fee includes a one-time %2$s to set up the joint account on-chain</string>
   <string name="joint_account_send_signatures_required">%1$s of %2$s signatures required</string>
+  <plurals name="joint_account_send_signatures_required_banner">
+    <item quantity="one">%1$d signature required</item>
+    <item quantity="other">%1$d signatures required</item>
+  </plurals>
   <string name="joint_account_send_slot_busy_subtitle">This network already has an operation collecting signatures. Wait for it to finish before creating a new one</string>
   <string name="joint_account_send_slot_busy_title">Operation already in progress</string>
   <string name="joint_account_settings_networks_info">This account works only in the supported networks.</string>
@@ -2609,6 +2613,7 @@
   <string name="tangempay_bank_transfer_details_daily_deposits_hint">If you want to deposit more than %s – contact support</string>
   <string name="tangempay_bank_transfer_details_fee_header">Deposit methods and fees</string>
   <string name="tangempay_bank_transfer_details_limitations">Limitations</string>
+  <string name="tangempay_bank_transfer_failed_title">Failed to create banking details</string>
   <string name="tangempay_bank_transfer_fee_ach">ACH</string>
   <string name="tangempay_bank_transfer_fee_error_subtitle">Tap to reload</string>
   <string name="tangempay_bank_transfer_fee_error_title">Error loading fee info</string>
@@ -2739,7 +2744,7 @@
   <string name="tangempay_cashback_accruals_calc_title">How we calculate cashback?</string>
   <string name="tangempay_cashback_accruals_exceptions_description">For now, cashback isn’t available for in-store purchases at EU merchants. It’s also no cashback for ATMs, quasi-cash, mobile phone bills, government services, and some other categories.</string>
   <string name="tangempay_cashback_accruals_exceptions_title">Exceptions</string>
-  <string name="tangempay_cashback_accruals_pay_description">From the 2nd to the 5th of the next month</string>
+  <string name="tangempay_cashback_accruals_pay_description">By the 10th of next month, once transactions are checked for compliance with the cashback program rules</string>
   <string name="tangempay_cashback_accruals_pay_title">How we pay cashback?</string>
   <string name="tangempay_cashback_accruals_subtitle">Limits and exceptions</string>
   <string name="tangempay_cashback_accruals_title">Accruals</string>
@@ -2748,7 +2753,7 @@
   <string name="tangempay_cashback_additional_until">Until %1$s</string>
   <string name="tangempay_cashback_deactivated_description">It was made due to your suspicious behavior. Contact support to learn more</string>
   <string name="tangempay_cashback_deactivated_title">Cashback deactivated</string>
-  <string name="tangempay_cashback_deposit_banner">Cashback %1$s for %2$s will be deposited till %3$s</string>
+  <string name="tangempay_cashback_deposit_banner">Cashback %1$s for %2$s will be deposited till %3$s after validation</string>
   <string name="tangempay_cashback_deposited_on">Will be deposited on %1$s</string>
   <string name="tangempay_cashback_details_cap">%1$s max per month</string>
   <string name="tangempay_cashback_details_eu_excluded">For now, no cashback for in-store purchases at EU merchants</string>
