@@ -165,6 +165,7 @@ internal class BankOfframpOrderRequestConverterTest {
         amountInCents = 10_000L,
         chainId = 137L,
         tokenContractAddress = TOKEN_ADDRESS,
+        tokenDecimals = 6,
         rail = rail,
         recipient = recipient,
     )
