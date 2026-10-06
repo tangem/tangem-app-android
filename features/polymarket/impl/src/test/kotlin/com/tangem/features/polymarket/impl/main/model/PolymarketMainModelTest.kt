@@ -613,7 +613,7 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
-    fun `GIVEN content WHEN outcome clicked THEN details route pushed with preselection`() = runTest {
+    fun `GIVEN content WHEN outcome clicked THEN place prediction route pushed with selected outcome`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returns categories().right()
         val model = createModel(testScope = this)
@@ -634,7 +634,7 @@ internal class PolymarketMainModelTest {
         // Assert
         verify {
             router.push(
-                PolymarketRoute.EventDetails(
+                PolymarketRoute.PlacePrediction(
                     eventId = "event-1",
                     userWalletId = USER_WALLET_ID,
                     marketId = "market-1",

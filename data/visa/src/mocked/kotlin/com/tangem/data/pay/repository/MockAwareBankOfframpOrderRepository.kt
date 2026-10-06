@@ -46,9 +46,11 @@ internal class MockAwareBankOfframpOrderRepository @Inject constructor(
     override suspend fun getOrderState(
         userWalletId: UserWalletId,
         orderId: String,
+        request: BankOfframpOrderRequest,
     ): Either<BankOfframpError, BankOfframpOrderState> = delegate.getOrderState(
         userWalletId = userWalletId,
         orderId = orderId,
+        request = request,
     )
 
     override suspend fun submitSignature(
