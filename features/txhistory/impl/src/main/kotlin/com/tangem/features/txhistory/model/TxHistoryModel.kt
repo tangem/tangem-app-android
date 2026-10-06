@@ -124,13 +124,16 @@ internal class TxHistoryModel @Inject constructor(
         initListManager()
         loadTxInfo()
         subscribeToUpdateListener()
-        JointHistoryPoller.launchIn(
-            scope = modelScope,
-            currency = params.currency,
-            isResumed = isResumed,
-            hasLoadedMorePages = loadedPagesTracker.hasLoadedMorePages,
-            reload = ::reloadOnChainHistory,
-        )
+        // The legacy list gives no signal that a requested page landed, so a reload could throw pages away unseen
+        if (historyTxListManager != null) {
+            JointHistoryPoller.launchIn(
+                scope = modelScope,
+                currency = params.currency,
+                isResumed = isResumed,
+                hasLoadedMorePages = loadedPagesTracker.hasLoadedMorePages,
+                reload = historyTxListManager::reload,
+            )
+        }
         subscribeOnCurrencyStatusUpdates()
         deepLinkListener()
     }
@@ -275,11 +278,6 @@ internal class TxHistoryModel @Inject constructor(
         isResumed.value = false
     }
 
-    /** Refreshes only the on-chain list: unlike [reload], it leaves the express overlay alone. */
-    private fun reloadOnChainHistory() {
-        historyTxListManager?.reload() ?: reload()
-    }
-
     fun reload() {
         if (stateController.isNotSupported) return
         loadedPagesTracker.onReload()
@@ -315,7 +313,7 @@ internal class TxHistoryModel @Inject constructor(
     }
 
     private fun loadMoreItems(): Boolean {
-        loadedPagesTracker.onLoadMore(current = historyTxListManager?.state?.value)
+        historyTxListManager?.let { loadedPagesTracker.onLoadMore(current = it.state.value) }
         historyTxListManager?.loadMore()
         modelScope.launch {
             txHistoryListManager?.loadMore(params.userWalletId, params.currency)
