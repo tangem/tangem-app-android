@@ -42,6 +42,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -59,6 +60,7 @@ import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUMFa
 import kotlinx.collections.immutable.persistentListOf
 
 private val TokenIconSize = 32.dp
+private val NetworkBadgeSize = 8.dp
 
 @Composable
 internal fun TangemPayWithdrawHubScreen(state: TangemPayWithdrawHubUM, modifier: Modifier = Modifier) {
@@ -183,7 +185,7 @@ private fun RecentTokenCard(state: RecentTokenUM, onClick: () -> Unit) {
         ) {
             CurrencyIcon(
                 state = state.icon,
-                shouldDisplayNetwork = false,
+                networkBadgeSize = NetworkBadgeSize,
                 withFixedSize = false,
                 iconSize = TokenIconSize,
                 modifier = Modifier.size(TokenIconSize),
@@ -263,7 +265,12 @@ private class SwapRecentsPreviewProvider : PreviewParameterProvider<TokenRecents
         TokenRecentsUM.Content(
             tokens = persistentListOf(
                 previewRecentToken(id = "1", name = "Polygon", accountName = "Main account"),
-                previewRecentToken(id = "2", name = "Tether", accountName = "Savings"),
+                previewRecentToken(
+                    id = "2",
+                    name = "USDC",
+                    accountName = "Savings",
+                    networkIconResId = R.drawable.img_polygon_22,
+                ),
             ),
             onTokenClick = {},
         ),
@@ -291,14 +298,30 @@ private fun previewActionCard(iconRes: Int, titleRes: Int): TangemPayWithdrawHub
         onClick = {},
     )
 
-private fun previewRecentToken(id: String, name: String, accountName: String): RecentTokenUM = RecentTokenUM(
+private fun previewRecentToken(
+    id: String,
+    name: String,
+    accountName: String,
+    networkIconResId: Int? = null,
+): RecentTokenUM = RecentTokenUM(
     id = id,
-    icon = CurrencyIconState.CoinIcon(
-        url = null,
-        fallbackResId = R.drawable.ic_user_filled_16,
-        isGrayscale = false,
-        shouldShowCustomBadge = false,
-    ),
+    icon = if (networkIconResId == null) {
+        CurrencyIconState.CoinIcon(
+            url = null,
+            fallbackResId = R.drawable.ic_user_filled_16,
+            isGrayscale = false,
+            shouldShowCustomBadge = false,
+        )
+    } else {
+        CurrencyIconState.TokenIcon(
+            url = null,
+            topBadgeIconResId = networkIconResId,
+            isGrayscale = false,
+            shouldShowCustomBadge = false,
+            fallbackTint = TangemColorPalette.White,
+            fallbackBackground = TangemColorPalette.Azure,
+        )
+    },
     name = name,
     accountName = stringReference(accountName),
     accountIcon = AccountIconUM.CryptoPortfolio(
