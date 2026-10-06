@@ -1164,6 +1164,7 @@
   <string name="joint_account_invite_load_failed_subtitle">Die Einladungsseite konnte nicht geladen werden.\nZum Neuladen tippen</string>
   <string name="joint_account_invite_members_creator">Urheber</string>
   <string name="joint_account_invite_members_invite">Einladen</string>
+  <string name="joint_account_invite_members_invited">Eingeladen</string>
   <string name="joint_account_invite_members_member">Mitglied</string>
   <string name="joint_account_invite_members_member_info">Mitgliederdaten</string>
   <string name="joint_account_invite_members_new_member">Neues Mitglied</string>
@@ -1237,6 +1238,10 @@
   <string name="joint_account_send_sends_automatically_setup_fee">Wird nach der Abholung automatisch versendet. Für den ersten Versand fällt eine einmalige Einrichtungsgebühr an.</string>
   <string name="joint_account_send_setup_fee_note">Erste Transaktion unter %1$s. Die Gebühr beinhaltet eine einmalige Zahlung von %2$s für die Einrichtung des Gemeinschaftskontos in der Blockchain.</string>
   <string name="joint_account_send_signatures_required">%1$s von %2$s erforderlichen Unterschriften</string>
+  <plurals name="joint_account_send_signatures_required_banner">
+    <item quantity="one">ONE %1$d signature erforderlich</item>
+    <item quantity="other">THER %1$d Signaturen erforderlich</item>
+  </plurals>
   <string name="joint_account_send_slot_busy_subtitle">In diesem Netzwerk läuft bereits eine Unterschriftensammlung. Warten Sie, bis diese abgeschlossen ist, bevor Sie eine neue starten.</string>
   <string name="joint_account_send_slot_busy_title">Die Operation ist bereits im Gange</string>
   <string name="joint_account_settings_networks_info">Dieses Konto funktioniert nur in den unterstützten Netzwerken.</string>
@@ -2606,6 +2611,7 @@
   <string name="tangempay_bank_transfer_details_daily_deposits_hint">Wenn Sie mehr als %s einzahlen möchten, wenden Sie sich bitte an den Support.</string>
   <string name="tangempay_bank_transfer_details_fee_header">Einzahlungsmethoden und Gebühren</string>
   <string name="tangempay_bank_transfer_details_limitations">Einschränkungen</string>
+  <string name="tangempay_bank_transfer_failed_title">Fehler beim Erstellen der Bankdaten</string>
   <string name="tangempay_bank_transfer_fee_ach">ACH</string>
   <string name="tangempay_bank_transfer_fee_error_subtitle">Zum Neuladen tippen</string>
   <string name="tangempay_bank_transfer_fee_error_title">Fehler beim Laden der Gebühreninformationen</string>
@@ -2736,7 +2742,7 @@
   <string name="tangempay_cashback_accruals_calc_title">Wie berechnen wir Cashback?</string>
   <string name="tangempay_cashback_accruals_exceptions_description">Aktuell gibt es kein Cashback für Kartenzahlungen am Terminal vor Ort in der EU. Kein Cashback gilt zudem für Bargeldabhebungen, Quasi-Cash, Mobilfunkaufladungen, Behördendienste und bestimmte weitere Kategorien.</string>
   <string name="tangempay_cashback_accruals_exceptions_title">Ausnahmen</string>
-  <string name="tangempay_cashback_accruals_pay_description">Vom 2. bis zum 5. des nächsten Monats</string>
+  <string name="tangempay_cashback_accruals_pay_description">Bis zum 10. des Folgemonats, nachdem die Transaktionen auf Einhaltung der Cashback-Regeln geprüft wurden</string>
   <string name="tangempay_cashback_accruals_pay_title">Wie erfolgt die Auszahlung von Cashback?</string>
   <string name="tangempay_cashback_accruals_subtitle">Grenzen und Ausnahmen</string>
   <string name="tangempay_cashback_accruals_title">Abgrenzungen</string>
@@ -2745,7 +2751,7 @@
   <string name="tangempay_cashback_additional_until">Bis %1$s</string>
   <string name="tangempay_cashback_deactivated_description">Dies geschah aufgrund Ihres verdächtigen Verhaltens. Wenden Sie sich an den Support, um mehr zu erfahren.</string>
   <string name="tangempay_cashback_deactivated_title">Cashback deaktiviert</string>
-  <string name="tangempay_cashback_deposit_banner">Der Cashback- %1$s -Betrag für %2$s wird bis zum %3$s</string>
+  <string name="tangempay_cashback_deposit_banner">Cashback %1$s für %2$s wird nach Prüfung bis zum %3$s gutgeschrieben</string>
   <string name="tangempay_cashback_deposited_on">Wird eingezahlt am %1$s</string>
   <string name="tangempay_cashback_details_cap">%1$s maximal pro Monat</string>
   <string name="tangempay_cashback_details_eu_excluded">Aktuell gibt es kein Cashback für Kartenzahlungen am Terminal vor Ort in der EU</string>
@@ -2845,7 +2851,7 @@
   <string name="tangempay_kyc_rejected_description">Leider konnten wir Ihre Identität</string>
   <string name="tangempay_kyc_rejected_description_span">nicht verifizieren.</string>
   <string name="tangempay_main_select_plan">Tarif auswählen</string>
-  <string name="tangempay_maximum_cards_issued_description">Du kannst bis zu 3 Karten haben. Lösche eine, um eine neue Karte hinzuzufügen.</string>
+  <string name="tangempay_maximum_cards_issued_description">Lösche eine, um eine neue Karte hinzuzufügen</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">Upgrade-Plan für mehr Karten</string>
   <string name="tangempay_maximum_cards_issued_for_plan_title">Das Kartenlimit für diesen Tarif wurde erreicht</string>
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">Upgrade-Plan</string>

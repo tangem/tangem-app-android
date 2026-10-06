@@ -2261,7 +2261,7 @@
   <string name="tangempay_cashback_accruals_calc_title">¿Cómo calculamos el cashback?</string>
   <string name="tangempay_cashback_accruals_exceptions_description">Actualmente no se aplica cashback en pagos presenciales por terminal (TPV) en tiendas físicas de la UE. Tampoco aplica para retiros de efectivo, operaciones de casi-efectivo, recargas de móvil, trámites públicos ni ciertas categorías adicionales.</string>
   <string name="tangempay_cashback_accruals_exceptions_title">Excepciones</string>
-  <string name="tangempay_cashback_accruals_pay_description">Del 2 al 5 del mes siguiente</string>
+  <string name="tangempay_cashback_accruals_pay_description">Antes del día 10 del mes siguiente, tras comprobar que las transacciones cumplen las reglas del programa de cashback</string>
   <string name="tangempay_cashback_accruals_pay_title">¿Cómo pagamos el cashback?</string>
   <string name="tangempay_cashback_accruals_subtitle">Límites y excepciones</string>
   <string name="tangempay_cashback_accruals_title">Acumulaciones</string>
@@ -2270,7 +2270,7 @@
   <string name="tangempay_cashback_additional_until">Hasta %1$s</string>
   <string name="tangempay_cashback_deactivated_description">Debido a actividad sospechosa. Contacte con soporte</string>
   <string name="tangempay_cashback_deactivated_title">Cashback desactivado</string>
-  <string name="tangempay_cashback_deposit_banner">Cashback %1$s por %2$s se depositará antes del %3$s</string>
+  <string name="tangempay_cashback_deposit_banner">Cashback %1$s por %2$s se depositará antes del %3$s tras la verificación</string>
   <string name="tangempay_cashback_deposited_on">Se deposita el %1$s</string>
   <string name="tangempay_cashback_details_cap">%1$s máx/mes</string>
   <string name="tangempay_cashback_details_eu_excluded">Actualmente, sin cashback por compras presenciales en la UE</string>
@@ -2369,7 +2369,7 @@
   <string name="tangempay_kyc_rejected_description">Lo sentimos, no pudimos verificar</string>
   <string name="tangempay_kyc_rejected_description_span">u identidad.</string>
   <string name="tangempay_main_select_plan">Seleccionar plan</string>
-  <string name="tangempay_maximum_cards_issued_description">Puedes tener hasta 3 tarjetas. Elimine una para añadir una nueva.</string>
+  <string name="tangempay_maximum_cards_issued_description">Elimine una para añadir una nueva</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">Mejore su plan para tener más tarjetas</string>
   <string name="tangempay_maximum_cards_issued_for_plan_title">Límite de tarjetas alcanzado para este plan</string>
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">Mejorar plan</string>
