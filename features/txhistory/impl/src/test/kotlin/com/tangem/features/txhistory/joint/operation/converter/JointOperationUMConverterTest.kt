@@ -177,6 +177,20 @@ internal class JointOperationUMConverterTest {
         assertThat(actual.amountBlock.fiatAmount).isNull()
     }
 
+    @Test
+    fun `GIVEN a long recipient address WHEN converted THEN the card shows it whole for the row to cut`() {
+        // Arrange
+        val state = state(isSending = false).copy(
+            displayed = JointTransferIntent.Native(recipient = LONG_RECIPIENT, amountWei = BigInteger.TEN.pow(18)),
+        )
+
+        // Act
+        val actual = converter.convert(input(state))
+
+        // Assert
+        assertThat(actual.counterparty?.title).isEqualTo(stringReference(LONG_RECIPIENT))
+    }
+
     private fun input(
         state: JointOperationState,
         hasAnswered: Boolean = false,
@@ -226,5 +240,6 @@ internal class JointOperationUMConverterTest {
     private companion object {
         const val OWN = "0xowner"
         const val OTHER = "0xother"
+        const val LONG_RECIPIENT = "0xaea826671a6bd1cc5b4b8e6a7f6a0e1d015c5ebb"
     }
 }

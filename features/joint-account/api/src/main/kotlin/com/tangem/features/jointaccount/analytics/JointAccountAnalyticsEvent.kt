@@ -32,6 +32,26 @@ sealed class JointAccountAnalyticsEvent(
         ),
     )
 
+    @Suppress("LongParameterList")
+    class OperationSigned(
+        signaturesCollected: Int,
+        membersCount: Int,
+        threshold: Int,
+        isThresholdReached: Boolean,
+        blockchain: String,
+        token: String,
+    ) : JointAccountAnalyticsEvent(
+        event = "Operation Signed",
+        params = mapOf(
+            SIGNATURES_COLLECTED to signaturesCollected.toString(),
+            MEMBERS_COUNT to membersCount.toString(),
+            THRESHOLD to threshold.toString(),
+            THRESHOLD_REACHED to if (isThresholdReached) "Yes" else "No",
+            AnalyticsParam.BLOCKCHAIN to blockchain,
+            AnalyticsParam.TOKEN_PARAM to token,
+        ),
+    )
+
     class NoticeAccountsLimitReached(source: LimitSource) : JointAccountAnalyticsEvent(
         event = "Notice - Accounts Limit Reached",
         params = mapOf(AnalyticsParam.SOURCE to source.value),
@@ -86,6 +106,8 @@ sealed class JointAccountAnalyticsEvent(
         const val CATEGORY = "Joint Account"
         const val MEMBERS_COUNT = "Members Count"
         const val THRESHOLD = "Threshold"
+        const val SIGNATURES_COLLECTED = "Signatures Collected"
+        const val THRESHOLD_REACHED = "Threshold Reached"
     }
 }
 

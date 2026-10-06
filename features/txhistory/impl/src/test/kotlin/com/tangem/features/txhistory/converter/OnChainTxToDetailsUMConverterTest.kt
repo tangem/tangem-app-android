@@ -842,6 +842,22 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
+    fun `GIVEN external counterparty WHEN convert THEN the card shows the whole address`() {
+        // Arrange
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(EXTERNAL_ADDRESS),
+        )
+
+        // Act
+        val counterparty = converter.convert(tx).counterparty
+
+        // Assert
+        assertThat(counterparty?.title).isEqualTo(stringReference(EXTERNAL_ADDRESS))
+    }
+
+    @Test
     fun `GIVEN address counterparty WHEN onCopyClick invoked THEN raw address is copied`() {
         // Arrange
         val tx = txInfo(

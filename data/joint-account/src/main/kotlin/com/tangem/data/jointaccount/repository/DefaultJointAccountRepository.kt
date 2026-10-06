@@ -16,6 +16,7 @@ import com.tangem.data.jointaccount.converter.CreateJointAccountRequestConverter
 import com.tangem.data.jointaccount.converter.JoinJointAccountRequestConverter
 import com.tangem.data.jointaccount.converter.JointAccountDtoConverter
 import com.tangem.data.jointaccount.converter.JointAccountInvitePreviewDtoConverter
+import com.tangem.data.jointaccount.converter.JointOperationConverter
 import com.tangem.data.jointaccount.converter.JointOperationCreateErrorConverter
 import com.tangem.data.jointaccount.converter.JointOperationRejectErrorConverter
 import com.tangem.data.jointaccount.converter.JointOperationSignErrorConverter
@@ -30,6 +31,7 @@ import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
 import com.tangem.domain.jointaccount.model.JointAccountJoinPayload
 import com.tangem.domain.jointaccount.model.JointAccountJoinResult
+import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
 import com.tangem.domain.jointaccount.model.JointOperationSignError
@@ -53,6 +55,7 @@ internal class DefaultJointAccountRepository @Inject constructor(
     private val converter: JointAccountDtoConverter,
     private val previewConverter: JointAccountInvitePreviewDtoConverter,
     private val safeTxConverter: SafeTxConverter,
+    private val operationConverter: JointOperationConverter,
     private val dispatchers: CoroutineDispatcherProvider,
     @NetworkMoshi private val moshi: Moshi,
 ) : JointAccountRepository {
@@ -283,14 +286,14 @@ internal class DefaultJointAccountRepository @Inject constructor(
         operationId: String,
         safeTx: SafeTx,
         signature: String,
-    ): Either<JointOperationSignError, Unit> = withContext(dispatchers.io) {
+    ): Either<JointOperationSignError, JointOperation?> = withContext(dispatchers.io) {
         val safeTxDto = Either
             .catch { safeTxConverter.convertBack(safeTx) }
             .getOrElse { return@withContext JointOperationSignError.Failed(cause = it).left() }
 
         safeApiCall(
             call = {
-                jointAccountApi.signJointOperation(
+                val response = jointAccountApi.signJointOperation(
                     walletId = userWalletId.stringValue,
                     operationId = operationId,
                     body = SignJointOperationRequest(
@@ -299,7 +302,16 @@ internal class DefaultJointAccountRepository @Inject constructor(
                     ),
                 ).bind()
 
-                Unit.right()
+                Either
+                    .catch { operationConverter.convert(response) }
+                    .onLeft { error ->
+                        logger.e(
+                            messageString = "The signed operation $operationId could not be read",
+                            throwable = error,
+                        )
+                    }
+                    .getOrNull()
+                    .right()
             },
             onError = { error -> signErrorConverter.convert(error).left() },
         )
