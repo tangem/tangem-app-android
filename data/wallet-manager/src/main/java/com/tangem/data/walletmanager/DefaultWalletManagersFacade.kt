@@ -267,6 +267,13 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             throw TxHistoryStateError.AddressNotReady()
         }
 
+        val gaslessFeeAddresses = try {
+            gaslessTransactionRepository.getGaslessFeeAddresses()
+        } catch (error: Throwable) {
+            TangemLogger.e("Failed to load gasless fee addresses; falling back to empty set", error)
+            emptySet()
+        }
+
         val itemsResult = source.provider.getTransactionsHistory(
             request = TransactionHistoryRequest(
                 address = source.address,
@@ -274,15 +281,9 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 page = page,
                 pageSize = pageSize,
                 filterType = currency.toTransactionHistoryFilterType(),
+                gaslessFeeAddresses = gaslessFeeAddresses,
             ),
         )
-
-        val gaslessFeeAddresses = try {
-            gaslessTransactionRepository.getGaslessFeeAddresses()
-        } catch (error: Throwable) {
-            TangemLogger.e("Failed to load gasless fee addresses; falling back to empty set", error)
-            emptySet()
-        }
 
         return when (itemsResult) {
             is Result.Success -> PaginationWrapper(
