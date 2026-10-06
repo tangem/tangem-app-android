@@ -2,6 +2,7 @@ package com.tangem.datasource.api.promotion
 
 import com.squareup.moshi.Moshi
 import com.tangem.core.remote.moshi.UnknownEnumMoshiAdapter
+import com.tangem.datasource.api.promotion.models.PromotionRegistrationsResponse
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.BlockType
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.EligibilityType
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.EligibilityWalletType
@@ -18,6 +19,7 @@ fun Moshi.Builder.addPromotionEnumFallbackAdapters(): Moshi.Builder {
         EligibilityWalletType::class.java to EligibilityWalletType.UNKNOWN,
         BlockType::class.java to BlockType.UNKNOWN,
         ValueType::class.java to ValueType.UNKNOWN,
+        PromotionRegistrationsResponse.Status::class.java to PromotionRegistrationsResponse.Status.UNKNOWN,
     )
 
     return apply {
