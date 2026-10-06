@@ -71,6 +71,12 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         useUnmergedTree = true
     }
 
+    val cardAwaitingActivationTile: KNode = child {
+        hasTestTag(TangemPayTestTags.PAYMENT_ACCOUNT_CARD_BUTTON)
+        hasAnyDescendant(withText(""))
+        useUnmergedTree = true
+    }
+
     val paymentAccountTitle: KNode = child {
         hasText(getResourceString(CoreResR.string.tangempay_payment_account))
         useUnmergedTree = true
@@ -264,6 +270,29 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
             text = getResourceString(CoreResR.string.tangempay_reissue_card_in_progress),
             substring = true,
         )
+        useUnmergedTree = true
+    }
+
+    val deliveryBannerTitle: KNode = deliveryBannerText(
+        tag = NotificationTestTags.TITLE,
+        textRes = CoreResR.string.tangempay_card_delivery_banner_title,
+    )
+
+    val deliveryBannerMessage: KNode = deliveryBannerText(
+        tag = NotificationTestTags.MESSAGE,
+        textRes = CoreResR.string.tangempay_card_delivery_banner_description,
+    )
+
+    val deliveryBannerActivateButton: KNode = child {
+        hasAnyAncestor(withTestTag(TangemPayTestTags.DELIVERY_BANNER))
+        hasText(getResourceString(CoreResR.string.tangempay_card_details_activate))
+        useUnmergedTree = true
+    }
+
+    private fun deliveryBannerText(tag: String, @StringRes textRes: Int): KNode = child {
+        hasAnyAncestor(withTestTag(TangemPayTestTags.DELIVERY_BANNER))
+        hasTestTag(tag)
+        hasText(getResourceString(textRes))
         useUnmergedTree = true
     }
 
