@@ -18,4 +18,8 @@ internal class DefaultWalletDeepLinkHandler @AssistedInject constructor(
     interface Factory : WalletDeepLinkHandler.Factory {
         override fun create(): DefaultWalletDeepLinkHandler
     }
+
+    companion object {
+        const val DEEPLINK_KEY = "tangem://main"
+    }
 }

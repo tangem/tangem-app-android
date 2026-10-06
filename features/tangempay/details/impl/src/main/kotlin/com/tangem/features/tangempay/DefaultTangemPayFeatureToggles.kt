@@ -19,6 +19,9 @@ internal class DefaultTangemPayFeatureToggles(
     override val isResidencyStepEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1771_PAY_RESIDENCY_STEP_ENABLED)
 
+    override val isVisaOnrampV2Enabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1753_VISA_ONRAMP_V2_ENABLED)
+
     override val isGoogleWalletPushProvisioningEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1062_GOOGLE_WALLET_PUSH_PROVISIONING_ENABLED)
 

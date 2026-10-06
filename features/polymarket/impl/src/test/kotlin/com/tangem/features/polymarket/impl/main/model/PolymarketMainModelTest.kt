@@ -36,6 +36,7 @@ import com.tangem.domain.polymarket.flow.PredictionPositionsValueSupplier
 import com.tangem.domain.polymarket.model.PredictionPositionsValue
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
+import com.tangem.domain.polymarket.usecase.ObservePolymarketCredentialsPresenceUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedFooterUM
@@ -110,6 +111,10 @@ internal class PolymarketMainModelTest {
     private val positionsValueFetcher: PredictionPositionsValueFetcher = mockk(relaxed = true)
     private val balancePoller: PredictionBalancePoller = mockk()
     private val fundingWindow: PredictionFundingWindow = mockk(relaxed = true)
+    private val hasCredentials = MutableStateFlow(value = true)
+    private val observeCredentialsPresence: ObservePolymarketCredentialsPresenceUseCase = mockk {
+        every { this@mockk.invoke(USER_WALLET_ID) } returns hasCredentials
+    }
 
     private val statusFlow = MutableStateFlow<PredictionAccountStatusValue>(
         value = activeStatus(depositAddress = DEPOSIT_ADDRESS),
@@ -613,7 +618,7 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
-    fun `GIVEN content WHEN outcome clicked THEN details route pushed with preselection`() = runTest {
+    fun `GIVEN content WHEN outcome clicked THEN place prediction route pushed with selected outcome`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returns categories().right()
         val model = createModel(testScope = this)
@@ -634,7 +639,7 @@ internal class PolymarketMainModelTest {
         // Assert
         verify {
             router.push(
-                PolymarketRoute.EventDetails(
+                PolymarketRoute.PlacePrediction(
                     eventId = "event-1",
                     userWalletId = USER_WALLET_ID,
                     marketId = "market-1",
@@ -1521,6 +1526,7 @@ internal class PolymarketMainModelTest {
             predictionPositionsValueFetcher = positionsValueFetcher,
             predictionBalancePoller = balancePoller,
             predictionFundingWindow = fundingWindow,
+            observePolymarketCredentialsPresenceUseCase = observeCredentialsPresence,
         ).also { model = it }
     }
 
@@ -1593,6 +1599,46 @@ internal class PolymarketMainModelTest {
             ),
         ),
     )
+
+    @Test
+    fun `GIVEN no stored credentials WHEN the screen opens THEN the gate replaces the feed`() = runTest {
+        // Arrange
+        hasCredentials.value = false
+
+        // Act
+        createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { router.replaceAll(PolymarketRoute.Onboarding(userWalletId = USER_WALLET_ID)) }
+    }
+
+    @Test
+    fun `GIVEN stored credentials WHEN the screen opens THEN the feed stays`() = runTest {
+        // Act
+        createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { router.replaceAll(any()) }
+    }
+
+    @Test
+    fun `GIVEN a child screen on top WHEN the credentials are dropped THEN the gate replaces the stack`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        model.onResume()
+        runCurrent()
+        model.onPause()
+
+        // Act
+        hasCredentials.value = false
+        runCurrent()
+        model.onDestroy()
+
+        // Assert
+        verify(exactly = 1) { router.replaceAll(PolymarketRoute.Onboarding(userWalletId = USER_WALLET_ID)) }
+    }
 
     private companion object {
         const val DEPOSIT_ADDRESS = "0xbridge0000000000000000000000000000000001"

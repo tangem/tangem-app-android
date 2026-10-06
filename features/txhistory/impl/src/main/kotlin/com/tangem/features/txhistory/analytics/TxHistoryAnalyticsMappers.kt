@@ -39,10 +39,7 @@ private fun TxInfo.TransactionType.toAnalyticsType(isOutgoing: Boolean): String 
     is TxInfo.TransactionType.Staking -> "Staking"
     is TxInfo.TransactionType.YieldSupply -> "Yield Supply"
     TxInfo.TransactionType.GaslessFee -> "Gasless Fee"
-    is TxInfo.TransactionType.NetworkFee,
-    is TxInfo.TransactionType.Joint.TokenFee,
-    -> "Network Fee"
-    is TxInfo.TransactionType.Joint.Call -> "Unknown"
+    is TxInfo.TransactionType.NetworkFee -> "Network Fee"
     is TxInfo.TransactionType.Operation -> name
     TxInfo.TransactionType.UnknownOperation -> "Unknown"
 }
