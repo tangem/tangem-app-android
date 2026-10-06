@@ -10,6 +10,7 @@ import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOutcome
+import com.tangem.features.polymarket.impl.common.formatPolymarketPrice
 import com.tangem.features.polymarket.impl.common.formatPolymarketVolume
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventRowUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventUM
@@ -44,12 +45,21 @@ internal class PolymarketEventUMConverter(
     }
 
     private fun convertRow(event: PolymarketEvent, market: PolymarketMarket): PolymarketEventRowUM {
+        val showPrices = market.groupItemTitle.isNullOrBlank() || market.groupItemTitle == "Match Winner"
         return PolymarketEventRowUM(
             marketId = market.id,
-            title = convertRowTitle(event = event, market = market),
-            probability = stringReference(market.outcomes.firstOrNull()?.probability.formatProbability()),
+            title = if (showPrices) {
+                market.title.takeIf { event.totalMarketsCount > 1 }?.let(::stringReference)
+            } else {
+                convertRowTitle(event = event, market = market)
+            },
+            probability = if (showPrices) {
+                null
+            } else {
+                stringReference(market.outcomes.firstOrNull()?.probability.formatProbability())
+            },
             outcomes = market.outcomes
-                .map { convertOutcome(event = event, market = market, outcome = it) }
+                .map { convertOutcome(event = event, market = market, outcome = it, showPrice = showPrices) }
                 .toImmutableList(),
         )
     }
@@ -75,10 +85,12 @@ internal class PolymarketEventUMConverter(
         event: PolymarketEvent,
         market: PolymarketMarket,
         outcome: PolymarketOutcome,
+        showPrice: Boolean,
     ): PolymarketOutcomeUM {
         return PolymarketOutcomeUM(
             assetId = outcome.assetId,
             title = stringReference(outcome.title),
+            price = if (showPrice) stringReference(outcome.probability.formatPolymarketPrice()) else null,
             onClick = { onOutcomeClick(event.id, market.id, outcome.assetId) },
         )
     }
