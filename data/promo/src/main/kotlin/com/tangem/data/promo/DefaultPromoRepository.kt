@@ -119,8 +119,9 @@ internal class DefaultPromoRepository(
                 }
                 is ApiResponse.Error -> {
                     val cause = response.cause
-                    val errorBody = (cause as? ApiResponseError.HttpException)?.errorBody
-                    raise(PromoRegistrationErrorConverter.convert(cause, parseErrorMessage(errorBody)))
+                    val error = parseError((cause as? ApiResponseError.HttpException)?.errorBody)
+                    TangemLogger.e("Registration for promotion $promotionId failed: ${error?.detail}", cause)
+                    raise(PromoRegistrationErrorConverter.convert(cause))
                 }
             }
         }
@@ -150,11 +151,9 @@ internal class DefaultPromoRepository(
         }.getOrNull()
     }
 
-    private fun parseErrorMessage(body: String?): String? {
+    private fun parseError(body: String?): PromotionErrorResponse? {
         if (body.isNullOrBlank()) return null
-        return runCatching {
-            moshi.adapter(PromotionErrorResponse::class.java).fromJson(body)?.message
-        }.getOrNull()
+        return runCatching { moshi.adapter(PromotionErrorResponse::class.java).fromJson(body) }.getOrNull()
     }
 
     private fun invalidEnrollments(message: String) = PromoRegistrationError.Generic(IllegalArgumentException(message))
