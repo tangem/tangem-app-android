@@ -373,8 +373,8 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
  * portfolio, the "in {owner}" tail. The whole phrasing (direction prefix, the "… in …" connector and word order) lives
  * in string resources: the owner tail (`token_details_toolbar_title_token_in_account` / `…_in_wallet`) is nested into
  * the direction template as its argument, yielding one localized string with two `%image%` markers. Both icons are
- * inline placeholders in a single ellipsizable [Text]; account / payment put the icon before the name, wallet the name
- * before the device icon — as the resources already encode.
+ * inline placeholders in a single ellipsizable [Text]; account / payment / contact put the icon before the name, wallet
+ * the name before the device icon — as the resources already encode.
  */
 @Composable
 private fun AssetSubtitle(subtitle: ContentSubtitle.Asset, status: Status, modifier: Modifier = Modifier) {
@@ -388,6 +388,7 @@ private fun AssetSubtitle(subtitle: ContentSubtitle.Asset, status: Status, modif
         is ContentSubtitle.AssetOwner.Account -> owner.name.resolveReference()
         is ContentSubtitle.AssetOwner.PaymentAccount -> owner.name.resolveReference()
         is ContentSubtitle.AssetOwner.Wallet -> owner.name
+        is ContentSubtitle.AssetOwner.Contact -> owner.name
         null -> null
     }
     // The owner tail is nested into the direction template as its %1$s, so the whole "to:/from: … in …" phrasing and
@@ -509,6 +510,11 @@ private fun AssetOwnerIcon(owner: ContentSubtitle.AssetOwner?, isFailed: Boolean
         is ContentSubtitle.AssetOwner.Wallet -> TangemDeviceIcon(
             state = owner.deviceIconUM,
             modifier = Modifier.fillMaxSize(),
+        )
+        is ContentSubtitle.AssetOwner.Contact -> PortfolioAvatar(
+            avatar = owner.avatar,
+            shape = CircleShape,
+            isFailed = isFailed,
         )
         null -> Unit
     }

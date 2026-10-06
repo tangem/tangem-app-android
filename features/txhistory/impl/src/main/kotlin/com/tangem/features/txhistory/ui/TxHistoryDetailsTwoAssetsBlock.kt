@@ -161,6 +161,7 @@ private fun TwoAssetsSideLabel(label: TextReference, owner: AssetOwnerUM?, modif
         when (owner) {
             is AssetOwnerUM.Account,
             is AssetOwnerUM.PaymentAccount,
+            is AssetOwnerUM.Contact,
             -> {
                 AssetOwnerIcon(owner = owner)
                 LabelText(text = owner.name, modifier = Modifier.weight(weight = 1f, fill = false))
@@ -220,6 +221,14 @@ private fun AssetOwnerIcon(owner: AssetOwnerUM, modifier: Modifier = Modifier) {
         is AssetOwnerUM.PaymentAccount -> PaymentAccountIcon(
             size = AccountIconSize.ExtraSmall,
             modifier = iconModifier,
+        )
+        // The same account glyph as an own account, clipped to a circle: a contact is round where an account is a
+        // rounded square, and the design system has no circular 16dp size of its own.
+        is AssetOwnerUM.Contact -> AccountIcon(
+            name = owner.name,
+            icon = owner.icon,
+            size = AccountIconSize.ExtraSmall,
+            modifier = modifier.clip(CircleShape),
         )
     }
 }

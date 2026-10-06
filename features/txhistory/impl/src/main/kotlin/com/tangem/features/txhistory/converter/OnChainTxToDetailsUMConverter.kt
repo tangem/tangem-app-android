@@ -32,7 +32,6 @@ import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.model.ResolvedOwner
 import com.tangem.features.txhistory.model.TxHistoryLookupContext
-import com.tangem.features.txhistory.model.isPlainTransfer
 import com.tangem.features.txhistory.model.mayCarryStakingTarget
 import com.tangem.features.txhistory.model.reclassifyOwnOperationAsTransfer
 import com.tangem.features.txhistory.model.resolveCounterparty
@@ -205,23 +204,17 @@ internal class OnChainTxToDetailsUMConverter(
     }
 
     /**
-     * The counterparty resolved against the user's portfolios on the viewed currency's network, so the title and the
-     * counterparty card never disagree with the list. [interactionAddressType] already carries the correct counterparty
-     * for every type — including an incoming [TxInfo.TransactionType.Transfer], whose interaction address the mapper
-     * takes from the sender. The one exception is an **incoming** unrecognized call ([TxInfo.TransactionType.Operation]
-     * / [TxInfo.TransactionType.UnknownOperation]): there [interactionAddressType] is the destination — the viewed
-     * wallet itself — so the real sender ([TxInfo.sourceType]) is resolved instead. `null` when there is no single
-     * plain counterparty address.
+     * The counterparty resolved against the user's portfolios and address books on the viewed currency's network, so
+     * the title and the counterparty card never disagree with the list. [interactionAddressType] already carries the
+     * correct counterparty for every type — including an incoming [TxInfo.TransactionType.Transfer], whose interaction
+     * address the mapper takes from the sender. The one exception is an **incoming** unrecognized call
+     * ([TxInfo.TransactionType.Operation] / [TxInfo.TransactionType.UnknownOperation]): there [interactionAddressType]
+     * is the destination — the viewed wallet itself — so the real sender ([TxInfo.sourceType]) is resolved instead.
+     * `null` when there is no single plain counterparty address.
      */
     private fun TxInfo.resolvedCounterparty(): ResolvedOwner? {
         val address = counterpartyAddress() ?: return null
-        return lookup.resolveCounterparty(
-            address = address,
-            networkRawId = currency.network.id.rawId,
-            // Only a plain transfer's recipient is matched against the address book, so the card agrees with the
-            // history list: an unrecognized contract call talks to a contract, not to a recipient.
-            isOutgoing = isOutgoing && isPlainTransfer(),
-        )
+        return lookup.resolveCounterparty(address = address, networkRawId = currency.network.id.rawId)
     }
 
     /** The raw counterparty address [resolvedCounterparty] resolves, before the [lookup] turns it into an owner. */

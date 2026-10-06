@@ -760,7 +760,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
-    fun `GIVEN incoming Transfer from a saved contact WHEN convert THEN address counterparty card`() {
+    fun `GIVEN incoming Transfer from a saved contact WHEN convert THEN contact card named after it`() {
         // Arrange
         val contactConverter = onChainConverter(lookup = lookupOf(contacts = listOf(savedContact())))
         val tx = txInfo(
@@ -772,12 +772,13 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Act
         val counterparty = contactConverter.convert(tx).counterparty
 
-        // Assert — contacts are matched for outgoing transfers only.
-        assertThat(counterparty?.avatar).isEqualTo(TxHistoryDetailsUM.CounterpartyAvatar.Address(USER_ADDRESS))
+        // Assert — the sender is named after the contact, same as a recipient.
+        assertThat(counterparty?.title).isEqualTo(TxHistoryDetailsUM.CounterpartyTitle.Name(stringReference("Binance")))
+        assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.common_from_address))
     }
 
     @Test
-    fun `GIVEN outgoing Operation to a saved address WHEN convert THEN address counterparty card`() {
+    fun `GIVEN outgoing Operation to a saved address WHEN convert THEN contact card named after it`() {
         // Arrange
         val contactConverter = onChainConverter(lookup = lookupOf(contacts = listOf(savedContact())))
         val tx = txInfo(
@@ -789,8 +790,8 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Act
         val counterparty = contactConverter.convert(tx).counterparty
 
-        // Assert — a contract call has no recipient to name, so it stays an address (as in the history list).
-        assertThat(counterparty?.avatar).isEqualTo(TxHistoryDetailsUM.CounterpartyAvatar.Address(USER_ADDRESS))
+        // Assert — the address book is consulted whatever the transaction type (as in the history list).
+        assertThat(counterparty?.title).isEqualTo(TxHistoryDetailsUM.CounterpartyTitle.Name(stringReference("Binance")))
     }
 
     @Test

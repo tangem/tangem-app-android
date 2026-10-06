@@ -22,6 +22,7 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
 import com.tangem.core.ui.res.generated.icons.ic_card_20
+import com.tangem.domain.addressbook.model.portfolioIcon
 import com.tangem.domain.express.models.ExchangeTransaction
 import com.tangem.domain.express.models.ExpressExchangeStatus
 import com.tangem.domain.express.models.ExpressOnrampStatus
@@ -195,7 +196,10 @@ internal class ExpressTxToDetailsUMConverter(
         )
     }
 
-    /** Maps a resolved leg owner to the model shown under the amount (own account / own wallet / external address). */
+    /**
+     * Maps a resolved leg owner to the model shown under the amount: own account / own wallet, the saved contact the
+     * address belongs to, or the external address itself.
+     */
     private fun ResolvedOwner.toAssetOwnerUM(): TxHistoryDetailsUM.AssetOwnerUM = when (this) {
         is ResolvedOwner.OwnAccount -> TxHistoryDetailsUM.AssetOwnerUM.Account(
             name = account.accountName.toUM().value,
@@ -208,7 +212,11 @@ internal class ExpressTxToDetailsUMConverter(
             name = stringReference(walletInfo.name),
             deviceIconUM = walletInfo.deviceIconUM,
         )
-        is ResolvedOwner.Foreign -> TxHistoryDetailsUM.AssetOwnerUM.Address(rawAddress = address)
+        is ResolvedOwner.SavedContact -> TxHistoryDetailsUM.AssetOwnerUM.Contact(
+            name = stringReference(contact.name.value),
+            icon = CryptoPortfolioIconConverter.convert(contact.portfolioIcon()),
+        )
+        is ResolvedOwner.External -> TxHistoryDetailsUM.AssetOwnerUM.Address(rawAddress = address)
     }
 
     /** Leg caption: the direction-only [fallback] ("You send" / "You receive") without an owner, "From" / "To" with one. */
