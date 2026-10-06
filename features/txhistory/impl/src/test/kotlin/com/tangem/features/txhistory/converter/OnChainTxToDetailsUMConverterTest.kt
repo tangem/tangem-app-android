@@ -1033,6 +1033,29 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
+    fun `GIVEN outgoing Transfer paid for in another token WHEN convert THEN fee row names that token`() {
+        // A gaslessly sent transfer: the relayer paid the native gas, the wallet paid the service in USDT
+        // Arrange
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            fee = SdkAmount(
+                currencySymbol = "USDT",
+                value = BigDecimal("0.065869"),
+                decimals = 6,
+                type = SdkAmountType.Token(contractAddress = "0xdac17f958d2ee523a2206206994597c13d831ec7"),
+            ),
+        )
+
+        // Act
+        val rows = converter.convert(tx).rows
+
+        // Assert
+        assertThat(rows.single().label).isEqualTo(resourceReference(R.string.common_network_fee_title))
+        assertThat(rows.single().value.resolveString()).isEqualTo("0.065869\u00A0USDT")
+    }
+
+    @Test
     fun `GIVEN incoming Transfer with fee WHEN convert THEN no network-fee row`() {
         // A received transfer's fee belongs to the sender, not the user — it must not be shown.
         // Arrange
