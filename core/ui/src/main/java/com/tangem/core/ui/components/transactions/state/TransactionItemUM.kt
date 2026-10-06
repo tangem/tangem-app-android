@@ -133,8 +133,8 @@ sealed interface TransactionItemUM {
         ) : ContentSubtitle
 
         /**
-         * Counterparty saved in one of the user's address books — renders as "to: <avatar> <contactName>" in place of
-         * the address. Outgoing transfers only; an incoming transfer's sender keeps showing its address.
+         * Counterparty saved in one of the user's address books — renders as "to/from: <avatar> <contactName>" in
+         * place of the address, on either side of any transaction the address is shown for.
          */
         data class Contact(
             val direction: Direction,
@@ -161,9 +161,10 @@ sealed interface TransactionItemUM {
         ) : ContentSubtitle
 
         /**
-         * The own portfolio a swap leg settled in, shown as the "in <owner>" tail of an [Asset] subtitle. Mirrors the
-         * icon placement of the standalone owner subtitles: [Account] / [PaymentAccount] render the icon before the
-         * name, [Wallet] renders the name before its device icon.
+         * The counterparty a swap leg settled with, shown as the "in <owner>" tail of an [Asset] subtitle — one of the
+         * user's own portfolios, or the [Contact] a foreign payout address is saved as. Mirrors the icon placement of
+         * the standalone owner subtitles: [Account] / [PaymentAccount] / [Contact] render the icon before the name,
+         * [Wallet] renders the name before its device icon.
          */
         @Immutable
         sealed interface AssetOwner {
@@ -175,6 +176,9 @@ sealed interface TransactionItemUM {
             data class PaymentAccount(val name: TextReference) : AssetOwner
 
             data class Wallet(val name: String, val deviceIconUM: DeviceIconUM) : AssetOwner
+
+            /** Payout address saved in an address book — its [avatar] is drawn as a circle, as contacts are. */
+            data class Contact(val name: String, val avatar: PortfolioAvatar) : AssetOwner
         }
 
         /**

@@ -12,6 +12,8 @@ import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Conten
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.ContentSubtitle
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.addressbook.model.Contact
+import com.tangem.domain.addressbook.model.ContactAddressLookup
 import com.tangem.domain.express.models.ExchangeTransaction
 import com.tangem.domain.express.models.ExpressAsset.ID as ExpressAssetId
 import com.tangem.domain.express.models.ExpressExchangeStatus
@@ -27,6 +29,7 @@ import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.tokens.model.AmountType
 import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.features.txhistory.impl.R
+import com.tangem.features.txhistory.model.TestContacts
 import com.tangem.features.txhistory.model.TxHistoryLookupContext
 import com.tangem.features.txhistory.model.WalletInfo
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
@@ -435,6 +438,39 @@ internal class ExpressTxToTransactionItemUMConverterTest {
         assertThat((result.subtitle as ContentSubtitle.Asset).owner).isNull()
     }
 
+    @Test
+    fun `GIVEN outgoing swap paying out to a saved contact WHEN convert THEN ticker with contact tail`() {
+        // Arrange — the payout address is in the viewed wallet's address book.
+        val swap = createSwap(
+            status = ExpressExchangeStatus.Finished,
+            isOutgoing = true,
+            fromCurrency = ethereum,
+            toCurrency = bitcoin,
+            fromAddress = FROM_ADDRESS,
+            payoutAddress = CONTACT_ADDRESS,
+        )
+        val lookup = lookupOf(
+            ethereum.network.id.rawId to mapOf(FROM_ADDRESS to ownAccount),
+            contacts = listOf(
+                TestContacts.create(
+                    name = "Binance",
+                    address = CONTACT_ADDRESS,
+                    walletId = MockAccounts.userWalletId,
+                    networkId = bitcoin.network.id.rawId,
+                ),
+            ),
+        )
+
+        // Act
+        val result = converterWith(lookup).convert(swap) as TransactionItemUM.Content
+
+        // Assert — the payout ticker stays, the contact names the "in …" tail.
+        val subtitle = result.subtitle as ContentSubtitle.Asset
+        assertThat(subtitle.direction).isEqualTo(ContentSubtitle.Direction.TO)
+        assertThat(subtitle.symbol).isEqualTo(bitcoin.symbol)
+        assertThat((subtitle.owner as ContentSubtitle.AssetOwner.Contact).name).isEqualTo("Binance")
+    }
+
     // endregion
 
     @Suppress("LongParameterList")
@@ -493,10 +529,13 @@ internal class ExpressTxToTransactionItemUMConverterTest {
         vararg networks: Pair<Network.RawID, Map<String, Account>>,
         isAccountsModeEnabled: Boolean = true,
         walletInfoById: Map<UserWalletId, WalletInfo> = singleWalletInfo(),
+        contacts: List<Contact> = emptyList(),
     ): TxHistoryLookupContext = TxHistoryLookupContext(
         ownAccountByNetwork = networks.toMap(),
         isAccountsModeEnabled = isAccountsModeEnabled,
         walletInfoById = walletInfoById,
+        contacts = ContactAddressLookup.of(contacts),
+        viewedWalletId = MockAccounts.userWalletId,
     )
 
     private fun singleWalletInfo(): Map<UserWalletId, WalletInfo> = mapOf(
@@ -513,6 +552,7 @@ internal class ExpressTxToTransactionItemUMConverterTest {
     private companion object {
         const val FROM_ADDRESS = "0xfromOwnAddress1234"
         const val PAYOUT_ADDRESS = "bc1qPayoutOwnAddress"
+        const val CONTACT_ADDRESS = "bc1qSavedContactAddress"
     }
 
     private fun createOnramp(

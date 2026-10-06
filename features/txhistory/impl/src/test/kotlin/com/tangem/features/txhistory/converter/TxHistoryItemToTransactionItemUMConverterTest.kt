@@ -687,7 +687,46 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
-    fun `GIVEN incoming Transfer from a saved contact WHEN convert THEN ExternalAddress subtitle`() {
+    fun `GIVEN outgoing Operation to a saved contact WHEN convert THEN Contact subtitle`() {
+        // Arrange — an unrecognized contract call, not a transfer: the address book is consulted all the same.
+        val converter = contactConverter(contacts = listOf(SAVED_CONTACT))
+        val tx = txInfo(
+            type = TransactionType.Operation(name = "Mint NFT"),
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(EXTERNAL_ADDRESS),
+        )
+
+        // Act
+        val result = converter.convert(tx) as TransactionItemUM.Content
+
+        // Assert
+        val subtitle = result.subtitle as ContentSubtitle.Contact
+        assertThat(subtitle.contactName).isEqualTo("Binance")
+        assertThat(subtitle.direction).isEqualTo(ContentSubtitle.Direction.TO)
+    }
+
+    @Test
+    fun `GIVEN incoming Operation from a saved contact WHEN convert THEN Contact subtitle`() {
+        // Arrange — an incoming call reads its sender from sourceType, which is resolved like any counterparty.
+        val converter = contactConverter(contacts = listOf(SAVED_CONTACT))
+        val tx = txInfo(
+            type = TransactionType.Operation(name = "Mint NFT"),
+            isOutgoing = false,
+            sourceType = TxInfo.SourceType.Single(EXTERNAL_ADDRESS),
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val result = converter.convert(tx) as TransactionItemUM.Content
+
+        // Assert
+        val subtitle = result.subtitle as ContentSubtitle.Contact
+        assertThat(subtitle.contactName).isEqualTo("Binance")
+        assertThat(subtitle.direction).isEqualTo(ContentSubtitle.Direction.FROM)
+    }
+
+    @Test
+    fun `GIVEN incoming Transfer from a saved contact WHEN convert THEN Contact subtitle`() {
         // Arrange
         val converter = contactConverter(contacts = listOf(SAVED_CONTACT))
         val tx = txInfo(
@@ -699,8 +738,10 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         // Act
         val result = converter.convert(tx) as TransactionItemUM.Content
 
-        // Assert
-        assertThat(result.subtitle).isInstanceOf(ContentSubtitle.ExternalAddress::class.java)
+        // Assert — the sender is named after the contact, same as a recipient.
+        val subtitle = result.subtitle as ContentSubtitle.Contact
+        assertThat(subtitle.contactName).isEqualTo("Binance")
+        assertThat(subtitle.direction).isEqualTo(ContentSubtitle.Direction.FROM)
     }
 
     @Test
