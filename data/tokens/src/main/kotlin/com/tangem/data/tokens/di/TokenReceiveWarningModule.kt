@@ -8,6 +8,7 @@ import com.tangem.data.tokens.store.DefaultTokenReceiveWarningActionStore
 import com.tangem.data.tokens.store.TokenReceiveWarningActionStore
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
+import com.tangem.datasource.utils.create
 import com.tangem.datasource.utils.setTypes
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Module
@@ -30,15 +31,22 @@ internal object TokenReceiveWarningModule {
         dataStoreFactory: AppDataStoreFactory,
     ): TokenReceiveWarningActionStore {
         return DefaultTokenReceiveWarningActionStore(
-            persistenceStore = dataStoreFactory.create(
-                serializer = MoshiDataStoreSerializer(
-                    moshi = moshi,
-                    types = setTypes<String>(),
-                    defaultValue = emptySet(),
-                ),
-                produceFile = { context.dataStoreFile(fileName = "token_receive_warnings_viewed") },
-                scope = appScope,
-            ),
+            persistenceStore = if (dataStoreFactory.isKotlinxDataStoreEnabled) {
+                dataStoreFactory.create(
+                    defaultValue = emptySet<String>(),
+                    fileName = "token_receive_warnings_viewed",
+                )
+            } else {
+                dataStoreFactory.create(
+                    serializer = MoshiDataStoreSerializer(
+                        moshi = moshi,
+                        types = setTypes<String>(),
+                        defaultValue = emptySet(),
+                    ),
+                    produceFile = { context.dataStoreFile(fileName = "token_receive_warnings_viewed") },
+                    scope = appScope,
+                )
+            },
         )
     }
 }
