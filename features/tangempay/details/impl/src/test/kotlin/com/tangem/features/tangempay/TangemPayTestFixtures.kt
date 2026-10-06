@@ -1,6 +1,8 @@
 package com.tangem.features.tangempay
 
+import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.tangem.domain.models.pay.TangemPayImage
+import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlan
@@ -9,10 +11,40 @@ import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.TangemPayCardType
+import com.tangem.domain.pay.model.AccountFee
+import com.tangem.domain.pay.model.AccountFeeGroupType
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import org.joda.time.DateTime
 import java.math.BigDecimal
 import java.util.Currency
+
+internal fun bankCredentials(depositLimit: BankCredentials.DepositLimit? = null): BankCredentials = BankCredentials(
+    type = "ACH",
+    beneficiaryName = "Rain Payments Inc",
+    beneficiaryAddress = "123 Finance St",
+    beneficiaryBankName = "SSB Bank",
+    beneficiaryBankAddress = "8700 Perry Highway",
+    accountNumber = "123456",
+    routingNumber = "654321",
+    transferMessage = null,
+    depositFee = null,
+    depositLimit = depositLimit,
+)
+
+internal fun onrampFee(amount: BigDecimal = BigDecimal.ZERO): AccountFee = AccountFee(
+    type = "ACH_ONRAMP",
+    name = "ACH",
+    paymentMethodId = null,
+    group = AccountFeeGroupType.ONRAMP,
+    amount = amount,
+    currency = "USD",
+)
+
+internal fun <T : Any> SlotNavigation<T>.trackSlot(): List<T?> {
+    val tracked = mutableListOf<T?>()
+    subscribe { event -> tracked.add(event.transformer(tracked.lastOrNull())) }
+    return tracked
+}
 
 internal fun spendTransaction(
     id: String = "tx_1",
