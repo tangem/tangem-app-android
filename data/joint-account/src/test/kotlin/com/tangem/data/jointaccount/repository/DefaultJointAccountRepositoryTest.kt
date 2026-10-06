@@ -18,6 +18,7 @@ import com.tangem.data.jointaccount.createJointAccountDto
 import com.tangem.data.jointaccount.createJointAccountInvitePreview
 import com.tangem.data.jointaccount.createJointAccountInvitePreviewDto
 import com.tangem.data.jointaccount.createSafeTx
+import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.store.datasource.jointaccount.models.CreateJointOperationRequest
 import com.tangem.store.datasource.jointaccount.models.JointOperationDto
@@ -81,7 +82,7 @@ internal class DefaultJointAccountRepositoryTest {
     @ProvideTestModels
     fun getFreeOwnerDerivationIndex(model: IndexModel) = runTest {
         // Arrange
-        coEvery { walletAccountsFetcher.fetch(WALLET_ID) } returns createAccountsResponse(model.counter)
+        coEvery { walletAccountsFetcher.fetch(WALLET_ID) } returns createAccountsResponse(model.counter, model.jointIndices)
 
         // Act
         val actual = repository.getFreeOwnerDerivationIndex(userWalletId = WALLET_ID)
@@ -97,6 +98,11 @@ internal class DefaultJointAccountRepositoryTest {
         IndexModel(counter = 0, expected = 0),
         IndexModel(counter = 3, expected = 3),
         IndexModel(counter = 19, expected = 19),
+        // A document written locally lost the counter: the joint rows still say which keys are taken
+        IndexModel(counter = null, jointIndices = listOf(0, 1, 2), expected = 3),
+        IndexModel(counter = 2, jointIndices = listOf(0, 4), expected = 5),
+        // The counter also covers archived joint accounts, which are not among the rows
+        IndexModel(counter = 7, jointIndices = listOf(0, 1), expected = 7),
     )
 
     @Test
@@ -634,7 +640,10 @@ internal class DefaultJointAccountRepositoryTest {
         return ApiResponse.Error(cause = cause) as ApiResponse<T>
     }
 
-    private fun createAccountsResponse(totalJointAccounts: Int?): GetWalletAccountsResponse {
+    private fun createAccountsResponse(
+        totalJointAccounts: Int?,
+        jointIndices: List<Int> = emptyList(),
+    ): GetWalletAccountsResponse {
         return GetWalletAccountsResponse(
             wallet = GetWalletAccountsResponse.Wallet(
                 group = null,
@@ -643,12 +652,21 @@ internal class DefaultJointAccountRepositoryTest {
                 totalArchivedAccounts = 0,
                 totalJointAccounts = totalJointAccounts,
             ),
-            accounts = emptyList(),
+            accounts = jointIndices.map { index ->
+                WalletAccountDTO(
+                    id = "joint-$index",
+                    name = null,
+                    derivationIndex = index,
+                    icon = "Family",
+                    iconColor = "Azure",
+                    type = WalletAccountDTO.Type.JOINT,
+                )
+            },
             unassignedTokens = emptyList(),
         )
     }
 
-    internal data class IndexModel(val counter: Int?, val expected: Int)
+    internal data class IndexModel(val counter: Int?, val expected: Int, val jointIndices: List<Int> = emptyList())
 
     private companion object {
         val WALLET_ID = UserWalletId("011121314151617181910A0B0C0D0E0F011121314151617181910A0B0C0D0E0F")
