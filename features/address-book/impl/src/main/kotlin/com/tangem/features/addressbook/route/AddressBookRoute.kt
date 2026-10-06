@@ -1,5 +1,6 @@
 package com.tangem.features.addressbook.route
 
+import com.tangem.common.routing.entity.AddressBookOpenMode
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -19,7 +20,8 @@ internal sealed class AddressBookRoute {
      * [predefinedAddress], [predefinedNetworkId] and [predefinedMemo] are set only when the feature is opened in
      * [com.tangem.common.routing.entity.AddressBookOpenMode.WithContactCreation] mode — the address and its
      * network are already known, so the new contact is opened with that address already attached. [predefinedMemo]
-     * stays null when the network has no transaction extras or no memo was entered.
+     * stays null when the network has no transaction extras or no memo was entered. [creationSource] carries that
+     * entry point into the editor's own analytics; it is null for the editor opened from the contacts list.
      */
     @Serializable
     data class EditContact(
@@ -27,6 +29,7 @@ internal sealed class AddressBookRoute {
         val predefinedAddress: String? = null,
         val predefinedNetworkId: String? = null,
         val predefinedMemo: String? = null,
+        val creationSource: AddressBookOpenMode.ContactCreationSource? = null,
     ) : AddressBookRoute()
 
     /**
