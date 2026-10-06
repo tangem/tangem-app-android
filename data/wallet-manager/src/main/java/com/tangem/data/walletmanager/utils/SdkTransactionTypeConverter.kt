@@ -255,11 +255,6 @@ internal class SdkTransactionTypeConverter(
 
     private fun String.toSelectorKey(): String = lowercase().formatHex()
 
-    fun isOwnSafeZeroCall(item: TransactionHistoryItem): Boolean = safeExecutionDecoder.isOwnSafeZeroCall(item)
-
-    fun withRefundStatus(item: TransactionHistoryItem): TransactionHistoryItem =
-        safeExecutionDecoder.withRefundStatus(item)
-
     private fun getTypeForGaslessMethod(
         destination: TransactionHistoryItem.DestinationType,
         source: TransactionHistoryItem.SourceType,
