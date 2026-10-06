@@ -30,12 +30,12 @@ internal class LoadedPagesTrackerTest {
     }
 
     @Test
-    fun `GIVEN the legacy list WHEN more is requested THEN more pages count as loaded`() {
+    fun `GIVEN a list still loading WHEN more is requested THEN nothing counts as loaded`() {
         // Act
-        tracker.onLoadMore(current = null)
+        tracker.onLoadMore(current = HistoryState.Loading)
 
         // Assert
-        assertThat(tracker.hasLoadedMorePages.value).isTrue()
+        assertThat(tracker.hasLoadedMorePages.value).isFalse()
     }
 
     @Test
