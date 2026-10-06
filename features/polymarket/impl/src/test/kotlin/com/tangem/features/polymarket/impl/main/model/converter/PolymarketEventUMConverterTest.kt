@@ -10,8 +10,11 @@ import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
+import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventRowUM
+import com.tangem.features.polymarket.impl.main.ui.state.PolymarketOutcomeUM
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.StringsSigns.DASH_SIGN
+import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -87,17 +90,17 @@ internal class PolymarketEventUMConverterTest {
                 groupItemTitle = "France",
                 expected = stringReference("France"),
             ),
-            // A grouped market without a group item title falls back to its question.
+            // An unlabelled single market is already identified by the event title.
             RowTitleModel(
                 displayMode = PolymarketDisplayMode.GROUPED_OUTCOMES,
                 groupItemTitle = null,
-                expected = stringReference("Market question"),
+                expected = null,
             ),
             // A plain event asks a single question, already shown as the card title.
             RowTitleModel(
                 displayMode = PolymarketDisplayMode.PLAIN_MARKETS,
                 groupItemTitle = null,
-                expected = resourceReference(R.string.prediction_event_probability),
+                expected = null,
             ),
             // Even when a plain market reports a group item title, it is not what labels the row.
             RowTitleModel(
@@ -106,6 +109,95 @@ internal class PolymarketEventUMConverterTest {
                 expected = resourceReference(R.string.prediction_event_probability),
             ),
         )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Prices {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN missing or Match Winner group title WHEN convert THEN prices replace probability`(model: PricesModel) {
+            // Arrange
+            val event = createEvent(
+                displayMode = model.displayMode,
+                markets = listOf(
+                    createMarket(
+                        groupItemTitle = model.groupItemTitle,
+                        outcomes = listOf(
+                            createOutcome(assetId = "a", title = "Team A", probability = BigDecimal("0.725")),
+                            createOutcome(assetId = "b", title = "Team B", probability = BigDecimal("0.275")),
+                        ),
+                    ),
+                ),
+            )
+
+            // Act
+            val actual = converter.convert(event).rows.single()
+
+            // Assert
+            Truth.assertThat(actual).isEqualTo(
+                PolymarketEventRowUM(
+                    marketId = "market-1",
+                    title = null,
+                    probability = null,
+                    outcomes = persistentListOf(
+                        PolymarketOutcomeUM(
+                            assetId = "a",
+                            title = stringReference("Team A"),
+                            price = stringReference("72.5¢"),
+                            onClick = actual.outcomes[0].onClick,
+                        ),
+                        PolymarketOutcomeUM(
+                            assetId = "b",
+                            title = stringReference("Team B"),
+                            price = stringReference("27.5¢"),
+                            onClick = actual.outcomes[1].onClick,
+                        ),
+                    ),
+                ),
+            )
+        }
+
+        @Test
+        fun `GIVEN price layout without probability WHEN convert THEN outcome price is a dash`() {
+            // Arrange
+            val event = createEvent(markets = listOf(createMarket(groupItemTitle = null)))
+
+            // Act
+            val actual = converter.convert(event).rows.single().outcomes.single()
+
+            // Assert
+            Truth.assertThat(actual).isEqualTo(
+                PolymarketOutcomeUM(
+                    assetId = "asset-1",
+                    title = stringReference("Yes"),
+                    price = stringReference(DASH_SIGN),
+                    onClick = actual.onClick,
+                ),
+            )
+        }
+
+        @Test
+        fun `GIVEN only one of several markets shown with prices WHEN convert THEN its question is kept`() {
+            // Arrange
+            val event = createEvent(
+                totalMarketsCount = 3,
+                markets = listOf(createMarket(groupItemTitle = "Match Winner")),
+            )
+
+            // Act
+            val actual = converter.convert(event).rows.single()
+
+            // Assert
+            Truth.assertThat(actual.title).isEqualTo(stringReference("Market question"))
+        }
+
+        private fun provideTestModels(): List<PricesModel> = PolymarketDisplayMode.entries.flatMap { displayMode ->
+            listOf(null, "", " \t", "Match Winner").map { groupItemTitle ->
+                PricesModel(displayMode = displayMode, groupItemTitle = groupItemTitle)
+            }
+        }
     }
 
     @Nested
@@ -220,7 +312,11 @@ internal class PolymarketEventUMConverterTest {
             // Arrange
             val event = createEvent(
                 markets = listOf(
-                    createMarket(id = "market-1", outcomes = listOf(createOutcome(assetId = "asset-1"))),
+                    createMarket(
+                        id = "market-1",
+                        groupItemTitle = "Match Winner",
+                        outcomes = listOf(createOutcome(assetId = "asset-1")),
+                    ),
                 ),
             )
 
@@ -244,8 +340,10 @@ internal class PolymarketEventUMConverterTest {
     internal data class RowTitleModel(
         val displayMode: PolymarketDisplayMode,
         val groupItemTitle: String?,
-        val expected: TextReference,
+        val expected: TextReference?,
     )
+
+    internal data class PricesModel(val displayMode: PolymarketDisplayMode, val groupItemTitle: String?)
 
     internal data class HiddenCountModel(
         val totalMarketsCount: Int,
@@ -256,8 +354,8 @@ internal class PolymarketEventUMConverterTest {
     private fun createEvent(
         displayMode: PolymarketDisplayMode = PolymarketDisplayMode.GROUPED_OUTCOMES,
         volume: BigDecimal? = null,
-        totalMarketsCount: Int = 1,
         markets: List<PolymarketMarket> = listOf(createMarket()),
+        totalMarketsCount: Int = markets.size,
     ): PolymarketEvent = PolymarketEvent(
         id = "event-1",
         slug = "event-slug",
@@ -281,7 +379,7 @@ internal class PolymarketEventUMConverterTest {
     private fun createMarket(
         id: String = "market-1",
         title: String = "Market question",
-        groupItemTitle: String? = null,
+        groupItemTitle: String? = "France",
         outcomes: List<PolymarketOutcome> = listOf(createOutcome()),
     ): PolymarketMarket = PolymarketMarket(
         id = id,
