@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test
 internal class JointHistoryPollerTest {
 
     private val isResumed = MutableStateFlow(true)
+    private val hasLoadedMorePages = MutableStateFlow(false)
     private var reloads = 0
 
     @Test
@@ -76,6 +77,36 @@ internal class JointHistoryPollerTest {
     }
 
     @Test
+    fun `GIVEN more pages are loaded WHEN intervals pass THEN history is not reloaded`() = runTest {
+        // Arrange
+        hasLoadedMorePages.value = true
+        launchPoller(currency = jointCurrency)
+
+        // Act
+        advanceTimeBy(POLL_INTERVAL_MILLIS * 3)
+        runCurrent()
+
+        // Assert
+        assertThat(reloads).isEqualTo(0)
+    }
+
+    @Test
+    fun `GIVEN more pages were loaded WHEN the list is back to its first page THEN polling resumes`() = runTest {
+        // Arrange
+        hasLoadedMorePages.value = true
+        launchPoller(currency = jointCurrency)
+        advanceTimeBy(POLL_INTERVAL_MILLIS * 2)
+
+        // Act
+        hasLoadedMorePages.value = false
+        advanceTimeBy(POLL_INTERVAL_MILLIS)
+        runCurrent()
+
+        // Assert
+        assertThat(reloads).isEqualTo(1)
+    }
+
+    @Test
     fun `GIVEN a non-joint currency WHEN resumed THEN history is not reloaded`() = runTest {
         // Arrange
         launchPoller(currency = MockCryptoCurrencyFactory().ethereum)
@@ -94,6 +125,7 @@ internal class JointHistoryPollerTest {
             scope = backgroundScope,
             currency = currency,
             isResumed = isResumed,
+            hasLoadedMorePages = hasLoadedMorePages,
             reload = { reloads++ },
         )
         runCurrent()

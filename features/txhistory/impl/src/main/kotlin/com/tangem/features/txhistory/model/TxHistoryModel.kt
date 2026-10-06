@@ -112,6 +112,7 @@ internal class TxHistoryModel @Inject constructor(
     }
 
     private val isResumed = MutableStateFlow(false)
+    private val hasLoadedMorePages = MutableStateFlow(false)
 
     val legacyUiState = stateController.legacyUiState
     val uiState = stateController.uiState
@@ -127,6 +128,7 @@ internal class TxHistoryModel @Inject constructor(
             scope = modelScope,
             currency = params.currency,
             isResumed = isResumed,
+            hasLoadedMorePages = hasLoadedMorePages,
             reload = ::reloadOnChainHistory,
         )
         subscribeOnCurrencyStatusUpdates()
@@ -279,6 +281,7 @@ internal class TxHistoryModel @Inject constructor(
 
     fun reload() {
         if (stateController.isNotSupported) return
+        hasLoadedMorePages.value = false
 
         if (txHistoryFeatureToggle.isNewTxHistoryEnabled) {
             historyTxListManager?.reload()
@@ -311,6 +314,12 @@ internal class TxHistoryModel @Inject constructor(
     }
 
     private fun loadMoreItems(): Boolean {
+        // The list asks for more whenever its end shows, short histories included; only a real next page counts
+        val hasNextPage = historyTxListManager?.state?.value
+            ?.let { it as? HistoryTxListManager.HistoryState.Content }
+            ?.hasMore
+            ?: true
+        if (hasNextPage) hasLoadedMorePages.value = true
         historyTxListManager?.loadMore()
         modelScope.launch {
             txHistoryListManager?.loadMore(params.userWalletId, params.currency)
