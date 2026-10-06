@@ -65,7 +65,7 @@
     },
     {
         "name": "TWI_1783_TRON_GASLESS_ACCOUNT_ACTIVATION_ENABLED",
-        "version": "undefined"
+        "version": "6.4"
     },
     {
         "name": "TWI_1586_CARD_LINKED_STATUS_UPDATE",
