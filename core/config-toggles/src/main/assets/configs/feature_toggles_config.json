@@ -162,5 +162,9 @@
     {
         "name": "AND_18288_KOTLINX_DATASTORE_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TWI_1674_SWAP_CUSTOM_SLIPPAGE_ENABLED",
+        "version": "undefined"
     }
 ]
