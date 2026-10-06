@@ -47,6 +47,7 @@ internal class WalletClickIntents @Inject constructor(
     private val fetchHotCryptoUseCase: FetchHotCryptoUseCase,
     private val onrampStatusFactory: OnrampStatusFactory,
     private val tangemPayIntents: TangemPayClickIntentsImplementor,
+    private val moneyAccountIntents: MoneyAccountClickIntentsImplementor,
     private val yieldSupplyApyUpdateUseCase: YieldSupplyApyUpdateUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val uiMessageSender: UiMessageSender,
@@ -56,7 +57,8 @@ internal class WalletClickIntents @Inject constructor(
     WalletCurrencyActionsClickIntents by currencyActionsClickIntentsImplementor,
     WalletContentClickIntents by contentClickIntentsImplementor,
     WalletPushPermissionClickIntents by pushPermissionClickIntentsImplementor,
-    TangemPayIntents by tangemPayIntents {
+    TangemPayIntents by tangemPayIntents,
+    MoneyAccountIntents by moneyAccountIntents {
 
     override fun initialize(router: InnerWalletRouter, coroutineScope: CoroutineScope) {
         super.initialize(router, coroutineScope)
@@ -67,6 +69,7 @@ internal class WalletClickIntents @Inject constructor(
         contentClickIntentsImplementor.initialize(router, coroutineScope)
         pushPermissionClickIntentsImplementor.initialize(router, coroutineScope)
         tangemPayIntents.initialize(router, coroutineScope)
+        moneyAccountIntents.initialize(router, coroutineScope)
     }
 
     fun onWalletChange(index: Int, onlyState: Boolean) {
