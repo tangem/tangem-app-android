@@ -24,7 +24,6 @@ import com.tangem.features.promobanners.impl.campaigns.entity.CampaignsBottomShe
 import com.tangem.features.promobanners.impl.campaigns.entity.CampaignType
 import com.tangem.features.promobanners.impl.campaigns.entity.toPromoCampaignId
 import com.tangem.features.promobanners.impl.campaigns.service.CampaignsService
-import com.tangem.features.promobanners.impl.campaigns.v2.model.PromoCampaignAvailabilityChecker
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.launchIn
@@ -44,7 +43,6 @@ internal class CampaignsModel @Inject constructor(
     private val promoBannersFeatureToggles: PromoBannersFeatureToggles,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getPromoCampaignsUseCase: GetPromoCampaignsUseCase,
-    private val promoCampaignAvailabilityChecker: PromoCampaignAvailabilityChecker,
 ) : Model() {
 
     val bottomSheetNavigation: SlotNavigation<CampaignsBottomSheetConfig> = SlotNavigation()
@@ -80,9 +78,7 @@ internal class CampaignsModel @Inject constructor(
                     showUnknownError()
                 },
                 ifRight = { campaigns ->
-                    val campaign = campaigns
-                        .findByIdOrName(campaignId)
-                        ?.takeIf { promoCampaignAvailabilityChecker.isAvailable(campaign = it, userWallet) }
+                    val campaign = campaigns.findByIdOrName(campaignId)
                     val config = when {
                         campaign == null -> CampaignsBottomSheetConfig.V2.NotFound
                         campaign.isAlreadyEnrolled -> {
