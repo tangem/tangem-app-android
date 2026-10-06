@@ -35,6 +35,7 @@ import com.tangem.features.txhistory.converter.TxHistoryInfoToTransactionItemUMC
 import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionItemUMConverter
 import com.tangem.features.txhistory.entity.TxHistoryItemsUM
 import com.tangem.features.txhistory.entity.TxHistoryUpdateListener
+import com.tangem.features.txhistory.joint.JointHistoryPoller
 import com.tangem.features.txhistory.state.TxHistoryItemsSnapshot
 import com.tangem.features.txhistory.state.TxHistoryStateController
 import com.tangem.features.txhistory.utils.TxHistoryListManager
@@ -110,6 +111,8 @@ internal class TxHistoryModel @Inject constructor(
         null
     }
 
+    private val isResumed = MutableStateFlow(false)
+
     val legacyUiState = stateController.legacyUiState
     val uiState = stateController.uiState
 
@@ -120,6 +123,12 @@ internal class TxHistoryModel @Inject constructor(
         initListManager()
         loadTxInfo()
         subscribeToUpdateListener()
+        JointHistoryPoller.launchIn(
+            scope = modelScope,
+            currency = params.currency,
+            isResumed = isResumed,
+            reload = ::reloadOnChainHistory,
+        )
         subscribeOnCurrencyStatusUpdates()
         deepLinkListener()
     }
@@ -253,6 +262,19 @@ internal class TxHistoryModel @Inject constructor(
             )
             appTxHistoryFetcher.invoke(trigger)
         }
+    }
+
+    fun onResume() {
+        isResumed.value = true
+    }
+
+    fun onPause() {
+        isResumed.value = false
+    }
+
+    /** Refreshes only the on-chain list: unlike [reload], it leaves the express overlay alone. */
+    private fun reloadOnChainHistory() {
+        historyTxListManager?.reload() ?: reload()
     }
 
     fun reload() {
