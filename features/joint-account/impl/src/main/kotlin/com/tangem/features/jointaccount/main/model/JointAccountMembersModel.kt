@@ -241,6 +241,11 @@ internal class JointAccountMembersModel @Inject constructor(
     }
 
     private fun onActivateClick(cryptoAccountId: String) {
+        if (!IS_ACTIVATION_CONFIRMATION_SHOWN) {
+            onConfirmActivationClick(cryptoAccountId = cryptoAccountId)
+            return
+        }
+
         val userWallet = userWalletsListRepository.getSyncOrNull(id = params.userWalletId)
 
         confirmedAccountId = cryptoAccountId
@@ -412,5 +417,8 @@ internal class JointAccountMembersModel @Inject constructor(
 
     private companion object {
         const val ACCOUNT_LOOKUP_TIMEOUT_MILLIS = 3_000L
+
+        /** The activation sheet is left out for now, activation starts at once; the step comes back by flipping this */
+        const val IS_ACTIVATION_CONFIRMATION_SHOWN = false
     }
 }
