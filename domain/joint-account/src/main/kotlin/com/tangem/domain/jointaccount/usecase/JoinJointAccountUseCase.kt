@@ -11,7 +11,6 @@ import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.model.JointAccountJoinError
 import com.tangem.domain.jointaccount.model.JointAccountJoinPayload
-import com.tangem.domain.jointaccount.model.JointAccountJoinResult
 import com.tangem.domain.jointaccount.model.JointAccountParticipant
 import com.tangem.domain.jointaccount.model.JointAccountSignInput
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
@@ -64,7 +63,7 @@ class JoinJointAccountUseCase(
             .mapLeft(::toJoinError)
             .bind()
 
-        val result = Either
+        val joined = Either
             .catch {
                 repository.join(
                     userWalletId = userWalletId,
@@ -84,16 +83,16 @@ class JoinJointAccountUseCase(
 
         val refresh = refreshAccounts(userWalletId = userWalletId)
 
-        when (result) {
-            is JointAccountJoinResult.Joined -> result.account
-            is JointAccountJoinResult.Conflict -> {
+        joined.fold(
+            ifRight = { account -> account },
+            ifLeft = { conflict ->
                 refresh.mapLeft(JointAccountFlowError::Failed).bind()
 
                 val own = supplier.findByMember(userWalletId = userWalletId, ownerAddress = signResult.ownerAddress)
 
-                ensureNotNull(own) { JointAccountJoinError.InvalidInvite(cause = result.cause) }
-            }
-        }
+                ensureNotNull(own) { JointAccountJoinError.InvalidInvite(cause = conflict) }
+            },
+        )
     }
 
     @Suppress("LongParameterList")
