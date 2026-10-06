@@ -234,6 +234,8 @@
   <string name="bitcoin_promo_no_address">您需要提供比特币地址才能领取奖励。请将比特币地址添加到您的钱包，然后重试激活。</string>
   <string name="bitcoin_promo_no_address_title">需要比特币地址</string>
   <string name="button_start_backup_process">启动备份程序</string>
+  <string name="buy_swap_region_restriction_description_region">您所在的地区目前无法使用“购买”并“交换”功能： %s</string>
+  <string name="buy_swap_region_restriction_title">区域限制</string>
   <string name="buy_token_description">使用银行卡或其他支付方式</string>
   <plurals name="card_label_card_count">
     <item quantity="other">%d设备</item>
@@ -525,6 +527,7 @@
   <string name="common_transfer">转让</string>
   <string name="common_transferred">已转账</string>
   <string name="common_try_again_later">请稍后再试。</string>
+  <string name="common_type">类型</string>
   <string name="common_unable_to_load">无法加载数据……</string>
   <string name="common_understand">我明白</string>
   <string name="common_understand_continue">我明白，请继续</string>
@@ -631,6 +634,7 @@
   <string name="dynamic_addresses_notification_funds_found_title">在其他地址发现的资金</string>
   <string name="dynamic_addresses_receive_badge">动态地址</string>
   <string name="dynamic_addresses_unavailability_reason_pending_transaction_send">一旦网络 %@ 中的待处理交易完成，即可进行动态地址管理</string>
+  <string name="earn_assets">赚取资产</string>
   <string name="earn_best_opportunities">最佳机会</string>
   <string name="earn_clear_filter">清除筛选</string>
   <string name="earn_empty">列表正在刷新，暂时为空。请稍后再查看。</string>
@@ -746,6 +750,9 @@
   <string name="feed_promo_tangem_pay_title">使用加密货币支付</string>
   <string name="feed_search_show_all_user_assets">显示全部</string>
   <string name="feed_search_show_less_user_assets">显示更少</string>
+  <string name="feed_tab_crypto">加密货币</string>
+  <string name="feed_tab_earn">赚取</string>
+  <string name="feed_tab_rwa">真实资产</string>
   <string name="feed_tangem_ai">Tangem AI</string>
   <string name="feed_trending_now">当下热门</string>
   <string name="feedback_data_collection_message">以下信息为可选信息。如果您不想分享，可以将其删除。</string>
@@ -1165,6 +1172,7 @@
   <string name="manage_tokens_unavailable_description">所选代币目前无法在加密钱包中进行操作。不过别担心，您可以点赞来表达您的兴趣。</string>
   <string name="manage_tokens_unavailable_vote">点赞</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">该钱包不支持多个网络</string>
+  <string name="market_categories">分类</string>
   <string name="market_chart_bubble_no_amount">无代币 \n/ 资产价值</string>
   <string name="market_chart_bubble_total_value">总价值</string>
   <string name="market_chart_can_not_load_data">无法加载数据</string>
@@ -2231,7 +2239,7 @@
   <string name="tangempay_cashback_accruals_calc_title">我们如何计算返现？</string>
   <string name="tangempay_cashback_accruals_exceptions_description">暂不支持欧盟线下门店消费返现。提现、准现金交易、话费充值、政务缴费等部分特定类别同样不参与返现。</string>
   <string name="tangempay_cashback_accruals_exceptions_title">例外情况</string>
-  <string name="tangempay_cashback_accruals_pay_description">下月 2 日至 5 日</string>
+  <string name="tangempay_cashback_accruals_pay_description">交易经核查符合返现计划规则后,于下月10日前发放</string>
   <string name="tangempay_cashback_accruals_pay_title">我们如何支付返现？</string>
   <string name="tangempay_cashback_accruals_subtitle">限额与例外情况</string>
   <string name="tangempay_cashback_accruals_title">累计</string>
@@ -2240,7 +2248,7 @@
   <string name="tangempay_cashback_additional_until">至 %1$s</string>
   <string name="tangempay_cashback_deactivated_description">由于检测到可疑行为，我们已停用此功能。请联系客服了解详情</string>
   <string name="tangempay_cashback_deactivated_title">返现已停用</string>
-  <string name="tangempay_cashback_deposit_banner">%2$s 的返现 %1$s 将于 %3$s 前存入</string>
+  <string name="tangempay_cashback_deposit_banner">%2$s 的 %1$s 返现将在审核后于 %3$s 前到账</string>
   <string name="tangempay_cashback_deposited_on">将于 %1$s 存入</string>
   <string name="tangempay_cashback_details_cap">每月最高 %1$s</string>
   <string name="tangempay_cashback_details_eu_excluded">暂不支持欧盟线下门店消费返现</string>
@@ -2339,7 +2347,7 @@
   <string name="tangempay_kyc_rejected_description">抱歉，我们无法验证</string>
   <string name="tangempay_kyc_rejected_description_span">您的个人资料。</string>
   <string name="tangempay_main_select_plan">选择套餐</string>
-  <string name="tangempay_maximum_cards_issued_description">您最多可以添加 3 张卡片。删除一张即可添加新卡片。</string>
+  <string name="tangempay_maximum_cards_issued_description">删除一张卡即可添加新卡</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">升级套餐以获得更多卡片</string>
   <string name="tangempay_maximum_cards_issued_for_plan_title">该套餐的卡片数量已达上限</string>
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">升级套餐</string>
