@@ -8,7 +8,6 @@ import com.tangem.features.promobanners.impl.campaigns.v2.createPromoCampaign
 import com.tangem.features.promobanners.impl.model.PromoBannerDisplay
 import com.tangem.features.promobanners.impl.model.PromoBannerPriority
 import com.tangem.test.core.ProvideTestModels
-import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -16,16 +15,14 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class PromoBannerCampaignMatcherTest {
 
-    private val availabilityChecker: PromoCampaignAvailabilityChecker = mockk()
     private val userWallet: UserWallet = mockk()
 
-    private val matcher = PromoBannerCampaignMatcher(availabilityChecker)
+    private val matcher = PromoBannerCampaignMatcher()
 
     @ParameterizedTest
     @ProvideTestModels
     fun filter(model: FilterModel) {
         // Arrange
-        every { availabilityChecker.isAvailable(any(), userWallet) } returns model.isAvailable
         val banner = createBanner(campaignId = model.bannerCampaignId)
 
         // Act
@@ -40,7 +37,6 @@ internal class PromoBannerCampaignMatcherTest {
         val bannerCampaignId: Int?,
         val walletCampaigns: WalletCampaigns?,
         val isShown: Boolean,
-        val isAvailable: Boolean = true,
     ) {
         override fun toString() = description
     }
@@ -81,13 +77,6 @@ internal class PromoBannerCampaignMatcherTest {
             bannerCampaignId = CAMPAIGN_ID,
             walletCampaigns = loaded(createPromoCampaign(id = OTHER_CAMPAIGN_ID)),
             isShown = false,
-        ),
-        FilterModel(
-            description = "GIVEN matching campaign not available for wallet WHEN filter THEN hidden",
-            bannerCampaignId = CAMPAIGN_ID,
-            walletCampaigns = loaded(createPromoCampaign(id = CAMPAIGN_ID)),
-            isShown = false,
-            isAvailable = false,
         ),
     )
 

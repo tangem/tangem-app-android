@@ -20,7 +20,6 @@ import com.tangem.features.promobanners.impl.campaigns.entity.CampaignType
 import com.tangem.features.promobanners.impl.campaigns.service.CampaignRequest
 import com.tangem.features.promobanners.impl.campaigns.service.CampaignsService
 import com.tangem.features.promobanners.impl.campaigns.v2.createPromoCampaign
-import com.tangem.features.promobanners.impl.campaigns.v2.model.PromoCampaignAvailabilityChecker
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.Called
 import io.mockk.clearMocks
@@ -50,7 +49,6 @@ internal class CampaignsModelTest {
     private val promoBannersFeatureToggles: PromoBannersFeatureToggles = mockk()
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
     private val getPromoCampaignsUseCase: GetPromoCampaignsUseCase = mockk()
-    private val promoCampaignAvailabilityChecker: PromoCampaignAvailabilityChecker = mockk()
     private val userWallet: UserWallet = mockk()
 
     private val campaignIdConverter = CampaignIdConverter()
@@ -64,10 +62,8 @@ internal class CampaignsModelTest {
             promoBannersFeatureToggles,
             getUserWalletUseCase,
             getPromoCampaignsUseCase,
-            promoCampaignAvailabilityChecker,
         )
         every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns false
-        every { promoCampaignAvailabilityChecker.isAvailable(any(), userWallet) } returns true
         every { getUserWalletUseCase(userWalletId) } returns Either.Right(userWallet)
     }
 
@@ -167,26 +163,6 @@ internal class CampaignsModelTest {
 
         // Assert
         assertThat(openedSheets).containsExactly(CampaignsBottomSheetConfig.V2.NotFound)
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN v2 enabled and campaign not available WHEN emitted THEN v2 not found sheet opened`() = runTest {
-        // Arrange
-        every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns true
-        val campaign = createPromoCampaign(name = "whale", isAlreadyEnrolled = true)
-        coEvery { getPromoCampaignsUseCase(userWallet, any()) } returns Either.Right(listOf(campaign))
-        every { promoCampaignAvailabilityChecker.isAvailable(campaign, userWallet) } returns false
-        val model = createModel(campaignFlow = flowOf(CampaignRequest(campaignId = "whale", userWalletId = userWalletId)))
-        val openedSheets = mutableListOf<CampaignsBottomSheetConfig?>()
-        model.bottomSheetNavigation.subscribe { event -> openedSheets += event.transformer(null) }
-
-        // Act
-        advanceUntilIdle()
-
-        // Assert
-        assertThat(openedSheets).containsExactly(CampaignsBottomSheetConfig.V2.NotFound)
-        verify(exactly = 0) { analyticsEventHandler.send(any()) }
         model.onDestroy()
     }
 
@@ -350,7 +326,6 @@ internal class CampaignsModelTest {
             promoBannersFeatureToggles = promoBannersFeatureToggles,
             getUserWalletUseCase = getUserWalletUseCase,
             getPromoCampaignsUseCase = getPromoCampaignsUseCase,
-            promoCampaignAvailabilityChecker = promoCampaignAvailabilityChecker,
         )
     }
 

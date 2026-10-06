@@ -52,7 +52,7 @@ internal object PromoCampaignPreviewData {
             "Stable coin into stablecoin swaps are excluded. " +
                 "Payout arrives weekly in USDT or USDC address of your choice.",
         ),
-        learnMore = PromoLinkUM(text = stringReference("Learn more"), onClick = {}),
+        link = PromoLinkUM(text = stringReference("Learn more"), onClick = {}),
     )
 
     val highlight = PromoBlockUM.Highlight(
