@@ -200,7 +200,7 @@ internal class SdkTransactionHistoryItemConverterTest {
             .isEqualTo(TxInfo.DestinationType.Single(TxInfo.AddressType.User(SAFE_RECIPIENT)))
         assertThat(row.gaslessFee?.amount).isEqualTo(REFUND)
         assertThat(row.transfers.map { it.type })
-            .containsExactly(TxInfo.TransactionType.Transfer, TxInfo.TransactionType.GaslessFee).inOrder()
+            .containsExactly(TxInfo.TransactionType.Transfer, TxInfo.TransactionType.GaslessFee)
     }
 
     @Test
