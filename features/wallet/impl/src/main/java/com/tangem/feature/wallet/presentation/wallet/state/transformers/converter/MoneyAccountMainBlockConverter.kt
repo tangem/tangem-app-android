@@ -10,19 +10,24 @@ import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.MoneyAccountStatusValue
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.feature.wallet.child.wallet.model.intents.MoneyAccountIntents
 import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
 import com.tangem.utils.converter.Converter
 
-internal class MoneyAccountMainBlockConverter : Converter<AccountStatus.Money, MoneyAccountMainUM> {
+internal class MoneyAccountMainBlockConverter(
+    private val moneyAccountIntents: MoneyAccountIntents,
+) : Converter<AccountStatus.Money, MoneyAccountMainUM> {
 
     override fun convert(value: AccountStatus.Money): MoneyAccountMainUM {
+        val userWalletId = value.account.userWalletId
         return when (val statusValue = value.value) {
             is MoneyAccountStatusValue.Empty,
             is MoneyAccountStatusValue.NotCreated,
             is MoneyAccountStatusValue.Error.ExposedDevice,
             -> MoneyAccountMainUM.Empty
             is MoneyAccountStatusValue.Loading -> MoneyAccountMainUM.Loading
-            is MoneyAccountStatusValue.Onboarding -> statusValue.toUM()
+            is MoneyAccountStatusValue.Onboarding -> statusValue.toUM(userWalletId)
             is MoneyAccountStatusValue.Account -> statusValue.toUM()
             is MoneyAccountStatusValue.Error.Unavailable,
             is MoneyAccountStatusValue.Error.NotSynced,
@@ -30,23 +35,25 @@ internal class MoneyAccountMainBlockConverter : Converter<AccountStatus.Money, M
         }
     }
 
-    private fun MoneyAccountStatusValue.Onboarding.toUM(): MoneyAccountMainUM {
+    private fun MoneyAccountStatusValue.Onboarding.toUM(userWalletId: UserWalletId): MoneyAccountMainUM {
         return when (this) {
             is MoneyAccountStatusValue.Onboarding.Issuing,
             is MoneyAccountStatusValue.Onboarding.Activating,
             -> MoneyAccountMainUM.Onboarding(
                 subtitle = resourceReference(R.string.money_account_main_status_activating),
-                onClick = ::onAccountClick,
+                onClick = moneyAccountIntents::onMoneyAccountActivatingClicked,
             )
             is MoneyAccountStatusValue.Onboarding.UnderReview -> MoneyAccountMainUM.Onboarding(
                 subtitle = resourceReference(R.string.money_account_main_status_verification),
-                onClick = ::onAccountClick,
+                onClick = { moneyAccountIntents.onMoneyAccountVerificationClicked(userWalletId, customerId) },
             )
-            is MoneyAccountStatusValue.Onboarding.VerificationDeclined,
-            is MoneyAccountStatusValue.Onboarding.CountryNotSupported,
-            -> MoneyAccountMainUM.ActionRequired(
+            is MoneyAccountStatusValue.Onboarding.VerificationDeclined -> MoneyAccountMainUM.ActionRequired(
                 balance = balance?.toUM(source),
-                onClick = ::onAccountClick,
+                onClick = { moneyAccountIntents.onMoneyAccountVerificationDeclinedClicked(userWalletId, customerId) },
+            )
+            is MoneyAccountStatusValue.Onboarding.CountryNotSupported -> MoneyAccountMainUM.ActionRequired(
+                balance = balance?.toUM(source),
+                onClick = { moneyAccountIntents.onMoneyAccountCountryNotSupportedClicked(userWalletId) },
             )
         }
     }
