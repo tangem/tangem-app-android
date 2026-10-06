@@ -46,5 +46,15 @@ internal interface WalletDeepLinkModule {
         @DeepLinkKey(DefaultWalletDeepLinkHandler.DEEPLINK_KEY)
         fun provideWalletDeepLinkHandler(factory: WalletDeepLinkHandler.Factory): DeepLinkHandler =
             DeepLinkHandler { factory.create() }
+
+        // Temporary bridge to the legacy factory: once the legacy routing is removed, the handler itself must be
+        // bound here as a DeepLinkHandler instead of a lambda over its factory.
+        @Provides
+        @IntoMap
+        @DeepLinkKey(DefaultPromoDeeplinkHandler.DEEPLINK_KEY)
+        fun providePromoDeepLinkHandler(factory: PromoDeeplinkHandler.Factory): DeepLinkHandler =
+            DeepLinkHandler { request ->
+                factory.create(coroutineScope = request.scope, queryParams = request.queryParams)
+            }
     }
 }
