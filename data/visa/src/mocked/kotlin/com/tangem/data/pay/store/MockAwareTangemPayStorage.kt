@@ -7,6 +7,7 @@ import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayWithdrawState
 import com.tangem.domain.visa.model.TangemPayAuthTokens
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
@@ -17,6 +18,8 @@ private const val MOCK_REFRESH_TOKEN = "mock-refresh-token"
 private const val MOCK_IDEMPOTENCY_KEY = "mock-idempotency-key"
 private const val MOCK_TOKEN_EXPIRES_AT = 9_999_999_999L
 private const val UITEST_ACCESS_TOKEN_EXPIRES_AT_KEY = "uitest.tangempay.access_token_expires_at"
+private const val UITEST_PER_WALLET_CUSTOMER_KEY = "uitest.tangempay.per_wallet_customer"
+private const val ADDRESS_HEX_LENGTH = 40
 
 /** In MOCK env returns synthetic auth tokens + customer wallet address; otherwise delegates. */
 @Singleton
@@ -30,8 +33,14 @@ internal class MockAwareTangemPayStorage @Inject constructor(
             .getEnvironmentConfig(TangemPay.Bff.ID)
             .environment == ApiEnvironment.MOCK
 
-    @Volatile
-    private var storedMockTokens: TangemPayAuthTokens? = null
+    private val isPerWalletCustomer: Boolean
+        get() = System.getProperty(UITEST_PER_WALLET_CUSTOMER_KEY) == "1"
+
+    private val storedMockTokens = ConcurrentHashMap<String, TangemPayAuthTokens>()
+
+    // Onboarding stores tokens under the SDK-derived address while requests read the fixed mock one.
+    private fun tokensKey(customerWalletAddress: String): String =
+        if (isPerWalletCustomer) customerWalletAddress else MOCK_CUSTOMER_WALLET_ADDRESS
 
     override suspend fun storeCustomerWalletAddress(userWalletId: UserWalletId, customerWalletAddress: String) {
         if (isMockMode) return
@@ -39,13 +48,19 @@ internal class MockAwareTangemPayStorage @Inject constructor(
     }
 
     override suspend fun getCustomerWalletAddress(userWalletId: UserWalletId): String? {
-        if (isMockMode) return MOCK_CUSTOMER_WALLET_ADDRESS
+        if (isMockMode) {
+            return if (isPerWalletCustomer) {
+                "0x" + userWalletId.stringValue.takeLast(ADDRESS_HEX_LENGTH).lowercase()
+            } else {
+                MOCK_CUSTOMER_WALLET_ADDRESS
+            }
+        }
         return real.getCustomerWalletAddress(userWalletId)
     }
 
     override suspend fun storeAuthTokens(customerWalletAddress: String, tokens: TangemPayAuthTokens) {
         if (isMockMode) {
-            storedMockTokens = tokens
+            storedMockTokens[tokensKey(customerWalletAddress)] = tokens
             return
         }
         real.storeAuthTokens(customerWalletAddress, tokens)
@@ -53,8 +68,12 @@ internal class MockAwareTangemPayStorage @Inject constructor(
 
     override suspend fun getAuthTokens(customerWalletAddress: String): TangemPayAuthTokens? {
         if (isMockMode) {
-            return storedMockTokens ?: TangemPayAuthTokens(
-                accessToken = MOCK_ACCESS_TOKEN,
+            return storedMockTokens[tokensKey(customerWalletAddress)] ?: TangemPayAuthTokens(
+                accessToken = if (isPerWalletCustomer) {
+                    "$MOCK_ACCESS_TOKEN-$customerWalletAddress"
+                } else {
+                    MOCK_ACCESS_TOKEN
+                },
                 expiresAt = System.getProperty(UITEST_ACCESS_TOKEN_EXPIRES_AT_KEY)?.toLongOrNull()
                     ?: MOCK_TOKEN_EXPIRES_AT,
                 refreshToken = MOCK_REFRESH_TOKEN,
