@@ -15,7 +15,6 @@ import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.buttons.predefined.PredefinedPercentButtonUM
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -1211,21 +1210,12 @@ internal class StateBuilder(
         }
     }
 
-    fun dismissBottomSheet(uiState: SwapStateHolder): SwapStateHolder {
-        return uiState.copy(
-            bottomSheetConfig = uiState.bottomSheetConfig?.copy(isShown = false),
-        )
-    }
-
-    @Suppress("LongParameterList")
-    fun showSelectProviderBottomSheet(
-        uiState: SwapStateHolder,
+    fun buildProvidersSheetSource(
         selectedProviderId: String,
         pricesLowerBest: Map<String, Float>,
         providersStates: Map<SwapProvider, SwapState>,
         needApplyFCARestrictions: Boolean,
-        onDismiss: () -> Unit,
-    ): SwapStateHolder {
+    ): ChooseProviderSheetSource {
         val successStates = providersStates.getLastLoadedSuccessStates()
         val availableProvidersStates = providersStates.entries
             .mapNotNull { entry ->
@@ -1261,74 +1251,39 @@ internal class StateBuilder(
         } else {
             persistentListOf()
         }
-        val config = ChooseProviderBottomSheetConfig(
+        return ChooseProviderSheetSource(
             selectedProviderId = selectedProviderId,
-            providers = availableProvidersStates,
             allProviders = availableProvidersStates,
             notification = SwapNotificationUM.Error.FCAWarningList.takeIf { isAnyFCABadge },
-            selectedFilter = ProviderFilterType.ALL,
             availableFilters = availableFilters,
-            onFilterSelect = actions.onProviderFilterSelect,
-        )
-        return uiState.copy(
-            bottomSheetConfig = TangemBottomSheetConfig(
-                isShown = true,
-                onDismissRequest = onDismiss,
-                content = config,
-            ),
         )
     }
 
-    fun updateProvidersBottomSheetContent(
-        uiState: SwapStateHolder,
+    fun updateProvidersSheetSource(
+        source: ChooseProviderSheetSource,
         pricesLowerBest: Map<String, Float>,
         tokenSwapInfoForProviders: Map<String, TokenSwapInfo>,
-    ): SwapStateHolder {
-        val config = uiState.bottomSheetConfig?.content as? ChooseProviderBottomSheetConfig
-        return if (config != null) {
-            fun updateState(providerState: ProviderState): ProviderState {
-                val tokenInfo = tokenSwapInfoForProviders[providerState.id]
-                return if (providerState is ProviderState.Content && tokenInfo != null) {
-                    providerState.copy(
-                        subtitle = SwapProviderStateBuilder.buildSelectableSubtitle(tokenInfo),
-                        percentLowerThenBest = if (
-                            providerState.additionalBadge == ProviderState.AdditionalBadge.Unavailable
-                        ) {
-                            PercentDifference.Empty
-                        } else {
-                            pricesLowerBest[providerState.id]?.let { percent ->
-                                PercentDifference.Value(percent)
-                            } ?: PercentDifference.Value(0f)
-                        },
-                    )
-                } else {
-                    providerState
-                }
+    ): ChooseProviderSheetSource {
+        fun updateState(providerState: ProviderState): ProviderState {
+            val tokenInfo = tokenSwapInfoForProviders[providerState.id]
+            return if (providerState is ProviderState.Content && tokenInfo != null) {
+                providerState.copy(
+                    subtitle = SwapProviderStateBuilder.buildSelectableSubtitle(tokenInfo),
+                    percentLowerThenBest = if (
+                        providerState.additionalBadge == ProviderState.AdditionalBadge.Unavailable
+                    ) {
+                        PercentDifference.Empty
+                    } else {
+                        pricesLowerBest[providerState.id]?.let { percent ->
+                            PercentDifference.Value(percent)
+                        } ?: PercentDifference.Value(0f)
+                    },
+                )
+            } else {
+                providerState
             }
-            uiState.copy(
-                bottomSheetConfig = uiState.bottomSheetConfig.copy(
-                    content = config.copy(
-                        providers = config.providers.map(::updateState).toImmutableList(),
-                        allProviders = config.allProviders.map(::updateState).toImmutableList(),
-                    ),
-                ),
-            )
-        } else {
-            uiState
         }
-    }
-
-    fun updateProviderFilterType(uiState: SwapStateHolder, filterType: ProviderFilterType): SwapStateHolder {
-        val config = uiState.bottomSheetConfig?.content as? ChooseProviderBottomSheetConfig ?: return uiState
-        val filtered = config.allProviders.filter { matchesTypeFilter(it, filterType) }.toImmutableList()
-        return uiState.copy(
-            bottomSheetConfig = uiState.bottomSheetConfig.copy(
-                content = config.copy(
-                    providers = filtered,
-                    selectedFilter = filterType,
-                ),
-            ),
-        )
+        return source.copy(allProviders = source.allProviders.map(::updateState).toImmutableList())
     }
 
     private fun formatSwapFeeForSuccess(swapFee: SwapFee): TextReference {
@@ -1430,20 +1385,6 @@ internal class StateBuilder(
             is Account.Money -> AccountIconUM.Money
             is Account.Prediction -> AccountIconUM.Prediction
             is Account.Collectibles -> AccountIconUM.Collectibles
-        }
-    }
-
-    private fun matchesTypeFilter(state: ProviderState, filterType: ProviderFilterType): Boolean {
-        val typeStr = when (state) {
-            is ProviderState.Content -> state.type
-            is ProviderState.Unavailable -> state.type
-            else -> null
-        } ?: return filterType == ProviderFilterType.ALL
-        return when (filterType) {
-            ProviderFilterType.ALL -> true
-            ProviderFilterType.CEX -> typeStr == ExchangeProviderType.CEX.providerName
-            ProviderFilterType.DEX -> typeStr == ExchangeProviderType.DEX.providerName ||
-                typeStr == ExchangeProviderType.DEX_BRIDGE.providerName
         }
     }
 }
