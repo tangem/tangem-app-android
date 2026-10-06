@@ -1,7 +1,5 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.domain.feedback.models.SupportChatInfoProvider
-import com.tangem.domain.feedback.models.SupportChatTopic
 import com.tangem.domain.polymarket.PolymarketBridgeRepository
 import com.tangem.domain.polymarket.PolymarketCredentialsLock
 import com.tangem.domain.polymarket.PolymarketActivityRepository
@@ -15,8 +13,6 @@ import com.tangem.domain.polymarket.PredictionWithdrawalStore
 import com.tangem.domain.polymarket.derivation.PolymarketDepositWalletDeriver
 import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
-import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
-import com.tangem.domain.polymarket.flow.PredictionPositionsValueSupplier
 import com.tangem.domain.polymarket.flow.DefaultPredictionPositionsUpdater
 import com.tangem.domain.polymarket.flow.PredictionPositionsUpdateEmitter
 import com.tangem.domain.polymarket.flow.PredictionPositionsUpdateListener
@@ -31,7 +27,6 @@ import com.tangem.domain.polymarket.interactor.SubmitPredictionClaimInteractor
 import com.tangem.domain.polymarket.interactor.SubmitPredictionWithdrawalInteractor
 import com.tangem.domain.polymarket.model.PredictionTransferCallCodec
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
-import com.tangem.domain.polymarket.support.PredictionSupportChatInfoProvider
 import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.BuildPredictionOrderDraftUseCase
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
@@ -63,7 +58,6 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import dagger.multibindings.IntoMap
 import javax.inject.Singleton
 
 @Module
@@ -398,19 +392,5 @@ internal object PolymarketDomainModule {
         redeemRepository = redeemRepository,
         polymarketRepository = polymarketRepository,
         signer = signer,
-    )
-
-    @Provides
-    @Singleton
-    @IntoMap
-    @SupportChatTopicKey(SupportChatTopic.PREDICTIONS)
-    fun providePredictionSupportChatInfoProvider(
-        predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
-        predictionPositionsValueSupplier: PredictionPositionsValueSupplier,
-        derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
-    ): SupportChatInfoProvider = PredictionSupportChatInfoProvider(
-        predictionAccountStatusSupplier = predictionAccountStatusSupplier,
-        predictionPositionsValueSupplier = predictionPositionsValueSupplier,
-        derivePolymarketAddressesUseCase = derivePolymarketAddressesUseCase,
     )
 }
