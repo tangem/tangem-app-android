@@ -21,6 +21,7 @@ import com.tangem.data.jointaccount.converter.JointOperationCreateErrorConverter
 import com.tangem.data.jointaccount.converter.JointOperationRejectErrorConverter
 import com.tangem.data.jointaccount.converter.JointOperationSignErrorConverter
 import com.tangem.data.jointaccount.converter.SafeTxConverter
+import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.store.datasource.jointaccount.models.CreateJointOperationRequest
 import com.tangem.store.datasource.jointaccount.models.SignJointOperationRequest
 import com.tangem.store.datasource.jointaccount.JointAccountApi
@@ -67,7 +68,13 @@ internal class DefaultJointAccountRepository @Inject constructor(
 
     override suspend fun getFreeOwnerDerivationIndex(userWalletId: UserWalletId): Int {
         return withContext(dispatchers.io) {
-            walletAccountsFetcher.fetch(userWalletId = userWalletId).wallet.totalJointAccounts ?: NO_JOINT_ACCOUNTS
+            val response = walletAccountsFetcher.fetch(userWalletId = userWalletId)
+            val nextAfterJointRows = response.accounts
+                .filter { it.type == WalletAccountDTO.Type.JOINT }
+                .maxOfOrNull { it.derivationIndex + 1 }
+                ?: NO_JOINT_ACCOUNTS
+
+            maxOf(response.wallet.totalJointAccounts ?: NO_JOINT_ACCOUNTS, nextAfterJointRows)
         }
     }
 
