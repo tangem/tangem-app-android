@@ -35,7 +35,6 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Instant
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -346,48 +345,35 @@ internal class DefaultPromoRepositoryTest {
         private fun createV3Dto() = PromotionsV3Response.PromotionDto(
             id = 7,
             name = "example_campaign",
-            status = PromotionsV3Response.Status.ACTIVE,
-            startAt = "2026-06-01T00:00:00Z",
-            endAt = "2026-08-31T23:59:59Z",
             isAlreadyEnrolled = false,
-            eligibility = PromotionsV3Response.Eligibility(
-                type = PromotionsV3Response.EligibilityType.PUBLIC,
-                conditions = null,
-            ),
             properties = PromotionsV3Response.Properties(
                 isPayoutNeeded = false,
                 payoutTokens = null,
                 matchMode = PromotionsV3Response.MatchMode.STRICT,
             ),
             content = PromotionsV3Response.Content(
-                campaignNameKey = "campaign.example_campaign.title",
+                campaignName = "campaign.example_campaign.title",
+                campaignDescription = null,
                 publicDescription = emptyList(),
                 publicImage = "https://cdn.tangem.com/c.png",
-                learnMoreLink = null,
-                tncLink = PromotionsV3Response.Link(textKey = "campaign.example_campaign.terms", url = "https://t.com"),
-                actionButtonNameKey = "campaign.example_campaign.action",
+                tncLink = PromotionsV3Response.Link(text = "campaign.example_campaign.terms", url = "https://t.com"),
+                actionButtonName = "campaign.example_campaign.action",
             ),
         )
 
         private fun createExpectedCampaign() = PromoCampaign(
             id = 7,
             name = "example_campaign",
-            status = PromoCampaignStatus.Active,
-            timeline = PromoTimeline(
-                start = Instant.parse("2026-06-01T00:00:00Z"),
-                end = Instant.parse("2026-08-31T23:59:59Z"),
-            ),
             isAlreadyEnrolled = false,
-            eligibility = PromoEligibility.Public,
             payout = PromoPayout(isNeeded = false, tokens = emptyList()),
             matchMode = PromoMatchMode.Strict,
             content = PromoCampaignContent(
-                nameKey = "campaign.example_campaign.title",
+                name = "campaign.example_campaign.title",
+                summary = null,
                 description = emptyList(),
                 imageUrl = "https://cdn.tangem.com/c.png",
-                learnMoreLink = null,
-                tncLink = PromoLink(textKey = "campaign.example_campaign.terms", url = "https://t.com"),
-                actionButtonNameKey = "campaign.example_campaign.action",
+                tncLink = PromoLink(text = "campaign.example_campaign.terms", url = "https://t.com"),
+                actionButtonName = "campaign.example_campaign.action",
             ),
         )
     }
@@ -516,30 +502,42 @@ internal class DefaultPromoRepositoryTest {
         }
 
         private fun provideTestModels(): List<ErrorModel> {
-            val campaignNotFound = httpError(Code.NOT_FOUND, """{"code":404,"message":"Campaign not found"}""")
-            val tokenNotFound = httpError(Code.NOT_FOUND, """{"code":404,"message":"Token not found"}""")
-            val notActive = httpError(Code.CONFLICT, """{"code":409,"message":"Campaign not currently active"}""")
-            val mainNotEligible = httpError(Code.BAD_REQUEST, """{"code":"x","message":"Main wallet not eligible"}""")
-            val genericBadRequests = listOf(
-                "Validation error",
-                "Main wallet required",
-                "Multiple main wallets",
-                "User address mismatch",
-            ).map { httpError(Code.BAD_REQUEST, """{"code":400,"message":"$it"}""") }
+            val campaignNotFound = httpError(
+                Code.NOT_FOUND,
+                problem(status = 404, title = "Not Found", detail = "Campaign with id=9001 not found"),
+            )
+            val notActive = httpError(
+                Code.CONFLICT,
+                problem(status = 409, title = "Conflict", detail = "Campaign not currently active"),
+            )
+            val mainNotEligible = httpError(
+                Code.BAD_REQUEST,
+                problem(status = 400, title = "Main wallet not eligible", detail = "Wallet abc is not eligible"),
+            )
+            val genericBadRequest = httpError(
+                Code.BAD_REQUEST,
+                problem(status = 400, title = "Bad Request", detail = "Main wallet not eligible"),
+            )
             val unreadableBadRequest = httpError(Code.BAD_REQUEST, "not json")
             val noBodyNotFound = httpError(Code.NOT_FOUND, errorBody = null)
-            val unauthorized = httpError(Code.UNAUTHORIZED, """{"code":401,"message":"Unauthorized"}""")
-            val serverError = httpError(Code.INTERNAL_SERVER_ERROR, """{"code":500,"message":"Internal error"}""")
+            val unauthorized = httpError(Code.UNAUTHORIZED, problem(status = 401, title = "Unauthorized", detail = null))
+            val serverError = httpError(
+                Code.INTERNAL_SERVER_ERROR,
+                problem(status = 500, title = "Internal Server Error", detail = "Internal error"),
+            )
             val networkError = ApiResponseError.NetworkException()
 
             return listOf(
                 ErrorModel(campaignNotFound, PromoRegistrationError.CampaignNotFound),
+                ErrorModel(noBodyNotFound, PromoRegistrationError.CampaignNotFound),
                 ErrorModel(notActive, PromoRegistrationError.CampaignNotActive),
-                ErrorModel(mainNotEligible, PromoRegistrationError.MainWalletNotEligible),
-            ) + (
-                genericBadRequests +
-                    listOf(tokenNotFound, unreadableBadRequest, noBodyNotFound, unauthorized, serverError, networkError)
-                ).map { ErrorModel(it, PromoRegistrationError.Generic(it)) }
+            ) + listOf(mainNotEligible, genericBadRequest, unreadableBadRequest, unauthorized, serverError, networkError)
+                .map { ErrorModel(it, PromoRegistrationError.Generic(it)) }
+        }
+
+        private fun problem(status: Int, title: String, detail: String?): String {
+            val detailField = detail?.let { """"detail":"$it",""" }.orEmpty()
+            return """{$detailField"status":$status,"title":"$title","traceId":"cb7af972"}"""
         }
 
         private fun httpError(code: Code, errorBody: String?) = ApiResponseError.HttpException(
