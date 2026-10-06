@@ -2,6 +2,7 @@ package com.tangem.grow.datasource.express.models.response
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import java.math.BigDecimal
 
 @JsonClass(generateAdapter = true)
 data class ExchangeDataResponseWithTxDetails(
@@ -33,6 +34,9 @@ data class ExchangeDataResponse(
 
     @Json(name = "signature")
     val signature: String,
+
+    @Json(name = "slippage")
+    val slippage: BigDecimal? = null,
 )
 
 @JsonClass(generateAdapter = true)
