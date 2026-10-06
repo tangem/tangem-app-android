@@ -6,12 +6,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -91,15 +93,11 @@ internal fun IntroductionScreen(
                     onSurfaceAvailable = onSurfaceAvailable,
                     onSurfaceRelease = onSurfaceRelease,
                 )
-                Image(
+                Header(
+                    onBuyTangemClick = state.onBuyTangemClick,
                     modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .statusBarsPadding()
-                        .padding(start = 16.dp, top = 16.dp)
-                        .height(20.dp),
-                    painter = painterResource(id = CoreUiR.drawable.ic_tangem_logo),
-                    contentScale = ContentScale.FillHeight,
-                    contentDescription = null,
+                        .align(Alignment.TopCenter)
+                        .statusBarsPadding(),
                 )
                 Column(
                     modifier = Modifier
@@ -214,6 +212,36 @@ private fun rememberBottomScrimBrush(): Brush {
 }
 
 @Composable
+private fun Header(onBuyTangemClick: () -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Image(
+            modifier = Modifier.height(20.dp),
+            painter = painterResource(id = CoreUiR.drawable.ic_tangem_logo),
+            contentScale = ContentScale.FillHeight,
+            contentDescription = null,
+        )
+        TangemButton(
+            modifier = Modifier
+                .padding(start = 16.dp)
+                .weight(weight = 1f, fill = false)
+                // Nothing on this screen is a haze source, and the video is a SurfaceView no blur can sample, so the
+                // material draws no fill at all. The tint iOS lays over its blur stands in for it.
+                .background(color = TangemTheme.colors3.material.fill.blur, shape = CircleShape),
+            text = resourceReference(R.string.introduction_button_buy_tangem),
+            variant = TangemButton.Variant.Material,
+            size = TangemButton.Size.X11,
+            onClick = onBuyTangemClick,
+        )
+    }
+}
+
+@Composable
 private fun BottomActions(state: IntroductionUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -284,6 +312,7 @@ private fun IntroductionScreenPreview() {
                 haveWalletBottomSheetConfig = null,
                 onCreateWalletClick = {},
                 onIHaveWalletClick = {},
+                onBuyTangemClick = {},
                 onCreateWalletSheetCollapsed = {},
                 onTermsOfServiceClick = {},
                 onPrivacyPolicyClick = {},
