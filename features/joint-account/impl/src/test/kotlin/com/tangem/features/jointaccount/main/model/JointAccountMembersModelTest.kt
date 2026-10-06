@@ -59,6 +59,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import com.tangem.core.ui.R as CoreUiR
@@ -456,7 +457,7 @@ internal class JointAccountMembersModelTest {
     }
 
     @Test
-    fun `GIVEN confirming account WHEN activation confirmed THEN use case gets the account`() = runTest {
+    fun `GIVEN confirming account WHEN activate tapped THEN use case gets the account without a sheet`() = runTest {
         // Arrange
         stubConfirmingAccount()
         val jointAccount = MockAccounts.createJointAccount(userWalletId = USER_WALLET_ID)
@@ -467,11 +468,10 @@ internal class JointAccountMembersModelTest {
         val model = createModel()
         val openedConfirmations = model.activationConfirmationNavigation.trackSlot()
         model.uiState.value.onActivateClick!!()
-        model.onConfirmActivationClick(cryptoAccountId = ACCOUNT_ID)
         advanceUntilIdle()
 
         // Assert
-        assertThat(openedConfirmations.first()!!.walletInteractionIconRes).isEqualTo(CoreUiR.drawable.ic_tangem_24)
+        assertThat(openedConfirmations.filterNotNull()).isEmpty()
         coVerify(exactly = 1) { activateUseCase(account = jointAccount) }
         val message = slot<SnackbarMessage>()
         verify(exactly = 1) { uiMessageSender.send(capture(message)) }
@@ -482,6 +482,7 @@ internal class JointAccountMembersModelTest {
         assertThat(openedConfirmations.last()).isNull()
     }
 
+    @Disabled("The activation sheet is off, see IS_ACTIVATION_CONFIRMATION_SHOWN")
     @Test
     fun `GIVEN hot wallet WHEN activation offered THEN the confirm button carries no wallet icon`() = runTest {
         // Arrange
@@ -617,6 +618,7 @@ internal class JointAccountMembersModelTest {
         verify(exactly = 1) { uiMessageSender.send(any()) }
     }
 
+    @Disabled("The activation sheet is off, see IS_ACTIVATION_CONFIRMATION_SHOWN")
     @Test
     fun `GIVEN confirmation open WHEN the resolved account changes identity THEN the sheet is dropped`() = runTest {
         // Arrange
