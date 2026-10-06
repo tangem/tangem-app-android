@@ -1240,6 +1240,10 @@
   <string name="joint_account_send_sends_automatically_setup_fee">Sends automatically once collected. First send includes a one-time setup fee</string>
   <string name="joint_account_send_setup_fee_note">First transaction in %1$s. The fee includes a one-time %2$s to set up the joint account on-chain</string>
   <string name="joint_account_send_signatures_required">%1$s of %2$s signatures required</string>
+  <plurals name="joint_account_send_signatures_required_banner">
+    <item quantity="one">%1$d signature required</item>
+    <item quantity="other">%1$d signatures required</item>
+  </plurals>
   <string name="joint_account_send_slot_busy_subtitle">This network already has an operation collecting signatures. Wait for it to finish before creating a new one</string>
   <string name="joint_account_send_slot_busy_title">Operation already in progress</string>
   <string name="joint_account_settings_networks_info">This account works only in the supported networks.</string>
