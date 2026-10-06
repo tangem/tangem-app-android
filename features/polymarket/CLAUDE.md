@@ -31,6 +31,9 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
   `UNDETERMINED` refuses with a snackbar. A run failure leaves the screen idle; the button is the only retry.
 - Region-restricted users (`READ_ONLY`) still reach Main, browse and withdraw. `READ_ONLY` explains itself
   as a region restriction — reuse it for another cause and the UI lies.
+- Main returns here (`replaceAll(Onboarding)`) the moment the stored credentials are gone, even from under a
+  child: nothing above Main can sign without them. So the order summary answers an `Unauthorized`
+  placement with no dialog and leaves the gate to explain it.
 
 ## Main screen
 
