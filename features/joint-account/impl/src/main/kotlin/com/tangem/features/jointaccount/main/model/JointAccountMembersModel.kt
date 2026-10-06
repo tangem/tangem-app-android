@@ -205,7 +205,7 @@ internal class JointAccountMembersModel @Inject constructor(
 
     /**
      * The backend won't silent-push joint-account state changes (a slot filling, activation, an operation awaiting
-     * a co-signature), so while this screen is on top a 60-second poll keeps it fresh — the current status can't
+     * a co-signature), so while this screen is on top a 5-second poll keeps it fresh — the current status can't
      * tell us whether it's stale, so it isn't used to gate this, and neither is whether an account is currently
      * resolved: an empty store (offline, cold start, a failed [refreshAccounts]) must still poll, or it could
      * never recover on its own. [pollingCoordinator] paces itself — this only decides whether to collect.
