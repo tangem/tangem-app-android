@@ -271,6 +271,85 @@ internal class TxHistoryStatusPillConverterTest {
         )
     }
 
+    @Test
+    fun `GIVEN YieldSupply uiStatus Confirmed WHEN convert THEN supplied label and Aave provider`() {
+        val tx = txInfo(type = TransactionType.YieldSupply.Topup)
+
+        val result = converter.convert(Input(tx, Status.Confirmed, YieldSupplySpec))
+
+        assertThat(result.kind).isEqualTo(TransactionItemUM.PillKind.YIELD_SUPPLY)
+        assertThat(result.label).isEqualTo(resRef(R.string.yield_module_transaction_supplied))
+        assertThat(result.amount).isNull()
+        assertThat(result.currencySymbol).isNull()
+        assertThat(result.subtitle).isEqualTo(
+            TransactionItemUM.PillSubtitle.Provider(
+                direction = TransactionItemUM.ContentSubtitle.Direction.TO,
+                name = resRef(R.string.yield_module_provider),
+                iconResId = R.drawable.img_aave_22,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN YieldSupply uiStatus Unconfirmed WHEN convert THEN supplying label keeps the provider`() {
+        val tx = txInfo(type = TransactionType.YieldSupply.Topup)
+
+        val result = converter.convert(Input(tx, Status.Unconfirmed, YieldSupplySpec))
+
+        assertThat(result.label).isEqualTo(resRef(R.string.common_supplying))
+        assertThat(result.subtitle).isInstanceOf(TransactionItemUM.PillSubtitle.Provider::class.java)
+    }
+
+    @Test
+    fun `GIVEN YieldSupply uiStatus Failed WHEN convert THEN composed supply failed label and no provider`() {
+        val tx = txInfo(type = TransactionType.YieldSupply.Topup)
+
+        val result = converter.convert(Input(tx, Status.Failed, YieldSupplySpec))
+
+        assertThat(result.label).isEqualTo(
+            resRef(R.string.common_action_failed, listOf(resRef(R.string.yield_module_supply))),
+        )
+        assertThat(result.subtitle).isNull()
+    }
+
+    @Test
+    fun `GIVEN YieldWithdraw uiStatus Confirmed WHEN convert THEN withdrawn label and Aave provider`() {
+        val tx = txInfo(type = TransactionType.YieldSupply.Send(isYieldSupplyWithdraw = true))
+
+        val result = converter.convert(Input(tx, Status.Confirmed, YieldWithdrawSpec))
+
+        assertThat(result.kind).isEqualTo(TransactionItemUM.PillKind.YIELD_SUPPLY)
+        assertThat(result.label).isEqualTo(resRef(R.string.transaction_history_withdrawn))
+        assertThat(result.amount).isNull()
+        assertThat(result.subtitle).isEqualTo(
+            TransactionItemUM.PillSubtitle.Provider(
+                direction = TransactionItemUM.ContentSubtitle.Direction.FROM,
+                name = resRef(R.string.yield_module_provider),
+                iconResId = R.drawable.img_aave_22,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN YieldWithdraw uiStatus Unconfirmed WHEN convert THEN withdrawing label`() {
+        val tx = txInfo(type = TransactionType.YieldSupply.Send(isYieldSupplyWithdraw = true))
+
+        val result = converter.convert(Input(tx, Status.Unconfirmed, YieldWithdrawSpec))
+
+        assertThat(result.label).isEqualTo(resRef(R.string.common_withdrawing))
+    }
+
+    @Test
+    fun `GIVEN YieldWithdraw uiStatus Failed WHEN convert THEN composed withdrawal failed label`() {
+        val tx = txInfo(type = TransactionType.YieldSupply.Send(isYieldSupplyWithdraw = true))
+
+        val result = converter.convert(Input(tx, Status.Failed, YieldWithdrawSpec))
+
+        assertThat(result.label).isEqualTo(
+            resRef(R.string.common_action_failed, listOf(resRef(R.string.common_withdrawal))),
+        )
+    }
+
     // endregion
 
     // region Misc
