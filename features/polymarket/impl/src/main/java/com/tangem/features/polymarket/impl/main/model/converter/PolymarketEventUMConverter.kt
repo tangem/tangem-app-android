@@ -45,21 +45,22 @@ internal class PolymarketEventUMConverter(
     }
 
     private fun convertRow(event: PolymarketEvent, market: PolymarketMarket): PolymarketEventRowUM {
-        val showPrices = market.groupItemTitle.isNullOrBlank() || market.groupItemTitle == MATCH_WINNER_GROUP_ITEM_TITLE
+        val shouldShowPrices = market.groupItemTitle.isNullOrBlank() ||
+            market.groupItemTitle == MATCH_WINNER_GROUP_ITEM_TITLE
         return PolymarketEventRowUM(
             marketId = market.id,
-            title = if (showPrices) {
+            title = if (shouldShowPrices) {
                 market.title.takeIf { event.totalMarketsCount > 1 }?.let(::stringReference)
             } else {
                 convertRowTitle(event = event, market = market)
             },
-            probability = if (showPrices) {
+            probability = if (shouldShowPrices) {
                 null
             } else {
                 stringReference(market.outcomes.firstOrNull()?.probability.formatProbability())
             },
             outcomes = market.outcomes
-                .map { convertOutcome(event = event, market = market, outcome = it, showPrice = showPrices) }
+                .map { convertOutcome(event = event, market = market, outcome = it, showPrice = shouldShowPrices) }
                 .toImmutableList(),
         )
     }
