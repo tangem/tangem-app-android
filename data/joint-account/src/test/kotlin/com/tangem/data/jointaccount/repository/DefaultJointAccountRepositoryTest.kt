@@ -36,7 +36,6 @@ import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationResult
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
 import com.tangem.domain.jointaccount.model.JointAccountJoinPayload
-import com.tangem.domain.jointaccount.model.JointAccountJoinResult
 import com.tangem.domain.jointaccount.model.JointAccountParticipant
 import com.tangem.domain.jointaccount.store.JointAccountInvitesStore
 import com.tangem.domain.models.StatusSource
@@ -208,7 +207,7 @@ internal class DefaultJointAccountRepositoryTest {
         val actual = repository.join(userWalletId = WALLET_ID, payload = joinPayload(), signature = SIGNATURE)
 
         // Assert
-        val expected = JointAccountJoinResult.Joined(account = createJointAccount(source = StatusSource.ACTUAL))
+        val expected = createJointAccount(source = StatusSource.ACTUAL).right()
         assertThat(actual).isEqualTo(expected)
         // The signature covers the canonical form of exactly these values — trimming any of them breaks it
         val body = bodySlot.captured
@@ -231,7 +230,7 @@ internal class DefaultJointAccountRepositoryTest {
         val actual = repository.join(userWalletId = WALLET_ID, payload = joinPayload(), signature = SIGNATURE)
 
         // Assert
-        assertThat(actual).isEqualTo(JointAccountJoinResult.Conflict(cause = (response as ApiResponse.Error).cause))
+        assertThat(actual).isEqualTo((response as ApiResponse.Error).cause.left())
     }
 
     @Test
