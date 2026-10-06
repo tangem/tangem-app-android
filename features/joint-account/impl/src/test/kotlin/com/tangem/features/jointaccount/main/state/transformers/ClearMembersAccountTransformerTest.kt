@@ -46,7 +46,7 @@ internal class ClearMembersAccountTransformerTest {
                 ),
             ),
             otherMembersLabel = stringReference("Other members"),
-            onActivateClick = {},
+            activateButton = JointAccountMembersUM.ActivateButtonUM(walletIconRes = null, isLoading = false, onClick = {}),
         )
 
         // Act
@@ -59,6 +59,6 @@ internal class ClearMembersAccountTransformerTest {
         assertThat(actual.joined).isEmpty()
         assertThat(actual.freeSlots).isEmpty()
         assertThat(actual.otherMembersLabel).isNull()
-        assertThat(actual.onActivateClick).isNull()
+        assertThat(actual.activateButton).isNull()
     }
 }
