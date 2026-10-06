@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.account.AccountIcon
@@ -66,7 +67,11 @@ internal fun TxHistoryDetailsCounterpartyRow(counterparty: CounterpartyUM, modif
             startSlot = { CounterpartyAvatar(counterparty.avatar) },
             titleSlot = { TangemRowText(text = counterparty.label, role = TangemRowTextRole.Subtitle) },
             subtitleSlot = {
-                TangemRowText(text = counterparty.title, role = TangemRowTextRole.Title)
+                TangemRowText(
+                    text = counterparty.title,
+                    role = TangemRowTextRole.Title,
+                    overflow = counterparty.titleOverflow(),
+                )
                 counterparty.titleIcon?.let { icon ->
                     CurrencyIcon(
                         state = icon,
@@ -80,6 +85,9 @@ internal fun TxHistoryDetailsCounterpartyRow(counterparty: CounterpartyUM, modif
         )
     }
 }
+
+private fun CounterpartyUM.titleOverflow(): TextOverflow =
+    if (avatar is CounterpartyAvatar.Address) TextOverflow.MiddleEllipsis else TextOverflow.Ellipsis
 
 @Composable
 private fun CounterpartyAvatar(avatar: CounterpartyAvatar, modifier: Modifier = Modifier) {
