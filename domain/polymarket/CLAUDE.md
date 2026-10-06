@@ -1,219 +1,97 @@
 # Polymarket — domain
 
-Business logic of the Predictions feature: the prediction account, onboarding of a Polymarket deposit
-wallet, discovery of events, order signing, funds movement. One Android-library module
-(`:domain:polymarket`), pure Kotlin apart from `libs/blockchain-sdk` types (`Blockchain`, EIP-712 hashing).
+Rules of the prediction account that the code does not make evident. Read before touching anything that
+signs, deploys or moves funds. Wire contract and its Notion sources: `data/polymarket/CLAUDE.md`.
 
-This file is the domain half of the module knowledge base. The other two halves:
-`data/polymarket/CLAUDE.md` (BFF/CLOB/bridge contracts, wire-format traps, stores) and
-`features/polymarket/CLAUDE.md` (screens, routes, flows). Read all three before touching anything that
-signs, deploys or moves funds.
+## Identities
 
-```bash
-./gradlew :domain:polymarket:testDebugUnitTest
-./gradlew :domain:polymarket:detekt
-```
+One Tangem wallet ↔ one Polymarket account; confusing these three is the classic defect.
 
-## Package map
+- **Owner EOA** — key on `m/44'/60'/999899'/0/0`. Signs everything (ClobAuth, approvals, orders,
+  withdrawals, claims). The path is hardened and belongs to no network, so a wallet needs nothing in its
+  portfolio to onboard. It must match iOS and the SDK byte for byte.
+- **Deposit wallet** — CREATE2 beacon proxy on Polygon derived from the owner EOA. Holds the funds; the
+  `maker`/`signer` of every order.
+- **`walletId`** = `UserWalletId.stringValue` (64 hex, no `0x`). A BFF correlation key only — never a
+  derivation input, never sent to the bridge (the bridge gets addresses plus the builder code that
+  `GET /configuration` returns for the wallet id).
 
-| Package | What lives there |
-|---|---|
-| root | Repository and store **interfaces** (`PolymarketRepository`, `PolymarketBridgeRepository`, `PolymarketWithdrawRepository`, `PolymarketPositionsRepository`, `PolymarketCredentialsStore`, `PolymarketOnboardedStore`, `PredictionDepositRequisitesStore`, `PredictionWithdrawalStore`, `PolymarketBridgeAssetsStore`); `PolymarketDepositBlockchain`, `PredictionAccountSupport` |
-| `approval` | `PolymarketContracts` — every on-chain address and constant; `PolymarketApprovalCalls` — the 13-call approvals batch |
-| `derivation` | `PolymarketEoaDeriver`, `PolymarketDepositWalletDeriver`, `POLYMARKET_OWNER_DERIVATION_PATH` |
-| `signing` | `PolymarketTypedDataSigner` (4 signing entry points), `PolymarketRelayerDeadline` |
-| `model` | 64 value types; the ones that carry a decision are documented in their KDoc |
-| `usecase` | One network or store operation each |
-| `interactor` | Use cases composed of use cases (project rule: a use case that injects use cases is an Interactor, package `interactor/`) |
-| `flow` | Long-lived processes: `PredictionAccountStatusSupplier`/`Producer`/`Fetcher`, `PredictionPositionsValueSupplier`/`Producer`/`Fetcher`, `PredictionBalancePoller`, `PredictionFundingWindow`, `PredictionWithdrawalTracker` |
-| `session` | `PolymarketPositionsSession` — one visit of the positions list |
-| `amount` | `PredictionCollateralAmount` — decimal ↔ base-unit conversion of pUSD (6 decimals) |
-
-Nothing in this module talks to a card, a network or a disk; those are `data/polymarket` implementations
-injected behind the interfaces above. Use cases and interactors are plain classes provided in the app's
-`di/domain/PolymarketDomainModule`, or in the feature's `PolymarketDomainUseCasesModule`
-(`features/polymarket/impl/di/PolymarketBindsModule.kt`) when they need feature-side dependencies;
-`data/polymarket/di/PolymarketDataModule` binds implementations and the long-lived flows only.
-
-## The identities
-
-One Tangem wallet ↔ one Polymarket account. Three identifiers travel together, and confusing them is
-the classic defect:
-
-| Identifier | Derived how | Used for |
-|---|---|---|
-| **Owner EOA** | secp256k1 key on `m/44'/60'/999899'/0/0` (`POLYMARKET_OWNER_DERIVATION_PATH`) → ERC-55 address | Signs everything: ClobAuth, approvals batch, orders, withdrawals. Protocol identity in every request |
-| **Deposit wallet (DW)** | CREATE2 from the owner EOA — Solady ERC-1967 **beacon** proxy on Polygon, `DW_FACTORY`/`DW_BEACON`/`DW_BEACON_INIT_*` | Holds the funds; `maker`/`signer` of every order; the address funds are credited to and leave from |
-| **`walletId`** | `UserWalletId.stringValue` (64 hex, no `0x`) | Correlation key on the BFF only (`/wallet/deploy` body, `GET /wallet?walletId`, the `wallet-id` header on positions, `/withdraw*` and `GET /configuration`). The bridge never sees it. **Not** an input to any derivation |
-
-`PolymarketAddresses` binds the first two to the `UserWalletId` they were derived for, and its
-constructor is `internal` so a pair cannot be assembled by hand. `DerivePolymarketAddressesUseCase`
-is the only producer; its `stored()` variant never prompts.
-
-The derivation path is hardened and belongs to no network — a wallet needs nothing in its portfolio to be
-onboarded. It must match iOS and the SDK byte for byte; `PolymarketDerivationConstantsTest` pins it.
-
-## Invariants — dear to break
+## Invariants — expensive to break
 
 1. **Opening a screen prompts for nothing.** Deriving the owner key opens a card session (Cold) or unlocks
-   the seed (Hot). `PolymarketEoaDeriver.storedOwnerEoa`, `DerivePolymarketAddressesUseCase.stored`,
-   `ResolvePolymarketEntryInteractor.withoutPrompting` and `DefaultPredictionAccountStatusFetcher` exist so
-   that a background refresh or a screen open never asks. `null` from any of them means "not derived on this
-   device", never "this wallet has no account" — a wallet onboarded on another phone answers `null` too.
-2. **One signing session per onboarding run.** `RunPolymarketOnboardingInteractor` signs ClobAuth and the
-   approvals batch in one signing session — a card session for Cold, a seed unlock for Hot
-   (`PolymarketTypedDataSigner.signOnboarding`) — and never asks twice; a
-   failure is reported retryable and the caller starts a new run.
-3. **Approvals are only ever checked on a fresh wallet.** The BFF reads on-chain allowances before it
-   validates the batch we send, so an already-approved deposit wallet answers `READY_TO_TRADE` to *any*
-   batch. A wrong batch surfaces only on a brand-new wallet — test approvals changes on one.
-4. **The batch is 13 calls and is not pinned by the backend.** `PolymarketApprovalCalls.build()`: 8 ERC-20
-   `approve` + 5 ERC-1155 `setApprovalForAll`, validated by the BFF as a set of `{target, selector, spender}`.
-   It already grew from 6 to 13 without notice (August 2026); when it changes again the app fails with a
-   BFF `400` until a release ships. Taking the list from the backend is a proposed v2 change.
-5. **Collateral ≠ top-up token.** `PolymarketContracts.COLLATERAL` (`0xC011a7E1…`) is **pUSD**, the
-   settlement token every order spends and `getBalanceAllowance` reports. Deposits are made in native USDC
-   on Polygon (`USDC_TOKEN_ADDRESS`, `0x3c499c…`); `PolymarketCollateralCurrencyFactory.createDepositTarget()`
-   is that token, `create()` is pUSD. The bridge converts.
-6. **The region is read by the flow that commits, never supplied by its entry route.** An unreadable region never
-   locks a user out of an existing account (browse, withdraw stay open), but it does refuse what would
-   *commit* them: `CheckNewPolymarketAccountAllowedInteractor` answers `UNDETERMINED` (no new deploy) and
-   the order flow keeps its gate shut as "unknown" rather than "restricted". The one fail-closed edge: that
-   interactor tells a new account from an existing one by a BFF status read, and when the read fails it asks
-   the geoblock anyway — an existing account that has no local confirmation record is then gated like a new
-   one until the BFF answers. The order flow reads the
-   region when it is shown and re-reads on resume only while it is still unknown — there is no re-read
-   right before signing; Amount passes its accepted state to Summary in an internal snapshot, so a region
-   that changes while the screen is open is not caught. A new trading
-   flow needs its own read.
-   `PolymarketAccessMode.READ_ONLY` (browse + withdraw only) is sourced from the geoblock alone — a second
-   reason to restrict access needs its own signal, or the UI explains the restriction wrongly.
-7. **The prediction account never blocks the other accounts.** `PredictionAccountStatusSupplier` is combined
-   with every other account's status on the wallet screen; `combine` withholds until every source has
-   emitted. So the store emits on subscription even when empty, the producer starts with a pending rate,
-   and a failed refresh keeps the cached value instead of writing "empty". Never show `Loading` when the
-   store already holds a value.
+   the seed (Hot); background refreshes and screen opens use only the `stored` / `withoutPrompting`
+   variants. Their `null` means "not derived on this device", never "no account" — a wallet onboarded on
+   another phone answers `null` too.
+2. **One signing session per onboarding run.** ClobAuth and the approvals batch are signed together and the
+   user is never asked twice; a failure is retryable and the caller starts a new run.
+3. **Approvals are only really checked on a fresh wallet.** The BFF reads on-chain allowances before it
+   validates our batch, so an already-approved deposit wallet answers `READY_TO_TRADE` to *any* batch.
+   Test approvals changes on a brand-new wallet.
+4. **The 13-call approvals batch is not pinned by the backend.** It is validated as a set of
+   `{target, selector, spender}` and grew from 6 to 13 without notice (August 2026); the next change breaks
+   the app with a BFF `400` until a release ships.
+5. **Collateral ≠ top-up token.** `COLLATERAL` is pUSD — what orders spend and the CLOB balance reports.
+   Deposits are native USDC on Polygon (`USDC_TOKEN_ADDRESS`); the bridge converts.
+6. **The region is read by the flow that commits, never supplied by its entry route.** An unreadable region
+   never locks a user out of an existing account (browse, withdraw stay open) but refuses what would commit
+   them: no new deploy (`UNDETERMINED`), order gate shut as "unknown", not "restricted". Fail-closed edge:
+   when the BFF status read fails, the new-account check asks the geoblock anyway, so an existing account
+   without a local confirmation record is gated like a new one until the BFF answers. The order flow does
+   not re-read the region right before signing — a new trading flow needs its own read.
+   `PolymarketAccessMode.READ_ONLY` comes from the geoblock alone; a second restriction cause needs its own
+   signal, or the UI explains it as a region restriction.
+7. **The prediction account never blocks the other accounts.** Its status supplier is `combine`d with every
+   other account on the wallet screen, and `combine` waits for all sources. So the store emits on
+   subscription even when empty, the producer starts with a pending rate, and a failed refresh keeps the
+   cached value. Never show `Loading` when the store already holds a value.
 8. **A ready backend status is not enough to trade.** L2 credentials live only on this device. Reinstall,
-   new phone, deleted-and-re-added wallet → status `READY_TO_TRADE`, nothing to sign with →
-   `PolymarketEntry.Reconnect`: the same onboarding run signs both digests in one session, uses only the
-   ClobAuth signature to re-derive the credentials, and deploys and approves nothing. A CLOB `401` on balance
-   or order drops only the credentials, never `PolymarketOnboardedStore`, so the gate offers Reconnect, not a
-   full onboarding. Reading, clearing and re-deriving the credentials of one wallet share one non-reentrant
-   `PolymarketCredentialsLock`, so a late `401` cannot wipe a set a Reconnect has just stored.
-9. **Withdrawal is persisted before it is submitted.** `SubmitPredictionWithdrawalInteractor` stores the
-   signed batch, then posts it; the relayer keys submissions on `(deposit wallet, nonce)`, so a resend of the
-   same batch returns the same receipt. `prepare()` refuses while a record is in flight (`AlreadyInFlight`).
-   A double withdrawal is worse than a stuck record — do not clear a record on an ambiguous error.
+   new phone or a re-added wallet → `READY_TO_TRADE` with nothing to sign with → `PolymarketEntry.Reconnect`:
+   the same onboarding run signs both digests, uses only ClobAuth to re-derive credentials, deploys and
+   approves nothing. A CLOB `401` on balance or order drops only the credentials, never
+   `PolymarketOnboardedStore`, so the gate offers Reconnect, not a full onboarding. Reading, clearing and
+   re-deriving one wallet's credentials share one non-reentrant `PolymarketCredentialsLock`, so a late `401`
+   cannot wipe a set a Reconnect has just stored.
+9. **A withdrawal is persisted before it is submitted.** The relayer keys submissions on
+   `(deposit wallet, nonce)`, so resending the same batch returns the same receipt. The record is cleared
+   on a terminal receipt or on a rejection of the submit itself (`RelayerRejected`, `InvalidRequest` — the
+   relayer recorded nothing), never on an ambiguous error. A double withdrawal is worse than a stuck record.
 
-## Onboarding state machine
+## Onboarding
 
-`PolymarketWalletStatus` mirrors BFF `GET /wallet`:
-`NOT_CREATED → DEPLOYMENT_IN_PROGRESS → DEPLOYED → APPROVALS_IN_PROGRESS → READY_TO_TRADE`, with
-`DEPLOYMENT_FAILED` / `APPROVALS_FAILED` as retry points and `UNKNOWN` for anything the BFF adds later
-(treated as "keep polling", never as a breaking change).
+- `PolymarketWalletStatus.UNKNOWN` (anything the BFF adds later) means "keep polling", not a breaking
+  change. The run has no deadline and resumes from whatever status the backend reports.
+- Credentials: derive-api-key first, create only on "no key yet".
+- `PolymarketOnboardedStore` mirrors backend reads: `READY_TO_TRADE` records the wallet, `NOT_CREATED`
+  withdraws it, any other status leaves it alone. Without stored addresses nothing is asked: the record
+  alone answers `Reconnect`, its absence `Undetermined`.
 
-`RunPolymarketOnboardingInteractor` resumes from whatever status the backend reports, emits
-`PolymarketOnboardingProgress` (`Deriving → AwaitingSignature → Working → Ready | Failed`), and has no
-deadline: it polls while the status is non-terminal. Steps, each its own use case:
-`DerivePolymarketAddresses → GetPolymarketWalletStatus` (a wallet that owes no approvals and already
-holds credentials skips straight to waiting for `READY_TO_TRADE`) `→ GetPolymarketRelayerNonce →
-SignOnboardingDigests → DeployDepositWallet` (when needed) `→ DeriveApiCredentials` (skipped when
-credentials exist; derive-api-key first, create only on "no key yet") `→` wait for `DEPLOYED` `→
-SubmitApprovals →` wait for `READY_TO_TRADE`. Finishing marks the wallet in `PolymarketOnboardedStore`,
-primes the CLOB balance cache and refreshes the account status. `RecordPolymarketConfirmationUseCase`
-keeps that store in step with a backend read elsewhere (`ResolvePolymarketEntryInteractor`): `READY_TO_TRADE`
-records the wallet, `NOT_CREATED` withdraws it, every other status leaves the record alone.
+## Signing and orders
 
-`ResolvePolymarketEntryInteractor` decides where the user lands (`PolymarketEntry`): `Onboarded` from local
-state alone when the confirmation record and credentials exist; `Onboard(status)` / `Reconnect` after a
-backend read when the addresses are stored. Without stored addresses and without prompting, no backend is
-asked: the confirmation record alone answers `Reconnect`, its absence `Undetermined`.
+- Relayer batches (approvals, withdrawal, claim) carry `deadline = now + 600 s`. Known gap: the tracker's
+  `resend` of a persisted withdrawal skips the expiry check that `confirm` does.
+- Orders use `signatureType = 3` (deposit wallet) wrapped in ERC-7739; the exchange `verifyingContract`
+  is chosen by `isNegRisk`. The signed order is re-validated against the draft, the deposit wallet, the
+  market and the quote age (60 s) before it is sent.
+- SELL: `makerAmount = shares`, `takerAmount = collateral`; BUY the reverse.
 
-## Signing
+## Funds
 
-`PolymarketTypedDataSigner` has four entry points, all EIP-712 over the owner key:
+- **Requisites** are written **after** the deposit address, so callers may treat requisites becoming
+  available as proof the status carries a confirmed address.
+- **Balance**: `syncBalanceAllowance` must precede `getBalanceAllowance` — the CLOB serves a cached figure it
+  recomputes only when asked, so a wallet funded after onboarding would report zero forever. The sync is
+  best-effort.
+- **Funding window** (5 s polling instead of 30 s) opens only on a send this app made; an external
+  transfer's timing is unknown.
+- **Positions value** is kept apart from the account status: it needs only the deposit-wallet address
+  (public data API), and a failed read must not touch the balance. `PredictionTotalBalance.of` is the one
+  place collateral and positions are added. Runtime only — persist it when the wallet total starts counting
+  it.
+- **Withdraw destinations** are filtered to USDC · Polygon (phase 1, owner decision 15.09.2026).
+- **Withdraw has no minimum** by design (guide §7.1); `minCheckoutUsd` is deposit-only.
+- **Withdrawal tracker** is started from the swap withdraw flow only, not on cold start (known gap).
 
-| Call | Domain | Notes |
-|---|---|---|
-| `signOnboarding` | `ClobAuth` (no `verifyingContract`) + `DepositWallet` batch | Two digests, one session |
-| `signClobAuth` | `ClobAuth` | ClobAuth alone; no production caller — `Reconnect` goes through `signOnboarding` |
-| `signWithdrawal` | `DepositWallet` batch | Same `Batch` envelope as approvals, one `transfer` call |
-| `signOrder` | CTF Exchange (`name "Polymarket CTF Exchange"`, `version "2"`, chain 137) wrapped in **ERC-7739** for the deposit wallet | `signatureType = 3` (`SIGNATURE_TYPE_DEPOSIT_WALLET`) |
+## Account support
 
-ERC-7739 is not in the Blockchain SDK; it is ported in `data/polymarket/builder/PolymarketErc7739SignatureBuilder`.
-The exchange domain is the same name/version for CTF and neg-risk — only `verifyingContract` differs
-(`CTF_EXCHANGE` vs `NEG_RISK_CTF_EXCHANGE`), chosen by `isNegRisk`. Known-answer vectors read off the chain
-pin `PolymarketOrderDigestTest`, `PolymarketErc7739SignatureBuilderTest`, `PolymarketTypedDataDigestTest`;
-a byte-level mistake shows up only as a CLOB rejection, so change these builders vector-first.
-
-Relayer batches (approvals, withdrawal) carry a `deadline` of now + 600 s (`PolymarketRelayerDeadline`).
-`SubmitPredictionWithdrawalInteractor.confirm` refuses an expired batch (`isExpired`); `resend`, which the
-tracker uses to recover a persisted batch, submits it without that check — known gap. On either path a
-`RelayerRejected` (the 422s, `DeadlineTooSoon` included) or `InvalidRequest` answer to the submit clears the
-record, because the relayer recorded nothing; every other failure keeps it.
-
-Orders: `SignPredictionOrderInteractor` builds the draft from the quote (`BuildPredictionOrderDraftUseCase`),
-signs with a 52-bit random salt, then `ValidatePredictionOrderUseCase` re-checks the signed order against the
-draft, the deposit wallet, the market and the quote age before anything is sent. SELL side:
-`makerAmount = shares`, `takerAmount = collateral`; BUY the reverse.
-
-## Funds movement
-
-- **Requisites.** `RefreshPredictionDepositRequisitesInteractor` reads bridge `/supported-assets` and
-  `POST /deposit` together, groups assets into `PolymarketDepositNetwork`s by `PolymarketChainFamily`, and
-  writes the requisites store **after** the deposit address (`PredictionDepositAddressWriter`) — callers may
-  treat requisites becoming available as proof the status carries a confirmed address.
-- **Balance.** `GetPolymarketBalanceInteractor` calls `syncBalanceAllowance` before `getBalanceAllowance`:
-  the CLOB serves a cached figure it only recomputes when asked, so without the sync a wallet funded after
-  onboarding reports zero forever. The sync is best-effort.
-- **Polling.** `PredictionBalancePoller` — one loop per wallet, reference-counted subscribers, runs on the
-  app scope. `PredictionBalancePollingConfig`: 30 s base, 5 s while a `PredictionFundingWindow` is open
-  (2 min window, 10 min max age). The window opens on a send this app made (`PredictionFundingWindow.open`)
-  and closes when the balance settles or the window elapses. Every tick refreshes the account status; ticks
-  outside the funding window also run `PredictionPositionsValueFetcher`.
-- **Positions value.** Kept apart from the account status: it needs only the deposit-wallet address (public
-  data API, `PolymarketPositionsRepository.getPositionsValue`), not credentials or the wallet status, and a
-  failed read must not touch the balance. `PredictionPositionsValueFetcher` / `PredictionPositionsValueSupplier`
-  hold it per wallet as `PredictionPositionsValue` — `Unknown` until first read, `Known(amount, source)` after,
-  `ONLY_CACHE` after a failed re-read; the fetcher is a no-op without stored addresses. `PredictionTotalBalance.of(status, positions)` is the one
-  place collateral and positions are added; its `source` is the less fresh of the two, `null` while the
-  positions value was never read. Runtime only — add persistence when the wallet total starts counting it.
-- **Withdraw destinations.** `GetPredictionWithdrawDestinationsUseCase` matches bridge assets to the
-  wallet's currencies but is filtered to USDC · Polygon (phase 1, owner decision 15.09.2026). Removing the
-  filter is the phase-2 change.
-- **Withdrawal tracking.** `PredictionWithdrawalTracker` resends a record without `transactionId`, then
-  polls `getState` (5 s × 360). A terminal state clears the record; a `NonceTaken` / `RelayerRejected` /
-  `InvalidRequest` / `Unauthorized` / `NotFound` answer to `getState` stops polling and leaves the record in
-  place (see invariant 9) — only the submit itself clears it on a rejection, as above. Known gap: the
-  tracker is started from the withdraw flow only, not on cold start.
-
-## Activity history
-
-`PolymarketActivitySession` owns one wallet's History visit. It resolves only stored addresses, retains
-rows during refresh, reloads from the first cursor on filter changes and refills the previously displayed
-row count before replacing a refreshed list. Pagination deduplicates operation ids and continues through
-pages that add no rows. Pause cancels active reads; resume reloads the selected filter. Entry and manual
-refresh request deposit reconciliation, followed by one history reread after the server's delay, without
-repeatedly submitting scans. A failed refresh preserves rows and exposes retry.
-
-## Prediction account in the rest of the app
-
-The account type itself is `Account.Prediction` / `AccountId.forPredictionAccount` /
-`PredictionAccountStatusValue` in `domain/models`, and `domain/account/status` combines
-`PredictionAccountStatusSupplier` into the account list. Support is `UserWallet.isPredictionAccountSupported`
-(= `isMultiCurrency`) and ignores the lock — the account is part of the wallet's structure.
-`GetPolymarketEligibleWalletsUseCase` is the one that respects the lock, for the wallet picker.
-
-## What is not here (yet)
-
-- Claiming a resolved position (redeem) — [REDACTED_TASK_KEY] / [REDACTED_TASK_KEY]; iOS has a claim transaction service.
-- Tradezone PnL (`/v1/leaderboard`).
-- Withdraw minimum — deliberately none (BFF client guide §7.1); `minCheckoutUsd` is deposit-only.
-
-## Where the contract comes from
-
-The external contract is a hypothesis until a real response confirms it: every documented status code and
-field shape on this epic has been wrong at least once (`404` that was a `400`, UUPS that was a beacon, a
-6-call batch that became 13, a `walletId` whose meaning reversed). Notion, `Tangem Wallet / Features /
-Polymarket Integration`, is the source; the pages that matter are listed in `data/polymarket/CLAUDE.md`.
-When a contract changes, update that list and this file in the same PR as the code.
+`UserWallet.isPredictionAccountSupported` (= `isMultiCurrency`) ignores the lock — the account is part of
+the wallet's structure. Only `GetPolymarketEligibleWalletsUseCase` (the wallet picker) respects the lock.
