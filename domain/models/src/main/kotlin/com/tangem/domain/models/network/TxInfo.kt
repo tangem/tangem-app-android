@@ -64,7 +64,9 @@ sealed interface TxInfo {
 
         override val txHash: String get() = first.txHash
         override val timestampInMillis: Long get() = first.timestampInMillis
-        override val status: TransactionStatus get() = first.status
+        /** The payload's: the gasless fee or a Safe refund is paid even when the transfer it paid for failed */
+        override val status: TransactionStatus
+            get() = (transfers.firstOrNull { it.type != TransactionType.GaslessFee } ?: first).status
         override val fee: SdkAmount? get() = first.fee
 
         val gaslessFee: Single? get() = transfers.firstOrNull { it.type == TransactionType.GaslessFee }
