@@ -109,6 +109,7 @@ internal fun PolymarketMainScreen(
     onBackClick: () -> Unit,
     onSearchClick: () -> Unit,
     onHistoryClick: () -> Unit,
+    onSupportChatClick: () -> Unit,
     onLoadMore: () -> Unit,
     onVisibleEventsChange: (Set<String>) -> Unit,
     onScrollIdle: (index: Int, offset: Int) -> Unit,
@@ -155,6 +156,7 @@ internal fun PolymarketMainScreen(
                     isTabBandPinned = isTabBandPinned,
                     onBackClick = onBackClick,
                     onHistoryClick = onHistoryClick,
+                    onSupportChatClick = onSupportChatClick,
                 )
 
                 // Outside the scaffold: glass inside its own haze source has nothing to sample.
@@ -181,6 +183,7 @@ private fun PolymarketMainScaffold(
     isTabBandPinned: Boolean,
     onBackClick: () -> Unit,
     onHistoryClick: () -> Unit,
+    onSupportChatClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     TangemTopBarScaffold(
@@ -193,7 +196,9 @@ private fun PolymarketMainScaffold(
                 contentAlign = TangemTopNavigation.ContentAlign.Center,
                 fadeEnabled = false,
                 onBack = onBackClick,
-                endButton = { PolymarketMainMenu(onHistoryClick = onHistoryClick) },
+                endButton = {
+                    PolymarketMainMenu(onHistoryClick = onHistoryClick, onSupportChatClick = onSupportChatClick)
+                },
             )
         },
         overlay = { contentPadding ->
@@ -476,6 +481,7 @@ private fun PolymarketMainScreenContentPreview() {
             onBackClick = {},
             onSearchClick = {},
             onHistoryClick = {},
+            onSupportChatClick = {},
             onLoadMore = {},
             onVisibleEventsChange = {},
             onScrollIdle = { _, _ -> },
@@ -511,6 +517,7 @@ private fun PolymarketMainScreenAwaitingFundsPreview() {
             onBackClick = {},
             onSearchClick = {},
             onHistoryClick = {},
+            onSupportChatClick = {},
             onLoadMore = {},
             onVisibleEventsChange = {},
             onScrollIdle = { _, _ -> },
@@ -542,6 +549,7 @@ private fun PolymarketMainScreenErrorPreview() {
             onBackClick = {},
             onSearchClick = {},
             onHistoryClick = {},
+            onSupportChatClick = {},
             onLoadMore = {},
             onVisibleEventsChange = {},
             onScrollIdle = { _, _ -> },
@@ -581,6 +589,7 @@ private fun PolymarketMainScreenLoadingPreview() {
             onBackClick = {},
             onSearchClick = {},
             onHistoryClick = {},
+            onSupportChatClick = {},
             onLoadMore = {},
             onVisibleEventsChange = {},
             onScrollIdle = { _, _ -> },
