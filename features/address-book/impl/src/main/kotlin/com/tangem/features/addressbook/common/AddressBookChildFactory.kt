@@ -6,6 +6,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.addressbook.model.ContactId
 import com.tangem.features.addressbook.AddressSelectorComponent
 import com.tangem.features.addressbook.addaddress.DefaultAddAddressComponent
+import com.tangem.features.addressbook.analytics.toAnalyticsSource
 import com.tangem.features.addressbook.editcontact.DefaultEditContactComponent
 import com.tangem.features.addressbook.editcontact.ui.state.ValidatedAddress
 import com.tangem.features.addressbook.list.DefaultAddressBookListComponent
@@ -45,6 +46,7 @@ internal class AddressBookChildFactory @Inject constructor(
             params = DefaultEditContactComponent.Params(
                 contactId = route.contactId?.let(::ContactId),
                 predefinedAddress = buildPredefinedAddress(route),
+                creationSource = route.creationSource?.toAnalyticsSource(),
                 onBackClick = clickIntents::onEditContactBack,
                 onAddAddressClick = clickIntents::onAddAddressClick,
             ),

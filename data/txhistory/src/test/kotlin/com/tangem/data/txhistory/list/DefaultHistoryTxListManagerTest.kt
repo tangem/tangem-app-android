@@ -183,6 +183,38 @@ internal class DefaultHistoryTxListManagerTest {
         scope.cancel()
     }
 
+    @Test
+    fun `GIVEN index-table source WHEN backbone is empty THEN Unavailable`() = runTest {
+        // Arrange: express is available, but it has nothing to list and the blockchain has no history of its own.
+        every { indexTable.history() } returns flowOf(HistoryState.Empty)
+
+        // Act
+        val scope = CoroutineScope(StandardTestDispatcher(testScheduler))
+        val states = getEmittedValues(createManager(scope).state)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(states.last()).isEqualTo(HistoryState.Unavailable)
+        scope.cancel()
+    }
+
+    @Test
+    fun `GIVEN bsdk source WHEN backbone is empty THEN Empty`() = runTest {
+        // Arrange: the blockchain does have a history, it is simply still empty.
+        coEvery { getAccountCurrencyStatusUseCase.invokeSync(any<UserWalletId>(), any<CryptoCurrency>()) } returns
+            mockk<AccountCryptoCurrencyStatus>().some()
+        every { bsdk.history() } returns flowOf(HistoryState.Empty)
+
+        // Act
+        val scope = CoroutineScope(StandardTestDispatcher(testScheduler))
+        val states = getEmittedValues(createManager(scope).state)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(states.last()).isEqualTo(HistoryState.Empty)
+        scope.cancel()
+    }
+
     // endregion
 
     // region state sequence
