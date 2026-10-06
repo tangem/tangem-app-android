@@ -17,9 +17,7 @@ internal sealed interface WalletCampaigns {
  * A banner linked to a campaign is shown only while that campaign is open for the wallet: tapping it must lead to
  * the campaign, not to the "not found" or "already enrolled" sheet. Banners without a campaign are not affected.
  */
-internal class PromoBannerCampaignMatcher @Inject constructor(
-    private val availabilityChecker: PromoCampaignAvailabilityChecker,
-) {
+internal class PromoBannerCampaignMatcher @Inject constructor() {
 
     fun filter(banners: List<PromoBannerDisplay>, walletCampaigns: WalletCampaigns?): List<PromoBannerDisplay> {
         return banners.filter { banner -> isShown(banner, walletCampaigns) }
@@ -31,7 +29,6 @@ internal class PromoBannerCampaignMatcher @Inject constructor(
 
         val campaign = walletCampaigns.campaigns.firstOrNull { it.id == campaignId } ?: return false
 
-        return !campaign.isAlreadyEnrolled &&
-            availabilityChecker.isAvailable(campaign = campaign, userWallet = walletCampaigns.userWallet)
+        return !campaign.isAlreadyEnrolled
     }
 }
