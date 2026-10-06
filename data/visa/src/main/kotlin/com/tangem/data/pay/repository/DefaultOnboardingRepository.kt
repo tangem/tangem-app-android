@@ -281,6 +281,8 @@ internal class DefaultOnboardingRepository @Inject constructor(
         val event = when (kycStatus) {
             KycStatus.APPROVED -> TangemPayAnalyticsEvents.KycPassedAndOrderCreated()
             KycStatus.REJECTED -> TangemPayAnalyticsEvents.KycRejected()
+            KycStatus.UNKNOWN,
+            KycStatus.REQUIRED,
             KycStatus.INIT,
             KycStatus.PENDING,
             -> return
