@@ -266,7 +266,12 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
 
             // Assert
             assertThat(model.uiState.value.quote)
-                .isEqualTo(QuoteUM.Unavailable(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY))
+                .isEqualTo(
+                    QuoteUM.Unavailable(
+                        status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY,
+                        expected = BigDecimal("23.8"),
+                    ),
+                )
             assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
 
             model.onDestroy()
@@ -763,6 +768,116 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
 
             // Assert
             coVerify(exactly = 1) { checkGeoblockUseCase() }
+            model.onDestroy()
+        }
+    }
+
+    @Nested
+    inner class SellQuotes {
+
+        @Test
+        fun `GIVEN insufficient sell liquidity WHEN quote received THEN proceeds shown AND closing disabled`() = runTest {
+            // Arrange
+            coEvery { getQuoteUseCase(request = any()) } returns
+                createSellQuote().copy(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY).right()
+            val model = createAmountModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+
+            // Act
+            model.onResume()
+            runCurrent()
+
+            // Assert
+            val state = model.uiState.value
+            assertThat((state.order as OrderSideUM.Sell).proceeds)
+                .isEqualTo(SharesProceedsUM.Content(expected = BigDecimal("11.01")))
+            assertThat(state.quote).isInstanceOf(QuoteUM.Unavailable::class.java)
+            assertThat(state.notifications).contains(PredictionNotificationUM.NoLiquidity)
+            assertThat(state.isPrimaryButtonEnabled).isFalse()
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN sell proceeds without liquidity WHEN quote refresh pending THEN displayed state retained`() = runTest {
+            // Arrange
+            val quote = createSellQuote().copy(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY)
+            coEvery { getQuoteUseCase(request = any()) } returns quote.right()
+            val model = createAmountModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+            model.onResume()
+            runCurrent()
+            coEvery { getQuoteUseCase(request = any()) } coAnswers {
+                delay(timeMillis = QUOTE_POLL_INTERVAL_MILLIS)
+                quote.right()
+            }
+
+            // Act
+            advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+
+            // Assert
+            val state = model.uiState.value
+            assertThat((state.order as OrderSideUM.Sell).proceeds)
+                .isEqualTo(SharesProceedsUM.Content(expected = BigDecimal("11.01")))
+            assertThat(state.notifications).contains(PredictionNotificationUM.NoLiquidity)
+            assertThat(state.isPrimaryButtonEnabled).isFalse()
+            coVerify(exactly = 2) { getQuoteUseCase(request = any()) }
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN first sell quote fails WHEN screen shown THEN current price unavailable AND entry price kept`() =
+            runTest {
+                // Arrange
+                coEvery { getQuoteUseCase(request = any()) } returns
+                    PredictionOrderQuoteError.Unknown(httpCode = 500, detail = "Quote failed").left()
+                val model = createAmountModel(testScope = this, params = SELL_PARAMS)
+                advanceUntilIdle()
+                val initialMarket = model.uiState.value.market
+
+                // Act
+                model.onResume()
+                runCurrent()
+
+                // Assert
+                val state = model.uiState.value
+                assertThat(state.market).isEqualTo(initialMarket.copy(isPriceUnavailable = true))
+                assertThat((state.order as OrderSideUM.Sell).proceeds).isEqualTo(SharesProceedsUM.Unavailable)
+                assertThat(state.isPrimaryButtonEnabled).isFalse()
+
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN priced sell quote WHEN refresh fails and recovers THEN current price hidden and restored`() = runTest {
+            // Arrange
+            coEvery { getQuoteUseCase(request = any()) } returnsMany listOf(
+                createSellQuote().copy(averagePrice = BigDecimal("0.61")).right(),
+                PredictionOrderQuoteError.Network.left(),
+                createSellQuote().copy(averagePrice = BigDecimal("0.64")).right(),
+            )
+            val model = createAmountModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+            val initialMarket = model.uiState.value.market
+
+            // Act
+            model.onResume()
+            runCurrent()
+            val priced = model.uiState.value
+            advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+            val failed = model.uiState.value
+            advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+            val restored = model.uiState.value
+
+            // Assert
+            assertThat(priced.market).isEqualTo(initialMarket.copy(outcomePrice = "61¢"))
+            assertThat(failed.market).isEqualTo(priced.market.copy(isPriceUnavailable = true))
+            assertThat((failed.order as OrderSideUM.Sell).proceeds).isEqualTo(SharesProceedsUM.Unavailable)
+            assertThat(failed.isPrimaryButtonEnabled).isFalse()
+            assertThat(restored.market).isEqualTo(priced.market.copy(outcomePrice = "64¢"))
+            assertThat(restored.isPrimaryButtonEnabled).isTrue()
+
             model.onDestroy()
         }
     }
