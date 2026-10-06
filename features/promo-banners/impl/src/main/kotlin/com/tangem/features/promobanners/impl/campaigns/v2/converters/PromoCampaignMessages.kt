@@ -26,13 +26,12 @@ internal object PromoCampaignMessages {
         closeButton()
     }
 
-    /** The campaign's `nameKey` is already localized by the backend, so it goes into the title as-is. */
     fun alreadyEnrolled(campaign: PromoCampaign): MessageBottomSheetUM = messageBottomSheetUM {
         infoBlock {
             vector(Icons.ic_info_28) { type = MessageBottomSheetUM.Vector.Type.Informative }
             title = resourceReference(
                 R.string.promo_campaign_already_activated_title,
-                wrappedList(campaign.content.nameKey),
+                wrappedList(campaign.content.name),
             )
         }
         closeButton()
