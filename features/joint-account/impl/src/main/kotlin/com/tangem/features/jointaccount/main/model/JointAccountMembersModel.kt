@@ -22,10 +22,10 @@ import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
+import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountActivationError
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
-import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
@@ -151,12 +151,14 @@ internal class JointAccountMembersModel @Inject constructor(
                         userWalletId = params.userWalletId,
                         cryptoAccountId = account.cryptoAccountId,
                     ),
-                ) { ownAddress, shared ->
+                    flow3 = isConfirmingActivation,
+                ) { ownAddress, shared, isActivating ->
                     ResolvedAccount(
                         account = account,
                         invites = invites,
                         sharedInvites = shared,
                         ownAddress = ownAddress,
+                        isActivating = isActivating,
                     )
                 }
             }
@@ -171,6 +173,10 @@ internal class JointAccountMembersModel @Inject constructor(
                             sharedInvites = account.sharedInvites,
                             ownAddress = account.ownAddress,
                             callbacks = converterCallbacks,
+                            walletIconRes = userWalletsListRepository
+                                .getSyncOrNull(id = params.userWalletId)
+                                ?.let(::walletInterationIcon),
+                            isActivating = account.isActivating,
                         )
                     }
                     ?: ClearMembersAccountTransformer()
@@ -270,6 +276,7 @@ internal class JointAccountMembersModel @Inject constructor(
 
             if (account == null) {
                 TangemLogger.e("Joint account activation failed: no account behind the shown members list")
+                isConfirmingActivation.value = false
                 activationConfirmationNavigation.dismiss()
                 showActivationError()
                 return@launch
@@ -278,7 +285,11 @@ internal class JointAccountMembersModel @Inject constructor(
             val result = activateJointAccountUseCase(account = account)
             activationConfirmationNavigation.dismiss()
             result
-                .onLeft(::onActivationError)
+                .onLeft { error ->
+                    // On success the loader stays until the activated account takes the button away
+                    isConfirmingActivation.value = false
+                    onActivationError(error)
+                }
                 .onRight { onActivated() }
         }
     }
@@ -413,6 +424,7 @@ internal class JointAccountMembersModel @Inject constructor(
         val invites: List<String>,
         val sharedInvites: Set<String>,
         val ownAddress: String?,
+        val isActivating: Boolean,
     )
 
     private companion object {
