@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -49,6 +50,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_32
 import com.tangem.core.ui.res.generated.icons.ic_error_28
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayReissuePlasticCardUM
 
@@ -119,7 +121,9 @@ private fun ReplaceContent(content: TangemPayReissuePlasticCardUM.Content?, onDi
     SpacerH(16.dp)
     Column(modifier = Modifier.fillMaxWidth()) {
         TangemButton(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(TangemPayTestTags.REISSUE_PLASTIC_SHEET_CANCEL_BUTTON),
             size = TangemButton.Size.X12,
             variant = TangemButton.Variant.Secondary,
             onClick = onDismissRequest,
@@ -127,7 +131,9 @@ private fun ReplaceContent(content: TangemPayReissuePlasticCardUM.Content?, onDi
         )
         SpacerH(8.dp)
         TangemButton(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(TangemPayTestTags.REISSUE_PLASTIC_SHEET_REPLACE_BUTTON),
             size = TangemButton.Size.X12,
             variant = TangemButton.Variant.Primary,
             onClick = content?.onReplaceClick ?: {},
