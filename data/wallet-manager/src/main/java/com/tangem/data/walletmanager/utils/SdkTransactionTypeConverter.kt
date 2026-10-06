@@ -311,6 +311,10 @@ internal class SdkTransactionTypeConverter(
                 yieldSupplyAddresses.contains(source.address.lowercase())
             -> TxInfo.TransactionType.YieldSupply.Send(isYieldSupplyWithdraw = true)
 
+            currency is CryptoCurrency.Token &&
+                destination is TransactionHistoryItem.DestinationType.Single
+            -> TxInfo.TransactionType.Transfer
+
             else -> fallbackOperation(methodName)
         }
     }
