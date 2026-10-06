@@ -2,18 +2,15 @@ package com.tangem.feature.swap
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRouter
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.express.models.ProviderFilterType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
-import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.models.UiActions
-import com.tangem.feature.swap.models.states.ChooseProviderBottomSheetConfig
+import com.tangem.feature.swap.models.states.ChooseProviderSheetSource
 import com.tangem.feature.swap.models.states.PercentDifference
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.ui.StateBuilder
@@ -26,7 +23,7 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 /**
- * Tests for [StateBuilder.updateProvidersBottomSheetContent] — the periodic refresh that rewrites the
+ * Tests for [StateBuilder.updateProvidersSheetSource] — the periodic refresh that rewrites the
  * rows of an already open provider picker.
  */
 internal class StateBuilderProvidersBottomSheetTest {
@@ -60,11 +57,11 @@ internal class StateBuilderProvidersBottomSheetTest {
     @Test
     fun `GIVEN unavailable provider row WHEN quotes refresh THEN percent difference stays hidden`() {
         // Arrange
-        val holder = holderWithProviderRow(badge = ProviderState.AdditionalBadge.Unavailable)
+        val source = sourceWithProviderRow(badge = ProviderState.AdditionalBadge.Unavailable)
 
         // Act
-        val updated = sut.updateProvidersBottomSheetContent(
-            uiState = holder,
+        val updated = sut.updateProvidersSheetSource(
+            source = source,
             pricesLowerBest = mapOf(PROVIDER_ID to 0.5f),
             tokenSwapInfoForProviders = mapOf(PROVIDER_ID to tokenInfo()),
         )
@@ -76,11 +73,11 @@ internal class StateBuilderProvidersBottomSheetTest {
     @Test
     fun `GIVEN ordinary provider row WHEN quotes refresh THEN percent difference is applied`() {
         // Arrange
-        val holder = holderWithProviderRow(badge = ProviderState.AdditionalBadge.Empty)
+        val source = sourceWithProviderRow(badge = ProviderState.AdditionalBadge.Empty)
 
         // Act
-        val updated = sut.updateProvidersBottomSheetContent(
-            uiState = holder,
+        val updated = sut.updateProvidersSheetSource(
+            source = source,
             pricesLowerBest = mapOf(PROVIDER_ID to 0.5f),
             tokenSwapInfoForProviders = mapOf(PROVIDER_ID to tokenInfo()),
         )
@@ -89,12 +86,11 @@ internal class StateBuilderProvidersBottomSheetTest {
         assertThat(refreshedRow(updated).percentLowerThenBest).isEqualTo(PercentDifference.Value(0.5f))
     }
 
-    private fun refreshedRow(holder: SwapStateHolder): ProviderState.Content {
-        val config = holder.bottomSheetConfig?.content as ChooseProviderBottomSheetConfig
-        return config.providers.single() as ProviderState.Content
+    private fun refreshedRow(source: ChooseProviderSheetSource): ProviderState.Content {
+        return source.allProviders.single() as ProviderState.Content
     }
 
-    private fun holderWithProviderRow(badge: ProviderState.AdditionalBadge): SwapStateHolder {
+    private fun sourceWithProviderRow(badge: ProviderState.AdditionalBadge): ChooseProviderSheetSource {
         val row = ProviderState.Content(
             id = PROVIDER_ID,
             name = "Provider",
@@ -107,21 +103,11 @@ internal class StateBuilderProvidersBottomSheetTest {
             namePrefix = ProviderState.PrefixType.NONE,
             onProviderClick = {},
         )
-        val config = ChooseProviderBottomSheetConfig(
+        return ChooseProviderSheetSource(
             selectedProviderId = PROVIDER_ID,
-            providers = persistentListOf(row),
             allProviders = persistentListOf(row),
             notification = null,
-            selectedFilter = ProviderFilterType.ALL,
             availableFilters = persistentListOf(),
-            onFilterSelect = {},
-        )
-        return sut.createInitialLoadingState().copy(
-            bottomSheetConfig = TangemBottomSheetConfig(
-                isShown = true,
-                onDismissRequest = {},
-                content = config,
-            ),
         )
     }
 

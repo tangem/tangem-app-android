@@ -12,13 +12,18 @@ internal class TangemPayAddFundsUMConverterTest {
     private val listener: AddFundsListener = mockk(relaxed = true)
     private val data: TangemPayTopUpData = mockk()
 
-    private fun convert(shouldShowBankTransfer: Boolean) = TangemPayAddFundsUMConverter(
-        listener = listener,
-        shouldShowBankTransfer = shouldShowBankTransfer,
-    ).convert(data)
+    private fun convert(shouldShowBankTransfer: Boolean, isBankTransferLoading: Boolean = false) =
+        TangemPayAddFundsUMConverter(
+            listener = listener,
+            shouldShowBankTransfer = shouldShowBankTransfer,
+        ).convert(TangemPayAddFundsUMConverter.Input(data = data, isBankTransferLoading = isBankTransferLoading))
 
     private fun titleIds(um: TangemPayAddFundsUM): List<Int> {
         return um.items.map { (it.title as TextReference.Res).id }
+    }
+
+    private fun TangemPayAddFundsUM.bankTransfer(): TangemPayAddFundsItemUM = items.single {
+        (it.title as TextReference.Res).id == R.string.tangempay_topup_bank_transfer_title
     }
 
     @Test
@@ -55,5 +60,25 @@ internal class TangemPayAddFundsUMConverterTest {
         val receive = um.items.single { (it.title as TextReference.Res).id == R.string.tangempay_topup_receive_title }
         assertThat((receive.description as TextReference.Res).id)
             .isEqualTo(R.string.tangempay_topup_receive_body_multichain)
+    }
+
+    @Test
+    fun `GIVEN banking details idle WHEN convert THEN bank transfer row is clickable`() {
+        // Act
+        val row = convert(shouldShowBankTransfer = true).bankTransfer()
+
+        // Assert
+        assertThat(row.isLoading).isFalse()
+        assertThat(row.onClick).isNotNull()
+    }
+
+    @Test
+    fun `GIVEN banking details loading WHEN convert THEN bank transfer row loads and is not clickable`() {
+        // Act
+        val row = convert(shouldShowBankTransfer = true, isBankTransferLoading = true).bankTransfer()
+
+        // Assert
+        assertThat(row.isLoading).isTrue()
+        assertThat(row.onClick).isNull()
     }
 }
