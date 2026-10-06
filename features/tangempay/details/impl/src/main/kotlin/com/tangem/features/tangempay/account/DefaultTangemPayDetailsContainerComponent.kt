@@ -31,6 +31,7 @@ import com.tangem.features.tangempay.tiers.current.TangemPayCurrentPlanComponent
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanComponent
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
 import com.tangem.features.tangempay.withdraw.hub.TangemPayWithdrawHubComponent
+import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.moneyaccount.details.component.MoneyAccountAddFundsBottomSheetComponent
 import dagger.assisted.Assisted
@@ -43,6 +44,7 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
     @Assisted private val params: TangemPayDetailsContainerComponent.Params,
     private val tangemPayCardPageFactory: TangemPayCardPageComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
+    private val expressTransactionsComponentFactory: ExpressTransactionsComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
     private val moneyAccountAddFundsComponentFactory: MoneyAccountAddFundsBottomSheetComponent.Factory,
     private val cashbackComponentFactory: TangemPayCashbackComponent.Factory,
@@ -109,6 +111,7 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = params,
             tokenReceiveComponentFactory = tokenReceiveComponentFactory,
+            expressTransactionsComponentFactory = expressTransactionsComponentFactory,
             promoBannersBlockComponentFactory = promoBannersBlockComponentFactory,
             moneyAccountAddFundsComponentFactory = moneyAccountAddFundsComponentFactory,
         )
