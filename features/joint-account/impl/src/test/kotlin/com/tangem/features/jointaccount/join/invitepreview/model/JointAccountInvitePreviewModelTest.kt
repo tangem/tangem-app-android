@@ -22,12 +22,14 @@ import com.tangem.features.jointaccount.join.invitepreview.state.JointAccountInv
 import com.tangem.features.jointaccount.join.invitepreview.ui.state.JointAccountInvitePreviewUM
 import com.tangem.features.jointaccount.join.model.JointAccountJoinChildParams
 import com.tangem.features.jointaccount.join.model.JointAccountJoinDraftHolder
+import com.tangem.features.jointaccount.join.navigation.JointAccountJoinRoute
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -271,6 +273,25 @@ internal class JointAccountInvitePreviewModelTest {
         // Assert
         assertThat(model.uiState.value).isInstanceOf(JointAccountInvitePreviewUM.Failed::class.java)
         coVerify(exactly = 0) { getJointAccountInvitePreviewUseCase(any(), any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN preview loaded WHEN continue tapped THEN the name step opens without the confirmation sheet`() = runTest {
+        // Arrange
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet))
+        every { portfolioSelectorController.selectedAccountWithData(any()) } returns MutableStateFlow(wallet to mockk())
+        coEvery { getJointAccountInvitePreviewUseCase(any(), INVITE_ID) } returns preview().right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        (model.uiState.value as JointAccountInvitePreviewUM.Content).onContinueClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat((model.uiState.value as JointAccountInvitePreviewUM.Content).confirmation).isNull()
+        verify(exactly = 1) { router.push(JointAccountJoinRoute.DisplayName) }
         model.onDestroy()
     }
 
