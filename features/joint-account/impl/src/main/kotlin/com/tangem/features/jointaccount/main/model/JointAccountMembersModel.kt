@@ -165,6 +165,9 @@ internal class JointAccountMembersModel @Inject constructor(
             .onEach { resolved ->
                 dismissStaleActivationConfirmation(resolvedAccountId = resolved?.account?.cryptoAccountId)
 
+                val walletIconRes = userWalletsListRepository
+                    .getSyncOrNull(id = params.userWalletId)
+                    ?.let(::walletInterationIcon)
                 val transformer = resolved
                     ?.let { account ->
                         UpdateMembersAccountTransformer(
@@ -173,9 +176,7 @@ internal class JointAccountMembersModel @Inject constructor(
                             sharedInvites = account.sharedInvites,
                             ownAddress = account.ownAddress,
                             callbacks = converterCallbacks,
-                            walletIconRes = userWalletsListRepository
-                                .getSyncOrNull(id = params.userWalletId)
-                                ?.let(::walletInterationIcon),
+                            walletIconRes = walletIconRes,
                             isActivating = account.isActivating,
                         )
                     }
