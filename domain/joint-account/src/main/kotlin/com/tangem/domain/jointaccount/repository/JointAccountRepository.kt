@@ -13,6 +13,7 @@ import com.tangem.domain.jointaccount.model.JointOperationRejectError
 import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.models.wallet.UserWalletId
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Write operations on joint accounts. Reading the accounts of a wallet is the supplier's job — see
@@ -105,6 +106,12 @@ interface JointAccountRepository {
      * empty list, so a screen built on this keeps rendering everything else.
      */
     suspend fun getInvites(userWalletId: UserWalletId, cryptoAccountId: String): List<String>
+
+    /** The invites of [cryptoAccountId] already shared from this device. Never fails: an unreadable store is empty. */
+    fun getSharedInvites(userWalletId: UserWalletId, cryptoAccountId: String): Flow<Set<String>>
+
+    /** Records that [inviteId] was shared. Never throws: a failed write is only logged, the slot stays not invited. */
+    suspend fun markInviteShared(userWalletId: UserWalletId, cryptoAccountId: String, inviteId: String)
 
     /**
      * Registers a [safeTx] for collective signing, [signature] counting as the initiator's first one.
