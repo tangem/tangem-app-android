@@ -3,7 +3,6 @@ package com.tangem.data.promo.converter
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.*
 import com.tangem.domain.promo.models.*
 import com.tangem.utils.converter.Converter
-import kotlinx.datetime.Instant
 import java.math.BigDecimal
 
 /**
@@ -17,13 +16,7 @@ internal object PromoCampaignV3Converter : Converter<PromotionDto, PromoCampaign
         return PromoCampaign(
             id = value.id ?: return null,
             name = value.name,
-            status = convertStatus(value.status) ?: return null,
-            timeline = PromoTimeline(
-                start = parseInstant(value.startAt) ?: return null,
-                end = parseInstant(value.endAt) ?: return null,
-            ),
             isAlreadyEnrolled = value.isAlreadyEnrolled,
-            eligibility = convertEligibility(value.eligibility ?: return null) ?: return null,
             payout = PromoPayout(
                 isNeeded = value.properties.isPayoutNeeded,
                 tokens = value.properties.payoutTokens.orEmpty().mapNotNull(::convertToken),
@@ -31,43 +24,6 @@ internal object PromoCampaignV3Converter : Converter<PromotionDto, PromoCampaign
             matchMode = convertMatchMode(value.properties.matchMode) ?: return null,
             content = convertContent(value.content),
         )
-    }
-
-    private fun parseInstant(value: String): Instant? = runCatching { Instant.parse(value) }.getOrNull()
-
-    private fun convertStatus(status: Status): PromoCampaignStatus? = when (status) {
-        Status.DRAFT -> PromoCampaignStatus.Draft
-        Status.ACTIVE -> PromoCampaignStatus.Active
-        Status.PAUSED -> PromoCampaignStatus.Paused
-        Status.ARCHIVED -> PromoCampaignStatus.Archived
-        Status.UNKNOWN -> null
-    }
-
-    /** An audience rule this app version can't read must not show the campaign to everyone. */
-    private fun convertEligibility(eligibility: Eligibility): PromoEligibility? = when (eligibility.type) {
-        EligibilityType.PUBLIC -> PromoEligibility.Public
-        EligibilityType.PRIVATE -> PromoEligibility.Private(convertConditions(eligibility.conditions))
-        EligibilityType.UNKNOWN -> null
-    }
-
-    private fun convertConditions(conditions: Conditions?) = PromoEligibilityConditions(
-        walletIds = conditions?.walletIds,
-        walletType = conditions?.walletType?.let(::convertWalletType),
-        batchIds = conditions?.batchIds,
-        countryExcluded = conditions?.countryExcluded,
-        minAndroidVersion = conditions?.minAndroidVersion,
-        maxAndroidVersion = conditions?.maxAndroidVersion,
-    )
-
-    /**
-     * A converted (hot, upgraded to a card) wallet is not distinguishable from a card on the app side, so that
-     * condition is left to the backend, which receives the wallet type with the request.
-     */
-    private fun convertWalletType(walletType: EligibilityWalletType): PromoWalletType? = when (walletType) {
-        EligibilityWalletType.MOBILE -> PromoWalletType.Mobile
-        EligibilityWalletType.CARD -> PromoWalletType.Card
-        EligibilityWalletType.UNKNOWN,
-        -> null
     }
 
     private fun convertMatchMode(matchMode: MatchMode): PromoMatchMode? = when (matchMode) {
@@ -88,26 +44,26 @@ internal object PromoCampaignV3Converter : Converter<PromotionDto, PromoCampaign
     }
 
     private fun convertContent(content: Content) = PromoCampaignContent(
-        nameKey = content.campaignNameKey,
+        name = content.campaignName,
+        summary = content.campaignDescription,
         description = content.publicDescription.mapNotNull(::convertBlock),
         imageUrl = content.publicImage,
-        learnMoreLink = content.learnMoreLink?.let(::convertLink),
-        tncLink = convertLink(content.tncLink),
-        actionButtonNameKey = content.actionButtonNameKey,
+        tncLink = content.tncLink.convert(),
+        actionButtonName = content.actionButtonName,
     )
 
-    private fun convertLink(link: Link) = PromoLink(textKey = link.textKey, url = link.url)
+    private fun Link.convert() = PromoLink(text = text, url = url)
 
     private fun convertBlock(block: DescriptionBlock): PromoDescriptionBlock? = when (block.type) {
-        BlockType.TEXT -> block.textKey?.let { textKey ->
-            PromoDescriptionBlock.Text(titleKey = block.titleKey, textKey = textKey)
+        BlockType.TEXT -> block.text?.let { text ->
+            PromoDescriptionBlock.Text(title = block.title, text = text, link = block.link?.convert())
         }
-        BlockType.HIGHLIGHT -> block.textKey?.let { textKey ->
-            PromoDescriptionBlock.Highlight(titleKey = block.titleKey, textKey = textKey)
+        BlockType.HIGHLIGHT -> block.text?.let { text ->
+            PromoDescriptionBlock.Highlight(title = block.title, text = text)
         }
         BlockType.BLOCK -> block.items.orEmpty().mapNotNull(::convertItem)
             .takeIf { it.isNotEmpty() }
-            ?.let { PromoDescriptionBlock.Items(titleKey = block.titleKey, items = it) }
+            ?.let { PromoDescriptionBlock.Items(title = block.title, items = it) }
         BlockType.TABLE -> convertTable(block)
         BlockType.UNKNOWN -> null
     }
@@ -122,7 +78,7 @@ internal object PromoCampaignV3Converter : Converter<PromotionDto, PromoCampaign
             )
         } ?: return null
 
-        return PromoDescriptionBlock.Item(labelKey = item.labelKey, value = value)
+        return PromoDescriptionBlock.Item(label = item.label, value = value)
     }
 
     private fun convertTable(block: DescriptionBlock): PromoDescriptionBlock.Table? {
@@ -131,8 +87,8 @@ internal object PromoCampaignV3Converter : Converter<PromotionDto, PromoCampaign
         if (rows.isEmpty()) return null
 
         return PromoDescriptionBlock.Table(
-            titleKey = block.titleKey,
-            headerKeys = block.headersKeys.orEmpty(),
+            title = block.title,
+            headers = block.headers.orEmpty(),
             rows = rows,
         )
     }
@@ -148,7 +104,7 @@ internal object PromoCampaignV3Converter : Converter<PromotionDto, PromoCampaign
 
     private fun convertCell(cell: TableCell, columnType: ValueType): PromoDescriptionBlock.Cell? {
         if (columnType == ValueType.TEXT) {
-            return cell.textKey?.let(PromoDescriptionBlock.Cell::Text)
+            return cell.text?.let(PromoDescriptionBlock.Cell::Text)
         }
 
         val value = convertAmount(
