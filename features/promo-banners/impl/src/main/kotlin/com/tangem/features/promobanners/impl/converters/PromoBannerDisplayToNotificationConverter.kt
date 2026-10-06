@@ -13,8 +13,10 @@ internal class PromoBannerDisplayToNotificationConverter {
         onDismiss: (Int) -> Unit,
         onCampaignClick: ((campaignId: Int) -> Unit)? = null,
     ): PromoBannerNotificationUM {
-        val campaignClick = banner.campaignId?.let { campaignId ->
-            onCampaignClick?.let { onClick -> { onClick(campaignId) } }
+        val campaignClick = if (banner.campaignId != null) {
+            onCampaignClick?.let { onClick -> { onClick(banner.campaignId) } }
+        } else {
+            null
         }
 
         return PromoBannerNotificationUM(

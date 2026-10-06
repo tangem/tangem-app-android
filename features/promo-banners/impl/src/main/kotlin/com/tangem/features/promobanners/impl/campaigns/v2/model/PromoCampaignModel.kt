@@ -48,12 +48,8 @@ import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -184,10 +180,11 @@ internal class PromoCampaignModel @Inject constructor(
         } else {
             wallets.firstOrNull { it.walletId == params.userWalletId }?.name
         }
+        val selectedToken = uiState.value.tokenSelector?.selectedToken
         val status = PromoCampaignStatusUMConverter(
             campaign = params.campaign,
             recipientWalletName = stringReference(recipientWalletName.orEmpty()),
-            recipientIcon = uiState.value.tokenSelector?.selectedToken?.iconState.takeIf { isPayoutChosen },
+            recipientIcon = selectedToken?.iconState.takeIf { isPayoutChosen },
             onDismiss = { router.pop() },
         ).convert(outcome)
 
