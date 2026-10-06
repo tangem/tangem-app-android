@@ -15,7 +15,6 @@ import com.tangem.features.promobanners.api.PromoBannersBlockComponent.Placehold
 import com.tangem.features.promobanners.api.PromoBannersFeatureToggles
 import com.tangem.features.promobanners.impl.campaigns.v2.createPromoCampaign
 import com.tangem.features.promobanners.impl.campaigns.v2.model.PromoBannerCampaignMatcher
-import com.tangem.features.promobanners.impl.campaigns.v2.model.PromoCampaignAvailabilityChecker
 import com.tangem.features.promobanners.impl.repository.PromoBannersRepository
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -36,7 +35,6 @@ internal class PromoBannersBlockModelTest {
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val promoBannersFeatureToggles: PromoBannersFeatureToggles = mockk()
     private val getPromoCampaignsUseCase: GetPromoCampaignsUseCase = mockk()
-    private val availabilityChecker: PromoCampaignAvailabilityChecker = mockk()
 
     private val selectedWallet: UserWallet = mockk { every { walletId } returns UserWalletId(SELECTED_WALLET_ID) }
     private val otherWallet: UserWallet = mockk { every { walletId } returns UserWalletId(OTHER_WALLET_ID) }
@@ -53,7 +51,6 @@ internal class PromoBannersBlockModelTest {
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(selectedWallet, otherWallet))
         coEvery { repository.getCachedBanners(any(), any()) } returns null
         coEvery { repository.getBanners(any(), any(), any()) } returns allBanners
-        every { availabilityChecker.isAvailable(any(), any()) } returns true
         coEvery { getPromoCampaignsUseCase(any(), any()) } returns Either.Right(
             listOf(
                 createPromoCampaign(id = OPEN_CAMPAIGN_ID),
@@ -123,7 +120,7 @@ internal class PromoBannersBlockModelTest {
         uiMessageSender = mockk<UiMessageSender>(relaxed = true),
         promoBannersFeatureToggles = promoBannersFeatureToggles,
         getPromoCampaignsUseCase = getPromoCampaignsUseCase,
-        campaignMatcher = PromoBannerCampaignMatcher(availabilityChecker),
+        campaignMatcher = PromoBannerCampaignMatcher(),
     )
 
     private fun createBanner(id: Int, campaignId: Int?) = PromoBannerDisplay(
