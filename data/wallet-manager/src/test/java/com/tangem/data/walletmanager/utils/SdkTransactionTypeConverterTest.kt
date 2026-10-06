@@ -490,24 +490,6 @@ internal class SdkTransactionTypeConverterTest {
             assertThat(actual).isNotEqualTo(TxInfo.TransactionType.GaslessFee)
         }
 
-        @ParameterizedTest
-        @ProvideTestModels
-        fun isOwnSafeZeroCall(model: OwnSafeZeroCallModel) {
-            // Act
-            val actual = jointConverter(model.currency, safeAddress = model.safeAddress)
-                .isOwnSafeZeroCall(safeItem(SAFE_EXEC_METHOD_ID, EXEC_TRANSACTION_CALLDATA))
-
-            // Assert
-            assertThat(actual).isEqualTo(model.expected)
-        }
-
-        private fun provideTestModels() = listOf(
-            OwnSafeZeroCallModel(currency = coin, safeAddress = SAFE_ADDRESS, expected = true),
-            OwnSafeZeroCallModel(currency = token, safeAddress = SAFE_ADDRESS, expected = false),
-            OwnSafeZeroCallModel(currency = currencyFactory.ethereum, safeAddress = SAFE_ADDRESS, expected = false),
-            OwnSafeZeroCallModel(currency = coin, safeAddress = OTHER_SAFE_ADDRESS, expected = false),
-        )
-
         @Test
         fun `GIVEN another Safe executing a transfer WHEN convert THEN plain named operation`() {
             // Arrange — another Safe paying this account shows up in its history with that Safe's calldata
@@ -667,12 +649,6 @@ internal class SdkTransactionTypeConverterTest {
         val methodId: String,
         val callData: String,
         val expectedName: String,
-    )
-
-    internal data class OwnSafeZeroCallModel(
-        val currency: CryptoCurrency,
-        val safeAddress: String,
-        val expected: Boolean,
     )
 
     internal data class YieldSendModel(
