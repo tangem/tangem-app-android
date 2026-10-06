@@ -4,8 +4,10 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -13,11 +15,21 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
+import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.model.MoneyAccountActivationError
+import com.tangem.domain.moneyaccount.model.MoneyAccountEligibility
 import com.tangem.domain.moneyaccount.model.MoneyAccountPaymentMethod
+import com.tangem.domain.moneyaccount.usecase.ActivateMoneyAccountUseCase
+import com.tangem.domain.moneyaccount.usecase.CreateMoneyAccountOrderUseCase
+import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountEligibilityUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountFeeTableUseCase
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.visa.model.MoneyAccountDepositCredentials
 import com.tangem.features.moneyaccount.onboarding.component.MoneyAccountOnboardingComponent
+import com.tangem.features.moneyaccount.onboarding.ui.MoneyAccountOnboardingNavigation
 import com.tangem.features.moneyaccount.onboarding.ui.MoneyAccountOnboardingUM
 import com.tangem.features.moneyaccount.onboarding.ui.MoneyAccountOnboardingUM.FeeRowUM
 import com.tangem.features.moneyaccount.onboarding.ui.MoneyAccountOnboardingUM.FeesUM
@@ -26,6 +38,7 @@ import com.tangem.utils.StringsSigns.DASH_SIGN
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.collections.immutable.persistentListOf
@@ -43,10 +56,155 @@ internal class MoneyAccountOnboardingModelTest {
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val onboardingRepository: OnboardingRepository = mockk()
     private val getMoneyAccountFeeTableUseCase: GetMoneyAccountFeeTableUseCase = mockk()
+    private val getMoneyAccountEligibilityUseCase: GetMoneyAccountEligibilityUseCase = mockk()
+    private val activateMoneyAccountUseCase: ActivateMoneyAccountUseCase = mockk()
+    private val createMoneyAccountOrderUseCase: CreateMoneyAccountOrderUseCase = mockk()
+    private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(router, urlOpener, onboardingRepository, getMoneyAccountFeeTableUseCase)
+        clearMocks(
+            router,
+            urlOpener,
+            onboardingRepository,
+            getMoneyAccountFeeTableUseCase,
+            getMoneyAccountEligibilityUseCase,
+            activateMoneyAccountUseCase,
+            createMoneyAccountOrderUseCase,
+            uiMessageSender,
+        )
+    }
+
+    @Test
+    fun `GIVEN single eligible wallet WHEN get started clicked THEN account created AND residency opened`() = runTest {
+        // Arrange
+        val userWalletId = UserWalletId("011")
+        coEvery { getMoneyAccountEligibilityUseCase() } returns
+            MoneyAccountEligibility.Available(wallets = listOf(mockWallet(userWalletId)))
+        mockAccountCreation(userWalletId)
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.content().onGetStartedClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) {
+            createMoneyAccountOrderUseCase(
+                userWalletId = userWalletId,
+                depositAddress = CREDENTIALS.address,
+                signature = CREDENTIALS.signature,
+            )
+        }
+        verify(exactly = 1) { router.push(eligibilityRoute(userWalletId), any()) }
+        assertThat(model.content().isLoading).isFalse()
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN several eligible wallets WHEN get started clicked THEN wallet selector opened`() = runTest {
+        // Arrange
+        val walletsIds = listOf(UserWalletId("011"), UserWalletId("022"))
+        coEvery { getMoneyAccountEligibilityUseCase() } returns
+            MoneyAccountEligibility.Available(wallets = walletsIds.map(::mockWallet))
+        val model = createModel(testScope = this)
+        val openedSheets = mutableListOf<MoneyAccountOnboardingNavigation?>()
+        model.bottomSheetNavigation.subscribe { event -> openedSheets += event.transformer(null) }
+        advanceUntilIdle()
+
+        // Act
+        model.content().onGetStartedClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(openedSheets).containsExactly(MoneyAccountOnboardingNavigation.WalletSelector(walletsIds))
+        coVerify(exactly = 0) { activateMoneyAccountUseCase(any()) }
+        verify(exactly = 0) { router.push(any(), any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN wallet selector shown WHEN wallet selected THEN account created AND residency opened`() = runTest {
+        // Arrange
+        val userWalletId = UserWalletId("022")
+        mockAccountCreation(userWalletId)
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onWalletSelected(userWalletId)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { router.push(eligibilityRoute(userWalletId), any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN user cancelled activation WHEN wallet selected THEN stays on screen without error`() = runTest {
+        // Arrange
+        val userWalletId = UserWalletId("022")
+        coEvery { activateMoneyAccountUseCase(userWalletId) } returns MoneyAccountActivationError.UserCancelled.left()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onWalletSelected(userWalletId)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { createMoneyAccountOrderUseCase(any(), any(), any()) }
+        verify(exactly = 0) { uiMessageSender.send(any()) }
+        verify(exactly = 0) { router.push(any(), any()) }
+        assertThat(model.content().isLoading).isFalse()
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN order creation fails WHEN wallet selected THEN error shown AND residency step not opened`() = runTest {
+        // Arrange
+        val userWalletId = UserWalletId("022")
+        coEvery { activateMoneyAccountUseCase(userWalletId) } returns CREDENTIALS.right()
+        coEvery { createMoneyAccountOrderUseCase(userWalletId, any(), any()) } returns
+            VisaApiError.ServerUnavailable.left()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onWalletSelected(userWalletId)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { uiMessageSender.send(any()) }
+        verify(exactly = 0) { router.push(any(), any()) }
+        assertThat(model.content().isLoading).isFalse()
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN no eligible wallets WHEN get started clicked THEN error shown AND screen kept`() = runTest {
+        // Arrange
+        coEvery { getMoneyAccountEligibilityUseCase() } returns MoneyAccountEligibility.NotAvailable
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.content().onGetStartedClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { uiMessageSender.send(any()) }
+        verify(exactly = 0) { router.pop(any()) }
+        verify(exactly = 0) { router.push(any(), any()) }
+        assertThat(model.content().isLoading).isFalse()
+
+        model.onDestroy()
     }
 
     @Test
@@ -173,7 +331,25 @@ internal class MoneyAccountOnboardingModelTest {
         urlOpener = urlOpener,
         onboardingRepository = onboardingRepository,
         getMoneyAccountFeeTableUseCase = getMoneyAccountFeeTableUseCase,
+        getMoneyAccountEligibilityUseCase = getMoneyAccountEligibilityUseCase,
+        activateMoneyAccountUseCase = activateMoneyAccountUseCase,
+        createMoneyAccountOrderUseCase = createMoneyAccountOrderUseCase,
+        uiMessageSender = uiMessageSender,
     )
+
+    private fun mockAccountCreation(userWalletId: UserWalletId) {
+        coEvery { activateMoneyAccountUseCase(userWalletId) } returns CREDENTIALS.right()
+        coEvery { createMoneyAccountOrderUseCase(userWalletId, any(), any()) } returns Unit.right()
+    }
+
+    private fun eligibilityRoute(userWalletId: UserWalletId) = AppRoute.TangemPayEligibility(
+        product = TangemPayProduct.BANKING_ACCOUNT,
+        userWalletId = userWalletId,
+    )
+
+    private fun mockWallet(userWalletId: UserWalletId): UserWallet = mockk {
+        every { walletId } returns userWalletId
+    }
 
     private fun MoneyAccountOnboardingModel.content() = uiState.value as MoneyAccountOnboardingUM.Content
 
@@ -204,5 +380,6 @@ internal class MoneyAccountOnboardingModelTest {
 
     private companion object {
         const val ICON_URL = "https://tangem.com/flags/us.png"
+        val CREDENTIALS = MoneyAccountDepositCredentials(address = "0xdeposit", signature = "0xsignature")
     }
 }
