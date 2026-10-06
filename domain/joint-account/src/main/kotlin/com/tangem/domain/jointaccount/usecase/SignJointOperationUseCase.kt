@@ -36,6 +36,9 @@ import com.tangem.utils.extensions.addHexPrefix
  * caller showed, the [JointOperationVerifier] pipeline and the Blockaid gate both stand between it and the card,
  * and only then the signature is collected and sent. An operation the slot no longer holds under that id — it
  * finished, was cancelled, or was replaced by another one — is [JointOperationSignError.OperationNotFound].
+ *
+ * Returns the operation as the backend reports it right after counting the signature, `null` when that answer could
+ * not be read.
  */
 @Suppress("LongParameterList")
 class SignJointOperationUseCase(
@@ -57,7 +60,7 @@ class SignJointOperationUseCase(
         network: Network,
         operationId: String,
         displayed: JointTransferIntent,
-    ): Either<JointOperationSignError, Unit> = either {
+    ): Either<JointOperationSignError, JointOperation?> = either {
         val userWalletId = account.accountId.userWalletId
 
         val jointAccount = ensureNotNull(supplier.find(accountId = account.accountId)) {
@@ -117,7 +120,7 @@ class SignJointOperationUseCase(
             .mapLeft(::toSignError)
             .bind()
 
-        repository
+        val signedOperation = repository
             .signOperation(
                 userWalletId = userWalletId,
                 operationId = operation.operationId,
@@ -129,6 +132,8 @@ class SignJointOperationUseCase(
         // The signature is already accepted by the backend, so a failed refresh must not fail the signing —
         // the list catches up on the next fetch
         fetcher(params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId)).getOrElse {}
+
+        signedOperation
     }
 
     /**

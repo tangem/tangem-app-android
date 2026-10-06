@@ -43,8 +43,8 @@ interface PromoRepository {
     ): EnrollResult
 
     /**
-     * Returns the campaigns eligible for [userWallet] (`GET /v3/promotion`), cached per wallet for the app
-     * session unless [forceRefresh]. Throws if the fetch fails; a failure never evicts other wallets' entries.
+     * Returns the campaigns eligible for [userWallet] (`GET /api/referral/v1/promotion/`), cached per wallet for the
+     * app session unless [forceRefresh]. Throws if the fetch fails; a failure never evicts other wallets' entries.
      */
     @Throws(Exception::class)
     suspend fun getCampaigns(userWallet: UserWallet, forceRefresh: Boolean = false): List<PromoCampaign>
