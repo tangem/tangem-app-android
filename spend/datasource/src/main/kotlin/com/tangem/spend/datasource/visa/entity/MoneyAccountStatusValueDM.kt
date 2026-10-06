@@ -20,7 +20,7 @@ sealed interface MoneyAccountStatusValueDM {
     @Serializable
     @SerialName("country_not_supported")
     data class CountryNotSupported(
-        @SerialName("country_code") val countryCode: String?,
+        @SerialName("country_code") val countryCode: String? = null,
     ) : MoneyAccountStatusValueDM
 
     @Serializable
