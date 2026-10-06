@@ -483,7 +483,6 @@ private fun TxInfo.headerIcon(currency: CryptoCurrency): TxIcon {
         is TransactionType.Approve -> TxIcon.Vector(Icons.ic_success_20)
         is TransactionType.GaslessFee,
         is TransactionType.NetworkFee,
-        is TransactionType.Joint.TokenFee,
         -> TxIcon.Vector(Icons.ic_percent_20)
         is TransactionType.Staking.Stake,
         is TransactionType.Staking.Unstake,
