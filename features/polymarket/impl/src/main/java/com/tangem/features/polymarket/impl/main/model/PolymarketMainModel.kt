@@ -11,6 +11,7 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
 import com.tangem.domain.polymarket.model.PolymarketCategory
@@ -95,6 +96,7 @@ internal class PolymarketMainModel @Inject constructor(
     private val predictionBalancePoller: PredictionBalancePoller,
     private val predictionFundingWindow: PredictionFundingWindow,
     private val observePolymarketCredentialsPresenceUseCase: ObservePolymarketCredentialsPresenceUseCase,
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
 ) : Model(), PolymarketAddFundsComponent.ModelCallback {
 
     private val params = paramsContainer.require<PolymarketMainParams>()
@@ -225,6 +227,21 @@ internal class PolymarketMainModel @Inject constructor(
 
     fun onHistoryClick() {
         router.push(PolymarketRoute.History(userWalletId = params.userWalletId))
+    }
+
+    fun onSupportChatClick() {
+        modelScope.launch {
+            getWalletMetaInfoUseCase(params.userWalletId)
+                .onRight { metaInfo ->
+                    router.push(
+                        AppRoute.Usedesk(
+                            walletMetaInfo = metaInfo,
+                            source = AnalyticsParam.ScreensSources.Predictions,
+                        ),
+                    )
+                }
+                .onLeft { TangemLogger.e("Failed to open the support chat from Predictions", it) }
+        }
     }
 
     fun onLoadMore() {
