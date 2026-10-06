@@ -87,6 +87,7 @@ sealed class IntroductionProcess(
      */
     class ButtonCreateNewWallet : IntroductionProcess("Button - Create New Wallet")
     class ButtonIHaveWallet : IntroductionProcess("Button - I Have Wallet")
+    class ButtonBuyTangem : IntroductionProcess("Button - Buy Tangem")
     class ButtonHardwareWallet : IntroductionProcess("Button - Hardware Wallet")
     class ButtonSignInWithCard : IntroductionProcess("Button - Sign In With Card")
     class ButtonTokensList : IntroductionProcess("Button - Tokens List")
