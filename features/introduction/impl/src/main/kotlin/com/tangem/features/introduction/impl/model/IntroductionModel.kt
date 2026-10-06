@@ -77,6 +77,7 @@ internal class IntroductionModel @Inject constructor(
     private var isScreenResumed = false
     private var isVideoRestartPendingResume = false
     private var isCreatingMobileWallet = false
+    private var isScanningCard = false
     private var hasRenderedFrame = false
 
     private val videoPlayer = videoPlayerFactory.create(
@@ -102,6 +103,13 @@ internal class IntroductionModel @Inject constructor(
         generateBuyTangemCardLinkUseCase = generateBuyTangemCardLinkUseCase,
     )
 
+    private val store = IntroductionStore(
+        scope = modelScope,
+        analyticsEventHandler = analyticsEventHandler,
+        urlOpener = urlOpener,
+        generateBuyTangemCardLinkUseCase = generateBuyTangemCardLinkUseCase,
+    )
+
     val storiesNavigation: SlotNavigation<Unit> get() = stories.navigation
 
     private val createWalletSheetCollapsed = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
@@ -119,6 +127,7 @@ internal class IntroductionModel @Inject constructor(
                 haveWalletBottomSheetConfig = null,
                 onCreateWalletClick = ::onCreateWalletClick,
                 onIHaveWalletClick = ::onIHaveWalletClick,
+                onBuyTangemClick = ::onBuyTangemClick,
                 onCreateWalletSheetCollapsed = ::onCreateWalletSheetCollapsed,
                 onTermsOfServiceClick = legalLinks::openTermsOfService,
                 onPrivacyPolicyClick = legalLinks::openPrivacyPolicy,
@@ -190,7 +199,10 @@ internal class IntroductionModel @Inject constructor(
 
     fun setVideoRunning(isRunning: Boolean) {
         isScreenResumed = isRunning
-        if (isRunning) stories.onScreenResumed()
+        if (isRunning) {
+            stories.onScreenResumed()
+            store.onScreenResumed()
+        }
         if (isRunning && isVideoRestartPendingResume) {
             isVideoRestartPendingResume = false
             videoPlayer.restart()
@@ -302,11 +314,16 @@ internal class IntroductionModel @Inject constructor(
 
     private fun launchCardScan(onNavigatedAway: () -> Unit, onFailed: () -> Unit) {
         modelScope.launch {
-            cardScanner.scanAndOpenWallet(
-                analyticsSource = AnalyticsParam.ScreensSources.Intro,
-                onNavigatedAway = onNavigatedAway,
-                onFailed = onFailed,
-            )
+            isScanningCard = true
+            try {
+                cardScanner.scanAndOpenWallet(
+                    analyticsSource = AnalyticsParam.ScreensSources.Intro,
+                    onNavigatedAway = onNavigatedAway,
+                    onFailed = onFailed,
+                )
+            } finally {
+                isScanningCard = false
+            }
         }
     }
 
@@ -355,6 +372,15 @@ internal class IntroductionModel @Inject constructor(
         analyticsEventHandler.send(IntroductionProcess.ButtonIHaveWallet())
         haveWalletSheet.open()
     }
+
+    private fun onBuyTangemClick() {
+        if (isAnySheetShown() || isWalletFlowRunning() || isStoryOnScreen()) return
+        store.open()
+    }
+
+    private fun isWalletFlowRunning(): Boolean = isCreatingMobileWallet || isScanningCard
+
+    private fun isStoryOnScreen(): Boolean = stories.isOpening || stories.isShown
 
     private fun isAnySheetShown(): Boolean = isCreateWalletSheetShown() || isHaveWalletSheetShown()
 
