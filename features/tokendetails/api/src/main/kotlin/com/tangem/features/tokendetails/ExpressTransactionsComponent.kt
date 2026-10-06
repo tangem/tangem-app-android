@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionsBlockState
 import com.tangem.core.decompose.factory.ComponentFactory
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.collections.immutable.PersistentList
@@ -25,7 +26,13 @@ interface ExpressTransactionsComponent {
             (txExternalId: String, providerName: String, txExternalUrl: String, userWalletIdStringValue: String) -> Unit
         )? = null,
         val onRatingDismiss: (() -> Unit)? = null,
+        val scope: Scope = Scope.Currency,
     )
+
+    sealed interface Scope {
+        data object Currency : Scope
+        data class Account(val accountId: AccountId, val maxCount: Int) : Scope
+    }
 
     interface Factory : ComponentFactory<Params, ExpressTransactionsComponent>
 }
