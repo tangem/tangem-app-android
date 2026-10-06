@@ -201,6 +201,13 @@ sealed class AnalyticsParam {
         data object Token : FeeAssetType("Token")
     }
 
+    sealed class AccountType(val value: String) {
+        data object Crypto : AccountType("Crypto")
+        data object Joint : AccountType("Joint")
+    }
+
+    data class JointComposition(val membersCount: Int, val threshold: Int)
+
     sealed class FeeType(val value: String) {
         data object Fixed : FeeType("Fixed")
         data object Min : FeeType("Min")
@@ -385,6 +392,11 @@ sealed class AnalyticsParam {
         const val ACCOUNT_DERIVATION_TO = "Account Derivation (to)"
         const val FEE_TOKEN = "Fee Token"
         const val ACCOUNT_DERIVATION = "Account Derivation"
+        const val ACCOUNT_TYPE = "Account Type"
+        const val ACCOUNT_TYPE_FROM = "Account Type (from)"
+        const val ACCOUNT_TYPE_TO = "Account Type (to)"
+        const val MEMBERS_COUNT = "Members Count"
+        const val THRESHOLD = "Threshold"
         const val REFERRAL = "Referral"
         const val REFERRAL_ID = "Referral_ID"
         const val SEARCHED = "Searched"

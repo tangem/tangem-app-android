@@ -73,12 +73,15 @@ sealed class Basic(
      *
      * [isCustomToken]/[isCustomFeeToken] mark user-defined tokens whose free-form symbols must not
      * become OTel attribute values — the mirrored metric gets [OtelIncludedEvent.CUSTOM_TOKEN] instead.
+     * [accountType] and [jointComposition] are reported only by the screens that pass them.
      */
     class TransactionSent(
         sentFrom: AnalyticsParam.TxSentFrom,
         memoType: MemoType,
         isCustomToken: Boolean,
         isCustomFeeToken: Boolean,
+        accountType: AnalyticsParam.AccountType? = null,
+        jointComposition: AnalyticsParam.JointComposition? = null,
     ) :
         Basic(
             event = "Transaction sent",
@@ -95,6 +98,11 @@ sealed class Basic(
                     put(AnalyticsParam.PERMISSION_TYPE, sentFrom.permissionType)
                 }
                 put(AnalyticsParam.MEMO, memoType.name)
+                accountType?.let { put(AnalyticsParam.ACCOUNT_TYPE, it.value) }
+                jointComposition?.let { composition ->
+                    put(AnalyticsParam.MEMBERS_COUNT, composition.membersCount.toString())
+                    put(AnalyticsParam.THRESHOLD, composition.threshold.toString())
+                }
             },
         ), AppsFlyerIncludedEvent, CriticalEvent, OtelIncludedEvent {
 
