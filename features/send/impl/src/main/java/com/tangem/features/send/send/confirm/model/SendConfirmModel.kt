@@ -48,6 +48,8 @@ import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransac
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendTronGaslessTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.api.subcomponents.amount.SendAmountReduceTrigger
@@ -74,6 +76,7 @@ import com.tangem.features.send.send.confirm.SendConfirmComponent
 import com.tangem.features.send.send.confirm.model.transformers.*
 import com.tangem.features.send.send.joint.JointSendDelegate
 import com.tangem.features.send.send.ui.state.SendUM
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.extensions.stripZeroPlainString
@@ -123,6 +126,7 @@ internal class SendConfirmModel @Inject constructor(
     private val jointSendDelegate: JointSendDelegate,
     private val recordTokenTransferFromSendUseCase: RecordTokenTransferFromSendUseCase,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
+    private val appScope: AppCoroutineScope,
 ) : Model(), SendConfirmClickIntents, FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
 
     private val params: SendConfirmComponent.Params = paramsContainer.require()
@@ -285,6 +289,7 @@ internal class SendConfirmModel @Inject constructor(
                 .fold(
                     ifLeft = ::showJointOperationError,
                     ifRight = {
+                        sendJointOperationCreatedAnalytics(account = account, feeToken = feeCurrencyStatus.currency)
                         _uiState.update(
                             SendConfirmJointOperationCreatedTransformer(createdAt = System.currentTimeMillis()),
                         )
@@ -295,8 +300,31 @@ internal class SendConfirmModel @Inject constructor(
         }
     }
 
+    private fun sendJointOperationCreatedAnalytics(account: Account.Joint, feeToken: CryptoCurrency) {
+        val sendUM = uiState.value
+        val signaturesUM = (sendUM.confirmUM as? ConfirmUM.Content)?.signaturesUM
+        if (signaturesUM == null) {
+            TangemLogger.e("Send confirm: no joint composition on the confirm step, the success events are not sent")
+            return
+        }
+        // The success screen replaces this step right away and cancels modelScope
+        appScope.launch(dispatchers.default) {
+            sendAnalyticHelper.sendSuccessAnalytics(
+                cryptoCurrency = cryptoCurrency,
+                sendUM = sendUM,
+                feeToken = feeToken,
+                account = account,
+                jointComposition = AnalyticsParam.JointComposition(
+                    membersCount = signaturesUM.membersCount,
+                    threshold = signaturesUM.threshold,
+                ),
+            )
+        }
+    }
+
     private fun showJointOperationError(error: JointOperationCreateError) {
         _uiState.update(SendConfirmSendingStateTransformer(isSending = false))
+        sendJointOperationError(error)
         when (error) {
             is JointOperationCreateError.UserCancelled -> Unit
             is JointOperationCreateError.SlotBusy -> alertFactory.getJointSlotBusyState()
@@ -317,6 +345,18 @@ internal class SendConfirmModel @Inject constructor(
                 alertFactory.getGenericErrorState(onFailedTxEmailClick = { onFailedTxEmailClick(error.toString()) })
             }
         }
+    }
+
+    private fun sendJointOperationError(error: JointOperationCreateError) {
+        val analyticsEvent = when (error) {
+            is JointOperationCreateError.UserCancelled -> return
+            is JointOperationCreateError.Failed -> JointAccountError(
+                source = ErrorSource.CreateOperation,
+                cause = error.cause,
+            )
+            else -> JointAccountError(source = ErrorSource.CreateOperation, errorMessage = error.toString())
+        }
+        analyticsEventHandler.send(analyticsEvent)
     }
 
     private fun startSending() {
