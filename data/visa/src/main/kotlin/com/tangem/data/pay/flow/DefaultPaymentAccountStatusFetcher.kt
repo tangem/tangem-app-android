@@ -430,8 +430,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         }
         return when {
             kycStatus == KycStatus.REQUIRED -> {
-                eligibilityManager.reset()
-                constructNotCreatedOrEmptyStatus(userWalletId)
+                PaymentAccountStatusValue.KycRequired(source = StatusSource.ACTUAL, customerId = customerId)
             }
             customerId.isNullOrEmpty() -> PaymentAccountStatusValue.IssuingCard(
                 source = StatusSource.ACTUAL,
