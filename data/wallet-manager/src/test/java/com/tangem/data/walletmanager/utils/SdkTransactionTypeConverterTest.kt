@@ -25,11 +25,20 @@ internal class SdkTransactionTypeConverterTest {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class Gasless {
 
-        private val converter = createConverter(currency = currencyFactory.createCoin(Blockchain.Ethereum))
+        private val usdt = currencyFactory.createToken(
+            blockchain = Blockchain.Ethereum,
+            id = "tether",
+            contractAddress = USDT_CONTRACT,
+            symbol = "USDT",
+            decimals = 6,
+        )
 
         @ParameterizedTest
         @ProvideTestModels
         fun convert(model: GaslessModel) {
+            // Arrange
+            val converter = createConverter(currency = model.currency)
+
             // Act
             val actual = converter.convert(item(destination = model.destination, methodId = model.methodId))
 
@@ -38,10 +47,21 @@ internal class SdkTransactionTypeConverterTest {
         }
 
         private fun provideTestModels() = listOf(
-            // The method is recognized, only its destination is not — the row falls back to the method's own name
+            // The call moved no coin, so the coin history keeps it an operation and the fee-only rules take it from
+            // there; in the token's own history the very same leg is the transfer the user made
             GaslessModel(
                 destination = singleUser(RECIPIENT),
                 expected = TxInfo.TransactionType.Operation(name = "GaslessTransaction"),
+            ),
+            GaslessModel(
+                currency = usdt,
+                destination = singleUser(RECIPIENT),
+                expected = TxInfo.TransactionType.Transfer,
+            ),
+            GaslessModel(
+                currency = usdt,
+                destination = singleUser(FEE_RECIPIENT),
+                expected = TxInfo.TransactionType.GaslessFee,
             ),
             GaslessModel(
                 destination = singleUser(FEE_RECIPIENT),
@@ -738,6 +758,7 @@ internal class SdkTransactionTypeConverterTest {
         val destination: TransactionHistoryItem.DestinationType,
         val expected: TxInfo.TransactionType,
         val methodId: String = GASLESS_METHOD_ID,
+        val currency: CryptoCurrency = MockCryptoCurrencyFactory().createCoin(Blockchain.Ethereum),
     )
 
     internal data class TokenTransferModel(
