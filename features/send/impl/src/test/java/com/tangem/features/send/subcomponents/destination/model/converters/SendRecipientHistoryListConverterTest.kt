@@ -4,6 +4,7 @@ import android.text.format.DateFormat
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.subcomponents.destination.model.transformers.RECENT_DEFAULT_COUNT
@@ -126,7 +127,11 @@ internal class SendRecipientHistoryListConverterTest {
                 type = TxInfo.TransactionType.Joint.Transfer(
                     recipient = RECIPIENT,
                     amount = BigDecimal.ONE,
-                    refundCapWei = BigDecimal("500000000000000"),
+                    refundCap = SdkAmount(
+                        currencySymbol = "ETH",
+                        value = BigDecimal("500000000000000").movePointLeft(18),
+                        decimals = 18,
+                    ),
                     signaturesCount = 2,
                 ),
             )
