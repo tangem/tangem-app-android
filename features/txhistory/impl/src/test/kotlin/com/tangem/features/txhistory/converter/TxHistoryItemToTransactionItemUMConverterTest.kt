@@ -85,6 +85,8 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
             TransactionType.Staking.Withdraw to TransactionItemUM.PillKind.STAKING,
             TransactionType.YieldSupply.Enter(address = USER_ADDRESS) to TransactionItemUM.PillKind.YIELD_MODE,
             TransactionType.YieldSupply.Exit(address = USER_ADDRESS) to TransactionItemUM.PillKind.YIELD_MODE,
+            TransactionType.YieldSupply.Topup to TransactionItemUM.PillKind.YIELD_SUPPLY,
+            TransactionType.YieldSupply.Send(isYieldSupplyWithdraw = true) to TransactionItemUM.PillKind.YIELD_SUPPLY,
         )
 
         cases.forEach { (type, expectedKind) ->
@@ -811,12 +813,20 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     // region Content — YieldSupply
 
     @Test
-    fun `GIVEN YieldSupply Topup WHEN convert THEN supplied title`() {
+    fun `GIVEN YieldSupply Topup WHEN convert THEN supplied pill naming Aave`() {
         val tx = txInfo(type = TransactionType.YieldSupply.Topup)
 
-        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+        val result = coinConverter.convert(tx) as TransactionItemUM.Pill
 
-        assertThat(result.title).isEqualTo(resRef(R.string.transaction_history_supplied))
+        assertThat(result.kind).isEqualTo(TransactionItemUM.PillKind.YIELD_SUPPLY)
+        assertThat(result.label).isEqualTo(resRef(R.string.yield_module_transaction_supplied))
+        assertThat(result.subtitle).isEqualTo(
+            TransactionItemUM.PillSubtitle.Provider(
+                direction = ContentSubtitle.Direction.TO,
+                name = resRef(R.string.yield_module_provider),
+                iconResId = R.drawable.img_aave_22,
+            ),
+        )
     }
 
     @Test
@@ -857,17 +867,18 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
-    fun `GIVEN YieldSupply Send withdraw WHEN convert THEN withdrawn title and Aave provider subtitle`() {
+    fun `GIVEN YieldSupply Send withdraw WHEN convert THEN withdrawn pill naming Aave`() {
         val tx = txInfo(
             type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = true),
             isOutgoing = false,
         )
 
-        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+        val result = coinConverter.convert(tx) as TransactionItemUM.Pill
 
-        assertThat(result.title).isEqualTo(resRef(R.string.transaction_history_withdrawn))
+        assertThat(result.kind).isEqualTo(TransactionItemUM.PillKind.YIELD_SUPPLY)
+        assertThat(result.label).isEqualTo(resRef(R.string.transaction_history_withdrawn))
         assertThat(result.subtitle).isEqualTo(
-            ContentSubtitle.Provider(
+            TransactionItemUM.PillSubtitle.Provider(
                 direction = ContentSubtitle.Direction.FROM,
                 name = resRef(R.string.yield_module_provider),
                 iconResId = R.drawable.img_aave_22,
@@ -876,16 +887,16 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
-    fun `GIVEN YieldSupply Send withdraw and unconfirmed WHEN convert THEN withdrawing title`() {
+    fun `GIVEN YieldSupply Send withdraw and unconfirmed WHEN convert THEN withdrawing pill`() {
         val tx = txInfo(
             type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = true),
             status = TxInfo.TransactionStatus.Unconfirmed,
             isOutgoing = false,
         )
 
-        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+        val result = coinConverter.convert(tx) as TransactionItemUM.Pill
 
-        assertThat(result.title).isEqualTo(resRef(R.string.common_withdrawing))
+        assertThat(result.label).isEqualTo(resRef(R.string.common_withdrawing))
     }
 
     @Test
@@ -974,51 +985,29 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
-    fun `GIVEN YieldSupply Topup Token WHEN convert THEN Aave provider subtitle`() {
+    fun `GIVEN YieldSupply Topup Token WHEN convert THEN pill carries no amount`() {
+        // The design states the operation and its provider only — the moved value lives in the details card.
         val tx = txInfo(type = TransactionType.YieldSupply.Topup, amount = BigDecimal("3.0"))
 
-        val result = tokenConverter.convert(tx) as TransactionItemUM.Content
+        val result = tokenConverter.convert(tx) as TransactionItemUM.Pill
 
-        assertThat(result.subtitle).isEqualTo(
-            ContentSubtitle.Provider(
-                direction = ContentSubtitle.Direction.TO,
-                name = resRef(R.string.yield_module_provider),
-                iconResId = R.drawable.img_aave_22,
-            ),
-        )
+        assertThat(result.amount).isNull()
+        assertThat(result.currencySymbol).isNull()
     }
 
     @Test
-    fun `GIVEN YieldSupply Send Token withdraw incoming WHEN convert THEN Aave provider subtitle`() {
-        val tx = txInfo(
-            type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = true),
-            isOutgoing = false,
-        )
-
-        val result = tokenConverter.convert(tx) as TransactionItemUM.Content
-
-        assertThat(result.subtitle).isEqualTo(
-            ContentSubtitle.Provider(
-                direction = ContentSubtitle.Direction.FROM,
-                name = resRef(R.string.yield_module_provider),
-                iconResId = R.drawable.img_aave_22,
-            ),
-        )
-    }
-
-    @Test
-    fun `GIVEN YieldSupply Topup Coin WHEN convert THEN Aave provider subtitle`() {
-        // Arrange — a coin topup names the provider too: the row mirrors a withdraw, which never shows the address.
+    fun `GIVEN YieldSupply Topup Coin with a user address WHEN convert THEN pill names Aave, not the address`() {
+        // Arrange — a coin topup names the provider too: the pill mirrors a withdraw, which never shows the address.
         val tx = txInfo(
             type = TransactionType.YieldSupply.Topup,
             interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
             isOutgoing = true,
         )
 
-        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+        val result = coinConverter.convert(tx) as TransactionItemUM.Pill
 
         assertThat(result.subtitle).isEqualTo(
-            ContentSubtitle.Provider(
+            TransactionItemUM.PillSubtitle.Provider(
                 direction = ContentSubtitle.Direction.TO,
                 name = resRef(R.string.yield_module_provider),
                 iconResId = R.drawable.img_aave_22,
