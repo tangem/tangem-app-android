@@ -45,6 +45,7 @@ import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawDestinationsUse
 import com.tangem.domain.polymarket.usecase.GetPredictionTopUpMinimumUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawalStateUseCase
 import com.tangem.domain.polymarket.usecase.InvalidatePolymarketCredentialsUseCase
+import com.tangem.domain.polymarket.usecase.ObservePolymarketCredentialsPresenceUseCase
 import com.tangem.domain.polymarket.usecase.SearchPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
@@ -201,6 +202,14 @@ internal object PolymarketDomainModule {
     fun provideInvalidatePolymarketCredentialsUseCase(
         credentialsStore: PolymarketCredentialsStore,
     ): InvalidatePolymarketCredentialsUseCase = InvalidatePolymarketCredentialsUseCase(
+        credentialsStore = credentialsStore,
+    )
+
+    @Provides
+    @Singleton
+    fun provideObservePolymarketCredentialsPresenceUseCase(
+        credentialsStore: PolymarketCredentialsStore,
+    ): ObservePolymarketCredentialsPresenceUseCase = ObservePolymarketCredentialsPresenceUseCase(
         credentialsStore = credentialsStore,
     )
 
