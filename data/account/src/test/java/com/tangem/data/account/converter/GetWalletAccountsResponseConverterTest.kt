@@ -120,6 +120,13 @@ class GetWalletAccountsResponseConverterTest {
                         ),
                     ),
                 ),
+                // A list with joint accounts written locally keeps their counter, so the next index is not reused
+                ConvertModel(
+                    value = createAccountList(userWalletId = userWallet.walletId, totalJointAccounts = 4),
+                    expected = Result.success(
+                        createGetWalletAccountsResponse(userWalletId = userWallet.walletId, totalJointAccounts = 4),
+                    ),
+                ),
             )
         }
     }
