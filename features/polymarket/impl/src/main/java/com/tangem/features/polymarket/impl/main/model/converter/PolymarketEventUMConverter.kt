@@ -45,7 +45,7 @@ internal class PolymarketEventUMConverter(
     }
 
     private fun convertRow(event: PolymarketEvent, market: PolymarketMarket): PolymarketEventRowUM {
-        val showPrices = market.groupItemTitle.isNullOrBlank() || market.groupItemTitle == "Match Winner"
+        val showPrices = market.groupItemTitle.isNullOrBlank() || market.groupItemTitle == MATCH_WINNER_GROUP_ITEM_TITLE
         return PolymarketEventRowUM(
             marketId = market.id,
             title = if (showPrices) {
@@ -97,5 +97,9 @@ internal class PolymarketEventUMConverter(
 
     private fun BigDecimal?.formatProbability(): String = format {
         percent(minFractionDigits = 0, maxFractionDigits = 0)
+    }
+
+    private companion object {
+        const val MATCH_WINNER_GROUP_ITEM_TITLE = "Match Winner"
     }
 }
