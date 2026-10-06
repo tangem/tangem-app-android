@@ -11,8 +11,8 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
 /**
- * Guards the stored format of the express assets: files written by the Moshi serializer must read back unchanged
- * after the store moved to kotlinx, and new writes keep that format, so the Moshi serializer still used while the
+ * Guards the stored format of the express assets: files written by the Moshi serializer must read back unchanged after
+ * the store moved to kotlinx, and new writes keep that format, so the Moshi serializer that is still used while the
  * kotlinx DataStore toggle is off reads them too.
  */
 @OptIn(ExperimentalStdlibApi::class)
