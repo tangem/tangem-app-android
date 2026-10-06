@@ -16,7 +16,9 @@ import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
+import com.tangem.features.txhistory.model.TestContacts
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.mock.MockAccounts
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -971,6 +973,30 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val owner = requireNotNull(result.from?.owner)
         assertThat(owner).isInstanceOf(TxHistoryDetailsUM.AssetOwnerUM.Address::class.java)
         assertThat((owner as TxHistoryDetailsUM.AssetOwnerUM.Address).rawAddress).isEqualTo(FROM_ADDRESS)
+    }
+
+    @Test
+    fun `GIVEN send-and-swap to a saved contact WHEN convert THEN to leg is named after the contact`() {
+        // Arrange — the payout address is in the viewed wallet's address book.
+        val swap = expressSwap(status = ExpressExchangeStatus.Finished, payoutAddress = EXTERNAL_ADDRESS)
+        val lookup = lookupOf(
+            contacts = listOf(
+                TestContacts.create(
+                    name = "Binance",
+                    address = EXTERNAL_ADDRESS,
+                    walletId = MockAccounts.userWalletId,
+                    networkId = bitcoin.network.id.rawId,
+                ),
+            ),
+        )
+
+        // Act
+        val result = expressConverter(lookup = lookup).convert(swap)
+
+        // Assert
+        val owner = requireNotNull(result.to?.owner)
+        assertThat(owner).isInstanceOf(TxHistoryDetailsUM.AssetOwnerUM.Contact::class.java)
+        assertThat(owner.name).isEqualTo(stringReference("Binance"))
     }
 
     // endregion
