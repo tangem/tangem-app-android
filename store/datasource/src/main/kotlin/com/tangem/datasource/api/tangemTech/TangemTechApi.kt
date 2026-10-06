@@ -142,7 +142,7 @@ interface TangemTechApi {
     ): ApiResponse<PromotionsResponse>
 
     @RequiresSessionAuth
-    @GET("/v3/promotion")
+    @GET("/api/referral/v1/promotion")
     suspend fun getPromotionsV3(
         @Query("walletId") walletId: String,
         @Query("walletType") walletType: PromotionWalletType,
