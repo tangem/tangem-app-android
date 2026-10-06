@@ -7,10 +7,6 @@ import com.squareup.moshi.ToJson
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.BlockItem
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.BlockType
-import com.tangem.datasource.api.promotion.models.PromotionsV3Response.Conditions
-import com.tangem.datasource.api.promotion.models.PromotionsV3Response.Eligibility
-import com.tangem.datasource.api.promotion.models.PromotionsV3Response.EligibilityType
-import com.tangem.datasource.api.promotion.models.PromotionsV3Response.EligibilityWalletType
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.Content
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.DescriptionBlock
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.Link
@@ -18,7 +14,6 @@ import com.tangem.datasource.api.promotion.models.PromotionsV3Response.MatchMode
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.PayoutToken
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.PromotionDto
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.Properties
-import com.tangem.datasource.api.promotion.models.PromotionsV3Response.Status
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.TableCell
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response.ValueType
 import org.junit.jupiter.api.Test
@@ -36,32 +31,28 @@ internal class PromotionsV3ResponseTest {
     fun `GIVEN full campaign json WHEN parsed THEN every block type mapped`() {
         // Arrange
         val json = """
-            {"promotions":[{"id":7,"name":"example_campaign","status":"active",
-            "startAt":"2026-06-01T00:00:00Z","endAt":"2026-08-31T23:59:59Z","alreadyEnrolled":false,
-            "eligibility":{"type":"private","conditions":{"walletIds":["UID_001"],"partnerIds":["partner_a"],
-            "walletType":"card","batchIds":["AF99 0088"],"minIosVersion":"6.1.0","minAndroidVersion":"6.1.0",
-            "maxAndroidVersion":"6.3.0","countryExcluded":["US","CN"]}},
-            "properties":{"payoutNeeded":true,"matchMode":"linked_wallet","payoutTokens":[
-              {"tokenAddress":"0xdAC","networkId":"ethereum","tokenId":"tether","tokenName":"Tether",
-              "tokenSymbol":"USDT","decimals":6}]},
-            "content":{"campaignNameKey":"campaign.example_campaign.title",
+            {"promotions":[{"id":1,"name":"example_campaign","alreadyEnrolled":false,
+            "content":{"campaignName":"Летний стейкинг-бонус",
+            "campaignDescription":"Кэшбек за стейкинг до конца лета",
             "publicDescription":[
-              {"type":"text","textKey":"campaign.example_campaign.intro"},
-              {"type":"block","titleKey":"campaign.example_campaign.cashback_amounts.title","items":[
-                {"labelKey":"campaign.example_campaign.cashback_amounts.tier1","value":0.10,"valueType":"percent"},
-                {"labelKey":"campaign.example_campaign.cashback_amounts.bonus","value":5,"valueType":"money",
-                "currency":"USDT"},
-                {"labelKey":"campaign.example_campaign.cashback_amounts.note","value":"weekly","valueType":"text"}]},
-              {"type":"table","titleKey":"campaign.example_campaign.payout.title",
-              "headersKeys":["campaign.example_campaign.payout.condition","campaign.example_campaign.payout.value"],
+              {"type":"text","text":"Застейкайте от 100 USDT и получите кэшбек",
+              "link":{"text":"Learn more","url":"https://tangem.com/campaigns/example_campaign"}},
+              {"type":"block","title":"Cashback and amounts","items":[
+                {"label":"From ${'$'}10K","value":0.10,"valueType":"percent"},
+                {"label":"From ${'$'}20K","value":0.20,"valueType":"percent"},
+                {"label":"Weekly bonus","value":5,"valueType":"money","currency":"USDT"}]},
+              {"type":"table","title":"Payout breakdown","headers":["Condition","Value"],
               "columnTypes":["text","money"],
-              "rows":[[{"textKey":"campaign.example_campaign.payout.gas"},{"value":0.002,"currency":"ETH"}]]},
-              {"type":"highlight","titleKey":"campaign.example_campaign.deadline_title",
-              "textKey":"campaign.example_campaign.deadline"}],
+              "rows":[[{"text":"Cashback"},{"value":5,"currency":"USDT"}],
+                [{"text":"Gas refund"},{"value":0.002,"currency":"ETH"}]]},
+              {"type":"highlight","title":"Deadline","text":"Акция действует только до 31 августа"}],
             "publicImage":"https://cdn.tangem.com/campaigns/example_campaign.png",
-            "learnMoreLink":{"textKey":"campaign.example_campaign.learn_more","url":"https://tangem.com/c"},
-            "tncLink":{"textKey":"campaign.example_campaign.terms","url":"https://tangem.com/c/terms"},
-            "actionButtonNameKey":"campaign.example_campaign.action_button"}}]}
+            "tncLink":{"text":"Terms and conditions","url":"https://tangem.com/campaigns/example_campaign/terms"},
+            "actionButtonName":"Select cashback token"},
+            "properties":{"payoutNeeded":true,"payoutTokens":[
+              {"tokenAddress":"0xdac17f958d2ee523a2206206994597c13d831ec7","networkId":"ethereum",
+              "tokenSymbol":"USDT","tokenName":"Tether USD","tokenId":"tether","decimals":6}],
+            "matchMode":"linked_wallet"}}]}
         """.trimIndent()
 
         // Act
@@ -72,25 +63,14 @@ internal class PromotionsV3ResponseTest {
             promotions = listOf(
                 createPromotion(
                     alreadyEnrolled = false,
-                    eligibility = Eligibility(
-                        type = EligibilityType.PRIVATE,
-                        conditions = Conditions(
-                            walletIds = listOf("UID_001"),
-                            walletType = EligibilityWalletType.CARD,
-                            batchIds = listOf("AF99 0088"),
-                            countryExcluded = listOf("US", "CN"),
-                            minAndroidVersion = "6.1.0",
-                            maxAndroidVersion = "6.3.0",
-                        ),
-                    ),
                     properties = Properties(
                         isPayoutNeeded = true,
                         payoutTokens = listOf(
                             PayoutToken(
-                                tokenAddress = "0xdAC",
+                                tokenAddress = "0xdac17f958d2ee523a2206206994597c13d831ec7",
                                 networkId = "ethereum",
                                 tokenId = "tether",
-                                tokenName = "Tether",
+                                tokenName = "Tether USD",
                                 tokenSymbol = "USDT",
                                 decimals = 6,
                             ),
@@ -98,60 +78,58 @@ internal class PromotionsV3ResponseTest {
                         matchMode = MatchMode.LINKED_WALLET,
                     ),
                     publicDescription = listOf(
-                        createBlock(type = BlockType.TEXT, textKey = "campaign.example_campaign.intro"),
+                        createBlock(
+                            type = BlockType.TEXT,
+                            text = "Застейкайте от 100 USDT и получите кэшбек",
+                            link = Link(text = "Learn more", url = "https://tangem.com/campaigns/example_campaign"),
+                        ),
                         createBlock(
                             type = BlockType.BLOCK,
-                            titleKey = "campaign.example_campaign.cashback_amounts.title",
+                            title = "Cashback and amounts",
                             items = listOf(
                                 BlockItem(
-                                    labelKey = "campaign.example_campaign.cashback_amounts.tier1",
+                                    label = "From \$10K",
                                     value = "0.10",
                                     valueType = ValueType.PERCENT,
                                     currency = null,
                                 ),
                                 BlockItem(
-                                    labelKey = "campaign.example_campaign.cashback_amounts.bonus",
+                                    label = "From \$20K",
+                                    value = "0.20",
+                                    valueType = ValueType.PERCENT,
+                                    currency = null,
+                                ),
+                                BlockItem(
+                                    label = "Weekly bonus",
                                     value = "5",
                                     valueType = ValueType.MONEY,
                                     currency = "USDT",
-                                ),
-                                BlockItem(
-                                    labelKey = "campaign.example_campaign.cashback_amounts.note",
-                                    value = "weekly",
-                                    valueType = ValueType.TEXT,
-                                    currency = null,
                                 ),
                             ),
                         ),
                         createBlock(
                             type = BlockType.TABLE,
-                            titleKey = "campaign.example_campaign.payout.title",
-                            headersKeys = listOf(
-                                "campaign.example_campaign.payout.condition",
-                                "campaign.example_campaign.payout.value",
-                            ),
+                            title = "Payout breakdown",
+                            headers = listOf("Condition", "Value"),
                             columnTypes = listOf(ValueType.TEXT, ValueType.MONEY),
                             rows = listOf(
                                 listOf(
-                                    TableCell(
-                                        textKey = "campaign.example_campaign.payout.gas",
-                                        value = null,
-                                        currency = null,
-                                    ),
-                                    TableCell(textKey = null, value = BigDecimal("0.002"), currency = "ETH"),
+                                    TableCell(text = "Cashback", value = null, currency = null),
+                                    TableCell(text = null, value = BigDecimal("5"), currency = "USDT"),
+                                ),
+                                listOf(
+                                    TableCell(text = "Gas refund", value = null, currency = null),
+                                    TableCell(text = null, value = BigDecimal("0.002"), currency = "ETH"),
                                 ),
                             ),
                         ),
                         createBlock(
                             type = BlockType.HIGHLIGHT,
-                            titleKey = "campaign.example_campaign.deadline_title",
-                            textKey = "campaign.example_campaign.deadline",
+                            title = "Deadline",
+                            text = "Акция действует только до 31 августа",
                         ),
                     ),
-                    learnMoreLink = Link(
-                        textKey = "campaign.example_campaign.learn_more",
-                        url = "https://tangem.com/c",
-                    ),
+                    campaignDescription = "Кэшбек за стейкинг до конца лета",
                 ),
             ),
         )
@@ -159,18 +137,16 @@ internal class PromotionsV3ResponseTest {
     }
 
     @Test
-    fun `GIVEN unknown block type and no optional fields WHEN parsed THEN campaign still mapped`() {
+    fun `GIVEN unknown block type and no optional fields WHEN parsed THEN campaign mapped without description`() {
         // Arrange
         val json = """
-            {"promotions":[{"id":7,"name":"example_campaign","status":"active",
-            "startAt":"2026-06-01T00:00:00Z","endAt":"2026-08-31T23:59:59Z","alreadyEnrolled":true,
-            "eligibility":{"type":"public"},
+            {"promotions":[{"id":1,"name":"example_campaign","alreadyEnrolled":true,
             "properties":{"payoutNeeded":false,"matchMode":"strict"},
-            "content":{"campaignNameKey":"campaign.example_campaign.title",
+            "content":{"campaignName":"Летний стейкинг-бонус",
             "publicDescription":[{"type":"carousel","images":["https://x/1.png"]}],
             "publicImage":"https://cdn.tangem.com/campaigns/example_campaign.png",
-            "tncLink":{"textKey":"campaign.example_campaign.terms","url":"https://tangem.com/c/terms"},
-            "actionButtonNameKey":"campaign.example_campaign.action_button"}}]}
+            "tncLink":{"text":"Terms and conditions","url":"https://tangem.com/campaigns/example_campaign/terms"},
+            "actionButtonName":"Select cashback token"}}]}
         """.trimIndent()
 
         // Act
@@ -181,10 +157,9 @@ internal class PromotionsV3ResponseTest {
             promotions = listOf(
                 createPromotion(
                     alreadyEnrolled = true,
-                    eligibility = Eligibility(type = EligibilityType.PUBLIC, conditions = null),
                     properties = Properties(isPayoutNeeded = false, payoutTokens = null, matchMode = MatchMode.STRICT),
                     publicDescription = listOf(createBlock(type = BlockType.UNKNOWN)),
-                    learnMoreLink = null,
+                    campaignDescription = null,
                 ),
             ),
         )
@@ -192,20 +167,18 @@ internal class PromotionsV3ResponseTest {
     }
 
     @Test
-    fun `GIVEN unknown status, match mode, eligibility and value types WHEN parsed THEN mapped to UNKNOWN`() {
+    fun `GIVEN unknown match mode and value types WHEN parsed THEN mapped to UNKNOWN`() {
         // Arrange
         val json = """
-            {"promotions":[{"name":"example_campaign","status":"expired",
-            "startAt":"2026-06-01T00:00:00Z","endAt":"2026-08-31T23:59:59Z","alreadyEnrolled":false,
-            "eligibility":{"type":"segment","conditions":{"walletType":"tablet"}},
+            {"promotions":[{"name":"example_campaign","alreadyEnrolled":false,
             "properties":{"payoutNeeded":false,"matchMode":"all_wallets"},
-            "content":{"campaignNameKey":"campaign.example_campaign.title",
+            "content":{"campaignName":"Летний стейкинг-бонус",
             "publicDescription":[
-              {"type":"block","items":[{"labelKey":"campaign.example_campaign.ratio","value":2,"valueType":"ratio"}]},
+              {"type":"block","items":[{"label":"Ratio","value":2,"valueType":"ratio"}]},
               {"type":"table","columnTypes":["date"],"rows":[[{"value":1}]]}],
             "publicImage":"https://cdn.tangem.com/campaigns/example_campaign.png",
-            "tncLink":{"textKey":"campaign.example_campaign.terms","url":"https://tangem.com/c/terms"},
-            "actionButtonNameKey":"campaign.example_campaign.action_button"}}]}
+            "tncLink":{"text":"Terms and conditions","url":"https://tangem.com/campaigns/example_campaign/terms"},
+            "actionButtonName":"Select cashback token"}}]}
         """.trimIndent()
 
         // Act
@@ -216,39 +189,22 @@ internal class PromotionsV3ResponseTest {
             promotions = listOf(
                 createPromotion(
                     id = null,
-                    status = Status.UNKNOWN,
                     alreadyEnrolled = false,
-                    eligibility = Eligibility(
-                        type = EligibilityType.UNKNOWN,
-                        conditions = Conditions(
-                            walletIds = null,
-                            walletType = EligibilityWalletType.UNKNOWN,
-                            batchIds = null,
-                            countryExcluded = null,
-                            minAndroidVersion = null,
-                            maxAndroidVersion = null,
-                        ),
-                    ),
                     properties = Properties(isPayoutNeeded = false, payoutTokens = null, matchMode = MatchMode.UNKNOWN),
                     publicDescription = listOf(
                         createBlock(
                             type = BlockType.BLOCK,
                             items = listOf(
-                                BlockItem(
-                                    labelKey = "campaign.example_campaign.ratio",
-                                    value = "2",
-                                    valueType = ValueType.UNKNOWN,
-                                    currency = null,
-                                ),
+                                BlockItem(label = "Ratio", value = "2", valueType = ValueType.UNKNOWN, currency = null),
                             ),
                         ),
                         createBlock(
                             type = BlockType.TABLE,
                             columnTypes = listOf(ValueType.UNKNOWN),
-                            rows = listOf(listOf(TableCell(textKey = null, value = BigDecimal("1"), currency = null))),
+                            rows = listOf(listOf(TableCell(text = null, value = BigDecimal("1"), currency = null))),
                         ),
                     ),
-                    learnMoreLink = null,
+                    campaignDescription = null,
                 ),
             ),
         )
@@ -257,47 +213,46 @@ internal class PromotionsV3ResponseTest {
 
     private fun createPromotion(
         alreadyEnrolled: Boolean,
-        eligibility: Eligibility,
         properties: Properties,
         publicDescription: List<DescriptionBlock>,
-        learnMoreLink: Link?,
-        status: Status = Status.ACTIVE,
-        id: Int? = 7,
+        campaignDescription: String?,
+        id: Int? = 1,
     ) = PromotionDto(
         id = id,
         name = "example_campaign",
-        status = status,
-        startAt = "2026-06-01T00:00:00Z",
-        endAt = "2026-08-31T23:59:59Z",
         isAlreadyEnrolled = alreadyEnrolled,
-        eligibility = eligibility,
         properties = properties,
         content = Content(
-            campaignNameKey = "campaign.example_campaign.title",
+            campaignName = "Летний стейкинг-бонус",
+            campaignDescription = campaignDescription,
             publicDescription = publicDescription,
             publicImage = "https://cdn.tangem.com/campaigns/example_campaign.png",
-            learnMoreLink = learnMoreLink,
-            tncLink = Link(textKey = "campaign.example_campaign.terms", url = "https://tangem.com/c/terms"),
-            actionButtonNameKey = "campaign.example_campaign.action_button",
+            tncLink = Link(
+                text = "Terms and conditions",
+                url = "https://tangem.com/campaigns/example_campaign/terms",
+            ),
+            actionButtonName = "Select cashback token",
         ),
     )
 
     private fun createBlock(
         type: BlockType,
-        titleKey: String? = null,
-        textKey: String? = null,
+        title: String? = null,
+        text: String? = null,
         items: List<BlockItem>? = null,
-        headersKeys: List<String>? = null,
+        headers: List<String>? = null,
         columnTypes: List<ValueType>? = null,
         rows: List<List<TableCell>>? = null,
+        link: Link? = null,
     ) = DescriptionBlock(
         type = type,
-        titleKey = titleKey,
-        textKey = textKey,
+        title = title,
+        text = text,
         items = items,
-        headersKeys = headersKeys,
+        headers = headers,
         columnTypes = columnTypes,
         rows = rows,
+        link = link,
     )
 
     private class TestBigDecimalAdapter {
