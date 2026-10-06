@@ -66,6 +66,8 @@ internal class DefaultSwapTransactionRepository(
                     savedTx.checkId(
                         fromUserWalletId = fromUserWalletId,
                         toUserWalletId = toUserWalletId,
+                        fromAccountId = fromAccount?.accountId,
+                        toAccountId = toAccount?.accountId,
                         fromCurrencyId = fromCryptoCurrency.id,
                         toCurrencyId = toCryptoCurrency.id,
                     )
@@ -151,6 +153,48 @@ internal class DefaultSwapTransactionRepository(
             .flowOn(dispatchers.default)
     }
 
+    override fun getAccountTransactions(
+        userWallet: UserWallet,
+        accountId: AccountId,
+    ): Flow<List<SavedSwapTransactionListModel>?> {
+        return combine(
+            flow = appPreferencesStore.getObjectList<SavedSwapTransactionListModelInner>(
+                key = growPreferencesKeys.swapTransactionsKey,
+            ),
+            flow2 = appPreferencesStore.getObjectMap<ExchangeStatusModel>(
+                key = growPreferencesKeys.swapTransactionsStatusesKey,
+            ),
+            flow3 = singleAccountListSupplier(SingleAccountListProducer.Params(userWallet.walletId)),
+        ) { savedTransactions, txStatuses, accountList ->
+            val walletId = userWallet.walletId.stringValue
+
+            savedTransactions?.mapNotNull { savedTx ->
+                val isFromAccount = savedTx.fromUserWalletId == walletId &&
+                    savedTx.fromTokensResponse?.accountId == accountId.value
+                val isToAccount = savedTx.toUserWalletId == walletId &&
+                    savedTx.toTokensResponse?.accountId == accountId.value
+
+                when {
+                    isFromAccount -> converter.convertBack(
+                        value = savedTx,
+                        userWallet = userWallet,
+                        accountList = accountList,
+                        txStatuses = txStatuses,
+                    )
+                    isToAccount -> converter.convertBack(
+                        value = savedTx,
+                        userWallet = userWallet,
+                        accountList = accountList,
+                        txStatuses = txStatuses,
+                        onFilter = { tx -> tx.swapTxTypeDTO == SwapTxTypeDTO.Swap },
+                    )
+                    else -> null
+                }
+            }.orEmpty()
+        }
+            .flowOn(dispatchers.default)
+    }
+
     override suspend fun removeTransaction(userWalletId: UserWalletId, txId: String) {
         clearTransactionsStatuses(txId = txId)
         appPreferencesStore.editData { mutablePreferences ->
@@ -231,14 +275,19 @@ internal class DefaultSwapTransactionRepository(
         }
     }
 
+    @Suppress("LongParameterList")
     private fun SavedSwapTransactionListModelInner.checkId(
         fromUserWalletId: UserWalletId,
         toUserWalletId: UserWalletId,
+        fromAccountId: AccountId?,
+        toAccountId: AccountId?,
         fromCurrencyId: CryptoCurrency.ID,
         toCurrencyId: CryptoCurrency.ID,
     ): Boolean {
         return this.fromUserWalletId == fromUserWalletId.stringValue &&
             this.toUserWalletId == toUserWalletId.stringValue &&
+            fromTokensResponse?.accountId == fromAccountId?.value &&
+            toTokensResponse?.accountId == toAccountId?.value &&
             toCryptoCurrencyId == toCurrencyId.value &&
             fromCryptoCurrencyId == fromCurrencyId.value
     }
@@ -267,6 +316,8 @@ internal class DefaultSwapTransactionRepository(
                 savedTx.checkId(
                     fromUserWalletId = fromUserWalletId,
                     toUserWalletId = toUserWalletId,
+                    fromAccountId = fromAccount?.accountId,
+                    toAccountId = toAccount?.accountId,
                     fromCurrencyId = fromCryptoCurrency.id,
                     toCurrencyId = toCryptoCurrency.id,
                 )
