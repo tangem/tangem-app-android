@@ -1,5 +1,6 @@
 package com.tangem.store.datasource.txhistory.db
 
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.tangem.store.datasource.txhistory.db.dao.ExpressHistoryDao
@@ -19,7 +20,7 @@ import com.tangem.store.datasource.txhistory.db.entity.staking.P2PEthPoolVaultEn
 import com.tangem.store.datasource.txhistory.db.entity.staking.StakingValidatorEntity
 
 @Database(
-    version = 1,
+    version = 2,
     entities = [
         ExpressProviderEntity::class,
         ExpressExchangeEntity::class,
@@ -31,6 +32,7 @@ import com.tangem.store.datasource.txhistory.db.entity.staking.StakingValidatorE
         StakingValidatorEntity::class,
         P2PEthPoolVaultEntity::class,
     ],
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
 )
 abstract class TxHistoryDatabase : RoomDatabase() {
 
