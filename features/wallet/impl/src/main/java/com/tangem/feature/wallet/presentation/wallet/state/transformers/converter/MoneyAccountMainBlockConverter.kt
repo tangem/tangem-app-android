@@ -43,6 +43,10 @@ internal class MoneyAccountMainBlockConverter(
                 subtitle = resourceReference(R.string.money_account_main_status_activating),
                 onClick = moneyAccountIntents::onMoneyAccountActivatingClicked,
             )
+            is MoneyAccountStatusValue.Onboarding.KycRequired -> MoneyAccountMainUM.ActionRequired(
+                balance = balance?.toUM(source),
+                onClick = { moneyAccountIntents.onMoneyAccountKycRequiredClicked(userWalletId, customerId) },
+            )
             is MoneyAccountStatusValue.Onboarding.UnderReview -> MoneyAccountMainUM.Onboarding(
                 subtitle = resourceReference(R.string.money_account_main_status_verification),
                 onClick = { moneyAccountIntents.onMoneyAccountVerificationClicked(userWalletId, customerId) },
