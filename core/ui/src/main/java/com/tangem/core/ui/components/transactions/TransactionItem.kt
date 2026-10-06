@@ -673,7 +673,7 @@ private fun OwnWalletSubtitle(subtitle: ContentSubtitle.OwnWallet, modifier: Mod
     }
 }
 
-private fun ContentSubtitle.Direction.templateResId(): Int = when (this) {
+internal fun ContentSubtitle.Direction.templateResId(): Int = when (this) {
     ContentSubtitle.Direction.TO -> R.string.transaction_history_to_inline_address
     ContentSubtitle.Direction.FROM -> R.string.transaction_history_from_inline_address
 }
