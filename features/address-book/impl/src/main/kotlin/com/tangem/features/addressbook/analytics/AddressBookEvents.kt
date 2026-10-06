@@ -3,6 +3,7 @@ package com.tangem.features.addressbook.analytics
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_TYPE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
+import com.tangem.common.routing.entity.AddressBookOpenMode
 
 private const val ADDRESS_BOOK_CATEGORY = "Address Book"
 
@@ -50,15 +51,21 @@ sealed class AddressBookEvents(
         }
     }
 
+    /**
+     * [source] is the entry point the editor was opened from, mirroring the [AddContactTapped] this event follows.
+     * It is absent when the editor was reached by tapping an existing contact in the list, which starts no creation.
+     */
     class ContactSaved(
         contactId: String,
         mode: Mode,
+        source: AddContactTapped.Source? = null,
     ) : AddressBookEvents(
         event = "Contact Saved",
-        params = mapOf(
-            CONTACT_ID to contactId,
-            MODE to mode.value,
-        ),
+        params = buildMap {
+            put(CONTACT_ID, contactId)
+            put(MODE, mode.value)
+            source?.let { put(SOURCE, it.value) }
+        },
     ) {
         enum class Mode(val value: String) {
             Create("Create"),
@@ -159,3 +166,11 @@ sealed class AddressBookEvents(
     )
     // endregion
 }
+
+/** The analytics value of the entry point that opened the contact editor with a prefilled address. */
+internal fun AddressBookOpenMode.ContactCreationSource.toAnalyticsSource(): AddressBookEvents.AddContactTapped.Source =
+    when (this) {
+        AddressBookOpenMode.ContactCreationSource.SendSuccess -> AddressBookEvents.AddContactTapped.Source.SendSuccess
+        AddressBookOpenMode.ContactCreationSource.TransactionDetails ->
+            AddressBookEvents.AddContactTapped.Source.TransactionDetails
+    }

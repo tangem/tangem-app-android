@@ -1096,6 +1096,22 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(rows).isEmpty()
     }
 
+    @Test
+    fun `GIVEN tx with zero fee WHEN convert THEN no rows`() {
+        // Arrange — a gaslessly sent transfer pays its native fee through the relayer, leaving a zero fee here.
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            fee = SdkAmount(currencySymbol = "TRX", value = BigDecimal.ZERO, decimals = 6),
+        )
+
+        // Act
+        val rows = converter.convert(tx).rows
+
+        // Assert
+        assertThat(rows).isEmpty()
+    }
+
     // endregion
 
     // region Validator row
