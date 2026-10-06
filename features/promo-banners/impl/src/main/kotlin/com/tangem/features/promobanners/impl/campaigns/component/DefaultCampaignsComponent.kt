@@ -170,6 +170,7 @@ internal class DefaultCampaignsComponent @AssistedInject constructor(
                 onDismiss = model::onDismiss,
                 params = PromoCampaignBottomSheetComponent.Params(
                     campaign = config.campaign,
+                    userWalletId = config.userWalletId,
                 ),
             )
             CampaignsBottomSheetConfig.V2.NotFound -> PromoCampaignMessageComponent(

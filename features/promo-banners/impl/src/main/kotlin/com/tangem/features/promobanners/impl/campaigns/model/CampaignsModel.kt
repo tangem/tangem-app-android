@@ -85,7 +85,7 @@ internal class CampaignsModel @Inject constructor(
                             analyticsEventHandler.send(PromoCampaignsAnalyticsEvent.AlreadyEnrolledScreenOpened())
                             CampaignsBottomSheetConfig.V2.AlreadyEnrolled(campaign)
                         }
-                        else -> CampaignsBottomSheetConfig.V2.Campaign(campaign)
+                        else -> CampaignsBottomSheetConfig.V2.Campaign(campaign, userWalletId)
                     }
                     bottomSheetNavigation.activate(config)
                 },

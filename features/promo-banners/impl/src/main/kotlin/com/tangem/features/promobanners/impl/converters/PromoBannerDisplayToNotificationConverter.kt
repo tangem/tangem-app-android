@@ -11,7 +11,12 @@ internal class PromoBannerDisplayToNotificationConverter {
         banner: PromoBannerDisplay,
         onDeeplinkClick: (String?) -> Unit,
         onDismiss: (Int) -> Unit,
+        onCampaignClick: ((campaignId: Int) -> Unit)? = null,
     ): PromoBannerNotificationUM {
+        val campaignClick = banner.campaignId?.let { campaignId ->
+            onCampaignClick?.let { onClick -> { onClick(campaignId) } }
+        }
+
         return PromoBannerNotificationUM(
             displayId = banner.id,
             config = NotificationConfig(
@@ -27,9 +32,10 @@ internal class PromoBannerDisplayToNotificationConverter {
                 buttonsState = banner.buttonText?.takeIf { banner.isButtonEnabled }?.let { text ->
                     NotificationConfig.ButtonsState.SecondaryButtonConfig(
                         text = TextReference.Str(text),
-                        onClick = { onDeeplinkClick(banner.deeplink) },
+                        onClick = campaignClick ?: { onDeeplinkClick(banner.deeplink) },
                     )
                 },
+                onClick = campaignClick,
             ),
         )
     }

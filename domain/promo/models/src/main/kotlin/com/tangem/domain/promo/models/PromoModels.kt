@@ -50,7 +50,7 @@ data class PromoEnrollment(
 ) {
     data class PromoPayoutTarget(
         val userAddress: String,
-        val tokenAddress: String,
+        val tokenAddress: String?,
         val networkId: String,
         val tokenId: String?,
     )

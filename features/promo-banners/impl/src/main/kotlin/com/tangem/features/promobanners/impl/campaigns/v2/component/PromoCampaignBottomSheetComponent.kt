@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -27,11 +28,13 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemAnimations
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.promo.models.PromoCampaign
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenComponent
 import com.tangem.features.promobanners.impl.R
 import com.tangem.features.promobanners.impl.campaigns.v2.model.PromoCampaignModel
 import com.tangem.features.promobanners.impl.campaigns.v2.ui.PromoCampaignContent
+import com.tangem.features.promobanners.impl.campaigns.v2.ui.PromoCampaignStatusContent
 
 /**
  * Backend-driven campaign sheet, rendered from the already fetched [Params.campaign] without another request.
@@ -68,6 +71,11 @@ internal class PromoCampaignBottomSheetComponent(
     override fun Content(modifier: Modifier) {
         val stack by innerStack.subscribeAsState()
         val isCampaignStep = stack.active.configuration == PromoCampaignRoute.Campaign
+        val isStatusStep = stack.active.configuration == PromoCampaignRoute.Status
+        val windowHeight = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() }
+        val campaignState by model.uiState.collectAsStateWithLifecycle()
+        // Leaving the sheet cancels the registration, possibly after the backend accepted it.
+        val isEnrolling = campaignState.footer.isLoading
 
         var topBarHeight by remember { mutableIntStateOf(0) }
 
@@ -79,21 +87,24 @@ internal class PromoCampaignBottomSheetComponent(
             ),
             chromePlacement = TangemModal.ChromePlacement.Overlay,
             presentation = TangemModal.Presentation.Overlay,
-            onBack = ::onChildBack,
+            dismissOnClickOutside = !isEnrolling,
+            onBack = { if (!isEnrolling) onChildBack() },
             scrollableContent = false,
             containerColor = TangemTheme.colors3.bg.primary,
             title = {
-                TangemModal.TopNavigation(
-                    title = if (isCampaignStep) {
-                        TextReference.EMPTY
-                    } else {
-                        resourceReference(R.string.choose_asset_title)
-                    },
-                    onClose = onDismiss,
-                    modifier = Modifier.onGloballyPositioned { layout ->
-                        topBarHeight = layout.size.height
-                    },
-                )
+                if (!isStatusStep) {
+                    TangemModal.TopNavigation(
+                        title = if (isCampaignStep) {
+                            TextReference.EMPTY
+                        } else {
+                            resourceReference(R.string.choose_asset_title)
+                        },
+                        onClose = onDismiss.takeIf { !isEnrolling },
+                        modifier = Modifier.onGloballyPositioned { layout ->
+                            topBarHeight = layout.size.height
+                        },
+                    )
+                }
             },
         ) {
             AnimatedContent(
@@ -102,8 +113,7 @@ internal class PromoCampaignBottomSheetComponent(
                 modifier = Modifier.weight(weight = 1f, fill = false),
                 label = "PromoCampaignStep",
                 transitionSpec = TangemAnimations.AnimatedContent.slide { from, to ->
-                    from.configuration == PromoCampaignRoute.Campaign &&
-                        to.configuration == PromoCampaignRoute.ChooseToken
+                    from.configuration.ordinal < to.configuration.ordinal
                 },
             ) { child ->
                 when (child.configuration) {
@@ -114,6 +124,12 @@ internal class PromoCampaignBottomSheetComponent(
                             .height(LocalWindowInfo.current.containerSize.height.dp)
                             .padding(top = 72.dp),
                     )
+                    // TangemModal measures intrinsic height, which the status screen can't provide.
+                    PromoCampaignRoute.Status -> child.instance.Content(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(windowHeight),
+                    )
                 }
             }
         }
@@ -122,6 +138,7 @@ internal class PromoCampaignBottomSheetComponent(
     private fun createChild(route: PromoCampaignRoute, context: AppComponentContext): ComposableContentComponent {
         return when (route) {
             PromoCampaignRoute.Campaign -> CampaignStep(model)
+            PromoCampaignRoute.Status -> StatusStep(model)
             PromoCampaignRoute.ChooseToken -> chooseTokenComponentFactory.create(
                 context = context,
                 params = ChooseTokenComponent.Params(bridge = model.bridge),
@@ -146,7 +163,17 @@ internal class PromoCampaignBottomSheetComponent(
         }
     }
 
+    private class StatusStep(private val model: PromoCampaignModel) : ComposableContentComponent {
+
+        @Composable
+        override fun Content(modifier: Modifier) {
+            val state by model.statusState.collectAsStateWithLifecycle()
+            state?.let { status -> PromoCampaignStatusContent(state = status, modifier = modifier) }
+        }
+    }
+
     data class Params(
         val campaign: PromoCampaign,
+        val userWalletId: UserWalletId,
     )
 }
