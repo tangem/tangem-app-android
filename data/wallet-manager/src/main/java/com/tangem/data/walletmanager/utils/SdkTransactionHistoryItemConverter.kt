@@ -43,19 +43,25 @@ internal class SdkTransactionHistoryItemConverter(
         )
     }
 
+    private val safeExecutionDecoder = SafeExecutionTypeDecoder(
+        currency = currency,
+        networkTokens = networkTokens,
+        safeAddress = ownAddress,
+        jointRefundReceiver = jointRefundReceiver,
+    )
+
     private val ownAddresses: Set<String> = currencyAddresses
         .mapTo(mutableSetOf()) { it.value.lowercase() }
 
     override fun convertList(input: Collection<SdkTransactionHistoryItem>): List<TxInfo> {
         val items = input
-            .filterNot(typeConverter::isOwnSafeZeroCall)
-            .map(typeConverter::withRefundStatus)
+            .filterNot(safeExecutionDecoder::isOwnSafeZeroCall)
+            .map(safeExecutionDecoder::withRefundStatus)
         if (!txHistoryFeatureToggles.isNewTxHistoryEnabled) return items.map(::convert)
 
         return items.groupBy(SdkTransactionHistoryItem::txHash)
             .flatMap { (_, items) ->
-                // A MultiTransfer takes its status from its first leg, and the fee leg must not speak for the payload
-                val transfers = items.map(::convert).sortedBy { it.type is TransactionType.GaslessFee }
+                val transfers = items.map(::convert)
 
                 transfers.singleOrNull()?.let { listOf(it) } ?: transfers.toMultiTransfer()
             }
