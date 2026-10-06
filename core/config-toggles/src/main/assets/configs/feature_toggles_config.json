@@ -158,5 +158,9 @@
     {
         "name": "AND_18183_DEEPLINK_HANDLER_REGISTRY_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "AND_18288_KOTLINX_DATASTORE_ENABLED",
+        "version": "undefined"
     }
 ]

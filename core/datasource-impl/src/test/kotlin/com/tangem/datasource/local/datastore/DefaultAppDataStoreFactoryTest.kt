@@ -8,6 +8,8 @@ import com.squareup.moshi.adapter
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
+import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.local.datastore.DeleteObsoleteFileMigration
 import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.core.remote.json.NetworkJsonFactory
@@ -28,6 +30,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.junit.jupiter.api.io.TempDir
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -60,11 +63,13 @@ internal class DefaultAppDataStoreFactoryTest {
         }
     }
     private val context: Context = mockk()
+    private val featureTogglesManager: FeatureTogglesManager = mockk()
     private val factory = DefaultAppDataStoreFactory(
         context = context,
         analyticsExceptionHandler = analyticsExceptionHandler,
         appScope = scope,
         json = NetworkJsonFactory.create(),
+        featureTogglesManager = featureTogglesManager,
     )
 
     @BeforeEach
@@ -72,6 +77,7 @@ internal class DefaultAppDataStoreFactoryTest {
         // context.dataStoreFile(name) resolves File(applicationContext.filesDir, "datastore/name").
         every { context.applicationContext } returns context
         every { context.filesDir } returns tempDir
+        every { featureTogglesManager.isFeatureEnabled(KOTLINX_DATASTORE_TOGGLE) } returns true
     }
 
     @AfterEach
@@ -217,6 +223,33 @@ internal class DefaultAppDataStoreFactoryTest {
             assertThat(dataStoreFile("written").readText()).isEqualTo(LegacyFormat.MOSHI.encode(value))
         }
 
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN kotlinx DataStore toggle WHEN isKotlinxDataStoreEnabled THEN reflects the toggle`(isEnabled: Boolean) {
+        // Arrange
+        every { featureTogglesManager.isFeatureEnabled(KOTLINX_DATASTORE_TOGGLE) } returns isEnabled
+
+        // Act
+        val actual = factory.isKotlinxDataStoreEnabled
+
+        // Assert
+        assertThat(actual).isEqualTo(isEnabled)
+    }
+
+    @Test
+    fun `GIVEN toggle disabled WHEN value with null field written via fileName overload THEN null is written`() =
+        runBlocking {
+            // Arrange
+            every { featureTogglesManager.isFeatureEnabled(KOTLINX_DATASTORE_TOGGLE) } returns false
+            val store = factory.create(defaultValue = DEFAULT_SAMPLE, fileName = "written_toggle_off")
+
+            // Act
+            store.updateData { SampleNullableDto(id = "a", note = null) }
+
+            // Assert
+            assertThat(dataStoreFile("written_toggle_off").readText()).isEqualTo("""{"id":"a","note":null}""")
+        }
+
     /** Mirrors `Context.dataStoreFile`, which the production factory resolves the file name with. */
     private fun dataStoreFile(fileName: String): File {
         return File(tempDir, "datastore/$fileName").apply { parentFile.mkdirs() }
@@ -249,6 +282,7 @@ internal class DefaultAppDataStoreFactoryTest {
 
     companion object {
 
+        val KOTLINX_DATASTORE_TOGGLE = FeatureToggles.AND_18288_KOTLINX_DATASTORE_ENABLED
         val DEFAULT_SAMPLE = SampleNullableDto(id = "default", note = null)
         val legacyMoshi: Moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build()
 
