@@ -212,7 +212,8 @@ sealed interface TransactionItemUM {
      *                           unlimited approval, a resolved word like "Unlimited"; null for kinds that don't
      *                           carry amount (Vote, Withdraw, Yield mode)
      * @property currencySymbol  currency symbol rendered after [amount]; null when [amount] is null
-     * @property subtitle        optional subtitle (e.g. "to: 33Bd...ga2B" with avatar) for Approve
+     * @property subtitle        optional subtitle — the spender address for Approve, the DeFi provider for a yield
+     *                           supply / withdrawal
      */
     data class Pill(
         override val txHash: String,
@@ -229,6 +230,9 @@ sealed interface TransactionItemUM {
     enum class PillKind {
         STAKING,
         YIELD_MODE,
+
+        /** Funds moved in or out of the yield position — a settled one carries no leading icon, only its provider. */
+        YIELD_SUPPLY,
         APPROVE,
     }
 
@@ -239,6 +243,16 @@ sealed interface TransactionItemUM {
          * here; the pill shortens it to the width it gets. See `EllipsisText`.
          */
         data class Address(val rawAddress: String) : PillSubtitle
+
+        /**
+         * DeFi provider the funds moved to or from — "to:/from: <provider icon> Aave", the pill's counterpart of
+         * [ContentSubtitle.Provider]: [iconResId] is a bundled full-color drawable rendered untinted in a circle.
+         */
+        data class Provider(
+            val direction: ContentSubtitle.Direction,
+            val name: TextReference,
+            @DrawableRes val iconResId: Int,
+        ) : PillSubtitle
     }
 
     data class Loading(override val txHash: String) : TransactionItemUM

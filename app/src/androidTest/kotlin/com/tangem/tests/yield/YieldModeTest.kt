@@ -200,7 +200,7 @@ class YieldModeTest : BaseTestCase() {
         val tokenTitle = "USDC"
         val topUpAmount = "600.00"
         val incomingTransactionTitle = getResourceString(CoreResR.string.common_received)
-        val topUpTransactionTitle = getResourceString(CoreResR.string.transaction_history_supplied)
+        val topUpTransactionTitle = getResourceString(CoreResR.string.yield_module_transaction_supplied)
         val supplyingNotificationTitle = getResourceString(
             CoreResR.string.yield_module_amount_not_transfered_to_aave_title,
             topUpAmount,
@@ -247,7 +247,12 @@ class YieldModeTest : BaseTestCase() {
                 }
             }
             step("Assert '$topUpTransactionTitle' transaction is displayed in history") {
-                onTxHistoryScreen { transactionItem(topUpTransactionTitle).assertIsDisplayed() }
+                onTxHistoryScreen {
+                    yieldSupplyPill(
+                        label = CoreResR.string.yield_module_transaction_supplied,
+                        directionTemplate = CoreResR.string.transaction_history_to_inline_address,
+                    ).assertIsDisplayed()
+                }
             }
 
             step("Click on 'Yield mode enabled' block") {

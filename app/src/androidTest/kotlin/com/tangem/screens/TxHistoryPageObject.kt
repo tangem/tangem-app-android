@@ -25,6 +25,15 @@ class TxHistoryPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         title = "${getResourceString(CoreResR.string.common_yield_mode_inline)} ${getResourceString(state)}",
     )
 
+    /**
+     * A supply / withdraw row is a pill whose label and provider read as one text node — "Supplied to: %image% Aave",
+     * with the provider avatar as the inline-image marker of [directionTemplate].
+     */
+    fun yieldSupplyPill(@StringRes label: Int, @StringRes directionTemplate: Int): KNode = transactionItem(
+        title = "${getResourceString(label)} " +
+            getResourceString(directionTemplate, getResourceString(CoreResR.string.yield_module_provider)),
+    )
+
     fun transactionAmount(title: String): KNode = transactionItem(title).child {
         hasTestTag(TransactionHistoryItemTestTags.AMOUNT)
         useUnmergedTree = true

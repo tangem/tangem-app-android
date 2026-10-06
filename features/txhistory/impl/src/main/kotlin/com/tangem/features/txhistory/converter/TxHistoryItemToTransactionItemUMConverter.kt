@@ -75,6 +75,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
             is TransactionType.Staking.Withdraw -> pillConverter.convert(PillInput(value, uiStatus, WithdrawSpec))
             is TransactionType.YieldSupply.Enter -> pillConverter.convert(PillInput(value, uiStatus, YieldEnterSpec))
             is TransactionType.YieldSupply.Exit -> pillConverter.convert(PillInput(value, uiStatus, YieldExitSpec))
+            is TransactionType.YieldSupply.Topup -> pillConverter.convert(PillInput(value, uiStatus, YieldSupplySpec))
             // endregion
 
             // region Content
@@ -82,8 +83,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
             is TransactionType.Swap -> swapContent(value, uiStatus)
             is TransactionType.Transfer -> transferContent(value, uiStatus)
             is TransactionType.Staking.ClaimRewards -> claimRewardsContent(value, uiStatus)
-            is TransactionType.YieldSupply.Topup -> yieldTopupContent(value, uiStatus)
-            is TransactionType.YieldSupply.Send -> yieldSendContent(value, uiStatus, type)
+            is TransactionType.YieldSupply.Send -> yieldSend(value, uiStatus, type)
             is TransactionType.YieldSupply.DeployContract -> yieldDeployContractContent(value, uiStatus, type)
             is TransactionType.YieldSupply.InitializeToken -> yieldInitializeTokenContent(value, uiStatus, type)
             is TransactionType.YieldSupply.ReactivateToken -> yieldReactivateTokenContent(value, uiStatus, type)
@@ -177,15 +177,6 @@ internal class TxHistoryItemToTransactionItemUMConverter(
             subtitle = ContentSubtitle.Plain(resourceReference(R.string.transaction_history_earned_from_stake)),
         )
 
-    private fun yieldTopupContent(tx: TxInfo, uiStatus: TransactionItemUM.Content.Status): TransactionItemUM.Content =
-        buildContent(
-            tx = tx,
-            uiStatus = uiStatus,
-            title = titleConverter.convert(tx),
-            icon = tx.directionalIcon(),
-            subtitle = yieldProviderSubtitle(ContentSubtitle.Direction.TO),
-        )
-
     private fun yieldDeployContractContent(
         tx: TxInfo,
         uiStatus: TransactionItemUM.Content.Status,
@@ -222,21 +213,18 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         subtitle = tx.yieldSupplySubtitle(currency, type),
     )
 
-    private fun yieldSendContent(
+    /**
+     * A withdraw Send takes the funds out of the yield position, so it reads as the yield pill its topup counterpart
+     * does. A non-withdraw Send is an ordinary transfer — resolve the counterparty against the user's own
+     * accounts/wallets and render it exactly like Transfer, so the list matches the details screen.
+     */
+    private fun yieldSend(
         tx: TxInfo,
         uiStatus: TransactionItemUM.Content.Status,
         type: TransactionType.YieldSupply.Send,
-    ): TransactionItemUM.Content = if (type.isYieldSupplyWithdraw) {
-        buildContent(
-            tx = tx,
-            uiStatus = uiStatus,
-            title = titleConverter.convert(tx),
-            icon = tx.directionalIcon(),
-            subtitle = yieldProviderSubtitle(ContentSubtitle.Direction.FROM),
-        )
+    ): TransactionItemUM = if (type.isYieldSupplyWithdraw) {
+        pillConverter.convert(PillInput(tx, uiStatus, YieldWithdrawSpec))
     } else {
-        // A non-withdraw Send is an ordinary transfer — resolve the counterparty against the user's own
-        // accounts/wallets and render it exactly like Transfer, so the list matches the details screen.
         transferContent(tx, uiStatus)
     }
 
@@ -464,17 +452,6 @@ private fun TransactionType.feeSubtitleResId(): Int? = when (this) {
     is TransactionType.YieldSupply.Send,
     -> null
 }
-
-/**
- * Subtitle of a yield transfer in or out of the Aave position, naming the provider as the counterparty: "to: <Aave
- * avatar> Aave" on a topup, "from: …" on a withdraw. A non-withdraw
- * [Send][TransactionType.YieldSupply.Send] is an ordinary transfer, rendered by [transferContent] instead.
- */
-private fun yieldProviderSubtitle(direction: ContentSubtitle.Direction): ContentSubtitle = ContentSubtitle.Provider(
-    direction = direction,
-    name = resourceReference(R.string.yield_module_provider),
-    iconResId = R.drawable.img_aave_22,
-)
 
 private fun TxInfo.amountSubtitle(currency: CryptoCurrency, @StringRes resId: Int): ContentSubtitle.Plain {
     val formatted = amount.format { crypto(currency) }
