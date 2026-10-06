@@ -15,6 +15,7 @@ internal data class IntroductionUM(
     val haveWalletBottomSheetConfig: TangemBottomSheetConfig?,
     val onCreateWalletClick: () -> Unit,
     val onIHaveWalletClick: () -> Unit,
+    val onBuyTangemClick: () -> Unit,
     val onCreateWalletSheetCollapsed: () -> Unit,
     val onTermsOfServiceClick: () -> Unit,
     val onPrivacyPolicyClick: () -> Unit,
