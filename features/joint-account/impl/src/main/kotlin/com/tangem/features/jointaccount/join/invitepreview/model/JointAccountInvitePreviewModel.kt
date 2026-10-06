@@ -261,6 +261,11 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     }
 
     private fun onContinueClick() {
+        if (!IS_JOIN_CONFIRMATION_SHOWN) {
+            onConfirmationContinue()
+            return
+        }
+
         stateController.update(
             SetJoinConfirmationTransformer(
                 confirmation = JointAccountJoinConfirmationUM(
@@ -292,5 +297,8 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     private companion object {
         val UNREACHABLE_RETRY_DELAYS = listOf(1.seconds, 2.seconds, 3.seconds)
         val SELECTOR_READY_TIMEOUT = 10.seconds
+
+        /** The shared-balance sheet is left out of the join for now; the step comes back by flipping this */
+        const val IS_JOIN_CONFIRMATION_SHOWN = false
     }
 }
