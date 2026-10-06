@@ -1,6 +1,7 @@
 package com.tangem.features.send.send.confirm.model
 
 import android.os.SystemClock
+import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.tangem.blockchain.common.Amount
@@ -13,9 +14,12 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -745,6 +749,114 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             coEvery {
                 jointSendDelegate.createOperation(jointAccount, any(), any(), any(), captureNullable(feeTokens))
             } returns Unit.right()
+        }
+
+        @Test
+        fun `GIVEN the operation is created WHEN onSendClick THEN send success analytics carry the composition`() =
+            runTest {
+                // Arrange
+                stubCreateOperation(result = Unit.right())
+                val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+                advanceUntilIdle()
+
+                // Act
+                sut.onSendClick()
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 1) {
+                    sendAnalyticHelper.sendSuccessAnalytics(
+                        cryptoCurrency = any(),
+                        sendUM = any(),
+                        feeToken = any(),
+                        account = jointAccount,
+                        jointComposition = AnalyticsParam.JointComposition(membersCount = 3, threshold = 2),
+                    )
+                }
+            }
+
+        @Test
+        fun `GIVEN the account leaves the store after confirm WHEN created THEN success analytics are still sent`() =
+            runTest {
+                // Arrange
+                stubCreateOperation(result = Unit.right())
+                coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returnsMany
+                    listOf(storedJointAccount, null)
+                val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+                advanceUntilIdle()
+
+                // Act
+                sut.onSendClick()
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 1) {
+                    sendAnalyticHelper.sendSuccessAnalytics(
+                        cryptoCurrency = any(),
+                        sendUM = any(),
+                        feeToken = any(),
+                        account = jointAccount,
+                        jointComposition = AnalyticsParam.JointComposition(membersCount = 3, threshold = 2),
+                    )
+                }
+            }
+
+        @Test
+        fun `GIVEN the request fails WHEN onSendClick THEN Joint Account Error carries the cause`() = runTest {
+            // Arrange
+            val cause = IllegalStateException("Request failed")
+            stubCreateOperation(result = JointOperationCreateError.Failed(cause = cause).left())
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(JointAccountError(source = ErrorSource.CreateOperation, cause = cause))
+            }
+        }
+
+        @Test
+        fun `GIVEN busy slot WHEN onSendClick THEN Joint Account Error names the error`() = runTest {
+            // Arrange
+            stubCreateOperation(result = JointOperationCreateError.SlotBusy.left())
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    JointAccountError(source = ErrorSource.CreateOperation, errorMessage = "SlotBusy"),
+                )
+            }
+        }
+
+        @Test
+        fun `GIVEN signing dismissed WHEN onSendClick THEN no Joint Account Error is sent`() = runTest {
+            // Arrange
+            stubCreateOperation(result = JointOperationCreateError.UserCancelled.left())
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<JointAccountError>()) }
+        }
+
+        private fun stubCreateOperation(result: Either<JointOperationCreateError, Unit>) {
+            coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+            coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
+            coEvery { jointSendDelegate.createOperation(jointAccount, any(), any(), any(), any()) } returns result
         }
 
         /** Confirm starts empty so the model builds the real Content with the signatures itself */
