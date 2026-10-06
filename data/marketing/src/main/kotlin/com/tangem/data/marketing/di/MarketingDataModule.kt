@@ -3,6 +3,7 @@ package com.tangem.data.marketing.di
 import android.content.Context
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.data.marketing.DefaultMarketingRepository
 import com.tangem.data.marketing.converter.MarketingCampaignConverter
 import com.tangem.data.marketing.store.DefaultMarketingCampaignsCacheStore
@@ -11,9 +12,9 @@ import com.tangem.data.marketing.store.MarketingCampaignsCacheStore
 import com.tangem.data.marketing.store.MarketingDismissStore
 import com.tangem.datasource.api.marketing.models.MarketingCampaignsCacheEntry
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
+import com.tangem.datasource.utils.create
 import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.datasource.utils.setTypes
 import com.tangem.domain.marketing.MarketingRepository
@@ -56,17 +57,26 @@ internal object MarketingDataModule {
         @ApplicationContext context: Context,
         appScope: AppCoroutineScope,
         dataStoreFactory: AppDataStoreFactory,
-    ): MarketingDismissStore = DefaultMarketingDismissStore(
-        dataStore = dataStoreFactory.create(
-            serializer = MoshiDataStoreSerializer(
-                moshi = moshi,
-                types = setTypes<Int>(),
-                defaultValue = emptySet(),
-            ),
-            produceFile = { context.dataStoreFile(fileName = "marketing_dismissed_banner_ids") },
-            scope = appScope,
-        ),
-    )
+    ): MarketingDismissStore {
+        return DefaultMarketingDismissStore(
+            dataStore = if (dataStoreFactory.isKotlinxDataStoreEnabled) {
+                dataStoreFactory.create(
+                    defaultValue = emptySet<Int>(),
+                    fileName = "marketing_dismissed_banner_ids",
+                )
+            } else {
+                dataStoreFactory.create(
+                    serializer = MoshiDataStoreSerializer(
+                        moshi = moshi,
+                        types = setTypes<Int>(),
+                        defaultValue = emptySet(),
+                    ),
+                    produceFile = { context.dataStoreFile(fileName = "marketing_dismissed_banner_ids") },
+                    scope = appScope,
+                )
+            },
+        )
+    }
 
     @Provides
     @Singleton
