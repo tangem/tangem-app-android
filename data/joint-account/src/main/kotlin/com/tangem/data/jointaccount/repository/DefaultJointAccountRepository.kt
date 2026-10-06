@@ -24,13 +24,13 @@ import com.tangem.data.jointaccount.converter.SafeTxConverter
 import com.tangem.store.datasource.jointaccount.models.CreateJointOperationRequest
 import com.tangem.store.datasource.jointaccount.models.SignJointOperationRequest
 import com.tangem.store.datasource.jointaccount.JointAccountApi
+import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountActivationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationResult
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
 import com.tangem.domain.jointaccount.model.JointAccountJoinPayload
-import com.tangem.domain.jointaccount.model.JointAccountJoinResult
 import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
@@ -109,7 +109,7 @@ internal class DefaultJointAccountRepository @Inject constructor(
         userWalletId: UserWalletId,
         payload: JointAccountJoinPayload,
         signature: String,
-    ): JointAccountJoinResult {
+    ): Either<Throwable, JointAccount> {
         return withContext(dispatchers.io) {
             safeApiCall(
                 call = {
@@ -118,12 +118,12 @@ internal class DefaultJointAccountRepository @Inject constructor(
                         body = JoinJointAccountRequestConverter(signature = signature).convert(value = payload),
                     ).bind()
 
-                    JointAccountJoinResult.Joined(account = converter.convert(value = response))
+                    converter.convert(value = response).right()
                 },
                 onError = { error ->
-                    // The HTTP code stays in the data layer: the domain branches on the result, not on 409
+                    // The HTTP code stays in the data layer: the domain branches on the Left, not on 409
                     if (error is ApiResponseError.HttpException && error.code == Code.CONFLICT) {
-                        JointAccountJoinResult.Conflict(cause = error)
+                        error.left()
                     } else {
                         throw error
                     }
