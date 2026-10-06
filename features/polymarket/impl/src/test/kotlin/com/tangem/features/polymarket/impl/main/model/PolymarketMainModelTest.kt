@@ -94,6 +94,8 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import io.mockk.coVerify
 import io.mockk.verifyOrder
 import org.junit.jupiter.api.BeforeEach
+import com.tangem.domain.feedback.models.WalletMetaInfo
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.polymarket.model.PolymarketBridgeError
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -115,6 +117,7 @@ internal class PolymarketMainModelTest {
     private val observeCredentialsPresence: ObservePolymarketCredentialsPresenceUseCase = mockk {
         every { this@mockk.invoke(USER_WALLET_ID) } returns hasCredentials
     }
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk()
 
     private val statusFlow = MutableStateFlow<PredictionAccountStatusValue>(
         value = activeStatus(depositAddress = DEPOSIT_ADDRESS),
@@ -662,6 +665,44 @@ internal class PolymarketMainModelTest {
 
         // Assert
         verify { router.pop(any()) }
+    }
+
+    @Test
+    fun `GIVEN wallet meta info WHEN support chat clicked THEN chat opens for Predictions`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns categories().right()
+        val metaInfo = WalletMetaInfo(userWalletId = USER_WALLET_ID)
+        coEvery { getWalletMetaInfoUseCase(USER_WALLET_ID) } returns metaInfo.right()
+        val route = slot<AppRoute.Usedesk>()
+        every { router.push(capture(route), any()) } returns Unit
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onSupportChatClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(route.captured.walletMetaInfo).isEqualTo(metaInfo)
+        assertThat(route.captured.source).isEqualTo(AnalyticsParam.ScreensSources.Predictions)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN wallet meta info fails WHEN support chat clicked THEN nothing opens`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns categories().right()
+        coEvery { getWalletMetaInfoUseCase(USER_WALLET_ID) } returns IllegalStateException("No wallet").left()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onSupportChatClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { router.push(any<AppRoute.Usedesk>(), any()) }
+        model.onDestroy()
     }
 
     @Test
@@ -1527,6 +1568,7 @@ internal class PolymarketMainModelTest {
             predictionBalancePoller = balancePoller,
             predictionFundingWindow = fundingWindow,
             observePolymarketCredentialsPresenceUseCase = observeCredentialsPresence,
+            getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
         ).also { model = it }
     }
 
