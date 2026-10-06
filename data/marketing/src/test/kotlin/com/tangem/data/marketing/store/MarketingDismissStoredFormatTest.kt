@@ -8,9 +8,9 @@ import com.tangem.test.core.datastore.writeStoredJson
 import org.junit.jupiter.api.Test
 
 /**
- * Guards the stored format of the dismissed banner ids: files written by the Moshi serializer must read back
- * unchanged after the store moved to kotlinx, and new writes keep that format, so the Moshi serializer still used
- * while the kotlinx DataStore toggle is off reads them too.
+ * Guards the stored format of the dismissed banner ids: files written by the Moshi serializer must read back unchanged
+ * after the store moved to kotlinx, and new writes keep that format, so the Moshi serializer that is still used while
+ * the kotlinx DataStore toggle is off reads them too.
  */
 @OptIn(ExperimentalStdlibApi::class)
 internal class MarketingDismissStoredFormatTest {
