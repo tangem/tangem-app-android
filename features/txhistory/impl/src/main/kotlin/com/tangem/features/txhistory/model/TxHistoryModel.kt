@@ -112,7 +112,7 @@ internal class TxHistoryModel @Inject constructor(
     }
 
     private val isResumed = MutableStateFlow(false)
-    private val hasLoadedMorePages = MutableStateFlow(false)
+    private val loadedPagesTracker = LoadedPagesTracker()
 
     val legacyUiState = stateController.legacyUiState
     val uiState = stateController.uiState
@@ -128,7 +128,7 @@ internal class TxHistoryModel @Inject constructor(
             scope = modelScope,
             currency = params.currency,
             isResumed = isResumed,
-            hasLoadedMorePages = hasLoadedMorePages,
+            hasLoadedMorePages = loadedPagesTracker.hasLoadedMorePages,
             reload = ::reloadOnChainHistory,
         )
         subscribeOnCurrencyStatusUpdates()
@@ -176,6 +176,7 @@ internal class TxHistoryModel @Inject constructor(
         lookup: TxHistoryLookupContext,
         networkTokens: Set<CryptoCurrency.Token>,
     ) {
+        loadedPagesTracker.onState(state)
         when (state) {
             HistoryTxListManager.HistoryState.Loading ->
                 stateController.setLoadingIfNotContent(onExploreClick = ::openExplorer)
@@ -281,7 +282,7 @@ internal class TxHistoryModel @Inject constructor(
 
     fun reload() {
         if (stateController.isNotSupported) return
-        hasLoadedMorePages.value = false
+        loadedPagesTracker.onReload()
 
         if (txHistoryFeatureToggle.isNewTxHistoryEnabled) {
             historyTxListManager?.reload()
@@ -314,12 +315,7 @@ internal class TxHistoryModel @Inject constructor(
     }
 
     private fun loadMoreItems(): Boolean {
-        // The list asks for more whenever its end shows, short histories included; only a real next page counts
-        val hasNextPage = historyTxListManager?.state?.value
-            ?.let { it as? HistoryTxListManager.HistoryState.Content }
-            ?.hasMore
-            ?: true
-        if (hasNextPage) hasLoadedMorePages.value = true
+        loadedPagesTracker.onLoadMore(current = historyTxListManager?.state?.value)
         historyTxListManager?.loadMore()
         modelScope.launch {
             txHistoryListManager?.loadMore(params.userWalletId, params.currency)
