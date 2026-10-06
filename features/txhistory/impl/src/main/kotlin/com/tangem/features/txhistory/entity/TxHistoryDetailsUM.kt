@@ -150,8 +150,9 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
 
     /**
      * Counterparty rendered inline in an [AssetUM.label] of a swap leg. Carries the [name] plus a kind-specific 16dp
-     * decoration: an own account / own wallet when the leg's address resolves to one of the user's portfolios, or an
-     * external blockchain [Address] (e.g. a send-and-swap payout to a non-user address).
+     * decoration: an own account / own wallet when the leg's address resolves to one of the user's portfolios, a
+     * [Contact] when it is saved in an address book, or an external blockchain [Address] (e.g. a send-and-swap payout
+     * to an address the user has not saved).
      */
     @Immutable
     sealed interface AssetOwnerUM {
@@ -174,6 +175,15 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
         data class Wallet(
             override val name: TextReference,
             val deviceIconUM: DeviceIconUM,
+        ) : AssetOwnerUM
+
+        /**
+         * Leg address saved in one of the user's address books — the contact's [name] in place of the address, with
+         * its portfolio [icon] shown **before** the name and drawn as a circle, the shape contacts carry everywhere.
+         */
+        data class Contact(
+            override val name: TextReference,
+            val icon: AccountIconUM.CryptoPortfolio,
         ) : AssetOwnerUM
 
         /**
