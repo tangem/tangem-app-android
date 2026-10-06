@@ -6,6 +6,8 @@ import com.tangem.common.extensions.calculateHashCode
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse.GroupType
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse.GroupType.NONE
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse.SortType
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 @JsonClass(generateAdapter = true)
 @Suppress("BooleanPropertyNaming")
@@ -21,6 +23,7 @@ data class UserTokensResponse(
     @Json(name = "campaign") val campaign: String? = null,
 ) {
 
+    @Serializable
     @JsonClass(generateAdapter = true)
     data class Token(
         @Json(name = "id") val id: String? = null,
@@ -55,26 +58,34 @@ data class UserTokensResponse(
         )
     }
 
+    @Serializable
     @JsonClass(generateAdapter = false)
     enum class GroupType {
+        @SerialName("none")
         @Json(name = "none")
         NONE,
 
+        @SerialName("token")
         @Json(name = "token")
         TOKEN,
 
+        @SerialName("network")
         @Json(name = "network")
         NETWORK,
     }
 
+    @Serializable
     @JsonClass(generateAdapter = false)
     enum class SortType {
+        @SerialName("balance")
         @Json(name = "balance")
         BALANCE,
 
+        @SerialName("manual")
         @Json(name = "manual")
         MANUAL,
 
+        @SerialName("marketcap")
         @Json(name = "marketcap")
         MARKETCAP,
     }
