@@ -23,6 +23,7 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.extensions.TextReference.Res
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -31,6 +32,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_card_20
 import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_20
+import com.tangem.core.ui.res.generated.icons.ic_sign_usd_20
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 import kotlinx.collections.immutable.persistentListOf
@@ -82,10 +84,11 @@ internal fun TangemPayAddFundsContent(state: TangemPayAddFundsUM) {
 
 @Composable
 private fun TangemPayTopUpItem(state: TangemPayAddFundsItemUM, modifier: Modifier = Modifier) {
+    val onClick = state.onClick
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = state.onClick)
+            .clickable(enabled = onClick != null) { onClick?.invoke() }
             .testTag(TangemPayTestTags.ADD_FUNDS_OPTION)
             .padding(vertical = TangemTheme.dimens2.x3),
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x3),
@@ -104,10 +107,13 @@ private fun TangemPayTopUpItem(state: TangemPayAddFundsItemUM, modifier: Modifie
                 tangemIconUM = state.icon,
             )
         }
-        Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x0_5)) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x0_5),
+        ) {
             Text(
                 text = state.title.resolveReference(),
-                style = TangemTheme.typography3.subheading.medium,
+                style = TangemTheme.typography3.body.medium,
                 color = TangemTheme.colors3.text.primary,
             )
             Text(
@@ -115,6 +121,9 @@ private fun TangemPayTopUpItem(state: TangemPayAddFundsItemUM, modifier: Modifie
                 style = TangemTheme.typography3.caption.medium,
                 color = TangemTheme.colors3.text.secondary,
             )
+        }
+        if (state.isLoading) {
+            TangemLoader(modifier = Modifier.align(Alignment.CenterVertically))
         }
     }
 }
@@ -127,6 +136,18 @@ private fun TangemPayAddFundsContentPreview() {
         TangemPayAddFundsContent(
             state = TangemPayAddFundsUM(
                 items = persistentListOf(
+                    TangemPayAddFundsItemUM(
+                        icon = TangemIconUM.Icon(
+                            imageVector = Icons.ic_sign_usd_20,
+                            tintReference = {
+                                TangemTheme.colors3.icon.brand
+                            },
+                        ),
+                        title = Res(R.string.tangempay_topup_bank_transfer_title),
+                        description = Res(R.string.tangempay_topup_bank_transfer_body),
+                        onClick = null,
+                        isLoading = true,
+                    ),
                     TangemPayAddFundsItemUM(
                         icon = TangemIconUM.Icon(
                             imageVector = Icons.ic_logo_tangem_20,
