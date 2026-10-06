@@ -15,9 +15,9 @@ import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 /**
- * Guards the stored format of the P2P ETH pool balances: files written by the Moshi serializer must read back
- * unchanged after the store moved to kotlinx, and new writes keep that format, so the Moshi serializer still used
- * while the kotlinx DataStore toggle is off reads them too.
+ * Guards the stored format of the P2P ETH pool balances: files written by the Moshi serializer must read back unchanged
+ * after the store moved to kotlinx, and new writes keep that format, so the Moshi serializer that is still used while
+ * the kotlinx DataStore toggle is off reads them too.
  */
 @OptIn(ExperimentalStdlibApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

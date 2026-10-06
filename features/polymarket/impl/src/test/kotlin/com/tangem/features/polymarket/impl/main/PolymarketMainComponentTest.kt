@@ -167,5 +167,6 @@ internal class PolymarketMainComponentTest {
         predictionBalancePoller = mockk(relaxed = true),
         predictionFundingWindow = fundingWindow,
         observePolymarketCredentialsPresenceUseCase = observeCredentialsPresence,
+        getWalletMetaInfoUseCase = mockk(),
     )
 }
