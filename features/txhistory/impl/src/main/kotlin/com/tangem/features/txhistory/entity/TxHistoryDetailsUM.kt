@@ -260,7 +260,8 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      * wallet renders its display name and still copies the address behind it.
      *
      * @property label Section label above the counterparty: "Recipient" (outgoing) / "From" (incoming).
-     * @property title Counterparty value: brief address / account name / wallet name.
+     * @property title Counterparty value: the whole address, which the row cuts in the middle / account name / wallet
+     * name.
      * @property avatar Leading avatar.
      * @property titleIcon Currency avatar drawn after the [title] — the asset of a fee-only card ("120.03 USDT ⓣ").
      * `null` on a counterparty card, which names an address rather than an asset.

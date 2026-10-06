@@ -350,7 +350,7 @@ internal class OnChainTxToDetailsUMConverter(
      * list uses for its subtitle); a counterparty that is not a plain `User` address yields no card (`null`).
      *
      * The address is resolved through the shared [lookup] for display only: an own account / own wallet renders its
-     * name and avatar, anything else the external brief address with an identicon. Whatever it renders, the card copies
+     * name and avatar, anything else the full external address with an identicon. Whatever it renders, the card copies
      * the underlying address on tap — the same address the header menu's "Copy address" row copies.
      */
     private fun TxInfo.toCounterpartyUM(): TxHistoryDetailsUM.CounterpartyUM? {
@@ -389,7 +389,7 @@ internal class OnChainTxToDetailsUMConverter(
             )
             is ResolvedOwner.External -> TxHistoryDetailsUM.CounterpartyUM(
                 label = counterpartyLabel(incoming = R.string.common_from_address),
-                title = stringReference(owner.address.toBriefAddressFormat()),
+                title = stringReference(owner.address),
                 avatar = TxHistoryDetailsUM.CounterpartyAvatar.Address(rawAddress = owner.address),
                 onCopyClick = copyAddress,
             )
