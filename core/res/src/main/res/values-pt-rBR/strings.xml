@@ -746,7 +746,7 @@
   <string name="dynamic_addresses_notification_funds_found_title">Fundos encontrados em endereços adicionais</string>
   <string name="dynamic_addresses_receive_badge">Endereço dinâmico</string>
   <string name="dynamic_addresses_unavailability_reason_pending_transaction_send">O gerenciamento de endereços dinâmicos estará disponível assim que as transações pendentes estiverem na rede. %@ está completo</string>
-  <string name="earn_assets">Ativos que geram rendimentos</string>
+  <string name="earn_assets">Ativos para obter rendimentos</string>
   <string name="earn_best_opportunities">Melhores oportunidades</string>
   <string name="earn_clear_filter">Limpar filtro</string>
   <string name="earn_empty">A lista está temporariamente vazia, pois está sendo atualizada. Volte daqui a pouco.</string>
@@ -876,7 +876,7 @@
   <string name="feed_search_show_all_user_assets">Mostrar tudo</string>
   <string name="feed_search_show_less_user_assets">Mostrar menos</string>
   <string name="feed_tab_crypto">Cripto</string>
-  <string name="feed_tab_earn">Ganhe</string>
+  <string name="feed_tab_earn">Obter rendimentos</string>
   <string name="feed_tab_rwa">Ativos do mundo real</string>
   <string name="feed_trending_now">Em alta agora</string>
   <string name="feedback_data_collection_message">As informações a seguir são opcionais. Você pode apagá-las se não quiser compartilhá-las.</string>
@@ -1119,6 +1119,7 @@
   <string name="initial_wallet_sync_banner_description">Sua carteira está sincronizada e pronta. \n Faltam alguns tokens?</string>
   <string name="initial_wallet_sync_banner_title">Carteira importada com sucesso.</string>
   <string name="initial_wallet_sync_restore_progress">Restaurando %d%%</string>
+  <string name="introduction_button_buy_tangem">Comprar Tangem</string>
   <string name="introduction_button_create_wallet">Criar carteira</string>
   <string name="introduction_button_i_have_a_wallet">Eu tenho uma carteira</string>
   <string name="introduction_create_wallet_hardware_description">Se você já tiver uma carteira Tangem</string>
@@ -1163,6 +1164,7 @@
   <string name="joint_account_invite_load_failed_subtitle">Não foi possível carregar a página de convite.\nToque para recarregar</string>
   <string name="joint_account_invite_members_creator">Criador</string>
   <string name="joint_account_invite_members_invite">Convidar</string>
+  <string name="joint_account_invite_members_invited">Convidado</string>
   <string name="joint_account_invite_members_member">Membro</string>
   <string name="joint_account_invite_members_member_info">Informações do membro</string>
   <string name="joint_account_invite_members_new_member">Novo membro</string>
@@ -1236,6 +1238,10 @@
   <string name="joint_account_send_sends_automatically_setup_fee">Envia automaticamente assim que todas forem coletadas. O primeiro envio inclui uma taxa de configuração única</string>
   <string name="joint_account_send_setup_fee_note">Primeira transação na rede %1$s. A taxa inclui uma cobrança única de %2$s para configurar a conta conjunta na blockchain.</string>
   <string name="joint_account_send_signatures_required">São necessárias %1$s de %2$s assinaturas</string>
+  <plurals name="joint_account_send_signatures_required_banner">
+    <item quantity="one">%1$d assinatura necessária</item>
+    <item quantity="other">%1$d assinaturas necessárias</item>
+  </plurals>
   <string name="joint_account_send_slot_busy_subtitle">Esta rede já tem uma operação aguardando assinaturas. Aguarde a conclusão antes de criar outra.</string>
   <string name="joint_account_send_slot_busy_title">Já existe uma operação em andamento</string>
   <string name="joint_account_settings_networks_info">Esta conta funciona apenas nas redes compatíveis.</string>
@@ -2014,22 +2020,27 @@
   <string name="prediction_withdraw_status_failed_title">Falha no saque</string>
   <string name="prediction_withdraw_status_sent_description">O envio pode levar até %1$d minutos</string>
   <string name="prediction_withdraw_status_sent_title">Saque enviado</string>
+  <string name="promo_campaign_all_wallets_enrolled">Todas as suas carteiras estão inscritas</string>
   <string name="promo_campaign_already_activated_subtitle">O cashback elegível será distribuído para:</string>
   <string name="promo_campaign_already_activated_title">Você já está inscrito em %1$s</string>
   <string name="promo_campaign_eligible_tokens">Tokens elegíveis</string>
   <string name="promo_campaign_enroll">Inscreva-se</string>
   <string name="promo_campaign_enroll_success_title">Você se inscreveu com sucesso em %1$s</string>
+  <string name="promo_campaign_enrolled_wallets">Carteira inscrita</string>
   <string name="promo_campaign_not_active_subtitle">Esta campanha não existe mais ou expirou</string>
   <string name="promo_campaign_not_active_title">Campanha não está ativa</string>
+  <string name="promo_campaign_not_started_title">A campanha ainda não está disponível</string>
   <string name="promo_campaign_reactivation_summary_description">Ganhe 0,5% de cashback em todas as trocas acima de US$ 500, em qualquer par, exceto entre pares de stablecoins. Pagamento máximo de US$ 50 por troca.\n\nConclua cinco trocas qualificadas e desbloqueie um bônus adicional de US$ 10.\n\nAs recompensas são pagas semanalmente em USDT ou USDC no endereço selecionado.</string>
   <string name="promo_campaign_select_cashback_account">Selecionar conta de cashback</string>
   <string name="promo_campaign_select_token">Selecionar token de cashback</string>
   <string name="promo_campaign_selected_cashback_account">Conta de cashback selecionada</string>
   <string name="promo_campaign_selected_token">Token de cashback selecionado</string>
+  <string name="promo_campaign_some_wallets_enrolled">Algumas das suas carteiras estão inscritas</string>
   <string name="promo_campaign_summary_title">Inscreva-se em %1$s</string>
   <string name="promo_campaign_terms_agreement">Concordo com %1$s</string>
   <string name="promo_campaign_terms_agreement_android">Concordo com</string>
   <string name="promo_campaign_terms_link">%1$s Termos</string>
+  <string name="promo_campaign_unavailable_title">Campanha indisponível</string>
   <string name="promo_campaign_whale_swap_summary_description">Ganhe cashback em todas as trocas a partir de US$ 10.000 até o final de agosto.\n\nAs taxas aumentam conforme o volume: 0,10% a partir de US$ 10 mil, 0,20% a partir de US$ 20 mil e 0,50% a partir de US$ 100 mil.\n\nPagamento máximo: US$ 500 por troca e US$ 10.000 por carteira, por direção de troca, enquanto durar a campanha. Trocas de stablecoin por stablecoin estão excluídas.\n\nO pagamento é realizado semanalmente em USDT ou USDC no endereço de sua escolha.</string>
   <string name="provider_name_support">%s suporte</string>
   <string name="push_notification_settings_banner_description">As notificações push estão ativadas, mas só funcionarão depois que você as permitir nas configurações do seu dispositivo.</string>
@@ -2600,6 +2611,7 @@
   <string name="tangempay_bank_transfer_details_daily_deposits_hint">Se quiser depositar mais de %s, entre em contato com o suporte</string>
   <string name="tangempay_bank_transfer_details_fee_header">Métodos de depósito e taxas</string>
   <string name="tangempay_bank_transfer_details_limitations">Limitações</string>
+  <string name="tangempay_bank_transfer_failed_title">Não foi possível criar seus dados bancários</string>
   <string name="tangempay_bank_transfer_fee_ach">ACH</string>
   <string name="tangempay_bank_transfer_fee_error_subtitle">Toque para recarregar</string>
   <string name="tangempay_bank_transfer_fee_error_title">Erro ao carregar as informações sobre a taxa</string>
@@ -2730,7 +2742,7 @@
   <string name="tangempay_cashback_accruals_calc_title">Como calculamos o cashback?</string>
   <string name="tangempay_cashback_accruals_exceptions_description">No momento, pagamentos presenciais na maquininha em lojas físicas na UE não acumulam cashback. Ele também não é válido para saques, quase-moeda, recargas de celular, serviços públicos e outras categorias específicas.</string>
   <string name="tangempay_cashback_accruals_exceptions_title">Exceções</string>
-  <string name="tangempay_cashback_accruals_pay_description">Do dia 2 ao dia 5 do próximo mês</string>
+  <string name="tangempay_cashback_accruals_pay_description">Até o dia 10 do mês seguinte, após a verificação da conformidade das transações com as regras do programa de cashback</string>
   <string name="tangempay_cashback_accruals_pay_title">Como pagamos o cashback?</string>
   <string name="tangempay_cashback_accruals_subtitle">Limites e exceções</string>
   <string name="tangempay_cashback_accruals_title">Valores acumulados</string>
@@ -2739,7 +2751,7 @@
   <string name="tangempay_cashback_additional_until">Até %1$s</string>
   <string name="tangempay_cashback_deactivated_description">Isso ocorreu devido à detecção de atividade suspeita. Entre em contato com o suporte para saber mais</string>
   <string name="tangempay_cashback_deactivated_title">Cashback desativado</string>
-  <string name="tangempay_cashback_deposit_banner">Cashback %1$s referente a %2$s será depositado até %3$s</string>
+  <string name="tangempay_cashback_deposit_banner">Cashback %1$s referente a %2$s será depositado até %3$s após a verificação</string>
   <string name="tangempay_cashback_deposited_on">Será depositado em %1$s</string>
   <string name="tangempay_cashback_details_cap">%1$s máximo por mês</string>
   <string name="tangempay_cashback_details_eu_excluded">Por enquanto, não há cashback para compras presenciais em estabelecimentos comerciais da UE.</string>
@@ -2839,7 +2851,7 @@
   <string name="tangempay_kyc_rejected_description">Desculpe, não foi possível verificar.</string>
   <string name="tangempay_kyc_rejected_description_span">Seu perfil.</string>
   <string name="tangempay_main_select_plan">Selecionar plano</string>
-  <string name="tangempay_maximum_cards_issued_description">Você pode ter até 3 cartões. Exclua um para adicionar um novo.</string>
+  <string name="tangempay_maximum_cards_issued_description">Exclua um para adicionar um novo</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">Atualize seu plano para ter mais cartões</string>
   <string name="tangempay_maximum_cards_issued_for_plan_title">Limite de cartões atingido para este plano</string>
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">Atualizar plano</string>
