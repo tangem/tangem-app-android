@@ -12,17 +12,14 @@ internal class LoadedPagesTracker {
 
     private var rowsBeforeLoadMore: Int? = null
 
-    /**
-     * @param current the list the request is made on; `null` for the legacy history, which can't tell whether a
-     * next page exists and so is taken to have one
-     */
-    fun onLoadMore(current: HistoryState?) {
+    /** @param current the list the request is made on */
+    fun onLoadMore(current: HistoryState) {
         // The list asks for more whenever its end shows, short histories included; only a real next page counts
-        val content = current as? HistoryState.Content
-        if (current != null && content?.hasMore != true) return
+        val content = current as? HistoryState.Content ?: return
+        if (!content.hasMore) return
 
         hasLoadedMorePages.value = true
-        rowsBeforeLoadMore = content?.items?.size
+        rowsBeforeLoadMore = content.items.size
     }
 
     /** A request that ends without new rows (a failed page) loaded nothing */
