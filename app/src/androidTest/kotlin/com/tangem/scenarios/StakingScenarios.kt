@@ -1,6 +1,8 @@
 package com.tangem.scenarios
 
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performTouchInput
@@ -179,17 +181,35 @@ fun BaseTestCase.confirmStakingByHolding() {
     // Hold-to-confirm needs a SINGLE stable SemanticsNodeInteraction for a continuous down→up gesture.
     // A KNode / semanticsProvider.onNode re-resolves the node on each performTouchInput, which splits
     // the press from the release; onAllNodes(...)[i] after fetchSemanticsNodes pins one node. The
-    // confirm screen has exactly one BASE_BUTTON (the hold button); its 'Stake' label disappears once
-    // the loader spins, so match by tag only. onConfirm fires only when the fill animation (~1.5s,
-    // frame clock) completes — hold until the success 'Explore' button appears, then release.
-    val buttons = composeTestRule.onAllNodes(hasTestTag(BaseButtonTestTags.BUTTON))
-    val stakeButton = buttons[buttons.fetchSemanticsNodes().lastIndex]
+    // 'Stake' label is matched only to pick the node — it disappears once the loader spins. onConfirm
+    // fires only when the fill animation (~1.5s, frame clock) completes — hold until the success
+    // 'Explore' button appears, then release.
+    val stakeLabel = getResourceString(CommonR.string.common_stake)
     val exploreButton = hasText(getResourceString(CommonR.string.common_explore))
+    // Re-validation after a fee, validator or allowance change disables and may recreate the button.
+    lateinit var stakeButton: SemanticsNodeInteraction
+    awaitSuccess(WAIT_UNTIL_TIMEOUT_LONG) {
+        val labelledButtons = composeTestRule.onAllNodes(
+            hasTestTag(BaseButtonTestTags.BUTTON) and hasAnyDescendant(hasText(stakeLabel)),
+            useUnmergedTree = true,
+        )
+        stakeButton = if (labelledButtons.fetchSemanticsNodes().isNotEmpty()) {
+            labelledButtons[0]
+        } else {
+            val buttons = composeTestRule.onAllNodes(hasTestTag(BaseButtonTestTags.BUTTON))
+            buttons[buttons.fetchSemanticsNodes().lastIndex]
+        }
+        stakeButton.assertIsEnabled()
+    }
     stakeButton.performTouchInput { down(center) }
     composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG) {
         composeTestRule.onAllNodes(exploreButton, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
     }
-    stakeButton.performTouchInput { up() }
+    // The success screen has replaced the 'Stake' button by now, so release on whichever button is left.
+    runCatching { stakeButton.performTouchInput { up() } }.onFailure {
+        val buttons = composeTestRule.onAllNodes(hasTestTag(BaseButtonTestTags.BUTTON))
+        buttons[buttons.fetchSemanticsNodes().lastIndex].performTouchInput { up() }
+    }
 }
 
 fun BaseTestCase.checkStakingSuccessScreen() {
