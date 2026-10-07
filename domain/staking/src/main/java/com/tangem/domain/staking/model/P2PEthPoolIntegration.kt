@@ -33,6 +33,8 @@ class P2PEthPoolIntegration(
         vault.toStakingTarget()
     }
 
+    override val allTargets: List<StakingTarget> = targets
+
     override val preferredTargets: List<StakingTarget> = vaults
         .filter { isVaultAvailable(it) }
         .map { it.toStakingTarget() }
