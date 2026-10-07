@@ -22,6 +22,7 @@ import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.pay.usecase.FindActiveMoneyAccountCreationOrderUseCase
 import com.tangem.domain.pay.usecase.StartTangemPayOrderPollingUseCase
 import com.tangem.domain.moneyaccount.repository.MoneyAccountActivationRepository
 import com.tangem.domain.moneyaccount.repository.MoneyAccountRepository
@@ -157,10 +158,12 @@ internal interface MoneyAccountDataModule {
         fun provideCreateMoneyAccountOrderUseCase(
             orderRepository: MoneyAccountOrderRepository,
             trackOrder: TrackMoneyAccountOrderUseCase,
+            findActiveMoneyAccountCreationOrderUseCase: FindActiveMoneyAccountCreationOrderUseCase,
         ): CreateMoneyAccountOrderUseCase {
             return CreateMoneyAccountOrderUseCase(
                 orderRepository = orderRepository,
                 trackOrder = trackOrder,
+                findActiveMoneyAccountCreationOrderUseCase = findActiveMoneyAccountCreationOrderUseCase,
             )
         }
 
@@ -169,11 +172,13 @@ internal interface MoneyAccountDataModule {
             orderRepository: MoneyAccountOrderRepository,
             onboardingRepository: OnboardingRepository,
             trackOrder: TrackMoneyAccountOrderUseCase,
+            findActiveMoneyAccountCreationOrderUseCase: FindActiveMoneyAccountCreationOrderUseCase,
         ): RestoreMoneyAccountOrderUseCase {
             return RestoreMoneyAccountOrderUseCase(
                 orderRepository = orderRepository,
                 onboardingRepository = onboardingRepository,
                 trackOrder = trackOrder,
+                findActiveMoneyAccountCreationOrderUseCase = findActiveMoneyAccountCreationOrderUseCase,
             )
         }
 
