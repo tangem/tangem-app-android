@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
+import com.arkivanov.decompose.router.slot.navigate
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -92,12 +93,22 @@ internal class AddAccountBlockModel @Inject constructor(
     }
 
     val portfolioSelectorCallback = object : PortfolioSelectorComponent.BottomSheetCallback {
-        override val onDismiss: () -> Unit = { bottomSheetNavigation.dismiss() }
-        override val onBack: () -> Unit = { bottomSheetNavigation.dismiss() }
+        override val onDismiss: () -> Unit = ::dismissWalletSelector
+        override val onBack: () -> Unit = ::dismissWalletSelector
     }
 
     init {
         observeChosenWallet()
+    }
+
+    /**
+     * The chooser's modal keeps collapsing after a wallet is picked and reports that as a dismissal, by then
+     * the account type sheet already occupies the slot and must survive it.
+     */
+    private fun dismissWalletSelector() {
+        bottomSheetNavigation.navigate { config ->
+            config.takeUnless { it is AddAccountBlockComponent.BottomSheetConfig.WalletSelector }
+        }
     }
 
     fun onClick() {
