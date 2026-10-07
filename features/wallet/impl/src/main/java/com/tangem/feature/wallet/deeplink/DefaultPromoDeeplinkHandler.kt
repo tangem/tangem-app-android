@@ -230,6 +230,8 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
     }
 
     companion object {
+        const val DEEPLINK_KEY = "tangem://promo"
+
         private const val LOG_TAG = "PromoCodeActivation"
         private const val DEFAULT_MESSAGE_SENDER_DELAY = 500L
         private const val FETCH_TIMEOUT_SECONDS = 5

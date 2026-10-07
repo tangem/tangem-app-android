@@ -243,6 +243,8 @@
   <string name="bitcoin_promo_no_address">Для зарахування бонусу потрібна Bitcoin-адреса. Додайте її до портфеля та повторіть активацію.</string>
   <string name="bitcoin_promo_no_address_title">Потрібна Bitcoin-адреса</string>
   <string name="button_start_backup_process">Почніть процес резервного копіювання</string>
+  <string name="buy_swap_region_restriction_description_region">Купівля та обмін наразі недоступні у вашому регіоні: %s</string>
+  <string name="buy_swap_region_restriction_title">Регіональні обмеження</string>
   <string name="buy_token_description">Використовуйте банківську картку або інші способи оплати</string>
   <plurals name="card_label_card_count">
     <item quantity="one">%d пристрій</item>
@@ -563,6 +565,7 @@
   <string name="common_transfer">Переказ</string>
   <string name="common_transferred">Переказано</string>
   <string name="common_try_again_later">Будь ласка, спробуйте пізніше</string>
+  <string name="common_type">Тип</string>
   <string name="common_unable_to_load">Неможливо завантажити дані...</string>
   <string name="common_understand">Я зрозумів</string>
   <string name="common_understand_continue">Я розумію, продовжити</string>
@@ -669,6 +672,7 @@
   <string name="dynamic_addresses_notification_funds_found_title">Знайдено кошти на додаткових адресах</string>
   <string name="dynamic_addresses_receive_badge">Динамічна адреса</string>
   <string name="dynamic_addresses_unavailability_reason_pending_transaction_send">Керування динамічними адресами стане доступним після підтвердження транзакцій у мережі %@</string>
+  <string name="earn_assets">Активи для заробітку</string>
   <string name="earn_best_opportunities">Найкращі можливості</string>
   <string name="earn_clear_filter">Очистити фільтр</string>
   <string name="earn_empty">Список тимчасово порожній, оскільки триває оновлення. Спробуйте ще раз за мить.</string>
@@ -784,6 +788,9 @@
   <string name="feed_promo_tangem_pay_title">Платіть криптовалютою</string>
   <string name="feed_search_show_all_user_assets">Показати всі</string>
   <string name="feed_search_show_less_user_assets">Сховати</string>
+  <string name="feed_tab_crypto">Криптовалюти</string>
+  <string name="feed_tab_earn">Заробіток</string>
+  <string name="feed_tab_rwa">Реальні активи</string>
   <string name="feed_trending_now">В тренді</string>
   <string name="feedback_data_collection_message">Інформація нижче не є обов\'язковою. Ви можете стерти її, якщо бажаєте.</string>
   <string name="feedback_preface_rate_negative">Розкажіть, яких функцій вам не вистачає, і ми спробуємо вам допомогти.</string>
@@ -1084,7 +1091,7 @@
   <string name="joint_account_join_subtitle">Це спільний акаунт. Для кожної транзакції з нього потрібні підписи: %1$s</string>
   <string name="joint_account_join_subtitle_value">%1$s із %2$s учасників</string>
   <string name="joint_account_join_success_message">Акаунт додано</string>
-  <string name="joint_account_join_title">Вас запросили до акаунта «%1$s»</string>
+  <string name="joint_account_join_title">Вас запросили до акаунта %1$s</string>
   <string name="joint_account_join_to_account_btn_text">Приєднатися до акаунта</string>
   <plurals name="joint_account_members_count">
     <item quantity="one">%d учасник</item>
@@ -1099,7 +1106,7 @@
   <string name="joint_account_members_signers_title">Потрібно підписів</string>
   <string name="joint_account_members_subtitle">Вкажіть, скільки людей користуватимуться акаунтом. Кожну транзакцію мають підписати %1$s із %2$s учасників. Пізніше це змінити не можна</string>
   <string name="joint_account_members_subtitle_helper_part"> %1$s із %2$s учасників</string>
-  <string name="joint_account_members_subtitle_main_part">Вкажіть, скільки людей користуватимуться акаунтом. Кожну транзакцію мають підписати%1$s. Пізніше це змінити не можна</string>
+  <string name="joint_account_members_subtitle_main_part">Вкажіть, скільки людей користуватимуться акаунтом. Кожну транзакцію мають підписати %1$s. Пізніше це змінити не можна</string>
   <string name="joint_account_members_title">Учасники</string>
   <string name="joint_account_members_total_subtitle">Щонайбільше %1$s осіб, включно з вами</string>
   <string name="joint_account_members_total_title">Усього учасників</string>
@@ -1137,7 +1144,7 @@
   <string name="joint_account_send_slot_busy_title">Уже є незавершена операція</string>
   <string name="joint_account_settings_networks_info">Цей акаунт працює лише в підтримуваних мережах.</string>
   <string name="joint_account_waiting_activation">Очікує активації</string>
-  <string name="joint_operation_auto_sends_footer">Надішлеться автоматично, коли підпишуть %1$s із %2$s учасників</string>
+  <string name="joint_operation_auto_sends_footer">Надішлеться автоматично, коли підпишуть %1$s із %2$s учасників</string>
   <string name="joint_operation_banner_subtitle">%1$s → %2$s</string>
   <string name="joint_operation_banner_title">%1$s хоче надіслати %2$s</string>
   <string name="joint_operation_banner_title_own">Ви хочете надіслати %1$s</string>
@@ -1148,7 +1155,7 @@
   <string name="joint_operation_decline_alert_title">Відхилити цю транзакцію?</string>
   <string name="joint_operation_declined">Відхилено</string>
   <string name="joint_operation_declined_at">Відхилено %s</string>
-  <string name="joint_operation_declined_footer">Ви відхилили. Інші ще можуть зібрати %1$s із %2$s підписів</string>
+  <string name="joint_operation_declined_footer">Ви відхилили. Інші ще можуть зібрати %1$s із %2$s підписів</string>
   <string name="joint_operation_delete_alert_message">Транзакцію буде скасовано для всіх учасників. Зібрані підписи буде видалено</string>
   <string name="joint_operation_delete_alert_title">Видалити цю транзакцію?</string>
   <string name="joint_operation_deleted_snackbar">Транзакцію видалено</string>
@@ -1159,7 +1166,7 @@
   <string name="joint_operation_signatures_progress">Підписи: %1$s із %2$s</string>
   <string name="joint_operation_signed">Підписано</string>
   <string name="joint_operation_signed_at">Підписано %s</string>
-  <string name="joint_operation_signed_footer">Надішлеться автоматично, коли підпишуть %1$s із %2$s</string>
+  <string name="joint_operation_signed_footer">Надішлеться автоматично, коли підпишуть %1$s із %2$s</string>
   <string name="joint_operation_signers_title">Підписанти</string>
   <string name="joint_operation_signing_blocked_subtitle">Підписання заблоковано з міркувань безпеки. Зверніться до служби підтримки</string>
   <string name="joint_operation_signing_blocked_title">Підписання заблоковано</string>
@@ -1209,6 +1216,7 @@
   <string name="manage_tokens_unavailable_description">Обраний токен наразі недоступний для дій у криптогаманці. Але не хвилюйтеся, ви можете висловити свою зацікавленість, проголосувавши за його інтеграцію.</string>
   <string name="manage_tokens_unavailable_vote">Проголосувати</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">Гаманець не підтримує більше однієї мережі</string>
+  <string name="market_categories">Категорії</string>
   <string name="market_chart_bubble_no_amount">Немає токенів \n/ вартості активів</string>
   <string name="market_chart_bubble_total_value">Загальна вартість</string>
   <string name="market_chart_can_not_load_data">Не вдалося завантажити дані</string>
@@ -2321,7 +2329,7 @@
   <string name="tangempay_cashback_accruals_calc_title">Як ми розраховуємо кешбек?</string>
   <string name="tangempay_cashback_accruals_exceptions_description">Наразі кешбек не нараховується за оплату карткою через термінали в магазинах ЄС. Він також не діє на зняття готівки, квазі-кеш операції, мобільний зв’язок, держпослуги та деякі інші категорії.</string>
   <string name="tangempay_cashback_accruals_exceptions_title">Винятки</string>
-  <string name="tangempay_cashback_accruals_pay_description">З 2 по 5 число наступного місяця</string>
+  <string name="tangempay_cashback_accruals_pay_description">До 10-го числа наступного місяця, після перевірки транзакцій на відповідність правилам програми кешбеку</string>
   <string name="tangempay_cashback_accruals_pay_title">Як ми виплачуємо кешбек?</string>
   <string name="tangempay_cashback_accruals_subtitle">Ліміти та винятки</string>
   <string name="tangempay_cashback_accruals_title">Нарахування</string>
@@ -2330,7 +2338,7 @@
   <string name="tangempay_cashback_additional_until">До %1$s</string>
   <string name="tangempay_cashback_deactivated_description">Це сталося через підозрілу активність. Зверніться до служби підтримки, щоб дізнатися більше</string>
   <string name="tangempay_cashback_deactivated_title">Кешбек деактивовано</string>
-  <string name="tangempay_cashback_deposit_banner">Кэшбэк %1$s за %2$s буде зараховано до %3$s</string>
+  <string name="tangempay_cashback_deposit_banner">Кешбек %1$s за %2$s буде зараховано до %3$s після перевірки</string>
   <string name="tangempay_cashback_deposited_on">Буде зараховано %1$s</string>
   <string name="tangempay_cashback_details_cap">Максимум %1$s на місяць</string>
   <string name="tangempay_cashback_details_eu_excluded">Наразі кешбек не нараховується за офлайн-покупки в магазинах ЄС</string>
@@ -2429,7 +2437,7 @@
   <string name="tangempay_kyc_rejected_description">Вибачте, ми не змогли підтвердити</string>
   <string name="tangempay_kyc_rejected_description_span">вашу особу.</string>
   <string name="tangempay_main_select_plan">Обрати тариф</string>
-  <string name="tangempay_maximum_cards_issued_description">Ви можете мати до 3 карток. Видаліть одну, щоб додати нову.</string>
+  <string name="tangempay_maximum_cards_issued_description">Видаліть одну, щоб додати нову</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">Перейдіть на вищий тариф, щоб мати більше карток</string>
   <string name="tangempay_maximum_cards_issued_for_plan_title">Досягнуто ліміту карток для цього тарифу</string>
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">Покращити тариф</string>
