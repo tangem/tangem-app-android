@@ -14,8 +14,6 @@ interface MoneyAccountOrderRepository {
         signature: String,
     ): Either<VisaApiError, Order>
 
-    suspend fun findActiveOrder(userWalletId: UserWalletId): Either<VisaApiError, Order?>
-
     fun storeOrder(userWalletId: UserWalletId, order: TangemPayOrderInfo)
 
     fun getOrder(userWalletId: UserWalletId): TangemPayOrderInfo?
