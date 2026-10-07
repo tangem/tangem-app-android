@@ -202,6 +202,16 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM, buttonsHazeS
         }
     }
 
+    state.bankTransferOnrampBanner?.let { banner ->
+        item("bankTransferOnrampBannerBlock") {
+            SpacerH12()
+            MessageBanner(
+                banner = banner,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+        }
+    }
+
     if (state.messageBanner != null) {
         item("messageBannerBlock") {
             SpacerH12()
