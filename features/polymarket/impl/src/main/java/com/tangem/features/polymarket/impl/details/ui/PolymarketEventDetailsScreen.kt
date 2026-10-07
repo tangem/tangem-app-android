@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
-import com.tangem.core.ui.ds.image.TangemIconUM
+// import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.Back
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.fade.TangemFade
@@ -50,8 +50,8 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_share_android_20
+// import com.tangem.core.ui.res.generated.icons.Icons
+// import com.tangem.core.ui.res.generated.icons.ic_share_android_20
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketDetailsMarketUM
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketDetailsOutcomeUM
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketEventDetailsUM
@@ -173,6 +173,8 @@ private fun BoxScope.HeaderOverlay(
         onClick = onBackClick,
     )
 
+    // Sharing is deferred to Phase 2.
+    /*
     if (content != null) {
         TangemButton(
             modifier = Modifier
@@ -184,6 +186,7 @@ private fun BoxScope.HeaderOverlay(
             onClick = content.onShareClick,
         )
     }
+     */
 }
 
 @Composable
