@@ -186,6 +186,7 @@ class AccountNodeRecognizer(private val blockchain: Blockchain) {
             Blockchain.Electroneum,
             Blockchain.Arc,
             Blockchain.Onyx,
+            Blockchain.PublicMasterpiece,
             -> true
             Blockchain.Nexa, // unsupported network
             Blockchain.Chia,
