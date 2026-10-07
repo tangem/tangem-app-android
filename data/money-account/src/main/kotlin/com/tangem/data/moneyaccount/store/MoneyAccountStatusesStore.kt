@@ -4,7 +4,6 @@ import androidx.datastore.core.DataStore
 import com.tangem.data.moneyaccount.converter.MoneyAccountStatusValueDMConverter
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM
-import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.MoneyAccountStatusValue
@@ -66,16 +65,6 @@ internal class MoneyAccountStatusesStore(
 
     suspend fun getSyncOrNull(userWalletId: UserWalletId): AccountStatus.Money? {
         return runtimeStore.getSyncOrNull()?.get(userWalletId.stringValue)
-    }
-
-    suspend fun updateStatusSource(userWalletId: UserWalletId, source: StatusSource) {
-        runtimeStore.update(emptyMap()) { stored ->
-            stored.toMutableMap().apply {
-                val status = this[userWalletId.stringValue] ?: return@update stored
-                val newValue = status.copy(value = status.value.copySealed(source = source))
-                put(key = userWalletId.stringValue, value = newValue)
-            }
-        }
     }
 
     suspend fun store(userWalletId: UserWalletId, status: AccountStatus.Money) {
