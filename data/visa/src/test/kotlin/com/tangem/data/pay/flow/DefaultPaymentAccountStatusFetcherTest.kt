@@ -828,6 +828,35 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             // Assert
             assertThat(realStore.getSyncOrNull(userWalletId)?.value).isEqualTo(issuingCard)
         }
+
+        @Test
+        fun `GIVEN cached Loaded with failed onramp WHEN mark eligible THEN virtualAccount becomes Eligible`() =
+            runTest {
+                // Arrange
+                val loaded = loadedFixture(virtualAccount = VirtualAccountOnramp.Failed)
+                realStore.store(userWalletId, AccountStatus.Payment(account = account, value = loaded))
+
+                // Act
+                realFetcher.markVirtualAccountEligible(userWalletId)
+
+                // Assert
+                val updated = realStore.getSyncOrNull(userWalletId)?.value
+                assertThat(updated).isEqualTo(loaded.copy(virtualAccount = VirtualAccountOnramp.Eligible))
+            }
+
+        @Test
+        fun `GIVEN cached Loaded with processing onramp WHEN mark eligible THEN virtualAccount stays Processing`() =
+            runTest {
+                // Arrange
+                val loaded = loadedFixture(virtualAccount = VirtualAccountOnramp.Processing)
+                realStore.store(userWalletId, AccountStatus.Payment(account = account, value = loaded))
+
+                // Act
+                realFetcher.markVirtualAccountEligible(userWalletId)
+
+                // Assert
+                assertThat(realStore.getSyncOrNull(userWalletId)?.value).isEqualTo(loaded)
+            }
     }
 
     @Nested
