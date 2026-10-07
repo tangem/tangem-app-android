@@ -21,6 +21,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
@@ -88,7 +89,7 @@ internal class GetFeeForGaslessUseCaseTronTest {
             normal = Fee.Common(amount = Amount(token = USDT_SDK_TOKEN, value = COMPENSATION)),
         ),
         feeTokenId = usdt.id,
-        tronGaslessQuote = QUOTE,
+        gaslessProtocolData = GaslessProtocolData.Tron(quote = QUOTE),
     )
 
     private val useCase = GetFeeForGaslessUseCase(

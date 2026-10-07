@@ -12,6 +12,7 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.error.SendTransactionError
+import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
 import io.mockk.coEvery
@@ -54,18 +55,20 @@ internal class CreateAndSendGaslessTransactionUseCaseTest {
                 ),
             ),
             feeTokenId = usdtCurrency.id,
-            tronGaslessQuote = TronGaslessQuote(
-                quoteId = "q_1",
-                quotedAmountRaw = BigInteger("50000000"),
-                quotedToAddress = "TRecipient",
-                feeRecipient = "TFee",
-                compensationToken = usdtContract,
-                compensationAmountRaw = BigInteger("2750000"),
-                compensationAmountDecimal = BigDecimal("2.75"),
-                energy = 1,
-                bandwidth = 1,
-                trxCost = BigDecimal("1"),
-                expiresAtEpochMs = 1,
+            gaslessProtocolData = GaslessProtocolData.Tron(
+                quote = TronGaslessQuote(
+                    quoteId = "q_1",
+                    quotedAmountRaw = BigInteger("50000000"),
+                    quotedToAddress = "TRecipient",
+                    feeRecipient = "TFee",
+                    compensationToken = usdtContract,
+                    compensationAmountRaw = BigInteger("2750000"),
+                    compensationAmountDecimal = BigDecimal("2.75"),
+                    energy = 1,
+                    bandwidth = 1,
+                    trxCost = BigDecimal("1"),
+                    expiresAtEpochMs = 1,
+                ),
             ),
         )
         coEvery { tronUseCase(userWallet, transactionData, fee) } returns TX_HASH.right()
@@ -79,11 +82,12 @@ internal class CreateAndSendGaslessTransactionUseCaseTest {
     }
 
     @Test
-    fun `GIVEN token-denominated EVM fee WHEN invoke THEN the EVM flow sends it`() = runTest {
+    fun `GIVEN an EVM gasless fee WHEN invoke THEN the EVM flow sends it`() = runTest {
         // Arrange
         val fee = TransactionFeeExtended(
             transactionFee = TransactionFee.Single(normal = mockk<Fee.Ethereum.TokenCurrency>()),
             feeTokenId = usdtCurrency.id,
+            gaslessProtocolData = GaslessProtocolData.Evm,
         )
         coEvery { evmUseCase(userWallet, transactionData, fee) } returns TX_HASH.right()
 
