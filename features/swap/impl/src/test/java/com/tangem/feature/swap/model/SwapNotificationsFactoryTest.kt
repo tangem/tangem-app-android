@@ -33,6 +33,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import com.tangem.core.ui.extensions.stringReference
 import java.math.BigDecimal
 
 /**
@@ -74,6 +75,45 @@ internal class SwapNotificationsFactoryTest {
     fun resetMocks() {
         clearMocks(isGaslessFeeSupportedForNetwork, appRouter)
         every { appRouter.stack } returns emptyList()
+    }
+
+    @Test
+    fun `GIVEN low slippage WHEN notifications built THEN low slippage warning shown`() {
+        // Arrange
+        every { isGaslessFeeSupportedForNetwork(any()) } returns false
+        val percent = stringReference("0.11%")
+
+        // Act
+        val notifications = factory.getConfirmationStateNotifications(
+            quoteModel = buildQuotesLoadedState(providerType = ExchangeProviderType.DEX),
+            feeCryptoCurrencyStatus = buildCoinFeeStatus(),
+            swapFee = null,
+            feeError = null,
+            appRouter = appRouter,
+            lowSlippage = percent,
+        )
+
+        // Assert
+        assertThat(notifications.filterIsInstance<SwapNotificationUM.Warning.LowSlippage>())
+            .containsExactly(SwapNotificationUM.Warning.LowSlippage(percent))
+    }
+
+    @Test
+    fun `GIVEN no low slippage WHEN notifications built THEN low slippage warning absent`() {
+        // Arrange
+        every { isGaslessFeeSupportedForNetwork(any()) } returns false
+
+        // Act
+        val notifications = factory.getConfirmationStateNotifications(
+            quoteModel = buildQuotesLoadedState(providerType = ExchangeProviderType.DEX),
+            feeCryptoCurrencyStatus = buildCoinFeeStatus(),
+            swapFee = null,
+            feeError = null,
+            appRouter = appRouter,
+        )
+
+        // Assert
+        assertThat(notifications.filterIsInstance<SwapNotificationUM.Warning.LowSlippage>()).isEmpty()
     }
 
     @Test
