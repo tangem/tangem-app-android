@@ -394,6 +394,7 @@
     <item quantity="other">%d Vermögenswerte</item>
   </plurals>
   <string name="common_attention">Achtung</string>
+  <string name="common_auto">Auto</string>
   <string name="common_available_networks">Verfügbare Netzwerke</string>
   <string name="common_backup">Sicherungskopie</string>
   <string name="common_backup_error">Sicherungsfehler</string>
@@ -444,6 +445,7 @@
     <item quantity="other">%d Tage zuvor</item>
   </plurals>
   <string name="common_decline">Abgelehnt</string>
+  <string name="common_default">Standard</string>
   <string name="common_delete">Entfernen</string>
   <string name="common_disable">Deaktivieren</string>
   <string name="common_disabled">Deaktiviert</string>
@@ -601,6 +603,7 @@
   <string name="common_sign">Signieren</string>
   <string name="common_sign_and_send">Signieren und senden</string>
   <string name="common_skip">Überspringen</string>
+  <string name="common_slippage">Slippage</string>
   <string name="common_something_went_wrong">Etwas ist schiefgelaufen.</string>
   <string name="common_stake">Staken</string>
   <string name="common_staked">Einsatz</string>
@@ -1119,6 +1122,7 @@
   <string name="initial_wallet_sync_banner_description">Deine Wallet ist eingerichtet und einsatzbereit!</string>
   <string name="initial_wallet_sync_banner_title">Wallet erfolgreich importiert</string>
   <string name="initial_wallet_sync_restore_progress">Wiederherstellung %d%%</string>
+  <string name="introduction_button_buy_tangem">Tangem kaufen</string>
   <string name="introduction_button_create_wallet">Wallet erstellen</string>
   <string name="introduction_button_i_have_a_wallet">Ich habe eine Wallet</string>
   <string name="introduction_create_wallet_hardware_description">Falls Sie bereits eine Tangem Wallet besitzen</string>
@@ -1163,6 +1167,7 @@
   <string name="joint_account_invite_load_failed_subtitle">Die Einladungsseite konnte nicht geladen werden.\nZum Neuladen tippen</string>
   <string name="joint_account_invite_members_creator">Urheber</string>
   <string name="joint_account_invite_members_invite">Einladen</string>
+  <string name="joint_account_invite_members_invited">Eingeladen</string>
   <string name="joint_account_invite_members_member">Mitglied</string>
   <string name="joint_account_invite_members_member_info">Mitgliederdaten</string>
   <string name="joint_account_invite_members_new_member">Neues Mitglied</string>
@@ -1181,6 +1186,7 @@
   <string name="joint_account_invite_members_title">Einladen</string>
   <string name="joint_account_invite_members_to_join">Lade Mitglieder ein, beizutreten</string>
   <string name="joint_account_invite_members_waiting_title">Warten auf Mitglieder</string>
+  <string name="joint_account_invite_share_title">Einladung zu %s</string>
   <string name="joint_account_join_confirm_sheet_subtitle">Alle Kontoinhaber teilen sich ein gemeinsames Guthaben. Jedes Mitglied kann das Guthaben jederzeit ausgeben oder abheben – auch ohne Ihre Zustimmung</string>
   <string name="joint_account_join_confirm_sheet_title">Sie treten einem gemeinsam genutzten Konto bei</string>
   <string name="joint_account_join_invalid_link_subtitle">Überprüfen Sie, ob Sie den vollständigen Link geöffnet haben, oder bitten Sie den Kontoinhaber, ihn erneut zu senden.</string>
@@ -1236,6 +1242,10 @@
   <string name="joint_account_send_sends_automatically_setup_fee">Wird nach der Abholung automatisch versendet. Für den ersten Versand fällt eine einmalige Einrichtungsgebühr an.</string>
   <string name="joint_account_send_setup_fee_note">Erste Transaktion unter %1$s. Die Gebühr beinhaltet eine einmalige Zahlung von %2$s für die Einrichtung des Gemeinschaftskontos in der Blockchain.</string>
   <string name="joint_account_send_signatures_required">%1$s von %2$s erforderlichen Unterschriften</string>
+  <plurals name="joint_account_send_signatures_required_banner">
+    <item quantity="one">ONE %1$d signature erforderlich</item>
+    <item quantity="other">THER %1$d Signaturen erforderlich</item>
+  </plurals>
   <string name="joint_account_send_slot_busy_subtitle">In diesem Netzwerk läuft bereits eine Unterschriftensammlung. Warten Sie, bis diese abgeschlossen ist, bevor Sie eine neue starten.</string>
   <string name="joint_account_send_slot_busy_title">Die Operation ist bereits im Gange</string>
   <string name="joint_account_settings_networks_info">Dieses Konto funktioniert nur in den unterstützten Netzwerken.</string>
@@ -2014,22 +2024,27 @@
   <string name="prediction_withdraw_status_failed_title">Abhebung fehlgeschlagen</string>
   <string name="prediction_withdraw_status_sent_description">Die Lieferung kann bis zu %1$d Minuten dauern</string>
   <string name="prediction_withdraw_status_sent_title">Auszahlungsantrag gesendet</string>
+  <string name="promo_campaign_all_wallets_enrolled">Alle Ihre Wallets sind registriert</string>
   <string name="promo_campaign_already_activated_subtitle">Berechtigte Cashback-Zahlungen werden wie folgt ausgezahlt:</string>
   <string name="promo_campaign_already_activated_title">Sie sind bereits eingeschrieben in %1$s</string>
   <string name="promo_campaign_eligible_tokens">Zulässige Token</string>
   <string name="promo_campaign_enroll">Anmelden</string>
   <string name="promo_campaign_enroll_success_title">Sie sind erfolgreich eingeschrieben in %1$s</string>
+  <string name="promo_campaign_enrolled_wallets">Registrierte Wallet</string>
   <string name="promo_campaign_not_active_subtitle">Diese Aktion existiert nicht mehr oder ist abgelaufen.</string>
   <string name="promo_campaign_not_active_title">Kampagne nicht aktiv</string>
+  <string name="promo_campaign_not_started_title">Kampagne noch nicht verfügbar</string>
   <string name="promo_campaign_reactivation_summary_description">Erhalten Sie bei jedem Swap über 500 $ ein Cashback von 0,5% , und zwar für alle Währungspaare außer „Stablecoin zu Stablecoin“. Die maximale Auszahlung beträgt 50 $ pro Swap.\n\nFühren Sie fünf qualifizierende Swaps durch und sichern Sie sich einen zusätzlichen Bonus von 10 $.\n\nDie Prämien werden wöchentlich in USDT oder USDC an die ausgewählte Adresse ausgezahlt.</string>
   <string name="promo_campaign_select_cashback_account">Cashback-Konto auswählen</string>
   <string name="promo_campaign_select_token">Cashback-Token auswählen</string>
   <string name="promo_campaign_selected_cashback_account">Ausgewähltes Cashback-Konto</string>
   <string name="promo_campaign_selected_token">Ausgewählter Cashback-Token</string>
+  <string name="promo_campaign_some_wallets_enrolled">Einige Ihrer Wallets sind registriert</string>
   <string name="promo_campaign_summary_title">Melden Sie sich an %1$s</string>
   <string name="promo_campaign_terms_agreement">Ich stimme zu, dass %1$s</string>
   <string name="promo_campaign_terms_agreement_android">Ich stimme zu, dass</string>
   <string name="promo_campaign_terms_link">%1$s Bedingungen</string>
+  <string name="promo_campaign_unavailable_title">Kampagne nicht verfügbar</string>
   <string name="promo_campaign_whale_swap_summary_description">Erhalten Sie bis Ende August bei jedem Swap ab 10.000 $ Cashback.\n\nDie Sätze steigen mit dem Volumen: 0,10% ab 10.000 $, 0,20% ab 20.000 $, 0,50% ab 100.000 $.\n\nMaximale Auszahlung: 500 $ pro Swap und 10.000 $ pro Wallet und Swap-Richtung, solange die Aktion läuft. Swaps von Stablecoins in andere Stablecoins sind ausgeschlossen.\n\nDie Auszahlung erfolgt wöchentlich an eine USDT- oder USDC-Adresse Ihrer Wahl.</string>
   <string name="provider_name_support">%s Unterstützung</string>
   <string name="push_notification_settings_banner_description">Push-Benachrichtigungen sind aktiviert, funktionieren aber erst, nachdem du Benachrichtigungen in den Geräteeinstellungen zugelassen hast.</string>
@@ -2472,7 +2487,10 @@
   <string name="support_selector_view_chat_button">Chat öffnen</string>
   <string name="support_selector_view_email_button">Mail öffnen</string>
   <string name="swap_approve_description">Durch die Genehmigung erlaubst Du dem Smart Contract, Deine Token in zukünftigen Transaktionen zu verwenden.</string>
+  <string name="swap_custom_slippage_info">Der Slippage lässt sich bei diesem Anbieter nicht individuell anpassen und kann in seltenen Fällen bis zu %s betragen.</string>
   <string name="swap_detailed_mode">Detaillierter Modus</string>
+  <string name="swap_exchange_rates_info_text">Die angezeigten Beträge beinhalten die Gebühr des Dienstanbieters.</string>
+  <string name="swap_exchange_rates_info_title">Wechselkurse</string>
   <string name="swap_fixed_rate">Fester Zinssatz</string>
   <string name="swap_give_permission_fee_footer">Das Netzwerk erhebt eine Token-Genehmigungsgebühr, um zu überprüfen, ob Sie die Verwendung Ihres Tokens für den Swap genehmigen.</string>
   <string name="swap_in_progress">Tausch läuft</string>
@@ -2482,6 +2500,10 @@
   <string name="swap_search_tooltip_description">Suche nach einem beliebigen Token, auch wenn es noch nicht in deiner Liste ist.</string>
   <string name="swap_search_tooltip_title">Nutzen Sie die Suche, um zu finden, was Sie benötigen.</string>
   <string name="swap_simple_mode">Einfacher Modus</string>
+  <string name="swap_slippage_error">Nicht unterstützter Betrag</string>
+  <string name="swap_slippage_info_text">ist die Differenz zwischen dem erwarteten und dem tatsächlichen Ausführungskurs, die durch Marktpreis- oder Liquiditätsänderungen verursacht wird</string>
+  <string name="swap_slippage_warning_text">Der Swap kann fehlschlagen, wenn der Slippage-Grenzwert erreicht wird</string>
+  <string name="swap_slippage_warning_title">Die Slippage ist festgelegt %s</string>
   <string name="swap_story_fifth_subtitle">Vertraue auf den rund um die Uhr verfügbaren Support bei allen Problemen</string>
   <string name="swap_story_fifth_title">Immer für Dich da</string>
   <string name="swap_story_first_subtitle">Mehrere vertrauenswürdige Anbieter an einem Ort – tausche mühelos alle Vermögenswerte in Deiner Wallet</string>
@@ -2593,6 +2615,9 @@
   <string name="tangempay_account_deactivated_message_subtitle">Bei Fragen zu Ihrem Konto, Ihren Daten oder Ihrem Transaktionsverlauf wenden Sie sich bitte an den Support</string>
   <string name="tangempay_account_deactivated_message_title">Ihr Konto wurde geschlossen</string>
   <string name="tangempay_account_unable_to_use_rooted">Auf gerooteten Geräten nicht nutzbar.</string>
+  <string name="tangempay_action_required_description">Um fortzufahren, benötigen wir noch ein paar weitere Angaben von Ihnen. Das dauert in der Regel ein paar Minuten.</string>
+  <string name="tangempay_action_required_primary_btn">Fortsetzung der Überprüfung</string>
+  <string name="tangempay_action_required_title">Handlungsbedarf erforderlich</string>
   <string name="tangempay_available_balance">Verfügbares Guthaben</string>
   <string name="tangempay_bank_transfer_creating_description">Dauert in der Regel bis zu 5 Minuten. In seltenen Fällen bis zu 48 Stunden</string>
   <string name="tangempay_bank_transfer_creating_title">Bankverbindung anlegen</string>
@@ -2600,6 +2625,7 @@
   <string name="tangempay_bank_transfer_details_daily_deposits_hint">Wenn Sie mehr als %s einzahlen möchten, wenden Sie sich bitte an den Support.</string>
   <string name="tangempay_bank_transfer_details_fee_header">Einzahlungsmethoden und Gebühren</string>
   <string name="tangempay_bank_transfer_details_limitations">Einschränkungen</string>
+  <string name="tangempay_bank_transfer_failed_title">Fehler beim Erstellen der Bankdaten</string>
   <string name="tangempay_bank_transfer_fee_ach">ACH</string>
   <string name="tangempay_bank_transfer_fee_error_subtitle">Zum Neuladen tippen</string>
   <string name="tangempay_bank_transfer_fee_error_title">Fehler beim Laden der Gebühreninformationen</string>
@@ -2730,7 +2756,7 @@
   <string name="tangempay_cashback_accruals_calc_title">Wie berechnen wir Cashback?</string>
   <string name="tangempay_cashback_accruals_exceptions_description">Aktuell gibt es kein Cashback für Kartenzahlungen am Terminal vor Ort in der EU. Kein Cashback gilt zudem für Bargeldabhebungen, Quasi-Cash, Mobilfunkaufladungen, Behördendienste und bestimmte weitere Kategorien.</string>
   <string name="tangempay_cashback_accruals_exceptions_title">Ausnahmen</string>
-  <string name="tangempay_cashback_accruals_pay_description">Vom 2. bis zum 5. des nächsten Monats</string>
+  <string name="tangempay_cashback_accruals_pay_description">Bis zum 10. des Folgemonats, nachdem die Transaktionen auf Einhaltung der Cashback-Regeln geprüft wurden</string>
   <string name="tangempay_cashback_accruals_pay_title">Wie erfolgt die Auszahlung von Cashback?</string>
   <string name="tangempay_cashback_accruals_subtitle">Grenzen und Ausnahmen</string>
   <string name="tangempay_cashback_accruals_title">Abgrenzungen</string>
@@ -2739,7 +2765,7 @@
   <string name="tangempay_cashback_additional_until">Bis %1$s</string>
   <string name="tangempay_cashback_deactivated_description">Dies geschah aufgrund Ihres verdächtigen Verhaltens. Wenden Sie sich an den Support, um mehr zu erfahren.</string>
   <string name="tangempay_cashback_deactivated_title">Cashback deaktiviert</string>
-  <string name="tangempay_cashback_deposit_banner">Der Cashback- %1$s -Betrag für %2$s wird bis zum %3$s</string>
+  <string name="tangempay_cashback_deposit_banner">Cashback %1$s für %2$s wird nach Prüfung bis zum %3$s gutgeschrieben</string>
   <string name="tangempay_cashback_deposited_on">Wird eingezahlt am %1$s</string>
   <string name="tangempay_cashback_details_cap">%1$s maximal pro Monat</string>
   <string name="tangempay_cashback_details_eu_excluded">Aktuell gibt es kein Cashback für Kartenzahlungen am Terminal vor Ort in der EU</string>
@@ -2839,7 +2865,7 @@
   <string name="tangempay_kyc_rejected_description">Leider konnten wir Ihre Identität</string>
   <string name="tangempay_kyc_rejected_description_span">nicht verifizieren.</string>
   <string name="tangempay_main_select_plan">Tarif auswählen</string>
-  <string name="tangempay_maximum_cards_issued_description">Du kannst bis zu 3 Karten haben. Lösche eine, um eine neue Karte hinzuzufügen.</string>
+  <string name="tangempay_maximum_cards_issued_description">Lösche eine, um eine neue Karte hinzuzufügen</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">Upgrade-Plan für mehr Karten</string>
   <string name="tangempay_maximum_cards_issued_for_plan_title">Das Kartenlimit für diesen Tarif wurde erreicht</string>
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">Upgrade-Plan</string>
