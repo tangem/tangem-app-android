@@ -288,12 +288,12 @@ internal class YieldSupplyModel @Inject constructor(
                             resourceReference(
                                 R.string.yield_module_token_details_earn_notification_apy,
                             ),
-                            stringReference(" ${tokenStatus.apy}%"),
+                            stringReference(" ${tokenStatus.effectiveApy}%"),
                         ),
                         onClick = ::onActiveClick,
                         shouldShowWarningIcon = shouldShowWarningIcon,
                         shouldShowInfoIcon = isShowInfoIconPrevState,
-                        apy = tokenStatus.apy.toString(),
+                        apy = tokenStatus.effectiveApy.toString(),
                     )
                 }
                 computeAndApplyShowInfoIcon(cryptoCurrencyStatus)
