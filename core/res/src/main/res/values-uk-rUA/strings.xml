@@ -1091,7 +1091,7 @@
   <string name="joint_account_join_subtitle">Це спільний акаунт. Для кожної транзакції з нього потрібні підписи: %1$s</string>
   <string name="joint_account_join_subtitle_value">%1$s із %2$s учасників</string>
   <string name="joint_account_join_success_message">Акаунт додано</string>
-  <string name="joint_account_join_title">Вас запросили до акаунта «%1$s»</string>
+  <string name="joint_account_join_title">Вас запросили до акаунта %1$s</string>
   <string name="joint_account_join_to_account_btn_text">Приєднатися до акаунта</string>
   <plurals name="joint_account_members_count">
     <item quantity="one">%d учасник</item>
