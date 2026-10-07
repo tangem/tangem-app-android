@@ -8,6 +8,8 @@ import com.tschuchort.compiletesting.configureKsp
 import com.tschuchort.compiletesting.kspSourcesDir
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.io.File
 
 @OptIn(ExperimentalCompilerApi::class)
@@ -32,10 +34,23 @@ internal class SocketServiceProcessorTest {
         assertThat(generated).contains("public class TickerSocketImpl(")
         assertThat(generated).contains("private val tickersDeserializer: KSerializer<TickerDto> = serializer<TickerDto>()")
         assertThat(generated).contains("channel.receive(tickersDeserializer)")
-        assertThat(generated).contains("channel.send(serializer<TickerDto>(), frame)")
+        assertThat(generated).contains("this.channel.send(serializer<TickerDto>(),")
         assertThat(generated).contains("public class FakeTickerSocket : TickerSocket")
         assertThat(generated).contains("public val subscribeSent: MutableList<TickerDto>")
         assertThat(generated).contains("public fun SocketChannelFactory.createTickerSocket(spec: SocketSpec)")
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["channel", "sendResult", "subscribeSent"])
+    fun `GIVEN send parameter named like a generated member WHEN processed THEN impl and fake compile`(name: String) {
+        // Arrange
+        val source = service("@Send fun subscribe($name: TickerDto): Boolean")
+
+        // Act
+        val (result, generated) = compile(source)
+
+        // Assert
+        assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
     }
 
     @Test
@@ -265,7 +280,9 @@ internal class SocketServiceProcessorTest {
             sources = listOf(source)
             inheritClassPath = true
             languageVersion = "1.9"
+            kotlincArguments += "-Xskip-prerelease-check"
             configureKsp(useKsp2 = false) {
+                withCompilation = true
                 symbolProcessorProviders += SocketServiceProcessorProvider()
             }
         }
