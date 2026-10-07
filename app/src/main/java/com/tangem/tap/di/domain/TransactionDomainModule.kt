@@ -419,15 +419,15 @@ internal object TransactionDomainModule {
         transactionRepository: TransactionRepository,
         walletManagersFacade: WalletManagersFacade,
         tronGaslessTransactionRepository: TronGaslessTransactionRepository,
-        cardSdkConfigRepository: CardSdkConfigRepository,
-        tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
+        singleAccountListSupplier: SingleAccountListSupplier,
+        gaslessSignerProvider: GaslessSignerProvider,
     ): CreateAndSendTronGaslessTransactionUseCase {
         return CreateAndSendTronGaslessTransactionUseCase(
             transactionRepository = transactionRepository,
             walletManagersFacade = walletManagersFacade,
             tronGaslessTransactionRepository = tronGaslessTransactionRepository,
-            cardSdkConfigRepository = cardSdkConfigRepository,
-            getHotWalletSigner = tangemHotWalletSignerFactory::create,
+            singleAccountListSupplier = singleAccountListSupplier,
+            gaslessSignerProvider = gaslessSignerProvider,
         )
     }
 
@@ -457,19 +457,41 @@ internal object TransactionDomainModule {
 
     @Provides
     @Singleton
-    fun provideCreateAndSendGaslessTransactionUseCase(
+    fun provideGaslessSignerProvider(
+        cardSdkConfigRepository: CardSdkConfigRepository,
+        tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
+    ): GaslessSignerProvider {
+        return GaslessSignerProvider(
+            cardSdkConfigRepository = cardSdkConfigRepository,
+            getHotWalletSigner = tangemHotWalletSignerFactory::create,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideCreateAndSendEvmGaslessTransactionUseCase(
         walletManagersFacade: WalletManagersFacade,
         gaslessTransactionRepository: GaslessTransactionRepository,
         singleAccountListSupplier: SingleAccountListSupplier,
-        cardSdkConfigRepository: CardSdkConfigRepository,
-        tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
-    ): CreateAndSendGaslessTransactionUseCase {
-        return CreateAndSendGaslessTransactionUseCase(
+        gaslessSignerProvider: GaslessSignerProvider,
+    ): CreateAndSendEvmGaslessTransactionUseCase {
+        return CreateAndSendEvmGaslessTransactionUseCase(
             walletManagersFacade = walletManagersFacade,
             singleAccountListSupplier = singleAccountListSupplier,
             gaslessTransactionRepository = gaslessTransactionRepository,
-            cardSdkConfigRepository = cardSdkConfigRepository,
-            getHotWalletSigner = tangemHotWalletSignerFactory::create,
+            gaslessSignerProvider = gaslessSignerProvider,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideCreateAndSendGaslessTransactionUseCase(
+        createAndSendEvmGaslessTransactionUseCase: CreateAndSendEvmGaslessTransactionUseCase,
+        createAndSendTronGaslessTransactionUseCase: CreateAndSendTronGaslessTransactionUseCase,
+    ): CreateAndSendGaslessTransactionUseCase {
+        return CreateAndSendGaslessTransactionUseCase(
+            createAndSendEvmGaslessTransactionUseCase = createAndSendEvmGaslessTransactionUseCase,
+            createAndSendTronGaslessTransactionUseCase = createAndSendTronGaslessTransactionUseCase,
         )
     }
 
