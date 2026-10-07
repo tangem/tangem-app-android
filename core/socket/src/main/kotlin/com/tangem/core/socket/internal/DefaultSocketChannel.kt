@@ -47,7 +47,6 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.SerializationStrategy
-import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -69,7 +68,7 @@ internal class DefaultSocketChannel(
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
-    private val decodedByType = ConcurrentHashMap<Pair<SerialDescriptor, Class<*>>, Flow<Any?>>()
+    private val decodedByDeserializer = ConcurrentHashMap<DeserializationStrategy<*>, Flow<Any?>>()
 
     private val collectorCount = MutableStateFlow(0)
 
@@ -98,7 +97,7 @@ internal class DefaultSocketChannel(
 
     @Suppress("UNCHECKED_CAST")
     override fun <T> receive(deserializer: DeserializationStrategy<T>): Flow<T> {
-        val decoded = decodedByType.computeIfAbsent(deserializer.descriptor to deserializer.javaClass) {
+        val decoded = decodedByDeserializer.computeIfAbsent(deserializer) {
             frames.mapNotNull { frame -> decodeOrNull(deserializer, frame) }
                 .shareIn(scope, SharingStarted.WhileSubscribed(spec.idleTimeout.inWholeMilliseconds))
         } as Flow<T>

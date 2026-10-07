@@ -19,8 +19,8 @@ interface SocketChannel : SocketSession {
     val state: StateFlow<SocketState>
 
     /**
-     * Holds the connection open while collected. A frame is decoded once per type and shared by every
-     * collector of that type; frames that do not decode as [T] are skipped.
+     * Holds the connection open while collected. A frame is decoded once per [deserializer] instance and shared by
+     * every collector passing that instance; frames that do not decode as [T] are skipped.
      */
     fun <T> receive(deserializer: DeserializationStrategy<T>): Flow<T>
 }

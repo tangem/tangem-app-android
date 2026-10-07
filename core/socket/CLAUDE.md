@@ -98,8 +98,8 @@ closes `idleTimeout` (5 s) after the last collector leaves.
   `SocketState.Connected` after a gap, re-fetch the snapshot. Keep polling as a fallback while the state
   is `Connecting` / `WaitingToRetry`.
 - **Fakes:** `FakeXxx` exposes a `MutableSharedFlow` per `@Receive` function, a `xxxSent` list per
-  `@Send` function and `sendResult`. Do not name a `@Receive` function `isXxx()` — the fake's property
-  would clash with its getter on the JVM.
+  `@Send` function and `sendResult`. The processor rejects names that would clash with those properties or
+  their JVM accessors, e.g. `@Receive fun isConnected()`.
 
 ## SocketSpec
 

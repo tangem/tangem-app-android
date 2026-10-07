@@ -24,6 +24,7 @@ internal object SocketNames {
     val stateFlow = ClassName("kotlinx.coroutines.flow", "StateFlow")
     val mutableSharedFlow = ClassName("kotlinx.coroutines.flow", "MutableSharedFlow")
     val mutableStateFlow = ClassName("kotlinx.coroutines.flow", "MutableStateFlow")
+    val kSerializer = ClassName("kotlinx.serialization", "KSerializer")
     val serializer = MemberName("kotlinx.serialization", "serializer")
     val filterIsInstance = MemberName("kotlinx.coroutines.flow", "filterIsInstance")
 }

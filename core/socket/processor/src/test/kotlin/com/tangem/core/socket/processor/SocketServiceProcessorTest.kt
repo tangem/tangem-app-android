@@ -30,7 +30,8 @@ internal class SocketServiceProcessorTest {
         // Assert
         assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
         assertThat(generated).contains("public class TickerSocketImpl(")
-        assertThat(generated).contains("channel.receive(serializer<TickerDto>())")
+        assertThat(generated).contains("private val tickersDeserializer: KSerializer<TickerDto> = serializer<TickerDto>()")
+        assertThat(generated).contains("channel.receive(tickersDeserializer)")
         assertThat(generated).contains("channel.send(serializer<TickerDto>(), frame)")
         assertThat(generated).contains("public class FakeTickerSocket : TickerSocket")
         assertThat(generated).contains("public val subscribeSent: MutableList<TickerDto>")
@@ -60,7 +61,7 @@ internal class SocketServiceProcessorTest {
 
         // Assert
         assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
-        assertThat(generated).contains("channel.receive(serializer<EventDto>()).filterIsInstance<EventDto.Trade>()")
+        assertThat(generated).contains("channel.receive(tradesDeserializer).filterIsInstance<EventDto.Trade>()")
     }
 
     @Test
@@ -134,6 +135,26 @@ internal class SocketServiceProcessorTest {
         // Assert
         assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
         assertThat(result.messages).contains("@SocketService names clash in the generated fake: subscribeSent")
+    }
+
+    @Test
+    fun `GIVEN a name clashing with a fake accessor WHEN processed THEN compilation fails with the name`() {
+        // Arrange
+        val source = service(
+            """
+            @Receive fun isConnected(): Flow<TickerDto>
+            @Receive fun tickers(): Flow<TickerDto>
+            @Receive fun getTickers(): Flow<TickerDto>
+            """,
+        )
+
+        // Act
+        val (result, _) = compile(source)
+
+        // Assert
+        assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
+        assertThat(result.messages)
+            .contains("@SocketService names clash with the generated fake's JVM accessors: isConnected, getTickers")
     }
 
     @Test
