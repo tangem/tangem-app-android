@@ -7,17 +7,17 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.transaction.models.GaslessBatchTransactionData
 import com.tangem.domain.transaction.models.GaslessFeePlan
 import com.tangem.domain.transaction.models.GaslessTransactionData
-import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase.GaslessPayload
+import com.tangem.domain.transaction.usecase.gasless.CreateAndSendEvmGaslessTransactionUseCase.GaslessPayload
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.math.BigInteger
 
 /**
- * Unit tests for [CreateAndSendGaslessTransactionUseCase.assembleGaslessPayload].
+ * Unit tests for [CreateAndSendEvmGaslessTransactionUseCase.assembleGaslessPayload].
  * Pure function — no coroutines or SDK side-effects.
  */
-internal class CreateAndSendGaslessPayloadTest {
+internal class CreateAndSendEvmGaslessPayloadTest {
 
     // ─── Common fixtures ─────────────────────────────────────────────────────────
 
@@ -64,7 +64,7 @@ internal class CreateAndSendGaslessPayloadTest {
             yieldModuleAddress = "0xmodule",
         )
 
-        val result = CreateAndSendGaslessTransactionUseCase.assembleGaslessPayload(
+        val result = CreateAndSendEvmGaslessTransactionUseCase.assembleGaslessPayload(
             mainTx = mainTx,
             feeObj = feeObj,
             nonce = nonce,
@@ -99,7 +99,7 @@ internal class CreateAndSendGaslessPayloadTest {
     fun `TokenPay plan returns Single wrapping mainTx feeObj and nonce`() {
         val plan = GaslessFeePlan.TokenPay(feeToken = fakeToken, fee = fakeTokenFee)
 
-        val result = CreateAndSendGaslessTransactionUseCase.assembleGaslessPayload(
+        val result = CreateAndSendEvmGaslessTransactionUseCase.assembleGaslessPayload(
             mainTx = mainTx,
             feeObj = feeObj,
             nonce = nonce,
@@ -118,7 +118,7 @@ internal class CreateAndSendGaslessPayloadTest {
 
     @Test
     fun `null plan returns Single wrapping mainTx feeObj and nonce`() {
-        val result = CreateAndSendGaslessTransactionUseCase.assembleGaslessPayload(
+        val result = CreateAndSendEvmGaslessTransactionUseCase.assembleGaslessPayload(
             mainTx = mainTx,
             feeObj = feeObj,
             nonce = nonce,
@@ -140,7 +140,7 @@ internal class CreateAndSendGaslessPayloadTest {
         val plan = GaslessFeePlan.NativePay(fee = fakeNativeFee)
 
         assertThrows<IllegalStateException> {
-            CreateAndSendGaslessTransactionUseCase.assembleGaslessPayload(
+            CreateAndSendEvmGaslessTransactionUseCase.assembleGaslessPayload(
                 mainTx = mainTx,
                 feeObj = feeObj,
                 nonce = nonce,
@@ -163,7 +163,7 @@ internal class CreateAndSendGaslessPayloadTest {
         )
 
         assertThrows<IllegalStateException> {
-            CreateAndSendGaslessTransactionUseCase.assembleGaslessPayload(
+            CreateAndSendEvmGaslessTransactionUseCase.assembleGaslessPayload(
                 mainTx = mainTx,
                 feeObj = feeObj,
                 nonce = nonce,
