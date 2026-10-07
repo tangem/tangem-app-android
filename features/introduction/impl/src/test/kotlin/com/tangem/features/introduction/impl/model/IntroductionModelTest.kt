@@ -1,6 +1,7 @@
 package com.tangem.features.introduction.impl.model
 
 import android.view.SurfaceView
+import androidx.compose.ui.unit.IntSize
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.entity.InitScreenLaunchMode
@@ -166,34 +167,42 @@ internal class IntroductionModelTest {
     }
 
     @Test
-    fun `GIVEN the frame geometry is unknown WHEN a frame is rendered THEN the shutter stays down`() {
-        // Arrange
-        val model = createModel()
-        surfaceAttached(isAttached = true)
-        model.attachSurface(surfaceView)
-
+    fun `GIVEN nothing decoded yet WHEN model created THEN the surface already has the size of the video`() {
         // Act
-        model.onFirstFrameRendered()
+        val model = createModel()
 
         // Assert
-        assertThat(model.uiState.value.isVideoReady).isFalse()
-        assertThat(model.uiState.value.videoAspectRatio).isNull()
+        assertThat(model.uiState.value.videoSize).isEqualTo(VIDEO_SIZE)
+        assertThat(model.uiState.value.videoSurfaceKey).isEqualTo(0)
     }
 
     @Test
-    fun `GIVEN a frame is rendered WHEN the geometry arrives THEN the shutter lifts on the shaped surface`() {
+    fun `GIVEN the declared size WHEN the decoder confirms it THEN the surface keeps its size`() {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        model.onVideoSizeChanged(width = VIDEO_SIZE.width, height = VIDEO_SIZE.height)
+
+        // Assert
+        assertThat(model.uiState.value.videoSize).isEqualTo(VIDEO_SIZE)
+    }
+
+    @Test
+    fun `GIVEN a file of another size WHEN the decoder reports it THEN the surface keeps the declared size`() {
         // Arrange
         val model = createModel()
         surfaceAttached(isAttached = true)
         model.attachSurface(surfaceView)
-        model.onFirstFrameRendered()
+        model.renderFrame()
 
         // Act
-        model.onAspectRatioChanged(VIDEO_ASPECT_RATIO)
+        model.onVideoSizeChanged(width = 720, height = 1280)
 
         // Assert
+        assertThat(model.uiState.value.videoSize).isEqualTo(VIDEO_SIZE)
+        assertThat(model.uiState.value.videoSurfaceKey).isEqualTo(0)
         assertThat(model.uiState.value.isVideoReady).isTrue()
-        assertThat(model.uiState.value.videoAspectRatio).isEqualTo(VIDEO_ASPECT_RATIO)
     }
 
     @Test
@@ -518,6 +527,72 @@ internal class IntroductionModelTest {
             RunningModel(isRunning = true),
             RunningModel(isRunning = false),
         )
+    }
+
+    @Test
+    fun `GIVEN no frames coming out while playing WHEN the stall is noticed THEN a covered surface replaces it`() =
+        runTest {
+            // Arrange
+            val model = createModel(dispatchers = createTestingCoroutineDispatcherProvider())
+            surfaceAttached(isAttached = true)
+            model.attachSurface(surfaceView)
+            model.renderFrame()
+            every { videoPlayer.outputFrameCount } returns 28L
+
+            // Act
+            model.onPlayingChanged(isPlaying = true)
+            advanceTimeBy(STALL_DETECTED_AFTER_MS)
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.videoSurfaceKey).isEqualTo(1)
+            assertThat(model.uiState.value.isVideoReady).isFalse()
+            model.attachSurface(otherSurfaceView)
+            model.renderFrame()
+            assertThat(model.uiState.value.isVideoReady).isTrue()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a stall new surfaces do not cure WHEN the watchdog gives up THEN the video is treated as failed`() =
+        runTest {
+            // Arrange
+            val model = createModel(dispatchers = createTestingCoroutineDispatcherProvider())
+            surfaceAttached(isAttached = true)
+            model.attachSurface(surfaceView)
+            model.renderFrame()
+            every { videoPlayer.outputFrameCount } returns 28L
+
+            // Act
+            model.onPlayingChanged(isPlaying = true)
+            advanceTimeBy(STALL_DETECTED_AFTER_MS * 4)
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.videoSurfaceKey).isEqualTo(3)
+            assertThat(model.uiState.value.isVideoReady).isFalse()
+            assertThat(model.uiState.value.isVideoFailed).isTrue()
+            assertThat(model.uiState.value.isVideoRunning).isFalse()
+            verify { videoPlayer.setRunning(isRunning = false) }
+            assertThat(sentEvents.last()).isEqualTo(WelcomeMediaError(WelcomeMediaError.Stage.Playback))
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN the video failed WHEN the screen resumes THEN playback stays stopped`() {
+        // Arrange
+        val model = createModel()
+        surfaceAttached(isAttached = true)
+        model.attachSurface(surfaceView)
+        model.renderFrame()
+        model.onError(PLAYBACK_ERROR)
+
+        // Act
+        model.setVideoRunning(isRunning = true)
+
+        // Assert
+        verify(exactly = 0) { videoPlayer.setRunning(isRunning = true) }
+        assertThat(model.uiState.value.isVideoRunning).isFalse()
     }
 
     @Nested
@@ -2240,9 +2315,7 @@ internal class IntroductionModelTest {
 
     internal data class RunningModel(val isRunning: Boolean)
 
-    /** The decoder reports the frame geometry before it renders anything, and the shutter waits for both. */
     private fun IntroductionModel.renderFrame() {
-        onAspectRatioChanged(VIDEO_ASPECT_RATIO)
         onFirstFrameRendered()
     }
 
@@ -2279,9 +2352,12 @@ internal class IntroductionModelTest {
 
     private companion object {
         val PLAYBACK_ERROR = IllegalStateException("decoder failed")
-        const val VIDEO_ASPECT_RATIO = 1080f / 1920f
+        val VIDEO_SIZE = IntSize(width = 1080, height = 1920)
 
         val SCREEN_OPENED = IntroductionProcess.ScreenOpened(IntroductionProcess.ScreenOpened.EntryReason.NoWallets)
+
+        /** The first check only takes the baseline, then four more checks 250 ms apart see the count stand still. */
+        const val STALL_DETECTED_AFTER_MS = 1_251L
         val SHUTTER_DOWN = false to true
         const val BUY_LINK = "https://buy.tangem.com/en?utm_source=tangem-app"
         const val LEAST_OS_VERSION = "Android 10"
