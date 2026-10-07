@@ -4,12 +4,15 @@ package com.tangem.grow.datasource.stakekit.models.response.model
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import com.tangem.domain.models.serialization.SerializedBigDecimal
+import com.tangem.domain.models.serialization.SerializedIsoDateTime
 import com.tangem.grow.datasource.stakekit.models.request.Address
 import com.tangem.grow.datasource.stakekit.models.response.model.BalanceDTO.PendingAction.PendingActionArgs.Amount
 import com.tangem.grow.datasource.stakekit.models.response.model.action.StakingActionTypeDTO
-import org.joda.time.DateTime
-import java.math.BigDecimal
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 @JsonClass(generateAdapter = true)
 data class YieldBalanceWrapperDTO(
     @Json(name = "addresses")
@@ -20,6 +23,7 @@ data class YieldBalanceWrapperDTO(
     val integrationId: String?,
 )
 
+@Serializable
 @JsonClass(generateAdapter = true)
 data class BalanceDTO(
     @Json(name = "groupId")
@@ -27,15 +31,16 @@ data class BalanceDTO(
     @Json(name = "type")
     val type: BalanceTypeDTO,
     @Json(name = "amount")
-    val amount: BigDecimal,
+    val amount: SerializedBigDecimal,
     @Json(name = "date")
-    val date: DateTime?,
+    val date: SerializedIsoDateTime?,
     @Json(name = "pricePerShare")
-    val pricePerShare: BigDecimal,
+    val pricePerShare: SerializedBigDecimal,
     @Json(name = "pendingActions")
     val pendingActions: List<PendingAction>,
     @Json(name = "pendingActionConstraints")
     val pendingActionConstraints: List<PendingActionConstraints>?,
+    @SerialName("token")
     @Json(name = "token")
     val tokenDTO: TokenDTO,
     @Json(name = "validatorAddress")
@@ -46,35 +51,45 @@ data class BalanceDTO(
     val providerId: String?,
 ) {
 
+    @Serializable
     @JsonClass(generateAdapter = false)
     enum class BalanceTypeDTO {
+        @SerialName("available")
         @Json(name = "available")
         AVAILABLE,
 
+        @SerialName("staked")
         @Json(name = "staked")
         STAKED,
 
+        @SerialName("unstaking")
         @Json(name = "unstaking")
         UNSTAKING,
 
+        @SerialName("unstaked")
         @Json(name = "unstaked")
         UNSTAKED,
 
+        @SerialName("preparing")
         @Json(name = "preparing")
         PREPARING,
 
+        @SerialName("rewards")
         @Json(name = "rewards")
         REWARDS,
 
+        @SerialName("locked")
         @Json(name = "locked")
         LOCKED,
 
+        @SerialName("unlocking")
         @Json(name = "unlocking")
         UNLOCKING,
 
         UNKNOWN,
     }
 
+    @Serializable
     @JsonClass(generateAdapter = true)
     data class PendingAction(
         @Json(name = "type")
@@ -84,6 +99,7 @@ data class BalanceDTO(
         @Json(name = "args")
         val args: PendingActionArgs?,
     ) {
+        @Serializable
         @JsonClass(generateAdapter = true)
         data class PendingActionArgs(
             @Json(name = "amount")
@@ -101,16 +117,18 @@ data class BalanceDTO(
             @Json(name = "signatureVerification")
             val signatureVerification: Required?,
         ) {
+            @Serializable
             @JsonClass(generateAdapter = true)
             data class Amount(
                 @Json(name = "required")
                 val required: Boolean = true,
                 @Json(name = "minimum")
-                val minimum: BigDecimal?,
+                val minimum: SerializedBigDecimal?,
                 @Json(name = "maximum")
-                val maximum: BigDecimal?,
+                val maximum: SerializedBigDecimal?,
             )
 
+            @Serializable
             @JsonClass(generateAdapter = true)
             data class Duration(
                 @Json(name = "required")
@@ -121,6 +139,7 @@ data class BalanceDTO(
                 val maximum: Int?,
             )
 
+            @Serializable
             @JsonClass(generateAdapter = true)
             data class Nft(
                 @Json(name = "baycId")
@@ -131,6 +150,7 @@ data class BalanceDTO(
                 val bakcId: Required?,
             )
 
+            @Serializable
             @JsonClass(generateAdapter = true)
             data class TronResource(
                 @Json(name = "required")
@@ -141,14 +161,17 @@ data class BalanceDTO(
         }
     }
 
+    @Serializable
     @JsonClass(generateAdapter = true)
     data class PendingActionConstraints(
         @Json(name = "type")
         val type: StakingActionTypeDTO,
+        @SerialName("amount")
         @Json(name = "amount")
         val amountArg: Amount,
     )
 
+    @Serializable
     @JsonClass(generateAdapter = true)
     data class Required(
         @Json(name = "required")
