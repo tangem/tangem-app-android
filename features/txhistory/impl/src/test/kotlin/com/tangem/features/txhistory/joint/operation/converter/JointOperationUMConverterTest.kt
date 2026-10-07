@@ -17,6 +17,7 @@ import com.tangem.domain.jointaccount.model.JointOperationSignerState
 import com.tangem.domain.jointaccount.model.JointOperationSignerState.Answer
 import com.tangem.domain.jointaccount.model.JointTransferIntent
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.joint.operation.model.JointOperationFiat
 import com.tangem.features.txhistory.joint.operation.model.JointOperationState
 import com.tangem.test.core.ProvideTestModels
