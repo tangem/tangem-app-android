@@ -118,6 +118,10 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         paymentAccountStatusesStore.markVirtualAccountProcessing(userWalletId)
     }
 
+    override suspend fun markVirtualAccountEligible(userWalletId: UserWalletId) {
+        paymentAccountStatusesStore.markVirtualAccountEligible(userWalletId)
+    }
+
     override suspend fun markCardActivating(userWalletId: UserWalletId, productInstanceId: String) {
         paymentAccountStatusesStore.markCardActivating(userWalletId, productInstanceId)
     }
@@ -589,6 +593,12 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             )
         }
 
+        val tariffPlanState = tariffPlan?.let { tariff ->
+            getTangemPayTariffPlanStateUseCase(
+                userWalletId = userWalletId,
+                tariff = tariff,
+            )
+        }
         val channels = fetchEligibilityChannels(userWalletId)
         val virtualAccount = resolveVirtualAccountOnramp(userWalletId = userWalletId, channels = channels)
 
@@ -604,12 +614,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             error = null,
             virtualAccount = virtualAccount,
             isBankOfframpAvailable = channels?.contains(TangemPayEligibilityType.BANK_OFFRAMP),
-            tariffPlan = tariffPlan?.let { tariff ->
-                getTangemPayTariffPlanStateUseCase(
-                    userWalletId = userWalletId,
-                    tariff = tariff,
-                )
-            },
+            tariffPlan = tariffPlanState,
         )
     }
 
@@ -626,8 +631,9 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
      *    clears the persisted id, persists the failure marker and falls through to eligibility; a
      *    [VisaApiError.OrderNotFound] (the persisted id went stale) clears the persisted id and falls through.
      * 3. Otherwise — when the wallet has the `VISA_VIRTUAL_ACCOUNT` eligibility channel (fetched fresh via the
-     *    user token), surfaces [VirtualAccountOnramp.Failed] while the failure marker is persisted (until a new
+     *    user token), surfaces [VirtualAccountOnramp.Failed] while the failure marker is persisted (until the
 
+     *    without the channel.
      */
     private suspend fun CustomerInfo.resolveVirtualAccountOnramp(
         userWalletId: UserWalletId,

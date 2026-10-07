@@ -3,6 +3,7 @@ package com.tangem.features.tangempay.card.details
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
@@ -12,9 +13,13 @@ import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
+import com.tangem.features.tangempay.TangemPayFeatureToggles
+import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToGoogleWalletController
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToGoogleWalletController.Entry as GoogleWalletEntry
+import com.tangem.features.tangempay.bankCredentials
 import com.tangem.features.tangempay.tangemPayCard
+import com.tangem.features.tangempay.trackSlot
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
@@ -37,6 +42,8 @@ internal class TangemPayCardPageModelTest {
     private val secondCard = tangemPayCard(id = "card_b")
 
     private val eventListener = DefaultCardDetailsEventListener()
+    private val router: Router = mockk(relaxed = true)
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk(relaxed = true)
     private val statusFlow = MutableSharedFlow<AccountStatus.Payment>(replay = 1)
     private val supplier: PaymentAccountStatusSupplier = mockk()
     private val cardDetailsRepository: TangemPayCardDetailsRepository = mockk(relaxed = true)
@@ -133,6 +140,65 @@ internal class TangemPayCardPageModelTest {
 
         // Assert
         assertThat(model.isDetailsSettingEnabled()).isTrue()
+    }
+
+    @Test
+    fun `GIVEN banking details failed to load WHEN add funds reports it THEN details error sheet opens`() = runTest {
+        // Arrange
+        val model = createModel()
+        statusFlow.emit(paymentStatus)
+        runCurrent()
+        val openedSheets = model.bottomSheetNavigation.trackSlot()
+
+        // Act
+        model.onBankingDetailsLoadFailed(PRODUCT_INSTANCE_ID)
+
+        // Assert
+        assertThat(openedSheets.filterIsInstance<TangemPayCardNavigation.VaBankingDetailsError>()).containsExactly(
+            TangemPayCardNavigation.VaBankingDetailsError(
+                userWalletId = userWalletId,
+                productInstanceId = PRODUCT_INSTANCE_ID,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN v2 enabled WHEN banking details resolved on retry THEN account details screen opens`() = runTest {
+        // Arrange
+        every { tangemPayFeatureToggles.isVisaOnrampV2Enabled } returns true
+        val model = createModel()
+        statusFlow.emit(paymentStatus)
+        runCurrent()
+
+        // Act
+        model.onVaBankingDetailsResolved(BANK_CREDENTIALS)
+
+        // Assert
+        verify(exactly = 1) {
+            router.push(TangemPayAccountDetailsInnerRoute.BankTransferOnrampDetails(BANK_CREDENTIALS), any())
+        }
+    }
+
+    @Test
+    fun `GIVEN v2 disabled WHEN banking details resolved on retry THEN requisites sheet opens`() = runTest {
+        // Arrange
+        val model = createModel()
+        statusFlow.emit(paymentStatus)
+        runCurrent()
+        val openedSheets = model.bottomSheetNavigation.trackSlot()
+
+        // Act
+        model.onVaBankingDetailsResolved(BANK_CREDENTIALS)
+
+        // Assert
+        assertThat(openedSheets.filterIsInstance<TangemPayCardNavigation.VirtualAccountRequisites>())
+            .containsExactly(
+                TangemPayCardNavigation.VirtualAccountRequisites(
+                    userWalletId = userWalletId,
+                    bankCredentials = BANK_CREDENTIALS,
+                ),
+            )
+        verify(exactly = 0) { router.push(any(), any()) }
     }
 
     @Nested
@@ -291,7 +357,7 @@ internal class TangemPayCardPageModelTest {
         paymentAccountStatusSupplier = supplier,
         paymentAccountStatusFetcher = mockk(relaxed = true),
         dispatchers = TestingCoroutineDispatcherProvider(),
-        router = mockk(relaxed = true),
+        router = router,
         analytics = mockk(relaxed = true),
         sendFeedbackEmailUseCase = mockk(relaxed = true),
         cardDetailsRepository = cardDetailsRepository,
@@ -302,7 +368,13 @@ internal class TangemPayCardPageModelTest {
         biometricAuthManager = mockk(relaxed = true),
         settingsManager = mockk(relaxed = true),
         onboardingRepository = mockk(relaxed = true),
-        tangemPayFeatureToggles = mockk(relaxed = true),
+        tangemPayFeatureToggles = tangemPayFeatureToggles,
         googleWalletControllerFactory = googleWalletControllerFactory,
     )
+
+    private companion object {
+        const val PRODUCT_INSTANCE_ID = "pi_account"
+
+        val BANK_CREDENTIALS = bankCredentials()
+    }
 }
