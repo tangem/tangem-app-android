@@ -245,6 +245,7 @@ internal class StakingModel @Inject constructor(
 
     private var isInitialInfoAnalyticSent: Boolean = false
     private var isBalanceUpdatedAfterStart: Boolean = false
+    private var isApprovalInProgress: Boolean = false
 
     private val balanceUpdater by lazy(LazyThreadSafetyMode.NONE) {
         stakingBalanceUpdater.create(
@@ -294,12 +295,14 @@ internal class StakingModel @Inject constructor(
             stakingAnalyticSender.sendTransactionApprovalAnalytics(
                 cryptoCurrencyStatus.currency as? CryptoCurrency.Token ?: return,
             )
+            isApprovalInProgress = true
             stateController.update(SetApprovalInProgressTransformer)
             awaitForAllowance()
         }
 
         override fun onApproveFailed() {
             approvalSlotNavigation.dismiss()
+            isApprovalInProgress = false
             stateController.update(
                 SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus = cryptoCurrencyStatus),
             )
@@ -466,6 +469,7 @@ internal class StakingModel @Inject constructor(
                             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                             fee = fee,
                             cryptoCurrencyStatus = cryptoCurrencyStatus,
+                            isApprovalInProgress = isApprovalInProgress,
                         ),
                     )
                     updateNotifications()
@@ -595,9 +599,6 @@ internal class StakingModel @Inject constructor(
             val confirmationState = value.confirmationState as? StakingStates.ConfirmationState.Data
             when (confirmationState?.innerState) {
                 InnerConfirmationStakingState.ASSENT -> {
-                    val isApprovalInProgress = confirmationState.notifications.any {
-                        it is StakingNotification.Warning.TransactionInProgress
-                    }
                     if (!isApprovalInProgress) {
                         stakingStateRouter.onPrevClick()
                         stateController.update(
@@ -927,6 +928,7 @@ internal class StakingModel @Inject constructor(
                     currencyWarning = currencyWarning,
                     currencyCheck = currencyStatus,
                     isSubtractAvailable = isAmountSubtractAvailable,
+                    isApprovalInProgress = isApprovalInProgress,
                     feeError = if (hasRentWarning) null else feeError,
                     stakingError = if (hasRentWarning) null else stakingError,
                     integration = integration,
@@ -1010,6 +1012,7 @@ internal class StakingModel @Inject constructor(
                     val amount = (value.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
                         ?: error("No amount provided")
                     if (allowance >= amount) {
+                        isApprovalInProgress = false
                         stateController.update(SetUpdatedAllowanceTransformer(allowance))
                         getFee()
                         allowanceTaskScheduler.cancelTask()
