@@ -72,34 +72,33 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
                 customerId = customerInfo.customerId.orEmpty(),
                 productInstanceId = instance.id,
             )
-            else -> onboardingStatus(userWalletId = userWalletId, customerInfo = customerInfo)
+            else -> onboardingStatus(userWalletId = userWalletId, customerInfo = customerInfo).bind()
         }
     }
 
-    private suspend fun onboardingStatus(
+    private fun onboardingStatus(
         userWalletId: UserWalletId,
         customerInfo: CustomerInfo,
-    ): MoneyAccountStatusValue {
-        if (customerInfo.kycStatus == KycStatus.REQUIRED) {
-            return MoneyAccountStatusValue.Onboarding.KycRequired(
+    ): Either<VisaApiError, MoneyAccountStatusValue> = either {
+        val order = orderRepository.getOrder(userWalletId) ?: return@either MoneyAccountStatusValue.NotCreated
+        if (customerInfo.kycStatus == KycStatus.REQUIRED && order.orderStatus != OrderStatus.CANCELED) {
+            return@either MoneyAccountStatusValue.Onboarding.KycRequired(
                 source = StatusSource.ACTUAL,
                 balance = null,
                 customerId = customerInfo.customerId,
             )
         }
 
-        val order = orderRepository.getOrder(userWalletId) ?: return lastOnboardingStatus(userWalletId)
         val customerId = customerInfo.customerId
-
         if (order.orderStatus == OrderStatus.COMPLETED) {
-            return MoneyAccountStatusValue.Onboarding.Activating(
+            return@either MoneyAccountStatusValue.Onboarding.Activating(
                 source = StatusSource.ACTUAL,
                 balance = null,
                 customerId = customerId,
             )
         }
 
-        return when (order.orderStep) {
+        return@either when (order.orderStep) {
             OrderStep.AWAITING_KYC -> kycStatus(customerId = customerId, customerInfo = customerInfo)
             OrderStep.ACCOUNT_ISSUE,
             OrderStep.ACCOUNT_ACTIVATION,
@@ -143,11 +142,6 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
                 kycStatus = kycStatus,
             )
         }
-    }
-
-    private suspend fun lastOnboardingStatus(userWalletId: UserWalletId): MoneyAccountStatusValue {
-        val previous = moneyAccountStatusesStore.getSyncOrNull(userWalletId)?.value
-        return previous as? MoneyAccountStatusValue.Onboarding ?: MoneyAccountStatusValue.NotCreated
     }
 
     private fun TangemPayOrderInfo.toIssuingStep(): MoneyAccountStatusValue.IssuingStep = when (orderStep) {
