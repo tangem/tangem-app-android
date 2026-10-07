@@ -62,7 +62,7 @@ internal class RwaFeaturedAssetsManagerTest {
         advanceUntilIdle()
 
         // Act
-        manager.load(categoryId = FEATURED_CATEGORY_ID)
+        manager.load(categoryId = FEATURED_CATEGORY_ID, country = null)
         advanceUntilIdle()
 
         // Assert
@@ -74,6 +74,38 @@ internal class RwaFeaturedAssetsManagerTest {
     }
 
     @Test
+    fun `GIVEN a known country WHEN load THEN the request carries it`() = runTest {
+        // Arrange — the flag the rail marks its assets with is evaluated for this country alone
+        val actions = captureActions()
+        val manager = createManager(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        manager.load(categoryId = FEATURED_CATEGORY_ID, country = "US")
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(reloadConfigs(actions).single().country).isEqualTo("US")
+    }
+
+    @Test
+    fun `GIVEN a restricted asset WHEN the rail is mapped THEN it is marked`() = runTest {
+        // Arrange
+        val restricted = createToken(id = "restricted", isRestrictedForCountry = true)
+        val allowed = createToken(id = "allowed")
+        captureActions(state = MutableStateFlow(stateOf(restricted, allowed)))
+
+        // Act
+        val manager = createManager(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        val assets = (manager.state.value as RwaFeaturedUM.Content).assets
+        assertThat(assets.single { it.id == "restricted" }.indicator).isNotNull()
+        assertThat(assets.single { it.id == "allowed" }.indicator).isNull()
+    }
+
+    @Test
     fun `GIVEN the tab is on a week interval WHEN load THEN the request carries it`() = runTest {
         // Arrange
         val actions = captureActions()
@@ -81,7 +113,7 @@ internal class RwaFeaturedAssetsManagerTest {
         advanceUntilIdle()
 
         // Act
-        manager.load(categoryId = FEATURED_CATEGORY_ID)
+        manager.load(categoryId = FEATURED_CATEGORY_ID, country = null)
         advanceUntilIdle()
 
         // Assert
@@ -209,6 +241,7 @@ internal class RwaFeaturedAssetsManagerTest {
         h24ChangePercent: BigDecimal? = PERCENT_UP,
         weekChangePercent: BigDecimal? = PERCENT_DOWN,
         monthChangePercent: BigDecimal? = null,
+        isRestrictedForCountry: Boolean = false,
     ) = TokenMarket(
         id = CryptoCurrency.RawID(id),
         name = name,
@@ -226,7 +259,7 @@ internal class RwaFeaturedAssetsManagerTest {
         yieldRate = null,
         updateTimestamp = null,
         networks = null,
-        isRestrictedForCountry = false,
+        isRestrictedForCountry = isRestrictedForCountry,
         imageHost = "https://host/",
     )
 
