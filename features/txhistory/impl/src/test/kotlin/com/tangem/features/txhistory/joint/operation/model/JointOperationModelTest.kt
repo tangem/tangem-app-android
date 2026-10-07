@@ -2,6 +2,7 @@ package com.tangem.features.txhistory.joint.operation.model
 
 import arrow.core.left
 import arrow.core.right
+import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
@@ -25,6 +26,7 @@ import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
 import com.tangem.features.txhistory.joint.operation.JointOperationComponent
+import com.tangem.features.txhistory.joint.operation.ui.state.JointOperationUM
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.MockAccounts
 import io.mockk.clearMocks
@@ -33,9 +35,11 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -301,6 +305,60 @@ internal class JointOperationModelTest {
         verify(exactly = 0) { analyticsEventHandler.send(any()) }
     }
 
+    @Test
+    fun `GIVEN a sending operation WHEN the backend drops it THEN the sheet stays open`() = runTest {
+        // Arrange
+        val sending = createState().copy(isSending = true)
+        val states = MutableStateFlow<JointOperationState?>(sending)
+        every { delegate.observe(userWalletId = any(), currency = any(), operationId = any()) } returns states
+        val model = createModel()
+
+        // Act
+        states.value = null
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value).isInstanceOf(JointOperationUM.Content::class.java)
+    }
+
+    @Test
+    fun `GIVEN a sending operation WHEN it is dropped while the sheet is not collected THEN the sheet stays open`() =
+        runTest {
+            // Arrange
+            val states = MutableStateFlow<JointOperationState?>(createState().copy(isSending = true))
+            every { delegate.observe(userWalletId = any(), currency = any(), operationId = any()) } returns states
+            val model = createModel(isCollected = false)
+            val sheetDispatcher = UnconfinedTestDispatcher(testScheduler)
+            val firstCollection = backgroundScope.launch(sheetDispatcher) { model.uiState.collect {} }
+            advanceUntilIdle()
+            firstCollection.cancel()
+            advanceUntilIdle()
+
+            // Act
+            states.value = null
+            advanceUntilIdle()
+            backgroundScope.launch(sheetDispatcher) { model.uiState.collect {} }
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value).isInstanceOf(JointOperationUM.Content::class.java)
+        }
+
+    @Test
+    fun `GIVEN an operation awaiting signatures WHEN the backend drops it THEN the sheet is gone`() = runTest {
+        // Arrange
+        val states = MutableStateFlow<JointOperationState?>(createState())
+        every { delegate.observe(userWalletId = any(), currency = any(), operationId = any()) } returns states
+        val model = createModel()
+
+        // Act
+        states.value = null
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value).isEqualTo(JointOperationUM.Gone)
+    }
+
     /** The refusal runs from the confirmation dialog the sheet shows first */
     private fun JointOperationModel.confirmRefusal() {
         val dialogs = mutableListOf<UiMessage>()
@@ -310,7 +368,7 @@ internal class JointOperationModelTest {
     }
 
     /** The actions read the state the sheet shows, so the test collects it the way the sheet does */
-    private fun TestScope.createModel(): JointOperationModel {
+    private fun TestScope.createModel(isCollected: Boolean = true): JointOperationModel {
         val model = JointOperationModel(
             paramsContainer = MutableParamsContainer(
                 JointOperationComponent.Params(
@@ -327,7 +385,7 @@ internal class JointOperationModelTest {
             analyticsEventHandler = analyticsEventHandler,
             getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
         )
-        backgroundScope.launch { model.uiState.collect {} }
+        if (isCollected) backgroundScope.launch { model.uiState.collect {} }
         advanceUntilIdle()
 
         return model

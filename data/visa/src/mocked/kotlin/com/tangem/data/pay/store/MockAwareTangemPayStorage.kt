@@ -117,6 +117,12 @@ internal class MockAwareTangemPayStorage @Inject constructor(
     override suspend fun clearVirtualAccountOrderId(customerWalletAddress: String) =
         real.clearVirtualAccountOrderId(customerWalletAddress)
 
+    override suspend fun getVirtualAccountOrderFailed(customerWalletAddress: String): Boolean =
+        real.getVirtualAccountOrderFailed(customerWalletAddress)
+
+    override suspend fun storeVirtualAccountOrderFailed(customerWalletAddress: String, isFailed: Boolean) =
+        real.storeVirtualAccountOrderFailed(customerWalletAddress, isFailed)
+
     override suspend fun storeCheckCustomerWalletResult(userWalletId: UserWalletId, isPaeraCustomer: Boolean) =
         real.storeCheckCustomerWalletResult(userWalletId, isPaeraCustomer)
 

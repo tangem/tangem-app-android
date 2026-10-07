@@ -19,13 +19,13 @@ import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.AccountFee
-import com.tangem.domain.pay.model.AccountFeeGroupType
 import com.tangem.domain.pay.usecase.CreateVirtualAccountOrderUseCase
 import com.tangem.domain.pay.usecase.GetOnrampFeesUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesUM
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.onrampFee
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.MockAccounts
@@ -46,7 +46,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import java.math.BigDecimal
 import java.util.Locale
 import com.tangem.core.ui.R as CoreUiR
 
@@ -217,6 +216,42 @@ internal class TangemPayBankTransferOnrampOnboardingModelTest {
         verify(exactly = 1) { uiMessageSender.send(ToastMessage(resourceReference(R.string.common_unknown_error))) }
     }
 
+    @Test
+    fun `GIVEN onramp eligibility unknown WHEN continue clicked THEN error shown and screen stays`() = runTest {
+        // Arrange
+        every { paymentAccountStatusSupplier(userWalletId) } returns flowOf(paymentStatus(virtualAccount = null))
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.onContinueClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { createVirtualAccountOrderUseCase(any(), any()) }
+        verify(exactly = 0) { router.pop(any()) }
+        verify(exactly = 1) { uiMessageSender.send(ToastMessage(resourceReference(R.string.common_unknown_error))) }
+        assertThat(model.uiState.value.isLoading).isFalse()
+    }
+
+    @Test
+    fun `GIVEN previous banking details request failed WHEN continue clicked THEN order created again`() = runTest {
+        // Arrange
+        val status = paymentStatus(virtualAccount = VirtualAccountOnramp.Failed)
+        every { paymentAccountStatusSupplier(userWalletId) } returns flowOf(status)
+        coEvery { createVirtualAccountOrderUseCase(userWalletId, PAYMENT_ACCOUNT_ADDRESS) } returns Unit.right()
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.onContinueClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { createVirtualAccountOrderUseCase(userWalletId, PAYMENT_ACCOUNT_ADDRESS) }
+        verify(exactly = 1) { router.pop(any()) }
+    }
+
     @ParameterizedTest
     @ProvideTestModels
     fun `GIVEN banking details already requested WHEN continue clicked THEN screen closed without a new order`(
@@ -325,15 +360,6 @@ internal class TangemPayBankTransferOnrampOnboardingModelTest {
         val loaded = status.value as PaymentAccountStatusValue.Loaded
         return status.copy(value = loaded.copy(virtualAccount = virtualAccount))
     }
-
-    private fun onrampFee() = AccountFee(
-        type = "ACH_ONRAMP",
-        name = "ACH",
-        paymentMethodId = null,
-        group = AccountFeeGroupType.ONRAMP,
-        amount = BigDecimal.ZERO,
-        currency = "USD",
-    )
 
     private fun provideTestModels() = listOf(
         VirtualAccountOnramp.Processing,
