@@ -127,4 +127,9 @@ internal class DefaultTangemPayMainDeepLinkHandler @AssistedInject constructor(
     interface Factory : TangemPayMainDeepLinkHandler.Factory {
         override fun create(scope: CoroutineScope, payload: Map<String, String>): DefaultTangemPayMainDeepLinkHandler
     }
+
+    companion object {
+        const val TANGEM_DEEPLINK_KEY = "tangem://pay-app-main"
+        const val HTTPS_DEEPLINK_KEY = "https://tangem.com/pay-app-main"
+    }
 }
