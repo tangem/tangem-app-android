@@ -460,12 +460,17 @@
             </intent-filter>
         </activity>
 
-        <!-- Disable android.startup completely. Used for Worker according doc -->
+        <!-- WorkManager is initialized on demand with the Hilt worker factory -->
         <!--https://developer.android.com/jetpack/androidx/releases/work#version_260_3-->
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
-            tools:node="remove" />
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
 
         <provider
             android:name="androidx.core.content.FileProvider"
