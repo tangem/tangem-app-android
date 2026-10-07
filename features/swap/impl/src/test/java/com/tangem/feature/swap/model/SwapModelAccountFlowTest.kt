@@ -5,6 +5,9 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
+import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -81,6 +84,8 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 /**
@@ -896,6 +901,30 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         model.onDestroy()
     }
 
+    @ParameterizedTest
+    @MethodSource("provideTransferFeeTypes")
+    fun `GIVEN a selected fee WHEN the transfer is sent THEN one Transaction sent with Source Transfer and its fee type`(
+        feeType: AnalyticsParam.FeeType,
+    ) = runTest {
+        // Arrange
+        val model = createTopUpTransferModel(accountFlow = null, feeType = feeType)
+        val events = mutableListOf<AnalyticsEvent>()
+        every { analyticsEventHandler.send(capture(events)) } returns Unit
+
+        // Act
+        model.uiState.swapButton.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        val transactionSent = events.filterIsInstance<Basic.TransactionSent>()
+        assertThat(transactionSent).hasSize(1)
+        assertThat(transactionSent.single().params).containsAtLeast(
+            AnalyticsParam.SOURCE, "Transfer",
+            AnalyticsParam.FEE_TYPE, feeType.value,
+        )
+        model.onDestroy()
+    }
+
     @Test
     fun `GIVEN no account flow WHEN the same transfer is sent THEN no funding window opens`() = runTest {
         // Arrange
@@ -1617,7 +1646,10 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         return from
     }
 
-    private fun TestScope.createTopUpTransferModel(accountFlow: AccountFlow?): SwapModel {
+    private fun TestScope.createTopUpTransferModel(
+        accountFlow: AccountFlow?,
+        feeType: AnalyticsParam.FeeType = AnalyticsParam.FeeType.Normal,
+    ): SwapModel {
         val from = swapCurrencyStatus()
         val collateral = swapCurrencyStatus(account = Account.Prediction(userWalletId))
         coEvery {
@@ -1641,6 +1673,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         advanceUntilIdle()
         model.feeSelectorRepository.state.value = mockk<FeeSelectorUM.Content>(relaxed = true) {
             every { selectedFeeItem } returns FeeItem.Market(fee = mockk(relaxed = true))
+            every { toAnalyticType() } returns feeType
         }
         return model
     }
@@ -1981,6 +2014,13 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     }
 
     private companion object {
+        @JvmStatic
+        fun provideTransferFeeTypes() = listOf(
+            AnalyticsParam.FeeType.Normal,
+            AnalyticsParam.FeeType.Custom,
+            AnalyticsParam.FeeType.Fixed,
+        )
+
         const val OWNER_ADDRESS = "0xOwner"
         const val DEPOSIT_WALLET_ADDRESS = "0xDepositWallet"
         const val USDC_CONTRACT_ADDRESS = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"

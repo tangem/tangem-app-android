@@ -69,7 +69,7 @@ sealed class Basic(
     }
 
     /**
-     * Tracks transaction submission from various screens (Send, Swap, WalletConnect, Sell, Approve, Staking).
+     * Tracks transaction submission from various screens (Send, Swap, Transfer, WalletConnect, Sell, Approve, Staking).
      *
      * [isCustomToken]/[isCustomFeeToken] mark user-defined tokens whose free-form symbols must not
      * become OTel attribute values — the mirrored metric gets [OtelIncludedEvent.CUSTOM_TOKEN] instead.
