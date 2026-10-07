@@ -1,6 +1,8 @@
 package com.tangem.feature.swap.ui
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -22,6 +24,7 @@ import com.tangem.core.ui.res.TangemTheme
 internal fun SwapBottomSheet(
     content: ComposableModularContentComponent,
     isMaterial: Boolean,
+    scrollableContent: Boolean,
     onBack: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -32,18 +35,50 @@ internal fun SwapBottomSheet(
             content = TangemBottomSheetConfigContent.Empty,
         ),
         isMaterialEnabled = isMaterial,
-        containerColor = if (isMaterial) TangemTheme.colors3.bg.opaque.primary else TangemTheme.colors3.bg.secondary,
+        // Glass sheets keep the modal's own opaque fill: it shows once the card expands (e.g. with the keyboard
+        // up), and a translucent token there would be drawn at full alpha.
+        containerColor = if (isMaterial) null else TangemTheme.colors3.bg.secondary,
         onBack = onBack,
+        scrollableContent = scrollableContent,
         title = { content.Title() },
         content = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .reportMeasuredHeight(),
-            ) {
-                content.Content(modifier = Modifier.fillMaxWidth())
-                content.Footer()
+            if (scrollableContent) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .reportMeasuredHeight(),
+                ) {
+                    content.Content(modifier = Modifier.fillMaxWidth())
+                    content.Footer()
+                }
+            } else {
+                PinnedFooterContent(content = content)
             }
         },
     )
+}
+
+/**
+ * Fills the card down to the keyboard once a focused field expands it, pinning the footer above the keyboard. Only
+ * the content reports its measured height: that report is measured unbounded, so wrapping the spacer would publish
+ * the expanded height as the card's natural one. The weighted spacer adds nothing to the intrinsic height, so the
+ * resting card keeps its size.
+ */
+@Composable
+private fun PinnedFooterContent(content: ComposableModularContentComponent) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .reportMeasuredHeight(),
+        ) {
+            content.Content(modifier = Modifier.fillMaxWidth())
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        content.Footer()
+    }
 }
