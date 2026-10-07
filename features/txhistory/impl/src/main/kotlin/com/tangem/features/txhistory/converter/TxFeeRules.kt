@@ -72,7 +72,10 @@ internal val ExpressTx.isPayInLeg: Boolean
 
 // region The fee row
 
-/** The network-fee row of a details card, absent while the transaction carries no fee we can name. */
+/**
+ * The network-fee row of a details card, absent while the transaction carries no fee we can name — including a fee
+ * that resolves to zero, which no network charges and which the card must not state ([REDACTED_TASK_KEY]).
+ */
 internal fun TxInfo.feeRows(currency: CryptoCurrency): ImmutableList<TxHistoryDetailsUM.InfoRowUM> =
     listOfNotNull(feeRow(currency)).toImmutableList()
 
@@ -92,12 +95,13 @@ private fun TxInfo.feeRow(currency: CryptoCurrency): TxHistoryDetailsUM.InfoRowU
  */
 private fun TxInfo.gaslessFeeText(currency: CryptoCurrency): String? {
     val gaslessFee = (this as? TxInfo.MultiTransfer)?.gaslessFee ?: return null
-    return gaslessFee.amount.format { crypto(cryptoCurrency = currency, ignoreSymbolPosition = true) }
+    val value = gaslessFee.amount.takeIf { !it.isZero() } ?: return null
+    return value.format { crypto(cryptoCurrency = currency, ignoreSymbolPosition = true) }
 }
 
 private fun TxInfo.nativeFeeText(): String? {
     val fee = fee ?: return null
-    val value = fee.value ?: return null
+    val value = fee.value?.takeIf { !it.isZero() } ?: return null
     return value.format { crypto(symbol = fee.currencySymbol, decimals = fee.decimals, ignoreSymbolPosition = true) }
 }
 

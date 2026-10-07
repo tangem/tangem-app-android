@@ -22,6 +22,7 @@ import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
@@ -109,6 +110,21 @@ fun AutoSizeTextField(
 
 @Composable
 internal fun BoxWithConstraintsScope.resizeFont(
+    visualTransformation: VisualTransformation,
+    value: String,
+    textStyle: TextStyle,
+    reduceFactor: Double,
+): TextUnit = resizeFont(
+    maxWidth = maxWidth,
+    visualTransformation = visualTransformation,
+    value = value,
+    textStyle = textStyle,
+    reduceFactor = reduceFactor,
+)
+
+@Composable
+internal fun resizeFont(
+    maxWidth: Dp,
     visualTransformation: VisualTransformation,
     value: String,
     textStyle: TextStyle,

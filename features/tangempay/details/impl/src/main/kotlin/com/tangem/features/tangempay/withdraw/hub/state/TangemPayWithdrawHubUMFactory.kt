@@ -47,8 +47,9 @@ internal class TangemPayWithdrawHubUMFactory(private val callbacks: Callbacks) {
 
     private fun createBankSection(state: WithdrawHubState): BankSectionUM = when (state.options) {
         OptionsState.Loading -> BankSectionUM.Loading
-        OptionsState.Unavailable -> BankSectionUM.Error(onRetryClick = callbacks.onRetryBankSectionClick)
-        is OptionsState.Ready -> BankSectionUM.Content(
+        OptionsState.Unavailable,
+        is OptionsState.Ready,
+        -> BankSectionUM.Content(
             toPersonalAccount = ActionCardUM(
                 icon = TangemIconUM.Icon(
                     iconRes = R.drawable.ic_user_filled_16,
@@ -66,6 +67,7 @@ internal class TangemPayWithdrawHubUMFactory(private val callbacks: Callbacks) {
                 onClick = callbacks.onToBusinessAccountClick,
             ),
             recents = createRecents(state.recents),
+            isAvailable = state.options is OptionsState.Ready,
         )
     }
 
@@ -73,12 +75,12 @@ internal class TangemPayWithdrawHubUMFactory(private val callbacks: Callbacks) {
         RecentsState.Loading -> RecentsUM.Loading
         RecentsState.Failed -> RecentsUM.Error(onRetryClick = callbacks.onRetryRecentsClick)
         is RecentsState.Loaded -> if (state.accounts.isEmpty()) {
-            RecentsUM.Empty(onSeeAllClick = callbacks.onSeeAllClick.takeIf { state.hasSavedAccounts })
+            RecentsUM.Empty
         } else {
             RecentsUM.Content(
                 recipients = state.accounts.map(::toRecipient).toImmutableList(),
                 onRecipientClick = callbacks.onRecentRecipientClick,
-                onSeeAllClick = callbacks.onSeeAllClick,
+                onSeeAllClick = callbacks.onSeeAllClick.takeIf { state.hasMoreAccounts },
             )
         }
     }
@@ -122,6 +124,5 @@ internal class TangemPayWithdrawHubUMFactory(private val callbacks: Callbacks) {
         val onRecentRecipientClick: (bankAccountId: String) -> Unit,
         val onSeeAllClick: () -> Unit,
         val onRetryRecentsClick: () -> Unit,
-        val onRetryBankSectionClick: () -> Unit,
     )
 }

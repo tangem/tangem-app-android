@@ -33,9 +33,9 @@ internal enum class MarketPulseInterval {
     fun intervalTitle(): TextReference {
         return resourceReference(
             when (this) {
-                H24 -> R.string.markets_real_assets_interval_day
-                D7 -> R.string.markets_real_assets_interval_week
-                M1 -> R.string.markets_real_assets_interval_month
+                H24 -> R.string.markets_selector_interval_24h_title
+                D7 -> R.string.markets_selector_interval_7d_title
+                M1 -> R.string.markets_selector_interval_1m_title
             },
         )
     }
@@ -47,13 +47,11 @@ internal enum class MarketPulseCategory(val id: String) {
     TopGainers(id = "top_gainers"),
     TopLosers(id = "top_losers"),
     ExperiencedBuyers(id = "experienced_buyers"),
-    Trending(id = "trending"),
     ;
 
     fun toRequestOrder(): TokenMarketListConfig.Order {
         return when (this) {
             MarketCap -> TokenMarketListConfig.Order.ByRating
-            Trending -> TokenMarketListConfig.Order.Trending
             ExperiencedBuyers -> TokenMarketListConfig.Order.Buyers
             TopGainers -> TokenMarketListConfig.Order.TopGainers
             TopLosers -> TokenMarketListConfig.Order.TopLosers
@@ -64,7 +62,6 @@ internal enum class MarketPulseCategory(val id: String) {
     fun toAnalyticsType(): FeedSortType {
         return when (this) {
             MarketCap -> FeedSortType.Rating
-            Trending -> FeedSortType.Trending
             ExperiencedBuyers -> FeedSortType.Buyers
             TopGainers -> FeedSortType.Gainers
             TopLosers -> FeedSortType.Losers
@@ -78,7 +75,6 @@ internal enum class MarketPulseCategory(val id: String) {
                 TopGainers -> R.string.markets_sort_by_top_gainers_title
                 TopLosers -> R.string.markets_sort_by_top_losers_title
                 ExperiencedBuyers -> R.string.markets_sort_by_experienced_buyers_title
-                Trending -> R.string.markets_sort_by_trending_title
             },
         )
     }
