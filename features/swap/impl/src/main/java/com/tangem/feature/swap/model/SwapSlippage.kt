@@ -38,6 +38,22 @@ internal object SwapSlippage {
     }
 }
 
+sealed interface SwapSlippageState {
+
+    val customOrNull: BigDecimal?
+    val isResetHighlighted: Boolean
+
+    /** [isResetHighlighted] marks a custom slippage reset to the default that the user hasn't seen yet. */
+    data class Default(override val isResetHighlighted: Boolean = false) : SwapSlippageState {
+        override val customOrNull: BigDecimal? get() = null
+    }
+
+    data class Custom(val value: BigDecimal, val quoteKey: SlippageQuoteKey?) : SwapSlippageState {
+        override val customOrNull: BigDecimal get() = value
+        override val isResetHighlighted: Boolean get() = false
+    }
+}
+
 /** The pair and amount a custom slippage was picked for; a quote for anything else resets it. */
 data class SlippageQuoteKey(
     val fromAccountId: AccountId,
