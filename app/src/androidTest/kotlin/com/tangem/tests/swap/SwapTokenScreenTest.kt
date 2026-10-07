@@ -1090,8 +1090,17 @@ class SwapTokenScreenTest : BaseTestCase() {
         var fiatEquivalent = ""
         var receiveAmountInToken = ""
         var tokenEquivalent = ""
+        var rateForTokenAmount = ""
+        var feeForTokenAmount = ""
+        val quoteScenarioName = "exchange_quote_polygon"
+        // The quote carries a fixed offset and the gas estimate is higher for exactly 1 POL, so the rate
+        // and the fee both change once the amount is entered in fiat.
+        val nonProportionalRateState = "NonProportionalRate"
 
         setupHooks().run {
+            step("Set WireMock scenario '$quoteScenarioName' to '$nonProportionalRateState'") {
+                setWireMockScenarioState(scenarioName = quoteScenarioName, state = nonProportionalRateState)
+            }
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
@@ -1114,6 +1123,18 @@ class SwapTokenScreenTest : BaseTestCase() {
                 onSwapTokenScreen {
                     flakySafely(WAIT_UNTIL_TIMEOUT) { swapFiatAmount.assertTextContains(fiatSign, substring = true) }
                     fiatEquivalent = swapFiatAmount.extractText()
+                }
+            }
+            step("Assert the provider rate is displayed") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { providerRateText.assertIsDisplayed() }
+                    rateForTokenAmount = providerRateText.extractText()
+                }
+            }
+            step("Assert the network fee is displayed") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { feeAmount.assertIsDisplayed() }
+                    feeForTokenAmount = feeAmount.extractText()
                 }
             }
             step("Assert the receive amount is calculated") {
@@ -1159,14 +1180,18 @@ class SwapTokenScreenTest : BaseTestCase() {
                     }
                 }
             }
-            step("Assert the provider rate is displayed") {
+            step("Assert the provider rate is recalculated") {
                 onSwapTokenScreen {
-                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { providerRateText.assertIsDisplayed() }
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                        assertNotEquals(rateForTokenAmount, providerRateText.extractText())
+                    }
                 }
             }
-            step("Assert the network fee is displayed") {
+            step("Assert the network fee is recalculated") {
                 onSwapTokenScreen {
-                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { feeAmount.assertIsDisplayed() }
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                        assertNotEquals(feeForTokenAmount, feeAmount.extractText())
+                    }
                 }
             }
         }
