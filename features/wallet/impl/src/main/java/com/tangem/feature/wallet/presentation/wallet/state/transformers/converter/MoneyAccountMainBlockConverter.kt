@@ -53,7 +53,7 @@ internal class MoneyAccountMainBlockConverter(
             )
             is MoneyAccountStatusValue.Onboarding.CountryNotSupported -> MoneyAccountMainUM.ActionRequired(
                 balance = balance?.toUM(source),
-                onClick = { moneyAccountIntents.onMoneyAccountCountryNotSupportedClicked(userWalletId) },
+                onClick = { moneyAccountIntents.onMoneyAccountCountryNotSupportedClicked(userWalletId, countryCode) },
             )
         }
     }
