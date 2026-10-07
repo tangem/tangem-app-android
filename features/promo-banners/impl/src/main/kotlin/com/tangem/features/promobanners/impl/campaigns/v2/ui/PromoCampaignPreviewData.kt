@@ -1,11 +1,15 @@
 package com.tangem.features.promobanners.impl.campaigns.v2.ui
 
 import androidx.compose.ui.graphics.Color
+import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
+import com.tangem.core.ui.ds2.statusscreen.TangemStatusScreen
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.promobanners.impl.campaigns.v2.entity.PromoBlockUM
 import com.tangem.features.promobanners.impl.campaigns.v2.entity.PromoCampaignFooterUM
+import com.tangem.features.promobanners.impl.campaigns.v2.entity.PromoCampaignStatusUM
 import com.tangem.features.promobanners.impl.campaigns.v2.entity.PromoCampaignUM
 import com.tangem.features.promobanners.impl.campaigns.v2.entity.PromoLinkUM
 import com.tangem.features.promobanners.impl.campaigns.v2.entity.PromoSelectedAccountUM
@@ -115,6 +119,73 @@ internal object PromoCampaignPreviewData {
             buttonText = stringReference("Enroll"),
             onButtonClick = {},
         ),
+    )
+
+    private val enrolled = PromoCampaignStatusUM(
+        variant = TangemStatusScreen.Variant.Success,
+        icon = TangemStatusIcon.Kind.Checkmark,
+        title = stringReference("You’re successfully enrolled in Whale Swap Cashback"),
+        description = null,
+        details = null,
+        buttonText = stringReference("Got it"),
+        onButtonClick = {},
+    )
+
+    private val alreadyEnrolled = PromoCampaignStatusUM(
+        variant = TangemStatusScreen.Variant.Info,
+        icon = TangemStatusIcon.Kind.Info,
+        title = stringReference("You’re already enrolled in Whale Swap Cashback"),
+        description = null,
+        details = null,
+        buttonText = stringReference("Close"),
+        onButtonClick = {},
+    )
+
+    private val unavailable = PromoCampaignStatusUM(
+        variant = TangemStatusScreen.Variant.Warning,
+        icon = TangemStatusIcon.Kind.Warning,
+        title = stringReference("Campaign unavailable"),
+        description = stringReference("This campaign no longer exists or has expired"),
+        details = null,
+        buttonText = stringReference("Close"),
+        onButtonClick = {},
+    )
+
+    val statuses = listOf(
+        enrolled,
+        enrolled.copy(description = stringReference("All of your wallets are enrolled")),
+        enrolled.copy(
+            description = stringReference("Some of your wallets are enrolled"),
+            details = PromoCampaignStatusUM.Details.EnrolledWallets(
+                wallets = persistentListOf(
+                    wallet(id = "1", name = "Main wallet", info = "3 cards", balance = "$4,496.75"),
+                    wallet(id = "2", name = "Multi Card", info = "1 card", balance = "$0.03"),
+                ),
+            ),
+        ),
+        alreadyEnrolled.copy(
+            details = PromoCampaignStatusUM.Details.Recipient(
+                walletName = stringReference("Tangem wallet 2.0"),
+                tokenIcon = tokenItem.iconState,
+                address = "33BddS...ga2B",
+            ),
+        ),
+        alreadyEnrolled,
+        unavailable,
+        unavailable.copy(
+            title = stringReference("Campaign not available yet"),
+            description = stringReference("Please try again later."),
+        ),
+    )
+
+    private fun wallet(id: String, name: String, info: String, balance: String) = UserWalletItemUM(
+        id = id,
+        name = stringReference(name),
+        information = UserWalletItemUM.Information.Loaded(stringReference(info)),
+        balance = UserWalletItemUM.Balance.Loaded(value = balance, isFlickering = false),
+        imageState = UserWalletItemUM.ImageState.MobileWallet,
+        isEnabled = true,
+        onClick = {},
     )
 
     private fun tile(label: String, value: String) = PromoBlockUM.Tile(
