@@ -50,4 +50,8 @@ internal class DefaultDiscoverDeepLinkHandler @AssistedInject constructor(
     interface Factory : DiscoverDeepLinkHandler.Factory {
         override fun create(queryParams: Map<String, String>): DefaultDiscoverDeepLinkHandler
     }
+
+    companion object {
+        const val DEEPLINK_KEY = "tangem://discover"
+    }
 }

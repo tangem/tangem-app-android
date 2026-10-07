@@ -70,8 +70,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         onPicked: (SocialLoginProvider) -> Unit,
     ): WalletOptionUM? = provider?.let { provider ->
         WalletOptionUM(
-            iconRes = CoreUiR.drawable.img_google_32,
-            isIconTinted = false,
+            icon = WalletOptionUM.Icon.Image(CoreUiR.drawable.img_google_32),
             title = resourceReference(
                 id = CoreResR.string.introduction_create_wallet_social_title,
                 formatArgs = wrappedList(provider.displayName()),

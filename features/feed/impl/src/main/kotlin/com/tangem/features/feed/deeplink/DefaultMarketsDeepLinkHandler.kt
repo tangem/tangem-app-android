@@ -29,4 +29,8 @@ internal class DefaultMarketsDeepLinkHandler @AssistedInject constructor(
     interface Factory : MarketsDeepLinkHandler.Factory {
         override fun create(params: Map<String, String>): DefaultMarketsDeepLinkHandler
     }
+
+    companion object {
+        const val DEEPLINK_KEY = "tangem://markets"
+    }
 }

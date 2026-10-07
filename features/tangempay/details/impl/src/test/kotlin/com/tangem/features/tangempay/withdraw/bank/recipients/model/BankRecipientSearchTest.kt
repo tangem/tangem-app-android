@@ -15,17 +15,17 @@ internal class BankRecipientSearchTest {
             id = "acc-1",
             beneficiary = Beneficiary.Individual(firstName = "Basit", lastName = "Didenko"),
             accountNumber = "4830019271",
-        ),
+        ).copy(displayName = "Basit Didenko JPMorgan"),
         bankAccount(
             id = "acc-2",
             beneficiary = Beneficiary.Business(name = "Raxanax"),
             accountNumber = "1120938475",
-        ),
+        ).copy(displayName = "Raxanax JPMorgan"),
         bankAccount(
             id = "acc-3",
             beneficiary = Beneficiary.Individual(firstName = "Saburo", lastName = "Arasaka"),
             accountNumber = "7719004432",
-        ),
+        ).copy(displayName = "Saburo Arasaka JPMorgan"),
     )
 
     @ParameterizedTest
@@ -51,5 +51,6 @@ internal class BankRecipientSearchTest {
         FilterModel(query = "4432", expectedIds = listOf("acc-3")),
         FilterModel(query = "a", expectedIds = listOf("acc-1", "acc-2", "acc-3")),
         FilterModel(query = "zzz", expectedIds = emptyList()),
+        FilterModel(query = "jpmorgan", expectedIds = emptyList()),
     )
 }

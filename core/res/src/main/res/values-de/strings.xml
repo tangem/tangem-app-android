@@ -1868,7 +1868,6 @@
   <string name="prediction_main_empty_positions_title">Sie haben keine aktiven Vorhersagen.</string>
   <string name="prediction_main_events_load_error">Ereignisse konnten nicht geladen werden.\nZum Neuladen tippen</string>
   <string name="prediction_main_explore_events">Veranstaltungen entdecken</string>
-  <string name="prediction_main_subtitle">USDC im Polygon-Netzwerk</string>
   <string name="prediction_main_title">Prognosen</string>
   <string name="prediction_main_total_balance">Gesamtsaldo</string>
   <string name="prediction_main_withdraw">Abheben</string>
