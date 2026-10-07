@@ -232,8 +232,7 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         hasText(getResourceString(R.string.common_swap))
     }
 
-    // A disabled button does not merge its label into BASE_BUTTON, and a hot wallet's hold-to-confirm
-    // button has no click action at all — match through the label and assert Disabled semantics.
+    // Disabled buttons don't merge their label into BASE_BUTTON, so match through the label.
     val swapButtonWithLabel: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasAnyDescendant(withText(getResourceString(R.string.common_swap)))
