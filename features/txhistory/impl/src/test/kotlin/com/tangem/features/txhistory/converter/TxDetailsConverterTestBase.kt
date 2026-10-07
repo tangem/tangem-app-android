@@ -103,6 +103,7 @@ internal open class TxDetailsConverterTestBase {
         lookup: TxHistoryLookupContext = lookupOf(),
         menu: ImmutableList<TxHistoryDetailsUM.MenuItemUM> = persistentListOf(),
         isBalanceHidden: Boolean = false,
+        nowMillis: Long = TIMESTAMP,
     ) = ExpressTxToDetailsUMConverter(
         currency = currency,
         onGoToProvider = openedUrls::add,
@@ -110,6 +111,7 @@ internal open class TxDetailsConverterTestBase {
         lookup = lookup,
         menu = menu,
         isBalanceHidden = isBalanceHidden,
+        nowMillis = { nowMillis },
     )
 
     protected fun txInfo(
@@ -207,13 +209,14 @@ internal open class TxDetailsConverterTestBase {
         fromAddress: String = FROM_ADDRESS,
         payoutAddress: String = PAYOUT_ADDRESS,
         fromCurrency: CryptoCurrency? = null,
+        payinHash: String? = null,
     ): ExpressTx.Swap = ExpressTx.Swap(
         tx = ExchangeTransaction(
             txId = "swap-1",
             status = status,
             createdAtMillis = TIMESTAMP,
             provider = provider,
-            payinHash = null,
+            payinHash = payinHash,
             payoutHash = null,
             fromAddress = fromAddress,
             payoutAddress = payoutAddress,

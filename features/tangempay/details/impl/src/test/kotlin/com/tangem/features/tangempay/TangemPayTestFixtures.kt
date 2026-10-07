@@ -13,6 +13,11 @@ import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.AccountFeeGroupType
+import com.tangem.domain.pay.model.Order
+import com.tangem.domain.pay.model.OrderStatus
+import com.tangem.domain.pay.model.OrderStep
+import com.tangem.domain.pay.model.OrderType
+import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import org.joda.time.DateTime
 import java.math.BigDecimal
@@ -138,6 +143,35 @@ internal fun customerTariffPlan(
     nextBillingAt = nextBillingAt,
     pendingPlan = pendingPlan,
     pendingTransitionAt = null,
+)
+
+internal fun payOrder(
+    id: String = "order",
+    type: OrderType = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
+    status: OrderStatus = OrderStatus.NEW,
+    step: OrderStep = OrderStep.UNKNOWN,
+): Order = Order(
+    id = id,
+    customerId = "customer",
+    type = type,
+    status = status,
+    step = step,
+    stepChangeCode = null,
+    productInstanceId = null,
+    paymentAccountId = null,
+    cardId = null,
+    toTariffPlanId = null,
+    withdrawTxHash = null,
+    createdAt = null,
+    updatedAt = null,
+)
+
+internal const val OUTCOME_UNKNOWN_ERRORS = "com.tangem.features.tangempay.TangemPayTestFixturesKt#outcomeUnknownErrors"
+
+internal fun outcomeUnknownErrors(): List<VisaApiError> = listOf(
+    VisaApiError.ServerUnavailable,
+    VisaApiError.UnknownWithoutCode,
+    VisaApiError.RefreshTokenExpired,
 )
 
 internal fun awaitingDepositOrder(

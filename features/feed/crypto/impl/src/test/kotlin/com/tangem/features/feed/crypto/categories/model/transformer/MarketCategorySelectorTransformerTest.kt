@@ -4,7 +4,6 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.MarketCategory
-import com.tangem.features.feed.crypto.categories.ALL_ROW_ID
 import com.tangem.features.feed.crypto.categories.MarketCategorySelection
 import com.tangem.features.feed.crypto.categories.createCategory
 import com.tangem.features.feed.crypto.categories.createSearchState
@@ -60,11 +59,11 @@ internal class MarketCategorySelectorTransformerTest {
 
         // Assert
         assertThat(actual.featured).isNull()
-        assertThat(actual.categories.items.map(MarketCategoryItemUM::id)).containsExactly(ALL_ROW_ID, "ai").inOrder()
+        assertThat(actual.categories.items.map(MarketCategoryItemUM::id)).containsExactly("ai")
     }
 
     @Test
-    fun `GIVEN a search WHEN transformed THEN the rail and the All row are both dropped`() {
+    fun `GIVEN a search WHEN transformed THEN the rail is dropped and only matches remain`() {
         // Act — an unfiltered shortcut strip and "no filter" are not search results
         val actual = transform(featured = listOf(meme), categories = listOf(ai), isSearching = true)
 
@@ -74,13 +73,13 @@ internal class MarketCategorySelectorTransformerTest {
     }
 
     @Test
-    fun `GIVEN categories WHEN transformed THEN the list is titled and carries the All row`() {
+    fun `GIVEN categories WHEN transformed THEN the list is titled and carries only the categories`() {
         // Act
         val actual = transform(categories = listOf(ai))
 
         // Assert
         assertThat(actual.categories.title).isEqualTo(TextReference.Res(R.string.market_categories))
-        assertThat(actual.categories.items.first().id).isEqualTo(ALL_ROW_ID)
+        assertThat(actual.categories.items.map(MarketCategoryItemUM::id)).containsExactly("ai")
     }
 
     @Test

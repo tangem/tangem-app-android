@@ -32,6 +32,7 @@ internal class TangemPayBankWithdrawFormUMFactory(
     fun create(draft: BankWithdrawDraft, state: FormState, accounts: List<BankAccount>): TangemPayBankWithdrawFormUM {
         val values = state.values(fields, draft)
         val displayNames = state.displayNames(fields, draft)
+        val suggestions = createSuggestions(values = values, state = state, accounts = accounts)
         return TangemPayBankWithdrawFormUM(
             header = BankWithdrawHeaderFactory.create(
                 draft = draft,
@@ -49,8 +50,8 @@ internal class TangemPayBankWithdrawFormUMFactory(
                     )
                 }
                 .toImmutableList(),
-            suggestions = createSuggestions(values = values, state = state, accounts = accounts),
-            isContinueEnabled = fields.all { field -> !values[field].isNullOrBlank() },
+            suggestions = suggestions,
+            isContinueEnabled = suggestions.isNotEmpty() || fields.all { field -> !values[field].isNullOrBlank() },
             onBackClick = callbacks.onBackClick,
             onContinueClick = callbacks.onContinueClick,
         )

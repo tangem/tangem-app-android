@@ -21,12 +21,11 @@ internal data class TangemPayWithdrawHubUM(
 
         data object Loading : BankSectionUM
 
-        data class Error(val onRetryClick: () -> Unit) : BankSectionUM
-
         data class Content(
             val toPersonalAccount: ActionCardUM,
             val toBusinessAccount: ActionCardUM,
             val recents: RecentsUM,
+            val isAvailable: Boolean,
         ) : BankSectionUM
     }
 
@@ -40,14 +39,14 @@ internal data class TangemPayWithdrawHubUM(
 
         data object Loading : RecentsUM
 
-        data class Empty(val onSeeAllClick: (() -> Unit)?) : RecentsUM
+        data object Empty : RecentsUM
 
         data class Error(val onRetryClick: () -> Unit) : RecentsUM
 
         data class Content(
             val recipients: ImmutableList<RecentRecipientUM>,
             val onRecipientClick: (bankAccountId: String) -> Unit,
-            val onSeeAllClick: () -> Unit,
+            val onSeeAllClick: (() -> Unit)?,
         ) : RecentsUM
     }
 
