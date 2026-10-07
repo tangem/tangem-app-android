@@ -11,14 +11,14 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 /**
- * Unit tests for [CreateAndSendGaslessTransactionUseCase.getDestinationAddress] — resolves the on-chain
+ * Unit tests for [CreateAndSendEvmGaslessTransactionUseCase.getDestinationAddress] — resolves the on-chain
  * `to` of the user's main gasless sub-call.
  *
  * Regression guard: a yield-supply send must target the user's yield MODULE (the contract that
  * runs `send(token, dest, amount)`), not the transfer recipient. Targeting the recipient reverts the whole
  * batch with GAS_ESTIMATION_FAILED / require(false).
  */
-internal class CreateAndSendGaslessDestinationAddressTest {
+internal class CreateAndSendEvmGaslessDestinationAddressTest {
 
     private val module = "0xmodule"
     private val recipient = "0xrecipient"
@@ -52,7 +52,7 @@ internal class CreateAndSendGaslessDestinationAddressTest {
         )
 
         // Act
-        val to = CreateAndSendGaslessTransactionUseCase.getDestinationAddress(txData)
+        val to = CreateAndSendEvmGaslessTransactionUseCase.getDestinationAddress(txData)
 
         // Assert
         assertThat(to).isEqualTo(module)
@@ -73,7 +73,7 @@ internal class CreateAndSendGaslessDestinationAddressTest {
         )
 
         // Act
-        val to = CreateAndSendGaslessTransactionUseCase.getDestinationAddress(txData)
+        val to = CreateAndSendEvmGaslessTransactionUseCase.getDestinationAddress(txData)
 
         // Assert
         assertThat(to).isEqualTo(tokenContract)
@@ -90,7 +90,7 @@ internal class CreateAndSendGaslessDestinationAddressTest {
 
         // Act & Assert
         assertThrows<IllegalStateException> {
-            CreateAndSendGaslessTransactionUseCase.getDestinationAddress(txData)
+            CreateAndSendEvmGaslessTransactionUseCase.getDestinationAddress(txData)
         }
     }
 }
