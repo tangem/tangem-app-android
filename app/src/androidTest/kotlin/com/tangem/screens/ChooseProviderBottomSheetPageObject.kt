@@ -43,7 +43,6 @@ class ChooseProviderBottomSheetPageObject(semanticsProvider: SemanticsNodeIntera
         useUnmergedTree = true
     }
 
-    // Provider rows have no testTag — the clickable row is the card holding both the name and the badge.
     fun unavailableProviderItem(name: String): KNode = child {
         hasClickAction()
         hasAnyDescendant(withText(name))
