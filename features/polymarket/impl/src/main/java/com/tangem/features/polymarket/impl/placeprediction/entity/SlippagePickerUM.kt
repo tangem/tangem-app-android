@@ -28,10 +28,13 @@ internal data class SlippagePickerUM(
 
             return SlippagePickerUM(
                 value = value,
-                error = if (percent != null && !isAccepted) {
-                    resourceReference(R.string.prediction_place_slippage_error)
-                } else {
-                    null
+                error = when {
+                    percent == null || isAccepted -> null
+                    percent < MIN_SLIPPAGE_PERCENT -> resourceReference(
+                        id = R.string.prediction_place_slippage_min_error,
+                        formatArgs = wrappedList(MIN_SLIPPAGE_PERCENT.formatSlippagePercent()),
+                    )
+                    else -> resourceReference(R.string.prediction_place_slippage_error)
                 },
                 isConfirmEnabled = isAccepted,
             )
@@ -40,7 +43,7 @@ internal data class SlippagePickerUM(
 }
 
 internal val DEFAULT_SLIPPAGE_PERCENT: BigDecimal = BigDecimal("3")
-internal val MIN_SLIPPAGE_PERCENT: BigDecimal = BigDecimal("0.1")
+internal val MIN_SLIPPAGE_PERCENT: BigDecimal = DEFAULT_SLIPPAGE_PERCENT
 internal val MAX_SLIPPAGE_PERCENT: BigDecimal = BigDecimal("30")
 
 internal const val SLIPPAGE_DECIMALS = 2
@@ -52,12 +55,11 @@ internal data class SlippagePresetUM(val percent: BigDecimal, val role: Role) {
 }
 
 internal val SLIPPAGE_PRESETS: ImmutableList<SlippagePresetUM> = persistentListOf(
-    SlippagePresetUM(percent = BigDecimal("0.1"), role = SlippagePresetUM.Role.Plain),
-    SlippagePresetUM(percent = BigDecimal("0.25"), role = SlippagePresetUM.Role.Plain),
-    SlippagePresetUM(percent = BigDecimal("0.5"), role = SlippagePresetUM.Role.Plain),
-    SlippagePresetUM(percent = BigDecimal("1"), role = SlippagePresetUM.Role.Plain),
-    SlippagePresetUM(percent = BigDecimal("2"), role = SlippagePresetUM.Role.Plain),
     SlippagePresetUM(percent = DEFAULT_SLIPPAGE_PERCENT, role = SlippagePresetUM.Role.Default),
+    SlippagePresetUM(percent = BigDecimal("5"), role = SlippagePresetUM.Role.Plain),
+    SlippagePresetUM(percent = BigDecimal("10"), role = SlippagePresetUM.Role.Plain),
+    SlippagePresetUM(percent = BigDecimal("15"), role = SlippagePresetUM.Role.Plain),
+    SlippagePresetUM(percent = MAX_SLIPPAGE_PERCENT, role = SlippagePresetUM.Role.Plain),
 )
 
 internal fun SlippagePresetUM.label(): TextReference = when (role) {
