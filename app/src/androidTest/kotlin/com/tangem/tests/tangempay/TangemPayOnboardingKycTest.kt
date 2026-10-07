@@ -10,7 +10,11 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_SHORT
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.scenarios.assertTangemPayWalletSelectorListsWallets
+import com.tangem.scenarios.clickGetCardOnTangemPayOnboarding
 import com.tangem.scenarios.openMainScreenWithExistingHotWallet
+import com.tangem.scenarios.openMainScreenWithHotAndCardWallets
+import com.tangem.scenarios.switchToPreviousWallet
 import com.tangem.screens.onDetailsScreen
 import com.tangem.screens.onMainScreen
 import com.tangem.screens.onMainScreenTopBar
@@ -189,6 +193,76 @@ class TangemPayOnboardingKycTest : BaseTestCase() {
                     title(rejectedSheetTitle).assertIsDisplayed()
                     primaryButtonWithText(goToSupportText).assertIsDisplayed()
                 }
+            }
+        }
+    }
+
+    @AllureId("9637")
+    @DisplayName("Tangem Pay: Get Tangem Pay from app Details lists the wallets without Tangem Pay")
+    @Test
+    fun getTangemPayFromAppDetailsListsWalletsWithoutTangemPayTest() {
+        val eligibilityStartedState = "Started"
+        val channelsBannerAndDetailsState = "BannerAndDetails"
+        val hotWalletName = "Wallet"
+        val cardWalletName = "Wallet 2"
+
+        setupHooks().run {
+            step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityStartedState'") {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityStartedState)
+            }
+            step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO' to '$channelsBannerAndDetailsState'") {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO, channelsBannerAndDetailsState)
+            }
+            step("Open 'Main' screen with a hot wallet and a card wallet") { openMainScreenWithHotAndCardWallets() }
+            step("Click on 'More' button") {
+                onMainScreenTopBar { moreButton.clickWithAssertion() }
+            }
+            step("Assert 'Get Tangem Pay' row is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onDetailsScreen { getTangemPayRow.assertIsDisplayed() }
+                }
+            }
+            step("Click on 'Get Tangem Pay' row") {
+                onDetailsScreen { getTangemPayRow.clickWithAssertion() }
+            }
+            step("Click on 'Get card' button") { clickGetCardOnTangemPayOnboarding() }
+            step("Assert wallet selection sheet lists '$hotWalletName' and '$cardWalletName'") {
+                assertTangemPayWalletSelectorListsWallets(hotWalletName, cardWalletName)
+            }
+        }
+    }
+
+    @AllureId("9638")
+    @DisplayName("Tangem Pay: Get Tangem Pay banner on Main opens the wallet selection")
+    @Test
+    fun getTangemPayBannerOnMainOpensWalletSelectionTest() {
+        val eligibilityStartedState = "Started"
+        val channelsBannerAndDetailsState = "BannerAndDetails"
+        val hotWalletName = "Wallet"
+        val cardWalletName = "Wallet 2"
+
+        setupHooks().run {
+            step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityStartedState'") {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityStartedState)
+            }
+            step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO' to '$channelsBannerAndDetailsState'") {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO, channelsBannerAndDetailsState)
+            }
+            step("Open 'Main' screen with a hot wallet and a card wallet") { openMainScreenWithHotAndCardWallets() }
+            step("Switch to the hot wallet") { switchToPreviousWallet() }
+            step("Click on 'Learn more' button on 'Get Tangem Pay' banner") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onMainScreen { clickDisplayedGetTangemPayBannerLearnMoreButton() }
+                }
+            }
+            step("Assert Tangem Pay onboarding screen is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onTangemPayOnboardingScreen { title.assertIsDisplayed() }
+                }
+            }
+            step("Click on 'Get card' button") { clickGetCardOnTangemPayOnboarding() }
+            step("Assert wallet selection sheet lists '$hotWalletName' and '$cardWalletName'") {
+                assertTangemPayWalletSelectorListsWallets(hotWalletName, cardWalletName)
             }
         }
     }

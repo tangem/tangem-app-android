@@ -10,14 +10,10 @@ import kotlinx.serialization.Serializable
  * `specification_name` this order carries none of. The recipient is described either by [Data.bankAccountId] —
  * one already saved on the backend — or by the whole [Data.bankAccount]; the unused one stays null and is
  * left out of the body.
- *
- * [idempotencyKey] is sent here as well as in the `Idempotency-Key` header: the backend reads the body key on
- * this endpoint today, the header is what its contract asks for.
  */
 @Serializable
 data class BankOfframpPlaceOrderRequest(
     @SerialName("data") val data: Data,
-    @SerialName("idempotency_key") val idempotencyKey: String,
 ) {
 
     @Serializable

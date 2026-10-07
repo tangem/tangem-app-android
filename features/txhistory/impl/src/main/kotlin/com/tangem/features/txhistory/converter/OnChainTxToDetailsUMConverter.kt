@@ -2,8 +2,6 @@ package com.tangem.features.txhistory.converter
 
 import androidx.annotation.StringRes
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
-import com.tangem.common.ui.account.getResId
-import com.tangem.common.ui.account.getUiColor
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
@@ -34,13 +32,11 @@ import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.model.ResolvedOwner
 import com.tangem.features.txhistory.model.TxHistoryLookupContext
-import com.tangem.features.txhistory.model.isPlainTransfer
 import com.tangem.features.txhistory.model.mayCarryStakingTarget
 import com.tangem.features.txhistory.model.reclassifyOwnOperationAsTransfer
 import com.tangem.features.txhistory.model.resolveCounterparty
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.extensions.isZero
-import com.tangem.utils.toBriefAddressFormat
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
@@ -129,19 +125,19 @@ internal class OnChainTxToDetailsUMConverter(
      */
     private fun TxInfo.validatorRow(): TxHistoryDetailsUM.InfoRowUM? {
         if (!mayCarryStakingTarget()) return null
-        val value = validatorAddressCandidates().firstNotNullOfOrNull(::resolveTarget)?.name
-            ?: declaredValidatorAddress()?.toBriefAddressFormat()
-            ?: return null
+        val name = validatorAddressCandidates().firstNotNullOfOrNull(::resolveTarget)?.name
+        val value = name ?: declaredValidatorAddress() ?: return null
         return TxHistoryDetailsUM.InfoRowUM(
             label = resourceReference(R.string.staking_validator),
             value = stringReference(value),
+            isValueAddress = name == null,
         )
     }
 
     /**
-     * Address the transaction itself declares to be the validator, shown shortened when [targetsByAddress] has no name
-     * for it — a validator the staking API has since dropped from the yield must still name the target of an old
-     * transaction instead of making the row disappear.
+     * Address the transaction itself declares to be the validator, shown in place of a name when [targetsByAddress]
+     * has none for it — a validator the staking API has since dropped from the yield must still name the target of an
+     * old transaction instead of making the row disappear.
      *
      * Only addresses the SDK types as a validator qualify, unlike the broader [validatorAddressCandidates]: a
      * `Contract` / `User` / plain destination address is a target only if the lookup confirms it, so falling back to
@@ -208,23 +204,17 @@ internal class OnChainTxToDetailsUMConverter(
     }
 
     /**
-     * The counterparty resolved against the user's portfolios on the viewed currency's network, so the title and the
-     * counterparty card never disagree with the list. [interactionAddressType] already carries the correct counterparty
-     * for every type — including an incoming [TxInfo.TransactionType.Transfer], whose interaction address the mapper
-     * takes from the sender. The one exception is an **incoming** unrecognized call ([TxInfo.TransactionType.Operation]
-     * / [TxInfo.TransactionType.UnknownOperation]): there [interactionAddressType] is the destination — the viewed
-     * wallet itself — so the real sender ([TxInfo.sourceType]) is resolved instead. `null` when there is no single
-     * plain counterparty address.
+     * The counterparty resolved against the user's portfolios and address books on the viewed currency's network, so
+     * the title and the counterparty card never disagree with the list. [interactionAddressType] already carries the
+     * correct counterparty for every type — including an incoming [TxInfo.TransactionType.Transfer], whose interaction
+     * address the mapper takes from the sender. The one exception is an **incoming** unrecognized call
+     * ([TxInfo.TransactionType.Operation] / [TxInfo.TransactionType.UnknownOperation]): there [interactionAddressType]
+     * is the destination — the viewed wallet itself — so the real sender ([TxInfo.sourceType]) is resolved instead.
+     * `null` when there is no single plain counterparty address.
      */
     private fun TxInfo.resolvedCounterparty(): ResolvedOwner? {
         val address = counterpartyAddress() ?: return null
-        return lookup.resolveCounterparty(
-            address = address,
-            networkRawId = currency.network.id.rawId,
-            // Only a plain transfer's recipient is matched against the address book, so the card agrees with the
-            // history list: an unrecognized contract call talks to a contract, not to a recipient.
-            isOutgoing = isOutgoing && isPlainTransfer(),
-        )
+        return lookup.resolveCounterparty(address = address, networkRawId = currency.network.id.rawId)
     }
 
     /** The raw counterparty address [resolvedCounterparty] resolves, before the [lookup] turns it into an owner. */
@@ -258,7 +248,7 @@ internal class OnChainTxToDetailsUMConverter(
 
         return TxHistoryDetailsUM.CounterpartyUM(
             label = resourceReference(R.string.common_send),
-            title = stringReference(amount ?: symbol),
+            title = TxHistoryDetailsUM.CounterpartyTitle.Name(stringReference(amount ?: symbol)),
             avatar = TxHistoryDetailsUM.CounterpartyAvatar.Glyph(icon = TxIcon.Vector(Icons.ic_arrow_up_20)),
             titleIcon = feeForToken(networkTokens)?.let(iconStateConverter::convert),
         )
@@ -359,28 +349,28 @@ internal class OnChainTxToDetailsUMConverter(
         return when (val owner = resolvedCounterparty()) {
             is ResolvedOwner.OwnAccount -> TxHistoryDetailsUM.CounterpartyUM(
                 label = counterpartyLabel(incoming = R.string.common_from_account),
-                title = owner.account.accountName.toUM().value,
+                title = TxHistoryDetailsUM.CounterpartyTitle.Name(owner.account.accountName.toUM().value),
                 avatar = TxHistoryDetailsUM.CounterpartyAvatar.Account(
-                    iconResId = owner.account.icon.value.getResId(),
-                    backgroundColor = owner.account.icon.color.getUiColor(),
+                    name = owner.account.accountName.toUM().value,
+                    icon = CryptoPortfolioIconConverter.convert(owner.account.icon),
                 ),
                 onCopyClick = copyAddress,
             )
             is ResolvedOwner.OwnPaymentAccount -> TxHistoryDetailsUM.CounterpartyUM(
                 label = counterpartyLabel(incoming = R.string.common_from_account),
-                title = owner.account.accountName.toUM().value,
+                title = TxHistoryDetailsUM.CounterpartyTitle.Name(owner.account.accountName.toUM().value),
                 avatar = TxHistoryDetailsUM.CounterpartyAvatar.PaymentAccount,
                 onCopyClick = copyAddress,
             )
             is ResolvedOwner.OwnWallet -> TxHistoryDetailsUM.CounterpartyUM(
                 label = counterpartyLabel(incoming = R.string.common_from_wallet),
-                title = stringReference(owner.walletInfo.name),
+                title = TxHistoryDetailsUM.CounterpartyTitle.Name(stringReference(owner.walletInfo.name)),
                 avatar = TxHistoryDetailsUM.CounterpartyAvatar.Wallet(deviceIconUM = owner.walletInfo.deviceIconUM),
                 onCopyClick = copyAddress,
             )
             is ResolvedOwner.SavedContact -> TxHistoryDetailsUM.CounterpartyUM(
                 label = counterpartyLabel(incoming = R.string.common_from_address),
-                title = stringReference(owner.contact.name.value),
+                title = TxHistoryDetailsUM.CounterpartyTitle.Name(stringReference(owner.contact.name.value)),
                 avatar = TxHistoryDetailsUM.CounterpartyAvatar.Contact(
                     name = owner.contact.name.value,
                     icon = CryptoPortfolioIconConverter.convert(owner.contact.portfolioIcon()),
@@ -389,7 +379,7 @@ internal class OnChainTxToDetailsUMConverter(
             )
             is ResolvedOwner.External -> TxHistoryDetailsUM.CounterpartyUM(
                 label = counterpartyLabel(incoming = R.string.common_from_address),
-                title = stringReference(owner.address),
+                title = TxHistoryDetailsUM.CounterpartyTitle.Address(owner.address),
                 avatar = TxHistoryDetailsUM.CounterpartyAvatar.Address(rawAddress = owner.address),
                 onCopyClick = copyAddress,
             )
@@ -398,12 +388,14 @@ internal class OnChainTxToDetailsUMConverter(
     }
 
     /**
-     * Whether the transaction has a counterparty worth a card. Contract interactions (yield-supply / staking / approve)
-     * talk to a protocol/validator, not a real recipient. A NON-withdraw Send is exempt: it is a plain transfer and
-     * keeps its recipient card. A withdraw Send stays a yield operation, so it gets none (no "from: Aave" in details).
+     * Whether the transaction has a counterparty worth a card. A fee-only transaction has none — what it paid the fee
+     * for is named by [toTransferredAssetUM] instead, and where the fee itself went is not a recipient the user chose.
+     * Contract interactions (yield-supply / staking / approve) talk to a protocol/validator, not a real recipient. A
+     * NON-withdraw Send is exempt: it is a plain transfer and keeps its recipient card. A withdraw Send stays a yield
+     * operation, so it gets none (no "from: Aave" in details).
      */
     private fun TxInfo.hasCounterpartyCard(): Boolean {
-        if (isFeeOnlyOperation(currency)) return false
+        if (isFeeOnly(currency)) return false
         val isPlainSend = (type as? TransactionType.YieldSupply.Send)?.isYieldSupplyWithdraw == false
         val isProtocolType = type is TransactionType.YieldSupply ||
             type is TransactionType.Staking ||

@@ -17,6 +17,9 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.dialog.Dialogs.hotWalletCreationNotSupportedDialog
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_20
+import com.tangem.core.ui.res.generated.icons.ic_wallet_plus_20
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.cloudbackup.usecase.ResolveCloudRestoreBackupsUseCase
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
@@ -47,7 +50,6 @@ import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 import com.tangem.core.res.R as CoreResR
-import com.tangem.core.ui.R as CoreUiR
 import kotlinx.coroutines.withContext
 
 // TODO [REDACTED_TASK_KEY]: already at the LargeClass limit before social login. The fix is a
@@ -80,7 +82,7 @@ internal class IntroductionModel @Inject constructor(
     private var isScreenResumed = false
     private var isVideoRestartPendingResume = false
     private var isCreatingMobileWallet = false
-
+    private var isScanningCard = false
     private var isSigningInSocially = false
     private var hasRenderedFrame = false
 
@@ -109,6 +111,13 @@ internal class IntroductionModel @Inject constructor(
         generateBuyTangemCardLinkUseCase = generateBuyTangemCardLinkUseCase,
     )
 
+    private val store = IntroductionStore(
+        scope = modelScope,
+        analyticsEventHandler = analyticsEventHandler,
+        urlOpener = urlOpener,
+        generateBuyTangemCardLinkUseCase = generateBuyTangemCardLinkUseCase,
+    )
+
     val storiesNavigation: SlotNavigation<Unit> get() = stories.navigation
 
     private val createWalletSheetCollapsed = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
@@ -128,6 +137,7 @@ internal class IntroductionModel @Inject constructor(
                 socialLoginConsent = null,
                 onCreateWalletClick = ::onCreateWalletClick,
                 onIHaveWalletClick = ::onIHaveWalletClick,
+                onBuyTangemClick = ::onBuyTangemClick,
                 onCreateWalletSheetCollapsed = ::onCreateWalletSheetCollapsed,
                 onTermsOfServiceClick = legalLinks::openTermsOfService,
                 onPrivacyPolicyClick = legalLinks::openPrivacyPolicy,
@@ -206,7 +216,10 @@ internal class IntroductionModel @Inject constructor(
 
     fun setVideoRunning(isRunning: Boolean) {
         isScreenResumed = isRunning
-        if (isRunning) stories.onScreenResumed()
+        if (isRunning) {
+            stories.onScreenResumed()
+            store.onScreenResumed()
+        }
         if (isRunning && isVideoRestartPendingResume) {
             isVideoRestartPendingResume = false
             videoPlayer.restart()
@@ -244,7 +257,7 @@ internal class IntroductionModel @Inject constructor(
         onDismissRequest = ::onCreateWalletSheetDismissRequested,
         content = CreateWalletUM(
             cardOrRing = WalletOptionUM(
-                iconRes = CoreUiR.drawable.ic_tangem_24,
+                icon = WalletOptionUM.Icon.Tinted(Icons.ic_logo_tangem_20),
                 title = resourceReference(CoreResR.string.introduction_create_wallet_hardware_title),
                 description = resourceReference(CoreResR.string.introduction_create_wallet_hardware_description),
                 isEnabled = !isCreatingMobileWallet && !isSigningInSocially,
@@ -259,7 +272,7 @@ internal class IntroductionModel @Inject constructor(
                 }
             },
             seedPhrase = WalletOptionUM(
-                iconRes = CoreUiR.drawable.ic_wallet_plus_20,
+                icon = WalletOptionUM.Icon.Tinted(Icons.ic_wallet_plus_20),
                 title = resourceReference(CoreResR.string.introduction_create_wallet_seed_phrase_title),
                 description = resourceReference(CoreResR.string.introduction_create_wallet_seed_phrase_description),
                 isEnabled = !isSigningInSocially,
@@ -378,11 +391,16 @@ internal class IntroductionModel @Inject constructor(
 
     private fun launchCardScan(onNavigatedAway: () -> Unit, onFailed: () -> Unit) {
         modelScope.launch {
-            cardScanner.scanAndOpenWallet(
-                analyticsSource = AnalyticsParam.ScreensSources.Intro,
-                onNavigatedAway = onNavigatedAway,
-                onFailed = onFailed,
-            )
+            isScanningCard = true
+            try {
+                cardScanner.scanAndOpenWallet(
+                    analyticsSource = AnalyticsParam.ScreensSources.Intro,
+                    onNavigatedAway = onNavigatedAway,
+                    onFailed = onFailed,
+                )
+            } finally {
+                isScanningCard = false
+            }
         }
     }
 
@@ -432,9 +450,16 @@ internal class IntroductionModel @Inject constructor(
         haveWalletSheet.open()
     }
 
-    private fun isAnySheetShown(): Boolean = isCreateWalletSheetShown() || isHaveWalletSheetShown()
+    private fun onBuyTangemClick() {
+        if (isAnySheetShown() || isWalletFlowRunning() || isStoryOnScreen()) return
+        store.open()
+    }
 
-    private fun isWalletFlowRunning(): Boolean = isCreatingMobileWallet || isSigningInSocially
+    private fun isWalletFlowRunning(): Boolean = isCreatingMobileWallet || isScanningCard || isSigningInSocially
+
+    private fun isStoryOnScreen(): Boolean = stories.isOpening || stories.isShown
+
+    private fun isAnySheetShown(): Boolean = isCreateWalletSheetShown() || isHaveWalletSheetShown()
 
     /**
      * A dismissed sheet keeps its dialog composed and interactive until the collapse ends, so a tap landing on a

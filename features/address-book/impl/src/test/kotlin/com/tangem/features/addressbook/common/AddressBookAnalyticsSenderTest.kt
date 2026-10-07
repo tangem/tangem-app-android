@@ -59,10 +59,10 @@ internal class AddressBookAnalyticsSenderTest {
     @MethodSource("provideContactSavedModels")
     fun sendContactSaved(model: ContactSavedModel) {
         // Act
-        sender.sendContactSaved(contactId = CONTACT_ID, isEdit = model.isEdit)
+        sender.sendContactSaved(contactId = CONTACT_ID, isEdit = model.isEdit, source = model.source)
 
         // Assert
-        val expected = ContactSaved(contactId = CONTACT_ID, mode = model.expectedMode)
+        val expected = ContactSaved(contactId = CONTACT_ID, mode = model.expectedMode, source = model.source)
         verify(exactly = 1) { analyticsEventHandler.send(expected) }
     }
 
@@ -180,7 +180,11 @@ internal class AddressBookAnalyticsSenderTest {
 
     internal data class ScreenOpenedModel(val source: Source, val contactsCount: Int)
 
-    internal data class ContactSavedModel(val isEdit: Boolean, val expectedMode: ContactSaved.Mode)
+    internal data class ContactSavedModel(
+        val isEdit: Boolean,
+        val expectedMode: ContactSaved.Mode,
+        val source: AddContactTapped.Source? = null,
+    )
 
     internal data class SaveErrorModel(val error: SaveContactError, val expectedType: ErrorType?)
 
@@ -192,6 +196,11 @@ internal class AddressBookAnalyticsSenderTest {
     private fun provideContactSavedModels() = listOf(
         ContactSavedModel(isEdit = false, expectedMode = ContactSaved.Mode.Create),
         ContactSavedModel(isEdit = true, expectedMode = ContactSaved.Mode.Edit),
+        ContactSavedModel(
+            isEdit = false,
+            expectedMode = ContactSaved.Mode.Create,
+            source = AddContactTapped.Source.TransactionDetails,
+        ),
     )
 
     private fun provideSaveErrorModels() = listOf(
