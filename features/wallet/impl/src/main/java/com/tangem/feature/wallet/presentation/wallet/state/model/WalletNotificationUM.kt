@@ -520,6 +520,36 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
         type = WalletNotificationType.Promo,
     )
 
+    data class UpgradeHotWalletPromo(
+        private val onLaterClick: () -> Unit,
+        private val onUpgradeClick: () -> Unit,
+    ) : WalletNotificationUM(
+        messageUM = TangemMessageUM(
+            id = "UpgradeHotWalletPromo",
+            variant = TangemMessageBanner.Variant.Default,
+            shouldShowGlowRing = true,
+            iconUM = TangemIconUM.Image(imageRes = R.drawable.img_tangem_wallet_72),
+            iconSize = 64.dp,
+            iconPosition = TangemMessageIconPosition.Trailing,
+            title = resourceReference(id = R.string.hw_upgrade_to_cold_banner_title),
+            subtitle = resourceReference(id = R.string.hw_upgrade_to_cold_banner_description),
+            buttonsUM = persistentListOf(
+                TangemMessageButtonUM(
+                    text = resourceReference(id = R.string.common_later),
+                    onClick = onLaterClick,
+                    type = TangemButtonType.Secondary,
+                ),
+                TangemMessageButtonUM(
+                    text = resourceReference(id = R.string.hw_upgrade),
+                    onClick = onUpgradeClick,
+                    type = TangemButtonType.Primary,
+                ),
+            ),
+            messageEffect = TangemMessageEffect.None,
+        ),
+        type = WalletNotificationType.Promo,
+    )
+
     data class YieldBoostPromo(
         val onExploreClick: () -> Unit,
         val onLaterClick: () -> Unit,

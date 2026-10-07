@@ -20,6 +20,7 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
+import com.tangem.domain.polymarket.flow.PredictionPositionsUpdateEmitter
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.interactor.PredictionSignRequest
 import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
@@ -84,6 +85,7 @@ internal class PlacePredictionSummaryModel @Inject constructor(
     private val awaitDelayedPredictionOrderUseCase: AwaitDelayedPredictionOrderUseCase,
     private val positionsRepository: PolymarketPositionsRepository,
     private val predictionFundingWindow: PredictionFundingWindow,
+    private val positionsUpdateEmitter: PredictionPositionsUpdateEmitter,
 ) : Model(), PlacePredictionSummaryIntents {
 
     private val order = paramsContainer.require<PreparedPrediction>()
@@ -284,12 +286,16 @@ internal class PlacePredictionSummaryModel @Inject constructor(
     private fun onPlaceError(error: PredictionPlaceOrderError) {
         when (error) {
             is PredictionPlaceOrderError.Ambiguous -> {
-                logger.e("Order outcome unknown, reporting it as submitted: $error")
-                showResult(result = PlaceResultUM.Submitted(placedAt = System.currentTimeMillis()))
+                refreshBalanceAndPositions()
+                showPlaceFailure(reason = "Order outcome unknown: $error")
             }
             is PredictionPlaceOrderError.NoLiquidity -> {
                 logger.e("The exchange found no match for the order: $error")
                 showResult(result = PlaceResultUM.NotFilled(placedAt = System.currentTimeMillis()))
+            }
+            is PredictionPlaceOrderError.Unauthorized -> {
+                logger.e("The exchange refused the credentials, leaving the gate to reconnect: $error")
+                returnToIdle()
             }
             else -> showPlaceFailure(reason = "Order refused: $error")
         }
@@ -357,7 +363,9 @@ internal class PlacePredictionSummaryModel @Inject constructor(
     }
 
     private fun showResult(result: PlaceResultUM) {
-        if (result.movesBalance()) predictionFundingWindow.open(userWalletId = params.userWalletId)
+        if (result.movesBalance()) {
+            refreshBalanceAndPositions()
+        }
 
         uiState.update(SetSubmitTransformer(submit = SubmitUM.Result(result = result)))
         router.replaceAll(
@@ -371,6 +379,11 @@ internal class PlacePredictionSummaryModel @Inject constructor(
         )
     }
 
+    private fun refreshBalanceAndPositions() {
+        predictionFundingWindow.open(userWalletId = params.userWalletId)
+        positionsUpdateEmitter.triggerUpdate(userWalletId = params.userWalletId)
+    }
+
     private fun PlaceResultUM.movesBalance(): Boolean = when (this) {
         is PlaceResultUM.Filled,
         is PlaceResultUM.PartiallyFilled,
@@ -380,8 +393,7 @@ internal class PlacePredictionSummaryModel @Inject constructor(
     }
 
     /**
-     * A submission that never reached the book: the same order can still be placed, so this is a dialog over
-     * the summary rather than a result screen, and it returns the flow to [SubmitUM.Idle].
+     * Shows the order error dialog with support over the summary and returns the flow to [SubmitUM.Idle].
      */
     fun showPlaceFailure(reason: String) {
         logger.e(reason)

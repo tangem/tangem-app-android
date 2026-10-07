@@ -1,11 +1,11 @@
 package com.tangem.features.collectibles.impl.machinedetails.model.transformer
 
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.core.ui.format.bigdecimal.simple
-import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.collectibles.models.CollectibleGachaMachine
 import com.tangem.features.collectibles.impl.machinedetails.model.converter.CollectiblesMachineDetailRowsConverter
 import com.tangem.features.collectibles.impl.machinedetails.model.converter.CollectiblesMachineTiersConverter
@@ -33,17 +33,10 @@ internal class CollectiblesUpdateMachineDetailsTransformer(
                 isTurboEnabled = previousContent?.footer?.isTurboEnabled == true,
                 onTurboCheckedChange = onTurboCheckedChange,
                 onTurboInfoClick = onTurboInfoClick,
-                expectedValue = stringReference(
-                    machine.expectedValue.format {
-                        fiat(
-                            fiatCurrencyCode = AppCurrency.Default.code,
-                            fiatCurrencySymbol = AppCurrency.Default.symbol,
-                        ).optionalDecimals()
-                    },
-                ),
-                buyButtonText = stringReference(
-                    // TODO replace with actual text when settled
-                    "Open for ${machine.price.format { simple(decimals = 2) }} USDC",
+                expectedValue = machine.formatExpectedValue(),
+                buyButtonText = resourceReference(
+                    id = R.string.collectibles_machine_open_button,
+                    formatArgs = wrappedList("${machine.price.format { simple(decimals = 2) }} USDC"),
                 ),
                 onBuyClick = onBuyClick,
             ),

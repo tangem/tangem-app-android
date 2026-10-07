@@ -60,6 +60,7 @@ import com.tangem.google.auth.GoogleAuthActivityResultBridge
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.sdk.api.TangemSdkManager
+import com.tangem.spend.pushProvisioning.PushProvisioningActivityBridge
 import com.tangem.tap.common.ActivityResultCallbackHolder
 import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.analytics.events.Push
@@ -171,6 +172,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     internal lateinit var googleAuthActivityResultBridge: Lazy<GoogleAuthActivityResultBridge>
+
+    @Inject
+    internal lateinit var pushProvisioningActivityBridge: PushProvisioningActivityBridge
 
     @Inject
     internal lateinit var hotWalletFeatureToggles: HotWalletFeatureToggles
@@ -304,6 +308,8 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             appRouter = appRouter,
         )
 
+        pushProvisioningActivityBridge.attach(activity = this)
+
         if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
             // registerForActivityResult unregisters itself on destroy; the bridge is the only holder
             val bridge = googleAuthActivityResultBridge.get()
@@ -380,6 +386,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
             googleAuthActivityResultBridge.get().unregisterLauncher()
         }
+        pushProvisioningActivityBridge.detach(activity = this)
         // workaround: kill process when activity destroy to avoid state when lock() wallets
         // and navigation to unlock screen was skipped because system kills activity but not process
         if (BuildConfig.BUILD_TYPE != MOCKED_BUILD_TYPE) {
@@ -428,7 +435,8 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        onActivityResultCallbacks.forEach { it(requestCode, resultCode, data) }
+        pushProvisioningActivityBridge.onActivityResult(requestCode = requestCode, resultCode = resultCode, data = data)
+        onActivityResultCallbacks.toList().forEach { it(requestCode, resultCode, data) }
     }
 
     override fun addOnActivityResultCallback(callback: OnActivityResultCallback) {

@@ -3,12 +3,14 @@ package com.tangem.domain.pay.repository
 import arrow.core.Either
 import com.tangem.core.error.UniversalError
 import com.tangem.domain.models.account.BankCredentials
-import com.tangem.domain.models.account.TangemPayOnrampFee
 import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.AccountFee
+import com.tangem.domain.pay.model.AccountFeeGroupType
 import com.tangem.domain.pay.model.CustomerInfo
-import com.tangem.domain.pay.model.OrderType
+import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.visa.model.TangemPayInitialCredentials
 import kotlinx.coroutines.flow.Flow
 
 @Suppress("TooManyFunctions")
@@ -20,6 +22,8 @@ interface OnboardingRepository {
 
     suspend fun produceInitialData(userWalletId: UserWalletId)
 
+    suspend fun storeInitialCredentials(userWalletId: UserWalletId, initialCredentials: TangemPayInitialCredentials)
+
     suspend fun getCustomerInfo(userWalletId: UserWalletId): Either<VisaApiError, CustomerInfo>
 
     /** Fiat bank requisites for the wallet's Virtual Account on-ramp instance (VA MVP0, TWI-1638). */
@@ -28,13 +32,14 @@ interface OnboardingRepository {
         productInstanceId: String,
     ): Either<VisaApiError, BankCredentials>
 
-    suspend fun getOnrampFees(userWalletId: UserWalletId): Either<VisaApiError, List<TangemPayOnrampFee>>
+    suspend fun getFees(
+        userWalletId: UserWalletId,
+        types: Set<AccountFeeGroupType>,
+    ): Either<VisaApiError, List<AccountFee>>
 
     suspend fun createOrder(
         userWalletId: UserWalletId,
-        deeplinkValue: String? = null,
-        specificationName: String = DEFAULT_ISSUE_SPECIFICATION_NAME,
-        type: OrderType = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
+        request: CustomerOrderRequest.CardIssue,
     ): Either<VisaApiError, String>
 
     suspend fun clearOrderId(userWalletId: UserWalletId)
@@ -76,8 +81,4 @@ interface OnboardingRepository {
     suspend fun disableTangemPay(userWalletId: UserWalletId): Either<VisaApiError, Unit>
 
     suspend fun isTangemPayDeactivated(userWalletId: UserWalletId): Boolean
-
-    companion object {
-        const val DEFAULT_ISSUE_SPECIFICATION_NAME = "SP_000004"
-    }
 }

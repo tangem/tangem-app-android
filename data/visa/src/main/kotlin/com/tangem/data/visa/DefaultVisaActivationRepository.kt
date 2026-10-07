@@ -4,7 +4,6 @@ import com.tangem.spend.datasource.config.TangemPay
 
 import arrow.core.Either
 import arrow.core.getOrElse
-import com.squareup.moshi.Moshi
 import com.tangem.data.visa.config.VisaLibLoader
 import com.tangem.data.visa.converter.VisaActivationStatusConverterWithState
 import com.tangem.core.remote.config.ApiEnvironment
@@ -15,22 +14,24 @@ import com.tangem.spend.datasource.pay.models.request.SetPinCodeRequest
 import com.tangem.spend.datasource.pay.models.response.TangemPayErrorResponse
 import com.tangem.spend.datasource.visa.VisaApi
 import com.tangem.spend.datasource.visa.models.request.*
-import com.tangem.core.remote.moshi.NetworkMoshi
+import com.tangem.core.remote.json.NetworkJson
 import com.tangem.spend.datasource.visa.storage.VisaAuthTokenStorage
 import com.tangem.domain.visa.datasource.VisaAuthRemoteDataSource
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.*
 import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 
 @Suppress("LongParameterList")
 internal class DefaultVisaActivationRepository @AssistedInject constructor(
     @Assisted private val visaCardId: VisaCardId,
-    @NetworkMoshi private val moshi: Moshi,
+    @NetworkJson private val json: Json,
     private val visaApi: VisaApi,
     private val dispatcherProvider: CoroutineDispatcherProvider,
     private val visaAuthTokenStorage: VisaAuthTokenStorage,
@@ -39,23 +40,20 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
     private val apiConfigsManager: ApiConfigsManager,
 ) : VisaActivationRepository {
 
-    private val errorAdapter by lazy { moshi.adapter(TangemPayErrorResponse::class.java) }
-
     override suspend fun getActivationRemoteState(): Either<VisaApiError, VisaActivationRemoteState> =
         withContext(dispatcherProvider.io) {
             request {
                 val authTokens =
                     checkNotNull(visaAuthTokenStorage.get(visaCardId.cardId)) { "Visa auth tokens are not stored" }
 
-                visaApi.getRemoteActivationStatus(
+                val response = visaApi.getRemoteActivationStatus(
                     authHeader = authTokens.getAuthHeader(),
                     request = ActivationStatusRequest(
                         cardId = visaCardId.cardId,
                         cardPublicKey = visaCardId.cardPublicKey,
                     ),
                 ).getOrThrow()
-            }.map {
-                VisaActivationStatusConverterWithState.convert(it)
+                VisaActivationStatusConverterWithState.convert(response)
             }
         }
 
@@ -170,14 +168,22 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
         val rsaPublicKey = visaLibLoader.getOrCreateConfig().rsaPublicKey
         return when (env) {
             ApiEnvironment.DEV,
+            ApiEnvironment.DEV_NEW,
             ApiEnvironment.DEV_2,
+            ApiEnvironment.DEV_2_NEW,
             ApiEnvironment.DEV_3,
+            ApiEnvironment.DEV_3_NEW,
             ApiEnvironment.STAGE,
+            ApiEnvironment.DEV_4_NEW,
             ApiEnvironment.STAGE_2,
+            ApiEnvironment.DEV_5_NEW,
             ApiEnvironment.STAGE_3,
+            ApiEnvironment.DEV_6_NEW,
             ApiEnvironment.MOCK,
             -> rsaPublicKey.dev
-            ApiEnvironment.PROD -> rsaPublicKey.prod
+            ApiEnvironment.PROD,
+            ApiEnvironment.PROD_NEW,
+            -> rsaPublicKey.prod
         }
     }
 
@@ -189,12 +195,13 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
                 responseError.code != ApiResponseError.HttpException.Code.UNAUTHORIZED &&
                 responseError.errorBody != null
             ) {
-                val errorCode =
-                    errorAdapter.fromJson(responseError.errorBody!!)?.error?.code ?: responseError.code.numericCode
+                val errorCode = TangemPayErrorResponse.decodeOrNull(json, responseError.errorBody)?.error?.code
+                    ?: responseError.code.numericCode
                 return Either.Left(VisaApiError.fromBackendError(errorCode))
             }
 
             if (responseError !is ApiResponseError.HttpException) {
+                TangemLogger.e("Visa activation request failed", responseError)
                 return Either.Left(VisaApiError.UnknownWithoutCode)
             }
 
@@ -209,9 +216,8 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
                 Either.Right(requestBlock())
             }.getOrElse { responseError ->
                 if (responseError is ApiResponseError.HttpException && responseError.errorBody != null) {
-                    val errorCode =
-                        errorAdapter.fromJson(responseError.errorBody!!)?.error?.code
-                            ?: responseError.code.numericCode
+                    val errorCode = TangemPayErrorResponse.decodeOrNull(json, responseError.errorBody)?.error?.code
+                        ?: responseError.code.numericCode
                     Either.Left(VisaApiError.fromBackendError(errorCode))
                 } else {
                     Either.Left(VisaApiError.UnknownWithoutCode)

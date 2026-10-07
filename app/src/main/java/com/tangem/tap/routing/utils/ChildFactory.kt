@@ -76,6 +76,7 @@ internal class ChildFactory @Inject constructor(
     private val walletSettingsComponentFactory: WalletSettingsComponent.Factory,
     private val walletBackupComponentFactory: WalletBackupComponent.Factory,
     private val walletHardwareBackupComponentFactory: WalletHardwareBackupComponent.Factory,
+    private val hardwareUpgradeStoriesComponentFactory: HardwareUpgradeStoriesComponent.Factory,
     private val disclaimerComponentFactory: DisclaimerComponent.Factory,
     private val manageTokensComponentFactory: ManageTokensComponent.Factory,
     private val onrampComponentFactory: OnrampComponent.Factory,
@@ -219,6 +220,16 @@ internal class ChildFactory @Inject constructor(
                         userWalletId = route.userWalletId,
                     ),
                     componentFactory = walletHardwareBackupComponentFactory,
+                )
+            }
+            is AppRoute.HardwareUpgradeStories -> {
+                createComponentChild(
+                    context = context,
+                    params = HardwareUpgradeStoriesComponent.Params(
+                        userWalletId = route.userWalletId,
+                        source = route.source,
+                    ),
+                    componentFactory = hardwareUpgradeStoriesComponentFactory,
                 )
             }
             is AppRoute.MarketsTokenDetails -> {
@@ -536,6 +547,7 @@ internal class ChildFactory @Inject constructor(
                         walletMetaInfo = route.walletMetaInfo,
                         source = route.source,
                         prefilledMessage = route.prefilledMessage,
+                        clientEmail = route.clientEmail,
                     ),
                     componentFactory = usedeskComponentFactory,
                 )
@@ -667,6 +679,7 @@ internal class ChildFactory @Inject constructor(
                     params = ForgetWalletComponent.Params(
                         userWalletId = route.userWalletId,
                         shouldDeleteCloudBackup = route.shouldDeleteCloudBackup,
+                        shouldDeleteSocialRecovery = route.shouldDeleteSocialRecovery,
                     ),
                     componentFactory = forgetWalletComponentFactory,
                 )
@@ -694,7 +707,10 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.JointAccountCreation -> {
                 createComponentChild(
                     context = context,
-                    params = JointAccountCreationComponent.Params(userWalletId = route.userWalletId),
+                    params = JointAccountCreationComponent.Params(
+                        userWalletId = route.userWalletId,
+                        source = route.source,
+                    ),
                     componentFactory = jointAccountCreationComponentFactory,
                 )
             }
@@ -791,14 +807,11 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = when (val mode = route.mode) {
                         is AppRoute.MoneyAccountOnboarding.Mode.Deeplink ->
-                            MoneyAccountOnboardingComponent.Params.Deeplink(
-                                userWalletId = mode.userWalletId,
-                                deeplink = mode.deeplink,
-                            )
-                        is AppRoute.MoneyAccountOnboarding.Mode.FromMain ->
-                            MoneyAccountOnboardingComponent.Params.FromMain(userWalletId = mode.userWalletId)
-                        is AppRoute.MoneyAccountOnboarding.Mode.FromDetailsScreen ->
-                            MoneyAccountOnboardingComponent.Params.FromDetailsScreen(userWalletId = mode.userWalletId)
+                            MoneyAccountOnboardingComponent.Params.Deeplink(deeplink = mode.deeplink)
+                        AppRoute.MoneyAccountOnboarding.Mode.FromMain ->
+                            MoneyAccountOnboardingComponent.Params.FromMain
+                        AppRoute.MoneyAccountOnboarding.Mode.FromDetailsScreen ->
+                            MoneyAccountOnboardingComponent.Params.FromDetailsScreen
                     },
                     componentFactory = moneyAccountOnboardingComponentFactory,
                 )

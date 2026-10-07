@@ -15,11 +15,9 @@ internal data class PolymarketMainUM(
     val categories: ImmutableList<PolymarketCategoryTabUM>,
     val content: ContentUM,
     val pullToRefreshConfig: PullToRefreshConfig,
+    val isCategoriesLoading: Boolean = false,
     val pendingScrollPosition: PolymarketFeedScrollPosition? = null,
-    val positions: PolymarketPositionsPreviewUM = PolymarketPositionsPreviewUM.Loading,
     val isAwaitingFunds: Boolean = false,
-    val onActivePositionsClick: (() -> Unit)? = null,
-    val onFinishedPositionsClick: (() -> Unit)? = null,
 ) {
 
     @Immutable
@@ -70,12 +68,15 @@ internal data class PolymarketEventUM(
     val onClick: () -> Unit,
 )
 
-/** @property title the market's group item title for grouped events, a generic caption for plain ones */
+/**
+ * @property title market label, omitted when the event title already identifies a market shown with prices
+ * @property probability `null` shows full-width outcome buttons with prices instead of a probability column
+ */
 @Immutable
 internal data class PolymarketEventRowUM(
     val marketId: String,
-    val title: TextReference,
-    val probability: TextReference,
+    val title: TextReference?,
+    val probability: TextReference?,
     val outcomes: ImmutableList<PolymarketOutcomeUM>,
 )
 
@@ -85,4 +86,5 @@ internal data class PolymarketOutcomeUM(
     val assetId: String,
     val title: TextReference,
     val onClick: () -> Unit,
+    val price: TextReference? = null,
 )

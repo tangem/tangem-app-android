@@ -1,8 +1,10 @@
 package com.tangem.features.jointaccount.creation.promo.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resourceReference
@@ -13,6 +15,8 @@ import com.tangem.core.ui.res.generated.icons.ic_shield_checkmark_20
 import com.tangem.core.ui.res.generated.icons.ic_user_plus_20
 import com.tangem.core.ui.res.generated.icons.ic_users_20
 import com.tangem.domain.jointaccount.model.JointAccountConfig
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
+import com.tangem.features.jointaccount.creation.JointAccountCreationComponent
 import com.tangem.features.jointaccount.creation.navigation.JointAccountCreationRoute
 import com.tangem.features.jointaccount.creation.promo.ui.state.JointAccountPromoUM
 import com.tangem.features.jointaccount.impl.R
@@ -26,11 +30,18 @@ import javax.inject.Inject
 @ModelScoped
 internal class JointAccountPromoModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
+    paramsContainer: ParamsContainer,
     private val router: Router,
+    analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     val uiState: StateFlow<JointAccountPromoUM>
         field = MutableStateFlow(createState())
+
+    init {
+        val params = paramsContainer.require<JointAccountCreationComponent.Params>()
+        analyticsEventHandler.send(JointAccountAnalyticsEvent.IntroScreenOpened(source = params.source))
+    }
 
     private fun createState(): JointAccountPromoUM = JointAccountPromoUM(
         title = resourceReference(R.string.common_joint_account),

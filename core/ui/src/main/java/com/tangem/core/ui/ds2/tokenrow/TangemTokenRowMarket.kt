@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.ds2.util.TangemPriceChange
@@ -26,6 +27,8 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * Design-system v2 (DS3) **Token Row Market** — a markets-list item: token icon, title with a
  * ticker, rank badge + capitalization, price with a [TangemPriceChange] indicator and a trailing
  * mini-graph slot.
+ *
+ * Version: 1.1.1
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=5724-3510&m=dev)
  *
@@ -150,6 +153,8 @@ fun TangemTokenRowMarket(
 /** Public API surface of [TangemTokenRowMarket]. */
 object TangemTokenRowMarket {
 
+    val version = DsVersion(major = 1, minor = 1, patch = 1)
+
     /**
      * State model of [TangemTokenRowMarket]. Render it with the `TangemTokenRowMarket(state = …)`
      * overload.
@@ -253,7 +258,7 @@ fun TangemTokenRowMarket.Shimmer(modifier: Modifier = Modifier) {
         ) {
             TangemShimmer(
                 radius = 4.dp,
-                modifier = Modifier.size(width = 24.dp, height = 12.dp),
+                modifier = Modifier.size(width = 24.dp, height = 16.dp),
             )
         }
     }

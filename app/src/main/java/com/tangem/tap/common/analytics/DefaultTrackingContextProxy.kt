@@ -12,10 +12,8 @@ import com.tangem.tap.common.extensions.eraseContext
 import com.tangem.tap.common.extensions.removeContext
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.extensions.setHotWalletContext
-import com.tangem.common.extensions.calculateSha256
-import com.tangem.common.extensions.toHexString
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.hashedStringValue
 
 /**
 [REDACTED_AUTHOR]
@@ -26,7 +24,7 @@ internal class DefaultTrackingContextProxy(private val abTestsManager: ABTestsMa
         val userWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
 
         abTestsManager.setUserProperties(
-            userId = calculateUserIdHash(userWalletId),
+            userId = userWalletId?.hashedStringValue,
             batch = scanResponse.card.batchId,
             productType = scanResponse.productType.name,
             firmware = scanResponse.card.firmwareVersion.stringValue,
@@ -71,15 +69,9 @@ internal class DefaultTrackingContextProxy(private val abTestsManager: ABTestsMa
         Analytics.removeContext()
     }
 
-    private fun calculateUserIdHash(userWalletId: UserWalletId?): String? {
-        return userWalletId?.value
-            ?.calculateSha256()
-            ?.toHexString()
-    }
-
     private fun setColdWalletUserProperties(userWallet: UserWallet.Cold) {
         abTestsManager.setUserProperties(
-            userId = calculateUserIdHash(userWallet.walletId),
+            userId = userWallet.walletId.hashedStringValue,
             batch = userWallet.scanResponse.card.batchId,
             productType = userWallet.scanResponse.productType.name,
             firmware = userWallet.scanResponse.card.firmwareVersion.stringValue,
@@ -88,7 +80,7 @@ internal class DefaultTrackingContextProxy(private val abTestsManager: ABTestsMa
 
     private fun setHotWalletUserProperties(userWallet: UserWallet.Hot) {
         abTestsManager.setUserProperties(
-            userId = calculateUserIdHash(userWallet.walletId),
+            userId = userWallet.walletId.hashedStringValue,
             batch = null,
             productType = AnalyticsParam.ProductType.MobileWallet.value,
             firmware = null,

@@ -3,6 +3,7 @@ package com.tangem.features.polymarket.impl.placeprediction.model
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketPositionsError
 import com.tangem.domain.polymarket.model.PolymarketAuthError
@@ -52,7 +53,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             // Assert
             assertThat(model.uiState.value.market.title).isEqualTo("Market question")
             assertThat(model.uiState.value.market.outcomeTitle).isEqualTo("Yes")
-            assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(42)
+            assertThat(model.uiState.value.market.outcomePrice).isEqualTo("42¢")
             assertThat((model.uiState.value.order as OrderSideUM.Buy).balance).isEqualTo(BigDecimal("100"))
 
             model.onDestroy()
@@ -232,7 +233,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         @Test
         fun `GIVEN balance unavailable WHEN model created THEN balance stays unknown AND button disabled`() = runTest {
             // Arrange
-            coEvery { getBalanceInteractor(addresses = ADDRESSES) } returns PolymarketAuthError.KeyNotFound.left()
+            statusFlow.value = PredictionAccountStatusValue.Error.Unavailable
 
             // Act
             val model = createAmountModel(testScope = this)
@@ -265,7 +266,12 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
 
             // Assert
             assertThat(model.uiState.value.quote)
-                .isEqualTo(QuoteUM.Unavailable(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY))
+                .isEqualTo(
+                    QuoteUM.Unavailable(
+                        status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY,
+                        expected = BigDecimal("23.8"),
+                    ),
+                )
             assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
 
             model.onDestroy()
@@ -527,6 +533,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         @Test
         fun `GIVEN empty amount WHEN screen shown THEN book price polls into the header`() = runTest {
             // Arrange
+            coEvery { getPriceUseCase(assetId = any(), side = any()) } returns BigDecimal("0.7455").right()
             val model = createAmountModel(testScope = this)
             advanceUntilIdle()
 
@@ -535,7 +542,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             advanceTimeBy(delayTimeMillis = 1)
 
             // Assert
-            assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(48)
+            assertThat(model.uiState.value.market.outcomePrice).isEqualTo("74.6¢")
             coVerify(exactly = 1) { getPriceUseCase(assetId = ASSET_ID, side = PredictionOrderSide.SELL) }
 
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
@@ -581,11 +588,11 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
 
             // Assert
-            assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(48)
+            assertThat(model.uiState.value.market.outcomePrice).isEqualTo("48¢")
             assertThat(model.uiState.value.notifications).isEmpty()
 
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
-            assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(52)
+            assertThat(model.uiState.value.market.outcomePrice).isEqualTo("52¢")
 
             model.onDestroy()
         }
@@ -605,10 +612,10 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             // Act
             model.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
-            assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(61)
+            assertThat(model.uiState.value.market.outcomePrice).isEqualTo("61¢")
 
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
-            assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(64)
+            assertThat(model.uiState.value.market.outcomePrice).isEqualTo("64¢")
 
             // Assert
             coVerify(exactly = 1) { getPriceUseCase(assetId = any(), side = any()) }
@@ -616,7 +623,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             model.onAmountChange(value = "")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             coVerify(exactly = 2) { getPriceUseCase(assetId = any(), side = any()) }
-            assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(48)
+            assertThat(model.uiState.value.market.outcomePrice).isEqualTo("48¢")
 
             model.onDestroy()
         }
@@ -638,10 +645,10 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
-            assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(61)
+            assertThat(model.uiState.value.market.outcomePrice).isEqualTo("61¢")
 
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
-            assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(61)
+            assertThat(model.uiState.value.market.outcomePrice).isEqualTo("61¢")
 
             model.onDestroy()
         }
@@ -766,6 +773,116 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
     }
 
     @Nested
+    inner class SellQuotes {
+
+        @Test
+        fun `GIVEN insufficient sell liquidity WHEN quote received THEN proceeds shown AND closing disabled`() = runTest {
+            // Arrange
+            coEvery { getQuoteUseCase(request = any()) } returns
+                createSellQuote().copy(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY).right()
+            val model = createAmountModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+
+            // Act
+            model.onResume()
+            runCurrent()
+
+            // Assert
+            val state = model.uiState.value
+            assertThat((state.order as OrderSideUM.Sell).proceeds)
+                .isEqualTo(SharesProceedsUM.Content(expected = BigDecimal("11.01")))
+            assertThat(state.quote).isInstanceOf(QuoteUM.Unavailable::class.java)
+            assertThat(state.notifications).contains(PredictionNotificationUM.NoLiquidity)
+            assertThat(state.isPrimaryButtonEnabled).isFalse()
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN sell proceeds without liquidity WHEN quote refresh pending THEN displayed state retained`() = runTest {
+            // Arrange
+            val quote = createSellQuote().copy(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY)
+            coEvery { getQuoteUseCase(request = any()) } returns quote.right()
+            val model = createAmountModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+            model.onResume()
+            runCurrent()
+            coEvery { getQuoteUseCase(request = any()) } coAnswers {
+                delay(timeMillis = QUOTE_POLL_INTERVAL_MILLIS)
+                quote.right()
+            }
+
+            // Act
+            advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+
+            // Assert
+            val state = model.uiState.value
+            assertThat((state.order as OrderSideUM.Sell).proceeds)
+                .isEqualTo(SharesProceedsUM.Content(expected = BigDecimal("11.01")))
+            assertThat(state.notifications).contains(PredictionNotificationUM.NoLiquidity)
+            assertThat(state.isPrimaryButtonEnabled).isFalse()
+            coVerify(exactly = 2) { getQuoteUseCase(request = any()) }
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN first sell quote fails WHEN screen shown THEN current price unavailable AND entry price kept`() =
+            runTest {
+                // Arrange
+                coEvery { getQuoteUseCase(request = any()) } returns
+                    PredictionOrderQuoteError.Unknown(httpCode = 500, detail = "Quote failed").left()
+                val model = createAmountModel(testScope = this, params = SELL_PARAMS)
+                advanceUntilIdle()
+                val initialMarket = model.uiState.value.market
+
+                // Act
+                model.onResume()
+                runCurrent()
+
+                // Assert
+                val state = model.uiState.value
+                assertThat(state.market).isEqualTo(initialMarket.copy(isPriceUnavailable = true))
+                assertThat((state.order as OrderSideUM.Sell).proceeds).isEqualTo(SharesProceedsUM.Unavailable)
+                assertThat(state.isPrimaryButtonEnabled).isFalse()
+
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN priced sell quote WHEN refresh fails and recovers THEN current price hidden and restored`() = runTest {
+            // Arrange
+            coEvery { getQuoteUseCase(request = any()) } returnsMany listOf(
+                createSellQuote().copy(averagePrice = BigDecimal("0.61")).right(),
+                PredictionOrderQuoteError.Network.left(),
+                createSellQuote().copy(averagePrice = BigDecimal("0.64")).right(),
+            )
+            val model = createAmountModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+            val initialMarket = model.uiState.value.market
+
+            // Act
+            model.onResume()
+            runCurrent()
+            val priced = model.uiState.value
+            advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+            val failed = model.uiState.value
+            advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+            val restored = model.uiState.value
+
+            // Assert
+            assertThat(priced.market).isEqualTo(initialMarket.copy(outcomePrice = "61¢"))
+            assertThat(failed.market).isEqualTo(priced.market.copy(isPriceUnavailable = true))
+            assertThat((failed.order as OrderSideUM.Sell).proceeds).isEqualTo(SharesProceedsUM.Unavailable)
+            assertThat(failed.isPrimaryButtonEnabled).isFalse()
+            assertThat(restored.market).isEqualTo(priced.market.copy(outcomePrice = "64¢"))
+            assertThat(restored.isPrimaryButtonEnabled).isTrue()
+
+            model.onDestroy()
+        }
+    }
+
+    @Nested
     inner class PositionReads {
 
         @Test
@@ -776,11 +893,11 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
 
             // Assert
             val order = model.uiState.value.order as OrderSideUM.Sell
-            assertThat(order.position).isEqualTo(SellPositionUM.Held(available = BigDecimal("51.23")))
+            assertThat(order.position).isEqualTo(SellPositionUM.Held(available = BigDecimal("51.234567")))
             assertThat(order.balance).isEqualTo(BigDecimal("100"))
             assertThat(model.uiState.value.market.title).isEqualTo("Will the event happen?")
             assertThat(model.uiState.value.market.outcomeTitle).isEqualTo("Yes")
-            assertThat(model.uiState.value.market.entryPriceCents).isEqualTo(35)
+            assertThat(model.uiState.value.market.entryPrice).isEqualTo("35.6¢")
             assertThat(model.uiState.value.collateral.tokenSymbol).isEqualTo("pUSD")
             coVerify(exactly = 0) { getEventUseCase(eventId = any()) }
 
@@ -788,7 +905,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         }
 
         @Test
-        fun `GIVEN a position too small to quote WHEN screen shown THEN the live price is the best bid`() = runTest {
+        fun `GIVEN a position below a cent WHEN screen shown THEN the whole position is quoted`() = runTest {
             // Arrange
             coEvery { positionsRepository.getPosition(addresses = any(), id = any()) } returns
                 createPosition(size = BigDecimal("0.005")).right()
@@ -800,7 +917,9 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             runCurrent()
 
             // Assert
-            coVerify(exactly = 1) { getPriceUseCase(assetId = ASSET_ID, side = PredictionOrderSide.BUY) }
+            coVerify(exactly = 1) {
+                getQuoteUseCase(request = match { it.side == PredictionOrderSide.SELL && it.amount == BigDecimal("0.005") })
+            }
 
             model.onDestroy()
         }
@@ -812,7 +931,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             advanceUntilIdle()
 
             // Assert
-            assertThat(model.uiState.value.amountValue).isEqualTo("51.23")
+            assertThat(model.uiState.value.amountValue).isEqualTo("51.234567")
 
             model.onDestroy()
         }
@@ -888,7 +1007,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
 
             // Assert
             val order = model.uiState.value.order as OrderSideUM.Sell
-            assertThat(order.position).isEqualTo(SellPositionUM.Held(available = BigDecimal("51.23")))
+            assertThat(order.position).isEqualTo(SellPositionUM.Held(available = BigDecimal("51.234567")))
             assertThat(model.uiState.value.notifications)
                 .doesNotContain(PredictionNotificationUM.PositionUnavailable)
 
@@ -911,7 +1030,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
 
             // Assert
             assertThat((model.uiState.value.order as OrderSideUM.Sell).position)
-                .isEqualTo(SellPositionUM.Held(available = BigDecimal("51.23")))
+                .isEqualTo(SellPositionUM.Held(available = BigDecimal("51.234567")))
 
             model.onDestroy()
         }

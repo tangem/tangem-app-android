@@ -55,6 +55,7 @@ import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.sheetscaffold.TangemSheetState
 import com.tangem.core.ui.components.sheetscaffold.TangemSheetValue
 import com.tangem.core.ui.components.sheetscaffold.rememberSheetState
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.res.LocalBottomSheetAlwaysVisible
@@ -65,11 +66,14 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.core.ui.test.BaseBottomSheetTestTags
 import com.tangem.core.ui.utils.WindowInsetsZero
+import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.rememberHazeState
 
 /**
  * Design-system v2 modal bottom sheet: a floating modal-material card with a drag indicator,
  * optional [title] slot and [content], shown above a dimmed scrim.
+ *
+ * Version: 1.1.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=8256-1265&m=dev)
  *
@@ -94,12 +98,20 @@ import dev.chrisbanes.haze.rememberHazeState
  *   identical animations and logic, but the card renders flat and opaque — cross-window blur is
  *   impossible.
  * - [LocalHazeState] is rescoped inside the card, so material elements of [title] (e.g. round
- *   navigation buttons) blur the modal surface, not the screen behind it.
+ *   navigation buttons) blur the modal surface, not the screen behind it. [content] gets an isolated
+ *   haze scope of its own: glass inside the content blurs only what the content registers as a
+ *   source, and never samples the modal it sits in.
+ * - **Chrome placement** ([chromePlacement]): by default the drag indicator and [title] take their own
+ *   band above the content. With [TangemModal.ChromePlacement.Overlay] they float over the top of the
+ *   content instead, which scrolls under them and shows through around the pill — as in
+ *   [com.tangem.core.ui.ds2.shtorka.TangemShtorka]; glass elements of [title] then blur that content.
  *
  * @param config bottom sheet config: visibility, dismiss callback and the typed content model
  * @param onBack custom back handler; when `null`, back dismisses the sheet
  * @param dismissOnClickOutside when `false`, taps on the scrim and back presses don't dismiss
  * @param scrollableContent whether [content] is wrapped in a vertical scroll container
+ * @param chromePlacement where the drag indicator and [title] sit — above the content (the default) or
+ *   floating over its top, so a full-bleed header can run under them. See [TangemModal.ChromePlacement].
  * @param presentation where the modal lives — same-window overlay or dialog window. See
  *   [TangemModal.Presentation].
  * @param isMaterialEnabled when `false`, the overlay card renders flat and opaque instead of glass —
@@ -118,7 +130,8 @@ import dev.chrisbanes.haze.rememberHazeState
  *   pays and when. Ignored in the dialog presentation (nothing is registered in a host there,
  *   and a warm-up dialog would be a real window) and in previews.
  * @param title pinned slot above the content, typically a navigation-style header
- * @param content content of the sheet below [title]
+ * @param content content of the sheet below [title]. The card sizes itself from its intrinsic height, so it
+ *   must not contain a `SubcomposeLayout` (lazy lists, `BoxWithConstraints`, scaffolds) — that throws on open.
  */
 @Composable
 inline fun <reified T : TangemBottomSheetConfigContent> TangemModal(
@@ -126,6 +139,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModal(
     noinline onBack: (() -> Unit)? = null,
     dismissOnClickOutside: Boolean = true,
     scrollableContent: Boolean = true,
+    chromePlacement: TangemModal.ChromePlacement = TangemModal.ChromePlacement.Stacked,
     presentation: TangemModal.Presentation = TangemModal.Presentation.Auto,
     isMaterialEnabled: Boolean = true,
     forceDarkTheme: Boolean = false,
@@ -148,6 +162,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModal(
             containerColor = containerColor,
             showDragIndicator = showDragIndicator,
             scrollableContent = scrollableContent,
+            chromePlacement = chromePlacement,
             title = title,
             content = content,
         )
@@ -161,6 +176,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModal(
             onBack = onBack,
             dismissOnClickOutside = dismissOnClickOutside,
             scrollableContent = scrollableContent,
+            chromePlacement = chromePlacement,
             prewarm = prewarm,
             title = title,
             content = content,
@@ -173,6 +189,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModal(
             onBack = onBack,
             dismissOnClickOutside = dismissOnClickOutside,
             scrollableContent = scrollableContent,
+            chromePlacement = chromePlacement,
             title = title,
             content = content,
         )
@@ -181,6 +198,8 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModal(
 
 /** Public namespace of the modal component. */
 object TangemModal {
+
+    val version = DsVersion(major = 1, minor = 1, patch = 0)
 
     /**
      * Where the modal is presented.
@@ -195,6 +214,19 @@ object TangemModal {
         Auto,
         Overlay,
         Dialog,
+    }
+
+    /**
+     * Where the drag indicator and the title sit relative to the content.
+     *
+     * - [Stacked] — above the content, in a band of the card of their own. The default.
+     * - [Overlay] — floating over the top of the content, which scrolls under them, as the chrome of
+     *   [com.tangem.core.ui.ds2.shtorka.TangemShtorka] does. Leave room at the top of the content for
+     *   whatever must not sit under the title.
+     */
+    enum class ChromePlacement {
+        Stacked,
+        Overlay,
     }
 }
 
@@ -215,6 +247,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> OverlayTangemMo
     noinline onBack: (() -> Unit)?,
     dismissOnClickOutside: Boolean,
     scrollableContent: Boolean,
+    chromePlacement: TangemModal.ChromePlacement,
     prewarm: Boolean,
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable ColumnScope.(T) -> Unit,
@@ -246,6 +279,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> OverlayTangemMo
                             containerColor = containerColor,
                             showDragIndicator = showDragIndicator,
                             scrollableContent = scrollableContent,
+                            chromePlacement = chromePlacement,
                             title = title,
                             content = content,
                         )
@@ -279,6 +313,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> OverlayTangemMo
             containerColor = containerColor,
             showDragIndicator = showDragIndicator,
             scrollableContent = scrollableContent,
+            chromePlacement = chromePlacement,
             title = title,
             content = content,
         )
@@ -308,6 +343,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> PrewarmTangemMo
     containerColor: Color?,
     showDragIndicator: Boolean,
     scrollableContent: Boolean,
+    chromePlacement: TangemModal.ChromePlacement,
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable ColumnScope.(T) -> Unit,
 ) {
@@ -325,6 +361,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> PrewarmTangemMo
                         containerColor = containerColor,
                         showDragIndicator = showDragIndicator,
                         scrollableContent = scrollableContent,
+                        chromePlacement = chromePlacement,
                         title = title,
                         content = content,
                     )
@@ -376,6 +413,7 @@ internal fun ModalPrewarmChrome(isMaterial: Boolean, showDragIndicator: Boolean,
         containerColor = null,
         showDragIndicator = showDragIndicator,
         scrollableContent = scrollableContent,
+        chromePlacement = TangemModal.ChromePlacement.Stacked,
         title = {},
         content = {},
     )
@@ -397,6 +435,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> DefaultTangemMo
     noinline onBack: (() -> Unit)?,
     dismissOnClickOutside: Boolean,
     scrollableContent: Boolean,
+    chromePlacement: TangemModal.ChromePlacement,
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable ColumnScope.(T) -> Unit,
 ) {
@@ -431,6 +470,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> DefaultTangemMo
                         containerColor = containerColor,
                         showDragIndicator = showDragIndicator,
                         scrollableContent = scrollableContent,
+                        chromePlacement = chromePlacement,
                         title = title,
                         content = content,
                     )
@@ -519,6 +559,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> PreviewTangemMo
     containerColor: Color?,
     showDragIndicator: Boolean,
     scrollableContent: Boolean,
+    chromePlacement: TangemModal.ChromePlacement,
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable ColumnScope.(T) -> Unit,
 ) {
@@ -541,6 +582,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> PreviewTangemMo
                 containerColor = containerColor,
                 showDragIndicator = showDragIndicator,
                 scrollableContent = scrollableContent,
+                chromePlacement = chromePlacement,
                 title = title,
                 content = content,
             )
@@ -557,6 +599,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> TangemModalCont
     containerColor: Color?,
     showDragIndicator: Boolean,
     scrollableContent: Boolean,
+    chromePlacement: TangemModal.ChromePlacement,
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable ColumnScope.(T) -> Unit,
 ) {
@@ -600,28 +643,80 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> TangemModalCont
                     // keyboard-detent style; hasFocus aggregates the whole subtree.
                     .onFocusEvent { state -> morphGeometry.isFocused = state.hasFocus },
             ) {
-                CompositionLocalProvider(LocalHazeState provides contentHazeState) {
-                    DragIndicator(geometry = morphGeometry, isShown = showDragIndicator)
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        title(model)
+                when (chromePlacement) {
+                    TangemModal.ChromePlacement.Stacked -> {
+                        ModalChrome(
+                            geometry = morphGeometry,
+                            hazeState = contentHazeState,
+                            isShown = showDragIndicator,
+                        ) { title(model) }
+                        ModalContentColumn(hazeState = contentHazeState, scrollableContent = scrollableContent) {
+                            content(model)
+                        }
                     }
-                }
-                // imePadding sits outside the scroll container, so the scroll viewport ends above
-                // the keyboard and a focused field is brought into the visible part of the card.
-                val contentModifier = Modifier
-                    .hazeSourceTangem(state = contentHazeState)
-                    .imePadding()
-                if (scrollableContent) {
-                    Column(modifier = contentModifier.verticalScroll(rememberScrollState())) {
-                        content(model)
-                    }
-                } else {
-                    Column(modifier = contentModifier) {
-                        content(model)
+                    // The chrome is a sibling drawn after the haze source, never inside it: glass
+                    // title buttons blur the content under them without sampling themselves.
+                    TangemModal.ChromePlacement.Overlay -> Box(modifier = Modifier.fillMaxWidth()) {
+                        ModalContentColumn(hazeState = contentHazeState, scrollableContent = scrollableContent) {
+                            content(model)
+                        }
+                        ModalChrome(
+                            geometry = morphGeometry,
+                            hazeState = contentHazeState,
+                            isShown = showDragIndicator,
+                            modifier = Modifier.align(Alignment.TopCenter),
+                        ) { title(model) }
                     }
                 }
             }
         }
+    }
+}
+
+/** The drag indicator (drawn only when [isShown]) and the title slot, whose glass elements sample the card content's [hazeState]. */
+@Composable
+@PublishedApi
+internal fun ModalChrome(
+    geometry: ModalMorphGeometry,
+    hazeState: HazeState,
+    isShown: Boolean,
+    modifier: Modifier = Modifier,
+    title: @Composable BoxScope.() -> Unit,
+) {
+    CompositionLocalProvider(LocalHazeState provides hazeState) {
+        Column(modifier = modifier.fillMaxWidth()) {
+            DragIndicator(geometry = geometry, isShown = isShown)
+            Box(modifier = Modifier.fillMaxWidth(), content = title)
+        }
+    }
+}
+
+/** The caller's content: the card's haze source, IME-padded, optionally scrolling. */
+@Composable
+@PublishedApi
+internal fun ModalContentColumn(
+    hazeState: HazeState,
+    scrollableContent: Boolean,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    // Content glass must not sample the host state: every modal entry is a source of it, so a glass
+    // element inside the content would draw the layer that contains it (a RenderThread stack overflow).
+    // An isolated state keeps content glass, and any sources the content registers (a footer fade), in a
+    // closed system of their own. Mirroring blurEnabled keeps their solid fallback in sync when blur is off.
+    val outerHazeState = LocalHazeState.current
+    val isolatedHazeState = rememberHazeState()
+    SideEffect { isolatedHazeState.blurEnabled = outerHazeState.blurEnabled }
+
+    // imePadding sits outside the scroll container, so the scroll viewport ends above the keyboard
+    // and a focused field is brought into the visible part of the card.
+    val modifier = Modifier
+        .hazeSourceTangem(state = hazeState)
+        .imePadding()
+    CompositionLocalProvider(LocalHazeState provides isolatedHazeState) {
+        Column(
+            modifier = if (scrollableContent) modifier.verticalScroll(rememberScrollState()) else modifier,
+            content = content,
+        )
     }
 }
 

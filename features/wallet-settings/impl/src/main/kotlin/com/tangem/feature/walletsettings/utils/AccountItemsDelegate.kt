@@ -20,9 +20,11 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
@@ -103,6 +105,9 @@ internal class AccountItemsDelegate @Inject constructor(
                     analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonOpenExistingAccount())
                     openAccountDetails(this.account)
                 },
+                appCurrency = appCurrency,
+                accountBalance = jointBalance(),
+                isBalanceHidden = isBalanceHidden,
             ).convert(account)
             return WalletSettingsAccountsUM.JointAccount(state = accountItemUM)
         }
@@ -172,6 +177,12 @@ internal class AccountItemsDelegate @Inject constructor(
 
         val positionByAccountId = order.withIndex().associate { it.value.value to it.index }
         return this.sortedBy { positionByAccountId[it.id] ?: Int.MAX_VALUE }
+    }
+
+    private fun AccountStatus.Joint.jointBalance(): TotalFiatBalance = when (value) {
+        is JointAccountStatusValue.Loading -> TotalFiatBalance.Loading
+        is JointAccountStatusValue.Error -> TotalFiatBalance.Failed
+        else -> tokenList.totalFiatBalance
     }
 
     private fun openAccountDetails(account: Account.CryptoPortfolio) {

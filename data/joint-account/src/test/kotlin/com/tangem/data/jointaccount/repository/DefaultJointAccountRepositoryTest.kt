@@ -18,6 +18,7 @@ import com.tangem.data.jointaccount.createJointAccountDto
 import com.tangem.data.jointaccount.createJointAccountInvitePreview
 import com.tangem.data.jointaccount.createJointAccountInvitePreviewDto
 import com.tangem.data.jointaccount.createSafeTx
+import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.store.datasource.jointaccount.models.CreateJointOperationRequest
 import com.tangem.store.datasource.jointaccount.models.JointOperationDto
@@ -68,6 +69,7 @@ internal class DefaultJointAccountRepositoryTest {
         converter = JointAccountDtoConverter(operationConverter = JointOperationConverter(safeTxConverter = SafeTxConverter())),
         previewConverter = JointAccountInvitePreviewDtoConverter(),
         safeTxConverter = SafeTxConverter(),
+        operationConverter = JointOperationConverter(safeTxConverter = SafeTxConverter()),
         dispatchers = TestingCoroutineDispatcherProvider(),
         moshi = Moshi.Builder().build(),
     )
@@ -81,7 +83,7 @@ internal class DefaultJointAccountRepositoryTest {
     @ProvideTestModels
     fun getFreeOwnerDerivationIndex(model: IndexModel) = runTest {
         // Arrange
-        coEvery { walletAccountsFetcher.fetch(WALLET_ID) } returns createAccountsResponse(model.counter)
+        coEvery { walletAccountsFetcher.fetch(WALLET_ID) } returns createAccountsResponse(model.counter, model.jointIndices)
 
         // Act
         val actual = repository.getFreeOwnerDerivationIndex(userWalletId = WALLET_ID)
@@ -97,6 +99,11 @@ internal class DefaultJointAccountRepositoryTest {
         IndexModel(counter = 0, expected = 0),
         IndexModel(counter = 3, expected = 3),
         IndexModel(counter = 19, expected = 19),
+        // A document written locally lost the counter: the joint rows still say which keys are taken
+        IndexModel(counter = null, jointIndices = listOf(0, 1, 2), expected = 3),
+        IndexModel(counter = 2, jointIndices = listOf(0, 4), expected = 5),
+        // The counter also covers archived joint accounts, which are not among the rows
+        IndexModel(counter = 7, jointIndices = listOf(0, 1), expected = 7),
     )
 
     @Test
@@ -360,6 +367,26 @@ internal class DefaultJointAccountRepositoryTest {
         assertThat(actual).isEqualTo(Either.Left(JointAccountInvitePreviewError.InvalidLink))
     }
 
+    /** A link opened right after a Quick Share transfer finds the phone still reconnecting: worth a retry, not a dead end */
+    @ParameterizedTest
+    @MethodSource("provideUnreachableCauses")
+    fun `GIVEN request got no answer WHEN getInvitePreview THEN Unreachable`(cause: ApiResponseError) = runTest {
+        // Arrange
+        coEvery { jointAccountApi.getJointAccountInvite(any(), any()) } returns
+            ApiResponse.Error(cause = cause) as ApiResponse<JointAccountInvitePreviewDto>
+
+        // Act
+        val actual = repository.getInvitePreview(walletId = WALLET_ID, inviteId = INVITE_A)
+
+        // Assert
+        assertThat(actual).isEqualTo(Either.Left(JointAccountInvitePreviewError.Unreachable(cause = cause)))
+    }
+
+    private fun provideUnreachableCauses() = listOf(
+        ApiResponseError.NetworkException(),
+        ApiResponseError.TimeoutException(),
+    )
+
     @Test
     fun `GIVEN server error WHEN getInvitePreview THEN LoadFailed`() = runTest {
         // Arrange
@@ -578,6 +605,47 @@ internal class DefaultJointAccountRepositoryTest {
     }
 
     @Test
+    fun `GIVEN the backend counted the signature WHEN signOperation THEN the operation it reports is returned`() =
+        runTest {
+            // Arrange
+            val response = createJointOperationDto().copy(
+                status = "pending",
+                votes = listOf(JointOperationDto.VoteDto(address = OWNER_ADDRESS, vote = "approve", votedAt = null)),
+            )
+            coEvery { jointAccountApi.signJointOperation(any(), any(), any()) } returns ApiResponse.Success(response)
+
+            // Act
+            val actual = repository.signOperation(
+                userWalletId = WALLET_ID,
+                operationId = OPERATION_ID,
+                safeTx = createSafeTx(),
+                signature = SIGNATURE,
+            )
+
+            // Assert
+            val expected = JointOperationConverter(safeTxConverter = SafeTxConverter()).convert(response)
+            assertThat(actual).isEqualTo(expected.right())
+        }
+
+    @Test
+    fun `GIVEN an unreadable answer WHEN signOperation THEN the signature still counts as sent`() = runTest {
+        // Arrange
+        val unreadable = createJointOperationDto().let { dto -> dto.copy(safeTx = dto.safeTx.copy(value = "n/a")) }
+        coEvery { jointAccountApi.signJointOperation(any(), any(), any()) } returns ApiResponse.Success(unreadable)
+
+        // Act
+        val actual = repository.signOperation(
+            userWalletId = WALLET_ID,
+            operationId = OPERATION_ID,
+            safeTx = createSafeTx(),
+            signature = SIGNATURE,
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(null.right())
+    }
+
+    @Test
     fun `GIVEN an operation WHEN reject THEN the call carries the id and no body`() = runTest {
         // Arrange
         coEvery {
@@ -614,7 +682,10 @@ internal class DefaultJointAccountRepositoryTest {
         return ApiResponse.Error(cause = cause) as ApiResponse<T>
     }
 
-    private fun createAccountsResponse(totalJointAccounts: Int?): GetWalletAccountsResponse {
+    private fun createAccountsResponse(
+        totalJointAccounts: Int?,
+        jointIndices: List<Int> = emptyList(),
+    ): GetWalletAccountsResponse {
         return GetWalletAccountsResponse(
             wallet = GetWalletAccountsResponse.Wallet(
                 group = null,
@@ -623,12 +694,21 @@ internal class DefaultJointAccountRepositoryTest {
                 totalArchivedAccounts = 0,
                 totalJointAccounts = totalJointAccounts,
             ),
-            accounts = emptyList(),
+            accounts = jointIndices.map { index ->
+                WalletAccountDTO(
+                    id = "joint-$index",
+                    name = null,
+                    derivationIndex = index,
+                    icon = "Family",
+                    iconColor = "Azure",
+                    type = WalletAccountDTO.Type.JOINT,
+                )
+            },
             unassignedTokens = emptyList(),
         )
     }
 
-    internal data class IndexModel(val counter: Int?, val expected: Int)
+    internal data class IndexModel(val counter: Int?, val expected: Int, val jointIndices: List<Int> = emptyList())
 
     private companion object {
         val WALLET_ID = UserWalletId("011121314151617181910A0B0C0D0E0F011121314151617181910A0B0C0D0E0F")

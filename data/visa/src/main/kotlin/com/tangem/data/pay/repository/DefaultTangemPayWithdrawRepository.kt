@@ -5,9 +5,11 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.core.error.UniversalError
 import com.tangem.data.common.quote.QuotesFetcher
+import com.tangem.data.pay.util.TangemPayWithdrawDataVerifier
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.request.WithdrawDataRequest
 import com.tangem.spend.datasource.pay.models.request.WithdrawRequest
+import com.tangem.spend.datasource.pay.models.response.WithdrawDataResponse
 import com.tangem.spend.datasource.pay.models.response.WithdrawResponse
 import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -70,16 +72,18 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
         if (amountInCents.isNullOrEmpty()) return Either.Left(VisaApiError.WithdrawalDataError)
         val source = withdrawSourceResolver.resolve(userWallet.walletId, sourceCurrency)
             ?: return Either.Left(VisaApiError.WithdrawalDataError)
+        val dataRequest = WithdrawDataRequest(
+            amountInCents = amountInCents,
+            recipientAddress = receiverAddress,
+            chainId = source.chainId,
+            tokenContractAddress = source.tokenContractAddress,
+        )
         return requestHelper.performRequest(userWallet.walletId) { authHeader ->
-            val request = WithdrawDataRequest(
-                amountInCents = amountInCents,
-                recipientAddress = receiverAddress,
-                chainId = source.chainId,
-                tokenContractAddress = source.tokenContractAddress,
-            )
-            tangemPayApi.getWithdrawData(authHeader = authHeader, body = request)
+            tangemPayApi.getWithdrawData(authHeader = authHeader, body = dataRequest)
         }.map { data ->
             val result = data.result ?: return VisaApiError.WithdrawalDataError.left()
+            result.verifyMatches(request = dataRequest, tokenDecimals = sourceCurrency.decimals)
+                .onLeft { return it.left() }
             val signatureResult = authDataSource.getWithdrawalSignature(
                 userWallet = userWallet,
                 hash = result.hash,
@@ -242,16 +246,18 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
         val source = withdrawSourceResolver.resolve(userWallet.walletId, sourceCurrency)
             ?: return VisaApiError.WithdrawalDataError.left()
 
+        val dataRequest = WithdrawDataRequest(
+            amountInCents = amountInCents,
+            recipientAddress = receiverAddress,
+            chainId = source.chainId,
+            tokenContractAddress = source.tokenContractAddress,
+        )
         return requestHelper.performRequest(userWallet.walletId) { authHeader ->
-            val request = WithdrawDataRequest(
-                amountInCents = amountInCents,
-                recipientAddress = receiverAddress,
-                chainId = source.chainId,
-                tokenContractAddress = source.tokenContractAddress,
-            )
-            tangemPayApi.getWithdrawData(authHeader = authHeader, body = request)
+            tangemPayApi.getWithdrawData(authHeader = authHeader, body = dataRequest)
         }.map { data ->
             val result = data.result ?: return VisaApiError.WithdrawalDataError.left()
+            result.verifyMatches(request = dataRequest, tokenDecimals = sourceCurrency.decimals)
+                .onLeft { return it.left() }
             val signatureResult = authDataSource.getWithdrawalSignature(
                 userWallet = userWallet,
                 hash = result.hash,
@@ -348,4 +354,22 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
 
         return quotes?.quotes[cryptoCurrencyId.value]?.price
     }
+}
+
+private fun WithdrawDataResponse.Result.verifyMatches(
+    request: WithdrawDataRequest,
+    tokenDecimals: Int,
+): Either<VisaApiError, Unit> = TangemPayWithdrawDataVerifier.verify(
+    hash = hash,
+    structuredData = structuredData,
+    expectation = TangemPayWithdrawDataVerifier.Expectation(
+        amountInCents = request.amountInCents.toBigDecimal(),
+        tokenDecimals = tokenDecimals,
+        recipientAddress = request.recipientAddress,
+        chainId = request.chainId,
+        tokenContractAddress = request.tokenContractAddress,
+    ),
+).mapLeft { mismatch ->
+    TangemLogger.withTag(TAG).e("Withdraw data does not match the requested withdrawal: $mismatch")
+    VisaApiError.WithdrawalDataError
 }

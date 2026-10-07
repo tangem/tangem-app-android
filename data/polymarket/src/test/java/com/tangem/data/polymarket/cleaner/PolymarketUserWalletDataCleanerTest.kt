@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.polymarket.converter.PredictionAccountStatusValueDTOConverter
 import com.tangem.data.polymarket.store.PredictionAccountStatusStore
+import com.tangem.data.polymarket.store.PredictionPositionsValueStore
 import com.tangem.data.polymarket.store.WalletIdWithPredictionStatusDTO
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
@@ -22,6 +23,8 @@ import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.datastore.MockStateDataStore
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -32,6 +35,7 @@ internal class PolymarketUserWalletDataCleanerTest {
 
     private val credentialsStore: PolymarketCredentialsStore = mockk(relaxUnitFun = true)
     private val statusStore: PredictionAccountStatusStore = mockk(relaxUnitFun = true)
+    private val positionsValueStore: PredictionPositionsValueStore = mockk(relaxUnitFun = true)
     private val onboardedStore: PolymarketOnboardedStore = mockk(relaxUnitFun = true)
     private val requisitesStore: PredictionDepositRequisitesStore = mockk(relaxUnitFun = true)
     private val withdrawalStore: PredictionWithdrawalStore = mockk(relaxUnitFun = true)
@@ -39,6 +43,7 @@ internal class PolymarketUserWalletDataCleanerTest {
     private val cleaner = PolymarketUserWalletDataCleaner(
         credentialsStore = credentialsStore,
         predictionAccountStatusStore = statusStore,
+        positionsValueStore = positionsValueStore,
         onboardedStore = onboardedStore,
         requisitesStore = requisitesStore,
         withdrawalStore = withdrawalStore,
@@ -46,7 +51,7 @@ internal class PolymarketUserWalletDataCleanerTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(credentialsStore, statusStore, onboardedStore, requisitesStore, withdrawalStore)
+        clearMocks(credentialsStore, statusStore, positionsValueStore, onboardedStore, requisitesStore, withdrawalStore)
     }
 
     @Test
@@ -59,6 +64,8 @@ internal class PolymarketUserWalletDataCleanerTest {
         coVerify(exactly = 1) { credentialsStore.clear(WALLET_B) }
         coVerify(exactly = 1) { statusStore.clear(WALLET_A) }
         coVerify(exactly = 1) { statusStore.clear(WALLET_B) }
+        coVerify(exactly = 1) { positionsValueStore.clear(WALLET_A) }
+        coVerify(exactly = 1) { positionsValueStore.clear(WALLET_B) }
         coVerify(exactly = 1) { onboardedStore.clear(WALLET_A) }
         coVerify(exactly = 1) { onboardedStore.clear(WALLET_B) }
     }
@@ -124,12 +131,16 @@ internal class PolymarketUserWalletDataCleanerTest {
             override suspend fun clear(userWalletId: UserWalletId) {
                 entries.remove(userWalletId)
             }
+
+            override fun hasCredentials(userWalletId: UserWalletId): Flow<Boolean> =
+                flowOf(entries[userWalletId] != null)
         }
 
         // Act
         PolymarketUserWalletDataCleaner(
             credentialsStore = store,
             predictionAccountStatusStore = statusStore,
+            positionsValueStore = positionsValueStore,
             onboardedStore = onboardedStore,
             requisitesStore = requisitesStore,
             withdrawalStore = withdrawalStore,
@@ -149,6 +160,7 @@ internal class PolymarketUserWalletDataCleanerTest {
         PolymarketUserWalletDataCleaner(
             credentialsStore = credentialsStore,
             predictionAccountStatusStore = store,
+            positionsValueStore = positionsValueStore,
             onboardedStore = onboardedStore,
             requisitesStore = requisitesStore,
             withdrawalStore = withdrawalStore,
@@ -202,6 +214,7 @@ internal class PolymarketUserWalletDataCleanerTest {
             PolymarketUserWalletDataCleaner(
                 credentialsStore = credentialsStore,
                 predictionAccountStatusStore = statusStore,
+                positionsValueStore = positionsValueStore,
                 onboardedStore = onboardedStore,
                 requisitesStore = requisitesStore,
                 withdrawalStore = store,
@@ -241,7 +254,6 @@ internal class PolymarketUserWalletDataCleanerTest {
         val ACTIVE = PredictionAccountStatusValue.Active(
             source = StatusSource.ACTUAL,
             balance = BigDecimal("12.5"),
-            positionsValue = null,
             fiatRate = null,
             depositCurrency = COLLATERAL,
             depositAddress = "0xbridge0000000000000000000000000000000001",

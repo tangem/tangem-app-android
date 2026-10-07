@@ -15,13 +15,41 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.tangem.core.ui.ds2.avatar.TangemAvatar
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_grid_plus_20
 import com.tangem.core.ui.test.WalletConnectBottomSheetTestTags
 import com.tangem.core.ui.test.WalletConnectDetailsBottomSheetTestTags
 import com.tangem.features.walletconnect.connections.entity.VerifiedDAppState
 import com.tangem.features.walletconnect.impl.R
+
+/**
+ * Logo of an MCP agent, falling back to the MCP glyph for a client that declared none.
+ */
+@Composable
+internal fun McpAgentAvatar(iconUrl: String?, modifier: Modifier = Modifier) {
+    if (iconUrl == null) {
+        TangemAvatar(
+            modifier = modifier,
+            state = TangemAvatar.UiState.Icon(
+                imageVector = Icons.ic_grid_plus_20,
+                appearance = TangemAvatar.Appearance.Neutral,
+            ),
+            size = TangemAvatar.Size.X40,
+        )
+    } else {
+        AsyncImage(
+            modifier = modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(12.dp)),
+            model = iconUrl,
+            contentDescription = null,
+        )
+    }
+}
 
 @Composable
 internal fun WcAppInfoItem(
