@@ -76,7 +76,7 @@ class RunPolymarketOnboardingInteractor(
 
         if (!entry.owesApprovals() && credentials != null) {
             awaitStatus(addresses, PolymarketWalletStatus.READY_TO_TRADE, from = entry) ?: return
-            finish(addresses, credentials)
+            finish(addresses, credentials, isNewAccount = entry != PolymarketWalletStatus.READY_TO_TRADE)
             return
         }
 
@@ -118,7 +118,7 @@ class RunPolymarketOnboardingInteractor(
         }
 
         awaitStatus(addresses, PolymarketWalletStatus.READY_TO_TRADE, from = current) ?: return
-        finish(addresses, activeCredentials)
+        finish(addresses, activeCredentials, isNewAccount = entry != PolymarketWalletStatus.READY_TO_TRADE)
     }
 
     private suspend fun FlowCollector<PolymarketOnboardingProgress>.awaitStatus(
@@ -179,11 +179,12 @@ class RunPolymarketOnboardingInteractor(
     private suspend fun FlowCollector<PolymarketOnboardingProgress>.finish(
         addresses: PolymarketAddresses,
         credentials: PolymarketApiCredentials,
+        isNewAccount: Boolean,
     ) {
         polymarketOnboardedStore.markOnboarded(addresses.userWalletId)
         primeBalanceCache(addresses, credentials)
         refreshAccountStatus(addresses.userWalletId)
-        emit(PolymarketOnboardingProgress.Ready)
+        emit(PolymarketOnboardingProgress.Ready(isNewAccount = isNewAccount))
     }
 
     private suspend fun refreshAccountStatus(userWalletId: UserWalletId) {

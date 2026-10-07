@@ -149,7 +149,7 @@ internal class PolymarketOnboardingModelTest {
     fun `GIVEN the gate failed to resolve WHEN start is tapped THEN the run decides`() = runTest {
         // Arrange
         gateFails(PolymarketOnboardingError.Network)
-        every { runOnboardingUseCase(userWalletId) } returns flowOf(PolymarketOnboardingProgress.Ready)
+        every { runOnboardingUseCase(userWalletId) } returns flowOf(PolymarketOnboardingProgress.Ready(isNewAccount = true))
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -444,7 +444,7 @@ internal class PolymarketOnboardingModelTest {
         // Arrange
         owesOnboarding()
         val release = storyArrivesOnRelease()
-        every { runOnboardingUseCase(userWalletId) } returns flowOf(PolymarketOnboardingProgress.Ready)
+        every { runOnboardingUseCase(userWalletId) } returns flowOf(PolymarketOnboardingProgress.Ready(isNewAccount = true))
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -466,7 +466,7 @@ internal class PolymarketOnboardingModelTest {
         // Arrange
         owesOnboarding()
         storyIsUnseen()
-        every { runOnboardingUseCase(userWalletId) } returns flowOf(PolymarketOnboardingProgress.Ready)
+        every { runOnboardingUseCase(userWalletId) } returns flowOf(PolymarketOnboardingProgress.Ready(isNewAccount = true))
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -498,7 +498,7 @@ internal class PolymarketOnboardingModelTest {
         // Arrange
         owesOnboarding()
         storyIsUnseen()
-        every { runOnboardingUseCase(userWalletId) } returns flowOf(PolymarketOnboardingProgress.Ready)
+        every { runOnboardingUseCase(userWalletId) } returns flowOf(PolymarketOnboardingProgress.Ready(isNewAccount = true))
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -519,7 +519,7 @@ internal class PolymarketOnboardingModelTest {
         // Arrange
         owesOnboarding()
         storyWasSeen()
-        every { runOnboardingUseCase(userWalletId) } returns flowOf(PolymarketOnboardingProgress.Ready)
+        every { runOnboardingUseCase(userWalletId) } returns flowOf(PolymarketOnboardingProgress.Ready(isNewAccount = true))
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -529,6 +529,93 @@ internal class PolymarketOnboardingModelTest {
 
         // Assert
         verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
+        verify(exactly = 1) { router.replaceAll(PolymarketRoute.Main(userWalletId = userWalletId)) }
+        model.onDestroy()
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ExistingAccountStories {
+
+        private fun provideTestModels() = listOf(
+            PolymarketEntry.Reconnect,
+            PolymarketEntry.Undetermined,
+            PolymarketEntry.Onboard(status = PolymarketWalletStatus.APPROVALS_IN_PROGRESS),
+        )
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN unseen stories WHEN the run restores a ready account THEN only the feed opens`(
+            entry: PolymarketEntry,
+        ) = runTest {
+            // Arrange
+            gateResolves(entry)
+            storyIsUnseen()
+            coEvery { getStoryContentUseCase.invokeSync(id = STORY_ID, refresh = true) } returns STORY_CONTENT.right()
+            every { runOnboardingUseCase(userWalletId) } returns flowOf(
+                PolymarketOnboardingProgress.Ready(isNewAccount = false),
+            )
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            (model.uiState.value as PolymarketOnboardingUM.Action).onActionClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
+            verify(exactly = 1) { router.replaceAll(PolymarketRoute.Main(userWalletId = userWalletId)) }
+            coVerify(exactly = 0) { shouldShowStoriesInteractor.invokeSync(STORY_ID) }
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN stories are still loading WHEN the run restores a ready account THEN the feed opens immediately`(
+            entry: PolymarketEntry,
+        ) = runTest {
+            // Arrange
+            gateResolves(entry)
+            storyIsUnseen()
+            coEvery { getStoryContentUseCase.invokeSync(id = STORY_ID, refresh = true) } coAnswers {
+                awaitCancellation()
+            }
+            every { runOnboardingUseCase(userWalletId) } returns flowOf(
+                PolymarketOnboardingProgress.Ready(isNewAccount = false),
+            )
+            val model = createModel(testScope = this)
+            runCurrent()
+
+            // Act
+            (model.uiState.value as PolymarketOnboardingUM.Action).onActionClick()
+            runCurrent()
+
+            // Assert
+            verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
+            verify(exactly = 1) { router.replaceAll(PolymarketRoute.Main(userWalletId = userWalletId)) }
+            model.onDestroy()
+        }
+    }
+
+    @Test
+    fun `GIVEN unfinished approvals WHEN the run completes onboarding THEN unseen stories are shown`() = runTest {
+        // Arrange
+        gateResolves(PolymarketEntry.Onboard(status = PolymarketWalletStatus.APPROVALS_IN_PROGRESS))
+        storyIsUnseen()
+        every { runOnboardingUseCase(userWalletId) } returns flowOf(
+            PolymarketOnboardingProgress.Ready(isNewAccount = true),
+        )
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.welcome().onActionClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            router.push(AppRoute.Stories(storyId = STORY_ID, screenSource = STORY_SOURCE))
+        }
         verify(exactly = 1) { router.replaceAll(PolymarketRoute.Main(userWalletId = userWalletId)) }
         model.onDestroy()
     }
@@ -554,7 +641,7 @@ internal class PolymarketOnboardingModelTest {
         owesOnboarding()
         storyIsUnseen()
         coEvery { getStoryContentUseCase.invokeSync(id = STORY_ID, refresh = true) } coAnswers { awaitCancellation() }
-        every { runOnboardingUseCase(userWalletId) } returns flowOf(PolymarketOnboardingProgress.Ready)
+        every { runOnboardingUseCase(userWalletId) } returns flowOf(PolymarketOnboardingProgress.Ready(isNewAccount = true))
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -602,7 +689,7 @@ internal class PolymarketOnboardingModelTest {
     fun `GIVEN run reports ready WHEN collected THEN opens the feed in trading mode`() = runTest {
         // Arrange
         owesOnboarding()
-        every { runOnboardingUseCase(userWalletId) } returns flowOf(PolymarketOnboardingProgress.Ready)
+        every { runOnboardingUseCase(userWalletId) } returns flowOf(PolymarketOnboardingProgress.Ready(isNewAccount = true))
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
