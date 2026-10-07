@@ -19,6 +19,8 @@ import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.security.DeviceSecurityInfoProvider
+import com.tangem.security.isSecurityExposed
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import javax.inject.Inject
@@ -28,6 +30,7 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
     private val orderRepository: MoneyAccountOrderRepository,
     private val onboardingRepository: OnboardingRepository,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val deviceSecurity: DeviceSecurityInfoProvider,
 ) : MoneyAccountStatusFetcher {
 
     override suspend fun invoke(params: MoneyAccountStatusFetcher.Params): Either<Throwable, Unit> {
@@ -55,23 +58,39 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
     }
 
     private suspend fun fetch(userWalletId: UserWalletId): Either<VisaApiError, MoneyAccountStatusValue> = either {
+        if (deviceSecurity.isSecurityExposed()) {
+            return@either MoneyAccountStatusValue.Error.ExposedDevice
+        }
+
         val customerInfo = onboardingRepository.getCustomerInfo(userWalletId).bind()
-        val instance = customerInfo.accountProductInstance
-        when (instance?.status) {
-            CustomerInfo.ProductInstance.Status.ACTIVE -> MoneyAccountStatusValue.Account.Active(
-                source = StatusSource.ACTUAL,
-                balance = null,
-                // TODO v_rodionov: [REDACTED_TASK_KEY] find out why customerId is nullable
-                customerId = customerInfo.customerId.orEmpty(),
-                productInstanceId = instance.id,
-            )
-            CustomerInfo.ProductInstance.Status.DEACTIVATED -> MoneyAccountStatusValue.Account.Deactivated(
-                source = StatusSource.ACTUAL,
-                balance = null,
-                // TODO v_rodionov: [REDACTED_TASK_KEY] find out why customerId is nullable
-                customerId = customerInfo.customerId.orEmpty(),
-                productInstanceId = instance.id,
-            )
+        val instance = customerInfo.moneyAccountProductInstance
+        when {
+            instance == null && customerInfo.state == CustomerInfo.State.FORMER -> MoneyAccountStatusValue.Empty
+            instance == null -> onboardingStatus(userWalletId = userWalletId, customerInfo = customerInfo).bind()
+            customerInfo.state == CustomerInfo.State.FORMER -> {
+                MoneyAccountStatusValue.Account.Deactivated(
+                    source = StatusSource.ACTUAL,
+                    balance = null,
+                    customerId = customerInfo.customerId,
+                    productInstanceId = instance.id,
+                )
+            }
+            instance.status == CustomerInfo.ProductInstance.Status.DEACTIVATED -> {
+                MoneyAccountStatusValue.Account.Deactivated(
+                    source = StatusSource.ACTUAL,
+                    balance = null,
+                    customerId = customerInfo.customerId,
+                    productInstanceId = instance.id,
+                )
+            }
+            instance.status == CustomerInfo.ProductInstance.Status.ACTIVE -> {
+                MoneyAccountStatusValue.Account.Active(
+                    source = StatusSource.ACTUAL,
+                    balance = null,
+                    customerId = customerInfo.customerId,
+                    productInstanceId = instance.id,
+                )
+            }
             else -> onboardingStatus(userWalletId = userWalletId, customerInfo = customerInfo).bind()
         }
     }
@@ -80,54 +99,45 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
         userWalletId: UserWalletId,
         customerInfo: CustomerInfo,
     ): Either<VisaApiError, MoneyAccountStatusValue> = either {
-        val order = orderRepository.getOrder(userWalletId) ?: return@either MoneyAccountStatusValue.NotCreated
-        if (customerInfo.kycStatus == KycStatus.REQUIRED && order.orderStatus != OrderStatus.CANCELED) {
-            return@either MoneyAccountStatusValue.Onboarding.KycRequired(
-                source = StatusSource.ACTUAL,
-                balance = null,
-                customerId = customerInfo.customerId,
-            )
-        }
-
+        val order = orderRepository.getOrder(userWalletId)
         val customerId = customerInfo.customerId
-        if (order.orderStatus == OrderStatus.COMPLETED) {
-            return@either MoneyAccountStatusValue.Onboarding.Activating(
-                source = StatusSource.ACTUAL,
-                balance = null,
-                customerId = customerId,
-            )
-        }
-
-        return@either when (order.orderStep) {
-            OrderStep.AWAITING_KYC -> kycStatus(customerId = customerId, customerInfo = customerInfo)
-            OrderStep.ACCOUNT_ISSUE,
-            OrderStep.ACCOUNT_ACTIVATION,
-            -> MoneyAccountStatusValue.Onboarding.Activating(
-                source = StatusSource.ACTUAL,
-                balance = null,
-                customerId = customerId,
-            )
-            else -> MoneyAccountStatusValue.Onboarding.Issuing(
-                source = StatusSource.ACTUAL,
-                balance = null,
-                customerId = customerId,
-                step = order.toIssuingStep(),
-            )
+        return@either when {
+            order == null -> MoneyAccountStatusValue.NotCreated
+            customerInfo.kycStatus == KycStatus.REQUIRED && order.orderStatus != OrderStatus.CANCELED -> {
+                MoneyAccountStatusValue.Onboarding.KycRequired(
+                    source = StatusSource.ACTUAL,
+                    balance = null,
+                    customerId = customerId,
+                )
+            }
+            order.orderStatus == OrderStatus.COMPLETED -> {
+                MoneyAccountStatusValue.Onboarding.Activating(
+                    source = StatusSource.ACTUAL,
+                    balance = null,
+                    customerId = customerId,
+                )
+            }
+            else -> when (order.orderStep) {
+                OrderStep.AWAITING_KYC -> kycStatus(customerId = customerId, customerInfo = customerInfo)
+                OrderStep.ACCOUNT_ISSUE,
+                OrderStep.ACCOUNT_ACTIVATION,
+                -> MoneyAccountStatusValue.Onboarding.Activating(
+                    source = StatusSource.ACTUAL,
+                    balance = null,
+                    customerId = customerId,
+                )
+                else -> MoneyAccountStatusValue.Onboarding.Issuing(
+                    source = StatusSource.ACTUAL,
+                    balance = null,
+                    customerId = customerId,
+                    step = order.toIssuingStep(),
+                )
+            }
         }
     }
 
-    private fun kycStatus(customerId: String?, customerInfo: CustomerInfo?): MoneyAccountStatusValue {
-        // TODO v_rodionov: [REDACTED_TASK_KEY] find out why customerId is nullable
-        if (customerId == null) {
-            return MoneyAccountStatusValue.Onboarding.Issuing(
-                source = StatusSource.ACTUAL,
-                balance = null,
-                customerId = null,
-                step = MoneyAccountStatusValue.IssuingStep.UNKNOWN,
-            )
-        }
-
-        val kycStatus = customerInfo?.kycStatus ?: KycStatus.INIT
+    private fun kycStatus(customerId: String, customerInfo: CustomerInfo): MoneyAccountStatusValue {
+        val kycStatus = customerInfo.kycStatus
         return if (kycStatus == KycStatus.REJECTED) {
             MoneyAccountStatusValue.Onboarding.VerificationDeclined(
                 source = StatusSource.ACTUAL,
