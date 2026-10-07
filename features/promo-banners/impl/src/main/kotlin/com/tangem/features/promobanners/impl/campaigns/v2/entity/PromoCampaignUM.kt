@@ -73,4 +73,5 @@ internal data class PromoCampaignFooterUM(
     val terms: PromoLinkUM?,
     val buttonText: TextReference,
     val onButtonClick: () -> Unit,
+    val isLoading: Boolean = false,
 )
