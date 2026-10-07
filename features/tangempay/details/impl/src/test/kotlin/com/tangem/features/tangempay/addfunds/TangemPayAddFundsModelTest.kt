@@ -15,6 +15,7 @@ import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
+import com.tangem.features.tangempay.bankCredentials
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -31,6 +32,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -74,7 +76,7 @@ internal class TangemPayAddFundsModelTest {
         }
 
     @Test
-    fun `GIVEN v2 enabled WHEN bank transfer clicked THEN the row loads until banking details arrive`() = runTest {
+    fun `GIVEN v2 enabled WHEN bank transfer clicked THEN the row is pending until banking details arrive`() = runTest {
         // Arrange
         every { featureToggles.isVisaOnrampV2Enabled } returns true
         val pending = CompletableDeferred<BankCredentials>()
@@ -86,7 +88,7 @@ internal class TangemPayAddFundsModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.bankTransferRow().isLoading).isTrue()
+        assertThat(model.bankTransferRow().accent).isEqualTo(TangemPayAddFundsItemUM.Accent.Warning)
         assertThat(model.bankTransferRow().onClick).isNull()
         pending.complete(bankCredentials())
         advanceUntilIdle()
@@ -107,18 +109,86 @@ internal class TangemPayAddFundsModelTest {
         // Assert
         verify(exactly = 1) { listener.onBankingDetailsLoadFailed(PRODUCT_INSTANCE_ID) }
         verify(exactly = 0) { router.push(any(), any()) }
-        assertThat(model.bankTransferRow().isLoading).isFalse()
+        assertThat(model.bankTransferRow().accent).isEqualTo(TangemPayAddFundsItemUM.Accent.Info)
         assertThat(model.bankTransferRow().onClick).isNotNull()
     }
 
+    @Test
+    fun `GIVEN banking details pending WHEN model destroyed THEN nothing is routed`() = runTest {
+        // Arrange
+        every { featureToggles.isVisaOnrampV2Enabled } returns true
+        val pending = CompletableDeferred<BankCredentials>()
+        coEvery { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) } coAnswers { pending.await().right() }
+        val model = createModel(VirtualAccountOnramp.Available(productInstanceId = PRODUCT_INSTANCE_ID))
+        model.clickBankTransfer()
+        advanceUntilIdle()
+
+        // Act
+        model.onDestroy()
+        pending.complete(bankCredentials())
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { router.push(any(), any()) }
+        verify(exactly = 0) { listener.onDismissAddFunds() }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class OnboardingStates {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN v2 enabled and no banking details WHEN bank transfer clicked THEN onboarding screen opens`(
+            onramp: VirtualAccountOnramp,
+        ) = runTest {
+            // Arrange
+            every { featureToggles.isVisaOnrampV2Enabled } returns true
+            val model = createModel(onramp)
+
+            // Act
+            model.clickBankTransfer()
+            advanceUntilIdle()
+
+            // Assert
+            verifyOrder {
+                listener.onDismissAddFunds()
+                router.push(TangemPayAccountDetailsInnerRoute.BankTransferOnrampOnboarding, any())
+            }
+            verify(exactly = 0) { listener.onClickBankTransfer() }
+            verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaTopupButtonClicked>()) }
+            coVerify(exactly = 0) { getBankCredentialsUseCase(any(), any()) }
+        }
+
+        private fun provideTestModels() = listOf(
+            VirtualAccountOnramp.Eligible,
+            VirtualAccountOnramp.Failed,
+        )
+    }
+
+    @Test
+    fun `GIVEN v2 enabled and banking details being created WHEN add funds shown THEN bank transfer row inert`() =
+        runTest {
+            // Arrange
+            every { featureToggles.isVisaOnrampV2Enabled } returns true
+
+            // Act
+            val model = createModel(VirtualAccountOnramp.Processing)
+
+            // Assert
+            assertThat(model.bankTransferRow().onClick).isNull()
+            assertThat(model.bankTransferRow().accent).isEqualTo(TangemPayAddFundsItemUM.Accent.Warning)
+            verify(exactly = 0) { router.push(any(), any()) }
+        }
+
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN no v2 screen for the state WHEN bank transfer clicked THEN host flow handles the click`(
-        model: HostFlowModel,
+    fun `GIVEN v2 disabled WHEN bank transfer clicked THEN host flow handles the click`(
+        onramp: VirtualAccountOnramp,
     ) = runTest {
         // Arrange
-        every { featureToggles.isVisaOnrampV2Enabled } returns model.isV2Enabled
-        val addFundsModel = createModel(model.onramp)
+        every { featureToggles.isVisaOnrampV2Enabled } returns false
+        val addFundsModel = createModel(onramp)
 
         // Act
         addFundsModel.clickBankTransfer()
@@ -158,26 +228,12 @@ internal class TangemPayAddFundsModelTest {
         getBankCredentialsUseCase = getBankCredentialsUseCase,
     )
 
-    private fun bankCredentials() = BankCredentials(
-        type = "ACH",
-        beneficiaryName = "Rain Payments Inc",
-        beneficiaryAddress = "123 Finance St",
-        beneficiaryBankName = "SSB Bank",
-        beneficiaryBankAddress = "8700 Perry Highway",
-        accountNumber = "123456",
-        routingNumber = "654321",
-        transferMessage = null,
-        depositFee = null,
-        depositLimit = null,
-    )
-
     private fun provideTestModels() = listOf(
-        HostFlowModel(isV2Enabled = false, onramp = VirtualAccountOnramp.Available(PRODUCT_INSTANCE_ID)),
-        HostFlowModel(isV2Enabled = true, onramp = VirtualAccountOnramp.Eligible),
-        HostFlowModel(isV2Enabled = true, onramp = VirtualAccountOnramp.Processing),
+        VirtualAccountOnramp.Available(PRODUCT_INSTANCE_ID),
+        VirtualAccountOnramp.Eligible,
+        VirtualAccountOnramp.Failed,
+        VirtualAccountOnramp.Processing,
     )
-
-    data class HostFlowModel(val isV2Enabled: Boolean, val onramp: VirtualAccountOnramp)
 
     private companion object {
         const val PRODUCT_INSTANCE_ID = "pi_account"

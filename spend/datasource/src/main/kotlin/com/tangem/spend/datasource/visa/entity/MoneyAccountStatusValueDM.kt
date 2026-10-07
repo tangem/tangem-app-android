@@ -19,12 +19,21 @@ sealed interface MoneyAccountStatusValueDM {
 
     @Serializable
     @SerialName("country_not_supported")
-    data object CountryNotSupported : MoneyAccountStatusValueDM
+    data class CountryNotSupported(
+        @SerialName("country_code") val countryCode: String? = null,
+    ) : MoneyAccountStatusValueDM
 
     @Serializable
     @SerialName("issuing")
     data class Issuing(
         @SerialName("step") val step: MoneyAccountStatusValue.IssuingStep,
+        @SerialName("customer_id") val customerId: String?,
+        @SerialName("balance") val balance: BalanceDM?,
+    ) : MoneyAccountStatusValueDM
+
+    @Serializable
+    @SerialName("kyc_required")
+    data class KycRequired(
         @SerialName("customer_id") val customerId: String?,
         @SerialName("balance") val balance: BalanceDM?,
     ) : MoneyAccountStatusValueDM

@@ -56,6 +56,7 @@ private enum class PromoEligibility { CAN_OFFER, NOT_AVAILABLE, ALREADY_CUSTOMER
 
 private fun PaymentAccountStatusValue.toPromoEligibility(): PromoEligibility = when (this) {
     is PaymentAccountStatusValue.NotCreated,
+    is PaymentAccountStatusValue.KycRequired,
     is PaymentAccountStatusValue.UnderReview,
     -> PromoEligibility.CAN_OFFER
     is PaymentAccountStatusValue.Empty -> PromoEligibility.NOT_AVAILABLE

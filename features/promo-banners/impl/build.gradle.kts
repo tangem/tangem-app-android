@@ -16,6 +16,7 @@ dependencies {
     /** Project - API */
     api(projects.features.promoBanners.api)
     implementation(projects.features.commonFeatures.api)
+    implementation(projects.features.wallet.api)
     implementation(projects.common.routing)
     implementation(projects.common.ui)
 
@@ -25,6 +26,8 @@ dependencies {
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.promo)
     implementation(projects.domain.promo.models)
+    implementation(projects.domain.feedback)
+    implementation(projects.domain.feedback.models)
     implementation(projects.domain.settings)
     implementation(projects.domain.markets.models)
 
