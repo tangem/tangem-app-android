@@ -16,6 +16,7 @@ import com.tangem.domain.account.status.utils.CryptoCurrencyOperations
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.TronGaslessTransactionRepository
+import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
@@ -91,7 +92,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
             normal = Fee.Common(amount = Amount(token = sentToken, value = BigDecimal("2.75"))),
         ),
         feeTokenId = usdtCurrency.id,
-        tronGaslessQuote = quote,
+        gaslessProtocolData = GaslessProtocolData.Tron(quote = quote),
     )
 
     @BeforeEach
@@ -157,7 +158,9 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
                 transactionFee = TransactionFee.Single(
                     normal = Fee.Common(amount = Amount(token = usdcToken, value = BigDecimal("2.75"))),
                 ),
-                tronGaslessQuote = quote.copy(compensationToken = usdcContract),
+                gaslessProtocolData = GaslessProtocolData.Tron(
+                    quote = quote.copy(compensationToken = usdcContract),
+                ),
             )
 
             // Act
@@ -193,7 +196,9 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
     fun `GIVEN compensation token differs from fee token WHEN invoke THEN error`() = runTest {
         // Arrange — backend quotes a compensation token other than the selected fee token.
         val mismatchedFee = fee.copy(
-            tronGaslessQuote = quote.copy(compensationToken = "TOtherContractAddress00000000000000"),
+            gaslessProtocolData = GaslessProtocolData.Tron(
+                quote = quote.copy(compensationToken = "TOtherContractAddress00000000000000"),
+            ),
         )
 
         // Act
@@ -254,7 +259,9 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
     @Test
     fun `GIVEN quote taken for another destination WHEN invoke THEN re-quotes for the actual destination`() = runTest {
         // Arrange
-        val estimationFee = fee.copy(tronGaslessQuote = quote.copy(quotedToAddress = "TEstimation"))
+        val estimationFee = fee.copy(
+            gaslessProtocolData = GaslessProtocolData.Tron(quote.copy(quotedToAddress = "TEstimation")),
+        )
         coEvery { tronGaslessTransactionRepository.estimate(any()) } returns quote.copy(quoteId = "q_2")
         coEvery {
             tronGaslessTransactionRepository.submit(userWallet.walletId, "q_2", "signedComp", "signedOrig")
