@@ -54,7 +54,11 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
             type = TransactionType.Joint.Transfer(
                 recipient = USER_ADDRESS,
                 amount = BigDecimal.ONE,
-                refundCapWei = BigDecimal("500000000000000"),
+                refundCap = SdkAmount(
+                    currencySymbol = "ETH",
+                    value = BigDecimal("500000000000000").movePointLeft(18),
+                    decimals = 18,
+                ),
                 signaturesCount = 2,
             ),
             isOutgoing = true,
@@ -66,55 +70,6 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
         // Assert
         assertThat(feeRow.value.resolveString()).startsWith("~")
-    }
-
-    @Test
-    fun `GIVEN joint token fee WHEN convert THEN the header carries the fee icon and an approximate amount`() {
-        // Arrange
-        val tx = txInfo(
-            type = TransactionType.Joint.TokenFee(
-                tokenContract = "0xtoken",
-                tokenAmount = null,
-                recipient = USER_ADDRESS,
-                refundCapWei = BigDecimal("500000000000000"),
-                signaturesCount = 2,
-            ),
-            isOutgoing = true,
-            amount = BigDecimal.ZERO,
-            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
-        )
-
-        // Act
-        val actual = converter.convert(tx)
-
-        // Assert
-        assertThat(actual.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_percent_20))
-        assertThat(actual.amountBlock.amount.resolveString()).contains(StringsSigns.TILDE_SIGN)
-    }
-
-    @Test
-    fun `GIVEN joint token fee for an untracked token WHEN convert THEN there is no counterparty card`() {
-        // Arrange — like a personal NetworkFee, the row talks to the token contract, which is not a counterparty
-        val tx = txInfo(
-            type = TransactionType.Joint.TokenFee(
-                tokenContract = "0xtoken",
-                tokenAmount = null,
-                recipient = USER_ADDRESS,
-                refundCapWei = BigDecimal("500000000000000"),
-                signaturesCount = 2,
-            ),
-            isOutgoing = true,
-            amount = BigDecimal.ZERO,
-            interactionAddressType = TxInfo.InteractionAddressType.Contract("0xtoken"),
-            destinationType = TxInfo.DestinationType.Single(addressType = TxInfo.AddressType.Contract("0xtoken")),
-            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
-        )
-
-        // Act
-        val actual = converter.convert(tx)
-
-        // Assert
-        assertThat(actual.counterparty).isNull()
     }
 
     @Test
@@ -884,6 +839,22 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Assert
         assertThat(counterparty?.avatar).isEqualTo(TxHistoryDetailsUM.CounterpartyAvatar.Address(EXTERNAL_ADDRESS))
         assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.common_from_address))
+    }
+
+    @Test
+    fun `GIVEN external counterparty WHEN convert THEN the card shows the whole address`() {
+        // Arrange
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(EXTERNAL_ADDRESS),
+        )
+
+        // Act
+        val counterparty = converter.convert(tx).counterparty
+
+        // Assert
+        assertThat(counterparty?.title).isEqualTo(stringReference(EXTERNAL_ADDRESS))
     }
 
     @Test

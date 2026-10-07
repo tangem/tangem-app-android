@@ -20,6 +20,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.model.ExpressTr
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.ExpressStatusBottomSheet
+import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
@@ -32,6 +33,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 @Suppress("LongParameterList")
@@ -42,6 +44,7 @@ internal class ExpressStatusFactory @AssistedInject constructor(
     @Assisted appCurrencyProvider: Provider<AppCurrency>,
     @Assisted userWallet: UserWallet,
     @Assisted cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
+    @Assisted private val scope: ExpressTransactionsComponent.Scope,
     private val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventsHandler: AnalyticsEventHandler,
     onrampStatusFactory: OnrampStatusFactory.Factory,
@@ -56,6 +59,7 @@ internal class ExpressStatusFactory @AssistedInject constructor(
             currentStateProvider = currentStateProvider,
             userWallet = userWallet,
             cryptoCurrency = cryptoCurrency,
+            scope = scope,
         )
     }
 
@@ -70,14 +74,22 @@ internal class ExpressStatusFactory @AssistedInject constructor(
         )
     }
 
-    fun getExpressStatuses(): Flow<PersistentList<ExpressTransactionStateUM>> = combine(
-        flow = exchangeStatusFactory(),
-        flow2 = onrampStatusFactory(),
-    ) { maybeExchange, maybeOnramp ->
-        persistentListOf(maybeOnramp, maybeExchange)
-            .flatten()
-            .sortedByDescending { it.info.timestamp }
-            .toPersistentList()
+    fun getExpressStatuses(): Flow<PersistentList<ExpressTransactionStateUM>> = when (scope) {
+        ExpressTransactionsComponent.Scope.Currency -> combine(
+            flow = exchangeStatusFactory(),
+            flow2 = onrampStatusFactory(),
+        ) { maybeExchange, maybeOnramp ->
+            persistentListOf(maybeOnramp, maybeExchange)
+                .flatten()
+                .sortedByDescending { it.info.timestamp }
+                .toPersistentList()
+        }
+        is ExpressTransactionsComponent.Scope.Account -> exchangeStatusFactory().map { exchanges ->
+            exchanges
+                .sortedByDescending { it.info.timestamp }
+                .take(scope.maxCount)
+                .toPersistentList()
+        }
     }
 
     suspend fun getUpdatedExpressStatuses(expressTxs: PersistentList<ExpressTransactionStateUM>) =
@@ -107,7 +119,9 @@ internal class ExpressStatusFactory @AssistedInject constructor(
             updateBalance(currentTx.toCryptoCurrency)
         }
 
-        val expressTxsToDisplay = if (txHistoryFeatureToggles.isNewTxHistoryEnabled) {
+        val isShownInTxHistory = scope == ExpressTransactionsComponent.Scope.Currency &&
+            txHistoryFeatureToggles.isNewTxHistoryEnabled
+        val expressTxsToDisplay = if (isShownInTxHistory) {
             persistentListOf()
         } else {
             expressTxs.filterNot {
@@ -235,6 +249,7 @@ internal class ExpressStatusFactory @AssistedInject constructor(
             userWallet: UserWallet,
             cryptoCurrency: CryptoCurrency,
             cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
+            scope: ExpressTransactionsComponent.Scope,
         ): ExpressStatusFactory
     }
 }
