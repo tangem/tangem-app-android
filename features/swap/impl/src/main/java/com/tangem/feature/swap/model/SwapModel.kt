@@ -110,6 +110,7 @@ import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.analytics.SwapQuotePerformanceTracker
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
+import com.tangem.feature.swap.component.slippage.SwapSlippageComponent
 import com.tangem.feature.swap.converters.SwapProviderResolver
 import com.tangem.feature.swap.converters.SwapTransactionErrorStateConverter
 import com.tangem.feature.swap.domain.AllowPermissionsHandler
@@ -303,6 +304,7 @@ internal class SwapModel @Inject constructor(
         isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
         appRouter = appRouter,
         isChooseTokenPulseEnabled = swapFeatureToggles.isChooseTokenPulseEnabled,
+        isCustomSlippageEnabled = swapFeatureToggles.isCustomSlippageEnabled,
         predictionTopUpLimitsProvider = Provider { predictionTopUpLimits },
     )
 
@@ -1139,6 +1141,7 @@ internal class SwapModel @Inject constructor(
         isSilent: Boolean = false,
         updateFeeBlock: Boolean = true,
     ) {
+        resetCustomSlippageIfQuoteChanged(SlippageQuoteKey(fromSwapCurrencyStatus, toSwapCurrencyStatus, amount))
         dataState = dataState.copy(
             amount = amount,
             reduceBalanceBy = reduceBalanceBy,
@@ -1263,6 +1266,7 @@ internal class SwapModel @Inject constructor(
                         providers = toProvidersList,
                         amountToSwap = amount,
                         reduceBalanceBy = reduceBalanceBy,
+                        customSlippage = dataState.slippage.customOrNull,
                     )
                 }
             },
@@ -1360,6 +1364,7 @@ internal class SwapModel @Inject constructor(
     ) {
         when (state) {
             is SwapState.QuotesLoadedState -> {
+                resetCustomSlippageIfNotApplied(state.slippage)
                 setupQuotesLoadedUiState(provider, state)
                 sendAnalyticsForNotifications(provider, fromSwapCurrencyStatus.status, toSwapCurrencyStatus.status)
                 updatePermissionNotificationState(state)
@@ -1397,6 +1402,7 @@ internal class SwapModel @Inject constructor(
             swapFee = swapFee,
             feeError = feeSelectorRepository.state.value as? FeeSelectorUM.Error,
             isHighNetworkFee = isHighNetworkFee(swapFee),
+            slippage = dataState.slippage,
         )
     }
 
@@ -1715,6 +1721,7 @@ internal class SwapModel @Inject constructor(
                     expressOperationType = ExpressOperationType.SWAP,
                     isTangemPayWithdrawal = isTangemPayWithdrawal,
                     integratedApproval = lastLoadedQuotesState.integratedApprovalData,
+                    customSlippage = dataState.slippage.customOrNull,
                 )
             }.onSuccess { swapTransactionState ->
                 when (swapTransactionState) {
@@ -2510,7 +2517,11 @@ internal class SwapModel @Inject constructor(
         glassSheetSlotNavigation.navigate(
             transformer = { null },
             onComplete = { _, old ->
-                if (old is SwapBottomSheetRoute.GiveApproval) startLoadingQuotesFromLastState(isSilent = true)
+                when (old) {
+                    is SwapBottomSheetRoute.GiveApproval -> startLoadingQuotesFromLastState(isSilent = true)
+                    is SwapBottomSheetRoute.Slippage -> singleTaskScheduler.resumeLastTask(modelScope)
+                    else -> Unit
+                }
             },
         )
     }
@@ -2630,6 +2641,77 @@ internal class SwapModel @Inject constructor(
             onSwapUIModeChange = ::onSwapUIModeChange,
             onSwapTypeMenuOpened = ::onSwapTypeMenuOpened,
             onTronBannerShown = ::incrementTronTokenFeeShowCount,
+            onSlippageClick = ::onSlippageClick,
+        )
+    }
+
+    @VisibleForTesting
+    internal fun onSlippageClick() {
+        val provider = dataState.selectedProvider ?: return
+        val defaultPercent = provider.defaultSlippage ?: return
+        val params = SwapSlippageComponent.Params(
+            provider = provider,
+            defaultPercent = defaultPercent,
+            customSlippage = dataState.slippage.customOrNull,
+            onConfirm = ::onSlippageConfirm,
+            onCloseClick = ::dismissGlassSheet,
+        )
+        openBottomSheet(SwapBottomSheetRoute.Slippage(params)) {
+            singleTaskScheduler.cancelTask()
+            if (dataState.slippage.isResetHighlighted) {
+                dataState = dataState.copy(slippage = SwapSlippageState.Default())
+            }
+            refreshSlippageUM()
+        }
+    }
+
+    @VisibleForTesting
+    internal fun onSlippageConfirm(customSlippage: BigDecimal?) {
+        val isChanged = customSlippage != dataState.slippage.customOrNull
+        dataState = dataState.copy(
+            slippage = customSlippage
+                ?.let { SwapSlippageState.Custom(value = it, quoteKey = currentSlippageQuoteKey()) }
+                ?: SwapSlippageState.Default(),
+        )
+        refreshSlippageUM()
+        if (isChanged) startLoadingQuotesFromLastState(isSilent = true)
+        dismissGlassSheet()
+    }
+
+    private fun currentSlippageQuoteKey(): SlippageQuoteKey? {
+        val from = dataState.fromSwapCurrencyStatus ?: return null
+        val to = dataState.toSwapCurrencyStatus ?: return null
+        val amount = dataState.amount ?: return null
+        return SlippageQuoteKey(from, to, amount)
+    }
+
+    @VisibleForTesting
+    internal fun resetCustomSlippageIfQuoteChanged(quoteKey: SlippageQuoteKey) {
+        val slippage = dataState.slippage as? SwapSlippageState.Custom ?: return
+        if (slippage.quoteKey != quoteKey) resetCustomSlippage()
+    }
+
+    /**
+     * The provider applies a custom slippage only if it supports it and the value is in its range, otherwise it
+     * falls back to its default for the pair and amount. Null comes from responses without slippage.
+     */
+    @VisibleForTesting
+    internal fun resetCustomSlippageIfNotApplied(appliedSlippage: BigDecimal?) {
+        val customSlippage = dataState.slippage.customOrNull ?: return
+        if (appliedSlippage != null && appliedSlippage.compareTo(customSlippage) != 0) resetCustomSlippage()
+    }
+
+    private fun resetCustomSlippage() {
+        dataState = dataState.copy(slippage = SwapSlippageState.Default(isResetHighlighted = true))
+        refreshSlippageUM()
+    }
+
+    private fun refreshSlippageUM() {
+        val provider = dataState.selectedProvider ?: return
+        uiState = stateBuilder.updateSlippage(
+            uiState = uiState,
+            swapProvider = provider,
+            slippage = dataState.slippage,
         )
     }
 

@@ -33,4 +33,5 @@ internal data class UiActions(
     val onSwapUIModeChange: (SwapUIMode) -> Unit,
     val onSwapTypeMenuOpened: () -> Unit,
     val onTronBannerShown: () -> Unit,
+    val onSlippageClick: () -> Unit,
 )
