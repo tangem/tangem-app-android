@@ -209,7 +209,9 @@ private fun PlanFooter(state: TangemPayCurrentPlanUM, modifier: Modifier = Modif
             )
         }
         TangemButton(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(TangemPayTestTags.CURRENT_PLAN_FULL_TERMS_BUTTON),
             variant = TangemButton.Variant.Secondary,
             size = TangemButton.Size.X12,
             text = resourceReference(R.string.tangempay_current_plan_full_terms),

@@ -200,7 +200,7 @@ class YieldModeTest : BaseTestCase() {
         val tokenTitle = "USDC"
         val topUpAmount = "600.00"
         val incomingTransactionTitle = getResourceString(CoreResR.string.common_received)
-        val topUpTransactionTitle = getResourceString(CoreResR.string.transaction_history_supplied)
+        val topUpTransactionTitle = getResourceString(CoreResR.string.yield_module_transaction_supplied)
         val supplyingNotificationTitle = getResourceString(
             CoreResR.string.yield_module_amount_not_transfered_to_aave_title,
             topUpAmount,
@@ -247,7 +247,12 @@ class YieldModeTest : BaseTestCase() {
                 }
             }
             step("Assert '$topUpTransactionTitle' transaction is displayed in history") {
-                onTxHistoryScreen { transactionItem(topUpTransactionTitle).assertIsDisplayed() }
+                onTxHistoryScreen {
+                    yieldSupplyPill(
+                        label = CoreResR.string.yield_module_transaction_supplied,
+                        directionTemplate = CoreResR.string.transaction_history_to_inline_address,
+                    ).assertIsDisplayed()
+                }
             }
 
             step("Click on 'Yield mode enabled' block") {
@@ -349,7 +354,10 @@ class YieldModeTest : BaseTestCase() {
         val tokenTitle = "USDC"
         val nativeCoinTitle = "Ethereum"
         val apy = "5.24"
-        val reactivateTransactionTitle = getResourceString(CoreResR.string.yield_module_transaction_reactivate)
+        val networkFeeTitle = getResourceString(CoreResR.string.common_network_fee_title)
+        val reactivateFeeSubtitle =
+            getResourceString(CoreResR.string.transaction_history_fee_for_yield_mode_reactivation)
+        val activateFeeSubtitle = getResourceString(CoreResR.string.transaction_history_fee_for_yield_mode_activation)
         val portfolioScenario = "user_tokens_api"
         val portfolioState = "YieldUSDCEthereum"
         val balancesScenario = "moralis_evm_token_balances_api"
@@ -434,13 +442,15 @@ class YieldModeTest : BaseTestCase() {
             step("Assert 'Token details' screen is displayed") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
             }
-            step("Assert 'Reactivate Token' transaction is displayed in history") {
+            step("Assert '$networkFeeTitle' for '$reactivateFeeSubtitle' is displayed in history") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onTxHistoryScreen { transactionItem(reactivateTransactionTitle).assertIsDisplayed() }
+                    onTxHistoryScreen {
+                        transactionSubtitle(networkFeeTitle, reactivateFeeSubtitle).assertIsDisplayed()
+                    }
                 }
             }
-            step("Assert 'Enter protocol' transaction is displayed in history") {
-                onTxHistoryScreen { yieldModePill(CoreResR.string.common_enabled).assertIsDisplayed() }
+            step("Assert '$networkFeeTitle' for '$activateFeeSubtitle' is displayed in history") {
+                onTxHistoryScreen { transactionSubtitle(networkFeeTitle, activateFeeSubtitle).assertIsDisplayed() }
             }
         }
     }
@@ -451,6 +461,8 @@ class YieldModeTest : BaseTestCase() {
     fun closeActiveLandingTest() {
         val tokenTitle = "USDC"
         val nativeCoinTitle = "Ethereum"
+        val networkFeeTitle = getResourceString(CoreResR.string.common_network_fee_title)
+        val exitFeeSubtitle = getResourceString(CoreResR.string.transaction_history_fee_for_yield_mode_deactivation)
         val portfolioScenario = "user_tokens_api"
         val portfolioState = "YieldUSDCEthereum"
         val balancesScenario = "moralis_evm_token_balances_api"
@@ -524,9 +536,9 @@ class YieldModeTest : BaseTestCase() {
             step("Assert 'Token details' screen is displayed") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
             }
-            step("Assert 'Yield mode disabled' transaction is displayed in history") {
+            step("Assert '$networkFeeTitle' for '$exitFeeSubtitle' is displayed in history") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onTxHistoryScreen { yieldModePill(CoreResR.string.common_disabled).assertIsDisplayed() }
+                    onTxHistoryScreen { transactionSubtitle(networkFeeTitle, exitFeeSubtitle).assertIsDisplayed() }
                 }
             }
         }

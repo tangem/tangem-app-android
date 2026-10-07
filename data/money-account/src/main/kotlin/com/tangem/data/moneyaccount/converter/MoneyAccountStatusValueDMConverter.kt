@@ -28,6 +28,10 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
                 customerId = value.customerId,
                 balance = value.balance?.toDM(),
             )
+            is MoneyAccountStatusValue.Onboarding.KycRequired -> MoneyAccountStatusValueDM.KycRequired(
+                customerId = value.customerId,
+                balance = value.balance?.toDM(),
+            )
             is MoneyAccountStatusValue.Onboarding.UnderReview -> MoneyAccountStatusValueDM.UnderReview(
                 kycStatus = value.kycStatus,
                 customerId = value.customerId,
@@ -73,6 +77,11 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
                 balance = value.balance?.toDomain(userWalletId),
                 customerId = value.customerId,
                 step = value.step,
+            )
+            is MoneyAccountStatusValueDM.KycRequired -> MoneyAccountStatusValue.Onboarding.KycRequired(
+                source = StatusSource.CACHE,
+                balance = value.balance?.toDomain(userWalletId),
+                customerId = value.customerId,
             )
             is MoneyAccountStatusValueDM.UnderReview -> MoneyAccountStatusValue.Onboarding.UnderReview(
                 source = StatusSource.CACHE,

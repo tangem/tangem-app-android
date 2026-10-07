@@ -30,6 +30,6 @@ internal class JointAccountMembersStateController @Inject constructor() {
         joined = persistentListOf(),
         freeSlots = persistentListOf(),
         otherMembersLabel = null,
-        onActivateClick = null,
+        activateButton = null,
     )
 }

@@ -59,7 +59,8 @@ internal fun FeedShortcutCard(
                     text = title,
                     style = TangemTheme.typography3.caption.medium,
                     color = TangemTheme.colors3.text.primary,
-                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 2,
                 )
             }
         }
@@ -93,7 +94,7 @@ internal fun FeedPromoCard(
     ) {
         Text(
             text = title,
-            style = TangemTheme.typography3.subheading.medium,
+            style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
             overflow = TextOverflow.Ellipsis,
             maxLines = 2,
@@ -101,7 +102,7 @@ internal fun FeedPromoCard(
         if (description != null) {
             Text(
                 text = description,
-                style = TangemTheme.typography3.body.medium,
+                style = TangemTheme.typography3.subheading.medium,
                 color = TangemTheme.colors3.text.primary,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 3,
@@ -123,15 +124,11 @@ internal fun FeedPromoCardSkeleton(
         icon = icon,
     ) {
         TangemShimmer(
-            style = TangemTheme.typography3.subheading.medium,
+            style = TangemTheme.typography3.caption.medium,
             modifier = Modifier.fillMaxWidth(fraction = TITLE_SKELETON_WIDTH_FRACTION),
         )
         TangemShimmer(
-            style = TangemTheme.typography3.body.medium,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        TangemShimmer(
-            style = TangemTheme.typography3.body.medium,
+            style = TangemTheme.typography3.subheading.medium,
             modifier = Modifier.fillMaxWidth(fraction = DESCRIPTION_SKELETON_WIDTH_FRACTION),
         )
     }

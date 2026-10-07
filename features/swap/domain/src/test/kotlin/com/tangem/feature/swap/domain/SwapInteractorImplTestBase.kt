@@ -280,6 +280,8 @@ internal fun buildCoinCurrency(
 internal fun buildSwapProvider(
     type: ExchangeProviderType = ExchangeProviderType.DEX,
     providerId: String = "test-provider-${type.name}",
+    slippage: BigDecimal? = null,
+    isCustomSlippageSupported: Boolean = false,
 ): SwapProvider = SwapProvider(
     providerId = providerId,
     rateTypes = listOf(RateType.FLOAT),
@@ -289,7 +291,8 @@ internal fun buildSwapProvider(
     termsOfUse = null,
     privacyPolicy = null,
     isRecommended = false,
-    slippage = null,
+    slippage = slippage,
+    isCustomSlippageSupported = isCustomSlippageSupported,
     isExtraIdSupported = false,
 )
 

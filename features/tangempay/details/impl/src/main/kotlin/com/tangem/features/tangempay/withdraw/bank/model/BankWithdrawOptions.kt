@@ -7,14 +7,15 @@ import java.util.Currency
 
 /**
  * Everything the wizard needs to price a withdrawal, prepared by the hub before the flow starts. Both lists are
- * non-empty: every source is a token the off-ramp accepts and the account holds, every destination a rail it offers.
+ * non-empty: [sources] lists every token the account holds a balance in, at least one of them available, and
+ * [destinations] every rail the off-ramp offers.
  *
- * [minAmount] is the smallest withdrawal the backend accepts. There is no upper limit of its own: a withdrawal is
- * capped by the selected token's own balance.
+ * A withdrawal must fall within [minAmount]..[maxAmount]; inside that range the selected token's balance caps it too.
  */
 internal data class BankWithdrawOptions(
     val sources: ImmutableList<BankWithdrawSource>,
     val destinations: ImmutableList<OfframpDestination>,
     val minAmount: BigDecimal,
+    val maxAmount: BigDecimal,
     val currency: Currency,
 )
