@@ -121,6 +121,7 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      *
      * @property isLoading `true` while the signing action (e.g. NFC card scan) is in flight.
      * @property iconEnd Optional trailing glyph on the button (e.g. a scan/NFC icon on "Sign").
+     * @property isHoldToConfirm the button signs on tap and hold — a hot wallet has no card tap to confirm the intent.
      */
     data class CosignActionUM(
         val buttonText: TextReference,
@@ -128,6 +129,7 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
         val isEnabled: Boolean,
         val isLoading: Boolean = false,
         val iconEnd: TangemIconUM? = null,
+        val isHoldToConfirm: Boolean = false,
         val onClick: () -> Unit,
     )
 
