@@ -1093,8 +1093,7 @@ class SwapTokenScreenTest : BaseTestCase() {
         var rateForTokenAmount = ""
         var feeForTokenAmount = ""
         val quoteScenarioName = "exchange_quote_polygon"
-        // The quote carries a fixed offset and the gas estimate is higher for exactly 1 POL, so the rate
-        // and the fee both change once the amount is entered in fiat.
+        // Mock: quote has a fixed offset and gas is higher for exactly 1 POL, so rate and fee change.
         val nonProportionalRateState = "NonProportionalRate"
 
         setupHooks().run {

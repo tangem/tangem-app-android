@@ -46,11 +46,9 @@ class SwapSuccessPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
         useUnmergedTree = true
     }
 
-    // The block title reads "You send" or, in accounts mode, "You send from" + the account label.
     fun sendBlockText(text: String): KNode =
         amountBlockText(getResourceString(R.string.swapping_from_title_v2), text)
 
-    // The block title reads "You receive" or, in accounts mode, "You receive in" + the account label.
     fun receiveBlockText(text: String): KNode =
         amountBlockText(getResourceString(R.string.swapping_to_title), text)
 
