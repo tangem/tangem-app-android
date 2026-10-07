@@ -15,6 +15,7 @@ import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.TronGaslessTransactionRepository
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.error.mapToGaslessSendError
+import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
@@ -43,7 +44,8 @@ class CreateAndSendTronGaslessTransactionUseCase(
     ): Either<SendTransactionError, String> = either {
         catch(
             block = {
-                val quotedFee = fee.tronGaslessQuote ?: error("Tron gasless quote is missing")
+                val quotedFee = (fee.gaslessProtocolData as? GaslessProtocolData.Tron)?.quote
+                    ?: error("Tron gasless quote is missing")
 
                 // Resolved as in the EVM flow, so both send paths agree on the account the fee token comes from.
                 val network = singleAccountListSupplier.getSyncOrNull(userWalletId = userWallet.walletId)
