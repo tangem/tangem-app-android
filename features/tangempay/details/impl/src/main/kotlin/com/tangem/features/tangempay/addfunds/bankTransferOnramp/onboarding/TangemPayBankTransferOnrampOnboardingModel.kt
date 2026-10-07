@@ -11,7 +11,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.ToastMessage
-import com.tangem.domain.models.account.VirtualAccountOnramp
+import com.tangem.domain.models.account.isOrderRequired
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.CreateVirtualAccountOrderUseCase
 import com.tangem.domain.pay.usecase.GetOnrampFeesUseCase
@@ -86,9 +86,10 @@ internal class TangemPayBankTransferOnrampOnboardingModel @Inject constructor(
         modelScope.launch {
             val status = paymentAccountStatusSupplier(params.userWalletId).first().ifLoadedOrNull { it }
             val paymentAccountAddress = status?.paymentAccountAddress
+            val onramp = status?.virtualAccount
             when {
-                status == null || paymentAccountAddress == null -> onOrderFailed()
-                status.virtualAccount != VirtualAccountOnramp.Eligible -> router.pop()
+                paymentAccountAddress == null || onramp == null -> onOrderFailed()
+                !onramp.isOrderRequired -> router.pop()
                 else -> createOrder(paymentAccountAddress)
             }
         }
