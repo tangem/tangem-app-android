@@ -79,8 +79,9 @@ grep -nE '"""\{|"\{\\"|\{\s*\\"[a-zA-Z]+\\"\s*:' $CHANGED
 # 3. flakySafely in scenario/extension code — NOT available there; must be awaitSuccess.
 grep -nE "flakySafely" $CHANGED   # legal only inside a TestCase test-body lambda, never in a scenario fun
 
-# 4. assertIsNotEnabled / assertIsEnabled on ACTION_BUTTON / HoldToConfirm — no Disabled semantics;
-#    use assertHasNoClickAction() / assertHasClickAction() instead.
+# 4. assertIsNotEnabled / assertIsEnabled on ACTION_BUTTON — no Disabled semantics;
+#    use assertHasNoClickAction() / assertHasClickAction() instead. HoldToConfirm is the opposite:
+#    no OnClick ever, but Disabled when enabled = false — assertIsEnabled() / assertIsNotEnabled() there.
 grep -nE "assertIs(Not)?Enabled" $CHANGED
 ```
 

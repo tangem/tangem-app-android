@@ -232,6 +232,14 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         hasText(getResourceString(R.string.common_swap))
     }
 
+    // A disabled button does not merge its label into BASE_BUTTON, and a hot wallet's hold-to-confirm
+    // button has no click action at all — match through the label and assert Disabled semantics.
+    val swapButtonWithLabel: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasAnyDescendant(withText(getResourceString(R.string.common_swap)))
+        useUnmergedTree = true
+    }
+
     val transferButton: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasText(getResourceString(R.string.swapping_transfer_action))
@@ -299,6 +307,19 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
     }
 
     val swapFiatAmount: KNode = child {
+        hasTestTag(SwapTokenScreenTestTags.SWAP_FIAT_AMOUNT)
+        useUnmergedTree = true
+    }
+
+    // Until a receive token is chosen, the receive card renders the send card's tags with placeholder zeros.
+    val emptyReceiveAmount: KNode = child {
+        hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.RECEIVE_CARD))
+        hasTestTag(SwapTokenScreenTestTags.SWAP_TEXT_FIELD)
+        useUnmergedTree = true
+    }
+
+    val emptyReceiveFiatAmount: KNode = child {
+        hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.RECEIVE_CARD))
         hasTestTag(SwapTokenScreenTestTags.SWAP_FIAT_AMOUNT)
         useUnmergedTree = true
     }
