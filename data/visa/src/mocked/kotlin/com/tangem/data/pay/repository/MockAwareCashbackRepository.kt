@@ -6,6 +6,7 @@ import arrow.core.Either
 import arrow.core.right
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.remote.config.managers.ApiConfigsManager
+import com.tangem.data.pay.store.CashbackSummaryStore
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CashbackDisplayMode
 import com.tangem.domain.pay.model.CashbackDocument
@@ -18,28 +19,42 @@ import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem.Cashback.ExclusionReason
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem.Cashback.Status
+import kotlinx.coroutines.flow.Flow
 import org.joda.time.DateTime
 import java.math.BigDecimal
 import java.util.Currency
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/** In MOCK env returns canned cashback data; otherwise delegates to [DefaultCashbackRepository]. */
+/**
+ * In MOCK env returns canned cashback data; otherwise delegates to [DefaultCashbackRepository].
+ *
+ * Cashback UI tests drive the program status, display mode and amounts from WireMock instead, so they opt out
+ * via the [UITEST_CASHBACK_FROM_API_KEY] system property.
+ */
 @Singleton
 internal class MockAwareCashbackRepository @Inject constructor(
     private val real: DefaultCashbackRepository,
     private val apiConfigsManager: ApiConfigsManager,
+    private val summaryStore: CashbackSummaryStore,
 ) : CashbackRepository {
 
     private val isMockMode: Boolean
         get() = apiConfigsManager
             .getEnvironmentConfig(TangemPay.Bff.ID)
-            .environment == ApiEnvironment.MOCK
+            .environment == ApiEnvironment.MOCK &&
+            System.getProperty(UITEST_CASHBACK_FROM_API_KEY) != "1"
 
     override suspend fun getCashbackSummary(userWalletId: UserWalletId): Either<VisaApiError, CashbackSummary> {
-        if (isMockMode) return MOCK_SUMMARY.right()
+        if (isMockMode) {
+            summaryStore.store(userWalletId, MOCK_SUMMARY)
+            return MOCK_SUMMARY.right()
+        }
         return real.getCashbackSummary(userWalletId)
     }
+
+    override fun observeCashbackSummary(userWalletId: UserWalletId): Flow<CashbackSummary?> =
+        real.observeCashbackSummary(userWalletId)
 
     override suspend fun getCashbackPromotions(
         userWalletId: UserWalletId,
@@ -78,6 +93,8 @@ internal class MockAwareCashbackRepository @Inject constructor(
         real.setDeactivationBannerDismissed(userWalletId)
 
     private companion object {
+        const val UITEST_CASHBACK_FROM_API_KEY = "uitest.tangempay.cashback_from_api"
+
         val MOCK_SUMMARY = CashbackSummary.Enabled(
             displayMode = CashbackDisplayMode.FULL,
             cashback = TangemPayCashback(
@@ -216,6 +233,11 @@ internal class MockAwareCashbackRepository @Inject constructor(
                 exclusionReason = ExclusionReason.MERCHANT_COUNTRY_EXCLUDED,
             )
             "tx_11" -> details(status = Status.EXCLUDED, amount = "0.00", exclusionReason = ExclusionReason.BELOW_MIN)
+            "tx_12" -> details(
+                status = Status.EXCLUDED,
+                amount = "0.00",
+                exclusionReason = ExclusionReason.COMPLIANCE_RISK,
+            )
             else -> null
         }
 

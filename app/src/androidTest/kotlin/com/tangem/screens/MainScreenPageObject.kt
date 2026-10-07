@@ -132,6 +132,16 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         error("Token '$tokenName' is not displayed on the current wallet page")
     }
 
+    fun clickDisplayedGetTangemPayBannerLearnMoreButton() {
+        val matcher = withTestTag(BaseButtonTestTags.BUTTON) and
+            hasAnyDescendant(withText(getResourceString(CoreResR.string.common_learn_more)))
+        val nodes = semanticsProvider.onAllNodes(matcher, useUnmergedTree = true)
+        for (i in 0 until nodes.fetchSemanticsNodes().size) {
+            if (runCatching { nodes[i].assertIsDisplayed(); nodes[i].performClick() }.isSuccess) return
+        }
+        throw AssertionError("'Get Tangem Pay' banner is not displayed on the current wallet page")
+    }
+
     /**
      * Switches to the previous/next wallet in the pager. A horizontal swipe is a silent no-op unless
      * the collapsing balance header is fully expanded and pinned to the top, so we retry: swipe, and

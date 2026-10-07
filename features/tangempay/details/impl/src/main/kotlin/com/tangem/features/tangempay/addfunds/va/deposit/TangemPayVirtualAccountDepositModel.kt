@@ -15,6 +15,7 @@ import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.models.account.VirtualAccountOnramp
+import com.tangem.domain.models.account.isOrderRequired
 import com.tangem.domain.pay.usecase.CreateVirtualAccountOrderUseCase
 import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
 import com.tangem.domain.pay.usecase.GetOnrampFeesUseCase
@@ -49,7 +50,7 @@ internal class TangemPayVirtualAccountDepositModel @Inject constructor(
         field = MutableStateFlow(
             TangemPayVirtualAccountDepositUM(
                 fees = TangemPayVirtualAccountDepositUM.FeesUM.Loading,
-                shouldShowTermsAndConditions = params.virtualAccountOnramp is VirtualAccountOnramp.Eligible,
+                shouldShowTermsAndConditions = params.virtualAccountOnramp.isOrderRequired,
                 isLoading = false,
                 onShowDetailsClick = ::onShowDetailsClick,
                 onDismiss = ::onDismiss,
@@ -59,7 +60,7 @@ internal class TangemPayVirtualAccountDepositModel @Inject constructor(
         )
 
     init {
-        val event = if (params.virtualAccountOnramp is VirtualAccountOnramp.Eligible) {
+        val event = if (params.virtualAccountOnramp.isOrderRequired) {
             TangemPayAnalyticsEvents.VaConditionsPopupShowedFirstTime()
         } else {
             TangemPayAnalyticsEvents.VaConditionsPopupShowed()
@@ -117,7 +118,9 @@ internal class TangemPayVirtualAccountDepositModel @Inject constructor(
                 analytics.send(TangemPayAnalyticsEvents.VaShowDetailsClicked())
                 fetchBankCredentials(onramp)
             }
-            VirtualAccountOnramp.Eligible -> {
+            VirtualAccountOnramp.Eligible,
+            VirtualAccountOnramp.Failed,
+            -> {
                 analytics.send(TangemPayAnalyticsEvents.VaShowDetailsFirstTimeClicked())
                 createVirtualAccountOrder()
             }

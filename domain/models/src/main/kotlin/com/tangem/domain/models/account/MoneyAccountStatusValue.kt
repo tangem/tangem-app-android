@@ -35,6 +35,7 @@ sealed class MoneyAccountStatusValue {
     fun copySealed(source: StatusSource): MoneyAccountStatusValue {
         return when (this) {
             is Onboarding.Issuing -> copy(source = source)
+            is Onboarding.KycRequired -> copy(source = source)
             is Onboarding.UnderReview -> copy(source = source)
             is Onboarding.VerificationDeclined -> copy(source = source)
             is Onboarding.Activating -> copy(source = source)
@@ -78,6 +79,13 @@ sealed class MoneyAccountStatusValue {
             @SerialName("balance") override val balance: Balance?,
             @SerialName("customer_id") override val customerId: String?,
             @SerialName("step") val step: IssuingStep,
+        ) : Onboarding()
+
+        @Serializable
+        data class KycRequired(
+            @SerialName("source") override val source: StatusSource,
+            @SerialName("balance") override val balance: Balance?,
+            @SerialName("customer_id") override val customerId: String?,
         ) : Onboarding()
 
         @Serializable

@@ -707,6 +707,7 @@ internal class TangemPayCardPageModel @Inject constructor(
             VirtualAccountOnramp.Processing -> showVaPreparing()
             is VirtualAccountOnramp.Available,
             VirtualAccountOnramp.Eligible,
+            VirtualAccountOnramp.Failed,
             -> openVirtualAccountDeposit(onramp, loaded)
         }
     }

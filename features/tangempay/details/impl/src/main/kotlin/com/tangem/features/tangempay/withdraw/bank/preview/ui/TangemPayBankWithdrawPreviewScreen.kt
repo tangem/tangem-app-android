@@ -74,13 +74,14 @@ internal fun TangemPayBankWithdrawPreviewScreen(state: TangemPayBankWithdrawPrev
 private fun FailedScreen(state: TangemPayBankWithdrawPreviewUM.Failed, modifier: Modifier = Modifier) {
     TangemStatusScreen(
         modifier = modifier,
-        variant = TangemStatusScreen.Variant.Error,
+        variant = TangemStatusScreen.Variant.Warning,
         title = state.title,
         description = resourceReference(R.string.common_try_again_later),
         asset = {
             TangemStatusIcon(
-                kind = TangemStatusIcon.Kind.HeartBroken,
+                kind = state.icon,
                 modifier = Modifier.size(StatusIconSize),
+                tint = TangemTheme.colors3.icon.status.warning,
             )
         },
         footer = {

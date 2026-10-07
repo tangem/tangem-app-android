@@ -19,6 +19,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.addressbook.model.ContactId
 import com.tangem.features.addressbook.AddressBookComponent
 import com.tangem.features.addressbook.analytics.AddressBookEvents
+import com.tangem.features.addressbook.analytics.toAnalyticsSource
 import com.tangem.features.addressbook.editcontact.ui.state.ValidatedAddress
 import com.tangem.features.addressbook.route.AddressBookRoute
 import dagger.assisted.Assisted
@@ -42,14 +43,7 @@ internal class DefaultAddressBookComponent @AssistedInject constructor(
         selectNetworksResultHolder.clear()
         val creationMode = params.addressBookOpenMode as? AddressBookOpenMode.WithContactCreation
         if (creationMode != null) {
-            analyticsSender.sendAddContactTapped(
-                source = when (creationMode.source) {
-                    AddressBookOpenMode.ContactCreationSource.SendSuccess ->
-                        AddressBookEvents.AddContactTapped.Source.SendSuccess
-                    AddressBookOpenMode.ContactCreationSource.TransactionDetails ->
-                        AddressBookEvents.AddContactTapped.Source.TransactionDetails
-                },
-            )
+            analyticsSender.sendAddContactTapped(source = creationMode.source.toAnalyticsSource())
         }
     }
 
@@ -149,6 +143,7 @@ internal class DefaultAddressBookComponent @AssistedInject constructor(
                 predefinedAddress = mode.address,
                 predefinedNetworkId = mode.networkId,
                 predefinedMemo = mode.memo,
+                creationSource = mode.source,
             ),
         )
     }

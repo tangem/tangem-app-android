@@ -77,7 +77,7 @@ internal class JointCosignRequestsModel @Inject constructor(
     }
 
     /**
-     * The backend won't silent-push a new cosign request, so while this screen is on top a 60-second poll keeps
+     * The backend won't silent-push a new cosign request, so while this screen is on top a 5-second poll keeps
 
      * while none was known yet would never be discovered. [pollingCoordinator] paces itself — this only decides
      * whether to collect, and only for a currency that actually belongs to a joint account.

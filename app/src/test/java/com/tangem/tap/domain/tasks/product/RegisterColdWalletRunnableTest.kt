@@ -17,7 +17,6 @@ import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -57,24 +56,6 @@ internal class RegisterColdWalletRunnableTest {
 
         // Assert
         coVerify(exactly = 1) { launcher.registerColdInSession(session, card, nonce, false) }
-        assertThat((forwarded as CompletionResult.Success).data).isEqualTo("ok")
-    }
-
-    @Test
-    fun `GIVEN nonce slower than the budget WHEN prepare then run THEN skips registration`() = runTest {
-        // Arrange — the nonce is still loading when the prefetch budget elapses, so prepare gives up.
-        every { session.scope } returns unconfinedScope()
-        stubInnerRun(CompletionResult.Success("ok"))
-        coEvery { launcher.prefetchColdNonce() } coAnswers {
-            delay(timeMillis = 30_000)
-            nonce
-        }
-
-        // Act
-        val forwarded = prepareThenRunAndCapture(RegisterColdWalletRunnable(inner, launcher))
-
-        // Assert
-        coVerify(exactly = 0) { launcher.registerColdInSession(any(), any(), any(), any()) }
         assertThat((forwarded as CompletionResult.Success).data).isEqualTo("ok")
     }
 
@@ -199,6 +180,92 @@ internal class RegisterColdWalletRunnableTest {
         // Assert
         coVerify(exactly = 0) { launcher.prefetchColdNonce() }
         assertThat(prepared).isInstanceOf(CompletionResult.Failure::class.java)
+    }
+
+    @Test
+    fun `GIVEN host operation and nonce ready WHEN run THEN registers mid-operation before it completes`() =
+        runTest {
+            // Arrange
+            every { session.scope } returns unconfinedScope()
+            coEvery { launcher.prefetchColdNonce() } returns nonce
+            val events = mutableListOf<String>()
+            coEvery { launcher.registerColdInSession(any(), any(), any(), any()) } answers { events += "registered" }
+            val host = FakeRegistrationHost(onRest = { events += "rest of operation" })
+
+            // Act
+            val forwarded = prepareThenRunAndCapture(RegisterColdWalletRunnable(host, launcher))
+
+            // Assert
+            coVerify(exactly = 1) { launcher.registerColdInSession(session, card, nonce, false) }
+            assertThat(events).containsExactly("registered", "rest of operation").inOrder()
+            assertThat((forwarded as CompletionResult.Success).data).isEqualTo("ok")
+        }
+
+    @Test
+    fun `GIVEN host operation and registration throws WHEN run THEN the operation still proceeds`() = runTest {
+        // Arrange
+        every { session.scope } returns unconfinedScope()
+        coEvery { launcher.prefetchColdNonce() } returns nonce
+        coEvery { launcher.registerColdInSession(any(), any(), any(), any()) } throws IllegalStateException("boom")
+        var hasProceeded = false
+        val host = FakeRegistrationHost(onRest = { hasProceeded = true })
+
+        // Act
+        val forwarded = prepareThenRunAndCapture(RegisterColdWalletRunnable(host, launcher))
+
+        // Assert
+        assertThat(hasProceeded).isTrue()
+        assertThat((forwarded as CompletionResult.Success).data).isEqualTo("ok")
+    }
+
+    @Test
+    fun `GIVEN host operation and no nonce WHEN run THEN proceeds without registering`() = runTest {
+        // Arrange
+        every { session.scope } returns unconfinedScope()
+        coEvery { launcher.prefetchColdNonce() } returns null
+        var hasProceeded = false
+        val host = FakeRegistrationHost(onRest = { hasProceeded = true })
+
+        // Act
+        val forwarded = prepareThenRunAndCapture(RegisterColdWalletRunnable(host, launcher))
+
+        // Assert
+        coVerify(exactly = 0) { launcher.registerColdInSession(any(), any(), any(), any()) }
+        assertThat(hasProceeded).isTrue()
+        assertThat((forwarded as CompletionResult.Success).data).isEqualTo("ok")
+    }
+
+    @Test
+    fun `GIVEN host operation fails after registration WHEN run THEN failure forwarded and registered once`() =
+        runTest {
+            // Arrange
+            every { session.scope } returns unconfinedScope()
+            coEvery { launcher.prefetchColdNonce() } returns nonce
+            val host = FakeRegistrationHost(result = CompletionResult.Failure(TangemSdkError.UserCancelled()))
+
+            // Act
+            val forwarded = prepareThenRunAndCapture(RegisterColdWalletRunnable(host, launcher))
+
+            // Assert
+            coVerify(exactly = 1) { launcher.registerColdInSession(any(), any(), any(), any()) }
+            assertThat(forwarded).isInstanceOf(CompletionResult.Failure::class.java)
+        }
+
+    /** Runs the handed registration first, then the rest of the operation, like `ScanProductTask`. */
+    private class FakeRegistrationHost(
+        private val result: CompletionResult<String> = CompletionResult.Success("ok"),
+        private val onRest: () -> Unit = {},
+    ) : CardSessionRunnable<String>, ColdWalletRegistrationHost {
+
+        override var coldWalletRegistration: InSessionColdWalletRegistration? = null
+
+        override fun run(session: CardSession, callback: (result: CompletionResult<String>) -> Unit) {
+            val proceed = {
+                onRest()
+                callback(result)
+            }
+            coldWalletRegistration?.register(session, proceed) ?: proceed()
+        }
     }
 
     /** Makes [inner] invoke its run callback synchronously with [result]. */

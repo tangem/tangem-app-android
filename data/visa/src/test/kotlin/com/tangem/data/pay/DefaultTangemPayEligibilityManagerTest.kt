@@ -3,10 +3,8 @@ package com.tangem.data.pay
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.TestAppCoroutineScope
@@ -40,8 +38,6 @@ internal class DefaultTangemPayEligibilityManagerTest {
     ) = runTest {
         // Arrange
         coEvery { onboardingRepository.hasTangemPayInWallet(USER_WALLET_ID) } returns model.hasTangemPay.right()
-        every { onboardingRepository.getSavedCustomerInfo(USER_WALLET_ID) } returns
-            model.savedKycStatus?.let(::customerInfo)
         val manager = DefaultTangemPayEligibilityManager(
             userWalletsListRepository = userWalletsListRepository,
             coroutineScope = TestAppCoroutineScope(backgroundScope.coroutineContext),
@@ -56,14 +52,8 @@ internal class DefaultTangemPayEligibilityManagerTest {
     }
 
     private fun provideTestModels() = listOf(
-        CompatibleWalletsModel(hasTangemPay = false, savedKycStatus = null, expected = listOf(USER_WALLET_ID)),
-        CompatibleWalletsModel(hasTangemPay = true, savedKycStatus = null, expected = emptyList()),
-        CompatibleWalletsModel(hasTangemPay = true, savedKycStatus = KycStatus.INIT, expected = emptyList()),
-        CompatibleWalletsModel(
-            hasTangemPay = true,
-            savedKycStatus = KycStatus.REQUIRED,
-            expected = listOf(USER_WALLET_ID),
-        ),
+        CompatibleWalletsModel(hasTangemPay = false, expected = listOf(USER_WALLET_ID)),
+        CompatibleWalletsModel(hasTangemPay = true, expected = emptyList()),
     )
 
     private val userWallet: UserWallet.Hot = mockk {
@@ -71,13 +61,8 @@ internal class DefaultTangemPayEligibilityManagerTest {
         every { isLocked } returns false
     }
 
-    private fun customerInfo(kycStatus: KycStatus): CustomerInfo = mockk {
-        every { this@mockk.kycStatus } returns kycStatus
-    }
-
     data class CompatibleWalletsModel(
         val hasTangemPay: Boolean,
-        val savedKycStatus: KycStatus?,
         val expected: List<UserWalletId>,
     )
 

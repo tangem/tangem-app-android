@@ -354,6 +354,22 @@ internal class TangemPayOnboardingStarterTest {
     inner class ProceedWithWallets {
 
         @Test
+        fun `GIVEN no wallets WHEN proceedWithWallets THEN exits AND wallet selector not requested`() = runTest {
+            // Act
+            starter.proceedWithWallets(
+                walletsIds = emptyList(),
+                mode = TangemPayOnboardingStarter.Mode.StartOnboarding,
+                campaignKey = null,
+                callbacks = callbacks,
+            )
+
+            // Assert
+            assertThat(exitCount).isEqualTo(1)
+            assertThat(requestedWalletsIds).isNull()
+            coVerify(exactly = 0) { repository.getCustomerInfo(any()) }
+        }
+
+        @Test
         fun `GIVEN single wallet WHEN proceedWithWallets THEN customer info checked for it`() = runTest {
             // Act
             starter.proceedWithWallets(

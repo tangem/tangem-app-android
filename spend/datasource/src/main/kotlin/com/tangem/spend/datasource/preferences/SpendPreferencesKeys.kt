@@ -25,9 +25,6 @@ class SpendPreferencesKeys @Inject constructor() {
 
     val eligibilityKey: Preferences.Key<Set<String>> = stringSetPreferencesKey(name = "tangemPayEligibilityListV3")
 
-    fun bankOfframpRecents(userWalletId: UserWalletId): Preferences.Key<String> =
-        stringPreferencesKey("tangem_pay_bank_offramp_recents_${userWalletId.stringValue}")
-
     fun paymentAccountRecents(userWalletId: UserWalletId): Preferences.Key<String> =
         stringPreferencesKey("tangem_pay_account_recents_${userWalletId.stringValue}")
 
@@ -45,6 +42,9 @@ class SpendPreferencesKeys @Inject constructor() {
 
     fun getVirtualAccountOrderIdKey(customerWalletAddress: String): Preferences.Key<String> =
         stringPreferencesKey("tangem_pay_va_order_id_key_$customerWalletAddress")
+
+    fun getVirtualAccountOrderFailedKey(customerWalletAddress: String): Preferences.Key<Boolean> =
+        booleanPreferencesKey("tangem_pay_va_order_failed_key_$customerWalletAddress")
 
     fun getCustomerWalletAddressKey(userWalletId: UserWalletId): Preferences.Key<String> =
         stringPreferencesKey("tangem_pay_customer_wallet_address_key_${userWalletId.stringValue}")

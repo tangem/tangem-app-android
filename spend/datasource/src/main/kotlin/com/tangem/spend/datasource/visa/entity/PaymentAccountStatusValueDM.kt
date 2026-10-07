@@ -22,6 +22,12 @@ sealed interface PaymentAccountStatusValueDM {
     data object NotCreated : PaymentAccountStatusValueDM
 
     @Serializable
+    @SerialName("kyc_required")
+    data class KycRequired(
+        @SerialName("customer_id") val customerId: String?,
+    ) : PaymentAccountStatusValueDM
+
+    @Serializable
     @SerialName("kyc_status")
     data class UnderReview(
         @SerialName("kyc_status") val kycStatus: KycStatus,

@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.withdraw.bank.preview.ui
 
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.pay.model.bankofframp.BankRail
@@ -109,12 +110,14 @@ internal object TangemPayBankWithdrawPreviewData {
 
     val failedGeneral = TangemPayBankWithdrawPreviewUM.Failed(
         title = resourceReference(R.string.tangempay_withdraw_bank_error_general_title),
+        icon = TangemStatusIcon.Kind.Warning,
         onCloseClick = {},
         onRetryClick = {},
     )
 
     val failedUnavailable = TangemPayBankWithdrawPreviewUM.Failed(
         title = resourceReference(R.string.tangempay_withdraw_bank_error_recipient_region),
+        icon = TangemStatusIcon.Kind.HeartBroken,
         onCloseClick = {},
         onRetryClick = null,
     )

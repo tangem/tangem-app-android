@@ -80,7 +80,13 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
         userWalletId: UserWalletId,
         customerInfo: CustomerInfo,
     ): MoneyAccountStatusValue {
-        if (customerInfo.kycStatus == KycStatus.REQUIRED) return MoneyAccountStatusValue.NotCreated
+        if (customerInfo.kycStatus == KycStatus.REQUIRED) {
+            return MoneyAccountStatusValue.Onboarding.KycRequired(
+                source = StatusSource.ACTUAL,
+                balance = null,
+                customerId = customerInfo.customerId,
+            )
+        }
 
         val order = orderRepository.getOrder(userWalletId) ?: return lastOnboardingStatus(userWalletId)
         val customerId = customerInfo.customerId

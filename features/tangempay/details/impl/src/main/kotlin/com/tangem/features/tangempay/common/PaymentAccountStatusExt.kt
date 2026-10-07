@@ -20,6 +20,7 @@ internal val PaymentAccountStatusValue.typeName: String
         PaymentAccountStatusValue.Empty -> "Empty"
         PaymentAccountStatusValue.Loading -> "Loading"
         PaymentAccountStatusValue.NotCreated -> "NotCreated"
+        is PaymentAccountStatusValue.KycRequired -> "KycRequired"
         is PaymentAccountStatusValue.UnderReview -> "UnderReview"
         is PaymentAccountStatusValue.IssuingCard -> "IssuingCard"
         is PaymentAccountStatusValue.AwaitingPlanSelection -> "AwaitingPlanSelection"

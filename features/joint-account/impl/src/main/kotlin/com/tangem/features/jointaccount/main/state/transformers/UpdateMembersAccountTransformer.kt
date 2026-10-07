@@ -17,6 +17,8 @@ internal class UpdateMembersAccountTransformer(
     private val sharedInvites: Set<String>,
     private val ownAddress: String?,
     private val callbacks: JointAccountToMembersUMConverter.Callbacks,
+    private val walletIconRes: Int? = null,
+    private val isActivating: Boolean = false,
 ) : Transformer<JointAccountMembersUM> {
 
     override fun transform(prevState: JointAccountMembersUM): JointAccountMembersUM =
@@ -26,6 +28,8 @@ internal class UpdateMembersAccountTransformer(
                 invites = invites,
                 sharedInvites = sharedInvites,
                 ownAddress = ownAddress,
+                walletIconRes = walletIconRes,
+                isActivating = isActivating,
             ),
         )
 }

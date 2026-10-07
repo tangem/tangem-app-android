@@ -3,22 +3,23 @@ package com.tangem.data.networks.di
 import android.content.Context
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
-import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
+import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.core.remote.moshi.NetworkMoshi
+import com.tangem.data.networks.entity.NetworkStatusDM
 import com.tangem.data.networks.repository.DefaultNetworksRepository
 import com.tangem.data.networks.store.DefaultNetworksStatusesStore
 import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.data.networks.utils.DefaultNetworksCleaner
-import com.tangem.core.remote.moshi.NetworkMoshi
-import com.tangem.core.local.datastore.RuntimeSharedStore
-import com.tangem.data.networks.entity.NetworkStatusDM
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
+import com.tangem.datasource.utils.create
 import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.datasource.utils.setTypes
-import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.networks.utils.NetworksCleaner
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -42,15 +43,22 @@ internal object NetworkDataModule {
         return DefaultNetworksStatusesStore(
             context = context,
             runtimeStore = RuntimeSharedStore(),
-            persistenceDataStore = dataStoreFactory.create(
-                serializer = MoshiDataStoreSerializer(
-                    moshi = moshi,
-                    types = mapWithStringKeyTypes(valueTypes = setTypes<NetworkStatusDM>()),
-                    defaultValue = emptyMap(),
-                ),
-                produceFile = { context.dataStoreFile(fileName = "networks_statuses_2") },
-                scope = appScope,
-            ),
+            persistenceDataStore = if (dataStoreFactory.isKotlinxDataStoreEnabled) {
+                dataStoreFactory.create(
+                    defaultValue = emptyMap<String, Set<NetworkStatusDM>>(),
+                    fileName = "networks_statuses_2",
+                )
+            } else {
+                dataStoreFactory.create(
+                    serializer = MoshiDataStoreSerializer(
+                        moshi = moshi,
+                        types = mapWithStringKeyTypes(valueTypes = setTypes<NetworkStatusDM>()),
+                        defaultValue = emptyMap(),
+                    ),
+                    produceFile = { context.dataStoreFile(fileName = "networks_statuses_2") },
+                    scope = appScope,
+                )
+            },
             scope = appScope,
         )
     }

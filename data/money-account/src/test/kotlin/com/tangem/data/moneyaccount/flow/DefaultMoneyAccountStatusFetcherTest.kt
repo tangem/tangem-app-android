@@ -135,7 +135,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     }
 
     @Test
-    fun `GIVEN order exists AND residency step not passed WHEN invoke THEN not created is stored`() = runTest {
+    fun `GIVEN order exists AND residency step not passed WHEN invoke THEN kyc required is stored`() = runTest {
         // Arrange
         every { orderRepository.getOrder(USER_WALLET_ID) } returns createOrder(step = OrderStep.AWAITING_KYC)
         coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo(
@@ -146,7 +146,13 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
 
         // Assert
-        verifyStored(MoneyAccountStatusValue.NotCreated)
+        verifyStored(
+            MoneyAccountStatusValue.Onboarding.KycRequired(
+                source = StatusSource.ACTUAL,
+                balance = null,
+                customerId = CUSTOMER_ID,
+            ),
+        )
     }
 
     @Test
