@@ -213,7 +213,7 @@ internal class PolymarketSearchModelTest {
     }
 
     @Test
-    fun `GIVEN results WHEN an outcome is clicked THEN the details route is pushed with preselection`() = runTest {
+    fun `GIVEN results WHEN an outcome is clicked THEN place prediction route is pushed with selected outcome`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
         model.uiState.value.onQueryChange("uzb")
@@ -234,7 +234,7 @@ internal class PolymarketSearchModelTest {
         // Assert
         verify {
             router.push(
-                PolymarketRoute.EventDetails(
+                PolymarketRoute.PlacePrediction(
                     eventId = "event-1",
                     userWalletId = userWalletId,
                     marketId = "market-1",

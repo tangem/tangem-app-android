@@ -47,7 +47,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.rememberIsKeyboardVisible
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.TextReference
@@ -62,6 +64,8 @@ import com.tangem.core.ui.res.generated.icons.ic_search_20
 
 /**
  * Search component (DS V3)
+ *
+ * Version: 1.0.1
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=3953-249&m=dev)
  *
@@ -78,6 +82,7 @@ fun TangemSearch(
     modifier: Modifier = Modifier,
     focusRequester: FocusRequester = remember { FocusRequester() },
 ) {
+    val dismissKeyboard = rememberDismissKeyboard()
     val openingEasing = CubicBezierEasing(a = 0.8f, b = 0f, c = 0.2f, d = 1f)
     val closingEasing = CubicBezierEasing(a = 0.8f, b = 0f, c = 0.8f, d = 1f)
 
@@ -93,7 +98,7 @@ fun TangemSearch(
             shape = CircleShape,
             onClick = focusRequester::requestFocus,
         ) {
-            SearchField(state = state, focusRequester = focusRequester)
+            SearchField(state = state, focusRequester = focusRequester, onDismissKeyboard = dismissKeyboard)
         }
 
         AnimatedVisibility(
@@ -105,12 +110,14 @@ fun TangemSearch(
                 scaleOut(animationSpec = tween(durationMillis = 150, easing = closingEasing)) +
                 shrinkHorizontally(animationSpec = tween(durationMillis = 150, easing = closingEasing)),
         ) {
-            CloseButton(onClick = state.onCloseClick ?: {})
+            CloseButton(onClick = state.onCloseClick ?: {}, onDismissKeyboard = dismissKeyboard)
         }
     }
 }
 
 object TangemSearch {
+
+    val version = DsVersion(major = 1, minor = 0, patch = 1)
 
     @Immutable
     data class State(
@@ -126,7 +133,7 @@ object TangemSearch {
 }
 
 @Composable
-private fun SearchField(state: TangemSearch.State, focusRequester: FocusRequester) {
+private fun SearchField(state: TangemSearch.State, focusRequester: FocusRequester, onDismissKeyboard: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Row(
             modifier = Modifier
@@ -148,7 +155,7 @@ private fun SearchField(state: TangemSearch.State, focusRequester: FocusRequeste
                 },
                 contentDescription = null,
             )
-            QueryTextField(state = state, focusRequester = focusRequester)
+            QueryTextField(state = state, focusRequester = focusRequester, onDismissKeyboard = onDismissKeyboard)
         }
 
         AnimatedVisibility(
@@ -167,9 +174,7 @@ private fun SearchField(state: TangemSearch.State, focusRequester: FocusRequeste
 }
 
 @Composable
-private fun QueryTextField(state: TangemSearch.State, focusRequester: FocusRequester) {
-    val keyboardController = LocalSoftwareKeyboardController.current
-    val focusManager = LocalFocusManager.current
+private fun QueryTextField(state: TangemSearch.State, focusRequester: FocusRequester, onDismissKeyboard: () -> Unit) {
     // Initial composition reports isFocused = false. Without this guard the field would
     // clobber a parent-supplied `state.isActive = true` on the first frame.
     var isInitialComposition by remember { mutableStateOf(true) }
@@ -178,8 +183,7 @@ private fun QueryTextField(state: TangemSearch.State, focusRequester: FocusReque
     var isFocused by remember { mutableStateOf(false) }
     LaunchedEffect(state.isActive) {
         if (!state.isActive && isFocused) {
-            keyboardController?.hide()
-            focusManager.clearFocus()
+            onDismissKeyboard()
         }
     }
 
@@ -209,8 +213,7 @@ private fun QueryTextField(state: TangemSearch.State, focusRequester: FocusReque
         ),
         keyboardActions = KeyboardActions(
             onSearch = {
-                keyboardController?.hide()
-                focusManager.clearFocus()
+                onDismissKeyboard()
                 state.onSubmit()
             },
         ),
@@ -243,18 +246,42 @@ private fun ClearButton(onClick: () -> Unit) {
     )
 }
 
+/**
+ * Hides the keyboard and clears focus only once the IME is gone. Clearing focus while the IME is still shown
+ * restarts it on the host view with an empty editor: Gboard flashes its default layout (with a number row) and
+ * reports that taller height on the next show, so the field jumps when the keyboard settles.
+ */
 @Composable
-private fun CloseButton(onClick: () -> Unit) {
+private fun rememberDismissKeyboard(): () -> Unit {
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
+    val isKeyboardVisible by rememberIsKeyboardVisible()
+    var isFocusClearPending by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isFocusClearPending, isKeyboardVisible) {
+        if (isFocusClearPending && !isKeyboardVisible) {
+            focusManager.clearFocus()
+            isFocusClearPending = false
+        }
+    }
+
+    return remember(keyboardController) {
+        {
+            keyboardController?.hide()
+            isFocusClearPending = true
+        }
+    }
+}
+
+@Composable
+private fun CloseButton(onClick: () -> Unit, onDismissKeyboard: () -> Unit) {
     TangemButton(
         modifier = Modifier.padding(start = 8.dp),
         size = TangemButton.Size.X11,
         variant = TangemButton.Variant.Material,
         iconStart = TangemIconUM.Icon(Icons.ic_cross_20),
         onClick = {
-            keyboardController?.hide()
-            focusManager.clearFocus()
+            onDismissKeyboard()
             onClick()
         },
     )

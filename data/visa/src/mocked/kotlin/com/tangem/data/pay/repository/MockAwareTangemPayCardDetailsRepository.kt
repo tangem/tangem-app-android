@@ -14,6 +14,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.SetPinResult
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.model.TangemPayCardDetails
+import com.tangem.domain.pay.model.TangemPayCardProvisioningData
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.visa.error.VisaApiError
@@ -72,6 +73,21 @@ internal class MockAwareTangemPayCardDetailsRepository @Inject constructor(
         return real.setPin(userWalletId, cardId, pin)
     }
 
+    override suspend fun getProvisioningData(
+        userWalletId: UserWalletId,
+        cardId: String,
+    ): Either<UniversalError, TangemPayCardProvisioningData> {
+        if (isMockMode) {
+            return TangemPayCardProvisioningData(
+                processorCardId = MOCK_PROCESSOR_CARD_ID,
+                cardSecret = MOCK_CARD_SECRET,
+            ).right()
+        }
+        return real.getProvisioningData(userWalletId, cardId)
+    }
+
+    override fun isProductionEnvironment(): Boolean = real.isProductionEnvironment()
+
     override suspend fun isAddToWalletDone(userWalletId: UserWalletId): Either<UniversalError, Boolean> =
         real.isAddToWalletDone(userWalletId)
 
@@ -127,5 +143,7 @@ internal class MockAwareTangemPayCardDetailsRepository @Inject constructor(
         const val MOCK_EXPIRATION_YEAR = "2028"
         const val MOCK_EXPIRATION_MONTH = "12"
         const val MOCK_PIN = "1234"
+        const val MOCK_PROCESSOR_CARD_ID = "mock-processor-card-id"
+        const val MOCK_CARD_SECRET = "mock-card-secret"
     }
 }

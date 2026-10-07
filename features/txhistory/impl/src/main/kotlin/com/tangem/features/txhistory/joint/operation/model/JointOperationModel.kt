@@ -3,6 +3,7 @@ package com.tangem.features.txhistory.joint.operation.model
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -11,9 +12,13 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
 import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.model.JointOperationSignerState.Answer
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
 import com.tangem.features.txhistory.joint.operation.JointOperationComponent
 import com.tangem.features.txhistory.joint.operation.converter.JointOperationUMConverter
 import com.tangem.features.txhistory.joint.operation.route.JointOperationRoutes
@@ -38,6 +43,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.tangem.core.ui.R as CoreUiR
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class JointOperationModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -45,6 +51,7 @@ internal class JointOperationModel @Inject constructor(
     private val delegate: JointOperationDelegate,
     private val uiMessageSender: UiMessageSender,
     private val clipboardManager: ClipboardManager,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : Model() {
 
@@ -127,7 +134,8 @@ internal class JointOperationModel @Inject constructor(
         flow2 = userActions,
         flow3 = canCreateContact,
         flow4 = isBalanceHidden,
-    ) { state, actions, canCreateContact, isBalanceHidden ->
+        flow5 = delegate.fiat(userWalletId = params.userWalletId, currency = params.currency),
+    ) { state, actions, canCreateContact, isBalanceHidden, fiat ->
         val answered = state?.withOwnAnswer(answeredLocally = actions.localAnswer)
         val isGone = answered == null || actions.isGone || !answered.isReachable && !answered.isSending
         if (isGone) return@combine JointOperationUM.Gone
@@ -142,6 +150,7 @@ internal class JointOperationModel @Inject constructor(
                     canCreateContact = canCreateContact,
                     isBalanceHidden = isBalanceHidden,
                     isColdWallet = isColdWallet,
+                    fiat = fiat,
                 ),
             ),
             signers = signersConverter.convert(
@@ -166,7 +175,10 @@ internal class JointOperationModel @Inject constructor(
                     network = params.currency.network,
                     operationId = params.operationId,
                 )
-                    .onRight { localAnswer.value = Answer.SIGNED }
+                    .onRight { signedOperation ->
+                        localAnswer.value = Answer.SIGNED
+                        signedOperation?.let { sendOperationSigned(state = operation, signedOperation = it) }
+                    }
                     .onLeft(::showSignError)
             } finally {
                 isSigning.value = false
@@ -217,7 +229,7 @@ internal class JointOperationModel @Inject constructor(
                     .onRight { onRefused(operation) }
                     .onLeft { error ->
                         if (error is JointOperationRejectError.OperationNotFound) isGoneLocally.value = true
-                        showRejectError(error)
+                        showRejectError(error = error, role = operation.role)
                     }
             } finally {
                 isRefusing.value = false
@@ -236,6 +248,26 @@ internal class JointOperationModel @Inject constructor(
         }
     }
 
+    private fun sendOperationSigned(state: JointOperationState, signedOperation: JointOperation) {
+        val signedBy = signedOperation.signatures
+            .filter { it.state == JointOperation.MemberSignature.State.SIGNED }
+            .map(JointOperation.MemberSignature::address)
+            .plus(listOfNotNull(signedOperation.initiator ?: state.initiator))
+            .distinct()
+
+        analyticsEventHandler.send(
+            JointAccountAnalyticsEvent.OperationSigned(
+                signaturesCollected = signedBy.size,
+                membersCount = state.membersCount,
+                threshold = state.threshold,
+                // An operation executed or failed right after this signature comes back with an unknown status
+                isThresholdReached = signedBy.size >= state.threshold,
+                blockchain = params.currency.network.name,
+                token = params.currency.symbol,
+            ),
+        )
+    }
+
     private fun showDeleted() {
         uiMessageSender.send(
             SnackbarMessage(
@@ -251,6 +283,11 @@ internal class JointOperationModel @Inject constructor(
             ?: return
 
         TangemLogger.e("Unable to sign the joint operation: $error")
+        val analyticsEvent = when (error) {
+            is JointOperationSignError.Failed -> JointAccountError(source = ErrorSource.Sign, cause = error.cause)
+            else -> JointAccountError(source = ErrorSource.Sign, errorMessage = error.toString())
+        }
+        analyticsEventHandler.send(analyticsEvent)
         uiMessageSender.send(message)
     }
 
@@ -258,10 +295,16 @@ internal class JointOperationModel @Inject constructor(
         modelScope.launch { delegate.openSupport(userWalletId = params.userWalletId) }
     }
 
-    private fun showRejectError(error: JointOperationRejectError) {
+    private fun showRejectError(error: JointOperationRejectError, role: Role) {
         val message = refusalMessages.error(error) ?: return
 
         TangemLogger.e("Unable to reject the joint operation: $error")
+        val source = if (role == Role.INITIATOR) ErrorSource.Delete else ErrorSource.Decline
+        val analyticsEvent = when (error) {
+            is JointOperationRejectError.Failed -> JointAccountError(source = source, cause = error.cause)
+            else -> JointAccountError(source = source, errorMessage = error.toString())
+        }
+        analyticsEventHandler.send(analyticsEvent)
         uiMessageSender.send(message)
     }
 

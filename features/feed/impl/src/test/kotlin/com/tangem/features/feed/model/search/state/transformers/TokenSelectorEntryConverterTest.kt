@@ -323,7 +323,6 @@ class TokenSelectorEntryConverterTest {
             fiatAmount = fiatAmount,
             fiatRate = fiatRate,
             priceChange = priceChange,
-            stakingBalance = null,
             yieldSupplyStatus = null,
             hasCurrentNetworkTransactions = false,
             pendingTransactions = emptySet(),

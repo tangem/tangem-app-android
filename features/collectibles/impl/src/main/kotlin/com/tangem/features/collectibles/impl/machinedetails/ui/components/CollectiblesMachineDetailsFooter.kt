@@ -25,17 +25,21 @@ internal fun CollectiblesPackDetailsFooter(
     state: CollectiblesMachineDetailsUM.FooterUM,
     modifier: Modifier = Modifier,
 ) {
-    TangemFooter(
-        modifier = modifier,
-        extraTop = { FooterMeta(state = state) },
-    ) {
-        TangemButton(
-            modifier = Modifier.fillMaxWidth(),
-            variant = TangemButton.Variant.Primary,
-            size = TangemButton.Size.X12,
-            text = state.buyButtonText,
-            onClick = state.onBuyClick,
-        )
+    TangemFooter(modifier = modifier) {
+        // Keeps the footer still while the keyboard closing on the previous screen shifts the insets
+        Column(
+            modifier = Modifier.navigationBarsPadding(),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            FooterMeta(state = state)
+            TangemButton(
+                modifier = Modifier.fillMaxWidth(),
+                variant = TangemButton.Variant.Primary,
+                size = TangemButton.Size.X12,
+                text = state.buyButtonText,
+                onClick = state.onBuyClick,
+            )
+        }
     }
 }
 
@@ -83,7 +87,7 @@ private fun TurboMode(state: CollectiblesMachineDetailsUM.FooterUM, modifier: Mo
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "Turbo mode",
+                text = stringResourceSafe(R.string.collectibles_machine_turbo_mode),
                 style = TangemTheme.typography3.caption.medium,
                 color = TangemTheme.colors3.text.secondary,
             )

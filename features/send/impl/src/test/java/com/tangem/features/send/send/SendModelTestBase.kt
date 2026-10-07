@@ -70,6 +70,7 @@ import com.tangem.features.send.send.model.SendModel
 import com.tangem.features.send.send.model.TronDefaultFeeLoader
 import com.tangem.features.send.send.ui.state.SendUM
 import com.tangem.features.send.testDispatcherProvider
+import com.tangem.test.core.TestAppCoroutineScope
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
@@ -259,6 +260,7 @@ internal abstract class SendModelTestBase {
             jointSendDelegate = jointSendDelegate,
             recordTokenTransferFromSendUseCase = recordTokenTransferFromSendUseCase,
             sendBalanceUpdaterFactory = sendBalanceUpdaterFactory,
+            appScope = TestAppCoroutineScope(testScope = testScope),
         )
     }
 

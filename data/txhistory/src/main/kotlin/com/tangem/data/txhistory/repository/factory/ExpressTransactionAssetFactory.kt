@@ -44,9 +44,14 @@ internal class ExpressTransactionAssetFactory @Inject constructor(
     /**
      * Builds a `legKey -> resolved currency` map covering both legs of every swap and the to-leg of every onramp.
      * Entries whose currency could not be resolved at all are omitted.
+     *
+     * [historyCurrency] is the currency whose history the records belong to and resolves its own asset right after an
+     * exact address match: a joint account currency shares the network and contract with the personal one yet is not
+     * among the portfolio candidates.
      */
     suspend fun create(
         userWalletId: UserWalletId,
+        historyCurrency: CryptoCurrency,
         outgoingSwaps: List<ExpressExchangeEntity>,
         incomingSwaps: List<ExpressExchangeEntity>,
         onramps: List<ExpressOnrampEntity>,
@@ -73,6 +78,7 @@ internal class ExpressTransactionAssetFactory @Inject constructor(
         return buildMap {
             legKeys.forEach { key ->
                 val currency = portfolioStatuses.findHolding(key)
+                    ?: historyCurrency.takeIf { it.matches(key.assetId) }
                     ?: portfolioStatuses.findMatching(key.assetId)
                     ?: resolveUnmatched(key.assetId, cachedTokens, userWallet)
                 if (currency != null) put(key, currency)

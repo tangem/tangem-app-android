@@ -30,20 +30,19 @@ class SwapTokenScreenTest : BaseTestCase() {
     // The mocked ETH -> POL (Ethereum) pair carries 1inch alongside the CEX providers, so the ALL/CEX/DEX
     // filter the case asks for is always there.
     @AllureId("9456")
-    @DisplayName("Swap: provider modal shows ALL/CEX/DEX filter and the picked provider appears in the tab")
+    @DisplayName("Swap: provider type filters (All / CEX / DEX) narrow the provider list")
     @Test
     fun checkProviderTypeFilterTest() {
-        val fromTokenSymbol = "ETH"
+        val tokenTitle = "Ethereum"
         val receiveTokenName = "POL (ex-MATIC)"
         // The wallet holds POL on two networks and only the Ethereum one has a DEX provider (1inch) next to
-        // Picking by name alone lands on the Polygon one about half the time, whose pair is CEX-only, and
-        // then no type filter can ever appear — no amount of reopening the sheet helps.
         val receiveTokenNetwork = "Ethereum network"
         val inputAmount = "0.1"
         val allFilter = getResourceString(R.string.common_all)
         val cexFilter = "CEX"
         val dexFilter = "DEX"
-        val dexProviderName = "1Inch"
+        val cexType = "CEX"
+        val dexType = "DEX"
 
         setupHooks().run {
             step("Open 'Main Screen'") {
@@ -52,19 +51,21 @@ class SwapTokenScreenTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            step("Open 'Swap' from the main screen") {
-                openSwapScreen(from = SwapEntryPoint.MainScreen)
+            step("Click on token with name: '$tokenTitle'") {
+                openTokenDetailsFromTokenList(tokenTitle)
             }
-            step("Assert the most funded token '$fromTokenSymbol' is pre-filled in the 'From' block") {
-                onSwapTokenScreen {
-                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { swapTokenSymbol(fromTokenSymbol).assertIsDisplayed() }
-                }
+            step("Open 'Swap' screen") {
+                openSwapScreen(from = SwapEntryPoint.TokenDetails)
             }
             step("Choose receive token '$receiveTokenName'") {
                 chooseReceiveToken(receiveTokenName, receiveTokenNetwork)
             }
+            step("Assert 'Swap tokens on screen' button is enabled") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { replaceTokensButton.assertIsEnabled() }
+                }
+            }
             step("Input swap amount '$inputAmount'") {
-                waitForIdle()
                 onSwapTokenScreen {
                     textInput.clickWithAssertion()
                     textInput.performTextReplacement(inputAmount)
@@ -78,27 +79,52 @@ class SwapTokenScreenTest : BaseTestCase() {
             step("Open the providers bottom sheet with the type filter displayed") {
                 openProviderSheetWithTypeFilter(allFilter)
             }
-            step("Assert the 'CEX' filter is displayed") {
-                onChooseProviderBottomSheet { filterButton(cexFilter).assertIsDisplayed() }
+            step("Assert the '$allFilter' filter is selected by default") {
+                onChooseProviderBottomSheet { filterSegment(allFilter).assertIsSelected() }
             }
-            step("Assert the 'DEX' filter is displayed") {
-                onChooseProviderBottomSheet { filterButton(dexFilter).assertIsDisplayed() }
+            step("Assert the '$cexFilter' filter is displayed") {
+                onChooseProviderBottomSheet { filterSegment(cexFilter).assertIsDisplayed() }
             }
-            step("Select the 'DEX' filter") {
-                onChooseProviderBottomSheet { filterButton(dexFilter).performClick() }
+            step("Assert the '$dexFilter' filter is displayed") {
+                onChooseProviderBottomSheet { filterSegment(dexFilter).assertIsDisplayed() }
             }
-            step("Assert the DEX provider '$dexProviderName' is displayed under the filter") {
+            step("Assert a '$cexType' provider is listed") {
+                onChooseProviderBottomSheet { providerTypeLabel(cexType).assertIsDisplayed() }
+            }
+            step("Assert a '$dexType' provider is listed") {
+                onChooseProviderBottomSheet { providerTypeLabel(dexType).assertIsDisplayed() }
+            }
+            step("Click on '$cexFilter' filter") {
+                onChooseProviderBottomSheet { filterSegment(cexFilter).performClick() }
+            }
+            step("Assert the '$cexFilter' filter is selected") {
                 onChooseProviderBottomSheet {
-                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { providerItem(dexProviderName).assertIsDisplayed() }
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { filterSegment(cexFilter).assertIsSelected() }
                 }
             }
-            step("Select the '$dexProviderName' provider") {
-                onChooseProviderBottomSheet { providerItem(dexProviderName).clickWithAssertion() }
+            step("Assert a '$cexType' provider is listed") {
+                onChooseProviderBottomSheet { providerTypeLabel(cexType).assertIsDisplayed() }
             }
-            step("Assert the selected provider '$dexProviderName' is shown in the providers tab") {
-                onSwapTokenScreen {
-                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { providerWithName(dexProviderName).assertIsDisplayed() }
+            step("Assert no '$dexType' provider is listed") {
+                onChooseProviderBottomSheet {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { providerTypeLabel(dexType).assertDoesNotExist() }
                 }
+            }
+            step("Click on '$dexFilter' filter") {
+                onChooseProviderBottomSheet { filterSegment(dexFilter).performClick() }
+            }
+            step("Assert the '$dexFilter' filter is selected") {
+                onChooseProviderBottomSheet {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { filterSegment(dexFilter).assertIsSelected() }
+                }
+            }
+            step("Assert a '$dexType' provider is listed") {
+                onChooseProviderBottomSheet {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { providerTypeLabel(dexType).assertIsDisplayed() }
+                }
+            }
+            step("Assert no '$cexType' provider is listed") {
+                onChooseProviderBottomSheet { providerTypeLabel(cexType).assertDoesNotExist() }
             }
         }
     }
@@ -193,14 +219,12 @@ class SwapTokenScreenTest : BaseTestCase() {
         }
     }
 
-    @ApiEnv(
-        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
-    )
     @AllureId("3546")
-    @DisplayName("Swap: network fee")
+    @DisplayName("Swap: network fee is calculated on amount input")
     @Test
     fun networkFeeTest() {
         val inputAmount = "400"
+        val changedInputAmount = "200"
         val tokenTitle = "Polygon"
         val receiveTokenName = "Ethereum"
 
@@ -240,6 +264,11 @@ class SwapTokenScreenTest : BaseTestCase() {
             step("Choose receive token") {
                 chooseReceiveToken(receiveTokenName)
             }
+            step("Assert 'Swap tokens on screen' button is enabled") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { replaceTokensButton.assertIsEnabled() }
+                }
+            }
             step("Input swap amount = '$inputAmount'") {
                 waitForIdle()
                 onSwapTokenScreen {
@@ -276,6 +305,54 @@ class SwapTokenScreenTest : BaseTestCase() {
                     flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                         waitForIdle()
                         receiveAmount.assert(!hasText("0"))
+                    }
+                }
+            }
+            step("Assert network fee amount is displayed") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { feeAmount.assertIsDisplayed() }
+                }
+            }
+            step("Open 'Network fee' selector") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSwapTokenScreen { selectFeeIcon.performClick() }
+                    onSwapSelectNetworkFeeBottomSheet { marketFeeItem.assertIsDisplayed() }
+                }
+            }
+            step("Assert 'Market' fee is selected by default") {
+                onSwapSelectNetworkFeeBottomSheet { marketFeeItem.assertIsSelected() }
+            }
+            step("Assert 'Fast' fee is not selected") {
+                onSwapSelectNetworkFeeBottomSheet { fastFeeItem.assertIsNotSelected() }
+            }
+            step("Close 'Network fee' selector") {
+                device.uiDevice.pressBack()
+                onSwapSelectNetworkFeeBottomSheet {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { title.assertDoesNotExist() }
+                }
+            }
+            var initialReceiveAmount = ""
+            step("Read receive amount for '$inputAmount'") {
+                onSwapTokenScreen { initialReceiveAmount = receiveAmount.extractText() }
+            }
+            step("Change swap amount to '$changedInputAmount'") {
+                onSwapTokenScreen { textInput.performTextReplacement(changedInputAmount) }
+            }
+            step("Assert network fee loader is displayed while the fee is recalculated") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { feeLoader.assertIsDisplayed() }
+                }
+            }
+            step("Assert recalculated network fee amount is displayed") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { feeAmount.assertIsDisplayed() }
+                }
+            }
+            step("Assert receive amount is recalculated for '$changedInputAmount'") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                        receiveAmount.assertIsDisplayed()
+                        receiveAmount.assert(!hasText(initialReceiveAmount))
                     }
                 }
             }
@@ -344,11 +421,8 @@ class SwapTokenScreenTest : BaseTestCase() {
         }
     }
 
-    @ApiEnv(
-        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
-    )
     @AllureId("3547")
-    @DisplayName("Swap: change network fee")
+    @DisplayName("Swap: changing the network fee type recalculates the fee")
     @Test
     fun changeNetworkFeeTest() {
         val inputAmount = "400"
@@ -366,83 +440,68 @@ class SwapTokenScreenTest : BaseTestCase() {
             step("Click on token with name: '$tokenTitle'") {
                 openTokenDetailsFromTokenList(tokenTitle)
             }
-            step("Assert title: '$tokenTitle' is displayed") {
-                onTokenDetailsScreen { title.assertIsDisplayed() }
-            }
-            step("Click on 'Swap' button") {
-                onTokenDetailsScreen { swapButton.performClick() }
-            }
-            step("Close 'Stories' screen") {
-                onSwapStoriesScreen { closeButton.clickWithAssertion() }
-            }
-            step("Assert 'Swap' screen title is displayed") {
-                onSwapTokenScreen { title.assertIsDisplayed() }
-            }
-            step("Assert 'Swap tokens on screen' button is displayed") {
-                onSwapTokenScreen {
-                    flakySafely(WAIT_UNTIL_TIMEOUT) {
-                        replaceTokensButton.assertIsDisplayed()
-                    }
-                }
+            step("Open 'Swap' screen") {
+                openSwapScreen(from = SwapEntryPoint.TokenDetails)
             }
             step("Choose receive token") {
                 chooseReceiveToken(receiveTokenName)
             }
+            step("Assert 'Swap tokens on screen' button is enabled") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { replaceTokensButton.assertIsEnabled() }
+                }
+            }
             step("Input swap amount = '$inputAmount'") {
-                waitForIdle()
                 onSwapTokenScreen {
                     textInput.clickWithAssertion()
                     textInput.performTextReplacement(inputAmount)
                 }
             }
-            step("Assert input amount = '$inputAmount'") {
-                onSwapTokenScreen { textInput.assertTextEquals(inputAmount) }
-            }
-            step("Assert receive amount is displayed") {
+            step("Assert network fee amount is displayed") {
                 onSwapTokenScreen {
-                    flakySafely(WAIT_UNTIL_TIMEOUT) {
-                        receiveAmount.assertIsDisplayed()
-                    }
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { feeAmount.assertIsDisplayed() }
                 }
             }
-            step("Assert 'Network fee' block is displayed") {
-                onSwapTokenScreen {
-                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                        networkFeeBlock.assertIsDisplayed()
-                    }
+            step("Open 'Network fee' selector") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSwapTokenScreen { selectFeeIcon.performClick() }
+                    onSwapSelectNetworkFeeBottomSheet { marketFeeItem.assertIsDisplayed() }
                 }
             }
-            step("Assert 'Swap' button is enabled") {
-                onSwapTokenScreen { swapButton.assertIsEnabled() }
+            step("Assert 'Market' fee is selected") {
+                onSwapSelectNetworkFeeBottomSheet { marketFeeItem.assertIsSelected() }
             }
-            step("Click on 'Network fee' block") {
-                onSwapTokenScreen {
-                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                        selectFeeIcon.performClick()
-                    }
+            var marketFee = ""
+            step("Read 'Market' fee amount") {
+                onSwapSelectNetworkFeeBottomSheet { marketFee = marketFeeTokenAmount.extractText() }
+            }
+            step("Assert 'Fast' fee amount differs from 'Market' fee amount") {
+                onSwapSelectNetworkFeeBottomSheet { fastFeeTokenAmount.assert(!hasText(marketFee)) }
+            }
+            step("Click on 'Fast' fee") {
+                onSwapSelectNetworkFeeBottomSheet { fastFeeItem.clickWithAssertion() }
+            }
+            step("Assert 'Network fee' selector is closed") {
+                onSwapSelectNetworkFeeBottomSheet {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { title.assertDoesNotExist() }
                 }
             }
-            step("Assert 'Select fee' bottom sheet title is displayed") {
-                onSwapSelectNetworkFeeBottomSheet { title.assertIsDisplayed() }
-            }
-            step("Assert 'Market' item is displayed") {
-                onSwapSelectNetworkFeeBottomSheet { marketSelectorItem.assertIsDisplayed() }
-            }
-            step("Assert 'Fast' item is displayed") {
-                onSwapSelectNetworkFeeBottomSheet { fastSelectorItem.assertIsDisplayed() }
-            }
-            step("Assert 'Read more' text block is displayed") {
-                onSwapSelectNetworkFeeBottomSheet { readMoreTextBlock.assertIsDisplayed() }
-            }
-            step("Click on 'Fast' item") {
-                onSwapSelectNetworkFeeBottomSheet { fastSelectorItem.assertIsDisplayed() }
-            }
-            step("Assert 'Network fee' block is displayed") {
+            step("Assert network fee amount is displayed") {
                 onSwapTokenScreen {
-                    flakySafely(WAIT_UNTIL_TIMEOUT) {
-                        networkFeeBlock.assertIsDisplayed()
-                    }
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { feeAmount.assertIsDisplayed() }
                 }
+            }
+            step("Open 'Network fee' selector") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSwapTokenScreen { selectFeeIcon.performClick() }
+                    onSwapSelectNetworkFeeBottomSheet { fastFeeItem.assertIsDisplayed() }
+                }
+            }
+            step("Assert 'Fast' fee is selected") {
+                onSwapSelectNetworkFeeBottomSheet { fastFeeItem.assertIsSelected() }
+            }
+            step("Assert 'Market' fee is not selected") {
+                onSwapSelectNetworkFeeBottomSheet { marketFeeItem.assertIsNotSelected() }
             }
         }
     }
@@ -594,19 +653,29 @@ class SwapTokenScreenTest : BaseTestCase() {
         }
     }
 
-    @ApiEnv(
-        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
-    )
     @AllureId("5162")
-    @DisplayName("Swap: check swap tokens switch")
+    @DisplayName("Swap: switching the swap direction recalculates the quote")
     @Test
     fun checkSwapTokensSwitchTest() {
         val swapTokenSymbol = "POL"
         val receiveTokenSymbol = "ETH"
         val receiveTokenName = "Ethereum"
         val tokenTitle = "Polygon"
+        val inputAmount = "100"
+        val switchedInputAmount = "0.1"
+        val pairsToScenarioName = "polygon_pos_to_pairs"
+        val pairsToScenarioState = "DexProvider"
+        val reverseQuoteScenarioName = "exchange_quote_ethereum_polygon"
+        val reverseQuoteScenarioState = "Native"
 
         setupHooks().run {
+
+            step("Set WireMock scenario: '$pairsToScenarioName' to state: '$pairsToScenarioState'") {
+                setWireMockScenarioState(scenarioName = pairsToScenarioName, state = pairsToScenarioState)
+            }
+            step("Set WireMock scenario: '$reverseQuoteScenarioName' to state: '$reverseQuoteScenarioState'") {
+                setWireMockScenarioState(scenarioName = reverseQuoteScenarioName, state = reverseQuoteScenarioState)
+            }
 
             step("Open 'Main Screen'") {
                 openMainScreen()
@@ -632,6 +701,46 @@ class SwapTokenScreenTest : BaseTestCase() {
             step("Assert receive token symbol: '$receiveTokenSymbol' is displayed") {
                 onSwapTokenScreen { receiveTokenSymbol(receiveTokenSymbol).assertIsDisplayed() }
             }
+            step("Assert 'Swap tokens on screen' button is enabled") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { replaceTokensButton.assertIsEnabled() }
+                }
+            }
+            step("Input swap amount = '$inputAmount'") {
+                onSwapTokenScreen {
+                    textInput.clickWithAssertion()
+                    textInput.performTextReplacement(inputAmount)
+                }
+            }
+            step("Assert receive amount is not equal to '0'") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                        receiveAmount.assertIsDisplayed()
+                        receiveAmount.assert(!hasText("0"))
+                    }
+                }
+            }
+            step("Assert provider name is displayed") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { providerNameText.assertIsDisplayed() }
+                }
+            }
+            step("Assert provider rate is displayed") {
+                onSwapTokenScreen { providerRateText.assertIsDisplayed() }
+            }
+            step("Assert network fee is calculated in '$swapTokenSymbol'") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { feeBlockCurrency(swapTokenSymbol).assertIsDisplayed() }
+                }
+            }
+            var initialReceiveAmount = ""
+            var initialRate = ""
+            step("Read receive amount and provider rate") {
+                onSwapTokenScreen {
+                    initialReceiveAmount = receiveAmount.extractText()
+                    initialRate = providerRateText.extractText()
+                }
+            }
             step("Click on 'Swap tokens on screen' button") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     onSwapTokenScreen {
@@ -641,10 +750,47 @@ class SwapTokenScreenTest : BaseTestCase() {
                 }
             }
             step("Assert new swap token symbol: '$receiveTokenSymbol' is displayed") {
-                onSwapTokenScreen { swapTokenSymbol(receiveTokenSymbol).assertIsDisplayed() }
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { swapTokenSymbol(receiveTokenSymbol).assertIsDisplayed() }
+                }
             }
             step("Assert new receive token symbol: '$swapTokenSymbol' is displayed") {
                 onSwapTokenScreen { receiveTokenSymbol(swapTokenSymbol).assertIsDisplayed() }
+            }
+            step("Assert 'Swap tokens on screen' button is enabled") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { replaceTokensButton.assertIsEnabled() }
+                }
+            }
+            step("Input swap amount = '$switchedInputAmount'") {
+                onSwapTokenScreen {
+                    textInput.clickWithAssertion()
+                    textInput.performTextReplacement(switchedInputAmount)
+                }
+            }
+            step("Assert receive amount is recalculated for the new direction") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                        receiveAmount.assertIsDisplayed()
+                        receiveAmount.assert(!hasText("0"))
+                        receiveAmount.assert(!hasText(initialReceiveAmount))
+                    }
+                }
+            }
+            step("Assert provider name is displayed for the new direction") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { providerNameText.assertIsDisplayed() }
+                }
+            }
+            step("Assert provider rate is recalculated for the new direction") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { providerRateText.assert(!hasText(initialRate)) }
+                }
+            }
+            step("Assert network fee is recalculated in '$receiveTokenSymbol'") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { feeBlockCurrency(receiveTokenSymbol).assertIsDisplayed() }
+                }
             }
         }
     }

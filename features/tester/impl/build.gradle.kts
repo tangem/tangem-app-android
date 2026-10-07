@@ -48,6 +48,7 @@ dependencies {
     implementation(projects.domain.markets.models)
     implementation(projects.domain.models)
     implementation(projects.domain.offramp)
+    implementation(projects.domain.socialLogin)
     implementation(projects.domain.walletManager)
     runtimeOnly(projects.domain.card)
     runtimeOnly(projects.domain.manageTokens)
@@ -82,6 +83,7 @@ dependencies {
     api(projects.features.storiesV2.api)
     api(projects.features.survey.api)
     api(projects.features.tester.api)
+    implementation(projects.features.hotWallet.api)
     implementation(projects.features.pushNotifications.api)
 
     /* SDK */

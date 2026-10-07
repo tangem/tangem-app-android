@@ -4,6 +4,7 @@ import android.text.format.DateFormat
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.subcomponents.destination.model.transformers.RECENT_DEFAULT_COUNT
@@ -117,6 +118,29 @@ internal class SendRecipientHistoryListConverterTest {
             assertThat(item.subtitleEndOffset).isEqualTo(cryptoCurrency.symbol.length)
             assertThat(item.subtitleIconRes).isEqualTo(R.drawable.ic_arrow_up_24)
             assertThat(item.isVisible).isTrue()
+        }
+
+        @Test
+        fun `GIVEN outgoing joint account transfer WHEN convert THEN its recipient is listed`() {
+            // Arrange
+            val jointTransfer = txInfo(
+                type = TxInfo.TransactionType.Joint.Transfer(
+                    recipient = RECIPIENT,
+                    amount = BigDecimal.ONE,
+                    refundCap = SdkAmount(
+                        currencySymbol = "ETH",
+                        value = BigDecimal("500000000000000").movePointLeft(18),
+                        decimals = 18,
+                    ),
+                    signaturesCount = 2,
+                ),
+            )
+
+            // Act
+            val actual = converter.convert(listOf(jointTransfer))
+
+            // Assert
+            assertThat(actual.single().title).isEqualTo(stringReference(RECIPIENT))
         }
 
         @Test

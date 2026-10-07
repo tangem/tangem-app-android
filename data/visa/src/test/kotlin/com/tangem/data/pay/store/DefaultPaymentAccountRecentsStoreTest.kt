@@ -2,8 +2,7 @@ package com.tangem.data.pay.store
 
 import androidx.datastore.preferences.core.emptyPreferences
 import com.google.common.truth.Truth.assertThat
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.tangem.core.remote.json.NetworkJsonFactory
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
@@ -19,13 +18,13 @@ internal class DefaultPaymentAccountRecentsStoreTest {
     private var nowMillis = 100L
     private val spendPreferencesKeys = SpendPreferencesKeys()
     private val prefs = createAppPreferencesStore(
-        moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build(),
         dispatchers = TestingCoroutineDispatcherProvider(),
         preferencesDataStore = MockStateDataStore(default = emptyPreferences()),
     )
     private val store = DefaultPaymentAccountRecentsStore(
         prefs = prefs,
         spendPreferencesKeys = spendPreferencesKeys,
+        json = NetworkJsonFactory.create(),
         currentTimeMillis = { nowMillis },
     )
 
@@ -78,6 +77,21 @@ internal class DefaultPaymentAccountRecentsStoreTest {
 
         // Assert
         assertThat(actual).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN a journal stored by the previous app version WHEN getUsage THEN it is read back`() = runTest {
+        // Arrange
+        prefs.editData { preferences ->
+            preferences[spendPreferencesKeys.paymentAccountRecents(WALLET_A)] =
+                """{"${COIN_ID.value}":{"accountId":"${"a".repeat(64)}","usedAtMillis":100}}"""
+        }
+
+        // Act
+        val actual = store.getUsage(WALLET_A)
+
+        // Assert
+        assertThat(actual).containsExactly(ACCOUNT_1 to COIN_ID, 100L)
     }
 
     @Test

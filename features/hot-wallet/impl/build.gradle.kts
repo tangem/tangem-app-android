@@ -15,6 +15,7 @@ dependencies {
     api(projects.features.hotWallet.api)
     api(projects.features.onboardingV2.api)
     api(projects.features.pushNotifications.api)
+    implementation(projects.features.storiesV2.api)
 
     /** Core modules */
     api(projects.core.analytics)

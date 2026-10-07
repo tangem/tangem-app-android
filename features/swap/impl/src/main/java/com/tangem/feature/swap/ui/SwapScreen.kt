@@ -25,6 +25,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
@@ -37,7 +39,6 @@ import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
 import com.tangem.feature.swap.domain.models.domain.SwapUIMode
 import com.tangem.feature.swap.models.SwapStateHolder
-import com.tangem.feature.swap.models.states.ChooseProviderBottomSheetConfig
 import com.tangem.feature.swap.presentation.R
 import com.tangem.features.marketing.api.MarketingBannerComponent
 
@@ -82,14 +83,6 @@ internal fun SwapScreen(
                 .padding(scaffoldPaddings)
                 .testTag(SwapTokenScreenTestTags.CONTAINER),
         )
-
-        if (stateHolder.bottomSheetConfig != null) {
-            val config = stateHolder.bottomSheetConfig
-
-            when (config.content) {
-                is ChooseProviderBottomSheetConfig -> ChooseProviderBottomSheet(config = config)
-            }
-        }
     }
 }
 
@@ -142,6 +135,7 @@ private fun SwapUiModeMenuItem(title: String, isSelected: Boolean, onClick: () -
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
+            .semantics { selected = isSelected }
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),

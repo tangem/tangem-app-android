@@ -2,12 +2,15 @@ package com.tangem.feature.swap.domain.di
 
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.domain.transaction.usecase.CreateTransactionDataExtrasUseCase
+import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
 import com.tangem.domain.transaction.usecase.GetEthSpecificFeeUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForGaslessTxUseCase
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForTokenUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
+import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.usecase.WrapYieldSwapCallDataWithUpgradeUseCase
 import com.tangem.feature.swap.domain.*
@@ -20,6 +23,7 @@ import com.tangem.feature.swap.domain.fee.DexSwapFeeCalculator
 import com.tangem.feature.swap.domain.fee.PatchEthGasLimitForSwap
 import com.tangem.feature.swap.domain.transfer.SwapTransferInteractor
 import com.tangem.feature.swap.domain.transfer.SwapTransferInteractorImpl
+import com.tangem.features.swap.SwapFeatureToggles
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -92,11 +96,19 @@ internal class SwapDomainModule {
         estimateFeeUseCase: EstimateFeeUseCase,
         estimateFeeForTokenUseCase: EstimateFeeForTokenUseCase,
         estimateFeeForGaslessTxUseCase: EstimateFeeForGaslessTxUseCase,
+        getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase,
+        createTransferTransactionUseCase: CreateTransferTransactionUseCase,
+        isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
+        swapFeatureToggles: SwapFeatureToggles,
         @SwapSendGasLimit patchEthGasLimitForSwap: PatchEthGasLimitForSwap,
     ): CexSwapFeeCalculator = CexSwapFeeCalculator(
         estimateFeeUseCase = estimateFeeUseCase,
         estimateFeeForTokenUseCase = estimateFeeForTokenUseCase,
         estimateFeeForGaslessTxUseCase = estimateFeeForGaslessTxUseCase,
+        getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
+        createTransferTransactionUseCase = createTransferTransactionUseCase,
+        isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
+        swapFeatureToggles = swapFeatureToggles,
         patchEthGasLimitForSwap = patchEthGasLimitForSwap,
     )
 

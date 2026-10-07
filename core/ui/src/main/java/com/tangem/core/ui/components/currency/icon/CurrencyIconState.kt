@@ -98,6 +98,12 @@ sealed class CurrencyIconState {
         override val topBadgeIconResId: Int? = null
     }
 
+    data class PredictionAccount(val size: AccountIconSize = AccountIconSize.Default) : CurrencyIconState() {
+        override val isGrayscale: Boolean = false
+        override val shouldShowCustomBadge: Boolean = false
+        override val topBadgeIconResId: Int? = null
+    }
+
     @Immutable
     sealed class CryptoPortfolio : CurrencyIconState() {
         override val shouldShowCustomBadge: Boolean = false
@@ -105,11 +111,15 @@ sealed class CurrencyIconState {
         abstract val color: Color
         abstract val size: AccountIconSize
 
+        /** Whether the account has a pending operation awaiting the user's signature (e.g. a joint-account co-sign) */
+        abstract val hasPendingOperation: Boolean
+
         data class Icon(
             internal val icon: Either<Int, ImageVector>,
             override val color: Color,
             override val isGrayscale: Boolean,
             override val size: AccountIconSize = AccountIconSize.Default,
+            override val hasPendingOperation: Boolean = false,
         ) : CryptoPortfolio() {
 
             constructor(
@@ -117,14 +127,16 @@ sealed class CurrencyIconState {
                 color: Color,
                 isGrayscale: Boolean,
                 size: AccountIconSize = AccountIconSize.Default,
-            ) : this(Either.Left(resId), color, isGrayscale, size)
+                hasPendingOperation: Boolean = false,
+            ) : this(Either.Left(resId), color, isGrayscale, size, hasPendingOperation)
 
             constructor(
                 imageVector: ImageVector,
                 color: Color,
                 isGrayscale: Boolean,
                 size: AccountIconSize = AccountIconSize.Default,
-            ) : this(Either.Right(imageVector), color, isGrayscale, size)
+                hasPendingOperation: Boolean = false,
+            ) : this(Either.Right(imageVector), color, isGrayscale, size, hasPendingOperation)
 
             @Composable
             fun imageVector(): ImageVector = icon.fold(
@@ -138,6 +150,7 @@ sealed class CurrencyIconState {
             override val color: Color,
             override val isGrayscale: Boolean,
             override val size: AccountIconSize = AccountIconSize.Default,
+            override val hasPendingOperation: Boolean = false,
         ) : CryptoPortfolio()
     }
 
@@ -187,6 +200,7 @@ sealed class CurrencyIconState {
             isGrayscale = isGrayscale,
         )
         is PaymentAccount,
+        is PredictionAccount,
         is Loading,
         is Locked,
         is Empty,
