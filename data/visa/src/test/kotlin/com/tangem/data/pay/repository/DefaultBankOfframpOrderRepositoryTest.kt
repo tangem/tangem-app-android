@@ -74,7 +74,6 @@ internal class DefaultBankOfframpOrderRepositoryTest {
 
         // Assert
         assertThat(actual).isEqualTo(BankOfframpOrderResult(orderId = ORDER_ID, bankAccountId = "acc-1").right())
-        assertThat(body.captured.idempotencyKey).isEqualTo(KEY)
         assertThat(body.captured.data.bankAccountId).isEqualTo("acc-1")
         assertThat(body.captured.data.bankAccount).isNull()
         coVerify(exactly = 1) { tangemPayApi.createBankOfframpOrder(AUTH_HEADER, KEY, any()) }
@@ -326,7 +325,6 @@ internal class DefaultBankOfframpOrderRepositoryTest {
                 ),
             ),
         ),
-        idempotencyKey = KEY,
     )
 
     private fun expectedAddress() = BankOfframpPlaceOrderRequest.Address(

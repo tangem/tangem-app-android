@@ -16,15 +16,33 @@ internal class TangemPayFormCharsetTest {
     }
 
     @ParameterizedTest
+    @MethodSource("recipientNameCases")
+    fun isRecipientNameCharsetValid(model: CharsetModel) {
+        assertThat(TangemPayFormCharset.isRecipientNameCharsetValid(model.input)).isEqualTo(model.expected)
+    }
+
+    @ParameterizedTest
     @MethodSource("shippingCases")
     fun isShippingCharsetValid(model: CharsetModel) {
         assertThat(TangemPayFormCharset.isShippingCharsetValid(model.input)).isEqualTo(model.expected)
     }
 
     @ParameterizedTest
+    @MethodSource("postalCodeCases")
+    fun isPostalCodeCharsetValid(model: CharsetModel) {
+        assertThat(TangemPayFormCharset.isPostalCodeCharsetValid(model.input)).isEqualTo(model.expected)
+    }
+
+    @ParameterizedTest
     @MethodSource("addressCases")
     fun isAddressCharsetValid(model: CharsetModel) {
         assertThat(TangemPayFormCharset.isAddressCharsetValid(model.input)).isEqualTo(model.expected)
+    }
+
+    @ParameterizedTest
+    @MethodSource("nonLatinLetterCases")
+    fun containsNonLatinLetter(model: CharsetModel) {
+        assertThat(TangemPayFormCharset.containsNonLatinLetter(model.input)).isEqualTo(model.expected)
     }
 
     @ParameterizedTest
@@ -59,6 +77,20 @@ internal class TangemPayFormCharsetTest {
         CharsetModel(input = "John_Doe", expected = false),
     )
 
+    private fun recipientNameCases() = listOf(
+        CharsetModel(input = "Johnny", expected = true),
+        CharsetModel(input = "Mary Jane", expected = true),
+        CharsetModel(input = "Jean-Luc", expected = true),
+        CharsetModel(input = "", expected = true),
+        CharsetModel(input = "O'Brien", expected = false),
+        CharsetModel(input = "O’Brien", expected = false),
+        CharsetModel(input = "St. John", expected = false),
+        CharsetModel(input = "John 2", expected = false),
+        CharsetModel(input = "Doe, John", expected = false),
+        CharsetModel(input = "José", expected = false),
+        CharsetModel(input = "Иван", expected = false),
+    )
+
     private fun shippingCases() = listOf(
         CharsetModel(input = "JOHN Doe 42", expected = true),
         CharsetModel(input = "Apt 5/7", expected = true),
@@ -67,7 +99,9 @@ internal class TangemPayFormCharsetTest {
         CharsetModel(input = "Suite 5, Floor 2", expected = true),
         CharsetModel(input = "O'Brien", expected = true),
         CharsetModel(input = "Block (A)", expected = true),
-        CharsetModel(input = "Unit: 10", expected = true),
+        CharsetModel(input = "Apt #5", expected = true),
+        CharsetModel(input = "Smith & Sons", expected = true),
+        CharsetModel(input = "Calle 5 N°12", expected = true),
         CharsetModel(input = "O’BRIEN", expected = true),
         CharsetModel(input = "O‘BRIEN", expected = true),
         CharsetModel(input = "JOHN\u00A0DOE", expected = true),
@@ -81,10 +115,20 @@ internal class TangemPayFormCharsetTest {
         CharsetModel(input = "İstanbul", expected = false),
         CharsetModel(input = "Москва", expected = false),
         CharsetModel(input = "北京", expected = false),
-        CharsetModel(input = "Smith & Sons", expected = false),
-        CharsetModel(input = "Apt #5", expected = false),
+        CharsetModel(input = "Unit: 10", expected = false),
         CharsetModel(input = "john@doe", expected = false),
         CharsetModel(input = "Unit\t10", expected = false),
+    )
+
+    private fun postalCodeCases() = listOf(
+        CharsetModel(input = "94103", expected = true),
+        CharsetModel(input = "SW1A 1AA", expected = true),
+        CharsetModel(input = "1000-001", expected = true),
+        CharsetModel(input = "", expected = true),
+        CharsetModel(input = "123/45", expected = false),
+        CharsetModel(input = "12.345", expected = false),
+        CharsetModel(input = "#12345", expected = false),
+        CharsetModel(input = "Ü1234", expected = false),
     )
 
     private fun addressCases() = listOf(
@@ -106,6 +150,21 @@ internal class TangemPayFormCharsetTest {
         CharsetModel(input = "A×B", expected = false),
         CharsetModel(input = "A÷B", expected = false),
         CharsetModel(input = "", expected = true),
+    )
+
+    private fun nonLatinLetterCases() = listOf(
+        CharsetModel(input = "José", expected = true),
+        CharsetModel(input = nfd("São Paulo"), expected = true),
+        CharsetModel(input = "q${Char(0x0303)}", expected = true),
+        CharsetModel(input = "Müller Straße 10", expected = true),
+        CharsetModel(input = "Москва", expected = true),
+        CharsetModel(input = "北京", expected = true),
+        CharsetModel(input = "O'Brien", expected = false),
+        CharsetModel(input = "Unit: 10", expected = false),
+        CharsetModel(input = "john@doe", expected = false),
+        CharsetModel(input = "Calle 5 N°12", expected = false),
+        CharsetModel(input = "A×B", expected = false),
+        CharsetModel(input = "", expected = false),
     )
 
     private fun normalizeCases() = listOf(

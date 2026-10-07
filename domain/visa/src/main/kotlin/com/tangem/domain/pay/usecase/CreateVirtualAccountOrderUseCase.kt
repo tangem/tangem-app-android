@@ -10,7 +10,6 @@ import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.utils.coroutines.AppCoroutineScope
 import kotlinx.coroutines.launch
-import java.util.UUID
 
 /**
  * Creates the Virtual Account on-ramp order (VA MVP0, TWI-1638) and persists the returned id as `vaOrderId`.
@@ -29,13 +28,14 @@ class CreateVirtualAccountOrderUseCase(
     suspend operator fun invoke(
         userWalletId: UserWalletId,
         paymentAccountAddress: String,
+        idempotencyKey: String,
     ): Either<VisaApiError, Unit> = either {
         onboardingRepository.getVirtualAccountOrderId(userWalletId)
             ?: run {
                 val vaOrderId = onboardingRepository.createVirtualAccountOrder(
                     userWalletId = userWalletId,
                     paymentAccountAddress = paymentAccountAddress,
-                    idempotencyKey = UUID.randomUUID().toString(),
+                    idempotencyKey = idempotencyKey,
                 ).bind()
                 onboardingRepository.storeVirtualAccountOrderFailed(userWalletId = userWalletId, isFailed = false)
                 onboardingRepository.storeVirtualAccountOrderId(userWalletId = userWalletId, vaOrderId = vaOrderId)
