@@ -47,6 +47,7 @@ interface TangemExpressApi {
         @Query("toDecimals") toDecimals: Int,
         @Query("providerId") providerId: String,
         @Query("rateType") rateType: String,
+        @Query("slippage") slippage: String? = null, // percent × 100, e.g. "50" for 0.5 %
     ): ApiResponse<ExchangeQuoteResponse>
 
     @GET("exchange-data")
@@ -71,6 +72,7 @@ interface TangemExpressApi {
         @Query("partnerOperationType") partnerOperationType: String?, // swap/ swap-and-send
         @Query("toExtraId") toExtraId: String?, // swap-and-send memo
         @Query("quoteId") quoteId: String?, // fixed rate quoteId
+        @Query("slippage") slippage: String? = null, // percent × 100, e.g. "50" for 0.5 %
     ): ApiResponse<ExchangeDataResponse>
 
     @GET("exchange-status")
