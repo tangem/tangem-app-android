@@ -3,7 +3,6 @@ package com.tangem.features.polymarket.impl.common
 import com.tangem.core.ui.extensions.SpanStyleReference
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.format.bigdecimal.compact
-import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.formatStyled
@@ -40,11 +39,6 @@ internal fun BigDecimal?.formatPolymarketMoneyStyled(fractionStyle: SpanStyleRef
 internal fun BigDecimal.formatPolymarketEnteredAmount(): String = format {
     fiat(fiatCurrencyCode = PolymarketConst.USD_CODE, fiatCurrencySymbol = PolymarketConst.USD_SYMBOL)
         .optionalDecimals()
-}
-
-/** Formats a collateral balance as the token it is held in, e.g. "1,000.00 USDC". */
-internal fun BigDecimal?.formatPolymarketBalance(tokenSymbol: String): String = format {
-    crypto(symbol = tokenSymbol, decimals = PolymarketConst.COLLATERAL_DISPLAY_DECIMALS, ignoreSymbolPosition = true)
 }
 
 /** Formats a slippage tolerance the way the screens state it, e.g. "5%". */

@@ -23,7 +23,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.features.polymarket.impl.common.PolymarketConst
-import com.tangem.features.polymarket.impl.common.formatPolymarketBalance
 import com.tangem.features.polymarket.impl.common.formatPolymarketEnteredAmount
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
@@ -48,7 +47,7 @@ internal fun PredictionPaymentBlock(
             modifier = Modifier.padding(all = 16.dp),
             verticalArrangement = Arrangement.spacedBy(space = 24.dp),
         ) {
-            SourceHeader(collateral = collateral, order = order)
+            SourceHeader(order = order)
             when (order) {
                 is OrderSideUM.Buy -> BuyAmountRow(amountValue = amountValue, payout = payout, collateral = collateral)
                 is OrderSideUM.Sell -> SellAmountRow(
@@ -62,7 +61,7 @@ internal fun PredictionPaymentBlock(
 }
 
 @Composable
-private fun SourceHeader(collateral: CollateralUM, order: OrderSideUM) {
+private fun SourceHeader(order: OrderSideUM) {
     Column(verticalArrangement = Arrangement.spacedBy(space = 2.dp)) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(space = 4.dp),
@@ -86,7 +85,7 @@ private fun SourceHeader(collateral: CollateralUM, order: OrderSideUM) {
         HeaderText(
             text = stringResourceSafe(
                 R.string.common_balance,
-                order.balance.formatPolymarketBalance(tokenSymbol = collateral.tokenSymbol),
+                order.balance.formatPolymarketMoney(),
             ),
         )
     }
