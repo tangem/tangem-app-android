@@ -1,12 +1,14 @@
 package com.tangem.core.socket
 
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -174,6 +176,57 @@ internal class KeyedSubscriptionsTest {
     }
 
     @Test
+    fun `GIVEN full shard WHEN a key is replaced within one batch THEN unsubscribe goes out before subscribe`() =
+        runTest {
+            // Arrange
+            val subscriptions = createSubscriptions(maxKeysPerService = 2)
+            val first = observe(subscriptions, setOf("a"))
+            observe(subscriptions, setOf("b"))
+            advanceTimeBy(BATCH + 1.milliseconds)
+
+            // Act
+            first.cancel()
+            advanceTimeBy(UNSUBSCRIBE_DELAY + 1.milliseconds)
+            observe(subscriptions, setOf("c"))
+            advanceTimeBy(BATCH)
+
+            // Assert
+            assertThat(services.single().frames)
+                .containsExactly(
+                    Frame.Subscribe(setOf("a", "b")),
+                    Frame.Unsubscribe(setOf("a")),
+                    Frame.Subscribe(setOf("c")),
+                )
+                .inOrder()
+        }
+
+    @Test
+    fun `GIVEN scope running jobs inline and zero windows WHEN keys change repeatedly THEN every change is sent`() =
+        runTest {
+            // Arrange
+            val subscriptions = createSubscriptions(
+                scope = CoroutineScope(UnconfinedTestDispatcher(testScheduler)),
+                batchWindow = Duration.ZERO,
+                unsubscribeDelay = Duration.ZERO,
+            )
+
+            // Act
+            val first = observe(subscriptions, setOf("a"))
+            first.cancel()
+            runCurrent()
+            observe(subscriptions, setOf("b"))
+
+            // Assert
+            assertThat(services.single().frames)
+                .containsExactly(
+                    Frame.Subscribe(setOf("a")),
+                    Frame.Unsubscribe(setOf("a")),
+                    Frame.Subscribe(setOf("b")),
+                )
+                .inOrder()
+        }
+
+    @Test
     fun `GIVEN events for several keys WHEN observing one key THEN only its events are delivered`() = runTest {
         // Arrange
         val subscriptions = createSubscriptions()
@@ -194,11 +247,12 @@ internal class KeyedSubscriptionsTest {
     }
 
     private fun TestScope.createSubscriptions(
+        scope: CoroutineScope = backgroundScope,
         maxKeysPerService: Int = Int.MAX_VALUE,
         batchWindow: Duration = BATCH,
         unsubscribeDelay: Duration = UNSUBSCRIBE_DELAY,
     ) = KeyedSubscriptions<String, FakeService>(
-        scope = backgroundScope,
+        scope = scope,
         newService = { _, openKeys -> FakeService(openKeys).also(services::add) },
         subscribe = { keys -> send(Frame.Subscribe(keys)) },
         unsubscribe = { keys -> send(Frame.Unsubscribe(keys)) },

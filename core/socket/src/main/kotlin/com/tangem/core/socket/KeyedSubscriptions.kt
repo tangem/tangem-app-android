@@ -1,6 +1,7 @@
 package com.tangem.core.socket
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -82,7 +83,7 @@ class KeyedSubscriptions<Key : Any, Service : Any>(
 
     private fun scheduleRemoval(shard: Shard, key: Key) {
         shard.removals.remove(key)?.cancel()
-        shard.removals[key] = scope.launch {
+        val job = scope.launch(start = CoroutineStart.LAZY) {
             delay(unsubscribeDelay)
             val removal = coroutineContext.job
             synchronized(lock) {
@@ -94,18 +95,22 @@ class KeyedSubscriptions<Key : Any, Service : Any>(
                 }
             }
         }
+        shard.removals[key] = job
+        job.start()
     }
 
     private fun scheduleFlush(shard: Shard) {
         if (shard.flush != null) return
 
-        shard.flush = scope.launch {
+        val job = scope.launch(start = CoroutineStart.LAZY) {
             delay(batchWindow)
             synchronized(lock) {
                 shard.flush = null
                 flush(shard)
             }
         }
+        shard.flush = job
+        job.start()
     }
 
     private fun flush(shard: Shard) {
@@ -113,8 +118,8 @@ class KeyedSubscriptions<Key : Any, Service : Any>(
         val added = desired - shard.subscribed
         val removed = shard.subscribed - desired
 
-        if (added.isNotEmpty() && shard.service.subscribe(added)) shard.subscribed += added
         if (removed.isNotEmpty() && shard.service.unsubscribe(removed)) shard.subscribed -= removed
+        if (added.isNotEmpty() && shard.service.subscribe(added)) shard.subscribed += added
     }
 
     private fun openKeys(shard: Shard): Set<Key> = synchronized(lock) {
