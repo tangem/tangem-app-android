@@ -92,6 +92,27 @@ class SwapGeoRestrictionsTest : BaseTestCase() {
                     }
                 }
             }
+            step("Assert the available provider '$availableProviderName' is listed") {
+                onChooseProviderBottomSheet { providerItem(availableProviderName).assertIsDisplayed() }
+            }
+            step("Click on the restricted provider '$restrictedProviderName'") {
+                onChooseProviderBottomSheet { unavailableProviderItem(restrictedProviderName).performClick() }
+            }
+            step("Assert the restricted provider '$restrictedProviderName' is selected") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { providerNameText.assertTextContains(restrictedProviderName) }
+                }
+            }
+            step("Assert '$restrictionsTitle' warning is displayed") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { warningTitle(restrictionsTitle).assertIsDisplayed() }
+                }
+            }
+            step("Assert 'Swap' button is not available") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { swapButtonWithLabel.assertIsNotEnabled() }
+                }
+            }
         }
     }
 }
