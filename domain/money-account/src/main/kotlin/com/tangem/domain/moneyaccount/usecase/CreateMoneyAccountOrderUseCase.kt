@@ -8,11 +8,13 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.repository.MoneyAccountOrderRepository
 import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.TangemPayOrderInfo
+import com.tangem.domain.pay.usecase.FindActiveMoneyAccountCreationOrderUseCase
 import com.tangem.domain.visa.error.VisaApiError
 
 class CreateMoneyAccountOrderUseCase(
     private val orderRepository: MoneyAccountOrderRepository,
     private val trackOrder: TrackMoneyAccountOrderUseCase,
+    private val findActiveMoneyAccountCreationOrderUseCase: FindActiveMoneyAccountCreationOrderUseCase,
 ) {
     suspend operator fun invoke(
         userWalletId: UserWalletId,
@@ -21,7 +23,7 @@ class CreateMoneyAccountOrderUseCase(
     ): Either<VisaApiError, Unit> {
         if (orderRepository.getOrder(userWalletId) != null) return Unit.right()
 
-        val activeOrder = orderRepository.findActiveOrder(userWalletId).getOrNull()
+        val activeOrder = findActiveMoneyAccountCreationOrderUseCase.invoke(userWalletId).getOrNull()
         if (activeOrder != null) {
             startOrderTracking(userWalletId, activeOrder)
             return Unit.right()
@@ -41,7 +43,7 @@ class CreateMoneyAccountOrderUseCase(
     ): Either<VisaApiError, Order> = fold(
         ifLeft = { error ->
             if (error == VisaApiError.AccountIssueActiveOrderExists) {
-                orderRepository.findActiveOrder(userWalletId)
+                findActiveMoneyAccountCreationOrderUseCase.invoke(userWalletId)
                     .flatMap { order -> order?.right() ?: VisaApiError.OrderNotFound.left() }
             } else {
                 error.left()

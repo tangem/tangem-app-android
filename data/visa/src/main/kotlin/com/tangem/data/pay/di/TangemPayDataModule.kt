@@ -731,5 +731,17 @@ internal interface TangemPayDataModule {
         ): FindActiveBankOfframpOrderUseCase {
             return FindActiveBankOfframpOrderUseCase(repository = repository)
         }
+
+        @Provides
+        fun provideFindActiveOrdersUseCase(customerOrderRepository: CustomerOrderRepository): FindActiveOrdersUseCase {
+            return FindActiveOrdersUseCase(customerOrderRepository = customerOrderRepository)
+        }
+
+        @Provides
+        fun provideFindActiveMoneyAccountCreationOrderUseCase(
+            findActiveOrdersUseCase: FindActiveOrdersUseCase,
+        ): FindActiveMoneyAccountCreationOrderUseCase {
+            return FindActiveMoneyAccountCreationOrderUseCase(findActiveOrdersUseCase = findActiveOrdersUseCase)
+        }
     }
 }
