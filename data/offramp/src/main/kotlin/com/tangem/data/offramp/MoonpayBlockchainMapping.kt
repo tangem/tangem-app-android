@@ -172,4 +172,5 @@ internal val Blockchain.moonPaySupportedCurrency: MoonPaySupportedCurrency?
         Electroneum, ElectroneumTestnet -> null
         Arc, ArcTestnet -> null
         Onyx, OnyxTestnet -> null
+        PublicMasterpiece -> null
     }
