@@ -9,10 +9,12 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.child.wallet.model.intents.TangemPayIntents
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.google.common.truth.Truth.assertThat
 import io.mockk.clearMocks
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
@@ -82,6 +84,24 @@ internal class TangemPayMainBlockConverterTest {
         assertThat(result).isInstanceOf(TangemPayMainUM.FailedToIssue::class.java)
         (result as TangemPayMainUM.FailedToIssue).onClick()
         verify(exactly = 1) { tangemPayIntents.openDetails(status) }
+    }
+
+    @Test
+    fun `GIVEN KYC required WHEN convert THEN block click opens KYC required sheet`() {
+        // Arrange
+        val userWalletId = UserWalletId("011")
+        val status = AccountStatus.Payment(
+            account = mockk { every { this@mockk.userWalletId } returns userWalletId },
+            value = PaymentAccountStatusValue.KycRequired(source = StatusSource.ACTUAL, customerId = "customer"),
+        )
+
+        // Act
+        val result = converter.convert(status)
+
+        // Assert
+        assertThat(result).isInstanceOf(TangemPayMainUM.ActionRequired::class.java)
+        (result as TangemPayMainUM.ActionRequired).onClick()
+        verify(exactly = 1) { tangemPayIntents.onKycRequiredClicked(userWalletId, "customer") }
     }
 
     private fun paymentAccount(value: PaymentAccountStatusValue): AccountStatus.Payment {
