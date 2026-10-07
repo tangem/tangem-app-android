@@ -1363,6 +1363,7 @@
   <string name="markets_real_assets_interval_day">Tag</string>
   <string name="markets_real_assets_interval_month">Monat</string>
   <string name="markets_real_assets_interval_week">Woche</string>
+  <string name="markets_real_assets_region_restriction_description">Aktien, ETFs, Anleihen – diese werden in Ihrer Region nicht unterstützt</string>
   <string name="markets_real_assets_region_restriction_description_region">Aktien, ETFs, Anleihen – diese werden nicht unterstützt %1$s</string>
   <string name="markets_real_assets_region_restriction_title">In Ihrer Region nicht unterstützt</string>
   <string name="markets_real_assets_sector_xstocks_communication">Kommunikationsdienste</string>
@@ -2573,6 +2574,7 @@
   <string name="tangem_pay_transaction_declined_notification_text">Die Bank hat diese Transaktionsanfrage abgelehnt.</string>
   <string name="tangem_pay_transaction_details_cashback_below_min">Versand ab</string>
   <string name="tangem_pay_transaction_details_cashback_cap_reached">Monatslimit erreicht</string>
+  <string name="tangem_pay_transaction_details_cashback_compliance_risk">Compliance-Risiko</string>
   <string name="tangem_pay_transaction_details_cashback_mcc_excluded">MCC ausgeschlossen</string>
   <string name="tangem_pay_transaction_details_cashback_none">—</string>
   <string name="tangem_pay_transaction_details_cashback_refund">Rückgabe des Kaufs</string>
@@ -3000,6 +3002,8 @@
   <string name="tangempay_va_available_to_deposit_day">Täglich zur Einzahlung verfügbar:</string>
   <string name="tangempay_va_banking_details_error_description">Bitte versuche es später erneut. Sollte das Problem weiterhin bestehen, kontaktiere bitte unseren Support. Wir helfen Dir gerne bei der Lösung.</string>
   <string name="tangempay_va_banking_details_error_title">Die Bankdaten konnten nicht geladen werden</string>
+  <string name="tangempay_va_banner_failed_description">Bitte versuchen Sie es erneut oder kontaktieren Sie den Support, falls das Problem weiterhin besteht.</string>
+  <string name="tangempay_va_banner_failed_title">Fehler beim Erstellen der Bankdaten</string>
   <string name="tangempay_va_limit_resetting_everyday">Das Limit wird jeden Tag zurückgesetzt</string>
   <string name="tangempay_visa_benefits">Visavorteile</string>
   <string name="tangempay_waitlist_description">Wir benachrichtigen Sie per E-Mail, sobald es in Ihrer Region verfügbar ist.</string>
