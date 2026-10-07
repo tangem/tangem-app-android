@@ -79,6 +79,15 @@ internal class SocketServiceProcessor(
             return null
         }
 
+        val accessorClashes = methods.filterNotNull().fakeAccessorClashes()
+        if (accessorClashes.isNotEmpty()) {
+            logger.error(
+                "@SocketService names clash with the generated fake's JVM accessors: ${accessorClashes.joinToString()}",
+                symbol,
+            )
+            return null
+        }
+
         return SocketServiceModel(
             declaration = symbol,
             visibility = if (Visibility.INTERNAL in visibilities) KModifier.INTERNAL else KModifier.PUBLIC,
@@ -157,6 +166,19 @@ internal class SocketServiceProcessor(
         if (method is SocketMethod.Send) "${method.name}Sent" else method.name
     } + FAKE_SEND_RESULT
 
+    private fun List<SocketMethod>.fakeAccessorClashes(): List<String> {
+        val getters = fakePropertyNames().map(::jvmGetterName).toSet()
+        val noArgClashes = filter { it !is SocketMethod.Send && it.name in getters }.map { it.name }
+        val setterClashes = filter { it is SocketMethod.Send && it.name == FAKE_SEND_RESULT_SETTER }.map { it.name }
+        return noArgClashes + setterClashes
+    }
+
+    private fun jvmGetterName(property: String): String = if (property.matches(IS_PREFIXED)) {
+        property
+    } else {
+        "get" + property.replaceFirstChar(Char::uppercaseChar)
+    }
+
     private fun KSClassDeclaration.consultedFiles(): Set<KSFile> = buildSet {
         addAll(withAncestorFiles())
         getAllFunctions().filter { it.isAbstract }.forEach { function ->
@@ -183,5 +205,7 @@ internal class SocketServiceProcessor(
 
     private companion object {
         const val FAKE_SEND_RESULT = "sendResult"
+        const val FAKE_SEND_RESULT_SETTER = "setSendResult"
+        val IS_PREFIXED = Regex("is[A-Z].*")
     }
 }
