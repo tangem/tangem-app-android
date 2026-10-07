@@ -2,15 +2,19 @@ package com.tangem.features.feed.crypto.categories.ui
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -32,12 +36,14 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
+import com.tangem.core.ui.res.generated.icons.ic_search_20
 import com.tangem.features.feed.crypto.categories.ui.state.*
 import com.tangem.features.feed.crypto.impl.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
 private const val LOAD_NEXT_PAGE_ON_END_INDEX = 10
+private const val NO_RESULTS_ICON_ALPHA = 0.9f
 
 /**
  * The hosting chrome — feed modal and header — is owned by the feed host and the component; the
@@ -76,9 +82,11 @@ private fun SectionsContent(state: MarketCategorySelectorUM.ContentUM.Content, m
             }
         }
 
-        item(key = "categoriesHeader") {
-            SectionHeader(title = categories.title, modifier = Modifier.padding(horizontal = 16.dp))
-            SpacerH(8.dp)
+        if (categories.items.isNotEmpty()) {
+            item(key = "categoriesHeader") {
+                SectionHeader(title = categories.title, modifier = Modifier.padding(horizontal = 16.dp))
+                SpacerH(8.dp)
+            }
         }
 
         items(items = categories.items, key = MarketCategoryItemUM::id) { item ->
@@ -89,7 +97,7 @@ private fun SectionsContent(state: MarketCategorySelectorUM.ContentUM.Content, m
             item(key = "loadingMore") { LoadingMoreRow() }
         }
 
-        item(key = "footerSpacer") { SpacerH(128.dp) }
+        item(key = "footerSpacer") { FooterSpacer() }
     }
 
     InfiniteListHandler(
@@ -126,7 +134,7 @@ private fun FeaturedRail(items: ImmutableList<FeaturedCategoryUM>, modifier: Mod
         items.fastForEach { item ->
             TangemBadge(
                 text = item.label,
-                variant = if (item.isSelected) TangemBadge.Variant.Solid else TangemBadge.Variant.Tinted,
+                variant = if (item.isSelected) TangemBadge.Variant.Inverse else TangemBadge.Variant.Solid,
                 size = TangemBadge.Size.X9,
                 onClick = item.onItemClick,
             )
@@ -181,6 +189,16 @@ private fun SectionHeader(title: TextReference, modifier: Modifier = Modifier) {
     )
 }
 
+/** Keeps the last rows scrollable above the [Footer], which sits over the list including the navigation bar inset. */
+@Composable
+private fun FooterSpacer() {
+    Spacer(
+        modifier = Modifier
+            .navigationBarsPadding()
+            .height(128.dp),
+    )
+}
+
 /**
  * Always present, so a filter arrived at with a selection can still be changed and applied; both
  * actions only mean something once the draft diverges from what is already applied.
@@ -199,7 +217,9 @@ private fun Footer(state: MarketCategorySelectorFooterUM, isEnabled: Boolean, mo
                 modifier = Modifier.matchParentSize(),
             )
             Column(
-                modifier = Modifier.padding(all = 16.dp),
+                modifier = Modifier
+                    .navigationBarsPadding()
+                    .padding(all = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(space = 8.dp),
             ) {
                 TangemButton(
@@ -223,18 +243,42 @@ private fun Footer(state: MarketCategorySelectorFooterUM, isEnabled: Boolean, mo
 
 @Composable
 private fun NoResults(modifier: Modifier = Modifier) {
-    Box(
+    Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        contentAlignment = Alignment.Center,
+            .imePadding()
+            .padding(horizontal = 16.dp, vertical = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(space = 16.dp, alignment = Alignment.CenterVertically),
     ) {
-        Text(
-            text = stringResourceSafe(R.string.common_no_results),
-            textAlign = TextAlign.Center,
-            style = TangemTheme.typography3.body.medium,
-            color = TangemTheme.colors3.text.secondary,
-        )
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .alpha(NO_RESULTS_ICON_ALPHA)
+                .background(color = TangemTheme.colors3.bg.opaque.secondary, shape = CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.ic_search_20,
+                contentDescription = null,
+                tint = TangemTheme.colors3.icon.secondary,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = stringResourceSafe(R.string.prediction_search_empty_title),
+                textAlign = TextAlign.Center,
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.primary,
+            )
+            Text(
+                text = stringResourceSafe(R.string.prediction_search_empty_subtitle),
+                textAlign = TextAlign.Center,
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.secondary,
+            )
+        }
     }
 }
 
@@ -365,18 +409,6 @@ private fun previewBody(withFeatured: Boolean, query: String = ""): MarketCatego
         categories = MarketCategoryListUM(
             title = resourceReference(R.string.market_categories),
             items = buildList {
-                if (!isSearching) {
-                    add(
-                        MarketCategoryItemUM(
-                            id = "__all__",
-                            title = resourceReference(R.string.common_all),
-                            subtitle = null,
-                            caption = null,
-                            isSelected = false,
-                            onItemClick = {},
-                        ),
-                    )
-                }
                 all.filter { it.contains(other = query, ignoreCase = true) }.forEach { name ->
                     add(
                         MarketCategoryItemUM(

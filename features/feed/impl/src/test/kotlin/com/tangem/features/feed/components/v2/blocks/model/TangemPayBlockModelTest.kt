@@ -1,6 +1,7 @@
 package com.tangem.features.feed.components.v2.blocks.model
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.routing.AppRoute
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.models.account.Account
@@ -205,6 +206,78 @@ internal class TangemPayBlockModelTest {
 
         // Assert
         assertThat(model.isVisible.value).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN no wallet carries a payment account WHEN the model is created THEN the pitch leads nowhere`() =
+        runTest {
+            // Arrange
+            accountLists.value = listOf(accountList(walletAId, mockk<Account.Personal>()))
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.onboardingMode.value).isNull()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a wallet whose account was never created WHEN the pitch is shown THEN it opens the activation`() =
+        runTest {
+            // Arrange
+            accountLists.value = listOf(accountList(walletAId, mockk<Account.Payment>()))
+            every { paymentAccountStatusSupplier(walletAId) } returns
+                MutableStateFlow(paymentStatus(PaymentAccountStatusValue.NotCreated))
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.onboardingMode.value)
+                .isEqualTo(AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a wallet already in KYC WHEN the pitch is shown THEN it resumes that wallet's onboarding`() = runTest {
+        // Arrange
+        accountLists.value = listOf(accountList(walletAId, mockk<Account.Payment>()))
+        every { paymentAccountStatusSupplier(walletAId) } returns
+            MutableStateFlow(paymentStatus(mockk<PaymentAccountStatusValue.UnderReview>()))
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.onboardingMode.value)
+            .isEqualTo(AppRoute.TangemPayOnboarding.Mode.ContinueOnboarding(userWalletId = walletAId))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN one of two wallets is in KYC WHEN the pitch is shown THEN it resumes the one in KYC`() = runTest {
+        // Arrange
+        accountLists.value = listOf(
+            accountList(walletAId, mockk<Account.Payment>()),
+            accountList(walletBId, mockk<Account.Payment>()),
+        )
+        every { paymentAccountStatusSupplier(walletAId) } returns
+            MutableStateFlow(paymentStatus(PaymentAccountStatusValue.NotCreated))
+        every { paymentAccountStatusSupplier(walletBId) } returns
+            MutableStateFlow(paymentStatus(mockk<PaymentAccountStatusValue.UnderReview>()))
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.onboardingMode.value)
+            .isEqualTo(AppRoute.TangemPayOnboarding.Mode.ContinueOnboarding(userWalletId = walletBId))
         model.onDestroy()
     }
 

@@ -61,7 +61,11 @@ internal class AddressBookAnalyticsSender @Inject constructor(
         analyticsEventHandler.send(AddressBookEvents.AddContactTapped(source = source))
     }
 
-    fun sendContactSaved(contactId: String, isEdit: Boolean) {
+    fun sendContactSaved(
+        contactId: String,
+        isEdit: Boolean,
+        source: AddressBookEvents.AddContactTapped.Source? = null,
+    ) {
         analyticsEventHandler.send(
             AddressBookEvents.ContactSaved(
                 contactId = contactId,
@@ -70,6 +74,7 @@ internal class AddressBookAnalyticsSender @Inject constructor(
                 } else {
                     AddressBookEvents.ContactSaved.Mode.Create
                 },
+                source = source,
             ),
         )
     }
