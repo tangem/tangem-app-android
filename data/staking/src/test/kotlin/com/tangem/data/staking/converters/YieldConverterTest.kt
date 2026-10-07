@@ -73,6 +73,38 @@ internal class YieldConverterTest {
     }
 
     @Test
+    fun `GIVEN active and jailed validators WHEN convert THEN only active are selectable but all are resolvable`() {
+        // Arrange
+        val yieldDTO = createYieldDTO(
+            createValidatorDTO(address = "active", status = ValidatorStatusDTO.ACTIVE),
+            createValidatorDTO(address = "jailed", status = ValidatorStatusDTO.JAILED),
+            createValidatorDTO(address = "inactive", status = ValidatorStatusDTO.INACTIVE),
+        )
+
+        // Act
+        val actual = YieldConverter.convert(yieldDTO)
+
+        // Assert
+        assertThat(actual.validators.map { it.address }).containsExactly("active")
+        assertThat(actual.allValidators.map { it.address }).containsExactly("active", "jailed", "inactive")
+    }
+
+    @Test
+    fun `GIVEN jailed validator without address WHEN convert THEN it is skipped`() {
+        // Arrange
+        val yieldDTO = createYieldDTO(
+            createValidatorDTO(address = "active", status = ValidatorStatusDTO.ACTIVE),
+            createValidatorDTO(address = null, status = ValidatorStatusDTO.JAILED),
+        )
+
+        // Act
+        val actual = YieldConverter.convert(yieldDTO)
+
+        // Assert
+        assertThat(actual.allValidators.map { it.address }).containsExactly("active")
+    }
+
+    @Test
     fun `GIVEN validator without address WHEN convert THEN error is thrown`() {
         // Arrange
         val yieldDTO = createYieldDTO(createValidatorDTO(address = null, name = "Named pool"))
