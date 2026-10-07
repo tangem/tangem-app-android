@@ -243,6 +243,8 @@
   <string name="bitcoin_promo_no_address">Для зачисления бонуса нужен Bitcoin-адрес. Добавьте его в портфель и повторите активацию.</string>
   <string name="bitcoin_promo_no_address_title">Требуется Bitcoin-адрес</string>
   <string name="button_start_backup_process">Начать резервное копирование</string>
+  <string name="buy_swap_region_restriction_description_region">Покупка и обмен сейчас недоступны в вашем регионе: %s</string>
+  <string name="buy_swap_region_restriction_title">Региональные ограничения</string>
   <string name="buy_token_description">Используйте банковскую карту или другие методы оплаты</string>
   <plurals name="card_label_card_count">
     <item quantity="one">%d устройство</item>
@@ -370,6 +372,7 @@
     <item quantity="many">%d дней назад</item>
     <item quantity="other">%d дней назад</item>
   </plurals>
+  <string name="common_decline">Отклонить</string>
   <string name="common_delete">Удалить</string>
   <string name="common_disable">Отключить</string>
   <string name="common_disabled">Отключено</string>
@@ -564,6 +567,7 @@
   <string name="common_transfer">Перевод</string>
   <string name="common_transferred">Переведено</string>
   <string name="common_try_again_later">Пожалуйста, попробуйте позже</string>
+  <string name="common_type">Тип</string>
   <string name="common_unable_to_load">Невозможно загрузить данные…</string>
   <string name="common_understand">Я понял</string>
   <string name="common_understand_continue">Я понимаю, продолжить</string>
@@ -670,6 +674,7 @@
   <string name="dynamic_addresses_notification_funds_found_title">Найдены средства на дополнительных адресах</string>
   <string name="dynamic_addresses_receive_badge">Динамический адрес</string>
   <string name="dynamic_addresses_unavailability_reason_pending_transaction_send">Управление динамическими адресами станет доступно после подтверждения транзакций в сети %@</string>
+  <string name="earn_assets">Активы для заработка</string>
   <string name="earn_best_opportunities">Лучшие возможности</string>
   <string name="earn_clear_filter">Очистить фильтр</string>
   <string name="earn_empty">Список временно пуст — он обновляется. Пожалуйста, зайдите чуть позже.</string>
@@ -785,6 +790,9 @@
   <string name="feed_promo_tangem_pay_title">Платите криптовалютой</string>
   <string name="feed_search_show_all_user_assets">Показать все</string>
   <string name="feed_search_show_less_user_assets">Скрыть</string>
+  <string name="feed_tab_crypto">Криптовалюты</string>
+  <string name="feed_tab_earn">Заработок</string>
+  <string name="feed_tab_rwa">Реальные активы</string>
   <string name="feed_trending_now">В тренде</string>
   <string name="feedback_data_collection_message">Информация ниже не является обязательной. Вы можете стереть её, если хотите.</string>
   <string name="feedback_preface_rate_negative">Расскажите, каких функций вам не хватает, и мы постараемся вам помочь.</string>
@@ -1059,6 +1067,7 @@
   <string name="joint_account_invite_load_failed_subtitle">Не удалось загрузить страницу приглашения.\nНажмите, чтобы обновить</string>
   <string name="joint_account_invite_members_creator">Создатель</string>
   <string name="joint_account_invite_members_invite">Пригласить</string>
+  <string name="joint_account_invite_members_invited">Приглашён</string>
   <string name="joint_account_invite_members_member">Участник</string>
   <string name="joint_account_invite_members_member_info">Об участнике</string>
   <string name="joint_account_invite_members_new_member">Новый участник</string>
@@ -1077,6 +1086,7 @@
   <string name="joint_account_invite_members_title">Пригласите участников</string>
   <string name="joint_account_invite_members_to_join">Пригласите участников в аккаунт</string>
   <string name="joint_account_invite_members_waiting_title">Ожидаем участников</string>
+  <string name="joint_account_invite_share_title">Пригласите в %s</string>
   <string name="joint_account_join_confirm_sheet_subtitle">У всех участников аккаунта общий баланс. Другие участники могут распоряжаться средствами без вашего согласия, если соберут достаточно подписей</string>
   <string name="joint_account_join_confirm_sheet_title">Вы вступаете в общий аккаунт</string>
   <string name="joint_account_join_invalid_link_subtitle">Проверьте, что открыли правильную ссылку, или попросите создателя аккаунта отправить её ещё раз</string>
@@ -1085,7 +1095,7 @@
   <string name="joint_account_join_subtitle">Это общий аккаунт. Для каждой транзакции из него нужны подписи: %1$s</string>
   <string name="joint_account_join_subtitle_value">%1$s из %2$s участников</string>
   <string name="joint_account_join_success_message">Аккаунт добавлен</string>
-  <string name="joint_account_join_title">Вас пригласили в аккаунт «%1$s»</string>
+  <string name="joint_account_join_title">Вас пригласили в аккаунт %1$s</string>
   <string name="joint_account_join_to_account_btn_text">Вступить в аккаунт</string>
   <plurals name="joint_account_members_count">
     <item quantity="one">%d участник</item>
@@ -1100,7 +1110,7 @@
   <string name="joint_account_members_signers_title">Нужно подписей</string>
   <string name="joint_account_members_subtitle">Укажите, сколько человек будет пользоваться аккаунтом. Каждую транзакцию должны подписать %1$s из %2$s участников. Позже это изменить нельзя</string>
   <string name="joint_account_members_subtitle_helper_part"> %1$s из %2$s участников</string>
-  <string name="joint_account_members_subtitle_main_part">Укажите, сколько человек будет пользоваться аккаунтом. Каждую транзакцию должны подписать%1$s. Позже это изменить нельзя</string>
+  <string name="joint_account_members_subtitle_main_part">Укажите, сколько человек будет пользоваться аккаунтом. Каждую транзакцию должны подписать %1$s. Позже это изменить нельзя</string>
   <string name="joint_account_members_title">Участники</string>
   <string name="joint_account_members_total_subtitle">Максимум %1$s человек, включая вас</string>
   <string name="joint_account_members_total_title">Всего участников</string>
@@ -1134,11 +1144,17 @@
   <string name="joint_account_send_sends_automatically_setup_fee">Отправится автоматически после сбора подписей. Первая отправка включает разовую комиссию за настройку</string>
   <string name="joint_account_send_setup_fee_note">Первая транзакция в сети %1$s. В комиссию входит разовая плата %2$s за настройку общего аккаунта в блокчейне</string>
   <string name="joint_account_send_signatures_required">Нужно подписей: %1$s из %2$s</string>
+  <plurals name="joint_account_send_signatures_required_banner">
+    <item quantity="one">Потребуется %1$d подпись</item>
+    <item quantity="few">Потребуется %1$d подписи</item>
+    <item quantity="many">Потребуется %1$d подписей</item>
+    <item quantity="other">Потребуется %1$d подписи</item>
+  </plurals>
   <string name="joint_account_send_slot_busy_subtitle">В этой сети уже идёт сбор подписей по другой операции. Дождитесь её завершения, чтобы создать новую</string>
   <string name="joint_account_send_slot_busy_title">Уже есть незавершённая операция</string>
   <string name="joint_account_settings_networks_info">Этот аккаунт работает только в поддерживаемых сетях.</string>
   <string name="joint_account_waiting_activation">Ожидает активации</string>
-  <string name="joint_operation_auto_sends_footer">Отправится автоматически, когда подпишут %1$s из %2$s участников</string>
+  <string name="joint_operation_auto_sends_footer">Отправится автоматически, когда подпишут %1$s из %2$s участников</string>
   <string name="joint_operation_banner_subtitle">%1$s → %2$s</string>
   <string name="joint_operation_banner_title">%1$s хочет отправить %2$s</string>
   <string name="joint_operation_banner_title_own">Вы хотите отправить %1$s</string>
@@ -1149,7 +1165,7 @@
   <string name="joint_operation_decline_alert_title">Отклонить транзакцию?</string>
   <string name="joint_operation_declined">Отклонено</string>
   <string name="joint_operation_declined_at">Отклонено %s</string>
-  <string name="joint_operation_declined_footer">Вы отклонили. Остальные ещё могут набрать %1$s из %2$s</string>
+  <string name="joint_operation_declined_footer">Вы отклонили. Остальные ещё могут набрать %1$s из %2$s</string>
   <string name="joint_operation_delete_alert_message">Транзакция будет отменена для всех участников. Собранные подписи будут удалены</string>
   <string name="joint_operation_delete_alert_title">Удалить транзакцию?</string>
   <string name="joint_operation_deleted_snackbar">Транзакция удалена</string>
@@ -1160,7 +1176,7 @@
   <string name="joint_operation_signatures_progress">Подписи: %1$s из %2$s</string>
   <string name="joint_operation_signed">Подписано</string>
   <string name="joint_operation_signed_at">Подписано %s</string>
-  <string name="joint_operation_signed_footer">Отправится автоматически, когда подпишут %1$s из %2$s</string>
+  <string name="joint_operation_signed_footer">Отправится автоматически, когда подпишут %1$s из %2$s</string>
   <string name="joint_operation_signers_title">Подписанты</string>
   <string name="joint_operation_signing_blocked_subtitle">Подписание заблокировано по соображениям безопасности. Обратитесь в поддержку</string>
   <string name="joint_operation_signing_blocked_title">Подписание заблокировано</string>
@@ -1210,6 +1226,7 @@
   <string name="manage_tokens_unavailable_description">Выбранный токен недоступен в кошельке на данный момент. Но не переживайте, вы можете выразить свой интерес проголосовав за его добавление.</string>
   <string name="manage_tokens_unavailable_vote">Голосовать</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">Кошелёк не поддерживает более одной сети</string>
+  <string name="market_categories">Категории</string>
   <string name="market_chart_bubble_no_amount">Нет токенов \n/ стоимости активов</string>
   <string name="market_chart_bubble_total_value">Общая стоимость</string>
   <string name="market_chart_can_not_load_data">Не удалось загрузить данные</string>
@@ -2322,7 +2339,7 @@
   <string name="tangempay_cashback_accruals_calc_title">Как мы рассчитываем кэшбэк?</string>
   <string name="tangempay_cashback_accruals_exceptions_description">Пока не начисляем кэшбэк за покупки в офлайн-магазинах в ЕС. Также кэшбэка не будет за снятие наличных, квази-кэш операции, оплату мобильной связи, госуслуги и некоторые другие категории</string>
   <string name="tangempay_cashback_accruals_exceptions_title">Исключения</string>
-  <string name="tangempay_cashback_accruals_pay_description">Со 2 по 5 число следующего месяца</string>
+  <string name="tangempay_cashback_accruals_pay_description">До 10-го числа следующего месяца, после проверки транзакций на соответствие правилам программы кешбэка</string>
   <string name="tangempay_cashback_accruals_pay_title">Как мы выплачиваем кэшбэк?</string>
   <string name="tangempay_cashback_accruals_subtitle">Лимиты и исключения</string>
   <string name="tangempay_cashback_accruals_title">Как начисляем</string>
@@ -2331,7 +2348,7 @@
   <string name="tangempay_cashback_additional_until">До %1$s</string>
   <string name="tangempay_cashback_deactivated_description">Это произошло из-за подозрительной активности. Обратитесь в поддержку</string>
   <string name="tangempay_cashback_deactivated_title">Кэшбэк деактивирован</string>
-  <string name="tangempay_cashback_deposit_banner">Кэшбэк %1$s за %2$s зачислим на счёт до %3$s</string>
+  <string name="tangempay_cashback_deposit_banner">Кэшбэк %1$s за %2$s выплатим до %3$s после валидации покупок</string>
   <string name="tangempay_cashback_deposited_on">Зачислим на счёт %1$s</string>
   <string name="tangempay_cashback_details_cap">Максимум %1$s в месяц</string>
   <string name="tangempay_cashback_details_eu_excluded">Пока не начисляем кэшбэк за офлайн-покупки у продавцов из ЕС</string>
@@ -2430,7 +2447,7 @@
   <string name="tangempay_kyc_rejected_description">Извините, мы не смогли подтвердить</string>
   <string name="tangempay_kyc_rejected_description_span">ваш профиль.</string>
   <string name="tangempay_main_select_plan">Выбрать тариф</string>
-  <string name="tangempay_maximum_cards_issued_description">Вы можете иметь до 3 карт. Удалите одну, чтобы добавить новую.</string>
+  <string name="tangempay_maximum_cards_issued_description">Удалите одну, чтобы добавить новую</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">Перейдите на более высокий тариф, чтобы иметь больше карт</string>
   <string name="tangempay_maximum_cards_issued_for_plan_title">Достигнут лимит карт для этого тарифа</string>
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">Улучшить тариф</string>
