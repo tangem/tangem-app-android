@@ -69,7 +69,7 @@ internal class AndroidSocketEnvironment @Inject constructor(
                 }
 
                 override fun onLost(network: Network) {
-                    trySend(connectivityManager.activeNetworkId())
+                    trySend(connectivityManager.activeNetworkId().takeUnless { it == network.toString() })
                 }
             }
             trySend(connectivityManager.activeNetworkId())

@@ -28,4 +28,9 @@ data class SocketSpec(
     val onOpen: suspend SocketSession.() -> Unit = {},
     val isSplitArrayFrames: Boolean = false,
     val idleTimeout: Duration = 5.seconds,
-)
+) {
+
+    init {
+        require(!idleTimeout.isNegative()) { "idleTimeout must not be negative" }
+    }
+}
