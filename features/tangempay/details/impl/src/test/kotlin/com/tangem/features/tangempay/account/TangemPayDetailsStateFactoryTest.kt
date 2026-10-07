@@ -8,6 +8,7 @@ import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_clock_20
+import com.tangem.core.ui.res.generated.icons.ic_error_20
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.PaymentNetworkStatus
@@ -82,6 +83,31 @@ internal class TangemPayDetailsStateFactoryTest {
             ),
         )
         assertThat(banner.onClose).isNull()
+    }
+
+    @Test
+    fun `GIVEN v2 enabled and banking details creation failed WHEN getLoadedState THEN closable failed banner shown`() {
+        // Arrange
+        isVisaOnrampV2Enabled = true
+        val status = loadedStatus(virtualAccount = VirtualAccountOnramp.Failed)
+
+        // Act
+        val banner = factory.getLoadedState(status).bankTransferOnrampBanner
+
+        // Assert
+        val state = requireNotNull(banner).state
+        val iconStart = state.iconStart as TangemIconUM.Icon
+        assertThat(state.copy(iconStart = iconStart.copy(tint = null))).isEqualTo(
+            TangemMessageBanner.State(
+                title = resourceReference(R.string.tangempay_va_banner_failed_title),
+                variant = TangemMessageBanner.Variant.Error,
+                shouldShowGlowRing = false,
+                description = resourceReference(R.string.tangempay_va_banner_failed_description),
+                iconStart = TangemIconUM.Icon(imageVector = Icons.ic_error_20),
+            ),
+        )
+        requireNotNull(banner.onClose).invoke()
+        verify(exactly = 1) { intents.onBankTransferOnrampFailedBannerDismissed() }
     }
 
     @ParameterizedTest
@@ -638,6 +664,7 @@ internal class TangemPayDetailsStateFactoryTest {
         @JvmStatic
         fun provideHiddenBankTransferOnrampBannerCases() = listOf(
             HiddenBankTransferOnrampBannerCase(isV2Enabled = false, virtualAccount = VirtualAccountOnramp.Processing),
+            HiddenBankTransferOnrampBannerCase(isV2Enabled = false, virtualAccount = VirtualAccountOnramp.Failed),
             HiddenBankTransferOnrampBannerCase(isV2Enabled = true, virtualAccount = VirtualAccountOnramp.Eligible),
             HiddenBankTransferOnrampBannerCase(
                 isV2Enabled = true,

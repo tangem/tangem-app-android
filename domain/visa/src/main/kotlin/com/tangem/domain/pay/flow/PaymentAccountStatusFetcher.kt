@@ -19,6 +19,8 @@ interface PaymentAccountStatusFetcher : FlowFetcher<PaymentAccountStatusFetcher.
      */
     suspend fun markVirtualAccountProcessing(userWalletId: UserWalletId)
 
+    suspend fun markVirtualAccountEligible(userWalletId: UserWalletId)
+
     /**
      * Optimistically marks the delivered card of [productInstanceId] as activating, so a submitted activation
      * shows up immediately and survives a failed confirming refetch.
