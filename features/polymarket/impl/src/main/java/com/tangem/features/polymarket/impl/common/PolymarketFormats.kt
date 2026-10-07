@@ -47,7 +47,7 @@ internal fun BigDecimal?.formatPolymarketBalance(tokenSymbol: String): String = 
     crypto(symbol = tokenSymbol, decimals = PolymarketConst.COLLATERAL_DISPLAY_DECIMALS, ignoreSymbolPosition = true)
 }
 
-/** Formats a slippage tolerance the way the screens state it, e.g. "0.25%". */
+/** Formats a slippage tolerance the way the screens state it, e.g. "5%". */
 internal fun BigDecimal.formatSlippagePercent(): String = movePointLeft(2).format {
     percent(minFractionDigits = 0)
 }
