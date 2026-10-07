@@ -18,10 +18,10 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-internal class FindActiveOrdersUseCaseTest {
+internal class FindOrdersUseCaseTest {
 
     private val customerOrderRepository: CustomerOrderRepository = mockk()
-    private val useCase = FindActiveOrdersUseCase(customerOrderRepository = customerOrderRepository)
+    private val useCase = FindOrdersUseCase(customerOrderRepository = customerOrderRepository)
 
     @BeforeEach
     fun resetMocks() {
@@ -29,26 +29,27 @@ internal class FindActiveOrdersUseCaseTest {
     }
 
     @Test
-    fun `GIVEN types WHEN invoke THEN orders requested with these types and active statuses`() = runTest {
+    fun `GIVEN types and statuses WHEN invoke THEN orders requested with these filters`() = runTest {
         // Arrange
         val types = setOf(OrderType.ACCOUNT_ISSUE_BANKING_RAIN, OrderType.CARD_ISSUE_PLASTIC_RAIN)
+        val statuses = setOf(OrderStatus.NEW, OrderStatus.COMPLETED)
         coEvery { customerOrderRepository.findOrders(any(), any(), any()) } returns emptyList<Order>().right()
 
         // Act
-        useCase(userWalletId = USER_WALLET_ID, types = types)
+        useCase(userWalletId = USER_WALLET_ID, types = types, statuses = statuses)
 
         // Assert
         coVerify(exactly = 1) {
             customerOrderRepository.findOrders(
                 userWalletId = USER_WALLET_ID,
                 types = types,
-                statuses = OrderStatus.activeStatuses,
+                statuses = statuses,
             )
         }
     }
 
     @Test
-    fun `GIVEN no types WHEN invoke THEN orders requested without type filter`() = runTest {
+    fun `GIVEN no filters WHEN invoke THEN orders requested without type and status filters`() = runTest {
         // Arrange
         coEvery { customerOrderRepository.findOrders(any(), any(), any()) } returns emptyList<Order>().right()
 
@@ -60,7 +61,7 @@ internal class FindActiveOrdersUseCaseTest {
             customerOrderRepository.findOrders(
                 userWalletId = USER_WALLET_ID,
                 types = emptySet(),
-                statuses = OrderStatus.activeStatuses,
+                statuses = emptySet(),
             )
         }
     }

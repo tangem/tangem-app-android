@@ -5,13 +5,13 @@ import com.tangem.domain.moneyaccount.repository.MoneyAccountOrderRepository
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.pay.usecase.FindActiveMoneyAccountCreationOrderUseCase
+import com.tangem.domain.pay.usecase.FindMoneyAccountCreationOrderUseCase
 
 class RestoreMoneyAccountOrderUseCase(
     private val orderRepository: MoneyAccountOrderRepository,
     private val onboardingRepository: OnboardingRepository,
     private val trackOrder: TrackMoneyAccountOrderUseCase,
-    private val findActiveMoneyAccountCreationOrderUseCase: FindActiveMoneyAccountCreationOrderUseCase,
+    private val findMoneyAccountCreationOrderUseCase: FindMoneyAccountCreationOrderUseCase,
 ) {
     suspend operator fun invoke(userWalletId: UserWalletId) {
         // TODO v_rodionov: [REDACTED_TASK_KEY] handle error of order restoring
@@ -20,7 +20,7 @@ class RestoreMoneyAccountOrderUseCase(
             orderRepository.clearOrder(userWalletId)
         } else {
             // TODO v_rodionov: [REDACTED_TASK_KEY] handle error of order restoring
-            val order = findActiveMoneyAccountCreationOrderUseCase.invoke(userWalletId).getOrNull() ?: return
+            val order = findMoneyAccountCreationOrderUseCase.invoke(userWalletId).getOrNull() ?: return
             trackOrder(userWalletId = userWalletId, order = TangemPayOrderInfo.fromOrder(order))
         }
     }
