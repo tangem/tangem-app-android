@@ -123,6 +123,26 @@ internal object YieldSupplyDomainModule {
 
     @Provides
     @Singleton
+    fun provideYieldSupplyMarketFlowUseCase(
+        yieldSupplyRepository: YieldSupplyRepository,
+    ): YieldSupplyMarketFlowUseCase {
+        return YieldSupplyMarketFlowUseCase(
+            yieldSupplyRepository = yieldSupplyRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetYieldRewardsSummaryUseCase(
+        yieldIncentivesRepository: YieldIncentivesRepository,
+    ): GetYieldRewardsSummaryUseCase {
+        return GetYieldRewardsSummaryUseCase(
+            yieldIncentivesRepository = yieldIncentivesRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideYieldSupplyGetChartUseCase(yieldSupplyRepository: YieldSupplyRepository): YieldSupplyGetChartUseCase {
         return YieldSupplyGetChartUseCase(
             yieldSupplyRepository = yieldSupplyRepository,

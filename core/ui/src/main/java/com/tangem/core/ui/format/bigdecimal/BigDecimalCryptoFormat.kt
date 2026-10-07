@@ -3,6 +3,7 @@ package com.tangem.core.ui.format.bigdecimal
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.CAN_BE_LOWER_SIGN
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.CRYPTO_FEE_FORMAT_THRESHOLD
+import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.CRYPTO_REWARD_MAX_DECIMALS
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.CURRENCY_SPACE
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.FORMAT_THRESHOLD
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -243,6 +244,40 @@ fun BigDecimalCryptoFormat.anyDecimals(maxDecimals: Int = decimals, minDecimals:
                 cryptoCurrencySymbol = symbol,
             )
     }
+
+/**
+ * Format for displaying an amount the user is about to receive, such as a claimable reward.
+ *
+ * Capped at [CRYPTO_REWARD_MAX_DECIMALS] because a token with eighteen of them is unreadable, and rounded down so
+ * the figure is never larger than what arrives. An amount too small for that cap keeps its lower-bound sign —
+ * "<0.00000001 WMON" — rather than reading as the plain zero a user would take for "nothing".
+ */
+fun BigDecimalCryptoFormat.reward() = BigDecimalFormat { value ->
+    val fractionDigits = decimals.coerceAtMost(maximumValue = CRYPTO_REWARD_MAX_DECIMALS)
+    val smallest = BigDecimal.ONE.movePointLeft(fractionDigits)
+    val formatter = NumberFormat.getCurrencyInstance(locale).apply {
+        currency = usdCurrency
+        maximumFractionDigits = fractionDigits
+        minimumFractionDigits = fractionDigits.coerceAtMost(maximumValue = 2)
+        isGroupingUsed = true
+        roundingMode = RoundingMode.DOWN
+    }
+
+    if (value > BigDecimal.ZERO && value < smallest) {
+        CAN_BE_LOWER_SIGN + formatter.format(smallest)
+            .replaceFiatSymbolWithCrypto(
+                fiatCurrencySymbol = usdCurrency.getSymbol(locale),
+                cryptoCurrencySymbol = symbol,
+                addStartSpace = true,
+            )
+    } else {
+        formatter.format(value)
+            .replaceFiatSymbolWithCrypto(
+                fiatCurrencySymbol = usdCurrency.getSymbol(locale),
+                cryptoCurrencySymbol = symbol,
+            )
+    }
+}
 
 /**
  * Format for displaying fees.
