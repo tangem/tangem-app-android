@@ -13,6 +13,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,36 +70,61 @@ internal fun PortfolioSelectorContentV3(
                 items = items,
                 key = { _, item -> item.id },
             ) { index, item ->
-                val pos = item.groupPosition
-                val decoration = Modifier
-                    .conditional(pos.isGroupStart && index != 0) {
-                        padding(top = 8.dp)
-                    }
-                    .roundedShapeItemDecoration(
-                        currentIndex = pos.indexInGroup,
-                        lastIndex = pos.lastIndexInGroup,
-                        backgroundColor = TangemTheme.colors3.bg.tertiary,
-                        radius = 24.dp,
-                        addDefaultPadding = false,
-                    )
-
-                when (item) {
-                    is PortfolioSelectorItemUM.Portfolio -> PortfolioSelectorItem(
-                        walletModel = item.item,
-                        isSelected = item.isSelected,
-                        isMultiChoiceEnabled = state.isMultiChoiceEnabled,
-                        modifier = decoration
-                            .clickable(enabled = item.item.isEnabled, onClick = item.item.onClick)
-                            .conditional(!item.item.isEnabled) { alpha(DISABLED_WALLET_ALPHA) },
-                    )
-                    is PortfolioSelectorItemUM.GroupTitle -> WalletNameRow(
-                        model = item,
-                        isMultiChoiceEnabled = state.isMultiChoiceEnabled,
-                        modifier = decoration,
-                    )
-                }
+                PortfolioSelectorListItem(
+                    item = item,
+                    index = index,
+                    isMultiChoiceEnabled = state.isMultiChoiceEnabled,
+                )
             }
         }
+    }
+}
+
+/** Non-lazy [PortfolioSelectorContentV3] for containers that can't host a lazy list, like the DS3 modal. */
+@Composable
+internal fun PortfolioSelectorColumnContent(state: PortfolioSelectorUM, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        state.items.forEachIndexed { index, item ->
+            key(item.id) {
+                PortfolioSelectorListItem(
+                    item = item,
+                    index = index,
+                    isMultiChoiceEnabled = state.isMultiChoiceEnabled,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PortfolioSelectorListItem(item: PortfolioSelectorItemUM, index: Int, isMultiChoiceEnabled: Boolean) {
+    val pos = item.groupPosition
+    val decoration = Modifier
+        .conditional(pos.isGroupStart && index != 0) {
+            padding(top = 8.dp)
+        }
+        .roundedShapeItemDecoration(
+            currentIndex = pos.indexInGroup,
+            lastIndex = pos.lastIndexInGroup,
+            backgroundColor = TangemTheme.colors3.bg.tertiary,
+            radius = 24.dp,
+            addDefaultPadding = false,
+        )
+
+    when (item) {
+        is PortfolioSelectorItemUM.Portfolio -> PortfolioSelectorItem(
+            walletModel = item.item,
+            isSelected = item.isSelected,
+            isMultiChoiceEnabled = isMultiChoiceEnabled,
+            modifier = decoration
+                .clickable(enabled = item.item.isEnabled, onClick = item.item.onClick)
+                .conditional(!item.item.isEnabled) { alpha(DISABLED_WALLET_ALPHA) },
+        )
+        is PortfolioSelectorItemUM.GroupTitle -> WalletNameRow(
+            model = item,
+            isMultiChoiceEnabled = isMultiChoiceEnabled,
+            modifier = decoration,
+        )
     }
 }
 
