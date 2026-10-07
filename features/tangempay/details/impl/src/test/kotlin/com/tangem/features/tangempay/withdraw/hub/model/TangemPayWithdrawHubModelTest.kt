@@ -28,7 +28,6 @@ import com.tangem.domain.pay.model.recents.RecentTokenTransfer
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.pay.usecase.bankofframp.GetBankOfframpOptionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetRecentBankAccountsUseCase
-import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
 import com.tangem.domain.pay.usecase.recents.GetRecentTokenTransfersUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
@@ -49,7 +48,6 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import io.mockk.verifyOrder
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -67,7 +65,6 @@ internal class TangemPayWithdrawHubModelTest {
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val getRecentBankAccountsUseCase: GetRecentBankAccountsUseCase = mockk()
     private val getRecentTokenTransfersUseCase: GetRecentTokenTransfersUseCase = mockk()
-    private val markBankAccountUsedUseCase: MarkBankAccountUsedUseCase = mockk(relaxed = true)
     private val getBankOfframpOptionsUseCase: GetBankOfframpOptionsUseCase = mockk()
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
@@ -91,7 +88,6 @@ internal class TangemPayWithdrawHubModelTest {
             uiMessageSender,
             getRecentBankAccountsUseCase,
             getRecentTokenTransfersUseCase,
-            markBankAccountUsedUseCase,
             getBankOfframpOptionsUseCase,
             paymentAccountStatusSupplier,
             analytics,
@@ -122,7 +118,7 @@ internal class TangemPayWithdrawHubModelTest {
     }
 
     @Test
-    fun `GIVEN model WHEN within portfolio clicked THEN hub popped and withdraw swap pushed`() {
+    fun `GIVEN model WHEN within portfolio clicked THEN withdraw swap pushed over the hub`() {
         // Arrange
         val model = createModel()
         val expectedRoute = AppRoute.Swap(
@@ -137,10 +133,8 @@ internal class TangemPayWithdrawHubModelTest {
         model.uiState.value.swapSection.withinPortfolio.onClick()
 
         // Assert
-        verifyOrder {
-            router.pop()
-            router.push(expectedRoute)
-        }
+        verify(exactly = 1) { router.push(expectedRoute) }
+        verify(exactly = 0) { router.pop() }
         model.onDestroy()
     }
 
@@ -187,7 +181,7 @@ internal class TangemPayWithdrawHubModelTest {
     }
 
     @Test
-    fun `GIVEN a recent token WHEN it is clicked THEN hub popped and swap pushed with that token as TO`() {
+    fun `GIVEN a recent token WHEN it is clicked THEN swap pushed over the hub with that token as TO`() {
         // Arrange
         val transfer = recentTransfer()
         tokenRecentsFlow.value = listOf(transfer)
@@ -205,10 +199,8 @@ internal class TangemPayWithdrawHubModelTest {
         model.tokenRecents().onTokenClick(RECENT_CURRENCY_ID_VALUE)
 
         // Assert
-        verifyOrder {
-            router.pop()
-            router.push(expectedRoute)
-        }
+        verify(exactly = 1) { router.push(expectedRoute) }
+        verify(exactly = 0) { router.pop() }
         model.onDestroy()
     }
 
@@ -245,7 +237,7 @@ internal class TangemPayWithdrawHubModelTest {
     }
 
     @Test
-    fun `GIVEN offramp options fail WHEN model created THEN bank section error`() {
+    fun `GIVEN offramp options fail WHEN model created THEN bank section unavailable`() {
         // Arrange
         coEvery { getBankOfframpOptionsUseCase(userWalletId) } returns optionsFailure
 
@@ -253,12 +245,12 @@ internal class TangemPayWithdrawHubModelTest {
         val model = createModel()
 
         // Assert
-        assertThat(model.uiState.value.bankSection).isInstanceOf(BankSectionUM.Error::class.java)
+        assertThat(model.bankContent().isAvailable).isFalse()
         model.onDestroy()
     }
 
     @Test
-    fun `GIVEN no token with balance WHEN model created THEN bank section error`() {
+    fun `GIVEN no token with balance WHEN model created THEN bank section unavailable`() {
         // Arrange
         statusFlow.resetReplayCache()
         emitStatus(balance = BigDecimal.ZERO)
@@ -267,26 +259,7 @@ internal class TangemPayWithdrawHubModelTest {
         val model = createModel()
 
         // Assert
-        assertThat(model.uiState.value.bankSection).isInstanceOf(BankSectionUM.Error::class.java)
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN bank section error WHEN retry clicked THEN options and recents reloaded`() {
-        // Arrange
-        coEvery { getBankOfframpOptionsUseCase(userWalletId) } returnsMany listOf(
-            optionsFailure,
-            offrampOptions().right(),
-        )
-        val model = createModel()
-
-        // Act
-        (model.uiState.value.bankSection as BankSectionUM.Error).onRetryClick()
-
-        // Assert
-        assertThat(model.uiState.value.bankSection).isInstanceOf(BankSectionUM.Content::class.java)
-        coVerify(exactly = 2) { getBankOfframpOptionsUseCase(userWalletId) }
-        coVerify(exactly = 2) { getRecentBankAccountsUseCase(userWalletId) }
+        assertThat(model.bankContent().isAvailable).isFalse()
         model.onDestroy()
     }
 
@@ -307,7 +280,7 @@ internal class TangemPayWithdrawHubModelTest {
     }
 
     @Test
-    fun `GIVEN the account cannot be resolved WHEN status emitted THEN bank section error`() {
+    fun `GIVEN the account cannot be resolved WHEN status emitted THEN bank section unavailable`() {
         // Arrange
         emitStatusValue(PaymentAccountStatusValue.Error.Unavailable)
 
@@ -315,7 +288,7 @@ internal class TangemPayWithdrawHubModelTest {
         val model = createModel()
 
         // Assert
-        assertThat(model.uiState.value.bankSection).isInstanceOf(BankSectionUM.Error::class.java)
+        assertThat(model.bankContent().isAvailable).isFalse()
         model.onDestroy()
     }
 
@@ -333,7 +306,7 @@ internal class TangemPayWithdrawHubModelTest {
     }
 
     @Test
-    fun `GIVEN last token spent WHEN account status updates THEN bank section error`() {
+    fun `GIVEN last token spent WHEN account status updates THEN bank section unavailable`() {
         // Arrange
         val model = createModel()
         assertThat(model.uiState.value.bankSection).isInstanceOf(BankSectionUM.Content::class.java)
@@ -342,7 +315,7 @@ internal class TangemPayWithdrawHubModelTest {
         emitStatus(balance = BigDecimal.ZERO)
 
         // Assert
-        assertThat(model.uiState.value.bankSection).isInstanceOf(BankSectionUM.Error::class.java)
+        assertThat(model.bankContent().isAvailable).isFalse()
         model.onDestroy()
     }
 
@@ -378,27 +351,26 @@ internal class TangemPayWithdrawHubModelTest {
     }
 
     @Test
-    fun `GIVEN no recent and no saved accounts WHEN model created THEN recents empty without see all`() {
+    fun `GIVEN no saved accounts WHEN model created THEN recents empty`() {
         // Act
         val model = createModel()
 
         // Assert
-        assertThat(model.recents()).isEqualTo(RecentsUM.Empty(onSeeAllClick = null))
+        assertThat(model.recents()).isEqualTo(RecentsUM.Empty)
         model.onDestroy()
     }
 
     @Test
-    fun `GIVEN no recent but saved accounts WHEN model created THEN recents empty with see all`() {
+    fun `GIVEN every saved account shown WHEN model created THEN recents content without see all`() {
         // Arrange
         coEvery { getRecentBankAccountsUseCase(userWalletId) } returns
-            recentBankAccounts(hasSavedAccounts = true).right()
-        val model = createModel()
+            recentBankAccounts(recents = listOf(bankAccount(id = "acc-1")), hasMoreAccounts = false).right()
 
         // Act
-        requireNotNull((model.recents() as RecentsUM.Empty).onSeeAllClick).invoke()
+        val model = createModel()
 
         // Assert
-        assertThat(opened.single().first).isEqualTo(BankWithdrawEntry.SeeAll)
+        assertThat((model.recents() as RecentsUM.Content).onSeeAllClick).isNull()
         model.onDestroy()
     }
 
@@ -463,7 +435,7 @@ internal class TangemPayWithdrawHubModelTest {
     }
 
     @Test
-    fun `GIVEN recents content WHEN recipient clicked THEN account marked used and saved entry opened`() {
+    fun `GIVEN recents content WHEN recipient clicked THEN saved entry opened`() {
         // Arrange
         coEvery { getRecentBankAccountsUseCase(userWalletId) } returns
             recentBankAccounts(recents = listOf(bankAccount(id = "acc-1"))).right()
@@ -473,20 +445,19 @@ internal class TangemPayWithdrawHubModelTest {
         (model.recents() as RecentsUM.Content).onRecipientClick("acc-1")
 
         // Assert
-        coVerify(exactly = 1) { markBankAccountUsedUseCase(userWalletId = userWalletId, bankAccountId = "acc-1") }
         assertThat(opened.single().first).isEqualTo(BankWithdrawEntry.Saved(bankAccountId = "acc-1"))
         model.onDestroy()
     }
 
     @Test
-    fun `GIVEN recents content WHEN see all clicked THEN wizard opened with see all entry`() {
+    fun `GIVEN more saved accounts than shown WHEN see all clicked THEN wizard opened with see all entry`() {
         // Arrange
         coEvery { getRecentBankAccountsUseCase(userWalletId) } returns
-            recentBankAccounts(recents = listOf(bankAccount(id = "acc-1"))).right()
+            recentBankAccounts(recents = listOf(bankAccount(id = "acc-1")), hasMoreAccounts = true).right()
         val model = createModel()
 
         // Act
-        (model.recents() as RecentsUM.Content).onSeeAllClick()
+        requireNotNull((model.recents() as RecentsUM.Content).onSeeAllClick).invoke()
 
         // Assert
         assertThat(opened.single().first).isEqualTo(BankWithdrawEntry.SeeAll)
@@ -530,14 +501,14 @@ internal class TangemPayWithdrawHubModelTest {
     }
 
     @Test
-    fun `GIVEN recents content WHEN see all clicked THEN SavedContactsSeeAllClicked is sent`() {
+    fun `GIVEN more saved accounts than shown WHEN see all clicked THEN SavedContactsSeeAllClicked is sent`() {
         // Arrange
         coEvery { getRecentBankAccountsUseCase(userWalletId) } returns
-            recentBankAccounts(recents = listOf(bankAccount(id = "acc-1"))).right()
+            recentBankAccounts(recents = listOf(bankAccount(id = "acc-1")), hasMoreAccounts = true).right()
         val model = createModel()
 
         // Act
-        (model.recents() as RecentsUM.Content).onSeeAllClick()
+        requireNotNull((model.recents() as RecentsUM.Content).onSeeAllClick).invoke()
 
         // Assert
         verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.SavedContactsSeeAllClicked()) }
@@ -644,7 +615,6 @@ internal class TangemPayWithdrawHubModelTest {
         uiMessageSender = uiMessageSender,
         getRecentBankAccountsUseCase = getRecentBankAccountsUseCase,
         getRecentTokenTransfersUseCase = getRecentTokenTransfersUseCase,
-        markBankAccountUsedUseCase = markBankAccountUsedUseCase,
         getBankOfframpOptionsUseCase = getBankOfframpOptionsUseCase,
         paymentAccountStatusSupplier = paymentAccountStatusSupplier,
         analytics = analytics,

@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,6 +32,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.core.ui.res.generated.icons.ic_percent_backward_20
@@ -49,13 +51,15 @@ internal fun TangemPayCashbackInfoTiles(state: TangemPayCashbackInfoTilesUM, mod
             tile = state.rate,
             modifier = Modifier
                 .weight(1f)
-                .fillMaxHeight(),
+                .fillMaxHeight()
+                .testTag(TangemPayTestTags.CASHBACK_RATE_TILE),
         )
         Tile(
             tile = state.accruals,
             modifier = Modifier
                 .weight(1f)
-                .fillMaxHeight(),
+                .fillMaxHeight()
+                .testTag(TangemPayTestTags.CASHBACK_ACCRUALS_TILE),
         )
     }
 }

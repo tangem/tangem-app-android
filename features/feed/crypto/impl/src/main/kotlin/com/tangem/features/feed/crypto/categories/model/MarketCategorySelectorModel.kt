@@ -163,7 +163,8 @@ internal class MarketCategorySelectorModel @Inject constructor(
                 renderBody(isEdited = isEdited, content = MarketCategorySelectorUM.ContentUM.Loading)
             listStatus is PaginationStatus.InitialLoadingError ->
                 renderBody(isEdited = isEdited, content = MarketCategorySelectorUM.ContentUM.Error(onRetry = ::load))
-            // An unfiltered listing always has the "All" row, so emptiness only ever means "no matches"
+            // "No results" is search copy, so an unfiltered listing that comes back empty keeps the
+            // ordinary list body rather than borrowing it
             appliedQuery != null && categories.isEmpty() ->
                 renderBody(isEdited = isEdited, content = MarketCategorySelectorUM.ContentUM.Empty)
             else -> uiState.update(

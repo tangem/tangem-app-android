@@ -8,8 +8,9 @@ import com.tangem.data.txhistory.repository.converter.ExpressSwapConverter
 import com.tangem.data.txhistory.repository.converter.OnrampCurrencyConverter
 import com.tangem.data.txhistory.repository.factory.ExpressTransactionAssetFactory
 import com.tangem.data.txhistory.repository.factory.ExpressTxByIdFactory
-import com.tangem.data.txhistory.repository.factory.toAssetId
-import com.tangem.data.txhistory.repository.factory.toRefundAssetId
+import com.tangem.data.txhistory.repository.factory.fromLegKey
+import com.tangem.data.txhistory.repository.factory.refundLegKey
+import com.tangem.data.txhistory.repository.factory.toLegKey
 import com.tangem.data.txhistory.repository.paging.TxHistoryPageBatchFetcher
 import com.tangem.store.datasource.txhistory.TxHistoryItemsStore
 import com.tangem.store.datasource.txhistory.db.dao.ExpressHistoryDao
@@ -236,9 +237,9 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
                     entity = entity,
                     provider = entity.providerId.expressProvider(),
                     isOutgoing = true,
-                    fromCurrency = currencies[entity.from.toAssetId()],
-                    toCurrency = currencies[entity.to.toAssetId()],
-                    refundCurrency = entity.toRefundAssetId()?.let { currencies[it] },
+                    fromCurrency = currencies[entity.fromLegKey()],
+                    toCurrency = currencies[entity.toLegKey()],
+                    refundCurrency = entity.refundLegKey()?.let { currencies[it] },
                 )
                 add(swapConverter.convert(input))
             }
@@ -247,9 +248,9 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
                     entity = entity,
                     provider = entity.providerId.expressProvider(),
                     isOutgoing = false,
-                    fromCurrency = currencies[entity.from.toAssetId()],
-                    toCurrency = currencies[entity.to.toAssetId()],
-                    refundCurrency = entity.toRefundAssetId()?.let { currencies[it] },
+                    fromCurrency = currencies[entity.fromLegKey()],
+                    toCurrency = currencies[entity.toLegKey()],
+                    refundCurrency = entity.refundLegKey()?.let { currencies[it] },
                 )
                 add(swapConverter.convert(input))
             }
@@ -257,7 +258,7 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
                 val input = ExpressOnrampConverter.Input(
                     entity = entity,
                     provider = entity.providerId.expressProvider(),
-                    toCurrency = currencies[entity.to.toAssetId()],
+                    toCurrency = currencies[entity.toLegKey()],
                     fiatCurrency = entity.fromCurrencyCode.onrampFiatCurrency(),
                 )
                 add(onrampConverter.convert(input))

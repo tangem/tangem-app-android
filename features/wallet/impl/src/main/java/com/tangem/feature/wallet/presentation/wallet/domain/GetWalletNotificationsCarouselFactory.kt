@@ -1,14 +1,12 @@
 package com.tangem.feature.wallet.presentation.wallet.domain
 
 import com.tangem.common.TangemSiteUrlBuilder
-import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.yield.supply.promo.usecase.ShouldShowYieldBoostMainBannerUseCase
@@ -34,7 +32,6 @@ import javax.inject.Inject
 internal class GetWalletNotificationsCarouselFactory @Inject constructor(
     private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
-    private val notificationsRepository: NotificationsRepository,
     private val shouldShowYieldBoostMainBannerUseCase: ShouldShowYieldBoostMainBannerUseCase,
     private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
@@ -47,14 +44,11 @@ internal class GetWalletNotificationsCarouselFactory @Inject constructor(
             .distinctUntilChanged()
 
         return combine(
-            flow = notificationsRepository.getShouldShowNotification(
-                NotificationId.EnablePushesReminderNotification.key,
-            ).distinctUntilChanged(),
-            flow2 = isReadyToShowRateAppUseCase().distinctUntilChanged(),
-            flow3 = getWalletsUseCase().conflate(),
-            flow4 = yieldSupplyGetShouldShowMainPromoUseCase().distinctUntilChanged(),
-            flow5 = isBalanceResolvedFlow,
-        ) { showPushesNotification, showRateAppPromo, wallets, shouldShowYieldPromoLocal, isBalanceResolved ->
+            flow = isReadyToShowRateAppUseCase().distinctUntilChanged(),
+            flow2 = getWalletsUseCase().conflate(),
+            flow3 = yieldSupplyGetShouldShowMainPromoUseCase().distinctUntilChanged(),
+            flow4 = isBalanceResolvedFlow,
+        ) { showRateAppPromo, wallets, shouldShowYieldPromoLocal, isBalanceResolved ->
 
             buildList {
                 addNoteMigrationNotification(userWallet, wallets, clickIntents)
@@ -62,12 +56,6 @@ internal class GetWalletNotificationsCarouselFactory @Inject constructor(
                 // isBalanceResolved gates Rate App on the balance leaving the loading state, so it does not
                 // flash during loading and then get replaced once balance-dependent banners are resolved.
                 addRateAppNotification(showRateAppPromo && isBalanceResolved, clickIntents)
-
-                addPushNotification(
-                    shouldShow = showPushesNotification,
-                    isPushesAllowed = notificationsRepository.isUserAllowToSubscribeOnPushNotifications(),
-                    clickIntents = clickIntents,
-                )
 
                 addYieldBoostBannerNotification(
                     userWallet = userWallet,
@@ -122,19 +110,6 @@ internal class GetWalletNotificationsCarouselFactory @Inject constructor(
         addIf(cardTypesResolver != null && cardTypesResolver.isSingleCurrency() && !isUserHasWalletOrWallet2) {
             WalletNotificationUM.NoteMigration(
                 onClick = { clickIntents.onNoteMigrationButtonClick(TangemSiteUrlBuilder.NOTE_MIGRATION_URL) },
-            )
-        }
-    }
-
-    private fun MutableList<WalletNotificationUM>.addPushNotification(
-        shouldShow: Boolean,
-        isPushesAllowed: Boolean,
-        clickIntents: WalletClickIntents,
-    ) {
-        addIf(shouldShow && !isPushesAllowed) {
-            WalletNotificationUM.PushNotifications(
-                onCloseClick = clickIntents::onDenyPermissions,
-                onEnabledClick = clickIntents::onAllowPermissions,
             )
         }
     }
