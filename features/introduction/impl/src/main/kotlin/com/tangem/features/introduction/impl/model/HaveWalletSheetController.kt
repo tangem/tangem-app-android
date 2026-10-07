@@ -11,7 +11,6 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
 import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_20
-import com.tangem.core.ui.res.generated.icons.ic_user_20
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.cloudbackup.usecase.ResolveCloudRestoreBackupsUseCase
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
