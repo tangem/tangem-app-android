@@ -11,6 +11,7 @@ import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
+import com.tangem.domain.jointaccount.gas.JointGasTokenResolver
 import com.tangem.domain.jointaccount.gas.JointRefundReceiverProvider
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.jointaccount.model.JointOperationSignError
@@ -24,15 +25,20 @@ import com.tangem.domain.jointaccount.supplier.find
 import com.tangem.domain.jointaccount.safe.SafeCompositionChecker
 import com.tangem.domain.jointaccount.safe.SafeDeployment
 import com.tangem.domain.jointaccount.verifier.JointOperationVerifier
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.utils.extensions.addHexPrefix
 
 /**
  * Co-signs the operation of a joint account in [Network]: the operation is taken from the store by the id the
  * caller showed, the [JointOperationVerifier] pipeline and the Blockaid gate both stand between it and the card,
  * and only then the signature is collected and sent. An operation the slot no longer holds under that id — it
  * finished, was cancelled, or was replaced by another one — is [JointOperationSignError.OperationNotFound].
+ *
+ * Returns the operation as the backend reports it right after counting the signature, `null` when that answer could
+ * not be read.
  */
 @Suppress("LongParameterList")
 class SignJointOperationUseCase(
@@ -46,6 +52,7 @@ class SignJointOperationUseCase(
     private val networkReader: JointNetworkReader,
     private val compositionChecker: SafeCompositionChecker,
     private val refundReceiverProvider: JointRefundReceiverProvider,
+    private val gasTokenResolver: JointGasTokenResolver,
 ) {
 
     suspend operator fun invoke(
@@ -53,7 +60,7 @@ class SignJointOperationUseCase(
         network: Network,
         operationId: String,
         displayed: JointTransferIntent,
-    ): Either<JointOperationSignError, Unit> = either {
+    ): Either<JointOperationSignError, JointOperation?> = either {
         val userWalletId = account.accountId.userWalletId
 
         val jointAccount = ensureNotNull(supplier.find(accountId = account.accountId)) {
@@ -82,7 +89,7 @@ class SignJointOperationUseCase(
                 operation = operation,
                 displayed = displayed,
                 ownerAddress = ownerAddress,
-                refundBounds = refundBounds(userWalletId = userWalletId, network = network),
+                refundBounds = refundBounds(account = account, network = network, operation = operation),
             )
             .bind()
 
@@ -113,7 +120,7 @@ class SignJointOperationUseCase(
             .mapLeft(::toSignError)
             .bind()
 
-        repository
+        val signedOperation = repository
             .signOperation(
                 userWalletId = userWalletId,
                 operationId = operation.operationId,
@@ -125,6 +132,8 @@ class SignJointOperationUseCase(
         // The signature is already accepted by the backend, so a failed refresh must not fail the signing —
         // the list catches up on the next fetch
         fetcher(params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId)).getOrElse {}
+
+        signedOperation
     }
 
     /**
@@ -225,9 +234,11 @@ class SignJointOperationUseCase(
     }
 
     private suspend fun Raise<JointOperationSignError>.refundBounds(
-        userWalletId: UserWalletId,
+        account: Account.Joint,
         network: Network,
+        operation: JointOperation,
     ): JointOperationVerifier.RefundBounds {
+        val userWalletId = account.accountId.userWalletId
         val refundReceiver = Either
             .catch { refundReceiverProvider.refundReceiver() }
             .mapLeft(JointOperationSignError::Failed)
@@ -238,7 +249,39 @@ class SignJointOperationUseCase(
             .mapLeft(JointOperationSignError::Failed)
             .bind()
 
-        return JointOperationVerifier.RefundBounds(refundReceiver = refundReceiver, networkGasPrice = gasPrice)
+        val gasToken = gasTokenResolver
+            .resolve(
+                network = network,
+                address = operation.safeTx.gasToken,
+                rawCurrencyId = gasTokenQuoteId(
+                    account = account,
+                    network = network,
+                    gasToken = operation.safeTx.gasToken,
+                ),
+            )
+            .mapLeft(JointOperationSignError::Failed)
+            .bind()
+        ensureNotNull(gasToken) {
+            JointOperationSignError.VerificationFailed(
+                reason = JointOperationSignError.VerificationFailed.Reason.REFUND_MISMATCH,
+            )
+        }
+
+        return JointOperationVerifier.RefundBounds(
+            refundReceiver = refundReceiver,
+            networkGasPrice = gasPrice,
+            gasToken = gasToken,
+        )
+    }
+
+    private fun gasTokenQuoteId(account: Account.Joint, network: Network, gasToken: String): CryptoCurrency.RawID? {
+        val address = gasToken.lowercase().addHexPrefix()
+
+        return account.cryptoCurrencies
+            .filterIsInstance<CryptoCurrency.Token>()
+            .firstOrNull { it.network == network && it.contractAddress.lowercase().addHexPrefix() == address }
+            ?.id
+            ?.rawCurrencyId
     }
 
     private fun toSignError(error: JointOperationCreateError): JointOperationSignError = when (error) {

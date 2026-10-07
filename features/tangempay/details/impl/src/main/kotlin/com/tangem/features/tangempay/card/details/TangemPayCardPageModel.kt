@@ -54,10 +54,14 @@ import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.usecase.ChangeCardFrozenStateUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.addfunds.AddFundsListener
 import com.tangem.features.tangempay.card.closure.CloseCardListener
+import com.tangem.features.tangempay.card.gpay.AddToGoogleWalletButtonState
 import com.tangem.features.tangempay.card.gpay.AddToWalletBlockState
+import com.tangem.features.tangempay.card.gpay.TangemPayAddToGoogleWalletController
+import com.tangem.features.tangempay.card.gpay.TangemPayAddToGoogleWalletController.Entry as GoogleWalletEntry
 import com.tangem.features.tangempay.card.pin.ViewPinListener
 import com.tangem.features.tangempay.card.reissue.ReissueCardListener
 import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
@@ -109,6 +113,8 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val biometricAuthManager: BiometricAuthManager,
     private val settingsManager: SettingsManager,
     private val onboardingRepository: OnboardingRepository,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
+    googleWalletControllerFactory: TangemPayAddToGoogleWalletController.Factory,
 ) : Model(), ViewPinListener, ReissueCardListener, AddFundsListener, CloseCardListener, ChooseNetworkListener {
 
     private val params: TangemPayCardPageComponent.Params = paramsContainer.require()
@@ -144,6 +150,11 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private val shouldShowGooglePayBanner = MutableStateFlow(false)
 
+    private val googleWalletController = googleWalletControllerFactory.create(
+        scope = modelScope,
+        userWalletId = userWalletId,
+    )
+
     val uiState: StateFlow<TangemPayCardPageUM>
         field = MutableStateFlow(
             TangemPayCardPageUM(
@@ -173,6 +184,10 @@ internal class TangemPayCardPageModel @Inject constructor(
 
         modelScope.launch { subscribeOnDetailsState() }
 
+        combine(googleWalletController.entry, shouldShowGooglePayBanner) { entry, shouldShowBanner ->
+            updateAddToWalletBlocks(entry = entry, shouldShowBanner = shouldShowBanner)
+        }.launchIn(modelScope)
+
         paymentAccountStatusSupplier.invoke(userWalletId)
             .onEach { state ->
                 currentStatus.update { state }
@@ -199,6 +214,14 @@ internal class TangemPayCardPageModel @Inject constructor(
     override fun onDestroy() {
         cardDetailsEventListener.send(CardDetailsEvent.HideAll)
         super.onDestroy()
+    }
+
+    fun onStart() {
+        googleWalletController.onStart()
+    }
+
+    fun onStop() {
+        googleWalletController.onStop()
     }
 
     private fun buildDailyLimitState(state: AccountStatus.Payment): TangemPayDailyLimitBlockState {
@@ -276,8 +299,10 @@ internal class TangemPayCardPageModel @Inject constructor(
     ) {
         val status = state.value
         if (status is PaymentAccountStatusValue.Loaded && status.source == StatusSource.ACTUAL) {
-            val card = status.findCardWithId(selectedId) ?: return
-            updateGooglePayBannerState(card.frozenState)
+            val card = status.findCardWithId(selectedId)
+            googleWalletController.selectCard(card)
+            if (card == null) return
+            googleWalletController.updateFrozenState(card.frozenState)
             if (card.state == TangemPayCardState.Delivering) loadDeliveryEmail()
             uiState.update { uiState ->
                 uiState.copy(
@@ -293,6 +318,7 @@ internal class TangemPayCardPageModel @Inject constructor(
             }
             sendDeliveryDetailsAnalytics(cardState = card.state)
         } else {
+            googleWalletController.selectCard(null)
             uiState.update { it.copy(dailyLimitState = buildDailyLimitState(state)) }
         }
 
@@ -352,7 +378,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     private fun subscribeToCardFrozenState(cardId: String) {
         cardDetailsRepository.cardFrozenState(cardId)
             .onEach { cardFrozenState ->
-                updateGooglePayBannerState(cardFrozenState)
+                googleWalletController.updateFrozenState(cardFrozenState)
                 uiState.update { state ->
                     val settings = currentStatus.value.ifLoadedOrNull {
                         it.buildSettings(frozenState = cardFrozenState, isDetailsShown = isDetailsShown.value)
@@ -364,14 +390,18 @@ internal class TangemPayCardPageModel @Inject constructor(
             .saveIn(frozenStateJobHolder)
     }
 
-    private fun updateGooglePayBannerState(cardFrozenState: TangemPayCardFrozenState) {
+    private fun updateAddToWalletBlocks(entry: GoogleWalletEntry, shouldShowBanner: Boolean) {
         uiState.update { state ->
             state.copy(
                 addToWalletBlockState = AddToWalletBlockState(
                     onClick = ::onClickAddToWallet,
                     onClickClose = ::onClickCloseBanner,
-                ).takeIf {
-                    shouldShowGooglePayBanner.value && cardFrozenState == TangemPayCardFrozenState.Unfrozen
+                ).takeIf { entry == GoogleWalletEntry.ManualGuide && shouldShowBanner },
+                addToGoogleWalletButtonState = (entry as? GoogleWalletEntry.Button)?.let { button ->
+                    AddToGoogleWalletButtonState(
+                        onClick = googleWalletController::onAddClick,
+                        isLoading = button.isLoading,
+                    )
                 },
             )
         }
@@ -681,6 +711,10 @@ internal class TangemPayCardPageModel @Inject constructor(
         }
     }
 
+    override fun onBankingDetailsLoadFailed(productInstanceId: String) {
+        showVaBankingDetailsError(productInstanceId)
+    }
+
     private fun openVirtualAccountDeposit(onramp: VirtualAccountOnramp, loaded: PaymentAccountStatusValue.Loaded) {
         analytics.send(TangemPayAnalyticsEvents.VaTopupButtonClicked())
         bottomSheetNavigation.dismiss()
@@ -742,6 +776,10 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     fun onShowVirtualAccountRequisites(bankCredentials: BankCredentials) {
         bottomSheetNavigation.dismiss()
+        if (tangemPayFeatureToggles.isVisaOnrampV2Enabled) {
+            router.push(TangemPayAccountDetailsInnerRoute.BankTransferOnrampDetails(bankCredentials))
+            return
+        }
         bottomSheetNavigation.activate(
             TangemPayCardNavigation.VirtualAccountRequisites(
                 userWalletId = userWalletId,
@@ -835,7 +873,6 @@ internal class TangemPayCardPageModel @Inject constructor(
     private fun onClickCloseBanner() {
         modelScope.launch {
             cardDetailsRepository.setAddToWalletAsDone(userWalletId)
-            uiState.update { it.copy(addToWalletBlockState = null) }
             shouldShowGooglePayBanner.update { false }
         }
     }

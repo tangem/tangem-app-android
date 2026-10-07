@@ -1,6 +1,7 @@
 package com.tangem.domain.jointaccount.store
 
 import com.tangem.domain.models.wallet.UserWalletId
+import kotlinx.coroutines.flow.Flow
 
 /**
 
@@ -19,6 +20,12 @@ interface JointAccountInvitesStore {
 
     /** Returns the stored invites of the account [cryptoAccountId], or `null` when nothing is stored for it. */
     suspend fun get(userWalletId: UserWalletId, cryptoAccountId: String): List<String>?
+
+    /** Records that the invite [inviteId] of the account [cryptoAccountId] has been handed to the share sheet. */
+    suspend fun markShared(userWalletId: UserWalletId, cryptoAccountId: String, inviteId: String)
+
+    /** The invites of the account [cryptoAccountId] already handed to the share sheet; emits again on every write. */
+    fun observeShared(userWalletId: UserWalletId, cryptoAccountId: String): Flow<Set<String>>
 
     /** Removes the invites of the account [cryptoAccountId] — they are useless once the account is active. */
     suspend fun clear(userWalletId: UserWalletId, cryptoAccountId: String)

@@ -10,6 +10,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
@@ -20,6 +21,7 @@ import com.tangem.domain.cloudbackup.usecase.DeleteCloudBackupWithRetryUseCase
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
+import com.tangem.domain.sociallogin.usecase.RevokeSocialRecoveryUseCase
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.features.hotwallet.ForgetWalletComponent
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
@@ -50,14 +52,27 @@ internal class ForgetWalletModel @Inject constructor(
     private val setCloudBackupStateUseCase: SetCloudBackupStateUseCase,
     private val deleteCloudBackupWithRetryUseCase: DeleteCloudBackupWithRetryUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
+    private val revokeSocialRecoveryUseCase: RevokeSocialRecoveryUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<ForgetWalletComponent.Params>()
 
+    private val isSocialDeletion = params.shouldDeleteSocialRecovery
+
     internal val uiState: StateFlow<ForgetWalletUM>
         field = MutableStateFlow(
             ForgetWalletUM(
-                onBackClick = { router.pop() },
+                onBackClick = ::onBackClick,
+                description = if (isSocialDeletion) {
+                    resourceReference(R.string.social_wallet_delete_attention_description, wrappedList(PROVIDER_NAME))
+                } else {
+                    resourceReference(R.string.hw_remove_wallet_attention_description)
+                },
+                buttonText = if (isSocialDeletion) {
+                    resourceReference(R.string.social_wallet_settings_delete_wallet)
+                } else {
+                    resourceReference(R.string.hw_remove_wallet_action_forget_title)
+                },
                 isCheckboxChecked = false,
                 onCheckboxClick = ::onCheckboxClick,
                 onForgetWalletClick = ::onForgetWalletClick,
@@ -66,7 +81,17 @@ internal class ForgetWalletModel @Inject constructor(
         )
 
     init {
-        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ForgetWalletScreen())
+        analyticsEventHandler.send(
+            if (isSocialDeletion) {
+                WalletSettingsAnalyticEvents.DeleteWalletScreenOpened()
+            } else {
+                WalletSettingsAnalyticEvents.ForgetWalletScreen()
+            },
+        )
+    }
+
+    private fun onBackClick() {
+        if (!uiState.value.isInProgress) router.pop()
     }
 
     private fun onCheckboxClick() {
@@ -80,15 +105,18 @@ internal class ForgetWalletModel @Inject constructor(
     }
 
     private fun onForgetWalletClick() {
+        if (uiState.value.isInProgress) return
         uiMessageSender.send(
             DialogMessage(
                 title = resourceReference(R.string.common_attention),
                 message = resourceReference(R.string.hw_remove_wallet_confirmation_title),
                 firstActionBuilder = {
                     EventMessageAction(
-                        title = resourceReference(R.string.common_forget),
+                        title = resourceReference(
+                            if (isSocialDeletion) R.string.common_delete else R.string.common_forget,
+                        ),
                         isWarning = true,
-                        onClick = ::forgetWallet,
+                        onClick = if (isSocialDeletion) ::deleteSocialWallet else ::forgetWallet,
                     )
                 },
                 secondActionBuilder = {
@@ -101,6 +129,39 @@ internal class ForgetWalletModel @Inject constructor(
         )
     }
 
+    private fun deleteSocialWallet() {
+        uiState.update { it.copy(isInProgress = true) }
+        modelScope.launch {
+            revokeSocialRecoveryUseCase(params.userWalletId).onLeft { error ->
+                TangemLogger.e("Unable to drop the social recovery on delete: $error")
+                sendDeletionError(step = "Unbind", error = error)
+                uiState.update { it.copy(isInProgress = false) }
+                showDeletionFailedDialog()
+                return@launch
+            }
+
+            forgetWallet()
+        }
+    }
+
+    private fun sendDeletionError(step: String, error: Any) {
+        analyticsEventHandler.send(
+            WalletSettingsAnalyticEvents.DeleteWalletError(errorMessage = "$step failed: ${error::class.simpleName}"),
+        )
+    }
+
+    private fun showDeletionFailedDialog() {
+        uiMessageSender.send(
+            DialogMessage(
+                title = resourceReference(R.string.common_something_went_wrong),
+                message = resourceReference(R.string.social_wallet_delete_error_description),
+                firstActionBuilder = {
+                    EventMessageAction(title = resourceReference(R.string.common_ok), onClick = {})
+                },
+            ),
+        )
+    }
+
     private fun forgetWallet() {
         modelScope.launch {
             startAssetsDiscoveryUseCase.cancel(params.userWalletId)
@@ -108,7 +169,9 @@ internal class ForgetWalletModel @Inject constructor(
             val hasUserWallets = deleteWalletUseCase(params.userWalletId)
                 .getOrElse { error ->
                     TangemLogger.e("Unable to delete wallet: $error")
+                    if (isSocialDeletion) sendDeletionError(step = "Local deletion", error = error)
 
+                    uiState.update { it.copy(isInProgress = false) }
                     uiMessageSender.send(
                         message = SnackbarMessage(resourceReference(R.string.common_unknown_error)),
                     )
@@ -116,7 +179,13 @@ internal class ForgetWalletModel @Inject constructor(
                     return@launch
                 }
 
-            analyticsEventHandler.send(WalletSettingsAnalyticEvents.WalletForgotten())
+            analyticsEventHandler.send(
+                if (isSocialDeletion) {
+                    WalletSettingsAnalyticEvents.WalletDeleted()
+                } else {
+                    WalletSettingsAnalyticEvents.WalletForgotten()
+                },
+            )
 
             val backupDeletion = if (params.shouldDeleteCloudBackup) deleteCloudBackup() else null
 
@@ -181,3 +250,5 @@ internal class ForgetWalletModel @Inject constructor(
         }
     }
 }
+
+private const val PROVIDER_NAME = "Google"

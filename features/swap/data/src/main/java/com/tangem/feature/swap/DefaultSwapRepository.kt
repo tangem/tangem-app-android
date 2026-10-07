@@ -40,6 +40,7 @@ import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import java.io.IOException
+import java.math.BigDecimal
 import java.util.UUID
 import com.tangem.grow.datasource.express.models.request.LeastTokenInfo as NetworkLeastTokenInfo
 
@@ -177,6 +178,7 @@ internal class DefaultSwapRepository(
         toDecimals: Int,
         providerId: String,
         rateType: RateType,
+        customSlippage: BigDecimal?,
     ): Either<ExpressDataError, QuoteModel> {
         return withContext(coroutineDispatcher.io) {
             try {
@@ -192,6 +194,7 @@ internal class DefaultSwapRepository(
                     rateType = rateType.name.lowercase(),
                     userWalletId = userWallet.walletId.stringValue,
                     refCode = expressUtils.getRefCode(userWallet = userWallet),
+                    slippage = ExpressSlippageConverter.toApi(customSlippage),
                 ).getOrThrow()
 
                 QuoteModel(
@@ -200,6 +203,7 @@ internal class DefaultSwapRepository(
                     txType = response.txType?.toDomain(),
                     isRestricted = response.isRestricted &&
                         swapFeatureToggles.isExpressCategoriesGeoBlockingEnabled,
+                    slippage = ExpressSlippageConverter.fromApi(response.slippage),
                 ).right()
             } catch (ex: Exception) {
                 getDataError(ex).left()
@@ -224,6 +228,7 @@ internal class DefaultSwapRepository(
         refundAddress: String?, // for cex only
         refundExtraId: String?, // for cex only
         toExtraId: String?, // for networks with memo only
+        customSlippage: BigDecimal?,
     ): Either<ExpressDataError, SwapDataModel> {
         return withContext(coroutineDispatcher.io) {
             try {
@@ -248,6 +253,7 @@ internal class DefaultSwapRepository(
                     refCode = expressUtils.getRefCode(userWallet = userWallet),
                     toExtraId = toExtraId?.ifEmpty { null },
                     quoteId = null, // TODO add when implementing fixed rate in swap
+                    slippage = ExpressSlippageConverter.toApi(customSlippage),
                 ).getOrThrow()
                 if (dataSignatureVerifier.verifySignature(response.signature, response.txDetailsJson)) {
                     val txDetails = parseTxDetails(response.txDetailsJson)

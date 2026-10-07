@@ -17,6 +17,8 @@ android {
     }
 }
 dependencies {
+    implementation(projects.core.abTests)
+    implementation(projects.core.remote)
     /* Project - API */
     api(projects.features.commonFeatures.api)
     api(projects.features.feed.api)

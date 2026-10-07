@@ -42,6 +42,14 @@ private fun CollectiblesMainScreenListErrorPreview() {
 
 @Preview(widthDp = 402, heightDp = 874, showBackground = true)
 @Composable
+private fun CollectiblesMainScreenNextPageErrorPreview() {
+    TangemThemePreviewRedesign {
+        PreviewScreen(discoveryState = CollectiblesDiscoveryPreviewData.nextPageError)
+    }
+}
+
+@Preview(widthDp = 402, heightDp = 874, showBackground = true)
+@Composable
 private fun CollectiblesMainScreenSearchActivePreview() {
     TangemThemePreviewRedesign {
         PreviewScreen(discoveryState = CollectiblesDiscoveryPreviewData.searchActive)

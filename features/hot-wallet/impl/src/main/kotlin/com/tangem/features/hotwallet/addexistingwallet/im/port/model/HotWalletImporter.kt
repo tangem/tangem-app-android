@@ -43,9 +43,10 @@ internal sealed interface HotWalletImportError {
  *
  * Extracted verbatim from the seed-import flow so the recovery-phrase import and the cloud-backup
  * restore converge on the exact same save/sync/analytics sequence: import via the Hot SDK, build the
- * wallet, persist it, kick off the remote sync + assets discovery, and send the identical onboarding
- * analytics ([AnalyticsParam.WalletCreationType.SeedImport]). Callers own only their progress UI, the
- * navigation callback and the seed-phrase backup state they import with.
+ * wallet, persist it, kick off the remote sync + assets discovery, and send the onboarding analytics
+ * ([AnalyticsParam.WalletCreationType.SeedImport] unless the caller passes another type, or `null` to
+ * report it later). Callers own only their progress UI, the navigation callback and the seed-phrase
+ * backup state they import with.
  */
 @Suppress("LongParameterList")
 internal class HotWalletImporter @Inject constructor(
@@ -63,6 +64,7 @@ internal class HotWalletImporter @Inject constructor(
      * @param scope outlives this call: the remote sync it starts must survive the caller's screen
      * @param isSeedPhraseBackedUp whether the user already holds the recovery phrase. True when they typed
      * it in themselves, false when the phrase came from a backup they never saw (e.g. a cloud restore).
+
      */
     suspend fun import(
         scope: CoroutineScope,
@@ -70,6 +72,7 @@ internal class HotWalletImporter @Inject constructor(
         passphrase: CharArray?,
         name: String? = null,
         isSeedPhraseBackedUp: Boolean,
+        creationType: AnalyticsParam.WalletCreationType? = AnalyticsParam.WalletCreationType.SeedImport,
     ): Either<HotWalletImportError, UserWalletId> = either {
         val userWallet = runSuspendCatching {
             val hotWalletId = tangemHotSdk.importWallet(mnemonic, passphrase, HotAuth.NoAuth)
@@ -86,7 +89,7 @@ internal class HotWalletImporter @Inject constructor(
 
         save(userWallet, isSeedPhraseBackedUp).bind()
         startRemoteSync(scope, userWallet.walletId)
-        sendWalletCreatedEvents(mnemonic, passphrase)
+        if (creationType != null) sendWalletCreatedEvents(mnemonic, passphrase, creationType)
 
         userWallet.walletId
     }
@@ -114,7 +117,11 @@ internal class HotWalletImporter @Inject constructor(
         }
     }
 
-    private suspend fun sendWalletCreatedEvents(mnemonic: Mnemonic, passphrase: CharArray?) {
+    private suspend fun sendWalletCreatedEvents(
+        mnemonic: Mnemonic,
+        passphrase: CharArray?,
+        creationType: AnalyticsParam.WalletCreationType,
+    ) {
         analyticsEventHandler.send(
             event = OnboardingAnalyticsEvent.Onboarding.Finished(
                 source = AnalyticsParam.ScreensSources.ImportWallet,
@@ -123,7 +130,7 @@ internal class HotWalletImporter @Inject constructor(
         analyticsEventHandler.send(
             event = OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
                 source = AnalyticsParam.ScreensSources.ImportWallet,
-                creationType = AnalyticsParam.WalletCreationType.SeedImport,
+                creationType = creationType,
                 seedPhraseLength = mnemonic.mnemonicComponents.size,
                 passPhraseState = if (passphrase?.any { char -> !char.isWhitespace() } == true) {
                     AnalyticsParam.EmptyFull.Full

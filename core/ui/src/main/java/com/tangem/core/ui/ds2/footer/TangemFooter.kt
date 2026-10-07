@@ -17,9 +17,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.lerp
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.rememberIsKeyboardVisible
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.animation.TangemAnimationSpec
 import com.tangem.core.ui.ds2.animation.TangemTransition
 import com.tangem.core.ui.ds2.button.TangemButton
@@ -37,6 +39,8 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_right_20
 /**
  * Design-system v2 footer: screen-level actions pinned to the
  * bottom edge over a fade that separates them from the content scrolling underneath.
+ *
+ * Version: 1.0.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=9062-4588)
  *
@@ -88,6 +92,11 @@ fun TangemFooter(
         animationSpec = TangemAnimationSpec.Alpha,
         label = "TangemFooter.fadeAlpha",
     )
+    val keyboardProgress by animateFloatAsState(
+        targetValue = if (isKeyboardVisible) 1f else 0f,
+        animationSpec = TangemAnimationSpec.Reveal,
+        label = "TangemFooter.keyboardProgress",
+    )
     val isBlurActive by remember(blurBackground) {
         derivedStateOf { blurBackground && fadeAlpha.value > 0f }
     }
@@ -114,11 +123,10 @@ fun TangemFooter(
                 .fillMaxWidth()
                 .windowInsetsPadding(if (isKeyboardVisible) WindowInsets(0) else windowInsets)
                 .padding(
-                    if (isKeyboardVisible) {
-                        contentPadding.copy(top = 12.dp, bottom = 12.dp)
-                    } else {
-                        contentPadding
-                    },
+                    contentPadding.copy(
+                        top = lerp(contentPadding.calculateTopPadding(), 12.dp, keyboardProgress),
+                        bottom = lerp(contentPadding.calculateBottomPadding(), 12.dp, keyboardProgress),
+                    ),
                 ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(space = 12.dp),
@@ -198,6 +206,8 @@ private fun Modifier.exceedTop(amount: Dp): Modifier = layout { measurable, cons
 }
 
 object TangemFooter {
+
+    val version = DsVersion(major = 1, minor = 0, patch = 0)
 
     /** Default inner padding of the content column: vertical 8, horizontal 16. */
     @Suppress("MagicNumber")

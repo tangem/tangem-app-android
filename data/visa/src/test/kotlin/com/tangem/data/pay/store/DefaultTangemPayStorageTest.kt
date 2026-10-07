@@ -3,8 +3,7 @@ package com.tangem.data.pay.store
 import android.content.Context
 import androidx.datastore.preferences.core.emptyPreferences
 import com.google.common.truth.Truth.assertThat
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.tangem.core.remote.json.NetworkJsonFactory
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayWithdrawExchangeState
@@ -34,7 +33,6 @@ internal class DefaultTangemPayStorageTest {
 
     private val dataStore = MockStateDataStore(default = emptyPreferences())
     private val prefs = createAppPreferencesStore(
-        moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build(),
         dispatchers = TestingCoroutineDispatcherProvider(),
         preferencesDataStore = dataStore,
     )
@@ -42,8 +40,7 @@ internal class DefaultTangemPayStorageTest {
 
     private val storage = DefaultTangemPayStorage(
         applicationContext = mockk<Context>(relaxed = true),
-        moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build(),
-        sdkMoshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build(),
+        json = NetworkJsonFactory.create(),
         dispatcherProvider = TestingCoroutineDispatcherProvider(),
         appPreferencesStore = prefs,
         spendPreferencesKeys = spendPreferencesKeys,
@@ -154,6 +151,52 @@ internal class DefaultTangemPayStorageTest {
     }
 
     @Test
+    fun `GIVEN malformed withdraw orders blob WHEN read and stored THEN it is treated as empty`() = runTest {
+        // Arrange
+        prefs.editData { preferences -> preferences[spendPreferencesKeys.withdrawOrdersKey] = """["not-a-map"]""" }
+
+        // Act
+        val before = storage.getWithdrawOrders(WALLET)
+        storage.storeWithdrawOrder(userWalletId = WALLET, data = WITHDRAW_ORDER)
+
+        // Assert
+        assertThat(before).isEmpty()
+        assertThat(storage.getWithdrawOrders(WALLET)).containsExactly(WITHDRAW_ORDER)
+    }
+
+    @Test
+    fun `GIVEN withdraw orders stored by the previous app version WHEN getWithdrawOrders THEN they are read back`() =
+        runTest {
+            // Arrange
+            prefs.editData { preferences ->
+                preferences[spendPreferencesKeys.withdrawOrdersKey] =
+                    """{"$LEGACY_WITHDRAW_KEY":[{"orderId":"$ORDER_ID","exchangeData":{"txId":"tx-1",""" +
+                    """"fromNetwork":"ethereum","fromAddress":"0xfrom","payInAddress":"0xpayin"}}]}"""
+            }
+
+            // Act
+            val actual = storage.getWithdrawOrders(WALLET)
+
+            // Assert
+            assertThat(actual).containsExactly(WITHDRAW_ORDER)
+        }
+
+    @Test
+    fun `GIVEN active order id stored by the previous version WHEN getActiveWithdrawOrderId THEN it is returned`() =
+        runTest {
+            // Arrange
+            prefs.editData { preferences ->
+                preferences[spendPreferencesKeys.activeWithdrawOrdersKey] = """{"$LEGACY_WITHDRAW_KEY":"$ORDER_ID"}"""
+            }
+
+            // Act
+            val actual = storage.getActiveWithdrawOrderId(WALLET)
+
+            // Assert
+            assertThat(actual).isEqualTo(ORDER_ID)
+        }
+
+    @Test
     fun `GIVEN deactivated marker WHEN clearIsTangemPayDeactivated THEN the key is removed`() = runTest {
         // Arrange
         storage.storeIsTangemPayDeactivated(WALLET)
@@ -184,6 +227,7 @@ internal class DefaultTangemPayStorageTest {
         val OTHER_WALLET = UserWalletId("022")
         const val ADDRESS = "0xaddress"
         const val ORDER_ID = "order-1"
+        val LEGACY_WITHDRAW_KEY = "tangem_pay_withdraw_order_id_key_$WALLET"
         val WITHDRAW_ORDER = TangemPayWithdrawState(
             orderId = ORDER_ID,
             exchangeData = TangemPayWithdrawExchangeState(

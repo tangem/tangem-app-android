@@ -3,6 +3,7 @@ import com.tangem.plugin.configuration.configurations.extension.kaptForObfuscati
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.serialization)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
     alias(deps.plugins.ksp)
@@ -43,6 +44,8 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.txhistory.models)
+
+    implementation(projects.libs.auth)
 
     testImplementation(projects.test.core)
     testImplementation(deps.moshi.kotlin)

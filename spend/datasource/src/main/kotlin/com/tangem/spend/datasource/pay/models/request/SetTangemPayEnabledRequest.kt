@@ -1,9 +1,9 @@
 package com.tangem.spend.datasource.pay.models.request
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class SetTangemPayEnabledRequest(
-    @Json(name = "is_tangem_pay_enabled") val isTangemPayEnabled: Boolean,
+    @SerialName("is_tangem_pay_enabled") val isTangemPayEnabled: Boolean,
 )

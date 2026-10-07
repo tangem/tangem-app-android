@@ -9,6 +9,7 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.essenty.lifecycle.doOnPause
+import com.arkivanov.essenty.lifecycle.subscribe
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -54,6 +55,7 @@ internal class TangemPayCardPageScreenComponent(
                 model.bottomSheetNavigation.dismiss()
             }
         }
+        lifecycle.subscribe(onStart = model::onStart, onStop = model::onStop)
     }
 
     @Composable

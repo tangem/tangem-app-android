@@ -1,5 +1,6 @@
 package com.tangem.features.send.send.joint
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.amountScreen.models.AmountState
@@ -18,6 +19,14 @@ import java.math.BigInteger
 internal const val FIXTURE_RECIPIENT = "0x1111111111111111111111111111111111111111"
 
 internal val fixtureCoin: CryptoCurrency.Coin = MockCryptoCurrencyFactory().ethereum
+
+internal val fixtureUsdc: CryptoCurrency.Token = MockCryptoCurrencyFactory().createToken(
+    blockchain = Blockchain.Ethereum,
+    id = "usd-coin",
+    contractAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    symbol = "USDC",
+    decimals = 6,
+)
 
 internal fun createAmountData(crypto: BigDecimal, fiat: BigDecimal? = null): AmountState.Data = AmountState.Data(
     isPrimaryButtonEnabled = true,

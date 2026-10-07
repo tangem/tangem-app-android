@@ -223,6 +223,14 @@ abstract class BaseTestCase : TestCase(
         runCatching { awaitSuccess(timeoutMillis, block) }.onFailure { block() }
     }
 
+    /**
+     * Per-test feature-toggle overrides, keyed by [com.tangem.core.configtoggle.FeatureToggles] `rawName`.
+     * A subclass overrides this to flip a toggle only for its own tests, without changing the shared base
+     * defaults (which would leak into every other test). Merged between the base map and the launch-time
+     * overrides, so a launch arg still wins.
+     */
+    protected open val featureToggleOverrides: Map<String, Boolean> = emptyMap()
+
     private fun applicationInjectionRule(): ApplicationInjectionExecutionRule {
         // Toggle states can be set from code here — base defaults for the UI-test build. Launch-time
         // overrides (the `feature_toggles` GitHub Actions input / Allure TestOps launch parameter, delivered
@@ -238,7 +246,10 @@ abstract class BaseTestCase : TestCase(
         // when nothing was passed, so the default behaviour is unchanged.
         val launchOverrides = FeatureToggleArgs.fromInstrumentation()
 
-        return ApplicationInjectionExecutionRule(toggleStates = baseToggles + launchOverrides)
+        // Lazy: featureToggleOverrides is a subclass property, initialized after this rule is constructed.
+        return ApplicationInjectionExecutionRule(
+            toggleStates = { baseToggles + featureToggleOverrides + launchOverrides },
+        )
     }
 
     private companion object {

@@ -12,21 +12,29 @@ import com.tangem.domain.polymarket.model.PolymarketPositionsPage
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketPositionsPreviewUM
 import com.tangem.features.polymarket.impl.positions.model.createPolymarketPosition
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.job
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Nested
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -346,20 +354,293 @@ internal class PolymarketPositionsPreviewLoaderTest {
         coVerify(exactly = 2) { repository.getOpenPositions(addresses, 3, 0) }
     }
 
-    private fun TestScope.createLoader(): PolymarketPositionsPreviewLoader {
+    @Nested
+    inner class ManualRefresh {
+
+        @Test
+        fun `GIVEN visible positions WHEN manually refreshed THEN waits for the read and keeps polling`() = runTest {
+            // Arrange
+            val loader = createLoader()
+            coEvery { repository.getOpenPositions(addresses, 3, 0) } returns page.right()
+            loader.resume(backgroundScope, userWalletId)
+            runCurrent()
+            val initial = loader.state.value
+            val read = CompletableDeferred<Unit>()
+            coEvery { repository.getOpenPositions(addresses, 3, 0) } coAnswers {
+                read.await()
+                page.copy(positions = emptyList()).right()
+            }
+
+            // Act
+            val refresh = backgroundScope.async { loader.refresh(backgroundScope, userWalletId) }
+            runCurrent()
+
+            // Assert
+            assertThat(refresh.isCompleted).isFalse()
+            assertThat(loader.state.value).isEqualTo(initial)
+
+            // Act
+            read.complete(Unit)
+            runCurrent()
+
+            // Assert
+            assertThat(refresh.isCompleted).isTrue()
+            assertThat(refresh.isCancelled).isFalse()
+            assertThat(loader.state.value).isEqualTo(PolymarketPositionsPreviewUM.Content(persistentListOf()))
+
+            // Act
+            passPollInterval()
+
+            // Assert
+            coVerify(exactly = 3) { repository.getOpenPositions(addresses, 3, 0) }
+        }
+
+        @Test
+        fun `GIVEN an older poll WHEN manual refresh finishes first THEN the old response is ignored`() = runTest {
+            // Arrange
+            val loader = createLoader()
+            val oldRead = CompletableDeferred<Unit>()
+            coEvery { repository.getOpenPositions(addresses, 3, 0) } coAnswers {
+                withContext(NonCancellable) { oldRead.await() }
+                page.right()
+            }
+            loader.resume(backgroundScope, userWalletId)
+            runCurrent()
+            coEvery { repository.getOpenPositions(addresses, 3, 0) } returns page.copy(positions = emptyList()).right()
+
+            // Act
+            val refresh = backgroundScope.async { loader.refresh(backgroundScope, userWalletId) }
+            runCurrent()
+            oldRead.complete(Unit)
+            runCurrent()
+
+            // Assert
+            assertThat(refresh.isCompleted).isTrue()
+            assertThat(loader.state.value).isEqualTo(PolymarketPositionsPreviewUM.Content(persistentListOf()))
+        }
+
+        @Test
+        fun `GIVEN a loaded preview WHEN manual refresh fails THEN completes and preserves retryable cards`() = runTest {
+            // Arrange
+            val loader = createLoader()
+            coEvery { repository.getOpenPositions(addresses, 3, 0) } returnsMany listOf(
+                page.right(),
+                PolymarketPositionsError.Network.left(),
+            )
+            loader.resume(backgroundScope, userWalletId)
+            runCurrent()
+            val initial = loader.state.value as PolymarketPositionsPreviewUM.Content
+
+            // Act
+            val refresh = backgroundScope.async { loader.refresh(backgroundScope, userWalletId) }
+            runCurrent()
+
+            // Assert
+            assertThat(refresh.isCompleted).isTrue()
+            assertThat(refresh.isCancelled).isFalse()
+            val failed = loader.state.value as PolymarketPositionsPreviewUM.Content
+            assertThat(failed.positions).isEqualTo(initial.positions)
+            assertThat(failed.onRetry).isNotNull()
+        }
+
+        @Test
+        fun `GIVEN an error then empty preview WHEN manually refreshed THEN can show the first position`() = runTest {
+            // Arrange
+            val loader = createLoader()
+            coEvery { repository.getOpenPositions(addresses, 3, 0) } returnsMany listOf(
+                PolymarketPositionsError.Network.left(),
+                page.copy(positions = emptyList()).right(),
+                page.right(),
+            )
+            loader.resume(backgroundScope, userWalletId)
+            runCurrent()
+
+            // Act
+            backgroundScope.async { loader.refresh(backgroundScope, userWalletId) }
+            runCurrent()
+
+            // Assert
+            assertThat(loader.state.value).isEqualTo(PolymarketPositionsPreviewUM.Content(persistentListOf()))
+
+            // Act
+            backgroundScope.async { loader.refresh(backgroundScope, userWalletId) }
+            runCurrent()
+
+            // Assert
+            val content = loader.state.value as PolymarketPositionsPreviewUM.Content
+            assertThat(content.positions.map { it.id }).containsExactly("condition:asset")
+            coVerify(exactly = 3) { repository.getOpenPositions(addresses, 3, 0) }
+        }
+
+        @Test
+        fun `GIVEN a manual refresh in flight WHEN paused THEN cancels the read and stops polling`() = runTest {
+            // Arrange
+            val loader = createLoader()
+            coEvery { repository.getOpenPositions(addresses, 3, 0) } returns page.right()
+            loader.resume(backgroundScope, userWalletId)
+            runCurrent()
+            val read = CompletableDeferred<Unit>()
+            coEvery { repository.getOpenPositions(addresses, 3, 0) } coAnswers { read.await(); page.right() }
+            val refresh = backgroundScope.async { loader.refresh(backgroundScope, userWalletId) }
+            runCurrent()
+
+            // Act
+            loader.pause()
+            passPollInterval()
+            loader.refresh(backgroundScope, userWalletId)
+
+            // Assert
+            assertThat(refresh.isCancelled).isTrue()
+            coVerify(exactly = 2) { repository.getOpenPositions(addresses, 3, 0) }
+        }
+    }
+
+    @Nested
+    inner class IndexingRetries {
+
+        @Test
+        fun `GIVEN positions invalidated WHEN indexing is delayed THEN reads with backoff before regular polling`() =
+            runTest {
+                // Arrange
+                val loader = createLoader()
+                val readTimes = mutableListOf<Long>()
+                coEvery { repository.getOpenPositions(addresses, 3, 0) } coAnswers {
+                    readTimes += testScheduler.currentTime
+                    if (testScheduler.currentTime < 6_000) page.right()
+                    else page.copy(positions = emptyList()).right()
+                }
+                loader.resume(backgroundScope, userWalletId)
+                runCurrent()
+
+                // Act
+                positionsUpdater.triggerUpdate(userWalletId)
+                runCurrent()
+                advanceTimeBy(50.seconds)
+                runCurrent()
+
+                // Assert
+                assertThat(readTimes).containsExactly(0L, 0L, 2_000L, 6_000L, 14_000L, 30_000L, 50_000L).inOrder()
+                assertThat(loader.state.value).isEqualTo(PolymarketPositionsPreviewUM.Content(persistentListOf()))
+            }
+
+        @Test
+        fun `GIVEN a trade while paused WHEN resumed THEN starts backoff and cancels it on pause`() = runTest {
+            // Arrange
+            val loader = createLoader()
+            coEvery { repository.getOpenPositions(addresses, 3, 0) } returns page.right()
+            loader.resume(backgroundScope, userWalletId)
+            runCurrent()
+            loader.pause()
+            positionsUpdater.triggerUpdate(userWalletId)
+
+            // Act
+            loader.resume(backgroundScope, userWalletId)
+            runCurrent()
+            advanceTimeBy(2.seconds)
+            runCurrent()
+            loader.pause()
+            advanceTimeBy(60.seconds)
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 3) { repository.getOpenPositions(addresses, 3, 0) }
+        }
+
+        @Test
+        fun `GIVEN another wallet trades WHEN polling THEN keeps the regular interval`() = runTest {
+            // Arrange
+            val loader = createLoader()
+            coEvery { repository.getOpenPositions(addresses, 3, 0) } returns page.right()
+            loader.resume(backgroundScope, userWalletId)
+            runCurrent()
+
+            // Act
+            positionsUpdater.triggerUpdate(UserWalletId("012"))
+            advanceTimeBy(POLL_INTERVAL - 1.seconds)
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 1) { repository.getOpenPositions(addresses, 3, 0) }
+        }
+    }
+
+    @Nested
+    inner class PollingRestarts {
+
+        @Test
+        fun `GIVEN a pending read WHEN resumed repeatedly with eager dispatch THEN cancels before each new read`() =
+            runTest {
+                // Arrange
+                val immediateDispatcher = UnconfinedTestDispatcher(testScheduler)
+                val dispatchers = object : CoroutineDispatcherProvider by createTestingCoroutineDispatcherProvider() {
+                    override val default = immediateDispatcher
+                }
+                val loader = createLoader(dispatchers)
+                val scope = CoroutineScope(backgroundScope.coroutineContext + immediateDispatcher)
+                val requests = mutableListOf<Job>()
+                val previousRequestActive = mutableListOf<Boolean>()
+                coEvery { repository.getOpenPositions(addresses, 3, 0) } coAnswers {
+                    requests.lastOrNull()?.let { previousRequestActive += it.isActive }
+                    requests += currentCoroutineContext().job
+                    awaitCancellation()
+                }
+
+                // Act
+                repeat(3) { loader.resume(scope, userWalletId) }
+
+                // Assert
+                assertThat(requests).hasSize(3)
+                assertThat(previousRequestActive).containsExactly(false, false)
+
+                // Act
+                loader.pause()
+                passPollInterval()
+
+                // Assert
+                assertThat(requests.all { it.isCancelled }).isTrue()
+                coVerify(exactly = 3) { repository.getOpenPositions(addresses, 3, 0) }
+            }
+
+        @Test
+        fun `GIVEN repeated resumes and manual refresh WHEN a trade arrives THEN keeps a single polling loop`() = runTest {
+            // Arrange
+            val loader = createLoader()
+            val readTimes = mutableListOf<Long>()
+            coEvery { repository.getOpenPositions(addresses, 3, 0) } coAnswers {
+                readTimes += testScheduler.currentTime
+                page.right()
+            }
+            repeat(3) {
+                loader.resume(backgroundScope, userWalletId)
+                runCurrent()
+            }
+            val refresh = backgroundScope.async { loader.refresh(backgroundScope, userWalletId) }
+            runCurrent()
+            refresh.await()
+
+            // Act
+            positionsUpdater.triggerUpdate(userWalletId)
+            runCurrent()
+            advanceTimeBy(50.seconds)
+            runCurrent()
+            loader.pause()
+            advanceTimeBy(60.seconds)
+            runCurrent()
+
+            // Assert
+            assertThat(readTimes).containsExactly(0L, 0L, 0L, 0L, 0L, 2_000L, 6_000L, 14_000L, 30_000L, 50_000L).inOrder()
+        }
+    }
+
+    private fun TestScope.createLoader(
+        dispatchers: CoroutineDispatcherProvider = createTestingCoroutineDispatcherProvider(),
+    ): PolymarketPositionsPreviewLoader {
         coEvery { deriveAddresses.stored(userWalletId) } returns addresses
-        val dispatcher = StandardTestDispatcher(testScheduler)
         return PolymarketPositionsPreviewLoader(
             repository = repository,
             deriveAddresses = deriveAddresses,
             updateListener = positionsUpdater,
-            dispatchers = TestingCoroutineDispatcherProvider(
-                main = dispatcher,
-                mainImmediate = dispatcher,
-                io = dispatcher,
-                default = dispatcher,
-                single = dispatcher,
-            ),
+            dispatchers = dispatchers,
         )
     }
 

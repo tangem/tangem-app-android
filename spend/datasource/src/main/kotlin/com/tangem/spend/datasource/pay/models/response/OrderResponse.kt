@@ -1,37 +1,42 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import com.tangem.domain.models.serialization.SerializedRawJson
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class OrderResponse(
-    @Json(name = "result") val result: Result?,
+    @SerialName("result") val result: Result?,
 ) {
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Result(
-        @Json(name = "id") val id: String,
-        @Json(name = "customer_id") val customerId: String?,
-        @Json(name = "type") val type: String?,
-        @Json(name = "status") val status: Status = Status.UNKNOWN,
-        @Json(name = "step") val step: String?,
-        @Json(name = "data") val data: Data,
-        @Json(name = "step_change_code") val stepChangeCode: Int?,
-        @Json(name = "created_at") val createdAt: String?,
-        @Json(name = "updated_at") val updatedAt: String?,
+        @SerialName("id") val id: String,
+        @SerialName("customer_id") val customerId: String?,
+        @SerialName("type") val type: String?,
+        /**
+         * A status this build does not know falls back to [Status.UNKNOWN] since app version 6.4. Older versions
+         * fail to parse the whole response on it.
+         */
+        @SerialName("status") val status: Status = Status.UNKNOWN,
+        @SerialName("step") val step: String?,
+        @SerialName("data") val data: Data,
+        @SerialName("step_change_code") val stepChangeCode: Int?,
+        @SerialName("created_at") val createdAt: String?,
+        @SerialName("updated_at") val updatedAt: String?,
     ) {
-        @JsonClass(generateAdapter = true)
+        @Serializable
         data class Data(
-            @Json(name = "type") val type: String?,
-            @Json(name = "specification_name") val specificationName: String?,
-            @Json(name = "customer_wallet_address") val customerWalletAddress: String?,
-            @Json(name = "emboss_name") val embossName: String?,
-            @Json(name = "product_instance_id") val productInstanceId: String?,
-            @Json(name = "source_product_instance_id") val sourceProductInstanceId: String? = null,
-            @Json(name = "payment_account_id") val paymentAccountId: String?,
-            @Json(name = "target_tariff_plan_id") val targetTariffPlanId: String?,
-            @Json(name = "transaction_hash") val transactionHash: String?,
-            @Json(name = "bank_account_id") val bankAccountId: String? = null,
-            @Json(name = "withdraw_data") val withdrawData: WithdrawData? = null,
+            @SerialName("type") val type: String?,
+            @SerialName("specification_name") val specificationName: String?,
+            @SerialName("customer_wallet_address") val customerWalletAddress: String?,
+            @SerialName("emboss_name") val embossName: String?,
+            @SerialName("product_instance_id") val productInstanceId: String?,
+            @SerialName("source_product_instance_id") val sourceProductInstanceId: String? = null,
+            @SerialName("payment_account_id") val paymentAccountId: String?,
+            @SerialName("target_tariff_plan_id") val targetTariffPlanId: String?,
+            @SerialName("transaction_hash") val transactionHash: String?,
+            @SerialName("bank_account_id") val bankAccountId: String? = null,
+            @SerialName("withdraw_data") val withdrawData: WithdrawData? = null,
         ) {
 
             /**
@@ -40,34 +45,37 @@ data class OrderResponse(
              * Only [hash] is consumed by the app; the rest is optional because this response is also the element
              * of the orders list, where one unexpected bank order must not break parsing of every other order.
              */
-            @JsonClass(generateAdapter = true)
+            @Serializable
             data class WithdrawData(
-                @Json(name = "hash") val hash: String,
-                @Json(name = "salt") val salt: String? = null,
-                @Json(name = "sender_address") val senderAddress: String? = null,
+                @SerialName("hash") val hash: String,
+                @SerialName("salt") val salt: String? = null,
+                @SerialName("sender_address") val senderAddress: String? = null,
                 /**
-                 * Kept as the text the server sent: re-encoding it through Kotlin types would turn
-                 * `chainId: 137` into `137.0` and the EIP-712 digest would stop matching [hash].
+                 * Kept as the JSON the server sent, number literals included: decoding it into Kotlin types would
+                 * turn `chainId: 137` into a double and the EIP-712 digest would stop matching [hash].
                  */
-                @Json(name = "structured_data") @RawJson val structuredData: String? = null,
+                @SerialName("structured_data") val structuredData: SerializedRawJson? = null,
             )
         }
 
-        @JsonClass(generateAdapter = false)
+        @Serializable
         enum class Status {
-            @Json(name = "NEW")
+            @SerialName("NEW")
             NEW,
 
-            @Json(name = "PROCESSING")
+            @SerialName("PROCESSING")
             PROCESSING,
 
-            @Json(name = "COMPLETED")
+            @SerialName("COMPLETED")
             COMPLETED,
 
-            @Json(name = "CANCELED")
+            @SerialName("CANCELED")
             CANCELED,
 
-            /** Not a wire value: every status this app version does not know is mapped here by the fallback adapter. */
+            /**
+             * Not a wire value: every status this app version does not know is coerced to this default by
+             * [com.tangem.core.remote.json.NetworkJsonFactory].
+             */
             UNKNOWN,
         }
     }

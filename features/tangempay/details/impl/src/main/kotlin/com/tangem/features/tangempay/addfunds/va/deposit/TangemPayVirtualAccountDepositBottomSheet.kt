@@ -13,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.*
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -36,6 +35,8 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_info_24
 import com.tangem.core.ui.res.generated.icons.ic_sign_usd_32
 import com.tangem.core.ui.test.TangemPayTestTags
+import com.tangem.features.tangempay.addfunds.LegalLink
+import com.tangem.features.tangempay.addfunds.TangemPayLegalLinksText
 import com.tangem.features.tangempay.details.impl.R
 import kotlinx.collections.immutable.persistentListOf
 import com.tangem.core.ui.R as CoreUiR
@@ -236,39 +237,12 @@ private fun InfoNotification(text: TextReference, modifier: Modifier = Modifier)
 
 @Composable
 private fun TermsFooter(onTermsClick: () -> Unit, onPrivacyClick: () -> Unit, modifier: Modifier = Modifier) {
-    val linkStyle = SpanStyle(color = TangemTheme.colors3.text.primary)
     val termsTitle = stringResourceSafe(R.string.tangempay_bank_transfer_terms_of_use)
     val privacyTitle = stringResourceSafe(R.string.common_privacy_policy)
-    val fullText = stringResourceSafe(R.string.tangempay_bank_transfer_legal, termsTitle, privacyTitle)
-
-    // Locate each link title in the resolved (localized) string and splice them in appearance order.
-    // Handles translations that reorder the %1$s/%2$s placeholders and skips a title that a translation
-    // does not contain verbatim — falling back to plain text instead of crashing on an invalid substring range.
-    val links = listOf(
-        Triple(fullText.indexOf(termsTitle), termsTitle, onTermsClick),
-        Triple(fullText.indexOf(privacyTitle), privacyTitle, onPrivacyClick),
-    )
-        .filter { it.first >= 0 }
-        .sortedBy { it.first }
-
-    val text = buildAnnotatedString {
-        var cursor = 0
-        links.forEach { (index, title, onClick) ->
-            if (index < cursor) return@forEach
-            append(fullText.substring(cursor, index))
-            withLink(LinkAnnotation.Clickable(tag = title, linkInteractionListener = { onClick() })) {
-                withStyle(linkStyle) { append(title) }
-            }
-            cursor = index + title.length
-        }
-        append(fullText.substring(cursor))
-    }
-    Text(
-        modifier = modifier.fillMaxWidth(),
-        text = text,
-        style = TangemTheme.typography3.caption.medium,
-        color = TangemTheme.colors3.text.secondary,
-        textAlign = TextAlign.Center,
+    TangemPayLegalLinksText(
+        modifier = modifier,
+        fullText = stringResourceSafe(R.string.tangempay_bank_transfer_legal, termsTitle, privacyTitle),
+        links = listOf(LegalLink(termsTitle, onTermsClick), LegalLink(privacyTitle, onPrivacyClick)),
     )
 }
 

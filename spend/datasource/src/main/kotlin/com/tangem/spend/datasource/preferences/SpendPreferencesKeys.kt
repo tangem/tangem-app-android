@@ -54,4 +54,7 @@ class SpendPreferencesKeys @Inject constructor() {
 
     fun getDeactivatedKey(userWalletId: UserWalletId): Preferences.Key<Boolean> =
         booleanPreferencesKey("tangem_pay_deactivated_$userWalletId")
+
+    fun getMoneyAccountMainBlockHiddenKey(userWalletId: UserWalletId): Preferences.Key<Boolean> =
+        booleanPreferencesKey("money_account_main_block_hidden_$userWalletId")
 }

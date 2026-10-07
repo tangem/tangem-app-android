@@ -98,6 +98,7 @@ sealed class AnalyticsParam {
         TangemPay("Tangem Pay"),
         WalletSettings("Wallet Settings"),
         Upgrade("Upgrade"),
+        SocialLogin("Social Login"),
         HardwareWallet("Hardware Wallet"),
         ImportWallet("Import Wallet"),
         CreateWalletIntro("Create Wallet Intro"),
@@ -200,6 +201,13 @@ sealed class AnalyticsParam {
         data object Token : FeeAssetType("Token")
     }
 
+    sealed class AccountType(val value: String) {
+        data object Crypto : AccountType("Crypto")
+        data object Joint : AccountType("Joint")
+    }
+
+    data class JointComposition(val membersCount: Int, val threshold: Int)
+
     sealed class FeeType(val value: String) {
         data object Fixed : FeeType("Fixed")
         data object Min : FeeType("Min")
@@ -224,6 +232,8 @@ sealed class AnalyticsParam {
         data object PrivateKey : WalletCreationType(value = "Private Key")
         data object NewSeed : WalletCreationType(value = "New Seed")
         data object SeedImport : WalletCreationType(value = "Seed Import")
+        data object NewSocialLogin : WalletCreationType(value = "New Social Login")
+        data object SocialLoginImport : WalletCreationType(value = "Social Login Import")
     }
 
     sealed class WalletType(val value: String) {
@@ -297,10 +307,11 @@ sealed class AnalyticsParam {
         Multiple("Multiple"),
     }
 
-    /** Way a mobile wallet secret is backed up: the recovery phrase written down by hand, or a cloud backup */
+    /** Way a mobile wallet secret is backed up: by hand, to a password cloud backup, or through social login */
     enum class BackupType(val value: String) {
         Manual("Manual"),
         Cloud("Cloud"),
+        SocialLogin("Social Login"),
     }
 
     /**
@@ -381,6 +392,11 @@ sealed class AnalyticsParam {
         const val ACCOUNT_DERIVATION_TO = "Account Derivation (to)"
         const val FEE_TOKEN = "Fee Token"
         const val ACCOUNT_DERIVATION = "Account Derivation"
+        const val ACCOUNT_TYPE = "Account Type"
+        const val ACCOUNT_TYPE_FROM = "Account Type (from)"
+        const val ACCOUNT_TYPE_TO = "Account Type (to)"
+        const val MEMBERS_COUNT = "Members Count"
+        const val THRESHOLD = "Threshold"
         const val REFERRAL = "Referral"
         const val REFERRAL_ID = "Referral_ID"
         const val SEARCHED = "Searched"
@@ -400,6 +416,7 @@ sealed class AnalyticsParam {
         const val COMPLETED_BACKUPS = "Completed Backups"
         const val CLOUD_BACKUP = "Cloud Backup"
         const val MANUAL_BACKUP = "Manual Backup"
+        const val SOCIAL_BACKUP = "Social Backup"
         const val BACKUP_TYPE = "Backup Type"
         const val BACKUP_COUNT = "Backup Count"
         const val MEMO = "Memo"

@@ -15,21 +15,21 @@ import com.tangem.data.visa.config.VisaLibLoader
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.spend.datasource.pay.TangemPayApi
+import com.tangem.spend.datasource.pay.TangemPayProvisioningApi
 import com.tangem.spend.datasource.pay.models.request.CardDetailsRequest
 import com.tangem.spend.datasource.pay.models.request.FreezeUnfreezeCardRequest
 import com.tangem.spend.datasource.pay.models.request.UpdateCardRequest
 import com.tangem.spend.datasource.pay.models.request.SetPinRequest
-import com.tangem.spend.datasource.pay.models.response.FreezeUnfreezeCardResponse
 import com.tangem.spend.datasource.pay.store.TangemPayCardFrozenStateStore
 import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.SetPinResult
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.model.TangemPayCardDetails
+import com.tangem.domain.pay.model.TangemPayCardProvisioningData
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.visa.error.VisaApiError
@@ -43,6 +43,7 @@ private const val TAG = "TangemPay: CardDetailsRepository"
 @Suppress("LongParameterList", "LargeClass")
 internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
     private val tangemPayApi: TangemPayApi,
+    private val tangemPayProvisioningApi: TangemPayProvisioningApi,
     private val requestHelper: TangemPayRequestPerformer,
     private val visaLibLoader: VisaLibLoader,
     private val apiConfigsManager: ApiConfigsManager,
@@ -170,6 +171,26 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
         )
     }
 
+    override suspend fun getProvisioningData(
+        userWalletId: UserWalletId,
+        cardId: String,
+    ): Either<UniversalError, TangemPayCardProvisioningData> = either {
+        val response = requestHelper.performRequest(userWalletId) { authHeader ->
+            tangemPayProvisioningApi.getCardProcessorDetails(authHeader = authHeader, cardId = cardId)
+        }.bind()
+
+        val result = response.result ?: raise(VisaApiError.Unspecified)
+        val cardSecret = result.cardSecret?.takeIf(String::isNotBlank) ?: run {
+            TangemLogger.withTag(TAG).e("Processor details returned no card secret")
+            raise(VisaApiError.Unspecified)
+        }
+
+        TangemPayCardProvisioningData(processorCardId = result.cardId, cardSecret = cardSecret)
+    }
+
+    override fun isProductionEnvironment(): Boolean =
+        apiConfigsManager.getEnvironmentConfig(TangemPay.Bff.ID).environment == ApiEnvironment.PROD
+
     override suspend fun isAddToWalletDone(userWalletId: UserWalletId): Either<UniversalError, Boolean> {
         return catch(
             block = {
@@ -205,12 +226,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
 
         TangemPayOrderInfo(
             orderId = result.orderId,
-            orderStatus = when (result.status) {
-                FreezeUnfreezeCardResponse.Status.NEW -> OrderStatus.NEW
-                FreezeUnfreezeCardResponse.Status.PROCESSING -> OrderStatus.PROCESSING
-                FreezeUnfreezeCardResponse.Status.COMPLETED -> OrderStatus.COMPLETED
-                FreezeUnfreezeCardResponse.Status.CANCELED -> OrderStatus.CANCELED
-            },
+            orderStatus = OrderStatusConverter.convert(result.status),
         )
     }
 
@@ -226,12 +242,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
 
         TangemPayOrderInfo(
             orderId = result.orderId,
-            orderStatus = when (result.status) {
-                FreezeUnfreezeCardResponse.Status.NEW -> OrderStatus.NEW
-                FreezeUnfreezeCardResponse.Status.PROCESSING -> OrderStatus.PROCESSING
-                FreezeUnfreezeCardResponse.Status.COMPLETED -> OrderStatus.COMPLETED
-                FreezeUnfreezeCardResponse.Status.CANCELED -> OrderStatus.CANCELED
-            },
+            orderStatus = OrderStatusConverter.convert(result.status),
         )
     }
 
@@ -317,18 +328,8 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
     }
 
     private suspend fun getPublicKeyBase64(): String {
-        val env = apiConfigsManager.getEnvironmentConfig(TangemPay.Bff.ID).environment
-        return when (env) {
-            ApiEnvironment.DEV,
-            ApiEnvironment.DEV_2,
-            ApiEnvironment.DEV_3,
-            ApiEnvironment.STAGE,
-            ApiEnvironment.STAGE_2,
-            ApiEnvironment.STAGE_3,
-            ApiEnvironment.MOCK,
-            -> visaLibLoader.getOrCreateConfig().rainRSAPublicKey.dev
-            ApiEnvironment.PROD -> visaLibLoader.getOrCreateConfig().rainRSAPublicKey.prod
-        }
+        val rainRSAPublicKey = visaLibLoader.getOrCreateConfig().rainRSAPublicKey
+        return if (isProductionEnvironment()) rainRSAPublicKey.prod else rainRSAPublicKey.dev
     }
 
     private fun <T> catchException(throwable: Throwable): Either<UniversalError, T> {

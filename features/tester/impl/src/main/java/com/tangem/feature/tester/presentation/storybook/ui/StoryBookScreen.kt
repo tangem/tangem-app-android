@@ -25,6 +25,7 @@ import com.tangem.feature.tester.presentation.storybook.entity.TangemLoaderStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemStatusScreenStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemContextMenuStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemMessageStory
+import com.tangem.feature.tester.presentation.storybook.entity.TangemModalStatusStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemPagerIndicatorStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemSearchFieldStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemSegmentedPickerStory
@@ -39,6 +40,9 @@ import com.tangem.feature.tester.presentation.storybook.page.buttons.ButtonsStor
 import com.tangem.feature.tester.presentation.storybook.page.checkbox.TangemCheckboxStory
 import com.tangem.feature.tester.presentation.storybook.page.contextmenu.TangemContextMenuStory
 import com.tangem.feature.tester.presentation.storybook.page.deviceicon.DeviceIconStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.avatar.TangemAvatarStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.accountrow.TangemAccountRowStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.expandablerow.TangemExpandableRowStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.DsComponentsListStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.badge.TangemBadgeV2Story
 import com.tangem.feature.tester.presentation.storybook.page.ds.button.TangemButtonStory
@@ -51,6 +55,7 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.filter.TangemFil
 import com.tangem.feature.tester.presentation.storybook.page.ds.footer.TangemFooterStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.glowring.TangemGlowRingStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.loader.TangemLoaderStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.modalstatus.TangemModalStatusStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.statusscreen.TangemStatusScreenStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.messagebanner.TangemMessageBannerStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.modal.TangemModalStory
@@ -79,7 +84,7 @@ import com.tangem.feature.tester.presentation.storybook.page.tokenrow.TangemToke
 import com.tangem.feature.tester.presentation.storybook.page.topbar.TangemTopBarStory
 import com.tangem.feature.tester.presentation.storybook.page.typography.TypographyStory
 
-@Suppress("CyclomaticComplexMethod")
+@Suppress("CyclomaticComplexMethod", "LongMethod")
 @Composable
 internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) {
     BackHandler(onBack = state.onBackClick)
@@ -93,6 +98,7 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
         // edge-to-edge ones (which manage insets themselves) keeps the usual system bars padding.
         val isEdgeToEdgePage = storyState is TangemShtorkaStory ||
             storyState is TangemModalStory ||
+            storyState is TangemModalStatusStory ||
             storyState is StoriesV2Story ||
             storyState is TangemStatusScreenStory
         val insetsModifier = if (isEdgeToEdgePage) Modifier else Modifier.systemBarsPadding()
@@ -118,7 +124,7 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
                 PlaceholderStory -> PlaceholderStory()
                 ProgressIndicatorStory -> ProgressIndicatorStory()
                 DeviceIconStory -> DeviceIconStory()
-                is DsComponentsListStory -> DsComponentsListStory(state = storyState)
+                DsComponentsListStory -> DsComponentsListStory(onStoryClick = state.onStoryClick)
                 is TangemLoaderStory -> TangemLoaderStory(state = storyState)
                 is TangemButtonStory -> TangemButtonStory(state = storyState)
                 is TangemButtonGroupStory -> TangemButtonGroupStory(state = storyState)
@@ -134,10 +140,14 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
                 is TangemShimmerStory -> TangemShimmerStory(state = storyState)
                 is TangemShtorkaStory -> TangemShtorkaStory(state = storyState)
                 is TangemModalStory -> TangemModalStory(state = storyState)
+                is TangemModalStatusStory -> TangemModalStatusStory(state = storyState)
                 is TangemFadeStory -> TangemFadeStory(state = storyState)
                 is TangemTopNavigationStory -> TangemTopNavigationStory(state = storyState)
                 is TangemMessageBannerStory -> TangemMessageBannerStory(state = storyState)
                 is TangemStatusScreenStory -> TangemStatusScreenStory(state = storyState)
+                is TangemAccountRowStory -> TangemAccountRowStory(state = storyState)
+                is TangemExpandableRowStory -> TangemExpandableRowStory(state = storyState)
+                is TangemAvatarStory -> TangemAvatarStory(state = storyState)
                 is TangemTokenRowV2Story -> TangemTokenRowV2Story(state = storyState)
                 is TangemTokenRowMarketStory -> TangemTokenRowMarketStory(state = storyState)
                 is TangemFilterGroupStory -> TangemFilterGroupStory(state = storyState)
@@ -145,6 +155,8 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
                 is TangemSegmentedControlStory -> TangemSegmentedControlStory(state = storyState)
                 is TextStyleStory -> TextStyleStory(state = storyState)
             }
+
+            DsVersionBadge(version = state.currentVersion, withStatusBarPadding = isEdgeToEdgePage)
         }
     }
 }

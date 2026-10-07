@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.account
 
 import com.tangem.core.decompose.navigation.Route
+import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.pay.TangemPayCard
@@ -35,6 +36,12 @@ internal sealed class TangemPayAccountDetailsInnerRoute : Route {
 
     @Serializable
     data object VirtualAccountDepositSuccess : TangemPayAccountDetailsInnerRoute()
+
+    @Serializable
+    data object BankTransferOnrampOnboarding : TangemPayAccountDetailsInnerRoute()
+
+    @Serializable
+    data class BankTransferOnrampDetails(val bankCredentials: BankCredentials) : TangemPayAccountDetailsInnerRoute()
 
     @Serializable
     data object Cashback : TangemPayAccountDetailsInnerRoute()

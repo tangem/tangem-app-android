@@ -1,5 +1,6 @@
 package com.tangem.features.introduction.impl.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,7 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.ds2.row.TangemRow
@@ -50,18 +51,25 @@ internal fun WalletOptionCard(option: WalletOptionUM, modifier: Modifier = Modif
 private const val DISABLED_CONTENT_ALPHA = 0.4f
 
 @Composable
-private fun OptionIcon(icon: ImageVector) {
+private fun OptionIcon(icon: WalletOptionUM.Icon) {
     Box(
         modifier = Modifier
             .size(40.dp)
             .background(color = TangemTheme.colors3.bg.opaque.primary, shape = CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            modifier = Modifier.size(20.dp),
-            imageVector = icon,
-            contentDescription = null,
-            tint = TangemTheme.colors3.icon.primary,
-        )
+        when (icon) {
+            is WalletOptionUM.Icon.Tinted -> Icon(
+                modifier = Modifier.size(20.dp),
+                imageVector = icon.vector,
+                contentDescription = null,
+                tint = TangemTheme.colors3.icon.primary,
+            )
+            is WalletOptionUM.Icon.Image -> Image(
+                modifier = Modifier.size(20.dp),
+                painter = painterResource(id = icon.res),
+                contentDescription = null,
+            )
+        }
     }
 }

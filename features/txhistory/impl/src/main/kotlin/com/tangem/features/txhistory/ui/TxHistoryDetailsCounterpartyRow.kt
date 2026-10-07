@@ -15,6 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.account.AccountIcon
@@ -69,7 +71,11 @@ internal fun TxHistoryDetailsCounterpartyRow(counterparty: CounterpartyUM, modif
             titleSlot = { TangemRowText(text = counterparty.label, role = TangemRowTextRole.Subtitle) },
             subtitleSlot = {
                 when (val title = counterparty.title) {
-                    is CounterpartyTitle.Name -> TangemRowText(text = title.value, role = TangemRowTextRole.Title)
+                    is CounterpartyTitle.Name -> TangemRowText(
+                        text = title.value,
+                        role = TangemRowTextRole.Title,
+                        overflow = counterparty.titleOverflow(),
+                    )
                     is CounterpartyTitle.Address -> TangemRowAddressText(
                         address = title.value,
                         role = TangemRowTextRole.Title,
@@ -89,6 +95,9 @@ internal fun TxHistoryDetailsCounterpartyRow(counterparty: CounterpartyUM, modif
         )
     }
 }
+
+private fun CounterpartyUM.titleOverflow(): TextOverflow =
+    if (avatar is CounterpartyAvatar.Address) TextOverflow.MiddleEllipsis else TextOverflow.Ellipsis
 
 @Composable
 private fun CounterpartyAvatar(avatar: CounterpartyAvatar, modifier: Modifier = Modifier) {

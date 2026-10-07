@@ -208,7 +208,6 @@ internal class EarnBlockConverterTest {
         val value = if (fiatAmount == null) {
             CryptoCurrencyStatus.NoQuote(
                 amount = BigDecimal.ONE,
-                stakingBalance = null,
                 yieldSupplyStatus = yieldSupplyStatus,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),
@@ -221,7 +220,6 @@ internal class EarnBlockConverterTest {
                 fiatAmount = BigDecimal(fiatAmount),
                 fiatRate = BigDecimal.ONE,
                 priceChange = BigDecimal.ZERO,
-                stakingBalance = null,
                 yieldSupplyStatus = yieldSupplyStatus,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),

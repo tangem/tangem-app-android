@@ -99,7 +99,7 @@ internal class SendConfirmComponent(
         params = FeeSelectorParams.FeeSelectorBlockParams(
             state = model.uiState.value.feeSelectorUM,
             onLoadFee = params.onLoadFee,
-            onLoadFeeExtended = params.onLoadFeeExtended.takeUnless { isJointAccount },
+            onLoadFeeExtended = params.onLoadFeeExtended,
             onDisableCustomFee = { isJointAccount },
             feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
             cryptoCurrencyStatus = params.cryptoCurrencyStatus,

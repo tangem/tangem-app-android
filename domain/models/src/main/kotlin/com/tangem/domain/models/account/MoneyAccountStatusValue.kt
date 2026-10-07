@@ -16,6 +16,7 @@ sealed class MoneyAccountStatusValue {
 
     abstract val source: StatusSource
 
+    // TODO v_rodionov: #[REDACTED_TASK_KEY] check if it possible to make balance not nullable
     abstract val balance: Balance?
 
     val totalFiatBalance: TotalFiatBalance
@@ -95,7 +96,9 @@ sealed class MoneyAccountStatusValue {
         ) : Onboarding()
 
         @Serializable
-        data object CountryNotSupported : Onboarding() {
+        data class CountryNotSupported(
+            val countryCode: String?,
+        ) : Onboarding() {
             override val source: StatusSource = StatusSource.ACTUAL
             override val balance: Balance? = null
             override val customerId: String? = null
@@ -201,7 +204,6 @@ private fun buildCryptoCurrencyStatusValue(
             networkAddress = networkAddress,
             sources = CryptoCurrencyStatus.Sources(),
             pendingTransactions = emptySet(),
-            stakingBalance = null,
             yieldSupplyStatus = null,
             hasCurrentNetworkTransactions = false,
         )
@@ -209,7 +211,6 @@ private fun buildCryptoCurrencyStatusValue(
         CryptoCurrencyStatus.NoQuote(
             amount = amount,
             networkAddress = networkAddress,
-            stakingBalance = null,
             yieldSupplyStatus = null,
             hasCurrentNetworkTransactions = false,
             pendingTransactions = emptySet(),

@@ -8,9 +8,10 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.store.datasource.preferences.StorePreferencesKeys
+import com.tangem.domain.feedback.GetSupportChatLogsUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
-import com.tangem.domain.feedback.repository.FeedbackRepository
+import com.tangem.domain.feedback.models.SupportChatTopic
 import com.tangem.domain.settings.UsedeskTokenTtlManager
 import com.tangem.feature.usedesk.analytics.UsedeskAnalyticsEvents
 import com.tangem.feature.usedesk.api.UsedeskComponent
@@ -34,13 +35,15 @@ internal class UsedeskModel @Inject constructor(
     private val appPreferencesStore: AppPreferencesStore,
     private val storePreferencesKeys: StorePreferencesKeys,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val feedbackRepository: FeedbackRepository,
+    private val getSupportChatLogsUseCase: GetSupportChatLogsUseCase,
     private val usedeskTokenTtlManager: UsedeskTokenTtlManager,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
     private val params = paramsContainer.require<UsedeskComponent.Params>()
+
+    private val logsTopic = logsTopicFor(params.source)
 
     val state: StateFlow<UsedeskState>
         field = MutableStateFlow(UsedeskState(usedeskChatConfiguration = null))
@@ -58,7 +61,7 @@ internal class UsedeskModel @Inject constructor(
                         companyId = COMPANY_ID,
                         channelId = CHANNEL_ID,
                         clientId = clientId,
-                        clientEmail = params.walletMetaInfo.userWalletId?.stringValue,
+                        clientEmail = params.clientEmail ?: params.walletMetaInfo.userWalletId?.stringValue,
                         clientInitMessage = params.prefilledMessage,
                         additionalFields = additionalFieldsFor(params.source),
                         tokenTtlMillis = usedeskTokenTtlManager.getTokenTtlMillisSync(),
@@ -91,12 +94,14 @@ internal class UsedeskModel @Inject constructor(
     }
 
     /**
-     * Collects the app logs into a zip archive (the same one attached to the support email)
+     * Collects the app logs and the wallet/device info into a zip archive
      * and returns it via [onReady] on the main thread, or null if there are no logs.
      */
     fun provideLogsFile(onReady: (File?) -> Unit) {
         modelScope.launch {
-            val file = runSuspendCatching { feedbackRepository.getZipLogFile() }.getOrNull()
+            val file = runSuspendCatching {
+                getSupportChatLogsUseCase(walletMetaInfo = params.walletMetaInfo, topic = logsTopic)
+            }.getOrNull()
             withContext(dispatchers.main) { onReady(file) }
         }
     }
@@ -107,8 +112,15 @@ internal class UsedeskModel @Inject constructor(
     }
 
     private fun additionalFieldsFor(source: ScreensSources): Map<Long, String> = when (source) {
-        ScreensSources.Swap -> mapOf(SWAP_ADDITIONAL_FIELD_ID to SWAP_ADDITIONAL_FIELD_VALUE)
+        ScreensSources.Swap -> mapOf(SOURCE_ADDITIONAL_FIELD_ID to SWAP_ADDITIONAL_FIELD_VALUE)
+        ScreensSources.SocialLogin -> mapOf(SOURCE_ADDITIONAL_FIELD_ID to SOCIAL_LOGIN_ADDITIONAL_FIELD_VALUE)
+        ScreensSources.Predictions -> mapOf(SOURCE_ADDITIONAL_FIELD_ID to PREDICTIONS_ADDITIONAL_FIELD_VALUE)
         else -> emptyMap()
+    }
+
+    private fun logsTopicFor(source: ScreensSources): SupportChatTopic? = when (source) {
+        ScreensSources.Predictions -> SupportChatTopic.PREDICTIONS
+        else -> null
     }
 
     private suspend fun getOrCreateClientId(): String {
@@ -130,7 +142,9 @@ internal class UsedeskModel @Inject constructor(
         const val COMPANY_ID = "2"
         const val CHANNEL_ID = "54"
 
-        const val SWAP_ADDITIONAL_FIELD_ID = 245L
+        const val SOURCE_ADDITIONAL_FIELD_ID = 245L
         const val SWAP_ADDITIONAL_FIELD_VALUE = "swap"
+        const val SOCIAL_LOGIN_ADDITIONAL_FIELD_VALUE = "social_login"
+        const val PREDICTIONS_ADDITIONAL_FIELD_VALUE = "polymarket"
     }
 }

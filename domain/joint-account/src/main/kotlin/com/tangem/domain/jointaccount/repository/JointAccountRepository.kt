@@ -10,9 +10,11 @@ import com.tangem.domain.jointaccount.model.JointAccountJoinPayload
 import com.tangem.domain.jointaccount.model.JointAccountJoinResult
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
+import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.models.wallet.UserWalletId
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Write operations on joint accounts. Reading the accounts of a wallet is the supplier's job — see
@@ -89,7 +91,8 @@ interface JointAccountRepository {
      *
      * [JointAccountInvitePreviewError.InvalidLink] covers a link the backend refuses or does not know — already
      * redeemed, this wallet already holding a slot, or no such invite. None of the three is retryable and all
-     * read the same to the invitee. Anything else is [JointAccountInvitePreviewError.LoadFailed].
+     * read the same to the invitee. A request that got no answer is [JointAccountInvitePreviewError.Unreachable];
+     * anything else is [JointAccountInvitePreviewError.LoadFailed].
      */
     suspend fun getInvitePreview(
         walletId: UserWalletId,
@@ -104,6 +107,12 @@ interface JointAccountRepository {
      * empty list, so a screen built on this keeps rendering everything else.
      */
     suspend fun getInvites(userWalletId: UserWalletId, cryptoAccountId: String): List<String>
+
+    /** The invites of [cryptoAccountId] already shared from this device. Never fails: an unreadable store is empty. */
+    fun getSharedInvites(userWalletId: UserWalletId, cryptoAccountId: String): Flow<Set<String>>
+
+    /** Records that [inviteId] was shared. Never throws: a failed write is only logged, the slot stays not invited. */
+    suspend fun markInviteShared(userWalletId: UserWalletId, cryptoAccountId: String, inviteId: String)
 
     /**
      * Registers a [safeTx] for collective signing, [signature] counting as the initiator's first one.
@@ -120,13 +129,16 @@ interface JointAccountRepository {
      * A 404 (the operation finished or was removed while the sheet was open) comes back as
      * [JointOperationSignError.OperationNotFound], a 409 (the threshold is already reached) as
      * [JointOperationSignError.ThresholdReached]. The function never throws.
+     *
+     * Returns the operation as the backend reports it right after counting the signature, `null` when that answer
+     * could not be read — the signature is accepted either way.
      */
     suspend fun signOperation(
         userWalletId: UserWalletId,
         operationId: String,
         safeTx: SafeTx,
         signature: String,
-    ): Either<JointOperationSignError, Unit>
+    ): Either<JointOperationSignError, JointOperation?>
 
     /** Cancels the operation when the caller is its initiator, records a decline otherwise */
     suspend fun rejectOperation(

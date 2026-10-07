@@ -7,6 +7,11 @@ pluginManagement {
     }
 
     includeBuild("plugins/configuration")
+    includeBuild("plugins/settings")
+}
+
+plugins {
+    id("meawallet-sdk")
 }
 
 val properties = java.util.Properties()
@@ -199,6 +204,7 @@ if (properties.getProperty("usedesk.local").toBoolean()) {
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":app")
+include(":benchmark")
 include(":plugins:detekt-rules")
 
 include(":test:core")
@@ -245,6 +251,9 @@ include(":libs:tangem-sdk-api")
 
 // region Spend modules
 include(":spend:datasource")
+include(":spend:push-provisioning:api")
+include(":spend:push-provisioning:mock")
+include(":spend:push-provisioning:no-op")
 // endregion Spend modules
 
 // region Store modules
@@ -439,6 +448,9 @@ include(":features:for-you:impl")
 
 include(":features:collectibles:api")
 include(":features:collectibles:impl")
+
+include(":features:mcp:api")
+include(":features:mcp:impl")
 // endregion Feature modules
 
 // region Domain modules
@@ -532,6 +544,8 @@ include(":domain:news")
 include(":domain:earn")
 include(":domain:search")
 include(":domain:feed:search")
+include(":domain:mcp")
+include(":domain:mcp:models")
 // endregion Domain modules
 
 // region Data modules
@@ -571,6 +585,7 @@ include(":data:hot-wallet")
 include(":data:cloud-backup")
 include(":data:social-login")
 include(":data:onramp")
+include(":data:offramp")
 include(":data:quotes")
 include(":data:notifications")
 include(":data:blockaid")
@@ -586,4 +601,5 @@ include(":data:search")
 include(":data:joint-account")
 include(":data:feed:search")
 include(":data:collectibles")
+include(":data:mcp")
 // endregion Data modules

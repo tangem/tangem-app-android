@@ -23,7 +23,7 @@ internal class BankOfframpOrderRequestConverterTest {
     @Test
     fun `GIVEN saved recipient WHEN convert THEN only the bank account id sent`() {
         // Act
-        val actual = BankOfframpOrderRequestConverter.convert(
+        val actual = convert(
             request = orderRequest(recipient = BankOfframpRecipient.Saved(bankAccountId = "acc-1")),
             idempotencyKey = KEY,
         )
@@ -45,7 +45,7 @@ internal class BankOfframpOrderRequestConverterTest {
     @Test
     fun `GIVEN new individual recipient WHEN convert THEN the full details sent with the selected rail`() {
         // Act
-        val actual = BankOfframpOrderRequestConverter.convert(
+        val actual = convert(
             request = orderRequest(recipient = BankOfframpRecipient.New(details = details())),
             idempotencyKey = KEY,
         )
@@ -98,7 +98,7 @@ internal class BankOfframpOrderRequestConverterTest {
     @Test
     fun `GIVEN business recipient WHEN convert THEN business beneficiary sent without personal names`() {
         // Act
-        val actual = BankOfframpOrderRequestConverter.convert(
+        val actual = convert(
             request = orderRequest(
                 recipient = BankOfframpRecipient.New(
                     details = details(beneficiary = Beneficiary.Business(name = "Tangem AG")),
@@ -117,7 +117,7 @@ internal class BankOfframpOrderRequestConverterTest {
     @Test
     fun `GIVEN the recipient rail differs from the route WHEN convert THEN the route rail sent`() {
         // Act
-        val actual = BankOfframpOrderRequestConverter.convert(
+        val actual = convert(
             request = orderRequest(
                 rail = BankRail.ACH,
                 recipient = BankOfframpRecipient.New(details = details(rail = BankRail.WIRE)),
@@ -133,7 +133,7 @@ internal class BankOfframpOrderRequestConverterTest {
     @ProvideTestModels
     fun `GIVEN a new recipient missing a required field WHEN convert THEN validation error`(model: IncompleteModel) {
         // Act
-        val actual = BankOfframpOrderRequestConverter.convert(
+        val actual = convert(
             request = orderRequest(recipient = BankOfframpRecipient.New(details = model.details)),
             idempotencyKey = KEY,
         )
@@ -153,6 +153,11 @@ internal class BankOfframpOrderRequestConverterTest {
         IncompleteModel("no account type", details().copy(accountType = null)),
     )
 
+    private fun convert(request: BankOfframpOrderRequest, idempotencyKey: String) =
+        BankOfframpOrderRequestConverter.convert(
+            BankOfframpOrderRequestConverter.Input(request = request, idempotencyKey = idempotencyKey),
+        )
+
     private fun orderRequest(
         recipient: BankOfframpRecipient,
         rail: BankRail = BankRail.WIRE,
@@ -160,6 +165,7 @@ internal class BankOfframpOrderRequestConverterTest {
         amountInCents = 10_000L,
         chainId = 137L,
         tokenContractAddress = TOKEN_ADDRESS,
+        tokenDecimals = 6,
         rail = rail,
         recipient = recipient,
     )
