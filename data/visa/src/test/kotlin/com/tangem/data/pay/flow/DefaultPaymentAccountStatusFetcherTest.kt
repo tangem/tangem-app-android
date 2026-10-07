@@ -108,6 +108,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         adminCardLimit = null,
         status = CustomerInfo.ProductInstance.Status.ACTIVE,
         specificationDataType = CustomerInfo.ProductInstance.SpecificationDataType.CARD,
+        paymentAccountType = CustomerInfo.ProductInstance.PaymentAccountType.COLLATERAL_CARD,
     )
 
     private val accountProductInstance = CustomerInfo.ProductInstance(
@@ -119,6 +120,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         adminCardLimit = null,
         status = CustomerInfo.ProductInstance.Status.ACTIVE,
         specificationDataType = CustomerInfo.ProductInstance.SpecificationDataType.ACCOUNT,
+        paymentAccountType = CustomerInfo.ProductInstance.PaymentAccountType.COLLATERAL_CARD,
     )
 
     private val cardInfo = createCardInfo()
