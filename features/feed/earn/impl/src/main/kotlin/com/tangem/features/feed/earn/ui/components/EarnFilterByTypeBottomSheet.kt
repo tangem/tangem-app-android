@@ -32,7 +32,6 @@ internal fun EarnFilterByTypeBottomSheet(config: TangemBottomSheetConfig) {
         title = {
             TangemModal.TopNavigation(
                 title = resourceReference(R.string.common_type),
-                onClose = config.onDismissRequest,
             )
         },
         content = { Content(it) },

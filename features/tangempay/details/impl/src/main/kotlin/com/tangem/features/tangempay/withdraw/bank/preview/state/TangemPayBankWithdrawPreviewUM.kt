@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.withdraw.bank.preview.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderUM
@@ -31,6 +32,7 @@ internal sealed interface TangemPayBankWithdrawPreviewUM {
     @Immutable
     data class Failed(
         val title: TextReference,
+        val icon: TangemStatusIcon.Kind,
         val onCloseClick: () -> Unit,
         val onRetryClick: (() -> Unit)?,
     ) : TangemPayBankWithdrawPreviewUM {

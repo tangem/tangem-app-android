@@ -31,7 +31,7 @@ internal class OrderRequestConverterTest {
         val actual = convert(model.request)
 
         // Assert
-        assertThat(actual).isEqualTo(OrderRequest(data = model.expected, idempotencyKey = IDEMPOTENCY_KEY).right())
+        assertThat(actual).isEqualTo(OrderRequest(data = model.expected).right())
     }
 
     @ParameterizedTest
@@ -92,11 +92,7 @@ internal class OrderRequestConverterTest {
     }
 
     private fun convert(request: CustomerOrderRequest) = OrderRequestConverter.convert(
-        OrderRequestConverter.Input(
-            customerWalletAddress = WALLET,
-            request = request,
-            idempotencyKey = IDEMPOTENCY_KEY,
-        ),
+        OrderRequestConverter.Input(customerWalletAddress = WALLET, request = request),
     )
 
     private fun provideTestModels() = listOf(
@@ -234,6 +230,5 @@ internal class OrderRequestConverterTest {
         const val LAST_FOUR_DIGITS = "8252"
         const val TARGET_PLAN = "plan-plus"
         const val CHAIN_ID = 137
-        const val IDEMPOTENCY_KEY = "6f1c9e2a-0b3d-4c5e-8a7b-9d0e1f2a3b4c"
     }
 }
