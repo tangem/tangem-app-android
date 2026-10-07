@@ -12,8 +12,6 @@ internal class IntroductionLegalLinks @Inject constructor(
 
     fun openTermsOfService() = open(IntroductionProcess.LegalOpened.Document.TermsOfService, TERMS_OF_SERVICE_URL)
 
-    fun openPrivacyPolicy() = open(IntroductionProcess.LegalOpened.Document.PrivacyPolicy, PRIVACY_POLICY_URL)
-
     private fun open(document: IntroductionProcess.LegalOpened.Document, url: String) {
         analyticsEventHandler.send(IntroductionProcess.LegalOpened(document))
         urlOpener.openUrl(url)
@@ -21,6 +19,5 @@ internal class IntroductionLegalLinks @Inject constructor(
 
     private companion object {
         const val TERMS_OF_SERVICE_URL = "https://tangem.com/tangem_tos.html"
-        const val PRIVACY_POLICY_URL = "https://tangem.com/privacy-policy.html"
     }
 }

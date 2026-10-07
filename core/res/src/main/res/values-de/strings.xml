@@ -394,6 +394,7 @@
     <item quantity="other">%d Vermögenswerte</item>
   </plurals>
   <string name="common_attention">Achtung</string>
+  <string name="common_auto">Auto</string>
   <string name="common_available_networks">Verfügbare Netzwerke</string>
   <string name="common_backup">Sicherungskopie</string>
   <string name="common_backup_error">Sicherungsfehler</string>
@@ -444,6 +445,7 @@
     <item quantity="other">%d Tage zuvor</item>
   </plurals>
   <string name="common_decline">Abgelehnt</string>
+  <string name="common_default">Standard</string>
   <string name="common_delete">Entfernen</string>
   <string name="common_disable">Deaktivieren</string>
   <string name="common_disabled">Deaktiviert</string>
@@ -601,6 +603,7 @@
   <string name="common_sign">Signieren</string>
   <string name="common_sign_and_send">Signieren und senden</string>
   <string name="common_skip">Überspringen</string>
+  <string name="common_slippage">Slippage</string>
   <string name="common_something_went_wrong">Etwas ist schiefgelaufen.</string>
   <string name="common_stake">Staken</string>
   <string name="common_staked">Einsatz</string>
@@ -1183,6 +1186,7 @@
   <string name="joint_account_invite_members_title">Einladen</string>
   <string name="joint_account_invite_members_to_join">Lade Mitglieder ein, beizutreten</string>
   <string name="joint_account_invite_members_waiting_title">Warten auf Mitglieder</string>
+  <string name="joint_account_invite_share_title">Einladung zu %s</string>
   <string name="joint_account_join_confirm_sheet_subtitle">Alle Kontoinhaber teilen sich ein gemeinsames Guthaben. Jedes Mitglied kann das Guthaben jederzeit ausgeben oder abheben – auch ohne Ihre Zustimmung</string>
   <string name="joint_account_join_confirm_sheet_title">Sie treten einem gemeinsam genutzten Konto bei</string>
   <string name="joint_account_join_invalid_link_subtitle">Überprüfen Sie, ob Sie den vollständigen Link geöffnet haben, oder bitten Sie den Kontoinhaber, ihn erneut zu senden.</string>
@@ -2483,7 +2487,10 @@
   <string name="support_selector_view_chat_button">Chat öffnen</string>
   <string name="support_selector_view_email_button">Mail öffnen</string>
   <string name="swap_approve_description">Durch die Genehmigung erlaubst Du dem Smart Contract, Deine Token in zukünftigen Transaktionen zu verwenden.</string>
+  <string name="swap_custom_slippage_info">Der Slippage lässt sich bei diesem Anbieter nicht individuell anpassen und kann in seltenen Fällen bis zu %s betragen.</string>
   <string name="swap_detailed_mode">Detaillierter Modus</string>
+  <string name="swap_exchange_rates_info_text">Die angezeigten Beträge beinhalten die Gebühr des Dienstanbieters.</string>
+  <string name="swap_exchange_rates_info_title">Wechselkurse</string>
   <string name="swap_fixed_rate">Fester Zinssatz</string>
   <string name="swap_give_permission_fee_footer">Das Netzwerk erhebt eine Token-Genehmigungsgebühr, um zu überprüfen, ob Sie die Verwendung Ihres Tokens für den Swap genehmigen.</string>
   <string name="swap_in_progress">Tausch läuft</string>
@@ -2493,6 +2500,10 @@
   <string name="swap_search_tooltip_description">Suche nach einem beliebigen Token, auch wenn es noch nicht in deiner Liste ist.</string>
   <string name="swap_search_tooltip_title">Nutzen Sie die Suche, um zu finden, was Sie benötigen.</string>
   <string name="swap_simple_mode">Einfacher Modus</string>
+  <string name="swap_slippage_error">Nicht unterstützter Betrag</string>
+  <string name="swap_slippage_info_text">ist die Differenz zwischen dem erwarteten und dem tatsächlichen Ausführungskurs, die durch Marktpreis- oder Liquiditätsänderungen verursacht wird</string>
+  <string name="swap_slippage_warning_text">Der Swap kann fehlschlagen, wenn der Slippage-Grenzwert erreicht wird</string>
+  <string name="swap_slippage_warning_title">Die Slippage ist festgelegt %s</string>
   <string name="swap_story_fifth_subtitle">Vertraue auf den rund um die Uhr verfügbaren Support bei allen Problemen</string>
   <string name="swap_story_fifth_title">Immer für Dich da</string>
   <string name="swap_story_first_subtitle">Mehrere vertrauenswürdige Anbieter an einem Ort – tausche mühelos alle Vermögenswerte in Deiner Wallet</string>
@@ -2604,6 +2615,9 @@
   <string name="tangempay_account_deactivated_message_subtitle">Bei Fragen zu Ihrem Konto, Ihren Daten oder Ihrem Transaktionsverlauf wenden Sie sich bitte an den Support</string>
   <string name="tangempay_account_deactivated_message_title">Ihr Konto wurde geschlossen</string>
   <string name="tangempay_account_unable_to_use_rooted">Auf gerooteten Geräten nicht nutzbar.</string>
+  <string name="tangempay_action_required_description">Um fortzufahren, benötigen wir noch ein paar weitere Angaben von Ihnen. Das dauert in der Regel ein paar Minuten.</string>
+  <string name="tangempay_action_required_primary_btn">Fortsetzung der Überprüfung</string>
+  <string name="tangempay_action_required_title">Handlungsbedarf erforderlich</string>
   <string name="tangempay_available_balance">Verfügbares Guthaben</string>
   <string name="tangempay_bank_transfer_creating_description">Dauert in der Regel bis zu 5 Minuten. In seltenen Fällen bis zu 48 Stunden</string>
   <string name="tangempay_bank_transfer_creating_title">Bankverbindung anlegen</string>
