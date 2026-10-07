@@ -525,6 +525,33 @@ internal class DefaultSocketChannelTest {
     }
 
     @Test
+    fun `GIVEN reconnect trigger already advanced WHEN collector returns before idle timeout THEN connection is kept`() =
+        runTest {
+            // Arrange
+            val account = MutableStateFlow("first")
+            val channel = createChannel(SocketSpec(url = URL, idleTimeout = 5.seconds, reconnectOn = account))
+            val first = launch { channel.receive(PriceDto.serializer()).collect {} }
+            runCurrent()
+            transport.connections.single().serverOpens()
+            runCurrent()
+            account.value = "second"
+            runCurrent()
+            transport.connections.last().serverOpens()
+            runCurrent()
+
+            // Act
+            first.cancel()
+            advanceTimeBy(3.seconds)
+            collect(channel)
+            advanceTimeBy(5.seconds)
+
+            // Assert
+            assertThat(transport.connections).hasSize(2)
+            assertThat(transport.connections.last().closedByClient).isFalse()
+            assertThat(channel.state.value).isEqualTo(SocketState.Connected)
+        }
+
+    @Test
     fun `GIVEN backoff returning a negative delay WHEN server closes THEN no tight reconnect loop starts`() = runTest {
         // Arrange
         val channel = createChannel(SocketSpec(url = URL, backoff = { (-1).seconds }))

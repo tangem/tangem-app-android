@@ -151,6 +151,7 @@ internal class DefaultSocketChannel(
             if (!hasCollectors) delay(spec.idleTimeout)
             emit(hasCollectors)
         }
+        .distinctUntilChanged()
 
     private fun reconnectGeneration(): Flow<Int> = (spec.reconnectOn ?: flowOf(Unit))
         .withIndex()

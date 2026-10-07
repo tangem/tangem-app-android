@@ -57,18 +57,19 @@ internal class AndroidSocketEnvironment @Inject constructor(
 
         return callbackFlow {
             val callback = object : ConnectivityManager.NetworkCallback() {
-                private var isBlocked = false
+                private val blockedNetworks = mutableSetOf<Network>()
 
                 override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) {
-                    trySend(networkId(network, capabilities, isBlocked))
+                    trySend(networkId(network, capabilities, isBlocked = network in blockedNetworks))
                 }
 
                 override fun onBlockedStatusChanged(network: Network, blocked: Boolean) {
-                    isBlocked = blocked
+                    if (blocked) blockedNetworks += network else blockedNetworks -= network
                     trySend(networkId(network, connectivityManager.capabilitiesOrNull(network), blocked))
                 }
 
                 override fun onLost(network: Network) {
+                    blockedNetworks -= network
                     trySend(connectivityManager.activeNetworkId().takeUnless { it == network.toString() })
                 }
             }
