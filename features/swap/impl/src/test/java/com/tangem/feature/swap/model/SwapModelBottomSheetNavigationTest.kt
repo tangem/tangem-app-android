@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.model
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.feature.swap.component.slippage.SwapSlippageComponent
 import com.tangem.features.approval.api.GiveApprovalComponent
 import com.tangem.features.approval.api.SelectApprovalTypeComponent
 import io.mockk.mockk
@@ -17,6 +18,7 @@ internal class SwapModelBottomSheetNavigationTest : SwapModelTestBase() {
         params = mockk<SelectApprovalTypeComponent.Params>(),
     )
     private val giveApprovalRoute = SwapBottomSheetRoute.GiveApproval(params = mockk<GiveApprovalComponent.Params>())
+    private val slippageRoute = SwapBottomSheetRoute.Slippage(params = mockk<SwapSlippageComponent.Params>())
 
     @BeforeEach
     fun setUp() {
@@ -50,6 +52,21 @@ internal class SwapModelBottomSheetNavigationTest : SwapModelTestBase() {
 
         // Assert
         assertThat(glass.results).containsExactly(giveApprovalRoute)
+        assertThat(flat.results).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN no sheet shown WHEN slippage opened THEN glass slot activated and flat untouched`() {
+        // Arrange
+        val model = createModel()
+        val flat = SlotTracker(model.flatSheetSlotNavigation)
+        val glass = SlotTracker(model.glassSheetSlotNavigation)
+
+        // Act
+        model.openBottomSheet(slippageRoute)
+
+        // Assert
+        assertThat(glass.results).containsExactly(slippageRoute)
         assertThat(flat.results).isEmpty()
     }
 
