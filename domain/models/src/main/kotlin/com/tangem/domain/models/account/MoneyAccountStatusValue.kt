@@ -32,24 +32,6 @@ sealed class MoneyAccountStatusValue {
             )
         }
 
-    fun copySealed(source: StatusSource): MoneyAccountStatusValue {
-        return when (this) {
-            is Onboarding.Issuing -> copy(source = source)
-            is Onboarding.KycRequired -> copy(source = source)
-            is Onboarding.UnderReview -> copy(source = source)
-            is Onboarding.VerificationDeclined -> copy(source = source)
-            is Onboarding.Activating -> copy(source = source)
-            is Account.Active -> copy(source = source)
-            is Account.Deactivated -> copy(source = source)
-            is Loading,
-            is Empty,
-            is NotCreated,
-            is Onboarding.CountryNotSupported,
-            is Error,
-            -> this
-        }
-    }
-
     @Serializable
     data object Empty : MoneyAccountStatusValue() {
         override val source: StatusSource = StatusSource.ACTUAL
@@ -71,13 +53,13 @@ sealed class MoneyAccountStatusValue {
     @Serializable
     sealed class Onboarding : MoneyAccountStatusValue() {
 
-        abstract val customerId: String?
+        abstract val customerId: String
 
         @Serializable
         data class Issuing(
             @SerialName("source") override val source: StatusSource,
             @SerialName("balance") override val balance: Balance?,
-            @SerialName("customer_id") override val customerId: String?,
+            @SerialName("customer_id") override val customerId: String,
             @SerialName("step") val step: IssuingStep,
         ) : Onboarding()
 
@@ -85,7 +67,7 @@ sealed class MoneyAccountStatusValue {
         data class KycRequired(
             @SerialName("source") override val source: StatusSource,
             @SerialName("balance") override val balance: Balance?,
-            @SerialName("customer_id") override val customerId: String?,
+            @SerialName("customer_id") override val customerId: String,
         ) : Onboarding()
 
         @Serializable
@@ -105,18 +87,17 @@ sealed class MoneyAccountStatusValue {
 
         @Serializable
         data class CountryNotSupported(
-            val countryCode: String?,
-        ) : Onboarding() {
-            override val source: StatusSource = StatusSource.ACTUAL
-            override val balance: Balance? = null
-            override val customerId: String? = null
-        }
+            @SerialName("source") override val source: StatusSource,
+            @SerialName("customer_id") override val customerId: String,
+            @SerialName("balance") override val balance: Balance?,
+            @SerialName("countryCode") val countryCode: String?,
+        ) : Onboarding()
 
         @Serializable
         data class Activating(
             @SerialName("source") override val source: StatusSource,
             @SerialName("balance") override val balance: Balance?,
-            @SerialName("customer_id") override val customerId: String?,
+            @SerialName("customer_id") override val customerId: String,
         ) : Onboarding()
     }
 

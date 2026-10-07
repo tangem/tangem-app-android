@@ -19,6 +19,7 @@ import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -36,12 +37,14 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     private val moneyAccountStatusesStore: MoneyAccountStatusesStore = mockk(relaxed = true)
     private val orderRepository: MoneyAccountOrderRepository = mockk()
     private val onboardingRepository: OnboardingRepository = mockk()
+    private val deviceSecurity: DeviceSecurityInfoProvider = mockk(relaxed = true)
 
     private val fetcher = DefaultMoneyAccountStatusFetcher(
         moneyAccountStatusesStore = moneyAccountStatusesStore,
         orderRepository = orderRepository,
         onboardingRepository = onboardingRepository,
         dispatchers = TestingCoroutineDispatcherProvider(),
+        deviceSecurity = deviceSecurity,
     )
 
     @BeforeEach
@@ -59,6 +62,21 @@ internal class DefaultMoneyAccountStatusFetcherTest {
 
         // Assert
         verifyStored(MoneyAccountStatusValue.NotCreated)
+    }
+
+    @Test
+    fun `GIVEN former customer without account WHEN invoke THEN empty is stored`() = runTest {
+        // Arrange
+        coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo(
+            state = CustomerInfo.State.FORMER,
+        ).right()
+        every { orderRepository.getOrder(USER_WALLET_ID) } returns createOrder()
+
+        // Act
+        fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
+
+        // Assert
+        verifyStored(MoneyAccountStatusValue.Empty)
     }
 
     @Test
@@ -289,13 +307,14 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     private fun createCustomerInfo(
         kycStatus: KycStatus = KycStatus.APPROVED,
         accountStatus: CustomerInfo.ProductInstance.Status? = null,
+        state: CustomerInfo.State = CustomerInfo.State.ACTIVE,
     ) = CustomerInfo(
         customerId = CUSTOMER_ID,
         paymentAccount = null,
         productInstances = listOfNotNull(accountStatus?.let(::createAccountInstance)),
         cards = emptyList(),
         kycStatus = kycStatus,
-        state = CustomerInfo.State.ACTIVE,
+        state = state,
         fiatBalance = null,
         tariffPlan = null,
     )
@@ -309,6 +328,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         adminCardLimit = null,
         status = status,
         specificationDataType = CustomerInfo.ProductInstance.SpecificationDataType.ACCOUNT,
+        paymentAccountType = CustomerInfo.ProductInstance.PaymentAccountType.COLLATERAL_BANKING_ACCOUNT,
     )
 
     private companion object {

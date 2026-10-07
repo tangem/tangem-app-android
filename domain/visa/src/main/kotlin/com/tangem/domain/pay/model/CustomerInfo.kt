@@ -25,7 +25,7 @@ data class MainScreenCustomerInfo(
 )
 
 data class CustomerInfo(
-    val customerId: String?,
+    val customerId: String,
     val paymentAccount: PaymentAccount?,
     val productInstances: List<ProductInstance>,
     val cards: List<CardInfo>,
@@ -46,11 +46,10 @@ data class CustomerInfo(
     /** Transitional single-card accessor — returns the first card, or null if none. */
     val cardInfo: CardInfo? get() = cards.firstOrNull()
 
-    // TODO v_rodionov: [REDACTED_TASK_KEY] ACCOUNT is for MVP0, for MONEY ACCOUNT there should be a new type.
-    //  Define it on  backend first
-    val accountProductInstance: ProductInstance?
+    val moneyAccountProductInstance: ProductInstance?
         get() = productInstances.firstOrNull {
-            it.specificationDataType == ProductInstance.SpecificationDataType.ACCOUNT
+            it.specificationDataType == ProductInstance.SpecificationDataType.ACCOUNT &&
+                it.paymentAccountType == ProductInstance.PaymentAccountType.COLLATERAL_BANKING_ACCOUNT
         }
 
     /** Card-level product instances only (excludes the VA ACCOUNT instance). */
@@ -119,6 +118,7 @@ data class CustomerInfo(
         val adminCardLimit: TangemPayCardLimit?,
         val status: Status,
         val specificationDataType: SpecificationDataType,
+        val paymentAccountType: PaymentAccountType,
     ) {
         enum class Status {
             NEW,
@@ -135,14 +135,25 @@ data class CustomerInfo(
             UNKNOWN,
         }
 
-        /**
-         * `ACCOUNT` marks a Virtual Account instance (vs. a `CARD`); used by VA MVP0 (TWI-1638). `UNKNOWN` is a
-         * type this app version does not know: such an instance is neither an account nor a card and is ignored.
-         */
         enum class SpecificationDataType {
             ACCOUNT,
             CARD,
             UNKNOWN,
+        }
+
+        enum class PaymentAccountType {
+            COLLATERAL_CARD,
+            COLLATERAL_BANKING_ACCOUNT,
+            UNKNOWN,
+            ;
+
+            companion object {
+                fun fromString(value: String?) = when (value?.uppercase(Locale.US)) {
+                    "COLLATERAL_CARD" -> COLLATERAL_CARD
+                    "COLLATERAL_BANKING_ACCOUNT" -> COLLATERAL_BANKING_ACCOUNT
+                    else -> UNKNOWN
+                }
+            }
         }
     }
 
