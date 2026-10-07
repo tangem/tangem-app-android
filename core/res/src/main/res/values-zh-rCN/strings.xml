@@ -1027,6 +1027,7 @@
   <string name="joint_account_invite_load_failed_subtitle">无法加载邀请页面。\n点击重新加载</string>
   <string name="joint_account_invite_members_creator">创建者</string>
   <string name="joint_account_invite_members_invite">邀请</string>
+  <string name="joint_account_invite_members_invited">已邀请</string>
   <string name="joint_account_invite_members_member">成员</string>
   <string name="joint_account_invite_members_member_info">成员信息</string>
   <string name="joint_account_invite_members_new_member">新成员</string>
@@ -1045,6 +1046,7 @@
   <string name="joint_account_invite_members_title">邀请成员</string>
   <string name="joint_account_invite_members_to_join">邀请成员加入</string>
   <string name="joint_account_invite_members_waiting_title">等待成员</string>
+  <string name="joint_account_invite_share_title">邀请参加 %s</string>
   <string name="joint_account_join_confirm_sheet_subtitle">该账户中的所有成员共用一个余额。其他成员在收集到足够签名后，无需您的批准即可调拨资金。</string>
   <string name="joint_account_join_confirm_sheet_title">您正在加入一个共享帐户</string>
   <string name="joint_account_join_invalid_link_subtitle">请确认您打开的是正确的链接，或者请账号创建者重新发送一次</string>
@@ -1099,6 +1101,9 @@
   <string name="joint_account_send_sends_automatically_setup_fee">收集完成后自动发送。首次发送包含一次性设置费。</string>
   <string name="joint_account_send_setup_fee_note">%1$s上的首笔交易。该手续费包含一次 %2$s ，用于在链上开设联名账户。</string>
   <string name="joint_account_send_signatures_required"> 需要 %2$s 中的%1$s个签名</string>
+  <plurals name="joint_account_send_signatures_required_banner">
+    <item quantity="other">需要%1$d签名</item>
+  </plurals>
   <string name="joint_account_send_slot_busy_subtitle">该网络上已有正在进行的签名收集活动。请等待该活动结束，再创建新的活动</string>
   <string name="joint_account_send_slot_busy_title">操作正在进行中</string>
   <string name="joint_account_settings_networks_info">该账户仅在受支持的网络中有效。</string>
