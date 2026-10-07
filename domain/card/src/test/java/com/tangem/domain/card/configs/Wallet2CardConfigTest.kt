@@ -188,6 +188,8 @@ class Wallet2CardConfigTest {
         Blockchain.ElectroneumTestnet to EllipticCurve.Secp256k1,
         Blockchain.Arc to EllipticCurve.Secp256k1,
         Blockchain.ArcTestnet to EllipticCurve.Secp256k1,
+        Blockchain.Onyx to EllipticCurve.Secp256k1,
+        Blockchain.OnyxTestnet to EllipticCurve.Secp256k1,
     )
 
     @Test
