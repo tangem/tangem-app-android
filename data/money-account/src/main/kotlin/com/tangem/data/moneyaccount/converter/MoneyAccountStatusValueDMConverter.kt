@@ -21,6 +21,8 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
             is MoneyAccountStatusValue.Onboarding.CountryNotSupported -> {
                 MoneyAccountStatusValueDM.CountryNotSupported(
                     countryCode = value.countryCode,
+                    customerId = value.customerId,
+                    balance = value.balance?.toDM(),
                 )
             }
             is MoneyAccountStatusValue.Onboarding.Issuing -> MoneyAccountStatusValueDM.Issuing(
@@ -70,6 +72,9 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
             is MoneyAccountStatusValueDM.Empty -> MoneyAccountStatusValue.Empty
             is MoneyAccountStatusValueDM.NotCreated -> MoneyAccountStatusValue.NotCreated
             is MoneyAccountStatusValueDM.CountryNotSupported -> MoneyAccountStatusValue.Onboarding.CountryNotSupported(
+                source = StatusSource.CACHE,
+                customerId = value.customerId,
+                balance = value.balance?.toDomain(userWalletId),
                 countryCode = value.countryCode,
             )
             is MoneyAccountStatusValueDM.Issuing -> MoneyAccountStatusValue.Onboarding.Issuing(

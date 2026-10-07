@@ -175,6 +175,7 @@ internal class RestoreMoneyAccountOrderUseCaseTest {
         adminCardLimit = null,
         status = status,
         specificationDataType = CustomerInfo.ProductInstance.SpecificationDataType.ACCOUNT,
+        paymentAccountType = CustomerInfo.ProductInstance.PaymentAccountType.COLLATERAL_BANKING_ACCOUNT,
     )
 
     private companion object {
