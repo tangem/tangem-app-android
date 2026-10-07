@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionsBlockState
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.SpacerW
@@ -64,10 +66,15 @@ import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.txhistory.PreviewTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.txhistory.TangemPayTxHistoryComponent
 import com.tangem.features.tangempay.txhistory.TangemPayTxHistoryUM
+import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import com.tangem.core.ui.R as CoreUiR
 
 private val InitialTopBarHeight: Dp = 64.dp
@@ -79,6 +86,7 @@ private const val TOP_FADE_MID_ALPHA = 0.8f
 internal fun TangemPayDetailsScreen(
     state: TangemPayDetailsUM,
     txHistoryComponent: TangemPayTxHistoryComponent,
+    expressTransactionsComponent: ExpressTransactionsComponent,
     promoBannersBlockComponent: ComposableContentComponent,
     modifier: Modifier = Modifier,
 ) {
@@ -90,6 +98,7 @@ internal fun TangemPayDetailsScreen(
     val rootBackground = TangemTheme.colors3.bg.primary
 
     val txHistoryState by txHistoryComponent.state.collectAsStateWithLifecycle()
+    val expressState by expressTransactionsComponent.state.collectAsStateWithLifecycle()
     val hazeState = rememberHazeState()
     val buttonsHazeState = rememberHazeState()
 
@@ -145,6 +154,15 @@ internal fun TangemPayDetailsScreen(
                             modifier = Modifier.padding(vertical = 12.dp),
                         )
                     }
+                    with(expressTransactionsComponent) {
+                        expressTransactionsContent(
+                            state = expressState.transactionsToDisplay,
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                                .padding(top = 12.dp)
+                                .fillMaxWidth(),
+                        )
+                    }
                     with(txHistoryComponent) { txHistoryContent(listState = listState, state = txHistoryState) }
                 }
             }
@@ -155,6 +173,8 @@ internal fun TangemPayDetailsScreen(
                     if (topBarTotalHeight != measuredHeight) topBarTotalHeight = measuredHeight
                 },
             )
+
+            expressState.bottomSheetSlot?.content(null)
         }
     }
 }
@@ -179,6 +199,16 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM, buttonsHazeS
             CompositionLocalProvider(LocalHazeState provides buttonsHazeState) {
                 ActionBlock(actionButtons = state.balanceBlockState.actionButtons)
             }
+        }
+    }
+
+    state.bankTransferOnrampBanner?.let { banner ->
+        item("bankTransferOnrampBannerBlock") {
+            SpacerH12()
+            MessageBanner(
+                banner = banner,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
         }
     }
 
@@ -514,6 +544,7 @@ private fun TangemPayDetailsScreenPreview(
             txHistoryComponent = PreviewTangemPayTxHistoryComponent(
                 txHistoryUM = PreviewTangemPayTxHistoryComponent.contentUM,
             ),
+            expressTransactionsComponent = PreviewExpressTransactionsComponent,
             promoBannersBlockComponent = ComposableContentComponent.EMPTY,
         )
     }
@@ -528,9 +559,25 @@ private fun TangemPayDetailsTxHistoryScreenPreview(
         TangemPayDetailsScreen(
             state = TangemPayDetailsUMProvider().values.first(),
             txHistoryComponent = PreviewTangemPayTxHistoryComponent(txHistoryUM = state),
+            expressTransactionsComponent = PreviewExpressTransactionsComponent,
             promoBannersBlockComponent = ComposableContentComponent.EMPTY,
         )
     }
+}
+
+private val PreviewExpressTransactionsComponent = object : ExpressTransactionsComponent {
+    override val state: StateFlow<ExpressTransactionsBlockState> = MutableStateFlow(
+        ExpressTransactionsBlockState(
+            transactions = persistentListOf(),
+            transactionsToDisplay = persistentListOf(),
+            bottomSheetSlot = null,
+        ),
+    )
+
+    override fun LazyListScope.expressTransactionsContent(
+        state: PersistentList<ExpressTransactionStateUM>,
+        modifier: Modifier,
+    ) = Unit
 }
 
 // end region preview

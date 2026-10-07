@@ -140,7 +140,7 @@ private fun SellAmountRow(amountValue: String, payout: BigDecimal?, collateral: 
             Text(
                 text = payout?.formatPolymarketMoney() ?: DASH_SIGN,
                 style = TangemTheme.typography3.heading.medium,
-                color = TangemTheme.colors3.text.status.success,
+                color = TangemTheme.colors3.text.primary,
             )
             Text(
                 text = stringResourceSafe(

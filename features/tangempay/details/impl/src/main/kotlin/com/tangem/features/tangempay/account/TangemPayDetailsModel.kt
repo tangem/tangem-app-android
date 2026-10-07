@@ -87,6 +87,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val getCashbackDeactivationDismissedUseCase: GetCashbackDeactivationDismissedUseCase,
     private val setCashbackDeactivationDismissedUseCase: SetCashbackDeactivationDismissedUseCase,
     private val findActiveBankOfframpOrderUseCase: FindActiveBankOfframpOrderUseCase,
+    private val dismissVirtualAccountOrderFailureUseCase: DismissVirtualAccountOrderFailureUseCase,
     tangemPayCurrencyFactory: TangemPayCurrencyFactory,
 ) : Model(),
     TangemPayTxHistoryUiActions,
@@ -108,6 +109,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         onBack = router::pop,
         onOpenMenu = ::onOpenMenu,
         intents = this,
+        isVisaOnrampV2Enabled = { tangemPayFeatureToggles.isVisaOnrampV2Enabled },
     )
 
     val uiState: StateFlow<TangemPayDetailsUM>
@@ -460,6 +462,10 @@ internal class TangemPayDetailsModel @Inject constructor(
         }
     }
 
+    override fun onBankTransferOnrampFailedBannerDismissed() {
+        modelScope.launch { dismissVirtualAccountOrderFailureUseCase(userWalletId) }
+    }
+
     override fun onCardIssueFailedSupportClick() {
         analytics.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.TangemPay))
         val customerId = currentStatus.value.customerId ?: return
@@ -516,6 +522,7 @@ internal class TangemPayDetailsModel @Inject constructor(
             VirtualAccountOnramp.Processing -> showVaPreparing()
             is VirtualAccountOnramp.Available,
             VirtualAccountOnramp.Eligible,
+            VirtualAccountOnramp.Failed,
             -> {
                 if (shouldSendClickAnalytics) analytics.send(TangemPayAnalyticsEvents.VaTopupButtonClicked())
                 openVirtualAccountDeposit(onramp, loaded)
@@ -526,14 +533,18 @@ internal class TangemPayDetailsModel @Inject constructor(
     private fun tryOpenBankTransferOnramp(): Boolean {
         if (!tangemPayFeatureToggles.isVisaOnrampV2Enabled) return false
         return when (val onramp = currentStatus.value.ifLoadedOrNull { it.virtualAccount }) {
+            null -> false
             is VirtualAccountOnramp.Available -> {
                 fetchVirtualAccountBankingDetails(onramp)
                 true
             }
             VirtualAccountOnramp.Eligible,
-            VirtualAccountOnramp.Processing,
-            null,
-            -> false
+            VirtualAccountOnramp.Failed,
+            -> {
+                router.push(TangemPayAccountDetailsInnerRoute.BankTransferOnrampOnboarding)
+                true
+            }
+            VirtualAccountOnramp.Processing -> true
         }
     }
 
@@ -542,7 +553,9 @@ internal class TangemPayDetailsModel @Inject constructor(
         when (val onramp = loaded.virtualAccount) {
             null -> return
             VirtualAccountOnramp.Processing -> showVaPreparing()
-            VirtualAccountOnramp.Eligible -> openVirtualAccountDeposit(onramp, loaded)
+            VirtualAccountOnramp.Eligible,
+            VirtualAccountOnramp.Failed,
+            -> openVirtualAccountDeposit(onramp, loaded)
             is VirtualAccountOnramp.Available -> fetchVirtualAccountBankingDetails(onramp)
         }
     }
