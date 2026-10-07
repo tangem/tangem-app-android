@@ -54,6 +54,7 @@ internal class CreateVirtualAccountOrderUseCaseTest {
 
         assertThat(result.isRight()).isTrue()
         coVerify(exactly = 1) { onboardingRepository.storeVirtualAccountOrderId(userWalletId, "new-id") }
+        coVerify(exactly = 1) { onboardingRepository.storeVirtualAccountOrderFailed(userWalletId, false) }
         coVerify(exactly = 1) { pollingUseCase.invoke(any(), userWalletId) }
         coVerify(exactly = 1) { paymentAccountStatusFetcher.markVirtualAccountProcessing(userWalletId) }
     }

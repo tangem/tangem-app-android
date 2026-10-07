@@ -34,4 +34,6 @@ data class ExchangeQuoteResponse(
     @property:Json(name = "isRestricted")
     val isRestricted: Boolean = false,
 
+    @Json(name = "slippage")
+    val slippage: BigDecimal? = null,
 )
