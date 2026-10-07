@@ -50,6 +50,16 @@ internal object SocketServiceGenerator {
                 ).initializer(CHANNEL).build(),
             )
 
+        model.methods.filterIsInstance<SocketMethod.Receive>().forEach { method ->
+            val decoded = method.decodeAs ?: method.type
+            builder.addProperty(
+                PropertySpec.builder(method.deserializerName(), SocketNames.kSerializer.parameterizedBy(decoded))
+                    .addModifiers(KModifier.PRIVATE)
+                    .initializer("%M<%T>()", SocketNames.serializer, decoded)
+                    .build(),
+            )
+        }
+
         model.methods.forEach { method ->
             val function = FunSpec.builder(method.name).addModifiers(KModifier.OVERRIDE)
             when (method) {
@@ -141,14 +151,15 @@ internal object SocketServiceGenerator {
     private fun SocketMethod.State.returnType() =
         (if (isStateFlow) SocketNames.stateFlow else SocketNames.flow).parameterizedBy(SocketNames.socketState)
 
+    private fun SocketMethod.Receive.deserializerName(): String = "${name}Deserializer"
+
     private fun SocketMethod.Receive.receiveStatement(): CodeBlock = if (decodeAs == null) {
-        CodeBlock.of("return %N.receive(%M<%T>())", CHANNEL, SocketNames.serializer, type)
+        CodeBlock.of("return %N.receive(%N)", CHANNEL, deserializerName())
     } else {
         CodeBlock.of(
-            "return %N.receive(%M<%T>()).%M<%T>()",
+            "return %N.receive(%N).%M<%T>()",
             CHANNEL,
-            SocketNames.serializer,
-            decodeAs,
+            deserializerName(),
             SocketNames.filterIsInstance,
             type,
         )
