@@ -17,8 +17,6 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.DsVersion
-import com.tangem.core.ui.ds2.animation.TangemTransition
-import com.tangem.core.ui.ds2.animation.WithoutMaterialWhileAnimating
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
