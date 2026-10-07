@@ -22,6 +22,7 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.decompose.ComposableDialogComponent
 import com.tangem.core.ui.utils.parseBigDecimal
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.feature.wallet.child.managetokens.AddAndManageBottomSheetComponent
 import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponent
@@ -49,6 +50,7 @@ import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockC
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
+import com.tangem.features.tangempay.eligibility.TangemPayWaitlistComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.moneyaccount.main.component.MoneyAccountMainBlockComponent
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
@@ -81,6 +83,7 @@ internal class WalletComponent @AssistedInject constructor(
     private val tokenActionsComponentFactory: TokenActionsComponent.Factory,
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
     private val manageFundsComponentFactory: ManageFundsComponent.Factory,
+    private val tangemPayWaitlistComponentFactory: TangemPayWaitlistComponent.Factory,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: WalletModel = getOrCreateModel()
@@ -207,6 +210,18 @@ internal class WalletComponent @AssistedInject constructor(
                             walletId = dialogConfig.walletId,
                             customerId = dialogConfig.customerId,
                             callbacks = model.tangemPayKycRejectedCallbacks,
+                            onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
+                        ),
+                    )
+                }
+                is WalletDialogConfig.TangemPayWaitlist -> {
+                    tangemPayWaitlistComponentFactory.create(
+                        context = childByContext(componentContext),
+                        params = TangemPayWaitlistComponent.Params(
+                            userWalletId = dialogConfig.userWalletId,
+                            product = TangemPayProduct.BANKING_ACCOUNT,
+                            countryCode = dialogConfig.countryCode,
+                            regionCode = null,
                             onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
                         ),
                     )
