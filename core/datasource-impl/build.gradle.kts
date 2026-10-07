@@ -67,6 +67,7 @@ dependencies {
 
     // region AndroidX
     implementation(deps.androidx.core)
+    implementation(deps.lifecycle.process)
     api(deps.androidx.datastore)
     // endregion
 
@@ -107,6 +108,7 @@ dependencies {
     implementation(projects.core.analytics.models)
     api(projects.core.utils)
     api(projects.core.remote)
+    api(projects.core.socket)
     // endregion
 
     // region Tests
