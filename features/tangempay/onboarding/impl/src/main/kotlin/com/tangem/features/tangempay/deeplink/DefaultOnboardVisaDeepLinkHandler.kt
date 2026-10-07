@@ -23,4 +23,9 @@ internal class DefaultOnboardVisaDeepLinkHandler @AssistedInject constructor(
     interface Factory : OnboardVisaDeepLinkHandler.Factory {
         override fun create(uri: Uri): DefaultOnboardVisaDeepLinkHandler
     }
+
+    companion object {
+        const val TANGEM_DEEPLINK_KEY = "tangem://onboard-visa"
+        const val HTTPS_DEEPLINK_KEY = "https://tangem.com/pay-app"
+    }
 }
