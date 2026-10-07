@@ -44,6 +44,7 @@ import com.tangem.features.yield.supply.impl.R
 import com.tangem.core.res.R as CoreResR
 import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
 import com.tangem.features.yield.supply.impl.active.entity.YieldSupplyActiveContentUM
+import com.tangem.features.yield.supply.impl.common.formatter.formatApy
 import com.tangem.features.yield.supply.impl.active.model.transformers.YieldSupplyActiveFeeContentTransformer
 import com.tangem.features.yield.supply.impl.active.model.transformers.YieldSupplyActiveMinAmountTransformer
 import com.tangem.features.yield.supply.impl.subcomponents.approve.YieldSupplyApproveComponent
@@ -128,6 +129,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
                 feeDescription = null,
                 isHighFee = false,
                 minFeeDescription = null,
+                onApyInfoClick = ::onApyInfoClick,
             ),
         )
 
@@ -198,6 +200,22 @@ internal class YieldSupplyActiveModel @Inject constructor(
 
     fun onStopEarning() {
         slotNavigation.activate(YieldSupplyActiveRoute.Exit)
+    }
+
+    /** Dismiss that skips the in-transaction guard of [onDismissClick] — the About APY sheet signs nothing. */
+    fun onAboutApyDismiss() {
+        slotNavigation.dismiss()
+    }
+
+    fun onClaimRewardsClick() {
+        // The claim sheet arrives with the claim part of the Merkl incentives series.
+    }
+
+    private fun onApyInfoClick() {
+        val breakdown = uiState.value.apyBreakdown ?: return
+        slotNavigation.activate(
+            YieldSupplyActiveRoute.AboutApy(baseApy = breakdown.baseApy, rewardsApr = breakdown.rewardsApr),
+        )
     }
 
     fun onReadMoreClick() {
@@ -317,13 +335,15 @@ internal class YieldSupplyActiveModel @Inject constructor(
             yieldSupplyGetTokenStatusUseCase(cryptoCurrencyToken).onRight { tokenStatus ->
                 uiState.update {
                     it.copy(
-                        apy = TextReference.Str("${tokenStatus.effectiveApy}%"),
+                        apy = TextReference.Str(tokenStatus.effectiveApy.formatApy()),
+                        apyBreakdown = resolveApyBreakdown(tokenStatus),
                     )
                 }
             }.onLeft {
                 uiState.update {
                     it.copy(
                         apy = TextReference.Str(DASH_SIGN),
+                        apyBreakdown = null,
                     )
                 }
                 TangemLogger.e("Error loading token status")
