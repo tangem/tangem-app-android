@@ -16,6 +16,7 @@ import com.tangem.core.navigation.notifications.SystemNotificationsStateProvider
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.status.polling.WalletAccountsPollingCoordinator
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
@@ -126,6 +127,7 @@ internal class WalletModel @Inject constructor(
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
     private val jointAccountPollingCoordinator: JointAccountPollingCoordinator,
+    private val walletAccountsPollingCoordinator: WalletAccountsPollingCoordinator,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val bindRefcodeWithWalletUseCase: BindRefcodeWithWalletUseCase,
     private val appsFlyerRepository: AppsFlyerRepository,
@@ -432,10 +434,11 @@ internal class WalletModel @Inject constructor(
 
     /**
      * The backend won't silent-push joint-account state changes (a slot filling, activation, an operation awaiting
-     * a co-signature), so while the main screen is in the foreground, the selected wallet's joint account gets a
-     * 60-second poll to keep it fresh — the current status can't tell us whether it's stale, so it isn't used to
-     * gate this. Only the selected wallet is polled, since it's the only one actually visible in the pager. The
-     * coordinator paces itself — this only decides which wallet (if any) to collect for.
+     * a co-signature, a token another member added), so while the main screen is in the foreground, the selected
+     * wallet's joint state gets a 5-second poll and its accounts document a 10-second one — the current status can't
+     * tell us whether it's stale, so it isn't used to gate this. Only the selected wallet is polled, since it's the
+     * only one actually visible in the pager. The coordinators pace themselves — this only decides which wallet (if
+     * any) to collect for.
      */
     private fun subscribeJointAccountPolling() {
         combine(
@@ -448,7 +451,10 @@ internal class WalletModel @Inject constructor(
             .distinctUntilChanged()
             .flatMapLatest { walletId ->
                 if (walletId != null) {
-                    jointAccountPollingCoordinator.poll(walletId)
+                    merge(
+                        jointAccountPollingCoordinator.poll(walletId),
+                        walletAccountsPollingCoordinator.poll(walletId),
+                    )
                 } else {
                     emptyFlow()
                 }

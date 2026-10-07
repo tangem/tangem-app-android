@@ -166,6 +166,19 @@ internal class DefaultTangemPayStorage @Inject constructor(
         appPreferencesStore.store(spendPreferencesKeys.getVirtualAccountOrderIdKey(customerWalletAddress), "")
     }
 
+    override suspend fun getVirtualAccountOrderFailed(customerWalletAddress: String): Boolean {
+        return appPreferencesStore.getSyncOrNull(
+            key = spendPreferencesKeys.getVirtualAccountOrderFailedKey(customerWalletAddress),
+        ) == true
+    }
+
+    override suspend fun storeVirtualAccountOrderFailed(customerWalletAddress: String, isFailed: Boolean) {
+        appPreferencesStore.store(
+            key = spendPreferencesKeys.getVirtualAccountOrderFailedKey(customerWalletAddress),
+            value = isFailed,
+        )
+    }
+
     override suspend fun storeCheckCustomerWalletResult(userWalletId: UserWalletId, isPaeraCustomer: Boolean) {
         appPreferencesStore.store(
             spendPreferencesKeys.getCheckCustomerByWalletId(userWalletId),
@@ -297,6 +310,7 @@ internal class DefaultTangemPayStorage @Inject constructor(
                 preferences.remove(spendPreferencesKeys.getOrderIdKey(customerWalletAddress))
                 preferences.remove(spendPreferencesKeys.getCampaignOrderKey(customerWalletAddress))
                 preferences.remove(spendPreferencesKeys.getVirtualAccountOrderIdKey(customerWalletAddress))
+                preferences.remove(spendPreferencesKeys.getVirtualAccountOrderFailedKey(customerWalletAddress))
                 preferences.remove(spendPreferencesKeys.getAddToWalletKey(customerWalletAddress))
                 preferences.remove(spendPreferencesKeys.getCashbackDeactivationDismissedKey(customerWalletAddress))
             }

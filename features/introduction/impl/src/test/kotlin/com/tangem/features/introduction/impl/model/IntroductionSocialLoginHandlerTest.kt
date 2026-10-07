@@ -27,7 +27,6 @@ import com.tangem.features.introduction.impl.analytics.SocialLoginAnalyticsEvent
 import com.tangem.features.introduction.impl.ui.state.SocialLoginConsentUM
 import com.tangem.features.introduction.impl.ui.state.SocialLoginProgressUM
 import com.tangem.test.core.ProvideTestModels
-import com.tangem.utils.coroutines.AppCoroutineScope
 import io.mockk.Called
 import io.mockk.Runs
 import io.mockk.every
@@ -50,7 +49,6 @@ internal class IntroductionSocialLoginHandlerTest {
 
     private val socialLoginUseCase: SocialLoginUseCase = mockk(relaxed = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk(relaxed = true)
-    private val appCoroutineScope: AppCoroutineScope = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val referral: IntroductionReferral = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
@@ -63,7 +61,6 @@ internal class IntroductionSocialLoginHandlerTest {
         getAvailableSocialLoginProvidersUseCase = getAvailableSocialLoginProvidersUseCase,
         socialLoginUseCase = socialLoginUseCase,
         userWalletsListRepository = userWalletsListRepository,
-        appCoroutineScope = appCoroutineScope,
         analyticsEventHandler = analyticsEventHandler,
         referral = referral,
         urlOpener = urlOpener,

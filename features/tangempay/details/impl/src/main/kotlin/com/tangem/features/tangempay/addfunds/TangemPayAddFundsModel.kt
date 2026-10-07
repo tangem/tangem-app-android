@@ -9,6 +9,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.ReceiveAddressModel
 import com.tangem.domain.models.ReceiveAddressModel.DisplayType
 import com.tangem.domain.models.account.VirtualAccountOnramp
+import com.tangem.domain.models.account.isOrderRequired
 import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
@@ -28,13 +29,13 @@ internal class TangemPayAddFundsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val analytics: AnalyticsEventHandler,
     private val router: Router,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
+    tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val getBankCredentialsUseCase: GetBankCredentialsUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayAddFundsComponent.Params>()
 
-    private val isBankTransferShown = params.virtualAccountOnramp != null
+    private val isVisaOnrampV2Enabled = tangemPayFeatureToggles.isVisaOnrampV2Enabled
 
     private val listener = object : AddFundsListener by params.listener {
         override fun onClickBankTransfer() = onBankTransferClick()
@@ -42,7 +43,8 @@ internal class TangemPayAddFundsModel @Inject constructor(
 
     private val converter = TangemPayAddFundsUMConverter(
         listener = listener,
-        shouldShowBankTransfer = isBankTransferShown,
+        virtualAccountOnramp = params.virtualAccountOnramp,
+        isVisaOnrampV2Enabled = isVisaOnrampV2Enabled,
     )
 
     private val topUpData = TangemPayTopUpData(
@@ -63,23 +65,24 @@ internal class TangemPayAddFundsModel @Inject constructor(
         field = MutableStateFlow(converter.convert(TangemPayAddFundsUMConverter.Input(data = topUpData)))
 
     init {
-        if (isBankTransferShown) {
+        if (params.virtualAccountOnramp != null) {
             analytics.send(TangemPayAnalyticsEvents.VaTopupButtonShowed())
         }
     }
 
     private fun onBankTransferClick() {
         val onramp = params.virtualAccountOnramp
-        if (!tangemPayFeatureToggles.isVisaOnrampV2Enabled || onramp == null) {
-            params.listener.onClickBankTransfer()
-            return
+        when {
+            !isVisaOnrampV2Enabled -> params.listener.onClickBankTransfer()
+            onramp is VirtualAccountOnramp.Available -> loadBankingDetails(onramp)
+            onramp.isOrderRequired -> openOnboarding()
         }
-        when (onramp) {
-            is VirtualAccountOnramp.Available -> loadBankingDetails(onramp)
-            VirtualAccountOnramp.Eligible,
-            VirtualAccountOnramp.Processing,
-            -> params.listener.onClickBankTransfer()
-        }
+    }
+
+    private fun openOnboarding() {
+        analytics.send(TangemPayAnalyticsEvents.VaTopupButtonClicked())
+        params.listener.onDismissAddFunds()
+        router.push(TangemPayAccountDetailsInnerRoute.BankTransferOnrampOnboarding)
     }
 
     private fun loadBankingDetails(onramp: VirtualAccountOnramp.Available) {
