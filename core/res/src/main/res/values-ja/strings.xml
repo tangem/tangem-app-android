@@ -234,6 +234,8 @@
   <string name="bitcoin_promo_no_address">ボーナスを受け取るにはビットコインアドレスが必要です。ウォレットにビットコインアドレスを追加し、再度アクティベーションをお試しください。</string>
   <string name="bitcoin_promo_no_address_title">ビットコインアドレスが必要です</string>
   <string name="button_start_backup_process">バックアップ処理を開始する</string>
+  <string name="buy_swap_region_restriction_description_region">お住まいの地域では現在、購入とスワップをご利用いただけません：%s</string>
+  <string name="buy_swap_region_restriction_title">地域制限</string>
   <string name="buy_token_description">銀行カードまたはその他の支払い方法を使用する</string>
   <plurals name="card_label_card_count">
     <item quantity="other">%d デバイス</item>
@@ -522,6 +524,7 @@
   <string name="common_transfer">送金</string>
   <string name="common_transferred">送金済み</string>
   <string name="common_try_again_later">しばらくしてからもう一度お試しください</string>
+  <string name="common_type">種類</string>
   <string name="common_unable_to_load">データを読み込めません…</string>
   <string name="common_understand">わかりました</string>
   <string name="common_understand_continue">理解して続行</string>
@@ -628,6 +631,7 @@
   <string name="dynamic_addresses_notification_funds_found_title">追加のアドレスで資金が見つかりました</string>
   <string name="dynamic_addresses_receive_badge">動的アドレス</string>
   <string name="dynamic_addresses_unavailability_reason_pending_transaction_send">ネットワーク%@で保留中の取引が完了すると、ダイナミックアドレスを管理できるようになります。</string>
+  <string name="earn_assets">運用資産</string>
   <string name="earn_best_opportunities">おすすめ</string>
   <string name="earn_clear_filter">絞り込みを解除</string>
   <string name="earn_empty">リストは現在更新中のため、一時的に空になっています。しばらくしてからご確認ください。</string>
@@ -743,6 +747,9 @@
   <string name="feed_promo_tangem_pay_title">暗号資産で支払おう</string>
   <string name="feed_search_show_all_user_assets">すべて表示</string>
   <string name="feed_search_show_less_user_assets">表示を減らす</string>
+  <string name="feed_tab_crypto">暗号資産</string>
+  <string name="feed_tab_earn">運用</string>
+  <string name="feed_tab_rwa">リアルアセット</string>
   <string name="feed_tangem_ai">Tangem AI</string>
   <string name="feed_trending_now">いま話題</string>
   <string name="feedback_data_collection_message">以下の情報はオプションです。共有したくない場合は消去できます。</string>
@@ -1164,6 +1171,7 @@
   <string name="manage_tokens_unavailable_description">選択したトークンは現在、暗号資産ウォレット内でのアクションには利用できません。しかし、心配しないでください。賛成票を投じることで関心を表明できます。</string>
   <string name="manage_tokens_unavailable_vote">賛成票を投じる</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">ウォレットは複数のネットワークをサポートしていません。</string>
+  <string name="market_categories">カテゴリー</string>
   <string name="market_chart_bubble_no_amount">トークンなし\n/資産価値</string>
   <string name="market_chart_bubble_total_value">合計評価額</string>
   <string name="market_chart_no_amount">トークンがないか、評価額が不明です</string>
@@ -2241,7 +2249,7 @@
   <string name="tangempay_cashback_accruals_calc_title">キャッシュバックの計算方法は？</string>
   <string name="tangempay_cashback_accruals_exceptions_description">現在、EU域内の店頭端末（端末決済）でのご利用はキャッシュバック対象外です。また、ATM出金、クージキャッシュ、携帯料金、行政サービスなどの一部カテゴリも対象外となります。</string>
   <string name="tangempay_cashback_accruals_exceptions_title">例外</string>
-  <string name="tangempay_cashback_accruals_pay_description">翌月の2日から5日まで</string>
+  <string name="tangempay_cashback_accruals_pay_description">取引がキャッシュバックプログラムの規約に沿っているか確認のうえ、翌月10日までに付与されます</string>
   <string name="tangempay_cashback_accruals_pay_title">キャッシュバックの支払い方法は？</string>
   <string name="tangempay_cashback_accruals_subtitle">上限と例外</string>
   <string name="tangempay_cashback_accruals_title">積算</string>
@@ -2250,7 +2258,7 @@
   <string name="tangempay_cashback_additional_until">%1$s まで</string>
   <string name="tangempay_cashback_deactivated_description">不審な行動が検出されたため停止されました。詳細はサポートにお問い合わせください</string>
   <string name="tangempay_cashback_deactivated_title">キャッシュバックが無効になりました</string>
-  <string name="tangempay_cashback_deposit_banner">%2$s の %1$s キャッシュバックは %3$s までに入金されます</string>
+  <string name="tangempay_cashback_deposit_banner">%2$sの%1$sキャッシュバックは、確認後%3$sまでに入金されます</string>
   <string name="tangempay_cashback_deposited_on">%1$s に入金されます</string>
   <string name="tangempay_cashback_details_cap">月間最大 %1$s</string>
   <string name="tangempay_cashback_details_eu_excluded">EU加盟国の店舗での対面購入にはキャッシュバックはありません</string>
@@ -2349,7 +2357,7 @@
   <string name="tangempay_kyc_rejected_description">申し訳ございませんが、</string>
   <string name="tangempay_kyc_rejected_description_span">本人確認ができませんでした。</string>
   <string name="tangempay_main_select_plan">プランを選択</string>
-  <string name="tangempay_maximum_cards_issued_description">最大3枚までカードを保有できます。新しいカードを追加するには、いずれかのカードを削除してください。</string>
+  <string name="tangempay_maximum_cards_issued_description">新しいカードを追加するには、いずれかのカードを削除してください</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">プランをアップグレードすると、より多くのカードを保有できます</string>
   <string name="tangempay_maximum_cards_issued_for_plan_title">このプランのカード発行枚数の上限に達しました</string>
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">プランをアップグレード</string>
