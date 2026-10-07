@@ -44,6 +44,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemeRedesign
+import com.tangem.features.storiesv2.impl.ui.state.StoriesV2ScreenUM
 import com.tangem.features.storiesv2.impl.ui.state.StoriesV2UM
 import kotlinx.coroutines.launch
 
@@ -56,7 +57,7 @@ import kotlinx.coroutines.launch
  */
 @Composable
 internal fun StoriesV2Screen(
-    state: StoriesV2UM,
+    state: StoriesV2ScreenUM,
     handle: StoryPlayerHandle,
     videoAspectRatio: Float?,
     modifier: Modifier = Modifier,
@@ -67,12 +68,23 @@ internal fun StoriesV2Screen(
     // are the dark-theme tokens, so following the app theme would put a black button on a black video.
     CompositionLocalProvider(LocalIsInDarkTheme provides true) {
         TangemThemeRedesign {
-            StoryContent(
-                state = state,
-                handle = handle,
-                videoAspectRatio = videoAspectRatio,
-                modifier = modifier,
-            )
+            when (state) {
+                is StoriesV2ScreenUM.Content -> StoryContent(
+                    state = state.story,
+                    handle = handle,
+                    videoAspectRatio = videoAspectRatio,
+                    modifier = modifier,
+                )
+                is StoriesV2ScreenUM.Loading -> StoryLoadingContent(
+                    onCloseClick = state.onCloseClick,
+                    modifier = modifier,
+                )
+                is StoriesV2ScreenUM.Error -> StoryErrorContent(
+                    onReloadClick = state.onReloadClick,
+                    onCloseClick = state.onCloseClick,
+                    modifier = modifier,
+                )
+            }
         }
     }
 }
@@ -147,7 +159,12 @@ private fun StoryContent(
             },
     ) {
         Box(modifier = Modifier.fillMaxSize().graphicsLayer { translationY = dismissOffset.value }) {
-            StorySlideContent(slide = state.slide, handle = handle, videoAspectRatio = videoAspectRatio)
+            StorySlideContent(
+                slide = state.slide,
+                playToken = state.playToken,
+                handle = handle,
+                videoAspectRatio = videoAspectRatio,
+            )
 
             StoryChrome(state = state, handle = handle)
         }
@@ -168,7 +185,7 @@ private fun StoryChrome(state: StoriesV2UM, handle: StoryPlayerHandle) {
                 slideCount = state.slideCount,
                 slideIndex = state.slideIndex,
                 position = {
-                    if (durationMs <= 0L) 0f else handle.slidePositionMs.longValue.toFloat() / durationMs
+                    if (durationMs <= 0L) 0f else handle.slidePositionMs(state.playToken).toFloat() / durationMs
                 },
                 // The strip stays centred, so the space the close button occupies is reserved on both sides:
                 // a story long enough to reach it shrinks its segments instead of sliding under it.

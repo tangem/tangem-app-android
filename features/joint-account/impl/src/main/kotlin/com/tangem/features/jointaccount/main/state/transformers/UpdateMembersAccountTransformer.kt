@@ -14,6 +14,7 @@ import com.tangem.utils.transformer.Transformer
 internal class UpdateMembersAccountTransformer(
     private val account: JointAccount,
     private val invites: List<String>,
+    private val sharedInvites: Set<String>,
     private val ownAddress: String?,
     private val callbacks: JointAccountToMembersUMConverter.Callbacks,
 ) : Transformer<JointAccountMembersUM> {
@@ -23,6 +24,7 @@ internal class UpdateMembersAccountTransformer(
             value = JointAccountToMembersUMConverter.Input(
                 account = account,
                 invites = invites,
+                sharedInvites = sharedInvites,
                 ownAddress = ownAddress,
             ),
         )

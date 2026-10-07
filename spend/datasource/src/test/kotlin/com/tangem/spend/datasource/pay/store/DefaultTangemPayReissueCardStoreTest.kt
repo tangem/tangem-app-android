@@ -2,7 +2,6 @@ package com.tangem.spend.datasource.pay.store
 
 import androidx.datastore.preferences.core.emptyPreferences
 import com.google.common.truth.Truth.assertThat
-import com.squareup.moshi.Moshi
 import com.tangem.core.local.datastore.RuntimeSharedMapStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.models.pay.TangemPayReissueCardFee
@@ -30,7 +29,6 @@ internal class DefaultTangemPayReissueCardStoreTest {
 
     private val dataStore = MockStateDataStore(default = emptyPreferences())
     private val prefs = createAppPreferencesStore(
-        moshi = Moshi.Builder().build(),
         dispatchers = TestingCoroutineDispatcherProvider(),
         preferencesDataStore = dataStore,
     )

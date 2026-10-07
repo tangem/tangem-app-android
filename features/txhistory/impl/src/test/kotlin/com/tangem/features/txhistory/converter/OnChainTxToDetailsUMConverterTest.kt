@@ -23,6 +23,7 @@ import com.tangem.core.ui.res.generated.icons.ic_chart_line_vertical_20
 import com.tangem.core.ui.res.generated.icons.ic_document_20
 import com.tangem.core.ui.res.generated.icons.ic_globe_24
 import com.tangem.core.ui.res.generated.icons.ic_lightning_20
+import com.tangem.core.ui.res.generated.icons.ic_percent_20
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.SdkAmountType
@@ -32,6 +33,7 @@ import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.model.TestContacts
 import com.tangem.test.mock.MockAccounts
+import com.tangem.utils.StringsSigns
 import com.tangem.test.core.ProvideTestModels
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Test
@@ -44,6 +46,48 @@ import java.math.BigDecimal
 internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() {
 
     private val converter = onChainConverter()
+
+    @Test
+    fun `GIVEN joint transfer WHEN convert THEN the fee is shown approximate`() {
+        // Arrange — the fee of a joint operation is the refund cap it was signed with, not what was really paid
+        val refundCap = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18)
+        val tx = txInfo(
+            type = TransactionType.Joint.Transfer(
+                recipient = USER_ADDRESS,
+                amount = BigDecimal.ONE,
+                refundCap = SdkAmount(
+                    currencySymbol = "ETH",
+                    value = BigDecimal("500000000000000").movePointLeft(18),
+                    decimals = 18,
+                ),
+                signaturesCount = 2,
+            ),
+            isOutgoing = true,
+            fee = refundCap,
+        )
+
+        // Act
+        val feeRow = converter.convert(tx).rows.single { it.label == resourceReference(R.string.common_network_fee_title) }
+
+        // Assert
+        assertThat(feeRow.value.resolveString()).startsWith("~")
+    }
+
+    @Test
+    fun `GIVEN outgoing personal transfer WHEN convert THEN the fee is exact`() {
+        // Arrange
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
+        )
+
+        // Act
+        val feeRow = converter.convert(tx).rows.single { it.label == resourceReference(R.string.common_network_fee_title) }
+
+        // Assert
+        assertThat(feeRow.value.resolveString()).doesNotContain("~")
+    }
 
     // region Header
 
@@ -862,6 +906,22 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Assert
         assertThat(counterparty?.avatar).isEqualTo(TxHistoryDetailsUM.CounterpartyAvatar.Address(EXTERNAL_ADDRESS))
         assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.common_from_address))
+    }
+
+    @Test
+    fun `GIVEN external counterparty WHEN convert THEN the card shows the whole address`() {
+        // Arrange
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(EXTERNAL_ADDRESS),
+        )
+
+        // Act
+        val counterparty = converter.convert(tx).counterparty
+
+        // Assert
+        assertThat(counterparty?.title).isEqualTo(TxHistoryDetailsUM.CounterpartyTitle.Address(EXTERNAL_ADDRESS))
     }
 
     @Test

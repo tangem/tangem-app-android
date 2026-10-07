@@ -170,6 +170,7 @@ private fun BoxScope.CurrencyIconBackgroundLayer(state: CurrencyIconState, blurR
             )
         }
         is CurrencyIconState.PaymentAccount -> Unit
+        is CurrencyIconState.PredictionAccount -> Unit
         CurrencyIconState.Loading -> Unit
         CurrencyIconState.Locked -> Unit
     }

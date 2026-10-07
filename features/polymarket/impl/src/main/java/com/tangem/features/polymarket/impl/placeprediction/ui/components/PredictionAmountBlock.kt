@@ -47,6 +47,7 @@ internal fun PredictionAmountBlock(
     amountCaption: AmountCaptionUM?,
     collateral: CollateralUM,
     balance: BigDecimal?,
+    isAddFundsEnabled: Boolean,
     onAmountChange: (String) -> Unit,
     onAddFundsClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -89,6 +90,7 @@ internal fun PredictionAmountBlock(
                         variant = TangemButton.Variant.Secondary,
                         size = TangemButton.Size.X7,
                         text = resourceReference(R.string.common_add_funds),
+                        isEnabled = isAddFundsEnabled,
                         onClick = onAddFundsClick,
                     )
                 },
@@ -123,7 +125,7 @@ private fun AmountSection(amountValue: String, amountCaption: AmountCaptionUM?, 
         AmountTextField(
             modifier = Modifier.padding(top = CAPTION_GAP),
             value = amountValue,
-            decimals = PolymarketConst.COLLATERAL_DECIMALS,
+            decimals = PolymarketConst.COLLATERAL_DISPLAY_DECIMALS,
             onValueChange = onAmountChange,
             textStyle = TangemTheme.typography3.display.medium.copy(textAlign = TextAlign.Center),
             colors = AmountTextFieldColors(
@@ -133,7 +135,7 @@ private fun AmountSection(amountValue: String, amountCaption: AmountCaptionUM?, 
             ),
             isAutoResize = true,
             visualTransformation = AmountVisualTransformation(
-                decimals = PolymarketConst.COLLATERAL_DECIMALS,
+                decimals = PolymarketConst.COLLATERAL_DISPLAY_DECIMALS,
                 symbol = PolymarketConst.USD_SYMBOL,
                 currencyCode = PolymarketConst.USD_CODE,
                 symbolColor = amountColor,

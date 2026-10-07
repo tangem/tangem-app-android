@@ -4,11 +4,10 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.format.bigdecimal.simple
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
+import com.tangem.features.polymarket.impl.common.formatPolymarketPrice
 import com.tangem.features.polymarket.impl.common.formatPolymarketShares
 import com.tangem.features.polymarket.impl.common.formatSlippagePercent
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
@@ -50,7 +49,7 @@ internal object PredictionFeeSheetUMConverter {
             id = descriptionRes,
             formatArgs = wrappedList(
                 tradedShares.formatPolymarketShares(),
-                averagePrice.movePointRight(2).format { simple(decimals = 2) },
+                averagePrice.formatPolymarketPrice(withSymbol = false),
                 tokenSymbol,
                 slippage.percent.formatSlippagePercent(),
             ),

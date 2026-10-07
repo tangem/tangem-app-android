@@ -28,7 +28,7 @@ internal class CollectiblesActionsConverter(
                     tintReference = { TangemTheme.colors3.icon.primary },
                 ),
                 type = TangemButtonType.Secondary,
-                isEnabled = value.balance?.usdcToken != null,
+                isEnabled = value.cryptoCurrencyStatus != null,
                 onClick = onAddFundsClick,
             ),
             TangemButtonUM(

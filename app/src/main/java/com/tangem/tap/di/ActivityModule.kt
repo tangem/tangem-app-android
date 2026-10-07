@@ -1,18 +1,14 @@
 package com.tangem.tap.di
 
-import com.tangem.grow.datasource.moonpay.MoonPayApi
-import com.tangem.grow.datasource.config.GrowEnvironmentConfig
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.express.ExpressServiceFetcher
+import com.tangem.domain.offramp.repository.OfframpRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.scanCard.repository.DefaultScanCardRepository
 import com.tangem.tap.network.exchangeServices.DefaultRampManager
-import com.tangem.tap.network.exchangeServices.SellService
-import com.tangem.tap.network.exchangeServices.moonpay.MoonPayService
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -43,13 +39,13 @@ internal object ActivityModule {
     @Provides
     @Singleton
     fun provideDefaultRampManager(
-        sellService: SellService,
+        offrampRepository: OfframpRepository,
         expressServiceFetcher: ExpressServiceFetcher,
         currenciesRepository: CurrenciesRepository,
         dispatchers: CoroutineDispatcherProvider,
     ): RampStateManager {
         return DefaultRampManager(
-            sellService = sellService,
+            offrampRepository = offrampRepository,
             expressServiceFetcher = expressServiceFetcher,
             currenciesRepository = currenciesRepository,
             dispatchers = dispatchers,
@@ -61,20 +57,5 @@ internal object ActivityModule {
     @DelayedWork
     fun provideActivityDelayedWorkCoroutineScope(appScope: AppCoroutineScope): CoroutineScope {
         return appScope
-    }
-
-    @Provides
-    @Singleton
-    fun provideExchangeService(
-        getSelectedWalletUseCase: GetSelectedWalletUseCase,
-        moonPayApi: MoonPayApi,
-        growEnvironmentConfig: GrowEnvironmentConfig,
-    ): SellService {
-        return MoonPayService(
-            api = moonPayApi,
-            apiKey = growEnvironmentConfig.moonPayApiKey,
-            secretKey = growEnvironmentConfig.moonPayApiSecretKey,
-            userWalletProvider = { getSelectedWalletUseCase.sync().getOrNull() },
-        )
     }
 }

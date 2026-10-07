@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -34,6 +35,7 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.*
+import com.tangem.core.ui.test.accounts.JointAccountCreationTestTags
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
 import com.tangem.features.jointaccount.main.JointAccountMembersUM.MemberUM
@@ -93,7 +95,12 @@ private fun MembersTopBar(topBar: JointAccountMembersUM.TopBarUM, modifier: Modi
             } else {
                 null
             },
-            endButton = { TangemButton.Close(onClick = topBar.onCloseClick) },
+            endButton = {
+                TangemButton.Close(
+                    modifier = Modifier.testTag(JointAccountCreationTestTags.MEMBERS_CLOSE_BUTTON),
+                    onClick = topBar.onCloseClick,
+                )
+            },
         )
     }
 }

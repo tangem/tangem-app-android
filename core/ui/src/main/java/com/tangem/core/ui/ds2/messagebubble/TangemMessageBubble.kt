@@ -30,6 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.conditionalCompose
@@ -46,6 +47,8 @@ import com.tangem.core.ui.res.generated.icons.ic_info_16
  * an optional close button and an optional "tip" tail on top pointing at the anchored element.
  * DS3 replacement for the legacy `TokenRowPromoBanner`.
  *
+ * Version: 1.1.0
+ *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=6327-22326)
  *
  * @param text Bubble message, rendered in caption/medium typography.
@@ -56,8 +59,11 @@ import com.tangem.core.ui.res.generated.icons.ic_info_16
  * @param showTip Whether the tail on top of the bubble is drawn. `false` shows only the pill.
  * @param icon Leading 16dp icon, tinted with the [variant] content color. `null` hides it.
  * @param onClick Invoked when the bubble body is tapped. `null` makes the bubble non-interactive.
- * @param onClose Invoked when the close button is tapped. `null` hides the button.
- * @param closeContentDescription Accessibility label for the close button announced by TalkBack
+ * @param onClose Invoked when the trailing button is tapped. `null` hides the button.
+ * @param trailingIcon Icon shown in the trailing button, ignored when [onClose] is `null`. Defaults
+ * to the close "X". Pass a different icon (e.g. a chevron) when the button represents an action
+ * other than dismissal, such as navigating to details.
+ * @param closeContentDescription Accessibility label for the trailing button announced by TalkBack
  * (e.g. `"Dismiss"`). Supply it whenever [onClose] is set.
  */
 @Suppress("LongParameterList")
@@ -70,6 +76,7 @@ fun TangemMessageBubble(
     icon: ImageVector? = null,
     onClick: (() -> Unit)? = null,
     onClose: (() -> Unit)? = null,
+    trailingIcon: ImageVector = Icons.ic_cross_circle_16_filled,
     closeContentDescription: String? = null,
     maxLines: Int = Int.MAX_VALUE,
     overflow: TextOverflow = TextOverflow.Clip,
@@ -111,6 +118,7 @@ fun TangemMessageBubble(
         if (onClose != null) {
             CloseButton(
                 onClick = onClose,
+                icon = trailingIcon,
                 tint = tokens.closeIcon,
                 contentDescription = closeContentDescription,
             )
@@ -120,6 +128,8 @@ fun TangemMessageBubble(
 
 /** Public API surface of [TangemMessageBubble]. */
 object TangemMessageBubble {
+
+    val version = DsVersion(major = 1, minor = 1, patch = 0)
 
     /** Visual appearance — background, text and tip colors. */
     enum class Variant {
@@ -141,7 +151,13 @@ object TangemMessageBubble {
 }
 
 @Composable
-private fun CloseButton(onClick: () -> Unit, tint: Color, contentDescription: String?, modifier: Modifier = Modifier) {
+private fun CloseButton(
+    onClick: () -> Unit,
+    icon: ImageVector,
+    tint: Color,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+) {
     Box(
         modifier = modifier
             .padding(start = 4.dp)
@@ -160,7 +176,7 @@ private fun CloseButton(onClick: () -> Unit, tint: Color, contentDescription: St
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                imageVector = Icons.ic_cross_circle_16_filled,
+                imageVector = icon,
                 contentDescription = null,
                 tint = tint,
                 modifier = Modifier.size(16.dp),

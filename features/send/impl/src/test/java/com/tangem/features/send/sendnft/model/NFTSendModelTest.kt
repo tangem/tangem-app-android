@@ -14,6 +14,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -36,6 +37,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
@@ -83,6 +85,7 @@ internal class NFTSendModelTest {
         clearMocks(router, nftSendSuccessTrigger, alertFactory, answers = false, recordedCalls = true, childMocks = false)
 
         every { nftAsset.network } returns network
+        every { network.derivationPath } returns Network.DerivationPath.None
         every { coin.network } returns network
         every { getUserWalletUseCase(testUserWalletId) } returns testUserWallet.right()
         coEvery { getSelectedAppCurrencyUseCase.invokeSync() } returns AppCurrency.Default.right()
@@ -166,6 +169,41 @@ internal class NFTSendModelTest {
 
     @Nested
     inner class SubscribeOnCurrencyStatusUpdates {
+
+        @Test
+        fun `GIVEN asset on a joint account network WHEN init THEN generic error and no currency lookup`() = runTest {
+            // Arrange
+            every { network.derivationPath } returns Network.DerivationPath.Joint(value = "m/44'/60'/888888'/0/0")
+
+            // Act
+            buildModel()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { alertFactory.getGenericErrorState(any(), any()) }
+            coVerify(exactly = 0) { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN asset on a joint account network WHEN support tapped THEN error saved for the asset network`() =
+            runTest {
+                // Arrange
+                every { network.derivationPath } returns Network.DerivationPath.Joint(value = "m/44'/60'/888888'/0/0")
+                val networkId = network.id
+                val onSupportClick = slot<() -> Unit>()
+                every { alertFactory.getGenericErrorState(capture(onSupportClick), any()) } returns Unit
+                coEvery { getWalletMetaInfoUseCase(testUserWalletId) } returns mockk<WalletMetaInfo>().right()
+                buildModel()
+                advanceUntilIdle()
+
+                // Act
+                onSupportClick.captured()
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { saveBlockchainErrorUseCase(error = match { it.networkId == networkId }) }
+                coVerify(exactly = 1) { sendFeedbackEmailUseCase(type = any()) }
+            }
 
         @Test
         fun `GIVEN get user wallet fails WHEN init THEN show generic error`() = runTest {

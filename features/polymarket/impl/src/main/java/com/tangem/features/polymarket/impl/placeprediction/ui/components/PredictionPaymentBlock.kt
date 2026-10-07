@@ -21,6 +21,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.parseToBigDecimal
+import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.formatPolymarketBalance
 import com.tangem.features.polymarket.impl.common.formatPolymarketEnteredAmount
@@ -80,7 +81,7 @@ private fun SourceHeader(collateral: CollateralUM, order: OrderSideUM) {
                 color = PredictionAccountIcon.color,
                 size = AccountIconSize.ExtraSmall,
             )
-            HeaderText(text = stringResourceSafe(R.string.prediction_place_summary_account))
+            HeaderText(text = stringResourceSafe(R.string.prediction_account_title))
         }
         HeaderText(
             text = stringResourceSafe(
@@ -103,7 +104,7 @@ private fun BuyAmountRow(amountValue: String, payout: BigDecimal?, collateral: C
             verticalArrangement = Arrangement.spacedBy(space = 4.dp),
         ) {
             Text(
-                text = amountValue.parseToBigDecimal(PolymarketConst.COLLATERAL_DECIMALS)
+                text = amountValue.parseToBigDecimal(PolymarketConst.COLLATERAL_DISPLAY_DECIMALS)
                     .formatPolymarketEnteredAmount(),
                 style = TangemTheme.typography3.heading.medium,
                 color = TangemTheme.colors3.text.primary,
@@ -121,7 +122,7 @@ private fun BuyAmountRow(amountValue: String, payout: BigDecimal?, collateral: C
                 )
             }
         }
-        collateral.iconState?.let { CurrencyIcon(state = it, shouldDisplayNetwork = false) }
+        collateral.iconState?.let { CurrencyIcon(state = it, shouldDisplayNetwork = true) }
     }
 }
 
@@ -139,18 +140,18 @@ private fun SellAmountRow(amountValue: String, payout: BigDecimal?, collateral: 
             Text(
                 text = payout?.formatPolymarketMoney() ?: DASH_SIGN,
                 style = TangemTheme.typography3.heading.medium,
-                color = TangemTheme.colors3.text.status.success,
+                color = TangemTheme.colors3.text.primary,
             )
             Text(
                 text = stringResourceSafe(
                     R.string.prediction_close_selling_tokens,
-                    amountValue.parseToBigDecimal(PolymarketConst.SHARES_DECIMALS).formatPolymarketShares(),
+                    amountValue.parseToBigDecimal(PolymarketContracts.SHARE_DECIMALS).formatPolymarketShares(),
                 ),
                 style = TangemTheme.typography3.caption.medium,
                 color = TangemTheme.colors3.text.secondary,
             )
         }
-        collateral.iconState?.let { CurrencyIcon(state = it, shouldDisplayNetwork = false) }
+        collateral.iconState?.let { CurrencyIcon(state = it, shouldDisplayNetwork = true) }
     }
 }
 

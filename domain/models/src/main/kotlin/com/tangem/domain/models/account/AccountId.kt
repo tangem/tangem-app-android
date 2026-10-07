@@ -3,6 +3,7 @@ package com.tangem.domain.models.account
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import com.squareup.moshi.JsonClass
 import com.tangem.common.extensions.toByteArray
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.extensions.toHexString
@@ -15,8 +16,9 @@ import java.security.MessageDigest
  * @property value        a unique string value that distinguishes this account
  * @property userWalletId the identifier of the user wallet associated with the account
  */
+@JsonClass(generateAdapter = true)
 @Serializable
-data class AccountId private constructor(
+data class AccountId internal constructor(
     val value: String,
     val userWalletId: UserWalletId,
 ) {

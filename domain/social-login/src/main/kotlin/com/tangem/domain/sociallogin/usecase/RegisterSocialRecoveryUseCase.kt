@@ -12,7 +12,7 @@ import javax.inject.Inject
  * Binds a wallet to a provider identity and stores its recovery key with the backend.
  *
  * Does not mark the wallet as socially backed up: the cloud file comes after, and until it is there the
- * wallet is bound but not restorable (NFR-01). Setting the flag is the caller's.
+ * wallet is bound but not restorable. Setting the flag is the caller's.
  */
 class RegisterSocialRecoveryUseCase @Inject constructor(
     private val socialRecoveryRepository: SocialRecoveryRepository,

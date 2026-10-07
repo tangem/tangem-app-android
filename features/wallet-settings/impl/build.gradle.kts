@@ -41,6 +41,7 @@ dependencies {
     api(projects.domain.balanceHiding)
     api(projects.domain.demo)
     implementation(projects.domain.cloudBackup)
+    implementation(projects.domain.socialLogin)
     api(projects.domain.nft)
     api(projects.domain.notifications)
     api(projects.domain.wallets)
