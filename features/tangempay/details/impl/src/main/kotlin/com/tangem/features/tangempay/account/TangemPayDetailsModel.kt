@@ -108,6 +108,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         onBack = router::pop,
         onOpenMenu = ::onOpenMenu,
         intents = this,
+        isVisaOnrampV2Enabled = { tangemPayFeatureToggles.isVisaOnrampV2Enabled },
     )
 
     val uiState: StateFlow<TangemPayDetailsUM>
@@ -526,6 +527,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private fun tryOpenBankTransferOnramp(): Boolean {
         if (!tangemPayFeatureToggles.isVisaOnrampV2Enabled) return false
         return when (val onramp = currentStatus.value.ifLoadedOrNull { it.virtualAccount }) {
+            null -> false
             is VirtualAccountOnramp.Available -> {
                 fetchVirtualAccountBankingDetails(onramp)
                 true
@@ -534,9 +536,7 @@ internal class TangemPayDetailsModel @Inject constructor(
                 router.push(TangemPayAccountDetailsInnerRoute.BankTransferOnrampOnboarding)
                 true
             }
-            VirtualAccountOnramp.Processing,
-            null,
-            -> false
+            VirtualAccountOnramp.Processing -> true
         }
     }
 

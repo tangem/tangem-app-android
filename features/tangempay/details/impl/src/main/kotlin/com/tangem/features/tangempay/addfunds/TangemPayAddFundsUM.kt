@@ -16,5 +16,11 @@ internal data class TangemPayAddFundsItemUM(
     val title: TextReference,
     val description: TextReference,
     val onClick: (() -> Unit)?,
-    val isLoading: Boolean = false,
-)
+    val accent: Accent = Accent.Info,
+) {
+
+    enum class Accent {
+        Info,
+        Warning,
+    }
+}
