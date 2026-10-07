@@ -116,6 +116,65 @@ internal class PushNotificationsModelTest {
     }
 
     @Test
+    fun `GIVEN unanswered main bottom sheet WHEN sheet dismissed THEN treated as later with cancel event`() = runTest {
+        // Arrange
+        val model = createMainSheetModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onSheetDismissed()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analyticHandler.send(PushNotificationAnalyticEvents.ButtonCancel(AnalyticsParam.ScreensSources.Main))
+        }
+        verify(exactly = 0) { analyticHandler.send(match<PushNotificationAnalyticEvents.ButtonLater> { true }) }
+        coVerify(exactly = 1) { notificationsRepository.setUserAllowToSubscribeOnPushNotifications(false) }
+        coVerify(exactly = 1) { neverRequestPermissionUseCase(any()) }
+        coVerify(exactly = 1) { neverToInitiallyAskPermissionUseCase(any()) }
+        verify(exactly = 1) { modelCallbacks.onDenySystemPermission() }
+        verify(exactly = 0) { modelCallbacks.onDismiss() }
+    }
+
+    @Test
+    fun `GIVEN allow clicked on main bottom sheet WHEN sheet dismissed THEN later is not recorded`() = runTest {
+        // Arrange
+        val model = createMainSheetModel(testScope = this)
+        advanceUntilIdle()
+        model.onAllowClick()
+        advanceUntilIdle()
+
+        // Act
+        model.onSheetDismissed()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { analyticHandler.send(match<PushNotificationAnalyticEvents.ButtonCancel> { true }) }
+        coVerify(exactly = 0) { notificationsRepository.setUserAllowToSubscribeOnPushNotifications(false) }
+        coVerify(exactly = 0) { neverRequestPermissionUseCase(any()) }
+        verify(exactly = 0) { modelCallbacks.onDismiss() }
+    }
+
+    @Test
+    fun `GIVEN later clicked on main bottom sheet WHEN sheet dismissed THEN later is not repeated`() = runTest {
+        // Arrange
+        val model = createMainSheetModel(testScope = this)
+        advanceUntilIdle()
+        model.onLaterClick()
+
+        // Act
+        model.onSheetDismissed()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { analyticHandler.send(match<PushNotificationAnalyticEvents.ButtonCancel> { true }) }
+        coVerify(exactly = 1) { notificationsRepository.setUserAllowToSubscribeOnPushNotifications(false) }
+        verify(exactly = 1) { modelCallbacks.onDenySystemPermission() }
+        verify(exactly = 0) { modelCallbacks.onDismiss() }
+    }
+
+    @Test
     fun `GIVEN double ask shown WHEN onDoubleAskEnableClick THEN enable tapped sent and not proceeded`() = runTest {
         coEvery { getDoubleAskVariantUseCase() } returns DoubleAskVariant.On
         val model = createModel(testScope = this)
@@ -345,6 +404,12 @@ internal class PushNotificationsModelTest {
             )
         }
     }
+
+    private fun createMainSheetModel(testScope: TestScope): PushNotificationsModel = createModel(
+        testScope = testScope,
+        isBottomSheet = true,
+        source = AppRoute.PushNotification.Source.Main,
+    )
 
     private fun createModel(
         testScope: TestScope,

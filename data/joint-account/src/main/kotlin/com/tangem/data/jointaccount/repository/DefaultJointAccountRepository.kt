@@ -21,6 +21,7 @@ import com.tangem.data.jointaccount.converter.JointOperationCreateErrorConverter
 import com.tangem.data.jointaccount.converter.JointOperationRejectErrorConverter
 import com.tangem.data.jointaccount.converter.JointOperationSignErrorConverter
 import com.tangem.data.jointaccount.converter.SafeTxConverter
+import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.store.datasource.jointaccount.models.CreateJointOperationRequest
 import com.tangem.store.datasource.jointaccount.models.SignJointOperationRequest
 import com.tangem.store.datasource.jointaccount.JointAccountApi
@@ -42,6 +43,8 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -65,7 +68,13 @@ internal class DefaultJointAccountRepository @Inject constructor(
 
     override suspend fun getFreeOwnerDerivationIndex(userWalletId: UserWalletId): Int {
         return withContext(dispatchers.io) {
-            walletAccountsFetcher.fetch(userWalletId = userWalletId).wallet.totalJointAccounts ?: NO_JOINT_ACCOUNTS
+            val response = walletAccountsFetcher.fetch(userWalletId = userWalletId)
+            val nextAfterJointRows = response.accounts
+                .filter { it.type == WalletAccountDTO.Type.JOINT }
+                .maxOfOrNull { it.derivationIndex + 1 }
+                ?: NO_JOINT_ACCOUNTS
+
+            maxOf(response.wallet.totalJointAccounts ?: NO_JOINT_ACCOUNTS, nextAfterJointRows)
         }
     }
 
@@ -208,6 +217,28 @@ internal class DefaultJointAccountRepository @Inject constructor(
             }.getOrElse { throwable ->
                 logger.e(messageString = "Failed to read the stored invites", throwable = throwable)
                 emptyList()
+            }
+        }
+    }
+
+    override fun getSharedInvites(userWalletId: UserWalletId, cryptoAccountId: String): Flow<Set<String>> {
+        return invitesStore.observeShared(userWalletId = userWalletId, cryptoAccountId = cryptoAccountId)
+            .catch { throwable ->
+                logger.e(messageString = "Failed to read the shared invites", throwable = throwable)
+                emit(emptySet())
+            }
+    }
+
+    override suspend fun markInviteShared(userWalletId: UserWalletId, cryptoAccountId: String, inviteId: String) {
+        withContext(dispatchers.io) {
+            runSuspendCatching {
+                invitesStore.markShared(
+                    userWalletId = userWalletId,
+                    cryptoAccountId = cryptoAccountId,
+                    inviteId = inviteId,
+                )
+            }.onFailure { throwable ->
+                logger.e(messageString = "Failed to record a shared invite", throwable = throwable)
             }
         }
     }

@@ -256,6 +256,19 @@ internal class DefaultOnboardingRepository @Inject constructor(
         }
     }
 
+    override suspend fun hasVirtualAccountOrderFailed(userWalletId: UserWalletId): Boolean =
+        withContext(dispatcherProvider.io) {
+            val customerWalletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
+            tangemPayStorage.getVirtualAccountOrderFailed(customerWalletAddress)
+        }
+
+    override suspend fun storeVirtualAccountOrderFailed(userWalletId: UserWalletId, isFailed: Boolean) {
+        withContext(dispatcherProvider.io) {
+            val customerWalletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
+            tangemPayStorage.storeVirtualAccountOrderFailed(customerWalletAddress, isFailed)
+        }
+    }
+
     private fun getUserWallet(userWalletId: UserWalletId): UserWallet {
         return userWalletsListRepository.userWallets.value?.firstOrNull { it.walletId == userWalletId }
             ?: error("no userWallet found")
@@ -281,6 +294,8 @@ internal class DefaultOnboardingRepository @Inject constructor(
         val event = when (kycStatus) {
             KycStatus.APPROVED -> TangemPayAnalyticsEvents.KycPassedAndOrderCreated()
             KycStatus.REJECTED -> TangemPayAnalyticsEvents.KycRejected()
+            KycStatus.UNKNOWN,
+            KycStatus.REQUIRED,
             KycStatus.INIT,
             KycStatus.PENDING,
             -> return

@@ -144,6 +144,7 @@ dependencies {
     api(projects.features.pushNotifications.api)
     api(projects.features.send.api)
     api(projects.features.tangempay.details.api)
+    implementation(projects.features.tangempay.eligibility.api)
     api(projects.features.tangempay.main.api)
     api(projects.features.tokenRecieve.api)
     api(projects.features.moneyAccount.details.api)
