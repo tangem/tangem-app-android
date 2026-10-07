@@ -323,14 +323,6 @@ internal class SendConfirmModelTest : SendModelTestBase() {
     @Nested
     inner class TronGaslessMaxSend {
 
-        @BeforeEach
-        fun stubTronGaslessSend() {
-            // The shared base leaves this one relaxed, which yields an Either that blows up on fold().
-            coEvery {
-                createAndSendTronGaslessTransactionUseCase(any(), any(), any(), any())
-            } returns "txHash".right()
-        }
-
         @Test
         fun `GIVEN max amount and Tron gasless fee in the sent token WHEN send THEN amount reduced by the fee`() =
             runTest {
@@ -360,8 +352,8 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             }
 
         @Test
-        fun `GIVEN Tron gasless quote WHEN send THEN dispatched through the Tron gasless use case`() = runTest {
-            // Arrange
+        fun `GIVEN Tron gasless quote WHEN send THEN dispatched through the gasless use case`() = runTest {
+            // Arrange — the model only decides gasless vs regular; the protocol is picked inside the use case.
             coEvery { isAmountSubtractAvailableUseCase(any(), any(), any()) } returns true.right()
             val sut = createSendConfirmModel(this, tronGaslessParams())
             advanceUntilIdle()
@@ -371,8 +363,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             advanceUntilIdle()
 
             // Assert
-            coVerify(exactly = 1) { createAndSendTronGaslessTransactionUseCase(any(), any(), any(), any()) }
-            coVerify(exactly = 0) { createAndSendGaslessTransactionUseCase(any(), any(), any()) }
+            coVerify(exactly = 1) { createAndSendGaslessTransactionUseCase(any(), any(), any()) }
             coVerify(exactly = 0) { sendTransactionUseCase(any(), any(), any()) }
         }
 
