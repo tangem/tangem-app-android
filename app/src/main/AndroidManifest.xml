@@ -492,6 +492,10 @@
             </intent-filter>
         </service>
 
+        <receiver
+            android:name="com.tangem.tap.common.share.ShareResultReceiver"
+            android:exported="false" />
+
         <!-- SurveySparrow SDK exports this activity (exported="true") in its own manifest. -->
         <!-- We launch it only via an explicit in-app intent, so force it non-exported to -->
         <!-- prevent any other installed app from loading arbitrary web content into it. -->

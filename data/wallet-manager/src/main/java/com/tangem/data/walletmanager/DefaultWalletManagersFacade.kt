@@ -1,5 +1,6 @@
 package com.tangem.data.walletmanager
 
+import com.tangem.domain.models.currency.isJoint
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
@@ -39,6 +40,7 @@ import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.jointaccount.address.JointAccountSafeAddressResolver
 import com.tangem.domain.jointaccount.derivation.isJointAccountReservedPath
+import com.tangem.domain.jointaccount.gas.JointRefundReceiverProvider
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
@@ -81,6 +83,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     private val jointAccountSafeAddressResolver: Lazy<JointAccountSafeAddressResolver>,
     private val getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
     private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
+    private val jointRefundReceiverProvider: JointRefundReceiverProvider,
     blockchainSDKFactory: BlockchainSDKFactory,
 ) : WalletManagersFacade {
 
@@ -251,6 +254,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         val transactionHistoryState = source.provider.getTransactionHistoryState(
             address = source.address,
             filterType = currency.toTransactionHistoryFilterType(),
+            shouldIncludeInternalTransfers = currency.isSafeCoin(),
         )
 
         return txHistoryStateConverter.convert(transactionHistoryState)
@@ -275,6 +279,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 page = page,
                 pageSize = pageSize,
                 filterType = currency.toTransactionHistoryFilterType(),
+                shouldIncludeInternalTransfers = currency.isSafeCoin(),
             ),
         )
 
@@ -293,6 +298,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                     smartContractMethods = readSmartContractMethods(),
                     yieldSupplyAddresses = YIELD_SUPPLY_ADDRESSES,
                     gaslessFeeAddresses = gaslessFeeAddresses,
+                    jointRefundReceiver = jointRefundReceiver(currency.network),
                     currency = currency,
                     currencyAddresses = getAddresses(userWalletId, currency.network),
                     txHistoryFeatureToggles = txHistoryFeatureToggles,
@@ -305,6 +311,11 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             )
             is Result.Failure -> throw TxHistoryLoadException(currency, itemsResult.error)
         }
+    }
+
+    private suspend fun jointRefundReceiver(network: Network): String? {
+        if (!network.isJoint) return null
+        return jointRefundReceiverProvider.refundReceiver()
     }
 
     private fun getUserWallet(userWalletId: UserWalletId): UserWallet? =
@@ -337,6 +348,9 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 )
             }
     }
+
+    /** A joint account's coin moves only in the Safe's internal calls: the relayer sends the transaction */
+    private fun CryptoCurrency.isSafeCoin(): Boolean = this is CryptoCurrency.Coin && isJoint
 
     private fun CryptoCurrency.toTransactionHistoryFilterType(): TransactionHistoryRequest.FilterType {
         return when (this) {

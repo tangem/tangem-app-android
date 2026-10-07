@@ -96,7 +96,9 @@ sealed class MoneyAccountStatusValue {
         ) : Onboarding()
 
         @Serializable
-        data object CountryNotSupported : Onboarding() {
+        data class CountryNotSupported(
+            val countryCode: String?,
+        ) : Onboarding() {
             override val source: StatusSource = StatusSource.ACTUAL
             override val balance: Balance? = null
             override val customerId: String? = null

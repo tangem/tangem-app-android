@@ -46,6 +46,9 @@ class SpendPreferencesKeys @Inject constructor() {
     fun getVirtualAccountOrderIdKey(customerWalletAddress: String): Preferences.Key<String> =
         stringPreferencesKey("tangem_pay_va_order_id_key_$customerWalletAddress")
 
+    fun getVirtualAccountOrderFailedKey(customerWalletAddress: String): Preferences.Key<Boolean> =
+        booleanPreferencesKey("tangem_pay_va_order_failed_key_$customerWalletAddress")
+
     fun getCustomerWalletAddressKey(userWalletId: UserWalletId): Preferences.Key<String> =
         stringPreferencesKey("tangem_pay_customer_wallet_address_key_${userWalletId.stringValue}")
 
@@ -57,4 +60,7 @@ class SpendPreferencesKeys @Inject constructor() {
 
     fun getDeactivatedKey(userWalletId: UserWalletId): Preferences.Key<Boolean> =
         booleanPreferencesKey("tangem_pay_deactivated_$userWalletId")
+
+    fun getMoneyAccountMainBlockHiddenKey(userWalletId: UserWalletId): Preferences.Key<Boolean> =
+        booleanPreferencesKey("money_account_main_block_hidden_$userWalletId")
 }
