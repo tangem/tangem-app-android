@@ -157,8 +157,18 @@ sealed interface TxInfo {
         @Serializable
         data object UnknownOperation : TransactionType
 
+        /**
+         * A contract call the history shows by its raw method [name].
+         *
+         * @property name       the contract method, unlocalized — the history renders it as it came
+         * @property recognized what the call really was, when a decoded type had to give way to this plain one: a
+         *                      protocol interaction viewed from a coin's own history moved no coin and only paid the
+         *                      gas of a token's operation, so it is reduced to an operation that still knows what it
+         *                      paid for. `null` — the usual case — when the call was never recognized. Never another
+         *                      [Operation]: this carries the type that was given up, not a chain of them.
+         */
         @Serializable
-        data class Operation(val name: String) : TransactionType
+        data class Operation(val name: String, val recognized: TransactionType? = null) : TransactionType
 
         @Serializable
         data object GaslessFee : TransactionType

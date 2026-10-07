@@ -76,6 +76,8 @@ internal object TangemPayCashbackDetailUmConverter {
             id = R.string.tangem_pay_transaction_details_cashback_below_min,
             formatArgs = wrappedList(BELOW_MIN_STUB),
         )
+        ExclusionReason.COMPLIANCE_RISK ->
+            resourceReference(R.string.tangem_pay_transaction_details_cashback_compliance_risk)
         ExclusionReason.UNKNOWN,
         null,
         -> null

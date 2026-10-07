@@ -10,6 +10,7 @@ import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Conten
 import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
@@ -38,7 +39,6 @@ import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isZero
-import com.tangem.utils.toBriefAddressFormat
 
 /**
  * Converts [TxInfo] to [TransactionItemUM] for transaction history.
@@ -75,6 +75,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
             is TransactionType.Staking.Withdraw -> pillConverter.convert(PillInput(value, uiStatus, WithdrawSpec))
             is TransactionType.YieldSupply.Enter -> pillConverter.convert(PillInput(value, uiStatus, YieldEnterSpec))
             is TransactionType.YieldSupply.Exit -> pillConverter.convert(PillInput(value, uiStatus, YieldExitSpec))
+            is TransactionType.YieldSupply.Topup -> pillConverter.convert(PillInput(value, uiStatus, YieldSupplySpec))
             // endregion
 
             // region Content
@@ -84,8 +85,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
             is TransactionType.Joint.Transfer,
             -> transferContent(value, uiStatus)
             is TransactionType.Staking.ClaimRewards -> claimRewardsContent(value, uiStatus)
-            is TransactionType.YieldSupply.Topup -> yieldTopupContent(value, uiStatus)
-            is TransactionType.YieldSupply.Send -> yieldSendContent(value, uiStatus, type)
+            is TransactionType.YieldSupply.Send -> yieldSend(value, uiStatus, type)
             is TransactionType.YieldSupply.DeployContract -> yieldDeployContractContent(value, uiStatus, type)
             is TransactionType.YieldSupply.InitializeToken -> yieldInitializeTokenContent(value, uiStatus, type)
             is TransactionType.YieldSupply.ReactivateToken -> yieldReactivateTokenContent(value, uiStatus, type)
@@ -147,13 +147,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
     private fun transferContent(tx: TxInfo, uiStatus: TransactionItemUM.Content.Status): TransactionItemUM.Content {
         val counterpartyAddress = (tx.interactionAddressType as? TxInfo.InteractionAddressType.User)?.address
         val direction = if (tx.isOutgoing) ContentSubtitle.Direction.TO else ContentSubtitle.Direction.FROM
-        val counterparty = counterpartyAddress?.let { address ->
-            lookupContext?.resolveCounterparty(
-                address = address,
-                networkRawId = currency.network.id.rawId,
-                isOutgoing = tx.isOutgoing,
-            )
-        }
+        val counterparty = counterpartyAddress?.let(::resolveCounterparty)
 
         val subtitle = when {
             counterparty != null -> counterparty.toSubtitle(direction)
@@ -179,15 +173,6 @@ internal class TxHistoryItemToTransactionItemUMConverter(
             subtitle = ContentSubtitle.Plain(resourceReference(R.string.transaction_history_earned_from_stake)),
         )
 
-    private fun yieldTopupContent(tx: TxInfo, uiStatus: TransactionItemUM.Content.Status): TransactionItemUM.Content =
-        buildContent(
-            tx = tx,
-            uiStatus = uiStatus,
-            title = titleConverter.convert(tx),
-            icon = tx.directionalIcon(),
-            subtitle = yieldProviderSubtitle(ContentSubtitle.Direction.TO),
-        )
-
     private fun yieldDeployContractContent(
         tx: TxInfo,
         uiStatus: TransactionItemUM.Content.Status,
@@ -197,7 +182,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         uiStatus = uiStatus,
         title = titleConverter.convert(tx),
         icon = TxIcon.Vector(Icons.ic_document_20),
-        subtitle = tx.yieldSupplySubtitle(currency, type),
+        subtitle = tx.yieldSupplySubtitle(type),
     )
 
     private fun yieldInitializeTokenContent(
@@ -209,7 +194,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         uiStatus = uiStatus,
         title = titleConverter.convert(tx),
         icon = TxIcon.Res(R.drawable.ic_gear_24),
-        subtitle = tx.yieldSupplySubtitle(currency, type),
+        subtitle = tx.yieldSupplySubtitle(type),
     )
 
     private fun yieldReactivateTokenContent(
@@ -221,24 +206,21 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         uiStatus = uiStatus,
         title = titleConverter.convert(tx),
         icon = TxIcon.Vector(Icons.ic_arrow_refresh_20),
-        subtitle = tx.yieldSupplySubtitle(currency, type),
+        subtitle = tx.yieldSupplySubtitle(type),
     )
 
-    private fun yieldSendContent(
+    /**
+     * A withdraw Send takes the funds out of the yield position, so it reads as the yield pill its topup counterpart
+     * does. A non-withdraw Send is an ordinary transfer — resolve the counterparty against the user's own
+     * accounts/wallets and render it exactly like Transfer, so the list matches the details screen.
+     */
+    private fun yieldSend(
         tx: TxInfo,
         uiStatus: TransactionItemUM.Content.Status,
         type: TransactionType.YieldSupply.Send,
-    ): TransactionItemUM.Content = if (type.isYieldSupplyWithdraw) {
-        buildContent(
-            tx = tx,
-            uiStatus = uiStatus,
-            title = titleConverter.convert(tx),
-            icon = tx.directionalIcon(),
-            subtitle = yieldProviderSubtitle(ContentSubtitle.Direction.FROM),
-        )
+    ): TransactionItemUM = if (type.isYieldSupplyWithdraw) {
+        pillConverter.convert(PillInput(tx, uiStatus, YieldWithdrawSpec))
     } else {
-        // A non-withdraw Send is an ordinary transfer — resolve the counterparty against the user's own
-        // accounts/wallets and render it exactly like Transfer, so the list matches the details screen.
         transferContent(tx, uiStatus)
     }
 
@@ -269,11 +251,18 @@ internal class TxHistoryItemToTransactionItemUMConverter(
     )
 
     /**
-     * What the fee was paid for: the contract method the history named — raw and unlocalized, the same way the
-     * [TransactionType.Operation] row title shows it — or a bare "operation" when the method has no name at all.
+     * What the fee was paid for: the localized name of the protocol call the operation gave up its type for; else the
+     * contract method the history named — raw and unlocalized, the same way the [TransactionType.Operation] row title
+     * shows it — or a bare "operation" when the method has no name at all.
      */
     private fun TxInfo.feeOnlyOperationSubtitle(): ContentSubtitle {
-        val methodName = (type as? TransactionType.Operation)?.name?.ifBlank { null }
+        val operation = type as? TransactionType.Operation
+            ?: return ContentSubtitle.Plain(resourceReference(R.string.transaction_history_fee_for_operation))
+
+        operation.recognized?.feeSubtitleResId()
+            ?.let { return ContentSubtitle.Plain(resourceReference(it)) }
+
+        val methodName = operation.name.ifBlank { null }
             ?: return ContentSubtitle.Plain(resourceReference(R.string.transaction_history_fee_for_operation))
 
         return ContentSubtitle.Plain(
@@ -300,6 +289,84 @@ internal class TxHistoryItemToTransactionItemUMConverter(
             symbol = symbol,
             icon = feeForToken(networkTokens)?.let(iconStateConverter::convert),
         )
+    }
+
+    /**
+     * The counterparty [address] resolved for display — own account → own wallet → saved contact → the raw address —
+     * or `null` without a [lookupContext], which leaves the caller on the raw address.
+     */
+    private fun resolveCounterparty(address: String): ResolvedOwner? =
+        lookupContext?.resolveCounterparty(address = address, networkRawId = currency.network.id.rawId)
+
+    /**
+     * The subtitle naming [address] as one of the user's own portfolios or a saved contact, or `null` when it is none
+     * of them — the caller then keeps whatever wording it shows a raw address with. Applied wherever a row names a
+     * counterparty, independently of the transaction type and of the direction the address sits on.
+     */
+    private fun namedCounterpartySubtitle(address: String, direction: ContentSubtitle.Direction): ContentSubtitle? =
+        resolveCounterparty(address)
+            ?.takeIf { it !is ResolvedOwner.External }
+            ?.toSubtitle(direction)
+
+    /**
+     * Yield supply is a token product, and a coin only ever paid the fee for it — such a row never reaches here, it is
+     * a [network fee][isFeeOnlyOperation] by then. So the subtitle speaks of the token that moved.
+     */
+    private fun TxInfo.yieldSupplySubtitle(type: TransactionType.YieldSupply): ContentSubtitle {
+        return when (type) {
+            is TransactionType.YieldSupply.Enter ->
+                amountSubtitle(currency, R.string.yield_module_transaction_enter_subtitle)
+            is TransactionType.YieldSupply.Exit ->
+                amountSubtitle(currency, R.string.yield_module_transaction_exit_subtitle)
+            else -> extractAddressSubtitle()
+        }
+    }
+
+    /**
+     * Counterparty subtitle for an unrecognized contract call (Operation / UnknownOperation). For an **incoming** call
+     * [TxInfo.interactionAddressType] is the destination — the viewed wallet itself — so the sender is read from
+     * [TxInfo.sourceType] instead: a single source is named like any other counterparty, multiple sources render
+     * "from multiple addresses" (reading [TxInfo.interactionAddressType] here would wrongly show the own destination).
+     * An **outgoing** call keeps its (correct) destination-based subtitle.
+     */
+    private fun TxInfo.operationCounterpartySubtitle(): ContentSubtitle {
+        if (isOutgoing) return extractAddressSubtitle()
+        return when (val source = sourceType) {
+            is TxInfo.SourceType.Single -> namedCounterpartySubtitle(
+                address = source.address,
+                direction = ContentSubtitle.Direction.FROM,
+            ) ?: ContentSubtitle.ExternalAddress(
+                direction = ContentSubtitle.Direction.FROM,
+                rawAddress = source.address,
+            )
+            is TxInfo.SourceType.Multiple -> ContentSubtitle.Plain(
+                resourceReference(
+                    R.string.transaction_history_transaction_from_address,
+                    wrappedList(resourceReference(R.string.transaction_history_multiple_addresses)),
+                ),
+            )
+        }
+    }
+
+    /**
+     * The subtitle naming the address this row interacted with. A `User` address is a counterparty, so it is named
+     * after the portfolio or contact it resolves to; a contract or validator address talks to no one and keeps its own
+     * wording, as does an address that resolves to nothing.
+     */
+    private fun TxInfo.extractAddressSubtitle(): ContentSubtitle {
+        val userAddress = (interactionAddressType as? TxInfo.InteractionAddressType.User)?.address
+        if (userAddress != null) {
+            val direction = if (isOutgoing) ContentSubtitle.Direction.TO else ContentSubtitle.Direction.FROM
+            namedCounterpartySubtitle(address = userAddress, direction = direction)?.let { return it }
+        }
+
+        val text = extractSubtitleByAddressType()
+        val address = interactionAddressType.displayedAddress()
+        return if (address == null) {
+            ContentSubtitle.Plain(text)
+        } else {
+            ContentSubtitle.PlainAddress(text = text, address = address)
+        }
     }
 
     private fun buildContent(
@@ -365,8 +432,7 @@ private fun ResolvedOwner.toSubtitle(direction: ContentSubtitle.Direction): Cont
     is ResolvedOwner.OwnAccount -> ContentSubtitle.OwnAccount(
         direction = direction,
         accountName = account.accountName.toUM().value,
-        iconResId = account.icon.value.getResId(),
-        iconBackgroundColor = account.icon.color.getUiColor(),
+        avatar = account.icon.toPortfolioAvatar(name = account.accountName.toUM().value),
     )
     is ResolvedOwner.OwnPaymentAccount -> ContentSubtitle.OwnPaymentAccount(
         direction = direction,
@@ -386,97 +452,77 @@ private fun ResolvedOwner.toSubtitle(direction: ContentSubtitle.Direction): Cont
 }
 
 private fun externalAddressSubtitle(address: String, direction: ContentSubtitle.Direction) =
-    ContentSubtitle.ExternalAddress(
-        direction = direction,
-        rawAddress = address,
-        briefAddress = address.toBriefAddressFormat(),
-    )
+    ContentSubtitle.ExternalAddress(direction = direction, rawAddress = address)
 
 /**
-
- * icon picked in the contact editor renders as its own drawable.
+ * A portfolio still on the default `Letter` icon renders the monogram of [name]; an icon picked in the account or
+ * contact editor renders as its own drawable. The same rule the design-system `AccountIcon` applies wherever a
+ * portfolio avatar is drawn full-size — here for the inline row avatar, which has its own container.
+ *
+ * The letter itself is left to the composition: [name] may be a string resource (the main account's title), so its
+ * first character is only known once the reference resolves.
  */
-private fun Contact.toContactAvatar(): ContentSubtitle.ContactAvatar {
-    val icon = portfolioIcon()
-    val color = icon.color.getUiColor()
-    val monogram = name.value.firstOrNull()
-
-    return if (icon.value == CryptoPortfolioIcon.Icon.Letter && monogram != null) {
-        ContentSubtitle.ContactAvatar.Monogram(char = monogram, color = color)
+internal fun CryptoPortfolioIcon.toPortfolioAvatar(name: TextReference): ContentSubtitle.PortfolioAvatar =
+    if (value == CryptoPortfolioIcon.Icon.Letter) {
+        ContentSubtitle.PortfolioAvatar.Monogram(name = name, color = color.getUiColor())
     } else {
-        ContentSubtitle.ContactAvatar.Resource(resId = icon.value.getResId(), color = color)
+        ContentSubtitle.PortfolioAvatar.Resource(resId = value.getResId(), color = color.getUiColor())
+    }
+
+/**
+ * A contact's name is a plain string, so an empty one is caught here rather than rendering a blank circle: it falls
+ * back to the letter drawable, as it did before the monogram existed.
+ */
+internal fun Contact.toContactAvatar(): ContentSubtitle.PortfolioAvatar {
+    val icon = portfolioIcon()
+
+    return if (name.value.isEmpty()) {
+        ContentSubtitle.PortfolioAvatar.Resource(resId = icon.value.getResId(), color = icon.color.getUiColor())
+    } else {
+        icon.toPortfolioAvatar(name = stringReference(name.value))
     }
 }
 
 /**
- * Yield supply is a token product, and a coin only ever paid the fee for it — such a row never reaches here, it is
- * a [network fee][isFeeOnlyOperation] by then. So the subtitle speaks of the token that moved.
+ * The network-fee subtitle naming the protocol call a coin's history only paid the gas of. `null` for a call the row
+ * has no wording for — a yield [Send][TransactionType.YieldSupply.Send] changed no mode, it is a transfer the module
+ * made — which leaves the subtitle on the raw method name.
  */
-private fun TxInfo.yieldSupplySubtitle(currency: CryptoCurrency, type: TransactionType.YieldSupply): ContentSubtitle {
-    return when (type) {
-        is TransactionType.YieldSupply.Enter ->
-            amountSubtitle(currency, R.string.yield_module_transaction_enter_subtitle)
-        is TransactionType.YieldSupply.Exit ->
-            amountSubtitle(currency, R.string.yield_module_transaction_exit_subtitle)
-        else -> extractAddressSubtitle()
-    }
+@StringRes
+private fun TransactionType.feeSubtitleResId(): Int? = when (this) {
+    is TransactionType.YieldSupply.Enter -> R.string.transaction_history_fee_for_yield_mode_activation
+    is TransactionType.YieldSupply.Topup -> R.string.transaction_history_fee_for_yield_mode_top_up
+    is TransactionType.YieldSupply.Exit -> R.string.transaction_history_fee_for_yield_mode_deactivation
+    is TransactionType.YieldSupply.DeployContract -> R.string.transaction_history_fee_for_yield_mode_deployment
+    is TransactionType.YieldSupply.InitializeToken -> R.string.transaction_history_fee_for_yield_mode_initialization
+    is TransactionType.YieldSupply.ReactivateToken -> R.string.transaction_history_fee_for_yield_mode_reactivation
+    is TransactionType.Approve,
+    TransactionType.GaslessFee,
+    is TransactionType.Joint.Transfer,
+    is TransactionType.NetworkFee,
+    is TransactionType.Operation,
+    TransactionType.Staking.ClaimRewards,
+    TransactionType.Staking.Restake,
+    TransactionType.Staking.Stake,
+    TransactionType.Staking.Unstake,
+    is TransactionType.Staking.Vote,
+    TransactionType.Staking.Withdraw,
+    TransactionType.Swap,
+    TransactionType.Transfer,
+    TransactionType.UnknownOperation,
+    is TransactionType.YieldSupply.Send,
+    -> null
 }
-
-/**
- * Subtitle of a yield transfer in or out of the Aave position, naming the provider as the counterparty: "to: <Aave
- * avatar> Aave" on a topup, "from: …" on a withdraw. A non-withdraw
- * [Send][TransactionType.YieldSupply.Send] is an ordinary transfer, rendered by [transferContent] instead.
- */
-private fun yieldProviderSubtitle(direction: ContentSubtitle.Direction): ContentSubtitle = ContentSubtitle.Provider(
-    direction = direction,
-    name = resourceReference(R.string.yield_module_provider),
-    iconResId = R.drawable.img_aave_22,
-)
 
 private fun TxInfo.amountSubtitle(currency: CryptoCurrency, @StringRes resId: Int): ContentSubtitle.Plain {
     val formatted = amount.format { crypto(currency) }
     return ContentSubtitle.Plain(resourceReference(resId, wrappedList(formatted)))
 }
 
-/**
- * Counterparty subtitle for an unrecognized contract call (Operation / UnknownOperation). For an **incoming** call
- * [interactionAddressType] is the destination — the viewed wallet itself — so the sender is read from
- * [TxInfo.sourceType] instead: a single source renders its address, multiple sources render "from multiple addresses"
- * (reading [interactionAddressType] here would wrongly show the own destination). An **outgoing** call keeps its
- * (correct) destination-based subtitle. Own counterparties never reach here: they are already reclassified as a
- * transfer upstream.
- */
-private fun TxInfo.operationCounterpartySubtitle(): ContentSubtitle {
-    if (isOutgoing) return extractAddressSubtitle()
-    return when (val source = sourceType) {
-        is TxInfo.SourceType.Single -> ContentSubtitle.ExternalAddress(
-            direction = ContentSubtitle.Direction.FROM,
-            rawAddress = source.address,
-            briefAddress = source.address.toBriefAddressFormat(),
-        )
-        is TxInfo.SourceType.Multiple -> ContentSubtitle.Plain(
-            resourceReference(
-                R.string.transaction_history_transaction_from_address,
-                wrappedList(resourceReference(R.string.transaction_history_multiple_addresses)),
-            ),
-        )
-    }
-}
-
-private fun TxInfo.extractAddressSubtitle(): ContentSubtitle {
-    val text = extractSubtitleByAddressType()
-    val highlight = interactionAddressType.highlightableBriefAddress()
-    return if (highlight == null) {
-        ContentSubtitle.Plain(text)
-    } else {
-        ContentSubtitle.PlainAddress(text = text, highlight = highlight)
-    }
-}
-
-private fun TxInfo.InteractionAddressType?.highlightableBriefAddress(): String? = when (this) {
-    is TxInfo.InteractionAddressType.Contract -> address.toBriefAddressFormat()
-    is TxInfo.InteractionAddressType.User -> address.toBriefAddressFormat()
-    is TxInfo.InteractionAddressType.Validator -> address.toBriefAddressFormat()
+private fun TxInfo.InteractionAddressType?.displayedAddress(): String? = when (this) {
+    is TxInfo.InteractionAddressType.Contract -> address
+    is TxInfo.InteractionAddressType.User -> address
+    is TxInfo.InteractionAddressType.Validator -> address
     is TxInfo.InteractionAddressType.Multiple,
     null,
     -> null
@@ -486,7 +532,7 @@ private fun TxInfo.extractSubtitleByAddressType(): TextReference =
     when (val interactionAddress = interactionAddressType) {
         is TxInfo.InteractionAddressType.Contract -> resourceReference(
             id = R.string.transaction_history_contract_address,
-            formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
+            formatArgs = wrappedList(interactionAddress.address),
         )
         is TxInfo.InteractionAddressType.Multiple -> resourceReference(
             id = directionalAddressRes(),
@@ -494,11 +540,11 @@ private fun TxInfo.extractSubtitleByAddressType(): TextReference =
         )
         is TxInfo.InteractionAddressType.User -> resourceReference(
             id = directionalAddressRes(),
-            formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
+            formatArgs = wrappedList(interactionAddress.address),
         )
         is TxInfo.InteractionAddressType.Validator -> resourceReference(
             id = R.string.transaction_history_transaction_validator,
-            formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
+            formatArgs = wrappedList(interactionAddress.address),
         )
         null -> TextReference.EMPTY
     }
