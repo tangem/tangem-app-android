@@ -40,4 +40,8 @@ internal class DefaultCampaignsDeepLinkHandler @AssistedInject constructor(
     interface Factory : CampaignsDeepLinkHandler.Factory {
         override fun create(queryParams: Map<String, String>): DefaultCampaignsDeepLinkHandler
     }
+
+    companion object {
+        const val DEEPLINK_KEY = "tangem://campaigns"
+    }
 }

@@ -3,28 +3,32 @@ package com.tangem.features.txhistory.joint.operation.converter
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.common.ui.cosign.SignatureProgressUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.common.ui.cosign.SignatureProgressUM
-import java.math.BigDecimal
-import com.tangem.features.txhistory.joint.operation.model.JointOperationFiat
-import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.format.bigdecimal.fiat
-import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperationSignerState
 import com.tangem.domain.jointaccount.model.JointOperationSignerState.Answer
 import com.tangem.domain.jointaccount.model.JointTransferIntent
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.features.txhistory.joint.operation.model.JointOperationFiat
 import com.tangem.features.txhistory.joint.operation.model.JointOperationState
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.MockAccounts
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import java.math.BigDecimal
 import java.math.BigInteger
 import com.tangem.core.ui.R as CoreUiR
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class JointOperationUMConverterTest {
 
     private val converter = JointOperationUMConverter(
@@ -107,6 +111,18 @@ internal class JointOperationUMConverterTest {
         assertThat(actual.cosignAction?.iconEnd).isNull()
     }
 
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN wallet type and operation state WHEN converted THEN only a hot wallet that can sign holds to confirm`(
+        model: HoldToConfirmModel,
+    ) {
+        // Act
+        val actual = converter.convert(model.input)
+
+        // Assert
+        assertThat(actual.cosignAction?.isHoldToConfirm).isEqualTo(model.expected)
+    }
+
     @Test
     fun `GIVEN threshold below the roster WHEN converted THEN the signatures counter runs to the threshold`() {
         // Act
@@ -177,6 +193,47 @@ internal class JointOperationUMConverterTest {
         assertThat(actual.amountBlock.fiatAmount).isNull()
     }
 
+    @Test
+    fun `GIVEN a long recipient address WHEN converted THEN the card shows it whole for the row to cut`() {
+        // Arrange
+        val state = state(isSending = false).copy(
+            displayed = JointTransferIntent.Native(recipient = LONG_RECIPIENT, amountWei = BigInteger.TEN.pow(18)),
+        )
+
+        // Act
+        val actual = converter.convert(input(state))
+
+        // Assert
+        assertThat(actual.counterparty?.title).isEqualTo(stringReference(LONG_RECIPIENT))
+    }
+
+    data class HoldToConfirmModel(val description: String, val input: JointOperationUMConverter.Input, val expected: Boolean) {
+        override fun toString() = description
+    }
+
+    private fun provideTestModels() = listOf(
+        HoldToConfirmModel(
+            description = "hot wallet can sign",
+            input = input(state(isSending = false), isColdWallet = false),
+            expected = true,
+        ),
+        HoldToConfirmModel(
+            description = "cold wallet signs with a card tap",
+            input = input(state(isSending = false), isColdWallet = true),
+            expected = false,
+        ),
+        HoldToConfirmModel(
+            description = "hot wallet already answered",
+            input = input(state(isSending = false), hasAnswered = true, isColdWallet = false),
+            expected = false,
+        ),
+        HoldToConfirmModel(
+            description = "hot wallet, operation already on its way",
+            input = input(state(isSending = true), isColdWallet = false),
+            expected = false,
+        ),
+    )
+
     private fun input(
         state: JointOperationState,
         hasAnswered: Boolean = false,
@@ -226,5 +283,6 @@ internal class JointOperationUMConverterTest {
     private companion object {
         const val OWN = "0xowner"
         const val OTHER = "0xother"
+        const val LONG_RECIPIENT = "0xaea826671a6bd1cc5b4b8e6a7f6a0e1d015c5ebb"
     }
 }
