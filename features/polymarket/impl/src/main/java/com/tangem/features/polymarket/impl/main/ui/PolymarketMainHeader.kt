@@ -47,22 +47,22 @@ import com.tangem.core.ui.res.generated.icons.ic_chevron_double_vertical_16
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoneyStyled
 import com.tangem.features.polymarket.impl.common.funding.PredictionAwaitingFundsBanner
 import com.tangem.features.polymarket.impl.main.ui.state.PredictionBalanceUM
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketPositionsPreviewUM
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 
-/** Scrolling header of the Discovery feed: the account balance, its actions, and the events section title. */
+/**
+ * Scrolling header of the Discovery feed: the account balance, its actions, and the events section title.
+ *
+ * @param positions the "My predictions" block, drawn between the actions and the events title
+ */
 @Composable
 internal fun PolymarketMainHeader(
     balance: PredictionBalanceUM,
     isAwaitingFunds: Boolean,
     modifier: Modifier = Modifier,
-    positions: PolymarketPositionsPreviewUM = PolymarketPositionsPreviewUM.Content(persistentListOf()),
-    onActivePositionsClick: (() -> Unit)? = null,
-    onFinishedPositionsClick: (() -> Unit)? = null,
+    positions: (@Composable (Modifier) -> Unit)? = null,
 ) {
-    val arePositionsVisible = positions.isVisible || onFinishedPositionsClick != null
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -84,17 +84,12 @@ internal fun PolymarketMainHeader(
             )
         }
 
-        PolymarketPositionsPreview(
-            state = positions,
-            modifier = Modifier.padding(top = 48.dp),
-            onActiveClick = onActivePositionsClick,
-            onFinishedClick = onFinishedPositionsClick,
-        )
+        positions?.invoke(Modifier.padding(top = 48.dp))
 
         Text(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = if (arePositionsVisible) 32.dp else 72.dp, start = 16.dp, end = 16.dp),
+                .padding(top = if (positions != null) 32.dp else 72.dp, start = 16.dp, end = 16.dp),
             text = stringResourceSafe(R.string.prediction_main_explore_events),
             color = TangemTheme.colors3.text.primary,
             style = TangemTheme.typography3.heading.small,

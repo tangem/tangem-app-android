@@ -7,6 +7,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.SetPinResult
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.model.TangemPayCardDetails
+import com.tangem.domain.pay.model.TangemPayCardProvisioningData
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import kotlinx.coroutines.flow.Flow
@@ -23,6 +24,13 @@ interface TangemPayCardDetailsRepository {
     suspend fun getPin(userWalletId: UserWalletId, cardId: String): Either<UniversalError, String?>
 
     suspend fun setPin(userWalletId: UserWalletId, cardId: String, pin: String): Either<UniversalError, SetPinResult>
+
+    suspend fun getProvisioningData(
+        userWalletId: UserWalletId,
+        cardId: String,
+    ): Either<UniversalError, TangemPayCardProvisioningData>
+
+    fun isProductionEnvironment(): Boolean
 
     suspend fun isAddToWalletDone(userWalletId: UserWalletId): Either<UniversalError, Boolean>
 

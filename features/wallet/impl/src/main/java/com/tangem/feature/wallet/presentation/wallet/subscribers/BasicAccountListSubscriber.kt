@@ -5,6 +5,7 @@ import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.jointaccount.model.JointPendingOperation
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.staking.model.StakingAvailability
@@ -46,6 +47,8 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
         shouldShowMainPromo: Boolean = false,
         isHotBackedUp: Boolean? = null,
         accountIdsWithInvites: Set<String> = emptySet(),
+        jointPendingOperations: List<JointPendingOperation> = emptyList(),
+        isMoneyAccountHidden: Boolean = false,
     ) {
         stateController.update(
             SetTokenListTransformer(
@@ -59,6 +62,8 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                 isAccountsModeEnabled = isAccountMode,
                 isHotBackedUp = isHotBackedUp,
                 accountIdsWithInvites = accountIdsWithInvites,
+                jointPendingOperations = jointPendingOperations,
+                isMoneyAccountHidden = isMoneyAccountHidden,
             ),
         )
     }

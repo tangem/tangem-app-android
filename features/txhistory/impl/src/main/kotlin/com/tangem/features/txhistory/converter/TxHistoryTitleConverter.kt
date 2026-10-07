@@ -53,7 +53,9 @@ internal class TxHistoryTitleConverter(private val currency: CryptoCurrency) {
             confirmed = R.string.common_swapped,
             failed = R.string.transaction_history_status_swap_failed,
         )
-        is TransactionType.Transfer -> tx.transferTitle(isOwnTransfer)
+        is TransactionType.Transfer,
+        is TransactionType.Joint.Transfer,
+        -> tx.transferTitle(isOwnTransfer)
         is TransactionType.Staking.ClaimRewards -> tx.statusAwareTitle(
             pending = R.string.transaction_history_status_claiming_rewards,
             confirmed = R.string.transaction_history_status_rewards_claimed,

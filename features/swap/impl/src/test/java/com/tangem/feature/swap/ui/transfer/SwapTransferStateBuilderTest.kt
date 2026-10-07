@@ -17,7 +17,6 @@ import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -41,6 +40,7 @@ import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
 import com.tangem.feature.swap.model.SwapProcessDataState
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.ProviderState
+import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.presentation.R
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -52,6 +52,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -567,6 +569,56 @@ internal class SwapTransferStateBuilderTest {
             )
         }
 
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN a prediction limit warning WHEN updateTransferButtonEnableState THEN button is disabled`(
+        isMinimum: Boolean,
+    ) = runTest {
+        // Arrange
+        val limits = PredictionTopUpLimits(
+            minimum = BigDecimal.ONE,
+            minimumText = "$1.00",
+            maximum = BigDecimal(100),
+            maximumText = "$100.00",
+        )
+        val warning = if (isMinimum) {
+            SwapNotificationUM.Warning.PredictionMinimumDeposit(amountText = "$1.00")
+        } else {
+            SwapNotificationUM.Warning.PredictionMaximumDeposit(amountText = "$100.00")
+        }
+        coEvery {
+            notificationsFactory.getNotifications(
+                transferState = any(),
+                feeSelectorUM = any(),
+                feeCryptoCurrencyStatus = any(),
+                actions = any(),
+                predictionTopUpLimits = limits,
+            )
+        } returns persistentListOf(warning)
+        val transferState = buildTransferState(
+            fromAmount = BigDecimal("1"),
+            toAmount = BigDecimal("1"),
+            isAccountsMode = false,
+        )
+
+        // Act
+        val result = sut.updateTransferButtonEnableState(
+            dataState = SwapProcessDataState(),
+            transferState = transferState,
+            actions = actions,
+            uiStateHolder = baseStateHolder(),
+            feePaidCryptoCurrencyStatus = null,
+            fee = mockk(relaxed = true),
+            isTangemPayWithdrawal = false,
+            feeSelectorUM = null,
+            predictionTopUpLimits = limits,
+        )
+
+        // Assert
+        assertThat(result.notifications).containsExactly(warning)
+        assertThat(result.swapButton.isEnabled).isFalse()
+    }
+
     @Test
     fun `GIVEN Tron fee WHEN updateTransferButtonEnableState THEN transferFooter uses Tron token fee sending text`() =
         runTest {
@@ -970,6 +1022,36 @@ internal class SwapTransferStateBuilderTest {
         }
 
     @Test
+    fun `GIVEN a transfer to the prediction account WHEN the success state is built THEN the destination title is localized`() {
+        // Arrange
+        val transferState = buildTransferState(fromAmount = BigDecimal.ONE, toAmount = BigDecimal.ONE, isAccountsMode = true)
+        val dataState = SwapProcessDataState(
+            fromSwapCurrencyStatus = fromCurrencyStatus,
+            toSwapCurrencyStatus = toCurrencyStatus.copy(account = Account.Prediction(toCurrencyStatus.userWalletId)),
+            amount = BigDecimal.ONE.toPlainString(),
+            currentTransferState = transferState,
+        )
+
+        // Act
+        val result = sut.createTangemPayWithdrawalSuccessState(
+            uiState = baseStateHolder(),
+            dataState = dataState,
+            fee = null,
+            onExploreClick = {},
+            onShareClick = {},
+        )
+
+        // Assert
+        assertThat(requireNotNull(result.successState).toTitle).isEqualTo(
+            AccountTitleUM.Account(
+                prefixText = resourceReference(R.string.swapping_to_account_title),
+                name = resourceReference(R.string.prediction_account_title),
+                icon = AccountIconUM.Prediction,
+            ),
+        )
+    }
+
+    @Test
     fun `GIVEN transfer dataState WHEN createTangemPayWithdrawalSuccessState THEN feeless transfer success holder is built`() {
         // from amount comes from dataState.amount, to amount from transferState.sendingAmount — keep them distinct
         val fromAmount = BigDecimal("2.0")
@@ -1048,7 +1130,7 @@ internal class SwapTransferStateBuilderTest {
     }
 
     @Test
-    fun `GIVEN transfer dataState WHEN createPredictionWithdrawalSentState THEN an in-progress transfer holder without fee or explorer is built`() {
+    fun `GIVEN transfer dataState WHEN createPredictionWithdrawalSentState THEN an in-progress transfer holder without fee or explorer shows the destination account`() {
         // Arrange
         val fromAmount = BigDecimal("5")
         val toAmount = BigDecimal("5")
@@ -1100,13 +1182,12 @@ internal class SwapTransferStateBuilderTest {
                 icon = AccountIconUM.Prediction,
             ),
         )
-        val toCurrency = toCurrencyStatus.currency
+        val toAccount = toCurrencyStatus.account as Account.CryptoPortfolio
         assertThat(success.toTitle).isEqualTo(
-            AccountTitleUM.Text(
-                combinedReference(
-                    resourceReference(R.string.common_to),
-                    stringReference(" ${toCurrency.symbol} · ${toCurrency.network.name}"),
-                ),
+            AccountTitleUM.Account(
+                prefixText = resourceReference(R.string.swapping_to_account_title),
+                name = toAccount.accountName.toUM().value,
+                icon = CryptoPortfolioIconConverter.convert(toAccount.icon),
             ),
         )
     }

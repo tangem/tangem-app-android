@@ -266,11 +266,13 @@ internal object YieldSupplyDomainModule {
     @Singleton
     fun provideYieldSupplyPendingProcessorUseCase(
         yieldSupplyRepository: YieldSupplyRepository,
+        yieldSupplyTransactionRepository: YieldSupplyTransactionRepository,
         singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
         appScope: AppCoroutineScope,
     ): YieldSupplyPendingTracker {
         return YieldSupplyPendingTracker(
             yieldSupplyRepository = yieldSupplyRepository,
+            yieldSupplyTransactionRepository = yieldSupplyTransactionRepository,
             singleNetworkStatusFetcher = singleNetworkStatusFetcher,
             coroutineScope = appScope,
         )

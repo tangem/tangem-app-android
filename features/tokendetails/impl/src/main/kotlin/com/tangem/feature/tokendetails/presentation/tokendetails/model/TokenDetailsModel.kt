@@ -55,7 +55,8 @@ import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.domain.marketing.models.MarketingScreen
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveNotification
-import com.tangem.domain.jointaccount.usecase.IsJointOperationSlotBusyUseCase
+import com.tangem.domain.jointaccount.model.JointOperationSlot
+import com.tangem.domain.jointaccount.usecase.GetJointOperationSlotUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -170,7 +171,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val saveViewedYieldSupplyWarningUseCase: SaveViewedYieldSupplyWarningUseCase,
     private val saveViewedTokenReceiveWarningUseCase: SaveViewedTokenReceiveWarningUseCase,
     private val needShowYieldSupplyDepositedWarningUseCase: NeedShowYieldSupplyDepositedWarningUseCase,
-    private val isJointOperationSlotBusyUseCase: IsJointOperationSlotBusyUseCase,
+    private val getJointOperationSlotUseCase: GetJointOperationSlotUseCase,
     private val getAccountCryptoCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val yieldSupplyGetRewardsBalanceUseCase: YieldSupplyGetRewardsBalanceUseCase,
@@ -600,10 +601,7 @@ internal class TokenDetailsModel @Inject constructor(
             return
         }
         modelScope.launch {
-            if (isJointOperationSlotBusy()) {
-                showJointOperationSlotBusy()
-                return@launch
-            }
+            if (!isJointOperationSlotFree()) return@launch
             analyticsEventsHandler.send(
                 TransferAnalyticsEvent.MethodScreenOpened(source = AnalyticsParam.ScreensSources.Token),
             )
@@ -720,9 +718,8 @@ internal class TokenDetailsModel @Inject constructor(
             return
         }
         modelScope.launch {
-            if (isJointOperationSlotBusy()) {
-                showJointOperationSlotBusy()
-            } else if (needShowYieldSupplyDepositedWarningUseCase(cryptoCurrencyStatus)) {
+            if (!isJointOperationSlotFree()) return@launch
+            if (needShowYieldSupplyDepositedWarningUseCase(cryptoCurrencyStatus)) {
                 bottomSheetNavigation.activate(
                     configuration = TokenDetailsBottomSheetConfig.YieldSupplyWarning(
                         cryptoCurrency = cryptoCurrency,
@@ -737,12 +734,23 @@ internal class TokenDetailsModel @Inject constructor(
 
     /**
      * A joint account runs one operation per network at a time, so a busy slot stops the transfer at its button.
-     * The send row checks again: the slot can fill while the transfer sheet is open.
+     * The send row checks again: the slot can fill while the transfer sheet is open. A slot that cannot be read
+     * stops the transfer too — the app cannot tell whether the network is free.
      */
-    private suspend fun isJointOperationSlotBusy(): Boolean {
-        val jointAccount = account as? Account.Joint ?: return false
+    private suspend fun isJointOperationSlotFree(): Boolean {
+        val jointAccount = account as? Account.Joint ?: return true
 
-        return isJointOperationSlotBusyUseCase(account = jointAccount, network = cryptoCurrency.network)
+        return when (getJointOperationSlotUseCase(account = jointAccount, network = cryptoCurrency.network)) {
+            JointOperationSlot.FREE -> true
+            JointOperationSlot.BUSY -> {
+                showJointOperationSlotBusy()
+                false
+            }
+            JointOperationSlot.UNKNOWN -> {
+                uiMessageSender.send(SnackbarMessage(resourceReference(R.string.common_unknown_error)))
+                false
+            }
+        }
     }
 
     private fun showJointOperationSlotBusy() {

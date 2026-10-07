@@ -1,115 +1,158 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
-import org.joda.time.DateTime
-import java.math.BigDecimal
+import com.tangem.domain.models.serialization.SerializedBigDecimal
+import com.tangem.domain.models.serialization.SerializedIsoDateTime
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class TangemPayTxHistoryResponse(
-    @Json(name = "result") val result: Result,
+    @SerialName("result") val result: Result,
 ) {
-    @JsonClass(generateAdapter = true)
+
+    @Serializable
     data class Result(
-        @Json(name = "transactions") val transactions: List<Transaction>,
+        @SerialName("transactions") val transactions: List<Transaction>,
     )
 
-    @JsonClass(generateAdapter = true)
-    data class Transaction(
-        @Json(name = "id") val id: String, // UUID (used as cursor for pagination)
-        @Json(name = "type") val type: String, // "spend", "refund", "collateral", "payment", "fee"
-        @Json(name = "spend") val spend: Spend? = null,
-        @Json(name = "refund") val refund: Refund? = null,
-        @Json(name = "collateral") val collateral: Collateral? = null,
-        @Json(name = "payment") val payment: Payment? = null,
-        @Json(name = "fee") val fee: Fee? = null,
-    )
+    /**
+     * A transaction of a type this build does not know is decoded as [Unknown] and skipped. Older app versions skip
+     * it too, so a new type never fails the whole history response.
+     */
+    @Serializable
+    sealed interface Transaction {
 
-    @JsonClass(generateAdapter = true)
+        val id: String
+
+        @Serializable
+        @SerialName("spend")
+        data class Spend(
+            @SerialName("id") override val id: String,
+            @SerialName("spend") val spend: SpendData?,
+        ) : Transaction
+
+        @Serializable
+        @SerialName("refund")
+        data class Refund(
+            @SerialName("id") override val id: String,
+            @SerialName("refund") val refund: RefundData?,
+        ) : Transaction
+
+        @Serializable
+        @SerialName("collateral")
+        data class Collateral(
+            @SerialName("id") override val id: String,
+            @SerialName("collateral") val collateral: CollateralData?,
+        ) : Transaction
+
+        @Serializable
+        @SerialName("payment")
+        data class Payment(
+            @SerialName("id") override val id: String,
+            @SerialName("payment") val payment: PaymentData?,
+        ) : Transaction
+
+        @Serializable
+        @SerialName("fee")
+        data class Fee(
+            @SerialName("id") override val id: String,
+            @SerialName("fee") val fee: FeeData?,
+        ) : Transaction
+
+        @Serializable
+        data class Unknown(
+            @SerialName("id") override val id: String,
+            @SerialName("wire_type") val type: String? = null,
+            @SerialName("payload") val payload: JsonObject? = null,
+        ) : Transaction
+    }
+
+    @Serializable
     @Suppress("BooleanPropertyNaming")
-    data class Spend(
-        @Json(name = "amount") val amount: BigDecimal,
-        @Json(name = "currency") val currency: String,
-        @Json(name = "local_amount") val localAmount: BigDecimal? = null,
-        @Json(name = "local_currency") val localCurrency: String? = null,
-        @Json(name = "authorized_amount") val authorizedAmount: BigDecimal? = null,
-        @Json(name = "authorization_method") val authorizationMethod: String? = null,
-        @Json(name = "memo") val memo: String? = null,
-        @Json(name = "receipt") val receipt: Boolean,
-        @Json(name = "merchant_name") val merchantName: String,
-        @Json(name = "merchant_category") val merchantCategory: String? = null,
-        @Json(name = "merchant_category_code") val merchantCategoryCode: String? = null,
-        @Json(name = "merchant_id") val merchantId: String? = null,
-        @Json(name = "enriched_merchant_icon") val enrichedMerchantIcon: String? = null,
-        @Json(name = "enriched_merchant_name") val enrichedMerchantName: String? = null,
-        @Json(name = "enriched_merchant_category") val enrichedMerchantCategory: String? = null,
-        @Json(name = "card_id") val cardId: String? = null,
-        @Json(name = "card_type") val cardType: String? = null,
-        @Json(name = "card_display_name") val cardDisplayName: String? = null,
-        @Json(name = "card_number_end") val cardNumberEnd: String? = null,
-        @Json(name = "status") val status: String,
-        @Json(name = "declined_reason") val declinedReason: String? = null,
-        @Json(name = "authorized_at") val authorizedAt: DateTime,
-        @Json(name = "posted_at") val postedAt: DateTime?,
-        @Json(name = "cashback") val cashback: BigDecimal? = null,
-        @Json(name = "cashback_status") val cashbackStatus: String? = null,
-        @Json(name = "cashback_currency_code") val cashbackCurrencyCode: String? = null,
+    data class SpendData(
+        @SerialName("amount") val amount: SerializedBigDecimal,
+        @SerialName("currency") val currency: String,
+        @SerialName("local_amount") val localAmount: SerializedBigDecimal? = null,
+        @SerialName("local_currency") val localCurrency: String? = null,
+        @SerialName("authorized_amount") val authorizedAmount: SerializedBigDecimal? = null,
+        @SerialName("authorization_method") val authorizationMethod: String? = null,
+        @SerialName("memo") val memo: String? = null,
+        @SerialName("receipt") val receipt: Boolean,
+        @SerialName("merchant_name") val merchantName: String,
+        @SerialName("merchant_category") val merchantCategory: String? = null,
+        @SerialName("merchant_category_code") val merchantCategoryCode: String? = null,
+        @SerialName("merchant_id") val merchantId: String? = null,
+        @SerialName("enriched_merchant_icon") val enrichedMerchantIcon: String? = null,
+        @SerialName("enriched_merchant_name") val enrichedMerchantName: String? = null,
+        @SerialName("enriched_merchant_category") val enrichedMerchantCategory: String? = null,
+        @SerialName("card_id") val cardId: String? = null,
+        @SerialName("card_type") val cardType: String? = null,
+        @SerialName("card_display_name") val cardDisplayName: String? = null,
+        @SerialName("card_number_end") val cardNumberEnd: String? = null,
+        @SerialName("status") val status: String,
+        @SerialName("declined_reason") val declinedReason: String? = null,
+        @SerialName("authorized_at") val authorizedAt: SerializedIsoDateTime,
+        @SerialName("posted_at") val postedAt: SerializedIsoDateTime?,
+        @SerialName("cashback") val cashback: SerializedBigDecimal? = null,
+        @SerialName("cashback_status") val cashbackStatus: String? = null,
+        @SerialName("cashback_currency_code") val cashbackCurrencyCode: String? = null,
     )
 
-    @JsonClass(generateAdapter = true)
-    data class Refund(
-        @Json(name = "amount") val amount: BigDecimal,
-        @Json(name = "currency") val currency: String,
-        @Json(name = "local_amount") val localAmount: BigDecimal? = null,
-        @Json(name = "local_currency") val localCurrency: String? = null,
-        @Json(name = "source_transaction_id") val sourceTransactionId: String? = null,
-        @Json(name = "merchant_name") val merchantName: String,
-        @Json(name = "merchant_category") val merchantCategory: String? = null,
-        @Json(name = "merchant_category_code") val merchantCategoryCode: String? = null,
-        @Json(name = "merchant_id") val merchantId: String? = null,
-        @Json(name = "enriched_merchant_icon") val enrichedMerchantIcon: String? = null,
-        @Json(name = "enriched_merchant_name") val enrichedMerchantName: String? = null,
-        @Json(name = "enriched_merchant_category") val enrichedMerchantCategory: String? = null,
-        @Json(name = "card_id") val cardId: String? = null,
-        @Json(name = "card_type") val cardType: String? = null,
-        @Json(name = "card_display_name") val cardDisplayName: String? = null,
-        @Json(name = "card_number_end") val cardNumberEnd: String? = null,
-        @Json(name = "status") val status: String,
-        @Json(name = "authorized_at") val authorizedAt: DateTime,
-        @Json(name = "posted_at") val postedAt: DateTime?,
-        @Json(name = "cashback") val cashback: BigDecimal? = null,
-        @Json(name = "cashback_status") val cashbackStatus: String? = null,
-        @Json(name = "cashback_currency_code") val cashbackCurrencyCode: String? = null,
+    @Serializable
+    data class RefundData(
+        @SerialName("amount") val amount: SerializedBigDecimal,
+        @SerialName("currency") val currency: String,
+        @SerialName("local_amount") val localAmount: SerializedBigDecimal? = null,
+        @SerialName("local_currency") val localCurrency: String? = null,
+        @SerialName("source_transaction_id") val sourceTransactionId: String? = null,
+        @SerialName("merchant_name") val merchantName: String,
+        @SerialName("merchant_category") val merchantCategory: String? = null,
+        @SerialName("merchant_category_code") val merchantCategoryCode: String? = null,
+        @SerialName("merchant_id") val merchantId: String? = null,
+        @SerialName("enriched_merchant_icon") val enrichedMerchantIcon: String? = null,
+        @SerialName("enriched_merchant_name") val enrichedMerchantName: String? = null,
+        @SerialName("enriched_merchant_category") val enrichedMerchantCategory: String? = null,
+        @SerialName("card_id") val cardId: String? = null,
+        @SerialName("card_type") val cardType: String? = null,
+        @SerialName("card_display_name") val cardDisplayName: String? = null,
+        @SerialName("card_number_end") val cardNumberEnd: String? = null,
+        @SerialName("status") val status: String,
+        @SerialName("authorized_at") val authorizedAt: SerializedIsoDateTime,
+        @SerialName("posted_at") val postedAt: SerializedIsoDateTime?,
+        @SerialName("cashback") val cashback: SerializedBigDecimal? = null,
+        @SerialName("cashback_status") val cashbackStatus: String? = null,
+        @SerialName("cashback_currency_code") val cashbackCurrencyCode: String? = null,
     )
 
-    @JsonClass(generateAdapter = true)
-    data class Collateral(
-        @Json(name = "amount") val amount: BigDecimal,
-        @Json(name = "currency") val currency: String,
-        @Json(name = "memo") val memo: String? = null,
-        @Json(name = "chain_id") val chainId: Long,
-        @Json(name = "wallet_address") val walletAddress: String,
-        @Json(name = "transaction_hash") val transactionHash: String,
-        @Json(name = "posted_at") val postedAt: DateTime?,
+    @Serializable
+    data class CollateralData(
+        @SerialName("amount") val amount: SerializedBigDecimal,
+        @SerialName("currency") val currency: String,
+        @SerialName("memo") val memo: String? = null,
+        @SerialName("chain_id") val chainId: Long,
+        @SerialName("wallet_address") val walletAddress: String,
+        @SerialName("transaction_hash") val transactionHash: String,
+        @SerialName("posted_at") val postedAt: SerializedIsoDateTime?,
     )
 
-    @JsonClass(generateAdapter = true)
-    data class Payment(
-        @Json(name = "amount") val amount: BigDecimal,
-        @Json(name = "currency") val currency: String,
-        @Json(name = "memo") val memo: String? = null,
-        @Json(name = "chain_id") val chainId: Long? = null,
-        @Json(name = "wallet_address") val walletAddress: String? = null,
-        @Json(name = "transaction_hash") val transactionHash: String? = null,
-        @Json(name = "status") val status: String,
-        @Json(name = "posted_at") val postedAt: DateTime,
+    @Serializable
+    data class PaymentData(
+        @SerialName("amount") val amount: SerializedBigDecimal,
+        @SerialName("currency") val currency: String,
+        @SerialName("memo") val memo: String? = null,
+        @SerialName("chain_id") val chainId: Long? = null,
+        @SerialName("wallet_address") val walletAddress: String? = null,
+        @SerialName("transaction_hash") val transactionHash: String? = null,
+        @SerialName("status") val status: String,
+        @SerialName("posted_at") val postedAt: SerializedIsoDateTime,
     )
 
-    @JsonClass(generateAdapter = true)
-    data class Fee(
-        @Json(name = "amount") val amount: BigDecimal,
-        @Json(name = "currency") val currency: String,
-        @Json(name = "description") val description: String? = null,
-        @Json(name = "posted_at") val postedAt: DateTime,
+    @Serializable
+    data class FeeData(
+        @SerialName("amount") val amount: SerializedBigDecimal,
+        @SerialName("currency") val currency: String,
+        @SerialName("description") val description: String? = null,
+        @SerialName("posted_at") val postedAt: SerializedIsoDateTime,
     )
 }

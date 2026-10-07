@@ -91,6 +91,7 @@ internal class ExpressTransactionsModel @Inject constructor(
             cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
             userWallet = userWallet,
             cryptoCurrency = cryptoCurrency,
+            scope = params.scope,
         )
     }
 
@@ -98,8 +99,10 @@ internal class ExpressTransactionsModel @Inject constructor(
     val uiState: StateFlow<ExpressTransactionsBlockState> = internalUiState
 
     init {
-        subscribeOnExternalEvents()
-        subscribeOnCurrencyStatusUpdates()
+        if (params.scope == ExpressTransactionsComponent.Scope.Currency) {
+            subscribeOnExternalEvents()
+            subscribeOnCurrencyStatusUpdates()
+        }
         subscribeOnExpressTransactionsUpdates()
         subscribeOnRatingActivation()
     }

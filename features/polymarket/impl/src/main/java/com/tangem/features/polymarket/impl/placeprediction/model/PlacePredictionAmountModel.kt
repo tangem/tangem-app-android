@@ -1,15 +1,20 @@
 package com.tangem.features.polymarket.impl.placeprediction.model
 
+import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.message.DialogMessage
+import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
-import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
+import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
+import com.tangem.domain.polymarket.flow.PredictionBalancePoller
+import com.tangem.domain.polymarket.flow.PredictionFundingWindow
+import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
 import com.tangem.domain.polymarket.model.PolymarketPositionId
+import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
 import com.tangem.domain.polymarket.model.PredictionPriceError
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
@@ -18,6 +23,8 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketCollateralCurrencyUseCa
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionPriceUseCase
+import com.tangem.features.polymarket.impl.main.addfunds.PolymarketAddFundsComponent
+import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetConfig
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
@@ -31,7 +38,9 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.canPollPrice
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
 import com.tangem.features.polymarket.impl.placeprediction.entity.isMarketClosed
 import com.tangem.features.polymarket.impl.placeprediction.entity.isQuotable
+import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAddFundsAvailabilityTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAmountTransformer
+import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAwaitingFundsTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetBalanceTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetCollateralTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetMarketTransformer
@@ -50,6 +59,13 @@ import com.tangem.utils.transformer.update
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -70,12 +86,15 @@ internal class PlacePredictionAmountModel @Inject constructor(
     private val getPolymarketEventUseCase: GetPolymarketEventUseCase,
     private val getPolymarketCollateralCurrencyUseCase: GetPolymarketCollateralCurrencyUseCase,
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
-    private val getPolymarketBalanceInteractor: GetPolymarketBalanceInteractor,
     private val getPredictionOrderQuoteUseCase: GetPredictionOrderQuoteUseCase,
     private val getPredictionPriceUseCase: GetPredictionPriceUseCase,
     private val checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
     private val positionsRepository: PolymarketPositionsRepository,
-) : Model(), PlacePredictionAmountIntents {
+    private val predictionFundingWindow: PredictionFundingWindow,
+    private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
+    private val predictionBalancePoller: PredictionBalancePoller,
+    private val refreshPredictionDepositRequisitesInteractor: RefreshPredictionDepositRequisitesInteractor,
+) : Model(), PlacePredictionAmountIntents, PolymarketAddFundsComponent.ModelCallback {
 
     private val params = paramsContainer.require<PlacePredictionComponent.Params>()
 
@@ -85,7 +104,23 @@ internal class PlacePredictionAmountModel @Inject constructor(
     private val quoteJobHolder = JobHolder()
     private val tradingAllowanceJobHolder = JobHolder()
     private val positionJobHolder = JobHolder()
-    private val balanceJobHolder = JobHolder()
+    private val balancePollJobHolder = JobHolder()
+
+    private val activeStatus = MutableStateFlow<PredictionAccountStatusValue.Active?>(value = null)
+
+    private val tradingPermission = MutableStateFlow<TradingPermissionUM?>(value = null)
+
+    private val addFunds = PlacePredictionAddFunds(
+        userWalletId = params.userWalletId,
+        activeStatus = activeStatus,
+        router = router,
+        messageSender = messageSender,
+        refreshInteractor = refreshPredictionDepositRequisitesInteractor,
+        scope = modelScope,
+    )
+
+    val fundingSheetNavigation: SlotNavigation<PolymarketFundingSheetConfig>
+        get() = addFunds.navigation
 
     private var isNegRiskMarket: Boolean? = null
 
@@ -99,7 +134,8 @@ internal class PlacePredictionAmountModel @Inject constructor(
             is PlacePredictionComponent.Params.Buy -> loadMarket(params = params)
             is PlacePredictionComponent.Params.Sell -> loadPosition(params = params)
         }
-        loadBalance()
+        observeAccountStatus()
+        observeFundingWindow()
         loadTradingAllowance()
     }
 
@@ -116,14 +152,50 @@ internal class PlacePredictionAmountModel @Inject constructor(
                 )
             }
 
+            tradingPermission.value = permission
             uiState.update(SetTradingPermissionTransformer(permission = permission))
         }.saveIn(tradingAllowanceJobHolder)
     }
 
+    private fun observeAccountStatus() {
+        predictionAccountStatusSupplier(userWalletId = params.userWalletId)
+            .onEach { status -> activeStatus.value = status as? PredictionAccountStatusValue.Active }
+            .flowOn(dispatchers.default)
+            .launchIn(modelScope)
+
+        activeStatus
+            .map { status -> status?.takeIf { it.source == StatusSource.ACTUAL }?.balance }
+            .distinctUntilChanged()
+            .onEach { balance -> uiState.update(SetBalanceTransformer(balance = balance)) }
+            .launchIn(modelScope)
+
+        if (params.side != PredictionOrderSide.BUY) return
+
+        activeStatus
+            .filterNotNull()
+            .take(count = 1)
+            .onEach { addFunds.prefetch() }
+            .launchIn(modelScope)
+
+        addFunds.isEnabled(permission = tradingPermission)
+            .onEach { isEnabled -> uiState.update(SetAddFundsAvailabilityTransformer(isEnabled = isEnabled)) }
+            .launchIn(modelScope)
+    }
+
+    private fun observeFundingWindow() {
+        predictionFundingWindow.isOpen(userWalletId = params.userWalletId)
+            .onEach { isOpen -> uiState.update(SetAwaitingFundsTransformer(isAwaitingFunds = isOpen)) }
+            .flowOn(dispatchers.default)
+            .launchIn(modelScope)
+    }
+
     fun onResume() {
         isResumed = true
-        if (uiState.value.tradingPermission == TradingPermissionUM.Unknown) loadTradingAllowance()
-        loadBalance()
+        if (tradingPermission.value == TradingPermissionUM.Unknown) loadTradingAllowance()
+        addFunds.retryIfFailed()
+        predictionBalancePoller.subscribe(userWalletId = params.userWalletId)
+            .launchIn(modelScope)
+            .saveIn(balancePollJobHolder)
         if (params is PlacePredictionComponent.Params.Sell) loadPosition(params = params)
         restartQuoteLoop(withDebounce = false)
     }
@@ -131,6 +203,7 @@ internal class PlacePredictionAmountModel @Inject constructor(
     fun onPause() {
         isResumed = false
         quoteJobHolder.cancel()
+        balancePollJobHolder.cancel()
     }
 
     override fun onAmountChange(value: String) {
@@ -158,7 +231,19 @@ internal class PlacePredictionAmountModel @Inject constructor(
     }
 
     override fun onAddFundsClick() {
-        showComingLater(part = "Adding funds")
+        addFunds.onAddFundsClick()
+    }
+
+    override fun onSwapClick() {
+        addFunds.onSwapClick()
+    }
+
+    override fun onReceiveClick() {
+        addFunds.onReceiveClick()
+    }
+
+    override fun onDismissAddFunds() {
+        addFunds.onDismissAddFunds()
     }
 
     override fun onQuoteRetryClick() {
@@ -186,15 +271,6 @@ internal class PlacePredictionAmountModel @Inject constructor(
         router.pop()
     }
 
-    private fun showComingLater(part: String) {
-        messageSender.send(
-            DialogMessage(
-                title = stringReference(value = "Not implemented"),
-                message = stringReference(value = "$part arrives in a later part of this flow."),
-            ),
-        )
-    }
-
     private fun loadMarket(params: PlacePredictionComponent.Params.Buy) {
         modelScope.launch {
             val event = withContext(dispatchers.default) {
@@ -211,31 +287,6 @@ internal class PlacePredictionAmountModel @Inject constructor(
 
             restartQuoteLoop(withDebounce = false)
         }
-    }
-
-    /**
-     * The CLOB serves a balance it recomputes only when asked, so the read behind this refreshes it first: the
-     * account status cached for the wallet screen is not honest spending power at the moment of an order.
-     *
-     * A read that fails leaves the balance unknown rather than zero. Zero is an answer — it says the money is
-     * spent — and the screen would repeat it as one, refusing the order and blaming the user's funds for what
-     * is our own failure to read them.
-     */
-    private fun loadBalance() {
-        if (balanceJobHolder.isActive) return
-
-        modelScope.launch {
-            val balance = withContext(dispatchers.default) {
-                val addresses = derivePolymarketAddressesUseCase.stored(userWalletId = params.userWalletId)
-                    ?: return@withContext null
-
-                getPolymarketBalanceInteractor(addresses = addresses).getOrNull()
-            }
-
-            if (balance == null) logger.e("Spending power could not be read; the screen keeps it unknown")
-
-            uiState.update(SetBalanceTransformer(balance = balance?.balance))
-        }.saveIn(balanceJobHolder)
     }
 
     /** @return whether a fresh read was started, in which case it — not the caller — restarts the loop. */

@@ -11,6 +11,7 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.remote)
 
     // region Kotlin
     implementation(deps.kotlin.coroutines)
@@ -54,6 +55,7 @@ dependencies {
     implementation(projects.domain.common)
     implementation(projects.domain.core)
     implementation(projects.domain.models)
+    implementation(projects.domain.quotes)
     implementation(projects.domain.transaction)
     implementation(projects.domain.wallets)
     // endregion
@@ -67,6 +69,7 @@ dependencies {
     // endregion
 
     // region Tests
+    testImplementation(projects.common.test)
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
     testImplementation(deps.web3j.core)
