@@ -7,7 +7,6 @@ import arrow.core.right
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.repository.MoneyAccountOrderRepository
 import com.tangem.domain.pay.model.Order
-import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.usecase.FindMoneyAccountCreationOrderUseCase
 import com.tangem.domain.visa.error.VisaApiError
@@ -23,7 +22,7 @@ class CreateMoneyAccountOrderUseCase(
         signature: String,
     ): Either<VisaApiError, Unit> {
         val activeOrder = findMoneyAccountCreationOrderUseCase.invoke(userWalletId).getOrNull()
-        return if (activeOrder != null && activeOrder.status != OrderStatus.CANCELED) {
+        return if (activeOrder != null) {
             startOrderTracking(userWalletId, activeOrder)
             Unit.right()
         } else {
