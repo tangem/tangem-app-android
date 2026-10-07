@@ -69,21 +69,18 @@ internal fun TxHistoryLookupContext.resolveOwner(address: String, networkRawId: 
 }
 
 /**
- * Resolves a transfer counterparty [address] the way it is displayed: [resolveOwner] first, and — for an **outgoing**
- * transfer whose recipient is none of the user's own portfolios — the address books, so a saved recipient reads as its
- * contact name instead of an address.
+ * Resolves a counterparty [address] the way it is displayed: [resolveOwner] first, and — when the address is none of
+ * the user's own portfolios — the address books, so a saved counterparty reads as its contact name instead of an
+ * address.
  *
- * Contacts are matched for outgoing transfers only: an incoming transfer's sender keeps showing its address. The
- * cross-network fallback of [resolveOwner] has no counterpart here either — an address book entry is always bound to a
- * concrete network, so [networkRawId] `null` stays external.
+ * The chain holds for every counterparty an address is shown for, whatever the transaction type and whichever side of
+ * it the address is on: own account → own wallet → saved contact → the raw address. The cross-network fallback of
+ * [resolveOwner] has no counterpart here — an address book entry is always bound to a concrete network, so
+ * [networkRawId] `null` stays external.
  */
-internal fun TxHistoryLookupContext.resolveCounterparty(
-    address: String,
-    networkRawId: Network.RawID?,
-    isOutgoing: Boolean,
-): ResolvedOwner {
+internal fun TxHistoryLookupContext.resolveCounterparty(address: String, networkRawId: Network.RawID?): ResolvedOwner {
     val owner = resolveOwner(address, networkRawId)
-    if (owner !is ResolvedOwner.External || !isOutgoing || networkRawId == null) return owner
+    if (owner !is ResolvedOwner.External || networkRawId == null) return owner
 
     val contact = contacts.resolve(
         networkId = networkRawId,
@@ -121,11 +118,13 @@ internal fun TxHistoryLookupContext.resolveExpressLegOwner(
 
 /**
  * Raw resolution of a swap/onramp leg's [address] (on the leg currency's network) to its owner, before any display
- * rule. `null` when there is no address to resolve (e.g. onramp fiat has no address).
+ * rule. `null` when there is no address to resolve (e.g. onramp fiat has no address). Goes through
+ * [resolveCounterparty], so a leg settling on a saved address reads as that contact — the same naming a plain transfer
+ * to it gets.
  */
 private fun TxHistoryLookupContext.resolveExpressLeg(address: String?, legCurrency: CryptoCurrency?): ResolvedOwner? {
     if (address == null) return null
-    return resolveOwner(address, legCurrency?.network?.id?.rawId)
+    return resolveCounterparty(address, legCurrency?.network?.id?.rawId)
 }
 
 /**

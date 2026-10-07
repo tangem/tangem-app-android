@@ -2,15 +2,22 @@ package com.tangem.tests.tangempay
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.extensions.assertSnackbarWithText
+import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
+import com.tangem.scenarios.assertTangemPayTransactionRowDisplayed
 import com.tangem.scenarios.freezeCardFromCardPage
 import com.tangem.scenarios.openTangemPay
 import com.tangem.scenarios.openTangemPayCardPage
+import com.tangem.scenarios.openTangemPayCardPageFromPaymentAccount
+import com.tangem.scenarios.openTangemPayTransactionDetails
+import com.tangem.scenarios.reopenTangemPayFromMain
 import com.tangem.scenarios.unfreezeCardFromCardPage
 import com.tangem.screens.tangempay.onTangemPayCardPageScreen
 import com.tangem.screens.tangempay.onTangemPayMainScreen
+import com.tangem.screens.tangempay.onTangemPayTransactionDetailsSheet
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
@@ -101,6 +108,89 @@ class TangemPayCardFreezeTest : BaseTestCase() {
             // Add funds is gated only by the frozen state, isolating it from Withdraw's balance check.
             step("Assert 'Add funds' button is disabled") {
                 onTangemPayMainScreen { topUpButton.assertHasNoClickAction() }
+            }
+        }
+    }
+
+    @AllureId("11478")
+    @DisplayName("Tangem Pay: a frozen card shows the snowflake indicator on Payment account")
+    @Test
+    fun frozenCardShowsSnowflakeIndicatorOnPaymentAccountTest() {
+        val cardActiveState = "Started"
+
+        setupHooks(
+            additionalBeforeSection = {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
+                setWireMockScenarioState(freezeScenario, cardActiveState)
+            }
+        ).run {
+            step("Open Tangem Pay card page") { openTangemPayCardPage() }
+            step("Assert card is active (Freeze row is displayed)") {
+                onTangemPayCardPageScreen { freezeCardRowActive.assertIsDisplayed() }
+            }
+            step("Freeze card via confirmation sheet") { freezeCardFromCardPage() }
+            step("Assert card is frozen (Unfreeze row is displayed)") {
+                awaitSuccess { onTangemPayCardPageScreen { unfreezeCardRow.assertIsDisplayed() } }
+            }
+            step("Click on 'Back' button") { device.uiDevice.pressBack() }
+            step("Assert frozen indicator is displayed on the card") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    onTangemPayMainScreen { cardFrozenIcon.assertIsDisplayed() }
+                }
+            }
+        }
+    }
+
+    @AllureId("9533")
+    @DisplayName("Tangem Pay: a payment on a frozen card shows up as a declined \$0.00 transaction")
+    @Test
+    fun paymentOnFrozenCardShownAsDeclinedZeroAmountTransactionTest() {
+        val cardActiveState = "Started"
+        val historyScenario = "tangem_pay_transaction_history"
+        val emptyHistoryState = "InitialEmpty"
+        val declinedOnFrozenCardState = "SpendDeclinedFrozenCard"
+        val declinedMerchant = "Tangem Frozen Card Shop"
+        val declinedAmount = "\$0.00"
+
+        setupHooks(
+            additionalBeforeSection = {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
+                setWireMockScenarioState(freezeScenario, cardActiveState)
+                setWireMockScenarioState(historyScenario, emptyHistoryState)
+            }
+        ).run {
+            step("Open Tangem Pay") { openTangemPay() }
+            step("Open Tangem Pay card page") { openTangemPayCardPageFromPaymentAccount() }
+            step("Freeze card via confirmation sheet") { freezeCardFromCardPage() }
+            step("Assert card is frozen (Unfreeze row is displayed)") {
+                awaitSuccess { onTangemPayCardPageScreen { unfreezeCardRow.assertIsDisplayed() } }
+            }
+            step("Set WireMock scenario '$historyScenario' to '$declinedOnFrozenCardState'") {
+                setWireMockScenarioState(historyScenario, declinedOnFrozenCardState)
+            }
+            step("Click on 'Back' button") { device.uiDevice.pressBack() }
+            step("Assert payment account balance is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    onTangemPayMainScreen { balance.assertIsDisplayed() }
+                }
+            }
+            step("Reopen Tangem Pay from Main") { reopenTangemPayFromMain() }
+            step("Assert '$declinedMerchant' transaction row is displayed") {
+                assertTangemPayTransactionRowDisplayed(declinedMerchant)
+            }
+            step("Assert '$declinedMerchant' transaction row shows '$declinedAmount'") {
+                onTangemPayMainScreen { transactionRowWithAmount(declinedMerchant, declinedAmount).assertIsDisplayed() }
+            }
+            step("Open '$declinedMerchant' transaction details") {
+                openTangemPayTransactionDetails(declinedMerchant)
+            }
+            step("Assert transaction details show '$declinedAmount' and the 'Declined' status") {
+                onTangemPayTransactionDetailsSheet {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) {
+                        amount.assertTextContainsSafe(declinedAmount, substring = true)
+                        declinedStatus.assertIsDisplayed()
+                    }
+                }
             }
         }
     }

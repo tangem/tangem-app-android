@@ -54,15 +54,15 @@ internal class TangemPayOnboardingStarter @Inject constructor(
         campaignKey: String?,
         callbacks: Callbacks,
     ) {
-        if (walletsIds.size == 1) {
-            checkCustomerInfo(
+        when (walletsIds.size) {
+            0 -> callbacks.onExit()
+            1 -> checkCustomerInfo(
                 userWalletId = walletsIds[0],
                 mode = mode,
                 campaignKey = campaignKey,
                 callbacks = callbacks,
             )
-        } else {
-            callbacks.onWalletSelectorRequested(walletsIds)
+            else -> callbacks.onWalletSelectorRequested(walletsIds)
         }
     }
 
