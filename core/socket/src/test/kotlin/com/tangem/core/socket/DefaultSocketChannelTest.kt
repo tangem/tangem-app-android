@@ -525,6 +525,37 @@ internal class DefaultSocketChannelTest {
     }
 
     @Test
+    fun `GIVEN backoff returning a negative delay WHEN server closes THEN no tight reconnect loop starts`() = runTest {
+        // Arrange
+        val channel = createChannel(SocketSpec(url = URL, backoff = { (-1).seconds }))
+        collect(channel)
+        transport.connections.single().serverOpens()
+        runCurrent()
+
+        // Act
+        transport.connections.single().serverCloses(code = 1001)
+        runCurrent()
+        val connectionsRightAfter = transport.connections.size
+        advanceTimeBy(5.seconds + 1.milliseconds)
+
+        // Assert
+        assertThat(connectionsRightAfter).isEqualTo(1)
+        assertThat(transport.connections).hasSize(2)
+    }
+
+    @Test
+    fun `GIVEN negative idle timeout WHEN spec created THEN it is rejected`() {
+        // Arrange
+        val idleTimeout = (-1).seconds
+
+        // Act
+        val error = runCatching { SocketSpec(url = URL, idleTimeout = idleTimeout) }.exceptionOrNull()
+
+        // Assert
+        assertThat(error).isInstanceOf(IllegalArgumentException::class.java)
+    }
+
+    @Test
     fun `GIVEN retry-after policy WHEN created with a negative delay THEN it is rejected`() {
         // Arrange
         val delay = (-1).seconds

@@ -179,7 +179,9 @@ internal class DefaultSocketChannel(
                     awaitCancellation()
                 }
                 is ClosePolicy.Decision.RetryAfter -> decision.delay
-                ClosePolicy.Decision.Retry -> spec.backoff.delayFor(attempt)
+                ClosePolicy.Decision.Retry -> spec.backoff.delayFor(attempt).also { delay ->
+                    require(!delay.isNegative()) { "Backoff returned a negative delay: $delay" }
+                }
             }
             attempt++
             state.value = SocketState.WaitingToRetry(attempt, retryDelay)
@@ -281,11 +283,7 @@ internal class DefaultSocketChannel(
         val start = text.firstOrNull { !it.isWhitespace() }
         if (start != '{' && start != '[') return null
 
-        return try {
-            json.parseToJsonElement(text)
-        } catch (e: SerializationException) {
-            null
-        }
+        return runCatching { json.parseToJsonElement(text) }.getOrNull()
     }
 
     private fun <T> decodeOrNull(deserializer: DeserializationStrategy<T>, frame: JsonElement): T? =
