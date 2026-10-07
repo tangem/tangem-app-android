@@ -17,11 +17,11 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 
 internal fun String.getCryptoValue(fiatRate: BigDecimal?, isFiatValue: Boolean, decimals: Int): String {
-    return if (isFiatValue && fiatRate != null) {
-        parseToBigDecimal(decimals).divide(fiatRate, decimals, RoundingMode.DOWN)
+    return when {
+        isFiatValue && fiatRate?.isZero() == true -> ""
+        isFiatValue && fiatRate != null -> parseToBigDecimal(decimals).divide(fiatRate, decimals, RoundingMode.DOWN)
             .parseBigDecimal(decimals)
-    } else {
-        this
+        else -> this
     }
 }
 
