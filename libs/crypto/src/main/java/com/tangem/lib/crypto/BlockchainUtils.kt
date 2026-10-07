@@ -99,6 +99,8 @@ object BlockchainUtils {
         return blockchain == Blockchain.TON || blockchain == Blockchain.TONTestnet
     }
 
+    fun isEvm(networkId: String): Boolean = networkId.toBlockchain()?.isEvm() == true
+
     fun isSupportedNetworkId(
         networkId: String,
         excludedBlockchains: ExcludedBlockchains,
