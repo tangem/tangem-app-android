@@ -16,6 +16,7 @@ internal class SetConfirmationStateAssentApprovalTransformer(
     private val feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
     private val fee: TransactionFee,
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
+    private val isApprovalInProgress: Boolean,
 ) : Transformer<StakingUiState> {
 
     override fun transform(prevState: StakingUiState): StakingUiState {
@@ -37,7 +38,7 @@ internal class SetConfirmationStateAssentApprovalTransformer(
                     appCurrency = appCurrencyProvider(),
                     isFeeApproximate = false,
                 ),
-                isPrimaryButtonEnabled = with(cryptoCurrencyStatus.value) {
+                isPrimaryButtonEnabled = !isApprovalInProgress && with(cryptoCurrencyStatus.value) {
                     sources.networkSource.isActual() && stakingSource.isActual()
                 },
                 isApprovalNeeded = true,
