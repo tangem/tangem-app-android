@@ -73,7 +73,7 @@ internal object SocketServiceGenerator {
                     .addParameter(method.parameterName, method.type)
                     .returns(BOOLEAN)
                     .addStatement(
-                        "return %N.send(%M<%T>(), %N)",
+                        "return this.%N.send(%M<%T>(), %N)",
                         CHANNEL,
                         SocketNames.serializer,
                         method.type,
@@ -129,8 +129,8 @@ internal object SocketServiceGenerator {
                     )
                     function.addParameter(method.parameterName, method.type)
                         .returns(BOOLEAN)
-                        .addStatement("%N += %N", sent, method.parameterName)
-                        .addStatement("return sendResult")
+                        .addStatement("this.%N += %N", sent, method.parameterName)
+                        .addStatement("return this.sendResult")
                 }
             }
             builder.addFunction(function.build())

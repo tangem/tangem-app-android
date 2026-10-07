@@ -5,6 +5,7 @@ import com.tangem.core.socket.SocketCloseCode
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.SendChannel
+import kotlinx.coroutines.channels.trySendBlocking
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -23,7 +24,7 @@ class OkHttpSocketTransport(private val client: OkHttpClient) : SocketTransport 
     }
 
     override fun open(request: SocketRequest): SocketConnection {
-        val events = Channel<TransportEvent>(Channel.UNLIMITED)
+        val events = Channel<TransportEvent>(EVENT_BUFFER_CAPACITY)
         val httpRequest = Request.Builder()
             .url(request.url)
             .apply { request.headers.forEach { (name, value) -> header(name, value) } }
@@ -31,6 +32,10 @@ class OkHttpSocketTransport(private val client: OkHttpClient) : SocketTransport 
         val listener = EventsListener(events)
         val webSocket = client.newWebSocket(httpRequest, listener)
         return OkHttpSocketConnection(webSocket, events, listener)
+    }
+
+    private companion object {
+        const val EVENT_BUFFER_CAPACITY = 64
     }
 }
 
@@ -48,7 +53,7 @@ private class OkHttpSocketConnection(
     }
 }
 
-private class EventsListener(private val events: SendChannel<TransportEvent>) : WebSocketListener() {
+internal class EventsListener(private val events: SendChannel<TransportEvent>) : WebSocketListener() {
 
     @Volatile
     var isOpened = false
@@ -56,15 +61,15 @@ private class EventsListener(private val events: SendChannel<TransportEvent>) : 
 
     override fun onOpen(webSocket: WebSocket, response: Response) {
         isOpened = true
-        events.trySend(TransportEvent.Opened)
+        events.trySendBlocking(TransportEvent.Opened)
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
-        events.trySend(TransportEvent.Message(text))
+        events.trySendBlocking(TransportEvent.Message(text))
     }
 
     override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
-        events.trySend(TransportEvent.Message(bytes.utf8()))
+        events.trySendBlocking(TransportEvent.Message(bytes.utf8()))
     }
 
     override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
@@ -87,7 +92,7 @@ private class EventsListener(private val events: SendChannel<TransportEvent>) : 
     }
 
     private fun finish(close: SocketClose) {
-        events.trySend(TransportEvent.Closed(close))
+        events.trySendBlocking(TransportEvent.Closed(close))
         events.close()
     }
 }
