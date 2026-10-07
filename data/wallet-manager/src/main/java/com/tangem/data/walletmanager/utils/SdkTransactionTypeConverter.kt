@@ -2,6 +2,9 @@ package com.tangem.data.walletmanager.utils
 
 import com.tangem.blockchain.blockchains.ethereum.tokenmethods.ApprovalERC20TokenCallData
 import com.tangem.blockchain.blockchains.ethereum.tokenmethods.TransferERC20TokenCallData
+import com.tangem.blockchain.blockchains.tron.tokenmethods.TronApprovalTokenCallData
+import com.tangem.blockchain.blockchains.tron.tokenmethods.TronTransferTokenCallData
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.extensions.formatHex
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem.TransactionType
@@ -9,6 +12,7 @@ import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldS
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyExitCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyInitTokenCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyReactivateTokenCallData
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -45,6 +49,11 @@ internal class SdkTransactionTypeConverter(
 
     private val gaslessFeeAddressesLowercase: Set<String> = gaslessFeeAddresses.map { it.lowercase() }.toSet()
 
+    private val isTron: Boolean by lazy {
+        val blockchain = currency.network.toBlockchain()
+        blockchain == Blockchain.Tron || blockchain == Blockchain.TronTestnet
+    }
+
     override fun convert(value: TransactionHistoryItem): TxInfo.TransactionType {
         safeExecutionDecoder.refund(value)?.let { return it }
 
@@ -63,9 +72,7 @@ internal class SdkTransactionTypeConverter(
                     historyItem = value,
                 )
             }
-            is TransactionType.Transfer -> {
-                TxInfo.TransactionType.Transfer
-            }
+            is TransactionType.Transfer -> getTypeForTransfer(value)
             is TransactionType.SolanaStakingTransactionType.Stake -> {
                 TxInfo.TransactionType.Staking.Stake
             }
@@ -157,21 +164,29 @@ internal class SdkTransactionTypeConverter(
 
         // A call decoded into a protocol interaction (yield supply for now, other protocols may join) describes what
         // the token did. In the coin's own history the same call moved nothing and cost only the fee, so it drops
-        // back to a plain operation — which the history then renders as a network-fee row.
+        // back to a plain operation — which the history then renders as a network-fee row, still carrying the type it
+        // gave up so that row can name what the fee was paid for.
+        val protocolCall = result as? TxInfo.TransactionType.YieldSupply
         val isCoinFeeOnly = currency is CryptoCurrency.Coin &&
             historyItem.amount.value?.isZero() == true &&
-            result is TxInfo.TransactionType.YieldSupply
+            protocolCall != null
         if (isCoinFeeOnly) {
-            result = fallbackOperation(methodName)
+            result = fallbackOperation(methodName, recognized = protocolCall)
         }
         return result
     }
 
-    private fun fallbackOperation(methodName: String?): TxInfo.TransactionType {
+    private fun fallbackOperation(
+        methodName: String?,
+        recognized: TxInfo.TransactionType? = null,
+    ): TxInfo.TransactionType {
         return if (methodName == null) {
             TxInfo.TransactionType.UnknownOperation
         } else {
-            TxInfo.TransactionType.Operation(name = methodName.replaceFirstChar { it.titlecase() })
+            TxInfo.TransactionType.Operation(
+                name = methodName.replaceFirstChar { it.titlecase() },
+                recognized = recognized,
+            )
         }
     }
 
@@ -194,11 +209,19 @@ internal class SdkTransactionTypeConverter(
         destination: TransactionHistoryItem.DestinationType,
     ): TxInfo.TransactionType.Approve? {
         val data = callData ?: return null
-        val approval = ApprovalERC20TokenCallData(data.hexToBytes()) ?: return null
+        val (spender, rawAllowance) = data.decodeApprovalCallData() ?: return null
+
         return TxInfo.TransactionType.Approve(
-            amount = toAllowance(rawAllowance = approval.amount?.value, destination = destination),
-            address = approval.spenderAddress,
+            amount = toAllowance(rawAllowance = rawAllowance, destination = destination),
+            address = spender,
         )
+    }
+
+    /** Tron encodes the spender as its own 21-byte address, where an EVM chain pads a 20-byte one. */
+    private fun String.decodeApprovalCallData(): Pair<String, BigDecimal?>? = if (isTron) {
+        TronApprovalTokenCallData(this)?.let { it.spenderAddress to it.amount?.value }
+    } else {
+        ApprovalERC20TokenCallData(hexToBytes())?.let { it.spenderAddress to it.amount?.value }
     }
 
     /**
@@ -211,11 +234,19 @@ internal class SdkTransactionTypeConverter(
     ): TxInfo.TransactionType.NetworkFee? {
         if (currency !is CryptoCurrency.Coin) return null
         val data = callData ?: return null
-        val transfer = TransferERC20TokenCallData(data) ?: return null
+        val (recipient, rawAmount) = data.decodeTransferCallData() ?: return null
+
         return TxInfo.TransactionType.NetworkFee(
-            amount = destination.resolveToken()?.toSdkAmount(rawValue = transfer.amount.value),
-            address = transfer.destination,
+            amount = destination.resolveToken()?.toSdkAmount(rawValue = rawAmount),
+            address = recipient,
         )
+    }
+
+    /** Tron encodes the recipient as its own 21-byte address, where an EVM chain pads a 20-byte one. */
+    private fun String.decodeTransferCallData(): Pair<String, BigDecimal?>? = if (isTron) {
+        TronTransferTokenCallData(this)?.let { it.destination to it.amount.value }
+    } else {
+        TransferERC20TokenCallData(this)?.let { it.destination to it.amount.value }
     }
 
     /**
@@ -255,6 +286,25 @@ internal class SdkTransactionTypeConverter(
 
     private fun String.toSelectorKey(): String = lowercase().formatHex()
 
+    /**
+     * A gasless transfer on Tron pays for itself with a second transfer of the same token, sent to the fee collector
+     * in a transaction of its own — nothing but the recipient tells the two apart. EVM needs no such guess: there both
+     * legs are one `gaslessTransaction` call and reach [getTypeForGaslessMethod], which matches the method as well as
+     * the address. A lone address match is the weaker signal, and [gaslessFeeAddresses] spans every network, so it is
+     * trusted only where it is all there is: a Tron transfer of the token the fee was paid in.
+     */
+    private fun getTypeForTransfer(historyItem: TransactionHistoryItem): TxInfo.TransactionType {
+        if (!isTron || currency !is CryptoCurrency.Token) return TxInfo.TransactionType.Transfer
+
+        val destination = historyItem.destinationType as? TransactionHistoryItem.DestinationType.Single
+            ?: return TxInfo.TransactionType.Transfer
+
+        val isFeeTransfer = historyItem.isOutgoing &&
+            gaslessFeeAddressesLowercase.contains(destination.addressType.address.lowercase())
+
+        return if (isFeeTransfer) TxInfo.TransactionType.GaslessFee else TxInfo.TransactionType.Transfer
+    }
+
     private fun getTypeForGaslessMethod(
         destination: TransactionHistoryItem.DestinationType,
         source: TransactionHistoryItem.SourceType,
@@ -267,6 +317,10 @@ internal class SdkTransactionTypeConverter(
             source is TransactionHistoryItem.SourceType.Single &&
                 yieldSupplyAddresses.contains(source.address.lowercase())
             -> TxInfo.TransactionType.YieldSupply.Send(isYieldSupplyWithdraw = true)
+
+            currency is CryptoCurrency.Token &&
+                destination is TransactionHistoryItem.DestinationType.Single
+            -> TxInfo.TransactionType.Transfer
 
             else -> fallbackOperation(methodName)
         }

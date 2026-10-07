@@ -41,7 +41,6 @@ internal class TangemPayWithdrawHubUMFactoryTest {
     private val onRecentRecipientClick: (String) -> Unit = mockk(relaxed = true)
     private val onSeeAllClick: () -> Unit = mockk(relaxed = true)
     private val onRetryRecentsClick: () -> Unit = mockk(relaxed = true)
-    private val onRetryBankSectionClick: () -> Unit = mockk(relaxed = true)
     private val onRecentTokenClick: (String) -> Unit = mockk(relaxed = true)
 
     private val factory = TangemPayWithdrawHubUMFactory(
@@ -53,7 +52,6 @@ internal class TangemPayWithdrawHubUMFactoryTest {
             onRecentRecipientClick = onRecentRecipientClick,
             onSeeAllClick = onSeeAllClick,
             onRetryRecentsClick = onRetryRecentsClick,
-            onRetryBankSectionClick = onRetryBankSectionClick,
             onRecentTokenClick = onRecentTokenClick,
         ),
     )
@@ -68,7 +66,6 @@ internal class TangemPayWithdrawHubUMFactoryTest {
             onRecentRecipientClick,
             onSeeAllClick,
             onRetryRecentsClick,
-            onRetryBankSectionClick,
             onRecentTokenClick,
         )
     }
@@ -165,22 +162,21 @@ internal class TangemPayWithdrawHubUMFactoryTest {
     }
 
     @Test
-    fun `GIVEN no recents and no saved accounts WHEN createRecents THEN empty without see all`() {
+    fun `GIVEN no saved accounts WHEN createRecents THEN empty`() {
         // Act
-        val actual = createRecents(accounts = emptyList(), hasSavedAccounts = false)
+        val actual = createRecents(accounts = emptyList())
 
         // Assert
-        assertThat(actual).isEqualTo(RecentsUM.Empty(onSeeAllClick = null))
+        assertThat(actual).isEqualTo(RecentsUM.Empty)
     }
 
     @Test
-    fun `GIVEN no recents but saved accounts WHEN createRecents THEN empty with see all callback`() {
+    fun `GIVEN every saved account shown WHEN createRecents THEN no see all`() {
         // Act
-        val actual = createRecents(accounts = emptyList()) as RecentsUM.Empty
-        requireNotNull(actual.onSeeAllClick).invoke()
+        val actual = createRecents(accounts = listOf(bankAccount()), hasMoreAccounts = false) as RecentsUM.Content
 
         // Assert
-        verify(exactly = 1) { onSeeAllClick() }
+        assertThat(actual.onSeeAllClick).isNull()
     }
 
     @Test
@@ -211,12 +207,12 @@ internal class TangemPayWithdrawHubUMFactoryTest {
     }
 
     @Test
-    fun `GIVEN content WHEN see all clicked THEN callback invoked`() {
+    fun `GIVEN more saved accounts than shown WHEN see all clicked THEN callback invoked`() {
         // Arrange
-        val content = createRecents(accounts = listOf(bankAccount())) as RecentsUM.Content
+        val content = createRecents(accounts = listOf(bankAccount()), hasMoreAccounts = true) as RecentsUM.Content
 
         // Act
-        content.onSeeAllClick()
+        requireNotNull(content.onSeeAllClick).invoke()
 
         // Assert
         verify(exactly = 1) { onSeeAllClick() }
@@ -244,15 +240,25 @@ internal class TangemPayWithdrawHubUMFactoryTest {
     }
 
     @Test
-    fun `GIVEN options unavailable WHEN create THEN bank section error retries the whole section`() {
-        // Arrange
-        val actual = create(options = OptionsState.Unavailable).bankSection as BankSectionUM.Error
-
+    fun `GIVEN options ready WHEN create THEN bank section available`() {
         // Act
-        actual.onRetryClick()
+        val actual = create().bankSection as BankSectionUM.Content
 
         // Assert
-        verify(exactly = 1) { onRetryBankSectionClick() }
+        assertThat(actual.isAvailable).isTrue()
+    }
+
+    @Test
+    fun `GIVEN options unavailable WHEN create THEN bank section unavailable and keeps its recents`() {
+        // Arrange
+        val recents = RecentsState.Loaded(accounts = listOf(bankAccount(id = "acc-1")), hasMoreAccounts = false)
+
+        // Act
+        val actual = create(options = OptionsState.Unavailable, recents = recents).bankSection as BankSectionUM.Content
+
+        // Assert
+        assertThat(actual.isAvailable).isFalse()
+        assertThat((actual.recents as RecentsUM.Content).recipients.map { it.id }).containsExactly("acc-1")
     }
 
     @Test
@@ -312,8 +318,8 @@ internal class TangemPayWithdrawHubUMFactoryTest {
 
     private fun createRecents(
         accounts: List<BankAccount> = emptyList(),
-        hasSavedAccounts: Boolean = true,
-        recents: RecentsState = RecentsState.Loaded(accounts = accounts, hasSavedAccounts = hasSavedAccounts),
+        hasMoreAccounts: Boolean = false,
+        recents: RecentsState = RecentsState.Loaded(accounts = accounts, hasMoreAccounts = hasMoreAccounts),
     ): RecentsUM = (create(recents = recents).bankSection as BankSectionUM.Content).recents
 
     private fun recentCurrency(name: String): CryptoCurrency.Coin = CryptoCurrency.Coin(

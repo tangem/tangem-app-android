@@ -3,8 +3,6 @@ package com.tangem.features.txhistory.converter
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Direction as RowDirection
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
-import com.tangem.common.ui.account.getResId
-import com.tangem.common.ui.account.getUiColor
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
@@ -82,29 +80,29 @@ internal class ExpressTxToTransactionItemUMConverter(
                 direction = if (swap.isOutgoing) SubtitleDirection.TO else SubtitleDirection.FROM,
                 symbol = counterparty.displaySymbol,
                 icon = counterparty.cryptoCurrency?.let(iconStateConverter::convert),
-                owner = swap.counterpartyOwner(),
+                owner = swap.counterpartyOwner()?.toAssetOwner(),
             ),
             warning = swapWarning(swap),
         )
     }
 
     /**
-     * The own portfolio the swap's counterparty leg settled in — the payout (to) leg for an outgoing swap, the pay-in
-     * (from) leg for an incoming one — as the "in {owner}" subtitle tail, or `null` when there is nothing to
-     * disambiguate (see [resolveSwapLegOwners]) or no [lookup] is available.
+     * The owner of the swap's counterparty leg — the payout (to) leg for an outgoing swap, the pay-in (from) leg for an
+     * incoming one — or `null` when there is nothing to name (see [resolveSwapLegOwners]) or no [lookup] is available.
      */
-    private fun ExpressTx.Swap.counterpartyOwner(): ContentSubtitle.AssetOwner? {
+    private fun ExpressTx.Swap.counterpartyOwner(): ResolvedOwner? {
         val legOwners = lookup?.resolveSwapLegOwners(this) ?: return null
-        val owner = if (isOutgoing) legOwners.to else legOwners.from
-        return owner?.toAssetOwner()
+        return if (isOutgoing) legOwners.to else legOwners.from
     }
 
-    /** Maps a resolved counterparty owner to the subtitle tail; a foreign address adds no tail (`null`). */
+    /**
+     * Maps a resolved counterparty owner to the "in {owner}" subtitle tail: another own portfolio, or the contact a
+     * saved payout address belongs to. An address in no address book names no one, so it adds no tail (`null`).
+     */
     private fun ResolvedOwner.toAssetOwner(): ContentSubtitle.AssetOwner? = when (this) {
         is ResolvedOwner.OwnAccount -> ContentSubtitle.AssetOwner.Account(
             name = account.accountName.toUM().value,
-            iconResId = account.icon.value.getResId(),
-            iconBackgroundColor = account.icon.color.getUiColor(),
+            avatar = account.icon.toPortfolioAvatar(name = account.accountName.toUM().value),
         )
         is ResolvedOwner.OwnPaymentAccount -> ContentSubtitle.AssetOwner.PaymentAccount(
             name = account.accountName.toUM().value,
@@ -113,7 +111,11 @@ internal class ExpressTxToTransactionItemUMConverter(
             name = walletInfo.name,
             deviceIconUM = walletInfo.deviceIconUM,
         )
-        is ResolvedOwner.Foreign -> null
+        is ResolvedOwner.SavedContact -> ContentSubtitle.AssetOwner.Contact(
+            name = contact.name.value,
+            avatar = contact.toContactAvatar(),
+        )
+        is ResolvedOwner.External -> null
     }
 
     private fun onrampContent(onramp: ExpressTx.Onramp): TransactionItemUM.Content {
