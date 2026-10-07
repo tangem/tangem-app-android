@@ -35,6 +35,7 @@ internal class SwapBottomSheetComponent @AssistedInject constructor(
         SwapBottomSheet(
             content = content,
             isMaterial = params.route.isMaterial,
+            scrollableContent = false,
             onBack = ::onBack,
             onDismiss = ::dismiss,
         )
