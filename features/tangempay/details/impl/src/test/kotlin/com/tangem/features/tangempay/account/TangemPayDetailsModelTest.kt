@@ -1584,7 +1584,7 @@ internal class TangemPayDetailsModelTest {
 
         @ParameterizedTest
         @EnumSource(value = TangemPayDetailsInitialRoute::class, names = ["VA_ONRAMP", "VA_ONRAMP_DETAILS"])
-        fun `GIVEN v2 enabled and details being created WHEN va onramp deeplink handled THEN v1 popup shows`(
+        fun `GIVEN v2 enabled and details being created WHEN va onramp deeplink handled THEN nothing opens`(
             initialRoute: TangemPayDetailsInitialRoute,
         ) = runTest {
             // Arrange
@@ -1594,13 +1594,16 @@ internal class TangemPayDetailsModelTest {
                 initialRoute = initialRoute,
                 virtualAccount = VirtualAccountOnramp.Processing,
             )
+            val openedSheets = payModel.bottomSheetNavigation.trackSlot()
 
             // Act
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaPreparationPopupShowed>()) }
             verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
+            verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.VaPreparationPopupShowed>()) }
+            verify(exactly = 0) { uiMessageSender.send(any()) }
+            assertThat(openedSheets.filterNotNull()).isEmpty()
             payModel.onDestroy()
         }
 
