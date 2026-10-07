@@ -28,9 +28,7 @@ internal class DefaultBankOfframpOrderRepository @Inject constructor(
         request: BankOfframpOrderRequest,
         idempotencyKey: String,
     ): Either<BankOfframpError, BankOfframpOrderResult> = either {
-        val body = BankOfframpOrderRequestConverter.convert(
-            BankOfframpOrderRequestConverter.Input(request = request, idempotencyKey = idempotencyKey),
-        ).bind()
+        val body = BankOfframpOrderRequestConverter.convert(request).bind()
         val response = requestPerformer.performRequest(userWalletId) { authHeader ->
             tangemPayApi.createBankOfframpOrder(
                 authHeader = authHeader,
