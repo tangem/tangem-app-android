@@ -51,10 +51,10 @@ internal fun JointAccountMembersScreen(state: JointAccountMembersUM, modifier: M
     ) { contentPadding ->
         MembersContent(state = state, contentPadding = contentPadding)
 
-        val onActivateClick = state.onActivateClick
-        if (onActivateClick != null) {
+        val activateButton = state.activateButton
+        if (activateButton != null) {
             ActivateAccountFooter(
-                onActivateClick = onActivateClick,
+                state = activateButton,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = contentPadding.calculateBottomPadding()),
@@ -67,7 +67,7 @@ internal fun JointAccountMembersScreen(state: JointAccountMembersUM, modifier: M
 private val ACTIVATION_FOOTER_HEIGHT = 72.dp
 
 @Composable
-private fun ActivateAccountFooter(onActivateClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun ActivateAccountFooter(state: JointAccountMembersUM.ActivateButtonUM, modifier: Modifier = Modifier) {
     TangemButton(
         modifier = modifier
             .fillMaxWidth()
@@ -75,7 +75,9 @@ private fun ActivateAccountFooter(onActivateClick: () -> Unit, modifier: Modifie
         variant = TangemButton.Variant.Primary,
         size = TangemButton.Size.X12,
         text = resourceReference(CoreUiR.string.joint_account_activation_account_button_title),
-        onClick = onActivateClick,
+        iconEnd = state.walletIconRes?.let { TangemIconUM.Icon(iconRes = it) },
+        isLoading = state.isLoading,
+        onClick = state.onClick,
     )
 }
 
@@ -141,7 +143,7 @@ private fun MembersContent(state: JointAccountMembersUM, contentPadding: Padding
         contentPadding = PaddingValues(
             top = contentPadding.calculateTopPadding(),
             bottom = contentPadding.calculateBottomPadding() +
-                if (state.onActivateClick != null) ACTIVATION_FOOTER_HEIGHT + 16.dp else 16.dp,
+                if (state.activateButton != null) ACTIVATION_FOOTER_HEIGHT + 16.dp else 16.dp,
         ),
     ) {
         val header = state.header
@@ -435,8 +437,12 @@ private fun previewState(
         joined = joined.toImmutableList(),
         freeSlots = freeSlots.toImmutableList(),
         otherMembersLabel = if (freeSlots.isNotEmpty()) stringReference("Other members") else null,
-        onActivateClick = if (canActivate) {
-            {}
+        activateButton = if (canActivate) {
+            JointAccountMembersUM.ActivateButtonUM(
+                walletIconRes = CoreUiR.drawable.ic_tangem_24,
+                isLoading = false,
+                onClick = {},
+            )
         } else {
             null
         },

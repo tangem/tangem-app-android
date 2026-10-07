@@ -33,6 +33,7 @@ import com.tangem.features.polymarket.impl.common.ui.PolymarketOutcomeButton
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventRowUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketOutcomeUM
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 private val ChipShape = RoundedCornerShape(50.dp)
@@ -93,6 +94,15 @@ private fun VolumeMeta(volume: TextReference) {
 
 @Composable
 private fun EventRow(state: PolymarketEventRowUM) {
+    val probability = state.probability
+    if (probability == null) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            state.title?.let { MarketTitle(title = it) }
+            EventOutcomes(outcomes = state.outcomes, isExpanded = true)
+        }
+        return
+    }
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -102,16 +112,10 @@ private fun EventRow(state: PolymarketEventRowUM) {
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            Text(
-                text = state.title.resolveReference(),
-                color = TangemTheme.colors3.text.primary,
-                style = TangemTheme.typography3.subheading.medium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            state.title?.let { MarketTitle(title = it) }
 
             Text(
-                text = state.probability.resolveReference(),
+                text = probability.resolveReference(),
                 color = TangemTheme.colors3.text.secondary,
                 style = TangemTheme.typography3.caption.medium,
                 maxLines = 1,
@@ -119,25 +123,43 @@ private fun EventRow(state: PolymarketEventRowUM) {
             )
         }
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            // The first outcome carries the info appearance, the second the error one — driven by
-            // position, not by label, since upstream labels aren't always "Yes"/"No".
-            state.outcomes.forEachIndexed { index, outcome ->
-                PolymarketOutcomeButton(
-                    modifier = Modifier.widthIn(max = OutcomeButtonMaxWidth),
-                    title = outcome.title,
-                    appearance = if (index == 0) {
-                        PolymarketOutcomeButton.Appearance.Info
-                    } else {
-                        PolymarketOutcomeButton.Appearance.Error
-                    },
-                    size = PolymarketOutcomeButton.Size.X9,
-                    onClick = outcome.onClick,
-                )
-            }
+        EventOutcomes(outcomes = state.outcomes, isExpanded = false)
+    }
+}
+
+@Composable
+private fun MarketTitle(title: TextReference) {
+    Text(
+        text = title.resolveReference(),
+        color = TangemTheme.colors3.text.primary,
+        style = TangemTheme.typography3.subheading.medium,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
+}
+
+@Composable
+private fun EventOutcomes(outcomes: ImmutableList<PolymarketOutcomeUM>, isExpanded: Boolean) {
+    Row(
+        modifier = if (isExpanded) Modifier.fillMaxWidth() else Modifier,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // The first outcome carries the info appearance, the second the error one — driven by
+        // position, not by label, since upstream labels aren't always "Yes"/"No".
+        outcomes.forEachIndexed { index, outcome ->
+            PolymarketOutcomeButton(
+                modifier = if (isExpanded) Modifier.weight(1f) else Modifier.widthIn(max = OutcomeButtonMaxWidth),
+                title = outcome.title,
+                price = outcome.price,
+                appearance = if (index == 0) {
+                    PolymarketOutcomeButton.Appearance.Info
+                } else {
+                    PolymarketOutcomeButton.Appearance.Error
+                },
+                size = PolymarketOutcomeButton.Size.X9,
+                onClick = outcome.onClick,
+            )
         }
     }
 }
@@ -216,9 +238,22 @@ private fun plainPreviewEvent(): PolymarketEventUM {
         rows = persistentListOf(
             PolymarketEventRowUM(
                 marketId = "probability",
-                title = stringReference("Probability"),
-                probability = stringReference("80%"),
-                outcomes = previewOutcomes(),
+                title = null,
+                probability = null,
+                outcomes = persistentListOf(
+                    PolymarketOutcomeUM(
+                        assetId = "yes",
+                        title = stringReference("Yes"),
+                        price = stringReference("80¢"),
+                        onClick = {},
+                    ),
+                    PolymarketOutcomeUM(
+                        assetId = "no",
+                        title = stringReference("No"),
+                        price = stringReference("20¢"),
+                        onClick = {},
+                    ),
+                ),
             ),
         ),
         hiddenMarketsCount = 0,

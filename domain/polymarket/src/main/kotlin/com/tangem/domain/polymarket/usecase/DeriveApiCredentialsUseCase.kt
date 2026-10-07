@@ -3,6 +3,7 @@ package com.tangem.domain.polymarket.usecase
 import arrow.core.Either
 import arrow.core.right
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.PolymarketCredentialsLock
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
@@ -18,9 +19,24 @@ import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 class DeriveApiCredentialsUseCase(
     private val polymarketRepository: PolymarketRepository,
     private val credentialsStore: PolymarketCredentialsStore,
+    private val credentialsLock: PolymarketCredentialsLock,
 ) {
 
     suspend operator fun invoke(
+        userWalletId: UserWalletId,
+        ownerAddress: String,
+        l1Signature: String,
+        timestamp: String,
+    ): Either<PolymarketOnboardingError, PolymarketApiCredentials> = credentialsLock.withLock(userWalletId) {
+        storedOrDerived(
+            userWalletId = userWalletId,
+            ownerAddress = ownerAddress,
+            l1Signature = l1Signature,
+            timestamp = timestamp,
+        )
+    }
+
+    private suspend fun storedOrDerived(
         userWalletId: UserWalletId,
         ownerAddress: String,
         l1Signature: String,

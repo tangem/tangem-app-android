@@ -27,6 +27,7 @@ internal sealed interface CampaignsBottomSheetConfig {
 
         data class Campaign(
             val campaign: PromoCampaign,
+            val userWalletId: UserWalletId,
         ) : V2
 
         data object NotFound : V2

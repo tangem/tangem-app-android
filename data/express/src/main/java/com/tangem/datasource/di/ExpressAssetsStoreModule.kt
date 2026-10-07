@@ -5,13 +5,14 @@ import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.core.local.datastore.RuntimeSharedMapStore
 import com.tangem.core.remote.moshi.NetworkMoshi
-import com.tangem.grow.datasource.express.models.response.Asset
 import com.tangem.datasource.local.token.DefaultExpressAssetsStore
 import com.tangem.datasource.local.token.ExpressAssetsStore
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
+import com.tangem.datasource.utils.create
 import com.tangem.datasource.utils.listTypes
 import com.tangem.datasource.utils.mapWithStringKeyTypes
+import com.tangem.grow.datasource.express.models.response.Asset
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Module
 import dagger.Provides
@@ -33,15 +34,22 @@ internal object ExpressAssetsStoreModule {
         dataStoreFactory: AppDataStoreFactory,
     ): ExpressAssetsStore {
         return DefaultExpressAssetsStore(
-            persistenceStore = dataStoreFactory.create(
-                serializer = MoshiDataStoreSerializer(
-                    moshi = moshi,
-                    types = mapWithStringKeyTypes(listTypes<Asset>()),
-                    defaultValue = emptyMap(),
-                ),
-                produceFile = { context.dataStoreFile("express_assets") },
-                scope = appScope,
-            ),
+            persistenceStore = if (dataStoreFactory.isKotlinxDataStoreEnabled) {
+                dataStoreFactory.create(
+                    defaultValue = emptyMap<String, List<Asset>>(),
+                    fileName = "express_assets",
+                )
+            } else {
+                dataStoreFactory.create(
+                    serializer = MoshiDataStoreSerializer(
+                        moshi = moshi,
+                        types = mapWithStringKeyTypes(listTypes<Asset>()),
+                        defaultValue = emptyMap(),
+                    ),
+                    produceFile = { context.dataStoreFile("express_assets") },
+                    scope = appScope,
+                )
+            },
             runtimeStore = RuntimeSharedMapStore(),
         )
     }

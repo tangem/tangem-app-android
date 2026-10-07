@@ -6,7 +6,6 @@ import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.notifications.NotificationUM
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.buttons.predefined.PredefinedPercentButtonUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
@@ -30,7 +29,6 @@ internal data class SwapStateHolder(
     val priceImpact: PriceImpact,
 
     val successState: SwapSuccessStateHolder? = null,
-    val bottomSheetConfig: TangemBottomSheetConfig? = null,
     val swapButton: SwapButton,
     val shouldShowMaxAmount: Boolean,
     val predefinedButtons: ImmutableList<PredefinedPercentButtonUM> = persistentListOf(),

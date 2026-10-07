@@ -89,12 +89,9 @@ internal class TxHistoryItemToTransactionItemUMConverter(
             is TransactionType.YieldSupply.DeployContract -> yieldDeployContractContent(value, uiStatus, type)
             is TransactionType.YieldSupply.InitializeToken -> yieldInitializeTokenContent(value, uiStatus, type)
             is TransactionType.YieldSupply.ReactivateToken -> yieldReactivateTokenContent(value, uiStatus, type)
-            is TransactionType.UnknownOperation,
-            is TransactionType.Joint.Call,
-            -> unknownOperationContent(value, uiStatus)
+            is TransactionType.UnknownOperation -> unknownOperationContent(value, uiStatus)
             is TransactionType.GaslessFee,
             is TransactionType.NetworkFee,
-            is TransactionType.Joint.TokenFee,
             -> feeContent(value, uiStatus)
             // endregion
         }

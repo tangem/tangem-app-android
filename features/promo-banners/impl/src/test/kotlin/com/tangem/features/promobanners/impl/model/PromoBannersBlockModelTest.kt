@@ -13,9 +13,9 @@ import com.tangem.domain.promo.usecase.GetPromoCampaignsUseCase
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent.Placeholder
 import com.tangem.features.promobanners.api.PromoBannersFeatureToggles
+import com.tangem.features.promobanners.impl.campaigns.service.CampaignsService
 import com.tangem.features.promobanners.impl.campaigns.v2.createPromoCampaign
 import com.tangem.features.promobanners.impl.campaigns.v2.model.PromoBannerCampaignMatcher
-import com.tangem.features.promobanners.impl.campaigns.v2.model.PromoCampaignAvailabilityChecker
 import com.tangem.features.promobanners.impl.repository.PromoBannersRepository
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -23,6 +23,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -36,7 +37,7 @@ internal class PromoBannersBlockModelTest {
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val promoBannersFeatureToggles: PromoBannersFeatureToggles = mockk()
     private val getPromoCampaignsUseCase: GetPromoCampaignsUseCase = mockk()
-    private val availabilityChecker: PromoCampaignAvailabilityChecker = mockk()
+    private val campaignsService: CampaignsService = mockk(relaxed = true)
 
     private val selectedWallet: UserWallet = mockk { every { walletId } returns UserWalletId(SELECTED_WALLET_ID) }
     private val otherWallet: UserWallet = mockk { every { walletId } returns UserWalletId(OTHER_WALLET_ID) }
@@ -48,12 +49,17 @@ internal class PromoBannersBlockModelTest {
 
     @BeforeEach
     fun setup() {
-        clearMocks(repository, userWalletsListRepository, promoBannersFeatureToggles, getPromoCampaignsUseCase)
+        clearMocks(
+            repository,
+            userWalletsListRepository,
+            promoBannersFeatureToggles,
+            getPromoCampaignsUseCase,
+            campaignsService,
+        )
         every { userWalletsListRepository.selectedUserWallet } returns MutableStateFlow(selectedWallet)
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(selectedWallet, otherWallet))
         coEvery { repository.getCachedBanners(any(), any()) } returns null
         coEvery { repository.getBanners(any(), any(), any()) } returns allBanners
-        every { availabilityChecker.isAvailable(any(), any()) } returns true
         coEvery { getPromoCampaignsUseCase(any(), any()) } returns Either.Right(
             listOf(
                 createPromoCampaign(id = OPEN_CAMPAIGN_ID),
@@ -113,6 +119,43 @@ internal class PromoBannersBlockModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN v2 enabled WHEN campaign banner clicked THEN campaign sheet requested for selected wallet`() = runTest {
+        // Arrange
+        every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns true
+        val model = createModel()
+        advanceUntilIdle()
+        val campaignBanner = model.uiState.value.banners.single { it.displayId == openCampaignBanner.id }
+
+        // Act
+        campaignBanner.config.onClick!!.invoke()
+
+        // Assert
+        verify(exactly = 1) {
+            campaignsService.show(
+                campaignId = OPEN_CAMPAIGN_ID.toString(),
+                userWalletId = UserWalletId(SELECTED_WALLET_ID),
+            )
+        }
+        assertThat(model.uiState.value.banners.single { it.displayId == plainBanner.id }.config.onClick).isNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN v2 disabled WHEN model created THEN campaign banner is not clickable`() = runTest {
+        // Arrange
+        every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns false
+
+        // Act
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.banners.single { it.displayId == openCampaignBanner.id }.config.onClick)
+            .isNull()
+        model.onDestroy()
+    }
+
     private fun TestScope.createModel() = PromoBannersBlockModel(
         dispatchers = createTestingCoroutineDispatcherProvider(),
         paramsContainer = MutableParamsContainer(value = PromoBannersBlockComponent.Params(Placeholder.MAIN)),
@@ -123,7 +166,8 @@ internal class PromoBannersBlockModelTest {
         uiMessageSender = mockk<UiMessageSender>(relaxed = true),
         promoBannersFeatureToggles = promoBannersFeatureToggles,
         getPromoCampaignsUseCase = getPromoCampaignsUseCase,
-        campaignMatcher = PromoBannerCampaignMatcher(availabilityChecker),
+        campaignMatcher = PromoBannerCampaignMatcher(),
+        campaignsService = campaignsService,
     )
 
     private fun createBanner(id: Int, campaignId: Int?) = PromoBannerDisplay(

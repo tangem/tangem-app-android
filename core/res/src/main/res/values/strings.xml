@@ -394,6 +394,7 @@
     <item quantity="other">%d assets</item>
   </plurals>
   <string name="common_attention">Attention</string>
+  <string name="common_auto">Auto</string>
   <string name="common_available_networks">Available networks</string>
   <string name="common_backup">Backup</string>
   <string name="common_backup_error">Backup Error</string>
@@ -444,6 +445,7 @@
     <item quantity="other">%d days ago</item>
   </plurals>
   <string name="common_decline">Decline</string>
+  <string name="common_default">Default</string>
   <string name="common_delete">Delete</string>
   <string name="common_disable">Disable</string>
   <string name="common_disabled">Disabled</string>
@@ -601,6 +603,7 @@
   <string name="common_sign">Sign</string>
   <string name="common_sign_and_send">Sign and send</string>
   <string name="common_skip">Skip</string>
+  <string name="common_slippage">Slippage</string>
   <string name="common_something_went_wrong">Something went wrong</string>
   <string name="common_stake">Stake</string>
   <string name="common_staked">Staked</string>
@@ -1121,6 +1124,7 @@
   <string name="initial_wallet_sync_banner_description">Your wallet is synced and ready.\nSome tokens missing?</string>
   <string name="initial_wallet_sync_banner_title">Wallet successfully imported</string>
   <string name="initial_wallet_sync_restore_progress">Restoring %d%%</string>
+  <string name="introduction_button_buy_tangem">Buy Tangem</string>
   <string name="introduction_button_create_wallet">Create wallet</string>
   <string name="introduction_button_i_have_a_wallet">I have a wallet</string>
   <string name="introduction_create_wallet_hardware_description">If you already have a Tangem Wallet</string>
@@ -1153,6 +1157,7 @@
   <string name="introduction_stories_two_title">One wallet, multiple cards</string>
   <string name="introduction_subtitle">One secure place for everything you own</string>
   <string name="introduction_terms_of_service">Terms of service</string>
+  <string name="introduction_terms_of_service_consent">By continuing, you agree with %s</string>
   <string name="introduction_title">Store all your assets</string>
   <string name="joint_account_activated_snackbar">Account activated</string>
   <string name="joint_account_activation_account_button_title">Activate account</string>
@@ -1165,6 +1170,7 @@
   <string name="joint_account_invite_load_failed_subtitle">Failed to load invite page.\nTap to reload</string>
   <string name="joint_account_invite_members_creator">Creator</string>
   <string name="joint_account_invite_members_invite">Invite</string>
+  <string name="joint_account_invite_members_invited">Invited</string>
   <string name="joint_account_invite_members_member">Member</string>
   <string name="joint_account_invite_members_member_info">Member info</string>
   <string name="joint_account_invite_members_new_member">New member</string>
@@ -1183,6 +1189,7 @@
   <string name="joint_account_invite_members_title">Invite members</string>
   <string name="joint_account_invite_members_to_join">Invite members to join</string>
   <string name="joint_account_invite_members_waiting_title">Waiting for members</string>
+  <string name="joint_account_invite_share_title">Invite to %s</string>
   <string name="joint_account_join_confirm_sheet_subtitle">This account has its own shared balance, separate from your personal funds. Members can manage the funds together, and some transactions may be approved without you.</string>
   <string name="joint_account_join_confirm_sheet_title">You\'re joining a shared account</string>
   <string name="joint_account_join_invalid_link_subtitle">Check that you opened the correct link, or ask the account creator to send it again</string>
@@ -1238,11 +1245,15 @@
   <string name="joint_account_send_sends_automatically_setup_fee">Sends automatically once collected. First send includes a one-time setup fee</string>
   <string name="joint_account_send_setup_fee_note">First transaction in %1$s. The fee includes a one-time %2$s to set up the joint account on-chain</string>
   <string name="joint_account_send_signatures_required">%1$s of %2$s signatures required</string>
+  <plurals name="joint_account_send_signatures_required_banner">
+    <item quantity="one">%1$d signature required</item>
+    <item quantity="other">%1$d signatures required</item>
+  </plurals>
   <string name="joint_account_send_slot_busy_subtitle">This network already has an operation collecting signatures. Wait for it to finish before creating a new one</string>
   <string name="joint_account_send_slot_busy_title">Operation already in progress</string>
   <string name="joint_account_settings_networks_info">This account works only in the supported networks.</string>
   <string name="joint_account_waiting_activation">Waiting for activation</string>
-  <string name="joint_operation_auto_sends_footer">Auto-sends once %1$s of %2$s members sign</string>
+  <string name="joint_operation_auto_sends_footer">Auto-sends once %1$s of %2$s members sign</string>
   <string name="joint_operation_banner_subtitle">%1$s → %2$s</string>
   <string name="joint_operation_banner_title">%1$s wants to send %2$s</string>
   <string name="joint_operation_banner_title_own">You want to send %1$s</string>
@@ -1253,7 +1264,7 @@
   <string name="joint_operation_decline_alert_title">Decline this transaction?</string>
   <string name="joint_operation_declined">Declined</string>
   <string name="joint_operation_declined_at">Declined at %s</string>
-  <string name="joint_operation_declined_footer">You declined. Others can still reach %1$s of %2$s</string>
+  <string name="joint_operation_declined_footer">You declined. Others can still reach %1$s of %2$s</string>
   <string name="joint_operation_delete_alert_message">The transaction will be cancelled for all members. Collected signatures will be discarded</string>
   <string name="joint_operation_delete_alert_title">Delete this transaction?</string>
   <string name="joint_operation_deleted_snackbar">Transaction deleted</string>
@@ -1264,7 +1275,7 @@
   <string name="joint_operation_signatures_progress">Signatures %1$s of %2$s</string>
   <string name="joint_operation_signed">Signed</string>
   <string name="joint_operation_signed_at">Signed at %s</string>
-  <string name="joint_operation_signed_footer">Sends automatically after %1$s of %2$s sign</string>
+  <string name="joint_operation_signed_footer">Sends automatically after %1$s of %2$s sign</string>
   <string name="joint_operation_signers_title">Signers</string>
   <string name="joint_operation_signing_blocked_subtitle">Signing is blocked for security reasons. Please contact support</string>
   <string name="joint_operation_signing_blocked_title">Signing is blocked</string>
@@ -1799,7 +1810,7 @@
   <string name="organize_tokens_ungroup">Ungroup</string>
   <string name="prediction_account_open_detailed_view">Open detailed view</string>
   <string name="prediction_account_subtitle">Add funds &amp; start predict</string>
-  <string name="prediction_account_title">Prediction account</string>
+  <string name="prediction_account_title">Predictions account</string>
   <string name="prediction_account_unavailable">Couldn\'t connect to your prediction account. Refresh or reopen this screen.</string>
   <string name="prediction_add_funds_error_description">Couldn\'t load deposit details. Refresh or re-enter this screen.</string>
   <string name="prediction_add_funds_max_receive_amount_title">The amount to receive must not exceed %s</string>
@@ -2016,22 +2027,27 @@
   <string name="prediction_withdraw_status_failed_title">Withdrawal failed</string>
   <string name="prediction_withdraw_status_sent_description">Delivery may take up to %1$d minutes</string>
   <string name="prediction_withdraw_status_sent_title">Withdrawal sent</string>
+  <string name="promo_campaign_all_wallets_enrolled">All of your wallets are enrolled</string>
   <string name="promo_campaign_already_activated_subtitle">Eligible cashback will be distributed to:</string>
   <string name="promo_campaign_already_activated_title">You\'re already enrolled in %1$s</string>
   <string name="promo_campaign_eligible_tokens">Eligible tokens</string>
   <string name="promo_campaign_enroll">Enroll</string>
   <string name="promo_campaign_enroll_success_title">You\'re successfully enrolled in %1$s</string>
+  <string name="promo_campaign_enrolled_wallets">Enrolled wallet</string>
   <string name="promo_campaign_not_active_subtitle">This campaign no longer exists or has expired</string>
   <string name="promo_campaign_not_active_title">Campaign not active</string>
+  <string name="promo_campaign_not_started_title">Campaign not available yet</string>
   <string name="promo_campaign_reactivation_summary_description">Earn 0.5% cashback on every swap over $500, on any pair except stable to stable. Max payout $50 per swap.\n\nComplete five qualifying swaps and unlock an extra $10 bonus.\n\nRewards are paid weekly in USDT or USDC on the address selected.</string>
   <string name="promo_campaign_select_cashback_account">Select cashback account</string>
   <string name="promo_campaign_select_token">Select cashback token</string>
   <string name="promo_campaign_selected_cashback_account">Selected cashback account</string>
   <string name="promo_campaign_selected_token">Selected cashback token</string>
+  <string name="promo_campaign_some_wallets_enrolled">Some of your wallets are enrolled</string>
   <string name="promo_campaign_summary_title">Enroll in %1$s</string>
   <string name="promo_campaign_terms_agreement">I agree with %1$s</string>
   <string name="promo_campaign_terms_agreement_android">I agree with</string>
   <string name="promo_campaign_terms_link">%1$s Terms</string>
+  <string name="promo_campaign_unavailable_title">Campaign unavailable</string>
   <string name="promo_campaign_whale_swap_summary_description">Earn cashback on every swap from $10K until the end of August.\n\nRates step up with size: 0.10% from $10K, 0.20% from $20K, 0.50% from $100K.\n\nMax payout: $500 per swap, and $10,000 per wallet per swap direction until campaign lasts. Stable coin into stablecoin swaps are excluded.\n\nPayout arrives weekly in USDT or USDC address of your choice.</string>
   <string name="provider_name_support">%s support</string>
   <string name="push_notification_settings_banner_description">Push Notifications are enabled but won\'t work until you allow them</string>
@@ -2474,7 +2490,10 @@
   <string name="support_selector_view_chat_button">Open chat</string>
   <string name="support_selector_view_email_button">Open mail</string>
   <string name="swap_approve_description">By approving, you allow the smart contract to use your tokens in future transactions.</string>
+  <string name="swap_custom_slippage_info">Slippage can\'t be customized with this provider and may reach up to %s in rare cases</string>
   <string name="swap_detailed_mode">Detailed mode</string>
+  <string name="swap_exchange_rates_info_text">displayed include the service provider’s fee</string>
+  <string name="swap_exchange_rates_info_title">Exchange rates</string>
   <string name="swap_fixed_rate">Fixed Rate</string>
   <string name="swap_give_permission_fee_footer">The network will charge a token approval fee to verify that you are authorizing the use of your token for the swap.</string>
   <string name="swap_in_progress">Swap in progress</string>
@@ -2484,6 +2503,10 @@
   <string name="swap_search_tooltip_description">Search for any token, even if it’s not in your list yet.</string>
   <string name="swap_search_tooltip_title">Use search to find what you need</string>
   <string name="swap_simple_mode">Simple mode</string>
+  <string name="swap_slippage_error">Unsupported amount</string>
+  <string name="swap_slippage_info_text">is the difference between the expected and actual execution price caused by market price or liquidity changes</string>
+  <string name="swap_slippage_warning_text">Swap may fail if the slippage threshold is hit</string>
+  <string name="swap_slippage_warning_title">Slippage is set %s</string>
   <string name="swap_story_fifth_subtitle">Feel confident with round-the-clock support to help with any issues</string>
   <string name="swap_story_fifth_title">Always Here</string>
   <string name="swap_story_first_subtitle">Multiple trusted providers in one place—swap any asset effortlessly in your wallet</string>
@@ -2576,6 +2599,7 @@
   <string name="tangem_pay_transaction_declined_notification_text">The bank rejected this transaction request.</string>
   <string name="tangem_pay_transaction_details_cashback_below_min">Below min trx amount</string>
   <string name="tangem_pay_transaction_details_cashback_cap_reached">Monthly cap reached</string>
+  <string name="tangem_pay_transaction_details_cashback_compliance_risk">Compliance risk</string>
   <string name="tangem_pay_transaction_details_cashback_mcc_excluded">MCC excluded</string>
   <string name="tangem_pay_transaction_details_cashback_none">—</string>
   <string name="tangem_pay_transaction_details_cashback_refund">Return of purchase</string>
@@ -2594,6 +2618,9 @@
   <string name="tangempay_account_deactivated_message_subtitle">For questions about account, data or transaction history, please contact support</string>
   <string name="tangempay_account_deactivated_message_title">Your account has been closed</string>
   <string name="tangempay_account_unable_to_use_rooted">Unable to use on rooted device</string>
+  <string name="tangempay_action_required_description">To continue, we need a bit more information from you. This usually takes a couple of minutes</string>
+  <string name="tangempay_action_required_primary_btn">Сontinue verification</string>
+  <string name="tangempay_action_required_title">Action required</string>
   <string name="tangempay_available_balance">Available balance</string>
   <string name="tangempay_bank_transfer_creating_description">Usually takes up to 5 minutes. In rare cases, up to 48 hours</string>
   <string name="tangempay_bank_transfer_creating_title">Creating your banking details</string>
@@ -2601,6 +2628,7 @@
   <string name="tangempay_bank_transfer_details_daily_deposits_hint">If you want to deposit more than %s – contact support</string>
   <string name="tangempay_bank_transfer_details_fee_header">Deposit methods and fees</string>
   <string name="tangempay_bank_transfer_details_limitations">Limitations</string>
+  <string name="tangempay_bank_transfer_failed_title">Failed to create banking details</string>
   <string name="tangempay_bank_transfer_fee_ach">ACH</string>
   <string name="tangempay_bank_transfer_fee_error_subtitle">Tap to reload</string>
   <string name="tangempay_bank_transfer_fee_error_title">Error loading fee info</string>
@@ -2731,7 +2759,7 @@
   <string name="tangempay_cashback_accruals_calc_title">How we calculate cashback?</string>
   <string name="tangempay_cashback_accruals_exceptions_description">For now, cashback isn’t available for in-store purchases at EU merchants. It’s also no cashback for ATMs, quasi-cash, mobile phone bills, government services, and some other categories.</string>
   <string name="tangempay_cashback_accruals_exceptions_title">Exceptions</string>
-  <string name="tangempay_cashback_accruals_pay_description">From the 2nd to the 5th of the next month</string>
+  <string name="tangempay_cashback_accruals_pay_description">By the 10th of next month, once transactions are checked for compliance with the cashback program rules</string>
   <string name="tangempay_cashback_accruals_pay_title">How we pay cashback?</string>
   <string name="tangempay_cashback_accruals_subtitle">Limits and exceptions</string>
   <string name="tangempay_cashback_accruals_title">Accruals</string>
@@ -2740,7 +2768,7 @@
   <string name="tangempay_cashback_additional_until">Until %1$s</string>
   <string name="tangempay_cashback_deactivated_description">It was made due to your suspicious behavior. Contact support to learn more</string>
   <string name="tangempay_cashback_deactivated_title">Cashback deactivated</string>
-  <string name="tangempay_cashback_deposit_banner">Cashback %1$s for %2$s will be deposited till %3$s</string>
+  <string name="tangempay_cashback_deposit_banner">Cashback %1$s for %2$s will be deposited till %3$s after validation</string>
   <string name="tangempay_cashback_deposited_on">Will be deposited on %1$s</string>
   <string name="tangempay_cashback_details_cap">%1$s max per month</string>
   <string name="tangempay_cashback_details_eu_excluded">For now, no cashback for in-store purchases at EU merchants</string>
@@ -3003,6 +3031,8 @@
   <string name="tangempay_va_available_to_deposit_day">Available to deposit per day:</string>
   <string name="tangempay_va_banking_details_error_description">Please try again or contact support if the issue persists</string>
   <string name="tangempay_va_banking_details_error_title">Couldn\'t load banking details</string>
+  <string name="tangempay_va_banner_failed_description">Please try again or contact support if the issue persists</string>
+  <string name="tangempay_va_banner_failed_title">Failed to create banking details</string>
   <string name="tangempay_va_limit_resetting_everyday">Limit is resetting every day</string>
   <string name="tangempay_visa_benefits">Visa Benefits</string>
   <string name="tangempay_waitlist_description">We\'ll email you the moment it\'s available in your region</string>
@@ -3142,6 +3172,7 @@
   <string name="transaction_history_approve_high_risk_subtitle">You\'re connected. Funds may be at risk. Consider revoking access.</string>
   <string name="transaction_history_approve_high_risk_title">High Risk</string>
   <string name="transaction_history_approved_amount">Approved amount</string>
+  <string name="transaction_history_claiming_incentive_rewards">Claiming incentive rewards</string>
   <string name="transaction_history_claiming_reward">Claiming reward</string>
   <string name="transaction_history_contract_address">contract: %s</string>
   <string name="transaction_history_detail_page_amount_signed_value" formatted="false">%1s %2s %3s</string>
@@ -3162,6 +3193,7 @@
   <string name="transaction_history_fee_for_yield_mode_top_up">For Yield mode top-up</string>
   <string name="transaction_history_fee_sending_asset">Send %%image%% %s</string>
   <string name="transaction_history_from_inline_address">from: %%image%% %s</string>
+  <string name="transaction_history_incentive_rewards_claimed">Incentive rewards claimed</string>
   <string name="transaction_history_multiple_addresses">Multiple addresses</string>
   <string name="transaction_history_not_supported_description">Transaction history is currently not supported for this blockchain. But don\'t worry, we\'re working on it! In the meantime you can check it in the explorer.</string>
   <string name="transaction_history_operation">Operation</string>
@@ -3173,6 +3205,7 @@
   <string name="transaction_history_status_claiming_rewards">Claiming rewards</string>
   <string name="transaction_history_status_disabling_yield_mode_failed">Disabling Yield mode failed</string>
   <string name="transaction_history_status_enabling_yield_mode_failed">Enabling Yield mode failed</string>
+  <string name="transaction_history_status_incentive_rewards_claim_failed">Claiming of incentive rewards failed</string>
   <string name="transaction_history_status_receive_failed">Receive failed</string>
   <string name="transaction_history_status_restaking_rewards">Restaking rewards</string>
   <string name="transaction_history_status_rewards_claim_failed">Rewards claim failed</string>

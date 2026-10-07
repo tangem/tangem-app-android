@@ -15,10 +15,12 @@ import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.models.account.VirtualAccountOnramp
+import com.tangem.domain.models.account.isOrderRequired
 import com.tangem.domain.pay.usecase.CreateVirtualAccountOrderUseCase
 import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
 import com.tangem.domain.pay.usecase.GetOnrampFeesUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.features.tangempay.addfunds.VIRTUAL_ACCOUNT_TERMS_OF_USE_URL
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
@@ -48,17 +50,17 @@ internal class TangemPayVirtualAccountDepositModel @Inject constructor(
         field = MutableStateFlow(
             TangemPayVirtualAccountDepositUM(
                 fees = TangemPayVirtualAccountDepositUM.FeesUM.Loading,
-                shouldShowTermsAndConditions = params.virtualAccountOnramp is VirtualAccountOnramp.Eligible,
+                shouldShowTermsAndConditions = params.virtualAccountOnramp.isOrderRequired,
                 isLoading = false,
                 onShowDetailsClick = ::onShowDetailsClick,
                 onDismiss = ::onDismiss,
-                onTermsClick = { urlOpener.openUrl(TERMS_OF_USE_URL) },
+                onTermsClick = { urlOpener.openUrl(VIRTUAL_ACCOUNT_TERMS_OF_USE_URL) },
                 onPrivacyClick = { urlOpener.openUrl(PRIVACY_POLICY_URL) },
             ),
         )
 
     init {
-        val event = if (params.virtualAccountOnramp is VirtualAccountOnramp.Eligible) {
+        val event = if (params.virtualAccountOnramp.isOrderRequired) {
             TangemPayAnalyticsEvents.VaConditionsPopupShowedFirstTime()
         } else {
             TangemPayAnalyticsEvents.VaConditionsPopupShowed()
@@ -116,7 +118,9 @@ internal class TangemPayVirtualAccountDepositModel @Inject constructor(
                 analytics.send(TangemPayAnalyticsEvents.VaShowDetailsClicked())
                 fetchBankCredentials(onramp)
             }
-            VirtualAccountOnramp.Eligible -> {
+            VirtualAccountOnramp.Eligible,
+            VirtualAccountOnramp.Failed,
+            -> {
                 analytics.send(TangemPayAnalyticsEvents.VaShowDetailsFirstTimeClicked())
                 createVirtualAccountOrder()
             }
@@ -161,7 +165,6 @@ internal class TangemPayVirtualAccountDepositModel @Inject constructor(
     }
 
     private companion object {
-        const val TERMS_OF_USE_URL = "https://tangem.com/docs/en/virtual-account-terms.pdf"
         const val PRIVACY_POLICY_URL = "https://tangem.com/docs/en/pay-privacy-policy.pdf"
     }
 }
