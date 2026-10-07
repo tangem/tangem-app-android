@@ -1263,6 +1263,7 @@ internal class TangemPayOrderCardDataModelTest {
         adminCardLimit = null,
         status = CustomerInfo.ProductInstance.Status.ACTIVE,
         specificationDataType = CustomerInfo.ProductInstance.SpecificationDataType.CARD,
+        paymentAccountType = CustomerInfo.ProductInstance.PaymentAccountType.COLLATERAL_CARD,
     )
 
     private fun sourceCard(embossName: String?) = CustomerInfo.CardInfo(

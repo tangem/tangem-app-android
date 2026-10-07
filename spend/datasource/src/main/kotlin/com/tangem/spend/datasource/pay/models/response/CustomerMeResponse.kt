@@ -90,6 +90,7 @@ data class CustomerMeResponse(
         @SerialName("display_name") val displayName: String?,
         @SerialName("actual_card_limit") val actualCardLimit: CardLimit?,
         @SerialName("admin_card_limit") val adminCardLimit: CardLimit?,
+        @SerialName("payment_account_type") val paymentAccountType: String?,
         /**
          * A type this build does not know falls back to [SpecificationDataType.UNKNOWN] since app version 6.5. Older
          * versions fail to parse the whole `customer/me` response on it.

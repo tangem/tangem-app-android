@@ -28,9 +28,6 @@ class TrackMoneyAccountOrderUseCase(
             onOrderStateChange = { updated ->
                 orderRepository.storeOrder(userWalletId = userWalletId, order = updated)
                 moneyAccountStatusFetcher.invoke(userWalletId)
-                if (updated.orderStatus.isTerminal) {
-                    orderRepository.clearOrder(userWalletId)
-                }
             },
             onTerminalRefresh = { walletId -> moneyAccountStatusFetcher(walletId) },
         )
