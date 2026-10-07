@@ -196,6 +196,8 @@ class SwapDexTest : BaseTestCase() {
         val percent75 = "PERCENT_75"
         val max = "MAX"
         val fiatSign = "$"
+        val zeroAmount = "0.00"
+        val zeroReceiveAmount = "~ 0"
         val zeroFiatAmount = "0.00"
         val approximateSign = "~"
         val rateSign = "≈"
@@ -234,10 +236,13 @@ class SwapDexTest : BaseTestCase() {
                 onSwapTokenScreen { chooseTokenButton.assertIsDisplayed() }
             }
             step("Assert the send amount is zero") {
-                onSwapTokenScreen { swapFiatAmount.assertTextContains(zeroFiatAmount, substring = true) }
+                onSwapTokenScreen { textInput.assertTextEquals(zeroAmount) }
+            }
+            step("Assert the send amount fiat equivalent is zero") {
+                onSwapTokenScreen { sendFiatAmount.assertTextContains(zeroFiatAmount, substring = true) }
             }
             step("Assert the receive amount is zero") {
-                onSwapTokenScreen { emptyReceiveAmount.assertTextEquals("$approximateSign 0") }
+                onSwapTokenScreen { emptyReceiveAmount.assertTextEquals(zeroReceiveAmount) }
             }
             step("Assert the receive amount fiat equivalent is zero") {
                 onSwapTokenScreen { emptyReceiveFiatAmount.assertTextContains(zeroFiatAmount, substring = true) }
