@@ -394,6 +394,7 @@
     <item quantity="other">%d assets</item>
   </plurals>
   <string name="common_attention">Attention</string>
+  <string name="common_auto">Auto</string>
   <string name="common_available_networks">Available networks</string>
   <string name="common_backup">Backup</string>
   <string name="common_backup_error">Backup Error</string>
@@ -444,6 +445,7 @@
     <item quantity="other">%d days ago</item>
   </plurals>
   <string name="common_decline">Decline</string>
+  <string name="common_default">Default</string>
   <string name="common_delete">Delete</string>
   <string name="common_disable">Disable</string>
   <string name="common_disabled">Disabled</string>
@@ -601,6 +603,7 @@
   <string name="common_sign">Sign</string>
   <string name="common_sign_and_send">Sign and send</string>
   <string name="common_skip">Skip</string>
+  <string name="common_slippage">Slippage</string>
   <string name="common_something_went_wrong">Something went wrong</string>
   <string name="common_stake">Stake</string>
   <string name="common_staked">Staked</string>
@@ -1154,6 +1157,7 @@
   <string name="introduction_stories_two_title">One wallet, multiple cards</string>
   <string name="introduction_subtitle">One secure place for everything you own</string>
   <string name="introduction_terms_of_service">Terms of service</string>
+  <string name="introduction_terms_of_service_consent">By continuing, you agree with %s</string>
   <string name="introduction_title">Store all your assets</string>
   <string name="joint_account_activated_snackbar">Account activated</string>
   <string name="joint_account_activation_account_button_title">Activate account</string>
@@ -1185,6 +1189,7 @@
   <string name="joint_account_invite_members_title">Invite members</string>
   <string name="joint_account_invite_members_to_join">Invite members to join</string>
   <string name="joint_account_invite_members_waiting_title">Waiting for members</string>
+  <string name="joint_account_invite_share_title">Invite to %s</string>
   <string name="joint_account_join_confirm_sheet_subtitle">This account has its own shared balance, separate from your personal funds. Members can manage the funds together, and some transactions may be approved without you.</string>
   <string name="joint_account_join_confirm_sheet_title">You\'re joining a shared account</string>
   <string name="joint_account_join_invalid_link_subtitle">Check that you opened the correct link, or ask the account creator to send it again</string>
@@ -2485,7 +2490,10 @@
   <string name="support_selector_view_chat_button">Open chat</string>
   <string name="support_selector_view_email_button">Open mail</string>
   <string name="swap_approve_description">By approving, you allow the smart contract to use your tokens in future transactions.</string>
+  <string name="swap_custom_slippage_info">Slippage can\'t be customized with this provider and may reach up to %s in rare cases</string>
   <string name="swap_detailed_mode">Detailed mode</string>
+  <string name="swap_exchange_rates_info_text">displayed include the service provider’s fee</string>
+  <string name="swap_exchange_rates_info_title">Exchange rates</string>
   <string name="swap_fixed_rate">Fixed Rate</string>
   <string name="swap_give_permission_fee_footer">The network will charge a token approval fee to verify that you are authorizing the use of your token for the swap.</string>
   <string name="swap_in_progress">Swap in progress</string>
@@ -2495,6 +2503,10 @@
   <string name="swap_search_tooltip_description">Search for any token, even if it’s not in your list yet.</string>
   <string name="swap_search_tooltip_title">Use search to find what you need</string>
   <string name="swap_simple_mode">Simple mode</string>
+  <string name="swap_slippage_error">Unsupported amount</string>
+  <string name="swap_slippage_info_text">is the difference between the expected and actual execution price caused by market price or liquidity changes</string>
+  <string name="swap_slippage_warning_text">Swap may fail if the slippage threshold is hit</string>
+  <string name="swap_slippage_warning_title">Slippage is set %s</string>
   <string name="swap_story_fifth_subtitle">Feel confident with round-the-clock support to help with any issues</string>
   <string name="swap_story_fifth_title">Always Here</string>
   <string name="swap_story_first_subtitle">Multiple trusted providers in one place—swap any asset effortlessly in your wallet</string>
@@ -2606,6 +2618,9 @@
   <string name="tangempay_account_deactivated_message_subtitle">For questions about account, data or transaction history, please contact support</string>
   <string name="tangempay_account_deactivated_message_title">Your account has been closed</string>
   <string name="tangempay_account_unable_to_use_rooted">Unable to use on rooted device</string>
+  <string name="tangempay_action_required_description">To continue, we need a bit more information from you. This usually takes a couple of minutes</string>
+  <string name="tangempay_action_required_primary_btn">Сontinue verification</string>
+  <string name="tangempay_action_required_title">Action required</string>
   <string name="tangempay_available_balance">Available balance</string>
   <string name="tangempay_bank_transfer_creating_description">Usually takes up to 5 minutes. In rare cases, up to 48 hours</string>
   <string name="tangempay_bank_transfer_creating_title">Creating your banking details</string>

@@ -130,7 +130,6 @@ internal class IntroductionModel @Inject constructor(
                 onBuyTangemClick = ::onBuyTangemClick,
                 onCreateWalletSheetCollapsed = ::onCreateWalletSheetCollapsed,
                 onTermsOfServiceClick = legalLinks::openTermsOfService,
-                onPrivacyPolicyClick = legalLinks::openPrivacyPolicy,
             ),
         )
 
