@@ -340,6 +340,55 @@ internal class AddAccountBlockModelTest {
     }
 
     @Test
+    fun `GIVEN the type sheet replaced the chooser WHEN the chooser reports dismiss THEN the type sheet stays`() =
+        runTest {
+            // Arrange
+            every { jointAccountFeatureToggles.isJointAccountEnabled } returns true
+            wallets.value = listOf(wallet(walletAId), wallet(walletBId))
+            accountLists.value = listOf(
+                accountList(walletAId, canAddCrypto = true, accountId = accountAId),
+                accountList(walletBId, canAddCrypto = true, accountId = accountBId),
+            )
+            val model = createModel(testScope = this)
+            val openedSheets = model.bottomSheetNavigation.trackSlot()
+            advanceUntilIdle()
+            model.onClick()
+            advanceUntilIdle()
+            selectedAccounts.value = setOf(accountBId)
+            advanceUntilIdle()
+
+            // Act
+            model.portfolioSelectorCallback.onDismiss()
+            model.portfolioSelectorCallback.onBack()
+
+            // Assert
+            assertThat(openedSheets.last()).isInstanceOf(BottomSheetConfig.AccountType::class.java)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN the chooser is open WHEN it is dismissed THEN the slot is cleared`() = runTest {
+        // Arrange
+        wallets.value = listOf(wallet(walletAId), wallet(walletBId))
+        accountLists.value = listOf(
+            accountList(walletAId, canAddCrypto = true),
+            accountList(walletBId, canAddCrypto = true),
+        )
+        val model = createModel(testScope = this)
+        val openedSheets = model.bottomSheetNavigation.trackSlot()
+        advanceUntilIdle()
+        model.onClick()
+        advanceUntilIdle()
+
+        // Act
+        model.portfolioSelectorCallback.onDismiss()
+
+        // Assert
+        assertThat(openedSheets).containsExactly(BottomSheetConfig.WalletSelector, null).inOrder()
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN the crypto limit is reached WHEN the option is tapped THEN the limit dialog shows`() =
         runTest {
             // Arrange
