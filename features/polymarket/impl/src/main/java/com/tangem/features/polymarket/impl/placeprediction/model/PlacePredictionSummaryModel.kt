@@ -286,12 +286,16 @@ internal class PlacePredictionSummaryModel @Inject constructor(
     private fun onPlaceError(error: PredictionPlaceOrderError) {
         when (error) {
             is PredictionPlaceOrderError.Ambiguous -> {
-                logger.e("Order outcome unknown, reporting it as submitted: $error")
-                showResult(result = PlaceResultUM.Submitted(placedAt = System.currentTimeMillis()))
+                refreshBalanceAndPositions()
+                showPlaceFailure(reason = "Order outcome unknown: $error")
             }
             is PredictionPlaceOrderError.NoLiquidity -> {
                 logger.e("The exchange found no match for the order: $error")
                 showResult(result = PlaceResultUM.NotFilled(placedAt = System.currentTimeMillis()))
+            }
+            is PredictionPlaceOrderError.Unauthorized -> {
+                logger.e("The exchange refused the credentials, leaving the gate to reconnect: $error")
+                returnToIdle()
             }
             else -> showPlaceFailure(reason = "Order refused: $error")
         }
@@ -360,8 +364,7 @@ internal class PlacePredictionSummaryModel @Inject constructor(
 
     private fun showResult(result: PlaceResultUM) {
         if (result.movesBalance()) {
-            predictionFundingWindow.open(userWalletId = params.userWalletId)
-            positionsUpdateEmitter.triggerUpdate(userWalletId = params.userWalletId)
+            refreshBalanceAndPositions()
         }
 
         uiState.update(SetSubmitTransformer(submit = SubmitUM.Result(result = result)))
@@ -376,6 +379,11 @@ internal class PlacePredictionSummaryModel @Inject constructor(
         )
     }
 
+    private fun refreshBalanceAndPositions() {
+        predictionFundingWindow.open(userWalletId = params.userWalletId)
+        positionsUpdateEmitter.triggerUpdate(userWalletId = params.userWalletId)
+    }
+
     private fun PlaceResultUM.movesBalance(): Boolean = when (this) {
         is PlaceResultUM.Filled,
         is PlaceResultUM.PartiallyFilled,
@@ -385,8 +393,7 @@ internal class PlacePredictionSummaryModel @Inject constructor(
     }
 
     /**
-     * A submission that never reached the book: the same order can still be placed, so this is a dialog over
-     * the summary rather than a result screen, and it returns the flow to [SubmitUM.Idle].
+     * Shows the order error dialog with support over the summary and returns the flow to [SubmitUM.Idle].
      */
     fun showPlaceFailure(reason: String) {
         logger.e(reason)

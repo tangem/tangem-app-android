@@ -19,7 +19,9 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
             is MoneyAccountStatusValue.Empty -> MoneyAccountStatusValueDM.Empty
             is MoneyAccountStatusValue.NotCreated -> MoneyAccountStatusValueDM.NotCreated
             is MoneyAccountStatusValue.Onboarding.CountryNotSupported -> {
-                MoneyAccountStatusValueDM.CountryNotSupported
+                MoneyAccountStatusValueDM.CountryNotSupported(
+                    countryCode = value.countryCode,
+                )
             }
             is MoneyAccountStatusValue.Onboarding.Issuing -> MoneyAccountStatusValueDM.Issuing(
                 step = value.step,
@@ -63,7 +65,9 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
         return when (value) {
             is MoneyAccountStatusValueDM.Empty -> MoneyAccountStatusValue.Empty
             is MoneyAccountStatusValueDM.NotCreated -> MoneyAccountStatusValue.NotCreated
-            is MoneyAccountStatusValueDM.CountryNotSupported -> MoneyAccountStatusValue.Onboarding.CountryNotSupported
+            is MoneyAccountStatusValueDM.CountryNotSupported -> MoneyAccountStatusValue.Onboarding.CountryNotSupported(
+                countryCode = value.countryCode,
+            )
             is MoneyAccountStatusValueDM.Issuing -> MoneyAccountStatusValue.Onboarding.Issuing(
                 source = StatusSource.CACHE,
                 balance = value.balance?.toDomain(userWalletId),

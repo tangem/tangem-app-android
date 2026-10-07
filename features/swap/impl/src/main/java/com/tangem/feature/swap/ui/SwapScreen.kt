@@ -39,7 +39,6 @@ import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
 import com.tangem.feature.swap.domain.models.domain.SwapUIMode
 import com.tangem.feature.swap.models.SwapStateHolder
-import com.tangem.feature.swap.models.states.ChooseProviderBottomSheetConfig
 import com.tangem.feature.swap.presentation.R
 import com.tangem.features.marketing.api.MarketingBannerComponent
 
@@ -84,14 +83,6 @@ internal fun SwapScreen(
                 .padding(scaffoldPaddings)
                 .testTag(SwapTokenScreenTestTags.CONTAINER),
         )
-
-        if (stateHolder.bottomSheetConfig != null) {
-            val config = stateHolder.bottomSheetConfig
-
-            when (config.content) {
-                is ChooseProviderBottomSheetConfig -> ChooseProviderBottomSheet(config = config)
-            }
-        }
     }
 }
 

@@ -86,7 +86,9 @@ internal class TangemPayBankWithdrawPreviewModelTest {
         every { getUserWalletUseCase(userWalletId) } returns mockk<UserWallet.Cold>().right()
         coEvery { cancelBankOfframpOrderUseCase(userWalletId, any()) } returns Unit.right()
         // The order sits in processing unless a test says otherwise, which keeps the screen in its sending state.
-        coEvery { awaitBankOfframpSignatureUseCase(userWalletId, any(), any()) } coAnswers { awaitCancellation() }
+        coEvery { awaitBankOfframpSignatureUseCase(userWalletId, any(), any(), any()) } coAnswers {
+            awaitCancellation()
+        }
     }
 
     @Test
@@ -338,7 +340,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     fun `GIVEN signature required WHEN payload signed THEN order reported as signed and sending ends`() {
         // Arrange
         orderCreated()
-        coEvery { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any()) } returns PAYLOAD_HASH.right()
+        coEvery { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any(), any()) } returns PAYLOAD_HASH.right()
         coEvery { signBankOfframpOrderUseCase(userWalletId, ORDER_ID, PAYLOAD_HASH, any()) } returns
             BankOfframpSignResult.Signed.right()
         val model = createModel()
@@ -354,10 +356,25 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     }
 
     @Test
+    fun `GIVEN order created WHEN awaiting signature THEN the payload is checked against the draft order`() {
+        // Arrange
+        orderCreated()
+        val model = createModel()
+
+        // Act
+        summary(model).onSendClick()
+
+        // Assert
+        val request = requireNotNull(completeDraft().toOrderRequest())
+        coVerify(exactly = 1) { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, request, any()) }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN order created WHEN signature submitted THEN the same idempotency key used`() {
         // Arrange
         orderCreated()
-        coEvery { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any()) } returns PAYLOAD_HASH.right()
+        coEvery { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any(), any()) } returns PAYLOAD_HASH.right()
         coEvery { signBankOfframpOrderUseCase(userWalletId, ORDER_ID, PAYLOAD_HASH, any()) } returns
             BankOfframpSignResult.Signed.right()
         val model = createModel()
@@ -380,7 +397,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     fun `GIVEN card prompt aborted WHEN signing THEN order cancelled and summary editable again`() {
         // Arrange
         orderCreated()
-        coEvery { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any()) } returns PAYLOAD_HASH.right()
+        coEvery { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any(), any()) } returns PAYLOAD_HASH.right()
         coEvery { signBankOfframpOrderUseCase(userWalletId, ORDER_ID, PAYLOAD_HASH, any()) } returns
             BankOfframpSignResult.Cancelled.right()
         val model = createModel()
@@ -401,7 +418,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     fun `GIVEN polling timed out WHEN retry THEN the same order is resumed instead of a second one`() {
         // Arrange
         orderCreated()
-        coEvery { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any()) }
+        coEvery { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any(), any()) }
             .returnsMany(listOf(BankOfframpError.PollingTimeout.left(), PAYLOAD_HASH.right()))
         coEvery { signBankOfframpOrderUseCase(userWalletId, ORDER_ID, PAYLOAD_HASH, any()) } returns
             BankOfframpSignResult.Signed.right()
@@ -412,8 +429,9 @@ internal class TangemPayBankWithdrawPreviewModelTest {
         requireNotNull((model.uiState.value as Failed).onRetryClick).invoke()
 
         // Assert
+        val request = requireNotNull(completeDraft().toOrderRequest())
         coVerify(exactly = 1) { createBankOfframpOrderUseCase(userWalletId, any(), any()) }
-        coVerify(exactly = 2) { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any()) }
+        coVerify(exactly = 2) { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, request, any()) }
         assertThat(signedCount).isEqualTo(1)
         model.onDestroy()
     }
@@ -422,7 +440,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     fun `GIVEN order fails after creation WHEN not a timeout THEN the order is cancelled`() {
         // Arrange
         orderCreated()
-        coEvery { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any()) } returns
+        coEvery { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any(), any()) } returns
             BankOfframpError.Unknown(null).left()
         val model = createModel()
 
@@ -438,7 +456,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     fun `GIVEN polling times out WHEN failure shown THEN the order is kept for retry`() {
         // Arrange
         orderCreated()
-        coEvery { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any()) } returns
+        coEvery { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any(), any()) } returns
             BankOfframpError.PollingTimeout.left()
         val model = createModel()
 
@@ -455,7 +473,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     fun `GIVEN the backend gave up on the order WHEN retry THEN a new order is created`() {
         // Arrange
         orderCreated()
-        coEvery { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any()) } returns
+        coEvery { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any(), any()) } returns
             BankOfframpError.Unknown(null).left()
         val model = createModel()
         summary(model).onSendClick()
@@ -669,7 +687,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     fun `GIVEN polling times out WHEN awaiting the signature THEN SendErrorScreenOpened is sent`() {
         // Arrange
         orderCreated()
-        coEvery { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any()) } returns
+        coEvery { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any(), any()) } returns
             BankOfframpError.PollingTimeout.left()
         val model = createModel()
 
@@ -717,7 +735,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     fun `GIVEN card prompt aborted WHEN signing THEN no SendErrorScreenOpened is sent`() {
         // Arrange
         orderCreated()
-        coEvery { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any()) } returns PAYLOAD_HASH.right()
+        coEvery { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any(), any()) } returns PAYLOAD_HASH.right()
         coEvery { signBankOfframpOrderUseCase(userWalletId, ORDER_ID, PAYLOAD_HASH, any()) } returns
             BankOfframpSignResult.Cancelled.right()
         val model = createModel()

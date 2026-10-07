@@ -29,7 +29,6 @@ internal class SwapAmountScreenClickIntentsTest {
         onRetryClick = {},
         onProviderClick = {},
         onProviderSelect = {},
-        onProviderFilterSelect = {},
         openTokenDetailsScreen = {},
         onSelectTokenClick = {},
         onSuccess = {},
