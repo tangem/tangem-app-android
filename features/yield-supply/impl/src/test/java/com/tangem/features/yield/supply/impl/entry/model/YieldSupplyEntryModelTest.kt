@@ -19,14 +19,18 @@ import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.tokens.model.details.NavigationAction
+import com.tangem.domain.yield.supply.models.YieldMarketToken
 import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
+import com.tangem.domain.yield.supply.models.incentives.YieldIncentiveCampaign
 import com.tangem.domain.yield.supply.promo.usecase.IsYieldBoostPromoEnabledForTokenUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyEnterStatusUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyEntryComponent
 import com.tangem.features.yield.supply.api.entry.YieldSupplyEntryRoute
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -47,6 +51,7 @@ internal class YieldSupplyEntryModelTest {
     private val enterStatusUseCase: YieldSupplyEnterStatusUseCase = mockk()
     private val accountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
     private val isPromoEnabledUseCase: IsYieldBoostPromoEnabledForTokenUseCase = mockk()
+    private val getTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase = mockk()
 
     private val accountStatusList: AccountStatusList = mockk()
 
@@ -54,7 +59,7 @@ internal class YieldSupplyEntryModelTest {
     fun setUp() {
         clearMocks(
             router, enterStatusUseCase, accountStatusListSupplier,
-            isPromoEnabledUseCase,
+            isPromoEnabledUseCase, getTokenStatusUseCase,
         )
         mockkObject(CryptoCurrencyStatusOperations)
         coEvery { accountStatusListSupplier.getSyncOrNull(USER_WALLET_ID) } returns accountStatusList
@@ -161,6 +166,7 @@ internal class YieldSupplyEntryModelTest {
             stubStatusLookup(status(isActive = false).some())
             coEvery { enterStatusUseCase(USER_WALLET_ID, any()) } returns null.right()
             coEvery { isPromoEnabledUseCase(USER_WALLET_ID, any()) } returns true.right()
+            coEvery { getTokenStatusUseCase(any()) } returns market(hasCampaign = false).right()
 
             // Act
             createModel(currency = token())
@@ -169,7 +175,6 @@ internal class YieldSupplyEntryModelTest {
             val route = captureReplacedRoute()
             assertThat(route).isInstanceOf(YieldSupplyEntryRoute.Promo::class.java)
             assertThat((route as YieldSupplyEntryRoute.Promo).isPromoEnabled).isTrue()
-            assertThat(route.apy).isEqualTo("5.0")
             assertThat(route.cryptoCurrency).isEqualTo(token())
         }
 
@@ -186,6 +191,65 @@ internal class YieldSupplyEntryModelTest {
         // Assert
         assertThat((captureReplacedRoute() as YieldSupplyEntryRoute.Promo).isPromoEnabled).isFalse()
     }
+
+    @Test
+    fun `GIVEN promo enabled and active campaign WHEN created THEN Promo route carries the base apy`() = runTest {
+        // Arrange
+        stubStatusLookup(status(isActive = false).some())
+        coEvery { enterStatusUseCase(USER_WALLET_ID, any()) } returns null.right()
+        coEvery { isPromoEnabledUseCase(USER_WALLET_ID, any()) } returns true.right()
+        coEvery { getTokenStatusUseCase(any()) } returns market(hasCampaign = true).right()
+
+        // Act
+        createModel(currency = token())
+
+        // Assert
+        assertThat((captureReplacedRoute() as YieldSupplyEntryRoute.Promo).apy).isEqualTo("4")
+    }
+
+    @Test
+    fun `GIVEN promo enabled and no market WHEN created THEN Promo route falls back to the params apy`() = runTest {
+        // Arrange
+        stubStatusLookup(status(isActive = false).some())
+        coEvery { enterStatusUseCase(USER_WALLET_ID, any()) } returns null.right()
+        coEvery { isPromoEnabledUseCase(USER_WALLET_ID, any()) } returns true.right()
+        coEvery { getTokenStatusUseCase(any()) } returns IllegalStateException("no market").left()
+
+        // Act
+        createModel(currency = token())
+
+        // Assert
+        assertThat((captureReplacedRoute() as YieldSupplyEntryRoute.Promo).apy).isEqualTo("5.0")
+    }
+
+    @Test
+    fun `GIVEN promo disabled WHEN created THEN Promo route keeps the params apy without a market lookup`() = runTest {
+        // Arrange
+        stubStatusLookup(status(isActive = false).some())
+        coEvery { enterStatusUseCase(USER_WALLET_ID, any()) } returns null.right()
+        coEvery { isPromoEnabledUseCase(USER_WALLET_ID, any()) } returns false.right()
+
+        // Act
+        createModel(currency = token())
+
+        // Assert
+        assertThat((captureReplacedRoute() as YieldSupplyEntryRoute.Promo).apy).isEqualTo("5.0")
+        coVerify(exactly = 0) { getTokenStatusUseCase(any()) }
+    }
+
+    private fun market(hasCampaign: Boolean) = YieldMarketToken(
+        tokenAddress = "0xToken",
+        chainId = 1,
+        apy = BigDecimal("4"),
+        isActive = true,
+        maxFeeNative = BigDecimal.ZERO,
+        maxFeeUSD = BigDecimal.ZERO,
+        campaign = YieldIncentiveCampaign(
+            hasActiveCampaign = hasCampaign,
+            rewardsApr = BigDecimal("1.5"),
+            totalApyEst = BigDecimal("5.5"),
+        ),
+    )
 
     private fun captureReplacedRoute(): Route {
         val slot = slot<Route>()
@@ -210,6 +274,7 @@ internal class YieldSupplyEntryModelTest {
         yieldSupplyEnterStatusUseCase = enterStatusUseCase,
         singleAccountStatusListSupplier = accountStatusListSupplier,
         isYieldBoostPromoEnabledForTokenUseCase = isPromoEnabledUseCase,
+        yieldSupplyGetTokenStatusUseCase = getTokenStatusUseCase,
     )
 
     private fun pendingEnter(): YieldSupplyPendingStatus = YieldSupplyPendingStatus.Enter(txIds = listOf("0xTx"))
