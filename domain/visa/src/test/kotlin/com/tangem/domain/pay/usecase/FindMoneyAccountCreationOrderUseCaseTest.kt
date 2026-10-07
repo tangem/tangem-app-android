@@ -17,29 +17,30 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-internal class FindActiveMoneyAccountCreationOrderUseCaseTest {
+internal class FindMoneyAccountCreationOrderUseCaseTest {
 
-    private val findActiveOrdersUseCase: FindActiveOrdersUseCase = mockk()
-    private val useCase = FindActiveMoneyAccountCreationOrderUseCase(findActiveOrdersUseCase = findActiveOrdersUseCase)
+    private val findOrdersUseCase: FindOrdersUseCase = mockk()
+    private val useCase = FindMoneyAccountCreationOrderUseCase(findOrdersUseCase = findOrdersUseCase)
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(findActiveOrdersUseCase)
+        clearMocks(findOrdersUseCase)
     }
 
     @Test
-    fun `GIVEN invoke WHEN orders requested THEN filtered by money account issue type`() = runTest {
+    fun `GIVEN invoke WHEN orders requested THEN filtered by type and non-cancelled statuses`() = runTest {
         // Arrange
-        stubActiveOrders()
+        stubOrders()
 
         // Act
         useCase(USER_WALLET_ID)
 
         // Assert
         coVerify(exactly = 1) {
-            findActiveOrdersUseCase(
+            findOrdersUseCase(
                 userWalletId = USER_WALLET_ID,
                 types = setOf(OrderType.ACCOUNT_ISSUE_BANKING_RAIN),
+                statuses = setOf(OrderStatus.NEW, OrderStatus.PROCESSING, OrderStatus.COMPLETED),
             )
         }
     }
@@ -49,7 +50,7 @@ internal class FindActiveMoneyAccountCreationOrderUseCaseTest {
         // Arrange
         val older = createOrder(id = "older", updatedAt = "2026-09-01T00:00:00Z")
         val newer = createOrder(id = "newer", updatedAt = "2026-09-02T00:00:00Z")
-        stubActiveOrders(older, newer)
+        stubOrders(older, newer)
 
         // Act
         val actual = useCase(USER_WALLET_ID)
@@ -59,25 +60,9 @@ internal class FindActiveMoneyAccountCreationOrderUseCaseTest {
     }
 
     @Test
-    fun `GIVEN orders of other types WHEN invoke THEN they are ignored`() = runTest {
+    fun `GIVEN no orders WHEN invoke THEN null returned`() = runTest {
         // Arrange
-        val expected = createOrder(id = "account", updatedAt = "2026-09-01T00:00:00Z")
-        stubActiveOrders(
-            createOrder(id = "card", type = OrderType.CARD_ISSUE_PLASTIC_RAIN, updatedAt = "2026-09-03T00:00:00Z"),
-            expected,
-        )
-
-        // Act
-        val actual = useCase(USER_WALLET_ID)
-
-        // Assert
-        assertThat(actual).isEqualTo(expected.right())
-    }
-
-    @Test
-    fun `GIVEN no active orders WHEN invoke THEN null returned`() = runTest {
-        // Arrange
-        stubActiveOrders()
+        stubOrders()
 
         // Act
         val actual = useCase(USER_WALLET_ID)
@@ -87,21 +72,22 @@ internal class FindActiveMoneyAccountCreationOrderUseCaseTest {
     }
 
     @Test
-    fun `GIVEN a terminal order leaks through the backend filter WHEN invoke THEN it is dropped`() = runTest {
+    fun `GIVEN completed order WHEN invoke THEN it is returned`() = runTest {
         // Arrange
-        stubActiveOrders(createOrder(id = "completed", status = OrderStatus.COMPLETED))
+        val completed = createOrder(id = "completed", status = OrderStatus.COMPLETED)
+        stubOrders(completed)
 
         // Act
         val actual = useCase(USER_WALLET_ID)
 
         // Assert
-        assertThat(actual).isEqualTo(null.right())
+        assertThat(actual).isEqualTo(completed.right())
     }
 
     @Test
-    fun `GIVEN find active orders fails WHEN invoke THEN error passed through`() = runTest {
+    fun `GIVEN find orders fails WHEN invoke THEN error passed through`() = runTest {
         // Arrange
-        coEvery { findActiveOrdersUseCase(any(), any()) } returns VisaApiError.Unspecified.left()
+        coEvery { findOrdersUseCase(any(), any(), any()) } returns VisaApiError.Unspecified.left()
 
         // Act
         val actual = useCase(USER_WALLET_ID)
@@ -110,8 +96,8 @@ internal class FindActiveMoneyAccountCreationOrderUseCaseTest {
         assertThat(actual).isEqualTo(VisaApiError.Unspecified.left())
     }
 
-    private fun stubActiveOrders(vararg orders: Order) {
-        coEvery { findActiveOrdersUseCase(any(), any()) } returns orders.toList().right()
+    private fun stubOrders(vararg orders: Order) {
+        coEvery { findOrdersUseCase(any(), any(), any()) } returns orders.toList().right()
     }
 
     private fun createOrder(
