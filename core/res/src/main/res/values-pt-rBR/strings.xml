@@ -394,6 +394,7 @@
     <item quantity="other">%d ativos</item>
   </plurals>
   <string name="common_attention">Atenção</string>
+  <string name="common_auto">Automático</string>
   <string name="common_available_networks">Redes disponíveis</string>
   <string name="common_backup">Backup</string>
   <string name="common_backup_error">Erro de backup</string>
@@ -444,6 +445,7 @@
     <item quantity="other">há%d dias</item>
   </plurals>
   <string name="common_decline">Recusar</string>
+  <string name="common_default">Padrão</string>
   <string name="common_delete">Excluir</string>
   <string name="common_disable">Desativar</string>
   <string name="common_disabled">Desabilitado</string>
@@ -601,6 +603,7 @@
   <string name="common_sign">Assine</string>
   <string name="common_sign_and_send">Assine e envie</string>
   <string name="common_skip">Pular</string>
+  <string name="common_slippage">Slippage</string>
   <string name="common_something_went_wrong">Algo deu errado</string>
   <string name="common_stake">Stake</string>
   <string name="common_staked">Estacado</string>
@@ -1152,6 +1155,7 @@
   <string name="introduction_stories_two_title">Uma carteira, vários cartões</string>
   <string name="introduction_subtitle">Um único lugar seguro para tudo o que é seu</string>
   <string name="introduction_terms_of_service">Termos de serviço</string>
+  <string name="introduction_terms_of_service_consent">Ao continuar, você concorda com %s</string>
   <string name="introduction_title">Armazene todos os seus ativos</string>
   <string name="joint_account_activated_snackbar">Conta ativada</string>
   <string name="joint_account_activation_account_button_title">Ativar conta</string>
@@ -1183,6 +1187,7 @@
   <string name="joint_account_invite_members_title">Convidar membros</string>
   <string name="joint_account_invite_members_to_join">Convide membros para participar</string>
   <string name="joint_account_invite_members_waiting_title">Aguardando membros</string>
+  <string name="joint_account_invite_share_title">Convite para %s</string>
   <string name="joint_account_join_confirm_sheet_subtitle">Todos os membros desta conta compartilham o mesmo saldo. Outros membros podem movimentar os fundos sem a sua aprovação quando obtiverem assinaturas suficientes</string>
   <string name="joint_account_join_confirm_sheet_title">Você está entrando em uma conta compartilhada</string>
   <string name="joint_account_join_invalid_link_subtitle">Verifique se você abriu o link correto ou peça ao criador da conta para enviá-lo novamente</string>
@@ -1864,7 +1869,6 @@
   <string name="prediction_main_empty_positions_title">Você não tem previsões ativas</string>
   <string name="prediction_main_events_load_error">Falha ao carregar os eventos.\nToque para recarregar</string>
   <string name="prediction_main_explore_events">Explorar eventos</string>
-  <string name="prediction_main_subtitle">USDC na rede Polygon</string>
   <string name="prediction_main_title">Previsões</string>
   <string name="prediction_main_total_balance">Saldo Total</string>
   <string name="prediction_main_withdraw">Sacar</string>
@@ -2483,7 +2487,10 @@
   <string name="support_selector_view_chat_button">Abra o chat</string>
   <string name="support_selector_view_email_button">Abra o e-mail</string>
   <string name="swap_approve_description">Ao aprovar, você permite que o contrato inteligente utilize seus tokens em transações futuras.</string>
+  <string name="swap_custom_slippage_info">O slippage não pode ser personalizado com este provedor e, em casos raros, pode chegar a %s</string>
   <string name="swap_detailed_mode">Modo detalhado</string>
+  <string name="swap_exchange_rates_info_text">As taxas de câmbio exibidas incluem a taxa do provedor de serviços</string>
+  <string name="swap_exchange_rates_info_title">Taxas de câmbio</string>
   <string name="swap_fixed_rate">Taxa fixa</string>
   <string name="swap_give_permission_fee_footer">A rede cobrará uma taxa de aprovação de token para verificar se você está autorizando o uso do seu token para a troca.</string>
   <string name="swap_in_progress">Troca em andamento</string>
@@ -2493,6 +2500,10 @@
   <string name="swap_search_tooltip_description">Pesquise qualquer token, mesmo que ele ainda não esteja na sua lista.</string>
   <string name="swap_search_tooltip_title">Use a busca para encontrar o que você precisa.</string>
   <string name="swap_simple_mode">Modo simples</string>
+  <string name="swap_slippage_error">Valor não compatível</string>
+  <string name="swap_slippage_info_text">é a diferença entre o preço de execução esperado e o preço de execução efetivo causada por alterações no preço de mercado ou na liquidez</string>
+  <string name="swap_slippage_warning_text">A troca pode falhar se o limite de slippage for atingido</string>
+  <string name="swap_slippage_warning_title">Slippage definido como %s</string>
   <string name="swap_story_fifth_subtitle">Sinta-se seguro com o suporte disponível 24 horas por dia, 7 dias por semana, para ajudá-lo com qualquer problema.</string>
   <string name="swap_story_fifth_title">Sempre aqui</string>
   <string name="swap_story_first_subtitle">Diversos provedores confiáveis ​​em um só lugar — troque qualquer ativo facilmente em sua carteira.</string>
@@ -2604,6 +2615,9 @@
   <string name="tangempay_account_deactivated_message_subtitle">Para dúvidas sobre sua conta, dados ou histórico de transações, entre em contato com o suporte</string>
   <string name="tangempay_account_deactivated_message_title">Sua conta foi encerrada</string>
   <string name="tangempay_account_unable_to_use_rooted">Não é possível usar em dispositivos com root.</string>
+  <string name="tangempay_action_required_description">Para continuar, precisamos de mais algumas informações suas. Isso normalmente leva alguns minutos.</string>
+  <string name="tangempay_action_required_primary_btn">Continuar a verificação</string>
+  <string name="tangempay_action_required_title">Ação necessária</string>
   <string name="tangempay_available_balance">Saldo disponível</string>
   <string name="tangempay_bank_transfer_creating_description">Normalmente, leva até 5 minutos. Em casos raros, até 48 horas</string>
   <string name="tangempay_bank_transfer_creating_title">Criando seus dados bancários</string>
