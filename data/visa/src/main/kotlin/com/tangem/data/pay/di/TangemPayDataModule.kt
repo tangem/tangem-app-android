@@ -513,6 +513,17 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
+        fun provideDismissVirtualAccountOrderFailureUseCase(
+            onboardingRepository: OnboardingRepository,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+        ): DismissVirtualAccountOrderFailureUseCase {
+            return DismissVirtualAccountOrderFailureUseCase(
+                onboardingRepository = onboardingRepository,
+                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+            )
+        }
+
+        @Provides
         fun provideGetBankCredentialsUseCase(onboardingRepository: OnboardingRepository): GetBankCredentialsUseCase {
             return GetBankCredentialsUseCase(onboardingRepository = onboardingRepository)
         }
