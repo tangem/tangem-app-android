@@ -121,6 +121,7 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      *
      * @property isLoading `true` while the signing action (e.g. NFC card scan) is in flight.
      * @property iconEnd Optional trailing glyph on the button (e.g. a scan/NFC icon on "Sign").
+     * @property isHoldToConfirm the button signs on tap and hold — a hot wallet has no card tap to confirm the intent.
      */
     data class CosignActionUM(
         val buttonText: TextReference,
@@ -128,6 +129,7 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
         val isEnabled: Boolean,
         val isLoading: Boolean = false,
         val iconEnd: TangemIconUM? = null,
+        val isHoldToConfirm: Boolean = false,
         val onClick: () -> Unit,
     )
 
@@ -260,7 +262,8 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      * wallet renders its display name and still copies the address behind it.
      *
      * @property label Section label above the counterparty: "Recipient" (outgoing) / "From" (incoming).
-     * @property title Counterparty value: brief address / account name / wallet name.
+     * @property title Counterparty value: the whole address, which the row cuts in the middle / account name / wallet
+     * name.
      * @property avatar Leading avatar.
      * @property titleIcon Currency avatar drawn after the [title] — the asset of a fee-only card ("120.03 USDT ⓣ").
      * `null` on a counterparty card, which names an address rather than an asset.

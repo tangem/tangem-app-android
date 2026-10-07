@@ -24,10 +24,6 @@ import java.math.BigDecimal
 import java.util.Currency
 import java.util.Locale
 
-/**
- * Every `*Key` of the campaign is already localized by the backend (the request carries the app language),
- * so it is shown as-is.
- */
 internal class PromoCampaignUMConverter(
     private val onLinkClick: (url: String) -> Unit,
     private val onActionClick: () -> Unit,
@@ -37,18 +33,12 @@ internal class PromoCampaignUMConverter(
 
     override fun convert(value: PromoCampaign): PromoCampaignUM {
         val content = value.content
-        val firstTextBlock = content.description.firstOrNull { it is PromoDescriptionBlock.Text }
 
         return PromoCampaignUM(
             imageUrl = content.imageUrl,
-            title = stringReference(content.nameKey),
-            subtitle = null,
-            blocks = content.description.map { block ->
-                convertBlock(
-                    block = block,
-                    learnMoreLink = content.learnMoreLink.takeIf { block === firstTextBlock },
-                )
-            }.toImmutableList(),
+            title = stringReference(content.name),
+            subtitle = content.summary?.let(::stringReference),
+            blocks = content.description.map(::convertBlock).toImmutableList(),
             tokenSelector = if (value.payout.isNeeded) {
                 PromoTokenSelectorUM(selectedToken = null, selectedAccount = null, onClick = onChooseTokenClick)
             } else {
@@ -69,28 +59,27 @@ internal class PromoCampaignUMConverter(
         } else {
             PromoCampaignFooterUM(
                 terms = convertLink(campaign.content.tncLink),
-                buttonText = stringReference(campaign.content.actionButtonNameKey),
+                buttonText = stringReference(campaign.content.actionButtonName),
                 onButtonClick = onActionClick,
             )
         }
     }
 
-    /** The backend has no dedicated slot for [learnMoreLink]; the design shows it inline in the first text block. */
-    private fun convertBlock(block: PromoDescriptionBlock, learnMoreLink: PromoLink?): PromoBlockUM = when (block) {
+    private fun convertBlock(block: PromoDescriptionBlock): PromoBlockUM = when (block) {
         is PromoDescriptionBlock.Text -> PromoBlockUM.Text(
-            title = block.titleKey?.let(::stringReference),
-            text = stringReference(block.textKey),
-            learnMore = learnMoreLink?.let(::convertLink),
+            title = block.title?.let(::stringReference),
+            text = stringReference(block.text),
+            link = block.link?.let(::convertLink),
         )
         is PromoDescriptionBlock.Items -> PromoBlockUM.Tiles(
-            title = block.titleKey?.let(::stringReference),
+            title = block.title?.let(::stringReference),
             tiles = block.items.map { item ->
-                PromoBlockUM.Tile(label = stringReference(item.labelKey), value = formatValue(item.value))
+                PromoBlockUM.Tile(label = stringReference(item.label), value = formatValue(item.value))
             }.toImmutableList(),
         )
         is PromoDescriptionBlock.Table -> PromoBlockUM.Table(
-            title = block.titleKey?.let(::stringReference),
-            headers = block.headerKeys.map(::stringReference).toImmutableList(),
+            title = block.title?.let(::stringReference),
+            headers = block.headers.map(::stringReference).toImmutableList(),
             rows = block.rows.map { row -> row.map(::convertCell).toImmutableList() }.toImmutableList(),
         )
         is PromoDescriptionBlock.Highlight -> convertHighlight(block)
@@ -98,21 +87,21 @@ internal class PromoCampaignUMConverter(
 
     /** Without a title the design shows the text alone as the banner's single line. */
     private fun convertHighlight(block: PromoDescriptionBlock.Highlight): PromoBlockUM.Highlight {
-        val title = block.titleKey ?: return PromoBlockUM.Highlight(
-            title = stringReference(block.textKey),
+        val title = block.title ?: return PromoBlockUM.Highlight(
+            title = stringReference(block.text),
             description = null,
         )
 
-        return PromoBlockUM.Highlight(title = stringReference(title), description = stringReference(block.textKey))
+        return PromoBlockUM.Highlight(title = stringReference(title), description = stringReference(block.text))
     }
 
     private fun convertCell(cell: PromoDescriptionBlock.Cell): TextReference = when (cell) {
-        is PromoDescriptionBlock.Cell.Text -> stringReference(cell.textKey)
+        is PromoDescriptionBlock.Cell.Text -> stringReference(cell.text)
         is PromoDescriptionBlock.Cell.Value -> formatValue(cell.value)
     }
 
     private fun convertLink(link: PromoLink) = PromoLinkUM(
-        text = stringReference(link.textKey),
+        text = stringReference(link.text),
         onClick = { onLinkClick(link.url) },
     )
 

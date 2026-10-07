@@ -31,7 +31,7 @@ internal class DefaultPushNotificationsBottomSheetComponent @AssistedInject cons
     }
 
     override fun dismiss() {
-        params.modelCallbacks.onDismiss()
+        model.onSheetDismissed()
     }
 
     @Composable

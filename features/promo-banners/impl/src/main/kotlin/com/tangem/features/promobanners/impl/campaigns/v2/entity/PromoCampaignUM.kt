@@ -37,7 +37,7 @@ internal sealed interface PromoBlockUM {
     data class Text(
         val title: TextReference?,
         val text: TextReference,
-        val learnMore: PromoLinkUM?,
+        val link: PromoLinkUM?,
     ) : PromoBlockUM
 
     data class Tiles(
@@ -73,4 +73,5 @@ internal data class PromoCampaignFooterUM(
     val terms: PromoLinkUM?,
     val buttonText: TextReference,
     val onButtonClick: () -> Unit,
+    val isLoading: Boolean = false,
 )

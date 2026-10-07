@@ -16,6 +16,7 @@ internal data class TangemPayDetailsUM(
     val isBalanceHidden: Boolean,
     val messageBanner: MessageBannerUM?,
     val cashbackBlockState: CashbackBlockUM? = null,
+    val bankTransferOnrampBanner: MessageBannerUM? = null,
 )
 
 @Immutable

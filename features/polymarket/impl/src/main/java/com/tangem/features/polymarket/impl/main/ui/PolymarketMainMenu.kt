@@ -3,6 +3,7 @@ package com.tangem.features.polymarket.impl.main.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -28,9 +29,14 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_clock_24
 import com.tangem.core.ui.res.generated.icons.ic_dots_vertical_20
+import com.tangem.core.ui.res.generated.icons.ic_headphones_support_24
 
 @Composable
-internal fun PolymarketMainMenu(onHistoryClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun PolymarketMainMenu(
+    onHistoryClick: () -> Unit,
+    onSupportChatClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     var isExpanded by remember { mutableStateOf(false) }
     var anchorHeightPx by remember { mutableIntStateOf(0) }
     val menuOffset = with(LocalDensity.current) { DpOffset(x = 0.dp, y = -anchorHeightPx.toDp()) }
@@ -52,6 +58,10 @@ internal fun PolymarketMainMenu(onHistoryClick: () -> Unit, modifier: Modifier =
                 isExpanded = false
                 onHistoryClick()
             })
+            SupportChatMenuItem(onClick = {
+                isExpanded = false
+                onSupportChatClick()
+            })
         }
     }
 }
@@ -65,6 +75,15 @@ private fun HistoryMenuItem(onClick: () -> Unit) {
     )
 }
 
+@Composable
+private fun SupportChatMenuItem(onClick: () -> Unit) {
+    TangemContextMenuItem(
+        title = resourceReference(R.string.support_chat_screen_title),
+        icon = Icons.ic_headphones_support_24,
+        onClick = onClick,
+    )
+}
+
 @Preview(name = "History menu", widthDp = 240)
 @Preview(name = "History menu dark", widthDp = 240, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Preview(name = "History menu large text", widthDp = 240, fontScale = 1.5f)
@@ -72,7 +91,10 @@ private fun HistoryMenuItem(onClick: () -> Unit) {
 private fun PolymarketMainMenuPreview() {
     TangemThemePreviewRedesign {
         Box(modifier = Modifier.background(TangemTheme.colors3.bg.primary)) {
-            HistoryMenuItem(onClick = {})
+            Column {
+                HistoryMenuItem(onClick = {})
+                SupportChatMenuItem(onClick = {})
+            }
         }
     }
 }
