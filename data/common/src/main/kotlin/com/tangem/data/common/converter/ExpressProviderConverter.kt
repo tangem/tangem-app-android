@@ -23,6 +23,7 @@ class ExpressProviderConverter : Converter<ExpressProviderEntity, ExpressProvide
             slippage = value.slippage?.toBigDecimalOrNull(),
             isExchangeOnlyWithinSingleAddress = value.isExchangeOnlyWithinSingleAddress,
             isExtraIdSupported = value.isExtraIdSupported,
+            isCustomSlippageSupported = value.isCustomSlippageSupported,
         )
     }
 

@@ -1,7 +1,5 @@
 package com.tangem.features.introduction.impl.model
 
-import com.tangem.common.TangemBlogUrlBuilder
-import com.tangem.common.TangemBlogUrlBuilder.Post.WhatWalletToChoose
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -35,7 +33,7 @@ import com.tangem.features.introduction.impl.analytics.SocialLoginAnalyticsEvent
 import com.tangem.features.introduction.impl.ui.state.SocialLoginConsentUM
 import com.tangem.features.introduction.impl.ui.state.SocialLoginProgressUM
 import com.tangem.features.introduction.impl.ui.state.WalletOptionUM
-import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.utils.SupportedLanguages
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -51,7 +49,6 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
     private val getAvailableSocialLoginProvidersUseCase: GetAvailableSocialLoginProvidersUseCase,
     private val socialLoginUseCase: SocialLoginUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val appCoroutineScope: AppCoroutineScope,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val referral: IntroductionReferral,
     private val urlOpener: UrlOpener,
@@ -151,7 +148,6 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         ) + stringReference(" ") + styledResourceReference(
             id = CoreResR.string.social_login_consent_learn_more,
             spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.primary) },
-            // TODO [REDACTED_TASK_KEY]: switch to the social login article once it is published.
             onClick = ::openHelpArticle,
         ),
         acknowledgement = providerReference(CoreResR.string.social_login_consent_acknowledge, provider),
@@ -160,7 +156,8 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
     )
 
     private fun openHelpArticle() {
-        appCoroutineScope.launch { urlOpener.openUrl(TangemBlogUrlBuilder.build(WhatWalletToChoose)) }
+        val language = SupportedLanguages.getCurrentSupportedLanguageCode()
+        urlOpener.openUrl("https://tangem.com/$language/$HELP_ARTICLE_PATH")
     }
 
     private fun onConsentEvent(event: SocialLoginConsentPrompt.Event) {
@@ -339,5 +336,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
 
     private companion object {
         const val SEED_PHRASE_LENGTH = 12
+        const val HELP_ARTICLE_PATH = "help-center/getting-started-with-mobile-wallet/" +
+            "how-to-create-a-mobile-wallet/#create-a-wallet-with-google-or-apple"
     }
 }

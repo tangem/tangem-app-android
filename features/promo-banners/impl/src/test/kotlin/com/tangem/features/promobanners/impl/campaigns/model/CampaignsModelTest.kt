@@ -82,7 +82,7 @@ internal class CampaignsModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(openedSheets).containsExactly(CampaignsBottomSheetConfig.V2.Campaign(campaign))
+        assertThat(openedSheets).containsExactly(CampaignsBottomSheetConfig.V2.Campaign(campaign, userWalletId))
         coVerify(exactly = 0) { getPromoCampaignStateUseCase.invoke(any(), any(), any()) }
         model.onDestroy()
     }
@@ -102,7 +102,7 @@ internal class CampaignsModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(openedSheets).containsExactly(CampaignsBottomSheetConfig.V2.Campaign(campaign))
+        assertThat(openedSheets).containsExactly(CampaignsBottomSheetConfig.V2.Campaign(campaign, userWalletId))
         model.onDestroy()
     }
 
@@ -121,7 +121,7 @@ internal class CampaignsModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(openedSheets).containsExactly(CampaignsBottomSheetConfig.V2.Campaign(matchedById))
+        assertThat(openedSheets).containsExactly(CampaignsBottomSheetConfig.V2.Campaign(matchedById, userWalletId))
         model.onDestroy()
     }
 

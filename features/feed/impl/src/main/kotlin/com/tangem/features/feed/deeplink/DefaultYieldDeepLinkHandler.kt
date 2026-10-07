@@ -105,4 +105,8 @@ internal class DefaultYieldDeepLinkHandler @AssistedInject constructor(
             queryParams: Map<String, String>,
         ): DefaultYieldDeepLinkHandler
     }
+
+    companion object {
+        const val DEEPLINK_KEY = "tangem://yield"
+    }
 }

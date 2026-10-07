@@ -22,10 +22,10 @@ import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
+import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountActivationError
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
-import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
@@ -151,18 +151,23 @@ internal class JointAccountMembersModel @Inject constructor(
                         userWalletId = params.userWalletId,
                         cryptoAccountId = account.cryptoAccountId,
                     ),
-                ) { ownAddress, shared ->
+                    flow3 = isConfirmingActivation,
+                ) { ownAddress, shared, isActivating ->
                     ResolvedAccount(
                         account = account,
                         invites = invites,
                         sharedInvites = shared,
                         ownAddress = ownAddress,
+                        isActivating = isActivating,
                     )
                 }
             }
             .onEach { resolved ->
                 dismissStaleActivationConfirmation(resolvedAccountId = resolved?.account?.cryptoAccountId)
 
+                val walletIconRes = userWalletsListRepository
+                    .getSyncOrNull(id = params.userWalletId)
+                    ?.let(::walletInterationIcon)
                 val transformer = resolved
                     ?.let { account ->
                         UpdateMembersAccountTransformer(
@@ -171,6 +176,8 @@ internal class JointAccountMembersModel @Inject constructor(
                             sharedInvites = account.sharedInvites,
                             ownAddress = account.ownAddress,
                             callbacks = converterCallbacks,
+                            walletIconRes = walletIconRes,
+                            isActivating = account.isActivating,
                         )
                     }
                     ?: ClearMembersAccountTransformer()
@@ -205,7 +212,7 @@ internal class JointAccountMembersModel @Inject constructor(
 
     /**
      * The backend won't silent-push joint-account state changes (a slot filling, activation, an operation awaiting
-     * a co-signature), so while this screen is on top a 60-second poll keeps it fresh — the current status can't
+     * a co-signature), so while this screen is on top a 5-second poll keeps it fresh — the current status can't
      * tell us whether it's stale, so it isn't used to gate this, and neither is whether an account is currently
      * resolved: an empty store (offline, cold start, a failed [refreshAccounts]) must still poll, or it could
      * never recover on its own. [pollingCoordinator] paces itself — this only decides whether to collect.
@@ -241,6 +248,11 @@ internal class JointAccountMembersModel @Inject constructor(
     }
 
     private fun onActivateClick(cryptoAccountId: String) {
+        if (!IS_ACTIVATION_CONFIRMATION_SHOWN) {
+            onConfirmActivationClick(cryptoAccountId = cryptoAccountId)
+            return
+        }
+
         val userWallet = userWalletsListRepository.getSyncOrNull(id = params.userWalletId)
 
         confirmedAccountId = cryptoAccountId
@@ -265,6 +277,7 @@ internal class JointAccountMembersModel @Inject constructor(
 
             if (account == null) {
                 TangemLogger.e("Joint account activation failed: no account behind the shown members list")
+                isConfirmingActivation.value = false
                 activationConfirmationNavigation.dismiss()
                 showActivationError()
                 return@launch
@@ -273,7 +286,11 @@ internal class JointAccountMembersModel @Inject constructor(
             val result = activateJointAccountUseCase(account = account)
             activationConfirmationNavigation.dismiss()
             result
-                .onLeft(::onActivationError)
+                .onLeft { error ->
+                    // On success the loader stays until the activated account takes the button away
+                    isConfirmingActivation.value = false
+                    onActivationError(error)
+                }
                 .onRight { onActivated() }
         }
     }
@@ -408,9 +425,13 @@ internal class JointAccountMembersModel @Inject constructor(
         val invites: List<String>,
         val sharedInvites: Set<String>,
         val ownAddress: String?,
+        val isActivating: Boolean,
     )
 
     private companion object {
         const val ACCOUNT_LOOKUP_TIMEOUT_MILLIS = 3_000L
+
+        /** The activation sheet is left out for now, activation starts at once; the step comes back by flipping this */
+        const val IS_ACTIVATION_CONFIRMATION_SHOWN = false
     }
 }

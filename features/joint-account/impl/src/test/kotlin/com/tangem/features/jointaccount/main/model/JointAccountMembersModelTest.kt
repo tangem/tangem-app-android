@@ -59,6 +59,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import com.tangem.core.ui.R as CoreUiR
@@ -456,7 +457,7 @@ internal class JointAccountMembersModelTest {
     }
 
     @Test
-    fun `GIVEN confirming account WHEN activation confirmed THEN use case gets the account`() = runTest {
+    fun `GIVEN confirming account WHEN activate tapped THEN use case gets the account without a sheet`() = runTest {
         // Arrange
         stubConfirmingAccount()
         val jointAccount = MockAccounts.createJointAccount(userWalletId = USER_WALLET_ID)
@@ -466,12 +467,11 @@ internal class JointAccountMembersModelTest {
         // Act
         val model = createModel()
         val openedConfirmations = model.activationConfirmationNavigation.trackSlot()
-        model.uiState.value.onActivateClick!!()
-        model.onConfirmActivationClick(cryptoAccountId = ACCOUNT_ID)
+        model.uiState.value.activateButton!!.onClick()
         advanceUntilIdle()
 
         // Assert
-        assertThat(openedConfirmations.first()!!.walletInteractionIconRes).isEqualTo(CoreUiR.drawable.ic_tangem_24)
+        assertThat(openedConfirmations.filterNotNull()).isEmpty()
         coVerify(exactly = 1) { activateUseCase(account = jointAccount) }
         val message = slot<SnackbarMessage>()
         verify(exactly = 1) { uiMessageSender.send(capture(message)) }
@@ -482,6 +482,71 @@ internal class JointAccountMembersModelTest {
         assertThat(openedConfirmations.last()).isNull()
     }
 
+    @Test
+    fun `GIVEN cold wallet WHEN activation offered THEN the activate button carries the card icon`() = runTest {
+        // Arrange
+        stubConfirmingAccount()
+
+        // Act
+        val model = createModel()
+
+        // Assert
+        assertThat(model.uiState.value.activateButton!!.walletIconRes).isEqualTo(CoreUiR.drawable.ic_tangem_24)
+    }
+
+    @Test
+    fun `GIVEN hot wallet WHEN activation offered THEN the activate button carries no wallet icon`() = runTest {
+        // Arrange
+        stubConfirmingAccount()
+        val hotWallet = mockk<UserWallet.Hot> {
+            every { walletId } returns USER_WALLET_ID
+        }
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(hotWallet))
+
+        // Act
+        val model = createModel()
+
+        // Assert
+        assertThat(model.uiState.value.activateButton!!.walletIconRes).isNull()
+    }
+
+    @Test
+    fun `GIVEN activation fails WHEN activate tapped THEN the activate button stops loading`() = runTest {
+        // Arrange
+        stubConfirmingAccount()
+        val jointAccount = MockAccounts.createJointAccount(userWalletId = USER_WALLET_ID)
+        every { singleAccountSupplier.filterJointAccount(accountId = any()) } returns flowOf(jointAccount)
+        coEvery {
+            activateUseCase(account = jointAccount)
+        } returns JointAccountFlowError.Failed(cause = IllegalStateException("boom")).left()
+        val model = createModel()
+
+        // Act
+        model.uiState.value.activateButton!!.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.activateButton!!.isLoading).isFalse()
+    }
+
+    @Test
+    fun `GIVEN signing dismissed WHEN activate tapped THEN the activate button stops loading`() = runTest {
+        // Arrange
+        stubConfirmingAccount()
+        val jointAccount = MockAccounts.createJointAccount(userWalletId = USER_WALLET_ID)
+        every { singleAccountSupplier.filterJointAccount(accountId = any()) } returns flowOf(jointAccount)
+        coEvery { activateUseCase(account = jointAccount) } returns JointAccountFlowError.UserCancelled.left()
+        val model = createModel()
+
+        // Act
+        model.uiState.value.activateButton!!.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.activateButton!!.isLoading).isFalse()
+    }
+
+    @Disabled("The activation sheet is off, see IS_ACTIVATION_CONFIRMATION_SHOWN")
     @Test
     fun `GIVEN hot wallet WHEN activation offered THEN the confirm button carries no wallet icon`() = runTest {
         // Arrange
@@ -494,7 +559,7 @@ internal class JointAccountMembersModelTest {
         // Act
         val model = createModel()
         val openedConfirmations = model.activationConfirmationNavigation.trackSlot()
-        model.uiState.value.onActivateClick!!()
+        model.uiState.value.activateButton!!.onClick()
 
         // Assert
         assertThat(openedConfirmations.last()!!.walletInteractionIconRes).isNull()
@@ -514,12 +579,13 @@ internal class JointAccountMembersModelTest {
         // Act
         val model = createModel()
         val openedConfirmations = model.activationConfirmationNavigation.trackSlot()
-        model.uiState.value.onActivateClick!!()
+        model.uiState.value.activateButton!!.onClick()
         model.onConfirmActivationClick(cryptoAccountId = ACCOUNT_ID)
         runCurrent()
 
         // Assert
         assertThat(model.isConfirmingActivation.value).isTrue()
+        assertThat(model.uiState.value.activateButton!!.isLoading).isTrue()
 
         // Act
         advanceUntilIdle()
@@ -543,11 +609,11 @@ internal class JointAccountMembersModelTest {
             // Act — confirm, dismiss the sheet mid-flight, reopen it and confirm again
             val model = createModel()
             val openedConfirmations = model.activationConfirmationNavigation.trackSlot()
-            model.uiState.value.onActivateClick!!()
+            model.uiState.value.activateButton!!.onClick()
             model.onConfirmActivationClick(cryptoAccountId = ACCOUNT_ID)
             runCurrent()
             model.activationConfirmationNavigation.dismiss()
-            model.uiState.value.onActivateClick!!()
+            model.uiState.value.activateButton!!.onClick()
             model.onConfirmActivationClick(cryptoAccountId = ACCOUNT_ID)
             runCurrent()
 
@@ -572,7 +638,7 @@ internal class JointAccountMembersModelTest {
 
         // Act
         val model = createModel()
-        model.uiState.value.onActivateClick!!()
+        model.uiState.value.activateButton!!.onClick()
         model.onConfirmActivationClick(cryptoAccountId = ACCOUNT_ID)
         advanceUntilIdle()
 
@@ -592,7 +658,7 @@ internal class JointAccountMembersModelTest {
 
         // Act
         val model = createModel()
-        model.uiState.value.onActivateClick!!()
+        model.uiState.value.activateButton!!.onClick()
         model.onConfirmActivationClick(cryptoAccountId = ACCOUNT_ID)
         advanceUntilIdle()
 
@@ -608,15 +674,17 @@ internal class JointAccountMembersModelTest {
 
         // Act
         val model = createModel()
-        model.uiState.value.onActivateClick!!()
+        model.uiState.value.activateButton!!.onClick()
         model.onConfirmActivationClick(cryptoAccountId = ACCOUNT_ID)
         advanceUntilIdle()
 
         // Assert
         coVerify(exactly = 0) { activateUseCase(account = any()) }
         verify(exactly = 1) { uiMessageSender.send(any()) }
+        assertThat(model.uiState.value.activateButton!!.isLoading).isFalse()
     }
 
+    @Disabled("The activation sheet is off, see IS_ACTIVATION_CONFIRMATION_SHOWN")
     @Test
     fun `GIVEN confirmation open WHEN the resolved account changes identity THEN the sheet is dropped`() = runTest {
         // Arrange
@@ -628,7 +696,7 @@ internal class JointAccountMembersModelTest {
 
         val model = createModel(cryptoAccountId = null)
         val openedConfirmations = model.activationConfirmationNavigation.trackSlot()
-        model.uiState.value.onActivateClick!!()
+        model.uiState.value.activateButton!!.onClick()
         assertThat(openedConfirmations.last()).isNotNull()
 
         // Act — a different account now resolves first

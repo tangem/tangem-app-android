@@ -35,6 +35,7 @@ sealed class MoneyAccountStatusValue {
     fun copySealed(source: StatusSource): MoneyAccountStatusValue {
         return when (this) {
             is Onboarding.Issuing -> copy(source = source)
+            is Onboarding.KycRequired -> copy(source = source)
             is Onboarding.UnderReview -> copy(source = source)
             is Onboarding.VerificationDeclined -> copy(source = source)
             is Onboarding.Activating -> copy(source = source)
@@ -81,6 +82,13 @@ sealed class MoneyAccountStatusValue {
         ) : Onboarding()
 
         @Serializable
+        data class KycRequired(
+            @SerialName("source") override val source: StatusSource,
+            @SerialName("balance") override val balance: Balance?,
+            @SerialName("customer_id") override val customerId: String?,
+        ) : Onboarding()
+
+        @Serializable
         data class UnderReview(
             @SerialName("source") override val source: StatusSource,
             @SerialName("balance") override val balance: Balance?,
@@ -96,7 +104,9 @@ sealed class MoneyAccountStatusValue {
         ) : Onboarding()
 
         @Serializable
-        data object CountryNotSupported : Onboarding() {
+        data class CountryNotSupported(
+            val countryCode: String?,
+        ) : Onboarding() {
             override val source: StatusSource = StatusSource.ACTUAL
             override val balance: Balance? = null
             override val customerId: String? = null
