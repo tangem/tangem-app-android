@@ -241,7 +241,7 @@ internal sealed interface QuoteUM {
         val signable: SignableQuoteUM,
     ) : QuoteUM
 
-    data class Unavailable(val status: PredictionQuoteStatus) : QuoteUM
+    data class Unavailable(val status: PredictionQuoteStatus, val expected: BigDecimal? = null) : QuoteUM
 
     data class Error(val reason: QuoteErrorUM) : QuoteUM
 }

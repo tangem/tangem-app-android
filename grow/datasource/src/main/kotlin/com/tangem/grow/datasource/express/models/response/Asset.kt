@@ -2,7 +2,9 @@ package com.tangem.grow.datasource.express.models.response
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
 
+@Serializable
 @JsonClass(generateAdapter = true)
 @Suppress("BooleanPropertyNaming")
 data class Asset(

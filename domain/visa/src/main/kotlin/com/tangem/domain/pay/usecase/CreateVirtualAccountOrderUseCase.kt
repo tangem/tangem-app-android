@@ -37,6 +37,7 @@ class CreateVirtualAccountOrderUseCase(
                     paymentAccountAddress = paymentAccountAddress,
                     idempotencyKey = UUID.randomUUID().toString(),
                 ).bind()
+                onboardingRepository.storeVirtualAccountOrderFailed(userWalletId = userWalletId, isFailed = false)
                 onboardingRepository.storeVirtualAccountOrderId(userWalletId = userWalletId, vaOrderId = vaOrderId)
                 // Optimistically flip the cached on-ramp to Processing so the UI shows "Preparing" immediately
                 // (no wait for the poll/refetch to confirm).
