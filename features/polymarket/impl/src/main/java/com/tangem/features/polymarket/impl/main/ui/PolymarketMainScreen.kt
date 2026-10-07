@@ -192,7 +192,7 @@ private fun PolymarketMainScaffold(
             // The overlay frosts the bar and the pinned tabs together; a second fade would compound the tint.
             TangemTopNavigation(
                 title = resourceReference(R.string.prediction_account_title),
-                subtitle = resourceReference(R.string.tangempay_multinetwork),
+                subtitle = resourceReference(R.string.prediction_main_subtitle),
                 contentAlign = TangemTopNavigation.ContentAlign.Center,
                 fadeEnabled = false,
                 onBack = onBackClick,
