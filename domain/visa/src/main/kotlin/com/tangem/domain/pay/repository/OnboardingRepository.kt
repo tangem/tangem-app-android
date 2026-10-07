@@ -40,6 +40,7 @@ interface OnboardingRepository {
     suspend fun createOrder(
         userWalletId: UserWalletId,
         request: CustomerOrderRequest.CardIssue,
+        idempotencyKey: String,
     ): Either<VisaApiError, String>
 
     suspend fun clearOrderId(userWalletId: UserWalletId)

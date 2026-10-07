@@ -90,6 +90,7 @@ internal data class MarketPulseUM(
 @Immutable
 internal data class MarketPulseIntervalUM(
     val selected: MarketPulseInterval,
+    val default: MarketPulseInterval,
     val onOptionClick: (MarketPulseInterval) -> Unit,
 )
 

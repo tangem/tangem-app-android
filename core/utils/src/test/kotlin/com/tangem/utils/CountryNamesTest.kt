@@ -12,6 +12,8 @@ import java.util.Locale
 private const val KNOWN_CODE = "AF"
 private const val UNASSIGNED_CODE = "QQ"
 private const val UNKNOWN_REGION = "ZZ"
+private const val PSEUDO_LOCALE_CODE = "XA"
+private const val NON_COUNTRY_CODE = "EU"
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CountryNamesTest {
@@ -138,4 +140,60 @@ class CountryNamesTest {
     )
 
     private fun provideBlankPayloads() = listOf<String?>(null, "", "   ")
+    @Test
+    fun `GIVEN a real country WHEN resolveDisplayName THEN returns its name`() {
+        // Act
+        val actual = CountryNames.resolveDisplayName(KNOWN_CODE, Locale.ENGLISH)
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            Locale.Builder().setRegion(KNOWN_CODE).build().getDisplayCountry(Locale.ENGLISH),
+        )
+    }
+
+    @Test
+    fun `GIVEN an unassigned code WHEN resolveDisplayName THEN returns null`() {
+        // Act
+        val actual = CountryNames.resolveDisplayName(UNASSIGNED_CODE, Locale.ENGLISH)
+
+        // Assert
+        assertThat(actual).isNull()
+    }
+
+    @Test
+    fun `GIVEN a pseudo-locale region WHEN resolveDisplayName THEN returns null`() {
+        // Act — CLDR names it ("Pseudo-Accents"), so a name-versus-code check would let it through
+        val actual = CountryNames.resolveDisplayName(PSEUDO_LOCALE_CODE, Locale.ENGLISH)
+
+        // Assert
+        assertThat(actual).isNull()
+    }
+
+    @Test
+    fun `GIVEN a non-country region WHEN resolveDisplayName THEN returns null`() {
+        // Act — "European Union" is a name, but not a country
+        val actual = CountryNames.resolveDisplayName(NON_COUNTRY_CODE, Locale.ENGLISH)
+
+        // Assert
+        assertThat(actual).isNull()
+    }
+
+    @Test
+    fun `GIVEN a lower case code WHEN resolveDisplayName THEN it is still resolved`() {
+        // Act
+        val actual = CountryNames.resolveDisplayName(KNOWN_CODE.lowercase(Locale.ROOT), Locale.ENGLISH)
+
+        // Assert
+        assertThat(actual).isNotNull()
+    }
+
+    @Test
+    fun `GIVEN no code WHEN resolveDisplayName THEN returns null`() {
+        // Act
+        val actual = CountryNames.resolveDisplayName(countryCode = null, locale = Locale.ENGLISH)
+
+        // Assert
+        assertThat(actual).isNull()
+    }
+
 }
