@@ -15,7 +15,6 @@ internal object OrderRequestConverter : Converter<OrderRequestConverter.Input, E
     data class Input(
         val customerWalletAddress: String,
         val request: CustomerOrderRequest,
-        val idempotencyKey: String,
     )
 
     override fun convert(value: Input): Either<VisaApiError, OrderRequest> = either {
@@ -49,7 +48,7 @@ internal object OrderRequestConverter : Converter<OrderRequestConverter.Input, E
                 chainId = request.chainId,
             )
         }
-        OrderRequest(data = data, idempotencyKey = value.idempotencyKey)
+        OrderRequest(data = data)
     }
 
     private fun Raise<VisaApiError>.convertCardIssue(

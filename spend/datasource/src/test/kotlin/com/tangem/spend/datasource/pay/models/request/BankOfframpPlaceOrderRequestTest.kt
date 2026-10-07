@@ -24,8 +24,7 @@ internal class BankOfframpPlaceOrderRequestTest {
         val serialized = serialize(request)
 
         // Assert
-        assertThat(serialized.keys).containsExactly("data", "idempotency_key")
-        assertThat(serialized["idempotency_key"]).isEqualTo(JsonPrimitive(IDEMPOTENCY_KEY))
+        assertThat(serialized.keys).containsExactly("data")
         assertThat(serialized.child("data")).isEqualTo(
             parse(
                 """{"type":"BANK_OFFRAMP_RAIN","chain_id":137,"amount_in_cents":10000,""" +
@@ -98,7 +97,6 @@ internal class BankOfframpPlaceOrderRequestTest {
             bankAccountId = bankAccountId,
             bankAccount = bankAccount,
         ),
-        idempotencyKey = IDEMPOTENCY_KEY,
     )
 
     private fun createBankAccount(
@@ -141,7 +139,6 @@ internal class BankOfframpPlaceOrderRequestTest {
     private fun JsonObject.child(key: String): JsonObject = getValue(key).jsonObject
 
     private companion object {
-        const val IDEMPOTENCY_KEY = "a3f1c0de"
         const val BANK_ACCOUNT_ID = "7b0f7d70"
         const val TOKEN_CONTRACT_ADDRESS = "0xUSDC"
 

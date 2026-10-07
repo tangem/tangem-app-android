@@ -43,7 +43,6 @@ import com.tangem.domain.visa.model.TangemPayInitialCredentials
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
-import java.util.UUID
 import javax.inject.Inject
 
 private const val VALID_STATUS = "valid"
@@ -178,6 +177,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
     override suspend fun createOrder(
         userWalletId: UserWalletId,
         request: CustomerOrderRequest.CardIssue,
+        idempotencyKey: String,
     ): Either<VisaApiError, String> = withContext(dispatcherProvider.io) {
         val walletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
         val isCampaignOrder = request.deeplinkValue != null
@@ -189,15 +189,11 @@ internal class DefaultOnboardingRepository @Inject constructor(
         if (reusableOrderId != null) return@withContext reusableOrderId.right()
 
         val body = OrderRequestConverter.convert(
-            OrderRequestConverter.Input(
-                customerWalletAddress = walletAddress,
-                request = request,
-                idempotencyKey = UUID.randomUUID().toString(),
-            ),
+            OrderRequestConverter.Input(customerWalletAddress = walletAddress, request = request),
         ).getOrElse { return@withContext it.left() }
 
         requestHelper.performRequest(userWalletId) { authHeader ->
-            tangemPayApi.createOrder(authHeader = authHeader, body = body)
+            tangemPayApi.createOrder(authHeader = authHeader, idempotencyKey = idempotencyKey, body = body)
         }.flatMap { response ->
             val result = response.result ?: return@flatMap VisaApiError.UnknownWithoutCode.left()
             tangemPayStorage.storeOrderId(walletAddress, result.id, isCampaignOrder)
@@ -230,10 +226,8 @@ internal class DefaultOnboardingRepository @Inject constructor(
         requestHelper.performRequest(userWalletId) { authHeader ->
             tangemPayApi.createOrder(
                 authHeader = authHeader,
-                body = OrderRequest(
-                    data = OrderRequest.VirtualAccountIssue(depositAddress = paymentAccountAddress),
-                    idempotencyKey = idempotencyKey,
-                ),
+                idempotencyKey = idempotencyKey,
+                body = OrderRequest(data = OrderRequest.VirtualAccountIssue(depositAddress = paymentAccountAddress)),
             )
         }.flatMap { response -> response.result?.id?.right() ?: VisaApiError.UnknownWithoutCode.left() }
     }
