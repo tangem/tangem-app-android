@@ -164,12 +164,13 @@ internal class CategorySelectorModelTest {
     }
 
     @Test
-    fun `GIVEN edited selection WHEN reset tapped THEN the applied one comes back`() = runTest {
+    fun `GIVEN an unrestricted region WHEN reset tapped THEN the filter is cleared`() = runTest {
         // Arrange
-        stubCategories(umbrella, stocks)
+        stubCategories(umbrella, stocks, commodities)
         val callback = RecordingCallback()
         val model = createModel(testScope = this, selection = stocksWithTechnology, callback = callback)
         advanceUntilIdle()
+        // the footer carrying Reset only appears once something is edited, so take the route a user has
         model.items().items.first { it.id == umbrella.id }.onItemClick()
 
         // Act
@@ -177,7 +178,46 @@ internal class CategorySelectorModelTest {
         model.content().footer.onApply()
 
         // Assert
-        assertThat(callback.selection).isEqualTo(stocksWithTechnology)
+        assertThat(callback.selection).isEqualTo(CategorySelection())
+    }
+
+    @Test
+    fun `GIVEN a restricted region WHEN reset tapped THEN the regional default comes back`() = runTest {
+        // Arrange
+        coEvery { userCountryResolver.resolve() } returns "US"
+        stubCategories(umbrella, stocks, commodities, country = "US")
+        val callback = RecordingCallback()
+        val model = createModel(testScope = this, selection = stocksWithTechnology, callback = callback)
+        advanceUntilIdle()
+        model.items().items.first { it.id == umbrella.id }.onItemClick()
+
+        // Act
+        model.content().footer.onReset()
+
+        // Assert — the reset differs from what the screen opened on, so it is there to be applied
+        assertThat(model.content().isEdited).isTrue()
+
+        // Act
+        model.content().footer.onApply()
+
+        // Assert
+        assertThat(callback.selection).isEqualTo(commoditiesSelection)
+    }
+
+    @Test
+    fun `GIVEN a restricted region opened on its default WHEN reset tapped THEN the footer is hidden`() = runTest {
+        // Arrange
+        coEvery { userCountryResolver.resolve() } returns "US"
+        stubCategories(umbrella, stocks, commodities, country = "US")
+        val model = createModel(testScope = this, selection = commoditiesSelection)
+        advanceUntilIdle()
+        model.items().items.first { it.id == stocks.id }.onItemClick()
+
+        // Act
+        model.content().footer.onReset()
+
+        // Assert
+        assertThat(model.content().isEdited).isFalse()
     }
 
     @Test
@@ -218,8 +258,8 @@ internal class CategorySelectorModelTest {
         assertThat(model.items().items.map { it.id }).containsExactly(umbrella.id, stocks.id)
     }
 
-    private fun stubCategories(vararg categories: CoinCategory) {
-        coEvery { getCoinCategoriesUseCase(country = "DE") } returns Either.Right(categories.toList())
+    private fun stubCategories(vararg categories: CoinCategory, country: String = "DE") {
+        coEvery { getCoinCategoriesUseCase(country = country) } returns Either.Right(categories.toList())
     }
 
     @Test
@@ -386,10 +426,25 @@ internal class CategorySelectorModelTest {
 
         val hidden = createCategory(
             id = "5",
-            code = "commodities",
-            displayName = "Commodities",
+            code = "gems",
+            displayName = "Gems",
             displayOrder = 5,
             isVisible = false,
+        )
+
+        val commodities = createCategory(
+            id = "6",
+            code = ReservedCategoryCodes.COMMODITIES,
+            displayName = "Commodities",
+            displayOrder = 6,
+        )
+
+        val commoditiesSelection = CategorySelection(
+            category = CategorySelection.Entry(
+                id = commodities.id,
+                displayName = commodities.displayName,
+                code = commodities.code,
+            ),
         )
 
         val stocksWithTechnology = CategorySelection(

@@ -60,7 +60,7 @@ internal class JointOperationUMConverter(
             ),
             counterparty = TxHistoryDetailsUM.CounterpartyUM(
                 label = resourceReference(R.string.send_recipient),
-                title = stringReference(state.displayed.recipient),
+                title = TxHistoryDetailsUM.CounterpartyTitle.Address(state.displayed.recipient),
                 avatar = TxHistoryDetailsUM.CounterpartyAvatar.Address(rawAddress = state.displayed.recipient),
                 onCopyClick = onCopyRecipientClick,
             ),

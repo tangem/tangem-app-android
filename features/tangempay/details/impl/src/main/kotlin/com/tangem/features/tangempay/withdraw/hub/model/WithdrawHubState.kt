@@ -27,8 +27,8 @@ internal sealed interface RecentsState {
 
     data object Failed : RecentsState
 
-    /** [hasSavedAccounts] gates "See all" when the usage log is empty but recipients exist elsewhere. */
-    data class Loaded(val accounts: List<BankAccount>, val hasSavedAccounts: Boolean) : RecentsState
+    /** [hasMoreAccounts] gates "See all": it would only repeat [accounts] when they are every saved recipient. */
+    data class Loaded(val accounts: List<BankAccount>, val hasMoreAccounts: Boolean) : RecentsState
 }
 
 internal sealed interface TokenRecentsState {

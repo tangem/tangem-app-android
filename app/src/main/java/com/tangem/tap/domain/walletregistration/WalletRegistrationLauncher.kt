@@ -4,6 +4,7 @@ import android.util.Base64
 import arrow.core.getOrElse
 import com.tangem.common.card.Card
 import com.tangem.common.core.CardSession
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.card.common.visa.VisaUtilities
 import com.tangem.domain.models.scan.CardDTO
@@ -11,23 +12,30 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.hot.HotWalletAccessor
+import com.tangem.hot.sdk.exception.RecentBiometryUnavailableException
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.lib.auth.session.WalletNonce
 import com.tangem.lib.auth.session.WalletRegistrar
+import com.tangem.lib.auth.session.WalletRegistrationError
+import com.tangem.tap.domain.walletregistration.BackendAuthAnalyticsEvent.WalletRegistrationFailed
+import com.tangem.tap.domain.walletregistration.BackendAuthAnalyticsEvent.WalletRegistrationFailed.Stage
+import com.tangem.tap.domain.walletregistration.BackendAuthAnalyticsEvent.WalletRegistrationFailed.WalletType
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 
 /**
  * Single entry point that registers wallets with the Tangem Auth Service. Gated by the backend-auth
- * feature toggle; all failures are log-only (registration is retried on the next launch / card scan,
- * never blocks the user). MOBILE wallets register without UI; COLD wallets attest inside a live
- * card session (no extra tap) and POST after the session closes.
+ * feature toggle; failures are logged and reported to analytics, never shown to the user (registration
+ * is retried on the next launch / card scan). MOBILE wallets register without UI; COLD wallets attest
+ * inside a live card session (no extra tap) and POST after the session closes.
  */
+@Suppress("LongParameterList")
 class WalletRegistrationLauncher @Inject internal constructor(
     private val walletRegistrar: WalletRegistrar,
     private val mobileSigner: MobileWalletRegistrationSigner,
@@ -35,6 +43,7 @@ class WalletRegistrationLauncher @Inject internal constructor(
     private val authFeatureToggles: AuthFeatureToggles,
     private val hotWalletAccessor: HotWalletAccessor,
     private val appCoroutineScope: AppCoroutineScope,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) {
 
     /**
@@ -49,21 +58,27 @@ class WalletRegistrationLauncher @Inject internal constructor(
             walletRegistrar.register(
                 walletId = userWallet.walletId.toBase64(),
                 signer = mobileSigner.signerFor(userWallet),
-            ).onLeft { TangemLogger.e("Mobile wallet registration deferred: $it") }
-        }.onFailure { TangemLogger.e("Mobile wallet registration failed", it) }
+            ).onLeft { error ->
+                TangemLogger.e("Mobile wallet registration deferred: $error")
+                sendRegistrationFailed(WalletType.Mobile, Stage.Register, error)
+            }
+        }.onFailure { error ->
+            TangemLogger.e("Mobile wallet registration failed", error)
+            sendRegistrationFailed(WalletType.Mobile, Stage.Register, error.toString())
+        }
     }
 
     /**
      * Catches up the registration of an already-saved MOBILE wallet at unlock time. A protected
      * (Password/Biometry) wallet can only register by signing the nonce with its key, which needs an
-     * unlock context. Establish a short-lived contextual unlock (the single auth), register within it —
-     * so the nonce is requested AFTER the auth and signed immediately (no ~55s expiry) and no second
-     * prompt appears — then ALWAYS clear the context. Already-registered wallets are skipped before any
-     * auth, so a routine unlock never pops a needless prompt; a context established elsewhere is reused
-     * and left untouched.
-     *
-     * Without a device session the registration can't be sent, so the auth is not asked for at all.
-     * An [accessCode] the user has just unlocked the wallet with establishes the context without a prompt.
+     * unlock context. The context is built only from the authentication the user has just passed to
+     * unlock — the entered [accessCode], or else the biometric unlock reused by the keystore (a NoPassword
+     * wallet needs none) — so the catch-up never asks for authentication of its own. When neither is
+     * available (e.g. a Password wallet unlocked biometrically) the registration waits for an access-code
+     * unlock. The nonce is requested after the context exists and signed right away, and the context is
+     * ALWAYS cleared.
+     * Already-registered wallets and a missing device session are skipped up front; a context
+     * established elsewhere is reused and left untouched.
      */
     suspend fun registerUnlockedMobileWallet(userWallet: UserWallet.Hot, accessCode: HotAuth.Password? = null) {
         if (!authFeatureToggles.isBackendAuthenticationEnabled) return
@@ -81,14 +96,20 @@ class WalletRegistrationLauncher @Inject internal constructor(
 
         try {
             runSuspendCatching {
-                if (accessCode != null) {
-                    hotWalletAccessor.unlockContextual(userWallet.hotWalletId, accessCode)
-                } else {
-                    hotWalletAccessor.unlockContextual(userWallet.hotWalletId)
+                when {
+                    accessCode != null -> hotWalletAccessor.unlockContextual(userWallet.hotWalletId, accessCode)
+                    // A NoPassword wallet opens without any auth, so its context never prompts.
+                    userWallet.hotWalletId.authType == HotWalletId.AuthType.NoPassword ->
+                        hotWalletAccessor.unlockContextual(userWallet.hotWalletId)
+                    else -> hotWalletAccessor.unlockContextualWithRecentBiometry(userWallet.hotWalletId)
                 }
             }
                 .onFailure { error ->
-                    TangemLogger.e("Failed to establish an unlock context for mobile registration", error)
+                    if (error is RecentBiometryUnavailableException) {
+                        TangemLogger.i("Deferring mobile registration to access-code unlock: ${error.message}")
+                    } else {
+                        TangemLogger.e("Failed to establish an unlock context for mobile registration", error)
+                    }
                     return
                 }
             registerMobile(userWallet)
@@ -106,14 +127,23 @@ class WalletRegistrationLauncher @Inject internal constructor(
      * enforced later in [registerColdInSession] and by the registrar's own idempotency check, so at
      * worst an ineligible or already-registered card wastes a nonce.
      *
-     * A registrar-side failure is logged and returns `null`; [WalletRegistrar.requestNonce] is total
-     * (routes every failure to a `Left`), so this consumes the `Either` directly rather than wrapping it.
+     * The caller blocks on this before the tap, so the request is capped at [NONCE_PREFETCH_BUDGET_MS]; past
+     * it this tap skips registration (the card binds on a later one). A timeout or a registrar-side failure
+     * is logged, reported to analytics and returns `null`; [WalletRegistrar.requestNonce] is total (routes
+     * every failure to a `Left`), so this consumes the `Either` directly rather than wrapping it.
      */
     suspend fun prefetchColdNonce(): WalletNonce? {
         if (!authFeatureToggles.isBackendAuthenticationEnabled) return null
 
-        return walletRegistrar.requestNonce().getOrElse { error ->
+        val result = withTimeoutOrNull(NONCE_PREFETCH_BUDGET_MS) { walletRegistrar.requestNonce() }
+        if (result == null) {
+            TangemLogger.e("Cold wallet nonce prefetch timed out after $NONCE_PREFETCH_BUDGET_MS ms")
+            sendRegistrationFailed(WalletType.Cold, Stage.Nonce, NONCE_TIMEOUT_REASON)
+            return null
+        }
+        return result.getOrElse { error ->
             TangemLogger.e("Cold wallet nonce prefetch deferred: $error")
+            sendRegistrationFailed(WalletType.Cold, Stage.Nonce, error)
             null
         }
     }
@@ -166,6 +196,7 @@ class WalletRegistrationLauncher @Inject internal constructor(
             shouldForce = shouldForce,
         ).getOrElse { error ->
             TangemLogger.e("Cold wallet registration prepare deferred: $error")
+            sendRegistrationFailed(WalletType.Cold, Stage.Prepare, error)
             return
         }
         if (prepared == null) return // already registered
@@ -173,8 +204,14 @@ class WalletRegistrationLauncher @Inject internal constructor(
         appCoroutineScope.launch {
             runSuspendCatching {
                 walletRegistrar.submit(prepared)
-                    .onLeft { TangemLogger.e("Cold wallet registration submit deferred: $it") }
-            }.onFailure { TangemLogger.e("Cold wallet registration submit failed", it) }
+                    .onLeft { error ->
+                        TangemLogger.e("Cold wallet registration submit deferred: $error")
+                        sendRegistrationFailed(WalletType.Cold, Stage.Submit, error)
+                    }
+            }.onFailure { error ->
+                TangemLogger.e("Cold wallet registration submit failed", error)
+                sendRegistrationFailed(WalletType.Cold, Stage.Submit, error.toString())
+            }
         }
     }
 
@@ -207,5 +244,19 @@ class WalletRegistrationLauncher @Inject internal constructor(
             .onLeft { TangemLogger.e("Wallet unregister deferred: $it") }
     }
 
+    private fun sendRegistrationFailed(walletType: WalletType, stage: Stage, error: WalletRegistrationError) {
+        if (error is WalletRegistrationError.Disabled) return
+        sendRegistrationFailed(walletType, stage, error.toString())
+    }
+
+    private fun sendRegistrationFailed(walletType: WalletType, stage: Stage, reason: String) {
+        analyticsEventHandler.send(WalletRegistrationFailed(walletType = walletType, stage = stage, reason = reason))
+    }
+
     private fun UserWalletId.toBase64(): String = Base64.encodeToString(value, Base64.NO_WRAP)
+
+    private companion object {
+        const val NONCE_PREFETCH_BUDGET_MS = 5_000L
+        const val NONCE_TIMEOUT_REASON = "Timeout"
+    }
 }
