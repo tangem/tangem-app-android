@@ -33,12 +33,16 @@ internal class JointAccountToMembersUMConverter(
      * @property invites       the invites this device holds; only the creating device ever receives them
      * @property sharedInvites the [invites] already handed to the share sheet — their slots read "Invited"
      * @property ownAddress    this wallet's owner address in the account, null while its key is not derived yet
+     * @property walletIconRes wallet-interaction icon of the activate button, null for a hot wallet
+     * @property isActivating  the activation is being signed and sent
      */
     data class Input(
         val account: JointAccount,
         val invites: List<String>,
         val sharedInvites: Set<String>,
         val ownAddress: String?,
+        val walletIconRes: Int? = null,
+        val isActivating: Boolean = false,
     )
 
     /** Every side effect the converted state can trigger. */
@@ -94,7 +98,7 @@ internal class JointAccountToMembersUMConverter(
             } else {
                 null
             },
-            onActivateClick = onActivateClick(phase = phase, cryptoAccountId = account.cryptoAccountId),
+            activateButton = activateButton(phase = phase, input = value),
         )
     }
 
@@ -138,10 +142,14 @@ internal class JointAccountToMembersUMConverter(
         )
     }
 
-    private fun onActivateClick(phase: MembersScreenPhase, cryptoAccountId: String): (() -> Unit)? {
+    private fun activateButton(phase: MembersScreenPhase, input: Input): JointAccountMembersUM.ActivateButtonUM? {
         if (phase.stage != MembersScreenPhase.Stage.ReadyToActivate || !phase.isThisDeviceCreator) return null
 
-        return { callbacks.onActivateClick(cryptoAccountId) }
+        return JointAccountMembersUM.ActivateButtonUM(
+            walletIconRes = input.walletIconRes,
+            isLoading = input.isActivating,
+            onClick = { callbacks.onActivateClick(input.account.cryptoAccountId) },
+        )
     }
 
     private fun joinedMember(

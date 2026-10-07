@@ -258,6 +258,19 @@ internal class DefaultOnboardingRepository @Inject constructor(
         }
     }
 
+    override suspend fun hasVirtualAccountOrderFailed(userWalletId: UserWalletId): Boolean =
+        withContext(dispatcherProvider.io) {
+            val customerWalletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
+            tangemPayStorage.getVirtualAccountOrderFailed(customerWalletAddress)
+        }
+
+    override suspend fun storeVirtualAccountOrderFailed(userWalletId: UserWalletId, isFailed: Boolean) {
+        withContext(dispatcherProvider.io) {
+            val customerWalletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
+            tangemPayStorage.storeVirtualAccountOrderFailed(customerWalletAddress, isFailed)
+        }
+    }
+
     private fun getUserWallet(userWalletId: UserWalletId): UserWallet {
         return userWalletsListRepository.userWallets.value?.firstOrNull { it.walletId == userWalletId }
             ?: error("no userWallet found")

@@ -10,6 +10,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -81,6 +82,8 @@ internal interface InnerWalletRouter {
     fun openTokenReceiveBottomSheet(tokenReceiveConfig: TokenReceiveConfig)
 
     fun openTangemPayOnboarding(mode: AppRoute.TangemPayOnboarding.Mode)
+
+    fun openTangemPayEligibility(product: TangemPayProduct, userWalletId: UserWalletId)
 
     fun openTangemPayDetails(status: AccountStatus.Payment)
 

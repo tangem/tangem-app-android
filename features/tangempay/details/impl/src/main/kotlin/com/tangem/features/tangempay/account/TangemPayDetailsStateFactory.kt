@@ -132,8 +132,20 @@ internal class TangemPayDetailsStateFactory(
     }
 
     private fun createBankTransferOnrampBanner(virtualAccount: VirtualAccountOnramp?): MessageBannerUM? {
-        if (!isVisaOnrampV2Enabled() || virtualAccount != VirtualAccountOnramp.Processing) return null
-        return MessageBannerUM(state = notificationFactory.createBankTransferOnrampCreatingBannerState())
+        if (!isVisaOnrampV2Enabled()) return null
+        return when (virtualAccount) {
+            VirtualAccountOnramp.Processing -> MessageBannerUM(
+                state = notificationFactory.createBankTransferOnrampCreatingBannerState(),
+            )
+            VirtualAccountOnramp.Failed -> MessageBannerUM(
+                state = notificationFactory.createBankTransferOnrampFailedBannerState(),
+                onClose = intents::onBankTransferOnrampFailedBannerDismissed,
+            )
+            VirtualAccountOnramp.Eligible,
+            is VirtualAccountOnramp.Available,
+            null,
+            -> null
+        }
     }
 
     /**

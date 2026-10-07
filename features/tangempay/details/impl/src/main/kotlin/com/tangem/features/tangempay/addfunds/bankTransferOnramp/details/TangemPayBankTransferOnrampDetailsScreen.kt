@@ -166,6 +166,7 @@ private fun LimitationsBlock(limit: DailyDepositLimitUM, modifier: Modifier = Mo
                 verticalAlignment = TangemRowVerticalAlignment.Center,
                 titleSlot = {
                     TangemRowText(
+                        modifier = Modifier.testTag(VirtualAccountRequisitesBottomSheetTestTags.DEPOSIT_LIMIT_TITLE),
                         text = resourceReference(R.string.tangempay_bank_transfer_details_daily_deposits),
                         role = TangemRowTextRole.Title,
                     )
@@ -173,7 +174,9 @@ private fun LimitationsBlock(limit: DailyDepositLimitUM, modifier: Modifier = Mo
                 valueSlot = { TangemPayRowValueText(text = limit.value.resolveReference()) },
             )
             Text(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .testTag(VirtualAccountRequisitesBottomSheetTestTags.DEPOSIT_LIMIT_SUBTITLE),
                 text = limit.hint.resolveReference(),
                 style = TangemTheme.typography3.caption.medium,
                 color = TangemTheme.colors3.text.secondary,

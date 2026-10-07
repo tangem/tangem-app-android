@@ -45,6 +45,7 @@ internal class MockAwareOnboardingRepository @Inject constructor(
 
     private val mockOrderIds: MutableSet<UserWalletId> = ConcurrentHashMap.newKeySet()
     private val mockVaOrderIds: MutableSet<UserWalletId> = ConcurrentHashMap.newKeySet()
+    private val mockFailedVaOrders: MutableSet<UserWalletId> = ConcurrentHashMap.newKeySet()
 
     private val isMockMode: Boolean
         get() = apiConfigsManager
@@ -149,6 +150,19 @@ internal class MockAwareOnboardingRepository @Inject constructor(
             return
         }
         real.clearVirtualAccountOrderId(userWalletId)
+    }
+
+    override suspend fun hasVirtualAccountOrderFailed(userWalletId: UserWalletId): Boolean {
+        if (isMockMode) return userWalletId in mockFailedVaOrders
+        return real.hasVirtualAccountOrderFailed(userWalletId)
+    }
+
+    override suspend fun storeVirtualAccountOrderFailed(userWalletId: UserWalletId, isFailed: Boolean) {
+        if (isMockMode) {
+            if (isFailed) mockFailedVaOrders.add(userWalletId) else mockFailedVaOrders.remove(userWalletId)
+            return
+        }
+        real.storeVirtualAccountOrderFailed(userWalletId, isFailed)
     }
 
     // The "existing Tangem Pay customer" gate (decides whether an active Payment account — and accounts mode —
