@@ -8,7 +8,6 @@ private const val ACCOUNT_SPECIFICATION_NAME = "SP_000006"
 @Serializable
 data class OrderRequest(
     @SerialName("data") val data: Data,
-    @SerialName("idempotency_key") val idempotencyKey: String,
 ) {
 
     @Serializable
