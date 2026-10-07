@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -12,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.cosign.CosignRequestRow
+import com.tangem.core.ui.components.HoldToConfirmButton
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.resolveReference
@@ -88,16 +90,33 @@ private fun SingleAssetContent(state: TxHistoryDetailsUM.SingleAsset, modifier: 
 @Composable
 private fun CosignActionBlock(state: TxHistoryDetailsUM.CosignActionUM, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
-        TangemButton(
-            modifier = Modifier.fillMaxWidth(),
-            variant = TangemButton.Variant.Primary,
-            text = state.buttonText,
-            isEnabled = state.isEnabled,
-            isLoading = state.isLoading,
-            iconEnd = state.iconEnd,
-            onClick = state.onClick,
-            size = TangemButton.Size.X12,
-        )
+        if (state.isHoldToConfirm) {
+            HoldToConfirmButton(
+                modifier = Modifier.fillMaxWidth(),
+                text = state.buttonText.resolveReference(),
+                onConfirm = state.onClick,
+                enabled = state.isEnabled,
+                isLoading = state.isLoading,
+                colors = ButtonColors(
+                    containerColor = TangemTheme.colors3.bg.inverse,
+                    contentColor = TangemTheme.colors3.text.inverse.primary,
+                    disabledContainerColor = TangemTheme.colors3.bg.disabled,
+                    disabledContentColor = TangemTheme.colors3.text.tertiary,
+                ),
+                textStyle = TangemTheme.typography3.body.medium,
+            )
+        } else {
+            TangemButton(
+                modifier = Modifier.fillMaxWidth(),
+                variant = TangemButton.Variant.Primary,
+                text = state.buttonText,
+                isEnabled = state.isEnabled,
+                isLoading = state.isLoading,
+                iconEnd = state.iconEnd,
+                onClick = state.onClick,
+                size = TangemButton.Size.X12,
+            )
+        }
         if (state.caption != null) {
             Text(
                 text = state.caption.resolveReference(),
