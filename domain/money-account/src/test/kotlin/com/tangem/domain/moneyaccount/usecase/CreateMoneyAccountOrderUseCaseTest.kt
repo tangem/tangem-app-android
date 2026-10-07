@@ -10,6 +10,7 @@ import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.TangemPayOrderInfo
+import com.tangem.domain.pay.usecase.FindActiveMoneyAccountCreationOrderUseCase
 import com.tangem.domain.visa.error.VisaApiError
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -29,18 +30,20 @@ internal class CreateMoneyAccountOrderUseCaseTest {
 
     private val orderRepository: MoneyAccountOrderRepository = mockk()
     private val trackOrder: TrackMoneyAccountOrderUseCase = mockk()
+    private val findActiveMoneyAccountCreationOrderUseCase: FindActiveMoneyAccountCreationOrderUseCase = mockk()
 
     private val useCase = CreateMoneyAccountOrderUseCase(
         orderRepository = orderRepository,
         trackOrder = trackOrder,
+        findActiveMoneyAccountCreationOrderUseCase = findActiveMoneyAccountCreationOrderUseCase,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(orderRepository, trackOrder)
+        clearMocks(orderRepository, trackOrder, findActiveMoneyAccountCreationOrderUseCase)
         every { orderRepository.getOrder(USER_WALLET_ID) } returns null
         every { trackOrder(any(), any()) } just runs
-        coEvery { orderRepository.findActiveOrder(USER_WALLET_ID) } returns null.right()
+        coEvery { findActiveMoneyAccountCreationOrderUseCase(USER_WALLET_ID) } returns null.right()
     }
 
     @Test
@@ -53,7 +56,7 @@ internal class CreateMoneyAccountOrderUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
-        coVerify(exactly = 0) { orderRepository.findActiveOrder(any()) }
+        coVerify(exactly = 0) { findActiveMoneyAccountCreationOrderUseCase(any()) }
         coVerify(exactly = 0) { orderRepository.createOrder(any(), any(), any()) }
     }
 
@@ -61,7 +64,7 @@ internal class CreateMoneyAccountOrderUseCaseTest {
     fun `GIVEN active order on backend WHEN invoke THEN it is tracked and no order is created`() = runTest {
         // Arrange
         val order = createOrder()
-        coEvery { orderRepository.findActiveOrder(USER_WALLET_ID) } returns order.right()
+        coEvery { findActiveMoneyAccountCreationOrderUseCase(USER_WALLET_ID) } returns order.right()
 
         // Act
         val actual = invokeUseCase()
@@ -96,7 +99,7 @@ internal class CreateMoneyAccountOrderUseCaseTest {
         coEvery {
             orderRepository.createOrder(USER_WALLET_ID, DEPOSIT_ADDRESS, SIGNATURE)
         } returns VisaApiError.AccountIssueActiveOrderExists.left()
-        coEvery { orderRepository.findActiveOrder(USER_WALLET_ID) } returnsMany listOf(
+        coEvery { findActiveMoneyAccountCreationOrderUseCase(USER_WALLET_ID) } returnsMany listOf(
             null.right(),
             order.right(),
         )
