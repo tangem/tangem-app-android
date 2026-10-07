@@ -8,6 +8,7 @@ import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import androidx.compose.ui.test.hasText as withText
 
 /** Message bottom sheets raised by the tariff-plan flows: the two cards-limit popups and 'Stay on plan'. */
 class TangemPayTariffMessageSheetPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
@@ -37,6 +38,12 @@ class TangemPayTariffMessageSheetPageObject(semanticsProvider: SemanticsNodeInte
 
     val primaryButton: KNode = child {
         hasTestTag(WarningBottomSheetTestTags.BUTTON_PRIMARY)
+        useUnmergedTree = true
+    }
+
+    val cancelButton: KNode = child {
+        hasTestTag(WarningBottomSheetTestTags.BUTTON_SECONDARY)
+        hasAnyDescendant(withText(getResourceString(CoreResR.string.common_cancel)))
         useUnmergedTree = true
     }
 

@@ -8,6 +8,7 @@ import javax.inject.Singleton
 @Singleton
 class TangemAFConversionListener @Inject constructor(
     private val referralParamsHandler: AppsFlyerReferralParamsHandler,
+    private val googleAdsConversionDataReporter: GoogleAdsConversionDataReporter,
 ) : AppsFlyerConversionListener {
 
     override fun onConversionDataSuccess(p0: Map<String?, Any?>?) {
@@ -15,6 +16,7 @@ class TangemAFConversionListener @Inject constructor(
 
         if (p0 == null) return
 
+        googleAdsConversionDataReporter.report(conversionData = p0)
         referralParamsHandler.handle(params = p0)
     }
 

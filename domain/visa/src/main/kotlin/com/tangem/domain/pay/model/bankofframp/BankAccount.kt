@@ -9,12 +9,11 @@ data class BankAccount(
 
 /**
  * The hub's view of the saved recipients, taken from a single `GET /account/bank-accounts`: [recents] is the
- * usage-ordered shortlist, while [hasSavedAccounts] tells whether anything is saved at all — recipients added
- * earlier or on another device are reachable only through "See all", and that needs no second request.
+ * shortlist, while [hasMoreAccounts] tells whether "See all" holds anyone the shortlist leaves out.
  */
 data class RecentBankAccounts(
     val recents: List<BankAccount>,
-    val hasSavedAccounts: Boolean,
+    val hasMoreAccounts: Boolean,
 )
 
 /**
