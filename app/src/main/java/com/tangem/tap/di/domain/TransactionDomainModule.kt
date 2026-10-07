@@ -342,24 +342,48 @@ internal object TransactionDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetFeeForGaslessUseCase(
+    fun provideEvmGaslessFeeResolver(
         walletManagersFacade: WalletManagersFacade,
         gaslessTransactionRepository: GaslessTransactionRepository,
         gaslessYieldRepository: GaslessYieldRepository,
-        getFeeUseCase: GetFeeUseCase,
-        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
-        currencyChecksRepository: CurrencyChecksRepository,
         resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
-    ): GetFeeForGaslessUseCase {
-        return GetFeeForGaslessUseCase(
+    ): EvmGaslessFeeResolver {
+        return EvmGaslessFeeResolver(
             walletManagersFacade = walletManagersFacade,
             demoConfig = DemoConfig,
             gaslessTransactionRepository = gaslessTransactionRepository,
             gaslessYieldRepository = gaslessYieldRepository,
-            singleAccountStatusListSupplier = singleAccountStatusListSupplier,
-            getFeeUseCase = getFeeUseCase,
-            currencyChecksRepository = currencyChecksRepository,
             resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideTronGaslessFeeResolver(
+        getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase,
+        isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
+    ): TronGaslessFeeResolver {
+        return TronGaslessFeeResolver(
+            getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
+            isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetFeeForGaslessUseCase(
+        getFeeUseCase: GetFeeUseCase,
+        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+        currencyChecksRepository: CurrencyChecksRepository,
+        evmGaslessFeeResolver: EvmGaslessFeeResolver,
+        tronGaslessFeeResolver: TronGaslessFeeResolver,
+    ): GetFeeForGaslessUseCase {
+        return GetFeeForGaslessUseCase(
+            singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+            currencyChecksRepository = currencyChecksRepository,
+            getFeeUseCase = getFeeUseCase,
+            evmGaslessFeeResolver = evmGaslessFeeResolver,
+            tronGaslessFeeResolver = tronGaslessFeeResolver,
         )
     }
 
@@ -410,21 +434,16 @@ internal object TransactionDomainModule {
     @Provides
     @Singleton
     fun provideGetFeeForTokenUseCase(
-        walletManagersFacade: WalletManagersFacade,
-        gaslessTransactionRepository: GaslessTransactionRepository,
-        gaslessYieldRepository: GaslessYieldRepository,
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         currencyChecksRepository: CurrencyChecksRepository,
-        resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
+        evmGaslessFeeResolver: EvmGaslessFeeResolver,
+        tronGaslessFeeResolver: TronGaslessFeeResolver,
     ): GetFeeForTokenUseCase {
         return GetFeeForTokenUseCase(
-            gaslessTransactionRepository = gaslessTransactionRepository,
-            gaslessYieldRepository = gaslessYieldRepository,
-            walletManagersFacade = walletManagersFacade,
-            demoConfig = DemoConfig,
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             currencyChecksRepository = currencyChecksRepository,
-            resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
+            evmGaslessFeeResolver = evmGaslessFeeResolver,
+            tronGaslessFeeResolver = tronGaslessFeeResolver,
         )
     }
 

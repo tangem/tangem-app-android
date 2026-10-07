@@ -4,13 +4,14 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 
 /**
- * Use case to check if gasless fee is supported for a given network.
+ * Gates the fee-token selector and the gasless notifications with the same predicate the fee path uses,
+ * so the selector cannot offer a fee token on a network [GetFeeForTokenUseCase] then rejects.
+ *
+ * Tron has its own gate — [IsTronGaslessSupportedUseCase].
  */
 class IsGaslessFeeSupportedForNetwork(
     private val currencyChecksRepository: CurrencyChecksRepository,
 ) {
 
-    operator fun invoke(network: Network): Boolean {
-        return currencyChecksRepository.isNetworkSupportedForGaslessTx(network)
-    }
+    operator fun invoke(network: Network): Boolean = currencyChecksRepository.isEvmGaslessNetwork(network)
 }
