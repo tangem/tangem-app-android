@@ -1,6 +1,7 @@
 package com.tangem.features.introduction.impl.model
 
 import android.view.SurfaceView
+import androidx.compose.ui.unit.IntSize
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -49,7 +50,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import com.tangem.core.res.R as CoreResR
 import kotlinx.coroutines.withContext
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class IntroductionModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
@@ -118,7 +119,8 @@ internal class IntroductionModel @Inject constructor(
         field = MutableStateFlow(
             IntroductionUM(
                 isVideoReady = false,
-                videoAspectRatio = null,
+                videoSize = BACKGROUND_VIDEO_SIZE,
+                videoSurfaceKey = 0,
                 isVideoFailed = false,
                 isVideoRunning = false,
                 isMotionEnabled = videoPlayer.isMotionEnabled,
@@ -134,6 +136,13 @@ internal class IntroductionModel @Inject constructor(
         )
 
     override val haveWalletSheetConfig: TangemBottomSheetConfig? get() = uiState.value.haveWalletBottomSheetConfig
+
+    private val outputWatchdog = IntroductionVideoOutputWatchdog(
+        scope = modelScope,
+        videoPlayer = videoPlayer,
+        onReplaceSurface = ::replaceVideoSurface,
+        onGiveUp = ::onError,
+    )
 
     init {
         reportScreenOpened()
@@ -157,18 +166,25 @@ internal class IntroductionModel @Inject constructor(
         updateVideoReady()
     }
 
-    override fun onAspectRatioChanged(aspectRatio: Float) {
-        uiState.update { it.copy(videoAspectRatio = aspectRatio) }
-        updateVideoReady()
+    /**
+     * The surface keeps [BACKGROUND_VIDEO_SIZE] whatever the file turns out to be: a new surface would race the first
+     * frame the old one reports right after this, and the cropping scale mode fits a file that disagrees into it.
+     */
+    override fun onVideoSizeChanged(width: Int, height: Int) {
+        if (IntSize(width, height) == BACKGROUND_VIDEO_SIZE) return
+        TangemLogger.e("Welcome video is ${width}x$height, but $BACKGROUND_VIDEO_SIZE is declared for it")
     }
 
-    /**
-     * The shutter lifts on a frame the screen can already shape. The decoder reports the frame geometry before it
-     * renders anything, and uncovering a surface that is still the wrong shape is what shows a stretched picture.
-     */
+    override fun onPlayingChanged(isPlaying: Boolean) = outputWatchdog.onPlayingChanged(isPlaying)
+
+    /** The new surface is composed before the old one is released, and stays empty until its first frame. */
+    private fun replaceVideoSurface() {
+        uiState.update { it.copy(videoSurfaceKey = it.videoSurfaceKey + 1, isVideoReady = false) }
+    }
+
     private fun updateVideoReady() {
         if (!hasRenderedFrame || !videoPlayer.isSurfaceAttached) return
-        uiState.update { if (it.videoAspectRatio == null) it else it.copy(isVideoReady = true) }
+        uiState.update { it.copy(isVideoReady = true) }
     }
 
     override fun onError(error: Throwable) {
@@ -182,6 +198,8 @@ internal class IntroductionModel @Inject constructor(
         // Only a rendered frame lifts the shutter, and the player never recovers from an error: uncovering the
         // SurfaceView here would expose the hole it punches through the window (see IntroductionScreen).
         uiState.update { it.copy(isVideoFailed = true) }
+        // A player error stops the player by itself; a stalled output given up on by the watchdog does not.
+        applyVideoRunning()
     }
 
     fun videoPositionMs(): Long = videoPlayer.positionMs
@@ -212,12 +230,12 @@ internal class IntroductionModel @Inject constructor(
     override fun onStoryVisibilityChanged() = applyVideoRunning()
 
     /**
-     * Two independent reasons to stop the background video, so neither may override the other: the screen is not
-     * resumed, or the story is on top of it. A slot child leaves its host resumed, so returning from background
-     * while the story plays would otherwise restart the video behind it.
+     * Independent reasons to stop the background video, so none may override another: the screen is not resumed, the
+     * story is on top of it, or the video has failed. A slot child leaves its host resumed, so returning from
+     * background while the story plays would otherwise restart the video behind it.
      */
     private fun applyVideoRunning() {
-        val isRunning = isScreenResumed && !stories.isShown
+        val isRunning = isScreenResumed && !stories.isShown && !uiState.value.isVideoFailed
         videoPlayer.setRunning(isRunning = isRunning)
         uiState.update { it.copy(isVideoRunning = isRunning) }
     }
@@ -412,5 +430,11 @@ internal class IntroductionModel @Inject constructor(
 
     private companion object {
         val SHEET_COLLAPSE_TIMEOUT = 600.milliseconds
+
+        /**
+         * The size of `R.raw.introduction_background`, declared rather than read from the file so the surface takes
+         * its final shape before the first frame: resizing it under a playing decoder is what can get its output stuck.
+         */
+        val BACKGROUND_VIDEO_SIZE = IntSize(width = 1080, height = 1920)
     }
 }

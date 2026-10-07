@@ -40,6 +40,11 @@ internal class IntroductionVideoDiagnostics : AnalyticsListener {
         TangemLogger.i("Welcome video surface ${width}x$height at ${eventTime.eventPlaybackPositionMs}ms")
     }
 
+    override fun onPlayWhenReadyChanged(eventTime: AnalyticsListener.EventTime, playWhenReady: Boolean, reason: Int) {
+        val action = if (playWhenReady) "play" else "pause"
+        TangemLogger.i("Welcome video $action at ${eventTime.eventPlaybackPositionMs}ms")
+    }
+
     override fun onPlaybackStateChanged(eventTime: AnalyticsListener.EventTime, state: @Player.State Int) {
         TangemLogger.i("Welcome video state ${stateName(state)} at ${eventTime.eventPlaybackPositionMs}ms")
     }

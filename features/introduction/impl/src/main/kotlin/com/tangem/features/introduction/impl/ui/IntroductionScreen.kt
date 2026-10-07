@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -34,6 +35,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.first
@@ -138,13 +140,23 @@ private fun VideoBackground(
     onSurfaceAvailable: (SurfaceView) -> Unit,
     onSurfaceRelease: (SurfaceView) -> Unit,
 ) {
+    val videoSize = state.videoSize
     // A SurfaceView punches a hole through the window, erasing whatever is composed before it, so the shutter
     // below has to come after it.
-    AndroidView(
-        modifier = Modifier.videoSurfaceSize(aspectRatio = state.videoAspectRatio),
-        factory = { context -> SurfaceView(context).also(onSurfaceAvailable) },
-        onRelease = onSurfaceRelease,
-    )
+    key(state.videoSurfaceKey) {
+        AndroidView(
+            modifier = Modifier.videoSurfaceSize(aspectRatio = videoSize.width.toFloat() / videoSize.height),
+            factory = { context ->
+                SurfaceView(context).also { surfaceView ->
+                    // The buffers keep the video's own size whatever the layout does, so no layout pass resizes
+                    // the surface under the decoder.
+                    surfaceView.holder.setFixedSize(videoSize.width, videoSize.height)
+                    onSurfaceAvailable(surfaceView)
+                }
+            },
+            onRelease = onSurfaceRelease,
+        )
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -276,19 +288,15 @@ private fun BottomActions(state: IntroductionUM, modifier: Modifier = Modifier) 
  * frame into whatever shape the surface has, which on a screen taller than the video is what squeezes the
  * picture. A surface that already has the frame's shape renders the same either way.
  */
-private fun Modifier.videoSurfaceSize(aspectRatio: Float?): Modifier = if (aspectRatio == null) {
-    fillMaxSize()
-} else {
-    layout { measurable, constraints ->
-        val width = constraints.maxWidth
-        val height = constraints.maxHeight
-        val isCoveredByHeight = width < height * aspectRatio
-        val coverWidth = if (isCoveredByHeight) (height * aspectRatio).roundToInt() else width
-        val coverHeight = if (isCoveredByHeight) height else (width / aspectRatio).roundToInt()
-        val placeable = measurable.measure(Constraints.fixed(width = coverWidth, height = coverHeight))
-        layout(width = width, height = height) {
-            placeable.place(x = (width - coverWidth) / 2, y = (height - coverHeight) / 2)
-        }
+private fun Modifier.videoSurfaceSize(aspectRatio: Float): Modifier = layout { measurable, constraints ->
+    val width = constraints.maxWidth
+    val height = constraints.maxHeight
+    val isCoveredByHeight = width < height * aspectRatio
+    val coverWidth = if (isCoveredByHeight) (height * aspectRatio).roundToInt() else width
+    val coverHeight = if (isCoveredByHeight) height else (width / aspectRatio).roundToInt()
+    val placeable = measurable.measure(Constraints.fixed(width = coverWidth, height = coverHeight))
+    layout(width = width, height = height) {
+        placeable.place(x = (width - coverWidth) / 2, y = (height - coverHeight) / 2)
     }
 }
 
@@ -303,7 +311,8 @@ private fun IntroductionScreenPreview() {
             videoPositionMs = { 0L },
             state = IntroductionUM(
                 isVideoReady = true,
-                videoAspectRatio = null,
+                videoSize = IntSize(width = 1080, height = 1920),
+                videoSurfaceKey = 0,
                 isVideoFailed = false,
                 isVideoRunning = false,
                 isMotionEnabled = false,
