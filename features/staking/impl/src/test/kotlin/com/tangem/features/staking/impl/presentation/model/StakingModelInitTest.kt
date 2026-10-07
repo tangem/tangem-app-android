@@ -1,9 +1,11 @@
 package com.tangem.features.staking.impl.presentation.model
 
 import arrow.core.Either
+import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.balancehiding.BalanceHidingSettings
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.YieldBalanceItem
@@ -12,9 +14,11 @@ import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.features.staking.impl.presentation.state.InnerConfirmationStakingState
+import com.tangem.features.staking.impl.presentation.state.StakingNotification
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingStep
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
+import com.tangem.features.staking.impl.presentation.state.createAssentConfirmationUiState
 import com.tangem.features.staking.impl.presentation.state.helpers.StakingFeeLoader
 import com.tangem.features.staking.impl.presentation.state.transformers.HideBalanceStateTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.SetConfirmationStateLoadingTransformer
@@ -28,6 +32,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -437,6 +442,55 @@ internal class StakingModelInitTest : StakingModelTestBase() {
 
         model.onDestroy()
     }
+
+    @Test
+    fun `GIVEN approval sent WHEN refreshed status emitted on assent THEN rebuilt notifications keep approval in progress`() =
+        runTest {
+            // Arrange
+            val statusFlow = MutableSharedFlow<AccountCryptoCurrencyStatus>()
+            val uiStateFlow = MutableStateFlow(initialUiState)
+            val (cachedStatus, cachedAccountStatus) = createMockedAccountCurrencyStatus()
+            val (_, refreshedAccountStatus) = createMockedAccountCurrencyStatus()
+            arrangeStatusRefreshOnConfirmation(statusFlow, uiStateFlow, cachedStatus)
+            every { cachedStatus.currency } returns mockk<CryptoCurrency.Token>(relaxed = true)
+            mockkObject(StakingIntegrationID.Companion)
+            every { StakingIntegrationID.create(any()) } returns mockk {
+                every { approval } returns StakingApproval.Needed("0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908")
+            }
+            coEvery { getAllowanceUseCase(any(), any(), any()) } returns Either.Right(BigDecimal.ZERO)
+
+            try {
+                val model = createModel(testScope = this)
+                runCurrent()
+                statusFlow.emit(cachedAccountStatus)
+                advanceUntilIdle()
+                uiStateFlow.value = createConfirmationUiState(InnerConfirmationStakingState.ASSENT).apply {
+                    every { amountState } returns mockk<AmountState.Data>(relaxed = true) {
+                        every { amountTextField.cryptoAmount.value } returns BigDecimal.ONE
+                    }
+                }
+                advanceUntilIdle()
+                val transformers = mutableListOf<Transformer<StakingUiState>>()
+                every { stateController.update(capture(transformers)) } just Runs
+
+                // Act — runCurrent, not advanceUntilIdle: the allowance poll repeats forever while allowance stays 0
+                model.getApprovalParams()!!.callback.onApproveDone()
+                runCurrent()
+                statusFlow.emit(refreshedAccountStatus)
+                runCurrent()
+
+                // Assert
+                val rebuilt = transformers.filterIsInstance<AddStakingNotificationsTransformer>().last()
+                    .transform(createAssentConfirmationUiState())
+                val confirmation = rebuilt.confirmationState as StakingStates.ConfirmationState.Data
+                assertThat(confirmation.notifications)
+                    .contains(StakingNotification.Warning.TransactionInProgress.Approval)
+
+                model.onDestroy()
+            } finally {
+                unmockkObject(StakingIntegrationID.Companion)
+            }
+        }
 
     private fun arrangeStatusRefreshOnConfirmation(
         statusFlow: MutableSharedFlow<AccountCryptoCurrencyStatus>,
