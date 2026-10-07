@@ -8,17 +8,18 @@ import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.visa.error.VisaApiError
 
-class FindActiveOrdersUseCase(
+class FindOrdersUseCase(
     private val customerOrderRepository: CustomerOrderRepository,
 ) {
     suspend operator fun invoke(
         userWalletId: UserWalletId,
         types: Set<OrderType> = emptySet(),
+        statuses: Set<OrderStatus> = emptySet(),
     ): Either<VisaApiError, List<Order>> {
         return customerOrderRepository.findOrders(
             userWalletId = userWalletId,
             types = types,
-            statuses = OrderStatus.activeStatuses,
+            statuses = statuses,
         )
     }
 }
