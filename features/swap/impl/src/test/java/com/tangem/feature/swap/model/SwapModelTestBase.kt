@@ -14,6 +14,7 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
+import com.tangem.domain.account.status.supplier.SingleAccountStatusSupplier
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
@@ -30,6 +31,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSwapUseCase
+import com.tangem.domain.polymarket.usecase.GetPredictionTopUpMinimumUseCase
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
@@ -117,6 +119,7 @@ internal abstract class SwapModelTestBase {
     protected val initialCurrenciesResolver: InitialCurrenciesResolver = mockk(relaxed = true)
     protected val accountUnderlyingCurrencies: AccountUnderlyingCurrencies = mockk(relaxed = true)
     protected val multiAccountStatusListSupplier: MultiAccountStatusListSupplier = mockk(relaxed = true)
+    protected val singleAccountStatusSupplier: SingleAccountStatusSupplier = mockk(relaxed = true)
     protected val getPredictionWithdrawDestinationsUseCase: GetPredictionWithdrawDestinationsUseCase =
         mockk(relaxed = true)
     protected val polymarketCollateralCurrencyFactory: PolymarketCollateralCurrencyFactory = mockk()
@@ -132,6 +135,9 @@ internal abstract class SwapModelTestBase {
     protected val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase = mockk(relaxed = true)
     protected val getCurrencyUSDQuoteUseCase: GetCurrencyUSDQuoteUseCase = mockk(relaxed = true)
     protected val recordTokenTransferFromSwapUseCase: RecordTokenTransferFromSwapUseCase = mockk(relaxed = true)
+    protected val getPredictionTopUpMinimumUseCase: GetPredictionTopUpMinimumUseCase = mockk {
+        coEvery { this@mockk(any()) } returns null
+    }
     protected val backupErrorWarningSender: BackupErrorWarningSender = mockk {
         every { forWallet(any(), any(), any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
     }
@@ -186,7 +192,7 @@ internal abstract class SwapModelTestBase {
         } answers { secondArg() }
     }
 
-    private fun usdcPolygonToken(): CryptoCurrency.Token {
+    protected fun usdcPolygonToken(): CryptoCurrency.Token {
         val id: CryptoCurrency.ID = mockk {
             every { rawCurrencyId } returns CryptoCurrency.RawID("usd-coin")
         }
@@ -263,6 +269,7 @@ internal abstract class SwapModelTestBase {
         initialCurrenciesResolver = initialCurrenciesResolver,
         accountUnderlyingCurrencies = accountUnderlyingCurrencies,
         multiAccountStatusListSupplier = multiAccountStatusListSupplier,
+        singleAccountStatusSupplier = singleAccountStatusSupplier,
         getPredictionWithdrawDestinationsUseCase = getPredictionWithdrawDestinationsUseCase,
         polymarketCollateralCurrencyFactory = polymarketCollateralCurrencyFactory,
         submitPredictionWithdrawalInteractor = submitPredictionWithdrawalInteractor,
@@ -277,6 +284,10 @@ internal abstract class SwapModelTestBase {
         isHighNetworkFeeUseCase = isHighNetworkFeeUseCase,
         getCurrencyUSDQuoteUseCase = getCurrencyUSDQuoteUseCase,
         recordTokenTransferFromSwapUseCase = recordTokenTransferFromSwapUseCase,
+        predictionTopUpLimitsResolver = PredictionTopUpLimitsResolver(
+            getPredictionTopUpMinimumUseCase = getPredictionTopUpMinimumUseCase,
+            getCurrencyUSDQuoteUseCase = getCurrencyUSDQuoteUseCase,
+        ),
         backupErrorWarningSender = backupErrorWarningSender,
     )
 

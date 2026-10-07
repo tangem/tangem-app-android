@@ -112,24 +112,6 @@ class UpdateStakingNotificationTransformerTest {
     }
 
     @Test
-    fun `GIVEN Full AND the stake arrives as a contribution WHEN transform THEN active balance block`() {
-        // Arrange — same stake as the case above, reached through the contributions path instead
-        val transformer = createTransformer(
-            availability = fullOption(BigDecimal("4.2")),
-            entryInfo = null,
-            status = buildStatusWithStake(stakedAmount = BigDecimal("5"), useContributions = true),
-        )
-
-        // Act
-        val result = transformer.transform(initialState())
-
-        // Assert — a reader stuck on the typed field would see no stake and return null here
-        assertThat(result.earnBlockState).isInstanceOf(EarnBlockUM.Content::class.java)
-        val content = result.earnBlockState as EarnBlockUM.Content
-        assertThat(content.trailingUM).isInstanceOf(EarnBlockUM.TrailingUM.Balance::class.java)
-    }
-
-    @Test
     fun `GIVEN active staked balance AND balance hidden WHEN transform THEN trailing balance hidden`() {
         // Arrange
         val status = buildStatus(
@@ -285,7 +267,7 @@ class UpdateStakingNotificationTransformerTest {
         networkRawId: String = "solana",
         symbol: String = "SOL",
         isCoin: Boolean = true,
-        stakingBalance: StakingBalance = mockk(relaxed = true),
+        stakingBalance: StakingBalance? = null,
     ): CryptoCurrencyStatus {
         val network = mockk<Network>(relaxed = true) {
             every { rawId } returns networkRawId
@@ -298,7 +280,7 @@ class UpdateStakingNotificationTransformerTest {
             every { id.isCoin } returns isCoin
         }
         val value = mockk<CryptoCurrencyStatus.Value>(relaxed = true) {
-            every { this@mockk.stakingBalance } returns stakingBalance
+            every { contributions } returns listOfNotNull(stakingBalance)
             every { fiatRate } returns BigDecimal.ONE
             every { yieldSupplyStatus } returns null
         }
@@ -347,15 +329,7 @@ class UpdateStakingNotificationTransformerTest {
         every { this@mockk.apy } returns apy
     }
 
-    /**
-     * @param useContributions toggle-on shape — the balance arrives in `contributions` and the typed field is
-     * **null**, exactly as `CryptoCurrencyStatusFactory` builds it. Populating both would let a status that only
-     * reads the legacy field still look correct.
-     */
-    private fun buildStatusWithStake(
-        stakedAmount: BigDecimal,
-        useContributions: Boolean = false,
-    ): CryptoCurrencyStatus {
+    private fun buildStatusWithStake(stakedAmount: BigDecimal): CryptoCurrencyStatus {
         val network = mockk<Network>(relaxed = true) {
             every { rawId } returns "solana"
             every { isTestnet } returns false
@@ -373,8 +347,7 @@ class UpdateStakingNotificationTransformerTest {
             every { totalRewards } returns BigDecimal.ZERO
         }
         val value = mockk<CryptoCurrencyStatus.Value>(relaxed = true) {
-            every { this@mockk.stakingBalance } returns stakingBalance.takeIf { !useContributions }
-            every { contributions } returns if (useContributions) listOf(stakingBalance) else emptyList()
+            every { contributions } returns listOf(stakingBalance)
             every { fiatRate } returns BigDecimal.ONE
             every { yieldSupplyStatus } returns null
         }

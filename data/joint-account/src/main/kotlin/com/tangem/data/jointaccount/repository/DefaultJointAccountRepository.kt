@@ -16,10 +16,12 @@ import com.tangem.data.jointaccount.converter.CreateJointAccountRequestConverter
 import com.tangem.data.jointaccount.converter.JoinJointAccountRequestConverter
 import com.tangem.data.jointaccount.converter.JointAccountDtoConverter
 import com.tangem.data.jointaccount.converter.JointAccountInvitePreviewDtoConverter
+import com.tangem.data.jointaccount.converter.JointOperationConverter
 import com.tangem.data.jointaccount.converter.JointOperationCreateErrorConverter
 import com.tangem.data.jointaccount.converter.JointOperationRejectErrorConverter
 import com.tangem.data.jointaccount.converter.JointOperationSignErrorConverter
 import com.tangem.data.jointaccount.converter.SafeTxConverter
+import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.store.datasource.jointaccount.models.CreateJointOperationRequest
 import com.tangem.store.datasource.jointaccount.models.SignJointOperationRequest
 import com.tangem.store.datasource.jointaccount.JointAccountApi
@@ -30,6 +32,7 @@ import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
 import com.tangem.domain.jointaccount.model.JointAccountJoinPayload
 import com.tangem.domain.jointaccount.model.JointAccountJoinResult
+import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
 import com.tangem.domain.jointaccount.model.JointOperationSignError
@@ -40,6 +43,8 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -51,6 +56,7 @@ internal class DefaultJointAccountRepository @Inject constructor(
     private val converter: JointAccountDtoConverter,
     private val previewConverter: JointAccountInvitePreviewDtoConverter,
     private val safeTxConverter: SafeTxConverter,
+    private val operationConverter: JointOperationConverter,
     private val dispatchers: CoroutineDispatcherProvider,
     @NetworkMoshi private val moshi: Moshi,
 ) : JointAccountRepository {
@@ -62,7 +68,13 @@ internal class DefaultJointAccountRepository @Inject constructor(
 
     override suspend fun getFreeOwnerDerivationIndex(userWalletId: UserWalletId): Int {
         return withContext(dispatchers.io) {
-            walletAccountsFetcher.fetch(userWalletId = userWalletId).wallet.totalJointAccounts ?: NO_JOINT_ACCOUNTS
+            val response = walletAccountsFetcher.fetch(userWalletId = userWalletId)
+            val nextAfterJointRows = response.accounts
+                .filter { it.type == WalletAccountDTO.Type.JOINT }
+                .maxOfOrNull { it.derivationIndex + 1 }
+                ?: NO_JOINT_ACCOUNTS
+
+            maxOf(response.wallet.totalJointAccounts ?: NO_JOINT_ACCOUNTS, nextAfterJointRows)
         }
     }
 
@@ -183,10 +195,11 @@ internal class DefaultJointAccountRepository @Inject constructor(
                 // A link the backend does not know is as dead as one it refuses: retrying it can only fail again
                 val isInvalidLink = error is ApiResponseError.HttpException &&
                     error.code in DEAD_INVITE_CODES
-                if (isInvalidLink) {
-                    JointAccountInvitePreviewError.InvalidLink.left()
-                } else {
-                    JointAccountInvitePreviewError.LoadFailed(cause = error).left()
+                when {
+                    isInvalidLink -> JointAccountInvitePreviewError.InvalidLink.left()
+                    error is ApiResponseError.NetworkException || error is ApiResponseError.TimeoutException ->
+                        JointAccountInvitePreviewError.Unreachable(cause = error).left()
+                    else -> JointAccountInvitePreviewError.LoadFailed(cause = error).left()
                 }
             },
         )
@@ -204,6 +217,28 @@ internal class DefaultJointAccountRepository @Inject constructor(
             }.getOrElse { throwable ->
                 logger.e(messageString = "Failed to read the stored invites", throwable = throwable)
                 emptyList()
+            }
+        }
+    }
+
+    override fun getSharedInvites(userWalletId: UserWalletId, cryptoAccountId: String): Flow<Set<String>> {
+        return invitesStore.observeShared(userWalletId = userWalletId, cryptoAccountId = cryptoAccountId)
+            .catch { throwable ->
+                logger.e(messageString = "Failed to read the shared invites", throwable = throwable)
+                emit(emptySet())
+            }
+    }
+
+    override suspend fun markInviteShared(userWalletId: UserWalletId, cryptoAccountId: String, inviteId: String) {
+        withContext(dispatchers.io) {
+            runSuspendCatching {
+                invitesStore.markShared(
+                    userWalletId = userWalletId,
+                    cryptoAccountId = cryptoAccountId,
+                    inviteId = inviteId,
+                )
+            }.onFailure { throwable ->
+                logger.e(messageString = "Failed to record a shared invite", throwable = throwable)
             }
         }
     }
@@ -258,14 +293,14 @@ internal class DefaultJointAccountRepository @Inject constructor(
         operationId: String,
         safeTx: SafeTx,
         signature: String,
-    ): Either<JointOperationSignError, Unit> = withContext(dispatchers.io) {
+    ): Either<JointOperationSignError, JointOperation?> = withContext(dispatchers.io) {
         val safeTxDto = Either
             .catch { safeTxConverter.convertBack(safeTx) }
             .getOrElse { return@withContext JointOperationSignError.Failed(cause = it).left() }
 
         safeApiCall(
             call = {
-                jointAccountApi.signJointOperation(
+                val response = jointAccountApi.signJointOperation(
                     walletId = userWalletId.stringValue,
                     operationId = operationId,
                     body = SignJointOperationRequest(
@@ -274,7 +309,16 @@ internal class DefaultJointAccountRepository @Inject constructor(
                     ),
                 ).bind()
 
-                Unit.right()
+                Either
+                    .catch { operationConverter.convert(response) }
+                    .onLeft { error ->
+                        logger.e(
+                            messageString = "The signed operation $operationId could not be read",
+                            throwable = error,
+                        )
+                    }
+                    .getOrNull()
+                    .right()
             },
             onError = { error -> signErrorConverter.convert(error).left() },
         )

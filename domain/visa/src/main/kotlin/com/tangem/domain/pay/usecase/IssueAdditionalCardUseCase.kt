@@ -5,6 +5,7 @@ import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.pay.model.IssueAdditionalCardError
 import com.tangem.domain.pay.model.IssueAdditionalCardResult
 import com.tangem.domain.pay.model.Offer
@@ -80,11 +81,13 @@ class IssueAdditionalCardUseCase(
         } else {
             val created = customerOrderRepository.createOrder(
                 userWalletId = userWalletId,
-                type = offer.data.orderType,
-                specificationName = offer.data.specificationName
-                    ?: raise(IssueAdditionalCardError.Other(VisaApiError.Unspecified)),
+                request = CustomerOrderRequest.CardIssue(
+                    type = offer.data.orderType,
+                    specificationName = offer.data.specificationName
+                        ?: raise(IssueAdditionalCardError.Other(VisaApiError.Unspecified)),
+                    deeplinkValue = deeplinkValue,
+                ),
                 idempotencyKey = UUID.randomUUID().toString(),
-                deeplinkValue = deeplinkValue,
             ).mapLeft(VisaApiError::toIssueError).bind()
             IssueAdditionalCardResult.Created(created)
         }

@@ -115,6 +115,10 @@ sealed class WalletScreenAnalyticsEvent {
 
         class ButtonAddFundsPromo : MainScreen(event = "Button - Add Funds Promo")
 
+        class NoticeUpgradeToColdWallet : MainScreen(event = "Notice - Upgrade To Cold Wallet")
+
+        class ButtonUpgrade : MainScreen(event = "Button - Upgrade")
+
         class NotePromo : MainScreen(event = "Notice - Note Promo")
 
         class NotePromoButton : MainScreen(event = "Note Promo Button")

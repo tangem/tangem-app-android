@@ -37,4 +37,10 @@ dependencies {
     api(projects.domain.models)
     api(projects.domain.nft.models)
     // endregion
+
+    // region Tests
+    testImplementation(projects.common.test)
+    testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
+    // endregion
 }
