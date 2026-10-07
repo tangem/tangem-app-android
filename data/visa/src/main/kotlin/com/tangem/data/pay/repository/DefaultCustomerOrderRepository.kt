@@ -67,14 +67,10 @@ internal class DefaultCustomerOrderRepository @Inject constructor(
             raise(VisaApiError.UnknownWithoutCode)
         }
         val body = OrderRequestConverter.convert(
-            OrderRequestConverter.Input(
-                customerWalletAddress = customerWalletAddress,
-                request = request,
-                idempotencyKey = idempotencyKey,
-            ),
+            OrderRequestConverter.Input(customerWalletAddress = customerWalletAddress, request = request),
         ).bind()
         val response = requestHelper.performRequest(userWalletId) { authHeader ->
-            tangemPayApi.createOrder(authHeader = authHeader, body = body)
+            tangemPayApi.createOrder(authHeader = authHeader, idempotencyKey = idempotencyKey, body = body)
         }.bind()
         val result = ensureNotNull(response.result) { VisaApiError.UnknownWithoutCode }
         OrderConverter.convert(result)

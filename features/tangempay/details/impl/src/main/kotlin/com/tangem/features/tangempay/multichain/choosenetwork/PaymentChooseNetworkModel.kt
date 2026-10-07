@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
@@ -48,6 +49,8 @@ internal class PaymentChooseNetworkModel @Inject constructor(
      * refresh) — so Loading/Error must be tracked here rather than derived purely from network state.
      */
     private val rowOverrides = MutableStateFlow<Map<String, RowOverride>>(emptyMap())
+
+    private val contractIdempotencyKeys = mutableMapOf<String, String>()
 
     val uiState: StateFlow<PaymentChooseNetworkUM>
         field = MutableStateFlow(converter.convert(emptyList()))
@@ -113,10 +116,15 @@ internal class PaymentChooseNetworkModel @Inject constructor(
         if (rowOverrides.value[rowId]?.state == PaymentNetworkItemUM.State.Loading) return
 
         rowOverrides.update { it + (rowId to RowOverride(state = PaymentNetworkItemUM.State.Loading, onRetry = null)) }
+        val idempotencyKey = contractIdempotencyKeys.getOrPut(rowId) { UUID.randomUUID().toString() }
         modelScope.launch {
-            createPaymentNetworkContractUseCase(params.walletId, status.network).fold(
-                ifLeft = { markFailed(rowId, status) },
+            createPaymentNetworkContractUseCase(params.walletId, status.network, idempotencyKey).fold(
+                ifLeft = { error ->
+                    if (!error.isOutcomeUnknown()) contractIdempotencyKeys.remove(rowId)
+                    markFailed(rowId, status)
+                },
                 ifRight = {
+                    contractIdempotencyKeys.remove(rowId)
                     delay(PENDING_TIMEOUT)
                     if (rowOverrides.value[rowId]?.state == PaymentNetworkItemUM.State.Loading) {
                         markFailed(rowId, status)
@@ -139,6 +147,7 @@ internal class PaymentChooseNetworkModel @Inject constructor(
             .toSet()
         rowOverrides.value.forEach { (rowId, override) ->
             if (rowId in availableRawIds) {
+                contractIdempotencyKeys.remove(rowId)
                 clearOverride(rowId)
                 if (override.state == PaymentNetworkItemUM.State.Loading) {
                     params.listener.onSelectAvailable(networkRawId = rowId)
