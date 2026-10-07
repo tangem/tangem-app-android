@@ -42,7 +42,8 @@ internal class TangemPayAddFundsModel @Inject constructor(
 
     private val converter = TangemPayAddFundsUMConverter(
         listener = listener,
-        shouldShowBankTransfer = isBankTransferShown,
+        virtualAccountOnramp = params.virtualAccountOnramp,
+        isVisaOnrampV2Enabled = tangemPayFeatureToggles.isVisaOnrampV2Enabled,
     )
 
     private val topUpData = TangemPayTopUpData(
@@ -77,7 +78,7 @@ internal class TangemPayAddFundsModel @Inject constructor(
         when (onramp) {
             is VirtualAccountOnramp.Available -> loadBankingDetails(onramp)
             VirtualAccountOnramp.Eligible -> openOnboarding()
-            VirtualAccountOnramp.Processing -> params.listener.onClickBankTransfer()
+            VirtualAccountOnramp.Processing -> Unit
         }
     }
 
