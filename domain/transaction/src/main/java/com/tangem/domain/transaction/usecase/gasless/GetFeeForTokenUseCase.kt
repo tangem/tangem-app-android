@@ -2,46 +2,32 @@ package com.tangem.domain.transaction.usecase.gasless
 
 import arrow.core.Either
 import arrow.core.getOrElse
-import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
-import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.TransactionData
-import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCoinStatus
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
-import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
-import com.tangem.domain.transaction.GaslessTransactionRepository
-import com.tangem.domain.transaction.GaslessYieldRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.raiseIllegalStateError
-import com.tangem.domain.walletmanager.WalletManagersFacade
 import java.math.BigDecimal
 
-@Suppress("LongParameterList")
+/**
+ * Mirror of [GetFeeForGaslessUseCase] with the fee token given rather than chosen. Neither resolver
+ * taking the network is an error here: the user asked to pay in a token, there is no native fee to fall
+ * back to.
+ */
 class GetFeeForTokenUseCase(
-    private val gaslessTransactionRepository: GaslessTransactionRepository,
-    private val gaslessYieldRepository: GaslessYieldRepository,
-    private val walletManagersFacade: WalletManagersFacade,
-    private val demoConfig: DemoConfig,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val currencyChecksRepository: CurrencyChecksRepository,
-    private val resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
+    private val evmGaslessFeeResolver: EvmGaslessFeeResolver,
+    private val tronGaslessFeeResolver: TronGaslessFeeResolver,
 ) {
-
-    private val tokenFeeCalculator = TokenFeeCalculator(
-        walletManagersFacade = walletManagersFacade,
-        gaslessTransactionRepository = gaslessTransactionRepository,
-        demoConfig = demoConfig,
-        gaslessYieldRepository = gaslessYieldRepository,
-    )
 
     /**
      * @param sentAmount amount sent by the main transaction, in the sent token. Required for a yield-supply
@@ -56,23 +42,12 @@ class GetFeeForTokenUseCase(
         return either {
             catch(
                 block = {
-                    if (!currencyChecksRepository.isNetworkSupportedForGaslessTx(token.network)) {
+                    tronGaslessFeeResolver.resolveWithSelectedFeeToken(userWallet.walletId, token, transactionData)
+                        ?.let { return@either it.bind() }
+
+                    if (!currencyChecksRepository.isEvmGaslessNetwork(token.network)) {
                         raise(GaslessError.NetworkIsNotSupported)
                     }
-
-                    val walletManager = prepareWalletManager(userWallet, token.network)
-
-                    val initialTxFee = tokenFeeCalculator.calculateInitialFee(
-                        userWallet = userWallet,
-                        network = token.network,
-                        walletManager = walletManager,
-                        transactionData = transactionData,
-                    ).bind()
-
-                    val initialFeeEth = initialTxFee.normal as? Fee.Ethereum
-                        ?: raiseIllegalStateError(
-                            error = "only Fee.Ethereum supported, but was different",
-                        )
 
                     val accountStatusList = singleAccountStatusListSupplier.getSyncOrNull(userWallet.walletId)
                         ?: raiseIllegalStateError("AccountStatusList is null for ${userWallet.walletId}")
@@ -85,49 +60,19 @@ class GetFeeForTokenUseCase(
                         raiseIllegalStateError("Token currency not found for network ${token.network.id}")
                     }
 
-                    val isYieldActive = tokenCurrencyStatus.value.yieldSupplyStatus?.isActive == true
-
-                    val tokenFeeExtended = tokenFeeCalculator.calculateTokenFee(
-                        walletManager = walletManager,
-                        tokenForPayFeeStatus = tokenCurrencyStatus,
-                        nativeCurrencyStatus = nativeCurrencyStatus,
-                        initialFee = initialFeeEth,
-                        isYieldActive = isYieldActive,
+                    evmGaslessFeeResolver.resolveWithSelectedFeeToken(
                         userWallet = userWallet,
+                        network = token.network,
+                        transactionData = transactionData,
+                        nativeCurrencyStatus = nativeCurrencyStatus,
+                        tokenCurrencyStatus = tokenCurrencyStatus,
+                        sentAmount = sentAmount,
                     ).bind()
-
-                    if (isYieldActive) {
-                        attachGaslessFeePlan(
-                            resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
-                            userWallet = userWallet,
-                            tokenStatus = tokenCurrencyStatus,
-                            tokenFeeExtended = tokenFeeExtended,
-                            transactionData = transactionData,
-                            isYieldActive = true,
-                            sentAmount = sentAmount,
-                        ).copy(nativeFee = initialTxFee)
-                    } else {
-                        tokenFeeExtended.copy(nativeFee = initialTxFee)
-                    }
                 },
                 catch = {
                     raise(GaslessError.DataError(it))
                 },
             )
         }
-    }
-
-    @Suppress("NullableToStringCall")
-    private suspend fun Raise<GetFeeError>.prepareWalletManager(
-        userWallet: UserWallet,
-        network: Network,
-    ): EthereumWalletManager {
-        val walletManager = walletManagersFacade.getOrCreateWalletManager(
-            userWalletId = userWallet.walletId,
-            network = network,
-        )
-        val ethereumWalletManager = walletManager as? EthereumWalletManager
-            ?: raiseIllegalStateError("WalletManager type ${walletManager?.javaClass?.name} not supported")
-        return ethereumWalletManager
     }
 }
