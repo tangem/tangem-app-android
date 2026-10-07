@@ -195,24 +195,63 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     }
 
     @Test
-    fun `GIVEN order is gone but onboarding was in progress WHEN invoke THEN last status is kept`() = runTest {
+    fun `GIVEN order is gone but onboarding was in progress WHEN invoke THEN not created is stored`() = runTest {
         // Arrange
-        val previous = MoneyAccountStatusValue.Onboarding.Activating(
-            source = StatusSource.ACTUAL,
-            balance = null,
-            customerId = CUSTOMER_ID,
-        )
         coEvery { moneyAccountStatusesStore.getSyncOrNull(USER_WALLET_ID) } returns AccountStatus.Money(
             account = Account.Money(userWalletId = USER_WALLET_ID),
-            value = previous,
+            value = MoneyAccountStatusValue.Onboarding.Activating(
+                source = StatusSource.ACTUAL,
+                balance = null,
+                customerId = CUSTOMER_ID,
+            ),
         )
 
         // Act
         fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
 
         // Assert
-        verifyStored(previous)
+        verifyStored(MoneyAccountStatusValue.NotCreated)
     }
+
+    @Test
+    fun `GIVEN no order AND residency step not passed WHEN invoke THEN not created is stored`() = runTest {
+        // Arrange
+        coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo(
+            kycStatus = KycStatus.REQUIRED,
+        ).right()
+
+        // Act
+        fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
+
+        // Assert
+        verifyStored(MoneyAccountStatusValue.NotCreated)
+    }
+
+    @Test
+    fun `GIVEN canceled order AND residency step not passed WHEN invoke THEN status is resolved by order step`() =
+        runTest {
+            // Arrange
+            every { orderRepository.getOrder(USER_WALLET_ID) } returns createOrder(
+                status = OrderStatus.CANCELED,
+                step = OrderStep.STARTING,
+            )
+            coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo(
+                kycStatus = KycStatus.REQUIRED,
+            ).right()
+
+            // Act
+            fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
+
+            // Assert
+            verifyStored(
+                MoneyAccountStatusValue.Onboarding.Issuing(
+                    source = StatusSource.ACTUAL,
+                    balance = null,
+                    customerId = CUSTOMER_ID,
+                    step = MoneyAccountStatusValue.IssuingStep.STARTING,
+                ),
+            )
+        }
 
     @Test
     fun `GIVEN the store fails WHEN invoke THEN the error is returned instead of being thrown`() = runTest {
