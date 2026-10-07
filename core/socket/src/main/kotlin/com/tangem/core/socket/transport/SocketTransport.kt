@@ -15,7 +15,7 @@ data class SocketRequest(
 
 interface SocketConnection {
 
-    /** Ends with exactly one [TransportEvent.Closed]. */
+    /** Ends with exactly one [TransportEvent.Closed], unless [close] is called first: then it just stops. */
     val events: ReceiveChannel<TransportEvent>
 
     fun send(text: String): Boolean
