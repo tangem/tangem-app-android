@@ -13,7 +13,7 @@ import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.pay.usecase.FindActiveMoneyAccountCreationOrderUseCase
+import com.tangem.domain.pay.usecase.FindMoneyAccountCreationOrderUseCase
 import com.tangem.domain.visa.error.VisaApiError
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -34,22 +34,22 @@ internal class RestoreMoneyAccountOrderUseCaseTest {
     private val orderRepository: MoneyAccountOrderRepository = mockk()
     private val onboardingRepository: OnboardingRepository = mockk()
     private val trackOrder: TrackMoneyAccountOrderUseCase = mockk()
-    private val findActiveMoneyAccountCreationOrderUseCase: FindActiveMoneyAccountCreationOrderUseCase = mockk()
+    private val findMoneyAccountCreationOrderUseCase: FindMoneyAccountCreationOrderUseCase = mockk()
 
     private val useCase = RestoreMoneyAccountOrderUseCase(
         orderRepository = orderRepository,
         onboardingRepository = onboardingRepository,
         trackOrder = trackOrder,
-        findActiveMoneyAccountCreationOrderUseCase = findActiveMoneyAccountCreationOrderUseCase,
+        findMoneyAccountCreationOrderUseCase = findMoneyAccountCreationOrderUseCase,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(orderRepository, onboardingRepository, trackOrder, findActiveMoneyAccountCreationOrderUseCase)
+        clearMocks(orderRepository, onboardingRepository, trackOrder, findMoneyAccountCreationOrderUseCase)
         every { orderRepository.clearOrder(USER_WALLET_ID) } just runs
         every { trackOrder(any(), any()) } just runs
         coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo().right()
-        coEvery { findActiveMoneyAccountCreationOrderUseCase(USER_WALLET_ID) } returns null.right()
+        coEvery { findMoneyAccountCreationOrderUseCase(USER_WALLET_ID) } returns null.right()
     }
 
     @Test
@@ -65,7 +65,7 @@ internal class RestoreMoneyAccountOrderUseCaseTest {
         // Assert
         verify(exactly = 0) { trackOrder(any(), any()) }
         verify(exactly = 0) { orderRepository.clearOrder(any()) }
-        coVerify(exactly = 0) { findActiveMoneyAccountCreationOrderUseCase(any()) }
+        coVerify(exactly = 0) { findMoneyAccountCreationOrderUseCase(any()) }
     }
 
     @Test
@@ -117,7 +117,7 @@ internal class RestoreMoneyAccountOrderUseCaseTest {
     fun `GIVEN an active order WHEN invoke THEN tracking is started`() = runTest {
         // Arrange
         val order = createOrder()
-        coEvery { findActiveMoneyAccountCreationOrderUseCase(USER_WALLET_ID) } returns order.right()
+        coEvery { findMoneyAccountCreationOrderUseCase(USER_WALLET_ID) } returns order.right()
 
         // Act
         useCase(USER_WALLET_ID)
