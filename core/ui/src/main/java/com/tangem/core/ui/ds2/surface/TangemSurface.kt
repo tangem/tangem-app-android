@@ -152,17 +152,16 @@ object TangemSurface {
 /**
  * Opacity the material chrome — shadow, stroke and fill — is drawn with.
  *
- * Only the way back is animated: the chrome is dropped while the surface sits in a clipped transient
- * layer, where fading it would just show the cropped halo dimmed. Coming back the layer is gone, so
- * it fades in rather than popping in under settled content.
+ * Toggling `isMaterial` fades the chrome both ways. Under [LocalMaterialRenderingEnabled] `false` it
+ * is dropped at once instead: the surface then sits in a clipped transient layer, where fading it
+ * would just show the cropped halo dimmed. Coming back the layer is gone, so it fades in rather than
+ * popping in under settled content.
  */
 @Composable
 private fun materialChromeOpacity(isMaterial: Boolean): Float {
-    if (!isMaterial) return 0f
-
     val isChromeEnabled = LocalMaterialRenderingEnabled.current
     val opacity by animateFloatAsState(
-        targetValue = if (isChromeEnabled) 1f else 0f,
+        targetValue = if (isMaterial && isChromeEnabled) 1f else 0f,
         animationSpec = if (isChromeEnabled) TangemAnimationSpec.Alpha else snap(),
         label = "materialOpacity",
     )
