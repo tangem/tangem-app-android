@@ -4,8 +4,11 @@ package com.tangem.grow.datasource.stakekit.models.response.model
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
-import java.math.BigDecimal
+import com.tangem.domain.models.serialization.SerializedBigDecimal
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 @JsonClass(generateAdapter = true)
 data class YieldDTO(
     @Json(name = "id")
@@ -19,7 +22,7 @@ data class YieldDTO(
     @Json(name = "status")
     val status: StatusDTO?,
     @Json(name = "apy")
-    val apy: BigDecimal?,
+    val apy: SerializedBigDecimal?,
     @Json(name = "rewardRate")
     val rewardRate: Double?,
     @Json(name = "rewardType")
@@ -32,6 +35,7 @@ data class YieldDTO(
     val isAvailable: Boolean?,
 ) {
 
+    @Serializable
     @JsonClass(generateAdapter = true)
     data class StatusDTO(
         @Json(name = "enter")
@@ -40,6 +44,7 @@ data class YieldDTO(
         val exit: Boolean?,
     )
 
+    @Serializable
     @JsonClass(generateAdapter = true)
     data class ArgsDTO(
         @Json(name = "enter")
@@ -47,6 +52,7 @@ data class YieldDTO(
         @Json(name = "exit")
         val exit: Enter?,
     ) {
+        @Serializable
         @JsonClass(generateAdapter = true)
         data class Enter(
             @Json(name = "addresses")
@@ -54,6 +60,7 @@ data class YieldDTO(
             @Json(name = "args")
             val args: Map<String, AddressArgumentDTO>?,
         ) {
+            @Serializable
             @JsonClass(generateAdapter = true)
             data class Addresses(
                 @Json(name = "address")
@@ -64,6 +71,7 @@ data class YieldDTO(
         }
     }
 
+    @Serializable
     @JsonClass(generateAdapter = true)
     data class ValidatorDTO(
         @Json(name = "address")
@@ -77,7 +85,7 @@ data class YieldDTO(
         @Json(name = "website")
         val website: String?,
         @Json(name = "apr")
-        val apr: BigDecimal?,
+        val apr: SerializedBigDecimal?,
         @Json(name = "commission")
         val commission: Double?,
         @Json(name = "stakedBalance")
@@ -87,20 +95,26 @@ data class YieldDTO(
         @Json(name = "preferred")
         val preferred: Boolean?,
     ) {
+        @Serializable
         @JsonClass(generateAdapter = false)
         enum class ValidatorStatusDTO {
+            @SerialName("active")
             @Json(name = "active")
             ACTIVE,
 
+            @SerialName("deactivating")
             @Json(name = "deactivating")
             DEACTIVATING,
 
+            @SerialName("inactive")
             @Json(name = "inactive")
             INACTIVE,
 
+            @SerialName("jailed")
             @Json(name = "jailed")
             JAILED,
 
+            @SerialName("full")
             @Json(name = "full")
             FULL,
 
@@ -108,20 +122,25 @@ data class YieldDTO(
         }
     }
 
+    @Serializable
     @JsonClass(generateAdapter = true)
     data class MetadataDTO(
         @Json(name = "name")
         val name: String?,
+        @SerialName("logoURI")
         @Json(name = "logoURI")
         val logoUri: String?,
         @Json(name = "description")
         val description: String?,
         @Json(name = "documentation")
         val documentation: String?,
+        @SerialName("gasFeeToken")
         @Json(name = "gasFeeToken")
         val gasFeeTokenDTO: TokenDTO?,
+        @SerialName("token")
         @Json(name = "token")
         val tokenDTO: TokenDTO?,
+        @SerialName("tokens")
         @Json(name = "tokens")
         val tokensDTO: List<TokenDTO>?,
         @Json(name = "type")
@@ -146,6 +165,7 @@ data class YieldDTO(
         val fee: EnabledDTO?,
     ) {
 
+        @Serializable
         @JsonClass(generateAdapter = true)
         data class PeriodDTO(
             @Json(name = "days")
@@ -154,43 +174,55 @@ data class YieldDTO(
             val seconds: Int?,
         )
 
+        @Serializable
         @JsonClass(generateAdapter = true)
         data class EnabledDTO(
             @Json(name = "enabled")
             val enabled: Boolean?,
         )
 
+        @Serializable
         @JsonClass(generateAdapter = false)
         enum class RewardScheduleDTO {
+            @SerialName("block")
             @Json(name = "block")
             BLOCK,
 
+            @SerialName("week")
             @Json(name = "week")
             WEEK,
 
+            @SerialName("hour")
             @Json(name = "hour")
             HOUR,
 
+            @SerialName("day")
             @Json(name = "day")
             DAY,
 
+            @SerialName("month")
             @Json(name = "month")
             MONTH,
 
+            @SerialName("era")
             @Json(name = "era")
             ERA,
 
+            @SerialName("epoch")
             @Json(name = "epoch")
             EPOCH,
 
             UNKNOWN,
         }
 
+        @Serializable
         @JsonClass(generateAdapter = false)
         enum class RewardClaimingDTO {
+            @SerialName("auto")
             @Json(name = "auto")
             AUTO,
 
+            @SerialName("manual")
             @Json(name = "manual")
             MANUAL,
 
@@ -198,11 +230,14 @@ data class YieldDTO(
         }
     }
 
+    @Serializable
     @JsonClass(generateAdapter = false)
     enum class RewardTypeDTO {
+        @SerialName("apy")
         @Json(name = "apy")
         APY, // compound rate
 
+        @SerialName("apr")
         @Json(name = "apr")
         APR, // simple rate,
 

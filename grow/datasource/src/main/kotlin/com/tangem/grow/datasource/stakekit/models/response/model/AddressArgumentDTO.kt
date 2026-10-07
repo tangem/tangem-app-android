@@ -2,8 +2,10 @@ package com.tangem.grow.datasource.stakekit.models.response.model
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
-import java.math.BigDecimal
+import com.tangem.domain.models.serialization.SerializedBigDecimal
+import kotlinx.serialization.Serializable
 
+@Serializable
 @JsonClass(generateAdapter = true)
 @Suppress("BooleanPropertyNaming")
 data class AddressArgumentDTO(
@@ -12,7 +14,7 @@ data class AddressArgumentDTO(
     @Json(name = "network")
     val network: String? = null,
     @Json(name = "minimum")
-    val minimum: BigDecimal? = null,
+    val minimum: SerializedBigDecimal? = null,
     @Json(name = "maximum")
-    val maximum: BigDecimal? = null,
+    val maximum: SerializedBigDecimal? = null,
 )

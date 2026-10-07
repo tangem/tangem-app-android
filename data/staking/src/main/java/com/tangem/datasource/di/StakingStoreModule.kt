@@ -43,15 +43,19 @@ internal object StakingStoreModule {
         dataStoreFactory: AppDataStoreFactory,
     ): StakingYieldsStore {
         return DefaultStakingYieldsStore(
-            dataStore = dataStoreFactory.create(
-                serializer = MoshiDataStoreSerializer(
-                    moshi = moshi,
-                    types = listTypes<YieldDTO>(),
-                    defaultValue = emptyList(),
-                ),
-                produceFile = { context.dataStoreFile(fileName = "yields_cache") },
-                scope = appScope,
-            ),
+            dataStore = if (dataStoreFactory.isKotlinxDataStoreEnabled) {
+                dataStoreFactory.create(defaultValue = emptyList<YieldDTO>(), fileName = "yields_cache")
+            } else {
+                dataStoreFactory.create(
+                    serializer = MoshiDataStoreSerializer(
+                        moshi = moshi,
+                        types = listTypes<YieldDTO>(),
+                        defaultValue = emptyList(),
+                    ),
+                    produceFile = { context.dataStoreFile(fileName = "yields_cache") },
+                    scope = appScope,
+                )
+            },
         )
     }
 
@@ -63,6 +67,10 @@ internal object StakingStoreModule {
         appScope: AppCoroutineScope,
         dataStoreFactory: AppDataStoreFactory,
     ): DataStore<Map<String, Set<YieldBalanceWrapperDTO>>> {
+        if (dataStoreFactory.isKotlinxDataStoreEnabled) {
+            return dataStoreFactory.create(defaultValue = emptyMap(), fileName = "yield_balances")
+        }
+
         return dataStoreFactory.create(
             serializer = MoshiDataStoreSerializer(
                 moshi = moshi,
