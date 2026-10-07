@@ -19,6 +19,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.model.CustomerInfo
+import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.features.tangempay.TangemPayFeatureToggles
@@ -308,10 +309,32 @@ internal class TangemPayOnboardingModelTest {
         }
 
     @Test
-    fun `GIVEN residency step enabled AND no wallets WHEN get card clicked THEN error shown`() = runTest {
+    fun `GIVEN deeplink AND no compatible wallets WHEN get card clicked THEN error shown`() = runTest {
         // Arrange
-        every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
         coEvery { eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true) } returns emptyList()
+        val model = createModel(TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink)
+        advanceUntilIdle()
+        val content = model.uiState.value as TangemPayOnboardingScreenState.Content
+
+        // Act
+        content.buttonConfig.onClick.invoke()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { uiMessageSender.send(any()) }
+        verify(exactly = 0) { router.pop(any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN banner on main AND no eligible wallets WHEN get card clicked THEN error shown`() = runTest {
+        // Arrange
+        coEvery {
+            eligibilityManager.getEligibleWallets(
+                shouldExcludePaeraCustomers = false,
+                entryPoint = TangemPayEntryPoint.BANNER,
+            )
+        } returns emptyList()
         val model = createModel(TangemPayOnboardingComponent.Params.FromBannerOnMain)
         advanceUntilIdle()
         val content = model.uiState.value as TangemPayOnboardingScreenState.Content
@@ -323,6 +346,7 @@ internal class TangemPayOnboardingModelTest {
         // Assert
         verify(exactly = 1) { uiMessageSender.send(any()) }
         verify(exactly = 0) { router.pop(any()) }
+        coVerify(exactly = 0) { eligibilityManager.getCompatibleWalletsIds(any()) }
         model.onDestroy()
     }
 
@@ -373,7 +397,6 @@ internal class TangemPayOnboardingModelTest {
             repository = repository,
             urlOpener = urlOpener,
             eligibilityManager = eligibilityManager,
-            featureToggles = tangemPayFeatureToggles,
             onboardingStarter = TangemPayOnboardingStarter(
                 router = router,
                 uiMessageSender = mockk(relaxed = true),
@@ -384,6 +407,7 @@ internal class TangemPayOnboardingModelTest {
                 isHotWalletCreationSupported = mockk(relaxed = true),
                 tangemPayFeatureToggles = tangemPayFeatureToggles,
             ),
+            featureToggles = tangemPayFeatureToggles,
             userWalletsListRepository = userWalletsListRepository,
             uiMessageSender = uiMessageSender,
         )
