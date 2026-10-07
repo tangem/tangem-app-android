@@ -70,7 +70,7 @@ internal fun PredictionAmountBlock(
                 },
                 titleSlot = {
                     Text(
-                        text = collateral.tokenSymbol,
+                        text = PolymarketConst.USD_CODE,
                         style = TangemTheme.typography3.body.medium,
                         color = TangemTheme.colors3.text.primary,
                     )
