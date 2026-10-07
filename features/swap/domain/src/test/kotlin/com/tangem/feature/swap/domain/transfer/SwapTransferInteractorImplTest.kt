@@ -28,6 +28,7 @@ import com.tangem.domain.tokens.GetCurrencyCheckUseCase
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.transaction.error.SendTransactionError
+import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
@@ -1242,7 +1243,7 @@ internal class SwapTransferInteractorImplTest {
     }
 
     @Test
-    fun `GIVEN LoadedExtended fee with TokenCurrency normal fee WHEN sendTransfer THEN route via createAndSendGaslessTransactionUseCase`() =
+    fun `GIVEN LoadedExtended EVM gasless fee WHEN sendTransfer THEN route via createAndSendGaslessTransactionUseCase`() =
         runTest {
             val userWalletId: UserWalletId = mockk()
             val userWallet: UserWallet = mockk { every { walletId } returns userWalletId }
@@ -1261,10 +1262,7 @@ internal class SwapTransferInteractorImplTest {
             val fee: Fee = mockk()
             val txData: TransactionData.Uncompiled = mockk()
             val transactionFeeExtended: TransactionFeeExtended = mockk {
-                every { tronGaslessQuote } returns null
-                every { transactionFee } returns mockk {
-                    every { normal } returns mockk<Fee.Ethereum.TokenCurrency>()
-                }
+                every { gaslessProtocolData } returns GaslessProtocolData.Evm
             }
             val transactionFeeResult = TransactionFeeResult.LoadedExtended(transactionFeeExtended)
             coEvery {
@@ -1327,7 +1325,7 @@ internal class SwapTransferInteractorImplTest {
             val fee: Fee = mockk()
             val txData: TransactionData.Uncompiled = mockk()
             val transactionFeeExtended: TransactionFeeExtended = mockk {
-                every { tronGaslessQuote } returns mockk()
+                every { gaslessProtocolData } returns GaslessProtocolData.Tron(quote = mockk())
             }
             val transactionFeeResult = TransactionFeeResult.LoadedExtended(transactionFeeExtended)
             coEvery {
@@ -1415,7 +1413,7 @@ internal class SwapTransferInteractorImplTest {
     }
 
     @Test
-    fun `GIVEN LoadedExtended fee with non-TokenCurrency normal fee WHEN sendTransfer THEN fall back to sendTransactionUseCase`() =
+    fun `GIVEN LoadedExtended native fee WHEN sendTransfer THEN fall back to sendTransactionUseCase`() =
         runTest {
             val userWalletId: UserWalletId = mockk()
             val userWallet: UserWallet = mockk { every { walletId } returns userWalletId }
@@ -1434,10 +1432,7 @@ internal class SwapTransferInteractorImplTest {
             val fee: Fee = mockk()
             val txData: TransactionData.Uncompiled = mockk()
             val transactionFeeExtended: TransactionFeeExtended = mockk {
-                every { tronGaslessQuote } returns null
-                every { transactionFee } returns mockk {
-                    every { normal } returns mockk<Fee.Common>()
-                }
+                every { gaslessProtocolData } returns null
             }
             val transactionFeeResult = TransactionFeeResult.LoadedExtended(transactionFeeExtended)
             coEvery {
