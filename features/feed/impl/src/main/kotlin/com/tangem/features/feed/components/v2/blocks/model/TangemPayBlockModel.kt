@@ -58,7 +58,9 @@ internal class TangemPayBlockModel @Inject constructor(
 private enum class PromoEligibility { CAN_OFFER, IN_KYC, NOT_AVAILABLE, ALREADY_CUSTOMER }
 
 private fun PaymentAccountStatusValue.toPromoEligibility(): PromoEligibility = when (this) {
-    is PaymentAccountStatusValue.NotCreated -> PromoEligibility.CAN_OFFER
+    is PaymentAccountStatusValue.NotCreated,
+    is PaymentAccountStatusValue.KycRequired,
+    -> PromoEligibility.CAN_OFFER
     is PaymentAccountStatusValue.UnderReview -> PromoEligibility.IN_KYC
     is PaymentAccountStatusValue.Empty -> PromoEligibility.NOT_AVAILABLE
     is PaymentAccountStatusValue.Loading,

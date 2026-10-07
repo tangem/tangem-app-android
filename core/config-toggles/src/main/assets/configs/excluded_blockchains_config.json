@@ -34,5 +34,9 @@
     {
         "name": "arc",
         "version": "6.3"
+    },
+    {
+        "name": "onyx",
+        "version": "undefined"
     }
 ]
