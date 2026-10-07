@@ -6,6 +6,7 @@ import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.data.pay.store.CashbackSummaryStore
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.store.TangemPayCustomerInfoStore
 import com.tangem.data.pay.util.BankCredentialsConverter
@@ -59,6 +60,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val paymentAccountStatusStore: PaymentAccountStatusesStore,
     private val txHistoryItemsStore: TangemPayTxHistoryItemsStore,
+    private val cashbackSummaryStore: CashbackSummaryStore,
     private val customerInfoStore: TangemPayCustomerInfoStore,
 ) : OnboardingRepository {
 
@@ -256,6 +258,19 @@ internal class DefaultOnboardingRepository @Inject constructor(
         }
     }
 
+    override suspend fun hasVirtualAccountOrderFailed(userWalletId: UserWalletId): Boolean =
+        withContext(dispatcherProvider.io) {
+            val customerWalletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
+            tangemPayStorage.getVirtualAccountOrderFailed(customerWalletAddress)
+        }
+
+    override suspend fun storeVirtualAccountOrderFailed(userWalletId: UserWalletId, isFailed: Boolean) {
+        withContext(dispatcherProvider.io) {
+            val customerWalletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
+            tangemPayStorage.storeVirtualAccountOrderFailed(customerWalletAddress, isFailed)
+        }
+    }
+
     private fun getUserWallet(userWalletId: UserWalletId): UserWallet {
         return userWalletsListRepository.userWallets.value?.firstOrNull { it.walletId == userWalletId }
             ?: error("no userWallet found")
@@ -355,6 +370,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
             val address = requestHelper.getCustomerWalletAddress(userWalletId)
             tangemPayStorage.clearAll(userWalletId = userWalletId, customerWalletAddress = address)
             txHistoryItemsStore.remove(userWalletId.stringValue)
+            cashbackSummaryStore.remove(listOf(userWalletId))
             setHideMainOnboardingBanner(userWalletId)
             paymentAccountStatusStore.store(
                 userWalletId = userWalletId,

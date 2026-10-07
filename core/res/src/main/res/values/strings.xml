@@ -1871,7 +1871,7 @@
   <string name="prediction_main_empty_positions_title">You don’t have active predictions</string>
   <string name="prediction_main_events_load_error">Failed to load events.\nTap to reload</string>
   <string name="prediction_main_explore_events">Explore Events</string>
-  <string name="prediction_main_subtitle">USDC on Polygon network</string>
+  <string name="prediction_main_subtitle">US Dollars</string>
   <string name="prediction_main_title">Predictions</string>
   <string name="prediction_main_total_balance">Total Balance</string>
   <string name="prediction_main_withdraw">Withdraw</string>

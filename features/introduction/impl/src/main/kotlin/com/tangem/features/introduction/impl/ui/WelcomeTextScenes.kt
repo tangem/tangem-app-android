@@ -1,6 +1,5 @@
 package com.tangem.features.introduction.impl.ui
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -71,7 +70,6 @@ internal fun WelcomeTextScenes(
                     .align(Alignment.TopStart)
                     .fillMaxWidth()
                     .then(if (scene == activeScene) Modifier else Modifier.clearAndSetSemantics {}),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 SceneLine(
                     text = texts.title,
