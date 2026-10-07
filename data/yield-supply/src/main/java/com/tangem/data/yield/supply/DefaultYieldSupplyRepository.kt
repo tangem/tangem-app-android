@@ -10,9 +10,13 @@ import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.data.yield.supply.converters.YieldMarketTokenConverter
 import com.tangem.data.yield.supply.converters.YieldTokenChartConverter
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
+import com.tangem.grow.datasource.yield.YieldIncentivesApi
 import com.tangem.grow.datasource.yield.YieldSupplyApi
 import com.tangem.grow.datasource.yield.models.YieldSupplyChangeTokenStatusBody
+import com.tangem.grow.datasource.yield.models.YieldSupplyMarketTokenDto
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
 import com.tangem.datasource.local.preferences.utils.get
@@ -26,6 +30,7 @@ import com.tangem.domain.yield.supply.models.YieldMarketToken
 import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
 import com.tangem.domain.yield.supply.models.YieldSupplyMarketChartData
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -35,12 +40,14 @@ import kotlinx.coroutines.withContext
 @Suppress("LongParameterList")
 internal class DefaultYieldSupplyRepository(
     private val yieldSupplyApi: YieldSupplyApi,
+    private val yieldIncentivesApi: YieldIncentivesApi,
     private val store: YieldMarketsStore,
     private val walletManagersFacade: WalletManagersFacade,
     private val dispatchers: CoroutineDispatcherProvider,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val appPreferencesStore: AppPreferencesStore,
     private val growPreferencesKeys: GrowPreferencesKeys,
+    private val isMerklIncentivesEnabled: Boolean,
 ) : YieldSupplyRepository {
 
     private val statusMapFlow = MutableStateFlow<Map<String, YieldSupplyPendingStatus>>(emptyMap())
@@ -53,10 +60,33 @@ internal class DefaultYieldSupplyRepository(
 
     override suspend fun updateMarkets(): List<YieldMarketToken> = withContext(dispatchers.io) {
         val chains = Blockchain.yieldSupplySupportedBlockchains().map { it.getChainId() }.joinToString(",")
-        val response = yieldSupplyApi.getYieldMarkets(chainId = chains).getOrThrow()
-        val domain = response.marketDtos.map(YieldMarketTokenConverter::convert)
-        store.store(response.marketDtos)
-        domain
+        val marketDtos = getIncentivisedMarkets(chains)
+            ?: yieldSupplyApi.getYieldMarkets(chainId = chains).getOrThrow().marketDtos
+        store.store(marketDtos)
+        marketDtos.map(YieldMarketTokenConverter::convert)
+    }
+
+    /**
+     * The incentivised markets payload is a strict superset of the plain one, so the whole incentive overlay is a URL
+     * switch. Null → fall back to the plain markets.
+     *
+     * An empty payload is treated as an absence too: the incentives service may not know a chain the plain markets
+     * still serve, and overwriting the cache with it would hide Yield Mode entirely.
+     */
+    private suspend fun getIncentivisedMarkets(chains: String): List<YieldSupplyMarketTokenDto>? {
+        if (!isMerklIncentivesEnabled) return null
+
+        return when (val response = yieldIncentivesApi.getIncentiveMarkets(chainId = chains)) {
+            is ApiResponse.Success -> response.data.marketDtos.takeIf(List<YieldSupplyMarketTokenDto>::isNotEmpty)
+            is ApiResponse.Error -> {
+                // A 400 means the chain is not configured for incentives yet — an expected answer, not a failure.
+                val code = (response.cause as? ApiResponseError.HttpException)?.code
+                if (code != ApiResponseError.HttpException.Code.BAD_REQUEST) {
+                    TangemLogger.e("Incentivised yield markets unavailable, using the plain markets", response.cause)
+                }
+                null
+            }
+        }
     }
 
     override fun getMarketsFlow(): Flow<List<YieldMarketToken>> = store.get().map {
