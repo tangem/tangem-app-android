@@ -19,7 +19,6 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.usecase.GetTangemPayCountriesUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayRegionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
-import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.POLYGON_CHAIN_ID
@@ -52,7 +51,6 @@ internal class TangemPayBankWithdrawModelTest {
 
     private val userWalletId = UserWalletId("011")
     private val getBankAccountsUseCase: GetBankAccountsUseCase = mockk()
-    private val markBankAccountUsedUseCase: MarkBankAccountUsedUseCase = mockk(relaxed = true)
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk(relaxed = true)
     private val getTangemPayCountriesUseCase: GetTangemPayCountriesUseCase = mockk()
     private val getTangemPayRegionsUseCase: GetTangemPayRegionsUseCase = mockk()
@@ -63,7 +61,6 @@ internal class TangemPayBankWithdrawModelTest {
     fun resetMocks() {
         clearMocks(
             getBankAccountsUseCase,
-            markBankAccountUsedUseCase,
             paymentAccountStatusFetcher,
             getTangemPayCountriesUseCase,
             getTangemPayRegionsUseCase,
@@ -76,7 +73,7 @@ internal class TangemPayBankWithdrawModelTest {
     }
 
     @Test
-    fun `GIVEN signed order WHEN reported THEN recipient marked used and payment account refreshed`() {
+    fun `GIVEN signed order WHEN reported THEN payment account refreshed`() {
         // Arrange
         val model = createModel(entry = BankWithdrawEntry.NewPersonal)
         model.onAmountConfirmed(
@@ -92,22 +89,6 @@ internal class TangemPayBankWithdrawModelTest {
         model.onOrderSigned()
 
         // Assert
-        coVerify(exactly = 1) { markBankAccountUsedUseCase(userWalletId = userWalletId, bankAccountId = "acc-7") }
-        coVerify(exactly = 1) { paymentAccountStatusFetcher(userWalletId) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN order without a recipient id WHEN signed THEN only the payment account is refreshed`() {
-        // Arrange
-        val model = createModel(entry = BankWithdrawEntry.NewPersonal)
-        model.onOrderCreated(BankOfframpOrderResult(orderId = "order-1", bankAccountId = null))
-
-        // Act
-        model.onOrderSigned()
-
-        // Assert
-        coVerify(exactly = 0) { markBankAccountUsedUseCase(any(), any()) }
         coVerify(exactly = 1) { paymentAccountStatusFetcher(userWalletId) }
         model.onDestroy()
     }
@@ -202,7 +183,6 @@ internal class TangemPayBankWithdrawModelTest {
         // Assert
         assertThat(model.draft.value)
             .isEqualTo(BankWithdrawDraft(entry = BankWithdrawEntry.SeeAll, recipient = recipient))
-        coVerify(exactly = 0) { markBankAccountUsedUseCase(any(), any()) }
         model.onDestroy()
     }
 
@@ -252,15 +232,30 @@ internal class TangemPayBankWithdrawModelTest {
     }
 
     @Test
-    fun `GIVEN saved recipient selected WHEN reported THEN account marked used`() {
+    fun `GIVEN ach confirmed WHEN saved recipient on wire suggested THEN draft destination switches to wire`() {
         // Arrange
-        val model = createModel(BankWithdrawEntry.NewBusiness)
+        val model = createModel(BankWithdrawEntry.NewPersonal)
+        model.onAmountConfirmed(achAmountResult())
 
         // Act
-        model.onSavedRecipientSelected(bankAccount(id = "acc-5"))
+        model.onSavedRecipientSelected(bankAccount(id = "acc-5", rail = BankRail.WIRE))
 
         // Assert
-        coVerify(exactly = 1) { markBankAccountUsedUseCase(userWalletId = userWalletId, bankAccountId = "acc-5") }
+        assertThat(model.draft.value.destination).isEqualTo(wireDestination())
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN ach confirmed WHEN saved recipient on wire picked from all THEN draft destination switches to wire`() {
+        // Arrange
+        val model = createModel(BankWithdrawEntry.SeeAll)
+        model.onAmountConfirmed(achAmountResult())
+
+        // Act
+        model.onRecipientSelected(bankAccount(id = "acc-5", rail = BankRail.WIRE))
+
+        // Assert
+        assertThat(model.draft.value.destination).isEqualTo(wireDestination())
         model.onDestroy()
     }
 
@@ -505,6 +500,15 @@ internal class TangemPayBankWithdrawModelTest {
             displayNames = values.associate { (field, _) -> field to "" },
         )
 
+    private fun achAmountResult() = BankWithdrawAmountResult(
+        amount = BigDecimal("500"),
+        source = bankWithdrawSource(),
+        destination = offrampDestination(),
+    )
+
+    private fun wireDestination() =
+        offrampDestination(rail = BankRail.WIRE, fee = BigDecimal("11.00"), minDays = 0, maxDays = 0)
+
     private fun createModel(entry: BankWithdrawEntry): TangemPayBankWithdrawModel = TangemPayBankWithdrawModel(
         paramsContainer = MutableParamsContainer(
             TangemPayBankWithdrawComponent.Params(
@@ -515,7 +519,6 @@ internal class TangemPayBankWithdrawModelTest {
         ),
         dispatchers = dispatchers,
         getBankAccountsUseCase = getBankAccountsUseCase,
-        markBankAccountUsedUseCase = markBankAccountUsedUseCase,
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
         getTangemPayCountriesUseCase = getTangemPayCountriesUseCase,
         getTangemPayRegionsUseCase = getTangemPayRegionsUseCase,

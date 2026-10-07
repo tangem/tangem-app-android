@@ -30,6 +30,15 @@ interface HotWalletAccessor {
      */
     suspend fun unlockContextual(hotWalletId: HotWalletId, auth: HotAuth): UnlockHotWallet
 
+    /**
+     * Establishes the contextual unlock for [hotWalletId] by reusing the biometric authentication the user
+     * has just passed (e.g. to unlock the app), never showing a prompt.
+     *
+     * @throws com.tangem.hot.sdk.exception.RecentBiometryUnavailableException if the wallet is not
+     * biometry-protected, the access code is required for it, or there is no recent biometric authentication to reuse.
+     */
+    suspend fun unlockContextualWithRecentBiometry(hotWalletId: HotWalletId): UnlockHotWallet
+
     fun getContextualUnlock(hotWalletId: HotWalletId): UnlockHotWallet?
 
     fun clearContextualUnlock(hotWalletId: HotWalletId)

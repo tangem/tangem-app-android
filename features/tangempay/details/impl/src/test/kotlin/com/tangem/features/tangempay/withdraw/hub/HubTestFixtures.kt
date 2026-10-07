@@ -10,13 +10,14 @@ import com.tangem.domain.pay.model.bankofframp.RecentBankAccounts
 
 internal fun recentBankAccounts(
     recents: List<BankAccount> = emptyList(),
-    hasSavedAccounts: Boolean = recents.isNotEmpty(),
-): RecentBankAccounts = RecentBankAccounts(recents = recents, hasSavedAccounts = hasSavedAccounts)
+    hasMoreAccounts: Boolean = false,
+): RecentBankAccounts = RecentBankAccounts(recents = recents, hasMoreAccounts = hasMoreAccounts)
 
 internal fun bankAccount(
     id: String = "acc-1",
     beneficiary: Beneficiary = Beneficiary.Individual(firstName = "Andrei", lastName = "Melnikov"),
     accountNumber: String = "0000000000",
+    rail: BankRail? = BankRail.ACH,
 ): BankAccount = BankAccount(
     id = id,
     displayName = when (beneficiary) {
@@ -25,7 +26,7 @@ internal fun bankAccount(
     },
     details = BankAccountDetails(
         currency = "USD",
-        rail = BankRail.ACH,
+        rail = rail,
         isThirdParty = false,
         beneficiary = beneficiary,
         beneficiaryAddress = postalAddress(),

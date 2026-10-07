@@ -17,7 +17,6 @@ internal class TxHistoryAnalyticsMappersTest : TxDetailsConverterTestBase() {
 
     internal data class TypeModel(val tx: TxHistoryInfo, val expected: String)
     internal data class StatusModel(val tx: TxHistoryInfo, val expected: String)
-    internal data class TitleModel(val type: String, val status: String, val expected: String)
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -74,28 +73,6 @@ internal class TxHistoryAnalyticsMappersTest : TxDetailsConverterTestBase() {
             StatusModel(expressOnramp(status = ExpressOnrampStatus.Finished), expected = "Confirmed"),
             StatusModel(expressOnramp(status = ExpressOnrampStatus.WaitingForPayment), expected = "Pending"),
             StatusModel(expressOnramp(status = ExpressOnrampStatus.Failed), expected = "Failed"),
-        )
-    }
-
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class AnalyticsTitle {
-
-        @ParameterizedTest
-        @ProvideTestModels
-        fun analyticsTitle(model: TitleModel) {
-            // Act
-            val actual = analyticsTitle(type = model.type, status = model.status)
-
-            // Assert
-            assertThat(actual).isEqualTo(model.expected)
-        }
-
-        private fun provideTestModels() = listOf(
-            TitleModel(type = "Send", status = "Confirmed", expected = "Send"),
-            TitleModel(type = "Send", status = "Failed", expected = "Send Failed"),
-            TitleModel(type = "Send", status = "Pending", expected = "Send Pending"),
-            TitleModel(type = "Swap", status = "Unknown", expected = "Swap"),
         )
     }
 }

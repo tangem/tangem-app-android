@@ -206,7 +206,7 @@ internal class RwaFeedSearchTabModel @Inject constructor(
 
         modelScope.launch {
             try {
-                // the same country as the tab, so both share one cache entry instead of fetching twice
+                // the same country as the tab, so a result opened from either carries the same marks
                 val country = userCountryResolver.resolve()
                 searchRequest.update { it.copy(country = country) }
 

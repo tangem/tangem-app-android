@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,6 +40,7 @@ import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.common.TextInput
 import com.tangem.features.tangempay.common.TextInputState
 import com.tangem.features.tangempay.common.revealAboveFooter
@@ -124,7 +126,8 @@ private fun OrderDataFooter(state: Form, modifier: Modifier = Modifier) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 16.dp)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .testTag(TangemPayTestTags.ORDER_DATA_ORDER_BUTTON),
             variant = TangemButton.Variant.Primary,
             size = TangemButton.Size.X12,
             text = resourceReference(R.string.tangempay_order_data_order_button),
@@ -180,7 +183,10 @@ private fun OrderDataField(@StringRes label: Int, field: FieldUM, isDisabled: Bo
         label = resourceReference(label),
         value = field.value,
         onValueChange = field.onValueChange,
-        modifier = modifier.fillMaxWidth().revealAboveFooter(FooterHeight),
+        modifier = modifier
+            .fillMaxWidth()
+            .revealAboveFooter(FooterHeight)
+            .testTag(orderDataFieldTestTag(label)),
         state = field.error.toInputState(isDisabled = isDisabled || !field.isEditable),
         isOptional = !field.isRequired,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
@@ -194,7 +200,9 @@ private fun OrderDataDisabledField(@StringRes label: Int, value: String, modifie
         label = resourceReference(label),
         value = value,
         onValueChange = {},
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag(orderDataFieldTestTag(label)),
         state = TextInputState.Disabled,
     )
 }
@@ -216,7 +224,10 @@ private fun OrderDataPhoneField(
         label = resourceReference(R.string.tangempay_order_data_phone),
         value = field.value,
         onValueChange = field.onValueChange,
-        modifier = modifier.fillMaxWidth().revealAboveFooter(FooterHeight),
+        modifier = modifier
+            .fillMaxWidth()
+            .revealAboveFooter(FooterHeight)
+            .testTag(TangemPayTestTags.ORDER_DATA_PHONE_FIELD),
         state = field.error.toInputState(isDisabled = isDisabled),
         isOptional = !field.isRequired,
         visualTransformation = transformation,
@@ -224,6 +235,20 @@ private fun OrderDataPhoneField(
         keyboardActions = KeyboardActions(onDone = { onImeDone() }),
         onFocusChange = field.onFocusChange,
     )
+}
+
+private fun orderDataFieldTestTag(@StringRes label: Int): String = when (label) {
+    R.string.tangempay_order_data_name_on_card -> TangemPayTestTags.ORDER_DATA_NAME_ON_CARD_FIELD
+    R.string.tangempay_order_data_country -> TangemPayTestTags.ORDER_DATA_COUNTRY_FIELD
+    R.string.tangempay_order_data_email -> TangemPayTestTags.ORDER_DATA_EMAIL_FIELD
+    R.string.tangempay_order_data_first_name -> TangemPayTestTags.ORDER_DATA_FIRST_NAME_FIELD
+    R.string.tangempay_order_data_last_name -> TangemPayTestTags.ORDER_DATA_LAST_NAME_FIELD
+    R.string.tangempay_order_data_region -> TangemPayTestTags.ORDER_DATA_REGION_FIELD
+    R.string.tangempay_order_data_city -> TangemPayTestTags.ORDER_DATA_CITY_FIELD
+    R.string.tangempay_order_data_address_line1 -> TangemPayTestTags.ORDER_DATA_ADDRESS_LINE1_FIELD
+    R.string.tangempay_order_data_address_line2 -> TangemPayTestTags.ORDER_DATA_ADDRESS_LINE2_FIELD
+    R.string.tangempay_order_data_postal_code -> TangemPayTestTags.ORDER_DATA_POSTAL_CODE_FIELD
+    else -> ""
 }
 
 private fun OrderFieldError?.toInputState(isDisabled: Boolean): TextInputState = if (isDisabled) {

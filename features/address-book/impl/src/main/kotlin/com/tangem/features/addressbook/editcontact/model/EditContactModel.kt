@@ -346,6 +346,7 @@ internal class EditContactModel @Inject constructor(
                     analyticsSender.sendContactSaved(
                         contactId = contact.id.value,
                         isEdit = params.contactId != null,
+                        source = params.creationSource,
                     )
                     params.onBackClick()
                 },

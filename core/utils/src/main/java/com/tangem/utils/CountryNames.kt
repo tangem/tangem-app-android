@@ -2,20 +2,27 @@ package com.tangem.utils
 
 import java.util.Locale
 
-private val ALPHA_2_REGEX = Regex("[A-Za-z]{2}")
-private const val UNKNOWN_REGION = "ZZ"
-
 object CountryNames {
 
-    fun getDisplayName(countryCode: String?, locale: Locale = Locale.getDefault()): String {
-        val trimmed = countryCode?.trim().orEmpty()
-        if (!ALPHA_2_REGEX.matches(trimmed)) return trimmed
+    private val isoCountries: Set<String> = Locale.getISOCountries().toSet()
 
-        val region = trimmed.uppercase(Locale.ROOT)
-        if (region == UNKNOWN_REGION) return trimmed
+    /**
+     * Display name of [countryCode], or `null` when the platform has no country to name — callers then
+     * leave the region out rather than printing a bare code.
+     *
+     * Membership in the ISO list is the guard, not the resolved name: CLDR also names regions that are
+     * not countries (`XA` is "Pseudo-Accents", `EU` is "European Union"), so comparing the name against
+     * the code lets those through.
+     */
+    fun resolveDisplayName(countryCode: String?, locale: Locale = Locale.getDefault()): String? {
+        val region = countryCode?.trim()?.uppercase(Locale.ROOT)?.takeIf { it in isoCountries } ?: return null
 
-        val displayName = Locale.Builder().setRegion(region).build().getDisplayCountry(locale)
-
-        return if (displayName.isBlank() || displayName == region) trimmed else displayName
+        return Locale.Builder().setRegion(region).build()
+            .getDisplayCountry(locale)
+            .takeIf { it.isNotBlank() && it != region }
     }
+
+    /** Same as [resolveDisplayName], but echoes [countryCode] back when there is no name to give. */
+    fun getDisplayName(countryCode: String?, locale: Locale = Locale.getDefault()): String =
+        resolveDisplayName(countryCode, locale) ?: countryCode?.trim().orEmpty()
 }

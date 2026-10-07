@@ -1,5 +1,6 @@
 package com.tangem.features.txhistory.model
 
+import android.content.Context
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
@@ -16,6 +17,8 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
@@ -42,7 +45,6 @@ import com.tangem.domain.txhistory.usecase.GetCachedTokenInfoUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.features.rating.RatingComponent
 import com.tangem.features.txhistory.analytics.TxHistoryAnalyticsEvent
-import com.tangem.features.txhistory.analytics.analyticsTitle
 import com.tangem.features.txhistory.analytics.toAnalyticsStatus
 import com.tangem.features.txhistory.analytics.toAnalyticsType
 import com.tangem.features.txhistory.component.TxHistoryDetailsComponent
@@ -53,6 +55,7 @@ import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -78,6 +81,7 @@ import javax.inject.Inject
 @ModelScoped
 @Suppress("LongParameterList")
 internal class TxHistoryDetailsModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     override val dispatchers: CoroutineDispatcherProvider,
     private val clipboardManager: ClipboardManager,
     private val uiMessageSender: UiMessageSender,
@@ -183,10 +187,6 @@ internal class TxHistoryDetailsModel @Inject constructor(
         val explorerHash = txInfo.explorerHash?.ifBlank { null }
         val idToCopy = txInfo.idToCopy.ifBlank { null }
         val shareText = (txInfo as? ExpressTx)?.let(shareTextConverter::convert)
-        if (!isScreenOpenedAnalyticsSent) {
-            isScreenOpenedAnalyticsSent = true
-            sendScreenOpenedAnalytics(txInfo)
-        }
         val contactCandidate = txInfo
             .contactCandidate(currency = params.currency, lookup = lookup)
             .takeIf { isAddressBookCompatible }
@@ -207,7 +207,12 @@ internal class TxHistoryDetailsModel @Inject constructor(
             onExploreProvider = urlOpener::openUrl,
             onAddContact = contactCandidate?.let { candidate -> { openContactCreation(candidate) } },
             networkTokens = networkTokens,
-        ).convert(txInfo)
+        ).convert(txInfo).also { um ->
+            if (!isScreenOpenedAnalyticsSent) {
+                isScreenOpenedAnalyticsSent = true
+                sendScreenOpenedAnalytics(txInfo = txInfo, title = um.header.title)
+            }
+        }
     }
         .flowOn(dispatchers.default)
         .stateIn(modelScope, SharingStarted.WhileSubscribed(), initialValue = null)
@@ -361,16 +366,14 @@ internal class TxHistoryDetailsModel @Inject constructor(
      * "Onramp Status Opened" (restored — see `TokenExchangeAnalyticsEvent`/`TokenOnrampAnalyticsEvent`, previously sent
      * only from the legacy `tokendetails` bottom sheet that the new detail screen replaces).
      */
-    private fun sendScreenOpenedAnalytics(txInfo: TxHistoryInfo) {
-        val type = txInfo.toAnalyticsType()
-        val status = txInfo.toAnalyticsStatus()
+    private fun sendScreenOpenedAnalytics(txInfo: TxHistoryInfo, title: TextReference) {
         analyticsEventHandler.send(
             TxHistoryAnalyticsEvent.TransactionDetailScreenOpened(
                 token = params.currency.symbol,
                 blockchain = params.currency.network.name,
-                type = type,
-                status = status,
-                title = analyticsTitle(type = type, status = status),
+                type = txInfo.toAnalyticsType(),
+                status = txInfo.toAnalyticsStatus(),
+                title = title.resolveReference(context.resources),
             ),
         )
         when (txInfo) {

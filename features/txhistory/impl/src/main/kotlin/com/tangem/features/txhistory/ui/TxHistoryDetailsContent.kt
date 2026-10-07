@@ -26,7 +26,7 @@ import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 internal fun TxHistoryDetailsContent(
     state: TxHistoryDetailsUM,
     modifier: Modifier = Modifier,
-    ratingContent: (@Composable () -> Unit)? = null,
+    ratingContent: (@Composable (Modifier) -> Unit)? = null,
 ) {
     when (state) {
         is TxHistoryDetailsUM.SingleAsset -> SingleAssetContent(state = state, modifier = modifier)
@@ -135,7 +135,7 @@ private fun CosignActionBlock(state: TxHistoryDetailsUM.CosignActionUM, modifier
 private fun TwoAssetsContent(
     state: TxHistoryDetailsUM.TwoAssets,
     modifier: Modifier = Modifier,
-    ratingContent: (@Composable () -> Unit)? = null,
+    ratingContent: (@Composable (Modifier) -> Unit)? = null,
 ) {
     val from = state.from
     val to = state.to
@@ -161,16 +161,13 @@ private fun TwoAssetsContent(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
         )
-        // Provider-rating (CSAT) card — final express swaps only.
-        ratingContent?.let { rating ->
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = 12.dp),
-            ) {
-                rating()
-            }
-        }
+        // Provider-rating (CSAT) card — final express swaps only. The card owns the spacing it is given, so an
+        // already-rated deal, which draws nothing, costs no gap.
+        ratingContent?.invoke(
+            Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 12.dp),
+        )
         // Network fee (and later rate) pulled from the matched on-chain leg; the block is skipped when [rows] is empty.
         TxHistoryDetailsInfoRows(
             rows = state.rows,

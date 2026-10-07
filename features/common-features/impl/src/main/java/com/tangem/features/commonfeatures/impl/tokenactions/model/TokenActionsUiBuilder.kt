@@ -29,10 +29,9 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.features.commonfeatures.impl.R
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
@@ -48,6 +47,7 @@ internal class TokenActionsUiBuilder @Inject constructor(
     paramsContainer: ParamsContainer,
     private val getWalletIconUseCase: GetWalletIconUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
+    private val getUserCountryUseCase: GetUserCountryUseCase,
     private val walletIconUMConverter: WalletIconUMConverter,
 ) {
     private val params = paramsContainer.require<TokenActionsComponent.Params>()
@@ -118,14 +118,8 @@ internal class TokenActionsUiBuilder @Inject constructor(
     private fun regionRestrictionBanner(): TangemMessageBanner.State? {
         if (!params.isRegionRestricted) return null
 
-        return TangemMessageBanner.State(
-            title = resourceReference(R.string.buy_swap_region_restriction_title),
-            description = resourceReference(R.string.buy_swap_region_restriction_description),
-            variant = TangemMessageBanner.Variant.Warning,
-            iconEnd = TangemIconUM.Icon(
-                imageVector = Icons.ic_info_20,
-                tintReference = { TangemTheme.colors3.icon.primary },
-            ),
+        return TokenActionsRegionRestriction.banner(
+            countryCode = getUserCountryUseCase.invokeSync().getOrNull()?.code,
         )
     }
 

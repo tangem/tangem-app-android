@@ -17,6 +17,7 @@ internal data class IntroductionUM(
     val socialLoginConsent: SocialLoginConsentUM?,
     val onCreateWalletClick: () -> Unit,
     val onIHaveWalletClick: () -> Unit,
+    val onBuyTangemClick: () -> Unit,
     val onCreateWalletSheetCollapsed: () -> Unit,
     val onTermsOfServiceClick: () -> Unit,
     val onPrivacyPolicyClick: () -> Unit,

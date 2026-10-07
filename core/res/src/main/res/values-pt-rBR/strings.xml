@@ -1869,7 +1869,6 @@
   <string name="prediction_main_empty_positions_title">Você não tem previsões ativas</string>
   <string name="prediction_main_events_load_error">Falha ao carregar os eventos.\nToque para recarregar</string>
   <string name="prediction_main_explore_events">Explorar eventos</string>
-  <string name="prediction_main_subtitle">USDC na rede Polygon</string>
   <string name="prediction_main_title">Previsões</string>
   <string name="prediction_main_total_balance">Saldo Total</string>
   <string name="prediction_main_withdraw">Sacar</string>

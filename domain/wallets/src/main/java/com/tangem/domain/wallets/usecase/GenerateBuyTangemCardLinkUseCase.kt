@@ -25,5 +25,6 @@ class GenerateBuyTangemCardLinkUseCase(
         Settings("users"),
         Backup("backup"),
         Upgrade("upgrade"),
+        Welcome("welcome"),
     }
 }

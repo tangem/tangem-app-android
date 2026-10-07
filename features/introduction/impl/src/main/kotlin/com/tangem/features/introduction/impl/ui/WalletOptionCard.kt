@@ -29,7 +29,7 @@ internal fun WalletOptionCard(option: WalletOptionUM, modifier: Modifier = Modif
             .alpha(if (option.isEnabled) 1f else DISABLED_CONTENT_ALPHA),
         onClick = if (option.isEnabled && !option.isLoading) option.onClick else null,
         verticalAlignment = TangemRowVerticalAlignment.Center,
-        startSlot = { OptionIcon(iconRes = option.iconRes, isTinted = option.isIconTinted) },
+        startSlot = { OptionIcon(icon = option.icon) },
         titleSlot = { TangemRowText(text = option.title, role = TangemRowTextRole.Title) },
         subtitleSlot = {
             TangemRowText(
@@ -51,24 +51,23 @@ internal fun WalletOptionCard(option: WalletOptionUM, modifier: Modifier = Modif
 private const val DISABLED_CONTENT_ALPHA = 0.4f
 
 @Composable
-private fun OptionIcon(iconRes: Int, isTinted: Boolean) {
+private fun OptionIcon(icon: WalletOptionUM.Icon) {
     Box(
         modifier = Modifier
             .size(40.dp)
             .background(color = TangemTheme.colors3.bg.opaque.primary, shape = CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        if (isTinted) {
-            Icon(
+        when (icon) {
+            is WalletOptionUM.Icon.Tinted -> Icon(
                 modifier = Modifier.size(20.dp),
-                painter = painterResource(id = iconRes),
+                imageVector = icon.vector,
                 contentDescription = null,
                 tint = TangemTheme.colors3.icon.primary,
             )
-        } else {
-            Image(
+            is WalletOptionUM.Icon.Image -> Image(
                 modifier = Modifier.size(20.dp),
-                painter = painterResource(id = iconRes),
+                painter = painterResource(id = icon.res),
                 contentDescription = null,
             )
         }

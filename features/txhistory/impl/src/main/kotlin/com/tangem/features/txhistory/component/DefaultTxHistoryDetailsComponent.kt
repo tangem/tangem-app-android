@@ -1,9 +1,7 @@
 package com.tangem.features.txhistory.component
 
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
@@ -52,7 +50,7 @@ internal class DefaultTxHistoryDetailsComponent @AssistedInject constructor(
             state = state,
             onDismiss = ::dismiss,
             ratingContent = ratingComponent?.let { component ->
-                { component.Content(modifier = Modifier.fillMaxWidth()) }
+                { modifier -> component.Content(modifier = modifier) }
             },
         )
     }

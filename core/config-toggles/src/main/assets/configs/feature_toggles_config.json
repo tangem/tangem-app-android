@@ -69,7 +69,7 @@
     },
     {
         "name": "TWI_1783_TRON_GASLESS_ACCOUNT_ACTIVATION_ENABLED",
-        "version": "undefined"
+        "version": "6.4"
     },
     {
         "name": "TWI_1803_TRON_GASLESS_SWAP_ENABLED",

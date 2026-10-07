@@ -51,6 +51,7 @@ internal fun CreateWalletBottomSheet(config: TangemBottomSheetConfig?, prewarm: 
         // The overlay composes in the host, outside this screen's forced palette, so the modal forces its own.
         forceDarkTheme = true,
         containerColor = TangemTheme.colors3.bg.secondary,
+        showDragIndicator = false,
         // First tap on a fresh process is the tap this screen exists for, so the modal is warmed before it.
         prewarm = prewarm,
         title = { content ->

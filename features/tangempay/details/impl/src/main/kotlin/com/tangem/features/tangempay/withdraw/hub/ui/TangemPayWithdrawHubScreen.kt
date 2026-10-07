@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -41,6 +42,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -58,6 +60,7 @@ import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUMFa
 import kotlinx.collections.immutable.persistentListOf
 
 private val TokenIconSize = 32.dp
+private val NetworkBadgeSize = 8.dp
 
 @Composable
 internal fun TangemPayWithdrawHubScreen(state: TangemPayWithdrawHubUM, modifier: Modifier = Modifier) {
@@ -123,7 +126,12 @@ private fun SwapSection(state: TangemPayWithdrawHubUM.SwapSectionUM) {
 }
 
 @Composable
-internal fun HubSectionHeader(title: TextReference, subtitle: TextReference, modifier: Modifier = Modifier) {
+internal fun HubSectionHeader(
+    title: TextReference,
+    subtitle: TextReference,
+    modifier: Modifier = Modifier,
+    subtitleColor: Color = TangemTheme.colors3.text.secondary,
+) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -138,7 +146,7 @@ internal fun HubSectionHeader(title: TextReference, subtitle: TextReference, mod
         Text(
             text = subtitle.resolveReference(),
             style = TangemTheme.typography3.caption.medium,
-            color = TangemTheme.colors3.text.secondary,
+            color = subtitleColor,
         )
     }
 }
@@ -177,7 +185,7 @@ private fun RecentTokenCard(state: RecentTokenUM, onClick: () -> Unit) {
         ) {
             CurrencyIcon(
                 state = state.icon,
-                shouldDisplayNetwork = false,
+                networkBadgeSize = NetworkBadgeSize,
                 withFixedSize = false,
                 iconSize = TokenIconSize,
                 modifier = Modifier.size(TokenIconSize),
@@ -222,33 +230,33 @@ private fun RecentTokenCard(state: RecentTokenUM, onClick: () -> Unit) {
 private class BankSectionPreviewProvider : PreviewParameterProvider<BankSectionUM> {
     override val values: Sequence<BankSectionUM> = sequenceOf(
         BankSectionUM.Loading,
-        BankSectionUM.Error(onRetryClick = {}),
-        previewContent(
-            recents = RecentsUM.Content(
-                recipients = persistentListOf(
-                    RecentRecipientUM(
-                        id = "1",
-                        initial = "A",
-                        name = "Andrei M.",
-                        accountNumber = "0000000000",
-                    ),
-                    RecentRecipientUM(
-                        id = "2",
-                        initial = "J",
-                        name = "Johnny S.",
-                        accountNumber = "0000000000",
-                    ),
-                ),
-                onRecipientClick = {},
-                onSeeAllClick = {},
-            ),
-        ),
+        previewContent(recents = previewRecents(onSeeAllClick = {}), isAvailable = false),
+        previewContent(recents = previewRecents(onSeeAllClick = {})),
+        previewContent(recents = previewRecents(onSeeAllClick = null)),
         previewContent(recents = RecentsUM.Loading),
-        previewContent(recents = RecentsUM.Empty(onSeeAllClick = null)),
-        previewContent(recents = RecentsUM.Empty(onSeeAllClick = {})),
+        previewContent(recents = RecentsUM.Empty),
         previewContent(recents = RecentsUM.Error(onRetryClick = {})),
     )
 }
+
+private fun previewRecents(onSeeAllClick: (() -> Unit)?): RecentsUM.Content = RecentsUM.Content(
+    recipients = persistentListOf(
+        RecentRecipientUM(
+            id = "1",
+            initial = "A",
+            name = "Andrei M.",
+            accountNumber = "0000000000",
+        ),
+        RecentRecipientUM(
+            id = "2",
+            initial = "J",
+            name = "Johnny S.",
+            accountNumber = "0000000000",
+        ),
+    ),
+    onRecipientClick = {},
+    onSeeAllClick = onSeeAllClick,
+)
 
 private class SwapRecentsPreviewProvider : PreviewParameterProvider<TokenRecentsUM> {
     override val values: Sequence<TokenRecentsUM> = sequenceOf(
@@ -257,24 +265,31 @@ private class SwapRecentsPreviewProvider : PreviewParameterProvider<TokenRecents
         TokenRecentsUM.Content(
             tokens = persistentListOf(
                 previewRecentToken(id = "1", name = "Polygon", accountName = "Main account"),
-                previewRecentToken(id = "2", name = "Tether", accountName = "Savings"),
+                previewRecentToken(
+                    id = "2",
+                    name = "USDC",
+                    accountName = "Savings",
+                    networkIconResId = R.drawable.img_polygon_22,
+                ),
             ),
             onTokenClick = {},
         ),
     )
 }
 
-private fun previewContent(recents: RecentsUM): BankSectionUM.Content = BankSectionUM.Content(
-    toPersonalAccount = previewActionCard(
-        iconRes = R.drawable.ic_user_filled_16,
-        titleRes = R.string.tangempay_withdraw_hub_to_personal_account,
-    ),
-    toBusinessAccount = previewActionCard(
-        iconRes = R.drawable.ic_briefcase_filled_16,
-        titleRes = R.string.tangempay_withdraw_hub_to_business_account,
-    ),
-    recents = recents,
-)
+private fun previewContent(recents: RecentsUM, isAvailable: Boolean = true): BankSectionUM.Content =
+    BankSectionUM.Content(
+        toPersonalAccount = previewActionCard(
+            iconRes = R.drawable.ic_user_filled_16,
+            titleRes = R.string.tangempay_withdraw_hub_to_personal_account,
+        ),
+        toBusinessAccount = previewActionCard(
+            iconRes = R.drawable.ic_briefcase_filled_16,
+            titleRes = R.string.tangempay_withdraw_hub_to_business_account,
+        ),
+        recents = recents,
+        isAvailable = isAvailable,
+    )
 
 private fun previewActionCard(iconRes: Int, titleRes: Int): TangemPayWithdrawHubUM.ActionCardUM =
     TangemPayWithdrawHubUM.ActionCardUM(
@@ -283,14 +298,30 @@ private fun previewActionCard(iconRes: Int, titleRes: Int): TangemPayWithdrawHub
         onClick = {},
     )
 
-private fun previewRecentToken(id: String, name: String, accountName: String): RecentTokenUM = RecentTokenUM(
+private fun previewRecentToken(
+    id: String,
+    name: String,
+    accountName: String,
+    networkIconResId: Int? = null,
+): RecentTokenUM = RecentTokenUM(
     id = id,
-    icon = CurrencyIconState.CoinIcon(
-        url = null,
-        fallbackResId = R.drawable.ic_user_filled_16,
-        isGrayscale = false,
-        shouldShowCustomBadge = false,
-    ),
+    icon = if (networkIconResId == null) {
+        CurrencyIconState.CoinIcon(
+            url = null,
+            fallbackResId = R.drawable.ic_user_filled_16,
+            isGrayscale = false,
+            shouldShowCustomBadge = false,
+        )
+    } else {
+        CurrencyIconState.TokenIcon(
+            url = null,
+            topBadgeIconResId = networkIconResId,
+            isGrayscale = false,
+            shouldShowCustomBadge = false,
+            fallbackTint = TangemColorPalette.White,
+            fallbackBackground = TangemColorPalette.Azure,
+        )
+    },
     name = name,
     accountName = stringReference(accountName),
     accountIcon = AccountIconUM.CryptoPortfolio(
@@ -313,7 +344,6 @@ private fun previewState(
             onRecentRecipientClick = {},
             onSeeAllClick = {},
             onRetryRecentsClick = {},
-            onRetryBankSectionClick = {},
         ),
     ).create(WithdrawHubState())
 
