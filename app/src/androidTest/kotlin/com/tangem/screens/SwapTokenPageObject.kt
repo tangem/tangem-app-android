@@ -311,6 +311,12 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         useUnmergedTree = true
     }
 
+    val sendFiatAmount: KNode = child {
+        hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.SWAP_CARD))
+        hasTestTag(SwapTokenScreenTestTags.SWAP_FIAT_AMOUNT)
+        useUnmergedTree = true
+    }
+
     // Until a receive token is chosen, the receive card renders the send card's tags with placeholder zeros.
     val emptyReceiveAmount: KNode = child {
         hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.RECEIVE_CARD))
