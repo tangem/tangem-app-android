@@ -9,14 +9,16 @@ import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.data.nft.custom.NFTPriceId
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
+import com.tangem.datasource.utils.create
 import com.tangem.datasource.utils.listTypes
-import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.lang.reflect.ParameterizedType
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.serialization.builtins.ListSerializer
 
 @Singleton
 internal class NFTPersistenceStoreFactory @Inject constructor(
@@ -34,21 +36,35 @@ internal class NFTPersistenceStoreFactory @Inject constructor(
         // simplify user wallet id so that is correct for a file name
         // e.g. 9a1a178f951a7115555568c09ebad8a882f3d96de25429f0017fe570931e208a
         val userWalletStringId = userWalletId.formatted()
+        // result file name example: nft_9a1a178f951a7115555568c09ebad8a882f3d96de25429f0017fe570931e208a_eth_m4460000_collections
+        // result file name example: nft_9a1a178f951a7115555568c09ebad8a882f3d96de25429f0017fe570931e208a_theopennetwork_m446070_collections
+        val collectionsFileName = "nft_${userWalletStringId}_${networkStringId}_collections"
+        // result file name example: nft_9a1a178f951a7115555568c09ebad8a882f3d96de25429f0017fe570931e208a_eth_m4460000_prices
+        // result file name example: nft_9a1a178f951a7115555568c09ebad8a882f3d96de25429f0017fe570931e208a_theopennetwork_m446070_prices
+        val pricesFileName = "nft_${userWalletStringId}_${networkStringId}_prices"
         return DefaultNFTPersistenceStore(
-            collectionsPersistenceStore = createPersistenceStore(
-                // result file name example: nft_9a1a178f951a7115555568c09ebad8a882f3d96de25429f0017fe570931e208a_eth_m4460000_collections
-                // result file name example: nft_9a1a178f951a7115555568c09ebad8a882f3d96de25429f0017fe570931e208a_theopennetwork_m446070_collections
-                fileName = "nft_${userWalletStringId}_${networkStringId}_collections",
-                types = listTypes<NFTCollection>(),
-                defaultValue = emptyList(),
-            ),
-            pricesPersistenceStore = createPersistenceStore(
-                // result file name example: nft_9a1a178f951a7115555568c09ebad8a882f3d96de25429f0017fe570931e208a_eth_m4460000_prices
-                // result file name example: nft_9a1a178f951a7115555568c09ebad8a882f3d96de25429f0017fe570931e208a_theopennetwork_m446070_prices
-                fileName = "nft_${userWalletStringId}_${networkStringId}_prices",
-                types = listTypes<NFTPriceId>(),
-                defaultValue = emptyList(),
-            ),
+            collectionsPersistenceStore = if (dataStoreFactory.isKotlinxDataStoreEnabled) {
+                dataStoreFactory.create(
+                    defaultValue = emptyList(),
+                    serializer = ListSerializer(NFTCollectionSerializer),
+                    fileName = collectionsFileName,
+                )
+            } else {
+                createPersistenceStore(
+                    fileName = collectionsFileName,
+                    types = listTypes<NFTCollection>(),
+                    defaultValue = emptyList(),
+                )
+            },
+            pricesPersistenceStore = if (dataStoreFactory.isKotlinxDataStoreEnabled) {
+                dataStoreFactory.create(defaultValue = emptyList<NFTPriceId>(), fileName = pricesFileName)
+            } else {
+                createPersistenceStore(
+                    fileName = pricesFileName,
+                    types = listTypes<NFTPriceId>(),
+                    defaultValue = emptyList(),
+                )
+            },
         )
     }
 
