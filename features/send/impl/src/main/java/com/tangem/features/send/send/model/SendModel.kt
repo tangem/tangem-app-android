@@ -29,7 +29,6 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.qrscanning.models.SourceType
@@ -39,9 +38,7 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
-import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
-import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -64,7 +61,6 @@ import com.tangem.features.send.send.joint.JointSendDelegate
 import com.tangem.features.send.send.success.SendConfirmSuccessComponent
 import com.tangem.features.send.send.ui.state.SendUM
 import com.tangem.features.send.subcomponents.destination.model.transformers.SendDestinationInitialStateTransformer
-import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -100,10 +96,8 @@ internal class SendModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
     private val getFeeUseCase: GetFeeUseCase,
-    private val getFeeForGaslessUseCase: GetFeeForGaslessUseCase,
     private val getFeeForTokenUseCase: GetFeeForTokenUseCase,
-    private val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase,
-    private val tronDefaultFeeLoader: TronDefaultFeeLoader,
+    private val defaultFeeLoader: DefaultFeeLoader,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val sendAmountUpdateTrigger: SendAmountUpdateTrigger,
@@ -378,24 +372,16 @@ internal class SendModel @Inject constructor(
         // A yield-supply send zeroes the amount inside TransactionData, so pass it explicitly.
         val sentAmount = currentSentAmount()
 
-        val feeToken = maybeToken?.currency
-        return when {
-            feeToken is CryptoCurrency.Token &&
-                tronDefaultFeeLoader.isGaslessAvailable(userWallet.walletId, feeToken.network, feeToken) ->
-                getTronGaslessFeeUseCase(
-                    userWalletId = userWallet.walletId,
-                    transactionData = transferTransaction,
-                    feeToken = feeToken,
-                )
-            maybeToken == null && BlockchainUtils.isTron(params.currency.network.rawId) -> tronDefaultFeeLoader.load(
-                userWalletId = userWallet.walletId,
-                sentStatus = cryptoCurrencyStatusFlow.value,
+        return if (maybeToken == null) {
+            defaultFeeLoader.load(
+                userWallet = userWallet,
+                network = params.currency.network,
                 nativeStatus = feeCryptoCurrencyStatusFlow.value,
                 transactionData = transferTransaction,
-                loadNativeFee = { loadFeeForGasless(transferTransaction, sentAmount) },
+                sentAmount = sentAmount,
             )
-            maybeToken == null -> loadFeeForGasless(transferTransaction, sentAmount)
-            else -> getFeeForTokenUseCase(
+        } else {
+            getFeeForTokenUseCase(
                 transactionData = transferTransaction,
                 userWallet = userWallet,
                 token = maybeToken.currency,
@@ -403,16 +389,6 @@ internal class SendModel @Inject constructor(
             )
         }
     }
-
-    private suspend fun loadFeeForGasless(
-        transferTransaction: TransactionData,
-        sentAmount: BigDecimal?,
-    ): Either<GetFeeError, TransactionFeeExtended> = getFeeForGaslessUseCase(
-        transactionData = transferTransaction,
-        userWallet = userWallet,
-        network = params.currency.network,
-        sentAmount = sentAmount,
-    )
 
     fun showAlertError() {
         sendConfirmAlertFactory.getGenericErrorState(
