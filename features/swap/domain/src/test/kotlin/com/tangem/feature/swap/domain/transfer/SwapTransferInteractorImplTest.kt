@@ -1261,6 +1261,7 @@ internal class SwapTransferInteractorImplTest {
             val fee: Fee = mockk()
             val txData: TransactionData.Uncompiled = mockk()
             val transactionFeeExtended: TransactionFeeExtended = mockk {
+                every { tronGaslessQuote } returns null
                 every { transactionFee } returns mockk {
                     every { normal } returns mockk<Fee.Ethereum.TokenCurrency>()
                 }
@@ -1300,6 +1301,64 @@ internal class SwapTransferInteractorImplTest {
                     fee = transactionFeeExtended,
                 )
             }
+            coVerify(exactly = 0) {
+                sendTransactionUseCase(txData = any(), userWallet = any(), network = any())
+            }
+        }
+
+    @Test
+    fun `GIVEN LoadedExtended fee carrying a Tron gasless quote WHEN sendTransfer THEN route via the gasless flow`() =
+        runTest {
+            // Arrange
+            val userWalletId: UserWalletId = mockk()
+            val userWallet: UserWallet = mockk { every { walletId } returns userWalletId }
+            val network: Network = mockk()
+            val fromCurrencyStatus = buildTokenCurrencyStatus(
+                rawCurrencyId = FROM_RAW_CURRENCY_ID,
+                decimals = FROM_DECIMALS,
+                userWallet = userWallet,
+                network = network,
+            )
+            val toCurrencyStatus = buildTokenCurrencyStatus(
+                rawCurrencyId = TO_RAW_CURRENCY_ID,
+                decimals = TO_DECIMALS,
+                destinationAddress = DESTINATION_ADDRESS,
+            )
+            val fee: Fee = mockk()
+            val txData: TransactionData.Uncompiled = mockk()
+            val transactionFeeExtended: TransactionFeeExtended = mockk {
+                every { tronGaslessQuote } returns mockk()
+            }
+            val transactionFeeResult = TransactionFeeResult.LoadedExtended(transactionFeeExtended)
+            coEvery {
+                createTransferTransactionUseCase(
+                    amount = any(),
+                    fee = fee,
+                    memo = null,
+                    destination = DESTINATION_ADDRESS,
+                    userWalletId = userWalletId,
+                    network = network,
+                )
+            } returns txData.right()
+            coEvery {
+                createAndSendGaslessTransactionUseCase(
+                    userWallet = userWallet,
+                    transactionData = txData,
+                    fee = transactionFeeExtended,
+                )
+            } returns TX_HASH.right()
+
+            // Act
+            val result = sut.sendTransfer(
+                fromSwapCurrencyStatus = fromCurrencyStatus,
+                toSwapCurrencyStatus = toCurrencyStatus,
+                sendingAmount = BigDecimal("1.0"),
+                fee = fee,
+                transactionFeeResult = transactionFeeResult,
+            )
+
+            // Assert
+            assertThat(result).isEqualTo(TX_HASH.right())
             coVerify(exactly = 0) {
                 sendTransactionUseCase(txData = any(), userWallet = any(), network = any())
             }
@@ -1375,6 +1434,7 @@ internal class SwapTransferInteractorImplTest {
             val fee: Fee = mockk()
             val txData: TransactionData.Uncompiled = mockk()
             val transactionFeeExtended: TransactionFeeExtended = mockk {
+                every { tronGaslessQuote } returns null
                 every { transactionFee } returns mockk {
                     every { normal } returns mockk<Fee.Common>()
                 }
