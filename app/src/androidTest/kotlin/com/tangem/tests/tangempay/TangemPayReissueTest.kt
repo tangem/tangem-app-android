@@ -242,6 +242,9 @@ class TangemPayReissueTest : BaseTestCase() {
                     onTangemPayReissueSheet { insufficientFundsTitle.assertIsDisplayed() }
                 }
             }
+            step("Assert 'Replace card' button is disabled") {
+                onTangemPayReissueSheet { confirmButton.assertIsNotEnabled() }
+            }
             step("Click on 'Add funds' button") {
                 onTangemPayReissueSheet { addFundsButton.clickWithAssertion() }
             }

@@ -32,6 +32,13 @@ sealed interface MoneyAccountStatusValueDM {
     ) : MoneyAccountStatusValueDM
 
     @Serializable
+    @SerialName("kyc_required")
+    data class KycRequired(
+        @SerialName("customer_id") val customerId: String?,
+        @SerialName("balance") val balance: BalanceDM?,
+    ) : MoneyAccountStatusValueDM
+
+    @Serializable
     @SerialName("kyc_status")
     data class UnderReview(
         @SerialName("kyc_status") val kycStatus: KycStatus,

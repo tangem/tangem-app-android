@@ -92,16 +92,16 @@ internal class DefaultTangemPayStorageTest {
     }
 
     @Test
-    fun `GIVEN bank offramp recents WHEN clearAll THEN the recents key is removed`() = runTest {
+    fun `GIVEN failed va order marker WHEN clearAll THEN the marker key is removed`() = runTest {
         // Arrange
-        val key = spendPreferencesKeys.bankOfframpRecents(WALLET)
-        prefs.editData { preferences -> preferences[key] = """{"acc-1":{"usedAtMillis":1}}""" }
+        storage.storeVirtualAccountOrderFailed(customerWalletAddress = ADDRESS, isFailed = true)
 
         // Act
-        storage.clearAll(userWalletId = WALLET, customerWalletAddress = null)
+        storage.clearAll(userWalletId = WALLET, customerWalletAddress = ADDRESS)
 
         // Assert
-        assertThat(prefs.data.first()[key]).isNull()
+        assertThat(storage.getVirtualAccountOrderFailed(ADDRESS)).isFalse()
+        assertThat(prefs.data.first()[spendPreferencesKeys.getVirtualAccountOrderFailedKey(ADDRESS)]).isNull()
     }
 
     @Test
