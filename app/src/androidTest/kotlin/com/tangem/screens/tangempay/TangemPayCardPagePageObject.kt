@@ -79,6 +79,29 @@ class TangemPayCardPagePageObject(semanticsProvider: SemanticsNodeInteractionsPr
         useUnmergedTree = true
     }
 
+    val activatingInProgressBlock: KNode = child {
+        hasText(
+            text = getResourceString(CoreResR.string.tangempay_card_page_activating_banner_title),
+            substring = true,
+        )
+        useUnmergedTree = true
+    }
+
+    val deliveryContactSupportButton: KNode = child {
+        hasTestTag(TangemPayTestTags.DELIVERY_CONTACT_SUPPORT_BUTTON)
+        useUnmergedTree = true
+    }
+
+    val deliveryActivateButton: KNode = child {
+        hasTestTag(TangemPayTestTags.DELIVERY_ACTIVATE_BUTTON)
+        useUnmergedTree = true
+    }
+
+    fun deliveryDescription(email: String): KNode = child {
+        hasText(getResourceString(CoreResR.string.tangempay_card_details_delivery_description, email))
+        useUnmergedTree = true
+    }
+
     val changePinRow: KNode = child {
         hasTestTag(TangemPayTestTags.CHANGE_PIN_ROW)
         useUnmergedTree = true
