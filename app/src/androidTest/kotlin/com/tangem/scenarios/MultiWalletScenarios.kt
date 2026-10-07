@@ -85,6 +85,12 @@ fun BaseTestCase.switchToPreviousWallet() {
     }
 }
 
+fun BaseTestCase.switchToNextWallet() {
+    step("Swipe wallet card to the next wallet") {
+        onMainScreen { swipeToAdjacentWallet(toPrevious = false) }
+    }
+}
+
 /** Picks a [token] the recipient [walletName] already holds, via the wallet tab. */
 fun BaseTestCase.selectReceiveTokenOnWallet(token: String, walletName: String) {
     step("Click on 'Choose token' button") {

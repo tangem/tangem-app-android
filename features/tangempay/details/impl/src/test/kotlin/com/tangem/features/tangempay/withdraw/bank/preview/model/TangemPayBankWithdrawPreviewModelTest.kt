@@ -140,10 +140,10 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     }
 
     @Test
-    fun `GIVEN unknown error WHEN send and retry THEN general failure and the idempotency key is reused`() {
+    fun `GIVEN outcome unknown WHEN send and retry THEN general failure and the idempotency key is reused`() {
         // Arrange
         coEvery { createBankOfframpOrderUseCase(userWalletId, any(), any()) }
-            .returns(BankOfframpError.Unknown(null).left())
+            .returns(BankOfframpError.Unknown(cause = null, isOutcomeUnknown = true).left())
         val model = createModel()
 
         // Act
@@ -157,6 +157,24 @@ internal class TangemPayBankWithdrawPreviewModelTest {
         coVerify(exactly = 2) { createBankOfframpOrderUseCase(userWalletId, any(), capture(keys)) }
         assertThat(keys.toSet()).hasSize(1)
         assertThat(model.uiState.value).isInstanceOf(Failed::class.java)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a definitive error WHEN send and retry THEN a new idempotency key is used`() {
+        // Arrange
+        coEvery { createBankOfframpOrderUseCase(userWalletId, any(), any()) }
+            .returns(BankOfframpError.Unknown(cause = null, isOutcomeUnknown = false).left())
+        val model = createModel()
+
+        // Act
+        summary(model).onSendClick()
+        requireNotNull((model.uiState.value as Failed).onRetryClick).invoke()
+
+        // Assert
+        val keys = mutableListOf<String>()
+        coVerify(exactly = 2) { createBankOfframpOrderUseCase(userWalletId, any(), capture(keys)) }
+        assertThat(keys.toSet()).hasSize(2)
         model.onDestroy()
     }
 
@@ -749,9 +767,9 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     }
 
     @Test
-    fun `GIVEN summary WHEN rail row tapped THEN RailSelectorClicked is sent and the amount step opened`() {
+    fun `GIVEN new recipient WHEN rail row tapped THEN RailSelectorClicked is sent and the amount step opened`() {
         // Arrange
-        val model = createModel()
+        val model = createModel(newRecipientDraft())
 
         // Act
         summary(model).transfer?.route?.onClick?.invoke()
@@ -768,7 +786,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     fun `GIVEN request in flight WHEN rail row tapped THEN no RailSelectorClicked is sent`() {
         // Arrange
         coEvery { createBankOfframpOrderUseCase(userWalletId, any(), any()) } coAnswers { awaitCancellation() }
-        val model = createModel()
+        val model = createModel(newRecipientDraft())
         val onRailClick = requireNotNull(summary(model).transfer?.route?.onClick)
         summary(model).onSendClick()
 

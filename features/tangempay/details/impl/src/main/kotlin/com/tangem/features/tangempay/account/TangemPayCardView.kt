@@ -82,11 +82,17 @@ internal fun TangemPayCardView(
                 cardType != TangemPayCardType.PHYSICAL -> Icons.ic_cloud_12_filled
                 else -> null
             }
+            val frozenIconTag = if (isFrozen) {
+                Modifier.testTag(TangemPayTestTags.PAYMENT_ACCOUNT_CARD_FROZEN_ICON)
+            } else {
+                Modifier
+            }
             statusIcon?.let { icon ->
                 Icon(
                     modifier = Modifier
                         .align(Alignment.CenterStart)
-                        .size(TangemTheme.dimens2.x3),
+                        .size(TangemTheme.dimens2.x3)
+                        .then(frozenIconTag),
                     imageVector = icon,
                     tint = TangemTheme.colors3.icon.staticDark,
                     contentDescription = null,

@@ -15,19 +15,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.account.AccountIcon
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.components.account.AccountIconSize
+import com.tangem.domain.models.account.CryptoPortfolioIcon.Color as IconColor
+import com.tangem.domain.models.account.CryptoPortfolioIcon.Icon
 import com.tangem.core.ui.components.account.PaymentAccountIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.ds.image.TangemDeviceIcon
 import com.tangem.core.ui.ds2.row.TangemRow
+import com.tangem.core.ui.ds2.row.TangemRowAddressText
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
@@ -38,8 +40,8 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.CounterpartyAvatar
+import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.CounterpartyTitle
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.CounterpartyUM
-import com.tangem.features.txhistory.impl.R
 
 /**
  * Counterparty ("Recipient" / "From") card of the single-asset detail, built on the DS3 [TangemRow] inside a tinted
@@ -67,11 +69,18 @@ internal fun TxHistoryDetailsCounterpartyRow(counterparty: CounterpartyUM, modif
             startSlot = { CounterpartyAvatar(counterparty.avatar) },
             titleSlot = { TangemRowText(text = counterparty.label, role = TangemRowTextRole.Subtitle) },
             subtitleSlot = {
-                TangemRowText(
-                    text = counterparty.title,
-                    role = TangemRowTextRole.Title,
-                    overflow = counterparty.titleOverflow(),
-                )
+                when (val title = counterparty.title) {
+                    is CounterpartyTitle.Name -> TangemRowText(
+                        text = title.value,
+                        role = TangemRowTextRole.Title,
+                        overflow = counterparty.titleOverflow(),
+                    )
+                    is CounterpartyTitle.Address -> TangemRowAddressText(
+                        address = title.value,
+                        role = TangemRowTextRole.Title,
+                        modifier = Modifier.weight(weight = 1f, fill = false),
+                    )
+                }
                 counterparty.titleIcon?.let { icon ->
                     CurrencyIcon(
                         state = icon,
@@ -110,19 +119,14 @@ private fun CounterpartyAvatar(avatar: CounterpartyAvatar, modifier: Modifier = 
                 modifier = Modifier.size(20.dp),
             )
         }
-        is CounterpartyAvatar.Account -> Box(
-            modifier = avatarModifier
-                .clip(CircleShape)
-                .background(avatar.backgroundColor),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                painter = painterResource(id = avatar.iconResId),
-                contentDescription = null,
-                tint = TangemTheme.colors3.icon.staticDark,
-                modifier = Modifier.size(20.dp),
-            )
-        }
+        // The raw modifier, like the contact branch below: AccountIcon sizes itself from ContactDefault (40dp), the
+        // same circle the hand-rolled avatars here are drawn at.
+        is CounterpartyAvatar.Account -> AccountIcon(
+            name = avatar.name,
+            icon = avatar.icon,
+            size = AccountIconSize.ContactDefault,
+            modifier = modifier,
+        )
         is CounterpartyAvatar.Wallet -> TangemDeviceIcon(
             state = avatar.deviceIconUM,
             modifier = avatarModifier,
@@ -157,7 +161,7 @@ private fun TxHistoryDetailsCounterpartyRowPreview() {
             TxHistoryDetailsCounterpartyRow(
                 counterparty = CounterpartyUM(
                     label = stringReference("Recipient"),
-                    title = stringReference("33Bd321fS...ga21412B"),
+                    title = CounterpartyTitle.Address("33Bd321fS2p2oMzEcHKNK1cEZga21412B"),
                     avatar = CounterpartyAvatar.Address(rawAddress = "0xfb6916095ca1df60bb79ce92ce3ea74c37c5d359"),
                     onCopyClick = {},
                 ),
@@ -165,10 +169,10 @@ private fun TxHistoryDetailsCounterpartyRowPreview() {
             TxHistoryDetailsCounterpartyRow(
                 counterparty = CounterpartyUM(
                     label = stringReference("Recipient"),
-                    title = stringReference("Danil Kolbasenko"),
+                    title = CounterpartyTitle.Name(stringReference("Danil Kolbasenko")),
                     avatar = CounterpartyAvatar.Account(
-                        iconResId = R.drawable.ic_arrow_down_24,
-                        backgroundColor = Color(0xFF704AF1),
+                        name = stringReference("Danil Kolbasenko"),
+                        icon = AccountIconUM.CryptoPortfolio(value = Icon.Letter, color = IconColor.CandyGrapeFizz),
                     ),
                     onCopyClick = {},
                 ),
@@ -176,7 +180,7 @@ private fun TxHistoryDetailsCounterpartyRowPreview() {
             TxHistoryDetailsCounterpartyRow(
                 counterparty = CounterpartyUM(
                     label = stringReference("Recipient"),
-                    title = stringReference("Tangem wallet"),
+                    title = CounterpartyTitle.Name(stringReference("Tangem wallet")),
                     avatar = CounterpartyAvatar.Wallet(
                         deviceIconUM = DeviceIconUM.Card(mainColor = Color(0xFF1E1E1E), secondColor = null),
                     ),
@@ -186,7 +190,7 @@ private fun TxHistoryDetailsCounterpartyRowPreview() {
             TxHistoryDetailsCounterpartyRow(
                 counterparty = CounterpartyUM(
                     label = stringReference("Recipient"),
-                    title = stringReference("Binance"),
+                    title = CounterpartyTitle.Name(stringReference("Binance")),
                     avatar = CounterpartyAvatar.Contact(
                         name = "Binance",
                         icon = AccountIconUM.CryptoPortfolio(

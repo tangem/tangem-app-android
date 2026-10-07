@@ -19,6 +19,7 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -1072,6 +1073,125 @@ class SwapTokenScreenTest : BaseTestCase() {
             step("Assert 'Swap' button is enabled") {
                 waitForIdle()
                 onSwapTokenScreen { swapButton.assertIsEnabled() }
+            }
+        }
+    }
+
+    @AllureId("11517")
+    @DisplayName("Swap: the send amount can be entered in the token and in fiat")
+    @Test
+    fun enterSendAmountInTokenAndFiatTest() {
+        val tokenTitle = "Polygon"
+        val fromTokenSymbol = "POL"
+        val receiveTokenName = "Ethereum"
+        val tokenAmount = "1"
+        val fiatAmount = "5"
+        val fiatSign = "$"
+        var fiatEquivalent = ""
+        var receiveAmountInToken = ""
+        var tokenEquivalent = ""
+        var rateForTokenAmount = ""
+        var feeForTokenAmount = ""
+        val quoteScenarioName = "exchange_quote_polygon"
+        // Mock: quote has a fixed offset and gas is higher for exactly 1 POL, so rate and fee change.
+        val nonProportionalRateState = "NonProportionalRate"
+
+        setupHooks().run {
+            step("Set WireMock scenario '$quoteScenarioName' to '$nonProportionalRateState'") {
+                setWireMockScenarioState(scenarioName = quoteScenarioName, state = nonProportionalRateState)
+            }
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Click on token with name: '$tokenTitle'") {
+                openTokenDetailsFromTokenList(tokenTitle)
+            }
+            step("Open 'Swap' screen") {
+                openSwapScreen(from = SwapEntryPoint.TokenDetails)
+            }
+            step("Choose receive token '$receiveTokenName'") {
+                chooseReceiveToken(receiveTokenName)
+            }
+            step("Input swap amount '$tokenAmount' in the token") {
+                inputAmount(tokenAmount)
+            }
+            step("Assert the fiat equivalent of the entered amount is displayed") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { swapFiatAmount.assertTextContains(fiatSign, substring = true) }
+                    fiatEquivalent = swapFiatAmount.extractText()
+                }
+            }
+            step("Assert the provider rate is displayed") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { providerRateText.assertIsDisplayed() }
+                    rateForTokenAmount = providerRateText.extractText()
+                }
+            }
+            step("Assert the network fee is displayed") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { feeAmount.assertIsDisplayed() }
+                    feeForTokenAmount = feeAmount.extractText()
+                }
+            }
+            step("Assert the receive amount is calculated") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { receiveAmount.assertIsDisplayed() }
+                    receiveAmountInToken = receiveAmount.extractText()
+                }
+            }
+            step("Click on the fiat equivalent to switch the input to fiat") {
+                onSwapTokenScreen { swapFiatAmount.performClick() }
+            }
+            step("Assert the send field shows the fiat equivalent '$fiatEquivalent'") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) {
+                        textInput.assertTextContains(fiatEquivalent.removePrefix(fiatSign), substring = true)
+                    }
+                }
+            }
+            step("Assert the token equivalent in '$fromTokenSymbol' is displayed under the send field") {
+                onSwapTokenScreen {
+                    swapFiatAmount.assertTextContains(fromTokenSymbol, substring = true)
+                    tokenEquivalent = swapFiatAmount.extractText()
+                }
+            }
+            step("Assert the receive amount '$receiveAmountInToken' is not changed by the switch") {
+                onSwapTokenScreen { receiveAmount.assertTextEquals(receiveAmountInToken) }
+            }
+            step("Input swap amount '$fiatAmount' in fiat") {
+                inputAmount(fiatAmount)
+            }
+            step("Assert the token equivalent of the entered fiat amount is recalculated") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) {
+                        swapFiatAmount.assertTextContains(fromTokenSymbol, substring = true)
+                        assertNotEquals(tokenEquivalent, swapFiatAmount.extractText())
+                    }
+                }
+            }
+            step("Assert the receive amount is recalculated") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                        assertNotEquals(receiveAmountInToken, receiveAmount.extractText())
+                    }
+                }
+            }
+            step("Assert the provider rate is recalculated") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                        assertNotEquals(rateForTokenAmount, providerRateText.extractText())
+                    }
+                }
+            }
+            step("Assert the network fee is recalculated") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                        assertNotEquals(feeForTokenAmount, feeAmount.extractText())
+                    }
+                }
             }
         }
     }

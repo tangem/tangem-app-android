@@ -4,11 +4,13 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
+import com.tangem.core.ui.R
 import com.tangem.core.ui.test.BaseBottomSheetTestTags
 import com.tangem.core.ui.test.SwapTokenScreenTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
+import io.github.kakaocup.kakao.common.utilities.getResourceString
 import androidx.compose.ui.test.hasText as withText
 
 class ChooseProviderBottomSheetPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
@@ -38,6 +40,13 @@ class ChooseProviderBottomSheetPageObject(semanticsProvider: SemanticsNodeIntera
 
     fun providerItem(name: String): KNode = child {
         hasText(name, substring = true)
+        useUnmergedTree = true
+    }
+
+    fun unavailableProviderItem(name: String): KNode = child {
+        hasClickAction()
+        hasAnyDescendant(withText(name))
+        hasAnyDescendant(withText(getResourceString(R.string.common_not_available)))
         useUnmergedTree = true
     }
 }

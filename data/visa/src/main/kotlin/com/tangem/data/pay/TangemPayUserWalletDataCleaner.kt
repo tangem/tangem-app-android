@@ -1,6 +1,7 @@
 package com.tangem.data.pay
 
 import com.tangem.data.pay.repository.TangemPayRequestPerformer
+import com.tangem.data.pay.store.CashbackSummaryStore
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.store.TangemPayCustomerInfoStore
 import com.tangem.data.pay.store.TangemPayStorage
@@ -12,6 +13,7 @@ import javax.inject.Inject
 internal class TangemPayUserWalletDataCleaner @Inject constructor(
     private val paymentAccountStatusesStore: PaymentAccountStatusesStore,
     private val txHistoryItemsStore: TangemPayTxHistoryItemsStore,
+    private val cashbackSummaryStore: CashbackSummaryStore,
     private val tangemPayStorage: TangemPayStorage,
     private val customerInfoStore: TangemPayCustomerInfoStore,
     private val requestPerformer: TangemPayRequestPerformer,
@@ -22,6 +24,7 @@ internal class TangemPayUserWalletDataCleaner @Inject constructor(
 
         paymentAccountStatusesStore.remove(userWalletIds)
         txHistoryItemsStore.remove(userWalletIds.map { it.stringValue })
+        cashbackSummaryStore.remove(userWalletIds)
         customerInfoStore.update { cache -> cache - userWalletIds }
         requestPerformer.removeCachedCustomerWalletAddresses(userWalletIds)
     }

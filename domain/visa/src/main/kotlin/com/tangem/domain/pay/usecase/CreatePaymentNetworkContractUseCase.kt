@@ -17,7 +17,6 @@ import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.UUID
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -57,7 +56,11 @@ class CreatePaymentNetworkContractUseCase(
     private val pollingUseCase: StartTangemPayOrderPollingUseCase,
     private val appCoroutineScope: AppCoroutineScope,
 ) {
-    suspend operator fun invoke(userWalletId: UserWalletId, network: Network): Either<VisaApiError, Unit> = either {
+    suspend operator fun invoke(
+        userWalletId: UserWalletId,
+        network: Network,
+        idempotencyKey: String,
+    ): Either<VisaApiError, Unit> = either {
         val chainId = network.toBlockchain().getChainId() ?: run {
             TangemLogger.e("TangemPay: unable to derive chain id for network ${network.rawId}")
             raise(VisaApiError.Unspecified)
@@ -70,7 +73,8 @@ class CreatePaymentNetworkContractUseCase(
         ).bind()
 
         val order = OrderResolver.selectActive(orders = activeOrders, type = OrderType.SMART_CONTRACT_ISSUE_RAIN)
-            ?: createOrderWithRetry(userWalletId = userWalletId, chainId = chainId).bind()
+            ?: createOrderWithRetry(userWalletId = userWalletId, chainId = chainId, idempotencyKey = idempotencyKey)
+                .bind()
 
         startPolling(order = order, userWalletId = userWalletId)
     }
@@ -86,11 +90,14 @@ class CreatePaymentNetworkContractUseCase(
     }
 
     /**
-     * `createOrder` retried on transient failures only, reusing a single idempotency key across
+     * `createOrder` retried on transient failures only, reusing the caller's idempotency key across
      * attempts (the key exists precisely to make repeated identical requests safe to retry).
      */
-    private suspend fun createOrderWithRetry(userWalletId: UserWalletId, chainId: Int): Either<VisaApiError, Order> {
-        val idempotencyKey = UUID.randomUUID().toString()
+    private suspend fun createOrderWithRetry(
+        userWalletId: UserWalletId,
+        chainId: Int,
+        idempotencyKey: String,
+    ): Either<VisaApiError, Order> {
         var attempt = 0
         while (true) {
             val result = customerOrderRepository.createOrder(

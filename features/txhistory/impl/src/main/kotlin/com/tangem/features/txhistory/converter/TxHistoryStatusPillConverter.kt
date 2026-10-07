@@ -1,5 +1,6 @@
 package com.tangem.features.txhistory.converter
 
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.PillKind
@@ -15,7 +16,6 @@ import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.utils.converter.Converter
-import com.tangem.utils.toBriefAddressFormat
 
 internal class TxHistoryStatusPillConverter(
     private val currency: CryptoCurrency,
@@ -53,7 +53,7 @@ internal class TxHistoryStatusPillConverter(
                 )
             },
             currencySymbol = if (hasAmount) allowance?.currencySymbol ?: currency.symbol else null,
-            subtitle = tx.buildPillSubtitle(uiStatus),
+            subtitle = tx.buildPillSubtitle(uiStatus, spec),
             timestamp = tx.timestampInMillis,
             onClick = { txHistoryUiActions.openTxInExplorer(tx.txHash) },
         )
@@ -72,6 +72,18 @@ internal data class PillSpec(
     val amount: PillAmount,
     /** Two-tone text of the settled pill; `null` renders [PillLabels.confirmed] in a single tone. */
     val confirmedSplit: PillConfirmedSplit? = null,
+    /** DeFi provider named after the label ("Supplied **to: Aave**"); `null` for pills that name no provider. */
+    val provider: PillProvider? = null,
+)
+
+/**
+ * The provider tail of a yield pill: a constant of the operation, not of the transaction — the yield-supply product is
+ * a single hard-wired integration (Aave), so the spec names it once instead of resolving it per tx.
+ */
+internal data class PillProvider(
+    val direction: TransactionItemUM.ContentSubtitle.Direction,
+    @StringRes val name: Int,
+    @DrawableRes val iconResId: Int,
 )
 
 /**
@@ -159,6 +171,34 @@ internal val WithdrawSpec = PillSpec(
     ),
     amount = PillAmount.NEVER,
 )
+internal val YieldSupplySpec = PillSpec(
+    kind = PillKind.YIELD_SUPPLY,
+    labels = PillLabels(
+        confirmed = R.string.yield_module_transaction_supplied,
+        pending = R.string.common_supplying,
+        failedBase = R.string.yield_module_supply,
+    ),
+    amount = PillAmount.NEVER,
+    provider = PillProvider(
+        direction = TransactionItemUM.ContentSubtitle.Direction.TO,
+        name = R.string.yield_module_provider,
+        iconResId = R.drawable.img_aave_22,
+    ),
+)
+internal val YieldWithdrawSpec = PillSpec(
+    kind = PillKind.YIELD_SUPPLY,
+    labels = PillLabels(
+        confirmed = R.string.transaction_history_withdrawn,
+        pending = R.string.common_withdrawing,
+        failedBase = R.string.common_withdrawal,
+    ),
+    amount = PillAmount.NEVER,
+    provider = PillProvider(
+        direction = TransactionItemUM.ContentSubtitle.Direction.FROM,
+        name = R.string.yield_module_provider,
+        iconResId = R.drawable.img_aave_22,
+    ),
+)
 internal val YieldEnterSpec = PillSpec(
     kind = PillKind.YIELD_MODE,
     labels = PillLabels(
@@ -185,14 +225,22 @@ internal val YieldExitSpec = PillSpec(
     ),
 )
 
-private fun TxInfo.buildPillSubtitle(status: TransactionItemUM.Content.Status): TransactionItemUM.PillSubtitle? {
-    val approve = type as? TransactionType.Approve ?: return null
+/** The counterparty tail: a spec-wide provider, or the spender an approval granted its allowance to. */
+private fun TxInfo.buildPillSubtitle(
+    status: TransactionItemUM.Content.Status,
+    spec: PillSpec,
+): TransactionItemUM.PillSubtitle? {
     if (status is TransactionItemUM.Content.Status.Failed) return null
+    spec.provider?.let { provider ->
+        return TransactionItemUM.PillSubtitle.Provider(
+            direction = provider.direction,
+            name = resourceReference(provider.name),
+            iconResId = provider.iconResId,
+        )
+    }
+    val approve = type as? TransactionType.Approve ?: return null
     val address = approve.address.takeIf { it.isNotBlank() } ?: return null
-    return TransactionItemUM.PillSubtitle.Address(
-        rawAddress = address,
-        briefAddress = address.toBriefAddressFormat(),
-    )
+    return TransactionItemUM.PillSubtitle.Address(rawAddress = address)
 }
 
 /** The statuses [resolve] answers [PillLabels.confirmed] for — the same ones [PillSpec.confirmedSplit] replaces. */

@@ -28,8 +28,9 @@ porting a test, verify with a logcat network trace, not visual inspection.
 
 ## `TangemHoldToConfirmButton` semantics are minimal
 
-The component exposes ONLY `TestTag`, `IsContainer`, `Shape` in Compose semantics — no `Disabled`,
-`Role`, or `OnClick`. `assertIsEnabled()` / `assertHasClickAction()` are useless on it.
+The component exposes ONLY `TestTag`, `IsContainer`, `Shape` (plus `Disabled` when `enabled = false`) in
+Compose semantics — no `Role` or `OnClick`. `assertHasClickAction()` is useless on it; use
+`assertIsEnabled()` / `assertIsNotEnabled()` (see `SwapTokenPageObject.swapButtonWithLabel`).
 
 `Modifier.holdToConfirmGestures(enabled, ...)` early-returns from `pointerInput` when `enabled=false`,
 so the hold gesture is silently swallowed: the button looks fine, the user holds, nothing happens,

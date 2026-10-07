@@ -18,4 +18,6 @@ sealed interface IssueAdditionalCardError {
     data object NoCampaignOffer : IssueAdditionalCardError
 
     data class Other(val cause: VisaApiError) : IssueAdditionalCardError
+
+    fun isOutcomeUnknown() = this is Other && cause.isOutcomeUnknown()
 }

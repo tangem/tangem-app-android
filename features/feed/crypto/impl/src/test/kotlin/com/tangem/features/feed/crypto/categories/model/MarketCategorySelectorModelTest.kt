@@ -12,7 +12,6 @@ import com.tangem.domain.markets.MarketCategoryListBatchFlow
 import com.tangem.domain.markets.MarketCategoryListBatchingContext
 import com.tangem.domain.markets.MarketCategoryListConfig
 import com.tangem.domain.markets.MarketCategoryPage
-import com.tangem.features.feed.crypto.categories.ALL_ROW_ID
 import com.tangem.features.feed.crypto.categories.MarketCategoryFilterController
 import com.tangem.features.feed.crypto.categories.MarketCategorySelection
 import com.tangem.features.feed.crypto.categories.createCategory
@@ -106,7 +105,7 @@ internal class MarketCategorySelectorModelTest {
 
         // Assert
         assertThat(model.content().featured?.items?.map { it.id }).containsExactly(meme.id)
-        assertThat(model.rows().map { it.id }).containsExactly(ALL_ROW_ID, ai.id, defi.id, meme.id).inOrder()
+        assertThat(model.rows().map { it.id }).containsExactly(ai.id, defi.id, meme.id).inOrder()
     }
 
     @Test
@@ -125,7 +124,7 @@ internal class MarketCategorySelectorModelTest {
 
             // Assert
             assertThat(model.content().featured).isNull()
-            assertThat(model.rows().map { it.id }).containsExactly(ALL_ROW_ID, ai.id).inOrder()
+            assertThat(model.rows().map { it.id }).containsExactly(ai.id)
         }
 
     @Test
@@ -145,7 +144,7 @@ internal class MarketCategorySelectorModelTest {
 
         // Assert
         assertThat(errorContent).isInstanceOf(MarketCategorySelectorUM.ContentUM.Error::class.java)
-        assertThat(model.rows().map { it.id }).containsExactly(ALL_ROW_ID, ai.id).inOrder()
+        assertThat(model.rows().map { it.id }).containsExactly(ai.id)
     }
 
     @Test
@@ -199,23 +198,7 @@ internal class MarketCategorySelectorModelTest {
     }
 
     @Test
-    fun `GIVEN a filter applied WHEN the All row tapped and applied THEN the empty selection is sent`() = runTest {
-        // Arrange
-        val model = createModel(testScope = this, selection = selectionOf(ai))
-        advanceUntilIdle()
-        batchFlow.emitFirstPage(ai)
-        advanceUntilIdle()
-
-        // Act
-        model.rowFor(ALL_ROW_ID).onItemClick()
-        model.footer().onApply()
-
-        // Assert
-        assertThat(filterController.selection.value).isEqualTo(MarketCategorySelection())
-    }
-
-    @Test
-    fun `GIVEN nothing applied WHEN list loaded THEN the All row is the checked one`() = runTest {
+    fun `GIVEN nothing applied WHEN list loaded THEN no row is checked`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
 
@@ -225,7 +208,7 @@ internal class MarketCategorySelectorModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.rows().filter { it.isSelected }.map { it.id }).containsExactly(ALL_ROW_ID)
+        assertThat(model.rows().none { it.isSelected }).isTrue()
     }
 
     @Test
@@ -337,11 +320,11 @@ internal class MarketCategorySelectorModelTest {
 
         // Assert
         assertThat(model.content().featured).isNull()
-        assertThat(model.rows().map { it.id }).containsExactly(ALL_ROW_ID, ai.id, defi.id).inOrder()
+        assertThat(model.rows().map { it.id }).containsExactly(ai.id, defi.id).inOrder()
     }
 
     @Test
-    fun `GIVEN an empty first page WHEN it arrives THEN only the All row is offered`() = runTest {
+    fun `GIVEN an empty first page WHEN it arrives THEN no rows are offered`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
@@ -351,12 +334,12 @@ internal class MarketCategorySelectorModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.rows().map { it.id }).containsExactly(ALL_ROW_ID)
+        assertThat(model.rows()).isEmpty()
     }
 
     @Test
     fun `GIVEN a selection absent from the page WHEN it loads THEN nothing is checked`() = runTest {
-        // Arrange — an id filtered out of the current listing must not silently check the All row
+        // Arrange — an id filtered out of the current listing must not silently check another row
         val model = createModel(testScope = this, selection = selectionOf(defi))
         advanceUntilIdle()
 
@@ -371,7 +354,7 @@ internal class MarketCategorySelectorModelTest {
 
     @Test
     fun `GIVEN the checked row WHEN tapped again THEN the draft keeps it`() = runTest {
-        // Arrange — clearing is the All row's job, so the row itself never deselects
+        // Arrange — clearing is the tab chip's job, so the row itself never deselects
         val model = createModel(testScope = this, selection = selectionOf(ai))
         advanceUntilIdle()
         batchFlow.emitFirstPage(ai, defi)
@@ -388,7 +371,7 @@ internal class MarketCategorySelectorModelTest {
 
     @Test
     fun `GIVEN the checked badge WHEN tapped again THEN the draft is cleared`() = runTest {
-        // Arrange — the rail has no All badge, so the badge itself toggles off
+        // Arrange — the badge toggles off, and nothing is checked once the draft is empty
         val model = createModel(testScope = this, selection = selectionOf(meme))
         advanceUntilIdle()
         batchFlow.emitFirstPage(ai, meme)
@@ -399,7 +382,7 @@ internal class MarketCategorySelectorModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.rowFor(ALL_ROW_ID).isSelected).isTrue()
+        assertThat(model.rows().none { it.isSelected }).isTrue()
         assertThat(model.isEdited()).isTrue()
     }
 
@@ -520,7 +503,7 @@ internal class MarketCategorySelectorModelTest {
     }
 
     @Test
-    fun `GIVEN results for a query WHEN they arrive THEN the rail and the All row are both gone`() = runTest {
+    fun `GIVEN results for a query WHEN they arrive THEN the rail is gone and only matches remain`() = runTest {
         // Arrange — the list is then a result set: an unfiltered shortcut strip is not one of the results
         val model = createModel(testScope = this)
         advanceUntilIdle()

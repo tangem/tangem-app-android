@@ -670,13 +670,13 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             every { router.push(capture(route), any()) } returns Unit
             model.onSlippageClick()
             model.onPause()
-            route.captured.onConfirm(BigDecimal("1.5"))
+            route.captured.onConfirm(BigDecimal("5"))
             model.onResume()
             advanceTimeBy(delayTimeMillis = 1)
 
             // Assert
             coVerify(exactly = 1) {
-                getQuoteUseCase(request = match { it.slippagePercent == BigDecimal("1.5") })
+                getQuoteUseCase(request = match { it.slippagePercent == BigDecimal("5") })
             }
             assertThat(model.uiState.value.slippage.isDefault).isFalse()
 

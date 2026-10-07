@@ -29,6 +29,7 @@ import com.tangem.features.tangempay.model.transformers.TangemPayOnboardingButto
 import com.tangem.features.tangempay.ui.TangemPayOnboardingNavigation
 import com.tangem.features.tangempay.ui.TangemPayOnboardingScreenState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -105,8 +106,8 @@ internal class TangemPayOnboardingModel @Inject constructor(
                 // FromBanner* and mobile-onboard skip the backend validation that Params.Deeplink performs.
                 is TangemPayOnboardingComponent.Params.FromBannerInSettings,
                 is TangemPayOnboardingComponent.Params.FromBannerOnMain,
-                is TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink,
                 -> showOnboarding()
+                is TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink -> showOnboardingIfOfferAvailable()
             }
         }
     }
@@ -133,7 +134,17 @@ internal class TangemPayOnboardingModel @Inject constructor(
             router.replaceAll(AppRoute.TangemPayHotWalletOnboarding)
             return
         }
-        showOnboarding()
+        showOnboardingIfOfferAvailable()
+    }
+
+    private suspend fun showOnboardingIfOfferAvailable() {
+        val offerWalletsIds = eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true)
+        if (offerWalletsIds.isEmpty()) {
+            TangemLogger.i("[TangemPay] Onboarding deeplink dropped: no wallet can take the offer")
+            back()
+        } else {
+            showOnboarding()
+        }
     }
 
     private fun showError() {

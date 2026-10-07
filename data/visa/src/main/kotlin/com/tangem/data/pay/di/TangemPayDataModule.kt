@@ -10,7 +10,7 @@ import com.tangem.data.pay.entity.DefaultTangemPayCurrencyFactory
 import com.tangem.data.pay.flow.DefaultPaymentAccountStatusFetcher
 import com.tangem.data.pay.flow.DefaultPaymentAccountStatusProducer
 import com.tangem.data.pay.repository.*
-import com.tangem.data.pay.store.DefaultBankOfframpRecentsStore
+import com.tangem.data.pay.store.CashbackSummaryStore
 import com.tangem.data.pay.store.DefaultPaymentAccountRecentsStore
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCurrencyStatusUseCase
@@ -20,6 +20,7 @@ import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawWithSwapUseCase
 import com.tangem.core.remote.json.NetworkJson
 import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.spend.datasource.pay.store.entity.CashbackSummaryDM
 import com.tangem.spend.datasource.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.spend.datasource.preferences.SpendPreferencesKeys
@@ -44,7 +45,6 @@ import com.tangem.domain.pay.usecase.bankofframp.FindActiveBankOfframpOrderUseCa
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetBankOfframpOptionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetRecentBankAccountsUseCase
-import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
 import com.tangem.domain.pay.usecase.bankofframp.SignBankOfframpOrderUseCase
 import com.tangem.domain.pay.usecase.recents.GetRecentTokenTransfersUseCase
 import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSendUseCase
@@ -62,9 +62,9 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
-import javax.inject.Singleton
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
+import javax.inject.Singleton
 import kotlinx.serialization.json.Json
 
 @Module
@@ -215,6 +215,18 @@ internal interface TangemPayDataModule {
                 ),
                 converter = converter,
                 scope = scope,
+            )
+        }
+
+        @Provides
+        @Singleton
+        fun provideCashbackSummaryStore(dataStoreFactory: AppDataStoreFactory): CashbackSummaryStore {
+            return CashbackSummaryStore(
+                dataStore = dataStoreFactory.create(
+                    defaultValue = emptyMap(),
+                    serializer = MapSerializer(String.serializer(), CashbackSummaryDM.serializer()),
+                    fileName = "tangem_pay_cashback_summary",
+                ),
             )
         }
 
@@ -373,6 +385,13 @@ internal interface TangemPayDataModule {
         @Provides
         fun provideGetCashbackSummaryUseCase(cashbackRepository: CashbackRepository): GetCashbackSummaryUseCase {
             return GetCashbackSummaryUseCase(cashbackRepository)
+        }
+
+        @Provides
+        fun provideObserveCashbackSummaryUseCase(
+            cashbackRepository: CashbackRepository,
+        ): ObserveCashbackSummaryUseCase {
+            return ObserveCashbackSummaryUseCase(cashbackRepository)
         }
 
         @Provides
@@ -613,20 +632,6 @@ internal interface TangemPayDataModule {
 
         @Provides
         @Singleton
-        fun provideBankOfframpRecentsStore(
-            prefs: AppPreferencesStore,
-            spendPreferencesKeys: SpendPreferencesKeys,
-            @NetworkJson json: Json,
-        ): BankOfframpRecentsStore {
-            return DefaultBankOfframpRecentsStore(
-                prefs = prefs,
-                spendPreferencesKeys = spendPreferencesKeys,
-                json = json,
-            )
-        }
-
-        @Provides
-        @Singleton
         fun providePaymentAccountRecentsStore(
             prefs: AppPreferencesStore,
             spendPreferencesKeys: SpendPreferencesKeys,
@@ -674,16 +679,8 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
-        fun provideGetRecentBankAccountsUseCase(
-            repository: BankOfframpRepository,
-            recentsStore: BankOfframpRecentsStore,
-        ): GetRecentBankAccountsUseCase {
-            return GetRecentBankAccountsUseCase(repository = repository, recentsStore = recentsStore)
-        }
-
-        @Provides
-        fun provideMarkBankAccountUsedUseCase(recentsStore: BankOfframpRecentsStore): MarkBankAccountUsedUseCase {
-            return MarkBankAccountUsedUseCase(recentsStore = recentsStore)
+        fun provideGetRecentBankAccountsUseCase(repository: BankOfframpRepository): GetRecentBankAccountsUseCase {
+            return GetRecentBankAccountsUseCase(repository = repository)
         }
 
         @Provides

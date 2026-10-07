@@ -103,16 +103,23 @@ internal class TransactionDataToTxHistoryItemConverterTest {
 
         private fun provideTestModels() = listOf(
             // A yield call moves no coin, so the coin's history shows nothing but the fee it paid — the same shape
-            // the confirmed row takes, rather than a yield row that changes once the explorer reports it.
+            // the confirmed row takes, rather than a yield row that changes once the explorer reports it. The call
+            // rides along so the fee row can name what it paid for.
             FallbackModel(
                 transaction = yieldCall(EthereumYieldSupplyEnterCallData(USDC_CONTRACT)),
                 currency = coin,
-                expected = TxInfo.TransactionType.UnknownOperation,
+                expected = TxInfo.TransactionType.Operation(
+                    name = "",
+                    recognized = TxInfo.TransactionType.YieldSupply.Enter(USDC_CONTRACT),
+                ),
             ),
             FallbackModel(
                 transaction = yieldCall(EthereumYieldSupplyExitCallData(USDC_CONTRACT)),
                 currency = coin,
-                expected = TxInfo.TransactionType.UnknownOperation,
+                expected = TxInfo.TransactionType.Operation(
+                    name = "",
+                    recognized = TxInfo.TransactionType.YieldSupply.Exit(USDC_CONTRACT),
+                ),
             ),
             FallbackModel(
                 transaction = yieldCall(
@@ -122,7 +129,10 @@ internal class TransactionDataToTxHistoryItemConverterTest {
                     ),
                 ),
                 currency = coin,
-                expected = TxInfo.TransactionType.UnknownOperation,
+                expected = TxInfo.TransactionType.Operation(
+                    name = "",
+                    recognized = TxInfo.TransactionType.YieldSupply.InitializeToken(USDC_CONTRACT),
+                ),
             ),
             // The token's own history is where the operation belongs, so it keeps its type there
             FallbackModel(

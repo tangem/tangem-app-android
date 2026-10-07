@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 @ModelScoped
@@ -43,6 +44,8 @@ internal class TangemPayCampaignIssueCardModel @Inject constructor(
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayCampaignIssueCardComponent.Params>()
+
+    private var issueIdempotencyKey: String? = null
 
     val uiState: StateFlow<TangemPayCampaignIssueCardUM>
         field = MutableStateFlow(
@@ -67,8 +70,13 @@ internal class TangemPayCampaignIssueCardModel @Inject constructor(
     private fun onIssueClick() {
         if (uiState.value.isIssuing) return
         uiState.update { it.copy(isIssuing = true) }
+        val idempotencyKey = issueIdempotencyKey ?: UUID.randomUUID().toString().also { issueIdempotencyKey = it }
         modelScope.launch {
-            issueAdditionalCardUseCase(userWalletId = params.userWalletId, deeplinkValue = params.campaignKey).fold(
+            issueAdditionalCardUseCase(
+                userWalletId = params.userWalletId,
+                idempotencyKey = idempotencyKey,
+                deeplinkValue = params.campaignKey,
+            ).fold(
                 ifLeft = { error -> handleIssueError(error) },
                 ifRight = {
                     TangemLogger.i("[TangemPay][Campaign] Campaign card issue order created or resumed")
@@ -80,6 +88,7 @@ internal class TangemPayCampaignIssueCardModel @Inject constructor(
 
     private suspend fun handleIssueError(error: IssueAdditionalCardError) {
         TangemLogger.e("[TangemPay][Campaign] Failed to issue the campaign card: $error")
+        if (!error.isOutcomeUnknown()) issueIdempotencyKey = null
         uiState.update { it.copy(isIssuing = false) }
         val message = when (error) {
             IssueAdditionalCardError.OfferNotAvailable -> createCardsLimitMessage()

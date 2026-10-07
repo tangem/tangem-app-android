@@ -58,6 +58,7 @@ import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.BaseActionButtonsBlockTestTags
+import com.tangem.core.ui.test.NotificationTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
 import com.tangem.features.tangempay.common.PayContextMenuButton
@@ -341,7 +342,9 @@ private fun MessageBanner(banner: MessageBannerUM, modifier: Modifier = Modifier
         description = state.description,
         secondaryButton = state.secondaryButton,
         primaryButton = state.primaryButton,
-        slotStart = state.iconStart?.let { icon -> { TangemIcon(icon) } },
+        slotStart = state.iconStart?.let { icon ->
+            { TangemIcon(icon, modifier = Modifier.testTag(NotificationTestTags.START_ICON)) }
+        },
         slotEnd = closeButton ?: iconEnd,
     )
 }

@@ -9,6 +9,7 @@ import com.tangem.domain.markets.GetCoinCategoriesUseCase
 import com.tangem.features.feed.rwa.categories.CategorySelection
 import com.tangem.features.feed.rwa.categories.CategorySelectorRoute
 import com.tangem.features.feed.rwa.categories.ReservedCategoryCodes
+import com.tangem.features.feed.rwa.categories.RwaDefaultCategory
 import com.tangem.features.feed.rwa.categories.model.transformer.CategorySelectorTransformer
 import com.tangem.features.feed.rwa.model.UserCountryResolver
 import com.tangem.features.feed.rwa.categories.ui.state.CategorySelectorUM
@@ -21,7 +22,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Tracks the draft selection separately from the applied one, so Reset can restore it.
+ * Tracks the draft selection separately from the applied one, so nothing reaches the tab until Apply.
  *
  * Two categories are not plain filters. The `featured-assets` one is excluded: it populates the tab's
  * Featured rail. The `real-world-assets` umbrella leads the list titled "All": it is the tab's default
@@ -39,7 +40,8 @@ internal class CategorySelectorModel @Inject constructor(
     private val params = paramsContainer.require<CategorySelectorRoute>()
 
     private var categories: List<CoinCategory> = emptyList()
-    private var appliedSelection = params.categorySelection
+    private var country: String? = null
+    private var draftSelection = params.categorySelection
 
     val uiState: StateFlow<CategorySelectorUM>
         field = MutableStateFlow<CategorySelectorUM>(CategorySelectorUM.Loading)
@@ -52,7 +54,9 @@ internal class CategorySelectorModel @Inject constructor(
         uiState.update { CategorySelectorUM.Loading }
 
         modelScope.launch {
-            getCoinCategoriesUseCase(country = userCountryResolver.resolve()).fold(
+            country = userCountryResolver.resolve()
+
+            getCoinCategoriesUseCase(country = country).fold(
                 ifLeft = {
                     uiState.update { CategorySelectorUM.Error(onRetry = ::loadCategories) }
                 },
@@ -76,19 +80,27 @@ internal class CategorySelectorModel @Inject constructor(
      * empty selection, and a sector tap arrives with its category already attached.
      */
     private fun onSelectionChange(selection: CategorySelection) {
-        appliedSelection = selection
+        draftSelection = selection
 
         updateState(selection = selection, isEdited = selection != params.categorySelection)
     }
 
+    /**
+     * Reset goes back to the scope the region opens on, not to the scope the screen was opened with — a
+     * user in a restricted region lands on the regional default, everyone else on the unfiltered list.
+     */
     private fun onReset() {
-        appliedSelection = params.categorySelection
+        draftSelection = RwaDefaultCategory.resolve(
+            categories = categories,
+            country = country,
+            hasUserSelection = false,
+        ) ?: CategorySelection()
 
-        updateState(selection = appliedSelection, isEdited = false)
+        updateState(selection = draftSelection, isEdited = draftSelection != params.categorySelection)
     }
 
     private fun onApply() {
-        params.callback.onCategorySelect(appliedSelection)
+        params.callback.onCategorySelect(draftSelection)
         router.pop()
     }
 
