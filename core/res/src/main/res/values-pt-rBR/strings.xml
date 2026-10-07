@@ -394,6 +394,7 @@
     <item quantity="other">%d ativos</item>
   </plurals>
   <string name="common_attention">Atenção</string>
+  <string name="common_auto">Automático</string>
   <string name="common_available_networks">Redes disponíveis</string>
   <string name="common_backup">Backup</string>
   <string name="common_backup_error">Erro de backup</string>
@@ -444,6 +445,7 @@
     <item quantity="other">há%d dias</item>
   </plurals>
   <string name="common_decline">Recusar</string>
+  <string name="common_default">Padrão</string>
   <string name="common_delete">Excluir</string>
   <string name="common_disable">Desativar</string>
   <string name="common_disabled">Desabilitado</string>
@@ -601,6 +603,7 @@
   <string name="common_sign">Assine</string>
   <string name="common_sign_and_send">Assine e envie</string>
   <string name="common_skip">Pular</string>
+  <string name="common_slippage">Slippage</string>
   <string name="common_something_went_wrong">Algo deu errado</string>
   <string name="common_stake">Stake</string>
   <string name="common_staked">Estacado</string>
@@ -746,7 +749,7 @@
   <string name="dynamic_addresses_notification_funds_found_title">Fundos encontrados em endereços adicionais</string>
   <string name="dynamic_addresses_receive_badge">Endereço dinâmico</string>
   <string name="dynamic_addresses_unavailability_reason_pending_transaction_send">O gerenciamento de endereços dinâmicos estará disponível assim que as transações pendentes estiverem na rede. %@ está completo</string>
-  <string name="earn_assets">Ativos que geram rendimentos</string>
+  <string name="earn_assets">Ativos para obter rendimentos</string>
   <string name="earn_best_opportunities">Melhores oportunidades</string>
   <string name="earn_clear_filter">Limpar filtro</string>
   <string name="earn_empty">A lista está temporariamente vazia, pois está sendo atualizada. Volte daqui a pouco.</string>
@@ -876,7 +879,7 @@
   <string name="feed_search_show_all_user_assets">Mostrar tudo</string>
   <string name="feed_search_show_less_user_assets">Mostrar menos</string>
   <string name="feed_tab_crypto">Cripto</string>
-  <string name="feed_tab_earn">Ganhe</string>
+  <string name="feed_tab_earn">Obter rendimentos</string>
   <string name="feed_tab_rwa">Ativos do mundo real</string>
   <string name="feed_trending_now">Em alta agora</string>
   <string name="feedback_data_collection_message">As informações a seguir são opcionais. Você pode apagá-las se não quiser compartilhá-las.</string>
@@ -1119,14 +1122,19 @@
   <string name="initial_wallet_sync_banner_description">Sua carteira está sincronizada e pronta. \n Faltam alguns tokens?</string>
   <string name="initial_wallet_sync_banner_title">Carteira importada com sucesso.</string>
   <string name="initial_wallet_sync_restore_progress">Restaurando %d%%</string>
+  <string name="introduction_button_buy_tangem">Comprar Tangem</string>
   <string name="introduction_button_create_wallet">Criar carteira</string>
   <string name="introduction_button_i_have_a_wallet">Eu tenho uma carteira</string>
   <string name="introduction_create_wallet_hardware_description">Se você já tiver uma carteira Tangem</string>
   <string name="introduction_create_wallet_hardware_title">Cartão ou Anel Tangem</string>
   <string name="introduction_create_wallet_seed_phrase_description">Começar sem uma carteira de hardware</string>
   <string name="introduction_create_wallet_seed_phrase_title">Criar uma carteira com frase-semente</string>
+  <string name="introduction_create_wallet_social_description">Comece sem uma carteira de hardware</string>
+  <string name="introduction_create_wallet_social_title">Criar uma conta com %s</string>
   <string name="introduction_i_have_wallet_hardware_description">Use a carteira Tangem para entrar no aplicativo</string>
   <string name="introduction_i_have_wallet_sign_in_google_title">Iniciar sessão com o Google</string>
+  <string name="introduction_i_have_wallet_social_description">Restaure a carteira armazenada na sua conta %s</string>
+  <string name="introduction_i_have_wallet_social_title">Fazer login com a conta %s</string>
   <string name="introduction_import_icloud_not_found">Backup do iCloud não encontrado</string>
   <string name="introduction_import_icloud_restore">Restaurar o backup do iCloud</string>
   <string name="introduction_import_icloud_retry">Tentar novamente o backup do iCloud</string>
@@ -1147,6 +1155,7 @@
   <string name="introduction_stories_two_title">Uma carteira, vários cartões</string>
   <string name="introduction_subtitle">Um único lugar seguro para tudo o que é seu</string>
   <string name="introduction_terms_of_service">Termos de serviço</string>
+  <string name="introduction_terms_of_service_consent">Ao continuar, você concorda com %s</string>
   <string name="introduction_title">Armazene todos os seus ativos</string>
   <string name="joint_account_activated_snackbar">Conta ativada</string>
   <string name="joint_account_activation_account_button_title">Ativar conta</string>
@@ -1159,6 +1168,7 @@
   <string name="joint_account_invite_load_failed_subtitle">Não foi possível carregar a página de convite.\nToque para recarregar</string>
   <string name="joint_account_invite_members_creator">Criador</string>
   <string name="joint_account_invite_members_invite">Convidar</string>
+  <string name="joint_account_invite_members_invited">Convidado</string>
   <string name="joint_account_invite_members_member">Membro</string>
   <string name="joint_account_invite_members_member_info">Informações do membro</string>
   <string name="joint_account_invite_members_new_member">Novo membro</string>
@@ -1177,6 +1187,7 @@
   <string name="joint_account_invite_members_title">Convidar membros</string>
   <string name="joint_account_invite_members_to_join">Convide membros para participar</string>
   <string name="joint_account_invite_members_waiting_title">Aguardando membros</string>
+  <string name="joint_account_invite_share_title">Convite para %s</string>
   <string name="joint_account_join_confirm_sheet_subtitle">Todos os membros desta conta compartilham o mesmo saldo. Outros membros podem movimentar os fundos sem a sua aprovação quando obtiverem assinaturas suficientes</string>
   <string name="joint_account_join_confirm_sheet_title">Você está entrando em uma conta compartilhada</string>
   <string name="joint_account_join_invalid_link_subtitle">Verifique se você abriu o link correto ou peça ao criador da conta para enviá-lo novamente</string>
@@ -1232,6 +1243,10 @@
   <string name="joint_account_send_sends_automatically_setup_fee">Envia automaticamente assim que todas forem coletadas. O primeiro envio inclui uma taxa de configuração única</string>
   <string name="joint_account_send_setup_fee_note">Primeira transação na rede %1$s. A taxa inclui uma cobrança única de %2$s para configurar a conta conjunta na blockchain.</string>
   <string name="joint_account_send_signatures_required">São necessárias %1$s de %2$s assinaturas</string>
+  <plurals name="joint_account_send_signatures_required_banner">
+    <item quantity="one">%1$d assinatura necessária</item>
+    <item quantity="other">%1$d assinaturas necessárias</item>
+  </plurals>
   <string name="joint_account_send_slot_busy_subtitle">Esta rede já tem uma operação aguardando assinaturas. Aguarde a conclusão antes de criar outra.</string>
   <string name="joint_account_send_slot_busy_title">Já existe uma operação em andamento</string>
   <string name="joint_account_settings_networks_info">Esta conta funciona apenas nas redes compatíveis.</string>
@@ -1359,6 +1374,7 @@
   <string name="markets_real_assets_interval_day">Dia</string>
   <string name="markets_real_assets_interval_month">Mês</string>
   <string name="markets_real_assets_interval_week">Semana</string>
+  <string name="markets_real_assets_region_restriction_description">Ações, ETFs e títulos de renda fixa não são compatíveis com a sua região</string>
   <string name="markets_real_assets_region_restriction_description_region">Ações, ETFs e títulos de renda fixa não são compatíveis com %1$s</string>
   <string name="markets_real_assets_region_restriction_title">Não está disponível na sua região</string>
   <string name="markets_real_assets_sector_xstocks_communication">Serviços de comunicação</string>
@@ -2009,22 +2025,27 @@
   <string name="prediction_withdraw_status_failed_title">Falha no saque</string>
   <string name="prediction_withdraw_status_sent_description">O envio pode levar até %1$d minutos</string>
   <string name="prediction_withdraw_status_sent_title">Saque enviado</string>
+  <string name="promo_campaign_all_wallets_enrolled">Todas as suas carteiras estão inscritas</string>
   <string name="promo_campaign_already_activated_subtitle">O cashback elegível será distribuído para:</string>
   <string name="promo_campaign_already_activated_title">Você já está inscrito em %1$s</string>
   <string name="promo_campaign_eligible_tokens">Tokens elegíveis</string>
   <string name="promo_campaign_enroll">Inscreva-se</string>
   <string name="promo_campaign_enroll_success_title">Você se inscreveu com sucesso em %1$s</string>
+  <string name="promo_campaign_enrolled_wallets">Carteira inscrita</string>
   <string name="promo_campaign_not_active_subtitle">Esta campanha não existe mais ou expirou</string>
   <string name="promo_campaign_not_active_title">Campanha não está ativa</string>
+  <string name="promo_campaign_not_started_title">A campanha ainda não está disponível</string>
   <string name="promo_campaign_reactivation_summary_description">Ganhe 0,5% de cashback em todas as trocas acima de US$ 500, em qualquer par, exceto entre pares de stablecoins. Pagamento máximo de US$ 50 por troca.\n\nConclua cinco trocas qualificadas e desbloqueie um bônus adicional de US$ 10.\n\nAs recompensas são pagas semanalmente em USDT ou USDC no endereço selecionado.</string>
   <string name="promo_campaign_select_cashback_account">Selecionar conta de cashback</string>
   <string name="promo_campaign_select_token">Selecionar token de cashback</string>
   <string name="promo_campaign_selected_cashback_account">Conta de cashback selecionada</string>
   <string name="promo_campaign_selected_token">Token de cashback selecionado</string>
+  <string name="promo_campaign_some_wallets_enrolled">Algumas das suas carteiras estão inscritas</string>
   <string name="promo_campaign_summary_title">Inscreva-se em %1$s</string>
   <string name="promo_campaign_terms_agreement">Concordo com %1$s</string>
   <string name="promo_campaign_terms_agreement_android">Concordo com</string>
   <string name="promo_campaign_terms_link">%1$s Termos</string>
+  <string name="promo_campaign_unavailable_title">Campanha indisponível</string>
   <string name="promo_campaign_whale_swap_summary_description">Ganhe cashback em todas as trocas a partir de US$ 10.000 até o final de agosto.\n\nAs taxas aumentam conforme o volume: 0,10% a partir de US$ 10 mil, 0,20% a partir de US$ 20 mil e 0,50% a partir de US$ 100 mil.\n\nPagamento máximo: US$ 500 por troca e US$ 10.000 por carteira, por direção de troca, enquanto durar a campanha. Trocas de stablecoin por stablecoin estão excluídas.\n\nO pagamento é realizado semanalmente em USDT ou USDC no endereço de sua escolha.</string>
   <string name="provider_name_support">%s suporte</string>
   <string name="push_notification_settings_banner_description">As notificações push estão ativadas, mas só funcionarão depois que você as permitir nas configurações do seu dispositivo.</string>
@@ -2274,12 +2295,27 @@
   <string name="settings_upgrade_banner_title">Carteira fria Tangem</string>
   <string name="settings_wallet_name_title">Nome</string>
   <string name="social_agreement_action_create">Criar carteira</string>
+  <string name="social_login_consent_acknowledge">Entendo que perder minha conta %s significa perder esta carteira</string>
+  <string name="social_login_consent_description">A Tangem gera as chaves neste celular e armazena uma cópia criptografada na sua conta %s. Fazer login nessa conta é a forma de recuperar a carteira em qualquer dispositivo.</string>
+  <string name="social_login_consent_email_sharing">Compartilhar meu e-mail com a Tangem para receber atualizações sobre os produtos</string>
+  <string name="social_login_consent_learn_more">Saiba mais</string>
+  <string name="social_login_consent_title">Criar uma carteira com a conta %s</string>
+  <string name="social_login_creating_wallet">Criando sua carteira</string>
+  <string name="social_login_creating_wallet_description">Suas chaves são geradas neste dispositivo</string>
   <string name="social_login_error_account_linked">Esta conta %s já está vinculada a outra carteira.</string>
   <string name="social_login_error_backup_not_saved">Não foi possível salvar o backup — verifique se o armazenamento em nuvem está disponível e tente novamente</string>
   <string name="social_login_error_cloud_access_description">Verifique se a Tangem tem acesso ao seu %s e tente novamente</string>
+  <string name="social_login_error_cloud_access_title">Não foi possível restaurar a carteira</string>
+  <string name="social_login_error_generic">Ocorreu um problema. Por favor, tente novamente</string>
   <string name="social_login_error_no_account">Adicione uma conta %s a este dispositivo para continuar.</string>
+  <string name="social_login_error_restore_failed_description">Não foi possível restaurar a carteira para esta conta. Tente novamente ou entre em contato com o suporte</string>
+  <string name="social_login_error_session_expired">A sessão expirou. Por favor, tente novamente</string>
   <string name="social_login_error_support">Entre em contato com o suporte</string>
   <string name="social_login_error_unavailable">O login com %s não está disponível neste dispositivo.</string>
+  <string name="social_login_restoring_wallet">Restaurando sua carteira</string>
+  <string name="social_login_restoring_wallet_description">Suas chaves nunca saem deste dispositivo sem criptografia</string>
+  <string name="social_login_toast_wallet_added">Carteira adicionada</string>
+  <string name="social_login_toast_wallet_created">Carteira criada</string>
   <string name="social_wallet_delete_anyway">Excluir mesmo assim</string>
   <string name="social_wallet_delete_attention_description">Esta carteira será removida permanentemente do seu dispositivo e da conta %s</string>
   <string name="social_wallet_delete_description">Esta carteira será removida permanentemente do aplicativo, e sua conta %s deixará de estar vinculada a ela. Faça primeiro o backup da sua frase-semente; caso contrário, você perderá permanentemente o acesso a quaisquer criptomoedas que ela contenha.</string>
@@ -2452,7 +2488,10 @@
   <string name="support_selector_view_chat_button">Abra o chat</string>
   <string name="support_selector_view_email_button">Abra o e-mail</string>
   <string name="swap_approve_description">Ao aprovar, você permite que o contrato inteligente utilize seus tokens em transações futuras.</string>
+  <string name="swap_custom_slippage_info">O slippage não pode ser personalizado com este provedor e, em casos raros, pode chegar a %s</string>
   <string name="swap_detailed_mode">Modo detalhado</string>
+  <string name="swap_exchange_rates_info_text">As taxas de câmbio exibidas incluem a taxa do provedor de serviços</string>
+  <string name="swap_exchange_rates_info_title">Taxas de câmbio</string>
   <string name="swap_fixed_rate">Taxa fixa</string>
   <string name="swap_give_permission_fee_footer">A rede cobrará uma taxa de aprovação de token para verificar se você está autorizando o uso do seu token para a troca.</string>
   <string name="swap_in_progress">Troca em andamento</string>
@@ -2462,6 +2501,10 @@
   <string name="swap_search_tooltip_description">Pesquise qualquer token, mesmo que ele ainda não esteja na sua lista.</string>
   <string name="swap_search_tooltip_title">Use a busca para encontrar o que você precisa.</string>
   <string name="swap_simple_mode">Modo simples</string>
+  <string name="swap_slippage_error">Valor não compatível</string>
+  <string name="swap_slippage_info_text">é a diferença entre o preço de execução esperado e o preço de execução efetivo causada por alterações no preço de mercado ou na liquidez</string>
+  <string name="swap_slippage_warning_text">A troca pode falhar se o limite de slippage for atingido</string>
+  <string name="swap_slippage_warning_title">Slippage definido como %s</string>
   <string name="swap_story_fifth_subtitle">Sinta-se seguro com o suporte disponível 24 horas por dia, 7 dias por semana, para ajudá-lo com qualquer problema.</string>
   <string name="swap_story_fifth_title">Sempre aqui</string>
   <string name="swap_story_first_subtitle">Diversos provedores confiáveis ​​em um só lugar — troque qualquer ativo facilmente em sua carteira.</string>
@@ -2554,6 +2597,7 @@
   <string name="tangem_pay_transaction_declined_notification_text">O banco rejeitou esta solicitação de transação.</string>
   <string name="tangem_pay_transaction_details_cashback_below_min">Abaixo do valor mínimo da transação</string>
   <string name="tangem_pay_transaction_details_cashback_cap_reached">O limite mensal foi atingido</string>
+  <string name="tangem_pay_transaction_details_cashback_compliance_risk">Risco de conformidade</string>
   <string name="tangem_pay_transaction_details_cashback_mcc_excluded">Código de categoria do comerciante (MCC) excluído</string>
   <string name="tangem_pay_transaction_details_cashback_none">—</string>
   <string name="tangem_pay_transaction_details_cashback_refund">Devolução da compra</string>
@@ -2572,6 +2616,9 @@
   <string name="tangempay_account_deactivated_message_subtitle">Para dúvidas sobre sua conta, dados ou histórico de transações, entre em contato com o suporte</string>
   <string name="tangempay_account_deactivated_message_title">Sua conta foi encerrada</string>
   <string name="tangempay_account_unable_to_use_rooted">Não é possível usar em dispositivos com root.</string>
+  <string name="tangempay_action_required_description">Para continuar, precisamos de mais algumas informações suas. Isso normalmente leva alguns minutos.</string>
+  <string name="tangempay_action_required_primary_btn">Continuar a verificação</string>
+  <string name="tangempay_action_required_title">Ação necessária</string>
   <string name="tangempay_available_balance">Saldo disponível</string>
   <string name="tangempay_bank_transfer_creating_description">Normalmente, leva até 5 minutos. Em casos raros, até 48 horas</string>
   <string name="tangempay_bank_transfer_creating_title">Criando seus dados bancários</string>
@@ -2579,6 +2626,7 @@
   <string name="tangempay_bank_transfer_details_daily_deposits_hint">Se quiser depositar mais de %s, entre em contato com o suporte</string>
   <string name="tangempay_bank_transfer_details_fee_header">Métodos de depósito e taxas</string>
   <string name="tangempay_bank_transfer_details_limitations">Limitações</string>
+  <string name="tangempay_bank_transfer_failed_title">Não foi possível criar seus dados bancários</string>
   <string name="tangempay_bank_transfer_fee_ach">ACH</string>
   <string name="tangempay_bank_transfer_fee_error_subtitle">Toque para recarregar</string>
   <string name="tangempay_bank_transfer_fee_error_title">Erro ao carregar as informações sobre a taxa</string>
@@ -2709,7 +2757,7 @@
   <string name="tangempay_cashback_accruals_calc_title">Como calculamos o cashback?</string>
   <string name="tangempay_cashback_accruals_exceptions_description">No momento, pagamentos presenciais na maquininha em lojas físicas na UE não acumulam cashback. Ele também não é válido para saques, quase-moeda, recargas de celular, serviços públicos e outras categorias específicas.</string>
   <string name="tangempay_cashback_accruals_exceptions_title">Exceções</string>
-  <string name="tangempay_cashback_accruals_pay_description">Do dia 2 ao dia 5 do próximo mês</string>
+  <string name="tangempay_cashback_accruals_pay_description">Até o dia 10 do mês seguinte, após a verificação da conformidade das transações com as regras do programa de cashback</string>
   <string name="tangempay_cashback_accruals_pay_title">Como pagamos o cashback?</string>
   <string name="tangempay_cashback_accruals_subtitle">Limites e exceções</string>
   <string name="tangempay_cashback_accruals_title">Valores acumulados</string>
@@ -2718,7 +2766,7 @@
   <string name="tangempay_cashback_additional_until">Até %1$s</string>
   <string name="tangempay_cashback_deactivated_description">Isso ocorreu devido à detecção de atividade suspeita. Entre em contato com o suporte para saber mais</string>
   <string name="tangempay_cashback_deactivated_title">Cashback desativado</string>
-  <string name="tangempay_cashback_deposit_banner">Cashback %1$s referente a %2$s será depositado até %3$s</string>
+  <string name="tangempay_cashback_deposit_banner">Cashback %1$s referente a %2$s será depositado até %3$s após a verificação</string>
   <string name="tangempay_cashback_deposited_on">Será depositado em %1$s</string>
   <string name="tangempay_cashback_details_cap">%1$s máximo por mês</string>
   <string name="tangempay_cashback_details_eu_excluded">Por enquanto, não há cashback para compras presenciais em estabelecimentos comerciais da UE.</string>
@@ -2818,7 +2866,7 @@
   <string name="tangempay_kyc_rejected_description">Desculpe, não foi possível verificar.</string>
   <string name="tangempay_kyc_rejected_description_span">Seu perfil.</string>
   <string name="tangempay_main_select_plan">Selecionar plano</string>
-  <string name="tangempay_maximum_cards_issued_description">Você pode ter até 3 cartões. Exclua um para adicionar um novo.</string>
+  <string name="tangempay_maximum_cards_issued_description">Exclua um para adicionar um novo</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">Atualize seu plano para ter mais cartões</string>
   <string name="tangempay_maximum_cards_issued_for_plan_title">Limite de cartões atingido para este plano</string>
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">Atualizar plano</string>
@@ -2970,6 +3018,7 @@
   <string name="tangempay_temporarily_unavailable">O serviço Tangem Pay está temporariamente inacessível.</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_topup_bank_transfer_body">Receber USD de uma conta bancária via ACH/Wire</string>
+  <string name="tangempay_topup_bank_transfer_pending_body">Criando seus dados bancários...</string>
   <string name="tangempay_topup_bank_transfer_title">De uma conta bancária</string>
   <string name="tangempay_topup_receive_body_multichain">Envie USDC ou USDT para o endereço da sua conta</string>
   <string name="tangempay_topup_receive_title">De outra carteira ou exchange</string>
@@ -2980,6 +3029,8 @@
   <string name="tangempay_va_available_to_deposit_day">Disponível para depósito diário:</string>
   <string name="tangempay_va_banking_details_error_description">Tente novamente ou entre em contato com o suporte se o problema persistir</string>
   <string name="tangempay_va_banking_details_error_title">Não foi possível carregar os dados bancários</string>
+  <string name="tangempay_va_banner_failed_description">Por favor, tente novamente ou entre em contato com o suporte se o problema persistir</string>
+  <string name="tangempay_va_banner_failed_title">Não foi possível criar seus dados bancários</string>
   <string name="tangempay_va_limit_resetting_everyday">O limite é reiniciado todos os dias</string>
   <string name="tangempay_visa_benefits">Benefícios Visa</string>
   <string name="tangempay_waitlist_description">Enviaremos um e-mail assim que estiver disponível na sua região</string>
