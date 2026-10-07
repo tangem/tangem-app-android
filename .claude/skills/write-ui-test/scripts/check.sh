@@ -128,7 +128,7 @@ check_test_lines() {
             emit("warn", "scenario-rollback", "setupHooks already resets every scenario before each test; reset only when the reset is part of the case")
         }
         code ~ /assertIs(Not)?Enabled\(|assertHas(No)?ClickAction\(/ {
-            emit("warn", "enabled-semantics", "check the target in production: clickable(enabled=false)/disabled() -> assertIsNotEnabled; TangemHoldToConfirmButton exposes neither, prove readiness another way")
+            emit("warn", "enabled-semantics", "check the target in production: clickable(enabled=false)/disabled() -> assertIsNotEnabled; TangemHoldToConfirmButton has no click action but exposes Disabled -> assertIsEnabled/assertIsNotEnabled")
         }
         code ~ /if[[:space:]]*\(.*isDisplayedSafely\(/ {
             emit("warn", "conditional-click", "an element that is always present after pm clear needs no if; click it directly")
