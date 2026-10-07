@@ -280,6 +280,8 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         } returns Either.Right(emptyList())
 
         coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns null
+        coEvery { onboardingRepository.hasVirtualAccountOrderFailed(userWalletId) } returns false
+        coEvery { onboardingRepository.storeVirtualAccountOrderFailed(userWalletId, any()) } just Runs
         coEvery { onboardingRepository.fetchCustomerEligibility(userWalletId) } returns Either.Right(emptyList())
     }
 
@@ -348,6 +350,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                     VirtualAccountOnramp.Available(productInstanceId = "pi_account"),
                 )
                 coVerify(exactly = 1) { onboardingRepository.clearVirtualAccountOrderId(userWalletId) }
+                coVerify(exactly = 1) { onboardingRepository.storeVirtualAccountOrderFailed(userWalletId, false) }
                 coVerify(exactly = 0) { onboardingRepository.getBankCredentials(any(), any()) }
             }
 
@@ -565,7 +568,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         }
 
         @Test
-        fun `GIVEN no instance and va order CANCELED WHEN invoke THEN id cleared and falls back to eligibility`() =
+        fun `GIVEN no instance and va order CANCELED WHEN invoke THEN id cleared and failure remembered`() =
             runTest {
                 // Arrange
                 val customerInfo = buildCustomerInfo(productInstances = listOf(cardProductInstance))
@@ -585,8 +588,47 @@ internal class DefaultPaymentAccountStatusFetcherTest {
 
                 // Assert
                 coVerify(exactly = 1) { onboardingRepository.clearVirtualAccountOrderId(userWalletId) }
-                assertThat(storedStatuses.lastLoaded().virtualAccount).isEqualTo(VirtualAccountOnramp.Eligible)
+                coVerify(exactly = 1) { onboardingRepository.storeVirtualAccountOrderFailed(userWalletId, true) }
+                assertThat(storedStatuses.lastLoaded().virtualAccount).isEqualTo(VirtualAccountOnramp.Failed)
             }
+
+        @Test
+        fun `GIVEN no instance and va order CANCELED for an ineligible wallet WHEN invoke THEN virtualAccount is null`() =
+            runTest {
+                // Arrange
+                val customerInfo = buildCustomerInfo(productInstances = listOf(cardProductInstance))
+                stubHappyPath(customerInfo)
+                coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns "va-1"
+                coEvery {
+                    customerOrderRepository.getOrderData(userWalletId, "va-1")
+                } returns OrderData(customerId = "c1", status = OrderStatus.CANCELED, withdrawTxHash = null).right()
+                coEvery { onboardingRepository.clearVirtualAccountOrderId(userWalletId) } just Runs
+                val storedStatuses = captureStoredStatuses()
+
+                // Act
+                fetcher.invoke(params)
+
+                // Assert
+                assertThat(storedStatuses.lastLoaded().virtualAccount).isNull()
+            }
+
+        @Test
+        fun `GIVEN no instance and remembered va order failure WHEN invoke THEN virtualAccount is Failed`() = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(productInstances = listOf(cardProductInstance))
+            stubHappyPath(customerInfo)
+            coEvery { onboardingRepository.hasVirtualAccountOrderFailed(userWalletId) } returns true
+            coEvery {
+                onboardingRepository.fetchCustomerEligibility(userWalletId)
+            } returns Either.Right(listOf(TangemPayEligibilityType.VISA_VIRTUAL_ACCOUNT))
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.lastLoaded().virtualAccount).isEqualTo(VirtualAccountOnramp.Failed)
+        }
 
         @Test
         fun `GIVEN no instance and va order is gone on backend WHEN invoke THEN id cleared and falls back to eligibility`() =
