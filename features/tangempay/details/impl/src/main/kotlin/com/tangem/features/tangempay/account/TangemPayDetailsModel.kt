@@ -87,6 +87,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val getCashbackDeactivationDismissedUseCase: GetCashbackDeactivationDismissedUseCase,
     private val setCashbackDeactivationDismissedUseCase: SetCashbackDeactivationDismissedUseCase,
     private val findActiveBankOfframpOrderUseCase: FindActiveBankOfframpOrderUseCase,
+    private val dismissVirtualAccountOrderFailureUseCase: DismissVirtualAccountOrderFailureUseCase,
     tangemPayCurrencyFactory: TangemPayCurrencyFactory,
 ) : Model(),
     TangemPayTxHistoryUiActions,
@@ -459,6 +460,10 @@ internal class TangemPayDetailsModel @Inject constructor(
         if (status is PaymentAccountStatusValue.Error.CardIssueFailed) {
             uiState.update { stateFactory.getCardIssueFailedState(status = status, isBannerDismissed = true) }
         }
+    }
+
+    override fun onBankTransferOnrampFailedBannerDismissed() {
+        modelScope.launch { dismissVirtualAccountOrderFailureUseCase(userWalletId) }
     }
 
     override fun onCardIssueFailedSupportClick() {
