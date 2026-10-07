@@ -56,6 +56,18 @@ internal class MoneyAccountStatusValueDMJsonFormatTest {
     }
 
     @Test
+    fun `GIVEN country not supported stored without country code WHEN decode THEN country code is null`() {
+        // Act
+        val actual = json.decodeFromString(
+            MoneyAccountStatusValueDM.serializer(),
+            """{"__type":"country_not_supported"}""",
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(MoneyAccountStatusValueDM.CountryNotSupported(countryCode = null))
+    }
+
+    @Test
     fun `GIVEN status in the previous Moshi format WHEN decode THEN it fails`() {
         // Act
         val error = runCatching {
@@ -70,8 +82,12 @@ internal class MoneyAccountStatusValueDMJsonFormatTest {
         FormatModel(status = MoneyAccountStatusValueDM.Empty, json = """{"__type":"empty"}"""),
         FormatModel(status = MoneyAccountStatusValueDM.NotCreated, json = """{"__type":"not_created"}"""),
         FormatModel(
-            status = MoneyAccountStatusValueDM.CountryNotSupported,
-            json = """{"__type":"country_not_supported"}""",
+            status = MoneyAccountStatusValueDM.CountryNotSupported(countryCode = null),
+            json = """{"__type":"country_not_supported","country_code":null}""",
+        ),
+        FormatModel(
+            status = MoneyAccountStatusValueDM.CountryNotSupported(countryCode = "US"),
+            json = """{"__type":"country_not_supported","country_code":"US"}""",
         ),
         FormatModel(
             status = MoneyAccountStatusValueDM.Issuing(
