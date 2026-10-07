@@ -174,6 +174,7 @@ internal class JointOperationUMConverter(
             isEnabled = canSign,
             isLoading = isSigning || isRefusing,
             iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_20).takeIf { canSign && isColdWallet },
+            isHoldToConfirm = canSign && !isColdWallet,
             onClick = onSignClick,
         )
     }
