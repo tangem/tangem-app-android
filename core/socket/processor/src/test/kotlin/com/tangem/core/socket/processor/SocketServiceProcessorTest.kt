@@ -224,6 +224,42 @@ internal class SocketServiceProcessorTest {
     }
 
     @Test
+    fun `GIVEN function inherited from a generic interface WHEN processed THEN impl uses the type argument`() {
+        // Arrange
+        val source = SourceFile.kotlin(
+            "EventsSocket.kt",
+            """
+            package test
+
+            import com.tangem.core.socket.Receive
+            import com.tangem.core.socket.Send
+            import com.tangem.core.socket.SocketService
+            import kotlinx.coroutines.flow.Flow
+            import kotlinx.serialization.Serializable
+
+            @Serializable
+            data class EventDto(val id: String)
+
+            interface Base<T> {
+                @Receive fun events(): Flow<T>
+                @Send fun publish(event: T): Boolean
+            }
+
+            @SocketService
+            interface EventsSocket : Base<EventDto>
+            """.trimIndent(),
+        )
+
+        // Act
+        val (result, generated) = compile(source)
+
+        // Assert
+        assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+        assertThat(generated).contains("override fun events(): Flow<EventDto>")
+        assertThat(generated).contains("override fun publish(event: EventDto): Boolean")
+    }
+
+    @Test
     fun `GIVEN annotated class WHEN processed THEN compilation fails`() {
         // Arrange
         val source = SourceFile.kotlin(
