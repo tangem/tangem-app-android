@@ -1091,7 +1091,7 @@
   <string name="joint_account_join_subtitle">Це спільний акаунт. Для кожної транзакції з нього потрібні підписи: %1$s</string>
   <string name="joint_account_join_subtitle_value">%1$s із %2$s учасників</string>
   <string name="joint_account_join_success_message">Акаунт додано</string>
-  <string name="joint_account_join_title">Вас запросили до акаунта «%1$s»</string>
+  <string name="joint_account_join_title">Вас запросили до акаунта %1$s</string>
   <string name="joint_account_join_to_account_btn_text">Приєднатися до акаунта</string>
   <plurals name="joint_account_members_count">
     <item quantity="one">%d учасник</item>
@@ -1106,7 +1106,7 @@
   <string name="joint_account_members_signers_title">Потрібно підписів</string>
   <string name="joint_account_members_subtitle">Вкажіть, скільки людей користуватимуться акаунтом. Кожну транзакцію мають підписати %1$s із %2$s учасників. Пізніше це змінити не можна</string>
   <string name="joint_account_members_subtitle_helper_part"> %1$s із %2$s учасників</string>
-  <string name="joint_account_members_subtitle_main_part">Вкажіть, скільки людей користуватимуться акаунтом. Кожну транзакцію мають підписати%1$s. Пізніше це змінити не можна</string>
+  <string name="joint_account_members_subtitle_main_part">Вкажіть, скільки людей користуватимуться акаунтом. Кожну транзакцію мають підписати %1$s. Пізніше це змінити не можна</string>
   <string name="joint_account_members_title">Учасники</string>
   <string name="joint_account_members_total_subtitle">Щонайбільше %1$s осіб, включно з вами</string>
   <string name="joint_account_members_total_title">Усього учасників</string>
@@ -1144,7 +1144,7 @@
   <string name="joint_account_send_slot_busy_title">Уже є незавершена операція</string>
   <string name="joint_account_settings_networks_info">Цей акаунт працює лише в підтримуваних мережах.</string>
   <string name="joint_account_waiting_activation">Очікує активації</string>
-  <string name="joint_operation_auto_sends_footer">Надішлеться автоматично, коли підпишуть %1$s із %2$s учасників</string>
+  <string name="joint_operation_auto_sends_footer">Надішлеться автоматично, коли підпишуть %1$s із %2$s учасників</string>
   <string name="joint_operation_banner_subtitle">%1$s → %2$s</string>
   <string name="joint_operation_banner_title">%1$s хоче надіслати %2$s</string>
   <string name="joint_operation_banner_title_own">Ви хочете надіслати %1$s</string>
@@ -1155,7 +1155,7 @@
   <string name="joint_operation_decline_alert_title">Відхилити цю транзакцію?</string>
   <string name="joint_operation_declined">Відхилено</string>
   <string name="joint_operation_declined_at">Відхилено %s</string>
-  <string name="joint_operation_declined_footer">Ви відхилили. Інші ще можуть зібрати %1$s із %2$s підписів</string>
+  <string name="joint_operation_declined_footer">Ви відхилили. Інші ще можуть зібрати %1$s із %2$s підписів</string>
   <string name="joint_operation_delete_alert_message">Транзакцію буде скасовано для всіх учасників. Зібрані підписи буде видалено</string>
   <string name="joint_operation_delete_alert_title">Видалити цю транзакцію?</string>
   <string name="joint_operation_deleted_snackbar">Транзакцію видалено</string>
@@ -1166,7 +1166,7 @@
   <string name="joint_operation_signatures_progress">Підписи: %1$s із %2$s</string>
   <string name="joint_operation_signed">Підписано</string>
   <string name="joint_operation_signed_at">Підписано %s</string>
-  <string name="joint_operation_signed_footer">Надішлеться автоматично, коли підпишуть %1$s із %2$s</string>
+  <string name="joint_operation_signed_footer">Надішлеться автоматично, коли підпишуть %1$s із %2$s</string>
   <string name="joint_operation_signers_title">Підписанти</string>
   <string name="joint_operation_signing_blocked_subtitle">Підписання заблоковано з міркувань безпеки. Зверніться до служби підтримки</string>
   <string name="joint_operation_signing_blocked_title">Підписання заблоковано</string>
