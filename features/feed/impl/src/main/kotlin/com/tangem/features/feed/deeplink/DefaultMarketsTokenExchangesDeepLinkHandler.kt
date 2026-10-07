@@ -85,4 +85,8 @@ internal class DefaultMarketsTokenExchangesDeepLinkHandler @AssistedInject const
             queryParams: Map<String, String>,
         ): DefaultMarketsTokenExchangesDeepLinkHandler
     }
+
+    companion object {
+        const val DEEPLINK_KEY = "tangem://token_exchanges"
+    }
 }

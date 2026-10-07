@@ -82,6 +82,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val getCustomerOffers: GetCustomerOffersUseCase,
     private val getBankCredentialsUseCase: GetBankCredentialsUseCase,
     private val findActiveBankOfframpOrderUseCase: FindActiveBankOfframpOrderUseCase,
+    private val dismissVirtualAccountOrderFailureUseCase: DismissVirtualAccountOrderFailureUseCase,
     cashbackControllerFactory: TangemPayCashbackController.Factory,
     tangemPayCurrencyFactory: TangemPayCurrencyFactory,
 ) : Model(),
@@ -330,6 +331,10 @@ internal class TangemPayDetailsModel @Inject constructor(
         }
     }
 
+    override fun onBankTransferOnrampFailedBannerDismissed() {
+        modelScope.launch { dismissVirtualAccountOrderFailureUseCase(userWalletId) }
+    }
+
     override fun onCardIssueFailedSupportClick() {
         analytics.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.TangemPay))
         val customerId = currentStatus.value.customerId ?: return
@@ -386,6 +391,7 @@ internal class TangemPayDetailsModel @Inject constructor(
             VirtualAccountOnramp.Processing -> showVaPreparing()
             is VirtualAccountOnramp.Available,
             VirtualAccountOnramp.Eligible,
+            VirtualAccountOnramp.Failed,
             -> {
                 if (shouldSendClickAnalytics) analytics.send(TangemPayAnalyticsEvents.VaTopupButtonClicked())
                 openVirtualAccountDeposit(onramp, loaded)
@@ -401,7 +407,9 @@ internal class TangemPayDetailsModel @Inject constructor(
                 fetchVirtualAccountBankingDetails(onramp)
                 true
             }
-            VirtualAccountOnramp.Eligible -> {
+            VirtualAccountOnramp.Eligible,
+            VirtualAccountOnramp.Failed,
+            -> {
                 router.push(TangemPayAccountDetailsInnerRoute.BankTransferOnrampOnboarding)
                 true
             }
@@ -414,7 +422,9 @@ internal class TangemPayDetailsModel @Inject constructor(
         when (val onramp = loaded.virtualAccount) {
             null -> return
             VirtualAccountOnramp.Processing -> showVaPreparing()
-            VirtualAccountOnramp.Eligible -> openVirtualAccountDeposit(onramp, loaded)
+            VirtualAccountOnramp.Eligible,
+            VirtualAccountOnramp.Failed,
+            -> openVirtualAccountDeposit(onramp, loaded)
             is VirtualAccountOnramp.Available -> fetchVirtualAccountBankingDetails(onramp)
         }
     }

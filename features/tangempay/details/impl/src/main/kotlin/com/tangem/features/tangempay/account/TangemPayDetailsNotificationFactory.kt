@@ -48,6 +48,14 @@ internal class TangemPayDetailsNotificationFactory(
         ),
     )
 
+    fun createBankTransferOnrampFailedBannerState() = TangemMessageBanner.State(
+        title = resourceReference(R.string.tangempay_va_banner_failed_title),
+        variant = TangemMessageBanner.Variant.Error,
+        shouldShowGlowRing = false,
+        description = resourceReference(R.string.tangempay_va_banner_failed_description),
+        iconStart = alertIcon(),
+    )
+
     fun createAccountDeactivatedBannerState() = TangemMessageBanner.State(
         title = resourceReference(R.string.tangempay_account_deactivated_message_title),
         variant = TangemMessageBanner.Variant.Error,

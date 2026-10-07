@@ -162,6 +162,7 @@ internal class TangemPayAddFundsModelTest {
 
         private fun provideTestModels() = listOf(
             VirtualAccountOnramp.Eligible,
+            VirtualAccountOnramp.Failed,
         )
     }
 
@@ -230,6 +231,7 @@ internal class TangemPayAddFundsModelTest {
     private fun provideTestModels() = listOf(
         VirtualAccountOnramp.Available(PRODUCT_INSTANCE_ID),
         VirtualAccountOnramp.Eligible,
+        VirtualAccountOnramp.Failed,
         VirtualAccountOnramp.Processing,
     )
 
