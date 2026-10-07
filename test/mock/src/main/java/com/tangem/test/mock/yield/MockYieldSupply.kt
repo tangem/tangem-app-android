@@ -4,12 +4,16 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.yield.supply.models.YieldMarketToken
 import com.tangem.domain.yield.supply.models.incentives.YieldIncentiveCampaign
+import com.tangem.domain.yield.supply.models.incentives.YieldReward
+import com.tangem.domain.yield.supply.models.incentives.YieldRewardDestination
 import java.math.BigDecimal
+import java.math.BigInteger
 
 /**
  * Yield Mode fixtures, every argument defaulted so a test states only what it is about.
  *
- * The defaults describe one supplied token on Ethereum, which is the shape most Yield Mode tests start from.
+ * The defaults describe one supplied token on Ethereum with a single owner-bound reward, which is the shape most
+ * Yield Mode tests start from.
  */
 object MockYieldSupply {
 
@@ -17,6 +21,7 @@ object MockYieldSupply {
     const val CHAIN_ID = 1
     const val TOKEN_ADDRESS = "0xTokenAbC"
     const val USER_ADDRESS = "0xUser"
+    const val REWARD_TOKEN = "0xWETH"
 
     fun market(
         tokenAddress: String = TOKEN_ADDRESS,
@@ -46,6 +51,31 @@ object MockYieldSupply {
         hasActiveCampaign = hasActiveCampaign,
         rewardsApr = rewardsApr,
         totalApyEst = totalApyEst,
+    )
+
+    @Suppress("LongParameterList")
+    fun reward(
+        rewardToken: String = REWARD_TOKEN,
+        symbol: String = "WETH",
+        tokenDecimals: Int = 18,
+        claimableAmount: BigInteger = BigInteger("1000000000000000000"),
+        pendingAmount: BigInteger = BigInteger.ZERO,
+        usdValue: BigDecimal = BigDecimal("10.00"),
+        estimatedNetValueUsd: BigDecimal = BigDecimal("8.50"),
+        estimatedServiceFeeUsd: BigDecimal = BigDecimal("1.50"),
+        serviceFeeRateBps: Int = 1_500,
+        finalDestination: YieldRewardDestination = YieldRewardDestination.Owner,
+    ) = YieldReward(
+        rewardToken = rewardToken,
+        symbol = symbol,
+        tokenDecimals = tokenDecimals,
+        claimableAmount = claimableAmount,
+        pendingAmount = pendingAmount,
+        usdValue = usdValue,
+        estimatedNetValueUsd = estimatedNetValueUsd,
+        estimatedServiceFeeUsd = estimatedServiceFeeUsd,
+        serviceFeeRateBps = serviceFeeRateBps,
+        finalDestination = finalDestination,
     )
 
     fun network(id: String = NETWORK_ID, name: String = "Ethereum", currencySymbol: String = "ETH") = Network(
