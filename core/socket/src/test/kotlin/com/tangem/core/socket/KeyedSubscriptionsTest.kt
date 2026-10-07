@@ -11,6 +11,7 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -109,6 +110,22 @@ internal class KeyedSubscriptionsTest {
     }
 
     @Test
+    fun `GIVEN invalid limits or windows WHEN subscriptions created THEN they are rejected`() = runTest {
+        // Arrange
+        val invalid = listOf<() -> Unit>(
+            { createSubscriptions(maxKeysPerService = 0) },
+            { createSubscriptions(batchWindow = (-1).milliseconds) },
+            { createSubscriptions(unsubscribeDelay = (-1).milliseconds) },
+        )
+
+        // Act
+        val errors = invalid.map { create -> runCatching { create() }.exceptionOrNull() }
+
+        // Assert
+        errors.forEach { error -> assertThat(error).isInstanceOf(IllegalArgumentException::class.java) }
+    }
+
+    @Test
     fun `GIVEN connection opens WHEN openKeys called THEN it returns every key and suppresses the delta frame`() =
         runTest {
             // Arrange
@@ -176,16 +193,19 @@ internal class KeyedSubscriptionsTest {
         assertThat(received).containsExactly("a" to 1, "a" to 3).inOrder()
     }
 
-    private fun TestScope.createSubscriptions(maxKeysPerService: Int = Int.MAX_VALUE) =
-        KeyedSubscriptions<String, FakeService>(
-            scope = backgroundScope,
-            newService = { _, openKeys -> FakeService(openKeys).also(services::add) },
-            subscribe = { keys -> send(Frame.Subscribe(keys)) },
-            unsubscribe = { keys -> send(Frame.Unsubscribe(keys)) },
-            maxKeysPerService = maxKeysPerService,
-            batchWindow = BATCH,
-            unsubscribeDelay = UNSUBSCRIBE_DELAY,
-        )
+    private fun TestScope.createSubscriptions(
+        maxKeysPerService: Int = Int.MAX_VALUE,
+        batchWindow: Duration = BATCH,
+        unsubscribeDelay: Duration = UNSUBSCRIBE_DELAY,
+    ) = KeyedSubscriptions<String, FakeService>(
+        scope = backgroundScope,
+        newService = { _, openKeys -> FakeService(openKeys).also(services::add) },
+        subscribe = { keys -> send(Frame.Subscribe(keys)) },
+        unsubscribe = { keys -> send(Frame.Unsubscribe(keys)) },
+        maxKeysPerService = maxKeysPerService,
+        batchWindow = batchWindow,
+        unsubscribeDelay = unsubscribeDelay,
+    )
 
     private fun TestScope.observe(subscriptions: KeyedSubscriptions<String, FakeService>, keys: Set<String>): Job {
         val job = backgroundScope.launch {

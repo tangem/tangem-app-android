@@ -33,6 +33,12 @@ class KeyedSubscriptions<Key : Any, Service : Any>(
     private val unsubscribeDelay: Duration = 2.seconds,
 ) {
 
+    init {
+        require(maxKeysPerService > 0) { "maxKeysPerService must be positive" }
+        require(!batchWindow.isNegative()) { "batchWindow must not be negative" }
+        require(!unsubscribeDelay.isNegative()) { "unsubscribeDelay must not be negative" }
+    }
+
     private val lock = Any()
     private val shards = mutableListOf<Shard>()
 
