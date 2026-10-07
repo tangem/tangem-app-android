@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 data class WaitlistRequest(
     @SerialName("email") val email: String,
     @SerialName("product") val product: String,
-    @SerialName("country") val country: String,
-    @SerialName("region") val region: String?,
+    @SerialName("country_code") val country: String,
+    @SerialName("region_code") val region: String?,
     @SerialName("marketing_consent") val hasMarketingConsent: Boolean,
 )
