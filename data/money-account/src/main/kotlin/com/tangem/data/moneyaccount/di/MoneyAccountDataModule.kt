@@ -175,8 +175,6 @@ internal interface MoneyAccountDataModule {
             findMoneyAccountCreationOrderUseCase: FindMoneyAccountCreationOrderUseCase,
         ): RestoreMoneyAccountOrderUseCase {
             return RestoreMoneyAccountOrderUseCase(
-                orderRepository = orderRepository,
-                onboardingRepository = onboardingRepository,
                 trackOrder = trackOrder,
                 findMoneyAccountCreationOrderUseCase = findMoneyAccountCreationOrderUseCase,
             )
