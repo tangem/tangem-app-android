@@ -1700,10 +1700,11 @@ internal class SwapModel @Inject constructor(
                             showAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
                             return@onSuccess
                         }
-                        sendSuccessSwapEvent(
+                        sendTransactionSentEvent(
                             fromToken = fromSwapCurrencyStatus.currency,
-                            feeBucket = swapFee.feeBucket,
+                            feeType = AnalyticsParam.FeeType.fromString(swapFee.feeBucket.toAnalyticsName()),
                             feeCryptoCurrency = dataState.feePaidCryptoCurrency,
+                            isTransfer = false,
                         )
                         val url = getExplorerTransactionUrlUseCase(
                             txHash = swapTransactionState.txHash,
@@ -1967,6 +1968,13 @@ internal class SwapModel @Inject constructor(
                     TangemLogger.i("onTransferClick: tx hash explore not supported")
                     ""
                 }
+                sendTransactionSentEvent(
+                    fromToken = fromSwapCurrencyStatus.currency,
+                    feeType = (feeSelectorRepository.state.value as? FeeSelectorUM.Content)?.toAnalyticType()
+                        ?: AnalyticsParam.FeeType.Normal,
+                    feeCryptoCurrency = dataState.feePaidCryptoCurrency,
+                    isTransfer = true,
+                )
                 updateWalletBalance()
                 recordTokenTransfer(fromSwapCurrencyStatus, toSwapCurrencyStatus)
                 sendTransferInProgressEvent(isTangemPay = false)
@@ -2719,26 +2727,39 @@ internal class SwapModel @Inject constructor(
             .map { it.currency }
     }
 
-    private fun sendSuccessSwapEvent(
+    private fun sendTransactionSentEvent(
         fromToken: CryptoCurrency,
-        feeBucket: FeeBucket,
+        feeType: AnalyticsParam.FeeType,
         feeCryptoCurrency: CryptoCurrencyStatus?,
+        isTransfer: Boolean,
     ) {
         val feeAssetType = if (feeCryptoCurrency?.currency is CryptoCurrency.Coin) {
             AnalyticsParam.FeeAssetType.Coin
         } else {
             AnalyticsParam.FeeAssetType.Token
         }
-        val event = AnalyticsParam.TxSentFrom.Swap(
-            blockchain = fromToken.network.name,
-            token = fromToken.symbol,
-            feeType = AnalyticsParam.FeeType.fromString(feeBucket.toAnalyticsName()),
-            feeToken = getFeeToken().symbol,
-            feeAssetType = feeAssetType,
-        )
+        val blockchain = fromToken.network.name
+        val feeToken = getFeeToken().symbol
+        val sentFrom = if (isTransfer) {
+            AnalyticsParam.TxSentFrom.Transfer(
+                blockchain = blockchain,
+                token = fromToken.symbol,
+                feeType = feeType,
+                feeToken = feeToken,
+                feeAssetType = feeAssetType,
+            )
+        } else {
+            AnalyticsParam.TxSentFrom.Swap(
+                blockchain = blockchain,
+                token = fromToken.symbol,
+                feeType = feeType,
+                feeToken = feeToken,
+                feeAssetType = feeAssetType,
+            )
+        }
         analyticsEventHandler.send(
             Basic.TransactionSent(
-                sentFrom = event,
+                sentFrom = sentFrom,
                 memoType = Basic.TransactionSent.MemoType.Null,
                 isCustomToken = fromToken.isCustom,
                 isCustomFeeToken = getFeeToken().isCustom,
