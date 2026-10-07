@@ -29,12 +29,13 @@ internal class CreateVirtualAccountOrderUseCaseTest {
 
     private val userWalletId = UserWalletId("1234567890ABCDEF")
     private val paymentAccountAddress = "0xcollateral"
+    private val idempotencyKey = "caller-owned-key"
 
     @Test
     fun `GIVEN stored va order id WHEN invoke THEN skips creation and polling`() = runTest {
         coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns "existing-id"
 
-        val result = useCase(userWalletId, paymentAccountAddress)
+        val result = useCase(userWalletId, paymentAccountAddress, idempotencyKey)
 
         assertThat(result.isRight()).isTrue()
         coVerify(exactly = 0) { onboardingRepository.createVirtualAccountOrder(any(), any(), any()) }
@@ -47,12 +48,15 @@ internal class CreateVirtualAccountOrderUseCaseTest {
     fun `GIVEN no stored id and create succeeds WHEN invoke THEN stores id and starts polling`() = runTest {
         coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns null
         coEvery {
-            onboardingRepository.createVirtualAccountOrder(userWalletId, paymentAccountAddress, any())
+            onboardingRepository.createVirtualAccountOrder(userWalletId, paymentAccountAddress, idempotencyKey)
         } returns "new-id".right()
 
-        val result = useCase(userWalletId, paymentAccountAddress)
+        val result = useCase(userWalletId, paymentAccountAddress, idempotencyKey)
 
         assertThat(result.isRight()).isTrue()
+        coVerify(exactly = 1) {
+            onboardingRepository.createVirtualAccountOrder(userWalletId, paymentAccountAddress, idempotencyKey)
+        }
         coVerify(exactly = 1) { onboardingRepository.storeVirtualAccountOrderId(userWalletId, "new-id") }
         coVerify(exactly = 1) { onboardingRepository.storeVirtualAccountOrderFailed(userWalletId, false) }
         coVerify(exactly = 1) { pollingUseCase.invoke(any(), userWalletId) }
@@ -63,10 +67,10 @@ internal class CreateVirtualAccountOrderUseCaseTest {
     fun `GIVEN no stored id and create fails WHEN invoke THEN returns error and does not store or poll`() = runTest {
         coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns null
         coEvery {
-            onboardingRepository.createVirtualAccountOrder(userWalletId, paymentAccountAddress, any())
+            onboardingRepository.createVirtualAccountOrder(userWalletId, paymentAccountAddress, idempotencyKey)
         } returns VisaApiError.Unspecified.left()
 
-        val result = useCase(userWalletId, paymentAccountAddress)
+        val result = useCase(userWalletId, paymentAccountAddress, idempotencyKey)
 
         assertThat(result.leftOrNull()).isEqualTo(VisaApiError.Unspecified)
         coVerify(exactly = 0) { onboardingRepository.storeVirtualAccountOrderId(any(), any()) }
