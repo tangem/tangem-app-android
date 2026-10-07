@@ -3,16 +3,17 @@ package com.tangem.data.quotes.di
 import android.content.Context
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
+import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.data.quotes.multi.DefaultMultiQuoteUpdater
 import com.tangem.data.quotes.repository.DefaultQuotesRepository
 import com.tangem.data.quotes.store.DefaultQuotesStatusesStore
 import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
-import com.tangem.core.remote.moshi.NetworkMoshi
-import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
+import com.tangem.datasource.utils.create
 import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
 import com.tangem.domain.quotes.IsHighNetworkFeeUseCase
@@ -41,15 +42,19 @@ internal object QuotesDataModule {
     ): QuotesStatusesStore {
         return DefaultQuotesStatusesStore(
             runtimeStore = RuntimeSharedStore(),
-            persistenceDataStore = dataStoreFactory.create(
-                serializer = MoshiDataStoreSerializer(
-                    moshi = moshi,
-                    types = mapWithStringKeyTypes<QuotesResponse.Quote>(),
-                    defaultValue = emptyMap(),
-                ),
-                produceFile = { context.dataStoreFile(fileName = "quotes") },
-                scope = appScope,
-            ),
+            persistenceDataStore = if (dataStoreFactory.isKotlinxDataStoreEnabled) {
+                dataStoreFactory.create(defaultValue = emptyMap<String, QuotesResponse.Quote>(), fileName = "quotes")
+            } else {
+                dataStoreFactory.create(
+                    serializer = MoshiDataStoreSerializer(
+                        moshi = moshi,
+                        types = mapWithStringKeyTypes<QuotesResponse.Quote>(),
+                        defaultValue = emptyMap(),
+                    ),
+                    produceFile = { context.dataStoreFile(fileName = "quotes") },
+                    scope = appScope,
+                )
+            },
             scope = appScope,
         )
     }

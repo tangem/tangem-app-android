@@ -1,15 +1,18 @@
 package com.tangem.features.approval.impl.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.features.approval.api.SelectApprovalTypeComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -25,6 +28,7 @@ import javax.inject.Inject
 internal class SelectApprovalTypeModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
+    private val urlOpener: UrlOpener,
 ) : Model() {
 
     private val params: SelectApprovalTypeComponent.Params = paramsContainer.require()
@@ -40,6 +44,12 @@ internal class SelectApprovalTypeModel @Inject constructor(
     fun onChangeApproveType(approveType: ApproveType) {
         if (uiState.value.approveType == approveType) return
         uiState.update { it.copy(approveType = approveType) }
+    }
+
+    fun onLearnMoreClick() {
+        modelScope.launch {
+            urlOpener.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.GiveRevokePermission))
+        }
     }
 
     fun onConfirmClick() {

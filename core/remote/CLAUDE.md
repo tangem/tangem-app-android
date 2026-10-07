@@ -19,6 +19,11 @@ and third-party libraries. Owned by the core Android team.
   `SessionAuthQualifiers`.
 - **Moshi** — the `@NetworkMoshi` qualifier, the `NetworkMoshiConfigurer` `@IntoSet` extension point,
   and `UnknownEnumMoshiAdapter`.
+- **kotlinx-serialization** — the `@NetworkJson` qualifier and `NetworkJsonFactory` (`ignoreUnknownKeys`,
+  `isLenient`, `encodeDefaults`, `explicitNulls = false`, `coerceInputValues = true`,
+  `decodeEnumsCaseInsensitive = true`). Modules contribute `SerializersModule`s through
+  `SerializersModuleProvider` (`core:utils`) bound `@IntoSet`; `RetrofitApiSpec.serialization` picks the
+  converter per API (Moshi by default).
 
 ## Rules
 
@@ -32,6 +37,21 @@ and third-party libraries. Owned by the core Android team.
   third-party libraries — never on `data:*`, `features:*`, `domain:*` or a stream module.
 - The legacy package `com.tangem.datasource.api.common.response.*` is retained for `ApiResponseExt` so
   consumers need no import change; new types use `com.tangem.core.remote.*`.
+- **A wire value this build does not know never fails the response.** On a kotlinx API a wire enum
+  carries an `UNKNOWN` constant and a default (`val status: Status = Status.UNKNOWN`), which
+  `coerceInputValues` applies to unknown and `null` values; a `type`-discriminated object is a sealed
+  hierarchy with an `Unknown(type, payload)` subclass registered through `polymorphicUnknownFallback`
+  (`core:utils`); a free-form string is mapped in the converter with a `fromString` that ignores case and
+  returns the domain `UNKNOWN`. The converter that meets an unknown value logs it with `TangemLogger.e` and maps it
+  to the safest domain state (skip the item, keep polling, treat as undefined). Adding a real value to
+  the enum is what makes every exhaustive `when` fail to compile — that is the intended reminder to
+  add app support. A fallback protects only the builds that ship it, and older app versions still fail on
+  the new value, so a field that gains one gets a KDoc naming the first app version with the fallback.
+  Enum values match in any case, and so does the `type` of any hierarchy, sealed or open, registered
+  through `polymorphicUnknownFallback`, so two entries or subtypes must not differ only in case. The Moshi
+  builds compared enum values exactly, so for older app versions an enum value in another case is a new
+  value too. `TangemPayPolymorphicFallbackTest` (`spend:datasource`) walks every Pay API response and fails
+  when a polymorphic type has no fallback, so a new kotlinx API interface joins its list.
 
 ## Adding a Retrofit API / config
 

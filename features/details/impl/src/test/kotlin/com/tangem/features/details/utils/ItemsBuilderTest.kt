@@ -9,6 +9,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.settings.HotWalletRestrictionManager
 import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.impl.R
+import com.tangem.features.mcp.api.McpFeatureToggles
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -23,16 +24,19 @@ internal class ItemsBuilderTest {
 
     private val router: Router = mockk(relaxUnitFun = true)
     private val hotWalletRestrictionManager: HotWalletRestrictionManager = mockk()
+    private val mcpFeatureToggles: McpFeatureToggles = mockk()
 
     private val itemsBuilder = ItemsBuilder(
         router = router,
         hotWalletRestrictionManager = hotWalletRestrictionManager,
+        mcpFeatureToggles = mcpFeatureToggles,
     )
 
     @BeforeEach
     fun setUp() {
-        clearMocks(router, hotWalletRestrictionManager)
+        clearMocks(router, hotWalletRestrictionManager, mcpFeatureToggles)
         every { hotWalletRestrictionManager.isCreationEnabledSync() } returns false
+        every { mcpFeatureToggles.isMcpEnabled } returns false
     }
 
     @Test

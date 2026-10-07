@@ -3,12 +3,16 @@ package com.tangem.features.tangempay.account
 import com.tangem.domain.models.pay.TangemPayImage
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_clock_20
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.domain.models.account.TangemPayTariffPlanState
+import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
@@ -42,15 +46,58 @@ internal class TangemPayDetailsStateFactoryTest {
 
     private val notIssuedNetwork: PaymentNetworkStatus.NotIssued = mockk(relaxed = true)
 
+    private var isVisaOnrampV2Enabled = false
+
     private val factory = TangemPayDetailsStateFactory(
         onBack = {},
         onOpenMenu = {},
         intents = intents,
+        isVisaOnrampV2Enabled = { isVisaOnrampV2Enabled },
     )
 
     @BeforeEach
     fun resetMocks() {
         clearMocks(intents)
+        isVisaOnrampV2Enabled = false
+    }
+
+    @Test
+    fun `GIVEN v2 enabled and banking details being created WHEN getLoadedState THEN creating banner shown`() {
+        // Arrange
+        isVisaOnrampV2Enabled = true
+        val status = loadedStatus(virtualAccount = VirtualAccountOnramp.Processing)
+
+        // Act
+        val banner = factory.getLoadedState(status).bankTransferOnrampBanner
+
+        // Assert
+        val state = requireNotNull(banner).state
+        val iconEnd = state.iconEnd as TangemIconUM.Icon
+        assertThat(state.copy(iconEnd = iconEnd.copy(tint = null))).isEqualTo(
+            TangemMessageBanner.State(
+                title = resourceReference(R.string.tangempay_bank_transfer_creating_title),
+                shouldShowGlowRing = false,
+                description = resourceReference(R.string.tangempay_bank_transfer_creating_description),
+                iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_clock_20),
+            ),
+        )
+        assertThat(banner.onClose).isNull()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideHiddenBankTransferOnrampBannerCases")
+    fun `GIVEN no banking details creation in v2 WHEN getLoadedState THEN creating banner hidden`(
+        case: HiddenBankTransferOnrampBannerCase,
+    ) {
+        // Arrange
+        isVisaOnrampV2Enabled = case.isV2Enabled
+        val status = loadedStatus(virtualAccount = case.virtualAccount)
+
+        // Act
+        val banner = factory.getLoadedState(status).bankTransferOnrampBanner
+
+        // Assert
+        assertThat(banner).isNull()
     }
 
     @Test
@@ -76,7 +123,7 @@ internal class TangemPayDetailsStateFactoryTest {
         val state = factory.getLoadedState(status)
 
         // Assert
-        val actionButtonsEnabled = state.balanceBlockState.actionButtons.map { it.config.isEnabled }
+        val actionButtonsEnabled = state.balanceBlockState.actionButtons.map { it.isEnabled }
         assertThat(actionButtonsEnabled).containsExactly(case.expectedEnabled, case.expectedEnabled)
         assertThat(state.balanceBlockState.cardsBlockState?.isAddCardEnabled).isEqualTo(case.expectedEnabled)
         // The card tile is intentionally NOT source-gated: it stays clickable on stale data as long as
@@ -99,7 +146,7 @@ internal class TangemPayDetailsStateFactoryTest {
         val state = factory.getLoadedState(status)
 
         // Assert
-        assertThat(state.balanceBlockState.actionButtons.map { it.config.isEnabled }).containsExactly(false, false)
+        assertThat(state.balanceBlockState.actionButtons.map { it.isEnabled }).containsExactly(false, false)
         assertThat(state.balanceBlockState.cardsBlockState?.isAddCardEnabled).isTrue()
     }
 
@@ -409,7 +456,7 @@ internal class TangemPayDetailsStateFactoryTest {
 
         // Assert
         assertThat(state.balanceBlockState).isInstanceOf(TangemPayDetailsBalanceBlockState.Error::class.java)
-        assertThat(state.balanceBlockState.actionButtons.map { it.config.isEnabled }).containsExactly(false, false)
+        assertThat(state.balanceBlockState.actionButtons.map { it.isEnabled }).containsExactly(false, false)
         assertThat(state.balanceBlockState.cardsBlockState?.cards).hasSize(1)
     }
 
@@ -423,7 +470,7 @@ internal class TangemPayDetailsStateFactoryTest {
 
         // Assert
         assertThat(state.balanceBlockState).isInstanceOf(TangemPayDetailsBalanceBlockState.Error::class.java)
-        assertThat(state.balanceBlockState.actionButtons.map { it.config.isEnabled }).containsExactly(false, false)
+        assertThat(state.balanceBlockState.actionButtons.map { it.isEnabled }).containsExactly(false, false)
     }
 
     @ParameterizedTest
@@ -523,7 +570,9 @@ internal class TangemPayDetailsStateFactoryTest {
         statusTariffPlan: TangemPayTariffPlanState? = null,
         statusBalance: PaymentAccountStatusValue.Balance? = balance(),
         statusNetworks: List<PaymentNetworkStatus> = listOf(availableNetwork),
+        virtualAccount: VirtualAccountOnramp? = null,
     ): PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
+        every { this@mockk.virtualAccount } returns virtualAccount
         every { source } returns statusSource
         every { error } returns statusError
         every { cards } returns statusCards
@@ -583,7 +632,20 @@ internal class TangemPayDetailsStateFactoryTest {
         override fun toString(): String = name
     }
 
+    data class HiddenBankTransferOnrampBannerCase(val isV2Enabled: Boolean, val virtualAccount: VirtualAccountOnramp?)
+
     private companion object {
+        @JvmStatic
+        fun provideHiddenBankTransferOnrampBannerCases() = listOf(
+            HiddenBankTransferOnrampBannerCase(isV2Enabled = false, virtualAccount = VirtualAccountOnramp.Processing),
+            HiddenBankTransferOnrampBannerCase(isV2Enabled = true, virtualAccount = VirtualAccountOnramp.Eligible),
+            HiddenBankTransferOnrampBannerCase(
+                isV2Enabled = true,
+                virtualAccount = VirtualAccountOnramp.Available(productInstanceId = "pi_account"),
+            ),
+            HiddenBankTransferOnrampBannerCase(isV2Enabled = true, virtualAccount = null),
+        )
+
         @JvmStatic
         fun provideAddFundsCases() = listOf(
             AddFundsCase(

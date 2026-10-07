@@ -47,6 +47,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.extensions.resolveReference
@@ -64,6 +65,8 @@ enum class TangemRowVerticalAlignment { Top, Center }
 /**
  * Design-system v2 row: a list-item container with start / end slots, title+subtitle on the
  * leading side, value+subvalue on the trailing side, and an optional slot below the row.
+ *
+ * Version: 1.0.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=2344-1406)
  *
@@ -474,6 +477,12 @@ private fun Modifier.bottomDivider(color: Color, width: Dp, horizontalInset: Dp)
         end = Offset(x = size.width - inset, y = y),
         strokeWidth = stroke,
     )
+}
+
+/** Public API surface of [TangemRow]. */
+object TangemRow {
+
+    val version = DsVersion(major = 1, minor = 0, patch = 0)
 }
 
 // region Previews

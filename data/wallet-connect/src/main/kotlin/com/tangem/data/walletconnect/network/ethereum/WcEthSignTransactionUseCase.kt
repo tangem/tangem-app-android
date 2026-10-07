@@ -14,7 +14,6 @@ import com.tangem.data.walletconnect.sign.SignCollector
 import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
-import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.transaction.usecase.PrepareForSendUseCase
 import com.tangem.domain.walletconnect.error.parseSendError
 import com.tangem.domain.walletconnect.model.WcApprovedAmount
@@ -54,20 +53,8 @@ internal class WcEthSignTransactionUseCase @AssistedInject constructor(
         accountAddress = context.accountAddress,
     ).map { lce ->
         lce.map { result ->
-            val amount = ethTxHelper.getApprovedAmount(method.transaction.data, result)
+            approvalAmount = ethTxHelper.getApprovedAmount(method.transaction.data, result)
                 ?: return@map BlockAidTransactionCheck.Result.Plain(result)
-            val tokenInfo = amount.tokenInfo
-            if (!amount.isUnlimited) {
-                approvalAmount = WcApprovedAmount(
-                    amount = Amount(
-                        currencySymbol = tokenInfo.symbol,
-                        decimals = tokenInfo.decimals,
-                        value = amount.approvedAmount,
-                    ),
-                    logoUrl = tokenInfo.logoUrl,
-                    chainId = tokenInfo.chainId,
-                )
-            }
             BlockAidTransactionCheck.Result.Approval(result = result)
         }
     }

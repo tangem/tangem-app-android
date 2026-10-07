@@ -10,7 +10,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
@@ -31,9 +30,9 @@ import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
+import com.tangem.domain.jointaccount.usecase.GetSharedJointAccountInvitesUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
-import com.tangem.features.jointaccount.deeplink.JointAccountInviteLinkBuilder
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
 import com.tangem.features.jointaccount.main.converter.JointAccountToMembersUMConverter
@@ -46,6 +45,7 @@ import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
@@ -62,17 +62,18 @@ internal class JointAccountMembersModel @Inject constructor(
     private val router: Router,
     private val clipboardManager: ClipboardManager,
     private val uiMessageSender: UiMessageSender,
-    private val shareManager: ShareManager,
     private val jointAccountListSupplier: SingleJointAccountListSupplier,
     private val jointAccountListFetcher: SingleJointAccountListFetcher,
     private val pollingCoordinator: JointAccountPollingCoordinator,
     private val singleAccountSupplier: SingleAccountSupplier,
     private val getJointAccountInvitesUseCase: GetJointAccountInvitesUseCase,
+    private val getSharedJointAccountInvitesUseCase: GetSharedJointAccountInvitesUseCase,
     private val ownerAddressResolver: JointOwnerAddressResolver,
     private val activateJointAccountUseCase: ActivateJointAccountUseCase,
     private val archiveCryptoPortfolioUseCase: ArchiveCryptoPortfolioUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val stateController: JointAccountMembersStateController,
+    private val inviteSharing: JointAccountInviteSharing,
 ) : Model() {
 
     private var activationJob: Job? = null
@@ -83,7 +84,7 @@ internal class JointAccountMembersModel @Inject constructor(
         onMemberInfoClick = { avatar, name, address ->
             onMemberInfoClick(MemberCardConfig(avatar = avatar, name = name, address = address))
         },
-        onInviteClick = ::shareInvite,
+        onInviteClick = { inviteId -> inviteSharing.share(inviteId) },
         onActivateClick = ::onActivateClick,
         onShareSafelyClick = ::onShareSafelyClick,
         onArchiveClick = ::onArchiveClick,
@@ -114,6 +115,7 @@ internal class JointAccountMembersModel @Inject constructor(
     init {
         stateController.update(UpdateMembersInitialStateTransformer(onCloseClick = ::onCloseClick))
         observeAccount()
+        recordSharedInvites()
         subscribePolling()
         refreshAccounts()
     }
@@ -143,20 +145,31 @@ internal class JointAccountMembersModel @Inject constructor(
                     userWalletId = params.userWalletId,
                     cryptoAccountId = account.cryptoAccountId,
                 )
-
-                ownAddressFlow(cryptoAccountId = account.cryptoAccountId).map { ownAddress ->
-                    ResolvedAccount(account = account, invites = invites, ownAddress = ownAddress)
+                combine(
+                    flow = ownAddressFlow(cryptoAccountId = account.cryptoAccountId),
+                    flow2 = getSharedJointAccountInvitesUseCase(
+                        userWalletId = params.userWalletId,
+                        cryptoAccountId = account.cryptoAccountId,
+                    ),
+                ) { ownAddress, shared ->
+                    ResolvedAccount(
+                        account = account,
+                        invites = invites,
+                        sharedInvites = shared,
+                        ownAddress = ownAddress,
+                    )
                 }
             }
             .onEach { resolved ->
                 dismissStaleActivationConfirmation(resolvedAccountId = resolved?.account?.cryptoAccountId)
 
                 val transformer = resolved
-                    ?.let { (account, invites, ownAddress) ->
+                    ?.let { account ->
                         UpdateMembersAccountTransformer(
-                            account = account,
-                            invites = invites,
-                            ownAddress = ownAddress,
+                            account = account.account,
+                            invites = account.invites,
+                            sharedInvites = account.sharedInvites,
+                            ownAddress = account.ownAddress,
                             callbacks = converterCallbacks,
                         )
                     }
@@ -221,12 +234,18 @@ internal class JointAccountMembersModel @Inject constructor(
         }
     }
 
-    /** The slot's own invite: a link issued for one slot cannot be redeemed for another */
-    private fun shareInvite(inviteId: String) {
-        shareManager.shareText(text = JointAccountInviteLinkBuilder.build(inviteId = inviteId))
+    private fun recordSharedInvites() {
+        inviteSharing
+            .recordShared(userWalletId = params.userWalletId, account = resolvedAccountFlow)
+            .launchIn(modelScope)
     }
 
     private fun onActivateClick(cryptoAccountId: String) {
+        if (!IS_ACTIVATION_CONFIRMATION_SHOWN) {
+            onConfirmActivationClick(cryptoAccountId = cryptoAccountId)
+            return
+        }
+
         val userWallet = userWalletsListRepository.getSyncOrNull(id = params.userWalletId)
 
         confirmedAccountId = cryptoAccountId
@@ -389,9 +408,17 @@ internal class JointAccountMembersModel @Inject constructor(
         router.pop()
     }
 
-    private data class ResolvedAccount(val account: JointAccount, val invites: List<String>, val ownAddress: String?)
+    private data class ResolvedAccount(
+        val account: JointAccount,
+        val invites: List<String>,
+        val sharedInvites: Set<String>,
+        val ownAddress: String?,
+    )
 
     private companion object {
         const val ACCOUNT_LOOKUP_TIMEOUT_MILLIS = 3_000L
+
+        /** The activation sheet is left out for now, activation starts at once; the step comes back by flipping this */
+        const val IS_ACTIVATION_CONFIRMATION_SHOWN = false
     }
 }
