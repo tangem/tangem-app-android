@@ -1,7 +1,6 @@
 package com.tangem.data.pay
 
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.pay.isTangemPayType
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -102,7 +101,7 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
                     val hasTangemPay = onboardingRepository
                         .hasTangemPayInWallet(wallet.walletId)
                         .getOrNull() == true
-                    wallet to (hasTangemPay && !hasNotPassedResidencyStep(wallet.walletId))
+                    wallet to hasTangemPay
                 }
             }
                 .awaitAll()
@@ -110,10 +109,6 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
                     UserWalletData(userWallet, isPaeraCustomer)
                 }
         }
-    }
-
-    private fun hasNotPassedResidencyStep(userWalletId: UserWalletId): Boolean {
-        return onboardingRepository.getSavedCustomerInfo(userWalletId)?.kycStatus == KycStatus.REQUIRED
     }
 
     private fun resetDataWhenWalletsUpdate() {

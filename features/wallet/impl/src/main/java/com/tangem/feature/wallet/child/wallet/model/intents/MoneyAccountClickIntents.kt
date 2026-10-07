@@ -19,6 +19,7 @@ import com.tangem.core.ui.res.generated.icons.ic_heart_broken_28
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.repository.MoneyAccountRepository
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
@@ -30,6 +31,8 @@ import javax.inject.Inject
 internal interface MoneyAccountIntents {
 
     fun onMoneyAccountActivatingClicked()
+
+    fun onMoneyAccountKycRequiredClicked(userWalletId: UserWalletId, customerId: String?)
 
     fun onMoneyAccountVerificationClicked(userWalletId: UserWalletId, customerId: String)
 
@@ -61,6 +64,17 @@ internal class MoneyAccountClickIntentsImplementor @Inject constructor(
                 onClick { closeBs() }
             }
         }
+
+        uiMessageSender.send(bottomSheet)
+    }
+
+    override fun onMoneyAccountKycRequiredClicked(userWalletId: UserWalletId, customerId: String?) {
+        val bottomSheet = kycRequiredBottomSheet(
+            onContactSupportClick = { sendFeedbackEmail(kycRequiredFeedbackEmailType(userWalletId, customerId)) },
+            onContinueVerificationClick = {
+                router.openTangemPayEligibility(product = TangemPayProduct.BANKING_ACCOUNT, userWalletId = userWalletId)
+            },
+        )
 
         uiMessageSender.send(bottomSheet)
     }
