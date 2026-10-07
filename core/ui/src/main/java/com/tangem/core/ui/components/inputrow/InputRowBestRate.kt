@@ -66,7 +66,12 @@ fun InputRowBestRate(
                 .padding(TangemTheme.dimens.spacing12)
                 .testTag(TransactionSuccessScreenTestTags.PROVIDER_BLOCK),
         ) {
-            InputRowAsyncImage(imageUrl = imageUrl, modifier = Modifier.size(TangemTheme.dimens.spacing40))
+            InputRowAsyncImage(
+                imageUrl = imageUrl,
+                modifier = Modifier
+                    .size(TangemTheme.dimens.spacing40)
+                    .testTag(TransactionSuccessScreenTestTags.PROVIDER_ICON),
+            )
             Column(
                 modifier = Modifier
                     .padding(start = TangemTheme.dimens.spacing12),
