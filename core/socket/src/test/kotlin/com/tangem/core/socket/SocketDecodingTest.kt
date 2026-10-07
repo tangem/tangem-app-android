@@ -62,6 +62,24 @@ internal class SocketDecodingTest {
         }
 
     @Test
+    fun `GIVEN two configured instances of one deserializer class WHEN a frame arrives THEN each keeps its own`() =
+        runTest {
+            // Arrange
+            val channel = createChannel()
+            val plain = collect(channel.receive(PrefixedPriceDeserializer(prefix = "")))
+            val prefixed = collect(channel.receive(PrefixedPriceDeserializer(prefix = "$")))
+            transport.connections.single().serverOpens()
+
+            // Act
+            transport.connections.single().serverSends(TRADE_FRAME)
+            runCurrent()
+
+            // Assert
+            assertThat(plain).containsExactly("2")
+            assertThat(prefixed).containsExactly("$2")
+        }
+
+    @Test
     fun `GIVEN a deserializer throws an unexpected error WHEN frames arrive THEN later frames still decode`() = runTest {
         // Arrange
         val channel = createChannel()
@@ -144,6 +162,13 @@ internal class SocketDecodingTest {
         override val descriptor = TradeDto.serializer().descriptor
 
         override fun deserialize(decoder: Decoder): String = TradeDto.serializer().deserialize(decoder).price
+    }
+
+    private class PrefixedPriceDeserializer(private val prefix: String) : DeserializationStrategy<String> {
+
+        override val descriptor = TradeDto.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): String = prefix + TradeDto.serializer().deserialize(decoder).price
     }
 
     private class FailingOnceDeserializer : DeserializationStrategy<String> {
