@@ -4,17 +4,19 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.domain.markets.CoinCategory
+import com.tangem.utils.CountryNames
 
 /**
  * Whether the scope the list currently shows holds assets the user's region blocks.
  *
  * The backend evaluates `restricted` per category for the country the request carried, and never sends
- * the country list itself — so this is the only thing the app can say about a region, and the banner copy
- * is fixed rather than assembled from data.
+ * the country list itself — so the region the notice names is the country the app asked about, not
+ * anything the response spells out.
  */
 internal object RwaRegionRestriction {
 
@@ -38,16 +40,33 @@ internal object RwaRegionRestriction {
     }
 
     /**
-     * The notice for a blocked scope, or `null` when nothing is blocked. The copy is fixed: the backend
-     * returns a per-category `restricted` flag and never the countries behind it, so neither the blocked
-     * categories nor the regions can be named from data.
+     * The notice for a blocked scope, or `null` when nothing is blocked.
+     *
+     * Names the region when the platform can name it, and falls back to the region-less wording when it
+     * cannot — a bare country code reads worse than saying nothing. The restriction itself is reported
+     * either way.
+     *
+     * @param country ISO 3166-1 alpha-2 code the restrictions were evaluated for, e.g. `US`
      */
-    fun banner(restrictedIds: Set<String>, selection: CategorySelection): TangemMessageBanner.State? {
+    fun banner(
+        restrictedIds: Set<String>,
+        selection: CategorySelection,
+        country: String?,
+    ): TangemMessageBanner.State? {
         if (!isRestricted(restrictedIds = restrictedIds, selection = selection)) return null
+
+        val regionName = CountryNames.resolveDisplayName(country)
 
         return TangemMessageBanner.State(
             title = resourceReference(R.string.markets_real_assets_region_restriction_title),
-            description = resourceReference(R.string.markets_real_assets_region_restriction_description),
+            description = if (regionName == null) {
+                resourceReference(R.string.markets_real_assets_region_restriction_description)
+            } else {
+                resourceReference(
+                    id = R.string.markets_real_assets_region_restriction_description_region,
+                    formatArgs = wrappedList(regionName),
+                )
+            },
             variant = TangemMessageBanner.Variant.Warning,
             iconEnd = TangemIconUM.Icon(
                 imageVector = Icons.ic_info_20,

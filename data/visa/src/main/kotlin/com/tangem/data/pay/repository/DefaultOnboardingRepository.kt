@@ -6,6 +6,7 @@ import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.data.pay.store.CashbackSummaryStore
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.store.TangemPayCustomerInfoStore
 import com.tangem.data.pay.util.BankCredentialsConverter
@@ -59,6 +60,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val paymentAccountStatusStore: PaymentAccountStatusesStore,
     private val txHistoryItemsStore: TangemPayTxHistoryItemsStore,
+    private val cashbackSummaryStore: CashbackSummaryStore,
     private val customerInfoStore: TangemPayCustomerInfoStore,
 ) : OnboardingRepository {
 
@@ -368,6 +370,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
             val address = requestHelper.getCustomerWalletAddress(userWalletId)
             tangemPayStorage.clearAll(userWalletId = userWalletId, customerWalletAddress = address)
             txHistoryItemsStore.remove(userWalletId.stringValue)
+            cashbackSummaryStore.remove(listOf(userWalletId))
             setHideMainOnboardingBanner(userWalletId)
             paymentAccountStatusStore.store(
                 userWalletId = userWalletId,

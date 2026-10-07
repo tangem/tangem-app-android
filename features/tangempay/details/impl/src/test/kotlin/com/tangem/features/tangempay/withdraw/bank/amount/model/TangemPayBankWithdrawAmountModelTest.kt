@@ -23,6 +23,7 @@ import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTa
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import com.tangem.features.tangempay.withdraw.bank.offrampDestination
 import com.tangem.features.tangempay.withdraw.bank.paymentToken
+import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.mockk
@@ -93,6 +94,48 @@ internal class TangemPayBankWithdrawAmountModelTest {
     }
 
     @Test
+    fun `GIVEN saved entry before its recipient loads WHEN model created THEN route row not clickable`() {
+        // Act
+        val model = createModel(draft = BankWithdrawDraft(entry = BankWithdrawEntry.Saved("acc-1")))
+
+        // Assert
+        assertThat(model.uiState.value.route.onClick).isNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN saved recipient on wire WHEN model created THEN wire shown and route row not clickable`() {
+        // Arrange
+        val draft = BankWithdrawDraft(entry = BankWithdrawEntry.SeeAll, recipient = bankAccount(rail = BankRail.WIRE))
+
+        // Act
+        val model = createModel(draft = draft)
+
+        // Assert
+        val route = model.uiState.value.route
+        assertThat(route.rail).isEqualTo(BankRail.WIRE)
+        assertThat(route.onClick).isNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN wire picked WHEN saved recipient on ach selected THEN ach shown and route row not clickable`() {
+        // Arrange
+        val model = createModel()
+        model.uiState.value.route.onClick?.invoke()
+        (model.uiState.value.sheet as SheetUM.Routes).items.last().onClick()
+
+        // Act
+        draftFlow.value = draftFlow.value.copy(recipient = bankAccount(rail = BankRail.ACH))
+
+        // Assert
+        val route = model.uiState.value.route
+        assertThat(route.rail).isEqualTo(BankRail.ACH)
+        assertThat(route.onClick).isNull()
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN amount below minimum WHEN value changed THEN range error and continue disabled`() {
         // Arrange
         val model = createModel()
@@ -103,7 +146,24 @@ internal class TangemPayBankWithdrawAmountModelTest {
         // Assert
         val state = model.uiState.value
         assertThat(state.amount.error).isEqualTo(
-            resourceReference(R.string.tangempay_withdraw_bank_amount_error_range, wrappedList("$1", "$2,324.55")),
+            resourceReference(R.string.tangempay_withdraw_bank_amount_error_range, wrappedList("$1", "$10,000")),
+        )
+        assertThat(state.isContinueEnabled).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN balance below limit WHEN amount above limit entered THEN range error instead of not enough funds`() {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        model.uiState.value.amount.onValueChange("10001")
+
+        // Assert
+        val state = model.uiState.value
+        assertThat(state.amount.error).isEqualTo(
+            resourceReference(R.string.tangempay_withdraw_bank_amount_error_range, wrappedList("$1", "$10,000")),
         )
         assertThat(state.isContinueEnabled).isFalse()
         model.onDestroy()
@@ -171,6 +231,23 @@ internal class TangemPayBankWithdrawAmountModelTest {
         // Assert
         val state = model.uiState.value
         assertThat(state.amount.value).isEqualTo("2324.55")
+        assertThat(state.amount.error).isNull()
+        assertThat(state.isContinueEnabled).isTrue()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN balance above limit WHEN max clicked THEN limit`() {
+        // Arrange
+        val options = bankWithdrawOptions(sources = listOf(bankWithdrawSource(fiatBalance = BigDecimal("20000"))))
+        val model = createModel(options = options)
+
+        // Act
+        model.uiState.value.source.onMaxClick()
+
+        // Assert
+        val state = model.uiState.value
+        assertThat(state.amount.value).isEqualTo("10000")
         assertThat(state.amount.error).isNull()
         assertThat(state.isContinueEnabled).isTrue()
         model.onDestroy()
@@ -263,6 +340,66 @@ internal class TangemPayBankWithdrawAmountModelTest {
 
         // Assert
         assertThat(model.uiState.value.sheet).isEqualTo(SheetUM.Hidden)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN token the off-ramp does not accept WHEN token sheet opened THEN listed unavailable`() {
+        // Arrange
+        val options = bankWithdrawOptions(sources = listOf(bankWithdrawSource(), baseSource.copy(isAvailable = false)))
+        val model = createModel(options = options)
+
+        // Act
+        model.uiState.value.source.onClick()
+
+        // Assert
+        val sheet = model.uiState.value.sheet as SheetUM.Tokens
+        assertThat(sheet.items.map { Triple(it.subtitle, it.isAvailable, it.isSelected) }).containsExactly(
+            Triple(
+                resourceReference(R.string.tangempay_withdraw_bank_source_subtitle, wrappedList("Polygon", "$2,325.55")),
+                true,
+                true,
+            ),
+            Triple(
+                resourceReference(
+                    R.string.tangempay_withdraw_bank_source_subtitle,
+                    wrappedList("Base", resourceReference(R.string.tangempay_withdraw_bank_offramp_unavailable)),
+                ),
+                false,
+                false,
+            ),
+        ).inOrder()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN unavailable token listed first WHEN model created THEN first available token preselected`() {
+        // Arrange
+        val options = bankWithdrawOptions(sources = listOf(baseSource.copy(isAvailable = false), bankWithdrawSource()))
+
+        // Act
+        val model = createModel(options = options)
+
+        // Assert
+        assertThat(model.uiState.value.source.subtitle).isEqualTo(
+            resourceReference(R.string.tangempay_withdraw_bank_source_subtitle, wrappedList("Polygon", "$2,325.55")),
+        )
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN draft source became unavailable WHEN model created THEN falls back to the first available source`() {
+        // Arrange
+        val draft = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal, source = baseSource)
+        val options = bankWithdrawOptions(sources = listOf(baseSource.copy(isAvailable = false), bankWithdrawSource()))
+
+        // Act
+        val model = createModel(draft = draft, options = options)
+
+        // Assert
+        assertThat(model.uiState.value.source.subtitle).isEqualTo(
+            resourceReference(R.string.tangempay_withdraw_bank_source_subtitle, wrappedList("Polygon", "$2,325.55")),
+        )
         model.onDestroy()
     }
 

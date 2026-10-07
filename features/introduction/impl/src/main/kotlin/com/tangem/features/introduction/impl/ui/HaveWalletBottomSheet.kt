@@ -34,11 +34,13 @@ import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.ds2.modal.reportMeasuredHeight
 import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
+import com.tangem.core.ui.extensions.rememberLastNonNull
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_download_24
+import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_20
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.hotwallet.cloudrestore.CloudRestoreErrorMessage
 import com.tangem.features.introduction.impl.ui.state.HaveWalletUM
@@ -66,13 +68,12 @@ internal fun HaveWalletBottomSheet(config: TangemBottomSheetConfig) {
         // The overlay composes in the host, outside this screen's forced palette, so the modal forces its own.
         forceDarkTheme = true,
         containerColor = TangemTheme.colors3.bg.secondary,
+        showDragIndicator = false,
         // Back steps inside the sheet; on the first step it dismisses, unless a row is still running.
         onBack = (step as? HaveWalletUM.Step.Import)?.onBack ?: {}.takeIf { isBusy },
         title = { content ->
             TangemModal.TopNavigation(
-                startButton = (content.step as? HaveWalletUM.Step.Import)?.onBack?.let {
-                    { TangemButton.Back(onClick = it) }
-                },
+                startButton = { StepBackButton(onBack = (content.step as? HaveWalletUM.Step.Import)?.onBack) },
                 endButton = closeButton(isBusy = isBusy, onClick = content.onCloseClick),
                 contentColumn = { StepTitle(step = content.step) },
             )
@@ -96,6 +97,19 @@ internal fun HaveWalletBottomSheet(config: TangemBottomSheetConfig) {
                 }
             }
         }
+    }
+}
+
+/**
+ * Always in the bar's start slot, so the bar never animates the slot itself: its slide drops the button's material
+ * for as long as it runs and then brings the shadow in after the button has already arrived. Fading in place lets
+ * the button arrive whole, together with the step it belongs to.
+ */
+@Composable
+private fun StepBackButton(onBack: (() -> Unit)?) {
+    val displayedOnBack = rememberLastNonNull(onBack)
+    AnimatedVisibility(visible = onBack != null, enter = fadeIn(), exit = fadeOut()) {
+        displayedOnBack?.let { TangemButton.Back(onClick = it) }
     }
 }
 
@@ -300,7 +314,7 @@ private fun ErrorStepPreview() {
 }
 
 private fun previewOption(titleRes: Int, descriptionRes: Int) = WalletOptionUM(
-    iconRes = CoreUiR.drawable.ic_tangem_card_24,
+    icon = WalletOptionUM.Icon.Tinted(Icons.ic_logo_tangem_20),
     title = resourceReference(titleRes),
     description = resourceReference(descriptionRes),
     onClick = {},
