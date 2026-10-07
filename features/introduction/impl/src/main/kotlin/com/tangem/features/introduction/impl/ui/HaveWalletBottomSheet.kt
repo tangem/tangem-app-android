@@ -73,9 +73,7 @@ internal fun HaveWalletBottomSheet(config: TangemBottomSheetConfig) {
         onBack = (step as? HaveWalletUM.Step.Import)?.onBack ?: {}.takeIf { isBusy },
         title = { content ->
             TangemModal.TopNavigation(
-                startButton = (content.step as? HaveWalletUM.Step.Import)?.onBack?.let {
-                    { TangemButton.Back(onClick = it) }
-                },
+                startButton = { StepBackButton(onBack = (content.step as? HaveWalletUM.Step.Import)?.onBack) },
                 endButton = closeButton(isBusy = isBusy, onClick = content.onCloseClick),
                 contentColumn = { StepTitle(step = content.step) },
             )
