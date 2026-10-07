@@ -7,6 +7,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.domain.*
+import java.math.BigDecimal
 
 interface SwapRepository {
 
@@ -34,6 +35,7 @@ interface SwapRepository {
         toDecimals: Int,
         providerId: String,
         rateType: RateType,
+        customSlippage: BigDecimal? = null,
     ): Either<ExpressDataError, QuoteModel>
 
     @Suppress("LongParameterList")
@@ -54,6 +56,7 @@ interface SwapRepository {
         refundAddress: String? = null, // for cex only
         refundExtraId: String? = null, // for cex only
         toExtraId: String? = null, // for networks with memo only
+        customSlippage: BigDecimal? = null,
     ): Either<ExpressDataError, SwapDataModel>
 
     // TODO: Add target error handling, remove either ([REDACTED_JIRA])

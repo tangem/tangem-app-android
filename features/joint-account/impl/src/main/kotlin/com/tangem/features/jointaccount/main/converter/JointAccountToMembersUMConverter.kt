@@ -30,10 +30,16 @@ internal class JointAccountToMembersUMConverter(
 ) : Converter<JointAccountToMembersUMConverter.Input, JointAccountMembersUM> {
 
     /**
-     * @property invites    the invites this device holds; only the creating device ever receives them
-     * @property ownAddress this wallet's owner address in the account, null while its key is not derived yet
+     * @property invites       the invites this device holds; only the creating device ever receives them
+     * @property sharedInvites the [invites] already handed to the share sheet — their slots read "Invited"
+     * @property ownAddress    this wallet's owner address in the account, null while its key is not derived yet
      */
-    data class Input(val account: JointAccount, val invites: List<String>, val ownAddress: String?)
+    data class Input(
+        val account: JointAccount,
+        val invites: List<String>,
+        val sharedInvites: Set<String>,
+        val ownAddress: String?,
+    )
 
     /** Every side effect the converted state can trigger. */
     data class Callbacks(
@@ -50,7 +56,9 @@ internal class JointAccountToMembersUMConverter(
     )
 
     override fun convert(value: Input): JointAccountMembersUM {
-        val (account, invites, ownAddress) = value
+        val account = value.account
+        val invites = value.invites
+        val ownAddress = value.ownAddress
         val phase = account.status.toPhase(
             isThisDeviceCreator = account.isThisDeviceCreator(ownAddress = ownAddress, invites = invites),
         )
@@ -69,8 +77,10 @@ internal class JointAccountToMembersUMConverter(
         val remainingInvites = invites
             .filterNot { invite -> invite.lowercase() in redeemedInvites }
 
-        val freeSlots = List(size = (account.membersCount - account.members.size).coerceAtLeast(minimumValue = 0)) {
-            freeSlot(index = it, invite = remainingInvites.getOrNull(it), phase = phase)
+        val freeSlotsCount = (account.membersCount - account.members.size).coerceAtLeast(minimumValue = 0)
+        val freeSlots = List(size = freeSlotsCount) { index ->
+            val invite = remainingInvites.getOrNull(index)
+            freeSlot(index = index, invite = invite, isInvited = invite in value.sharedInvites, phase = phase)
         }
 
         return JointAccountMembersUM(
@@ -178,12 +188,18 @@ internal class JointAccountToMembersUMConverter(
     private fun freeSlot(
         index: Int,
         invite: String?,
+        isInvited: Boolean,
         phase: MembersScreenPhase,
     ): JointAccountMembersUM.MemberUM.FreeSlot {
+        val status = if (isInvited) {
+            CoreUiR.string.joint_account_invite_members_invited
+        } else {
+            CoreUiR.string.joint_account_invite_members_not_invited
+        }
         return JointAccountMembersUM.MemberUM.FreeSlot(
             id = "slot_$index",
             title = resourceReference(CoreUiR.string.joint_account_invite_members_member),
-            status = resourceReference(CoreUiR.string.joint_account_invite_members_not_invited),
+            status = resourceReference(status),
             canInvite = phase.stage != MembersScreenPhase.Stage.Completed &&
                 phase.isThisDeviceCreator &&
                 invite != null,

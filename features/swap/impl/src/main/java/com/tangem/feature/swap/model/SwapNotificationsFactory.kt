@@ -31,7 +31,9 @@ import com.tangem.feature.swap.domain.models.ui.PermissionDataState
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.domain.models.ui.SwapFee
 import com.tangem.feature.swap.domain.models.ui.SwapState
+import com.tangem.feature.swap.models.PredictionTopUpLimits
 import com.tangem.feature.swap.models.UiActions
+import com.tangem.feature.swap.models.warningFor
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.lib.crypto.BlockchainUtils.getTezosThreshold
@@ -49,6 +51,7 @@ internal class SwapNotificationsFactory(
     private val actions: UiActions,
     private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
     private val appCurrencyProvider: Provider<AppCurrency> = Provider { AppCurrency.Default },
+    private val predictionTopUpLimitsProvider: Provider<PredictionTopUpLimits?> = Provider { null },
 ) {
 
     fun getGeneralErrorStateNotifications(
@@ -129,6 +132,7 @@ internal class SwapNotificationsFactory(
         isHighNetworkFee: Boolean = false,
     ): ImmutableList<NotificationUM> {
         val warnings = buildList {
+            maybeAddPredictionTopUpLimitWarning(quoteModel)
             maybeAddRegionRestrictionError(quoteModel)
             maybeAddFeeErrorNotification(feeCryptoCurrencyStatus, quoteModel, feeError)
             maybeAddRentExemptionError(quoteModel)
@@ -147,6 +151,13 @@ internal class SwapNotificationsFactory(
             maybeAddHighNetworkFeeWarning(isHighNetworkFee)
         }
         return warnings.toPersistentList()
+    }
+
+    private fun MutableList<NotificationUM>.maybeAddPredictionTopUpLimitWarning(
+        quoteModel: SwapState.QuotesLoadedState,
+    ) {
+        val warning = predictionTopUpLimitsProvider()?.warningFor(quoteModel.toTokenInfo.tokenAmount.value)
+        if (warning != null) add(warning)
     }
 
     private fun MutableList<NotificationUM>.maybeAddHighNetworkFeeWarning(isHighNetworkFee: Boolean) {

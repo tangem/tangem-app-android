@@ -1,7 +1,6 @@
 package com.tangem.features.moneyaccount.main.ui
 
 import android.content.res.Configuration
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,10 +10,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -25,12 +24,16 @@ import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.text.applyBladeBrush
-import com.tangem.core.ui.ds.row.TangemRowContainer
-import com.tangem.core.ui.ds.row.TangemRowLayoutId
+import com.tangem.core.ui.ds2.row.TangemRow
+import com.tangem.core.ui.ds2.row.TangemRowContentLead
+import com.tangem.core.ui.ds2.row.TangemRowText
+import com.tangem.core.ui.ds2.row.TangemRowTextRole
+import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
+import com.tangem.features.moneyaccount.main.impl.R
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.core.ui.R as CoreUiR
 
@@ -43,210 +46,170 @@ internal fun MoneyAccountMainBlockContent(
     when (state) {
         is MoneyAccountMainUM.Empty -> Unit
         is MoneyAccountMainUM.Loading -> MoneyAccountMainLoading(modifier)
-        is MoneyAccountMainUM.UnderReview -> MoneyAccountStateRow(
+        is MoneyAccountMainUM.Onboarding -> MoneyAccountRow(
             subtitle = state.subtitle,
             modifier = modifier,
             onClick = state.onClick,
         )
-        is MoneyAccountMainUM.Provisioning -> MoneyAccountStateRow(
-            subtitle = stringReference("Setting up your account"),
+        is MoneyAccountMainUM.ActionRequired -> MoneyAccountRow(
+            subtitle = resourceReference(R.string.money_account_main_status_action_required),
+            subtitleColor = TangemTheme.colors3.text.status.warning,
+            balance = state.balance,
+            isBalanceHidden = isBalanceHidden,
             modifier = modifier,
             onClick = state.onClick,
         )
-        is MoneyAccountMainUM.CountryNotSupported -> MoneyAccountStateRow(
-            subtitle = stringReference("Not available in your region"),
+        is MoneyAccountMainUM.Content -> MoneyAccountRow(
+            subtitle = state.subtitle,
+            balance = state.balance,
+            isBalanceHidden = isBalanceHidden,
             modifier = modifier,
             onClick = state.onClick,
         )
-        is MoneyAccountMainUM.Content -> MoneyAccountMainContent(state, isBalanceHidden, modifier)
-        is MoneyAccountMainUM.TemporaryUnavailable -> MoneyAccountStateRow(
-            subtitle = stringReference(DASH_SIGN),
-            modifier = modifier,
-            isEnabled = false,
-        )
-        is MoneyAccountMainUM.SyncNeeded -> MoneyAccountStateRow(
-            subtitle = stringReference("Virtual account session expired"),
-            modifier = modifier,
-            isEnabled = false,
-        )
-        is MoneyAccountMainUM.ExposedDevice -> MoneyAccountStateRow(
-            subtitle = stringReference("Unable to use on rooted devices"),
-            modifier = modifier,
-        )
+        is MoneyAccountMainUM.Unavailable -> MoneyAccountUnavailable(modifier)
     }
 }
 
 @Composable
-private fun MoneyAccountMainContent(
-    state: MoneyAccountMainUM.Content,
-    isBalanceHidden: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    TangemRowContainer(
-        modifier = modifier
-            .clip(RoundedCornerShape(size = 18.dp))
-            .background(TangemTheme.colors2.surface.level3)
-            .clickableSingle(onClick = state.onClick),
-    ) {
-        AccountIcon(
-            name = TextReference.EMPTY,
-            icon = AccountIconUM.Money,
-            size = AccountIconSize.Default,
-            modifier = Modifier
-                .layoutId(TangemRowLayoutId.HEAD)
-                .padding(end = TangemTheme.dimens2.x2),
-        )
-        Text(
-            text = "Virtual account",
-            color = TangemTheme.colors2.text.neutral.primary,
-            style = TangemTheme.typography2.bodySemibold16,
-            modifier = Modifier.layoutId(TangemRowLayoutId.START_TOP),
-        )
-        Text(
-            text = state.subtitle.resolveReference(),
-            color = TangemTheme.colors2.text.neutral.secondary,
-            style = TangemTheme.typography2.captionSemibold12,
-            modifier = Modifier.layoutId(TangemRowLayoutId.START_BOTTOM),
-        )
-        MoneyAccountFiatAmount(
-            text = state.balance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
-            isBalanceFlickering = state.isBalanceFlickering,
-            isBalanceFromCache = state.shouldShowOnlyCacheWarning,
-            modifier = Modifier.layoutId(TangemRowLayoutId.END_TOP),
-        )
-        Text(
-            text = state.balanceSubtitle.resolveReference(),
-            color = TangemTheme.colors2.text.neutral.secondary,
-            style = TangemTheme.typography2.captionSemibold12,
-            modifier = Modifier.layoutId(TangemRowLayoutId.END_BOTTOM),
-        )
-    }
-}
-
-@Composable
-private fun MoneyAccountStateRow(
+private fun MoneyAccountRow(
     subtitle: TextReference,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null,
-    isEnabled: Boolean = true,
+    subtitleColor: Color = TangemTheme.colors3.text.secondary,
+    balance: MoneyAccountMainUM.BalanceUM? = null,
+    isBalanceHidden: Boolean = false,
 ) {
-    TangemRowContainer(
-        modifier = modifier
-            .clip(RoundedCornerShape(size = 18.dp))
-            .background(TangemTheme.colors2.surface.level3)
-            .conditional(onClick != null && isEnabled) { clickableSingle(onClick = requireNotNull(onClick)) },
-    ) {
-        AccountIcon(
-            name = TextReference.EMPTY,
-            icon = AccountIconUM.Money,
-            size = AccountIconSize.Default,
-            modifier = Modifier
-                .layoutId(TangemRowLayoutId.HEAD)
-                .padding(end = TangemTheme.dimens2.x2),
-        )
-        Text(
-            text = "Virtual account",
-            color = if (isEnabled) {
-                TangemTheme.colors2.text.neutral.primary
-            } else {
-                TangemTheme.colors2.text.status.disabled
-            },
-            style = TangemTheme.typography2.bodySemibold16,
-            modifier = Modifier.layoutId(TangemRowLayoutId.START_TOP),
-        )
-        Text(
-            text = subtitle.resolveReference(),
-            color = if (isEnabled) {
-                TangemTheme.colors2.text.neutral.secondary
-            } else {
-                TangemTheme.colors2.text.status.disabled
-            },
-            style = TangemTheme.typography2.captionSemibold12,
-            modifier = Modifier.layoutId(TangemRowLayoutId.START_BOTTOM),
-        )
-    }
-}
-
-@Composable
-private fun MoneyAccountFiatAmount(
-    text: AnnotatedString,
-    isBalanceFlickering: Boolean,
-    isBalanceFromCache: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        AnimatedVisibility(isBalanceFromCache) {
-            Row(
-                modifier = Modifier.padding(horizontal = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Icon(
-                    modifier = Modifier.size(12.dp),
-                    painter = painterResource(CoreUiR.drawable.ic_error_sync_24),
-                    tint = TangemTheme.colors2.graphic.neutral.secondary,
-                    contentDescription = null,
+    TangemRow(
+        modifier = modifier.moneyAccountCard(),
+        contentLead = TangemRowContentLead.Start,
+        verticalAlignment = TangemRowVerticalAlignment.Center,
+        onClick = onClick,
+        startSlot = { MoneyAccountIcon() },
+        titleSlot = {
+            TangemRowText(
+                text = resourceReference(R.string.money_account_main_name),
+                role = TangemRowTextRole.Title,
+            )
+        },
+        subtitleSlot = {
+            Text(
+                text = subtitle.resolveReference(),
+                color = subtitleColor,
+                style = TangemTheme.typography3.caption.medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        },
+        valueSlot = balance?.let {
+            {
+                MoneyAccountFiatAmount(
+                    text = balance.amount.orMaskWithStars(isBalanceHidden).resolveReference(),
+                    isBalanceFlickering = balance.isFlickering,
+                    isBalanceFromCache = balance.isFromCache,
                 )
             }
-        }
+        },
+        subvalueSlot = balance?.let {
+            { TangemRowText(text = balance.currency, role = TangemRowTextRole.Subvalue) }
+        },
+    )
+}
 
+@Composable
+private fun MoneyAccountUnavailable(modifier: Modifier = Modifier) {
+    TangemRow(
+        modifier = modifier.moneyAccountCard(),
+        contentLead = TangemRowContentLead.Start,
+        verticalAlignment = TangemRowVerticalAlignment.Center,
+        startSlot = { MoneyAccountIcon() },
+        titleSlot = {
+            Text(
+                text = resourceReference(R.string.money_account_main_name).resolveReference(),
+                color = TangemTheme.colors3.text.tertiary,
+                style = TangemTheme.typography3.body.medium,
+            )
+        },
+        subtitleSlot = {
+            Text(
+                text = DASH_SIGN,
+                color = TangemTheme.colors3.text.tertiary,
+                style = TangemTheme.typography3.caption.medium,
+            )
+        },
+    )
+}
+
+@Composable
+private fun MoneyAccountIcon() {
+    AccountIcon(
+        name = TextReference.EMPTY,
+        icon = AccountIconUM.Money,
+        size = AccountIconSize.Default,
+    )
+}
+
+@Composable
+private fun MoneyAccountFiatAmount(text: String, isBalanceFlickering: Boolean, isBalanceFromCache: Boolean) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        if (isBalanceFromCache) {
+            Icon(
+                modifier = Modifier.size(12.dp),
+                painter = painterResource(CoreUiR.drawable.ic_error_sync_24),
+                tint = TangemTheme.colors3.icon.secondary,
+                contentDescription = null,
+            )
+        }
         Text(
             text = text,
-            style = TangemTheme.typography2.bodySemibold16.applyBladeBrush(
+            style = TangemTheme.typography3.body.medium.applyBladeBrush(
                 isEnabled = isBalanceFlickering,
-                textColor = TangemTheme.colors2.text.neutral.primary,
+                textColor = TangemTheme.colors3.text.primary,
             ),
             textAlign = TextAlign.End,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
 
 @Composable
 private fun MoneyAccountMainLoading(modifier: Modifier = Modifier) {
-    TangemRowContainer(
-        modifier = modifier
-            .clip(RoundedCornerShape(size = 18.dp))
-            .background(TangemTheme.colors2.surface.level3),
-    ) {
-        CircleShimmer(
-            modifier = Modifier
-                .layoutId(TangemRowLayoutId.HEAD)
-                .padding(end = TangemTheme.dimens2.x2)
-                .size(TangemTheme.dimens2.x10),
-        )
-        TextShimmer(
-            style = TangemTheme.typography2.bodySemibold16,
-            radius = TangemTheme.dimens2.x25,
-            modifier = Modifier
-                .layoutId(TangemRowLayoutId.START_TOP)
-                .width(TangemTheme.dimens2.x25),
-        )
-        TextShimmer(
-            style = TangemTheme.typography2.captionSemibold12,
-            radius = TangemTheme.dimens2.x25,
-            modifier = Modifier
-                .layoutId(TangemRowLayoutId.START_BOTTOM)
-                .width(TangemTheme.dimens2.x11),
-        )
-        TextShimmer(
-            style = TangemTheme.typography2.bodyRegular16,
-            radius = TangemTheme.dimens2.x25,
-            modifier = Modifier
-                .layoutId(TangemRowLayoutId.END_TOP)
-                .width(TangemTheme.dimens2.x20),
-        )
-        TextShimmer(
-            style = TangemTheme.typography2.bodyRegular16,
-            radius = TangemTheme.dimens2.x25,
-            modifier = Modifier
-                .layoutId(TangemRowLayoutId.END_BOTTOM)
-                .width(TangemTheme.dimens2.x11),
-        )
-    }
+    TangemRow(
+        modifier = modifier.moneyAccountCard(),
+        contentLead = TangemRowContentLead.Start,
+        verticalAlignment = TangemRowVerticalAlignment.Center,
+        startSlot = { CircleShimmer(modifier = Modifier.size(40.dp)) },
+        titleSlot = {
+            TextShimmer(
+                style = TangemTheme.typography3.body.medium,
+                radius = 10.dp,
+                modifier = Modifier.width(100.dp),
+            )
+        },
+        subtitleSlot = {
+            TextShimmer(
+                style = TangemTheme.typography3.caption.medium,
+                radius = 10.dp,
+                modifier = Modifier.width(44.dp),
+            )
+        },
+        valueSlot = {
+            TextShimmer(
+                style = TangemTheme.typography3.body.medium,
+                radius = 10.dp,
+                modifier = Modifier.width(80.dp),
+            )
+        },
+    )
 }
+
+@Composable
+private fun Modifier.moneyAccountCard(): Modifier = this
+    .clip(RoundedCornerShape(24.dp))
+    .background(TangemTheme.colors3.bg.secondary)
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360)
@@ -257,7 +220,13 @@ private fun MoneyAccountMainBlockContent_Preview(
     state: MoneyAccountMainUM,
 ) {
     TangemThemePreviewRedesign {
-        MoneyAccountMainBlockContent(state = state, isBalanceHidden = false)
+        MoneyAccountMainBlockContent(
+            state = state,
+            isBalanceHidden = false,
+            modifier = Modifier
+                .background(TangemTheme.colors3.bg.primary)
+                .padding(16.dp),
+        )
     }
 }
 
@@ -265,20 +234,22 @@ private class MoneyAccountMainBlockContentPreviewParameterProvider :
     CollectionPreviewParameterProvider<MoneyAccountMainUM>(
         collection = listOf(
             MoneyAccountMainUM.Loading,
-            MoneyAccountMainUM.SyncNeeded,
-            MoneyAccountMainUM.TemporaryUnavailable,
-            MoneyAccountMainUM.ExposedDevice,
-            MoneyAccountMainUM.Provisioning(onClick = {}),
-            MoneyAccountMainUM.CountryNotSupported(onClick = {}),
-            MoneyAccountMainUM.UnderReview(subtitle = TextReference.Str("KYC in progress"), onClick = {}),
+            MoneyAccountMainUM.Unavailable,
+            MoneyAccountMainUM.Onboarding(subtitle = TextReference.Str("Activating…"), onClick = {}),
+            MoneyAccountMainUM.Onboarding(subtitle = TextReference.Str("Verification in progress…"), onClick = {}),
+            MoneyAccountMainUM.ActionRequired(balance = previewBalance, onClick = {}),
             MoneyAccountMainUM.Content(
-                subtitle = TextReference.Str("USDC"),
-                isBalanceFlickering = true,
-                balance = TextReference.Str("$ 101.56"),
-                balanceSubtitle = TextReference.Str("USDC"),
+                subtitle = TextReference.Str("Polygon network"),
+                balance = previewBalance.copy(isFlickering = true, isFromCache = true),
                 onClick = {},
-                shouldShowOnlyCacheWarning = true,
             ),
         ),
     )
+
+private val previewBalance = MoneyAccountMainUM.BalanceUM(
+    amount = TextReference.Str("$0.00"),
+    currency = TextReference.Str("USD"),
+    isFlickering = false,
+    isFromCache = false,
+)
 // endregion

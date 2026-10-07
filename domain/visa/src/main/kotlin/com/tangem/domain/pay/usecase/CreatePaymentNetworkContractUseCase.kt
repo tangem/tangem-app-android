@@ -5,6 +5,7 @@ import arrow.core.raise.either
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderType
@@ -94,10 +95,8 @@ class CreatePaymentNetworkContractUseCase(
         while (true) {
             val result = customerOrderRepository.createOrder(
                 userWalletId = userWalletId,
-                type = OrderType.SMART_CONTRACT_ISSUE_RAIN,
-                specificationName = null,
+                request = CustomerOrderRequest.SmartContractIssue(chainId = chainId),
                 idempotencyKey = idempotencyKey,
-                chainId = chainId,
             )
             val error = result.leftOrNull()
             if (error == null || attempt >= RETRY_DELAYS.size || !error.isRetryable()) return result

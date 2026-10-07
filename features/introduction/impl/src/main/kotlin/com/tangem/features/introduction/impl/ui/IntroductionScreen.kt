@@ -1,6 +1,13 @@
 package com.tangem.features.introduction.impl.ui
 
 import android.view.SurfaceView
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +35,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.painterResource
@@ -44,6 +53,9 @@ import com.tangem.core.ui.components.KeepScreenOn
 import com.tangem.core.ui.components.legal.LegalCaption
 import com.tangem.core.ui.components.SystemBarsIconsDisposable
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.loader.TangemLoader
+import com.tangem.core.ui.ds2.loader.TangemLoaderSize
+import com.tangem.core.ui.ds2.statusscreen.TangemStatusScreen
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.TangemTheme
@@ -51,8 +63,11 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.features.introduction.impl.model.welcomeScenes
 import com.tangem.features.introduction.impl.ui.state.IntroductionUM
+import com.tangem.features.introduction.impl.ui.state.SocialLoginProgressUM
 import com.tangem.features.introduction.impl.R as IntroductionR
 import com.tangem.core.ui.R as CoreUiR
+
+private const val PROGRESS_FADE_MS = 200
 
 /** Vertical stops of the darkening gradient, each paired with the scrim opacity it reaches. */
 private val ScrimGradient = listOf(
@@ -63,6 +78,9 @@ private val ScrimGradient = listOf(
     0.82f to 1f,
     1f to 1f,
 )
+
+/** The social login overlays consume taps, but accessibility focus would walk straight past them */
+private val HiddenFromAccessibility = Modifier.clearAndSetSemantics {}
 
 /** How long the warm-up pass waits for a frame nobody sees before taking one that someone might. */
 private val PREWARM_COVER_TIMEOUT = 1.seconds
@@ -104,7 +122,8 @@ internal fun IntroductionScreen(
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
                         .padding(horizontal = 16.dp)
-                        .padding(bottom = 12.dp),
+                        .padding(bottom = 12.dp)
+                        .then(if (state.isSocialLoginShown) HiddenFromAccessibility else Modifier),
                 ) {
                     WelcomeTextScenes(
                         scenes = state.scenes,
@@ -117,6 +136,8 @@ internal fun IntroductionScreen(
                     )
                     BottomActions(state = state)
                 }
+                SocialLoginProgressHost(progress = state.socialLoginProgress)
+                state.socialLoginConsent?.let { SocialLoginConsentScreen(state = it) }
             }
             // One sheet is composed from the first frame, with or without a config of its own: a hidden modal
             // shows nothing, and being composed is what lets it warm the machinery both sheets then reuse.
@@ -198,6 +219,84 @@ private fun rememberEverShown(isShown: Boolean): Boolean {
     var wasShown by remember { mutableStateOf(false) }
     if (isShown) wasShown = true
     return wasShown
+}
+
+@Composable
+private fun SocialLoginProgressHost(progress: SocialLoginProgressUM?) {
+    AnimatedContent(
+        targetState = progress,
+        modifier = Modifier.fillMaxSize(),
+        contentKey = { it?.javaClass },
+        transitionSpec = {
+            fadeIn(tween(durationMillis = PROGRESS_FADE_MS)) togetherWith
+                fadeOut(tween(durationMillis = PROGRESS_FADE_MS))
+        },
+        label = "SocialLoginProgressKind",
+    ) { target ->
+        target?.let { SocialLoginProgress(state = it) }
+    }
+}
+
+/**
+ * Swallows input and the back gesture on purpose: the buttons underneath stay composed, and leaving now
+ * would drop the viewer back on the welcome screen while the wallet is still being written.
+ */
+@Composable
+private fun SocialLoginProgress(state: SocialLoginProgressUM) {
+    BackHandler(enabled = true) {}
+
+    when (state) {
+        SocialLoginProgressUM.Loader -> Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(TangemTheme.colors3.overlay.modal)
+                .consumeAllPointerInput(),
+            contentAlignment = Alignment.Center,
+        ) {
+            TangemLoader(size = TangemLoaderSize.X32)
+        }
+        is SocialLoginProgressUM.Stage -> SocialLoginStageProgress(state)
+    }
+}
+
+@Composable
+private fun SocialLoginStageProgress(state: SocialLoginProgressUM.Stage) {
+    val firstStage = remember { state }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            // opaque, so the cross-fade between two stages never lets the welcome video show through
+            .background(TangemTheme.colors3.bg.primary)
+            .consumeAllPointerInput(),
+    ) {
+        // The status screen centres a block whose height depends on the text, so a longer title would
+        // re-centre everything mid-read. The cross-fade hides the move; only the first stage animates in.
+        AnimatedContent(
+            targetState = state,
+            transitionSpec = {
+                fadeIn(tween(durationMillis = PROGRESS_FADE_MS)) togetherWith
+                    fadeOut(tween(durationMillis = PROGRESS_FADE_MS)) using SizeTransform(clip = false)
+            },
+            label = "SocialLoginProgress",
+        ) { stage ->
+            TangemStatusScreen(
+                variant = TangemStatusScreen.Variant.Info,
+                title = stage.title,
+                description = stage.description,
+                asset = { TangemLoader(size = TangemLoaderSize.X32, color = TangemTheme.colors3.icon.brand) },
+                animated = stage == firstStage,
+            )
+        }
+    }
+}
+
+private fun Modifier.consumeAllPointerInput(): Modifier = pointerInput(Unit) {
+    awaitPointerEventScope {
+        while (true) {
+            awaitPointerEvent().changes.forEach { it.consume() }
+        }
+    }
 }
 
 @Composable
@@ -310,6 +409,8 @@ private fun IntroductionScreenPreview() {
                 scenes = welcomeScenes,
                 bottomSheetConfig = null,
                 haveWalletBottomSheetConfig = null,
+                socialLoginProgress = null,
+                socialLoginConsent = null,
                 onCreateWalletClick = {},
                 onIHaveWalletClick = {},
                 onBuyTangemClick = {},

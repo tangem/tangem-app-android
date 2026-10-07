@@ -12,6 +12,8 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.local)
+    implementation(projects.core.remote)
 
     // region AndroidX
     // DataStore persistence of the prediction account status (see com.tangem.data.polymarket.store).

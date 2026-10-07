@@ -9,13 +9,15 @@ import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.domain.models.account.BankCredentials
-import com.tangem.domain.models.account.TangemPayOnrampFee
 import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.AccountFee
+import com.tangem.domain.pay.model.AccountFeeGroupType
 import com.tangem.domain.pay.model.CustomerInfo
-import com.tangem.domain.pay.model.OrderType
+import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.visa.model.TangemPayInitialCredentials
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -67,6 +69,14 @@ internal class MockAwareOnboardingRepository @Inject constructor(
         real.produceInitialData(userWalletId)
     }
 
+    override suspend fun storeInitialCredentials(
+        userWalletId: UserWalletId,
+        initialCredentials: TangemPayInitialCredentials,
+    ) {
+        if (isMockMode) return
+        real.storeInitialCredentials(userWalletId = userWalletId, initialCredentials = initialCredentials)
+    }
+
     // Delegates to WireMock (via the real repo + synthetic storage tokens) so the customer state — KYC status,
     // ACTIVE/INACTIVE, balances — follows the test scenario instead of a hardcoded "always active" customer.
     // Note: this may be invoked even when `hasTangemPayInWallet` is false (e.g., onboarding/deeplink flows),
@@ -79,26 +89,20 @@ internal class MockAwareOnboardingRepository @Inject constructor(
         productInstanceId: String,
     ): Either<VisaApiError, BankCredentials> = real.getBankCredentials(userWalletId, productInstanceId)
 
-    override suspend fun getOnrampFees(
+    override suspend fun getFees(
         userWalletId: UserWalletId,
-    ): Either<VisaApiError, List<TangemPayOnrampFee>> = real.getOnrampFees(userWalletId)
+        types: Set<AccountFeeGroupType>,
+    ): Either<VisaApiError, List<AccountFee>> = real.getFees(userWalletId, types)
 
     override suspend fun createOrder(
         userWalletId: UserWalletId,
-        deeplinkValue: String?,
-        specificationName: String,
-        type: OrderType,
+        request: CustomerOrderRequest.CardIssue,
     ): Either<VisaApiError, String> {
         if (isMockMode) {
             mockOrderIds.add(userWalletId)
             return MOCK_ORDER_ID.right()
         }
-        return real.createOrder(
-            userWalletId = userWalletId,
-            deeplinkValue = deeplinkValue,
-            specificationName = specificationName,
-            type = type,
-        )
+        return real.createOrder(userWalletId = userWalletId, request = request)
     }
 
     override suspend fun clearOrderId(userWalletId: UserWalletId) {

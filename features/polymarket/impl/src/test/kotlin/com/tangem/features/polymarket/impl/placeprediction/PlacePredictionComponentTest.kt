@@ -223,6 +223,7 @@ internal class PlacePredictionComponentTest : PlacePredictionModelTestBase() {
         )
         PlacePredictionComponent(
             appComponentContext = context,
+            tokenReceiveComponentFactory = mockk(),
             params = PlacePredictionComponent.Params.Buy(USER_WALLET_ID, EVENT_ID, MARKET_ID, ASSET_ID),
         )
         lifecycle.create()

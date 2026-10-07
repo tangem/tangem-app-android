@@ -23,6 +23,7 @@ import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.ExpressTransactionsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsSwapTransactionsStateConverter
+import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.utils.Provider
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
@@ -49,6 +50,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
     @Assisted private val currentStateProvider: Provider<ExpressTransactionsBlockState>,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val cryptoCurrency: CryptoCurrency,
+    @Assisted private val scope: ExpressTransactionsComponent.Scope,
 ) {
 
     private val swapTransactionsStateConverter by lazy {
@@ -61,10 +63,8 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
     }
 
     operator fun invoke(): Flow<PersistentList<ExchangeUM>> {
-        return swapTransactionRepository.getTransactions(
-            userWallet = userWallet,
-            cryptoCurrencyId = cryptoCurrency.id,
-        ).conflate()
+        return getSavedTransactions()
+            .conflate()
             .map { savedTransactions ->
                 val accountStatuses = savedTransactions
                     ?.flatMapTo(mutableSetOf()) { swapTransaction ->
@@ -114,6 +114,17 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
         }
     }
 
+    private fun getSavedTransactions(): Flow<List<SavedSwapTransactionListModel>?> = when (scope) {
+        ExpressTransactionsComponent.Scope.Currency -> swapTransactionRepository.getTransactions(
+            userWallet = userWallet,
+            cryptoCurrencyId = cryptoCurrency.id,
+        )
+        is ExpressTransactionsComponent.Scope.Account -> swapTransactionRepository.getAccountTransactions(
+            userWallet = userWallet,
+            accountId = scope.accountId,
+        )
+    }
+
     private suspend fun getExchangeStatus(
         txId: String,
         provider: SwapProvider,
@@ -130,34 +141,18 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
                 ifRight = { statusModel ->
                     sendStatusUpdateAnalytics(statusModel, provider)
 
-                    val accountId = getAccountCurrencyStatusUseCase.invokeSync(
+                    val refundAccountWithCurrency = addRefundCurrencyIfNeeded(
                         userWalletId = fromUserWalletId,
-                        currency = cryptoCurrency,
+                        status = statusModel,
+                        type = provider.type,
                     )
-                        .map { it.account.accountId }
-                        .getOrNull()
-
-                    val refundTokenCurrency = if (accountId != null) {
-                        addRefundCurrencyIfNeeded(
-                            accountId = accountId,
-                            status = statusModel,
-                            type = provider.type,
-                        )
-                    } else {
-                        TangemLogger.e("Account ID is null, cannot add refund currency ${cryptoCurrency.id}")
-                        null
-                    }
 
                     swapTransactionRepository.storeTransactionState(
                         txId = txId,
                         status = statusModel,
-                        accountWithCurrency = if (refundTokenCurrency != null) {
-                            Pair(accountId, refundTokenCurrency)
-                        } else {
-                            null
-                        },
+                        accountWithCurrency = refundAccountWithCurrency,
                     )
-                    statusModel.copy(refundCurrency = refundTokenCurrency)
+                    statusModel.copy(refundCurrency = refundAccountWithCurrency?.second)
                 },
             )
     }
@@ -176,16 +171,27 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
     }
 
     private suspend fun addRefundCurrencyIfNeeded(
-        accountId: AccountId,
-        status: ExchangeStatusModel?,
+        userWalletId: UserWalletId,
+        status: ExchangeStatusModel,
         type: ExchangeProviderType,
-    ): CryptoCurrency? {
-        status ?: return null
+    ): Pair<AccountId, CryptoCurrency>? {
         if (type != ExchangeProviderType.DEX_BRIDGE) return null
         val refundNetwork = status.refundNetwork
         val refundContractAddress = status.refundContractAddress
 
         if (refundNetwork == null || refundContractAddress == null) return null
+
+        val accountId = getAccountCurrencyStatusUseCase.invokeSync(
+            userWalletId = userWalletId,
+            currency = cryptoCurrency,
+        )
+            .map { it.account.accountId }
+            .getOrNull()
+
+        if (accountId == null) {
+            TangemLogger.e("Account ID is null, cannot add refund currency ${cryptoCurrency.id}")
+            return null
+        }
 
         return manageCryptoCurrenciesUseCase.add(
             accountId = accountId,
@@ -194,6 +200,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
         )
             .onLeft { TangemLogger.e("Error", it) }
             .getOrNull()
+            ?.let { refundCurrency -> accountId to refundCurrency }
     }
 
     private fun getExchangeStatusState(
@@ -261,6 +268,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
             currentStateProvider: Provider<ExpressTransactionsBlockState>,
             userWallet: UserWallet,
             cryptoCurrency: CryptoCurrency,
+            scope: ExpressTransactionsComponent.Scope,
         ): ExchangeStatusFactory
     }
 }

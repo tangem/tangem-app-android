@@ -26,6 +26,7 @@ import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
 import com.tangem.domain.yield.supply.promo.usecase.GetBoostedApyUseCase
 import com.tangem.domain.yield.supply.promo.usecase.IsYieldBoostPromoEnabledForTokenUseCase
@@ -62,7 +63,9 @@ internal class YieldSupplyModel @Inject constructor(
     private val yieldSupplyActivateUseCase: YieldSupplyActivateUseCase,
     private val yieldSupplyDeactivateUseCase: YieldSupplyDeactivateUseCase,
     private val yieldSupplyEnterStatusUseCase: YieldSupplyEnterStatusUseCase,
+    private val yieldSupplyRepository: YieldSupplyRepository,
     private val yieldSupplyEnterStatusFlowUseCase: YieldSupplyEnterStatusFlowUseCase,
+    private val yieldSupplyPendingTracker: YieldSupplyPendingTracker,
     private val yieldSupplyMinAmountUseCase: YieldSupplyMinAmountUseCase,
     private val yieldSupplyGetDustMinAmountUseCase: YieldSupplyGetDustMinAmountUseCase,
     private val isYieldBoostPromoEnabledForTokenUseCase: IsYieldBoostPromoEnabledForTokenUseCase,
@@ -141,7 +144,7 @@ internal class YieldSupplyModel @Inject constructor(
                 maybeCryptoCurrency.fold(
                     ifSome = { cryptoCurrencyStatus ->
                         latestCryptoCurrencyStatus = cryptoCurrencyStatus
-                        if (isFirstCryptoCurrencyStatusEmission.compareAndSet(true, false)) {
+                        if (isFirstCryptoCurrencyStatusEmission.get()) {
                             sendInfoAboutProtocolStatus(cryptoCurrencyStatus)
                         }
                         onCryptoCurrencyStatusUpdated(cryptoCurrencyStatus)
@@ -345,8 +348,26 @@ internal class YieldSupplyModel @Inject constructor(
     private fun sendInfoAboutProtocolStatus(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         val token = cryptoCurrency as? CryptoCurrency.Token ?: return
         val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value ?: return
+
+        // Only mirror a status the chain actually confirmed. A cached one can be stale and an absent one says
+        // nothing, and either would announce a state the chain does not have.
+        if (cryptoCurrencyStatus.value.sources.networkSource != StatusSource.ACTUAL) return
+        val isActive = cryptoCurrencyStatus.value.yieldSupplyStatus?.isActive ?: return
+
         modelScope.launch(dispatchers.default) {
-            if (cryptoCurrencyStatus.value.yieldSupplyStatus?.isActive == true) {
+            // Activation dispatches the backend relayer, which deposits the same funds as a yield transaction
+            // the user may still have in flight. Announcing it mid-flight makes the two race for the same
+            // balance, and the loser reverts. The pending tracker owns the announcement in that case. The
+            // pending marker alone is not enough: it is cleared once the module turns active, which happens
+            // before the enter transaction itself has settled.
+            val hasPendingYieldOperation =
+                yieldSupplyPendingTracker.hasPendingDeposit(userWallet.walletId, token.id) ||
+                    yieldSupplyRepository.getTokenProtocolPendingStatus(userWallet.walletId, token) != null
+            if (hasPendingYieldOperation) return@launch
+
+            isFirstCryptoCurrencyStatusEmission.set(false)
+
+            if (isActive) {
                 yieldSupplyActivateUseCase(
                     userWalletId = userWallet.walletId,
                     cryptoCurrency = token,

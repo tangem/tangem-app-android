@@ -21,9 +21,10 @@ internal class PushDeeplinkPolicyTest {
     data class Model(val scheme: String?, val host: String?, val expected: Boolean)
 
     private fun provideTestModels() = listOf(
-        // Blocked — the sell redirect (Send prefill) and WalletConnect pairing
+        // Blocked — the sell redirect (Send prefill), WalletConnect pairing and MCP agent authorization
         Model(scheme = "tangem", host = "redirect_sell", expected = false),
         Model(scheme = "tangem", host = "wc", expected = false),
+        Model(scheme = "tangem", host = "mcp.authorization", expected = false),
         Model(scheme = "wc", host = null, expected = false),
         Model(scheme = "wc", host = "anything", expected = false),
         Model(scheme = "WC", host = null, expected = false),

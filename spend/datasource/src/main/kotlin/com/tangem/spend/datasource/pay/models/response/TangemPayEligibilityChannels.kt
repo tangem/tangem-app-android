@@ -1,14 +1,14 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class TangemPayEligibilityChannels(
-    @Json(name = "result") val result: Result,
+    @SerialName("result") val result: Result,
 ) {
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Result(
-        @Json(name = "channels") val channels: List<String>,
+        @SerialName("channels") val channels: List<String>,
     )
 }

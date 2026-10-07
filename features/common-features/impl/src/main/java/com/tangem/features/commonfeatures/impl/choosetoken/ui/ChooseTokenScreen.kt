@@ -138,7 +138,7 @@ private val ChooseTokenFullUM.isEmptyState: Boolean
 internal fun ChooseTokenScreen(state: ChooseTokenFullUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(color = TangemTheme.colors2.surface.level2)
+            .background(color = TangemTheme.colors3.bg.primary)
             .fillMaxSize()
             .imePadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -162,7 +162,7 @@ private fun AppBar(title: TextReference, onBackClick: () -> Unit, modifier: Modi
         iconRes = com.tangem.common.ui.R.drawable.ic_back_24,
         modifier = modifier
             .statusBarsPadding()
-            .height(TangemTheme.dimens.size56),
+            .height(56.dp),
     )
 }
 
@@ -182,7 +182,7 @@ private fun Content(state: ChooseTokenFullUM, modifier: Modifier = Modifier) {
         ) {
             item(key = "search_bar") {
                 SearchBar(
-                    modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+                    modifier = Modifier.padding(horizontal = 16.dp),
                     state = state.initialUM.searchBar,
                     colors = TangemSearchBarDefaults.secondaryTextFieldColors,
                 )
@@ -270,17 +270,17 @@ private fun LazyListScope.assetsTitle(balanceFilterUM: BalanceFilterUM?) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    top = TangemTheme.dimens.spacing20,
-                    start = TangemTheme.dimens.spacing16,
-                    end = TangemTheme.dimens.spacing16,
+                    top = 20.dp,
+                    start = 16.dp,
+                    end = 16.dp,
                 ),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = stringResourceSafe(R.string.markets_portfolio_block_subtitle),
-                style = TangemTheme.typography2.headingSemibold20,
-                color = TangemTheme.colors2.text.neutral.primary,
+                style = TangemTheme.typography3.heading.small,
+                color = TangemTheme.colors3.text.primary,
                 modifier = Modifier.weight(1f),
             )
             if (balanceFilterUM != null) {
@@ -318,7 +318,7 @@ private fun WalletList(walletList: WalletListUM, modifier: Modifier = Modifier) 
     LazyRow(
         state = listState,
         modifier = modifier.padding(top = 16.dp, bottom = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
+        horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
         contentPadding = PaddingValues(horizontal = 16.dp),
     ) {
         items(walletList.items) { um ->
@@ -330,13 +330,17 @@ private fun WalletList(walletList: WalletListUM, modifier: Modifier = Modifier) 
 @Composable
 private fun WalletTabItem(state: WalletTabUM, modifier: Modifier = Modifier) {
     val isSelected = state.isSelected
-    val backgroundColor = if (isSelected) TangemTheme.colors.button.primary else TangemTheme.colors.button.secondary
-    val buttonTextColor = if (isSelected) TangemTheme.colors.text.primary2 else TangemTheme.colors.text.primary1
-    val countTextColor = if (isSelected) TangemTheme.colors.text.primary2 else TangemTheme.colors.text.secondary
-    val countBackground = if (isSelected) {
-        TangemTheme.colors.button.secondary.copy(alpha = 0.2f)
+    val backgroundColor = if (isSelected) TangemTheme.colors3.bg.inverse else TangemTheme.colors3.bg.tertiary
+    val buttonTextColor = if (isSelected) TangemTheme.colors3.text.inverse.primary else TangemTheme.colors3.text.primary
+    val countTextColor = if (isSelected) {
+        TangemTheme.colors3.text.inverse.primary
     } else {
-        TangemTheme.colors.button.primary.copy(alpha = 0.1f)
+        TangemTheme.colors3.text.secondary
+    }
+    val countBackground = if (isSelected) {
+        TangemTheme.colors3.bg.tertiary.copy(alpha = 0.2f)
+    } else {
+        TangemTheme.colors3.bg.opaque.secondary
     }
 
     Row(
@@ -352,7 +356,7 @@ private fun WalletTabItem(state: WalletTabUM, modifier: Modifier = Modifier) {
         Text(
             text = state.text.resolveReference(),
             color = buttonTextColor,
-            style = TangemTheme.typography2.bodySemibold16,
+            style = TangemTheme.typography3.body.medium,
         )
 
         Spacer(modifier = Modifier.width(4.dp))
@@ -376,7 +380,7 @@ private fun WalletTabItem(state: WalletTabUM, modifier: Modifier = Modifier) {
                 Text(
                     text = count.resolveReference(),
                     color = countTextColor,
-                    style = TangemTheme.typography.caption1,
+                    style = TangemTheme.typography3.caption.medium,
                 )
             }
         }
@@ -431,7 +435,7 @@ private fun LazyListScope.tokensList(items: ImmutableList<TokensListItemUM>, isB
                     .roundedShapeItemDecoration(
                         currentIndex = index,
                         lastIndex = items.lastIndex,
-                        backgroundColor = TangemTheme.colors.background.primary,
+                        backgroundColor = TangemTheme.colors3.bg.secondary,
                     )
                     .testTag(BuyTokenScreenTestTags.LAZY_LIST_ITEM)
                     .semantics { lazyListItemPosition = index },
@@ -473,9 +477,9 @@ private fun LazyListScope.accountWithTokens(
                 .semantics { lazyListItemPosition = portfolioIndex }
                 .roundedShapeItemDecoration(
                     currentIndex = 0,
-                    radius = TangemTheme.dimens.radius14,
+                    radius = 14.dp,
                     lastIndex = effectiveLastIndex,
-                    backgroundColor = TangemTheme.colors.background.primary,
+                    backgroundColor = TangemTheme.colors3.bg.secondary,
                 ),
         )
     }
@@ -488,12 +492,12 @@ private fun LazyListScope.accountWithTokens(
                 lastIndex = lastIndex,
                 modifier = Modifier.roundedShapeItemDecoration(
                     currentIndex = 1,
-                    radius = TangemTheme.dimens.radius14,
+                    radius = 14.dp,
                     lastIndex = 1,
-                    backgroundColor = TangemTheme.colors.background.primary,
+                    backgroundColor = TangemTheme.colors3.bg.secondary,
                 ),
             ) {
-                NonContentItemContent(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing16))
+                NonContentItemContent(modifier = Modifier.padding(vertical = 16.dp))
             }
         }
         return
@@ -505,7 +509,7 @@ private fun LazyListScope.accountWithTokens(
         contentType = { _, token -> token::class.java },
     ) { tokenIndex, token ->
         val indexWithHeader = tokenIndex.inc()
-        val lastTokenBottomPadding = TangemTheme.dimens.spacing8
+        val lastTokenBottomPadding = 8.dp
         SlideInItemVisibility(
             visible = isExpanded,
             currentIndex = tokenIndex,
@@ -514,9 +518,9 @@ private fun LazyListScope.accountWithTokens(
                 .testTag(BuyTokenScreenTestTags.LAZY_LIST_ITEM)
                 .roundedShapeItemDecoration(
                     currentIndex = indexWithHeader,
-                    radius = TangemTheme.dimens.radius14,
+                    radius = 14.dp,
                     lastIndex = lastIndex,
-                    backgroundColor = TangemTheme.colors.background.primary,
+                    backgroundColor = TangemTheme.colors3.bg.secondary,
                 ),
         ) {
             PortfolioTokensListItem(
@@ -594,8 +598,8 @@ private fun AccountRow(
                                 animationSpec = tween(durationMillis = ACCOUNT_CONTENT_ANIM_MS),
                                 label = "accountTitle",
                             )
-                            val startStyle = TangemTheme.typography2.captionSemibold12
-                            val stopStyle = TangemTheme.typography2.bodySemibold16
+                            val startStyle = TangemTheme.typography3.caption.medium
+                            val stopStyle = TangemTheme.typography3.body.medium
                             val textStyle = lerp(startStyle, stopStyle, animationFraction.value)
                             val resizedTitle = when (val titleUM = tokenRowUM.titleUM) {
                                 is TangemTokenRowUM.TitleUM.Content -> titleUM.copy(
@@ -660,8 +664,8 @@ private fun AccountRowSharedTransitionLayout(
 private fun AccountTail(isExpanded: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .padding(start = TangemTheme.dimens2.x2, end = TangemTheme.dimens2.x4)
-            .size(TangemTheme.dimens2.x9)
+            .padding(start = 8.dp, end = 16.dp)
+            .size(36.dp)
             .clip(CircleShape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
@@ -674,10 +678,10 @@ private fun AccountTail(isExpanded: Boolean, onClick: () -> Unit, modifier: Modi
             if (expanded) {
                 Icon(
                     modifier = Modifier
-                        .offset(x = TangemTheme.dimens.spacing2)
-                        .size(TangemTheme.dimens2.x4),
+                        .offset(x = 2.dp)
+                        .size(16.dp),
                     painter = painterResource(id = R.drawable.ic_minimize_24),
-                    tint = TangemTheme.colors2.graphic.neutral.tertiaryConstant,
+                    tint = TangemTheme.colors3.icon.tertiary,
                     contentDescription = null,
                 )
             } else {
@@ -691,15 +695,15 @@ private fun AccountTail(isExpanded: Boolean, onClick: () -> Unit, modifier: Modi
 private fun AccountExpandButton(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .size(TangemTheme.dimens2.x9)
+            .size(36.dp)
             .clip(CircleShape)
-            .background(TangemTheme.colors2.button.backgroundSecondary),
+            .background(TangemTheme.colors3.bg.opaque.secondary),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            modifier = Modifier.size(TangemTheme.dimens2.x5),
+            modifier = Modifier.size(20.dp),
             painter = painterResource(id = R.drawable.ic_chewron_down_20),
-            tint = TangemTheme.colors2.button.iconPrimary,
+            tint = TangemTheme.colors3.icon.primary,
             contentDescription = null,
         )
     }
@@ -745,14 +749,14 @@ private fun LazyListScope.predefinedTokensListItems(state: PredefinedTokensUM) {
     item(key = "predefined_title") {
         Text(
             text = stringResourceSafe(R.string.markets_portfolio_eligible_block_title),
-            style = TangemTheme.typography2.headingSemibold20,
-            color = TangemTheme.colors2.text.neutral.primary,
+            style = TangemTheme.typography3.heading.small,
+            color = TangemTheme.colors3.text.primary,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    start = TangemTheme.dimens.spacing16,
-                    end = TangemTheme.dimens.spacing16,
-                    bottom = TangemTheme.dimens.spacing8,
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = 8.dp,
                 ),
         )
     }
@@ -767,7 +771,7 @@ private fun LazyListScope.predefinedTokensListItems(state: PredefinedTokensUM) {
                     .roundedShapeItemDecoration(
                         currentIndex = index,
                         lastIndex = state.items.lastIndex,
-                        backgroundColor = TangemTheme.colors.background.primary,
+                        backgroundColor = TangemTheme.colors3.bg.secondary,
                     )
                     .testTag(BuyTokenScreenTestTags.LAZY_LIST_ITEM)
                     .semantics { lazyListItemPosition = index },
@@ -815,7 +819,7 @@ private fun PredefinedTokenItem(state: PredefinedTokenItemUM, modifier: Modifier
         )
         SecondaryTangemButton(
             onClick = state.onAddClick,
-            modifier = Modifier.padding(start = TangemTheme.dimens2.x2, end = TangemTheme.dimens2.x4),
+            modifier = Modifier.padding(start = 8.dp, end = 16.dp),
             text = resourceReference(R.string.common_add),
             size = TangemButtonSize.X9,
             shape = TangemButtonShape.Default,
@@ -827,26 +831,26 @@ private fun LazyListScope.emptyTokensList(modifier: Modifier = Modifier) {
     item("EmptyTokensList") {
         Box(
             modifier = modifier
-                .background(color = TangemTheme.colors2.surface.level2)
+                .background(color = TangemTheme.colors3.bg.primary)
                 .fillParentMaxSize(),
         ) {
             Column(modifier = Modifier.align(Alignment.Center)) {
                 Image(
                     modifier = Modifier
-                        .size(TangemTheme.dimens.size64)
+                        .size(64.dp)
                         .align(Alignment.CenterHorizontally),
                     painter = painterResource(id = R.drawable.ic_no_token_44),
-                    colorFilter = ColorFilter.tint(TangemTheme.colors.icon.inactive),
+                    colorFilter = ColorFilter.tint(TangemTheme.colors3.icon.tertiary),
                     contentDescription = null,
                 )
                 Text(
                     modifier = Modifier
-                        .padding(top = TangemTheme.dimens.spacing16)
-                        .padding(horizontal = TangemTheme.dimens.spacing30)
+                        .padding(top = 16.dp)
+                        .padding(horizontal = 30.dp)
                         .align(Alignment.CenterHorizontally),
                     text = stringResourceSafe(id = R.string.exchange_tokens_empty_tokens),
-                    style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.tertiary,
+                    style = TangemTheme.typography3.caption.medium,
+                    color = TangemTheme.colors3.text.tertiary,
                     textAlign = TextAlign.Center,
                 )
             }
@@ -858,17 +862,17 @@ private fun LazyListScope.tokensNotFound(modifier: Modifier = Modifier) {
     item("TokensNotFound") {
         Box(
             modifier = modifier
-                .background(color = TangemTheme.colors2.surface.level2)
+                .background(color = TangemTheme.colors3.bg.primary)
                 .fillParentMaxSize(),
         ) {
             Text(
                 modifier = Modifier
-                    .padding(top = TangemTheme.dimens.spacing32)
-                    .padding(horizontal = TangemTheme.dimens.spacing30)
+                    .padding(top = 32.dp)
+                    .padding(horizontal = 30.dp)
                     .align(Alignment.TopCenter),
                 text = stringResourceSafe(id = R.string.express_token_list_empty_search),
-                style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.tertiary,
+                style = TangemTheme.typography3.body.medium,
+                color = TangemTheme.colors3.text.tertiary,
                 textAlign = TextAlign.Center,
             )
         }

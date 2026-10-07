@@ -3,7 +3,14 @@ package com.tangem.features.promobanners.impl.campaigns.model
 import arrow.core.Either
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.promo.usecase.GetPromoCampaignsUseCase
+import com.tangem.domain.wallets.models.errors.GetUserWalletError
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.promobanners.api.PromoBannersFeatureToggles
+import com.tangem.features.promobanners.impl.campaigns.entity.CampaignsBottomSheetConfig
 import com.tangem.domain.promo.models.PromoCampaignId
 import com.tangem.domain.promo.models.PromoCampaignState
 import com.tangem.domain.promo.usecase.GetPromoCampaignStateUseCase
@@ -12,6 +19,7 @@ import com.tangem.features.promobanners.impl.campaigns.converters.CampaignIdConv
 import com.tangem.features.promobanners.impl.campaigns.entity.CampaignType
 import com.tangem.features.promobanners.impl.campaigns.service.CampaignRequest
 import com.tangem.features.promobanners.impl.campaigns.service.CampaignsService
+import com.tangem.features.promobanners.impl.campaigns.v2.createPromoCampaign
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.Called
 import io.mockk.clearMocks
@@ -38,12 +46,182 @@ internal class CampaignsModelTest {
     private val getPromoCampaignStateUseCase: GetPromoCampaignStateUseCase = mockk()
     private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
+    private val promoBannersFeatureToggles: PromoBannersFeatureToggles = mockk()
+    private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
+    private val getPromoCampaignsUseCase: GetPromoCampaignsUseCase = mockk()
+    private val userWallet: UserWallet = mockk()
 
     private val campaignIdConverter = CampaignIdConverter()
 
     @BeforeEach
     fun setup() {
-        clearMocks(getPromoCampaignStateUseCase, messageSender, analyticsEventHandler)
+        clearMocks(
+            getPromoCampaignStateUseCase,
+            messageSender,
+            analyticsEventHandler,
+            promoBannersFeatureToggles,
+            getUserWalletUseCase,
+            getPromoCampaignsUseCase,
+        )
+        every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns false
+        every { getUserWalletUseCase(userWalletId) } returns Either.Right(userWallet)
+    }
+
+    @Test
+    fun `GIVEN v2 enabled and campaign found WHEN emitted THEN v2 campaign sheet opened`() = runTest {
+        // Arrange
+        every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns true
+        val campaign = createPromoCampaign(name = "whale")
+        coEvery { getPromoCampaignsUseCase(userWallet, any()) } returns
+            Either.Right(listOf(createPromoCampaign(name = "other"), campaign))
+        val model = createModel(campaignFlow = flowOf(CampaignRequest(campaignId = "whale", userWalletId = userWalletId)))
+        val openedSheets = mutableListOf<CampaignsBottomSheetConfig?>()
+        model.bottomSheetNavigation.subscribe { event -> openedSheets += event.transformer(null) }
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(openedSheets).containsExactly(CampaignsBottomSheetConfig.V2.Campaign(campaign, userWalletId))
+        coVerify(exactly = 0) { getPromoCampaignStateUseCase.invoke(any(), any(), any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN v2 enabled and campaign id requested WHEN emitted THEN campaign with that id opened`() = runTest {
+        // Arrange
+        every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns true
+        val campaign = createPromoCampaign(name = "whale", id = 42)
+        coEvery { getPromoCampaignsUseCase(userWallet, any()) } returns
+            Either.Right(listOf(createPromoCampaign(name = "other", id = 7), campaign))
+        val model = createModel(campaignFlow = flowOf(CampaignRequest(campaignId = "42", userWalletId = userWalletId)))
+        val openedSheets = mutableListOf<CampaignsBottomSheetConfig?>()
+        model.bottomSheetNavigation.subscribe { event -> openedSheets += event.transformer(null) }
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(openedSheets).containsExactly(CampaignsBottomSheetConfig.V2.Campaign(campaign, userWalletId))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN v2 enabled and value matches one id and another name WHEN emitted THEN id match opened`() = runTest {
+        // Arrange
+        every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns true
+        val matchedById = createPromoCampaign(name = "whale", id = 42)
+        coEvery { getPromoCampaignsUseCase(userWallet, any()) } returns
+            Either.Right(listOf(createPromoCampaign(name = "42", id = 7), matchedById))
+        val model = createModel(campaignFlow = flowOf(CampaignRequest(campaignId = "42", userWalletId = userWalletId)))
+        val openedSheets = mutableListOf<CampaignsBottomSheetConfig?>()
+        model.bottomSheetNavigation.subscribe { event -> openedSheets += event.transformer(null) }
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(openedSheets).containsExactly(CampaignsBottomSheetConfig.V2.Campaign(matchedById, userWalletId))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN v2 enabled and campaign already enrolled WHEN emitted THEN already enrolled sheet opened and analytics sent`() =
+        runTest {
+            // Arrange
+            every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns true
+            val campaign = createPromoCampaign(name = "whale", isAlreadyEnrolled = true)
+            coEvery { getPromoCampaignsUseCase(userWallet, any()) } returns Either.Right(listOf(campaign))
+            val model = createModel(
+                campaignFlow = flowOf(CampaignRequest(campaignId = "whale", userWalletId = userWalletId)),
+            )
+            val openedSheets = mutableListOf<CampaignsBottomSheetConfig?>()
+            model.bottomSheetNavigation.subscribe { event -> openedSheets += event.transformer(null) }
+
+            // Act
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(openedSheets).containsExactly(CampaignsBottomSheetConfig.V2.AlreadyEnrolled(campaign))
+            verify(exactly = 1) {
+                analyticsEventHandler.send(PromoCampaignsAnalyticsEvent.AlreadyEnrolledScreenOpened())
+            }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN v2 enabled and campaign missing WHEN emitted THEN v2 not found sheet opened`() = runTest {
+        // Arrange
+        every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns true
+        coEvery { getPromoCampaignsUseCase(userWallet, any()) } returns Either.Right(listOf(createPromoCampaign("other")))
+        val model = createModel(campaignFlow = flowOf(CampaignRequest(campaignId = "whale", userWalletId = userWalletId)))
+        val openedSheets = mutableListOf<CampaignsBottomSheetConfig?>()
+        model.bottomSheetNavigation.subscribe { event -> openedSheets += event.transformer(null) }
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(openedSheets).containsExactly(CampaignsBottomSheetConfig.V2.NotFound)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN v2 enabled and campaigns fail WHEN emitted THEN error message sent and nothing opened`() = runTest {
+        // Arrange
+        every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns true
+        coEvery { getPromoCampaignsUseCase(userWallet, any()) } returns Either.Left(RuntimeException("network"))
+        val model = createModel(campaignFlow = flowOf(CampaignRequest(campaignId = "whale", userWalletId = userWalletId)))
+        val openedSheets = mutableListOf<CampaignsBottomSheetConfig?>()
+        model.bottomSheetNavigation.subscribe { event -> openedSheets += event.transformer(null) }
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { messageSender.send(any()) }
+        assertThat(openedSheets).isEmpty()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN v2 enabled and user wallet missing WHEN emitted THEN error message sent and campaigns not requested`() =
+        runTest {
+            // Arrange
+            every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns true
+            every { getUserWalletUseCase(userWalletId) } returns Either.Left(GetUserWalletError.UserWalletNotFound)
+            val model = createModel(
+                campaignFlow = flowOf(CampaignRequest(campaignId = "whale", userWalletId = userWalletId)),
+            )
+            val openedSheets = mutableListOf<CampaignsBottomSheetConfig?>()
+            model.bottomSheetNavigation.subscribe { event -> openedSheets += event.transformer(null) }
+
+            // Act
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { messageSender.send(any()) }
+            coVerify(exactly = 0) { getPromoCampaignsUseCase(any(), any()) }
+            assertThat(openedSheets).isEmpty()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN v2 disabled WHEN emitted THEN v3 campaigns are not requested`() = runTest {
+        // Arrange
+        coEvery { getPromoCampaignStateUseCase.invoke(any(), any(), any()) } returns
+            Either.Right(PromoCampaignState.NotActive(PromoCampaignId.WhaleSwapCashback))
+        val model = createModel(
+            campaignFlow = flowOf(CampaignRequest(campaignId = "whale-swap-cashback", userWalletId = userWalletId)),
+        )
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { getPromoCampaignsUseCase(any(), any()) }
+        coVerify(exactly = 1) { getPromoCampaignStateUseCase.invoke(any(), any(), any()) }
+        model.onDestroy()
     }
 
     @ParameterizedTest
@@ -145,6 +323,9 @@ internal class CampaignsModelTest {
             getPromoCampaignStateUseCase = getPromoCampaignStateUseCase,
             messageSender = messageSender,
             analyticsEventHandler = analyticsEventHandler,
+            promoBannersFeatureToggles = promoBannersFeatureToggles,
+            getUserWalletUseCase = getUserWalletUseCase,
+            getPromoCampaignsUseCase = getPromoCampaignsUseCase,
         )
     }
 

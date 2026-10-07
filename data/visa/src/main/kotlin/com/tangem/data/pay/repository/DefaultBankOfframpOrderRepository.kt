@@ -29,8 +29,7 @@ internal class DefaultBankOfframpOrderRepository @Inject constructor(
         idempotencyKey: String,
     ): Either<BankOfframpError, BankOfframpOrderResult> = either {
         val body = BankOfframpOrderRequestConverter.convert(
-            request = request,
-            idempotencyKey = idempotencyKey,
+            BankOfframpOrderRequestConverter.Input(request = request, idempotencyKey = idempotencyKey),
         ).bind()
         val response = requestPerformer.performRequest(userWalletId) { authHeader ->
             tangemPayApi.createBankOfframpOrder(
@@ -47,13 +46,14 @@ internal class DefaultBankOfframpOrderRepository @Inject constructor(
     override suspend fun getOrderState(
         userWalletId: UserWalletId,
         orderId: String,
+        request: BankOfframpOrderRequest,
     ): Either<BankOfframpError, BankOfframpOrderState> = either {
         val response = requestPerformer.performRequest(userWalletId) { authHeader ->
             tangemPayApi.getOrder(authHeader = authHeader, orderId = orderId)
         }.mapLeft { error -> error.toBankOfframpError(operation = "getOrderState") }.bind()
 
         val result = ensureNotNull(response.result) { emptyResult(operation = "getOrderState") }
-        BankOfframpOrderStateConverter.convert(result)
+        BankOfframpOrderStateConverter.convert(BankOfframpOrderStateConverter.Input(result = result, request = request))
     }
 
     override suspend fun submitSignature(
@@ -83,7 +83,7 @@ internal class DefaultBankOfframpOrderRepository @Inject constructor(
     }
 
     private fun VisaApiError.toBankOfframpError(operation: String) =
-        BankOfframpErrorConverter.convert(error = this, operation = operation)
+        BankOfframpErrorConverter.convert(BankOfframpErrorConverter.Input(error = this, operation = operation))
 
     private fun emptyResult(operation: String) = BankOfframpError.Unknown(
         cause = IllegalStateException("Bank off-ramp $operation returned an empty result"),

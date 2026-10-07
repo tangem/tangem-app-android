@@ -1,6 +1,7 @@
 package com.tangem.features.walletconnect.connections.routing
 
 import com.tangem.core.decompose.navigation.Route
+import com.tangem.domain.mcp.models.McpRequest
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import kotlinx.serialization.Serializable
@@ -45,4 +46,7 @@ internal sealed interface WcInnerRoute : Route {
 
     @Serializable
     data class RequiredReconnectWithNetwork(val networkName: String) : WcInnerRoute
+
+    @Serializable
+    data class McpRequestRoute(val request: McpRequest) : WcInnerRoute
 }
