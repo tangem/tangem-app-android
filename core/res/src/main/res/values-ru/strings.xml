@@ -372,6 +372,7 @@
     <item quantity="many">%d дней назад</item>
     <item quantity="other">%d дней назад</item>
   </plurals>
+  <string name="common_decline">Отклонить</string>
   <string name="common_delete">Удалить</string>
   <string name="common_disable">Отключить</string>
   <string name="common_disabled">Отключено</string>
@@ -1066,6 +1067,7 @@
   <string name="joint_account_invite_load_failed_subtitle">Не удалось загрузить страницу приглашения.\nНажмите, чтобы обновить</string>
   <string name="joint_account_invite_members_creator">Создатель</string>
   <string name="joint_account_invite_members_invite">Пригласить</string>
+  <string name="joint_account_invite_members_invited">Приглашён</string>
   <string name="joint_account_invite_members_member">Участник</string>
   <string name="joint_account_invite_members_member_info">Об участнике</string>
   <string name="joint_account_invite_members_new_member">Новый участник</string>
@@ -1084,6 +1086,7 @@
   <string name="joint_account_invite_members_title">Пригласите участников</string>
   <string name="joint_account_invite_members_to_join">Пригласите участников в аккаунт</string>
   <string name="joint_account_invite_members_waiting_title">Ожидаем участников</string>
+  <string name="joint_account_invite_share_title">Пригласите в %s</string>
   <string name="joint_account_join_confirm_sheet_subtitle">У всех участников аккаунта общий баланс. Другие участники могут распоряжаться средствами без вашего согласия, если соберут достаточно подписей</string>
   <string name="joint_account_join_confirm_sheet_title">Вы вступаете в общий аккаунт</string>
   <string name="joint_account_join_invalid_link_subtitle">Проверьте, что открыли правильную ссылку, или попросите создателя аккаунта отправить её ещё раз</string>
@@ -1092,7 +1095,7 @@
   <string name="joint_account_join_subtitle">Это общий аккаунт. Для каждой транзакции из него нужны подписи: %1$s</string>
   <string name="joint_account_join_subtitle_value">%1$s из %2$s участников</string>
   <string name="joint_account_join_success_message">Аккаунт добавлен</string>
-  <string name="joint_account_join_title">Вас пригласили в аккаунт «%1$s»</string>
+  <string name="joint_account_join_title">Вас пригласили в аккаунт %1$s</string>
   <string name="joint_account_join_to_account_btn_text">Вступить в аккаунт</string>
   <plurals name="joint_account_members_count">
     <item quantity="one">%d участник</item>

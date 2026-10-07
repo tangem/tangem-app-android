@@ -325,21 +325,18 @@ internal class IntroductionModelTest {
     }
 
     @Test
-    fun `GIVEN introduction screen WHEN legal links clicked THEN each opens its own document`() {
+    fun `GIVEN introduction screen WHEN terms of service clicked THEN opens terms of service`() {
         // Arrange
         val model = createModel()
 
         // Act
         model.uiState.value.onTermsOfServiceClick()
-        model.uiState.value.onPrivacyPolicyClick()
 
         // Assert
         verify(exactly = 1) { urlOpener.openUrl("https://tangem.com/tangem_tos.html") }
-        verify(exactly = 1) { urlOpener.openUrl("https://tangem.com/privacy-policy.html") }
         assertThat(sentEvents).containsExactly(
             SCREEN_OPENED,
             LegalOpened(LegalOpened.Document.TermsOfService),
-            LegalOpened(LegalOpened.Document.PrivacyPolicy),
         ).inOrder()
     }
 

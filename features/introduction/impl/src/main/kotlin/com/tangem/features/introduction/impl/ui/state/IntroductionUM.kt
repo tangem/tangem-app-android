@@ -18,5 +18,4 @@ internal data class IntroductionUM(
     val onBuyTangemClick: () -> Unit,
     val onCreateWalletSheetCollapsed: () -> Unit,
     val onTermsOfServiceClick: () -> Unit,
-    val onPrivacyPolicyClick: () -> Unit,
 )
