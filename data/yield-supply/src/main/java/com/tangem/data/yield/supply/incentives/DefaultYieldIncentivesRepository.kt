@@ -10,15 +10,12 @@ import com.tangem.data.yield.supply.incentives.converters.YieldAprHistoryConvert
 import com.tangem.data.yield.supply.incentives.converters.YieldClaimCalldataConverter
 import com.tangem.data.yield.supply.incentives.converters.YieldClaimHistoryConverter
 import com.tangem.data.yield.supply.incentives.converters.YieldIncentivesConverter
-import com.tangem.data.yield.supply.converters.YieldMarketTokenConverter
 import com.tangem.domain.yield.supply.incentives.YieldIncentivesRepository
 import com.tangem.domain.yield.supply.incentives.YieldIncentivesRepository.Companion.APR_HISTORY_CACHE_SECONDS
 import com.tangem.domain.yield.supply.incentives.YieldIncentivesRepository.Companion.CLAIM_HISTORY_CACHE_SECONDS
 import com.tangem.domain.yield.supply.incentives.YieldIncentivesRepository.Companion.INCENTIVES_CACHE_SECONDS
-import com.tangem.domain.yield.supply.incentives.YieldIncentivesRepository.Companion.INCENTIVE_MARKETS_CACHE_SECONDS
 import com.tangem.domain.yield.supply.incentives.YieldIncentivesRepository.Companion.MAX_APR_HISTORY_DAYS
 import com.tangem.domain.yield.supply.incentives.YieldIncentivesRepository.Companion.MIN_APR_HISTORY_DAYS
-import com.tangem.domain.yield.supply.models.YieldMarketToken
 import com.tangem.domain.yield.supply.models.incentives.YieldAprHistory
 import com.tangem.domain.yield.supply.models.incentives.YieldClaimCalldata
 import com.tangem.domain.yield.supply.models.incentives.YieldClaimHistoryItem
@@ -37,21 +34,6 @@ internal class DefaultYieldIncentivesRepository(
     private val dispatchers: CoroutineDispatcherProvider,
     private val isMerklIncentivesEnabled: Boolean,
 ) : YieldIncentivesRepository {
-
-    override suspend fun getIncentiveMarkets(
-        chainIds: List<Int>,
-    ): Either<YieldIncentivesError, List<YieldMarketToken>> {
-        if (!isMerklIncentivesEnabled) return YieldIncentivesError.FeatureAbsent.left()
-
-        val chains = chainIds.takeIf(List<Int>::isNotEmpty)?.sorted()?.joinToString(separator = ",")
-
-        return cache.getOrFetch(key = "markets:$chains", window = INCENTIVE_MARKETS_CACHE_SECONDS.seconds) {
-            request(
-                call = { api.getIncentiveMarkets(chainId = chains) },
-                convert = { response -> response.marketDtos.map(YieldMarketTokenConverter::convert) },
-            )
-        }
-    }
 
     override suspend fun getIncentives(
         chainId: Int,
