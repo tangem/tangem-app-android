@@ -35,10 +35,13 @@ import com.tangem.hot.sdk.model.MnemonicType
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.cancellation.CancellationException
 
 @Suppress("LongParameterList")
 @Singleton
@@ -123,16 +126,19 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
                 restored.secret.wipe()
             }
 
-            registerRestoredWalletUseCase(userWallet).getOrElse { error ->
-                TangemLogger.e("Failed to register the restored social login wallet: $error")
-                discardFromSdk(userWallet)
-                return Either.Left(error)
+            return discardOnCancel(userWallet) {
+                registerRestoredWalletUseCase(userWallet).getOrElse { error ->
+                    TangemLogger.e("Failed to register the restored social login wallet: $error")
+                    discardFromSdk(userWallet)
+                    return Either.Left(error)
+                }
+
+                saveSocialWallet(userWallet) {
+                    hotWalletImporter.save(appCoroutineScope, it, isSeedPhraseBackedUp = false)
+                }.getOrElse { return Either.Left(it) }
+
+                Either.Right(SocialLoginOutcome.WalletRestored(userWallet.walletId))
             }
-
-            saveSocialWallet(userWallet) { hotWalletImporter.save(appCoroutineScope, it, isSeedPhraseBackedUp = false) }
-                .getOrElse { return Either.Left(it) }
-
-            return Either.Right(SocialLoginOutcome.WalletRestored(userWallet.walletId))
         } finally {
             recoveryKey.wipe()
         }
@@ -154,14 +160,25 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
 
         val userWallet = createHotWallet().getOrElse { return Either.Left(it) }
 
-        backUpCreatedWallet(idToken, userWallet).getOrElse { error ->
-            discardFromSdk(userWallet)
-            return Either.Left(error)
+        return discardOnCancel(userWallet) {
+            backUpCreatedWallet(idToken, userWallet).getOrElse { error ->
+                discardFromSdk(userWallet)
+                return Either.Left(error)
+            }
+
+            saveSocialWallet(userWallet) { saveWalletUseCase(it).map { } }.getOrElse { return Either.Left(it) }
+
+            Either.Right(SocialLoginOutcome.WalletCreated(userWallet.walletId))
         }
+    }
 
-        saveSocialWallet(userWallet) { saveWalletUseCase(it).map { } }.getOrElse { return Either.Left(it) }
-
-        return Either.Right(SocialLoginOutcome.WalletCreated(userWallet.walletId))
+    private suspend inline fun <T> discardOnCancel(userWallet: UserWallet.Hot, block: () -> T): T = try {
+        block()
+    } catch (e: CancellationException) {
+        withContext(NonCancellable) {
+            if (!isListedWithItsKeys(userWallet)) discardFromSdk(userWallet)
+        }
+        throw e
     }
 
     private suspend fun backUpCreatedWallet(
@@ -202,9 +219,15 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
     ): Either<SocialLoginError, Unit> = save(userWallet.copy(isSocialBackupCompleted = true))
         .onLeft { error -> TangemLogger.e("Failed to save the social login wallet: $error") }
         .mapLeft {
-            discardFromSdk(userWallet)
+            if (!isListedWithItsKeys(userWallet)) discardFromSdk(userWallet)
             SocialLoginError.Unknown()
         }
+
+    // the same seed may have been listed meanwhile under another Hot SDK id
+    private fun isListedWithItsKeys(userWallet: UserWallet.Hot): Boolean = runCatching {
+        val listed = getUserWalletUseCase(userWallet.walletId).getOrNull() as? UserWallet.Hot
+        listed?.hotWalletId == userWallet.hotWalletId
+    }.getOrDefault(false)
 
     private suspend fun discardFromSdk(userWallet: UserWallet.Hot) {
         runSuspendCatching { tangemHotSdk.delete(userWallet.hotWalletId) }
