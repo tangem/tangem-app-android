@@ -149,8 +149,7 @@ internal class HaveWalletSheetController(
         if (importStepOrNull()?.isCloudLoading != false) return
         dismiss()
         if (!host.ensureHotWalletCreationSupported()) return
-        host.onTerminalFlowEntered()
-        router.push(AppRoute.AddExistingWallet(mode = AppRoute.AddExistingWallet.Mode.RecoveryPhrase))
+        openImport(AppRoute.AddExistingWallet.Mode.RecoveryPhrase)
     }
 
     /**
@@ -178,12 +177,17 @@ internal class HaveWalletSheetController(
                 ifRight = {
                     cloudResolveJob = null
                     dismiss()
-                    host.onTerminalFlowEntered()
-                    router.push(AppRoute.AddExistingWallet(mode = AppRoute.AddExistingWallet.Mode.CloudRestore))
+                    openImport(AppRoute.AddExistingWallet.Mode.CloudRestore)
                 },
             )
             cloudResolveJob = null
         }
+    }
+
+    /** Unlike the mobile wallet screen, the sheet does not report the onboarding start, so the import flow does. */
+    private fun openImport(mode: AppRoute.AddExistingWallet.Mode) {
+        host.onTerminalFlowEntered()
+        router.push(AppRoute.AddExistingWallet(mode = mode, shouldSendOnboardingStarted = true))
     }
 
     /** The step on screen, if it is Import: the outgoing step stays tappable while the next one slides in. */
