@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.yield.supply.models.YieldSupplyMarketChartData
 import com.tangem.domain.yield.supply.models.incentives.YieldAprHistory
 import com.tangem.domain.yield.supply.models.incentives.YieldIncentivesError
@@ -11,6 +12,7 @@ import com.tangem.domain.yield.supply.usecase.GetYieldAprHistoryUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetChartUseCase
 import com.tangem.features.yield.supply.impl.chart.DefaultYieldSupplyChartComponent
+import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartIncentiveUM
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartPeriod
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartUM
 import com.tangem.test.mock.yield.MockYieldSupply
@@ -18,10 +20,14 @@ import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -169,7 +175,7 @@ internal class YieldSupplyChartModelTest {
         val incentive = requireNotNull(data.incentive)
         assertThat(incentive.period).isEqualTo(YieldSupplyChartPeriod.Week)
         // Already formatted: the header prints it as it stands, so a raw mean would leak the payload's scale
-        assertThat(incentive.averageApy).isEqualTo("5.00%")
+        assertThat(incentive.averageApy).isEqualTo(stringReference("5.00%"))
     }
 
     @Test
@@ -429,6 +435,70 @@ internal class YieldSupplyChartModelTest {
             )
         }
     }
+
+    @Test
+    fun `GIVEN the plain rate sheet WHEN the market arrives THEN the base rate heads it, not the incentivised one`() =
+        runTest {
+            // Arrange
+            coEvery { getTokenStatusUseCase(any()) } returns MockYieldSupply.market(
+                apy = BigDecimal("4.0"),
+                campaign = MockYieldSupply.campaign(totalApyEst = BigDecimal("9.5")),
+            ).right()
+            coEvery { getChartUseCase(any()) } returns chartData(y = listOf(2.0, 5.0)).right()
+
+            // Act
+            createModel(isPlainRate = true)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { callback.onRateResolved(stringReference("4.00%")) }
+        }
+
+    @Test
+    fun `GIVEN the incentivised sheet WHEN the market arrives THEN the campaign total heads it`() = runTest {
+        // Arrange
+        coEvery { getTokenStatusUseCase(any()) } returns MockYieldSupply.market(
+            apy = BigDecimal("4.0"),
+            campaign = MockYieldSupply.campaign(totalApyEst = BigDecimal("9.5")),
+        ).right()
+        coEvery { getAprHistoryUseCase(any(), any(), any()) } returns aprHistory("4.0", "5.0").right()
+
+        // Act
+        createModel()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { callback.onRateResolved(stringReference("9.50%")) }
+    }
+
+    @Test
+    fun `GIVEN a period switch WHEN it is applied THEN the chart ends on the new window`() =
+        runTest {
+            // Arrange
+            coEvery { getTokenStatusUseCase(any()) } returns market(hasCampaign = true).right()
+            coEvery {
+                getAprHistoryUseCase(chainId = any(), tokenAddress = any(), days = YieldSupplyChartPeriod.ThreeMonths.days)
+            } coAnswers {
+                delay(timeMillis = 1_000)
+                aprHistory("4.0", "5.0", "6.0").right()
+            }
+            coEvery {
+                getAprHistoryUseCase(chainId = any(), tokenAddress = any(), days = YieldSupplyChartPeriod.Week.days)
+            } returns aprHistory("7.0", "8.0").right()
+            val incentive = slot<YieldSupplyChartIncentiveUM?>()
+            every { callback.onIncentiveChanged(captureNullable(incentive)) } returns Unit
+            val model = createModel(initialPeriod = YieldSupplyChartPeriod.ThreeMonths)
+            runCurrent()
+
+            // Act
+            incentive.captured?.onPeriodSelected(YieldSupplyChartPeriod.Week.name)
+            advanceUntilIdle()
+
+            // Assert
+            val data = model.uiState.value as YieldSupplyChartUM.Data
+            assertThat(data.incentive?.period).isEqualTo(YieldSupplyChartPeriod.Week)
+            assertThat(data.chartData.y).hasSize(2)
+        }
 
     private fun createModel(
         callback: DefaultYieldSupplyChartComponent.ModelCallback? = this.callback,

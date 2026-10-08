@@ -16,6 +16,7 @@ import com.tangem.features.yield.supply.api.YieldSupplyPromoComponent
 import com.tangem.features.yield.supply.impl.apy.YieldSupplyApyComponent
 import com.tangem.features.yield.supply.impl.promo.model.YieldSupplyPromoModel
 import com.tangem.features.yield.supply.impl.promo.v2.model.YieldSupplyPromoV2Model
+import com.tangem.features.yield.supply.impl.promo.ui.YieldSupplyPromoContent
 import com.tangem.features.yield.supply.impl.promo.v2.ui.YieldSupplyPromoV2Content
 import com.tangem.features.yield.supply.impl.subcomponents.startearning.YieldSupplyStartEarningEntryComponent
 import dagger.assisted.Assisted
@@ -42,11 +43,21 @@ internal class DefaultYieldSupplyPromoComponent @AssistedInject constructor(
         val incentiveState by incentiveModel.uiState.collectAsStateWithLifecycle()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
 
-        YieldSupplyPromoV2Content(
-            state = incentiveState,
-            clickIntents = model,
-            modifier = modifier,
-        )
+        // The boost promo multiplies a rate the wallet has earned, and says so with its own title, card and terms.
+        // The redesigned screen has no room for any of that, so a boosted wallet keeps the screen built for it.
+        if (params.isPromoEnabled) {
+            YieldSupplyPromoContent(
+                yieldSupplyPromoUM = model.uiState,
+                clickIntents = model,
+                modifier = modifier,
+            )
+        } else {
+            YieldSupplyPromoV2Content(
+                state = incentiveState,
+                clickIntents = model,
+                modifier = modifier,
+            )
+        }
 
         bottomSheet.child?.instance?.BottomSheet()
     }

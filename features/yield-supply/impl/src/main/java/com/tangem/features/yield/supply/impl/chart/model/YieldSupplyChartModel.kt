@@ -23,6 +23,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -49,16 +50,24 @@ internal class YieldSupplyChartModel @Inject constructor(
 
     private var selectedPeriod = params.initialPeriod
 
+    /** A period switch supersedes the request in flight: a late answer for the old window is no longer an answer. */
+    private var loadJob: Job? = null
+
     init {
         load()
     }
 
     private fun load() {
-        modelScope.launch(dispatchers.default) {
+        loadJob?.cancel()
+        loadJob = modelScope.launch(dispatchers.default) {
             params.callback?.onStartLoading()
 
             val market = yieldSupplyGetTokenStatusUseCase(params.cryptoCurrency).getOrNull()
             val campaign = market?.campaign?.takeIf { it.hasActiveCampaign }
+
+            // The plain sheet plots the Aave history, so it must not headline the rate the campaign adds to it.
+            val headlineApy = if (params.isPlainRate) market?.apy else market?.effectiveApy
+            params.callback?.onRateResolved(headlineApy.formatApy())
 
             if (campaign == null || params.isPlainRate) {
                 loadSupplyChart()
@@ -134,14 +143,14 @@ internal class YieldSupplyChartModel @Inject constructor(
                 xLabels = axisLabels(history.points).toImmutableList(),
             ),
             monthLables = persistentListOf(),
-            incentive = incentive(averageApy = average.formatApy()),
+            incentive = incentive(averageApy = average),
         )
     }
 
-    private fun incentive(averageApy: String?) = YieldSupplyChartIncentiveUM(
+    private fun incentive(averageApy: BigDecimal?) = YieldSupplyChartIncentiveUM(
         period = selectedPeriod,
         picker = periodPicker(),
-        averageApy = averageApy,
+        averageApy = averageApy.formatApy(),
         onPeriodSelected = ::onPeriodSelected,
     )
 
