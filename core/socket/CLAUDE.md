@@ -127,7 +127,8 @@ network (a captive portal passed) do not interrupt a working connection; backoff
 closes at once — even after an error frame — is not hammered every second.
 
 Nothing a spec does can kill the socket for good: `headers`, the transport's `open` (a malformed URL or
-header) and `onOpen` throwing end the attempt like a dropped connection (`SocketCloseCode.ABNORMAL`), so
+header) and `onOpen` throwing — a `withTimeout` inside them included — end the attempt like a dropped
+connection (`SocketCloseCode.ABNORMAL`), so
 the close policy and backoff apply; anything else restarts the loop after 5 s and logs an error.
 
 ## Authorization
