@@ -1,6 +1,7 @@
 package com.tangem.features.yield.supply.impl.chart.entity
 
 import androidx.compose.runtime.Immutable
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -25,14 +26,14 @@ internal sealed class YieldSupplyChartUM {
 }
 
 /**
- * @property averageApy period mean of the total APY, null until the history arrives
+ * @property averageApy period mean of the total APY; a dash until the history arrives
  * @property onPeriodSelected receives the [YieldSupplyChartPeriod] name carried as the segment id
  */
 @Immutable
 internal data class YieldSupplyChartIncentiveUM(
     val period: YieldSupplyChartPeriod,
     val picker: TangemSegmentedPickerUM,
-    val averageApy: String?,
+    val averageApy: TextReference,
     val onPeriodSelected: (String) -> Unit,
 )
 
