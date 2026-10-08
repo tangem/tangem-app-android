@@ -24,6 +24,7 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.addressbook.usecase.IsAddressBookCompatibleUseCase
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.express.models.ExchangeTransaction
 import com.tangem.domain.express.models.ExpressAsset
@@ -49,6 +50,7 @@ import com.tangem.features.txhistory.analytics.toAnalyticsStatus
 import com.tangem.features.txhistory.analytics.toAnalyticsType
 import com.tangem.features.txhistory.component.TxHistoryDetailsComponent
 import com.tangem.features.txhistory.converter.ExpressTxToShareTextConverter
+import com.tangem.features.txhistory.converter.FiatConversion
 import com.tangem.features.txhistory.converter.TxHistoryInfoToTxHistoryDetailsUMConverter
 import com.tangem.features.txhistory.converter.fiatCode
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
@@ -96,6 +98,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
     private val router: Router,
     isAddressBookCompatibleUseCase: IsAddressBookCompatibleUseCase,
     getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
+    getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     ownerLookupProducer: TxHistoryOwnerLookupProducer,
     paramsContainer: ParamsContainer,
 ) : Model() {
@@ -163,24 +166,49 @@ internal class TxHistoryDetailsModel @Inject constructor(
         .flowOn(dispatchers.io)
 
     /**
-     * The owner/contact lookup, whether saving a contact is possible at all (an address book stored by a newer build
-     * cannot be written to, so "Add contact" must not be offered), and the wallet's cached tokens. Combined here
-     * rather than in the [uiState] `combine` below, which is already at the five-source overload.
+     * Rate of the viewed currency and the app currency it is quoted in, for the fiat line under the details amount.
+     * Both sources can keep the card waiting — a currency the account list has not yielded yet never emits a status
+     * at all — so the pair starts at [FiatConversion.NONE]: the card renders at once and the fiat line appears with
+     * the rate.
      */
-    private val lookupWithAddressBook: Flow<Triple<TxHistoryLookupContext, Boolean, Set<CryptoCurrency.Token>>> =
+    private val fiatConversionFlow: Flow<FiatConversion> = combine(
+        flow = getAccountCurrencyStatusUseCase(userWalletId = params.userWalletId, currency = params.currency)
+            .map { it.status.value.fiatRate },
+        flow2 = getSelectedAppCurrencyUseCase.invokeOrDefault(),
+    ) { rate, appCurrency -> FiatConversion(rate = rate, appCurrency = appCurrency) }
+        .onStart { emit(FiatConversion.NONE) }
+        .distinctUntilChanged()
+        .flowOn(dispatchers.io)
+
+    /**
+     * The owner/contact lookup, whether saving a contact is possible at all (an address book stored by a newer build
+     * cannot be written to, so "Add contact" must not be offered), the wallet's cached tokens and the fiat
+     * conversion. Combined here rather than in the [uiState] `combine` below, which is already at the five-source
+     * overload.
+     */
+    private val detailsInputs: Flow<DetailsInputs> =
         combine(
             flow = ownerLookupProducer(params.userWalletId),
             flow2 = isAddressBookCompatibleUseCase(params.userWalletId),
             flow3 = networkTokensFlow,
-        ) { lookup, isCompatible, tokens -> Triple(lookup, isCompatible, tokens) }
+            flow4 = fiatConversionFlow,
+        ) { lookup, isCompatible, tokens, fiatConversion ->
+            DetailsInputs(
+                lookup = lookup,
+                isAddressBookCompatible = isCompatible,
+                networkTokens = tokens,
+                fiatConversion = fiatConversion,
+            )
+        }
 
     val uiState: StateFlow<TxHistoryDetailsUM?> = combine(
         flow = txHistoryInfo,
-        flow2 = lookupWithAddressBook,
+        flow2 = detailsInputs,
         flow3 = targetsByAddress,
         flow4 = refundCurrency,
         flow5 = balanceHidingSettings.isBalanceHidden(),
-    ) { txInfo, (lookup, isAddressBookCompatible, networkTokens), stakingTargets, refundToken, isBalanceHidden ->
+    ) { txInfo, inputs, stakingTargets, refundToken, isBalanceHidden ->
+        val lookup = inputs.lookup
         // Each header-menu row drops with the data behind it: no explorer hash (an express op with no on-chain leg
         // yet, or a blank on-chain hash) drops "Explore"; only an express deal can describe itself as text, so an
         // on-chain row has no "Share"; a blank id drops "Transaction ID".
@@ -189,7 +217,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
         val shareText = (txInfo as? ExpressTx)?.let(shareTextConverter::convert)
         val contactCandidate = txInfo
             .contactCandidate(currency = params.currency, lookup = lookup)
-            .takeIf { isAddressBookCompatible }
+            .takeIf { inputs.isAddressBookCompatible }
         TxHistoryInfoToTxHistoryDetailsUMConverter(
             currency = params.currency,
             onCopyAddress = { address -> onCopyAddress(address, txInfo) },
@@ -206,7 +234,8 @@ internal class TxHistoryDetailsModel @Inject constructor(
             isBalanceHidden = isBalanceHidden,
             onExploreProvider = urlOpener::openUrl,
             onAddContact = contactCandidate?.let { candidate -> { openContactCreation(candidate) } },
-            networkTokens = networkTokens,
+            networkTokens = inputs.networkTokens,
+            fiatConversion = inputs.fiatConversion,
         ).convert(txInfo).also { um ->
             if (!isScreenOpenedAnalyticsSent) {
                 isScreenOpenedAnalyticsSent = true
@@ -423,6 +452,14 @@ internal class TxHistoryDetailsModel @Inject constructor(
             .getOrNull()
     }
 }
+
+/** The per-wallet sources the details converter needs, combined apart from the already five-wide `uiState` combine. */
+private data class DetailsInputs(
+    val lookup: TxHistoryLookupContext,
+    val isAddressBookCompatible: Boolean,
+    val networkTokens: Set<CryptoCurrency.Token>,
+    val fiatConversion: FiatConversion,
+)
 
 /** Identity of the rating slot: re-activation is needed only when one of these deal fields changes. */
 private data class RatingKey(
