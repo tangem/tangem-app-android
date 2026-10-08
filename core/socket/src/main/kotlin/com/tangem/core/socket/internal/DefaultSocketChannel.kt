@@ -83,9 +83,11 @@ internal class DefaultSocketChannel(
 
     private val sendsQueuedDuringOnOpen = mutableListOf<String>()
 
+    private val logName = spec.url.substringBefore('?')
+
     init {
         scope.launch {
-            state.collect { state -> TangemLogger.i("Socket ${spec.url.substringBefore('?')}: $state") }
+            state.collect(::logState)
         }
         scope.launch {
             while (true) {
@@ -176,6 +178,7 @@ internal class DefaultSocketChannel(
             state.value = SocketState.Connecting(attempt)
             val close = connectOnce(SocketConnectContext(attempt, previousClose), onHealthy = { attempt = 0 })
             previousClose = close
+            logClose(close, attempt)
             val retryDelay = when (val decision = spec.closePolicy.decide(close)) {
                 ClosePolicy.Decision.Stop -> {
                     state.value = SocketState.Stopped(close.code, close.reason)
@@ -303,6 +306,19 @@ internal class DefaultSocketChannel(
 
         override fun <T> send(serializer: SerializationStrategy<T>, value: T): Boolean =
             send(json.encodeToString(serializer, value))
+    }
+
+    private fun logState(state: SocketState) {
+        val message = "Socket $logName: $state"
+        when (state) {
+            is SocketState.Connecting, is SocketState.WaitingToRetry -> TangemLogger.d(message)
+            else -> TangemLogger.i(message)
+        }
+    }
+
+    private fun logClose(close: SocketClose, attempt: Int) {
+        val message = "Socket $logName closed: $close"
+        if (attempt == 0) TangemLogger.i(message) else TangemLogger.d(message)
     }
 
     private sealed interface Gate {
