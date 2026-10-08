@@ -49,6 +49,7 @@ internal fun PaymentNetworkStatus.currencies(): List<CryptoCurrency> = when (thi
  */
 internal fun PaymentNetworkStatus.receivableCurrencies(): List<CryptoCurrency> = currencies()
     .filter { it.id.rawCurrencyId != null }
+    .sortedBy { it.symbol }
 
 /**
  * Maps this status to row display data: network identity (id, name, icon) from [PaymentNetworkStatus.network],

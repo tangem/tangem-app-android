@@ -482,7 +482,7 @@ internal class PlacePredictionNotificationsFactoryTest {
             outcomePrice = "42¢",
             resolutionDateMillis = null,
         ),
-        collateral = CollateralUM(tokenSymbol = "USDC", iconState = null),
+        collateral = CollateralUM(tokenSymbol = "USDC"),
         order = order ?: OrderSideUM.Buy(balance = balance, hasSufficientBalance = false),
         amountValue = amountValue,
         slippage = SlippageUM(percent = BigDecimal("3"), isDefault = true),

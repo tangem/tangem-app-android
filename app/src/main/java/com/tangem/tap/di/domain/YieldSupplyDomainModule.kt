@@ -9,6 +9,7 @@ import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.error.FeeErrorResolver
 import com.tangem.domain.yield.supply.YieldSupplyErrorResolver
 import com.tangem.domain.yield.supply.YieldSupplyRepository
+import com.tangem.domain.yield.supply.incentives.YieldIncentivesRepository
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.domain.yield.supply.promo.YieldPromoRepository
 import com.tangem.domain.yield.supply.promo.usecase.GetBoostedApyUseCase
@@ -112,17 +113,11 @@ internal object YieldSupplyDomainModule {
 
     @Provides
     @Singleton
-    fun provideYieldSupplyGetApyUseCase(yieldSupplyRepository: YieldSupplyRepository): YieldSupplyGetApyUseCase {
-        return YieldSupplyGetApyUseCase(
-            yieldSupplyRepository = yieldSupplyRepository,
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideResolveYieldApyUseCase(yieldSupplyRepository: YieldSupplyRepository): ResolveYieldApyUseCase {
-        return ResolveYieldApyUseCase(
-            yieldSupplyRepository = yieldSupplyRepository,
+    fun provideGetYieldAprHistoryUseCase(
+        yieldIncentivesRepository: YieldIncentivesRepository,
+    ): GetYieldAprHistoryUseCase {
+        return GetYieldAprHistoryUseCase(
+            yieldIncentivesRepository = yieldIncentivesRepository,
         )
     }
 

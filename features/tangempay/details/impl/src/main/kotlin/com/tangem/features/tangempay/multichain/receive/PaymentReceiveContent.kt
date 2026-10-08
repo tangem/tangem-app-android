@@ -184,9 +184,14 @@ private fun AddressBlock(state: PaymentReceiveUM, onShowQr: () -> Unit, modifier
             isEnabled = hasAddress,
         )
         SpacerH(20.dp)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier.width(IntrinsicSize.Min),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             TangemButton(
-                modifier = Modifier.testTag(TangemPayTestTags.RECEIVE_COPY_BUTTON),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag(TangemPayTestTags.RECEIVE_COPY_BUTTON),
                 text = resourceReference(R.string.common_copy),
                 iconStart = TangemIconUM.Icon(imageVector = Icons.ic_copy_24),
                 onClick = state.onCopy,
@@ -195,7 +200,9 @@ private fun AddressBlock(state: PaymentReceiveUM, onShowQr: () -> Unit, modifier
                 isEnabled = hasAddress,
             )
             TangemButton(
-                modifier = Modifier.testTag(TangemPayTestTags.RECEIVE_SHARE_BUTTON),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag(TangemPayTestTags.RECEIVE_SHARE_BUTTON),
                 text = resourceReference(R.string.common_share),
                 iconStart = TangemIconUM.Icon(imageVector = Icons.ic_share_android_24),
                 onClick = state.onShare,
