@@ -10,6 +10,10 @@ import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
 
+/**
+ * Every route here answers with its payload bare, exactly like the plain `yield` routes — the
+ * `{success, timestamp, result}` envelope the contract documents does not exist on the wire.
+ */
 interface YieldIncentivesApi {
 
     @GET("api/v1/yield-modules/markets")
