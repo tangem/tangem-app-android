@@ -14,6 +14,8 @@ import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
 import com.tangem.core.ui.res.generated.icons.ic_copy_24
@@ -23,6 +25,7 @@ import com.tangem.core.ui.res.generated.icons.ic_chart_line_vertical_20
 import com.tangem.core.ui.res.generated.icons.ic_document_20
 import com.tangem.core.ui.res.generated.icons.ic_globe_24
 import com.tangem.core.ui.res.generated.icons.ic_lightning_20
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.SdkAmountType
@@ -1503,6 +1506,71 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
     // endregion
 
+    // region Fiat line under the amount
+
+    @Test
+    fun `GIVEN network fee tx and known rate WHEN convert THEN fiat prices the fee`() {
+        // Arrange
+        val tx = txInfo(
+            type = TransactionType.NetworkFee(amount = null, address = USER_ADDRESS),
+            isOutgoing = true,
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.000015"), decimals = 18),
+        )
+
+        // Act
+        val result = onChainConverter(fiatConversion = usdRate("2000")).convert(tx)
+
+        // Assert
+        assertThat(result.amountBlock.fiatAmount).isEqualTo(expectedUsd("0.030000"))
+    }
+
+    @Test
+    fun `GIVEN transfer and known rate WHEN convert THEN fiat prices the amount unsigned`() {
+        // Arrange
+        val tx = txInfo(type = TransactionType.Transfer, isOutgoing = true, amount = BigDecimal("2"))
+
+        // Act
+        val result = onChainConverter(fiatConversion = usdRate("1500")).convert(tx)
+
+        // Assert
+        assertThat(result.amountBlock.fiatAmount).isEqualTo(expectedUsd("3000"))
+    }
+
+    @Test
+    fun `GIVEN no known rate WHEN convert THEN no fiat line`() {
+        // Act
+        val result = converter.convert(txInfo(type = TransactionType.Transfer, isOutgoing = true))
+
+        // Assert
+        assertThat(result.amountBlock.fiatAmount).isNull()
+    }
+
+    @Test
+    fun `GIVEN approve and known rate WHEN convert THEN no fiat line`() {
+        // Arrange — the allowance is denominated in the approved token, which the viewed currency's rate cannot price.
+        val tx = txInfo(
+            type = TransactionType.Approve(
+                amount = SdkAmount(currencySymbol = "USDT", value = BigDecimal("100"), decimals = 6),
+                address = USER_ADDRESS,
+            ),
+            isOutgoing = true,
+        )
+
+        // Act
+        val result = onChainConverter(fiatConversion = usdRate("2000")).convert(tx)
+
+        // Assert
+        assertThat(result.amountBlock.fiatAmount).isNull()
+    }
+
+    private fun usdRate(rate: String) = FiatConversion(rate = BigDecimal(rate), appCurrency = AppCurrency.Default)
+
+    private fun expectedUsd(value: String) = stringReference(
+        BigDecimal(value).format { fiat(fiatCurrencyCode = "USD", fiatCurrencySymbol = "$") },
+    )
+
+    // endregion
+
     // region YieldSupply Send (rendered as a plain transfer)
 
     @Test
@@ -1593,6 +1661,25 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
         // Assert
         assertThat(result.rows).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN non-withdraw yield Send to own account WHEN convert THEN transferred title`() {
+        // Arrange
+        val ownConverter = onChainConverter(
+            lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
+        )
+        val tx = txInfo(
+            type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = false),
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val result = ownConverter.convert(tx)
+
+        // Assert
+        assertThat(result.header.title).isEqualTo(resourceReference(R.string.common_transferred))
     }
 
     // endregion
