@@ -1155,7 +1155,7 @@
   <string name="introduction_stories_two_title">Uma carteira, vários cartões</string>
   <string name="introduction_subtitle">Um único lugar seguro para tudo o que é seu</string>
   <string name="introduction_terms_of_service">Termos de serviço</string>
-  <string name="introduction_terms_of_service_consent">Ao continuar, você concorda com %s</string>
+  <string name="introduction_terms_of_service_consent">Ao continuar, você concorda com os termos %s</string>
   <string name="introduction_title">Armazene todos os seus ativos</string>
   <string name="joint_account_activated_snackbar">Conta ativada</string>
   <string name="joint_account_activation_account_button_title">Ativar conta</string>

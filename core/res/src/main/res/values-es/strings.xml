@@ -1021,6 +1021,7 @@
   <string name="introduction_stories_two_title">Una wallet, varias tarjetas</string>
   <string name="introduction_subtitle">Un lugar seguro para todas tus pertenencias.</string>
   <string name="introduction_terms_of_service">Términos del servicio</string>
+  <string name="introduction_terms_of_service_consent">Al continuar, acepta las %s</string>
   <string name="introduction_title">Guarda todos tus activos</string>
   <string name="joint_account_activated_snackbar">Cuenta activada</string>
   <string name="joint_account_activation_account_button_title">Activar cuenta</string>

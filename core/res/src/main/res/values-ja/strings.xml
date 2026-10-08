@@ -1014,6 +1014,7 @@
   <string name="introduction_stories_two_title">ひとつのウォレット、複数のカード</string>
   <string name="introduction_subtitle">すべての資産を安全にひとつの場所で</string>
   <string name="introduction_terms_of_service">利用規約</string>
+  <string name="introduction_terms_of_service_consent">続行すると、以下に同意したものとみなされます %s</string>
   <string name="introduction_title">すべての資産をまとめる</string>
   <string name="joint_account_activated_snackbar">アカウントが有効化されました</string>
   <string name="joint_account_activation_account_button_title">アカウントを有効化</string>
@@ -1026,6 +1027,7 @@
   <string name="joint_account_invite_load_failed_subtitle">招待ページを読み込めませんでした。\nタップして再読み込みしてください</string>
   <string name="joint_account_invite_members_creator">クリエイター</string>
   <string name="joint_account_invite_members_invite">招待する</string>
+  <string name="joint_account_invite_members_invited">招待済み</string>
   <string name="joint_account_invite_members_member">メンバー</string>
   <string name="joint_account_invite_members_member_info">メンバー情報</string>
   <string name="joint_account_invite_members_new_member">新しいメンバー</string>
@@ -1044,6 +1046,7 @@
   <string name="joint_account_invite_members_title">メンバーを招待</string>
   <string name="joint_account_invite_members_to_join">メンバーを招待して参加してもらう</string>
   <string name="joint_account_invite_members_waiting_title">メンバーの参加待ち</string>
+  <string name="joint_account_invite_share_title">%sに招待</string>
   <string name="joint_account_join_confirm_sheet_subtitle">このアカウントでは、全員が1つの残高を共有します。メンバーは誰でも、あなたの承認なしでも、いつでも資金を使用または出金できます</string>
   <string name="joint_account_join_confirm_sheet_title">共有アカウントに参加しようとしています</string>
   <string name="joint_account_join_invalid_link_subtitle">正しいリンクを開いたことを確認するか、アカウント作成者に再送を依頼してください</string>
@@ -1098,6 +1101,9 @@
   <string name="joint_account_send_sends_automatically_setup_fee">必要な署名が集まると自動的に送信されます。初回の送信には1回限りの設定手数料が含まれます</string>
   <string name="joint_account_send_setup_fee_note">%1$sでの初回取引です。手数料には、共同アカウントをオンチェーンで設定するための1回限りの%2$sが含まれます</string>
   <string name="joint_account_send_signatures_required">%2$s人中%1$s人の署名が必要です</string>
+  <plurals name="joint_account_send_signatures_required_banner">
+    <item quantity="other">必要な署名数：%1$d</item>
+  </plurals>
   <string name="joint_account_send_slot_busy_subtitle">このネットワークでは、すでに署名を収集中の処理があります。完了するまで待ってから新しい処理を作成してください</string>
   <string name="joint_account_send_slot_busy_title">処理がすでに進行中です</string>
   <string name="joint_account_settings_networks_info">このアカウントは対応ネットワークでのみ利用できます。</string>

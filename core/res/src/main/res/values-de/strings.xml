@@ -1155,7 +1155,7 @@
   <string name="introduction_stories_two_title">Eine Wallet, mehrere Karten</string>
   <string name="introduction_subtitle">Ein sicherer Ort für alles, was dir gehört</string>
   <string name="introduction_terms_of_service">Nutzungsbedingungen</string>
-  <string name="introduction_terms_of_service_consent">Wenn Sie fortfahren, erklären Sie sich damit einverstanden, dass %s</string>
+  <string name="introduction_terms_of_service_consent">Indem Sie fortfahren, stimmen Sie den folgenden Bedingungen zu: %s</string>
   <string name="introduction_title">Alle deine Assets an einem Ort</string>
   <string name="joint_account_activated_snackbar">Konto aktiviert</string>
   <string name="joint_account_activation_account_button_title">Konto aktivieren</string>
