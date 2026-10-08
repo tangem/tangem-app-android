@@ -60,10 +60,10 @@ import com.tangem.core.ui.res.generated.icons.ic_triangle_up_12
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartIncentiveUM
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartPeriod
+import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.persistentListOf
 
 private const val AVERAGE_PLACEHOLDER = "0.00%"
-private const val EM_DASH = "—"
 
 @Suppress("LongMethod")
 @Composable
@@ -345,7 +345,7 @@ private fun IncentiveApyHeader(
                     TextShimmer(text = AVERAGE_PLACEHOLDER, style = TangemTheme.typography3.heading.medium)
                 } else {
                     Text(
-                        text = averageApy ?: EM_DASH,
+                        text = averageApy ?: StringsSigns.DASH_SIGN,
                         style = TangemTheme.typography3.heading.medium,
                         color = TangemTheme.colors3.text.secondary,
                     )
