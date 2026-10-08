@@ -123,8 +123,8 @@ closes `idleTimeout` (5 s) after the last collector leaves.
 Foreground and network are always part of the condition — a socket never stays open in the background.
 Losing the network pauses (`Paused(NoNetwork)`) without spending backoff attempts; coming back connects
 at once, and so does a switch of the default network (Wi-Fi → cellular). Validation changes on the same
-network (a captive portal passed) do not interrupt a working connection; backoff retries it. Backoff starts over only after a connection delivered a message or lived 30 s, so a server that
-accepts and closes at once is not hammered every second.
+network (a captive portal passed) do not interrupt a working connection; backoff retries it. Backoff starts over only after a connection lived 30 s, so a server that accepts and
+closes at once — even after an error frame — is not hammered every second.
 
 Nothing a spec does can kill the socket for good: `headers`, the transport's `open` (a malformed URL or
 header) and `onOpen` throwing end the attempt like a dropped connection (`SocketCloseCode.ABNORMAL`), so
