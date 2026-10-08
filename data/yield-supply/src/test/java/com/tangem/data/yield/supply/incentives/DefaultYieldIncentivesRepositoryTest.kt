@@ -9,7 +9,6 @@ import com.tangem.data.yield.supply.incentives.cache.DefaultYieldIncentivesCache
 import com.tangem.domain.yield.supply.incentives.YieldIncentivesRepository
 import com.tangem.domain.yield.supply.models.incentives.YieldIncentivesError
 import com.tangem.grow.datasource.yield.YieldIncentivesApi
-import com.tangem.grow.datasource.yield.models.YieldMarketsResponse
 import com.tangem.grow.datasource.yield.models.incentives.YieldAprHistoryPointDto
 import com.tangem.grow.datasource.yield.models.incentives.YieldAprHistoryResponse
 import com.tangem.grow.datasource.yield.models.incentives.YieldClaimCalldataResponse
@@ -110,7 +109,6 @@ internal class DefaultYieldIncentivesRepositoryTest {
     }
 
     private fun provideTestModels() = listOf(
-        ToggleOffModel("getIncentiveMarkets") { it.getIncentiveMarkets(chainIds = listOf(CHAIN_ID)) },
         ToggleOffModel("getIncentives") { it.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS) },
         ToggleOffModel("getAprHistory") { it.getAprHistory(chainId = CHAIN_ID, tokenAddress = TOKEN, days = 30) },
         ToggleOffModel("getClaimCalldata") { it.getClaimCalldata(chainId = CHAIN_ID, userAddress = ADDRESS) },
@@ -262,34 +260,6 @@ internal class DefaultYieldIncentivesRepositoryTest {
 
         // Assert
         coVerify(exactly = 1) { api.getClaimHistory(chainId = CHAIN_ID, userAddress = ADDRESS) }
-    }
-
-    @Test
-    fun `GIVEN chain ids WHEN getIncentiveMarkets THEN they are sent as a comma separated query`() = runTest {
-        // Arrange
-        val repository = createRepository(testScope = this)
-        coEvery { api.getIncentiveMarkets(chainId = any(), isForEarn = null) } returns
-            ApiResponse.Success(YieldMarketsResponse(marketDtos = emptyList(), lastUpdated = TIMESTAMP))
-
-        // Act
-        repository.getIncentiveMarkets(chainIds = listOf(137, 1))
-
-        // Assert
-        coVerify(exactly = 1) { api.getIncentiveMarkets(chainId = "1,137", isForEarn = null) }
-    }
-
-    @Test
-    fun `GIVEN no chain ids WHEN getIncentiveMarkets THEN the query is omitted`() = runTest {
-        // Arrange
-        val repository = createRepository(testScope = this)
-        coEvery { api.getIncentiveMarkets(chainId = any(), isForEarn = null) } returns
-            ApiResponse.Success(YieldMarketsResponse(marketDtos = emptyList(), lastUpdated = TIMESTAMP))
-
-        // Act
-        repository.getIncentiveMarkets(chainIds = emptyList())
-
-        // Assert
-        coVerify(exactly = 1) { api.getIncentiveMarkets(chainId = null, isForEarn = null) }
     }
 
     private fun createRepository(testScope: TestScope, isMerklIncentivesEnabled: Boolean = true) =
