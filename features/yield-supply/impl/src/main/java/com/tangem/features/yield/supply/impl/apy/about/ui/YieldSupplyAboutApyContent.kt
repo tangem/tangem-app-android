@@ -21,6 +21,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -66,7 +67,7 @@ internal fun YieldSupplyAboutApyContent(baseApy: BigDecimal, rewardsApr: BigDeci
                 Column(modifier = Modifier.fillMaxWidth()) {
                     ApyBreakdownRow(
                         title = stringResourceSafe(R.string.yield_module_about_apy_base_yield_title),
-                        value = baseApy.formatApy(),
+                        value = baseApy.formatApy().resolveReference(),
                     )
                     HorizontalDivider(
                         thickness = 0.5.dp,
@@ -74,7 +75,7 @@ internal fun YieldSupplyAboutApyContent(baseApy: BigDecimal, rewardsApr: BigDeci
                     )
                     ApyBreakdownRow(
                         title = stringResourceSafe(R.string.yield_module_about_apy_extra_rewards_title),
-                        value = rewardsApr.formatApy(),
+                        value = rewardsApr.formatApy().resolveReference(),
                     )
                 }
             }

@@ -1,9 +1,12 @@
 package com.tangem.features.yield.supply.impl.common.formatter
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
@@ -32,10 +35,19 @@ internal class YieldSupplyApyFormatterTest {
         val actual = BigDecimal(model.raw).formatApy()
 
         // Assert
-        assertThat(actual).isEqualTo(model.expected)
+        assertThat(actual).isEqualTo(stringReference(model.expected))
     }
 
     internal data class ApyModel(val raw: String, val expected: String)
+
+    @Test
+    fun `GIVEN no rate WHEN formatted THEN the shared empty sign is shown`() {
+        // Act
+        val actual = (null as BigDecimal?).formatApy()
+
+        // Assert
+        assertThat(actual).isEqualTo(stringReference(BigDecimalFormatConstants.EMPTY_BALANCE_SIGN))
+    }
 
     private fun provideTestModels() = listOf(
         ApyModel(raw = "3.09", expected = "3.09%"),
