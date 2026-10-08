@@ -20,7 +20,8 @@ internal class TxHistoryTitleConverter(private val currency: CryptoCurrency) {
 
     /**
      * @param tx            transaction whose title to resolve.
-     * @param isOwnTransfer for a [TransactionType.Transfer] only — whether the counterparty is one of the user's own
+     * @param isOwnTransfer for a plain transfer only ([TransactionType.Transfer] and the non-withdraw
+     *                      [TransactionType.YieldSupply.Send]) — whether the counterparty is one of the user's own
      *                      accounts/wallets, which selects the "Transfer" title over "Send" / "Receive".
      */
     fun convert(tx: TxInfo, isOwnTransfer: Boolean = false): TextReference {
@@ -66,8 +67,9 @@ internal class TxHistoryTitleConverter(private val currency: CryptoCurrency) {
             confirmed = R.string.transaction_history_supplied,
             failed = R.string.transaction_history_status_supply_failed,
         )
-        // Send routes through the yield provider (never the user's own account), so "Transfer" is impossible:
-        // a withdraw (funds out of Aave) → Withdrawn, everything else → Receive/Send by direction.
+        // A withdraw takes the funds out of Aave → Withdrawn. Any other Send is a plain transfer the yield module
+        // made from the user's own address, so its counterparty can be another portfolio of theirs — it reads exactly
+        // like Transfer.
         is TransactionType.YieldSupply.Send -> if (type.isYieldSupplyWithdraw) {
             tx.statusAwareTitle(
                 pending = R.string.common_withdrawing,
@@ -75,7 +77,7 @@ internal class TxHistoryTitleConverter(private val currency: CryptoCurrency) {
                 failed = R.string.transaction_history_status_withdraw_failed,
             )
         } else {
-            tx.sendReceiveTitle()
+            tx.transferTitle(isOwnTransfer)
         }
         is TransactionType.YieldSupply.DeployContract ->
             resourceReference(R.string.yield_module_transaction_deploy_contract)
