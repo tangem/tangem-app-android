@@ -11,7 +11,6 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
@@ -22,7 +21,6 @@ import io.mockk.Called
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
@@ -41,11 +39,6 @@ internal class DefaultFeeLoaderTest {
     private val userWallet: UserWallet = mockk()
     private val network = trx.network
     private val transactionData: TransactionData = mockk()
-    // The coin covers every fee here, so only the resolver's preference can pin it
-    private val nativeStatus = CryptoCurrencyStatus(
-        currency = trx,
-        value = mockk<CryptoCurrencyStatus.Loaded> { every { amount } returns BigDecimal("50") },
-    )
 
     private lateinit var loader: DefaultFeeLoader
 
@@ -111,6 +104,50 @@ internal class DefaultFeeLoaderTest {
         verify { getFeeUseCase wasNot Called }
     }
 
+    @Test
+    fun `GIVEN the coin is preferred with a fee of another coin id WHEN loading again THEN pinned fee keeps that id`() =
+        runTest {
+            // Arrange
+            val secondaryAccountTrxId = CryptoCurrency.ID.fromValue("coin⟨TRON→42⟩tron")
+            givenDefaultFee(fee = nativeFee.copy(feeTokenId = secondaryAccountTrxId).right(), isNativeFeePreferred = true)
+
+            // Act
+            load()
+            val second = load()
+
+            // Assert
+            assertThat(second).isEqualTo(
+                TransactionFeeExtended(
+                    transactionFee = plainNativeFee,
+                    feeTokenId = secondaryAccountTrxId,
+                    nativeFee = plainNativeFee,
+                ).right(),
+            )
+        }
+
+    @Test
+    fun `GIVEN the coin is preferred but the fee fails WHEN loading again THEN default fee is resolved again`() =
+        runTest {
+            // Arrange
+            givenDefaultFee(fee = GetFeeError.UnknownError.left(), isNativeFeePreferred = true)
+
+            // Act
+            load()
+            load()
+
+            // Assert
+            coVerify(exactly = 2) {
+                getFeeForGaslessUseCase(
+                    userWallet = any(),
+                    network = any(),
+                    transactionData = any(),
+                    sentAmount = any(),
+                    onNativeFeePreferred = any(),
+                )
+            }
+            verify { getFeeUseCase wasNot Called }
+        }
+
     private fun givenDefaultFee(fee: Either<GetFeeError, TransactionFeeExtended>, isNativeFeePreferred: Boolean) {
         coEvery {
             getFeeForGaslessUseCase(
@@ -129,7 +166,6 @@ internal class DefaultFeeLoaderTest {
     private suspend fun load(): Either<GetFeeError, TransactionFeeExtended> = loader.load(
         userWallet = userWallet,
         network = network,
-        nativeStatus = nativeStatus,
         transactionData = transactionData,
         sentAmount = SENT_AMOUNT,
     )
