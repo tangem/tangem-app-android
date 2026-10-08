@@ -1015,6 +1015,7 @@
   <string name="introduction_stories_two_title">一个钱包，多张卡片</string>
   <string name="introduction_subtitle">您所有资产的安全之所</string>
   <string name="introduction_terms_of_service">服务条款</string>
+  <string name="introduction_terms_of_service_consent">如继续，即表示您同意以下条款：%s</string>
   <string name="introduction_title">存储您的所有资产</string>
   <string name="joint_account_activated_snackbar">账户已激活</string>
   <string name="joint_account_activation_account_button_title">激活账户</string>
