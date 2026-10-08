@@ -1,10 +1,11 @@
 package com.tangem.features.polymarket.impl.common
 
+import com.tangem.domain.appcurrency.model.AppCurrency
 import java.math.BigDecimal
 
 internal object PolymarketConst {
     const val CENT_SIGN = "¢"
-    const val USD_CODE = "USD"
+    val USD_CODE = AppCurrency.Default.code
     const val USD_SYMBOL = "$"
     const val COLLATERAL_DISPLAY_DECIMALS = 2
     const val SHARES_DISPLAY_DECIMALS = 2
