@@ -4,8 +4,10 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.res.R
-import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_grid_20
+import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_20
 import com.tangem.features.polymarket.impl.main.addfunds.analytics.PredictionAddFundsAnalyticsEvent
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -32,12 +34,12 @@ internal class PolymarketAddFundsModelTest {
         val model = createModel()
 
         // Act
-        val actual = model.uiState.items.map { it.iconRes }
+        val actual = model.uiState.items.map { it.icon }
 
         // Assert
         assertThat(actual).containsExactly(
-            CoreUiR.drawable.ic_exchange_horizontal_24,
-            CoreUiR.drawable.ic_arrow_down_24,
+            Icons.ic_logo_tangem_20,
+            Icons.ic_grid_20,
         ).inOrder()
     }
 
@@ -51,9 +53,9 @@ internal class PolymarketAddFundsModelTest {
 
         // Assert
         assertThat(actual).containsExactly(
-            resourceReference(R.string.common_swap) to
+            resourceReference(R.string.prediction_add_funds_swap_title) to
                 resourceReference(R.string.prediction_add_funds_swap_subtitle),
-            resourceReference(R.string.common_receive) to
+            resourceReference(R.string.prediction_add_funds_receive_title) to
                 resourceReference(R.string.prediction_add_funds_receive_subtitle),
         ).inOrder()
     }
