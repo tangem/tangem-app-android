@@ -85,6 +85,9 @@ closes `idleTimeout` (5 s) after the last collector leaves.
 - **Every abstract function is `@Receive` or `@Send`.** `@Receive`: no parameters, returns `Flow<T>`
   (`StateFlow<SocketState>` is allowed for the state, so `state().value` is a cheap read).
   `@Send`: one parameter, returns `Boolean` — `true` means "queued", not "delivered".
+- **Only JSON objects and arrays are frames.** Any other text — `PONG`, `"ok"`, `42` — is treated as
+  protocol chatter and never reaches a collector: `@NetworkJson` is lenient and would otherwise turn a bare
+  `PONG` into a string. Wrap a primitive payload in an object DTO; `Flow<String>` / `Flow<Int>` never emit.
 - **One sealed type per socket, picked by a discriminator.** A frame is parsed to JSON once; each
   `@Receive` type then decodes it once and shares the result with all its collectors, skipping frames
   that do not decode. `@NetworkJson` ignores unknown keys and fills missing nullable fields, so a loose
