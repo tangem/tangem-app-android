@@ -94,6 +94,7 @@ class DefaultDeviceRegistrarTest {
             attestationProvider = attestationProvider,
             errorConverter = errorConverter,
             appPreferencesStore = appPreferencesStore,
+            nonceRequestTracker = { _, request -> request() },
             sessionTokenRefresher = Lazy { sessionTokenRefresher },
             walletRegistrar = walletRegistrar,
             dispatchers = dispatchers,
