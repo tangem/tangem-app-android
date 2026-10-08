@@ -6,6 +6,7 @@ import com.tangem.core.decompose.context.child
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableModularContentComponent
 import com.tangem.feature.swap.component.chooseprovider.ChooseProviderComponent
+import com.tangem.feature.swap.component.slippage.SwapSlippageComponent
 import com.tangem.feature.swap.model.SwapBottomSheetRoute
 import com.tangem.feature.swap.models.states.ChooseProviderSheetSource
 import com.tangem.feature.swap.ui.SwapBottomSheet
@@ -35,7 +36,7 @@ internal class SwapBottomSheetComponent @AssistedInject constructor(
         SwapBottomSheet(
             content = content,
             isMaterial = params.route.isMaterial,
-            scrollableContent = false,
+            scrollableContent = params.route !is SwapBottomSheetRoute.Slippage,
             onBack = ::onBack,
             onDismiss = ::dismiss,
         )
@@ -61,6 +62,10 @@ internal class SwapBottomSheetComponent @AssistedInject constructor(
                 params = route.params,
             )
             is SwapBottomSheetRoute.GiveApproval -> giveApprovalComponentFactory.create(
+                context = contentContext,
+                params = route.params,
+            )
+            is SwapBottomSheetRoute.Slippage -> SwapSlippageComponent(
                 context = contentContext,
                 params = route.params,
             )
