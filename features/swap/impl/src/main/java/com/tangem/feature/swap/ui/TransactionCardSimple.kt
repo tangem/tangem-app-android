@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,10 +36,13 @@ import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_edit_16
 import com.tangem.core.ui.test.SwapTokenScreenTestTags
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.SwapCardState
 import com.tangem.feature.swap.models.TransactionCardType
+import com.tangem.feature.swap.models.states.SwapSlippageUM
 import com.tangem.feature.swap.ui.preview.SwapTransactionCardPreview
 
 @Composable
@@ -47,6 +51,7 @@ internal fun TransactionCardSimple(
     swapCardState: SwapCardState,
     onSelectTokenClick: () -> Unit,
     modifier: Modifier = Modifier,
+    slippageUM: SwapSlippageUM.Content? = null,
 ) {
     val cardTag = when (swapCardState.type) {
         is TransactionCardType.Inputtable -> SwapTokenScreenTestTags.SWAP_CARD
@@ -66,6 +71,7 @@ internal fun TransactionCardSimple(
             priceImpact = priceImpact,
             onChangeTokenClick = onChangeTokenClick,
             modifier = modifier.testTag(cardTag),
+            slippageUM = slippageUM,
         )
         is SwapCardState.Loading -> SimpleTransactionCardLoading(modifier = modifier.testTag(cardTag))
     }
@@ -77,12 +83,13 @@ private fun SimpleTransactionCardData(
     priceImpact: PriceImpact,
     modifier: Modifier = Modifier,
     onChangeTokenClick: (() -> Unit)? = null,
+    slippageUM: SwapSlippageUM.Content? = null,
 ) {
     Box(
         modifier = modifier
             .background(
-                shape = RoundedCornerShape(TangemTheme.dimens.radius16),
-                color = TangemTheme.colors.background.primary,
+                shape = RoundedCornerShape(16.dp),
+                color = TangemTheme.colors3.bg.secondary,
             )
             .fillMaxWidth(),
     ) {
@@ -100,6 +107,7 @@ private fun SimpleTransactionCardData(
             SimpleContent(
                 cardData = cardState,
                 priceImpact = priceImpact,
+                slippageUM = slippageUM,
             )
         }
 
@@ -117,12 +125,13 @@ private fun SimpleTransactionCardData(
             Box(
                 Modifier
                     .align(Alignment.CenterEnd)
-                    .height(TangemTheme.dimens.size116)
-                    .width(TangemTheme.dimens.size102)
+                    .height(116.dp)
+                    .width(102.dp)
                     .clickable(
                         indication = ripple(bounded = false),
                         interactionSource = remember { MutableInteractionSource() },
-                    ) { onChangeTokenClick() },
+                        onClick = onChangeTokenClick,
+                    ),
             )
         }
     }
@@ -137,8 +146,8 @@ private fun SimpleTransactionCardEmpty(
     Column(
         modifier = modifier
             .background(
-                shape = RoundedCornerShape(TangemTheme.dimens.radius12),
-                color = TangemTheme.colors.background.primary,
+                shape = RoundedCornerShape(12.dp),
+                color = TangemTheme.colors3.bg.secondary,
             )
             .padding(
                 top = 12.dp,
@@ -178,7 +187,7 @@ private fun SimpleTransactionCardEmpty(
                     color = TangemTheme.colors.text.tertiary,
                     style = TangemTheme.typography.body2,
                     modifier = Modifier
-                        .defaultMinSize(minHeight = TangemTheme.dimens.size20)
+                        .defaultMinSize(minHeight = 20.dp)
                         .testTag(SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT),
                 )
             }
@@ -197,8 +206,8 @@ private fun SimpleTransactionCardLoading(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(
-                shape = RoundedCornerShape(TangemTheme.dimens.radius12),
-                color = TangemTheme.colors.background.primary,
+                shape = RoundedCornerShape(12.dp),
+                color = TangemTheme.colors3.bg.secondary,
             )
             .padding(
                 top = 12.dp,
@@ -266,10 +275,10 @@ private fun SimpleHeader(
         modifier = modifier
             .fillMaxWidth()
             .padding(
-                bottom = TangemTheme.dimens.spacing8,
-                top = TangemTheme.dimens.spacing14,
-                start = TangemTheme.dimens.spacing12,
-                end = TangemTheme.dimens.spacing12,
+                bottom = 8.dp,
+                top = 14.dp,
+                start = 12.dp,
+                end = 12.dp,
             )
             .testTag(SwapTokenScreenTestTags.SWAP_BLOCK_HEADER),
     ) {
@@ -295,9 +304,9 @@ private fun SimpleHeader(
         } else {
             RectangleShimmer(
                 modifier = Modifier
-                    .width(TangemTheme.dimens.size80)
-                    .height(TangemTheme.dimens.size12),
-                radius = TangemTheme.dimens.radius3,
+                    .width(80.dp)
+                    .height(12.dp),
+                radius = 3.dp,
             )
         }
     }
@@ -305,23 +314,27 @@ private fun SimpleHeader(
 
 @Suppress("LongMethod")
 @Composable
-private fun SimpleContent(cardData: SwapCardState.SwapCardData, priceImpact: PriceImpact) {
+private fun SimpleContent(
+    cardData: SwapCardState.SwapCardData,
+    priceImpact: PriceImpact,
+    slippageUM: SwapSlippageUM.Content?,
+) {
     val type = cardData.type
     Row(
         modifier = Modifier
             .padding(
-                start = TangemTheme.dimens.spacing12,
-                bottom = TangemTheme.dimens.spacing16,
+                start = 12.dp,
+                bottom = 16.dp,
             ),
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.Top,
     ) {
         Column(
-            modifier = Modifier.padding(end = TangemTheme.dimens.spacing92),
+            modifier = Modifier.padding(end = 92.dp),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start,
         ) {
-            val sumTextModifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size32)
+            val sumTextModifier = Modifier.defaultMinSize(minHeight = 32.dp)
             when (type) {
                 is TransactionCardType.ReadOnly -> {
                     val value = cardData.amountField?.value
@@ -340,9 +353,9 @@ private fun SimpleContent(cardData: SwapCardState.SwapCardData, priceImpact: Pri
                     } else {
                         RectangleShimmer(
                             modifier = Modifier
-                                .padding(vertical = TangemTheme.dimens.spacing4)
-                                .width(TangemTheme.dimens.size102)
-                                .height(TangemTheme.dimens.size24),
+                                .padding(vertical = 4.dp)
+                                .width(102.dp)
+                                .height(24.dp),
                         )
                     }
                 }
@@ -353,9 +366,16 @@ private fun SimpleContent(cardData: SwapCardState.SwapCardData, priceImpact: Pri
             SpacerH4()
             // Keep the same 20dp slot as Detailed (where fiat/shimmer lives)
             // so that Token (BottomEnd) does not shift when switching modes.
-            Box(modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size20)) {
-                if (type is TransactionCardType.ReadOnly && type.shouldShowWarning) {
-                    WarningIcon(priceImpact = priceImpact, onClick = type.onWarningClick)
+            Row(
+                modifier = Modifier.defaultMinSize(minHeight = 20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                if (type is TransactionCardType.ReadOnly) {
+                    slippageUM?.let { SlippageLink(slippageUM = it) }
+                    if (type.shouldShowWarning) {
+                        WarningIcon(priceImpact = priceImpact, onClick = type.onWarningClick)
+                    }
                 }
             }
         }
@@ -363,10 +383,34 @@ private fun SimpleContent(cardData: SwapCardState.SwapCardData, priceImpact: Pri
 }
 
 @Composable
+private fun SlippageLink(slippageUM: SwapSlippageUM.Content) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(4.dp))
+            .clickable(onClick = slippageUM.onClick),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Icon(
+            imageVector = Icons.ic_edit_16,
+            contentDescription = null,
+            tint = TangemTheme.colors.icon.secondary,
+            modifier = Modifier.size(16.dp),
+        )
+        Text(
+            text = stringResourceSafe(R.string.common_slippage),
+            style = TangemTheme.typography.caption2,
+            color = TangemTheme.colors.text.tertiary,
+            maxLines = 1,
+        )
+    }
+}
+
+@Composable
 private fun WarningIcon(priceImpact: PriceImpact, onClick: (() -> Unit)?) {
     IconButton(
         onClick = { onClick?.invoke() },
-        modifier = Modifier.size(TangemTheme.dimens.size20),
+        modifier = Modifier.size(20.dp),
     ) {
         Icon(
             painter = painterResource(id = R.drawable.ic_information_24),
