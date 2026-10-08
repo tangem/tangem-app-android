@@ -27,7 +27,6 @@ import com.tangem.features.polymarket.impl.placeprediction.model.PlacePrediction
 import com.tangem.features.polymarket.impl.placeprediction.model.recomputeGate
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
-import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 
 internal class PlacePredictionPreviewProvider : PreviewParameterProvider<PlacePredictionUM> {
 
@@ -130,7 +129,7 @@ private fun previewState(
         outcomePrice = "85¢",
         resolutionDateMillis = RESOLUTION_AT,
     ),
-    collateral = CollateralUM(tokenSymbol = "pUSD", iconState = CurrencyIconState.Empty()),
+    collateral = CollateralUM(tokenSymbol = "pUSD"),
     order = order,
     amountValue = amountValue,
     slippage = SlippageUM(percent = DEFAULT_SLIPPAGE_PERCENT, isDefault = true),
