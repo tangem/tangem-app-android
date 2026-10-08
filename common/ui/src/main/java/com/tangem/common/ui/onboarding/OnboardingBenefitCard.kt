@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.Hyphens
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.TextReference
@@ -41,6 +42,8 @@ fun OnboardingBenefitCard(
     subtitle: TextReference,
     modifier: Modifier = Modifier,
 ) {
+    val captionStyle = TangemTheme.typography3.caption.medium.copy(hyphens = Hyphens.Auto)
+
     Column(
         modifier = modifier
             .background(color = TangemTheme.colors3.bg.secondary, shape = RoundedCornerShape(24.dp))
@@ -57,12 +60,12 @@ fun OnboardingBenefitCard(
         Column {
             Text(
                 text = title.resolveReference(),
-                style = TangemTheme.typography3.caption.medium,
+                style = captionStyle,
                 color = TangemTheme.colors3.text.primary,
             )
             Text(
                 text = subtitle.resolveReference(),
-                style = TangemTheme.typography3.caption.medium,
+                style = captionStyle,
                 color = TangemTheme.colors3.text.secondary,
             )
         }
