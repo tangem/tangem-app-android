@@ -1253,7 +1253,7 @@
   <string name="joint_account_send_slot_busy_title">Operation already in progress</string>
   <string name="joint_account_settings_networks_info">This account works only in the supported networks.</string>
   <string name="joint_account_waiting_activation">Waiting for activation</string>
-  <string name="joint_operation_auto_sends_footer">Auto-sends once %1$s of %2$s members sign</string>
+  <string name="joint_operation_auto_sends_footer">Auto-sends once %1$s of %2$s members sign</string>
   <string name="joint_operation_banner_subtitle">%1$s → %2$s</string>
   <string name="joint_operation_banner_title">%1$s wants to send %2$s</string>
   <string name="joint_operation_banner_title_own">You want to send %1$s</string>
@@ -1264,7 +1264,7 @@
   <string name="joint_operation_decline_alert_title">Decline this transaction?</string>
   <string name="joint_operation_declined">Declined</string>
   <string name="joint_operation_declined_at">Declined at %s</string>
-  <string name="joint_operation_declined_footer">You declined. Others can still reach %1$s of %2$s</string>
+  <string name="joint_operation_declined_footer">You declined. Others can still reach %1$s of %2$s</string>
   <string name="joint_operation_delete_alert_message">The transaction will be cancelled for all members. Collected signatures will be discarded</string>
   <string name="joint_operation_delete_alert_title">Delete this transaction?</string>
   <string name="joint_operation_deleted_snackbar">Transaction deleted</string>
@@ -1275,7 +1275,7 @@
   <string name="joint_operation_signatures_progress">Signatures %1$s of %2$s</string>
   <string name="joint_operation_signed">Signed</string>
   <string name="joint_operation_signed_at">Signed at %s</string>
-  <string name="joint_operation_signed_footer">Sends automatically after %1$s of %2$s sign</string>
+  <string name="joint_operation_signed_footer">Sends automatically after %1$s of %2$s sign</string>
   <string name="joint_operation_signers_title">Signers</string>
   <string name="joint_operation_signing_blocked_subtitle">Signing is blocked for security reasons. Please contact support</string>
   <string name="joint_operation_signing_blocked_title">Signing is blocked</string>
@@ -1810,7 +1810,7 @@
   <string name="organize_tokens_ungroup">Ungroup</string>
   <string name="prediction_account_open_detailed_view">Open detailed view</string>
   <string name="prediction_account_subtitle">Add funds &amp; start predict</string>
-  <string name="prediction_account_title">Prediction account</string>
+  <string name="prediction_account_title">Predictions account</string>
   <string name="prediction_account_unavailable">Couldn\'t connect to your prediction account. Refresh or reopen this screen.</string>
   <string name="prediction_add_funds_error_description">Couldn\'t load deposit details. Refresh or re-enter this screen.</string>
   <string name="prediction_add_funds_max_receive_amount_title">The amount to receive must not exceed %s</string>
@@ -1818,9 +1818,11 @@
   <string name="prediction_add_funds_notification_limits_title">Deposit limits</string>
   <string name="prediction_add_funds_receive_body">Send %1$s from another wallet, minimum %2$s</string>
   <string name="prediction_add_funds_receive_subtitle">Send USDC on the Polygon network to your Polymarket account</string>
+  <string name="prediction_add_funds_receive_title">From another wallet or exchange</string>
   <string name="prediction_add_funds_subtitle">%1$s on %2$s</string>
   <string name="prediction_add_funds_swap_body">Exchange a token you already hold</string>
   <string name="prediction_add_funds_swap_subtitle">Use crypto in your Tangem wallet to top up your Polymarket account</string>
+  <string name="prediction_add_funds_swap_title">From your Tangem Wallet</string>
   <string name="prediction_balance_total">Total Balance</string>
   <string name="prediction_balance_withdraw">Withdraw</string>
   <string name="prediction_claim_error_failed">The claim did not go through. Nothing left your account, and you can try again.</string>
@@ -1871,7 +1873,7 @@
   <string name="prediction_main_empty_positions_title">You don’t have active predictions</string>
   <string name="prediction_main_events_load_error">Failed to load events.\nTap to reload</string>
   <string name="prediction_main_explore_events">Explore Events</string>
-  <string name="prediction_main_subtitle">USDC on Polygon network</string>
+  <string name="prediction_main_subtitle">US Dollars</string>
   <string name="prediction_main_title">Predictions</string>
   <string name="prediction_main_total_balance">Total Balance</string>
   <string name="prediction_main_withdraw">Withdraw</string>
@@ -2619,7 +2621,7 @@
   <string name="tangempay_account_deactivated_message_title">Your account has been closed</string>
   <string name="tangempay_account_unable_to_use_rooted">Unable to use on rooted device</string>
   <string name="tangempay_action_required_description">To continue, we need a bit more information from you. This usually takes a couple of minutes</string>
-  <string name="tangempay_action_required_primary_btn">Сontinue verification</string>
+  <string name="tangempay_action_required_primary_btn">Continue verification</string>
   <string name="tangempay_action_required_title">Action required</string>
   <string name="tangempay_available_balance">Available balance</string>
   <string name="tangempay_bank_transfer_creating_description">Usually takes up to 5 minutes. In rare cases, up to 48 hours</string>
@@ -2886,8 +2888,8 @@
   <string name="tangempay_newonboard_body">Spend crypto anywhere — no banks, no middlemen, no exchanges. The power of self-custody meets everyday payments.</string>
   <string name="tangempay_newonboard_bottomleft_body">Buy online and via Apple Pay</string>
   <string name="tangempay_newonboard_bottomleft_title">Accepted worldwide</string>
-  <string name="tangempay_newonboard_bottomright_body">USD to USDC 1:1; flat $1 fee</string>
-  <string name="tangempay_newonboard_bottomright_title">Recieve ACH transfers</string>
+  <string name="tangempay_newonboard_bottomright_body">Via ACH or Wire</string>
+  <string name="tangempay_newonboard_bottomright_title">Get and send bank transfers</string>
   <string name="tangempay_newonboard_title">Get your Tangem Pay Card</string>
   <string name="tangempay_newonboard_topleft_body">Pay what you see</string>
   <string name="tangempay_newonboard_topleft_title">No purchase fees, \n1 USDC = 1 USD</string>
@@ -3172,6 +3174,7 @@
   <string name="transaction_history_approve_high_risk_subtitle">You\'re connected. Funds may be at risk. Consider revoking access.</string>
   <string name="transaction_history_approve_high_risk_title">High Risk</string>
   <string name="transaction_history_approved_amount">Approved amount</string>
+  <string name="transaction_history_claiming_incentive_rewards">Claiming incentive rewards</string>
   <string name="transaction_history_claiming_reward">Claiming reward</string>
   <string name="transaction_history_contract_address">contract: %s</string>
   <string name="transaction_history_detail_page_amount_signed_value" formatted="false">%1s %2s %3s</string>
@@ -3192,6 +3195,7 @@
   <string name="transaction_history_fee_for_yield_mode_top_up">For Yield mode top-up</string>
   <string name="transaction_history_fee_sending_asset">Send %%image%% %s</string>
   <string name="transaction_history_from_inline_address">from: %%image%% %s</string>
+  <string name="transaction_history_incentive_rewards_claimed">Incentive rewards claimed</string>
   <string name="transaction_history_multiple_addresses">Multiple addresses</string>
   <string name="transaction_history_not_supported_description">Transaction history is currently not supported for this blockchain. But don\'t worry, we\'re working on it! In the meantime you can check it in the explorer.</string>
   <string name="transaction_history_operation">Operation</string>
@@ -3203,6 +3207,7 @@
   <string name="transaction_history_status_claiming_rewards">Claiming rewards</string>
   <string name="transaction_history_status_disabling_yield_mode_failed">Disabling Yield mode failed</string>
   <string name="transaction_history_status_enabling_yield_mode_failed">Enabling Yield mode failed</string>
+  <string name="transaction_history_status_incentive_rewards_claim_failed">Claiming of incentive rewards failed</string>
   <string name="transaction_history_status_receive_failed">Receive failed</string>
   <string name="transaction_history_status_restaking_rewards">Restaking rewards</string>
   <string name="transaction_history_status_rewards_claim_failed">Rewards claim failed</string>
@@ -3793,6 +3798,7 @@
   <string name="yield_module_incentive_chart_powered_by_description">A campaign sponsor funds extra reward tokens, distributed through Merkl.\nIncentives may end, and reward token prices can change.\nThe displayed APY includes incentive rewards after Tangem\'s service fee.</string>
   <string name="yield_module_incentive_chart_powered_by_title">Powered by Merkl</string>
   <string name="yield_module_incentive_chart_sheet_title">Incentivized yield</string>
+  <string name="yield_module_incentives_provider">Merkl</string>
   <string name="yield_module_main_screen_promo_banner_message">Enable %1$s%% APY on your balance</string>
   <string name="yield_module_main_view_approve_notification_description">Approval for your token in Yield Mode has been revoked. Open the token to grant permission again.</string>
   <string name="yield_module_main_view_approve_notification_title">Token approval needed</string>
