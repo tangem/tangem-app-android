@@ -52,7 +52,7 @@ internal class YieldIncentivesDtoTest {
         // Arrange
         val adapter = moshi.adapter(YieldIncentivesResponse::class.java)
         val json = """
-            {"chainId":143,"userAddress":"0xuser","moduleAddress":"0xmodule",
+            {"chainId":143,"userAddress":"0xuser","moduleAddress":"0xmodule","claimRecommended":true,
             "rewards":[{"source":"merkl","protocol":"aave","rewardToken":"0xreward","symbol":"MRK",
             "tokenDecimals":18,"claimableAmount":"1000000000000000000","pendingAmount":"0",
             "usdValue":12.5,"serviceFeeRateBps":500,"estimatedServiceFeeUsd":0.62,
@@ -66,6 +66,7 @@ internal class YieldIncentivesDtoTest {
         // Assert
         assertThat(parsed.chainId).isEqualTo(143)
         assertThat(parsed.moduleAddress).isEqualTo("0xmodule")
+        assertThat(parsed.isClaimRecommended).isTrue()
         val reward = parsed.rewards!!.single()
         assertThat(reward.rewardToken).isEqualTo("0xreward")
         assertThat(reward.claimableAmount).isEqualTo("1000000000000000000")
