@@ -73,6 +73,7 @@ interface TangemExpressApi {
         @Query("toExtraId") toExtraId: String?, // swap-and-send memo
         @Query("quoteId") quoteId: String?, // fixed rate quoteId
         @Query("slippage") slippage: String? = null, // percent × 100, e.g. "50" for 0.5 %
+        @Query("intentId") intentId: String? = null, // MCP exchange intent the transaction fulfils
     ): ApiResponse<ExchangeDataResponse>
 
     @GET("exchange-status")
