@@ -1835,6 +1835,151 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CachedStatusOnFailedRefresh {
+
+        private val cachedKycInProgress = PaymentAccountStatusValue.UnderReview(
+            source = StatusSource.CACHE,
+            kycStatus = KycStatus.PENDING,
+            customerId = "cust_1",
+        )
+
+        private val cachedKycRejected = cachedKycInProgress.copy(kycStatus = KycStatus.REJECTED)
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN cached KYC status WHEN refresh request fails THEN cached status is kept as ONLY_CACHE`(
+            model: CachedStatusModel,
+        ) = runTest {
+            // Arrange
+            stubFailedRefresh(cached = model.cached, failingRequest = model.failingRequest, error = model.error)
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.last().value).isEqualTo(model.expected)
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideNotKeptCaches")
+        fun `GIVEN no KYC or account data cached WHEN customer info fails THEN Unavailable stored`(
+            cached: PaymentAccountStatusValue?,
+        ) = runTest {
+            // Arrange
+            stubFailedRefresh(
+                cached = cached,
+                failingRequest = FailingRequest.CUSTOMER_INFO,
+                error = VisaApiError.ServerUnavailable,
+            )
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.last().value).isEqualTo(PaymentAccountStatusValue.Error.Unavailable)
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideCustomerInfoRequests")
+        fun `GIVEN cached KYC status WHEN customer info session expired THEN NotSynced stored`(
+            failingRequest: FailingRequest,
+        ) = runTest {
+            // Arrange
+            stubFailedRefresh(
+                cached = cachedKycInProgress,
+                failingRequest = failingRequest,
+                error = VisaApiError.RefreshTokenExpired,
+            )
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.last().value).isEqualTo(PaymentAccountStatusValue.Error.NotSynced)
+        }
+
+        private suspend fun stubFailedRefresh(
+            cached: PaymentAccountStatusValue?,
+            failingRequest: FailingRequest,
+            error: VisaApiError,
+        ) {
+            stubHappyPath(buildCustomerInfo())
+            coEvery { paymentAccountStatusesStore.getSyncOrNull(userWalletId) } returns cached?.let { value ->
+                AccountStatus.Payment(account = Account.Payment(userWalletId = userWalletId), value = value)
+            }
+            when (failingRequest) {
+                FailingRequest.WALLET_CHECK -> {
+                    coEvery { onboardingRepository.hasTangemPayInWallet(userWalletId) } returns error.left()
+                }
+                FailingRequest.CUSTOMER_INFO -> {
+                    coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns error.left()
+                }
+                FailingRequest.CUSTOMER_INFO_WITH_ORDER -> {
+                    coEvery { onboardingRepository.getOrderId(userWalletId) } returns "order_1"
+                    coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns error.left()
+                }
+            }
+        }
+
+        private fun provideTestModels() = listOf(
+            CachedStatusModel(
+                name = "KYC in progress, customer/me unavailable",
+                cached = cachedKycInProgress,
+                failingRequest = FailingRequest.CUSTOMER_INFO,
+                error = VisaApiError.ServerUnavailable,
+                expected = cachedKycInProgress.copy(source = StatusSource.ONLY_CACHE),
+            ),
+            CachedStatusModel(
+                name = "KYC rejected, customer/me unavailable",
+                cached = cachedKycRejected,
+                failingRequest = FailingRequest.CUSTOMER_INFO,
+                error = VisaApiError.ServerUnavailable,
+                expected = cachedKycRejected.copy(source = StatusSource.ONLY_CACHE),
+            ),
+            CachedStatusModel(
+                name = "KYC in progress with a stored order, customer/me unavailable",
+                cached = cachedKycInProgress,
+                failingRequest = FailingRequest.CUSTOMER_INFO_WITH_ORDER,
+                error = VisaApiError.ServerUnavailable,
+                expected = cachedKycInProgress.copy(source = StatusSource.ONLY_CACHE),
+            ),
+            CachedStatusModel(
+                name = "KYC in progress, wallet check unavailable",
+                cached = cachedKycInProgress,
+                failingRequest = FailingRequest.WALLET_CHECK,
+                error = VisaApiError.ServerUnavailable,
+                expected = cachedKycInProgress.copy(source = StatusSource.ONLY_CACHE),
+            ),
+        )
+
+        private fun provideNotKeptCaches() = listOf(
+            null,
+            PaymentAccountStatusValue.IssuingCard(source = StatusSource.CACHE),
+        )
+
+        private fun provideCustomerInfoRequests() = listOf(
+            FailingRequest.CUSTOMER_INFO,
+            FailingRequest.CUSTOMER_INFO_WITH_ORDER,
+        )
+    }
+
+    internal enum class FailingRequest { WALLET_CHECK, CUSTOMER_INFO, CUSTOMER_INFO_WITH_ORDER }
+
+    internal data class CachedStatusModel(
+        val name: String,
+        val cached: PaymentAccountStatusValue,
+        val failingRequest: FailingRequest,
+        val error: VisaApiError,
+        val expected: PaymentAccountStatusValue,
+    ) {
+        override fun toString(): String = name
+    }
+
     internal data class OrderStateModel(
         val name: String,
         val orders: Either<VisaApiError, List<Order>>,
