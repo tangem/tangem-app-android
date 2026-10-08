@@ -602,7 +602,10 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.AddExistingWallet -> {
                 createComponentChild(
                     context = context,
-                    params = AddExistingWalletComponent.Params(mode = route.mode),
+                    params = AddExistingWalletComponent.Params(
+                        mode = route.mode,
+                        shouldSendOnboardingStarted = route.shouldSendOnboardingStarted,
+                    ),
                     componentFactory = addExistingWalletComponentFactory,
                 )
             }
