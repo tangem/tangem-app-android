@@ -492,4 +492,12 @@ internal object WalletsDomainModule {
     ): ApplyUserWalletListSortingUseCase {
         return ApplyUserWalletListSortingUseCase(userWalletsListRepository = userWalletsListRepository)
     }
+
+    @Provides
+    @Singleton
+    fun providesWalletNameGenerateUseCase(
+        userWalletsListRepository: UserWalletsListRepository,
+    ): GenerateWalletNameUseCase {
+        return GenerateWalletNameUseCase(userWalletsListRepository = userWalletsListRepository)
+    }
 }
