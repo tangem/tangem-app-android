@@ -21,6 +21,7 @@ import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.transaction.models.AllowanceInfo
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
@@ -41,6 +42,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -1931,6 +1933,86 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
             return result[cexProvider] as SwapState.QuotesLoadedState
         }
     }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CustomSlippageForwarding {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN custom slippage WHEN findBestQuote THEN forwards it only to a provider accepting it`(
+            model: CustomSlippageModel,
+        ) = runTest {
+            // Arrange
+            val cexProvider = buildSwapProvider(
+                type = ExchangeProviderType.CEX,
+                isCustomSlippageSupported = model.isSupported,
+                slippage = model.providerDefault,
+            )
+            val appliedSlippage = BigDecimal("0.7")
+            coEvery {
+                repository.findBestQuote(
+                    userWallet = any(),
+                    fromContractAddress = any(),
+                    fromNetwork = any(),
+                    toContractAddress = any(),
+                    toNetwork = any(),
+                    fromAmount = any(),
+                    fromDecimals = any(),
+                    toDecimals = any(),
+                    providerId = cexProvider.providerId,
+                    rateType = any(),
+                    customSlippage = any(),
+                )
+            } returns buildQuoteModel(slippage = appliedSlippage).right()
+
+            // Act
+            val result = sut.findBestQuote(
+                fromSwapCurrencyStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true),
+                toSwapCurrencyStatus = buildSwapCurrencyStatus(networkRawId = btcNetwork),
+                providers = listOf(cexProvider),
+                amountToSwap = "1.0",
+                reduceBalanceBy = BigDecimal.ZERO,
+                customSlippage = BigDecimal("0.5"),
+            )
+
+            // Assert
+            coVerify(exactly = 1) {
+                repository.findBestQuote(
+                    userWallet = any(),
+                    fromContractAddress = any(),
+                    fromNetwork = any(),
+                    toContractAddress = any(),
+                    toNetwork = any(),
+                    fromAmount = any(),
+                    fromDecimals = any(),
+                    toDecimals = any(),
+                    providerId = cexProvider.providerId,
+                    rateType = any(),
+                    customSlippage = model.expectedSentSlippage,
+                )
+            }
+            assertThat((result[cexProvider] as SwapState.QuotesLoadedState).slippage).isEqualTo(appliedSlippage)
+        }
+
+        private fun provideTestModels() = listOf(
+            CustomSlippageModel(
+                isSupported = true,
+                providerDefault = BigDecimal("0.3"),
+                expectedSentSlippage = BigDecimal("0.5"),
+            ),
+            CustomSlippageModel(isSupported = false, providerDefault = BigDecimal("0.3"), expectedSentSlippage = null),
+            CustomSlippageModel(isSupported = true, providerDefault = BigDecimal("0.2"), expectedSentSlippage = null),
+            CustomSlippageModel(isSupported = true, providerDefault = null, expectedSentSlippage = null),
+        )
+    }
+
+    /** [customSlippageProviderId] null means the custom slippage was picked for the quoted provider itself. */
+    data class CustomSlippageModel(
+        val isSupported: Boolean,
+        val providerDefault: BigDecimal?,
+        val expectedSentSlippage: BigDecimal?,
+    )
 }
 
 // region — test-local helpers

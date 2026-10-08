@@ -53,6 +53,7 @@ class SwapFeeSelectorBlockComponent @AssistedInject constructor(
                 analyticsSendSource = params.analyticsParams.analyticsSendSource,
                 bottomSheetShown = params.repository::choosingInProgress,
                 isTronGaslessSupported = !params.isTransferMode && swapFeatureToggles.isTronGaslessSwapEnabled,
+                blockAppearance = FeeSelectorParams.BlockAppearance.Plain,
             ),
             onResult = params.repository::onResult,
         )
