@@ -48,22 +48,22 @@ internal fun ProviderItemBlockSimple(state: ProviderState, modifier: Modifier = 
 
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(TangemTheme.dimens.radius16))
-            .background(TangemTheme.colors.background.primary)
+            .clip(RoundedCornerShape(16.dp))
+            .background(TangemTheme.colors3.bg.secondary)
             .clickable(
                 enabled = state.onProviderClick != null,
                 onClick = { state.onProviderClick?.invoke(state.id) },
             )
             .fillMaxWidth()
             .testTag(SwapTokenScreenTestTags.PROVIDERS_BLOCK_SIMPLE)
-            .padding(TangemTheme.dimens.spacing12),
+            .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             painter = painterResource(id = R.drawable.ic_stack_new_24),
             tint = TangemTheme.colors.icon.accent,
             contentDescription = null,
-            modifier = Modifier.size(TangemTheme.dimens.size24),
+            modifier = Modifier.size(24.dp),
         )
         SpacerW8()
         Text(
@@ -91,8 +91,8 @@ private fun SimpleProviderTrailing(state: ProviderState) {
                     error = { RectangleShimmer(radius = 4.dp) },
                     contentDescription = null,
                     modifier = Modifier
-                        .size(TangemTheme.dimens.size20)
-                        .clip(RoundedCornerShape(TangemTheme.dimens.radius4)),
+                        .size(20.dp)
+                        .clip(RoundedCornerShape(4.dp)),
                 )
                 if (state.additionalBadge is ProviderState.AdditionalBadge.BestTrade ||
                     state.additionalBadge is ProviderState.AdditionalBadge.BestDexRate
@@ -108,20 +108,20 @@ private fun SimpleProviderTrailing(state: ProviderState) {
                 text = state.name,
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.tertiary,
-                modifier = Modifier.padding(start = TangemTheme.dimens.spacing6),
+                modifier = Modifier.padding(start = 6.dp),
             )
             Icon(
                 painter = painterResource(id = R.drawable.ic_chevron_24),
                 tint = TangemTheme.colors.icon.secondary,
                 contentDescription = null,
-                modifier = Modifier.size(TangemTheme.dimens.size24),
+                modifier = Modifier.size(24.dp),
             )
         }
         is ProviderState.Loading -> {
             RectangleShimmer(
                 modifier = Modifier
-                    .size(width = TangemTheme.dimens.size80, height = TangemTheme.dimens.size20),
-                radius = TangemTheme.dimens.radius4,
+                    .size(width = 80.dp, height = 20.dp),
+                radius = 4.dp,
             )
         }
         is ProviderState.Unavailable -> {
