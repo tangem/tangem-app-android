@@ -19,7 +19,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.currency.icon.CurrencyIcon
+import com.tangem.core.ui.components.account.AccountIconSize
+import com.tangem.core.ui.components.account.PredictionAccountResIcon
 import com.tangem.core.ui.components.fields.AmountTextField
 import com.tangem.core.ui.components.fields.AmountTextFieldColors
 import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
@@ -37,7 +38,6 @@ import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.CollateralUM
 import java.math.BigDecimal
 
 @Suppress("LongParameterList")
@@ -45,7 +45,6 @@ import java.math.BigDecimal
 internal fun PredictionAmountBlock(
     amountValue: String,
     amountCaption: AmountCaptionUM?,
-    collateral: CollateralUM,
     balance: BigDecimal?,
     isAddFundsEnabled: Boolean,
     onAmountChange: (String) -> Unit,
@@ -65,12 +64,12 @@ internal fun PredictionAmountBlock(
             )
             TangemRow(
                 verticalAlignment = TangemRowVerticalAlignment.Center,
-                startSlot = collateral.iconState?.let { iconState ->
-                    { CurrencyIcon(state = iconState, shouldDisplayNetwork = true) }
+                startSlot = {
+                    PredictionAccountResIcon(size = AccountIconSize.Default)
                 },
                 titleSlot = {
                     Text(
-                        text = collateral.tokenSymbol,
+                        text = PolymarketConst.USD_CODE,
                         style = TangemTheme.typography3.body.medium,
                         color = TangemTheme.colors3.text.primary,
                     )
