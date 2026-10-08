@@ -22,7 +22,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.selected
@@ -61,11 +60,7 @@ internal fun SwapScreen(
             state = stateHolder,
             feeBlock = if (feeSelectorBlockComponent != null) {
                 @Composable { modifier: Modifier ->
-                    feeSelectorBlockComponent.Content(
-                        modifier = modifier
-                            .clip(TangemTheme.shapes.roundedCornersXMedium)
-                            .background(TangemTheme.colors.background.action),
-                    )
+                    feeSelectorBlockComponent.Content(modifier = modifier)
                 }
             } else {
                 null
@@ -104,7 +99,7 @@ private fun SwapTopBar(stateHolder: SwapStateHolder) {
             TangemDropdownMenu(
                 expanded = shouldShowModeMenu,
                 modifier = Modifier.background(TangemTheme.colors.background.primary),
-                offset = DpOffset(x = TangemTheme.dimens.spacing20, y = 44.dp),
+                offset = DpOffset(x = 20.dp, y = 44.dp),
                 onDismissRequest = { shouldShowModeMenu = false },
                 content = {
                     SwapUiModeMenuItem(

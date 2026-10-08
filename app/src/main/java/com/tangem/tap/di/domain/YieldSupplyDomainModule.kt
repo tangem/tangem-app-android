@@ -112,14 +112,6 @@ internal object YieldSupplyDomainModule {
 
     @Provides
     @Singleton
-    fun provideYieldSupplyGetApyUseCase(yieldSupplyRepository: YieldSupplyRepository): YieldSupplyGetApyUseCase {
-        return YieldSupplyGetApyUseCase(
-            yieldSupplyRepository = yieldSupplyRepository,
-        )
-    }
-
-    @Provides
-    @Singleton
     fun provideYieldSupplyGetChartUseCase(yieldSupplyRepository: YieldSupplyRepository): YieldSupplyGetChartUseCase {
         return YieldSupplyGetChartUseCase(
             yieldSupplyRepository = yieldSupplyRepository,

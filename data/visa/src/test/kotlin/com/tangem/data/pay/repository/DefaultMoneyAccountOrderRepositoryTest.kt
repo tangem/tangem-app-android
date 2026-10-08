@@ -5,12 +5,10 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.TangemPayOrderInfo
-import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.request.OrderRequest
@@ -30,18 +28,16 @@ internal class DefaultMoneyAccountOrderRepositoryTest {
 
     private val tangemPayApi: TangemPayApi = mockk()
     private val requestHelper: TangemPayRequestPerformer = mockk()
-    private val customerOrderRepository: CustomerOrderRepository = mockk()
 
     private val repository = DefaultMoneyAccountOrderRepository(
         tangemPayApi = tangemPayApi,
         requestHelper = requestHelper,
-        customerOrderRepository = customerOrderRepository,
         dispatcherProvider = TestingCoroutineDispatcherProvider(),
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(tangemPayApi, requestHelper, customerOrderRepository)
+        clearMocks(tangemPayApi, requestHelper)
         repository.clearOrder(USER_WALLET_ID)
 
         coEvery {
@@ -105,38 +101,6 @@ internal class DefaultMoneyAccountOrderRepositoryTest {
     }
 
     @Test
-    fun `GIVEN orders of several types WHEN findActiveOrder THEN the latest money account order is returned`() =
-        runTest {
-            // Arrange
-            val expected = createOrder(id = "latest", updatedAt = "2026-09-02T00:00:00Z")
-            coEvery { customerOrderRepository.findOrders(USER_WALLET_ID, any(), any()) } returns listOf(
-                createOrder(id = "card", type = OrderType.CARD_ISSUE_PLASTIC_RAIN, updatedAt = "2026-09-03T00:00:00Z"),
-                createOrder(id = "older", updatedAt = "2026-09-01T00:00:00Z"),
-                expected,
-            ).right()
-
-            // Act
-            val actual = repository.findActiveOrder(USER_WALLET_ID)
-
-            // Assert
-            assertThat(actual.getOrNull()).isEqualTo(expected)
-        }
-
-    @Test
-    fun `GIVEN no money account orders WHEN findActiveOrder THEN nothing is returned`() = runTest {
-        // Arrange
-        coEvery { customerOrderRepository.findOrders(USER_WALLET_ID, any(), any()) } returns listOf(
-            createOrder(type = OrderType.CARD_ISSUE_PLASTIC_RAIN),
-        ).right()
-
-        // Act
-        val actual = repository.findActiveOrder(USER_WALLET_ID)
-
-        // Assert
-        assertThat(actual.getOrNull()).isNull()
-    }
-
-    @Test
     fun `GIVEN a stored order WHEN clearOrder THEN it is no longer returned`() {
         // Arrange
         val order = TangemPayOrderInfo(orderId = ORDER_ID, orderStatus = OrderStatus.PROCESSING)
@@ -161,26 +125,6 @@ internal class DefaultMoneyAccountOrderRepositoryTest {
         assertThat(repository.getOrder(USER_WALLET_ID)).isEqualTo(order)
         assertThat(repository.getOrder(OTHER_USER_WALLET_ID)).isNull()
     }
-
-    private fun createOrder(
-        id: String = ORDER_ID,
-        type: OrderType = OrderType.ACCOUNT_ISSUE_BANKING_RAIN,
-        updatedAt: String? = null,
-    ) = Order(
-        id = id,
-        customerId = null,
-        type = type,
-        status = OrderStatus.PROCESSING,
-        step = OrderStep.STARTING,
-        stepChangeCode = null,
-        productInstanceId = null,
-        paymentAccountId = null,
-        cardId = null,
-        toTariffPlanId = null,
-        withdrawTxHash = null,
-        createdAt = null,
-        updatedAt = updatedAt,
-    )
 
     private fun createResponse() = OrderResponse(
         result = OrderResponse.Result(
