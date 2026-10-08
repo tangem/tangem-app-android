@@ -1053,6 +1053,7 @@
   <string name="introduction_stories_two_title">Один гаманець, кілька карток</string>
   <string name="introduction_subtitle">Одне безпечне місце для всіх ваших активів</string>
   <string name="introduction_terms_of_service">Умовами використання</string>
+  <string name="introduction_terms_of_service_consent">Продовжуючи, ви погоджуєтеся %s</string>
   <string name="introduction_title">Зберігайте всі свої активи</string>
   <string name="joint_account_activated_snackbar">Акаунт активовано</string>
   <string name="joint_account_activation_account_button_title">Активувати акаунт</string>
