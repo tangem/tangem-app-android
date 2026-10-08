@@ -43,9 +43,9 @@ internal object BankWithdrawOptionsFactory {
     }
 
     /**
-     * Payment-account tokens holding a positive balance, available when the off-ramp accepts them, grouped by symbol:
-     * USDC first, then every other symbol in the order it first appears among the account's networks, and inside a
-     * group that order.
+     * Payment-account tokens holding a positive balance, available when the off-ramp accepts them. Available tokens come
+     * before the rest, and each part is grouped by symbol: USDC first, then every other symbol in the order it first
+     * appears among the account's networks, and inside a group that order.
      */
     private fun resolveSources(
         networks: List<PaymentNetworkStatus>,
@@ -69,14 +69,15 @@ internal object BankWithdrawOptionsFactory {
                     )
                 }
             }
-            .sortedBySymbol()
+            .sortedByAvailabilityAndSymbol()
     }
 
-    private fun List<BankWithdrawSource>.sortedBySymbol(): List<BankWithdrawSource> {
+    private fun List<BankWithdrawSource>.sortedByAvailabilityAndSymbol(): List<BankWithdrawSource> {
         val symbolOrder = mutableMapOf<String, Int>()
         forEach { source -> symbolOrder.getOrPut(source.token.symbol) { symbolOrder.size } }
         return sortedWith(
             compareBy(
+                { source -> !source.isAvailable },
                 { source -> !source.token.symbol.equals(TangemPayCurrencyFactory.TOKEN_NAME, ignoreCase = true) },
                 { source -> symbolOrder.getValue(source.token.symbol) },
             ),
