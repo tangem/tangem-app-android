@@ -61,6 +61,8 @@ import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -236,9 +238,14 @@ private fun rememberChartModel(data: YieldSupplyMarketChartDataUM): CartesianCha
     return remember(data.y, data.rewardCaps) {
         CartesianChartModel(
             ColumnCartesianLayerModel.build {
-                series(data.y)
-                if (data.rewardCaps.isNotEmpty()) {
-                    series(data.gapSeries())
+                if (data.rewardCaps.isEmpty()) {
+                    series(data.y)
+                } else {
+                    // The gap is carved out of the base rather than stacked on top, so the column still ends at the
+                    // APY the backend reported and keeps meeting the average line.
+                    val gap = data.gapSeries()
+                    series(data.y.mapIndexed { index, base -> (base - gap[index]).coerceAtLeast(0.0) })
+                    series(gap)
                     series(data.rewardCaps)
                 }
             },
@@ -248,7 +255,8 @@ private fun rememberChartModel(data: YieldSupplyMarketChartDataUM): CartesianCha
 
 /**
  * A transparent spacer series, as tall in data units as [COLUMN_GAP] is on screen, so the cap reads as its own
- * segment. It is sized off the tallest column, which is what the vertical axis scales to.
+ * segment. It is sized off the tallest column, which is what the vertical axis scales to, and the base series gives
+ * the room up rather than the column growing by it.
  */
 private fun YieldSupplyMarketChartDataUM.gapSeries(): List<Double> {
     val top = y.zip(rewardCaps) { base, cap -> base + cap }.maxOrNull() ?: return emptyList()
@@ -399,7 +407,7 @@ private fun MonthLabelsRow(labels: kotlinx.collections.immutable.ImmutableList<S
 }
 
 @Composable
-private fun AverageLabel(avr: String, modifier: Modifier = Modifier) {
+private fun AverageLabel(avr: TextReference, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.background(
             color = TangemTheme.colors.button.secondary,
@@ -407,7 +415,7 @@ private fun AverageLabel(avr: String, modifier: Modifier = Modifier) {
         ),
     ) {
         Text(
-            text = stringResourceSafe(R.string.yield_module_rate_info_sheet_chart_average, avr),
+            text = stringResourceSafe(R.string.yield_module_rate_info_sheet_chart_average, avr.resolveReference()),
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.text.primary1,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
