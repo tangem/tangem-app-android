@@ -5,10 +5,9 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
-import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.feature.swap.presentation.R
 import java.math.BigDecimal
 
@@ -79,19 +78,20 @@ private fun SwapStateHolder.withPredictionTopUpReceiveCard(collateralBalance: Bi
     return copy(
         receiveCardData = receiveCard.copy(
             currencyIconState = CurrencyIconState.PredictionAccount(),
-            balance = collateralBalance?.formatCollateralBalance() ?: receiveCard.balance,
+            fiatSymbolOverride = ACCOUNT_TOP_UP_ABSTRACT_SYMBOL,
+            balance = collateralBalance?.formatUsdBalance() ?: receiveCard.balance,
             isSelectionLocked = true,
         ),
     )
 }
 
-private fun BigDecimal.formatCollateralBalance(): TextReference = resourceReference(
+private fun BigDecimal.formatUsdBalance(): TextReference = resourceReference(
     id = R.string.common_balance,
     formatArgs = wrappedList(
         format {
-            crypto(
-                symbol = PolymarketCollateralCurrencyFactory.COLLATERAL_SYMBOL,
-                decimals = PolymarketContracts.COLLATERAL_DECIMALS,
+            fiat(
+                fiatCurrencyCode = AppCurrency.Default.code,
+                fiatCurrencySymbol = AppCurrency.Default.symbol,
             )
         },
     ),

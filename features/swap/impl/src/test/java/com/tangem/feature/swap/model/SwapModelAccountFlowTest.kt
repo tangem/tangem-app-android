@@ -12,7 +12,7 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.account.models.AccountStatusList
@@ -35,7 +35,6 @@ import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.WithdrawalResult
-import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.interactor.PredictionWithdrawalFailure
 import com.tangem.domain.polymarket.interactor.SubmitPredictionWithdrawalInteractor
@@ -831,7 +830,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         }
 
     @Test
-    fun `GIVEN a prediction top-up WHEN the state is built THEN the receive card shows the prediction account in pUSD`() =
+    fun `GIVEN a prediction top-up WHEN the state is built THEN the receive card shows the prediction account in USD`() =
         runTest {
             // Arrange
             val (_, collateral) = stubResolvedTopUpPair()
@@ -843,12 +842,13 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             // Assert
             val receiveCard = model.uiState.receiveCardData as SwapCardState.SwapCardData
             val expectedBalance = collateral.status.value.amount.format {
-                crypto(
-                    symbol = PolymarketCollateralCurrencyFactory.COLLATERAL_SYMBOL,
-                    decimals = PolymarketContracts.COLLATERAL_DECIMALS,
+                fiat(
+                    fiatCurrencyCode = AppCurrency.Default.code,
+                    fiatCurrencySymbol = AppCurrency.Default.symbol,
                 )
             }
             assertThat(receiveCard.currencyIconState).isEqualTo(CurrencyIconState.PredictionAccount())
+            assertThat(receiveCard.fiatSymbolOverride).isEqualTo("USD")
             assertThat(receiveCard.balance)
                 .isEqualTo(resourceReference(R.string.common_balance, wrappedList(expectedBalance)))
             assertThat(receiveCard.tokenSymbol).isEqualTo(stringReference(collateral.currency.symbol))
@@ -856,7 +856,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         }
 
     @Test
-    fun `GIVEN a prediction top-up WHEN the prediction balance changes THEN the receive card shows the new pUSD balance`() =
+    fun `GIVEN a prediction top-up WHEN the prediction balance changes THEN the receive card shows the new USD balance`() =
         runTest {
             // Arrange
             val (_, collateral) = stubResolvedTopUpPair()
@@ -880,9 +880,9 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             // Assert
             val receiveCard = model.uiState.receiveCardData as SwapCardState.SwapCardData
             val expectedBalance = updatedAmount.format {
-                crypto(
-                    symbol = PolymarketCollateralCurrencyFactory.COLLATERAL_SYMBOL,
-                    decimals = PolymarketContracts.COLLATERAL_DECIMALS,
+                fiat(
+                    fiatCurrencyCode = AppCurrency.Default.code,
+                    fiatCurrencySymbol = AppCurrency.Default.symbol,
                 )
             }
             assertThat(receiveCard.balance)
