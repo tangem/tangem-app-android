@@ -1157,7 +1157,7 @@
   <string name="introduction_stories_two_title">One wallet, multiple cards</string>
   <string name="introduction_subtitle">One secure place for everything you own</string>
   <string name="introduction_terms_of_service">Terms of service</string>
-  <string name="introduction_terms_of_service_consent">By continuing, you agree with %s</string>
+  <string name="introduction_terms_of_service_consent">By continuing, you agree to the %s</string>
   <string name="introduction_title">Store all your assets</string>
   <string name="joint_account_activated_snackbar">Account activated</string>
   <string name="joint_account_activation_account_button_title">Activate account</string>
@@ -2326,6 +2326,7 @@
   <string name="social_wallet_delete_error_description">We couldn\'t delete this wallet. Please try again</string>
   <string name="social_wallet_delete_title">Delete wallet?</string>
   <string name="social_wallet_log_out_description">You can always sign in at any time.</string>
+  <string name="social_wallet_log_out_description_v2">This only removes the wallet from this device. It stays linked to your %1$s Account, and you can restore the wallet by signing in with %1$s.</string>
   <string name="social_wallet_log_out_title">Are you sure you want to log out?</string>
   <string name="social_wallet_settings_delete_wallet">Delete wallet</string>
   <string name="social_wallet_settings_log_out">Log out</string>
@@ -2887,6 +2888,7 @@
   <string name="tangempay_newonboard_Q4_title">Who stores my personal data and how is it protected?</string>
   <string name="tangempay_newonboard_body">Spend crypto anywhere — no banks, no middlemen, no exchanges. The power of self-custody meets everyday payments.</string>
   <string name="tangempay_newonboard_bottomleft_body">Buy online and via Apple Pay</string>
+  <string name="tangempay_newonboard_bottomleft_body_android">Buy online and via Google Pay</string>
   <string name="tangempay_newonboard_bottomleft_title">Accepted worldwide</string>
   <string name="tangempay_newonboard_bottomright_body">Via ACH or Wire</string>
   <string name="tangempay_newonboard_bottomright_title">Get and send bank transfers</string>
