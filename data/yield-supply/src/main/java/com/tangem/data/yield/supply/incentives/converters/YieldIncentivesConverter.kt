@@ -1,6 +1,10 @@
 package com.tangem.data.yield.supply.incentives.converters
 
+import arrow.core.Either
+import arrow.core.raise.either
+import arrow.core.raise.ensureNotNull
 import com.tangem.domain.yield.supply.models.incentives.YieldIncentives
+import com.tangem.domain.yield.supply.models.incentives.YieldIncentivesError
 import com.tangem.domain.yield.supply.models.incentives.YieldReward
 import com.tangem.domain.yield.supply.models.incentives.YieldRewardDestination
 import com.tangem.grow.datasource.yield.models.incentives.YieldIncentivesResponse
@@ -11,18 +15,21 @@ import java.math.BigInteger
 
 internal object YieldIncentivesConverter {
 
-    fun convert(response: YieldIncentivesResponse): YieldIncentives {
-        return YieldIncentives(
+    fun convert(response: YieldIncentivesResponse): Either<YieldIncentivesError, YieldIncentives> = either {
+        YieldIncentives(
             chainId = response.chainId ?: -1,
             userAddress = response.userAddress.orEmpty(),
             moduleAddress = response.moduleAddress,
-            isClaimRecommended = checkNotNull(response.isClaimRecommended) {
-                "claimRecommended is missing from the incentives response"
-            },
+            // The verdict on whether a claim is worth its fee. It has no safe default: assuming false hides a claim
+            // the owner could make, assuming true offers one that may cost more than it pays, so the payload is
+            // refused instead.
+            isClaimRecommended = ensureNotNull(response.isClaimRecommended) { YieldIncentivesError.Unavailable },
             rewards = response.rewards.orEmpty().map(::convertReward),
-            lastUpdatedAt = Instant.parse(response.lastUpdatedAt.orEmpty()),
+            lastUpdatedAt = response.lastUpdatedAt?.toInstantOrNull(),
         )
     }
+
+    private fun String.toInstantOrNull(): Instant? = runCatching { Instant.parse(this) }.getOrNull()
 
     fun convertReward(dto: YieldRewardDto): YieldReward {
         return YieldReward(
