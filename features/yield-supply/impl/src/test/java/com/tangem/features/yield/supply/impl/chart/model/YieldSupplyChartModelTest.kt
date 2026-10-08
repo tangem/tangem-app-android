@@ -500,6 +500,22 @@ internal class YieldSupplyChartModelTest {
             assertThat(data.chartData.y).hasSize(2)
         }
 
+    @Test
+    fun `GIVEN a mean below the shown precision WHEN the chart loads THEN it is not flattened to zero`() = runTest {
+        // Arrange - rounding the mean before display would read 0.004% as a flat zero and drop the reference line
+        coEvery { getTokenStatusUseCase(any()) } returns market(hasCampaign = true).right()
+        coEvery { getAprHistoryUseCase(any(), any(), any()) } returns aprHistory("0.004", "0.004").right()
+
+        // Act
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Assert
+        val data = model.uiState.value as YieldSupplyChartUM.Data
+        assertThat(data.chartData.avr).isGreaterThan(0.0)
+        assertThat(data.incentive?.averageApy).isEqualTo(stringReference("<0.01%"))
+    }
+
     private fun createModel(
         callback: DefaultYieldSupplyChartComponent.ModelCallback? = this.callback,
         isPlainRate: Boolean = false,
