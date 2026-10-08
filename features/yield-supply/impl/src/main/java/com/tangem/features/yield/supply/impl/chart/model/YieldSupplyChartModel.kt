@@ -131,7 +131,7 @@ internal class YieldSupplyChartModel @Inject constructor(
         val average = history.points
             .map(YieldAprHistory.Point::totalApyEst)
             .reduce(BigDecimal::add)
-            .divide(history.points.size.toBigDecimal(), AVERAGE_SCALE, RoundingMode.HALF_UP)
+            .divide(history.points.size.toBigDecimal(), AVERAGE_GUARD_SCALE, RoundingMode.HALF_UP)
 
         return YieldSupplyChartUM.Data(
             chartData = YieldSupplyMarketChartDataUM(
@@ -236,6 +236,11 @@ internal class YieldSupplyChartModel @Inject constructor(
 
     companion object {
         private const val MONTH_LABELS_COUNT = 5
-        private const val AVERAGE_SCALE = 2
+        /**
+         * Guard digits, not display digits. Rounding the mean to the two decimals the header shows would turn a
+         * rate like 0.004% into a flat zero, taking the reference line down to the axis with it; the formatter
+         * rounds for the screen and says `<0.01%` where the mean is too small to write out.
+         */
+        private const val AVERAGE_GUARD_SCALE = 8
     }
 }
