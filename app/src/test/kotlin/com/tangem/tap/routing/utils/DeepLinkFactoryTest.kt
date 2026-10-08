@@ -19,6 +19,7 @@ import com.tangem.features.jointaccount.deeplink.JointAccountDeepLinkHandler
 import com.tangem.features.jointaccount.deeplink.JointAccountInviteDeepLinkHandler
 import com.tangem.features.mcp.api.McpFeatureToggles
 import com.tangem.features.mcp.api.deeplink.McpDeepLinkHandler
+import com.tangem.features.mcp.api.deeplink.McpIntentDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SellDeepLinkHandler
@@ -158,6 +159,10 @@ internal class DeepLinkFactoryTest {
         every { create(any()) } returns mockk()
     }
 
+    private val mcpIntentDeepLinkFactory = mockk<McpIntentDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any()) } returns mockk()
+    }
+
     private val mcpFeatureToggles = mockk<McpFeatureToggles> {
         every { isMcpEnabled } returns true
     }
@@ -211,6 +216,7 @@ internal class DeepLinkFactoryTest {
         surveyDeepLink = surveyDeepLinkFactory,
         promoCampaignsDeepLink = campaignsDeepLinkHandlerFactory,
         mcpDeepLink = mcpDeepLinkFactory,
+        mcpIntentDeepLink = mcpIntentDeepLinkFactory,
         mcpFeatureToggles = mcpFeatureToggles,
         jointAccountDeepLink = jointAccountDeepLinkFactory,
         jointAccountInviteDeepLink = jointAccountInviteDeepLinkFactory,
@@ -461,6 +467,20 @@ internal class DeepLinkFactoryTest {
         deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
         verify { mcpDeepLinkFactory.create(eq(mapOf("user_code" to "ABCD-1234"))) }
+
+        // Test MCP intent
+        every { mockedUri.host } returns "intent"
+        every { mockedUri.queryParameterNames } returns setOf("id", "source", "type")
+        every { mockedUri.getQueryParameter("id") } returns "my_intent_id123"
+        every { mockedUri.getQueryParameter("source") } returns "express"
+        every { mockedUri.getQueryParameter("type") } returns "exchange"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify {
+            mcpIntentDeepLinkFactory.create(
+                eq(mapOf("id" to "my_intent_id123", "source" to "express", "type" to "exchange")),
+            )
+        }
     }
 
     @Test
@@ -501,6 +521,27 @@ internal class DeepLinkFactoryTest {
                 eq(isFromOnNewIntent),
             )
         }
+    }
+
+    @Test
+    fun `GIVEN mcp disabled WHEN intent deeplink handled THEN intent handler is not created`() = runTest {
+        // Arrange
+        every { mcpFeatureToggles.isMcpEnabled } returns false
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "intent"
+        every { mockedUri.query } returns "id=my_intent_id123&source=express&type=exchange"
+        every { mockedUri.queryParameterNames } returns setOf("id", "source", "type")
+        every { mockedUri.getQueryParameter("id") } returns "my_intent_id123"
+        every { mockedUri.getQueryParameter("source") } returns "express"
+        every { mockedUri.getQueryParameter("type") } returns "exchange"
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { mcpIntentDeepLinkFactory.create(any()) }
     }
 
     @Test
