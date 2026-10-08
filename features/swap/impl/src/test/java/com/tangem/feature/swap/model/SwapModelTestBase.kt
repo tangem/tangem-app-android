@@ -297,6 +297,8 @@ internal abstract class SwapModelTestBase {
         id: String = "provider-1",
         name: String = "1inch",
         type: ExchangeProviderType = ExchangeProviderType.DEX,
+        slippage: java.math.BigDecimal? = null,
+        isCustomSlippageSupported: Boolean = false,
     ): SwapProvider = SwapProvider(
         providerId = id,
         name = name,
@@ -304,7 +306,8 @@ internal abstract class SwapModelTestBase {
         imageLarge = "",
         termsOfUse = null,
         privacyPolicy = null,
-        slippage = null,
+        slippage = slippage,
+        isCustomSlippageSupported = isCustomSlippageSupported,
     )
 
     protected fun permissionSettings(
