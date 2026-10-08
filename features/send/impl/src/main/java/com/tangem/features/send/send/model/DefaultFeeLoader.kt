@@ -2,7 +2,7 @@ package com.tangem.features.send.send.model
 
 import arrow.core.Either
 import com.tangem.blockchain.common.TransactionData
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.error.GetFeeError
@@ -24,33 +24,37 @@ internal class DefaultFeeLoader @Inject constructor(
     private val getFeeUseCase: GetFeeUseCase,
 ) {
 
-    private var isPinnedToNative = false
+    /**
+     * Taken from the fee the coin was preferred with rather than from the send's fee-currency status: that
+     * status starts as, and falls back to, the token being sent.
+     */
+    private var pinnedCoinId: CryptoCurrency.ID? = null
 
     suspend fun load(
         userWallet: UserWallet,
         network: Network,
-        nativeStatus: CryptoCurrencyStatus,
         transactionData: TransactionData,
         sentAmount: BigDecimal?,
     ): Either<GetFeeError, TransactionFeeExtended> {
-        if (isPinnedToNative) {
+        pinnedCoinId?.let { coinId ->
             return getFeeUseCase(transactionData = transactionData, userWallet = userWallet, network = network)
-                .map { fee ->
-                    TransactionFeeExtended(transactionFee = fee, feeTokenId = nativeStatus.currency.id, nativeFee = fee)
-                }
+                .map { fee -> TransactionFeeExtended(transactionFee = fee, feeTokenId = coinId, nativeFee = fee) }
         }
 
+        var isNativeFeePreferred = false
         return getFeeForGaslessUseCase(
             userWallet = userWallet,
             network = network,
             transactionData = transactionData,
             sentAmount = sentAmount,
-            onNativeFeePreferred = ::pinToNative,
-        )
+            onNativeFeePreferred = { isNativeFeePreferred = true },
+        ).onRight { fee ->
+            if (isNativeFeePreferred) pinToNative(fee.feeTokenId)
+        }
     }
 
-    private fun pinToNative() {
+    private fun pinToNative(coinId: CryptoCurrency.ID) {
         TangemLogger.i("Paying the fee in the network coin for the rest of this send")
-        isPinnedToNative = true
+        pinnedCoinId = coinId
     }
 }

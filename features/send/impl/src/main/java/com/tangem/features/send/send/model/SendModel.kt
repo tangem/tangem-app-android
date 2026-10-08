@@ -376,7 +376,6 @@ internal class SendModel @Inject constructor(
             defaultFeeLoader.load(
                 userWallet = userWallet,
                 network = params.currency.network,
-                nativeStatus = feeCryptoCurrencyStatusFlow.value,
                 transactionData = transferTransaction,
                 sentAmount = sentAmount,
             )
