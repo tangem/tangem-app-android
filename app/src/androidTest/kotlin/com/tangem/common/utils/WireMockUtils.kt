@@ -170,16 +170,26 @@ fun findWireMockRequestBodies(
     method: String,
     urlPath: String,
     baseUrl: String = getWireMockBaseUrl(),
-): List<String> {
-    val json = JSONObject()
-        .put("method", method)
-        .put("urlPath", urlPath)
-        .toString()
+): List<String> = findWireMockRequestBodies(
+    requestPattern = JSONObject().put("method", method).put("urlPath", urlPath),
+    baseUrl = baseUrl,
+)
+
+fun findWireMockRequestBodiesByPathPattern(
+    method: String,
+    urlPathPattern: String,
+    baseUrl: String = getWireMockBaseUrl(),
+): List<String> = findWireMockRequestBodies(
+    requestPattern = JSONObject().put("method", method).put("urlPathPattern", urlPathPattern),
+    baseUrl = baseUrl,
+)
+
+private fun findWireMockRequestBodies(requestPattern: JSONObject, baseUrl: String): List<String> {
     val mediaType = "application/json".toMediaType()
 
     val request = Request.Builder()
         .url("$baseUrl/__admin/requests/find")
-        .post(json.toRequestBody(mediaType))
+        .post(requestPattern.toString().toRequestBody(mediaType))
         .build()
 
     return try {
