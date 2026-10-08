@@ -124,6 +124,12 @@ sealed class IntroductionProcess(
         }
     }
 
+    /**
+     * Tracks opening the I have a wallet sheet with the Welcome screen button; going back to it from Import existing
+     * wallet is not an opening.
+     */
+    class IHaveWalletIntroScreenOpened : IntroductionProcess("I Have Wallet Intro Screen Opened")
+
     class ButtonScanCard(
         val source: AnalyticsParam.ScreensSources,
     ) : IntroductionProcess(
