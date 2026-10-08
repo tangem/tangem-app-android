@@ -12,6 +12,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
@@ -287,6 +288,61 @@ internal class DefaultSocketChannelTest {
         // Assert
         assertThat(stateWithoutToken).isEqualTo(SocketState.WaitingToRetry(attempt = 1, delay = 1.seconds))
         assertThat(transport.connections.single().request.headers).containsExactly("Authorization", "Bearer t")
+    }
+
+    @Test
+    fun `GIVEN headers time out WHEN connecting THEN the attempt fails and the policy retries`() = runTest {
+        // Arrange
+        var resolveCalls = 0
+        val channel = createChannel(
+            SocketSpec(
+                url = URL,
+                backoff = Backoff { 1.seconds },
+                headers = {
+                    resolveCalls++
+                    if (resolveCalls == 1) withTimeout(1.seconds) { awaitCancellation() }
+                    emptyMap()
+                },
+            ),
+        )
+
+        // Act
+        collect(channel)
+        advanceTimeBy(1.seconds + 1.milliseconds)
+        val stateAfterTimeout = channel.state.value
+        advanceTimeBy(1.seconds)
+
+        // Assert
+        assertThat(stateAfterTimeout).isEqualTo(SocketState.WaitingToRetry(attempt = 1, delay = 1.seconds))
+        assertThat(transport.connections).hasSize(1)
+    }
+
+    @Test
+    fun `GIVEN onOpen times out WHEN socket opens THEN connection is closed and retried`() = runTest {
+        // Arrange
+        var onOpenCalls = 0
+        val channel = createChannel(
+            SocketSpec(
+                url = URL,
+                backoff = Backoff { 3.seconds },
+                onOpen = {
+                    onOpenCalls++
+                    if (onOpenCalls == 1) withTimeout(1.seconds) { awaitCancellation() }
+                },
+            ),
+        )
+        collect(channel)
+
+        // Act
+        transport.connections.single().serverOpens()
+        advanceTimeBy(1.seconds + 1.milliseconds)
+        val failedState = channel.state.value
+        advanceTimeBy(3.seconds)
+
+        // Assert
+        assertThat(failedState).isEqualTo(SocketState.WaitingToRetry(attempt = 1, delay = 3.seconds))
+        assertThat(transport.connections.first().closedByClient).isTrue()
+        assertThat(transport.connections).hasSize(2)
     }
 
     @Test
