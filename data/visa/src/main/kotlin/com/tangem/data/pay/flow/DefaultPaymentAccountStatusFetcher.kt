@@ -22,6 +22,7 @@ import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.pay.repository.*
+import com.tangem.domain.pay.usecase.FindMoneyAccountCreationOrderUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
@@ -66,6 +67,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val issueCardRepository: TangemPayIssueCardRepository,
     private val getTangemPayTariffPlanStateUseCase: GetTangemPayTariffPlanStateUseCase,
+    private val findMoneyAccountCreationOrderUseCase: FindMoneyAccountCreationOrderUseCase,
 ) : PaymentAccountStatusFetcher {
 
     private val logger = TangemLogger.withTag(TAG)
@@ -432,9 +434,18 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         val multichainNetworkStatuses by lazy {
             tangemPayCurrencyFactory.createNetworkStatuses(userWalletId, networks, quotesData?.fiatRate)
         }
+
         return when {
             kycStatus == KycStatus.REQUIRED -> {
-                PaymentAccountStatusValue.KycRequired(source = StatusSource.ACTUAL, customerId = customerId)
+                // TODO v_rodionov: #[REDACTED_TASK_KEY] find another way to check if payment account creating is not started
+                val moneyAccountOrder = findMoneyAccountCreationOrderUseCase.invoke(userWalletId).getOrElse {
+                    return PaymentAccountStatusValue.Error.Unavailable
+                }
+                if (moneyAccountOrder != null) {
+                    PaymentAccountStatusValue.NotCreated
+                } else {
+                    PaymentAccountStatusValue.KycRequired(source = StatusSource.ACTUAL, customerId = customerId)
+                }
             }
             customerId.isNullOrEmpty() -> PaymentAccountStatusValue.IssuingCard(
                 source = StatusSource.ACTUAL,
