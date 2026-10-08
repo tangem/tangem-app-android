@@ -23,6 +23,7 @@ import com.tangem.features.jointaccount.deeplink.JointAccountDeepLinkHandler
 import com.tangem.features.jointaccount.deeplink.JointAccountInviteDeepLinkHandler
 import com.tangem.features.mcp.api.McpFeatureToggles
 import com.tangem.features.mcp.api.deeplink.McpDeepLinkHandler
+import com.tangem.features.mcp.api.deeplink.McpIntentDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SellDeepLinkHandler
@@ -84,6 +85,7 @@ internal class DeepLinkFactory @Inject constructor(
     private val jointAccountDeepLink: JointAccountDeepLinkHandler.Factory,
     private val jointAccountInviteDeepLink: JointAccountInviteDeepLinkHandler.Factory,
     private val mcpDeepLink: McpDeepLinkHandler.Factory,
+    private val mcpIntentDeepLink: McpIntentDeepLinkHandler.Factory,
     private val mcpFeatureToggles: McpFeatureToggles,
     private val urlOpener: UrlOpener,
     private val deepLinkFeatureToggles: DeepLinkFeatureToggles,
@@ -305,6 +307,10 @@ internal class DeepLinkFactory @Inject constructor(
             DeepLinkRoute.McpAuthorization.host -> {
                 if (!mcpFeatureToggles.isMcpEnabled) return false
                 mcpDeepLink.create(queryParams)
+            }
+            DeepLinkRoute.Intent.host -> {
+                if (!mcpFeatureToggles.isMcpEnabled) return false
+                mcpIntentDeepLink.create(queryParams)
             }
             DeepLinkRoute.JointAccount.host -> jointAccountDeepLink.create(
                 coroutineScope = coroutineScope,
