@@ -22,7 +22,7 @@ class YieldSupplyGetAvailabilityUseCase(
         val yieldSupplyToken = cachedStatus ?: yieldSupplyRepository.getTokenStatus(tokenCurrency)
 
         if (yieldSupplyToken.isActive) {
-            YieldSupplyAvailability.Available(yieldSupplyToken.apy.toString())
+            YieldSupplyAvailability.Available(yieldSupplyToken.effectiveApy.toString())
         } else {
             YieldSupplyAvailability.Unavailable
         }

@@ -77,7 +77,8 @@ internal class DefaultYieldSupplyRepository(
         if (!isMerklIncentivesEnabled) return null
 
         return when (val response = yieldIncentivesApi.getIncentiveMarkets(chainId = chains)) {
-            is ApiResponse.Success -> response.data.marketDtos.takeIf(List<YieldSupplyMarketTokenDto>::isNotEmpty)
+            is ApiResponse.Success ->
+                response.data.marketDtos.takeIf(List<YieldSupplyMarketTokenDto>::isNotEmpty)
             is ApiResponse.Error -> {
                 // A 400 means the chain is not configured for incentives yet — an expected answer, not a failure.
                 val code = (response.cause as? ApiResponseError.HttpException)?.code
@@ -93,12 +94,14 @@ internal class DefaultYieldSupplyRepository(
         it.map(YieldMarketTokenConverter::convert).enrichNetworkIds()
     }
 
-    override suspend fun getTokenStatus(cryptoCurrencyToken: CryptoCurrency.Token): YieldMarketToken {
-        val chainId = Blockchain.fromNetworkId(cryptoCurrencyToken.network.rawId)?.getChainId()
-            ?: error("Chain id is required for evm's")
-        val response = yieldSupplyApi.getYieldTokenStatus(chainId, cryptoCurrencyToken.contractAddress).getOrThrow()
-        return YieldMarketTokenConverter.convert(response)
-    }
+    override suspend fun getTokenStatus(cryptoCurrencyToken: CryptoCurrency.Token): YieldMarketToken =
+        withContext(dispatchers.io) {
+            val chainId = Blockchain.fromNetworkId(cryptoCurrencyToken.network.rawId)?.getChainId()
+                ?: error("Chain id is required for evm's")
+            val response = yieldSupplyApi.getYieldTokenStatus(chainId, cryptoCurrencyToken.contractAddress)
+                .getOrThrow()
+            YieldMarketTokenConverter.convert(response)
+        }
 
     override suspend fun getTokenChart(cryptoCurrencyToken: CryptoCurrency.Token): YieldSupplyMarketChartData {
         val chainId = Blockchain.fromNetworkId(cryptoCurrencyToken.network.rawId)?.getChainId()

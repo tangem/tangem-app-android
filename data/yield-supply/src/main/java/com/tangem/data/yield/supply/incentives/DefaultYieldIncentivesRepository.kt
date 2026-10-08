@@ -64,7 +64,7 @@ internal class DefaultYieldIncentivesRepository(
         return cache.getOrFetch(key = key, window = APR_HISTORY_CACHE_SECONDS.seconds) {
             request(
                 call = { api.getAprHistory(chainId = chainId, tokenAddress = tokenAddress, days = boundedDays) },
-                convert = YieldAprHistoryConverter::convert,
+                convert = { YieldAprHistoryConverter.convert(it).right() },
             )
         }
     }
@@ -77,7 +77,7 @@ internal class DefaultYieldIncentivesRepository(
 
         return request(
             call = { api.getClaimCalldata(chainId = chainId, userAddress = userAddress) },
-            convert = YieldClaimCalldataConverter::convert,
+            convert = { YieldClaimCalldataConverter.convert(it).right() },
         )
     }
 
@@ -92,19 +92,25 @@ internal class DefaultYieldIncentivesRepository(
         return cache.getOrFetch(key = key, window = CLAIM_HISTORY_CACHE_SECONDS.seconds) {
             request(
                 call = { api.getClaimHistory(chainId = chainId, userAddress = userAddress) },
-                convert = YieldClaimHistoryConverter::convert,
+                convert = { YieldClaimHistoryConverter.convert(it).right() },
             )
         }
     }
 
+    /**
+     * [convert] states its own failures, so a payload it refuses is an answer rather than an accident. The catch
+     * stays for what a converter cannot foresee — a parser throwing deep inside a field it is reading.
+     */
     private suspend fun <D : Any, T : Any> request(
         call: suspend () -> ApiResponse<D>,
-        convert: (D) -> T,
+        convert: (D) -> Either<YieldIncentivesError, T>,
     ): Either<YieldIncentivesError, T> = withContext(dispatchers.io) {
         when (val response = call()) {
             is ApiResponse.Success -> runSuspendCatching { convert(response.data) }
                 .fold(
-                    onSuccess = { it.right() },
+                    onSuccess = { converted ->
+                        converted.onLeft { TangemLogger.e("A yield incentives payload was refused: $it") }
+                    },
                     onFailure = { error ->
                         TangemLogger.e("Unable to read a yield incentives payload", error)
                         YieldIncentivesError.Unavailable.left()
