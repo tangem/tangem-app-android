@@ -1,12 +1,15 @@
 package com.tangem.data.yield.supply
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionStatus
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.data.yield.supply.converters.YieldMarketTokenConverter
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.grow.datasource.yield.YieldIncentivesApi
 import com.tangem.grow.datasource.yield.YieldSupplyApi
 import com.tangem.grow.datasource.yield.models.YieldMarketsResponse
 import com.tangem.grow.datasource.yield.models.YieldModuleStatusResponse
@@ -44,28 +47,22 @@ import java.math.BigDecimal
 internal class DefaultYieldSupplyRepositoryTest {
 
     private val yieldSupplyApi: YieldSupplyApi = mockk()
+    private val yieldIncentivesApi: YieldIncentivesApi = mockk()
     private val store: YieldMarketsStore = mockk(relaxed = true)
     private val walletManagersFacade: WalletManagersFacade = mockk()
     private val analyticsExceptionHandler: AnalyticsExceptionHandler = mockk(relaxed = true)
     private val appPreferencesStore: AppPreferencesStore = mockk()
     private val growPreferencesKeys = GrowPreferencesKeys()
 
-    private val repository = DefaultYieldSupplyRepository(
-        yieldSupplyApi = yieldSupplyApi,
-        store = store,
-        walletManagersFacade = walletManagersFacade,
-        dispatchers = TestingCoroutineDispatcherProvider(),
-        analyticsExceptionHandler = analyticsExceptionHandler,
-        appPreferencesStore = appPreferencesStore,
-        growPreferencesKeys = growPreferencesKeys,
-    )
+    private val repository = createRepository(isMerklIncentivesEnabled = false)
+    private val incentivisedRepository = createRepository(isMerklIncentivesEnabled = true)
 
     private val userWalletId = UserWalletId("abcdef012345")
     private val token = token()
 
     @BeforeEach
     fun setUp() {
-        clearMocks(yieldSupplyApi, store, walletManagersFacade, analyticsExceptionHandler)
+        clearMocks(yieldSupplyApi, yieldIncentivesApi, store, walletManagersFacade, analyticsExceptionHandler)
     }
 
     // region markets
@@ -121,6 +118,75 @@ internal class DefaultYieldSupplyRepositoryTest {
         // Assert
         assertThat(result).containsExactly(YieldMarketTokenConverter.convert(dto))
         coVerify(exactly = 1) { store.store(listOf(dto)) }
+    }
+
+    @Test
+    fun `GIVEN incentives enabled WHEN updateMarkets THEN incentivised markets are stored`() = runTest {
+        // Arrange
+        val dto = marketDto(chainId = 1, hasActiveCampaign = true)
+        coEvery { yieldIncentivesApi.getIncentiveMarkets(chainId = any(), isForEarn = null) } returns ApiResponse.Success(
+            YieldMarketsResponse(marketDtos = listOf(dto), lastUpdated = "now"),
+        )
+
+        // Act
+        val result = incentivisedRepository.updateMarkets()
+
+        // Assert
+        assertThat(result).containsExactly(YieldMarketTokenConverter.convert(dto))
+        coVerify(exactly = 1) { store.store(listOf(dto)) }
+        coVerify(exactly = 0) { yieldSupplyApi.getYieldMarkets(any()) }
+        coVerify(exactly = 1) { yieldIncentivesApi.getIncentiveMarkets(chainId = supportedChains(), isForEarn = null) }
+    }
+
+    @Test
+    fun `GIVEN incentivised markets are empty WHEN updateMarkets THEN legacy markets are used`() = runTest {
+        // Arrange — an empty payload must not overwrite the cached markets and hide Yield Mode
+        val dto = marketDto(chainId = 1)
+        coEvery { yieldIncentivesApi.getIncentiveMarkets(chainId = any(), isForEarn = null) } returns
+            ApiResponse.Success(YieldMarketsResponse(marketDtos = emptyList(), lastUpdated = "now"))
+        coEvery { yieldSupplyApi.getYieldMarkets(any()) } returns ApiResponse.Success(
+            YieldMarketsResponse(marketDtos = listOf(dto), lastUpdated = "now"),
+        )
+
+        // Act
+        val result = incentivisedRepository.updateMarkets()
+
+        // Assert
+        assertThat(result).containsExactly(YieldMarketTokenConverter.convert(dto))
+        coVerify(exactly = 1) { store.store(listOf(dto)) }
+    }
+
+    @Test
+    fun `GIVEN incentivised markets unavailable WHEN updateMarkets THEN legacy markets are used`() = runTest {
+        // Arrange
+        val dto = marketDto(chainId = 1)
+        @Suppress("UNCHECKED_CAST")
+        coEvery { yieldIncentivesApi.getIncentiveMarkets(chainId = any(), isForEarn = null) } returns
+            ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<YieldMarketsResponse>
+        coEvery { yieldSupplyApi.getYieldMarkets(any()) } returns ApiResponse.Success(
+            YieldMarketsResponse(marketDtos = listOf(dto), lastUpdated = "now"),
+        )
+
+        // Act
+        val result = incentivisedRepository.updateMarkets()
+
+        // Assert
+        assertThat(result).containsExactly(YieldMarketTokenConverter.convert(dto))
+        coVerify(exactly = 1) { store.store(listOf(dto)) }
+    }
+
+    @Test
+    fun `GIVEN incentives disabled WHEN updateMarkets THEN the incentivised endpoint is not called`() = runTest {
+        // Arrange
+        coEvery { yieldSupplyApi.getYieldMarkets(any()) } returns ApiResponse.Success(
+            YieldMarketsResponse(marketDtos = listOf(marketDto(chainId = 1)), lastUpdated = "now"),
+        )
+
+        // Act
+        repository.updateMarkets()
+
+        // Assert
+        coVerify(exactly = 0) { yieldIncentivesApi.getIncentiveMarkets(chainId = any(), isForEarn = null) }
     }
 
     @Test
@@ -407,7 +473,7 @@ internal class DefaultYieldSupplyRepositoryTest {
         every { this@mockk.hash } returns hash
     }
 
-    private fun marketDto(chainId: Int) = YieldSupplyMarketTokenDto(
+    private fun marketDto(chainId: Int, hasActiveCampaign: Boolean? = null) = YieldSupplyMarketTokenDto(
         tokenAddress = "0xToken",
         tokenSymbol = "USDT",
         tokenName = "Tether",
@@ -417,6 +483,24 @@ internal class DefaultYieldSupplyRepositoryTest {
         chainId = chainId,
         maxFeeNative = BigDecimal("0.005"),
         maxFeeUSD = BigDecimal("12.34"),
+        hasActiveCampaign = hasActiveCampaign,
+        rewardsApr = hasActiveCampaign?.let { BigDecimal("1.5") },
+        totalApyEst = hasActiveCampaign?.let { BigDecimal("7") },
+    )
+
+    private fun supportedChains() =
+        Blockchain.yieldSupplySupportedBlockchains().joinToString(",") { it.getChainId().toString() }
+
+    private fun createRepository(isMerklIncentivesEnabled: Boolean) = DefaultYieldSupplyRepository(
+        yieldSupplyApi = yieldSupplyApi,
+        yieldIncentivesApi = yieldIncentivesApi,
+        store = store,
+        walletManagersFacade = walletManagersFacade,
+        dispatchers = TestingCoroutineDispatcherProvider(),
+        analyticsExceptionHandler = analyticsExceptionHandler,
+        appPreferencesStore = appPreferencesStore,
+        growPreferencesKeys = growPreferencesKeys,
+        isMerklIncentivesEnabled = isMerklIncentivesEnabled,
     )
 
     private fun chartResponse() = YieldTokenChartResponse(
