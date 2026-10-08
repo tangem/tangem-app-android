@@ -49,6 +49,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Covers the orderings it cannot get wrong: the binding before the cloud file, and the wallet reaching the
@@ -152,7 +153,7 @@ internal class DefaultSocialLoginUseCaseTest {
         coEvery { writeSocialBackupUseCase(any(), any(), any()) } returns Either.Right(Unit)
 
         every { mnemonicRepository.generateMnemonic(any<String>()) } returns mockk()
-        every { getUserWalletUseCase(RESTORED_WALLET_ID) } returns GetUserWalletError.UserWalletNotFound.left()
+        every { getUserWalletUseCase(any()) } returns GetUserWalletError.UserWalletNotFound.left()
         coEvery { hotWalletImporter.materialize(any(), any(), any()) } returns restoredWallet.right()
         coEvery { hotWalletImporter.save(any(), savedRestoredWallet, any()) } returns Unit.right()
         coEvery { registerRestoredWalletUseCase(restoredWallet) } returns Unit.right()
@@ -229,6 +230,62 @@ internal class DefaultSocialLoginUseCaseTest {
         assertThat(actual).isInstanceOf(Either.Left::class.java)
         coVerify(exactly = 1) { tangemHotSdk.delete(hotWalletId) }
     }
+
+    @Test
+    fun `GIVEN the wallet is listed but its save fails later WHEN signIn THEN its keys are kept`() = runTest {
+        // Arrange
+        coEvery { saveWalletUseCase(savedWallet) } returns mockk<SaveWalletError>().left()
+        every { getUserWalletUseCase(WALLET_ID) } returns savedWallet.right()
+
+        // Act
+        val actual = useCase.signIn(PROVIDER) { CONSENT }
+
+        // Assert
+        assertThat(actual).isInstanceOf(Either.Left::class.java)
+        coVerify(exactly = 0) { tangemHotSdk.delete(any()) }
+    }
+
+    @Test
+    fun `GIVEN the sign-in is cancelled while backing up WHEN signIn THEN the unlisted wallet is deleted`() = runTest {
+        // Arrange
+        coEvery { writeSocialBackupUseCase(any(), any(), any()) } throws CancellationException()
+
+        // Act
+        val actual = runCatching { useCase.signIn(PROVIDER) { CONSENT } }.exceptionOrNull()
+
+        // Assert
+        assertThat(actual).isInstanceOf(CancellationException::class.java)
+        coVerify(exactly = 1) { tangemHotSdk.delete(hotWalletId) }
+    }
+
+    @Test
+    fun `GIVEN the sign-in is cancelled after the wallet is listed WHEN signIn THEN its keys are kept`() = runTest {
+        // Arrange
+        coEvery { saveWalletUseCase(savedWallet) } throws CancellationException()
+        every { getUserWalletUseCase(WALLET_ID) } returns savedWallet.right()
+
+        // Act
+        val actual = runCatching { useCase.signIn(PROVIDER) { CONSENT } }.exceptionOrNull()
+
+        // Assert
+        assertThat(actual).isInstanceOf(CancellationException::class.java)
+        coVerify(exactly = 0) { tangemHotSdk.delete(any()) }
+    }
+
+    @Test
+    fun `GIVEN the sign-in is cancelled while registering a restore WHEN signIn THEN the restored wallet is deleted`() =
+        runTest {
+            // Arrange
+            bindIdentity()
+            coEvery { registerRestoredWalletUseCase(restoredWallet) } throws CancellationException()
+
+            // Act
+            val actual = runCatching { useCase.signIn(PROVIDER) { CONSENT } }.exceptionOrNull()
+
+            // Assert
+            assertThat(actual).isInstanceOf(CancellationException::class.java)
+            coVerify(exactly = 1) { tangemHotSdk.delete(restoredHotWalletId) }
+        }
 
     @Test
     fun `GIVEN identity owns a wallet WHEN signIn THEN it is registered before it is listed`() = runTest {
