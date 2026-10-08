@@ -42,6 +42,8 @@ sealed interface SwapState {
         val minAdaValue: BigDecimal?,
         val txType: ExpressTxType? = null,
         val isRestricted: Boolean = false,
+        // Slippage percent the provider applied to this quote
+        val slippage: BigDecimal? = null,
     ) : SwapState
 
     data class Transfer(
