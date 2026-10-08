@@ -8,8 +8,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.AccountTitleUM
-import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
+import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldConverter
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
@@ -42,9 +42,7 @@ import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.*
-import com.tangem.feature.swap.model.SwapNotificationsFactory
-import com.tangem.feature.swap.model.SwapProcessDataState
-import com.tangem.feature.swap.model.getLastLoadedSuccessStates
+import com.tangem.feature.swap.model.*
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.SwapButton.Mode
 import com.tangem.feature.swap.models.states.*
@@ -73,6 +71,7 @@ internal class StateBuilder(
     private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
     private val appRouter: AppRouter,
     private val isChooseTokenPulseEnabled: Boolean,
+    private val isCustomSlippageEnabled: Boolean = false,
     private val predictionTopUpLimitsProvider: Provider<PredictionTopUpLimits?> = Provider { null },
 ) {
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
@@ -574,6 +573,7 @@ internal class StateBuilder(
         swapFee: SwapFee?,
         feeError: FeeSelectorUM.Error?,
         isHighNetworkFee: Boolean,
+        slippage: SwapSlippageState = SwapSlippageState.Default(),
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -588,6 +588,7 @@ internal class StateBuilder(
             feeError = feeError?.error,
             appRouter = appRouter,
             isHighNetworkFee = isHighNetworkFee,
+            lowSlippage = getLowSlippage(swapProvider, slippage.customOrNull),
         )
 
         val fromAccountTitleUM = when {
@@ -628,8 +629,9 @@ internal class StateBuilder(
             ),
             receiveCardData = SwapCardState.SwapCardData(
                 type = TransactionCardType.ReadOnly(
-                    shouldShowWarning = true,
-                    onWarningClick = actions.onReceiveCardWarningClick,
+                    // The slippage entry point replaces the receive card's slippage info dialog.
+                    shouldShowWarning = !isCustomSlippageEnabled,
+                    onWarningClick = actions.onReceiveCardWarningClick.takeUnless { isCustomSlippageEnabled },
                     accountTitleUM = getCardAccountTitle(toSwapCurrencyStatus.account, isFromCard = false),
                 ),
                 amountField = displayAmountField(
@@ -692,6 +694,7 @@ internal class StateBuilder(
             tosState = createTosState(swapProvider),
             shouldShowMaxAmount = shouldShowMaxAmount(fromSwapCurrencyStatus.currency, toSwapCurrencyStatus.currency),
             predefinedButtons = createPredefinedButtons(fromSwapCurrencyStatus.currency, toSwapCurrencyStatus.currency),
+            slippageUM = createSlippageUM(swapProvider = swapProvider, slippage = slippage),
         )
     }
 
@@ -1196,6 +1199,33 @@ internal class StateBuilder(
                 message = message,
                 onClick = onClick,
             ),
+        )
+    }
+
+    fun updateSlippage(
+        uiState: SwapStateHolder,
+        swapProvider: SwapProvider,
+        slippage: SwapSlippageState,
+    ): SwapStateHolder {
+        return uiState.copy(slippageUM = createSlippageUM(swapProvider = swapProvider, slippage = slippage))
+    }
+
+    private fun getLowSlippage(swapProvider: SwapProvider, customSlippage: BigDecimal?): TextReference? {
+        val defaultSlippage = swapProvider.defaultSlippage ?: return null
+        val customPercent = swapProvider.acceptedSlippageOrNull(customSlippage) ?: return null
+        if (!SwapSlippage.isLow(customPercent, defaultSlippage)) return null
+        return stringReference(customPercent.formatSlippagePercent())
+    }
+
+    private fun createSlippageUM(swapProvider: SwapProvider, slippage: SwapSlippageState): SwapSlippageUM {
+        val defaultSlippage = swapProvider.defaultSlippage
+        if (!isCustomSlippageEnabled || defaultSlippage == null) return SwapSlippageUM.Hidden
+        val customPercent = swapProvider.acceptedSlippageOrNull(slippage.customOrNull)
+        return SwapSlippageUM.Content(
+            value = customPercent?.formatSlippagePercent()?.let(::stringReference)
+                ?: resourceReference(R.string.common_auto),
+            isHighlighted = slippage.isResetHighlighted,
+            onClick = actions.onSlippageClick,
         )
     }
 
