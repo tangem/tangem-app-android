@@ -983,6 +983,34 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
+    fun `GIVEN outgoing YieldSupply Send to own account WHEN convert THEN transferred title`() {
+        val tx = txInfo(
+            type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = false),
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        val result = ownAccountConverter(USER_ADDRESS).convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.title).isEqualTo(resRef(R.string.common_transferred))
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_up_20))
+    }
+
+    @Test
+    fun `GIVEN incoming YieldSupply Send from own account WHEN convert THEN transferred title`() {
+        val tx = txInfo(
+            type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = false),
+            isOutgoing = false,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        val result = ownAccountConverter(USER_ADDRESS).convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.title).isEqualTo(resRef(R.string.common_transferred))
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_down_20))
+    }
+
+    @Test
     fun `GIVEN YieldSupply Send Token incoming WHEN convert THEN amount and symbol shown`() {
         val tx = txInfo(
             type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = false),

@@ -10,6 +10,8 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
@@ -67,6 +69,7 @@ internal class TxHistoryModel @Inject constructor(
     private val appTxHistoryFetcher: AppTxHistoryFetcher,
     private val router: Router,
     private val cryptoCurrencyDeepLinkListener: ExpressDeepLinkListener,
+    private val vibratorHapticManager: VibratorHapticManager,
     getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
     repository: TxHistoryRepositoryV2,
     paramsContainer: ParamsContainer,
@@ -376,6 +379,7 @@ internal class TxHistoryModel @Inject constructor(
         // manager is non-null only under the new tx-history toggle.
         val manager = historyTxListManager
         if (manager != null) {
+            vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Tick)
             txDetailsNavigation.activate(TxHistoryDetailsSlotConfig(item.txId))
         } else {
             item.explorerHash?.let(::openTxInExplorer)

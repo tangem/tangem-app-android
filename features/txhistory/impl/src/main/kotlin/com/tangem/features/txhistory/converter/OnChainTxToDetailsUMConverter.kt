@@ -62,6 +62,8 @@ internal class OnChainTxToDetailsUMConverter(
     private val isBalanceHidden: Boolean,
     /** Names and draws the asset of a network-fee transaction. */
     private val networkTokens: Set<CryptoCurrency.Token> = emptySet(),
+    /** Prices the amount in the user's app currency for the secondary line under it. */
+    private val fiatConversion: FiatConversion = FiatConversion.NONE,
 ) {
 
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
@@ -232,8 +234,20 @@ internal class OnChainTxToDetailsUMConverter(
         icon = amountIcon(),
         amount = feeAmountText(currency) ?: approveAmountText() ?: stringReference(signedAmount(currency)),
         label = amountLabel(),
+        fiatAmount = fiatAmountText(),
         isFailed = status is TxInfo.TransactionStatus.Failed,
     )
+
+    /**
+     * Fiat equivalent shown under the amount, unsigned — it prices what moved, not the direction. `null` leaves the
+     * line out: an approval states an allowance in a token that is not the viewed currency, so the viewed currency's
+     * rate cannot price it, and a currency with no known quote has no rate to price anything with.
+     */
+    private fun TxInfo.fiatAmountText(): TextReference? {
+        if (type is TransactionType.Approve) return null
+
+        return fiatConversion.convert(amountOrFee(currency))
+    }
 
     /**
      * The card of a fee-only transaction, standing in for the counterparty one: the asset the fee was paid for, over
