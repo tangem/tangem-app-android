@@ -93,12 +93,14 @@ internal class DefaultYieldSupplyRepository(
         it.map(YieldMarketTokenConverter::convert).enrichNetworkIds()
     }
 
-    override suspend fun getTokenStatus(cryptoCurrencyToken: CryptoCurrency.Token): YieldMarketToken {
-        val chainId = Blockchain.fromNetworkId(cryptoCurrencyToken.network.rawId)?.getChainId()
-            ?: error("Chain id is required for evm's")
-        val response = yieldSupplyApi.getYieldTokenStatus(chainId, cryptoCurrencyToken.contractAddress).getOrThrow()
-        return YieldMarketTokenConverter.convert(response)
-    }
+    override suspend fun getTokenStatus(cryptoCurrencyToken: CryptoCurrency.Token): YieldMarketToken =
+        withContext(dispatchers.io) {
+            val chainId = Blockchain.fromNetworkId(cryptoCurrencyToken.network.rawId)?.getChainId()
+                ?: error("Chain id is required for evm's")
+            val response = yieldSupplyApi.getYieldTokenStatus(chainId, cryptoCurrencyToken.contractAddress)
+                .getOrThrow()
+            YieldMarketTokenConverter.convert(response)
+        }
 
     override suspend fun getTokenChart(cryptoCurrencyToken: CryptoCurrency.Token): YieldSupplyMarketChartData {
         val chainId = Blockchain.fromNetworkId(cryptoCurrencyToken.network.rawId)?.getChainId()
