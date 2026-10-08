@@ -16,7 +16,7 @@ import dagger.assisted.AssistedInject
  *
  * Only Express exchange intents are acted on; an intent of any other service or operation is dropped, so it never
  * takes the place of the swap flow in the request queue. Express links may omit `type`, as the exchange is the only
- * operation it has.
+ * operation it has had so far.
  */
 internal class DefaultMcpIntentDeepLinkHandler @AssistedInject constructor(
     @Assisted queryParams: Map<String, String>,
@@ -28,18 +28,28 @@ internal class DefaultMcpIntentDeepLinkHandler @AssistedInject constructor(
         val source = queryParams[SOURCE_KEY]?.takeIf { it.isNotBlank() }
         val type = queryParams[TYPE_KEY]?.takeIf { it.isNotBlank() }
 
-        when {
-            id == null || source == null -> {
-                TangemLogger.e("MCP intent deeplink requires $INTENT_ID_KEY and $SOURCE_KEY parameters")
-            }
-            source != McpRequest.Intent.SOURCE_EXPRESS ||
-                type != null && type != McpRequest.Intent.TYPE_EXCHANGE -> {
+        if (id == null || source == null) {
+            TangemLogger.e("MCP intent deeplink requires $INTENT_ID_KEY and $SOURCE_KEY parameters")
+        } else {
+            val intentSource = parseSource(source = source, type = type)
+            if (intentSource == SUPPORTED_SOURCE) {
+                mcpRequestService.request(McpRequest.Intent(id = id, source = intentSource))
+            } else {
                 TangemLogger.e("MCP intent of an unsupported kind: $SOURCE_KEY=$source, $TYPE_KEY=$type")
             }
-            else -> mcpRequestService.request(
-                McpRequest.Intent(id = id, source = source, type = McpRequest.Intent.TYPE_EXCHANGE),
-            )
         }
+    }
+
+    private fun parseSource(source: String, type: String?): McpRequest.Intent.Source? = when (source) {
+        SOURCE_EXPRESS -> {
+            val expressType = if (type == null) {
+                McpRequest.Intent.Source.Express.Type.EXCHANGE
+            } else {
+                McpRequest.Intent.Source.Express.Type.entries.firstOrNull { it.name.lowercase() == type }
+            }
+            expressType?.let(McpRequest.Intent.Source::Express)
+        }
+        else -> null
     }
 
     @AssistedFactory
@@ -49,5 +59,9 @@ internal class DefaultMcpIntentDeepLinkHandler @AssistedInject constructor(
 
     companion object {
         const val DEEPLINK_KEY = "tangem://intent"
+
+        private const val SOURCE_EXPRESS = "express"
+
+        private val SUPPORTED_SOURCE = McpRequest.Intent.Source.Express(McpRequest.Intent.Source.Express.Type.EXCHANGE)
     }
 }
