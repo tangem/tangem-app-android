@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Brush
@@ -32,6 +33,8 @@ private const val DEFAULT_TINT_END_Y = 600f
  * @param imageResId the photo
  * @param tintStartY y in the design's 608-high image where the fade into the background begins
  * @param tintEndY   y in the design's 608-high image where the fade reaches the solid background
+ * @param foregroundImageResId full-width image centred on the photo above the fade, so the fade never
+ *   dims it; `null` draws the photo alone
  * @param content    placed over the fade, starting where the design's content column starts
  */
 @Composable
@@ -40,6 +43,7 @@ fun OnboardingHero(
     modifier: Modifier = Modifier,
     tintStartY: Float = DEFAULT_TINT_START_Y,
     tintEndY: Float = DEFAULT_TINT_END_Y,
+    @DrawableRes foregroundImageResId: Int? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val tintColor = TangemTheme.colors3.bg.primary
@@ -66,6 +70,22 @@ fun OnboardingHero(
             contentDescription = null,
             contentScale = ContentScale.Crop,
         )
+
+        if (foregroundImageResId != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(FRAME_WIDTH / IMAGE_HEIGHT),
+                contentAlignment = Alignment.Center,
+            ) {
+                Image(
+                    modifier = Modifier.fillMaxWidth(),
+                    painter = painterResource(foregroundImageResId),
+                    contentDescription = null,
+                    contentScale = ContentScale.FillWidth,
+                )
+            }
+        }
 
         Column {
             Spacer(
