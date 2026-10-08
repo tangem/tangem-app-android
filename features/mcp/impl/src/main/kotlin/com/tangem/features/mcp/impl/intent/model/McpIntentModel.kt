@@ -20,7 +20,7 @@ internal class McpIntentModel @Inject constructor(
 
     init {
         val request = params.request
-        TangemLogger.i("MCP intent received: id=${request.id}, source=${request.source}, type=${request.type}")
+        TangemLogger.i("MCP intent received: id=${request.id}, source=${request.source}")
     }
 
     fun onClose() = router.pop()

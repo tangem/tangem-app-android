@@ -10,16 +10,19 @@ sealed interface McpRequest {
     @Serializable
     data class Pair(val userCode: String) : McpRequest
 
-    /** A request to act on the intent [id] raised by [source], of the given [type]. */
+    /** A request to act on the intent [id] raised by [source]. */
     @Serializable
-    data class Intent(val id: String, val source: String, val type: String) : McpRequest {
+    data class Intent(val id: String, val source: Source) : McpRequest {
 
-        companion object {
-            /** The only service whose intents the app can act on so far. */
-            const val SOURCE_EXPRESS = "express"
+        /** The service that raised the intent, together with the operation it asks for. */
+        @Serializable
+        sealed interface Source {
 
-            /** The only operation of [SOURCE_EXPRESS] intents the app can act on so far. */
-            const val TYPE_EXCHANGE = "exchange"
+            @Serializable
+            data class Express(val type: Type) : Source {
+
+                enum class Type { EXCHANGE, ONRAMP }
+            }
         }
     }
 }
