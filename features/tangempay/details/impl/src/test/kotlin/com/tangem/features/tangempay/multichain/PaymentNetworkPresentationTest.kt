@@ -111,6 +111,23 @@ internal class PaymentNetworkPresentationTest {
     }
 
     @Test
+    fun `GIVEN backend lists USDT before USDC WHEN receivableCurrencies THEN USDC comes first`() {
+        // Arrange
+        val status = PaymentNetworkStatus.Available(
+            network = network(networkName = "Polygon", networkRawId = "polygon"),
+            depositAddress = "0xDEPOSIT",
+            chainId = 137L,
+            cryptoCurrencyStatuses = listOf(status(currency("USDT")), status(currency("USDC"))),
+        )
+
+        // Act
+        val result = status.receivableCurrencies()
+
+        // Assert
+        assertThat(result.map { it.symbol }).containsExactly("USDC", "USDT").inOrder()
+    }
+
+    @Test
     fun `GIVEN only catalogue-unknown tokens WHEN toRowData THEN the Available network gets no row`() {
         // Arrange
         val status = PaymentNetworkStatus.Available(
