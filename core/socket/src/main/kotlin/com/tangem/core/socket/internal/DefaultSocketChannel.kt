@@ -17,12 +17,15 @@ import com.tangem.core.socket.transport.TransportEvent
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -190,7 +193,7 @@ internal class DefaultSocketChannel(
     }
 
     private suspend fun connectOnce(context: SocketConnectContext, onHealthy: () -> Unit): SocketClose {
-        val headers = spec.headers.runSuspendCatching { resolve(context) }.getOrElse { error ->
+        val headers = runAttemptCatching { spec.headers.resolve(context) }.getOrElse { error ->
             return SocketClose(SocketCloseCode.ABNORMAL, "Headers failed: ${error.message}")
         }
         val opened = runCatching { (spec.transport ?: transport).open(SocketRequest(spec.url, headers)) }
@@ -204,7 +207,7 @@ internal class DefaultSocketChannel(
                     when (event) {
                         TransportEvent.Opened -> {
                             synchronized(sendLock) { isOnOpenRunning = true }
-                            val openError = runSuspendCatching { spec.onOpen(ConnectionSession(opened)) }
+                            val openError = runAttemptCatching { spec.onOpen(ConnectionSession(opened)) }
                                 .exceptionOrNull()
                             if (openError != null) {
                                 closed = SocketClose(SocketCloseCode.ABNORMAL, "onOpen failed: ${openError.message}")
@@ -242,6 +245,15 @@ internal class DefaultSocketChannel(
             }
             opened.close(SocketCloseCode.NORMAL, "")
         }
+    }
+
+    private suspend inline fun <R> runAttemptCatching(block: () -> R): Result<R> = try {
+        Result.success(block())
+    } catch (error: CancellationException) {
+        currentCoroutineContext().ensureActive()
+        Result.failure(error)
+    } catch (error: Throwable) {
+        Result.failure(error)
     }
 
     private fun CoroutineScope.launchKeepAlive(connection: SocketConnection): Job? {
