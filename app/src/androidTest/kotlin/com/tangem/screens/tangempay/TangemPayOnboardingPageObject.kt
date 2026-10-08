@@ -14,7 +14,7 @@ class TangemPayOnboardingPageObject(semanticsProvider: SemanticsNodeInteractions
     ComposeScreen<TangemPayOnboardingPageObject>(semanticsProvider = semanticsProvider) {
 
     val title: KNode = child {
-        hasText(getResourceString(CoreResR.string.tangempay_onboarding_title))
+        hasText(getResourceString(CoreResR.string.tangempay_newonboard_title))
         useUnmergedTree = true
     }
 

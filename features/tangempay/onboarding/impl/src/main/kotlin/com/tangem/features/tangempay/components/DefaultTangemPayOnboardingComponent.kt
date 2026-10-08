@@ -14,7 +14,7 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.features.tangempay.eligibility.TangemPayWalletSelectorComponent
 import com.tangem.features.tangempay.model.TangemPayOnboardingModel
 import com.tangem.features.tangempay.ui.TangemPayOnboardingNavigation
-import com.tangem.features.tangempay.ui.TandemPayOnboardingScreen
+import com.tangem.features.tangempay.ui.TangemPayOnboardingScreen
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -38,7 +38,7 @@ internal class DefaultTangemPayOnboardingComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
-        TandemPayOnboardingScreen(modifier = modifier, state = state)
+        TangemPayOnboardingScreen(modifier = modifier, state = state)
         bottomSheet.child?.instance?.BottomSheet()
     }
 
