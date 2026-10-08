@@ -1155,6 +1155,7 @@
   <string name="introduction_stories_two_title">Eine Wallet, mehrere Karten</string>
   <string name="introduction_subtitle">Ein sicherer Ort für alles, was dir gehört</string>
   <string name="introduction_terms_of_service">Nutzungsbedingungen</string>
+  <string name="introduction_terms_of_service_consent">Wenn Sie fortfahren, erklären Sie sich damit einverstanden, dass %s</string>
   <string name="introduction_title">Alle deine Assets an einem Ort</string>
   <string name="joint_account_activated_snackbar">Konto aktiviert</string>
   <string name="joint_account_activation_account_button_title">Konto aktivieren</string>
@@ -1815,9 +1816,11 @@
   <string name="prediction_add_funds_notification_limits_title">Einzahlungslimits</string>
   <string name="prediction_add_funds_receive_body">Schicken %1$s aus einer anderen Wallet, Mindestbetrag %2$s</string>
   <string name="prediction_add_funds_receive_subtitle">Senden Sie USDC über das Polygon-Netzwerk an Ihr Polymarket-Konto.</string>
+  <string name="prediction_add_funds_receive_title">Von einer anderen Wallet oder Börse</string>
   <string name="prediction_add_funds_subtitle">%1$s auf %2$s</string>
   <string name="prediction_add_funds_swap_body">Tausche einen Token, den du bereits hältst</string>
   <string name="prediction_add_funds_swap_subtitle">Nutzen Sie Kryptowährung in Ihrer Tangem-Wallet, um Ihr Polymarket-Konto aufzuladen</string>
+  <string name="prediction_add_funds_swap_title">Aus Ihrer Tangem Wallet</string>
   <string name="prediction_balance_total">Gesamtsaldo</string>
   <string name="prediction_balance_withdraw">Abheben</string>
   <string name="prediction_claim_error_failed">Die Abbuchung wurde nicht ausgeführt. Es wurde kein Betrag von Ihrem Konto abgebucht, und Sie können es erneut versuchen.</string>
@@ -1868,7 +1871,7 @@
   <string name="prediction_main_empty_positions_title">Sie haben keine aktiven Vorhersagen.</string>
   <string name="prediction_main_events_load_error">Ereignisse konnten nicht geladen werden.\nZum Neuladen tippen</string>
   <string name="prediction_main_explore_events">Veranstaltungen entdecken</string>
-  <string name="prediction_main_subtitle">USDC im Polygon-Netzwerk</string>
+  <string name="prediction_main_subtitle">US-Dollar</string>
   <string name="prediction_main_title">Prognosen</string>
   <string name="prediction_main_total_balance">Gesamtsaldo</string>
   <string name="prediction_main_withdraw">Abheben</string>
@@ -2883,8 +2886,8 @@
   <string name="tangempay_newonboard_body">Gib Krypto überall aus — ohne Banken, ohne Mittelsmänner, ohne Börsen. Self-Custody trifft auf alltägliches Bezahlen.</string>
   <string name="tangempay_newonboard_bottomleft_body">Online sowie mit Apple Pay bezahlen</string>
   <string name="tangempay_newonboard_bottomleft_title">Weltweit akzeptiert</string>
-  <string name="tangempay_newonboard_bottomright_body">USD → USDC 1:1; 1 $ Gebühr</string>
-  <string name="tangempay_newonboard_bottomright_title">ACH empfangen</string>
+  <string name="tangempay_newonboard_bottomright_body">Empfangen und senden</string>
+  <string name="tangempay_newonboard_bottomright_title">ACH/Wire-Überweisungen</string>
   <string name="tangempay_newonboard_title">Hol dir deine Tangem Pay Karte</string>
   <string name="tangempay_newonboard_topleft_body">Zahl, was du siehst</string>
   <string name="tangempay_newonboard_topleft_title">Keine Kaufgebühren, \n1 USDC = 1 USD</string>
@@ -3101,7 +3104,7 @@
   <string name="tangempay_withdraw_hub_title">Abheben</string>
   <string name="tangempay_withdraw_hub_to_business_account">An das Geschäftskonto</string>
   <string name="tangempay_withdraw_hub_to_personal_account">Zum persönlichen Konto</string>
-  <string name="tangempay_withdraw_hub_within_portfolio">Innerhalb Ihres Portfolios</string>
+  <string name="tangempay_withdraw_hub_within_portfolio">Innerhalb Ihres Tangem Wallet</string>
   <string name="tangempay_your_pin_code">Ihr PIN-Code</string>
   <string name="this_is_my_wallet_title">Das ist meine Wallet</string>
   <string name="toast_balances_hidden">Guthaben versteckt</string>
@@ -3169,6 +3172,7 @@
   <string name="transaction_history_approve_high_risk_subtitle">Sie sind verbunden. Es besteht möglicherweise ein Risiko für Ihre Geldmittel. Erwägen Sie, den Zugriff zu widerrufen.</string>
   <string name="transaction_history_approve_high_risk_title">Hohes Risiko</string>
   <string name="transaction_history_approved_amount">Genehmigter Betrag</string>
+  <string name="transaction_history_claiming_incentive_rewards">Anspruch auf Prämien</string>
   <string name="transaction_history_claiming_reward">Belohnung einfordern</string>
   <string name="transaction_history_contract_address">Vertrag: %s</string>
   <string name="transaction_history_detail_page_amount_signed_value" formatted="false">%1s %2s %3s</string>
@@ -3189,6 +3193,7 @@
   <string name="transaction_history_fee_for_yield_mode_top_up">Für den Yield-Modus-Aufladevorgang</string>
   <string name="transaction_history_fee_sending_asset">Schicken %%Bild%% %s</string>
   <string name="transaction_history_from_inline_address">aus: %%image%% %s</string>
+  <string name="transaction_history_incentive_rewards_claimed">Inanspruchgenommene Prämien</string>
   <string name="transaction_history_multiple_addresses">Mehrere Adressen</string>
   <string name="transaction_history_not_supported_description">Die Transaktionshistorie wird für diese Blockchain derzeit nicht verfügbar. Aber keine Sorge, wir arbeiten daran! In der Zwischenzeit kannst du es im Explorer überprüfen.</string>
   <string name="transaction_history_operation">Operation</string>
@@ -3200,6 +3205,7 @@
   <string name="transaction_history_status_claiming_rewards">Prämien einfordern</string>
   <string name="transaction_history_status_disabling_yield_mode_failed">Das Deaktivieren des Yield-Modus ist fehlgeschlagen</string>
   <string name="transaction_history_status_enabling_yield_mode_failed">Die Aktivierung des Yield-Modus ist fehlgeschlagen</string>
+  <string name="transaction_history_status_incentive_rewards_claim_failed">Die Inanspruchnahme der Leistungsprämien ist fehlgeschlagen.</string>
   <string name="transaction_history_status_receive_failed">Empfang fehlgeschlagen</string>
   <string name="transaction_history_status_restaking_rewards">Retaking-Belohnungen</string>
   <string name="transaction_history_status_rewards_claim_failed">Prämienanspruch fehlgeschlagen</string>
@@ -3789,6 +3795,7 @@
   <string name="yield_module_incentive_chart_powered_by_description">Ein Kampagnensponsor finanziert zusätzliche Belohnungstoken, die über Merkl verteilt werden.\nAnreize können enden, und die Preise für Belohnungstoken können sich ändern.\nDer angezeigte APY beinhaltet Anreizprämien nach Abzug der Servicegebühr von Tangem.</string>
   <string name="yield_module_incentive_chart_powered_by_title">Unterstützt von Merkl</string>
   <string name="yield_module_incentive_chart_sheet_title">Anreizbasierte Rendite</string>
+  <string name="yield_module_incentives_provider">Merkl</string>
   <string name="yield_module_main_screen_promo_banner_message">Aktiviere %1$s%% Jahreszins auf Dein Guthaben</string>
   <string name="yield_module_main_view_approve_notification_description">Die Genehmigung für Deine Token im Yield-Modus wurde widerrufen. Öffne den Token, um die Berechtigung erneut zu erteilen.</string>
   <string name="yield_module_main_view_approve_notification_title">Token-Genehmigung erforderlich</string>
