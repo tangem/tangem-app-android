@@ -124,9 +124,8 @@ internal class DefaultYieldSupplyRepositoryTest {
     fun `GIVEN incentives enabled WHEN updateMarkets THEN incentivised markets are stored`() = runTest {
         // Arrange
         val dto = marketDto(chainId = 1, hasActiveCampaign = true)
-        coEvery { yieldIncentivesApi.getIncentiveMarkets(chainId = any(), isForEarn = null) } returns ApiResponse.Success(
-            YieldMarketsResponse(marketDtos = listOf(dto), lastUpdated = "now"),
-        )
+        coEvery { yieldIncentivesApi.getIncentiveMarkets(chainId = any(), isForEarn = null) } returns
+            success(YieldMarketsResponse(marketDtos = listOf(dto), lastUpdated = "now"))
 
         // Act
         val result = incentivisedRepository.updateMarkets()
@@ -143,7 +142,7 @@ internal class DefaultYieldSupplyRepositoryTest {
         // Arrange — an empty payload must not overwrite the cached markets and hide Yield Mode
         val dto = marketDto(chainId = 1)
         coEvery { yieldIncentivesApi.getIncentiveMarkets(chainId = any(), isForEarn = null) } returns
-            ApiResponse.Success(YieldMarketsResponse(marketDtos = emptyList(), lastUpdated = "now"))
+            success(YieldMarketsResponse(marketDtos = emptyList(), lastUpdated = "now"))
         coEvery { yieldSupplyApi.getYieldMarkets(any()) } returns ApiResponse.Success(
             YieldMarketsResponse(marketDtos = listOf(dto), lastUpdated = "now"),
         )
@@ -162,7 +161,8 @@ internal class DefaultYieldSupplyRepositoryTest {
         val dto = marketDto(chainId = 1)
         @Suppress("UNCHECKED_CAST")
         coEvery { yieldIncentivesApi.getIncentiveMarkets(chainId = any(), isForEarn = null) } returns
-            ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<YieldMarketsResponse>
+            ApiResponse.Error(ApiResponseError.NetworkException())
+                as ApiResponse<YieldMarketsResponse>
         coEvery { yieldSupplyApi.getYieldMarkets(any()) } returns ApiResponse.Success(
             YieldMarketsResponse(marketDtos = listOf(dto), lastUpdated = "now"),
         )
@@ -553,4 +553,6 @@ internal class DefaultYieldSupplyRepositoryTest {
     private companion object {
         const val ADDRESS = "0x1111111111111111111111111111111111111111"
     }
+
+    private fun <T : Any> success(payload: T) = ApiResponse.Success(payload)
 }

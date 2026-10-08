@@ -9,6 +9,7 @@ data class YieldIncentivesResponse(
     @Json(name = "chainId") val chainId: Int? = null,
     @Json(name = "userAddress") val userAddress: String? = null,
     @Json(name = "moduleAddress") val moduleAddress: String? = null,
+    @Json(name = "claimRecommended") val isClaimRecommended: Boolean? = null,
     @Json(name = "rewards") val rewards: List<YieldRewardDto>? = null,
     @Json(name = "lastUpdatedAt") val lastUpdatedAt: String? = null,
 )
@@ -26,6 +27,5 @@ data class YieldRewardDto(
     @Json(name = "serviceFeeRateBps") val serviceFeeRateBps: Int? = null,
     @Json(name = "estimatedServiceFeeUsd") val estimatedServiceFeeUsd: BigDecimal? = null,
     @Json(name = "estimatedNetValueUsd") val estimatedNetValueUsd: BigDecimal? = null,
-    @Json(name = "claimRecommended") val isClaimRecommended: Boolean? = null,
     @Json(name = "finalDestination") val finalDestination: String? = null,
 )
