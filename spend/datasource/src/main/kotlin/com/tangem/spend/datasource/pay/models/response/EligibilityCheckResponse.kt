@@ -14,7 +14,7 @@ data class EligibilityCheckResponse(
     @Serializable
     data class Result(
         @SerialName("available") val isAvailable: Boolean,
-        @SerialName("country") val country: String,
-        @SerialName("region") val region: String?,
+        @SerialName("country_code") val country: String,
+        @SerialName("region_code") val region: String?,
     )
 }
