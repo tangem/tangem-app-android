@@ -77,7 +77,8 @@ internal class DefaultYieldSupplyRepository(
         if (!isMerklIncentivesEnabled) return null
 
         return when (val response = yieldIncentivesApi.getIncentiveMarkets(chainId = chains)) {
-            is ApiResponse.Success -> response.data.marketDtos.takeIf(List<YieldSupplyMarketTokenDto>::isNotEmpty)
+            is ApiResponse.Success ->
+                response.data.marketDtos.takeIf(List<YieldSupplyMarketTokenDto>::isNotEmpty)
             is ApiResponse.Error -> {
                 // A 400 means the chain is not configured for incentives yet — an expected answer, not a failure.
                 val code = (response.cause as? ApiResponseError.HttpException)?.code

@@ -21,6 +21,5 @@ data class YieldReward(
     val estimatedNetValueUsd: BigDecimal,
     val estimatedServiceFeeUsd: BigDecimal,
     val serviceFeeRateBps: Int,
-    val isClaimRecommended: Boolean,
     val finalDestination: YieldRewardDestination,
 )

@@ -76,7 +76,22 @@ internal class DefaultYieldIncentivesRepositoryTest {
         // Arrange
         val repository = createRepository(testScope = this)
         coEvery { api.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS) } returns
-            ApiResponse.Success(incentivesResponse(lastUpdatedAt = "yesterday"))
+            success(incentivesResponse(lastUpdatedAt = "yesterday"))
+
+        // Act
+        val actual = repository.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS)
+
+        // Assert
+        assertThat(actual).isEqualTo(YieldIncentivesError.Unavailable.left())
+    }
+
+    @Test
+    fun `GIVEN claimRecommended absent WHEN getIncentives THEN unavailable instead of a silent verdict`() = runTest {
+        // Arrange — reading a missing key as "not recommended" would leave the Claim action dark with nothing
+        // on screen to say why, so the overlay has to fail visibly instead.
+        val repository = createRepository(testScope = this)
+        coEvery { api.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS) } returns
+            success(incentivesResponse().copy(isClaimRecommended = null))
 
         // Act
         val actual = repository.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS)
@@ -120,7 +135,7 @@ internal class DefaultYieldIncentivesRepositoryTest {
         // Arrange
         val repository = createRepository(testScope = this)
         coEvery { api.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS) } returns
-            ApiResponse.Success(incentivesResponse())
+            success(incentivesResponse())
 
         // Act
         repository.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS)
@@ -136,7 +151,7 @@ internal class DefaultYieldIncentivesRepositoryTest {
         // Arrange
         val repository = createRepository(testScope = this)
         coEvery { api.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS) } returns
-            ApiResponse.Success(incentivesResponse())
+            success(incentivesResponse())
 
         // Act
         repository.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS)
@@ -167,7 +182,7 @@ internal class DefaultYieldIncentivesRepositoryTest {
         val repository = createRepository(testScope = this)
         coEvery { api.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS) } coAnswers {
             delay(timeMillis = 1_000)
-            ApiResponse.Success(incentivesResponse())
+            success(incentivesResponse())
         }
 
         // Act
@@ -185,7 +200,7 @@ internal class DefaultYieldIncentivesRepositoryTest {
         // Arrange
         val repository = createRepository(testScope = this)
         coEvery { api.getClaimCalldata(chainId = CHAIN_ID, userAddress = ADDRESS) } returns
-            ApiResponse.Success(YieldClaimCalldataResponse(chainId = CHAIN_ID, hasClaimable = false))
+            success(YieldClaimCalldataResponse(chainId = CHAIN_ID, hasClaimable = false))
 
         // Act
         repository.getClaimCalldata(chainId = CHAIN_ID, userAddress = ADDRESS)
@@ -200,7 +215,7 @@ internal class DefaultYieldIncentivesRepositoryTest {
         // Arrange
         val repository = createRepository(testScope = this)
         coEvery { api.getAprHistory(chainId = CHAIN_ID, tokenAddress = TOKEN, days = any()) } returns
-            ApiResponse.Success(
+            success(
                 YieldAprHistoryResponse(
                     chainId = CHAIN_ID,
                     tokenAddress = TOKEN,
@@ -220,7 +235,7 @@ internal class DefaultYieldIncentivesRepositoryTest {
         // Arrange
         val repository = createRepository(testScope = this)
         coEvery { api.getAprHistory(chainId = CHAIN_ID, tokenAddress = TOKEN, days = any()) } returns
-            ApiResponse.Success(YieldAprHistoryResponse(chainId = CHAIN_ID, tokenAddress = TOKEN, points = null))
+            success(YieldAprHistoryResponse(chainId = CHAIN_ID, tokenAddress = TOKEN, points = null))
 
         // Act
         repository.getAprHistory(chainId = CHAIN_ID, tokenAddress = TOKEN, days = 180)
@@ -234,7 +249,7 @@ internal class DefaultYieldIncentivesRepositoryTest {
         // Arrange
         val repository = createRepository(testScope = this)
         coEvery { api.getAprHistory(chainId = CHAIN_ID, tokenAddress = TOKEN, days = any()) } returns
-            ApiResponse.Success(YieldAprHistoryResponse(chainId = CHAIN_ID, tokenAddress = TOKEN, points = null))
+            success(YieldAprHistoryResponse(chainId = CHAIN_ID, tokenAddress = TOKEN, points = null))
 
         // Act
         repository.getAprHistory(chainId = CHAIN_ID, tokenAddress = TOKEN, days = 7)
@@ -251,7 +266,7 @@ internal class DefaultYieldIncentivesRepositoryTest {
         // Arrange
         val repository = createRepository(testScope = this)
         coEvery { api.getClaimHistory(chainId = CHAIN_ID, userAddress = ADDRESS) } returns
-            ApiResponse.Success(YieldClaimHistoryResponse(chainId = CHAIN_ID, claims = null))
+            success(YieldClaimHistoryResponse(chainId = CHAIN_ID, claims = null))
 
         // Act
         repository.getClaimHistory(chainId = CHAIN_ID, userAddress = ADDRESS)
@@ -274,6 +289,7 @@ internal class DefaultYieldIncentivesRepositoryTest {
         chainId = CHAIN_ID,
         userAddress = ADDRESS,
         moduleAddress = null,
+        isClaimRecommended = false,
         rewards = emptyList(),
         lastUpdatedAt = lastUpdatedAt,
     )
@@ -298,4 +314,6 @@ internal class DefaultYieldIncentivesRepositoryTest {
         const val TOKEN = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
         const val TIMESTAMP = "2026-07-31T10:30:00.000Z"
     }
+
+    private fun <T : Any> success(payload: T) = ApiResponse.Success(payload)
 }
