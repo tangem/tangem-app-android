@@ -72,8 +72,9 @@ internal class DefaultYieldIncentivesRepositoryTest {
     }
 
     @Test
-    fun `GIVEN unparseable timestamp WHEN getIncentives THEN unavailable instead of throwing`() = runTest {
-        // Arrange
+    fun `GIVEN unparseable timestamp WHEN getIncentives THEN the rewards still arrive`() = runTest {
+        // Arrange - nothing reads the stamp, so letting it sink a payload of real rewards would cost the owner
+        // their claim over a field no screen shows.
         val repository = createRepository(testScope = this)
         coEvery { api.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS) } returns
             success(incentivesResponse(lastUpdatedAt = "yesterday"))
@@ -82,7 +83,8 @@ internal class DefaultYieldIncentivesRepositoryTest {
         val actual = repository.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS)
 
         // Assert
-        assertThat(actual).isEqualTo(YieldIncentivesError.Unavailable.left())
+        assertThat(actual.getOrNull()?.lastUpdatedAt).isNull()
+        assertThat(actual.isRight()).isTrue()
     }
 
     @Test
