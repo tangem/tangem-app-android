@@ -91,6 +91,7 @@ data class TangemPayTxHistoryResponse(
         @Json(name = "wallet_address") val walletAddress: String,
         @Json(name = "transaction_hash") val transactionHash: String,
         @Json(name = "posted_at") val postedAt: DateTime?,
+        @Json(name = "kind") val kind: String? = null,
     )
 
     @JsonClass(generateAdapter = true)
