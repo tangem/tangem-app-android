@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.model
 
+import com.tangem.feature.swap.component.slippage.SwapSlippageComponent
 import com.tangem.features.approval.api.GiveApprovalComponent
 import com.tangem.features.approval.api.SelectApprovalTypeComponent
 
@@ -20,6 +21,10 @@ internal sealed interface SwapBottomSheetRoute {
     }
 
     data class GiveApproval(val params: GiveApprovalComponent.Params) : SwapBottomSheetRoute {
+        override val isMaterial: Boolean = true
+    }
+
+    data class Slippage(val params: SwapSlippageComponent.Params) : SwapBottomSheetRoute {
         override val isMaterial: Boolean = true
     }
 }
