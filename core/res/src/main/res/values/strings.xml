@@ -1818,9 +1818,11 @@
   <string name="prediction_add_funds_notification_limits_title">Deposit limits</string>
   <string name="prediction_add_funds_receive_body">Send %1$s from another wallet, minimum %2$s</string>
   <string name="prediction_add_funds_receive_subtitle">Send USDC on the Polygon network to your Polymarket account</string>
+  <string name="prediction_add_funds_receive_title">From another wallet or exchange</string>
   <string name="prediction_add_funds_subtitle">%1$s on %2$s</string>
   <string name="prediction_add_funds_swap_body">Exchange a token you already hold</string>
   <string name="prediction_add_funds_swap_subtitle">Use crypto in your Tangem wallet to top up your Polymarket account</string>
+  <string name="prediction_add_funds_swap_title">From your Tangem Wallet</string>
   <string name="prediction_balance_total">Total Balance</string>
   <string name="prediction_balance_withdraw">Withdraw</string>
   <string name="prediction_claim_error_failed">The claim did not go through. Nothing left your account, and you can try again.</string>
@@ -2619,7 +2621,7 @@
   <string name="tangempay_account_deactivated_message_title">Your account has been closed</string>
   <string name="tangempay_account_unable_to_use_rooted">Unable to use on rooted device</string>
   <string name="tangempay_action_required_description">To continue, we need a bit more information from you. This usually takes a couple of minutes</string>
-  <string name="tangempay_action_required_primary_btn">Сontinue verification</string>
+  <string name="tangempay_action_required_primary_btn">Continue verification</string>
   <string name="tangempay_action_required_title">Action required</string>
   <string name="tangempay_available_balance">Available balance</string>
   <string name="tangempay_bank_transfer_creating_description">Usually takes up to 5 minutes. In rare cases, up to 48 hours</string>
