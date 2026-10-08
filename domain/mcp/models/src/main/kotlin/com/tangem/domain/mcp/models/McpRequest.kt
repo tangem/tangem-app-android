@@ -9,4 +9,20 @@ sealed interface McpRequest {
     /** A request to connect the agent behind [userCode]. */
     @Serializable
     data class Pair(val userCode: String) : McpRequest
+
+    /** A request to act on the intent [id] raised by [source]. */
+    @Serializable
+    data class Intent(val id: String, val source: Source) : McpRequest {
+
+        /** The service that raised the intent, together with the operation it asks for. */
+        @Serializable
+        sealed interface Source {
+
+            @Serializable
+            data class Express(val type: Type) : Source {
+
+                enum class Type { EXCHANGE, ONRAMP }
+            }
+        }
+    }
 }
