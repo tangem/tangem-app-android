@@ -51,6 +51,7 @@ interface SwapInteractor {
         providers: List<SwapProvider>,
         amountToSwap: String,
         reduceBalanceBy: BigDecimal,
+        customSlippage: BigDecimal? = null,
     ): Map<SwapProvider, SwapState>
 
     /**
@@ -77,6 +78,7 @@ interface SwapInteractor {
         expressOperationType: ExpressOperationType,
         isTangemPayWithdrawal: Boolean,
         integratedApproval: IntegratedApprovalData? = null,
+        customSlippage: BigDecimal? = null,
     ): SwapTransactionState
 
     /**

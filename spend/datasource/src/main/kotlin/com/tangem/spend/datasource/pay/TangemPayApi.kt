@@ -95,8 +95,8 @@ interface TangemPayApi {
     @GET("v1/eligibility/check")
     suspend fun checkEligibilityForCountry(
         @Query("product") product: String,
-        @Query("country") country: String,
-        @Query("region") region: String?,
+        @Query("country_code") country: String,
+        @Query("region_code") region: String?,
     ): ApiResponse<EligibilityCheckResponse>
 
     @GET("v1/eligibility/check")
