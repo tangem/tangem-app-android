@@ -56,9 +56,14 @@ internal class YieldSupplyPromoModel @Inject constructor(
         appRouter.pop()
     }
 
-    override fun onApyInfoClick() {
+    override fun onVariableRateInfoClick() {
         analytics.send(YieldSupplyAnalytics.ApyChartViewed())
-        bottomSheetNavigation.activate(YieldSupplyPromoConfig.Apy)
+        bottomSheetNavigation.activate(YieldSupplyPromoConfig.VariableRate)
+    }
+
+    override fun onIncentiveRateInfoClick() {
+        analytics.send(YieldSupplyAnalytics.ApyChartViewed())
+        bottomSheetNavigation.activate(YieldSupplyPromoConfig.IncentiveRate)
     }
 
     override fun onUrlClick(url: String) {
