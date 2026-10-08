@@ -60,7 +60,6 @@ import com.tangem.core.ui.res.generated.icons.ic_triangle_up_12
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartIncentiveUM
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartPeriod
-import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.persistentListOf
 
 private const val AVERAGE_PLACEHOLDER = "0.00%"
@@ -302,7 +301,7 @@ private fun PlainApyChart(
 @Composable
 private fun IncentiveApyHeader(
     apy: TextReference,
-    averageApy: String?,
+    averageApy: TextReference,
     isLoading: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -345,7 +344,7 @@ private fun IncentiveApyHeader(
                     TextShimmer(text = AVERAGE_PLACEHOLDER, style = TangemTheme.typography3.heading.medium)
                 } else {
                     Text(
-                        text = averageApy ?: StringsSigns.DASH_SIGN,
+                        text = averageApy.resolveReference(),
                         style = TangemTheme.typography3.heading.medium,
                         color = TangemTheme.colors3.text.secondary,
                     )
@@ -420,7 +419,7 @@ private fun YieldSupplyApyContentIncentivisedPreview() {
                     initialSelectedItem = segments.first(),
                     isFixed = true,
                 ),
-                averageApy = "6.84%",
+                averageApy = stringReference("6.84%"),
                 onPeriodSelected = {},
             ),
             onBackClick = {},
