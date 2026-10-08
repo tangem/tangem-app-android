@@ -33,8 +33,8 @@ import com.tangem.feature.swap.domain.models.ui.SwapFee
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.models.PredictionTopUpLimits
 import com.tangem.feature.swap.models.UiActions
-import com.tangem.feature.swap.models.warningFor
 import com.tangem.feature.swap.models.states.SwapNotificationUM
+import com.tangem.feature.swap.models.warningFor
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.lib.crypto.BlockchainUtils.getTezosThreshold
 import com.tangem.lib.crypto.BlockchainUtils.isTezos
@@ -130,6 +130,7 @@ internal class SwapNotificationsFactory(
         feeError: GetFeeError?,
         appRouter: AppRouter,
         isHighNetworkFee: Boolean = false,
+        lowSlippage: TextReference? = null,
     ): ImmutableList<NotificationUM> {
         val warnings = buildList {
             maybeAddPredictionTopUpLimitWarning(quoteModel)
@@ -149,6 +150,7 @@ internal class SwapNotificationsFactory(
             maybeAddTransactionInProgressWarning(quoteModel)
             maybeAddPriceImpactNotification(quoteModel.priceImpact)
             maybeAddHighNetworkFeeWarning(isHighNetworkFee)
+            maybeAddLowSlippageWarning(lowSlippage)
         }
         return warnings.toPersistentList()
     }
@@ -164,6 +166,11 @@ internal class SwapNotificationsFactory(
         if (isHighNetworkFee) {
             add(NotificationUM.Warning.HighNetworkFee)
         }
+    }
+
+    @Suppress("CanBeNonNullable")
+    private fun MutableList<NotificationUM>.maybeAddLowSlippageWarning(lowSlippage: TextReference?) {
+        if (lowSlippage != null) add(SwapNotificationUM.Warning.LowSlippage(lowSlippage))
     }
 
     private fun MutableList<NotificationUM>.maybeAddRegionRestrictionError(quoteModel: SwapState.QuotesLoadedState) {
