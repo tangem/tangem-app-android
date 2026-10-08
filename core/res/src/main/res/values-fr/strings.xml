@@ -981,6 +981,7 @@
   <string name="introduction_stories_two_title">Un wallet, plusieurs cartes</string>
   <string name="introduction_subtitle">Un espace unique et sécurisé pour tout ce que vous possédez</string>
   <string name="introduction_terms_of_service">Conditions d\'utilisation</string>
+  <string name="introduction_terms_of_service_consent">En continuant, vous acceptez les %s</string>
   <string name="introduction_title">Stockez tous vos actifs</string>
   <string name="joint_account_activated_snackbar">Compte activé</string>
   <string name="joint_account_activation_account_button_title">Activer le compte</string>

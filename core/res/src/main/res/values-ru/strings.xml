@@ -1055,6 +1055,7 @@
   <string name="introduction_stories_two_title">Один кошелёк, несколько карт</string>
   <string name="introduction_subtitle">Одно безопасное место для всех ваших активов</string>
   <string name="introduction_terms_of_service">Условиями использования</string>
+  <string name="introduction_terms_of_service_consent">Продолжая, вы соглашаетесь с %s</string>
   <string name="introduction_title">Храните все свои активы</string>
   <string name="joint_account_activated_snackbar">Аккаунт активирован</string>
   <string name="joint_account_activation_account_button_title">Активировать аккаунт</string>
