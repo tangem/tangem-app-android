@@ -198,7 +198,6 @@ internal class GetMoneyAccountEligibilityUseCaseTest {
         MoneyAccountStatusValue.Onboarding.CountryNotSupported(
             source = StatusSource.ACTUAL,
             customerId = CUSTOMER_ID,
-            balance = null,
             countryCode = null,
         ),
         MoneyAccountStatusValue.Account.Deactivated(
@@ -209,24 +208,20 @@ internal class GetMoneyAccountEligibilityUseCaseTest {
         ),
         MoneyAccountStatusValue.Onboarding.Issuing(
             source = StatusSource.ACTUAL,
-            balance = null,
             customerId = CUSTOMER_ID,
             step = MoneyAccountStatusValue.IssuingStep.STARTING,
         ),
         MoneyAccountStatusValue.Onboarding.UnderReview(
             source = StatusSource.ACTUAL,
-            balance = null,
             customerId = CUSTOMER_ID,
             kycStatus = mockk(),
         ),
         MoneyAccountStatusValue.Onboarding.VerificationDeclined(
             source = StatusSource.ACTUAL,
-            balance = null,
             customerId = CUSTOMER_ID,
         ),
         MoneyAccountStatusValue.Onboarding.Activating(
             source = StatusSource.ACTUAL,
-            balance = null,
             customerId = CUSTOMER_ID,
         ),
         activeStatus(),

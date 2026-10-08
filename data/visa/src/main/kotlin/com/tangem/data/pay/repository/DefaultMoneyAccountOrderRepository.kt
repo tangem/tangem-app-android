@@ -24,7 +24,7 @@ internal class DefaultMoneyAccountOrderRepository @Inject constructor(
     private val dispatcherProvider: CoroutineDispatcherProvider,
 ) : MoneyAccountOrderRepository {
 
-    private val orderStates = ConcurrentHashMap<UserWalletId, TangemPayOrderInfo>()
+    private val orderStates = ConcurrentHashMap<UserWalletId, Either<VisaApiError, TangemPayOrderInfo?>>()
 
     override suspend fun createOrder(
         userWalletId: UserWalletId,
@@ -45,11 +45,13 @@ internal class DefaultMoneyAccountOrderRepository @Inject constructor(
         }
     }
 
-    override fun storeOrder(userWalletId: UserWalletId, order: TangemPayOrderInfo) {
+    override fun storeOrder(userWalletId: UserWalletId, order: Either<VisaApiError, TangemPayOrderInfo?>) {
         orderStates[userWalletId] = order
     }
 
-    override fun getOrder(userWalletId: UserWalletId): TangemPayOrderInfo? = orderStates[userWalletId]
+    override fun getOrder(userWalletId: UserWalletId): Either<VisaApiError, TangemPayOrderInfo?>? {
+        return orderStates[userWalletId]
+    }
 
     override fun clearOrder(userWalletId: UserWalletId) {
         orderStates.remove(userWalletId)
