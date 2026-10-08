@@ -1,13 +1,14 @@
 package com.tangem.grow.datasource.collectibles
 
 import com.tangem.core.remote.response.ApiResponse
-import com.tangem.grow.datasource.collectibles.models.request.GenerateTxRequestBody
-import com.tangem.grow.datasource.collectibles.models.request.SubmitTxRequestBody
-import com.tangem.grow.datasource.collectibles.models.response.GenerateTxResponse
+import com.tangem.grow.datasource.collectibles.models.request.CollectibleTxRequestBody
+import com.tangem.grow.datasource.collectibles.models.request.GeneratePurchaseTxRequestBody
+import com.tangem.grow.datasource.collectibles.models.request.PurchaseTxSentRequestBody
+import com.tangem.grow.datasource.collectibles.models.response.CollectibleTxResponse
+import com.tangem.grow.datasource.collectibles.models.response.GeneratePurchaseTxResponse
 import com.tangem.grow.datasource.collectibles.models.response.MachineCategoriesResponse
 import com.tangem.grow.datasource.collectibles.models.response.MachineNftsResponse
 import com.tangem.grow.datasource.collectibles.models.response.MachinesResponse
-import com.tangem.grow.datasource.collectibles.models.response.SubmitTxResponse
 import com.tangem.grow.datasource.collectibles.models.response.model.MachineDTO
 import com.tangem.lib.auth.api.RequiresSessionAuth
 import retrofit2.http.*
@@ -51,17 +52,35 @@ interface CollectiblesApi {
         @Query("limit") limit: Int? = null,
     ): ApiResponse<MachineNftsResponse>
 
+    /** Issues the gacha's memo and price for one spin; the app builds, signs and sends the transaction itself. */
     @RequiresSessionAuth
-    @POST("api/v1/collectible/generateTx")
-    suspend fun generateTx(
+    @POST("api/v1/collectible/generate-purchase-tx")
+    suspend fun generatePurchaseTx(
         @Header("user-id") userWalletId: String,
-        @Body body: GenerateTxRequestBody,
-    ): ApiResponse<GenerateTxResponse>
+        @Body body: GeneratePurchaseTxRequestBody,
+    ): ApiResponse<GeneratePurchaseTxResponse>
 
     @RequiresSessionAuth
-    @POST("api/v1/collectible/submitTx")
-    suspend fun submitTx(
+    @POST("api/v1/collectible/purchase-tx-sent")
+    suspend fun purchaseTxSent(
         @Header("user-id") userWalletId: String,
-        @Body body: SubmitTxRequestBody,
-    ): ApiResponse<SubmitTxResponse>
+        @Body body: PurchaseTxSentRequestBody,
+    ): ApiResponse<CollectibleTxResponse>
+
+    @RequiresSessionAuth
+    @GET("api/v1/collectible/status")
+    suspend fun getTxStatus(
+        @Header("user-id") userWalletId: String,
+        @Query("txId") txId: String,
+        @Query("includeNftWon") includeNftWon: Boolean,
+    ): ApiResponse<CollectibleTxResponse>
+
+    /** Only meaningful once the purchase is confirmed; before that the gacha answers "No spin transaction found". */
+    @RequiresSessionAuth
+    @POST("api/v1/collectible/open-pack")
+    suspend fun openPack(
+        @Header("user-id") userWalletId: String,
+        @Body body: CollectibleTxRequestBody,
+        @Query("includeNftWon") includeNftWon: Boolean,
+    ): ApiResponse<CollectibleTxResponse>
 }
