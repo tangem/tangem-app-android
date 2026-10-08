@@ -4,19 +4,20 @@ import android.app.Activity
 import android.content.Intent
 import android.content.IntentSender
 import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.LifecycleOwner
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -30,7 +31,7 @@ import javax.inject.Singleton
  *
  * Callers only see [launch] and [launchAccountPicker]. One resolution runs at a time (auth is user-driven),
  * guarded by [mutex]. Every request always completes: with the delivered result, or as canceled once the
- * result can no longer arrive — see [HostObserver] and [detach].
+ * result can no longer arrive — see [createLostResultObserver] and [detach].
  */
 @Singleton
 class GoogleAuthActivityResultBridge @Inject constructor(
@@ -40,14 +41,11 @@ class GoogleAuthActivityResultBridge @Inject constructor(
     private val host = MutableStateFlow<Host?>(null)
     private val mutex = Mutex()
 
-    private var pending: PendingRequest? = null
+    private val registrations = mutableListOf<Registration>()
 
     fun attach(registry: ActivityResultRegistry, lifecycle: Lifecycle) {
         host.value?.let { detach(it.registry) }
-
-        val observer = HostObserver()
-        lifecycle.addObserver(observer)
-        host.value = Host(registry = registry, lifecycle = lifecycle, observer = observer)
+        host.value = Host(registry = registry, lifecycle = lifecycle)
     }
 
     /**
@@ -55,10 +53,9 @@ class GoogleAuthActivityResultBridge @Inject constructor(
      * no longer get its result, so it completes as canceled. A no-op for a registry that is not attached.
      */
     fun detach(registry: ActivityResultRegistry) {
-        val current = host.value?.takeIf { it.registry === registry } ?: return
-        current.lifecycle.removeObserver(current.observer)
+        if (host.value?.registry !== registry) return
         host.value = null
-        pending?.cancel(reason = "host detached")
+        releaseRegistrations { true }
     }
 
     /**
@@ -91,25 +88,56 @@ class GoogleAuthActivityResultBridge @Inject constructor(
             val target = withTimeoutOrNull(HOST_WAIT_TIMEOUT_MS) { host.filterNotNull().first() }
                 ?: throw GoogleAuthLauncherUnavailableException()
 
+            releaseRegistrations { it.isSettled }
+
             val deferred = CompletableDeferred<ActivityResult>()
-            // A unique key per request: a result that comes back after its request has ended lands on an
-            // unregistered key and is parked by the registry unclaimed, instead of completing whichever request
-            // runs next. Unique across processes too, as the registry restores its keys from the saved state.
+            val registration = Registration()
+            // A unique key per request, so a result that comes back after its request has ended cannot complete
+            // whichever request runs next. Unique across processes too, as the registry restores its keys from
+            // the saved state.
             val key = KEY_PREFIX + UUID.randomUUID()
-            val launcher = target.registry.register(key = key, contract = contract) { deferred.complete(it) }
-            val request = PendingRequest(
+            val launcher = target.registry.register(key = key, contract = contract) { result ->
+                registration.isSettled = true
+                deferred.complete(result)
+            }
+            registration.launcher = launcher
+            registrations += registration
+
+            val hostObserver = createLostResultObserver(
                 deferred = deferred,
-                isHostLeft = !target.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED),
+                isHostLeftAtLaunch = !target.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED),
             )
-            pending = request
+            target.lifecycle.addObserver(hostObserver)
+            val hostWatcher = launch {
+                host.first { it !== target }
+                deferred.completeAsLost(reason = "host detached")
+            }
             try {
-                launcher.launch(input)
+                try {
+                    launcher.launch(input)
+                } catch (e: Exception) {
+                    registration.isSettled = true
+                    throw e
+                }
                 deferred.await()
             } finally {
-                if (pending === request) pending = null
-                launcher.unregister()
+                hostWatcher.cancel()
+                target.lifecycle.removeObserver(hostObserver)
             }
         }
+    }
+
+    /**
+     * The registry keeps the key of a launched request until it dispatches the result, and the callback runs
+     * before that: `unregister()` called from a request that has just been completed (by its result or as
+     * canceled) leaves the key, and a result that arrives after it lands in the registry's saved state. So
+     * a request stays registered until its result is consumed, and it is released by the next request or
+     * by [detach].
+     */
+    private fun releaseRegistrations(predicate: (Registration) -> Boolean) {
+        val released = registrations.filter(predicate)
+        released.forEach { it.launcher.unregister() }
+        registrations -= released.toSet()
     }
 
     /**
@@ -120,34 +148,31 @@ class GoogleAuthActivityResultBridge @Inject constructor(
      * launcher: `MainActivity` is `singleInstance`, so the Google UI runs in a task of its own and the
      * launcher brings back only the app's task, leaving the Google one hidden behind it.
      */
-    private inner class HostObserver : LifecycleEventObserver {
-
-        override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
-            val request = pending ?: return
+    private fun createLostResultObserver(
+        deferred: CompletableDeferred<ActivityResult>,
+        isHostLeftAtLaunch: Boolean,
+    ): LifecycleEventObserver {
+        var isHostLeft = isHostLeftAtLaunch
+        return LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_PAUSE -> request.isHostLeft = true
-                Lifecycle.Event.ON_RESUME -> if (request.isHostLeft) request.cancel(reason = "host resumed")
+                Lifecycle.Event.ON_PAUSE -> isHostLeft = true
+                Lifecycle.Event.ON_RESUME -> if (isHostLeft) deferred.completeAsLost(reason = "host resumed")
                 else -> Unit
             }
         }
     }
 
-    private class Host(
-        val registry: ActivityResultRegistry,
-        val lifecycle: Lifecycle,
-        val observer: LifecycleEventObserver,
-    )
-
-    private class PendingRequest(
-        private val deferred: CompletableDeferred<ActivityResult>,
-        var isHostLeft: Boolean,
-    ) {
-
-        fun cancel(reason: String) {
-            if (deferred.complete(ActivityResult(Activity.RESULT_CANCELED, null))) {
-                TangemLogger.i("Google auth result is lost ($reason), the request is completed as canceled")
-            }
+    private fun CompletableDeferred<ActivityResult>.completeAsLost(reason: String) {
+        if (complete(ActivityResult(Activity.RESULT_CANCELED, null))) {
+            TangemLogger.i("Google auth result is lost ($reason), the request is completed as canceled")
         }
+    }
+
+    private class Host(val registry: ActivityResultRegistry, val lifecycle: Lifecycle)
+
+    private class Registration {
+        lateinit var launcher: ActivityResultLauncher<*>
+        var isSettled = false
     }
 
     private companion object {
