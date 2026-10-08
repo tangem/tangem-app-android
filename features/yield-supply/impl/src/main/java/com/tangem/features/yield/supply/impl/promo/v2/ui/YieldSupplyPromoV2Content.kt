@@ -91,7 +91,7 @@ private fun ColumnScope.Content(state: YieldSupplyPromoV2UM, clickIntents: Yield
             .verticalScroll(rememberScrollState()),
     ) {
         HeaderArt()
-        Column(modifier = Modifier.padding(horizontal = HORIZONTAL_PADDING)) {
+        Column(modifier = Modifier.padding(horizontal = 24.dp)) {
             RatePills(state = state, clickIntents = clickIntents)
             SpacerH12()
             Title(title = state.title)
@@ -108,16 +108,16 @@ private fun HeaderArt() {
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = ART_TOP_SPACING, bottom = ART_BOTTOM_SPACING)
-            .height(ART_AREA_SIZE),
+            .padding(top = 32.dp, bottom = 40.dp)
+            .height(148.dp),
     ) {
         Icon(
             imageVector = ImageVector.vectorResource(R.drawable.img_yield_promo_graph_104),
             contentDescription = null,
             tint = Color.Unspecified,
             modifier = Modifier
-                .width(ART_WIDTH)
-                .height(ART_HEIGHT),
+                .width(104.dp)
+                .height(93.dp),
         )
     }
 }
@@ -131,8 +131,8 @@ private fun Title(title: TextReference) {
     Text(
         text = title.resolveReference(),
         style = TangemTheme.typography.h2.copy(
-            fontSize = TITLE_SIZE,
-            lineHeight = TITLE_LINE_HEIGHT,
+            fontSize = 28.sp,
+            lineHeight = 34.sp,
             fontWeight = FontWeight.SemiBold,
         ),
         color = TangemTheme.colors.text.primary1,
@@ -292,7 +292,7 @@ private fun TopBar(onBackClick: () -> Unit, onHowItWorksClick: () -> Unit) {
                 .clip(CircleShape)
                 .background(TangemTheme.colors.button.secondary)
                 .clickable(onClick = onBackClick)
-                .size(TOOLBAR_BUTTON_SIZE)
+                .size(44.dp)
                 .padding(12.dp),
         )
         SpacerWMax()
@@ -309,15 +309,6 @@ private fun TopBar(onBackClick: () -> Unit, onHowItWorksClick: () -> Unit) {
     }
 }
 
-private val HORIZONTAL_PADDING = 24.dp
-private val TOOLBAR_BUTTON_SIZE = 44.dp
-private val ART_TOP_SPACING = 32.dp
-private val ART_BOTTOM_SPACING = 40.dp
-private val ART_AREA_SIZE = 148.dp
-private val ART_WIDTH = 104.dp
-private val ART_HEIGHT = 93.dp
-private val TITLE_SIZE = 28.sp
-private val TITLE_LINE_HEIGHT = 34.sp
 private const val TOS_TAG = "TOS_TAG"
 private const val POLICY_TAG = "POLICY_TAG"
 
