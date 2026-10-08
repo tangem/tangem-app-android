@@ -116,7 +116,7 @@ class TangemPayHotWalletOnboardingTest : BaseTestCase() {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     onTangemPayHotWalletOnboardingScreen {
                         title.assertIsDisplayed()
-                        setupWalletBlockTitle.assertIsDisplayed()
+                        legalCaption.assertIsDisplayed()
                     }
                 }
             }
