@@ -13,9 +13,11 @@ import androidx.lifecycle.LifecycleRegistry
 import com.google.common.truth.Truth.assertThat
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
+import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.mockk
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runCurrent
@@ -161,6 +163,54 @@ internal class GoogleAuthActivityResultBridgeTest {
             assertResult(firstResult, expectedCode = Activity.RESULT_CANCELED, expectedData = null)
             assertThat(isSecondPendingAfterStale).isTrue()
             assertResult(second.await(), expectedCode = Activity.RESULT_OK, expectedData = secondData)
+        }
+
+    @Test
+    fun `GIVEN result delivered inline WHEN next request launched THEN previous key unregistered`() = runTest {
+        // Arrange
+        val bridge = GoogleAuthActivityResultBridge(
+            TestingCoroutineDispatcherProvider(mainImmediate = UnconfinedTestDispatcher(testScheduler)),
+        )
+        val registry = FakeActivityResultRegistry()
+        bridge.attach(registry, createLifecycle(Lifecycle.State.RESUMED))
+        val first = async { bridge.launch(mockk<IntentSender>()) }
+        runCurrent()
+        val firstRequestCode = registry.launchedRequestCodes.single()
+        registry.dispatchResult(firstRequestCode, Activity.RESULT_OK, mockk<Intent>())
+        first.await()
+
+        // Act
+        backgroundScope.async { bridge.launch(mockk<IntentSender>()) }
+        runCurrent()
+
+        // Assert
+        assertThat(registry.dispatchResult(firstRequestCode, Activity.RESULT_OK, null)).isFalse()
+    }
+
+    @Test
+    fun `GIVEN request canceled WHEN late result delivered and next request launched THEN key unregistered`() =
+        runTest {
+            // Arrange
+            val bridge = createBridge()
+            val registry = FakeActivityResultRegistry()
+            val lifecycle = createLifecycle(Lifecycle.State.RESUMED)
+            bridge.attach(registry, lifecycle)
+            val first = async { bridge.launch(mockk<IntentSender>()) }
+            runCurrent()
+            lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+            lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+            advanceUntilIdle()
+            first.await()
+            val firstRequestCode = registry.launchedRequestCodes.single()
+
+            // Act
+            val isLateResultClaimed = registry.dispatchResult(firstRequestCode, Activity.RESULT_OK, mockk<Intent>())
+            backgroundScope.async { bridge.launch(mockk<IntentSender>()) }
+            runCurrent()
+
+            // Assert
+            assertThat(isLateResultClaimed).isTrue()
+            assertThat(registry.dispatchResult(firstRequestCode, Activity.RESULT_OK, null)).isFalse()
         }
 
     @Test
