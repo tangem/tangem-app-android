@@ -37,6 +37,7 @@ import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.*
+import com.tangem.domain.pay.usecase.FindMoneyAccountCreationOrderUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.visa.error.VisaApiError
@@ -72,6 +73,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
     private val cardDetailsRepository: TangemPayCardDetailsRepository = mockk()
     private val issueCardRepository: TangemPayIssueCardRepository = mockk()
     private val getTangemPayTariffPlanStateUseCase: GetTangemPayTariffPlanStateUseCase = mockk()
+    private val findMoneyAccountCreationOrderUseCase: FindMoneyAccountCreationOrderUseCase = mockk()
 
     private val fetcher = DefaultPaymentAccountStatusFetcher(
         paymentAccountStatusesStore = paymentAccountStatusesStore,
@@ -87,6 +89,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         cardDetailsRepository = cardDetailsRepository,
         issueCardRepository = issueCardRepository,
         getTangemPayTariffPlanStateUseCase = getTangemPayTariffPlanStateUseCase,
+        findMoneyAccountCreationOrderUseCase = findMoneyAccountCreationOrderUseCase,
     )
 
     private val userWalletId = UserWalletId("011")
@@ -234,11 +237,13 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             cardDetailsRepository,
             issueCardRepository,
             getTangemPayTariffPlanStateUseCase,
+            findMoneyAccountCreationOrderUseCase,
         )
         // Relaxed mocks don't need clearing — deviceSecurity, eligibilityManager, paymentAccountStatusesStore
         // are relaxed and consistent with their relaxed defaults (false, empty, etc.)
         clearMocks(paymentAccountStatusesStore, answers = false)
         every { tangemPayCurrencyFactory.createNetworkStatuses(any(), any(), any()) } returns emptyList()
+        coEvery { findMoneyAccountCreationOrderUseCase(userWalletId) } returns null.right()
     }
 
     /**
@@ -672,6 +677,51 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 PaymentAccountStatusValue.KycRequired(source = StatusSource.ACTUAL, customerId = "cust_1"),
             )
         }
+
+        @Test
+        fun `GIVEN KYC required AND active money account order WHEN invoke THEN NotCreated stored`() = runTest {
+            // Arrange
+            stubHappyPath(buildCustomerInfo(customerId = "cust_1").copy(kycStatus = KycStatus.REQUIRED))
+            coEvery {
+                findMoneyAccountCreationOrderUseCase(userWalletId)
+            } returns activeOrder(id = "ma_order", type = OrderType.ACCOUNT_ISSUE_BANKING_RAIN).right()
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.map { it.value }.last()).isEqualTo(PaymentAccountStatusValue.NotCreated)
+        }
+
+        @Test
+        fun `GIVEN KYC required AND money account order lookup fails WHEN invoke THEN Unavailable stored`() =
+            runTest {
+                // Arrange
+                stubHappyPath(buildCustomerInfo(customerId = "cust_1").copy(kycStatus = KycStatus.REQUIRED))
+                coEvery {
+                    findMoneyAccountCreationOrderUseCase(userWalletId)
+                } returns VisaApiError.Unspecified.left()
+                val storedStatuses = captureStoredStatuses()
+
+                // Act
+                fetcher.invoke(params)
+
+                // Assert
+                assertThat(storedStatuses.map { it.value }.last()).isEqualTo(PaymentAccountStatusValue.Error.Unavailable)
+            }
+
+        @Test
+        fun `GIVEN KYC approved WHEN invoke THEN money account order is not looked up`() = runTest {
+            // Arrange
+            stubHappyPath(buildCustomerInfo(customerId = "cust_1"))
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            coVerify(exactly = 0) { findMoneyAccountCreationOrderUseCase(any()) }
+        }
     }
 
     /**
@@ -763,6 +813,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             cardDetailsRepository = cardDetailsRepository,
             issueCardRepository = issueCardRepository,
             getTangemPayTariffPlanStateUseCase = getTangemPayTariffPlanStateUseCase,
+            findMoneyAccountCreationOrderUseCase = findMoneyAccountCreationOrderUseCase,
         )
 
         private val account = Account.Payment(userWalletId = userWalletId)

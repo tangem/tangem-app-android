@@ -13,6 +13,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.feature.swap.domain.models.domain.SwapUIMode
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.states.ProviderState
+import com.tangem.feature.swap.models.states.SwapSlippageUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -34,6 +35,7 @@ internal data class SwapStateHolder(
     val predefinedButtons: ImmutableList<PredefinedPercentButtonUM> = persistentListOf(),
     val tosState: TosState? = null,
     val swapUIMode: SwapUIMode = SwapUIMode.Detailed,
+    val slippageUM: SwapSlippageUM = SwapSlippageUM.Hidden,
 
     val transferFooter: TextReference? = null,
 
@@ -48,6 +50,12 @@ internal data class SwapStateHolder(
     val onSwapTypeMenuOpened: () -> Unit = {},
     val onTronBannerShown: () -> Unit = {},
 )
+
+// Kept while quotes reload so the entry point does not blink on every re-quote; other provider states hide it.
+internal val SwapStateHolder.visibleSlippageUM: SwapSlippageUM.Content?
+    get() = (slippageUM as? SwapSlippageUM.Content)?.takeIf {
+        providerState is ProviderState.Content || providerState is ProviderState.Loading
+    }
 
 @Immutable
 sealed class SwapCardState {

@@ -13,6 +13,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.yield.supply.promo.usecase.IsYieldBoostPromoEnabledForTokenUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyEnterStatusUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyEntryComponent
 import com.tangem.features.yield.supply.api.entry.YieldSupplyEntryRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -30,6 +31,7 @@ internal class YieldSupplyEntryModel @Inject constructor(
     private val yieldSupplyEnterStatusUseCase: YieldSupplyEnterStatusUseCase,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val isYieldBoostPromoEnabledForTokenUseCase: IsYieldBoostPromoEnabledForTokenUseCase,
+    private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<YieldSupplyEntryComponent.Params>()
@@ -97,9 +99,21 @@ internal class YieldSupplyEntryModel @Inject constructor(
             val isPromoEnabled = isYieldBoostPromoEnabledForTokenUseCase(userWalletId, token).getOrElse { false }
             YieldSupplyEntryRoute.Promo(
                 cryptoCurrency = token,
-                apy = params.apy,
+                apy = if (isPromoEnabled) baseApy(token) else params.apy,
                 isPromoEnabled = isPromoEnabled,
             )
         }
+    }
+
+    /**
+     * The boost promo multiplies the APY it is handed, so it must be handed the plain market rate: an incentivised
+     * APY would be boosted on top of the incentive.
+     */
+    private suspend fun baseApy(token: CryptoCurrency.Token): String {
+        val market = yieldSupplyGetTokenStatusUseCase(token)
+            .onLeft { TangemLogger.e("Failed to get the base APY of ${token.id}", it) }
+            .getOrNull()
+
+        return market?.apy?.toString() ?: params.apy
     }
 }
