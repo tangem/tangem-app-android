@@ -47,6 +47,7 @@ import com.tangem.features.send.api.subcomponents.destination.entity.Destination
 import com.tangem.features.send.subcomponents.destination.SendDestinationAlertFactory
 import com.tangem.features.send.subcomponents.destination.analytics.EnterAddressSource
 import com.tangem.features.send.subcomponents.destination.analytics.SendDestinationAnalyticEvents
+import com.tangem.features.send.subcomponents.destination.model.converters.JointAccountDestinationDeduplicator
 import com.tangem.features.send.subcomponents.destination.model.converters.JointAccountDestinationFactory
 import com.tangem.features.send.subcomponents.destination.model.transformers.*
 import com.tangem.features.send.subcomponents.destination.ui.state.DestinationWalletUM
@@ -391,7 +392,14 @@ internal class SendDestinationModel @Inject constructor(
                     }
                 }.awaitAll().flatten()
             }
-        }.flowOn(dispatchers.default)
+        }
+            .map { destinations ->
+                JointAccountDestinationDeduplicator.deduplicate(
+                    destinations = destinations,
+                    senderWalletId = userWalletId,
+                )
+            }
+            .flowOn(dispatchers.default)
     }
 
     private fun AccountStatus.CryptoPortfolio.getDestinationWalletUM(wallet: UserWallet): List<DestinationWalletUM> {
