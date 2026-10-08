@@ -9,6 +9,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.promo.usecase.GetBoostedApyUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyPromoComponent
 import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
 import com.tangem.features.yield.supply.impl.promo.YieldSupplyPromoConfig
@@ -22,6 +23,7 @@ internal class YieldSupplyPromoModelTest {
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val appRouter: AppRouter = mockk(relaxed = true)
     private val boostStoryPreloader: YieldBoostStoryPreloader = mockk(relaxed = true)
+    private val getTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase = mockk(relaxed = true)
 
     private val personal: CryptoCurrency = coin(derivationPath = Network.DerivationPath.None)
 

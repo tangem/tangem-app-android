@@ -3,18 +3,32 @@ package com.tangem.features.yield.supply.impl.chart.model
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.domain.yield.supply.models.YieldSupplyMarketChartData
+import com.tangem.core.ui.ds.tabs.TangemSegmentUM
+import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.yield.supply.models.YieldMarketToken
+import com.tangem.domain.yield.supply.models.incentives.YieldAprHistory
+import com.tangem.domain.yield.supply.usecase.GetYieldAprHistoryUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetChartUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
+import com.tangem.features.yield.supply.impl.common.formatter.formatApy
 import com.tangem.features.yield.supply.impl.chart.DefaultYieldSupplyChartComponent
+import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartIncentiveUM
+import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartPeriod
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartUM
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyMarketChartDataUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.text.SimpleDateFormat
+import java.time.Month
+import java.time.format.TextStyle
 import java.util.Calendar
 import java.util.Locale
 import javax.inject.Inject
@@ -24,6 +38,8 @@ internal class YieldSupplyChartModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val yieldSupplyGetChartUseCase: YieldSupplyGetChartUseCase,
+    private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
+    private val getYieldAprHistoryUseCase: GetYieldAprHistoryUseCase,
 ) : Model() {
 
     private val params: DefaultYieldSupplyChartComponent.Params = paramsContainer.require()
@@ -31,22 +47,32 @@ internal class YieldSupplyChartModel @Inject constructor(
     val uiState: StateFlow<YieldSupplyChartUM>
         field = MutableStateFlow<YieldSupplyChartUM>(YieldSupplyChartUM.Loading)
 
+    private var selectedPeriod = params.initialPeriod
+
     init {
-        loadChart()
+        load()
     }
 
-    private fun loadChart() {
+    private fun load() {
         modelScope.launch(dispatchers.default) {
             params.callback?.onStartLoading()
-            yieldSupplyGetChartUseCase(params.cryptoCurrency).onRight { chartData ->
+
+            val market = yieldSupplyGetTokenStatusUseCase(params.cryptoCurrency).getOrNull()
+            val campaign = market?.campaign?.takeIf { it.hasActiveCampaign }
+
+            if (campaign == null || params.isPlainRate) {
+                loadSupplyChart()
+            } else {
+                loadIncentiveChart(market)
+            }
+        }
+    }
+
+    private suspend fun loadSupplyChart() {
+        yieldSupplyGetChartUseCase(params.cryptoCurrency)
+            .onRight { chartData ->
                 if (chartData.y.isEmpty()) {
-                    uiState.update {
-                        YieldSupplyChartUM.Error({
-                            uiState.update { YieldSupplyChartUM.Loading }
-                            loadChart()
-                        })
-                    }
-                    params.callback?.onLoadFail()
+                    showError()
                 } else {
                     uiState.update {
                         YieldSupplyChartUM.Data(
@@ -54,33 +80,141 @@ internal class YieldSupplyChartModel @Inject constructor(
                                 y = chartData.y.toImmutableList(),
                                 x = chartData.x.toImmutableList(),
                                 avr = chartData.avr,
-                                percentFormat = getPercentFormatPattern(chartData),
+                                percentFormat = getPercentFormatPattern(chartData.y),
                             ),
                             monthLables = lastMonthLabels().toImmutableList(),
                         )
                     }
+                    params.callback?.onIncentiveChanged(null)
                     params.callback?.onSuccessLoad()
                 }
-            }.onLeft {
-                uiState.update {
-                    YieldSupplyChartUM.Error({
-                        uiState.update { YieldSupplyChartUM.Loading }
-                        loadChart()
-                    })
+            }
+            .onLeft { showError() }
+    }
+
+    private suspend fun loadIncentiveChart(market: YieldMarketToken) {
+        params.callback?.onIncentiveChanged(incentive(averageApy = null))
+
+        getYieldAprHistoryUseCase(
+            chainId = market.chainId,
+            tokenAddress = market.tokenAddress,
+            days = selectedPeriod.days,
+        )
+            .onRight { history ->
+                if (history.points.isEmpty()) {
+                    showError()
+                } else {
+                    val state = toIncentiveState(history)
+                    uiState.update { state }
+                    params.callback?.onIncentiveChanged(state.incentive)
+                    params.callback?.onSuccessLoad()
                 }
-                params.callback?.onLoadFail()
+            }
+            .onLeft { showError() }
+    }
+
+    private fun toIncentiveState(history: YieldAprHistory): YieldSupplyChartUM.Data {
+        val totals = history.points.map { it.totalApyEst.toDouble() }
+        // The bar is the backend total: a reward cap is only what the total leaves above the base, and the
+        // reported rewards APR is not a third opinion to compose the rate from.
+        val caps = history.points.map { (it.totalApyEst - it.baseApy).coerceAtLeast(BigDecimal.ZERO) }
+        val bases = history.points.mapIndexed { index, point -> (point.totalApyEst - caps[index]).toDouble() }
+        val average = history.points
+            .map(YieldAprHistory.Point::totalApyEst)
+            .reduce(BigDecimal::add)
+            .divide(history.points.size.toBigDecimal(), AVERAGE_SCALE, RoundingMode.HALF_UP)
+
+        return YieldSupplyChartUM.Data(
+            chartData = YieldSupplyMarketChartDataUM(
+                y = bases.toImmutableList(),
+                x = bases.indices.map(Int::toDouble).toImmutableList(),
+                avr = average.toDouble(),
+                percentFormat = getPercentFormatPattern(totals),
+                rewardCaps = caps.map(BigDecimal::toDouble).toImmutableList(),
+                xLabels = axisLabels(history.points).toImmutableList(),
+            ),
+            monthLables = persistentListOf(),
+            incentive = incentive(averageApy = average.formatApy()),
+        )
+    }
+
+    private fun incentive(averageApy: String?) = YieldSupplyChartIncentiveUM(
+        period = selectedPeriod,
+        picker = periodPicker(),
+        averageApy = averageApy,
+        onPeriodSelected = ::onPeriodSelected,
+    )
+
+    /**
+     * A week is short enough to label every bar with its weekday; over three months only the first bar of each
+     * month is labelled, the rest stay blank so the axis does not collapse into noise.
+     */
+    private fun axisLabels(points: List<YieldAprHistory.Point>): List<String> {
+        val locale = Locale.getDefault()
+
+        return when (selectedPeriod) {
+            YieldSupplyChartPeriod.Week -> points.map {
+                it.date.dayOfWeek.getDisplayName(TextStyle.NARROW, locale)
+            }
+            YieldSupplyChartPeriod.ThreeMonths -> {
+                var previousMonth: Month? = null
+
+                points.map { point ->
+                    val month = point.date.month
+                    if (month == previousMonth) {
+                        ""
+                    } else {
+                        previousMonth = month
+                        month.getDisplayName(TextStyle.SHORT, locale)
+                    }
+                }
             }
         }
     }
 
+    private fun periodPicker(): TangemSegmentedPickerUM {
+        val items = YieldSupplyChartPeriod.entries.map { period ->
+            TangemSegmentUM(id = period.name, title = resourceReference(period.titleRes))
+        }
+
+        return TangemSegmentedPickerUM(
+            items = items.toImmutableList(),
+            initialSelectedItem = items.first { it.id == selectedPeriod.name },
+            isFixed = true,
+        )
+    }
+
+    private fun onPeriodSelected(periodName: String) {
+        val period = YieldSupplyChartPeriod.entries.firstOrNull { it.name == periodName } ?: return
+        if (period == selectedPeriod) return
+
+        selectedPeriod = period
+        uiState.update { YieldSupplyChartUM.Loading }
+        load()
+    }
+
+    private fun showError() {
+        uiState.update {
+            YieldSupplyChartUM.Error(
+                onRetry = {
+                    uiState.update { YieldSupplyChartUM.Loading }
+                    load()
+                },
+            )
+        }
+        params.callback?.onLoadFail()
+    }
+
+    /** Narrowest range first: every value under a tenth of a percent is also under a whole one. */
     @Suppress("MagicNumber")
-    private fun getPercentFormatPattern(chartData: YieldSupplyMarketChartData): String {
+    private fun getPercentFormatPattern(values: List<Double>): String {
         return when {
-            chartData.y.all { it < 1.0 } -> "%.1f"
-            chartData.y.all { it < 0.1 } -> "%.2f"
+            values.all { it < 0.1 } -> "%.2f"
+            values.all { it < 1.0 } -> "%.1f"
             else -> "%.0f"
         }
     }
+
     private fun lastMonthLabels(n: Int = MONTH_LABELS_COUNT, locale: Locale = Locale.getDefault()): List<String> {
         val calendar = Calendar.getInstance()
         val formatter = SimpleDateFormat("MMM", locale)
@@ -93,5 +227,6 @@ internal class YieldSupplyChartModel @Inject constructor(
 
     companion object {
         private const val MONTH_LABELS_COUNT = 5
+        private const val AVERAGE_SCALE = 2
     }
 }

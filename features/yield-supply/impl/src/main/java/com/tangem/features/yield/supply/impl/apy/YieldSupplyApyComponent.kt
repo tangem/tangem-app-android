@@ -10,6 +10,8 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.yield.supply.impl.apy.ui.YieldSupplyApyContent
 import com.tangem.features.yield.supply.impl.chart.DefaultYieldSupplyChartComponent
+import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartIncentiveUM
+import com.tangem.features.yield.supply.impl.common.formatter.formatApy
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -21,10 +23,15 @@ internal class YieldSupplyApyComponent(
 
     val loadingState: StateFlow<Boolean>
         field = MutableStateFlow<Boolean>(true)
+
+    private val incentiveState: StateFlow<YieldSupplyChartIncentiveUM?>
+        field = MutableStateFlow<YieldSupplyChartIncentiveUM?>(null)
+
     private val chartComponent = DefaultYieldSupplyChartComponent(
         appComponentContext = child("chartComponent"),
         params = DefaultYieldSupplyChartComponent.Params(
             cryptoCurrency = params.cryptoCurrency as CryptoCurrency.Token,
+            isPlainRate = params.isPlainRate,
             callback = object : DefaultYieldSupplyChartComponent.ModelCallback {
                 override fun onStartLoading() {
                     loadingState.update { true }
@@ -37,6 +44,10 @@ internal class YieldSupplyApyComponent(
                 override fun onLoadFail() {
                     loadingState.update { false }
                 }
+
+                override fun onIncentiveChanged(incentive: YieldSupplyChartIncentiveUM?) {
+                    incentiveState.update { incentive }
+                }
             },
         ),
     )
@@ -48,17 +59,22 @@ internal class YieldSupplyApyComponent(
     @Composable
     override fun BottomSheet() {
         val isLoadingState by loadingState.collectAsState()
+        val incentive by incentiveState.collectAsState()
         YieldSupplyApyContent(
-            apy = stringReference("${params.apy}%"),
+            apy = stringReference(params.apy.formatApy()),
             isLoading = isLoadingState,
+            incentive = incentive,
             onBackClick = params.onBackClick,
             chartComponent = chartComponent,
         )
     }
 
+    /** @property isPlainRate true for the variable-rate sheet, which stays on the Aave history even on a
+     * token whose campaign would otherwise take the chart over */
     data class Params(
         val cryptoCurrency: CryptoCurrency,
         val apy: String,
+        val isPlainRate: Boolean,
         val onBackClick: () -> Unit,
     )
 }
