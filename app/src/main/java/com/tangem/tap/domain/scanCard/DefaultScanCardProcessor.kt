@@ -123,11 +123,11 @@ internal class DefaultScanCardProcessor @Inject constructor(
         }
     }
 
-    private suspend inline fun onScanFailure(
+    private suspend fun onScanFailure(
         analyticsSource: AnalyticsParam.ScreensSources,
         error: TangemError,
-        crossinline onFailure: suspend (TangemError) -> Unit,
-        crossinline onCancel: () -> Unit,
+        onFailure: suspend (TangemError) -> Unit,
+        onCancel: () -> Unit,
     ) {
         if (error is TangemSdkError.CardVerificationFailed) {
             analyticsEventHandler.send(
@@ -160,11 +160,11 @@ internal class DefaultScanCardProcessor @Inject constructor(
         }
     }
 
-    private suspend inline fun onScanSuccess(
+    private suspend fun onScanSuccess(
         scanResponse: ScanResponse,
-        crossinline onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
-        crossinline onWalletNotCreated: suspend () -> Unit,
-        crossinline onSuccess: suspend (ScanResponse) -> Unit,
+        onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
+        onWalletNotCreated: suspend () -> Unit,
+        onSuccess: suspend (ScanResponse) -> Unit,
     ) {
         if (onboardingHelper.isOnboardingCase(scanResponse)) {
             trackingContextProxy.addContext(scanResponse)
@@ -174,7 +174,8 @@ internal class DefaultScanCardProcessor @Inject constructor(
                     scanResponse = scanResponse,
                     mode = AppRoute.Onboarding.Mode.Onboarding,
                 ),
-            ) { onProgressStateChange(it) }
+                onProgressStateChange = onProgressStateChange,
+            )
         } else {
             trackingContextProxy.setContext(scanResponse)
 
@@ -187,7 +188,8 @@ internal class DefaultScanCardProcessor @Inject constructor(
                         scanResponse = scanResponse,
                         mode = AppRoute.Onboarding.Mode.WelcomeOnlyTwin,
                     ),
-                ) { onProgressStateChange(it) }
+                    onProgressStateChange = onProgressStateChange,
+                )
             } else {
                 delay(DELAY_SDK_DIALOG_CLOSE)
                 onSuccess(scanResponse)
@@ -195,7 +197,7 @@ internal class DefaultScanCardProcessor @Inject constructor(
         }
     }
 
-    private suspend inline fun navigateTo(route: AppRoute, onProgressStateChange: (showProgress: Boolean) -> Unit) {
+    private suspend fun navigateTo(route: AppRoute, onProgressStateChange: suspend (showProgress: Boolean) -> Unit) {
         delay(DELAY_SDK_DIALOG_CLOSE)
         appRouter.push(route)
         onProgressStateChange(false)
