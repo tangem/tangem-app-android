@@ -28,6 +28,7 @@ dependencies {
     api(projects.domain.common)
     api(projects.domain.core)
     api(projects.domain.networks)
+    api(projects.domain.quotes)
     api(projects.domain.visa)
     // endregion
 

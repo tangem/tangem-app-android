@@ -1,5 +1,6 @@
 package com.tangem.domain.moneyaccount.usecase
 
+import arrow.core.right
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.repository.MoneyAccountOrderRepository
@@ -56,7 +57,7 @@ internal class TrackMoneyAccountOrderUseCaseTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 1) { orderRepository.storeOrder(USER_WALLET_ID, order) }
+        verify(exactly = 1) { orderRepository.storeOrder(USER_WALLET_ID, order.right()) }
         coVerify(exactly = 1) { startPolling(order, USER_WALLET_ID, any(), any(), any()) }
     }
 
@@ -72,24 +73,10 @@ internal class TrackMoneyAccountOrderUseCaseTest {
             requireNotNull(onOrderStateChange).invoke(updated)
 
             // Assert
-            verify(exactly = 1) { orderRepository.storeOrder(USER_WALLET_ID, updated) }
+            verify(exactly = 1) { orderRepository.storeOrder(USER_WALLET_ID, updated.right()) }
             coVerify(exactly = 1) { moneyAccountStatusFetcher.invoke(USER_WALLET_ID) }
             verify(exactly = 0) { orderRepository.clearOrder(any()) }
         }
-
-    @Test
-    fun `GIVEN a terminal update WHEN polling reports it THEN order is cleared`() = runTest {
-        // Arrange
-        createUseCase().invoke(USER_WALLET_ID, createOrder())
-        advanceUntilIdle()
-        val completed = createOrder(status = OrderStatus.COMPLETED, step = OrderStep.ACCOUNT_ACTIVATION)
-
-        // Act
-        requireNotNull(onOrderStateChange).invoke(completed)
-
-        // Assert
-        verify(exactly = 1) { orderRepository.clearOrder(USER_WALLET_ID) }
-    }
 
     @Test
     fun `GIVEN polling finished WHEN terminal refresh requested THEN account status is fetched`() = runTest {

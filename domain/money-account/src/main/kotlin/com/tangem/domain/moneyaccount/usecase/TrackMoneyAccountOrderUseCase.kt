@@ -1,5 +1,6 @@
 package com.tangem.domain.moneyaccount.usecase
 
+import arrow.core.right
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.repository.MoneyAccountOrderRepository
@@ -15,7 +16,7 @@ class TrackMoneyAccountOrderUseCase(
     private val appCoroutineScope: AppCoroutineScope,
 ) {
     operator fun invoke(userWalletId: UserWalletId, order: TangemPayOrderInfo) {
-        orderRepository.storeOrder(userWalletId = userWalletId, order = order)
+        orderRepository.storeOrder(userWalletId = userWalletId, order = order.right())
         appCoroutineScope.launch {
             track(userWalletId = userWalletId, order = order)
         }
@@ -26,7 +27,7 @@ class TrackMoneyAccountOrderUseCase(
             order = order,
             userWalletId = userWalletId,
             onOrderStateChange = { updated ->
-                orderRepository.storeOrder(userWalletId = userWalletId, order = updated)
+                orderRepository.storeOrder(userWalletId = userWalletId, order = updated.right())
                 moneyAccountStatusFetcher.invoke(userWalletId)
             },
             onTerminalRefresh = { walletId -> moneyAccountStatusFetcher(walletId) },
