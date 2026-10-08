@@ -10,7 +10,8 @@ import com.tangem.data.sociallogin.crypto.SocialBackupCipher
 import com.tangem.data.sociallogin.crypto.SocialBackupCryptoError
 import com.tangem.data.sociallogin.crypto.SocialBackupFileData
 import com.tangem.data.sociallogin.crypto.SocialBackupPayload
-import com.tangem.data.sociallogin.store.SocialBackupStore
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.sociallogin.models.RecoveryKey
 import com.tangem.domain.sociallogin.models.RestoredSocialBackup
@@ -25,8 +26,10 @@ import com.tangem.google.drive.DriveFileMetadata
 import com.tangem.google.drive.GoogleDriveApi
 import com.tangem.google.drive.GoogleDriveTokenProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.runSuspendCatching
+import dagger.Lazy
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -53,7 +56,8 @@ import kotlinx.serialization.json.decodeFromStream
 internal class DefaultSocialBackupRepository(
     private val api: GoogleDriveApi,
     private val tokenProvider: GoogleDriveTokenProvider,
-    private val store: SocialBackupStore,
+    // the wallets list reaches this repository through IsWalletBackedUpUseCase
+    private val userWalletsListRepository: Lazy<UserWalletsListRepository>,
     private val cipher: SocialBackupCipher,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SocialBackupRepository {
@@ -159,21 +163,30 @@ internal class DefaultSocialBackupRepository(
         }
 
     override suspend fun isSocialBackupCompleted(walletId: UserWalletId): Boolean =
-        walletId.stringValue in store.getCompletedWalletIds().first()
+        isSocialBackupCompletedFlow(walletId).first()
 
     override fun isSocialBackupCompletedFlow(walletId: UserWalletId): Flow<Boolean> =
-        store.getCompletedWalletIds().map { walletId.stringValue in it }
+        userWalletsListRepository.get().userWallets
+            .filterNotNull()
+            .map { userWallets -> userWallets.findHot(walletId)?.isSocialBackupCompleted == true }
+            .distinctUntilChanged()
 
     override suspend fun setSocialBackupCompleted(
         walletId: UserWalletId,
         isCompleted: Boolean,
-    ): Either<SocialLoginError, Unit> = runSuspendCatching {
-        store.setCompleted(walletId = walletId.stringValue, isCompleted = isCompleted)
+    ): Either<SocialLoginError, Unit> {
+        val repository = userWalletsListRepository.get()
+        val userWallet = repository.userWalletsSync().findHot(walletId)
+        if (userWallet == null || userWallet.isSocialBackupCompleted == isCompleted) return Either.Right(Unit)
+
+        return repository
+            .saveWithoutLock(userWallet = userWallet.copy(isSocialBackupCompleted = isCompleted), canOverride = true)
+            .mapLeft { SocialLoginError.PersistenceFailed() }
+            .map { }
     }
-        .fold(
-            onSuccess = { Either.Right(Unit) },
-            onFailure = { Either.Left(SocialLoginError.PersistenceFailed(it)) },
-        )
+
+    private fun List<UserWallet>.findHot(walletId: UserWalletId): UserWallet.Hot? =
+        firstOrNull { it.walletId == walletId } as? UserWallet.Hot
 
     /** `null` when the secret cannot be serialized, i.e. the mnemonic is not a BIP39 phrase */
     private fun encodeBackup(
