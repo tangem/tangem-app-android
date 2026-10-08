@@ -177,6 +177,48 @@ internal class TxHistoryTitleConverterTest {
             ),
             expected = resRef(R.string.transaction_history_status_withdraw_failed),
         ),
+        // A non-withdraw Send is a plain transfer, so it follows the same own-vs-external wording as Transfer
+        TitleModel(
+            tx = txInfo(
+                type = TransactionType.YieldSupply.Send(address = "0xdest", isYieldSupplyWithdraw = false),
+                isOutgoing = true,
+            ),
+            isOwnTransfer = true,
+            expected = resRef(R.string.common_transferred),
+        ),
+        TitleModel(
+            tx = txInfo(
+                type = TransactionType.YieldSupply.Send(address = "0xdest", isYieldSupplyWithdraw = false),
+                isOutgoing = false,
+            ),
+            isOwnTransfer = true,
+            expected = resRef(R.string.common_transferred),
+        ),
+        TitleModel(
+            tx = txInfo(
+                type = TransactionType.YieldSupply.Send(address = "0xdest", isYieldSupplyWithdraw = false),
+                isOutgoing = true,
+                status = TransactionStatus.Unconfirmed,
+            ),
+            isOwnTransfer = true,
+            expected = resRef(R.string.transaction_history_status_transferring),
+        ),
+        TitleModel(
+            tx = txInfo(
+                type = TransactionType.YieldSupply.Send(address = "0xdest", isYieldSupplyWithdraw = false),
+                isOutgoing = true,
+                status = TransactionStatus.Failed,
+            ),
+            isOwnTransfer = true,
+            expected = resRef(R.string.transaction_history_status_transfer_failed),
+        ),
+        TitleModel(
+            tx = txInfo(
+                type = TransactionType.YieldSupply.Send(address = "0xdest", isYieldSupplyWithdraw = false),
+                isOutgoing = true,
+            ),
+            expected = resRef(R.string.common_sent),
+        ),
         TitleModel(
             tx = txInfo(TransactionType.UnknownOperation),
             expected = resRef(R.string.transaction_history_operation),
