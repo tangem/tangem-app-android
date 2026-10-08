@@ -12,9 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.account.AccountIconSize
-import com.tangem.core.ui.components.account.AccountResIcon
-import com.tangem.core.ui.components.account.PredictionAccountIcon
-import com.tangem.core.ui.components.currency.icon.CurrencyIcon
+import com.tangem.core.ui.components.account.PredictionAccountResIcon
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.stringReference
@@ -23,11 +21,9 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.features.polymarket.impl.common.PolymarketConst
-import com.tangem.features.polymarket.impl.common.formatPolymarketBalance
 import com.tangem.features.polymarket.impl.common.formatPolymarketEnteredAmount
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
-import com.tangem.features.polymarket.impl.placeprediction.entity.CollateralUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.balance
 import com.tangem.features.polymarket.impl.common.formatPolymarketShares
@@ -39,7 +35,6 @@ import java.math.BigDecimal
 internal fun PredictionPaymentBlock(
     amountValue: String,
     payout: BigDecimal?,
-    collateral: CollateralUM,
     order: OrderSideUM,
     modifier: Modifier = Modifier,
 ) {
@@ -48,13 +43,12 @@ internal fun PredictionPaymentBlock(
             modifier = Modifier.padding(all = 16.dp),
             verticalArrangement = Arrangement.spacedBy(space = 24.dp),
         ) {
-            SourceHeader(collateral = collateral, order = order)
+            SourceHeader(order = order)
             when (order) {
-                is OrderSideUM.Buy -> BuyAmountRow(amountValue = amountValue, payout = payout, collateral = collateral)
+                is OrderSideUM.Buy -> BuyAmountRow(amountValue = amountValue, payout = payout)
                 is OrderSideUM.Sell -> SellAmountRow(
                     amountValue = amountValue,
                     payout = payout,
-                    collateral = collateral,
                 )
             }
         }
@@ -62,7 +56,7 @@ internal fun PredictionPaymentBlock(
 }
 
 @Composable
-private fun SourceHeader(collateral: CollateralUM, order: OrderSideUM) {
+private fun SourceHeader(order: OrderSideUM) {
     Column(verticalArrangement = Arrangement.spacedBy(space = 2.dp)) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(space = 4.dp),
@@ -76,24 +70,20 @@ private fun SourceHeader(collateral: CollateralUM, order: OrderSideUM) {
                     },
                 ),
             )
-            AccountResIcon(
-                imageVector = PredictionAccountIcon.imageVector,
-                color = PredictionAccountIcon.color,
-                size = AccountIconSize.ExtraSmall,
-            )
+            PredictionAccountResIcon(size = AccountIconSize.ExtraSmall)
             HeaderText(text = stringResourceSafe(R.string.prediction_account_title))
         }
         HeaderText(
             text = stringResourceSafe(
                 R.string.common_balance,
-                order.balance.formatPolymarketBalance(tokenSymbol = collateral.tokenSymbol),
+                order.balance.formatPolymarketMoney(),
             ),
         )
     }
 }
 
 @Composable
-private fun BuyAmountRow(amountValue: String, payout: BigDecimal?, collateral: CollateralUM) {
+private fun BuyAmountRow(amountValue: String, payout: BigDecimal?) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(space = 12.dp),
@@ -122,12 +112,12 @@ private fun BuyAmountRow(amountValue: String, payout: BigDecimal?, collateral: C
                 )
             }
         }
-        collateral.iconState?.let { CurrencyIcon(state = it, shouldDisplayNetwork = true) }
+        PredictionAccountResIcon(size = AccountIconSize.Default)
     }
 }
 
 @Composable
-private fun SellAmountRow(amountValue: String, payout: BigDecimal?, collateral: CollateralUM) {
+private fun SellAmountRow(amountValue: String, payout: BigDecimal?) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(space = 12.dp),
@@ -151,7 +141,7 @@ private fun SellAmountRow(amountValue: String, payout: BigDecimal?, collateral: 
                 color = TangemTheme.colors3.text.secondary,
             )
         }
-        collateral.iconState?.let { CurrencyIcon(state = it, shouldDisplayNetwork = true) }
+        PredictionAccountResIcon(size = AccountIconSize.Default)
     }
 }
 
