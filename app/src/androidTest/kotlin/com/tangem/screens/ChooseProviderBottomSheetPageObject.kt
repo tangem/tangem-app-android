@@ -43,6 +43,12 @@ class ChooseProviderBottomSheetPageObject(semanticsProvider: SemanticsNodeIntera
         useUnmergedTree = true
     }
 
+    fun approvalSettingsButton(providerName: String): KNode = child {
+        hasTestTag(SwapTokenScreenTestTags.PROVIDER_APPROVAL_SETTINGS)
+        hasAnySibling(withText(providerName))
+        useUnmergedTree = true
+    }
+
     fun unavailableProviderItem(name: String): KNode = child {
         hasClickAction()
         hasAnyDescendant(withText(name))
