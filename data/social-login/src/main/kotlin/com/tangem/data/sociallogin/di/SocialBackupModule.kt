@@ -3,8 +3,6 @@ package com.tangem.data.sociallogin.di
 import com.tangem.data.sociallogin.backup.DefaultSocialBackupRepository
 import com.tangem.data.sociallogin.crypto.DefaultRecoveryKeyGenerator
 import com.tangem.data.sociallogin.crypto.SocialBackupCipher
-import com.tangem.data.sociallogin.store.SocialBackupStore
-import com.tangem.data.sociallogin.store.UserWalletSocialBackupStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.sociallogin.crypto.RecoveryKeyGenerator
 import com.tangem.domain.sociallogin.repository.SocialBackupRepository
@@ -32,22 +30,16 @@ internal interface SocialBackupModule {
 
         @Provides
         @Singleton
-        fun provideSocialBackupStore(userWalletsListRepository: Lazy<UserWalletsListRepository>): SocialBackupStore {
-            return UserWalletSocialBackupStore(userWalletsListRepositoryLazy = userWalletsListRepository)
-        }
-
-        @Provides
-        @Singleton
         fun provideSocialBackupRepository(
             api: GoogleDriveApi,
             @AppDataDrive tokenProvider: GoogleDriveTokenProvider,
-            store: SocialBackupStore,
+            userWalletsListRepository: Lazy<UserWalletsListRepository>,
             dispatchers: CoroutineDispatcherProvider,
         ): SocialBackupRepository {
             return DefaultSocialBackupRepository(
                 api = api,
                 tokenProvider = tokenProvider,
-                store = store,
+                userWalletsListRepository = userWalletsListRepository,
                 cipher = SocialBackupCipher(),
                 dispatchers = dispatchers,
             )
