@@ -1136,7 +1136,12 @@ internal class IntroductionModelTest {
             // Assert
             assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
             verify(exactly = 1) {
-                router.push(AppRoute.AddExistingWallet(mode = AppRoute.AddExistingWallet.Mode.RecoveryPhrase))
+                router.push(
+                    AppRoute.AddExistingWallet(
+                        mode = AppRoute.AddExistingWallet.Mode.RecoveryPhrase,
+                        shouldSendOnboardingStarted = true,
+                    ),
+                )
             }
             // The import flow owns the hot wallet analytics context; a second push here would overwrite its parent.
             verify(exactly = 0) { trackingContextProxy.addHotWalletContext() }
@@ -1155,7 +1160,12 @@ internal class IntroductionModelTest {
             // Assert
             assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
             verify(exactly = 1) {
-                router.push(AppRoute.AddExistingWallet(mode = AppRoute.AddExistingWallet.Mode.CloudRestore))
+                router.push(
+                    AppRoute.AddExistingWallet(
+                        mode = AppRoute.AddExistingWallet.Mode.CloudRestore,
+                        shouldSendOnboardingStarted = true,
+                    ),
+                )
             }
         }
 
@@ -1774,7 +1784,12 @@ internal class IntroductionModelTest {
             // Assert
             verify(exactly = 1) { videoPlayer.restart() }
             verify(exactly = 1) {
-                router.push(AppRoute.AddExistingWallet(mode = AppRoute.AddExistingWallet.Mode.RecoveryPhrase))
+                router.push(
+                    AppRoute.AddExistingWallet(
+                        mode = AppRoute.AddExistingWallet.Mode.RecoveryPhrase,
+                        shouldSendOnboardingStarted = true,
+                    ),
+                )
             }
         }
 
