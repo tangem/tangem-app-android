@@ -45,7 +45,10 @@ internal class McpIntentModelTest {
 
     private fun createModel(testScope: TestScope): McpIntentModel {
         val params = McpIntentComponent.Params(
-            request = McpRequest.Intent(id = "my_intent_id123", source = "express", type = "exchange"),
+            request = McpRequest.Intent(
+                id = "my_intent_id123",
+                source = McpRequest.Intent.Source.Express(McpRequest.Intent.Source.Express.Type.EXCHANGE),
+            ),
         )
         return McpIntentModel(
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),

@@ -14,6 +14,8 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
 
     private val mcpRequestService: McpRequestService = mockk(relaxed = true)
 
+    private val exchangeSource = McpRequest.Intent.Source.Express(McpRequest.Intent.Source.Express.Type.EXCHANGE)
+
     private val validParams = mapOf("id" to "my_intent_id123", "source" to "express", "type" to "exchange")
 
     @BeforeEach
@@ -28,7 +30,7 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
 
         // Assert
         verify(exactly = 1) {
-            mcpRequestService.request(McpRequest.Intent(id = "my_intent_id123", source = "express", type = "exchange"))
+            mcpRequestService.request(McpRequest.Intent(id = "my_intent_id123", source = exchangeSource))
         }
     }
 
@@ -43,7 +45,7 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
 
         // Assert
         verify(exactly = 1) {
-            mcpRequestService.request(McpRequest.Intent(id = "my_intent_id123", source = "express", type = "exchange"))
+            mcpRequestService.request(McpRequest.Intent(id = "my_intent_id123", source = exchangeSource))
         }
     }
 
@@ -54,7 +56,7 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
 
         // Assert
         verify(exactly = 1) {
-            mcpRequestService.request(McpRequest.Intent(id = "my_intent_id123", source = "express", type = "exchange"))
+            mcpRequestService.request(McpRequest.Intent(id = "my_intent_id123", source = exchangeSource))
         }
     }
 
@@ -101,6 +103,18 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
         // Act
         DefaultMcpIntentDeepLinkHandler(
             queryParams = validParams + ("type" to "onramp"),
+            mcpRequestService = mcpRequestService,
+        )
+
+        // Assert
+        verify(exactly = 0) { mcpRequestService.request(any()) }
+    }
+
+    @Test
+    fun `GIVEN express intent of an unknown operation WHEN handler created THEN no request is sent`() {
+        // Act
+        DefaultMcpIntentDeepLinkHandler(
+            queryParams = validParams + ("type" to "refund"),
             mcpRequestService = mcpRequestService,
         )
 
