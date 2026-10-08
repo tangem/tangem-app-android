@@ -138,15 +138,24 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
             id = id,
             jsonRepresentation = collateralAdapter.toJson(collateral),
             date = date.withLocalZone(),
-            currency = Currency.getInstance("usd"),
+            currency = Currency.getInstance("USD"),
             amount = collateral.amount,
             transactionHash = collateral.transactionHash,
-            type = if (collateral.amount.isPositive() || collateral.amount.isZero()) {
+            type = convertCollateralType(kind = collateral.kind, amount = collateral.amount),
+        )
+    }
+
+    private fun convertCollateralType(kind: String?, amount: BigDecimal): TangemPayTxHistoryItem.Type {
+        return when (kind?.uppercase()) {
+            "DEPOSIT" -> TangemPayTxHistoryItem.Type.Deposit
+            "WITHDRAWAL" -> TangemPayTxHistoryItem.Type.Withdrawal
+            "CASHBACK" -> TangemPayTxHistoryItem.Type.Cashback
+            else -> if (amount.isPositive() || amount.isZero()) {
                 TangemPayTxHistoryItem.Type.Deposit
             } else {
                 TangemPayTxHistoryItem.Type.Withdrawal
-            },
-        )
+            }
+        }
     }
 
     private fun DateTime.withLocalZone(): DateTime {

@@ -68,6 +68,8 @@ object TangemPayPushPayloadToTxHistoryItemConverter {
         val transactionHash = payload[KEY_TRANSACTION_HASH]?.ifEmpty { null } ?: return null
         val postedAt = payload[KEY_POSTED_AT]?.let(::parseDateTime) ?: return null
         val currency = payload[KEY_CURRENCY]?.let(::parseCurrency) ?: return null
+        val isCashback = payload[KEY_TYPE]?.let(TangemPayPushNotificationType::fromValue) ==
+            TangemPayPushNotificationType.CASHBACK_TOPUP
 
         return TangemPayTxHistoryItem.Collateral(
             id = id,
@@ -76,10 +78,10 @@ object TangemPayPushPayloadToTxHistoryItemConverter {
             currency = currency,
             amount = amount,
             transactionHash = transactionHash,
-            type = if (amount >= BigDecimal.ZERO) {
-                TangemPayTxHistoryItem.Type.Deposit
-            } else {
-                TangemPayTxHistoryItem.Type.Withdrawal
+            type = when {
+                isCashback -> TangemPayTxHistoryItem.Type.Cashback
+                amount >= BigDecimal.ZERO -> TangemPayTxHistoryItem.Type.Deposit
+                else -> TangemPayTxHistoryItem.Type.Withdrawal
             },
         )
     }

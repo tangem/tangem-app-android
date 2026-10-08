@@ -68,7 +68,7 @@ sealed class TangemPayTxHistoryItem {
     ) : TangemPayTxHistoryItem()
 
     enum class Type {
-        Deposit, Withdrawal
+        Deposit, Withdrawal, Cashback
     }
 
     enum class Status {
