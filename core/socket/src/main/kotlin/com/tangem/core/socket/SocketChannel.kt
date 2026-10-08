@@ -7,7 +7,7 @@ import kotlinx.serialization.SerializationStrategy
 
 interface SocketSession {
 
-    /** @return true when the frame was queued, not when it was delivered */
+    /** @return true when the frame was queued for the current connection attempt, not when it was delivered */
     fun send(text: String): Boolean
 
     fun <T> send(serializer: SerializationStrategy<T>, value: T): Boolean
