@@ -19,6 +19,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_info_16
+import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
@@ -39,7 +40,7 @@ internal fun PredictionDetailsBlock(state: PlacePredictionUM, onFeeClick: () -> 
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         TangemBadge(
-                            text = stringReference(state.collateral.tokenSymbol),
+                            text = stringReference(PolymarketConst.USD_CODE),
                             size = TangemBadge.Size.X6,
                         )
                         DetailValue(
