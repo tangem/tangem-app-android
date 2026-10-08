@@ -72,6 +72,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import com.tangem.core.res.R as CoreResR
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -948,7 +949,7 @@ internal class IntroductionModelTest {
     inner class HaveWalletSheet {
 
         @Test
-        fun `GIVEN no sheet WHEN i have a wallet clicked THEN the options open and the tap is reported`() {
+        fun `GIVEN no sheet WHEN i have a wallet clicked THEN the options open and the tap and opening are reported`() {
             // Arrange
             val model = createModel()
 
@@ -957,11 +958,15 @@ internal class IntroductionModelTest {
 
             // Assert
             assertThat(model.haveWalletStep()).isInstanceOf(HaveWalletUM.Step.Options::class.java)
-            assertThat(sentEvents).containsExactly(SCREEN_OPENED, IntroductionProcess.ButtonIHaveWallet()).inOrder()
+            assertThat(sentEvents).containsExactly(
+                SCREEN_OPENED,
+                IntroductionProcess.ButtonIHaveWallet(),
+                IntroductionProcess.IHaveWalletIntroScreenOpened(),
+            ).inOrder()
         }
 
         @Test
-        fun `GIVEN an open sheet WHEN i have a wallet clicked again THEN it stays the same sheet`() {
+        fun `GIVEN an open sheet WHEN i have a wallet clicked again THEN it stays the same sheet reported once`() {
             // Arrange
             val model = createModel()
             model.uiState.value.onIHaveWalletClick()
@@ -972,6 +977,11 @@ internal class IntroductionModelTest {
 
             // Assert
             assertThat(model.uiState.value.haveWalletBottomSheetConfig).isSameInstanceAs(opened)
+            assertThat(sentEvents).containsExactly(
+                SCREEN_OPENED,
+                IntroductionProcess.ButtonIHaveWallet(),
+                IntroductionProcess.IHaveWalletIntroScreenOpened(),
+            ).inOrder()
         }
 
         @Test
@@ -988,6 +998,7 @@ internal class IntroductionModelTest {
             assertThat(sentEvents).containsExactly(
                 SCREEN_OPENED,
                 IntroductionProcess.ButtonIHaveWallet(),
+                IntroductionProcess.IHaveWalletIntroScreenOpened(),
                 IntroductionProcess.ButtonImportExistingWallet(),
                 OnboardingAnalyticsEvent.Backup.ImportWalletRequest(AnalyticsParam.CloudBackupAvailability.Available),
             ).inOrder()
@@ -1059,7 +1070,7 @@ internal class IntroductionModelTest {
         }
 
         @Test
-        fun `GIVEN the scan started from the sheet WHEN it fails THEN the viewer stays on the welcome screen`() {
+        fun `GIVEN the scan started from the sheet WHEN it fails THEN no sheet returns and no opening is reported`() {
             // Arrange
             val model = createModel()
             model.openHaveWallet().cardOrRing.onClick()
@@ -1070,6 +1081,12 @@ internal class IntroductionModelTest {
             // Assert
             assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
             assertThat(model.uiState.value.bottomSheetConfig).isNull()
+            assertThat(sentEvents).containsExactly(
+                SCREEN_OPENED,
+                IntroductionProcess.ButtonIHaveWallet(),
+                IntroductionProcess.IHaveWalletIntroScreenOpened(),
+                IntroductionProcess.ButtonSignInWithCard(),
+            ).inOrder()
         }
 
         @Test
@@ -1799,6 +1816,22 @@ internal class IntroductionModelTest {
         }
 
         @Test
+        fun `GIVEN a referral WHEN i have a wallet clicked THEN the sheet opening is sent without params`() {
+            // Arrange
+            coEvery { appsFlyerRepository.getConversionData() } returns AppsFlyerConversionData("ref-42", null)
+            val model = createModel()
+
+            // Act
+            model.uiState.value.onIHaveWalletClick()
+
+            // Assert
+            val openings = sentEvents.filterIsInstance<IntroductionProcess.IHaveWalletIntroScreenOpened>()
+            assertThat(openings.map { it.id to it.params }).containsExactly(
+                "[Introduction Process] I Have Wallet Intro Screen Opened" to emptyMap<String, String>(),
+            )
+        }
+
+        @Test
         fun `GIVEN the create sheet WHEN the card row is picked THEN the hardware choice is reported`() {
             // Arrange
             val model = createModel()
@@ -1851,7 +1884,33 @@ internal class IntroductionModelTest {
             assertThat(sentEvents).containsExactly(
                 SCREEN_OPENED,
                 IntroductionProcess.ButtonIHaveWallet(),
+                IntroductionProcess.IHaveWalletIntroScreenOpened(),
                 SheetDismissed(SheetDismissed.Sheet.IHaveWallet, SheetDismissed.DismissReason.CloseButton),
+            ).inOrder()
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideHaveWalletDismissModels")
+        fun `GIVEN the have wallet options left WHEN i have a wallet clicked again THEN the opening is reported again`(
+            model: DismissModel,
+        ) {
+            // Arrange
+            val introductionModel = createModel()
+            introductionModel.uiState.value.onIHaveWalletClick()
+            model.leave(introductionModel)
+
+            // Act
+            introductionModel.uiState.value.onIHaveWalletClick()
+
+            // Assert
+            assertThat(introductionModel.uiState.value.haveWalletBottomSheetConfig?.isShown).isTrue()
+            assertThat(sentEvents).containsExactly(
+                SCREEN_OPENED,
+                IntroductionProcess.ButtonIHaveWallet(),
+                IntroductionProcess.IHaveWalletIntroScreenOpened(),
+                SheetDismissed(SheetDismissed.Sheet.IHaveWallet, model.reason),
+                IntroductionProcess.ButtonIHaveWallet(),
+                IntroductionProcess.IHaveWalletIntroScreenOpened(),
             ).inOrder()
         }
 
@@ -1925,7 +1984,7 @@ internal class IntroductionModelTest {
         }
 
         @Test
-        fun `GIVEN the import step WHEN back pressed THEN the back is reported and the options return`() {
+        fun `GIVEN the import step WHEN back pressed THEN only the back is reported and the options return`() {
             // Arrange
             val model = createModel()
             model.uiState.value.onIHaveWalletClick()
@@ -1939,6 +1998,7 @@ internal class IntroductionModelTest {
             assertThat(sentEvents).containsExactly(
                 SCREEN_OPENED,
                 IntroductionProcess.ButtonIHaveWallet(),
+                IntroductionProcess.IHaveWalletIntroScreenOpened(),
                 IntroductionProcess.ButtonImportExistingWallet(),
                 OnboardingAnalyticsEvent.Backup.ImportWalletRequest(AnalyticsParam.CloudBackupAvailability.Available),
                 SheetDismissed(SheetDismissed.Sheet.ImportExisting, SheetDismissed.DismissReason.BackButton),
@@ -1977,6 +2037,7 @@ internal class IntroductionModelTest {
             assertThat(sentEvents).containsExactly(
                 SCREEN_OPENED,
                 IntroductionProcess.ButtonIHaveWallet(),
+                IntroductionProcess.IHaveWalletIntroScreenOpened(),
                 IntroductionProcess.ButtonImportExistingWallet(),
                 OnboardingAnalyticsEvent.Backup.ImportWalletRequest(AnalyticsParam.CloudBackupAvailability.Available),
                 SheetDismissed(SheetDismissed.Sheet.ImportExisting, SheetDismissed.DismissReason.BackButton),
@@ -2000,6 +2061,7 @@ internal class IntroductionModelTest {
             assertThat(sentEvents).containsExactly(
                 SCREEN_OPENED,
                 IntroductionProcess.ButtonIHaveWallet(),
+                IntroductionProcess.IHaveWalletIntroScreenOpened(),
                 IntroductionProcess.ButtonImportExistingWallet(),
                 OnboardingAnalyticsEvent.Backup.ImportWalletRequest(AnalyticsParam.CloudBackupAvailability.Available),
             ).inOrder()
@@ -2028,6 +2090,11 @@ internal class IntroductionModelTest {
         private fun provideTestModels() = listOf(
             DismissModel(reason = SheetDismissed.DismissReason.CloseButton) { it.createSheet().onCloseClick() },
             DismissModel(reason = SheetDismissed.DismissReason.Dismissed) { it.closeCreateWalletSheet() },
+        )
+
+        private fun provideHaveWalletDismissModels() = listOf(
+            DismissModel(reason = SheetDismissed.DismissReason.CloseButton) { it.haveWalletContent().onCloseClick() },
+            DismissModel(reason = SheetDismissed.DismissReason.Dismissed) { it.closeHaveWalletSheet() },
         )
     }
 
@@ -2058,6 +2125,7 @@ internal class IntroductionModelTest {
 
             // Assert
             assertThat(model.uiState.value.haveWalletBottomSheetConfig).isNull()
+            assertThat(sentEvents.filterIsInstance<IntroductionProcess.IHaveWalletIntroScreenOpened>()).isEmpty()
         }
 
         @Test
