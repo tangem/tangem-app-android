@@ -214,6 +214,7 @@ internal abstract class SwapModelTestBase {
         fromAmount: java.math.BigDecimal? = null,
         providerId: String? = null,
         accountFlow: AccountFlow? = null,
+        intentId: String? = null,
     ): SwapComponent.Params = SwapComponent.Params(
         userWalletId = userWalletId,
         fromCryptoCurrency = fromCryptoCurrency,
@@ -223,6 +224,7 @@ internal abstract class SwapModelTestBase {
         toCryptoCurrency = toCryptoCurrency,
         fromAmount = fromAmount,
         providerId = providerId,
+        intentId = intentId,
     )
 
     @Suppress("LongMethod")

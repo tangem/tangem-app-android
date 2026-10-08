@@ -44,6 +44,11 @@ crypto portfolio — resolved by `InitialCurrenciesResolver` (matched by token i
 preferring the FROM account's instance). If the token isn't in the wallet, the TO slot stays empty. Used by
 Send-with-Swap's "Swap token" notice when a pair is available only in the regular Swap flow.
 
+`intentId` (set only by the MCP intent flow, `AppRoute.Swap.intentId`) binds a swap session to an agent's exchange
+intent. It is read from the immutable `params` and sent as `intentId` with every V1 `exchange-data` request: the DEX
+quote-time prefetch (`findBestQuote`, repeated every `UPDATE_DELAY`) and the CEX call at confirm (`onSwap`). It is
+never kept in `SwapProcessDataState`, and Send-with-Swap (`swap-v2`) does not send it.
+
 `SwapModel` state worth knowing: `dataStateStateFlow` (reactive domain data) and
 `uiState: SwapStateHolder` (Compose state); the inner `FeeSelectorRepository` wires the
 send-v2 fee selector to `SwapInteractor.loadSwapFee`/`applySwapFee`.

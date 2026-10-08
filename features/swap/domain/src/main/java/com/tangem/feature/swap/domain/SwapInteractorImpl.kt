@@ -334,6 +334,7 @@ internal class SwapInteractorImpl @Inject constructor(
         amountToSwap: String,
         reduceBalanceBy: BigDecimal,
         customSlippage: BigDecimal?,
+        intentId: String?,
     ): Map<SwapProvider, SwapState> {
         TangemLogger.i(
             """
@@ -373,6 +374,7 @@ internal class SwapInteractorImpl @Inject constructor(
                                     amount = amount,
                                     expressOperationType = ExpressOperationType.SWAP,
                                     customSlippage = customSlippagePercent,
+                                    intentId = intentId,
                                 )
                             } else {
                                 manageDex(
@@ -382,6 +384,7 @@ internal class SwapInteractorImpl @Inject constructor(
                                     amount = amount,
                                     expressOperationType = ExpressOperationType.SWAP,
                                     customSlippage = customSlippagePercent,
+                                    intentId = intentId,
                                 )
                             }
                         }
@@ -408,6 +411,7 @@ internal class SwapInteractorImpl @Inject constructor(
         amount: SwapAmount,
         expressOperationType: ExpressOperationType,
         customSlippage: BigDecimal?,
+        intentId: String?,
     ): Pair<SwapProvider, SwapState>? {
         val maybeQuote = repository.findBestQuote(
             userWallet = fromSwapCurrencyStatus.userWallet,
@@ -512,6 +516,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 isRestricted = maybeQuote.getOrNull()?.isRestricted == true,
                 customSlippage = customSlippage,
                 quoteSlippage = maybeQuote.getOrNull()?.slippage,
+                intentId = intentId,
             )?.let { provider to it }
         } else {
             val quoteBalanceStatus = if (isBalanceWithoutFeeEnough) {
@@ -556,6 +561,7 @@ internal class SwapInteractorImpl @Inject constructor(
         amount: SwapAmount,
         expressOperationType: ExpressOperationType,
         customSlippage: BigDecimal?,
+        intentId: String?,
     ): Pair<SwapProvider, SwapState>? {
         val maybeQuotes = repository.findBestQuote(
             userWallet = fromSwapCurrencyStatus.userWallet,
@@ -600,6 +606,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 isRestricted = maybeQuotes.getOrNull()?.isRestricted == true,
                 customSlippage = customSlippage,
                 quoteSlippage = maybeQuotes.getOrNull()?.slippage,
+                intentId = intentId,
             )?.let { provider to it }
         } else {
             provider to getQuotesState(
@@ -780,6 +787,7 @@ internal class SwapInteractorImpl @Inject constructor(
         isTangemPayWithdrawal: Boolean,
         integratedApproval: IntegratedApprovalData?,
         customSlippage: BigDecimal?,
+        intentId: String?,
     ): SwapTransactionState {
         TangemLogger.i(
             """
@@ -822,6 +830,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 expressOperationType = expressOperationType,
                 isTangemPayWithdrawal = isTangemPayWithdrawal,
                 customSlippage = swapProvider.acceptedSlippageOrNull(customSlippage),
+                intentId = intentId,
             )
             ResolvedFlow.DexLike -> onSwapDexLike(
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
@@ -1037,6 +1046,7 @@ internal class SwapInteractorImpl @Inject constructor(
         expressOperationType: ExpressOperationType,
         isTangemPayWithdrawal: Boolean,
         customSlippage: BigDecimal?,
+        intentId: String?,
     ): SwapTransactionState {
         val amountDecimal = toBigDecimalOrNull(amountToSwap)
         val amount = SwapAmount(requireNotNull(amountDecimal), fromSwapCurrencyStatus.currency.decimals)
@@ -1065,6 +1075,7 @@ internal class SwapInteractorImpl @Inject constructor(
             expressOperationType = expressOperationType,
             isTangemPayWithdrawal = isTangemPayWithdrawal,
             customSlippage = customSlippage,
+            intentId = intentId,
         )
     }
 
@@ -1117,7 +1128,7 @@ internal class SwapInteractorImpl @Inject constructor(
      *    → `createAndSendGaslessTransactionUseCase`.
      *  - Otherwise → `sendTransactionUseCase` with `swapFee.fee`.
      */
-    @Suppress("LongMethod", "CanBeNonNullable")
+    @Suppress("LongMethod", "LongParameterList", "CanBeNonNullable")
     private suspend fun onSwapCex(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
@@ -1127,6 +1138,7 @@ internal class SwapInteractorImpl @Inject constructor(
         expressOperationType: ExpressOperationType,
         isTangemPayWithdrawal: Boolean,
         customSlippage: BigDecimal?,
+        intentId: String?,
     ): SwapTransactionState {
         val fromNetworkAddress = fromSwapCurrencyStatus.status.value.networkAddress
         val fromAddress = fromNetworkAddress?.defaultAddress?.value.orEmpty()
@@ -1149,6 +1161,7 @@ internal class SwapInteractorImpl @Inject constructor(
             refundAddress = fromNetworkAddress?.defaultAddress?.value,
             refundExtraId = null, // currently always null,
             customSlippage = customSlippage,
+            intentId = intentId,
         ).getOrElse { error -> return SwapTransactionState.Error.ExpressError(error) }
 
         val exchangeDataCex =
@@ -2205,6 +2218,7 @@ internal class SwapInteractorImpl @Inject constructor(
         isRestricted: Boolean,
         customSlippage: BigDecimal?,
         quoteSlippage: BigDecimal?,
+        intentId: String?,
     ): SwapState? {
         val fromNetworkAddress = fromSwapCurrencyStatus.status.value.networkAddress
         val walletAddress = fromNetworkAddress?.defaultAddress?.value
@@ -2227,6 +2241,7 @@ internal class SwapInteractorImpl @Inject constructor(
             refundAddress = walletAddress,
             expressOperationType = expressOperationType,
             customSlippage = customSlippage,
+            intentId = intentId,
         ).map { swapData ->
             val dexTx = swapData.transaction as? ExpressTransactionModel.DEX
             if (dexTx != null && dexRouterSpenderAddress != null && dexTx.allowanceContract == null) {
