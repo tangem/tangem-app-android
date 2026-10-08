@@ -45,9 +45,9 @@ internal class RewardsValidatorStateConverter(
 
     private fun List<BalanceItem>.mapRewardBalances(cryptoCurrencyStatus: CryptoCurrencyStatus) =
         this.mapNotNull { balance ->
-            val target = integration.targets.firstOrNull {
-                it.address.contains(balance.validatorAddress.orEmpty(), ignoreCase = true)
-            }
+            // Account-level rewards carry no validator, but still need a row to be claimable from
+            val target = integration.findBalanceTarget(address = balance.validatorAddress)
+                ?: integration.targets.firstOrNull().takeIf { balance.validatorAddress.isNullOrBlank() }
             val cryptoValue = balance.amount
             val fiatValue = cryptoCurrencyStatus.value.fiatRate?.times(cryptoValue)
 
