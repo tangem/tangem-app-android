@@ -17,6 +17,8 @@ import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.attestation.getAttestationTokenOrNull
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
+import com.tangem.lib.auth.performance.NonceRequestTracker
+import com.tangem.lib.auth.performance.NonceRequestType
 import com.tangem.lib.auth.session.AuthError
 import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.lib.auth.session.DeviceRegistrationError
@@ -41,6 +43,7 @@ internal class DefaultDeviceRegistrar(
     private val attestationProvider: AttestationProvider,
     private val errorConverter: AuthErrorConverter,
     private val appPreferencesStore: AppPreferencesStore,
+    private val nonceRequestTracker: NonceRequestTracker,
     // Lazy to break the DeviceRegistrar ↔ SessionTokenRefresher DI cycle (the refresher depends on
     // Lazy<DeviceRegistrar> for its "device not found" re-registration path).
     private val sessionTokenRefresher: Lazy<SessionTokenRefresher>,
@@ -108,7 +111,9 @@ internal class DefaultDeviceRegistrar(
 
         val devicePublicKeyBase64 = devicePublicKey.toBase64NoWrap()
 
-        val nonceResponse = authApi.requestDeviceNonce(NonceApiRequest(devicePublicKey = devicePublicKeyBase64))
+        val nonceResponse = nonceRequestTracker.track(NonceRequestType.DEVICE) {
+            authApi.requestDeviceNonce(NonceApiRequest(devicePublicKey = devicePublicKeyBase64))
+        }
         val cipheredNonce = when (nonceResponse) {
             is ApiResponse.Success -> nonceResponse.data.cipheredNonce
             is ApiResponse.Error -> {
