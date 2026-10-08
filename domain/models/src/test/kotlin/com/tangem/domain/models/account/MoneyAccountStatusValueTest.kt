@@ -55,17 +55,24 @@ internal class MoneyAccountStatusValueTest {
     }
 
     @Test
-    fun `GIVEN no balance WHEN totalFiatBalance THEN zero`() {
+    fun `GIVEN onboarding status WHEN totalFiatBalance THEN zero`() {
         // Arrange
         val issuing = MoneyAccountStatusValue.Onboarding.Issuing(
             source = StatusSource.ACTUAL,
-            balance = null,
             customerId = "customer-1",
             step = MoneyAccountStatusValue.IssuingStep.STARTING,
         )
 
         // Act & Assert
         Truth.assertThat(issuing.totalFiatBalance).isEqualTo(
+            TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = StatusSource.ACTUAL),
+        )
+    }
+
+    @Test
+    fun `GIVEN account without balance WHEN totalFiatBalance THEN zero`() {
+        // Act & Assert
+        Truth.assertThat(activeWith(balance = null).totalFiatBalance).isEqualTo(
             TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = StatusSource.ACTUAL),
         )
     }
