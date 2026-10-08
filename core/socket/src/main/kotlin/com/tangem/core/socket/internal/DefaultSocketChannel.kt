@@ -199,13 +199,6 @@ internal class DefaultSocketChannel(
             coroutineScope {
                 var keepAlive: Job? = null
                 var healthyTimer: Job? = null
-                var isHealthy = false
-                val markHealthy = {
-                    if (!isHealthy) {
-                        isHealthy = true
-                        onHealthy()
-                    }
-                }
                 var closed: SocketClose? = null
                 for (event in opened.events) {
                     when (event) {
@@ -227,13 +220,10 @@ internal class DefaultSocketChannel(
                             keepAlive = launchKeepAlive(opened)
                             healthyTimer = launch {
                                 delay(HEALTHY_CONNECTION_AGE)
-                                markHealthy()
+                                onHealthy()
                             }
                         }
-                        is TransportEvent.Message -> {
-                            markHealthy()
-                            dispatch(opened, event.text)
-                        }
+                        is TransportEvent.Message -> dispatch(opened, event.text)
                         is TransportEvent.Closed -> {
                             closed = event.close
                             break
