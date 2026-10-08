@@ -1,6 +1,8 @@
 package com.tangem.data.yield.supply.incentives.converters
 
+import arrow.core.left
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.yield.supply.models.incentives.YieldIncentivesError
 import com.tangem.domain.yield.supply.models.incentives.YieldReward
 import com.tangem.domain.yield.supply.models.incentives.YieldRewardDestination
 import com.tangem.grow.datasource.yield.models.incentives.YieldIncentivesResponse
@@ -104,11 +106,12 @@ internal class YieldIncentivesConverterTest {
         val actual = YieldIncentivesConverter.convert(response)
 
         // Assert
-        assertThat(actual.chainId).isEqualTo(1)
-        assertThat(actual.userAddress).isEqualTo("0xUser")
-        assertThat(actual.moduleAddress).isNull()
-        assertThat(actual.rewards).hasSize(1)
-        assertThat(actual.lastUpdatedAt).isEqualTo(Instant.parse("2026-07-31T10:30:00.000Z"))
+        val incentives = actual.getOrNull()
+        assertThat(incentives?.chainId).isEqualTo(1)
+        assertThat(incentives?.userAddress).isEqualTo("0xUser")
+        assertThat(incentives?.moduleAddress).isNull()
+        assertThat(incentives?.rewards).hasSize(1)
+        assertThat(incentives?.lastUpdatedAt).isEqualTo(Instant.parse("2026-07-31T10:30:00.000Z"))
     }
 
     @Test
@@ -120,20 +123,33 @@ internal class YieldIncentivesConverterTest {
         val actual = YieldIncentivesConverter.convert(response)
 
         // Assert
-        assertThat(actual.isClaimRecommended).isTrue()
+        assertThat(actual.getOrNull()?.isClaimRecommended).isTrue()
     }
 
     @Test
-    fun `GIVEN response without claimRecommended WHEN convert THEN it throws`() {
+    fun `GIVEN response without claimRecommended WHEN convert THEN the payload is refused`() {
         // Arrange — a missing key must not read as "not recommended": that is indistinguishable from the
         // below-threshold state and would take the Claim action dark without saying why.
         val response = createIncentivesResponse(isClaimRecommended = null)
 
         // Act
-        val error = runCatching { YieldIncentivesConverter.convert(response) }.exceptionOrNull()
+        val actual = YieldIncentivesConverter.convert(response)
 
         // Assert
-        assertThat(error).isInstanceOf(IllegalStateException::class.java)
+        assertThat(actual).isEqualTo(YieldIncentivesError.Unavailable.left())
+    }
+
+    @Test
+    fun `GIVEN an unparsable timestamp WHEN convert THEN the rest of the payload still maps`() {
+        // Arrange
+        val response = createIncentivesResponse(isClaimRecommended = true).copy(lastUpdatedAt = "not a timestamp")
+
+        // Act
+        val actual = YieldIncentivesConverter.convert(response)
+
+        // Assert
+        assertThat(actual.isRight()).isTrue()
+        assertThat(actual.getOrNull()?.lastUpdatedAt).isNull()
     }
 
     private fun createIncentivesResponse(isClaimRecommended: Boolean?) = YieldIncentivesResponse(
