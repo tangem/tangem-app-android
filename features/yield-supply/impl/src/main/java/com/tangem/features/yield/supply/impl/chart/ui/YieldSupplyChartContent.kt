@@ -71,8 +71,6 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import java.util.Locale
 
-private const val REWARDS_COLUMN_ALPHA = 0.3f
-
 /** Height the chart host is laid out at; the average label and the column gap both measure against it. */
 private val CHART_HEIGHT = 105.dp
 
@@ -86,7 +84,6 @@ private val COLUMN_THICKNESS = 4.dp
 private val MIN_COLUMN_SPACING = 1.dp
 
 /** What the value axis takes before the plot starts; the labels row below the chart is inset by the same amount. */
-private val AXIS_LABELS_WIDTH = 38.dp
 
 @Composable
 internal fun YieldSupplyChartContent(state: YieldSupplyChartUM, modifier: Modifier = Modifier) {
@@ -223,12 +220,13 @@ private fun YieldSupplyChartData(state: YieldSupplyChartUM.Data, modifier: Modif
 /**
  * Vico multiplies the column thickness by the zoom factor it needs to fit every point, so seven days of history
  * would be drawn as blobs the width of a finger. Spacing the columns out so that they fill the plot exactly holds
- * that factor at 1, and the bars stay [COLUMN_THICKNESS] wide whatever the period.
+ * that factor at 1, and the bars stay [COLUMN_THICKNESS] wide whatever the period. The 38.dp taken off
+ * the width is the room the vertical axis labels occupy.
  */
 private fun columnSpacing(plotWidth: Dp, columnCount: Int): Dp {
     if (columnCount <= 0) return MIN_COLUMN_SPACING
 
-    val perColumn = (plotWidth - AXIS_LABELS_WIDTH).coerceAtLeast(0.dp) / columnCount
+    val perColumn = (plotWidth - 38.dp).coerceAtLeast(0.dp) / columnCount
 
     return (perColumn - COLUMN_THICKNESS).coerceAtLeast(MIN_COLUMN_SPACING)
 }
@@ -271,7 +269,7 @@ private fun rememberColumnsLayer(accentColor: Color, isStacked: Boolean, columnS
         thickness = COLUMN_THICKNESS,
     )
     val rewardsColumn = rememberLineComponent(
-        color = accentColor.copy(alpha = REWARDS_COLUMN_ALPHA),
+        color = accentColor.copy(alpha = 0.3f),
         thickness = COLUMN_THICKNESS,
         shape = Shape.rounded(40),
     )
