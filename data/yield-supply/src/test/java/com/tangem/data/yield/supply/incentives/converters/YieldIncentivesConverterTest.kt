@@ -45,7 +45,6 @@ internal class YieldIncentivesConverterTest {
                 estimatedNetValueUsd = BigDecimal("1.42"),
                 estimatedServiceFeeUsd = BigDecimal("0.08"),
                 serviceFeeRateBps = 500,
-                isClaimRecommended = true,
                 finalDestination = YieldRewardDestination.Owner,
             ),
         )
@@ -91,22 +90,15 @@ internal class YieldIncentivesConverterTest {
                 estimatedNetValueUsd = BigDecimal.ZERO,
                 estimatedServiceFeeUsd = BigDecimal.ZERO,
                 serviceFeeRateBps = 0,
-                isClaimRecommended = true,
                 finalDestination = YieldRewardDestination.Module,
             ),
         )
     }
 
     @Test
-    fun `GIVEN incentives response WHEN convert THEN envelope is mapped`() {
+    fun `GIVEN incentives response WHEN convert THEN module fields are mapped`() {
         // Arrange
-        val response = YieldIncentivesResponse(
-            chainId = 1,
-            userAddress = "0xUser",
-            moduleAddress = null,
-            rewards = listOf(createRewardDto(finalDestination = "owner")),
-            lastUpdatedAt = "2026-07-31T10:30:00.000Z",
-        )
+        val response = createIncentivesResponse(isClaimRecommended = false)
 
         // Act
         val actual = YieldIncentivesConverter.convert(response)
@@ -118,6 +110,40 @@ internal class YieldIncentivesConverterTest {
         assertThat(actual.rewards).hasSize(1)
         assertThat(actual.lastUpdatedAt).isEqualTo(Instant.parse("2026-07-31T10:30:00.000Z"))
     }
+
+    @Test
+    fun `GIVEN claimRecommended on the response WHEN convert THEN it lands on the model`() {
+        // Arrange
+        val response = createIncentivesResponse(isClaimRecommended = true)
+
+        // Act
+        val actual = YieldIncentivesConverter.convert(response)
+
+        // Assert
+        assertThat(actual.isClaimRecommended).isTrue()
+    }
+
+    @Test
+    fun `GIVEN response without claimRecommended WHEN convert THEN it throws`() {
+        // Arrange — a missing key must not read as "not recommended": that is indistinguishable from the
+        // below-threshold state and would take the Claim action dark without saying why.
+        val response = createIncentivesResponse(isClaimRecommended = null)
+
+        // Act
+        val error = runCatching { YieldIncentivesConverter.convert(response) }.exceptionOrNull()
+
+        // Assert
+        assertThat(error).isInstanceOf(IllegalStateException::class.java)
+    }
+
+    private fun createIncentivesResponse(isClaimRecommended: Boolean?) = YieldIncentivesResponse(
+        chainId = 1,
+        userAddress = "0xUser",
+        moduleAddress = null,
+        isClaimRecommended = isClaimRecommended,
+        rewards = listOf(createRewardDto(finalDestination = "owner")),
+        lastUpdatedAt = "2026-07-31T10:30:00.000Z",
+    )
 
     private fun createRewardDto(finalDestination: String?) = YieldRewardDto(
         source = "merkl",
@@ -131,7 +157,6 @@ internal class YieldIncentivesConverterTest {
         estimatedNetValueUsd = BigDecimal("1.42"),
         estimatedServiceFeeUsd = BigDecimal("0.08"),
         serviceFeeRateBps = 500,
-        isClaimRecommended = true,
         finalDestination = finalDestination,
     )
 }

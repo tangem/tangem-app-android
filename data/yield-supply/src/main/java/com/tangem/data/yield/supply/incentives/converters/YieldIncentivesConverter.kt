@@ -16,6 +16,9 @@ internal object YieldIncentivesConverter {
             chainId = response.chainId ?: -1,
             userAddress = response.userAddress.orEmpty(),
             moduleAddress = response.moduleAddress,
+            isClaimRecommended = checkNotNull(response.isClaimRecommended) {
+                "claimRecommended is missing from the incentives response"
+            },
             rewards = response.rewards.orEmpty().map(::convertReward),
             lastUpdatedAt = Instant.parse(response.lastUpdatedAt.orEmpty()),
         )
@@ -32,7 +35,6 @@ internal object YieldIncentivesConverter {
             estimatedNetValueUsd = dto.estimatedNetValueUsd.orZero(),
             estimatedServiceFeeUsd = dto.estimatedServiceFeeUsd.orZero(),
             serviceFeeRateBps = dto.serviceFeeRateBps ?: 0,
-            isClaimRecommended = dto.isClaimRecommended == true,
             finalDestination = dto.finalDestination.toDestination(),
         )
     }
