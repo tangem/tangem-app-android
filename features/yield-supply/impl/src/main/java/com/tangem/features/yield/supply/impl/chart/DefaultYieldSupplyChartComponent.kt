@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -56,5 +57,8 @@ internal class DefaultYieldSupplyChartComponent @AssistedInject constructor(
 
         /** Null once the token has no running campaign, so the host sheet can fall back to its plain rate copy. */
         fun onIncentiveChanged(incentive: YieldSupplyChartIncentiveUM?)
+
+        /** The rate this sheet heads with, once the market says what the chart below is actually plotting. */
+        fun onRateResolved(apy: TextReference)
     }
 }

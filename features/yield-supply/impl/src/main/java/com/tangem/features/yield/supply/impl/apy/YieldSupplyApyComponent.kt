@@ -6,7 +6,7 @@ import androidx.compose.runtime.getValue
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.yield.supply.impl.apy.ui.YieldSupplyApyContent
 import com.tangem.features.yield.supply.impl.chart.DefaultYieldSupplyChartComponent
@@ -26,6 +26,9 @@ internal class YieldSupplyApyComponent(
 
     private val incentiveState: StateFlow<YieldSupplyChartIncentiveUM?>
         field = MutableStateFlow<YieldSupplyChartIncentiveUM?>(null)
+
+    private val apyState: StateFlow<TextReference>
+        field = MutableStateFlow(params.apy.formatApy())
 
     private val chartComponent = DefaultYieldSupplyChartComponent(
         appComponentContext = child("chartComponent"),
@@ -48,6 +51,10 @@ internal class YieldSupplyApyComponent(
                 override fun onIncentiveChanged(incentive: YieldSupplyChartIncentiveUM?) {
                     incentiveState.update { incentive }
                 }
+
+                override fun onRateResolved(apy: TextReference) {
+                    apyState.update { apy }
+                }
             },
         ),
     )
@@ -60,8 +67,9 @@ internal class YieldSupplyApyComponent(
     override fun BottomSheet() {
         val isLoadingState by loadingState.collectAsState()
         val incentive by incentiveState.collectAsState()
+        val apy by apyState.collectAsState()
         YieldSupplyApyContent(
-            apy = stringReference(params.apy.formatApy()),
+            apy = apy,
             isLoading = isLoadingState,
             incentive = incentive,
             onBackClick = params.onBackClick,
