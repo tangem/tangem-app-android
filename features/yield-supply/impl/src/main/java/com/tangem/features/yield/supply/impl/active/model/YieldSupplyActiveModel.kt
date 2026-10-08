@@ -317,7 +317,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
             yieldSupplyGetTokenStatusUseCase(cryptoCurrencyToken).onRight { tokenStatus ->
                 uiState.update {
                     it.copy(
-                        apy = TextReference.Str("${tokenStatus.apy}%"),
+                        apy = TextReference.Str("${tokenStatus.effectiveApy}%"),
                     )
                 }
             }.onLeft {

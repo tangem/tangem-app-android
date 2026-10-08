@@ -34,13 +34,13 @@ internal class YieldSupplyTokenStatusSuccessTransformer(
             onClick = onStartEarningClick,
             onLearnMoreClick = onLearnMoreClick,
             isBoostAvailable = boost != null,
-            apy = tokenStatus.apy.toString(),
+            apy = tokenStatus.effectiveApy.toString(),
             apyText = if (boost != null) {
                 annotatedReference(buildBoostedApyText(baseApy = tokenStatus.apy, boostedApy = boost))
             } else {
                 combinedReference(
                     resourceReference(R.string.yield_module_token_details_earn_notification_apy),
-                    stringReference(" ${tokenStatus.apy}%"),
+                    stringReference(" ${tokenStatus.effectiveApy}%"),
                 )
             },
         )
