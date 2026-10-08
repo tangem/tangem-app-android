@@ -448,7 +448,30 @@ internal class DefaultSocketChannelTest {
     }
 
     @Test
-    fun `GIVEN connection delivered a message WHEN it closes THEN backoff starts over`() = runTest {
+    fun `GIVEN server sends an error frame and closes at once WHEN reconnecting THEN backoff keeps growing`() =
+        runTest {
+            // Arrange
+            val attempts = mutableListOf<Int>()
+            val channel = createChannel(
+                SocketSpec(url = URL, backoff = { attempt -> 1.seconds.also { attempts += attempt } }),
+            )
+            collect(channel)
+
+            // Act
+            repeat(3) {
+                transport.connections.last().serverOpens()
+                transport.connections.last().serverSends("""{"error":"unauthorized"}""")
+                transport.connections.last().serverCloses(code = 1008)
+                runCurrent()
+                advanceTimeBy(1.seconds + 1.milliseconds)
+            }
+
+            // Assert
+            assertThat(attempts).containsExactly(0, 1, 2).inOrder()
+        }
+
+    @Test
+    fun `GIVEN connection lived 30 seconds WHEN it closes THEN backoff starts over`() = runTest {
         // Arrange
         val attempts = mutableListOf<Int>()
         val channel = createChannel(
@@ -464,7 +487,7 @@ internal class DefaultSocketChannelTest {
 
         // Act
         transport.connections.last().serverOpens()
-        transport.connections.last().serverSends("""{"price":"0.42"}""")
+        advanceTimeBy(30.seconds + 1.milliseconds)
         transport.connections.last().serverCloses(code = 1001)
         runCurrent()
 
