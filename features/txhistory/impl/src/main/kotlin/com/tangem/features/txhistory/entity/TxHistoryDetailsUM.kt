@@ -201,8 +201,9 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      * secondary [fiatAmount].
      *
      * [label] is `null` for the plain single-asset types (Send / Receive / Transfer / staking) — the line is then
-     * omitted. [fiatAmount] is `null` while no fiat value is available (`TxInfo` has no fiat field yet) — the fiat line
-     * is then omitted entirely rather than shown as a placeholder.
+     * omitted. [fiatAmount] prices [amount] at the viewed currency's current rate; it is `null` when there is no rate
+     * to price it with (or the amount is not in the viewed currency, as an approval's allowance is) — the fiat line is
+     * then omitted entirely rather than shown as a placeholder.
      *
      * [isFailed] drives the failed visual state — the amount is struck through, recolored to tertiary and carries no
      * `+`/`−` sign (mirrors the status-driven recolor in the shared header).
