@@ -116,7 +116,7 @@ closes `idleTimeout` (5 s) after the last collector leaves.
 | `keepAlive` | none | `ClientSends("PING", 10.seconds)` — first ping a full interval after `onOpen`; `ServerSends(text, reply)` for text pings. Protocol-level ping frames need nothing |
 | `backoff` | 1 s → 30 s, ×2, jitter 50% | `Backoff.exponential(…)` or your own |
 | `closePolicy` | always retry | `SocketClose` → `Retry`, `RetryAfter(delay)` or `Stop` |
-| `onOpen` | nothing | the first frames of every connection: auth message, the full subscription set. It must only send: incoming frames wait until it returns. Until then the state stays `Connecting` and frames sent from outside are queued to go out right after it |
+| `onOpen` | nothing | the first frames of every connection: auth message, the full subscription set. It must only send: incoming frames wait until it returns. Until then the state stays `Connecting` and frames sent from outside are queued to go out right after it, or dropped if it fails |
 | `isSplitArrayFrames` | false | a JSON-array frame is delivered element by element |
 | `idleTimeout` | 5 s | how long the connection outlives its last collector |
 
@@ -128,8 +128,7 @@ closes at once — even after an error frame — is not hammered every second.
 
 Nothing a spec does can kill the socket for good: `headers`, the transport's `open` (a malformed URL or
 header) and `onOpen` throwing — a `withTimeout` inside them included — end the attempt like a dropped
-connection (`SocketCloseCode.ABNORMAL`), so
-the close policy and backoff apply; anything else restarts the loop after 5 s and logs an error.
+connection (`SocketCloseCode.ABNORMAL`), so the close policy and backoff apply; anything else restarts the loop after 5 s and logs an error.
 
 ## Authorization
 
