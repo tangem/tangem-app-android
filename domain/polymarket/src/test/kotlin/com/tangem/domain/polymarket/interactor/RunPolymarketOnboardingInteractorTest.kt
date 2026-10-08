@@ -119,7 +119,7 @@ internal class RunPolymarketOnboardingInteractorTest {
             assertThat(awaitItem()).isEqualTo(
                 PolymarketOnboardingProgress.Working(PolymarketWalletStatus.APPROVALS_IN_PROGRESS),
             )
-            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready(isNewAccount = true))
             awaitComplete()
         }
         coVerify(exactly = 1) { signOnboardingDigests(ADDRESSES, NONCE) }
@@ -144,7 +144,7 @@ internal class RunPolymarketOnboardingInteractorTest {
         // Act & Assert
         useCase(USER_WALLET_ID).test {
             skipItems(4)
-            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready(isNewAccount = true))
             awaitComplete()
         }
         coVerify(exactly = 1) { syncBalanceAllowance(OWNER, CREDENTIALS) }
@@ -161,7 +161,7 @@ internal class RunPolymarketOnboardingInteractorTest {
             // Act & Assert
             useCase(USER_WALLET_ID).test {
                 assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Deriving)
-                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready(isNewAccount = false))
                 awaitComplete()
             }
             coVerify(exactly = 1) { syncBalanceAllowance(OWNER, CREDENTIALS) }
@@ -180,7 +180,7 @@ internal class RunPolymarketOnboardingInteractorTest {
         // Act & Assert
         useCase(USER_WALLET_ID).test {
             assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Deriving)
-            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready(isNewAccount = false))
             awaitComplete()
         }
     }
@@ -196,7 +196,7 @@ internal class RunPolymarketOnboardingInteractorTest {
         // Act & Assert
         useCase(USER_WALLET_ID).test {
             assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Deriving)
-            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready(isNewAccount = false))
             awaitComplete()
         }
     }
@@ -252,7 +252,7 @@ internal class RunPolymarketOnboardingInteractorTest {
             // Act & Assert
             useCase(USER_WALLET_ID).test {
                 assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Deriving)
-                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready(isNewAccount = false))
                 awaitComplete()
             }
             coVerify(exactly = 0) { signOnboardingDigests(any(), any()) }
@@ -272,7 +272,7 @@ internal class RunPolymarketOnboardingInteractorTest {
             useCase(USER_WALLET_ID).test {
                 assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Deriving)
                 assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.AwaitingSignature)
-                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready(isNewAccount = false))
                 awaitComplete()
             }
             coVerify(exactly = 1) { signOnboardingDigests(ADDRESSES, NONCE) }
@@ -300,7 +300,7 @@ internal class RunPolymarketOnboardingInteractorTest {
             assertThat(awaitItem()).isEqualTo(
                 PolymarketOnboardingProgress.Working(PolymarketWalletStatus.APPROVALS_IN_PROGRESS),
             )
-            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready(isNewAccount = true))
             awaitComplete()
         }
         coVerify(exactly = 0) { deployDepositWallet(any()) }
@@ -322,7 +322,7 @@ internal class RunPolymarketOnboardingInteractorTest {
             assertThat(awaitItem()).isEqualTo(
                 PolymarketOnboardingProgress.Working(PolymarketWalletStatus.APPROVALS_IN_PROGRESS),
             )
-            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready(isNewAccount = true))
             awaitComplete()
         }
         coVerify(exactly = 0) { deployDepositWallet(any()) }
@@ -346,7 +346,7 @@ internal class RunPolymarketOnboardingInteractorTest {
                 assertThat(awaitItem()).isEqualTo(
                     PolymarketOnboardingProgress.Working(PolymarketWalletStatus.APPROVALS_IN_PROGRESS),
                 )
-                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready(isNewAccount = true))
                 awaitComplete()
             }
             coVerify(exactly = 0) { deriveApiCredentials(any(), any(), any(), any()) }
@@ -368,7 +368,7 @@ internal class RunPolymarketOnboardingInteractorTest {
             assertThat(awaitItem()).isEqualTo(
                 PolymarketOnboardingProgress.Working(PolymarketWalletStatus.APPROVALS_IN_PROGRESS),
             )
-            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready(isNewAccount = true))
             awaitComplete()
         }
         coVerify(exactly = 0) { signOnboardingDigests(any(), any()) }
@@ -391,7 +391,7 @@ internal class RunPolymarketOnboardingInteractorTest {
                 assertThat(awaitItem()).isEqualTo(
                     PolymarketOnboardingProgress.Working(PolymarketWalletStatus.APPROVALS_IN_PROGRESS),
                 )
-                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready(isNewAccount = true))
                 awaitComplete()
             }
             coVerify(exactly = 1) { signOnboardingDigests(ADDRESSES, NONCE) }
@@ -414,7 +414,7 @@ internal class RunPolymarketOnboardingInteractorTest {
                 assertThat(awaitItem()).isEqualTo(
                     PolymarketOnboardingProgress.Working(PolymarketWalletStatus.APPROVALS_IN_PROGRESS),
                 )
-                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready(isNewAccount = true))
                 awaitComplete()
             }
             coVerify(exactly = 1) { signOnboardingDigests(ADDRESSES, NONCE) }
@@ -441,7 +441,7 @@ internal class RunPolymarketOnboardingInteractorTest {
             assertThat(awaitItem()).isEqualTo(
                 PolymarketOnboardingProgress.Working(PolymarketWalletStatus.APPROVALS_IN_PROGRESS),
             )
-            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready(isNewAccount = true))
             awaitComplete()
         }
         coVerify(exactly = 0) { deployDepositWallet(any()) }
@@ -467,7 +467,7 @@ internal class RunPolymarketOnboardingInteractorTest {
             assertThat(awaitItem()).isEqualTo(
                 PolymarketOnboardingProgress.Working(PolymarketWalletStatus.APPROVALS_IN_PROGRESS),
             )
-            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready(isNewAccount = true))
             awaitComplete()
         }
         coVerify(exactly = 1) { deployDepositWallet(ADDRESSES) }
@@ -540,7 +540,7 @@ internal class RunPolymarketOnboardingInteractorTest {
             assertThat(awaitItem()).isEqualTo(
                 PolymarketOnboardingProgress.Working(PolymarketWalletStatus.APPROVALS_IN_PROGRESS),
             )
-            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready(isNewAccount = true))
             awaitComplete()
         }
     }
@@ -710,7 +710,7 @@ internal class RunPolymarketOnboardingInteractorTest {
         // Act
         useCase(USER_WALLET_ID).test {
             assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Deriving)
-            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready(isNewAccount = false))
             awaitComplete()
         }
 
@@ -734,7 +734,7 @@ internal class RunPolymarketOnboardingInteractorTest {
             useCase(USER_WALLET_ID).test {
                 assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Deriving)
                 assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.AwaitingSignature)
-                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready(isNewAccount = false))
                 awaitComplete()
             }
             coVerify(exactly = 1) { deriveApiCredentials(USER_WALLET_ID, OWNER, L1_SIGNATURE, TIMESTAMP) }
@@ -800,7 +800,7 @@ internal class RunPolymarketOnboardingInteractorTest {
             useCase(USER_WALLET_ID).test {
                 assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Deriving)
                 assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.AwaitingSignature)
-                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready(isNewAccount = true))
                 awaitComplete()
             }
             coVerify(exactly = 1) { getWalletStatus(ADDRESSES) }
@@ -825,7 +825,7 @@ internal class RunPolymarketOnboardingInteractorTest {
                     assertThat(awaitItem()).isEqualTo(
                         PolymarketOnboardingProgress.Working(PolymarketWalletStatus.APPROVALS_IN_PROGRESS),
                     )
-                    assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+                    assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready(isNewAccount = true))
                     awaitComplete()
                 }
                 coVerify(exactly = 2) { getWalletStatus(ADDRESSES) }
@@ -845,7 +845,7 @@ internal class RunPolymarketOnboardingInteractorTest {
             // Act
             useCase(USER_WALLET_ID).test {
                 assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Deriving)
-                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready(isNewAccount = false))
                 awaitComplete()
             }
 
@@ -869,7 +869,7 @@ internal class RunPolymarketOnboardingInteractorTest {
             // Act & Assert
             useCase(USER_WALLET_ID).test {
                 assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Deriving)
-                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready(isNewAccount = false))
                 awaitComplete()
             }
             coVerify(exactly = 1) { predictionAccountStatusFetcher(PredictionAccountStatusFetcher.Params(
