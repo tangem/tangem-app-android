@@ -474,6 +474,7 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class AddExistingWallet(
         val mode: Mode = Mode.RecoveryPhrase,
+        val shouldSendOnboardingStarted: Boolean = false,
     ) : AppRoute(path = "/add_existing_wallet") {
 
         @Serializable
