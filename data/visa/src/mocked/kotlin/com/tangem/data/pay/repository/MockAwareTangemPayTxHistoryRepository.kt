@@ -192,8 +192,41 @@ internal class MockAwareTangemPayTxHistoryRepository @Inject constructor(
                 currency = USD,
                 transactionHash = "0xmock",
             ),
+            mockCollateral(
+                id = "tx_13",
+                type = TangemPayTxHistoryItem.Type.Deposit,
+                amount = BigDecimal("50.00"),
+                date = yesterday.minusHours(8),
+            ),
+            mockCollateral(
+                id = "tx_14",
+                type = TangemPayTxHistoryItem.Type.Withdrawal,
+                amount = BigDecimal("-20.00"),
+                date = yesterday.minusHours(9),
+            ),
+            mockCollateral(
+                id = "tx_15",
+                type = TangemPayTxHistoryItem.Type.Cashback,
+                amount = BigDecimal("19.00"),
+                date = yesterday.minusHours(10),
+            ),
         )
     }
+
+    private fun mockCollateral(
+        id: String,
+        type: TangemPayTxHistoryItem.Type,
+        amount: BigDecimal,
+        date: DateTime,
+    ): TangemPayTxHistoryItem.Collateral = TangemPayTxHistoryItem.Collateral(
+        id = id,
+        jsonRepresentation = "{}",
+        date = date,
+        amount = amount,
+        currency = USD,
+        transactionHash = "0xmock",
+        type = type,
+    )
 
     @Suppress("LongParameterList")
     private fun mockSpend(
