@@ -54,7 +54,7 @@ fun ProviderItemBlock(state: ProviderState, modifier: Modifier = Modifier) {
             modifier = modifier
                 .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
                 .background(
-                    color = TangemTheme.colors.background.action,
+                    color = TangemTheme.colors3.bg.secondary,
                     shape = TangemTheme.shapes.roundedCornersXMedium,
                 )
                 .clickable(
@@ -62,7 +62,7 @@ fun ProviderItemBlock(state: ProviderState, modifier: Modifier = Modifier) {
                     onClick = { state.onProviderClick?.invoke(state.id) },
                 )
                 .fillMaxWidth()
-                .padding(vertical = TangemTheme.dimens.spacing12),
+                .padding(vertical = 12.dp),
         )
     }
 }
@@ -111,17 +111,17 @@ private fun ProviderContentState(
             )
             SubcomposeAsyncImage(
                 modifier = Modifier
-                    .padding(start = TangemTheme.dimens.spacing12)
-                    .size(size = TangemTheme.dimens.size40)
+                    .padding(start = 12.dp)
+                    .size(size = 40.dp)
                     .clip(TangemTheme.shapes.roundedCorners8)
                     .testTag(SwapTokenScreenTestTags.PROVIDER_ICON),
                 model = ImageRequest.Builder(context = LocalContext.current).data(state.iconUrl)
                     .crossfade(enable = true).allowHardware(false).build(),
-                loading = { RectangleShimmer(radius = TangemTheme.dimens.radius8) },
+                loading = { RectangleShimmer(radius = 8.dp) },
                 error = {
                     ErrorProviderIcon(
                         Modifier.size(
-                            size = TangemTheme.dimens.size40,
+                            size = 40.dp,
                         ),
                     )
                 },
@@ -132,8 +132,8 @@ private fun ProviderContentState(
 
             Column(
                 modifier = Modifier
-                    .heightIn(min = TangemTheme.dimens.size40)
-                    .padding(start = TangemTheme.dimens.spacing12)
+                    .heightIn(min = 40.dp)
+                    .padding(start = 12.dp)
                     .testTag(SwapTokenScreenTestTags.PROVIDERS_BLOCK),
                 verticalArrangement = Arrangement.SpaceBetween,
             ) {
@@ -143,7 +143,7 @@ private fun ProviderContentState(
                             text = stringResourceSafe(id = R.string.express_by_provider),
                             style = TangemTheme.typography.caption2,
                             color = TangemTheme.colors.text.tertiary,
-                            modifier = Modifier.padding(end = TangemTheme.dimens.spacing4),
+                            modifier = Modifier.padding(end = 4.dp),
                         )
                     }
                     AnimatedContent(targetState = state.name, label = "") { name ->
@@ -160,11 +160,11 @@ private fun ProviderContentState(
                             style = TangemTheme.typography.caption2,
                             color = TangemTheme.colors.text.tertiary,
                             modifier = Modifier
-                                .padding(start = TangemTheme.dimens.spacing4)
+                                .padding(start = 4.dp)
                                 .testTag(SwapTokenScreenTestTags.PROVIDER_TYPE),
                         )
                     }
-                    val badgeModifier = Modifier.padding(start = TangemTheme.dimens.spacing4)
+                    val badgeModifier = Modifier.padding(start = 4.dp)
                     when (state.additionalBadge) {
                         ProviderState.AdditionalBadge.FCAWarningList -> FCABadgeItem(badgeModifier)
                         ProviderState.AdditionalBadge.BestTrade -> BestTradeItem(badgeModifier)
@@ -177,7 +177,7 @@ private fun ProviderContentState(
                 }
                 Row(
                     modifier = Modifier.padding(
-                        end = TangemTheme.dimens.spacing56,
+                        end = 56.dp,
                     ),
                 ) {
                     AnimatedContent(targetState = state.subtitle, label = "") { subtitle ->
@@ -203,7 +203,7 @@ private fun ProviderContentState(
                                 text = if (percentValue > 0) "+$percentValue%" else "$percentValue%",
                                 style = TangemTheme.typography.body2,
                                 color = textColor,
-                                modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
+                                modifier = Modifier.padding(start = 4.dp),
                                 overflow = TextOverflow.Ellipsis,
                                 maxLines = 1,
                             )
@@ -245,16 +245,16 @@ private fun ProviderUnavailableState(
             val (alpha, colorFilter) = getGreyScaleColorFilter(isGrayscale = true)
             SubcomposeAsyncImage(
                 modifier = Modifier
-                    .padding(start = TangemTheme.dimens.spacing12)
-                    .size(size = TangemTheme.dimens.size40)
+                    .padding(start = 12.dp)
+                    .size(size = 40.dp)
                     .clip(TangemTheme.shapes.roundedCorners8),
                 model = ImageRequest.Builder(context = LocalContext.current).data(state.iconUrl)
                     .crossfade(enable = true).allowHardware(false).build(),
-                loading = { RectangleShimmer(radius = TangemTheme.dimens.radius8) },
+                loading = { RectangleShimmer(radius = 8.dp) },
                 error = {
                     ErrorProviderIcon(
                         Modifier.size(
-                            size = TangemTheme.dimens.size40,
+                            size = 40.dp,
                         ),
                     )
                 },
@@ -265,8 +265,8 @@ private fun ProviderUnavailableState(
 
             Column(
                 modifier = Modifier
-                    .heightIn(min = TangemTheme.dimens.size40)
-                    .padding(start = TangemTheme.dimens.spacing12),
+                    .heightIn(min = 40.dp)
+                    .padding(start = 12.dp),
                 verticalArrangement = Arrangement.SpaceBetween,
             ) {
                 Row {
@@ -282,7 +282,7 @@ private fun ProviderUnavailableState(
                             text = type,
                             style = TangemTheme.typography.caption2,
                             color = TangemTheme.colors.text.tertiary,
-                            modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
+                            modifier = Modifier.padding(start = 4.dp),
                         )
                     }
                 }
@@ -313,27 +313,27 @@ private fun ProviderLoadingState(modifier: Modifier = Modifier) {
                 text = stringResourceSafe(R.string.express_provider),
                 style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.secondary,
-                modifier = Modifier.padding(start = TangemTheme.dimens.spacing12),
+                modifier = Modifier.padding(start = 12.dp),
             )
 
             Row(
                 modifier = Modifier.padding(
-                    top = TangemTheme.dimens.spacing8,
-                    start = TangemTheme.dimens.spacing12,
+                    top = 8.dp,
+                    start = 12.dp,
                 ),
             ) {
                 CircularProgressIndicator(
                     modifier = Modifier
-                        .size(TangemTheme.dimens.size16)
+                        .size(16.dp)
                         .align(Alignment.CenterVertically),
                     color = TangemTheme.colors.icon.informative,
-                    strokeWidth = TangemTheme.dimens.size2,
+                    strokeWidth = 2.dp,
                 )
                 Text(
                     text = stringResourceSafe(R.string.express_fetch_best_rates),
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.tertiary,
-                    modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
+                    modifier = Modifier.padding(start = 4.dp),
                 )
             }
         }
@@ -343,7 +343,7 @@ private fun ProviderLoadingState(modifier: Modifier = Modifier) {
             contentDescription = null,
             modifier = Modifier
                 .align(alignment = Alignment.CenterEnd)
-                .padding(end = TangemTheme.dimens.spacing12),
+                .padding(end = 12.dp),
             tint = TangemTheme.colors.icon.informative,
         )
     }
@@ -360,7 +360,7 @@ private fun BoxScope.ProviderChevron(selectionType: ProviderState.SelectionType,
                 contentDescription = null,
                 modifier = Modifier
                     .align(alignment = Alignment.CenterEnd)
-                    .padding(end = TangemTheme.dimens.spacing12),
+                    .padding(end = 12.dp),
                 tint = TangemTheme.colors.icon.informative,
             )
         }
@@ -371,7 +371,7 @@ private fun BoxScope.ProviderChevron(selectionType: ProviderState.SelectionType,
                     contentDescription = null,
                     modifier = Modifier
                         .align(alignment = Alignment.CenterEnd)
-                        .padding(end = TangemTheme.dimens.spacing12),
+                        .padding(end = 12.dp),
                     tint = TangemTheme.colors.icon.accent,
                 )
             }
@@ -408,7 +408,7 @@ private fun BestTradeItem(modifier: Modifier = Modifier) {
             text = stringResourceSafe(R.string.express_provider_best_rate),
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.icon.accent,
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
+            modifier = Modifier.padding(horizontal = 6.dp),
             maxLines = 1,
         )
     }
@@ -426,7 +426,7 @@ private fun BestDexRateItem(modifier: Modifier = Modifier) {
             text = stringResourceSafe(R.string.express_provider_best_dex_rate),
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.icon.accent,
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
+            modifier = Modifier.padding(horizontal = 6.dp),
             maxLines = 1,
         )
     }
@@ -444,7 +444,7 @@ private fun PermissionBadgeItem(modifier: Modifier = Modifier) {
             text = stringResourceSafe(id = R.string.express_provider_permission_needed),
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.text.tertiary,
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
+            modifier = Modifier.padding(horizontal = 6.dp),
             maxLines = 1,
         )
     }
@@ -462,7 +462,7 @@ private fun UnavailableBadgeItem(modifier: Modifier = Modifier) {
             text = stringResourceSafe(id = R.string.common_not_available),
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.text.tertiary,
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
+            modifier = Modifier.padding(horizontal = 6.dp),
             maxLines = 1,
         )
     }
@@ -480,7 +480,7 @@ private fun FCABadgeItem(modifier: Modifier = Modifier) {
             text = stringResourceSafe(id = R.string.express_provider_fca_warning_list),
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.text.tertiary,
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
+            modifier = Modifier.padding(horizontal = 6.dp),
             maxLines = 1,
         )
     }
@@ -498,7 +498,7 @@ private fun RecommendedItem(modifier: Modifier = Modifier) {
             text = stringResourceSafe(id = R.string.express_provider_recommended),
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.icon.accent,
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
+            modifier = Modifier.padding(horizontal = 6.dp),
             maxLines = 1,
         )
     }

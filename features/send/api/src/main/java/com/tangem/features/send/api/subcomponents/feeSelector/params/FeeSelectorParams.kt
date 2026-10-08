@@ -49,6 +49,7 @@ sealed class FeeSelectorParams {
         override val isTronGaslessSupported: Boolean = false,
         override val onDisableCustomFee: () -> Boolean = { false },
         val bottomSheetShown: (Boolean) -> Unit = {},
+        val blockAppearance: BlockAppearance = BlockAppearance.Default,
     ) : FeeSelectorParams()
 
     data class FeeSelectorDetailsParams(
@@ -80,5 +81,11 @@ sealed class FeeSelectorParams {
     enum class FeeDisplaySource {
         Screen,
         BottomSheet,
+    }
+
+    /** [Plain] drops the fee icon and the block's own background, for hosts that draw the card themselves. */
+    enum class BlockAppearance {
+        Default,
+        Plain,
     }
 }
