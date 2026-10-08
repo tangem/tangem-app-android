@@ -252,6 +252,11 @@ internal object SwapNotificationUM {
             subtitle = resourceReference(R.string.swapping_high_price_impact_text),
         )
 
+        data class LowSlippage(val percent: TextReference) : Warning(
+            title = combinedReference(resourceReference(R.string.swap_slippage_warning_title, wrappedList(percent))),
+            subtitle = resourceReference(R.string.swap_slippage_warning_text),
+        )
+
         data object TradeTooHigh : Warning(
             title = resourceReference(R.string.swapping_trade_too_large_title),
             subtitle = resourceReference(R.string.swapping_trade_too_large_text),
