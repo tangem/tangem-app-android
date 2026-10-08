@@ -47,9 +47,9 @@ data class CustomerInfo(
     val cardInfo: CardInfo? get() = cards.firstOrNull()
 
     val moneyAccountProductInstance: ProductInstance?
-        get() = productInstances.firstOrNull {
-            it.specificationDataType == ProductInstance.SpecificationDataType.ACCOUNT &&
-                it.paymentAccountType == ProductInstance.PaymentAccountType.COLLATERAL_BANKING_ACCOUNT
+        get() = productInstances.firstOrNull { product ->
+            product.specificationDataType == ProductInstance.SpecificationDataType.ACCOUNT &&
+                product.paymentAccountType == ProductInstance.PaymentAccountType.COLLATERAL_BANKING_ACCOUNT
         }
 
     /** Card-level product instances only (excludes the VA ACCOUNT instance). */
