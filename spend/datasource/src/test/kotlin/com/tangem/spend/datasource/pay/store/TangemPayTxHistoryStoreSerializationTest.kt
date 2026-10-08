@@ -9,6 +9,8 @@ import kotlinx.serialization.builtins.serializer
 import org.joda.time.DateTime
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.math.BigDecimal
 import java.util.Currency
 
@@ -46,6 +48,23 @@ internal class TangemPayTxHistoryStoreSerializationTest {
         // Arrange
         val original: Map<String, Map<String, List<TangemPayTxHistoryItemDM>>> = mapOf(
             "wallet-1" to mapOf("cursor" to listOf(collateral())),
+        )
+
+        // Act
+        val restored = json.decodeFromString(serializer, json.encodeToString(serializer, original))
+
+        // Assert
+        assertThat(restored).isEqualTo(original)
+    }
+
+    @ParameterizedTest
+    @EnumSource(TangemPayTxHistoryItemDM.Type::class)
+    fun `GIVEN Collateral of every type WHEN serialized and deserialized THEN type is preserved`(
+        type: TangemPayTxHistoryItemDM.Type,
+    ) {
+        // Arrange
+        val original: Map<String, Map<String, List<TangemPayTxHistoryItemDM>>> = mapOf(
+            "wallet-1" to mapOf("cursor" to listOf(collateral().copy(type = type))),
         )
 
         // Act
