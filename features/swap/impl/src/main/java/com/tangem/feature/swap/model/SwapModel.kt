@@ -386,6 +386,7 @@ internal class SwapModel @Inject constructor(
     private var isAmountChangedByUser: Boolean = false
     private var lastPermissionNotificationTokens: Pair<String, String>? = null
     private var lastGeoRestrictionTokens: Pair<String, String>? = null
+    private val lowSlippageNoticeAnalytics = LowSlippageNoticeAnalytics(analyticsEventHandler)
 
     private var preselectedFromCurrency: CryptoCurrency? = null
     private var preselectedToCurrency: CryptoCurrency? = null
@@ -1354,6 +1355,7 @@ internal class SwapModel @Inject constructor(
         feeSelectorRepository.state.value = FeeSelectorUM.Error(GetFeeError.UnknownError, isHidden = true)
         uiState = stateBuilder.addNotification(uiState, null) { startLoadingQuotesFromLastState() }
         lastGeoRestrictionTokens = null
+        lowSlippageNoticeAnalytics.reset()
     }
 
     private suspend fun setupLoadedState(
@@ -1369,17 +1371,24 @@ internal class SwapModel @Inject constructor(
                 sendAnalyticsForNotifications(provider, fromSwapCurrencyStatus.status, toSwapCurrencyStatus.status)
                 updatePermissionNotificationState(state)
                 updateGeoRestrictionNotificationState(state)
+                lowSlippageNoticeAnalytics.onQuotesLoaded(
+                    state = state,
+                    notifications = uiState.notifications,
+                    customSlippage = dataState.slippage.customOrNull,
+                )
             }
             is SwapState.Transfer -> Unit
             is SwapState.EmptyAmountState -> {
                 setupEmptyAmountUiState(state, fromSwapCurrencyStatus)
                 lastPermissionNotificationTokens = null
                 lastGeoRestrictionTokens = null
+                lowSlippageNoticeAnalytics.reset()
             }
             is SwapState.SwapError -> {
                 setupErrorUiState(provider, state)
                 lastPermissionNotificationTokens = null
                 lastGeoRestrictionTokens = null
+                lowSlippageNoticeAnalytics.reset()
             }
         }
     }
@@ -2533,14 +2542,15 @@ internal class SwapModel @Inject constructor(
             onCurrencyChange = { onCurrencyChange(it) },
             onSwapClick = {
                 onSwapClick()
-                val sendTokenSymbol = dataState.fromSwapCurrencyStatus?.currency?.symbol
-                val receiveTokenSymbol = dataState.toSwapCurrencyStatus?.currency?.symbol
-                if (sendTokenSymbol != null && receiveTokenSymbol != null) {
+                val fromCurrency = dataState.fromSwapCurrencyStatus?.currency
+                val toCurrency = dataState.toSwapCurrencyStatus?.currency
+                if (fromCurrency != null && toCurrency != null) {
                     analyticsEventHandler.send(
                         SwapEvents.ButtonSwapClicked(
-                            sendToken = sendTokenSymbol,
-                            receiveToken = receiveTokenSymbol,
+                            fromCurrency = fromCurrency,
+                            toCurrency = toCurrency,
                             swapUIMode = uiState.swapUIMode,
+                            slippage = appliedSlippagePercent(),
                         ),
                     )
                 }
@@ -2658,6 +2668,7 @@ internal class SwapModel @Inject constructor(
         )
         openBottomSheet(SwapBottomSheetRoute.Slippage(params)) {
             singleTaskScheduler.cancelTask()
+            sendSlippageEvent(SwapEvents::ButtonSlippage)
             if (dataState.slippage.isResetHighlighted) {
                 dataState = dataState.copy(slippage = SwapSlippageState.Default())
             }
@@ -2667,6 +2678,9 @@ internal class SwapModel @Inject constructor(
 
     @VisibleForTesting
     internal fun onSlippageConfirm(customSlippage: BigDecimal?) {
+        (customSlippage ?: dataState.selectedProvider?.defaultSlippage)?.let { confirmedSlippage ->
+            sendSlippageEvent { from, to -> SwapEvents.ButtonSlippageConfirm(from, to, confirmedSlippage) }
+        }
         val isChanged = customSlippage != dataState.slippage.customOrNull
         dataState = dataState.copy(
             slippage = customSlippage
@@ -2676,6 +2690,20 @@ internal class SwapModel @Inject constructor(
         refreshSlippageUM()
         if (isChanged) startLoadingQuotesFromLastState(isSilent = true)
         dismissGlassSheet()
+    }
+
+    private fun sendSlippageEvent(createEvent: (from: CryptoCurrency, to: CryptoCurrency) -> SwapEvents) {
+        val fromCurrency = dataState.fromSwapCurrencyStatus?.currency ?: return
+        val toCurrency = dataState.toSwapCurrencyStatus?.currency ?: return
+        analyticsEventHandler.send(createEvent(fromCurrency, toCurrency))
+    }
+
+    /** The provider's quote carries the slippage it actually applied, which may differ from the one requested. */
+    private fun appliedSlippagePercent(): BigDecimal? {
+        val provider = dataState.selectedProvider ?: return null
+        return dataState.getCurrentLoadedSwapState()?.slippage
+            ?: provider.acceptedSlippageOrNull(dataState.slippage.customOrNull)
+            ?: provider.defaultSlippage
     }
 
     private fun currentSlippageQuoteKey(): SlippageQuoteKey? {
