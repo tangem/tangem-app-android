@@ -53,7 +53,10 @@ internal class HaveWalletSheetController(
 
     val isShown: Boolean get() = host.haveWalletSheetConfig?.isShown == true
 
-    fun open() = showStep(::optionsStep)
+    fun open() {
+        analyticsEventHandler.send(IntroductionProcess.IHaveWalletIntroScreenOpened())
+        showStep(::optionsStep)
+    }
 
     private fun optionsStep() = HaveWalletUM.Step.Options(
         cardOrRing = WalletOptionUM(
