@@ -46,4 +46,8 @@ internal class DefaultMcpIntentDeepLinkHandler @AssistedInject constructor(
     interface Factory : McpIntentDeepLinkHandler.Factory {
         override fun create(queryParams: Map<String, String>): DefaultMcpIntentDeepLinkHandler
     }
+
+    companion object {
+        const val DEEPLINK_KEY = "tangem://intent"
+    }
 }
