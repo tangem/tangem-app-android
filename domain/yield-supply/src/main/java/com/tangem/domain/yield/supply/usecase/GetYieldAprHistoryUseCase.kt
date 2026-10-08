@@ -8,8 +8,9 @@ import com.tangem.domain.yield.supply.models.incentives.YieldIncentivesError
 /**
  * Daily incentivised APY history of a supplied token.
  *
- * @param days how far back to look. The backend caps it at [MAX_DAYS], which is why the chart offers no period
- * longer than three months — a wider request is rejected, not merely trimmed.
+ * @param days how far back to look, clamped to [MIN_DAYS]..[MAX_DAYS] before the request is made. The backend
+ * refuses a wider window outright, so the chart offers no period longer than three months and anything beyond it
+ * is trimmed here rather than sent to be rejected.
  */
 class GetYieldAprHistoryUseCase(
     private val yieldIncentivesRepository: YieldIncentivesRepository,
