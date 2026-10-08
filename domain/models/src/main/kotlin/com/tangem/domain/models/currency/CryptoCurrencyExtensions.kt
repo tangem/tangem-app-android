@@ -1,13 +1,14 @@
 package com.tangem.domain.models.currency
 
 import com.tangem.domain.models.network.isJoint
+import com.tangem.domain.models.normalizeEvmAddress
 import java.math.BigDecimal
 
 val CryptoCurrency.isJoint: Boolean
     get() = network.isJoint
 
 fun CryptoCurrency.Token.yieldSupplyKey(): String {
-    return "${network.rawId}_$contractAddress"
+    return "${network.rawId}_${contractAddress.normalizeEvmAddress()}"
 }
 
 fun CryptoCurrencyStatus.hasNotSuppliedAmount(): Boolean {

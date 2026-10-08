@@ -12,6 +12,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.models.YieldMarketToken
+import com.tangem.domain.yield.supply.models.incentives.YieldIncentiveCampaign
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetRewardsBalanceUseCase.Companion.TICK_MILLIS
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -518,5 +519,67 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
         assertThat(emissions).hasSize(2)
         assertThat(emissions[0].cryptoBalance).isNotNull()
         assertThat(emissions[1].cryptoBalance).isNotNull()
+    }
+
+    @Test
+    fun `GIVEN active campaign WHEN invoke THEN balance grows at the base apy`() = runTest {
+        // Arrange
+        val network = createNetwork()
+        val token = createToken(network)
+        val amount = BigDecimal("100.0")
+        val baseApy = BigDecimal("12.0")
+
+        val status = CryptoCurrencyStatus(
+            currency = token,
+            value = CryptoCurrencyStatus.Custom(
+                amount = amount,
+                fiatAmount = null,
+                fiatRate = BigDecimal.ONE,
+                priceChange = null,
+                yieldSupplyStatus = null,
+                hasCurrentNetworkTransactions = false,
+                pendingTransactions = emptySet(),
+                networkAddress = NetworkAddress.Single(
+                    NetworkAddress.Address(value = "0xabc", type = NetworkAddress.Address.Type.Primary),
+                ),
+                sources = CryptoCurrencyStatus.Sources(),
+            ),
+        )
+
+        coEvery { repository.getCachedMarkets() } returns listOf(
+            YieldMarketToken(
+                tokenAddress = token.contractAddress,
+                chainId = 1,
+                apy = baseApy,
+                isActive = true,
+                maxFeeNative = BigDecimal.ZERO,
+                maxFeeUSD = BigDecimal.ZERO,
+                backendId = "id",
+                campaign = YieldIncentiveCampaign(
+                    hasActiveCampaign = true,
+                    rewardsApr = BigDecimal("6.0"),
+                    totalApyEst = BigDecimal("18.0"),
+                ),
+            ),
+        )
+
+        val dispatcherProvider = testDispatcherProvider(this)
+        val useCase = YieldSupplyGetRewardsBalanceUseCase(repository, dispatcherProvider)
+        val appCurrency = AppCurrency.Default
+
+        // Act
+        val deferred = async { useCase(status, appCurrency).take(2).toList() }
+
+        testScheduler.advanceUntilIdle()
+        advanceTimeBy(TICK_MILLIS)
+        testScheduler.advanceUntilIdle()
+
+        // Assert
+        val collected = deferred.await()
+        val expectedDecimals = calculateMinVisibleDecimalsForTest(initialPerTickDelta(amount, baseApy))
+        val expectedSecond = nextBalance(amount, baseApy).format {
+            fiat(appCurrency.code, appCurrency.symbol).anyDecimals(decimals = expectedDecimals)
+        }
+        assertThat(collected[1].fiatBalance).isEqualTo(expectedSecond)
     }
 }

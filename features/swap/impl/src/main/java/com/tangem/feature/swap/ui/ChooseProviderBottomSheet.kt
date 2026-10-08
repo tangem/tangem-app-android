@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,6 +37,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_filter_20
 import com.tangem.core.ui.res.generated.icons.ic_lightning_20
+import com.tangem.core.ui.test.SwapTokenScreenTestTags
 import com.tangem.core.ui.utils.getGreyScaleColorFilter
 import com.tangem.domain.express.models.ProviderFilterType
 import com.tangem.feature.swap.models.states.ChooseProviderBottomSheetConfig
@@ -188,6 +190,7 @@ private fun ProviderSheetItem(state: ProviderState, isSelected: Boolean, modifie
                 modifier = Modifier
                     .size(20.dp)
                     .clip(CircleShape)
+                    .testTag(SwapTokenScreenTestTags.PROVIDER_APPROVAL_SETTINGS)
                     .clickable(onClick = content.approvalSettings.onApprovalSelectClick),
             )
         }
