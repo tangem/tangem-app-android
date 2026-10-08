@@ -6,7 +6,7 @@ import java.math.BigDecimal
 internal object PolymarketConst {
     const val CENT_SIGN = "¢"
     val USD_CODE = AppCurrency.Default.code
-    const val USD_SYMBOL = "$"
+    val USD_SYMBOL = AppCurrency.Default.symbol
     const val COLLATERAL_DISPLAY_DECIMALS = 2
     const val SHARES_DISPLAY_DECIMALS = 2
     val SHARES_DISPLAY_STEP: BigDecimal = BigDecimal.ONE.movePointLeft(SHARES_DISPLAY_DECIMALS)
