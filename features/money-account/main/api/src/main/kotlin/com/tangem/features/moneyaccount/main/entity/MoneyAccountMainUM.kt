@@ -15,10 +15,7 @@ sealed interface MoneyAccountMainUM {
         val onClick: () -> Unit,
     ) : MoneyAccountMainUM
 
-    data class ActionRequired(
-        val balance: BalanceUM?,
-        val onClick: () -> Unit,
-    ) : MoneyAccountMainUM
+    data class ActionRequired(val onClick: () -> Unit) : MoneyAccountMainUM
 
     data class Content(
         val subtitle: TextReference,

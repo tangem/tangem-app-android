@@ -44,7 +44,6 @@ internal class MoneyAccountMainBlockConverter(
                 onClick = moneyAccountIntents::onMoneyAccountActivatingClicked,
             )
             is MoneyAccountStatusValue.Onboarding.KycRequired -> MoneyAccountMainUM.ActionRequired(
-                balance = balance?.toUM(source),
                 onClick = { moneyAccountIntents.onMoneyAccountKycRequiredClicked(userWalletId, customerId) },
             )
             is MoneyAccountStatusValue.Onboarding.UnderReview -> MoneyAccountMainUM.Onboarding(
@@ -52,11 +51,9 @@ internal class MoneyAccountMainBlockConverter(
                 onClick = { moneyAccountIntents.onMoneyAccountVerificationClicked(userWalletId, customerId) },
             )
             is MoneyAccountStatusValue.Onboarding.VerificationDeclined -> MoneyAccountMainUM.ActionRequired(
-                balance = balance?.toUM(source),
                 onClick = { moneyAccountIntents.onMoneyAccountVerificationDeclinedClicked(userWalletId, customerId) },
             )
             is MoneyAccountStatusValue.Onboarding.CountryNotSupported -> MoneyAccountMainUM.ActionRequired(
-                balance = balance?.toUM(source),
                 onClick = { moneyAccountIntents.onMoneyAccountCountryNotSupportedClicked(userWalletId, countryCode) },
             )
         }
