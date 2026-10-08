@@ -55,6 +55,20 @@ internal fun cashback(
     exclusionReason = exclusionReason,
 )
 
+internal fun collateralTransaction(
+    id: String = "tx_collateral_1",
+    type: TangemPayTxHistoryItem.Type = TangemPayTxHistoryItem.Type.Deposit,
+    amount: BigDecimal = BigDecimal.TEN,
+): TangemPayTxHistoryItem.Collateral = TangemPayTxHistoryItem.Collateral(
+    id = id,
+    jsonRepresentation = "{}",
+    date = DateTime(0L),
+    amount = amount,
+    currency = Currency.getInstance("USD"),
+    transactionHash = "0xhash",
+    type = type,
+)
+
 internal fun paymentTransaction(id: String = "tx_payment_1"): TangemPayTxHistoryItem.Payment =
     TangemPayTxHistoryItem.Payment(
         id = id,
