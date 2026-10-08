@@ -16,7 +16,10 @@ internal class DefaultMcpComponentFactoryTest {
     private val intentComponent: McpIntentComponent = mockk()
 
     private val pairRequest = McpRequest.Pair(userCode = "WDJB-MJHT")
-    private val intentRequest = McpRequest.Intent(id = "my_intent_id123", source = "express", type = "exchange")
+    private val intentRequest = McpRequest.Intent(
+        id = "my_intent_id123",
+        source = McpRequest.Intent.Source.Express(McpRequest.Intent.Source.Express.Type.EXCHANGE),
+    )
 
     private val pairFactory: McpPairComponent.Factory = mockk {
         every { create(context, McpPairComponent.Params(pairRequest)) } returns pairComponent
