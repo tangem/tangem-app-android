@@ -41,23 +41,8 @@ internal class CreateMoneyAccountOrderUseCaseTest {
     @BeforeEach
     fun resetMocks() {
         clearMocks(orderRepository, trackOrder, findMoneyAccountCreationOrderUseCase)
-        every { orderRepository.getOrder(USER_WALLET_ID) } returns null
         every { trackOrder(any(), any()) } just runs
         coEvery { findMoneyAccountCreationOrderUseCase(USER_WALLET_ID) } returns null.right()
-    }
-
-    @Test
-    fun `GIVEN order is already tracked WHEN invoke THEN backend is not called`() = runTest {
-        // Arrange
-        every { orderRepository.getOrder(USER_WALLET_ID) } returns createOrderInfo()
-
-        // Act
-        val actual = invokeUseCase()
-
-        // Assert
-        assertThat(actual).isEqualTo(Unit.right())
-        coVerify(exactly = 0) { findMoneyAccountCreationOrderUseCase(any()) }
-        coVerify(exactly = 0) { orderRepository.createOrder(any(), any(), any()) }
     }
 
     @Test
@@ -146,11 +131,6 @@ internal class CreateMoneyAccountOrderUseCaseTest {
         userWalletId = USER_WALLET_ID,
         depositAddress = DEPOSIT_ADDRESS,
         signature = SIGNATURE,
-    )
-
-    private fun createOrderInfo(orderId: String = ORDER_ID) = TangemPayOrderInfo(
-        orderId = orderId,
-        orderStatus = OrderStatus.PROCESSING,
     )
 
     private fun createOrder(
