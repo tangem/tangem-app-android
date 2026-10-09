@@ -56,7 +56,7 @@ internal class SocialLoginConsentPrompt(
 
     private fun onEmailSharingChange(isAllowed: Boolean) = update { it.copy(isEmailSharingAllowed = isAllowed) }
 
-    private fun onConfirmClick() {
+    private fun onConfirmClick(consentText: String) {
         if (!choice.isAcknowledged) {
             update { it.copy(isAcknowledgementMissing = true) }
             onEvent(Event.AcknowledgementMissing)
@@ -65,7 +65,7 @@ internal class SocialLoginConsentPrompt(
 
         val isEmailSharingAllowed = choice.isEmailSharingAllowed
         if (answer.complete(SocialLoginConsent(isEmailSharingAllowed = isEmailSharingAllowed))) {
-            onEvent(Event.Confirmed(isEmailSharingAllowed = isEmailSharingAllowed))
+            onEvent(Event.Confirmed(isEmailSharingAllowed = isEmailSharingAllowed, consentText = consentText))
         }
     }
 
@@ -76,7 +76,7 @@ internal class SocialLoginConsentPrompt(
     sealed interface Event {
         data object Shown : Event
         data object AcknowledgementMissing : Event
-        data class Confirmed(val isEmailSharingAllowed: Boolean) : Event
+        data class Confirmed(val isEmailSharingAllowed: Boolean, val consentText: String) : Event
     }
 
     private data class Choice(

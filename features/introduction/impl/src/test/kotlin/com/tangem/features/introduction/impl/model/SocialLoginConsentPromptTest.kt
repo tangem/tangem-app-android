@@ -31,16 +31,16 @@ internal class SocialLoginConsentPromptTest {
         runCurrent()
 
         // Act
-        current.onConfirmClick()
+        current.onConfirmClick(CONSENT_TEXT)
         current.onAcknowledgedChange(true)
-        current.onConfirmClick()
+        current.onConfirmClick(CONSENT_TEXT)
         answer.await()
 
         // Assert
         assertThat(events).containsExactly(
             SocialLoginConsentPrompt.Event.Shown,
             SocialLoginConsentPrompt.Event.AcknowledgementMissing,
-            SocialLoginConsentPrompt.Event.Confirmed(isEmailSharingAllowed = false),
+            SocialLoginConsentPrompt.Event.Confirmed(isEmailSharingAllowed = false, consentText = CONSENT_TEXT),
         ).inOrder()
     }
 
@@ -55,8 +55,8 @@ internal class SocialLoginConsentPromptTest {
         val ui = current
 
         // Act
-        ui.onConfirmClick()
-        ui.onConfirmClick()
+        ui.onConfirmClick(CONSENT_TEXT)
+        ui.onConfirmClick(CONSENT_TEXT)
         answer.await()
 
         // Assert
@@ -72,7 +72,7 @@ internal class SocialLoginConsentPromptTest {
         // Act
         current.onAcknowledgedChange(true)
         current.onEmailSharingChange(true)
-        current.onConfirmClick()
+        current.onConfirmClick(CONSENT_TEXT)
 
         // Assert
         assertThat(answer.await()).isEqualTo(SocialLoginConsent(isEmailSharingAllowed = true))
@@ -87,7 +87,7 @@ internal class SocialLoginConsentPromptTest {
 
         // Act
         current.onAcknowledgedChange(true)
-        current.onConfirmClick()
+        current.onConfirmClick(CONSENT_TEXT)
 
         // Assert
         assertThat(answer.await()).isEqualTo(SocialLoginConsent(isEmailSharingAllowed = false))
@@ -101,7 +101,7 @@ internal class SocialLoginConsentPromptTest {
             runCurrent()
 
             // Act
-            current.onConfirmClick()
+            current.onConfirmClick(CONSENT_TEXT)
 
             // Assert
             assertThat(current.isAcknowledgementMissing).isTrue()
@@ -116,7 +116,7 @@ internal class SocialLoginConsentPromptTest {
         // Arrange
         val answer = async { prompt.await() }
         runCurrent()
-        current.onConfirmClick()
+        current.onConfirmClick(CONSENT_TEXT)
 
         // Act
         current.onAcknowledgedChange(true)
@@ -157,5 +157,9 @@ internal class SocialLoginConsentPromptTest {
         // Assert
         assertThat(answer.await()).isNull()
         assertThat(states.last()).isNull()
+    }
+
+    private companion object {
+        const val CONSENT_TEXT = "Teilen Sie meine E-Mail mit Tangem"
     }
 }

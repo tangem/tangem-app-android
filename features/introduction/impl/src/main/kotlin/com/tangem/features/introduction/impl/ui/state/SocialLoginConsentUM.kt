@@ -11,6 +11,6 @@ internal data class SocialLoginConsentUM(
     val isEmailSharingAllowed: Boolean,
     val onAcknowledgedChange: (Boolean) -> Unit,
     val onEmailSharingChange: (Boolean) -> Unit,
-    val onConfirmClick: () -> Unit,
+    val onConfirmClick: (consentText: String) -> Unit,
     val onCloseClick: () -> Unit,
 )
