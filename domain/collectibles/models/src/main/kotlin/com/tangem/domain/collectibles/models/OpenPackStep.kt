@@ -17,7 +17,16 @@ sealed interface OpenPackStep {
         /** Failed before the payment was sent: nothing spent. */
         data object PurchaseFailed : Failed
 
-        /** Failed after the payment was sent: the pack may be paid for, but it is not opened. */
+        /** Failed once the payment was attempted: the pack may be paid for, but it is not opened. */
         data class PackUnopened(val txId: String) : Failed
+
+        /** The payment never arrived in time, so the purchase is closed. */
+        data object Expired : Failed
+
+        /** The purchase was paid back instead of opened. */
+        data object Refunded : Failed
+
+        /** The purchase ended in a state this flow cannot reach, such as a sold card. */
+        data object Unexpected : Failed
     }
 }
