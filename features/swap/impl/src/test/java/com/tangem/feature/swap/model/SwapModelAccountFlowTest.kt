@@ -90,7 +90,10 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import java.math.BigDecimal
+import java.util.Locale
 
 /**
  * Tests for mode-based withdrawal detection driven by [AccountFlow] plus the hidden/no-op reverse
@@ -807,6 +810,56 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             assertThat(model.uiState.changeCardsButtonState).isEqualTo(ChangeCardsButtonState.HIDDEN)
             model.onDestroy()
         }
+
+    @ParameterizedTest
+    @CsvSource(
+        value = [
+            "en-US|1.235|$1.235",
+            "en-US|10.999999|$10.999999",
+            "en-US|1.2399999|$1.239999",
+            "en-US|1.230000|$1.23",
+            "en-US|10|$10.00",
+            "en-US|0|$0.00",
+            "en-US|0.000001|$0.000001",
+            "en-US|0.009999|$0.009999",
+            "en-US|1234.567890|$1,234.56789",
+            "en-US|null|—",
+            "de-DE|1234.567890|1.234,56789\u00a0$",
+            "de-DE|0.000001|0,000001\u00a0$",
+        ],
+        delimiter = '|',
+        nullValues = ["null"],
+    )
+    fun `GIVEN a prediction balance WHEN withdrawing THEN the USD balance preserves spendable precision`(
+        localeTag: String,
+        balance: String?,
+        expected: String,
+    ) = runTest {
+        // Arrange
+        val originalLocale = Locale.getDefault()
+        Locale.setDefault(Locale.forLanguageTag(localeTag))
+        try {
+            val (collateral, _) = stubResolvedPredictionPair()
+            every { collateral.status.value.amount } returns balance?.toBigDecimal()
+            stubTransferState()
+            stubTransferStateBuilderPassthrough()
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
+            try {
+                advanceUntilIdle()
+
+                // Assert
+                val sendCard = model.uiState.sendCardData as SwapCardState.SwapCardData
+                assertThat(sendCard.balance)
+                    .isEqualTo(resourceReference(R.string.common_balance, wrappedList(expected)))
+            } finally {
+                model.onDestroy()
+            }
+        } finally {
+            Locale.setDefault(originalLocale)
+        }
+    }
 
     @Test
     fun `GIVEN a prediction withdraw WHEN entering USD THEN collateral amount and precision are preserved`() = runTest {
