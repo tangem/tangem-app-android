@@ -1,13 +1,9 @@
 package com.tangem.tap.di
 
-import com.tangem.domain.card.ScanCardUseCase
-import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.offramp.repository.OfframpRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.sdk.api.TangemSdkManager
-import com.tangem.tap.domain.scanCard.repository.DefaultScanCardRepository
 import com.tangem.tap.network.exchangeServices.DefaultRampManager
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -21,20 +17,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal object ActivityModule {
-
-    @Provides
-    @Singleton
-    fun provideScanCardUseCase(
-        tangemSdkManager: TangemSdkManager,
-        cardSdkConfigRepository: CardSdkConfigRepository,
-    ): ScanCardUseCase {
-        return ScanCardUseCase(
-            cardSdkConfigRepository = cardSdkConfigRepository,
-            scanCardRepository = DefaultScanCardRepository(
-                tangemSdkManager = tangemSdkManager,
-            ),
-        )
-    }
 
     @Provides
     @Singleton
