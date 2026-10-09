@@ -1268,6 +1268,7 @@ internal class SwapModel @Inject constructor(
                         amountToSwap = amount,
                         reduceBalanceBy = reduceBalanceBy,
                         customSlippage = dataState.slippage.customOrNull,
+                        intentId = params.intentId,
                     )
                 }
             },
@@ -1731,6 +1732,7 @@ internal class SwapModel @Inject constructor(
                     isTangemPayWithdrawal = isTangemPayWithdrawal,
                     integratedApproval = lastLoadedQuotesState.integratedApprovalData,
                     customSlippage = dataState.slippage.customOrNull,
+                    intentId = params.intentId,
                 )
             }.onSuccess { swapTransactionState ->
                 when (swapTransactionState) {
