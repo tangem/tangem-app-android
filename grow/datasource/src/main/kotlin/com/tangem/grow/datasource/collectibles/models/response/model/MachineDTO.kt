@@ -1,8 +1,8 @@
 package com.tangem.grow.datasource.collectibles.models.response.model
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
-import java.math.BigDecimal
+import com.tangem.domain.models.serialization.SerializedBigDecimal
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * A gacha machine (pack) as served by GET /api/v1/machine/machines and GET /api/v1/machine/{externalId}.
@@ -10,89 +10,89 @@ import java.math.BigDecimal
  * @property price **in cents** — 5000 means $50.00. So are [fee], [feeAmount], [expectedValue] and
  *   [tierRanges]; the data layer divides them by 100 — see `MachineConverter`.
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class MachineDTO(
-    @Json(name = "id")
+    @SerialName("id")
     val id: String,
-    @Json(name = "externalId")
+    @SerialName("externalId")
     val externalId: String,
-    @Json(name = "name")
+    @SerialName("name")
     val name: String,
-    @Json(name = "shortName")
+    @SerialName("shortName")
     val shortName: String,
-    @Json(name = "price")
-    val price: BigDecimal,
-    @Json(name = "fee")
-    val fee: BigDecimal,
-    @Json(name = "feeAmount")
-    val feeAmount: BigDecimal,
-    @Json(name = "contains")
+    @SerialName("price")
+    val price: SerializedBigDecimal,
+    @SerialName("fee")
+    val fee: SerializedBigDecimal,
+    @SerialName("feeAmount")
+    val feeAmount: SerializedBigDecimal,
+    @SerialName("contains")
     val contains: Int?,
-    @Json(name = "instantBuybackPercent")
+    @SerialName("instantBuybackPercent")
     val instantBuybackPercent: Int,
-    @Json(name = "lowThreshold")
+    @SerialName("lowThreshold")
     val lowThreshold: Int,
-    @Json(name = "odds")
+    @SerialName("odds")
     val odds: MachineOddsDTO,
-    @Json(name = "tierRanges")
+    @SerialName("tierRanges")
     val tierRanges: MachineTierRangesDTO,
-    @Json(name = "stock")
+    @SerialName("stock")
     val stock: MachineStockDTO,
-    @Json(name = "expectedValue")
-    val expectedValue: BigDecimal,
-    @Json(name = "image")
+    @SerialName("expectedValue")
+    val expectedValue: SerializedBigDecimal,
+    @SerialName("image")
     val image: String?,
-    @Json(name = "categoryId")
+    @SerialName("categoryId")
     val categoryId: String,
-    @Json(name = "createdAt")
+    @SerialName("createdAt")
     val createdAt: String,
-    @Json(name = "updatedAt")
+    @SerialName("updatedAt")
     val updatedAt: String,
 ) {
     /** Remaining card count per rarity tier. */
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class MachineStockDTO(
-        @Json(name = "common")
+        @SerialName("common")
         val common: Int,
-        @Json(name = "uncommon")
+        @SerialName("uncommon")
         val uncommon: Int,
-        @Json(name = "rare")
+        @SerialName("rare")
         val rare: Int,
-        @Json(name = "epic")
+        @SerialName("epic")
         val epic: Int?,
     )
 
     /** Drop chance per rarity tier, in percent. */
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class MachineOddsDTO(
-        @Json(name = "common")
+        @SerialName("common")
         val common: Int,
-        @Json(name = "uncommon")
+        @SerialName("uncommon")
         val uncommon: Int,
-        @Json(name = "rare")
+        @SerialName("rare")
         val rare: Int,
-        @Json(name = "epic")
+        @SerialName("epic")
         val epic: Int?,
     )
 
     /** Card value range per rarity tier. */
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class MachineTierRangesDTO(
-        @Json(name = "common")
+        @SerialName("common")
         val common: MachineTierRangeDTO,
-        @Json(name = "uncommon")
+        @SerialName("uncommon")
         val uncommon: MachineTierRangeDTO,
-        @Json(name = "rare")
+        @SerialName("rare")
         val rare: MachineTierRangeDTO,
-        @Json(name = "epic")
+        @SerialName("epic")
         val epic: MachineTierRangeDTO?,
     ) {
-        @JsonClass(generateAdapter = true)
+        @Serializable
         data class MachineTierRangeDTO(
-            @Json(name = "start")
-            val start: BigDecimal,
-            @Json(name = "end")
-            val end: BigDecimal,
+            @SerialName("start")
+            val start: SerializedBigDecimal,
+            @SerialName("end")
+            val end: SerializedBigDecimal,
         )
     }
 }
