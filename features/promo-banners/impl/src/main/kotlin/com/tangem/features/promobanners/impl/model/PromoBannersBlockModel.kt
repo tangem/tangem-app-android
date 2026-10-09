@@ -84,7 +84,12 @@ internal class PromoBannersBlockModel @Inject constructor(
                 } else {
                     banners
                 }
-                buildState(walletId, shownBanners, isVisible = false)
+                buildState(
+                    walletId = walletId,
+                    banners = shownBanners,
+                    walletCampaigns = campaignsByWallet[walletId],
+                    isVisible = false,
+                )
             }
         }.stateIn(modelScope, SharingStarted.Eagerly, emptyMap())
 
@@ -214,15 +219,33 @@ internal class PromoBannersBlockModel @Inject constructor(
     private fun buildState(
         walletId: String,
         banners: List<PromoBannerDisplay>,
+        walletCampaigns: WalletCampaigns?,
         isVisible: Boolean,
     ): PromoBannersBlockUM {
+        val campaignNames = campaignNamesByDisplayId(banners, walletCampaigns)
         val bannerUMs = banners.map { banner ->
+            val campaignName = campaignNames[banner.id]
             converter.convert(
                 banner = banner,
-                onDeeplinkClick = { deeplink -> onButtonClick(banner.id, deeplink) },
-                onDismiss = { displayId -> onBannerDismiss(walletId, displayId) },
+                onDeeplinkClick = { deeplink -> onButtonClick(
+                    displayId = banner.id,
+                    deeplink = deeplink,
+                    campaignName = campaignName,
+                ) },
+                onDismiss = { displayId -> onBannerDismiss(
+                    walletId = walletId,
+                    displayId = displayId,
+                    campaignName = campaignName,
+                ) },
                 onCampaignClick = if (isCampaignsV2Enabled) {
-                    { campaignId -> onCampaignClick(walletId, banner.id, campaignId) }
+                    { campaignId ->
+                        onCampaignClick(
+                            walletId = walletId,
+                            displayId = banner.id,
+                            campaignId = campaignId,
+                            campaignName = campaignName,
+                        )
+                    }
                 } else {
                     null
                 },
@@ -242,16 +265,29 @@ internal class PromoBannersBlockModel @Inject constructor(
             banners = bannerUMs,
             isVisibleOnScreen = isVisible,
             placeholder = params.placeholder,
-            onBannerShown = { displayId -> onBannerShown(walletId, displayId) },
+            onBannerShown = { displayId -> onBannerShown(walletId, displayId, campaignNames[displayId]) },
             onCarouselScrolled = ::onCarouselScrolled,
             onPageChanged = { displayId -> savedDisplayIdByWalletId[walletId] = displayId },
         )
     }
 
-    private fun onBannerShown(walletId: String, displayId: Int) {
+    /** Campaign banners report their campaign's name; it is known whenever one is shown, see [campaignMatcher]. */
+    private fun campaignNamesByDisplayId(
+        banners: List<PromoBannerDisplay>,
+        walletCampaigns: WalletCampaigns?,
+    ): Map<Int, String> {
+        val campaigns = (walletCampaigns as? WalletCampaigns.Loaded)?.campaigns ?: return emptyMap()
+
+        return banners.mapNotNull { banner ->
+            val campaign = campaigns.firstOrNull { it.id == banner.campaignId } ?: return@mapNotNull null
+            banner.id to campaign.name
+        }.toMap()
+    }
+
+    private fun onBannerShown(walletId: String, displayId: Int, campaignName: String?) {
         if (walletId != selectedWalletId.value) return
         if (shownBannerIds.add(walletId to displayId)) {
-            analyticsEventHandler.send(PromoBannerAnalyticsEvent.Shown(displayId, placeholderName))
+            analyticsEventHandler.send(PromoBannerAnalyticsEvent.Shown(displayId, placeholderName, campaignName))
         }
     }
 
@@ -262,8 +298,8 @@ internal class PromoBannersBlockModel @Inject constructor(
         }
     }
 
-    private fun onButtonClick(displayId: Int, deeplink: String?) {
-        analyticsEventHandler.send(PromoBannerAnalyticsEvent.Clicked(displayId, placeholderName))
+    private fun onButtonClick(displayId: Int, deeplink: String?, campaignName: String?) {
+        analyticsEventHandler.send(PromoBannerAnalyticsEvent.Clicked(displayId, placeholderName, campaignName))
 
         if (deeplink.isNullOrBlank()) {
             uiMessageSender.send(ToastMessage(message = resourceReference(R.string.common_something_went_wrong)))
@@ -272,8 +308,8 @@ internal class PromoBannersBlockModel @Inject constructor(
         }
     }
 
-    private fun onCampaignClick(walletId: String, displayId: Int, campaignId: Int) {
-        analyticsEventHandler.send(PromoBannerAnalyticsEvent.Clicked(displayId, placeholderName))
+    private fun onCampaignClick(walletId: String, displayId: Int, campaignId: Int, campaignName: String?) {
+        analyticsEventHandler.send(PromoBannerAnalyticsEvent.Clicked(displayId, placeholderName, campaignName))
         campaignsService.show(campaignId = campaignId.toString(), userWalletId = UserWalletId(walletId))
     }
 
@@ -299,8 +335,8 @@ internal class PromoBannersBlockModel @Inject constructor(
         onPageChanged = {},
     )
 
-    private fun onBannerDismiss(walletId: String, displayId: Int) {
-        analyticsEventHandler.send(PromoBannerAnalyticsEvent.Dismissed(displayId, placeholderName))
+    private fun onBannerDismiss(walletId: String, displayId: Int, campaignName: String?) {
+        analyticsEventHandler.send(PromoBannerAnalyticsEvent.Dismissed(displayId, placeholderName, campaignName))
         rawBannersByWalletId.update { byWallet ->
             val banners = byWallet[walletId] ?: return@update byWallet
             byWallet + (walletId to banners.filterNot { it.id == displayId })
