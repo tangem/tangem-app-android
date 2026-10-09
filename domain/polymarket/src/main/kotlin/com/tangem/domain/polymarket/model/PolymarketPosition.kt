@@ -23,6 +23,7 @@ sealed interface PolymarketPosition {
      * Shares still held, including resolved shares awaiting claim.
      * [cashPnl] and [percentPnl] describe only the remaining holding; [realizedPnl] covers earlier sales.
      * [currentValue] is an indicative mark, not guaranteed sale proceeds.
+     * [score] and [period] retain the provider's format; [dataFetchedAt] dates the backend's event snapshot.
      */
     data class Open(
         override val id: PolymarketPositionId,
@@ -49,6 +50,11 @@ sealed interface PolymarketPosition {
         val isLive: Boolean,
         val resolutionStatus: PolymarketResolutionStatus,
         val result: PolymarketPositionResult?,
+        val gameId: String? = null,
+        val score: String? = null,
+        val period: String? = null,
+        val isEnded: Boolean? = null,
+        val dataFetchedAt: Instant? = null,
     ) : PolymarketPosition
 
     /** History of sold-out or claimed shares. There is no remaining value or route to an event. */
