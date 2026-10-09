@@ -39,6 +39,8 @@ internal interface MoneyAccountIntents {
     fun onMoneyAccountVerificationDeclinedClicked(userWalletId: UserWalletId, customerId: String)
 
     fun onMoneyAccountCountryNotSupportedClicked(userWalletId: UserWalletId, countryCode: String?)
+
+    fun onMoneyAccountClicked(userWalletId: UserWalletId)
 }
 
 @ModelScoped
@@ -192,6 +194,10 @@ internal class MoneyAccountClickIntentsImplementor @Inject constructor(
         }
 
         uiMessageSender.send(bottomSheet)
+    }
+
+    override fun onMoneyAccountClicked(userWalletId: UserWalletId) {
+        router.openMoneyAccountMain(userWalletId = userWalletId)
     }
 
     private fun hideMoneyAccount(userWalletId: UserWalletId) {
