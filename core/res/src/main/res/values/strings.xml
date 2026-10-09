@@ -1098,12 +1098,14 @@
   <string name="hw_upgrade_funds_access_description">Your funds remain safe and fully accessible during the process</string>
   <string name="hw_upgrade_funds_access_title">Access to funds</string>
   <string name="hw_upgrade_general_security_description">After upgrading, your mobile wallet is removed from the app and stored on your Tangem hardware wallet. Your recovery phrase stays with you.</string>
+  <string name="hw_upgrade_general_security_description_social">After upgrading, your wallet moves to your Tangem hardware wallet. Signing in with %1$s will no longer restore it. Your recovery phrase stays with you.</string>
   <string name="hw_upgrade_general_security_description_v2">After upgrading, your mobile wallet and %1$s backup are removed. Your recovery phrase is stored on your Tangem hardware wallet instead.</string>
   <string name="hw_upgrade_general_security_title">General security</string>
   <string name="hw_upgrade_key_migration_description">Private keys will be moved from the app to your Tangem hardware wallet</string>
   <string name="hw_upgrade_key_migration_title">Key migration</string>
   <string name="hw_upgrade_save_seed_action">Save recovery phrase</string>
   <string name="hw_upgrade_save_seed_description">After the upgrade, you won\'t be able to view it again. Your mobile wallet and cloud backup will be deleted, so write it down now as a backup recovery method.</string>
+  <string name="hw_upgrade_save_seed_description_social">After the upgrade, this wallet will be stored on your Tangem hardware wallet and removed from this phone. Signing in with %1$s will no longer restore it. Use your Tangem hardware wallet or recovery phrase instead.</string>
   <string name="hw_upgrade_save_seed_title">Save your recovery phrase before upgrading</string>
   <string name="hw_upgrade_scan_device">Scan device</string>
   <string name="hw_upgrade_start_action">Start upgrade</string>
@@ -1140,7 +1142,7 @@
   <string name="introduction_import_icloud_not_found">iCloud backup not found</string>
   <string name="introduction_import_icloud_restore">Restore iCloud backup</string>
   <string name="introduction_import_icloud_retry">Retry iCloud backup</string>
-  <string name="introduction_legal">By continuing, you agree with %1$s and %2$s</string>
+  <string name="introduction_legal">By continuing, you agree to the %1$s and %2$s</string>
   <string name="introduction_scene_three_subtitle">Earn up to 4% cashback in US dollars</string>
   <string name="introduction_scene_three_title">Pay anywhere</string>
   <string name="introduction_scene_two_subtitle">Buy crypto and stocks with zero fees</string>
@@ -1157,7 +1159,7 @@
   <string name="introduction_stories_two_title">One wallet, multiple cards</string>
   <string name="introduction_subtitle">One secure place for everything you own</string>
   <string name="introduction_terms_of_service">Terms of service</string>
-  <string name="introduction_terms_of_service_consent">By continuing, you agree with %s</string>
+  <string name="introduction_terms_of_service_consent">By continuing, you agree to the %s</string>
   <string name="introduction_title">Store all your assets</string>
   <string name="joint_account_activated_snackbar">Account activated</string>
   <string name="joint_account_activation_account_button_title">Activate account</string>
@@ -1195,11 +1197,16 @@
   <string name="joint_account_join_invalid_link_subtitle">Check that you opened the correct link, or ask the account creator to send it again</string>
   <string name="joint_account_join_invalid_link_title">Invitation link isn\'t valid</string>
   <string name="joint_account_join_load_failed">Failed to load invite page. Tap to reload</string>
+  <plurals name="joint_account_join_signatures_count">
+    <item quantity="one">%d signature</item>
+    <item quantity="other">%d signatures</item>
+  </plurals>
   <string name="joint_account_join_subtitle">This is a joint account. Every transaction from this account will require %1$s to sign</string>
   <string name="joint_account_join_subtitle_value">%1$s of %2$s members</string>
   <string name="joint_account_join_success_message">Account added</string>
   <string name="joint_account_join_title">You\'ve been invited to %1$s</string>
   <string name="joint_account_join_to_account_btn_text">Join account</string>
+  <string name="joint_account_join_to_approve">To approve</string>
   <plurals name="joint_account_members_count">
     <item quantity="one">%d member</item>
     <item quantity="other">%d members</item>
@@ -2321,13 +2328,17 @@
   <string name="social_login_toast_wallet_added">Wallet added</string>
   <string name="social_login_toast_wallet_created">Wallet created</string>
   <string name="social_wallet_delete_anyway">Delete anyway</string>
+  <string name="social_wallet_delete_attention_acknowledge">I understand that if I haven\'t backed up my recovery phrase, I\'ll lose access to this wallet forever.</string>
   <string name="social_wallet_delete_attention_description">This wallet will be permanently removed from your device and %s account</string>
+  <string name="social_wallet_delete_confirmation_title">Delete this wallet and unlink it from your %1$s Account?</string>
   <string name="social_wallet_delete_description">This wallet will be permanently removed from the app, and your %s account will no longer be linked to it. Back up your seed phrase first - otherwise you\'ll permanently lose access to any crypto it holds.</string>
   <string name="social_wallet_delete_error_description">We couldn\'t delete this wallet. Please try again</string>
   <string name="social_wallet_delete_title">Delete wallet?</string>
   <string name="social_wallet_log_out_description">You can always sign in at any time.</string>
+  <string name="social_wallet_log_out_description_v2">This only removes the wallet from this device. It stays linked to your %1$s Account, and you can restore the wallet by signing in with %1$s.</string>
   <string name="social_wallet_log_out_title">Are you sure you want to log out?</string>
   <string name="social_wallet_settings_delete_wallet">Delete wallet</string>
+  <string name="social_wallet_settings_delete_wallet_footer">Wallet deletion is irreversible. Without a backup, the wallet can\'t be restored or used again.</string>
   <string name="social_wallet_settings_log_out">Log out</string>
   <string name="stake_token_description">Put your token to work</string>
   <string name="staking_account_initialization_footer">A network fee is a small payment required to process and confirm your transaction on the blockchain.</string>
@@ -2887,9 +2898,10 @@
   <string name="tangempay_newonboard_Q4_title">Who stores my personal data and how is it protected?</string>
   <string name="tangempay_newonboard_body">Spend crypto anywhere — no banks, no middlemen, no exchanges. The power of self-custody meets everyday payments.</string>
   <string name="tangempay_newonboard_bottomleft_body">Buy online and via Apple Pay</string>
+  <string name="tangempay_newonboard_bottomleft_body_android">Buy online and via Google Pay</string>
   <string name="tangempay_newonboard_bottomleft_title">Accepted worldwide</string>
-  <string name="tangempay_newonboard_bottomright_body">USD to USDC 1:1; flat $1 fee</string>
-  <string name="tangempay_newonboard_bottomright_title">Recieve ACH transfers</string>
+  <string name="tangempay_newonboard_bottomright_body">Via ACH or Wire</string>
+  <string name="tangempay_newonboard_bottomright_title">Get and send bank transfers</string>
   <string name="tangempay_newonboard_title">Get your Tangem Pay Card</string>
   <string name="tangempay_newonboard_topleft_body">Pay what you see</string>
   <string name="tangempay_newonboard_topleft_title">No purchase fees, \n1 USDC = 1 USD</string>
@@ -3798,6 +3810,7 @@
   <string name="yield_module_incentive_chart_powered_by_description">A campaign sponsor funds extra reward tokens, distributed through Merkl.\nIncentives may end, and reward token prices can change.\nThe displayed APY includes incentive rewards after Tangem\'s service fee.</string>
   <string name="yield_module_incentive_chart_powered_by_title">Powered by Merkl</string>
   <string name="yield_module_incentive_chart_sheet_title">Incentivized yield</string>
+  <string name="yield_module_incentives_provider">Merkl</string>
   <string name="yield_module_main_screen_promo_banner_message">Enable %1$s%% APY on your balance</string>
   <string name="yield_module_main_view_approve_notification_description">Approval for your token in Yield Mode has been revoked. Open the token to grant permission again.</string>
   <string name="yield_module_main_view_approve_notification_title">Token approval needed</string>
