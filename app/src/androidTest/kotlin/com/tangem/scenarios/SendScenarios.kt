@@ -376,3 +376,57 @@ fun BaseTestCase.selectTokenToSendViaSwap(
         onChooseNetworkBottomSheet { networkItem(networkName, networkType).performClick() }
     }
 }
+
+fun BaseTestCase.selectReceiveTokenForSendViaSwap(swapTokenName: String, networkType: String) {
+    step("Click on 'Swap to another token' button") {
+        onSendScreen { swapToAnotherTokenButton.performClick() }
+    }
+    step("Click on token: '$swapTokenName'") {
+        awaitSuccess(WAIT_UNTIL_TIMEOUT_LONG) { onSendViaSwapScreen { tokenItem(swapTokenName).assertIsDisplayed() } }
+        onSendViaSwapScreen { tokenItem(swapTokenName).performClick() }
+    }
+    step("Click on '$swapTokenName $networkType' network") {
+        awaitSuccess { onChooseNetworkBottomSheet { networkItem(swapTokenName, networkType).assertIsDisplayed() } }
+        onChooseNetworkBottomSheet { networkItem(swapTokenName, networkType).performClick() }
+    }
+}
+
+fun BaseTestCase.openSendViaSwapConfirmScreen(
+    sendTokenName: String,
+    swapTokenName: String,
+    networkType: String,
+    amount: String,
+    recipientAddress: String,
+    isFloatingRate: Boolean = false,
+) {
+    step("Type '$amount' in text field") {
+        onSendScreen { amountInputTextField.performTextInput(amount) }
+    }
+    step("Assert amount '$amount' is displayed before leaving the screen") {
+        awaitSuccess { onSendScreen { amountInputTextField.assertTextContains(amount) } }
+    }
+    step("Select '$swapTokenName $networkType' as receive token") {
+        selectReceiveTokenForSendViaSwap(swapTokenName = swapTokenName, networkType = networkType)
+    }
+    if (isFloatingRate) {
+        step("Click on '$sendTokenName' send amount block") {
+            awaitSuccess { onSendScreen { swapTokenName(sendTokenName).assertIsDisplayed() } }
+            onSendScreen { swapTokenName(sendTokenName).performClick() }
+        }
+        step("Assert 'Floating rate' badge is displayed") {
+            awaitSuccess { onSendScreen { floatingRateBadge.assertIsDisplayed() } }
+        }
+    }
+    step("Click on 'Next' button") {
+        awaitSuccess(WAIT_UNTIL_TIMEOUT_LONG) { onSendScreen { nextButton.assertIsEnabled() } }
+        onSendScreen { nextButton.performClick() }
+    }
+    step("Type recipient address") {
+        awaitSuccess { onSendAddressScreen { addressTextField.assertIsDisplayed() } }
+        onSendAddressScreen { addressTextField.performTextReplacement(recipientAddress) }
+    }
+    step("Open 'Send confirm' screen via 'Next' button") {
+        awaitSuccess(WAIT_UNTIL_TIMEOUT_LONG) { onSendAddressScreen { nextButton.assertIsEnabled() } }
+        openSendConfirmScreenViaNextButton()
+    }
+}
