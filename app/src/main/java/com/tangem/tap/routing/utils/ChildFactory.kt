@@ -364,6 +364,7 @@ internal class ChildFactory @Inject constructor(
                         fromAmount = route.fromAmount,
                         providerId = route.providerId,
                         accountFlow = route.accountFlow,
+                        intentId = route.intentId,
                     ),
                     componentFactory = swapComponentFactory,
                 )
