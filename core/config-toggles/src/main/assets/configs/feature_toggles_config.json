@@ -16,10 +16,6 @@
         "version": "6.4"
     },
     {
-        "name": "NEW_CARD_SCANNING_ENABLED",
-        "version": "undefined"
-    },
-    {
         "name": "VISA_ONBOARDING_ENABLED",
         "version": "undefined"
     },
