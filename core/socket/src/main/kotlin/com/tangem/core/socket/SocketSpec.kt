@@ -11,7 +11,8 @@ import kotlin.time.Duration.Companion.seconds
  * @property lifecycle extra condition for holding the connection, on top of foreground, network and collectors
  * @property reconnectOn every change of its value reconnects at once without backoff, e.g. rotated credentials
  * @property onOpen runs on every (re)connect before the keep-alive starts: auth, the full subscription set. It must only
- * send: incoming frames wait until it returns, and frames sent from outside meanwhile go out right after it
+ * send: incoming frames wait until it returns, and frames sent from outside meanwhile go out right after it. Taking
+ * longer than 5 s fails the attempt
  * @property isSplitArrayFrames delivers every element of a JSON array frame as a separate message
  * @property idleTimeout how long the connection outlives its last collector
  */
