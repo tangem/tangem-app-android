@@ -36,6 +36,11 @@ internal object PolymarketOpenPositionConverter : Converter<PolymarketOpenPositi
         isNegRisk = value.isNegRisk,
         isAcceptingOrders = value.isAcceptingOrders,
         isLive = value.isLive,
+        gameId = value.gameId,
+        score = value.score,
+        period = value.period,
+        isEnded = value.isEnded,
+        dataFetchedAt = value.dataFetchedAt?.let(Instant::parse),
         resolutionStatus = PolymarketResolutionStatus.entries.firstOrNull { it.name == value.resolutionStatus }
             ?: PolymarketResolutionStatus.UNKNOWN,
         result = value.status?.let { status ->

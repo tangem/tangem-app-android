@@ -374,6 +374,7 @@ internal class PolymarketEventDetailsContentTransformerTest {
         liquidity = null,
         totalMarketsCount = markets.size,
         isNegRisk = displayMode == PolymarketDisplayMode.GROUPED_OUTCOMES,
+        isLive = false,
         displayMode = displayMode,
         markets = markets,
     )
