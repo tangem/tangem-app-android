@@ -76,7 +76,7 @@ internal class TangemPayAddFundsModelTest {
         }
 
     @Test
-    fun `GIVEN v2 enabled WHEN bank transfer clicked THEN the row is pending until banking details arrive`() = runTest {
+    fun `GIVEN v2 enabled WHEN bank transfer clicked THEN the row loads until banking details arrive`() = runTest {
         // Arrange
         every { featureToggles.isVisaOnrampV2Enabled } returns true
         val pending = CompletableDeferred<BankCredentials>()
@@ -88,7 +88,8 @@ internal class TangemPayAddFundsModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.bankTransferRow().accent).isEqualTo(TangemPayAddFundsItemUM.Accent.Warning)
+        assertThat(model.bankTransferRow().isLoading).isTrue()
+        assertThat(model.bankTransferRow().accent).isEqualTo(TangemPayAddFundsItemUM.Accent.Info)
         assertThat(model.bankTransferRow().onClick).isNull()
         pending.complete(bankCredentials())
         advanceUntilIdle()
@@ -109,7 +110,7 @@ internal class TangemPayAddFundsModelTest {
         // Assert
         verify(exactly = 1) { listener.onBankingDetailsLoadFailed(PRODUCT_INSTANCE_ID) }
         verify(exactly = 0) { router.push(any(), any()) }
-        assertThat(model.bankTransferRow().accent).isEqualTo(TangemPayAddFundsItemUM.Accent.Info)
+        assertThat(model.bankTransferRow().isLoading).isFalse()
         assertThat(model.bankTransferRow().onClick).isNotNull()
     }
 
