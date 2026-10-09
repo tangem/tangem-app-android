@@ -92,7 +92,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
             analyticsEventHandler.send(PushNotificationAnalyticEvents.NotificationOpened(type.name))
 
             if (userWallet.isMultiCurrency) {
-                appRouter.push(
+                openCurrencyDetails(
                     route = AppRoute.CurrencyDetails(
                         userWalletId = userWallet.walletId,
                         currency = cryptoCurrency,
@@ -120,6 +120,14 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
                 }
             }
             if (isFromOnNewIntent) fetchCurrency(userWallet, cryptoCurrency)
+        }
+    }
+
+    private fun openCurrencyDetails(route: AppRoute.CurrencyDetails, onComplete: (Boolean) -> Unit) {
+        if (appRouter.stack.lastOrNull() is AppRoute.CurrencyDetails) {
+            appRouter.replaceCurrent(route = route, onComplete = onComplete)
+        } else {
+            appRouter.push(route = route, onComplete = onComplete)
         }
     }
 
