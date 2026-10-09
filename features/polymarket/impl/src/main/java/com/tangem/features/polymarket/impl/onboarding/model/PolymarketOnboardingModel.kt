@@ -108,19 +108,20 @@ internal class PolymarketOnboardingModel @Inject constructor(
 
     private fun renderEntry(entry: PolymarketEntry) {
         when (entry) {
-            is PolymarketEntry.Onboard -> uiState.value = welcome(
-                isInProgress = false,
-                actionButtonText = startButtonText(status = entry.status),
-            )
-            PolymarketEntry.Undetermined -> uiState.value = welcome(isInProgress = false)
-            PolymarketEntry.Reconnect -> uiState.value = reconnect()
-            PolymarketEntry.Onboarded -> {
-                openFeed()
-                return
+            is PolymarketEntry.Onboard -> {
+                uiState.value = welcome(
+                    isInProgress = false,
+                    actionButtonText = startButtonText(status = entry.status),
+                )
+                prefetchStory()
             }
+            PolymarketEntry.Undetermined -> {
+                uiState.value = welcome(isInProgress = false)
+                prefetchStory()
+            }
+            PolymarketEntry.Reconnect -> uiState.value = reconnect()
+            PolymarketEntry.Onboarded -> openFeed()
         }
-
-        prefetchStory()
     }
 
     private fun startOnboarding() {
