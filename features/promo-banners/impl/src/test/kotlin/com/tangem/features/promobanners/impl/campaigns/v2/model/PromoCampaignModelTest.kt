@@ -7,6 +7,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -37,6 +38,8 @@ import com.tangem.domain.promo.usecase.RegisterPromoCampaignUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
+import com.tangem.features.promobanners.impl.campaigns.analytics.PromoCampaignsAnalyticsEvent
+import com.tangem.features.promobanners.impl.campaigns.analytics.PromoCampaignsAnalyticsEvent.PayoutToken
 import com.tangem.features.promobanners.impl.campaigns.model.PredefinedTokenResolver
 import com.tangem.features.promobanners.impl.campaigns.v2.PROMO_TNC_URL
 import com.tangem.features.promobanners.impl.campaigns.v2.component.PromoCampaignBottomSheetComponent
@@ -75,6 +78,7 @@ internal class PromoCampaignModelTest {
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk()
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
 
     private val mainWallet = MockUserWalletFactory.create()
     private val linkedWallet = MockUserWalletFactory.create().copy(walletId = UserWalletId("0b"), name = "Linked")
@@ -98,6 +102,7 @@ internal class PromoCampaignModelTest {
             getWalletMetaInfoUseCase,
             sendFeedbackEmailUseCase,
             messageSender,
+            analyticsEventHandler,
         )
         val bridge = mockk<ChooseTokenBridge>(relaxed = true) {
             every { onCurrencyChosen } returns this@PromoCampaignModelTest.onCurrencyChosen
@@ -435,6 +440,102 @@ internal class PromoCampaignModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN campaign WHEN model created THEN promotion screen opened sent once`() = runTest {
+        // Act
+        val model = createModel(isPayoutNeeded = true, matchMode = PromoMatchMode.LinkedWallet)
+        advanceUntilIdle()
+
+        // Assert
+        val campaign = createPromoCampaign(isPayoutNeeded = true, matchMode = PromoMatchMode.LinkedWallet)
+        verify(exactly = 1) {
+            analyticsEventHandler.send(PromoCampaignsAnalyticsEvent.PromotionScreenOpened(campaign))
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN token chosen WHEN enroll clicked THEN enroll click sent with token and wallets count`() = runTest {
+        // Arrange
+        val model = createModel(isPayoutNeeded = true)
+        advanceUntilIdle()
+        val chosen = chooseTokenResult()
+        onCurrencyChosen.send(chosen)
+        advanceUntilIdle()
+        val token = chosen.currency.currency
+        val expected = PromoCampaignsAnalyticsEvent.EnrollButtonClicked(
+            campaign = createPromoCampaign(isPayoutNeeded = true),
+            payoutToken = PayoutToken(symbol = token.symbol, blockchain = token.network.name),
+            walletsCount = 1,
+        )
+
+        // Act
+        model.uiState.value.footer.onButtonClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { analyticsEventHandler.send(expected) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN linked wallet ineligible WHEN enroll clicked THEN enroll successful sent with partial counts`() =
+        runTest {
+            // Arrange
+            coEvery { registerPromoCampaignUseCase(any(), any()) } returns listOf(
+                registered(mainWallet.walletId, PromoRegistrationStatus.Enrolled),
+                registered(linkedWallet.walletId, PromoRegistrationStatus.Ineligible),
+            ).right()
+            every { userWalletsFetcherFactory.create(any(), any(), any(), any(), any()) } returns
+                mockk { every { userWallets } returns flowOf(persistentListOf()) }
+            val model = createModel(isPayoutNeeded = false, matchMode = PromoMatchMode.LinkedWallet)
+            advanceUntilIdle()
+            val campaign = createPromoCampaign(isPayoutNeeded = false, matchMode = PromoMatchMode.LinkedWallet)
+
+            // Act
+            model.uiState.value.footer.onButtonClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    PromoCampaignsAnalyticsEvent.EnrollButtonClicked(campaign, payoutToken = null, walletsCount = 2),
+                )
+                analyticsEventHandler.send(
+                    PromoCampaignsAnalyticsEvent.EnrollSuccessful(
+                        campaign = campaign,
+                        payoutToken = null,
+                        walletsEnrolled = 1,
+                        walletsTotal = 2,
+                    ),
+                )
+            }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN generic error WHEN enroll clicked THEN technical enroll error sent`() = runTest {
+        // Arrange
+        val model = createModel(isPayoutNeeded = false)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.footer.onButtonClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(
+                PromoCampaignsAnalyticsEvent.EnrollError(
+                    campaign = createPromoCampaign(isPayoutNeeded = false),
+                    reason = PromoCampaignsAnalyticsEvent.EnrollError.Reason.Technical,
+                    errorCode = null,
+                ),
+            )
+        }
+        model.onDestroy()
+    }
+
     private fun registered(walletId: UserWalletId, status: PromoRegistrationStatus) =
         PromoRegistrationResult(userWalletId = walletId, status = status, payout = null)
 
@@ -487,5 +588,6 @@ internal class PromoCampaignModelTest {
         getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
         sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
         messageSender = messageSender,
+        analyticsEventHandler = analyticsEventHandler,
     )
 }

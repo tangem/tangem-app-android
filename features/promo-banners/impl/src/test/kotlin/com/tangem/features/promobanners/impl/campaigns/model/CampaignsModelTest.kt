@@ -14,7 +14,7 @@ import com.tangem.features.promobanners.impl.campaigns.entity.CampaignsBottomShe
 import com.tangem.domain.promo.models.PromoCampaignId
 import com.tangem.domain.promo.models.PromoCampaignState
 import com.tangem.domain.promo.usecase.GetPromoCampaignStateUseCase
-import com.tangem.features.promobanners.impl.campaigns.analytics.PromoCampaignsAnalyticsEvent
+import com.tangem.features.promobanners.impl.campaigns.analytics.PromoCampaignsAnalyticsEvent.AlreadyEnrolledScreenOpened
 import com.tangem.features.promobanners.impl.campaigns.converters.CampaignIdConverter
 import com.tangem.features.promobanners.impl.campaigns.entity.CampaignType
 import com.tangem.features.promobanners.impl.campaigns.service.CampaignRequest
@@ -144,7 +144,9 @@ internal class CampaignsModelTest {
             // Assert
             assertThat(openedSheets).containsExactly(CampaignsBottomSheetConfig.V2.AlreadyEnrolled(campaign))
             verify(exactly = 1) {
-                analyticsEventHandler.send(PromoCampaignsAnalyticsEvent.AlreadyEnrolledScreenOpened())
+                analyticsEventHandler.send(
+                    AlreadyEnrolledScreenOpened(campaign = "whale", source = AlreadyEnrolledScreenOpened.Source.Entry),
+                )
             }
             model.onDestroy()
         }
@@ -293,7 +295,12 @@ internal class CampaignsModelTest {
 
         // Assert
         verify(exactly = 1) {
-            analyticsEventHandler.send(PromoCampaignsAnalyticsEvent.AlreadyEnrolledScreenOpened())
+            analyticsEventHandler.send(
+                AlreadyEnrolledScreenOpened(
+                    campaign = "Cashback",
+                    source = AlreadyEnrolledScreenOpened.Source.EnrollResponse,
+                ),
+            )
         }
         model.onDestroy()
     }
