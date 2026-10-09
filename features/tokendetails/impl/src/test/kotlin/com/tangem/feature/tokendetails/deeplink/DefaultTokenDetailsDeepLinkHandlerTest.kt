@@ -274,6 +274,30 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
     }
 
     @Test
+    fun `GIVEN the same details deeper in the stack WHEN handle deeplink THEN the stack pops back to them`() = runTest {
+        // Arrange
+        val userWalletId = UserWalletId("011")
+        val expectedCryptoCurrency = mockCryptoCurrency()
+        mockMultiCurrencyWallet(userWalletId)
+        coEvery { singleAccountListSupplier.getSyncOrNull(userWalletId) } returns AccountList.empty(
+            userWalletId = userWalletId,
+            cryptoCurrencies = listOf(expectedCryptoCurrency),
+        )
+        val expectedRoute = AppRoute.CurrencyDetails(userWalletId = userWalletId, currency = expectedCryptoCurrency)
+        val otherDetails: AppRoute.CurrencyDetails = mockk()
+        every { appRouter.stack } returns listOf(AppRoute.Wallet, expectedRoute, otherDetails)
+
+        // Act
+        createHandler(scope = this, defaultQueryParams())
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { appRouter.popTo(route = expectedRoute, onComplete = any()) }
+        verify(exactly = 0) { appRouter.replaceCurrent(route = any(), onComplete = any()) }
+        verify(exactly = 0) { appRouter.push(route = any(), onComplete = any()) }
+    }
+
+    @Test
     fun `GIVEN non joint_tx type WHEN handle deeplink THEN pushed route carries no navigation action`() = runTest {
         val queryParams = mapOf(
             WALLET_ID_KEY to "011",

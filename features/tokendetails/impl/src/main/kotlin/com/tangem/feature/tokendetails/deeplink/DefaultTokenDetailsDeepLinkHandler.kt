@@ -124,10 +124,14 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
     }
 
     private fun openCurrencyDetails(route: AppRoute.CurrencyDetails, onComplete: (Boolean) -> Unit) {
-        if (appRouter.stack.lastOrNull() is AppRoute.CurrencyDetails) {
-            appRouter.replaceCurrent(route = route, onComplete = onComplete)
-        } else {
-            appRouter.push(route = route, onComplete = onComplete)
+        val stack = appRouter.stack
+        when {
+            // The stack holds a route at most once
+            route in stack -> appRouter.popTo(route = route, onComplete = onComplete)
+            stack.lastOrNull() is AppRoute.CurrencyDetails -> {
+                appRouter.replaceCurrent(route = route, onComplete = onComplete)
+            }
+            else -> appRouter.push(route = route, onComplete = onComplete)
         }
     }
 
