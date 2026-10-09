@@ -1,6 +1,7 @@
 package com.tangem.features.promobanners.impl.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam.Key.CAMPAIGN
 
 internal sealed class PromoBannerAnalyticsEvent(
     event: String,
@@ -10,12 +11,10 @@ internal sealed class PromoBannerAnalyticsEvent(
     data class Shown(
         private val displayId: Int,
         private val placeholder: String,
+        private val campaign: String? = null,
     ) : PromoBannerAnalyticsEvent(
         event = "Banner Shown",
-        params = mapOf(
-            PARAM_DISPLAY_ID to displayId.toString(),
-            PARAM_PLACEHOLDER to placeholder,
-        ),
+        params = bannerParams(displayId, placeholder, campaign),
     )
 
     data class CarouselScrolled(
@@ -32,27 +31,30 @@ internal sealed class PromoBannerAnalyticsEvent(
     data class Clicked(
         private val displayId: Int,
         private val placeholder: String,
+        private val campaign: String? = null,
     ) : PromoBannerAnalyticsEvent(
         event = "Banner Button Clicked",
-        params = mapOf(
-            PARAM_DISPLAY_ID to displayId.toString(),
-            PARAM_PLACEHOLDER to placeholder,
-        ),
+        params = bannerParams(displayId, placeholder, campaign),
     )
 
     data class Dismissed(
         private val displayId: Int,
         private val placeholder: String,
+        private val campaign: String? = null,
     ) : PromoBannerAnalyticsEvent(
         event = "Banner Dismissed",
-        params = mapOf(
-            PARAM_DISPLAY_ID to displayId.toString(),
-            PARAM_PLACEHOLDER to placeholder,
-        ),
+        params = bannerParams(displayId, placeholder, campaign),
     )
 
     private companion object {
         const val PARAM_DISPLAY_ID = "Display Id"
         const val PARAM_PLACEHOLDER = "Placeholder"
+
+        /** [campaign] is the name of the campaign behind the banner; banners without one don't send it. */
+        fun bannerParams(displayId: Int, placeholder: String, campaign: String?): Map<String, String> = buildMap {
+            put(PARAM_DISPLAY_ID, displayId.toString())
+            put(PARAM_PLACEHOLDER, placeholder)
+            campaign?.let { put(CAMPAIGN, it) }
+        }
     }
 }
