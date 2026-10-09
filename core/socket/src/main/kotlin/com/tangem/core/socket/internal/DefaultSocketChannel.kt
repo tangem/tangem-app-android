@@ -158,11 +158,7 @@ internal class DefaultSocketChannel(
         }
         .distinctUntilChanged()
 
-    private fun reconnectGeneration(): Flow<Int> = (spec.reconnectOn ?: flowOf(Unit))
-        .withIndex()
-        .map { it.index }
-        .onStart { emit(0) }
-        .distinctUntilChanged()
+    private fun reconnectGeneration(): Flow<Int> = spec.reconnectOn?.withIndex()?.map { it.index } ?: flowOf(0)
 
     private fun gateOf(isForeground: Boolean, network: String?, isActive: Boolean, generation: Int): Gate = when {
         !isActive -> Gate.Closed(SocketState.Idle)

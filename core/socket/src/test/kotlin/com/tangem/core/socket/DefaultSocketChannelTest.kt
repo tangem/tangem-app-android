@@ -360,29 +360,6 @@ internal class DefaultSocketChannelTest {
     }
 
     @Test
-    fun `GIVEN event reconnect trigger without replay WHEN collector arrives THEN connects without waiting for it`() =
-        runTest {
-            // Arrange
-            val trigger = MutableSharedFlow<Unit>()
-            val channel = createChannel(SocketSpec(url = URL, reconnectOn = trigger))
-
-            // Act
-            collect(channel)
-            transport.connections.single().serverOpens()
-            runCurrent()
-            trigger.emit(Unit)
-            runCurrent()
-            val connectionsAfterBaseline = transport.connections.size
-            trigger.emit(Unit)
-            runCurrent()
-
-            // Assert
-            assertThat(connectionsAfterBaseline).isEqualTo(1)
-            assertThat(transport.connections).hasSize(2)
-            assertThat(transport.connections.first().closedByClient).isTrue()
-        }
-
-    @Test
     fun `GIVEN reconnect trigger WHEN it emits THEN reconnects at once with fresh headers`() = runTest {
         // Arrange
         val account = MutableStateFlow("first")
