@@ -98,18 +98,18 @@ internal fun WalletListContent(
                 modifier = itemModifier,
             )
 
-            tokensListItems2(
-                walletTokensListUM = currentWallet.tokensListUM,
-                jointAccountComponent = jointAccountComponent,
-                modifier = movableItemModifier,
-                isBalanceHidden = isBalanceHidden,
-            )
-
             polymarketWalletBlock(
                 polymarketComponent = polymarketComponent,
                 polymarketUM = currentWallet.polymarketWalletBlockUM,
                 isBalanceHidden = isBalanceHidden,
                 modifier = itemModifier,
+            )
+
+            tokensListItems2(
+                walletTokensListUM = currentWallet.tokensListUM,
+                jointAccountComponent = jointAccountComponent,
+                modifier = movableItemModifier,
+                isBalanceHidden = isBalanceHidden,
             )
 
             collectiblesWalletBlock(
