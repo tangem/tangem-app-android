@@ -77,6 +77,7 @@ dependencies {
     // endregion
 
     // region Test
+    testImplementation(deps.kotlin.serialization)
     testImplementation(deps.test.turbine)
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)

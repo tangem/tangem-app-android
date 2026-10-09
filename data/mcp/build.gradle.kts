@@ -18,6 +18,7 @@ dependencies {
     implementation(projects.domain.common)
     implementation(projects.core.utils)
     implementation(projects.domain.models)
+    implementation(projects.domain.mcp.models)
     implementation(projects.libs.auth)
 
     implementation(deps.arrow.core)

@@ -64,5 +64,6 @@ dependencies {
     implementation(deps.okHttp)
 
     /** Tests */
+    testImplementation(deps.kotlin.serialization)
     testImplementation(projects.test.core)
 }

@@ -120,6 +120,7 @@ dependencies {
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.marketing)
     implementation(projects.domain.markets.models)
+    implementation(projects.domain.mcp.models)
     implementation(projects.domain.nft.models)
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.qrScanning.models)
