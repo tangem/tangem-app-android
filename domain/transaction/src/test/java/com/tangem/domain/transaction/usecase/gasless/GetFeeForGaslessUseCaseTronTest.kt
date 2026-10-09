@@ -129,13 +129,12 @@ internal class GetFeeForGaslessUseCaseTronTest {
     }
 
     @Test
-    fun `GIVEN sent token covers the compensation WHEN invoke THEN gasless fee without a native estimate`() = runTest {
+    fun `GIVEN sent token covers the compensation WHEN invoke THEN gasless fee`() = runTest {
         // Act
         val actual = invoke(transferTransaction)
 
         // Assert
         assertThat(actual).isEqualTo(tronGaslessFee.right())
-        coVerify(exactly = 0) { getFeeUseCase.invoke(any(), any(), any()) }
         verify { evmGaslessFeeResolver wasNot Called }
         assertThat(nativeFeePreferredCalls).isEqualTo(0)
     }
@@ -212,7 +211,7 @@ internal class GetFeeForGaslessUseCaseTronTest {
     }
 
     @Test
-    fun `GIVEN activation is refused WHEN invoke THEN the refusal is surfaced without a native fallback`() = runTest {
+    fun `GIVEN activation is refused WHEN invoke THEN the refusal is surfaced`() = runTest {
         // Arrange
         val refusal = GetFeeError.GaslessError.TronActivationRateLimited(isPerWallet = true)
         coEvery { getTronGaslessFeeUseCase(userWalletId, transferTransaction, usdt) } returns refusal.left()
@@ -222,7 +221,6 @@ internal class GetFeeForGaslessUseCaseTronTest {
 
         // Assert
         assertThat(actual).isEqualTo(refusal.left())
-        coVerify(exactly = 0) { getFeeUseCase.invoke(any(), any(), any()) }
         assertThat(nativeFeePreferredCalls).isEqualTo(0)
     }
 

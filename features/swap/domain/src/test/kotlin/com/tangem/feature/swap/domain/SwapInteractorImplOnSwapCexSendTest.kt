@@ -1,7 +1,9 @@
 package com.tangem.feature.swap.domain
 
+import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
@@ -11,6 +13,8 @@ import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapCurrencyStatus
+import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
@@ -44,7 +48,20 @@ internal class SwapInteractorImplOnSwapCexSendTest : SwapInteractorImplTestBase(
 
     @BeforeEach
     fun setup() {
-        clearMocks(sendTransactionUseCase, createAndSendGaslessTransactionUseCase)
+        clearMocks(
+            sendTransactionUseCase,
+            createAndSendGaslessTransactionUseCase,
+            createTransferTransactionUseCase,
+            getFeeUseCase,
+            getFeePaidCryptoCurrencyStatusSyncUseCase,
+        )
+        coEvery {
+            getFeeUseCase(
+                userWallet = any(), network = any(), transactionData = any(),
+                spenderAddress = any(), isSimulateEstimation = any(),
+            )
+        } returns TransactionFee.Single(normal = trxFee(QUOTED_FEE)).right()
+        coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) } returns trxStatus(balance = "50").right()
         every { isDemoCardUseCase(any()) } returns false
         coEvery {
             repository.getExchangeData(
@@ -146,6 +163,112 @@ internal class SwapInteractorImplOnSwapCexSendTest : SwapInteractorImplTestBase(
         coVerify(exactly = 0) { createAndSendGaslessTransactionUseCase(any(), any(), any()) }
     }
 
+    @Test
+    fun `GIVEN re-estimated Tron fee higher and TRX covers it WHEN onSwap CEX THEN transaction is sent`() = runTest {
+        // Arrange
+        val fromStatus = hotTronTokenStatus()
+        stubReestimatedFee(REESTIMATED_FEE)
+
+        // Act
+        val result = onSwapCex(fromStatus, nativeSwapFee())
+
+        // Assert
+        assertThat(result).isInstanceOf(SwapTransactionState.TxSent::class.java)
+        coVerify(exactly = 1) {
+            sendTransactionUseCase(txData = txData, userWallet = fromStatus.userWallet, network = any())
+        }
+    }
+
+    @Test
+    fun `GIVEN re-estimated Tron fee higher and TRX short WHEN onSwap CEX THEN not sent and error returned`() =
+        runTest {
+            // Arrange
+            val fromStatus = hotTronTokenStatus()
+            stubReestimatedFee(REESTIMATED_FEE)
+            coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) } returns
+                trxStatus(balance = "5").right()
+
+            // Act
+            val result = onSwapCex(fromStatus, nativeSwapFee())
+
+            // Assert
+            assertThat(result).isEqualTo(
+                SwapTransactionState.Error.TransactionError(
+                    SendTransactionError.DataError("Not enough TRX to pay the network fee"),
+                ),
+            )
+            coVerify(exactly = 0) { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) }
+        }
+
+    @Test
+    fun `GIVEN Tron fee re-estimation fails WHEN onSwap CEX THEN sends with the quoted fee`() = runTest {
+        // Arrange
+        val fromStatus = hotTronTokenStatus()
+        coEvery {
+            getFeeUseCase(
+                userWallet = any(), network = any(), transactionData = any(),
+                spenderAddress = any(), isSimulateEstimation = any(),
+            )
+        } returns GetFeeError.UnknownError.left()
+
+        // Act
+        val result = onSwapCex(fromStatus, nativeSwapFee())
+
+        // Assert
+        assertThat(result).isInstanceOf(SwapTransactionState.TxSent::class.java)
+        coVerify(exactly = 1) {
+            sendTransactionUseCase(txData = txData, userWallet = fromStatus.userWallet, network = any())
+        }
+    }
+
+    @Test
+    fun `GIVEN non-Tron native fee WHEN onSwap CEX THEN fee is not re-estimated`() = runTest {
+        // Arrange
+        val ethStatus = buildSwapCurrencyStatus(contractAddress = "0xUsdt", isCoin = false, decimals = 6)
+        val fromStatus = SwapCurrencyStatus(
+            userWallet = mockk<UserWallet.Hot>(relaxed = true),
+            status = ethStatus.status,
+            account = ethStatus.account,
+        )
+
+        // Act
+        val result = onSwapCex(fromStatus, nativeSwapFee())
+
+        // Assert
+        assertThat(result).isInstanceOf(SwapTransactionState.TxSent::class.java)
+        coVerify(exactly = 0) {
+            getFeeUseCase(
+                userWallet = any(), network = any(), transactionData = any(),
+                spenderAddress = any(), isSimulateEstimation = any(),
+            )
+        }
+        coVerify(exactly = 1) { sendTransactionUseCase(txData = txData, userWallet = any(), network = any()) }
+    }
+
+    private fun stubReestimatedFee(value: String) {
+        coEvery {
+            getFeeUseCase(
+                userWallet = any(), network = any(), transactionData = any(),
+                spenderAddress = any(), isSimulateEstimation = any(),
+            )
+        } returns TransactionFee.Single(normal = trxFee(value)).right()
+    }
+
+    private fun nativeSwapFee(): SwapFee = SwapFee(
+        fee = trxFee(QUOTED_FEE),
+        transactionFeeResult = TransactionFeeResult.Loaded(
+            fee = TransactionFee.Single(normal = trxFee(QUOTED_FEE)),
+        ),
+        selectedFeeToken = trxStatus(balance = "50"),
+        otherNativeFee = BigDecimal.ZERO,
+        feeBucket = FeeBucket.MARKET,
+    )
+
+    private fun trxFee(value: String): Fee = Fee.Common(Amount(BigDecimal(value), Blockchain.Tron))
+
+    private fun trxStatus(balance: String): CryptoCurrencyStatus =
+        buildSwapCurrencyStatus(networkRawId = tronNetwork, amount = BigDecimal(balance), decimals = 6).status
+
     private suspend fun onSwapCex(fromStatus: SwapCurrencyStatus, fee: SwapFee): SwapTransactionState = sut.onSwap(
         fromSwapCurrencyStatus = fromStatus,
         toSwapCurrencyStatus = buildSwapCurrencyStatus(),
@@ -200,5 +323,7 @@ internal class SwapInteractorImplOnSwapCexSendTest : SwapInteractorImplTestBase(
         const val CEX_DEPOSIT_ADDRESS = "TCexDepositAddress"
         const val GASLESS_TX_HASH = "gasless-hash"
         const val NATIVE_TX_HASH = "native-hash"
+        const val QUOTED_FEE = "6.4"
+        const val REESTIMATED_FEE = "13"
     }
 }
