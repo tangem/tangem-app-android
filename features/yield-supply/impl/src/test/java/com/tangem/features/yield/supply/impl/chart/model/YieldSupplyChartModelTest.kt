@@ -516,6 +516,21 @@ internal class YieldSupplyChartModelTest {
         assertThat(data.incentive?.averageApy).isEqualTo(stringReference("<0.01%"))
     }
 
+    @Test
+    fun `GIVEN the market cannot be read WHEN the chart loads THEN the sheet keeps the rate it opened with`() =
+        runTest {
+            // Arrange - a dash in the header would be worse than the rate the caller already handed over
+            coEvery { getTokenStatusUseCase(any()) } returns IllegalStateException("no market").left()
+            coEvery { getChartUseCase(any()) } returns chartData(y = listOf(2.0, 5.0)).right()
+
+            // Act
+            createModel()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { callback.onRateResolved(any()) }
+        }
+
     private fun createModel(
         callback: DefaultYieldSupplyChartComponent.ModelCallback? = this.callback,
         isPlainRate: Boolean = false,
