@@ -166,5 +166,9 @@
     {
         "name": "TWI_1674_SWAP_CUSTOM_SLIPPAGE_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TWI_1700_POLYMARKET_PHASE_TWO_ENABLED",
+        "version": "undefined"
     }
 ]
