@@ -357,7 +357,6 @@ internal class DefaultScanCardProcessorTest {
         return dialog
     }
 
-    /** Records callback invocations of the callback-based scan in call order. */
     private inner class RecordingCallbacks {
 
         val events = mutableListOf<String>()
