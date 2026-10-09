@@ -1157,7 +1157,7 @@
   <string name="introduction_stories_two_title">One wallet, multiple cards</string>
   <string name="introduction_subtitle">One secure place for everything you own</string>
   <string name="introduction_terms_of_service">Terms of service</string>
-  <string name="introduction_terms_of_service_consent">By continuing, you agree with %s</string>
+  <string name="introduction_terms_of_service_consent">By continuing, you agree to the %s</string>
   <string name="introduction_title">Store all your assets</string>
   <string name="joint_account_activated_snackbar">Account activated</string>
   <string name="joint_account_activation_account_button_title">Activate account</string>
@@ -2887,9 +2887,10 @@
   <string name="tangempay_newonboard_Q4_title">Who stores my personal data and how is it protected?</string>
   <string name="tangempay_newonboard_body">Spend crypto anywhere — no banks, no middlemen, no exchanges. The power of self-custody meets everyday payments.</string>
   <string name="tangempay_newonboard_bottomleft_body">Buy online and via Apple Pay</string>
+  <string name="tangempay_newonboard_bottomleft_body_android">Buy online and via Google Pay</string>
   <string name="tangempay_newonboard_bottomleft_title">Accepted worldwide</string>
-  <string name="tangempay_newonboard_bottomright_body">USD to USDC 1:1; flat $1 fee</string>
-  <string name="tangempay_newonboard_bottomright_title">Recieve ACH transfers</string>
+  <string name="tangempay_newonboard_bottomright_body">Via ACH or Wire</string>
+  <string name="tangempay_newonboard_bottomright_title">Get and send bank transfers</string>
   <string name="tangempay_newonboard_title">Get your Tangem Pay Card</string>
   <string name="tangempay_newonboard_topleft_body">Pay what you see</string>
   <string name="tangempay_newonboard_topleft_title">No purchase fees, \n1 USDC = 1 USD</string>
@@ -3798,6 +3799,7 @@
   <string name="yield_module_incentive_chart_powered_by_description">A campaign sponsor funds extra reward tokens, distributed through Merkl.\nIncentives may end, and reward token prices can change.\nThe displayed APY includes incentive rewards after Tangem\'s service fee.</string>
   <string name="yield_module_incentive_chart_powered_by_title">Powered by Merkl</string>
   <string name="yield_module_incentive_chart_sheet_title">Incentivized yield</string>
+  <string name="yield_module_incentives_provider">Merkl</string>
   <string name="yield_module_main_screen_promo_banner_message">Enable %1$s%% APY on your balance</string>
   <string name="yield_module_main_view_approve_notification_description">Approval for your token in Yield Mode has been revoked. Open the token to grant permission again.</string>
   <string name="yield_module_main_view_approve_notification_title">Token approval needed</string>
