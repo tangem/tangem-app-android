@@ -3,6 +3,7 @@ package com.tangem.domain.collectibles.usecase
 import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.either
+import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
 import com.tangem.domain.collectibles.models.CollectibleException
@@ -29,8 +30,8 @@ import kotlin.time.Duration.Companion.seconds
  * Buys and opens one pack: the backend issues the spin, the vault pays for it on chain, the gacha sees the payment,
  * the pack is opened.
  *
- * Nothing is spent until the payment is sent; once it is, any failure is [OpenPackStep.Failed.PackUnopened], which
- * [OpenPackRequest.Reopen] retries.
+ * Nothing is spent until the payment is sent; from that attempt on, a failure that may leave the pack paid for is
+ * [OpenPackStep.Failed.PackUnopened], which [OpenPackRequest.Reopen] retries.
  */
 class OpenCollectiblePackUseCase @Inject constructor(
     private val collectiblesRepository: CollectiblesRepository,
@@ -104,7 +105,15 @@ class OpenCollectiblePackUseCase @Inject constructor(
             amount = purchase.amount,
             feeAmount = purchase.feeAmount,
             memo = purchase.memo,
-        ).getOrElse { fail(OpenPackStep.Failed.PurchaseFailed, cause = it) }
+        ).getOrElse { error ->
+            // TODO tell a send that surely failed from one that may have landed, e.g. by the signature's status or the
+            //  vault balance, so a sure failure is not shown as a pack left unopened
+            val failure = when (error) {
+                is CollectiblesAccountError.DelegateSigningFailed -> OpenPackStep.Failed.PurchaseFailed
+                else -> OpenPackStep.Failed.PackUnopened(purchase.txId)
+            }
+            fail(failure, cause = error)
+        }
 
         return SentPurchase(txId = purchase.txId, txHash = txHash)
     }
@@ -124,14 +133,13 @@ class OpenCollectiblePackUseCase @Inject constructor(
         val status = withTimeoutOrNull(PAYMENT_TIMEOUT) { pollUntilSettled(userWallet, txId) }
             ?: fail(OpenPackStep.Failed.PackUnopened(txId), cause = "payment timeout")
 
-        // TODO a refunded or expired purchase is not "paid, left unopened"; agree on what the user sees
-        if (status in NOT_PURCHASED) fail(OpenPackStep.Failed.PackUnopened(txId), cause = status)
+        failIfClosed(txId, status)
     }
 
     private suspend fun pollUntilSettled(userWallet: UserWallet, txId: String): CollectibleTxStatus {
         while (true) {
             val status = txStatus(userWallet, txId)
-            if (status != null && status !in IN_PROGRESS) return status
+            if (status != null && !status.isPaymentInProgress) return status
             delay(POLL_INTERVAL)
         }
     }
@@ -144,7 +152,24 @@ class OpenCollectiblePackUseCase @Inject constructor(
         val state = runSuspendCatching { collectiblesRepository.openPack(userWallet.walletId, txId) }
             .getOrElse { fail(OpenPackStep.Failed.PackUnopened(txId), cause = it) }
 
-        return state.pack ?: fail(OpenPackStep.Failed.PackUnopened(txId), cause = "no nftWon")
+        return state.pack ?: run {
+            failIfClosed(txId, state.status)
+            fail(OpenPackStep.Failed.PackUnopened(txId), cause = "no nftWon in ${state.status}")
+        }
+    }
+
+    /** A status that leaves no pack to open ends the flow; any other one goes on. */
+    private fun Raise<OpenPackStep.Failed>.failIfClosed(txId: String, status: CollectibleTxStatus) {
+        when (status) {
+            CollectibleTxStatus.EXPIRED -> fail(OpenPackStep.Failed.Expired, cause = status)
+            CollectibleTxStatus.REFUNDED -> fail(OpenPackStep.Failed.Refunded, cause = status)
+            CollectibleTxStatus.PAUSED -> fail(OpenPackStep.Failed.PackUnopened(txId), cause = status)
+            // TODO turbo mode: an auto-sold pack is a result of its own, not a failure
+            CollectibleTxStatus.AUTO_BUYBACKED,
+            CollectibleTxStatus.MANUALLY_BUYBACKED,
+            -> fail(OpenPackStep.Failed.Unexpected, cause = status)
+            else -> Unit
+        }
     }
 
     private suspend fun txStatus(userWallet: UserWallet, txId: String): CollectibleTxStatus? =
@@ -163,21 +188,5 @@ class OpenCollectiblePackUseCase @Inject constructor(
 
         val POLL_INTERVAL = 2.seconds
         val PAYMENT_TIMEOUT = 100.seconds
-
-        val NOT_PURCHASED = setOf(
-            CollectibleTxStatus.REFUNDED,
-            CollectibleTxStatus.EXPIRED,
-            // TODO turbo mode: an auto-sold pack is a result of its own, not a failure
-            CollectibleTxStatus.AUTO_BUYBACKED,
-            CollectibleTxStatus.PAUSED,
-        )
-
-        val IN_PROGRESS = setOf(
-            CollectibleTxStatus.CREATED,
-            CollectibleTxStatus.WAITING_TX_HASH,
-            CollectibleTxStatus.PURCHASE_TX_HASH,
-            CollectibleTxStatus.WAITING_FOR_PAYMENT,
-            CollectibleTxStatus.UNKNOWN,
-        )
     }
 }
