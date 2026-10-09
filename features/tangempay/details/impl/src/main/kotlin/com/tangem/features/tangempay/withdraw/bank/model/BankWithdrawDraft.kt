@@ -22,3 +22,6 @@ internal data class BankWithdrawDraft(
 
 /** Who receives the money: the saved recipient, or the recipient being added once every form step is filled. */
 internal fun BankWithdrawDraft.recipientDetails(): BankAccountDetails? = recipient?.details ?: toNewBankAccountDetails()
+
+internal val BankWithdrawDraft.isRailLocked: Boolean
+    get() = recipient != null || entry is BankWithdrawEntry.Saved

@@ -17,8 +17,8 @@ import com.tangem.utils.transformer.Transformer
  * A failed or empty featured request drops the rail rather than the screen — the full list is the
  * filter, the rail is only a shortcut into it.
  *
- * A search drops the rail too, along with the "All" row: the list is then a result set, and neither
- * an unfiltered shortcut strip nor "no filter" is a result.
+ * A search drops the rail too: the list is then a result set, and an unfiltered shortcut strip is not
+ * one of the results.
  *
  * @property isSearching a query is applied to the listing on screen — not merely typed into the field
  */
@@ -47,7 +47,6 @@ internal class MarketCategorySelectorTransformer(
                     items = MarketCategoryItemConverter(
                         selection = selection,
                         appCurrency = appCurrency,
-                        shouldIncludeAllRow = !isSearching,
                         onSelectionChange = onSelectionChange,
                     ).convert(categories),
                     isLoadingMore = isLoadingMore,

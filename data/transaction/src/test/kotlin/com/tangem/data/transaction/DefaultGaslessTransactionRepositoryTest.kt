@@ -71,7 +71,7 @@ internal class DefaultGaslessTransactionRepositoryTest {
         val actual = repository.getGaslessFeeAddresses()
 
         // Assert
-        assertThat(actual).containsExactly(HARDCODED_ADDRESS_1, HARDCODED_ADDRESS_2, BACKEND_ADDRESS)
+        assertThat(actual).containsExactly(HARDCODED_ADDRESS_1, HARDCODED_ADDRESS_2, TRON_ADDRESS, BACKEND_ADDRESS)
     }
 
     @Test
@@ -84,7 +84,7 @@ internal class DefaultGaslessTransactionRepositoryTest {
         val actual = repository.getGaslessFeeAddresses()
 
         // Assert
-        assertThat(actual).containsExactly(HARDCODED_ADDRESS_1, HARDCODED_ADDRESS_2)
+        assertThat(actual).containsExactly(HARDCODED_ADDRESS_1, HARDCODED_ADDRESS_2, TRON_ADDRESS)
     }
 
     @Test
@@ -99,8 +99,8 @@ internal class DefaultGaslessTransactionRepositoryTest {
         val secondResult = repository.getGaslessFeeAddresses()
 
         // Assert
-        assertThat(firstResult).containsExactly(HARDCODED_ADDRESS_1, HARDCODED_ADDRESS_2)
-        assertThat(secondResult).containsExactly(HARDCODED_ADDRESS_1, HARDCODED_ADDRESS_2, BACKEND_ADDRESS)
+        assertThat(firstResult).containsExactly(HARDCODED_ADDRESS_1, HARDCODED_ADDRESS_2, TRON_ADDRESS)
+        assertThat(secondResult).containsExactly(HARDCODED_ADDRESS_1, HARDCODED_ADDRESS_2, TRON_ADDRESS, BACKEND_ADDRESS)
     }
 
     @Test
@@ -134,6 +134,7 @@ internal class DefaultGaslessTransactionRepositoryTest {
     private companion object {
         const val HARDCODED_ADDRESS_1 = "0xFc719364BcCdc92D055d8C3164eF1ab4f5A9182c"
         const val HARDCODED_ADDRESS_2 = "0xAf722F46145fbb106379d506ED3a5B96f110c8E5"
+        const val TRON_ADDRESS = "TSWsmaEDgWaE2VsP9tCBGh5GbBRbrdHSuZ"
         const val BACKEND_ADDRESS = "0x1111111111111111111111111111111111111111"
     }
 }

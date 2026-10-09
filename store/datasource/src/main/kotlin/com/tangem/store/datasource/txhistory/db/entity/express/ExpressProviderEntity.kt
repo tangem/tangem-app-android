@@ -50,4 +50,7 @@ data class ExpressProviderEntity(
 
     @ColumnInfo(name = "is_extra_id_supported")
     val isExtraIdSupported: Boolean,
+
+    @ColumnInfo(name = "is_custom_slippage_supported", defaultValue = "0")
+    val isCustomSlippageSupported: Boolean,
 )

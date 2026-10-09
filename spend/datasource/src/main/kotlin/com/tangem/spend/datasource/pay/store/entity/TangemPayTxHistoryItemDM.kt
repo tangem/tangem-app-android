@@ -141,6 +141,9 @@ internal sealed class TangemPayTxHistoryItemDM {
             @SerialName("below-min")
             BELOW_MIN,
 
+            @SerialName("compliance_risk")
+            COMPLIANCE_RISK,
+
             @SerialName("unknown")
             UNKNOWN,
         }
