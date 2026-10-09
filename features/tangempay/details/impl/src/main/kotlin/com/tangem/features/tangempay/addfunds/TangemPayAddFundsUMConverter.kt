@@ -61,20 +61,24 @@ internal class TangemPayAddFundsUMConverter(
     private fun bankTransferItem(isLoading: Boolean): TangemPayAddFundsItemUM? {
         val onramp = virtualAccountOnramp ?: return null
         if (!isVisaOnrampV2Enabled) return clickableBankTransferItem(icon = Icons.ic_sign_usd_20)
-        return when {
-            isLoading || onramp == VirtualAccountOnramp.Processing -> pendingBankTransferItem()
-            else -> clickableBankTransferItem(icon = Icons.ic_government_20)
+        return when (onramp) {
+            VirtualAccountOnramp.Processing -> pendingBankTransferItem()
+            VirtualAccountOnramp.Eligible,
+            VirtualAccountOnramp.Failed,
+            is VirtualAccountOnramp.Available,
+            -> clickableBankTransferItem(icon = Icons.ic_government_20, isLoading = isLoading)
         }
     }
 
-    private fun clickableBankTransferItem(icon: ImageVector) = TangemPayAddFundsItemUM(
+    private fun clickableBankTransferItem(icon: ImageVector, isLoading: Boolean = false) = TangemPayAddFundsItemUM(
         icon = TangemIconUM.Icon(
             imageVector = icon,
             tintReference = { TangemTheme.colors3.icon.brand },
         ),
         title = resourceReference(R.string.tangempay_topup_bank_transfer_title),
         description = resourceReference(R.string.tangempay_topup_bank_transfer_body),
-        onClick = listener::onClickBankTransfer,
+        onClick = if (isLoading) null else listener::onClickBankTransfer,
+        isLoading = isLoading,
     )
 
     private fun pendingBankTransferItem() = TangemPayAddFundsItemUM(
