@@ -1,7 +1,7 @@
 package com.tangem.features.polymarket.impl.main.addfunds
 
-import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
@@ -13,7 +13,7 @@ internal data class PolymarketAddFundsUM(
 
     @Immutable
     internal data class Item(
-        @DrawableRes val iconRes: Int,
+        val icon: ImageVector,
         val title: TextReference,
         val description: TextReference,
         val onClick: () -> Unit,

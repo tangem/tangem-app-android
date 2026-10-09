@@ -1,10 +1,17 @@
 package com.tangem.datasource.api.promotion.models
 
+import com.squareup.moshi.Json
 import com.tangem.domain.models.wallet.UserWallet
 
-/** `walletType` query value of `GET /v3/promotion`; Retrofit serializes a `@Query` enum via [toString]. */
+/**
+ * `walletType` of `GET /api/referral/v1/promotion/` (a `@Query`, serialized by Retrofit via [toString]) and of the
+ * registration body (serialized by Moshi via [Json]).
+ */
 enum class PromotionWalletType(private val value: String) {
+    @Json(name = "card")
     CARD("card"),
+
+    @Json(name = "mobile")
     MOBILE("mobile"),
     ;
 

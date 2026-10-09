@@ -29,7 +29,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
+import com.tangem.common.ui.account.AccountIcon
+import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.components.account.AccountIconSize
+import com.tangem.core.ui.components.atoms.text.EllipsisText
+import com.tangem.core.ui.components.atoms.text.TextEllipsis
+import com.tangem.domain.models.account.CryptoPortfolioIcon.Color as IconColor
+import com.tangem.domain.models.account.CryptoPortfolioIcon.Icon
 import com.tangem.core.ui.components.account.PaymentAccountIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.currency.icon.TangemCurrencyIcon
@@ -154,11 +160,21 @@ private fun TwoAssetsSideLabel(label: TextReference, owner: AssetOwnerUM?, modif
         LabelText(text = label)
         when (owner) {
             is AssetOwnerUM.Account,
-            is AssetOwnerUM.Address,
             is AssetOwnerUM.PaymentAccount,
+            is AssetOwnerUM.Contact,
             -> {
                 AssetOwnerIcon(owner = owner)
                 LabelText(text = owner.name, modifier = Modifier.weight(weight = 1f, fill = false))
+            }
+            is AssetOwnerUM.Address -> {
+                AssetOwnerIcon(owner = owner)
+                EllipsisText(
+                    text = owner.rawAddress,
+                    style = TangemTheme.typography3.caption.medium,
+                    color = TangemTheme.colors3.text.secondary,
+                    ellipsis = TextEllipsis.Middle,
+                    modifier = Modifier.weight(weight = 1f, fill = false),
+                )
             }
             is AssetOwnerUM.Wallet -> {
                 LabelText(text = owner.name, modifier = Modifier.weight(weight = 1f, fill = false))
@@ -186,21 +202,14 @@ private fun LabelText(text: TextReference, modifier: Modifier = Modifier) {
 private fun AssetOwnerIcon(owner: AssetOwnerUM, modifier: Modifier = Modifier) {
     val iconModifier = modifier.size(16.dp)
     when (owner) {
-        is AssetOwnerUM.Account -> Box(
-            modifier = iconModifier
-                .clip(RoundedCornerShape(4.dp))
-                .background(owner.backgroundColor),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                painter = painterResource(id = owner.iconResId),
-                contentDescription = null,
-                // staticDark == white in both themes (the constant glyph tone for a colored avatar), matching the
-                // white-on-color account avatar in Figma and the counterparty card / history-list account icon.
-                tint = TangemTheme.colors3.icon.staticDark,
-                modifier = Modifier.size(8.dp),
-            )
-        }
+        // The raw modifier, not the pre-sized iconModifier: AccountIcon sizes itself from ExtraSmall (16dp), and an
+        // outer size() would pin that instead of following the design-system size.
+        is AssetOwnerUM.Account -> AccountIcon(
+            name = owner.name,
+            icon = owner.icon,
+            size = AccountIconSize.ExtraSmall,
+            modifier = modifier,
+        )
         is AssetOwnerUM.Wallet -> TangemDeviceIcon(
             state = owner.deviceIconUM,
             modifier = iconModifier,
@@ -212,6 +221,14 @@ private fun AssetOwnerIcon(owner: AssetOwnerUM, modifier: Modifier = Modifier) {
         is AssetOwnerUM.PaymentAccount -> PaymentAccountIcon(
             size = AccountIconSize.ExtraSmall,
             modifier = iconModifier,
+        )
+        // The same account glyph as an own account, clipped to a circle: a contact is round where an account is a
+        // rounded square, and the design system has no circular 16dp size of its own.
+        is AssetOwnerUM.Contact -> AccountIcon(
+            name = owner.name,
+            icon = owner.icon,
+            size = AccountIconSize.ExtraSmall,
+            modifier = modifier.clip(CircleShape),
         )
     }
 }
@@ -299,8 +316,7 @@ private fun TxHistoryDetailsTwoAssetsBlockPreview() {
                     isFaded = false,
                     owner = AssetOwnerUM.Account(
                         name = stringReference("Main account"),
-                        iconResId = R.drawable.ic_rounded_star_24,
-                        backgroundColor = Color(0xFF007FFF),
+                        icon = AccountIconUM.CryptoPortfolio(value = Icon.Star, color = IconColor.Azure),
                     ),
                 ),
                 to = previewAsset(
@@ -309,8 +325,7 @@ private fun TxHistoryDetailsTwoAssetsBlockPreview() {
                     isFaded = false,
                     owner = AssetOwnerUM.Account(
                         name = stringReference("Family"),
-                        iconResId = R.drawable.ic_family_24,
-                        backgroundColor = Color(0xFF744FF1),
+                        icon = AccountIconUM.CryptoPortfolio(value = Icon.Family, color = IconColor.CandyGrapeFizz),
                     ),
                 ),
                 isBalanceHidden = false,
@@ -352,10 +367,7 @@ private fun TxHistoryDetailsTwoAssetsBlockPreview() {
                     label = "To",
                     amount = "+ 1,800.00 POL",
                     isFaded = false,
-                    owner = AssetOwnerUM.Address(
-                        name = stringReference("33Bd3…a21412B"),
-                        rawAddress = "0xfb6916095ca1df60bb79ce92ce3ea74c37c5d359",
-                    ),
+                    owner = AssetOwnerUM.Address(rawAddress = "0xfb6916095ca1df60bb79ce92ce3ea74c37c5d359"),
                 ),
                 isBalanceHidden = false,
             )

@@ -8,11 +8,12 @@ import com.tangem.data.walletconnect.store.DefaultWalletConnectStore
 import com.tangem.data.walletconnect.store.WalletConnectStore
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
+import com.tangem.datasource.utils.create
 import com.tangem.datasource.utils.setTypes
-import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.walletconnect.featuretoggle.WalletConnectFeatureToggles
 import com.tangem.domain.walletconnect.model.WcPendingApprovalSessionDTO
 import com.tangem.domain.walletconnect.model.WcSessionDTO
+import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -34,24 +35,35 @@ internal object WalletConnectModule {
         featureToggles: WalletConnectFeatureToggles,
     ): WalletConnectStore {
         return DefaultWalletConnectStore(
-            persistenceStore = dataStoreFactory.create(
-                serializer = MoshiDataStoreSerializer(
-                    moshi = moshi,
-                    types = setTypes<WcSessionDTO>(),
-                    defaultValue = emptySet(),
-                ),
-                produceFile = { context.dataStoreFile(fileName = "wallet_connect_sessions") },
-                scope = scope,
-            ),
-            pendingApprovalSessionsStore = dataStoreFactory.create(
-                serializer = MoshiDataStoreSerializer(
-                    moshi = moshi,
-                    types = setTypes<WcPendingApprovalSessionDTO>(),
-                    defaultValue = emptySet(),
-                ),
-                produceFile = { context.dataStoreFile(fileName = "wallet_connect_pending_approval_sessions") },
-                scope = scope,
-            ),
+            persistenceStore = if (dataStoreFactory.isKotlinxDataStoreEnabled) {
+                dataStoreFactory.create(defaultValue = emptySet<WcSessionDTO>(), fileName = "wallet_connect_sessions")
+            } else {
+                dataStoreFactory.create(
+                    serializer = MoshiDataStoreSerializer(
+                        moshi = moshi,
+                        types = setTypes<WcSessionDTO>(),
+                        defaultValue = emptySet(),
+                    ),
+                    produceFile = { context.dataStoreFile(fileName = "wallet_connect_sessions") },
+                    scope = scope,
+                )
+            },
+            pendingApprovalSessionsStore = if (dataStoreFactory.isKotlinxDataStoreEnabled) {
+                dataStoreFactory.create(
+                    defaultValue = emptySet<WcPendingApprovalSessionDTO>(),
+                    fileName = "wallet_connect_pending_approval_sessions",
+                )
+            } else {
+                dataStoreFactory.create(
+                    serializer = MoshiDataStoreSerializer(
+                        moshi = moshi,
+                        types = setTypes<WcPendingApprovalSessionDTO>(),
+                        defaultValue = emptySet(),
+                    ),
+                    produceFile = { context.dataStoreFile(fileName = "wallet_connect_pending_approval_sessions") },
+                    scope = scope,
+                )
+            },
             featureToggles = featureToggles,
         )
     }

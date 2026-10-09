@@ -114,72 +114,67 @@ internal class PromoCampaignUMConverterTest {
     }
 
     @Test
-    fun `GIVEN two text blocks and learn more link WHEN convert THEN link attached to the first only`() {
-        // Arrange
-        val campaign = createPromoCampaign(
-            blocks = listOf(
-                PromoDescriptionBlock.Text(titleKey = null, textKey = "first"),
-                PromoDescriptionBlock.Text(titleKey = null, textKey = "second"),
-            ),
-            learnMoreLink = PromoLink(textKey = "Learn more", url = LEARN_MORE_URL),
-        )
-
+    fun `GIVEN summary WHEN convert THEN shown as subtitle`() {
         // Act
-        val (first, second) = converter.convert(campaign).blocks.filterIsInstance<PromoBlockUM.Text>()
-        first.learnMore?.onClick?.invoke()
+        val actual = converter.convert(createPromoCampaign(summary = "Cashback on every swap"))
 
         // Assert
-        assertThat(first.learnMore?.text).isEqualTo(stringReference("Learn more"))
-        assertThat(second.learnMore).isNull()
-        assertThat(openedUrls).containsExactly(LEARN_MORE_URL)
+        assertThat(actual.subtitle).isEqualTo(stringReference("Cashback on every swap"))
     }
 
     @Test
-    fun `GIVEN learn more link without text blocks WHEN convert THEN link dropped`() {
+    fun `GIVEN text block with link WHEN link clicked THEN its url opened`() {
         // Arrange
         val campaign = createPromoCampaign(
-            blocks = listOf(PromoDescriptionBlock.Highlight(titleKey = null, textKey = "note")),
-            learnMoreLink = PromoLink(textKey = "Learn more", url = LEARN_MORE_URL),
+            blocks = listOf(
+                PromoDescriptionBlock.Text(
+                    title = null,
+                    text = "note",
+                    link = PromoLink(text = "Learn more", url = LEARN_MORE_URL),
+                ),
+            ),
         )
 
         // Act
-        val actual = converter.convert(campaign).blocks
+        val link = converter.convert(campaign).blocks.filterIsInstance<PromoBlockUM.Text>().single().link
+        link?.onClick?.invoke()
 
         // Assert
-        assertThat(actual).containsExactly(PromoBlockUM.Highlight(title = stringReference("note"), description = null))
+        assertThat(link?.text).isEqualTo(stringReference("Learn more"))
+        assertThat(openedUrls).containsExactly(LEARN_MORE_URL)
     }
 
     data class BlockModel(val block: PromoDescriptionBlock, val expected: PromoBlockUM)
 
     private fun provideTestModels() = listOf(
         BlockModel(
-            block = PromoDescriptionBlock.Text(titleKey = "Limits", textKey = "Swaps are excluded"),
+            block = PromoDescriptionBlock.Text(title = "Limits", text = "Swaps are excluded", link = null),
             expected = PromoBlockUM.Text(
                 title = stringReference("Limits"),
                 text = stringReference("Swaps are excluded"),
-                learnMore = null,
+                link = null,
             ),
         ),
         BlockModel(
-            block = PromoDescriptionBlock.Highlight(titleKey = "You have \$30", textKey = "All tokens"),
+            block = PromoDescriptionBlock.Highlight(title = "You have \$30", text = "All tokens"),
             expected = PromoBlockUM.Highlight(
                 title = stringReference("You have \$30"),
                 description = stringReference("All tokens"),
             ),
         ),
         BlockModel(
-            block = PromoDescriptionBlock.Highlight(titleKey = null, textKey = "You have \$30"),
+            block = PromoDescriptionBlock.Highlight(title = null, text = "You have \$30"),
             expected = PromoBlockUM.Highlight(title = stringReference("You have \$30"), description = null),
         ),
         BlockModel(
             block = PromoDescriptionBlock.Items(
-                titleKey = "Cashback",
+                title = "Cashback",
                 items = listOf(
-                    Item(labelKey = "From 10K", value = PromoValue.Percent(BigDecimal("0.10"))),
-                    Item(labelKey = "Count", value = PromoValue.Number(BigDecimal("1234.5"))),
-                    Item(labelKey = "Payout", value = PromoValue.Text("weekly")),
-                    Item(labelKey = "Bonus", value = PromoValue.Money(BigDecimal("0.5"), currency = "USD")),
-                    Item(labelKey = "Reward", value = PromoValue.Money(BigDecimal("0.5"), currency = "USDT")),
+                    Item(label = "From 10K", value = PromoValue.Percent(BigDecimal("0.10"))),
+                    Item(label = "Count", value = PromoValue.Number(BigDecimal("1234.5"))),
+                    Item(label = "Payout", value = PromoValue.Text("weekly")),
+                    Item(label = "Bonus", value = PromoValue.Money(BigDecimal("0.5"), currency = "USD")),
+                    Item(label = "Reward", value = PromoValue.Money(BigDecimal("0.5"), currency = "USDT")),
                 ),
             ),
             expected = PromoBlockUM.Tiles(
@@ -195,8 +190,8 @@ internal class PromoCampaignUMConverterTest {
         ),
         BlockModel(
             block = PromoDescriptionBlock.Table(
-                titleKey = null,
-                headerKeys = listOf("Option", "Amount"),
+                title = null,
+                headers = listOf("Option", "Amount"),
                 rows = listOf(
                     listOf(Cell.Text("Per swap"), Cell.Value(PromoValue.Number(BigDecimal("500")))),
                 ),

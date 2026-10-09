@@ -30,6 +30,9 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
     override fun convert(value: PaymentAccountStatusValue): PaymentAccountStatusValueDM? {
         return when (value) {
             is PaymentAccountStatusValue.NotCreated -> PaymentAccountStatusValueDM.NotCreated
+            is PaymentAccountStatusValue.KycRequired -> PaymentAccountStatusValueDM.KycRequired(
+                customerId = value.customerId,
+            )
             is PaymentAccountStatusValue.UnderReview -> PaymentAccountStatusValueDM.UnderReview(
                 kycStatus = value.kycStatus,
                 customerId = value.customerId,
@@ -130,6 +133,10 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                 virtualAccount = null,
                 isBankOfframpAvailable = null,
                 tariffPlan = null,
+            )
+            is PaymentAccountStatusValueDM.KycRequired -> PaymentAccountStatusValue.KycRequired(
+                source = StatusSource.CACHE,
+                customerId = value.customerId,
             )
             is PaymentAccountStatusValueDM.UnderReview -> PaymentAccountStatusValue.UnderReview(
                 source = StatusSource.CACHE,

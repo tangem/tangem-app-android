@@ -40,6 +40,7 @@ dependencies {
     implementation(projects.domain.account)
     implementation(projects.domain.card)
     implementation(projects.domain.core)
+    implementation(projects.domain.settings)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.yieldSupply.models)

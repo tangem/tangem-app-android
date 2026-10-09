@@ -23,7 +23,6 @@ import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.launch
-import java.util.UUID
 
 /**
  * Orchestrates the issue-additional-card flow. The use case is idempotent and resume-safe:
@@ -35,8 +34,8 @@ import java.util.UUID
  * 2. Resume — looks up active orders of the offer's [Offer.Data.orderType] and, if one is in flight,
  *    returns it as [IssueAdditionalCardResult.Resumed] instead of creating a duplicate (find-before-create).
  *    On the campaign path any active virtual issue order counts, whatever its type.
- * 3. Create — otherwise issues `POST /v1/order` with the offer's specification name and a fresh
- *    idempotency key; backend failures propagate as [Either.Left].
+ * 3. Create — otherwise issues `POST /v1/order` with the offer's specification name and the caller's
+ *    [idempotencyKey][invoke]; backend failures propagate as [Either.Left].
  *
  * Non-fatal exceptions from either repository are logged and collapsed to [VisaApiError.Unspecified]
  * so the caller always receives a typed [Either].
@@ -53,6 +52,7 @@ class IssueAdditionalCardUseCase(
 ) {
     suspend operator fun invoke(
         userWalletId: UserWalletId,
+        idempotencyKey: String,
         deeplinkValue: String? = null,
     ): Either<IssueAdditionalCardError, IssueAdditionalCardResult> = either {
         val offer = resolveOffer(userWalletId = userWalletId, deeplinkValue = deeplinkValue)
@@ -87,7 +87,7 @@ class IssueAdditionalCardUseCase(
                         ?: raise(IssueAdditionalCardError.Other(VisaApiError.Unspecified)),
                     deeplinkValue = deeplinkValue,
                 ),
-                idempotencyKey = UUID.randomUUID().toString(),
+                idempotencyKey = idempotencyKey,
             ).mapLeft(VisaApiError::toIssueError).bind()
             IssueAdditionalCardResult.Created(created)
         }

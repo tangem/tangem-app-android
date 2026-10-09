@@ -35,6 +35,7 @@ import com.tangem.features.txhistory.converter.TxHistoryInfoToTransactionItemUMC
 import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionItemUMConverter
 import com.tangem.features.txhistory.entity.TxHistoryItemsUM
 import com.tangem.features.txhistory.entity.TxHistoryUpdateListener
+import com.tangem.features.txhistory.joint.JointHistoryPoller
 import com.tangem.features.txhistory.state.TxHistoryItemsSnapshot
 import com.tangem.features.txhistory.state.TxHistoryStateController
 import com.tangem.features.txhistory.utils.TxHistoryListManager
@@ -110,6 +111,9 @@ internal class TxHistoryModel @Inject constructor(
         null
     }
 
+    private val isResumed = MutableStateFlow(false)
+    private val loadedPagesTracker = LoadedPagesTracker()
+
     val legacyUiState = stateController.legacyUiState
     val uiState = stateController.uiState
 
@@ -120,6 +124,16 @@ internal class TxHistoryModel @Inject constructor(
         initListManager()
         loadTxInfo()
         subscribeToUpdateListener()
+        // The legacy list gives no signal that a requested page landed, so a reload could throw pages away unseen
+        if (historyTxListManager != null) {
+            JointHistoryPoller.launchIn(
+                scope = modelScope,
+                currency = params.currency,
+                isResumed = isResumed,
+                hasLoadedMorePages = loadedPagesTracker.hasLoadedMorePages,
+                reload = historyTxListManager::reload,
+            )
+        }
         subscribeOnCurrencyStatusUpdates()
         deepLinkListener()
     }
@@ -165,6 +179,7 @@ internal class TxHistoryModel @Inject constructor(
         lookup: TxHistoryLookupContext,
         networkTokens: Set<CryptoCurrency.Token>,
     ) {
+        loadedPagesTracker.onState(state)
         when (state) {
             HistoryTxListManager.HistoryState.Loading ->
                 stateController.setLoadingIfNotContent(onExploreClick = ::openExplorer)
@@ -255,8 +270,17 @@ internal class TxHistoryModel @Inject constructor(
         }
     }
 
+    fun onResume() {
+        isResumed.value = true
+    }
+
+    fun onPause() {
+        isResumed.value = false
+    }
+
     fun reload() {
         if (stateController.isNotSupported) return
+        loadedPagesTracker.onReload()
 
         if (txHistoryFeatureToggle.isNewTxHistoryEnabled) {
             historyTxListManager?.reload()
@@ -289,6 +313,7 @@ internal class TxHistoryModel @Inject constructor(
     }
 
     private fun loadMoreItems(): Boolean {
+        historyTxListManager?.let { loadedPagesTracker.onLoadMore(current = it.state.value) }
         historyTxListManager?.loadMore()
         modelScope.launch {
             txHistoryListManager?.loadMore(params.userWalletId, params.currency)

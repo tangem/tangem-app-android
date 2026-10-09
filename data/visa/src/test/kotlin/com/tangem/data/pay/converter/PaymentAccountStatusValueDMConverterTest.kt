@@ -231,6 +231,20 @@ internal class PaymentAccountStatusValueDMConverterTest {
         }
 
         @Test
+        fun `GIVEN KYC required WHEN round tripped THEN it restores from cache`() {
+            // Arrange
+            val domain = PaymentAccountStatusValue.KycRequired(source = StatusSource.ACTUAL, customerId = "customer-id")
+
+            // Act
+            val restored = converter.convertBack(userWalletId, converter.convert(domain))
+
+            // Assert
+            assertThat(restored).isEqualTo(
+                PaymentAccountStatusValue.KycRequired(source = StatusSource.CACHE, customerId = "customer-id"),
+            )
+        }
+
+        @Test
         fun `GIVEN DM Empty WHEN convertBack THEN returns domain Empty`() {
             // GIVEN
             val dm = PaymentAccountStatusValueDM.Empty

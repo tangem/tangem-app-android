@@ -13,10 +13,12 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.promo.usecase.GetPromoCampaignsUseCase
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.promobanners.api.PromoBannersFeatureToggles
 import com.tangem.features.promobanners.impl.analytics.PromoBannerAnalyticsEvent
+import com.tangem.features.promobanners.impl.campaigns.service.CampaignsService
 import com.tangem.features.promobanners.impl.campaigns.v2.model.PromoBannerCampaignMatcher
 import com.tangem.features.promobanners.impl.campaigns.v2.model.WalletCampaigns
 import com.tangem.features.promobanners.impl.converters.PromoBannerDisplayToNotificationConverter
@@ -49,6 +51,7 @@ internal class PromoBannersBlockModel @Inject constructor(
     promoBannersFeatureToggles: PromoBannersFeatureToggles,
     private val getPromoCampaignsUseCase: GetPromoCampaignsUseCase,
     private val campaignMatcher: PromoBannerCampaignMatcher,
+    private val campaignsService: CampaignsService,
 ) : Model() {
 
     private val params = paramsContainer.require<PromoBannersBlockComponent.Params>()
@@ -218,6 +221,11 @@ internal class PromoBannersBlockModel @Inject constructor(
                 banner = banner,
                 onDeeplinkClick = { deeplink -> onButtonClick(banner.id, deeplink) },
                 onDismiss = { displayId -> onBannerDismiss(walletId, displayId) },
+                onCampaignClick = if (isCampaignsV2Enabled) {
+                    { campaignId -> onCampaignClick(walletId, banner.id, campaignId) }
+                } else {
+                    null
+                },
             )
         }.toImmutableList()
 
@@ -262,6 +270,11 @@ internal class PromoBannersBlockModel @Inject constructor(
         } else {
             deeplinkLauncher.launch(appendSurveyDisplayId(deeplink, displayId))
         }
+    }
+
+    private fun onCampaignClick(walletId: String, displayId: Int, campaignId: Int) {
+        analyticsEventHandler.send(PromoBannerAnalyticsEvent.Clicked(displayId, placeholderName))
+        campaignsService.show(campaignId = campaignId.toString(), userWalletId = UserWalletId(walletId))
     }
 
     private fun appendSurveyDisplayId(deeplink: String, displayId: Int): String {

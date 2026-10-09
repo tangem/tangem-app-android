@@ -23,6 +23,7 @@ internal object DiscoveryListKeys {
     const val SKELETON = "skeleton"
     const val STATUS = "status"
     const val NEXT_PAGE = "next_page"
+    const val NEXT_PAGE_ERROR = "next_page_error"
     const val CONTENT_TYPE_PACK_ROW = "pack_row"
 }
 
@@ -109,11 +110,7 @@ private fun LazyListScope.contentItems(content: CollectiblesDiscoveryUM.ContentU
                         .alpha(if (content.isReloading) 0.4f else 1f),
                 )
             }
-            if (content.isLoadingNextPage) {
-                item(key = DiscoveryListKeys.NEXT_PAGE, contentType = DiscoveryListKeys.NEXT_PAGE) {
-                    NextPageLoader()
-                }
-            }
+            nextPageItem(nextPage = content.nextPage)
         }
         is CollectiblesDiscoveryUM.ContentUM.Error -> {
             statusItem {
@@ -141,6 +138,26 @@ private fun PackRow(row: CollectiblesDiscoveryUM.PackRowUM, modifier: Modifier =
         }
         if (row.packs.size == 1) {
             Spacer(modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+private fun LazyListScope.nextPageItem(nextPage: CollectiblesDiscoveryUM.NextPageUM) {
+    when (nextPage) {
+        CollectiblesDiscoveryUM.NextPageUM.Idle -> Unit
+        CollectiblesDiscoveryUM.NextPageUM.Loading -> {
+            item(key = DiscoveryListKeys.NEXT_PAGE, contentType = DiscoveryListKeys.NEXT_PAGE) {
+                NextPageLoader()
+            }
+        }
+        is CollectiblesDiscoveryUM.NextPageUM.Error -> {
+            item(key = DiscoveryListKeys.NEXT_PAGE_ERROR, contentType = DiscoveryListKeys.NEXT_PAGE_ERROR) {
+                CollectiblesStatus(
+                    message = nextPage.message,
+                    onReloadClick = nextPage.onRetryClick,
+                    modifier = Modifier.padding(vertical = 16.dp),
+                )
+            }
         }
     }
 }

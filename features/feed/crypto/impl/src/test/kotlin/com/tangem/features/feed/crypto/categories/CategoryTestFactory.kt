@@ -16,8 +16,6 @@ import java.math.BigDecimal
  * fallback is the only subtitle these tests can observe.
  */
 
-internal const val ALL_ROW_ID = "__all__"
-
 internal fun createCategory(
     id: String,
     name: String,

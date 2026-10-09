@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.withdraw.bank.preview.state
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -259,6 +260,7 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
         assertThat(actual).isEqualTo(
             Failed(
                 title = resourceReference(R.string.tangempay_withdraw_bank_error_general_title),
+                icon = TangemStatusIcon.Kind.Warning,
                 onCloseClick = callbacks.onCloseClick,
                 onRetryClick = callbacks.onRetryClick,
             ),
@@ -275,6 +277,7 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
         assertThat(actual).isEqualTo(
             Failed(
                 title = resourceReference(model.titleRes),
+                icon = TangemStatusIcon.Kind.HeartBroken,
                 onCloseClick = callbacks.onCloseClick,
                 onRetryClick = null,
             ),
@@ -322,9 +325,9 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
     }
 
     @Test
-    fun `GIVEN not sending WHEN rail row tapped THEN the rail callback fires`() {
+    fun `GIVEN new recipient not sending WHEN rail row tapped THEN the rail callback fires`() {
         // Arrange
-        val actual = factory.create(draft = savedDraft(), state = PreviewState()) as Summary
+        val actual = factory.create(draft = newRecipientDraft(), state = PreviewState()) as Summary
 
         // Act
         actual.transfer?.route?.onClick?.invoke()
@@ -340,7 +343,16 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
         val state = PreviewState(send = SendState.CreatingOrder)
 
         // Act
-        val actual = factory.create(draft = savedDraft(), state = state) as Summary
+        val actual = factory.create(draft = newRecipientDraft(), state = state) as Summary
+
+        // Assert
+        assertThat(actual.transfer?.route?.onClick).isNull()
+    }
+
+    @Test
+    fun `GIVEN saved recipient not sending WHEN create THEN the rail row is read-only`() {
+        // Act
+        val actual = factory.create(draft = savedDraft(), state = PreviewState()) as Summary
 
         // Assert
         assertThat(actual.transfer?.route?.onClick).isNull()

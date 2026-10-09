@@ -273,7 +273,9 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
         ): DefaultTokenDetailsDeepLinkHandler
     }
 
-    private companion object {
-        const val TOKEN_APPEARANCE_TIMEOUT_MILLIS = 3_000L
+    companion object {
+        const val DEEPLINK_KEY = "tangem://token"
+
+        private const val TOKEN_APPEARANCE_TIMEOUT_MILLIS = 3_000L
     }
 }

@@ -70,7 +70,7 @@ internal class JointAccountJoinModel @Inject constructor(
                     ),
                 )
                 showAccountAdded()
-                JoinResultAction.CloseFlow
+                JoinResultAction.OpenMembers(userWalletId = walletId, cryptoAccountId = account.cryptoAccountId)
             },
         )
     }
@@ -93,7 +93,7 @@ internal class JointAccountJoinModel @Inject constructor(
         )
     }
 
-    /** The join confirmation, shown over whatever screen the closed flow returns the user to */
+    /** The join confirmation, shown over the members screen the flow opens */
     private fun showAccountAdded() {
         uiMessageSender.send(
             SnackbarMessage(

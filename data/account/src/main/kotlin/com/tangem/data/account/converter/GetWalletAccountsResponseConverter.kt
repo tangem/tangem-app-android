@@ -28,6 +28,7 @@ internal class GetWalletAccountsResponseConverter @AssistedInject constructor(
                 sort = TokensSortTypeConverter.convertBack(value.sortType),
                 totalAccounts = value.totalAccounts,
                 totalArchivedAccounts = value.totalArchivedAccounts,
+                totalJointAccounts = value.totalJointAccounts.takeIf { it > 0 },
             ),
             accounts = value.accounts.mapNotNull { account ->
                 when (account) {

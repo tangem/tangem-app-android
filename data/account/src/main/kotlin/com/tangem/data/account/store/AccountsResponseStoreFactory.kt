@@ -6,20 +6,21 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapter
-import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.core.remote.moshi.NetworkMoshi
+import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
+import com.tangem.datasource.utils.create
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
-import com.tangem.domain.models.wallet.UserWalletId
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 typealias AccountsResponseStore = DataStore<GetWalletAccountsResponse?>
 
@@ -53,11 +54,16 @@ internal class AccountsResponseStoreFactory @Inject constructor(
      */
     fun create(userWalletId: UserWalletId): AccountsResponseStore {
         return createdDataStores.computeIfAbsent(userWalletId) {
-            dataStoreFactory.create(
-                serializer = MoshiDataStoreSerializer(defaultValue = null, adapter = adapter),
-                produceFile = { context.dataStoreFile(fileName = "wallet_accounts_${userWalletId.stringValue}") },
-                scope = appScope,
-            )
+            val fileName = "wallet_accounts_${userWalletId.stringValue}"
+            if (dataStoreFactory.isKotlinxDataStoreEnabled) {
+                dataStoreFactory.create<GetWalletAccountsResponse?>(defaultValue = null, fileName = fileName)
+            } else {
+                dataStoreFactory.create(
+                    serializer = MoshiDataStoreSerializer(defaultValue = null, adapter = adapter),
+                    produceFile = { context.dataStoreFile(fileName = fileName) },
+                    scope = appScope,
+                )
+            }
         }
     }
 

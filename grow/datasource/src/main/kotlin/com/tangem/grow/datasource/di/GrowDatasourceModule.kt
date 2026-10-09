@@ -14,6 +14,7 @@ import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
+import com.tangem.datasource.utils.create
 import com.tangem.datasource.utils.listTypes
 import com.tangem.grow.datasource.collectibles.CollectiblesApi
 import com.tangem.grow.datasource.collectibles.CollectiblesAuthProvider
@@ -260,15 +261,22 @@ internal object GrowDatasourceModule {
         dataStoreFactory: AppDataStoreFactory,
     ): YieldMarketsStore {
         return DefaultYieldMarketsStore(
-            persistenceStore = dataStoreFactory.create(
-                serializer = MoshiDataStoreSerializer(
-                    moshi = moshi,
-                    types = listTypes<YieldSupplyMarketTokenDto>(),
-                    defaultValue = emptyList(),
-                ),
-                produceFile = { context.dataStoreFile(fileName = "yield_markets_cache") },
-                scope = appScope,
-            ),
+            persistenceStore = if (dataStoreFactory.isKotlinxDataStoreEnabled) {
+                dataStoreFactory.create(
+                    defaultValue = emptyList<YieldSupplyMarketTokenDto>(),
+                    fileName = "yield_markets_cache",
+                )
+            } else {
+                dataStoreFactory.create(
+                    serializer = MoshiDataStoreSerializer(
+                        moshi = moshi,
+                        types = listTypes<YieldSupplyMarketTokenDto>(),
+                        defaultValue = emptyList(),
+                    ),
+                    produceFile = { context.dataStoreFile(fileName = "yield_markets_cache") },
+                    scope = appScope,
+                )
+            },
         )
     }
 

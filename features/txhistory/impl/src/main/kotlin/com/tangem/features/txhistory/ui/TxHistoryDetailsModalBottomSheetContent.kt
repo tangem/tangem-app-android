@@ -55,13 +55,15 @@ import kotlinx.collections.immutable.persistentListOf
  * @param state Sheet state. `null` keeps the sheet hidden (the modal renders its empty placeholder).
  * @param onDismiss Invoked on close / dismiss request.
  * @param ratingContent Optional provider-rating (CSAT) card, rendered between the exchange block and the info rows
- *  of the two-asset body. `null` hides the card (non-swap txs).
+ *  of the two-asset body. It receives the modifier carrying its place in the layout and is expected to apply it only
+ *  to what it draws, so a card that has nothing left to show (an already-rated deal) leaves no gap behind. `null`
+ *  hides the card outright (non-swap txs).
  */
 @Composable
 internal fun TxHistoryDetailsModalBottomSheetContent(
     state: TxHistoryDetailsUM?,
     onDismiss: () -> Unit,
-    ratingContent: (@Composable () -> Unit)? = null,
+    ratingContent: (@Composable (Modifier) -> Unit)? = null,
 ) {
     TangemModal<TxHistoryDetailsUM>(
         config = TangemBottomSheetConfig(
@@ -122,20 +124,7 @@ private fun TxHistoryDetailsModalBottomSheetContentUnratedPreview() {
         TxHistoryDetailsModalBottomSheetContent(
             state = previewTwoAssets(),
             onDismiss = {},
-            ratingContent = { PreviewRatingCard(selectedRating = null) },
-        )
-    }
-}
-
-@Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
-@Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = UI_MODE_NIGHT_YES)
-@Composable
-private fun TxHistoryDetailsModalBottomSheetContentAlreadyRatedPreview() {
-    TangemThemePreviewRedesign {
-        TxHistoryDetailsModalBottomSheetContent(
-            state = previewTwoAssets(),
-            onDismiss = {},
-            ratingContent = { PreviewRatingCard(selectedRating = 4) },
+            ratingContent = { modifier -> PreviewRatingCard(modifier = modifier) },
         )
     }
 }
@@ -146,9 +135,9 @@ private fun TxHistoryDetailsModalBottomSheetContentAlreadyRatedPreview() {
  */
 @Composable
 @Suppress("MagicNumber")
-private fun PreviewRatingCard(selectedRating: Int?) {
+private fun PreviewRatingCard(modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(TangemTheme.colors3.bg.tertiary)
@@ -165,16 +154,11 @@ private fun PreviewRatingCard(selectedRating: Int?) {
             modifier = Modifier.padding(vertical = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            repeat(5) { index ->
-                val isFilled = selectedRating != null && index < selectedRating
+            repeat(5) {
                 Icon(
                     painter = painterResource(R.drawable.ic_rating_star_24),
                     contentDescription = null,
-                    tint = if (isFilled) {
-                        TangemTheme.colors3.icon.accent.orange
-                    } else {
-                        TangemTheme.colors3.icon.tertiary
-                    },
+                    tint = TangemTheme.colors3.icon.tertiary,
                     modifier = Modifier.size(32.dp),
                 )
             }
@@ -207,7 +191,7 @@ private fun previewSingleAsset() = TxHistoryDetailsUM.SingleAsset(
     ),
     counterparty = TxHistoryDetailsUM.CounterpartyUM(
         label = stringReference("Recipient"),
-        title = stringReference("33Bd321fS...ga21412B"),
+        title = TxHistoryDetailsUM.CounterpartyTitle.Address("0xfb6916095ca1df60bb79ce92ce3ea74c37c5d359"),
         avatar = TxHistoryDetailsUM.CounterpartyAvatar.Address(
             rawAddress = "0xfb6916095ca1df60bb79ce92ce3ea74c37c5d359",
         ),

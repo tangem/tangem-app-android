@@ -123,15 +123,11 @@ class SwapStoriesTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            step("Open 'Token details' from 'Markets' screen for token '$tokenName'") {
-                openTokenDetailsFromMarketsScreen(blockchainName = tokenName, tokenName = tokenName)
+            step("Open 'Markets' token details for token '$tokenName'") {
+                openMarketsTokenDetailsFromMainScreen(tokenName)
             }
-            step("Assert 'Swap' button is displayed") {
-                waitForIdle()
-                onTokenDetailsScreen { swapButton.assertIsDisplayed() }
-            }
-            step("Open 'Swap' screen") {
-                openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = false)
+            step("Open 'Swap' screen from 'Markets' token details without stories") {
+                openSwapScreen(from = SwapEntryPoint.MarketsTokenDetails, storiesExist = false)
             }
             step("Click on 'Close' button") {
                 onSwapTokenScreen { closeButton.performClick() }
@@ -142,12 +138,27 @@ class SwapStoriesTest : BaseTestCase() {
             step("Restart app") {
                 restartApp(packageName)
             }
-            step("Assert 'Swap' button is displayed") {
-                waitForIdle()
-                onTokenDetailsScreen { swapButton.assertIsDisplayed() }
+            step("Open 'Markets' token details for token '$tokenName'") {
+                openMarketsTokenDetailsFromMainScreen(tokenName)
             }
-            step("Open 'Swap' screen") {
-                openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = true)
+            step("Click on 'Add funds' button on 'Markets' token details screen") {
+                onMarketsTokenDetailsScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { addFundsButton.clickWithAssertion() }
+                }
+            }
+            step("Click on 'Swap' action in the bottom sheet") {
+                onAddFundsBottomSheet { swapButton.clickWithAssertion() }
+            }
+            step("Assert 'Stories' screen is displayed") {
+                onSwapStoriesScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { closeButton.assertIsDisplayed() }
+                }
+            }
+            step("Click on 'Close' button") {
+                onSwapStoriesScreen { closeButton.performClick() }
+            }
+            step("Assert 'Swap' screen title is displayed") {
+                onSwapTokenScreen { title.assertIsDisplayed() }
             }
         }
     }

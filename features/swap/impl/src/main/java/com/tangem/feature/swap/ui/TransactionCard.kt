@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -101,8 +102,8 @@ private fun TransactionCardData(
     Box(
         modifier = modifier
             .background(
-                shape = RoundedCornerShape(TangemTheme.dimens.radius16),
-                color = TangemTheme.colors.background.primary,
+                shape = RoundedCornerShape(16.dp),
+                color = TangemTheme.colors3.bg.secondary,
             )
             .fillMaxWidth(),
     ) {
@@ -138,8 +139,8 @@ private fun TransactionCardData(
             Box(
                 Modifier
                     .align(Alignment.CenterEnd)
-                    .height(TangemTheme.dimens.size116)
-                    .width(TangemTheme.dimens.size102)
+                    .height(116.dp)
+                    .width(102.dp)
                     .clickable(
                         indication = ripple(bounded = false),
                         interactionSource = remember { MutableInteractionSource() },
@@ -158,8 +159,8 @@ private fun TransactionCardEmpty(
     Column(
         modifier = modifier
             .background(
-                shape = RoundedCornerShape(TangemTheme.dimens.radius12),
-                color = TangemTheme.colors.background.primary,
+                shape = RoundedCornerShape(12.dp),
+                color = TangemTheme.colors3.bg.secondary,
             )
             .padding(
                 top = 12.dp,
@@ -199,7 +200,7 @@ private fun TransactionCardEmpty(
                     color = TangemTheme.colors.text.tertiary,
                     style = TangemTheme.typography.body2,
                     modifier = Modifier
-                        .defaultMinSize(minHeight = TangemTheme.dimens.size20)
+                        .defaultMinSize(minHeight = 20.dp)
                         .testTag(SwapTokenScreenTestTags.SWAP_FIAT_AMOUNT),
                 )
             }
@@ -218,8 +219,8 @@ private fun TransactionCardLoading(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(
-                shape = RoundedCornerShape(TangemTheme.dimens.radius12),
-                color = TangemTheme.colors.background.primary,
+                shape = RoundedCornerShape(12.dp),
+                color = TangemTheme.colors3.bg.secondary,
             )
             .padding(
                 top = 12.dp,
@@ -292,10 +293,10 @@ private fun Header(
         modifier = modifier
             .fillMaxWidth()
             .padding(
-                bottom = TangemTheme.dimens.spacing8,
-                top = TangemTheme.dimens.spacing14,
-                start = TangemTheme.dimens.spacing12,
-                end = TangemTheme.dimens.spacing12,
+                bottom = 8.dp,
+                top = 14.dp,
+                start = 12.dp,
+                end = 12.dp,
             )
             .testTag(SwapTokenScreenTestTags.SWAP_BLOCK_HEADER),
     ) {
@@ -324,9 +325,9 @@ private fun Header(
         } else {
             RectangleShimmer(
                 modifier = Modifier
-                    .width(TangemTheme.dimens.size80)
-                    .height(TangemTheme.dimens.size12),
-                radius = TangemTheme.dimens.radius3,
+                    .width(80.dp)
+                    .height(12.dp),
+                radius = 3.dp,
             )
         }
     }
@@ -340,8 +341,8 @@ private fun Content(cardData: SwapCardState.SwapCardData, priceImpact: PriceImpa
     Row(
         modifier = Modifier
             .padding(
-                start = TangemTheme.dimens.spacing12,
-                bottom = TangemTheme.dimens.spacing16,
+                start = 12.dp,
+                bottom = 16.dp,
             ),
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.Top,
@@ -349,12 +350,12 @@ private fun Content(cardData: SwapCardState.SwapCardData, priceImpact: PriceImpa
         Column(
             modifier = Modifier
                 .padding(
-                    end = TangemTheme.dimens.spacing92,
+                    end = 92.dp,
                 ),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start,
         ) {
-            val sumTextModifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size32)
+            val sumTextModifier = Modifier.defaultMinSize(minHeight = 32.dp)
             when (type) {
                 is TransactionCardType.ReadOnly -> {
                     val value = cardData.amountField?.value
@@ -373,9 +374,9 @@ private fun Content(cardData: SwapCardState.SwapCardData, priceImpact: PriceImpa
                     } else {
                         RectangleShimmer(
                             modifier = Modifier
-                                .padding(vertical = TangemTheme.dimens.spacing4)
-                                .width(TangemTheme.dimens.size102)
-                                .height(TangemTheme.dimens.size24),
+                                .padding(vertical = 4.dp)
+                                .width(102.dp)
+                                .height(24.dp),
                         )
                     }
                 }
@@ -403,11 +404,11 @@ private fun Content(cardData: SwapCardState.SwapCardData, priceImpact: PriceImpa
             } else {
                 RectangleShimmer(
                     modifier = Modifier
-                        .padding(vertical = TangemTheme.dimens.spacing4)
-                        .width(TangemTheme.dimens.size40)
-                        .height(TangemTheme.dimens.size12)
+                        .padding(vertical = 4.dp)
+                        .width(40.dp)
+                        .height(12.dp)
                         .testTag(SwapTokenScreenTestTags.RECEIVE_AMOUNT_SHIMMER),
-                    radius = TangemTheme.dimens.radius3,
+                    radius = 3.dp,
                 )
             }
         }
@@ -444,7 +445,7 @@ internal fun AmountInputField(
         colors = AmountTextFieldColors(
             textColor = TangemTheme.colors.text.primary1,
             disabledTextColor = TangemTheme.colors.text.disabled,
-            backgroundColor = TangemTheme.colors.background.primary,
+            backgroundColor = Color.Unspecified,
         ),
         isValuePasted = amountField.isValuePasted,
         onValuePastedTriggerDismiss = amountField.onValuePastedTriggerDismiss,
@@ -472,7 +473,7 @@ private fun ReceiveAmountEquivalent(
     priceImpact: PriceImpact,
 ) {
     Row(
-        modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size20),
+        modifier = Modifier.defaultMinSize(minHeight = 20.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         AnimatedContent(targetState = amountEquivalent, label = "") { amount ->
@@ -487,7 +488,7 @@ private fun ReceiveAmountEquivalent(
             SpacerW4()
             IconButton(
                 onClick = { type.onWarningClick?.invoke() },
-                modifier = Modifier.size(size = TangemTheme.dimens.size20),
+                modifier = Modifier.size(size = 20.dp),
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_information_24),
@@ -517,7 +518,7 @@ private fun SwapAmountEquivalent(
     onCurrencyChange: (Boolean) -> Unit,
 ) {
     val rowModifier = Modifier
-        .defaultMinSize(minHeight = TangemTheme.dimens.size20)
+        .defaultMinSize(minHeight = 20.dp)
         .then(
             if (isFiatUnavailable) {
                 Modifier
@@ -532,7 +533,7 @@ private fun SwapAmountEquivalent(
     Row(
         modifier = rowModifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         if (!isFiatUnavailable) {
             val iconRotation by animateFloatAsState(
@@ -544,7 +545,7 @@ private fun SwapAmountEquivalent(
                 contentDescription = null,
                 tint = TangemTheme.colors3.icon.tertiary,
                 modifier = Modifier
-                    .size(TangemTheme.dimens.size16)
+                    .size(16.dp)
                     .graphicsLayer { rotationZ = iconRotation },
             )
         }
@@ -564,8 +565,8 @@ fun Token(currencyIconState: CurrencyIconState, tokenSymbol: TextReference) {
     Column(
         modifier = Modifier
             .padding(
-                end = TangemTheme.dimens.spacing12,
-                bottom = TangemTheme.dimens.spacing12,
+                end = 12.dp,
+                bottom = 12.dp,
             )
             .testTag(SwapTokenScreenTestTags.TOKEN),
         verticalArrangement = Arrangement.Bottom,
@@ -580,7 +581,7 @@ fun Token(currencyIconState: CurrencyIconState, tokenSymbol: TextReference) {
             style = TangemTheme.typography.subtitle2,
             textAlign = TextAlign.Center,
             modifier = Modifier
-                .defaultMinSize(minWidth = TangemTheme.dimens.size80)
+                .defaultMinSize(minWidth = 80.dp)
                 .testTag(SwapTokenScreenTestTags.TOKEN_SYMBOL),
         )
     }
@@ -591,15 +592,15 @@ fun ChangeTokenSelector() {
     Box(
         modifier = Modifier
             .padding(
-                top = TangemTheme.dimens.spacing12,
-                start = TangemTheme.dimens.spacing24,
-                end = TangemTheme.dimens.spacing12,
+                top = 12.dp,
+                start = 24.dp,
+                end = 12.dp,
             ),
         contentAlignment = Alignment.CenterEnd,
     ) {
         Icon(
             modifier = Modifier
-                .size(TangemTheme.dimens.size20)
+                .size(20.dp)
                 .testTag(SwapTokenScreenTestTags.SELECT_TOKEN_ICON),
             painter = painterResource(id = R.drawable.ic_chevron_24),
             tint = TangemTheme.colors.icon.secondary,

@@ -232,6 +232,13 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         hasText(getResourceString(R.string.common_swap))
     }
 
+    // Disabled buttons don't merge their label into BASE_BUTTON, so match through the label.
+    val swapButtonWithLabel: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasAnyDescendant(withText(getResourceString(R.string.common_swap)))
+        useUnmergedTree = true
+    }
+
     val transferButton: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasText(getResourceString(R.string.swapping_transfer_action))
@@ -299,6 +306,25 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
     }
 
     val swapFiatAmount: KNode = child {
+        hasTestTag(SwapTokenScreenTestTags.SWAP_FIAT_AMOUNT)
+        useUnmergedTree = true
+    }
+
+    val sendFiatAmount: KNode = child {
+        hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.SWAP_CARD))
+        hasTestTag(SwapTokenScreenTestTags.SWAP_FIAT_AMOUNT)
+        useUnmergedTree = true
+    }
+
+    // Until a receive token is chosen, the receive card renders the send card's tags with placeholder zeros.
+    val emptyReceiveAmount: KNode = child {
+        hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.RECEIVE_CARD))
+        hasTestTag(SwapTokenScreenTestTags.SWAP_TEXT_FIELD)
+        useUnmergedTree = true
+    }
+
+    val emptyReceiveFiatAmount: KNode = child {
+        hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.RECEIVE_CARD))
         hasTestTag(SwapTokenScreenTestTags.SWAP_FIAT_AMOUNT)
         useUnmergedTree = true
     }
