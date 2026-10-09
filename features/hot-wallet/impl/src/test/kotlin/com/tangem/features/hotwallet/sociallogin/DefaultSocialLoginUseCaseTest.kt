@@ -45,6 +45,9 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.Runs
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -271,6 +274,33 @@ internal class DefaultSocialLoginUseCaseTest {
         assertThat(actual).isInstanceOf(CancellationException::class.java)
         coVerify(exactly = 0) { tangemHotSdk.delete(any()) }
     }
+
+    @Test
+    fun `GIVEN a cancel during the save WHEN signIn THEN the save finishes and the keys are kept`() =
+        runTest {
+            // Arrange
+            val saveGate = CompletableDeferred<Unit>()
+            var isListed = false
+            coEvery { saveWalletUseCase(savedWallet) } coAnswers {
+                saveGate.await()
+                isListed = true
+                Unit.right()
+            }
+            every { getUserWalletUseCase(WALLET_ID) } answers {
+                if (isListed) savedWallet.right() else GetUserWalletError.UserWalletNotFound.left()
+            }
+            val signIn = launch { useCase.signIn(PROVIDER) { CONSENT } }
+            advanceUntilIdle()
+
+            // Act
+            signIn.cancel()
+            saveGate.complete(Unit)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(isListed).isTrue()
+            coVerify(exactly = 0) { tangemHotSdk.delete(any()) }
+        }
 
     @Test
     fun `GIVEN the sign-in is cancelled while registering a restore WHEN signIn THEN the restored wallet is deleted`() =
