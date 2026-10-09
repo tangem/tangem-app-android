@@ -21,31 +21,27 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
             is MoneyAccountStatusValue.Onboarding.CountryNotSupported -> {
                 MoneyAccountStatusValueDM.CountryNotSupported(
                     countryCode = value.countryCode,
+                    customerId = value.customerId,
                 )
             }
             is MoneyAccountStatusValue.Onboarding.Issuing -> MoneyAccountStatusValueDM.Issuing(
                 step = value.step,
                 customerId = value.customerId,
-                balance = value.balance?.toDM(),
             )
             is MoneyAccountStatusValue.Onboarding.KycRequired -> MoneyAccountStatusValueDM.KycRequired(
                 customerId = value.customerId,
-                balance = value.balance?.toDM(),
             )
             is MoneyAccountStatusValue.Onboarding.UnderReview -> MoneyAccountStatusValueDM.UnderReview(
                 kycStatus = value.kycStatus,
                 customerId = value.customerId,
-                balance = value.balance?.toDM(),
             )
             is MoneyAccountStatusValue.Onboarding.VerificationDeclined -> {
                 MoneyAccountStatusValueDM.VerificationDeclined(
                     customerId = value.customerId,
-                    balance = value.balance?.toDM(),
                 )
             }
             is MoneyAccountStatusValue.Onboarding.Activating -> MoneyAccountStatusValueDM.Activating(
                 customerId = value.customerId,
-                balance = value.balance?.toDM(),
             )
             is MoneyAccountStatusValue.Account.Active -> MoneyAccountStatusValueDM.ActiveAccount(
                 customerId = value.customerId,
@@ -70,35 +66,32 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
             is MoneyAccountStatusValueDM.Empty -> MoneyAccountStatusValue.Empty
             is MoneyAccountStatusValueDM.NotCreated -> MoneyAccountStatusValue.NotCreated
             is MoneyAccountStatusValueDM.CountryNotSupported -> MoneyAccountStatusValue.Onboarding.CountryNotSupported(
+                source = StatusSource.CACHE,
+                customerId = value.customerId,
                 countryCode = value.countryCode,
             )
             is MoneyAccountStatusValueDM.Issuing -> MoneyAccountStatusValue.Onboarding.Issuing(
                 source = StatusSource.CACHE,
-                balance = value.balance?.toDomain(userWalletId),
                 customerId = value.customerId,
                 step = value.step,
             )
             is MoneyAccountStatusValueDM.KycRequired -> MoneyAccountStatusValue.Onboarding.KycRequired(
                 source = StatusSource.CACHE,
-                balance = value.balance?.toDomain(userWalletId),
                 customerId = value.customerId,
             )
             is MoneyAccountStatusValueDM.UnderReview -> MoneyAccountStatusValue.Onboarding.UnderReview(
                 source = StatusSource.CACHE,
-                balance = value.balance?.toDomain(userWalletId),
                 kycStatus = value.kycStatus,
                 customerId = value.customerId,
             )
             is MoneyAccountStatusValueDM.VerificationDeclined -> {
                 MoneyAccountStatusValue.Onboarding.VerificationDeclined(
                     source = StatusSource.CACHE,
-                    balance = value.balance?.toDomain(userWalletId),
                     customerId = value.customerId,
                 )
             }
             is MoneyAccountStatusValueDM.Activating -> MoneyAccountStatusValue.Onboarding.Activating(
                 source = StatusSource.CACHE,
-                balance = value.balance?.toDomain(userWalletId),
                 customerId = value.customerId,
             )
             is MoneyAccountStatusValueDM.ActiveAccount -> MoneyAccountStatusValue.Account.Active(
