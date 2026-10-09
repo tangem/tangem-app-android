@@ -1,14 +1,14 @@
 package com.tangem.grow.datasource.collectibles.models.response.model
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class MachineCategoryDTO(
-    @Json(name = "id")
+    @SerialName("id")
     val id: String,
-    @Json(name = "name")
+    @SerialName("name")
     val name: String,
-    @Json(name = "machinesQuantity")
+    @SerialName("machinesQuantity")
     val machinesQuantity: Int,
 )
