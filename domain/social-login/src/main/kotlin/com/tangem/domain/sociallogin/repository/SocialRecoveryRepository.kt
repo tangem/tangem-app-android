@@ -1,6 +1,7 @@
 package com.tangem.domain.sociallogin.repository
 
 import arrow.core.Either
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.sociallogin.models.SocialProviderIdToken
 import com.tangem.domain.sociallogin.models.RecoveryKey
@@ -24,7 +25,8 @@ interface SocialRecoveryRepository {
     suspend fun getRecoveryKey(idToken: SocialProviderIdToken): Either<SocialLoginError, RecoveryKey>
 
     /**
-     * Binds [walletId] to the identity behind [idToken] and stores [recoveryKey] encrypted for it.
+     * Binds [userWallet] to the identity behind [idToken] and stores [recoveryKey] encrypted for it.
+     * Signed with the wallet's own key, so the wallet does not have to be in the wallets list yet.
      *
      * Idempotent per identity: repeating the call after a network failure re-uses the existing binding
      * instead of creating a second one. Fails with [SocialLoginError.BindingConflict] when the
@@ -32,11 +34,12 @@ interface SocialRecoveryRepository {
      */
     suspend fun registerRecoveryKey(
         idToken: SocialProviderIdToken,
-        walletId: UserWalletId,
+        userWallet: UserWallet.Hot,
         recoveryKey: RecoveryKey,
     ): Either<SocialLoginError, Unit>
 
-    suspend fun registerRestoredWallet(walletId: UserWalletId): Either<SocialLoginError, Unit>
+    /** Registers a restored [userWallet], signed with its own key like [registerRecoveryKey] */
+    suspend fun registerRestoredWallet(userWallet: UserWallet.Hot): Either<SocialLoginError, Unit>
 
     /**
      * Drops the binding of [walletId] and the recovery key stored with it, so the identity can no longer
