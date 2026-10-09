@@ -23,7 +23,6 @@ internal class DefaultCardSdkConfigRepository(
     private val transactionSignerFactory: TransactionSignerFactory,
 ) : CardSdkConfigRepository {
 
-    @Deprecated("Use CardSdkConfigRepository's methods instead of this property")
     override val sdk: TangemSdk
         get() = cardSdkProvider.sdk
 
