@@ -13,12 +13,14 @@ import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.repository.MoneyAccountOrderRepository
+import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBalanceUseCase
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -29,6 +31,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultMoneyAccountStatusFetcherTest {
@@ -36,19 +39,24 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     private val moneyAccountStatusesStore: MoneyAccountStatusesStore = mockk(relaxed = true)
     private val orderRepository: MoneyAccountOrderRepository = mockk()
     private val onboardingRepository: OnboardingRepository = mockk()
+    private val deviceSecurity: DeviceSecurityInfoProvider = mockk(relaxed = true)
+    private val getMoneyAccountBalanceUseCase: GetMoneyAccountBalanceUseCase = mockk()
 
     private val fetcher = DefaultMoneyAccountStatusFetcher(
         moneyAccountStatusesStore = moneyAccountStatusesStore,
         orderRepository = orderRepository,
         onboardingRepository = onboardingRepository,
         dispatchers = TestingCoroutineDispatcherProvider(),
+        getMoneyAccountBalanceUseCase = getMoneyAccountBalanceUseCase,
+        deviceSecurity = deviceSecurity,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(moneyAccountStatusesStore, orderRepository, onboardingRepository)
+        clearMocks(moneyAccountStatusesStore, orderRepository, onboardingRepository, getMoneyAccountBalanceUseCase)
+        coEvery { getMoneyAccountBalanceUseCase(USER_WALLET_ID) } returns IllegalStateException().left()
         coEvery { moneyAccountStatusesStore.getSyncOrNull(USER_WALLET_ID) } returns null
-        every { orderRepository.getOrder(USER_WALLET_ID) } returns null
+        every { orderRepository.getOrder(USER_WALLET_ID) } returns null.right()
         coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo().right()
     }
 
@@ -59,6 +67,21 @@ internal class DefaultMoneyAccountStatusFetcherTest {
 
         // Assert
         verifyStored(MoneyAccountStatusValue.NotCreated)
+    }
+
+    @Test
+    fun `GIVEN former customer without account WHEN invoke THEN empty is stored`() = runTest {
+        // Arrange
+        coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo(
+            state = CustomerInfo.State.FORMER,
+        ).right()
+        every { orderRepository.getOrder(USER_WALLET_ID) } returns createOrder().right()
+
+        // Act
+        fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
+
+        // Assert
+        verifyStored(MoneyAccountStatusValue.Empty)
     }
 
     @Test
@@ -76,11 +99,57 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     }
 
     @Test
-    fun `GIVEN active product instance WHEN invoke THEN active account is stored`() = runTest {
+    fun `GIVEN refresh token expired WHEN invoke THEN not synced is stored`() = runTest {
         // Arrange
+        coEvery {
+            onboardingRepository.getCustomerInfo(USER_WALLET_ID)
+        } returns VisaApiError.RefreshTokenExpired.left()
+
+        // Act
+        fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
+
+        // Assert
+        verifyStored(MoneyAccountStatusValue.Error.NotSynced)
+    }
+
+    @Test
+    fun `GIVEN order is not restored yet WHEN invoke THEN loading is stored`() = runTest {
+        // Arrange
+        every { orderRepository.getOrder(USER_WALLET_ID) } returns null
+
+        // Act
+        fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
+
+        // Assert
+        verifyStored(MoneyAccountStatusValue.Loading)
+    }
+
+    @Test
+    fun `GIVEN order restoring failed WHEN invoke THEN unavailable is stored`() = runTest {
+        // Arrange
+        every { orderRepository.getOrder(USER_WALLET_ID) } returns VisaApiError.ServerUnavailable.left()
+
+        // Act
+        fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
+
+        // Assert
+        verifyStored(MoneyAccountStatusValue.Error.Unavailable)
+    }
+
+    @Test
+    fun `GIVEN active product instance WHEN invoke THEN active account with balance is stored`() = runTest {
+        // Arrange
+        val balance = MoneyAccountStatusValue.Balance(
+            cryptoAmount = BigDecimal.TEN,
+            cryptoCurrency = mockk(),
+            depositAddress = "0xdeposit",
+            currencyCode = "USD",
+            fiatRate = BigDecimal.ONE,
+        )
         coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo(
             accountStatus = CustomerInfo.ProductInstance.Status.ACTIVE,
         ).right()
+        coEvery { getMoneyAccountBalanceUseCase(USER_WALLET_ID) } returns balance.right()
 
         // Act
         fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
@@ -88,6 +157,49 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         // Assert
         verifyStored(
             MoneyAccountStatusValue.Account.Active(
+                source = StatusSource.ACTUAL,
+                balance = balance,
+                customerId = CUSTOMER_ID,
+                productInstanceId = PRODUCT_INSTANCE_ID,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN active product instance AND balance failed WHEN invoke THEN active account without balance is stored`() =
+        runTest {
+            // Arrange
+            coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo(
+                accountStatus = CustomerInfo.ProductInstance.Status.ACTIVE,
+            ).right()
+
+            // Act
+            fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
+
+            // Assert
+            verifyStored(
+                MoneyAccountStatusValue.Account.Active(
+                    source = StatusSource.ACTUAL,
+                    balance = null,
+                    customerId = CUSTOMER_ID,
+                    productInstanceId = PRODUCT_INSTANCE_ID,
+                ),
+            )
+        }
+
+    @Test
+    fun `GIVEN deactivated product instance WHEN invoke THEN deactivated account is stored`() = runTest {
+        // Arrange
+        coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo(
+            accountStatus = CustomerInfo.ProductInstance.Status.DEACTIVATED,
+        ).right()
+
+        // Act
+        fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
+
+        // Assert
+        verifyStored(
+            MoneyAccountStatusValue.Account.Deactivated(
                 source = StatusSource.ACTUAL,
                 balance = null,
                 customerId = CUSTOMER_ID,
@@ -99,7 +211,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     @Test
     fun `GIVEN order is being issued WHEN invoke THEN issuing is stored`() = runTest {
         // Arrange
-        every { orderRepository.getOrder(USER_WALLET_ID) } returns createOrder(step = OrderStep.ELIGIBILITY_CHECK)
+        every { orderRepository.getOrder(USER_WALLET_ID) } returns createOrder(step = OrderStep.ELIGIBILITY_CHECK).right()
 
         // Act
         fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
@@ -108,7 +220,6 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         verifyStored(
             MoneyAccountStatusValue.Onboarding.Issuing(
                 source = StatusSource.ACTUAL,
-                balance = null,
                 customerId = CUSTOMER_ID,
                 step = MoneyAccountStatusValue.IssuingStep.ELIGIBILITY_CHECK,
             ),
@@ -118,7 +229,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     @Test
     fun `GIVEN order awaits verification WHEN invoke THEN under review is stored`() = runTest {
         // Arrange
-        every { orderRepository.getOrder(USER_WALLET_ID) } returns createOrder(step = OrderStep.AWAITING_KYC)
+        every { orderRepository.getOrder(USER_WALLET_ID) } returns createOrder(step = OrderStep.AWAITING_KYC).right()
 
         // Act
         fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
@@ -127,7 +238,6 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         verifyStored(
             MoneyAccountStatusValue.Onboarding.UnderReview(
                 source = StatusSource.ACTUAL,
-                balance = null,
                 customerId = CUSTOMER_ID,
                 kycStatus = KycStatus.APPROVED,
             ),
@@ -137,7 +247,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     @Test
     fun `GIVEN order exists AND residency step not passed WHEN invoke THEN kyc required is stored`() = runTest {
         // Arrange
-        every { orderRepository.getOrder(USER_WALLET_ID) } returns createOrder(step = OrderStep.AWAITING_KYC)
+        every { orderRepository.getOrder(USER_WALLET_ID) } returns createOrder(step = OrderStep.AWAITING_KYC).right()
         coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo(
             kycStatus = KycStatus.REQUIRED,
         ).right()
@@ -149,7 +259,6 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         verifyStored(
             MoneyAccountStatusValue.Onboarding.KycRequired(
                 source = StatusSource.ACTUAL,
-                balance = null,
                 customerId = CUSTOMER_ID,
             ),
         )
@@ -158,7 +267,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     @Test
     fun `GIVEN verification is rejected WHEN invoke THEN declined is stored`() = runTest {
         // Arrange
-        every { orderRepository.getOrder(USER_WALLET_ID) } returns createOrder(step = OrderStep.AWAITING_KYC)
+        every { orderRepository.getOrder(USER_WALLET_ID) } returns createOrder(step = OrderStep.AWAITING_KYC).right()
         coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo(
             kycStatus = KycStatus.REJECTED,
         ).right()
@@ -170,7 +279,6 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         verifyStored(
             MoneyAccountStatusValue.Onboarding.VerificationDeclined(
                 source = StatusSource.ACTUAL,
-                balance = null,
                 customerId = CUSTOMER_ID,
             ),
         )
@@ -179,7 +287,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     @Test
     fun `GIVEN order is completed WHEN invoke THEN activating is stored`() = runTest {
         // Arrange
-        every { orderRepository.getOrder(USER_WALLET_ID) } returns createOrder(status = OrderStatus.COMPLETED)
+        every { orderRepository.getOrder(USER_WALLET_ID) } returns createOrder(status = OrderStatus.COMPLETED).right()
 
         // Act
         fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
@@ -188,7 +296,6 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         verifyStored(
             MoneyAccountStatusValue.Onboarding.Activating(
                 source = StatusSource.ACTUAL,
-                balance = null,
                 customerId = CUSTOMER_ID,
             ),
         )
@@ -201,7 +308,6 @@ internal class DefaultMoneyAccountStatusFetcherTest {
             account = Account.Money(userWalletId = USER_WALLET_ID),
             value = MoneyAccountStatusValue.Onboarding.Activating(
                 source = StatusSource.ACTUAL,
-                balance = null,
                 customerId = CUSTOMER_ID,
             ),
         )
@@ -234,7 +340,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
             every { orderRepository.getOrder(USER_WALLET_ID) } returns createOrder(
                 status = OrderStatus.CANCELED,
                 step = OrderStep.STARTING,
-            )
+            ).right()
             coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo(
                 kycStatus = KycStatus.REQUIRED,
             ).right()
@@ -246,7 +352,6 @@ internal class DefaultMoneyAccountStatusFetcherTest {
             verifyStored(
                 MoneyAccountStatusValue.Onboarding.Issuing(
                     source = StatusSource.ACTUAL,
-                    balance = null,
                     customerId = CUSTOMER_ID,
                     step = MoneyAccountStatusValue.IssuingStep.STARTING,
                 ),
@@ -289,13 +394,14 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     private fun createCustomerInfo(
         kycStatus: KycStatus = KycStatus.APPROVED,
         accountStatus: CustomerInfo.ProductInstance.Status? = null,
+        state: CustomerInfo.State = CustomerInfo.State.ACTIVE,
     ) = CustomerInfo(
         customerId = CUSTOMER_ID,
         paymentAccount = null,
         productInstances = listOfNotNull(accountStatus?.let(::createAccountInstance)),
         cards = emptyList(),
         kycStatus = kycStatus,
-        state = CustomerInfo.State.ACTIVE,
+        state = state,
         fiatBalance = null,
         tariffPlan = null,
     )
@@ -309,6 +415,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         adminCardLimit = null,
         status = status,
         specificationDataType = CustomerInfo.ProductInstance.SpecificationDataType.ACCOUNT,
+        paymentAccountType = CustomerInfo.ProductInstance.PaymentAccountType.COLLATERAL_BANKING_ACCOUNT,
     )
 
     private companion object {

@@ -21,6 +21,8 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.pay.TangemPayCurrencyFactory
+import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
+import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.FindMoneyAccountCreationOrderUseCase
 import com.tangem.domain.pay.usecase.StartTangemPayOrderPollingUseCase
@@ -130,11 +132,15 @@ internal interface MoneyAccountDataModule {
             tangemPayCurrencyFactory: TangemPayCurrencyFactory,
             singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
             singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
+            singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
+            singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
         ): GetMoneyAccountBalanceUseCase {
             return GetMoneyAccountBalanceUseCase(
                 tangemPayCurrencyFactory = tangemPayCurrencyFactory,
                 singleNetworkStatusFetcher = singleNetworkStatusFetcher,
                 singleNetworkStatusSupplier = singleNetworkStatusSupplier,
+                singleQuoteStatusFetcher = singleQuoteStatusFetcher,
+                singleQuoteStatusSupplier = singleQuoteStatusSupplier,
             )
         }
 
@@ -170,15 +176,15 @@ internal interface MoneyAccountDataModule {
         @Provides
         fun provideRestoreMoneyAccountOrderUseCase(
             orderRepository: MoneyAccountOrderRepository,
-            onboardingRepository: OnboardingRepository,
             trackOrder: TrackMoneyAccountOrderUseCase,
             findMoneyAccountCreationOrderUseCase: FindMoneyAccountCreationOrderUseCase,
+            moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
         ): RestoreMoneyAccountOrderUseCase {
             return RestoreMoneyAccountOrderUseCase(
-                orderRepository = orderRepository,
-                onboardingRepository = onboardingRepository,
                 trackOrder = trackOrder,
                 findMoneyAccountCreationOrderUseCase = findMoneyAccountCreationOrderUseCase,
+                moneyAccountOrderRepository = orderRepository,
+                moneyAccountStatusFetcher = moneyAccountStatusFetcher,
             )
         }
 

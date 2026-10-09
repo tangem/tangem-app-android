@@ -21,21 +21,19 @@ class CreateMoneyAccountOrderUseCase(
         depositAddress: String,
         signature: String,
     ): Either<VisaApiError, Unit> {
-        if (orderRepository.getOrder(userWalletId) != null) return Unit.right()
-
         val activeOrder = findMoneyAccountCreationOrderUseCase.invoke(userWalletId).getOrNull()
-        if (activeOrder != null) {
+        return if (activeOrder != null) {
             startOrderTracking(userWalletId, activeOrder)
-            return Unit.right()
+            Unit.right()
+        } else {
+            orderRepository.createOrder(
+                userWalletId = userWalletId,
+                depositAddress = depositAddress,
+                signature = signature,
+            )
+                .handleActiveOrderConflict(userWalletId)
+                .map { order -> startOrderTracking(userWalletId, order) }
         }
-
-        return orderRepository.createOrder(
-            userWalletId = userWalletId,
-            depositAddress = depositAddress,
-            signature = signature,
-        )
-            .handleActiveOrderConflict(userWalletId)
-            .map { order -> startOrderTracking(userWalletId, order) }
     }
 
     private suspend fun Either<VisaApiError, Order>.handleActiveOrderConflict(

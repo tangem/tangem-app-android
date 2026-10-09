@@ -43,6 +43,7 @@ internal class CustomerMeProductInstanceParsingTest {
                 displayName = null,
                 actualCardLimit = null,
                 adminCardLimit = null,
+                paymentAccountType = null,
                 specificationDataType = ProductInstance.SpecificationDataType.CARD,
             ),
         )

@@ -447,9 +447,6 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     PaymentAccountStatusValue.KycRequired(source = StatusSource.ACTUAL, customerId = customerId)
                 }
             }
-            customerId.isNullOrEmpty() -> PaymentAccountStatusValue.IssuingCard(
-                source = StatusSource.ACTUAL,
-            )
             kycStatus != KycStatus.APPROVED -> PaymentAccountStatusValue.UnderReview(
                 source = StatusSource.ACTUAL,
                 kycStatus = kycStatus,
