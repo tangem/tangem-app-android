@@ -173,7 +173,7 @@ internal class DefaultScanCardProcessor @Inject constructor(
         if (config.shouldTrackScanFails) scanFailsCounter.reset()
         if (config.shouldUpdateCardIdDisplayFormat) tangemSdkManager.changeDisplayedCardIdNumbersCount(scanResponse)
 
-        if (!config.shouldHandleOnboarding) return scanResponse.right()
+        if (!config.shouldLaunchOnboarding) return scanResponse.right()
 
         val onboardingRoute = resolveOnboardingRoute(scanResponse)
         delay(DELAY_SDK_DIALOG_CLOSE)
