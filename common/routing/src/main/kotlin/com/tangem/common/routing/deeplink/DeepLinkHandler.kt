@@ -14,6 +14,10 @@ fun interface DeepLinkHandler {
     val isEnabled: Boolean
         get() = true
 
+    /** `false` — a deep link from a push notification is dropped instead of being handled. */
+    val isOpenableFromPush: Boolean
+        get() = true
+
     fun handle(request: DeepLinkRequest)
 }
 

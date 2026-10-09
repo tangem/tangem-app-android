@@ -1,8 +1,12 @@
 package com.tangem.features.mcp.impl.di
 
+import com.tangem.common.routing.deeplink.DeepLinkHandler
+import com.tangem.common.routing.deeplink.DeepLinkKey
+import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.mcp.api.McpComponentFactory
+import com.tangem.features.mcp.api.McpFeatureToggles
 import com.tangem.features.mcp.api.deeplink.McpDeepLinkHandler
 import com.tangem.features.mcp.api.deeplink.McpIntentDeepLinkHandler
 import com.tangem.features.mcp.impl.DefaultMcpComponentFactory
@@ -12,6 +16,7 @@ import com.tangem.features.mcp.impl.intent.model.McpIntentModel
 import com.tangem.features.mcp.impl.pair.model.McpPairModel
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.ClassKey
@@ -35,6 +40,29 @@ internal interface FeatureModule {
     fun bindIntentDeepLinkHandlerFactory(
         impl: DefaultMcpIntentDeepLinkHandler.Factory,
     ): McpIntentDeepLinkHandler.Factory
+
+    companion object {
+
+        // Temporary bridge to the legacy factory: once the legacy routing is removed, the handler itself must be
+        // bound here as a DeepLinkHandler instead of a lambda over its factory.
+        /** Not openable from push: the link pairs an agent with a payload-supplied user code. */
+        @Provides
+        @IntoMap
+        @DeepLinkKey(DefaultMcpDeepLinkHandler.DEEPLINK_KEY)
+        fun provideMcpDeepLinkHandler(
+            factory: McpDeepLinkHandler.Factory,
+            mcpFeatureToggles: McpFeatureToggles,
+        ): DeepLinkHandler = object : DeepLinkHandler {
+            override val isEnabled: Boolean
+                get() = mcpFeatureToggles.isMcpEnabled
+
+            override val isOpenableFromPush: Boolean = false
+
+            override fun handle(request: DeepLinkRequest) {
+                factory.create(queryParams = request.queryParams)
+            }
+        }
+    }
 }
 
 @Module
