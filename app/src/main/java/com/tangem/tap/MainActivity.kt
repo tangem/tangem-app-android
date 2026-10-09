@@ -71,6 +71,7 @@ import com.tangem.tap.features.main.MainViewModel
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.utils.DeepLinkFactory
+import com.tangem.tap.routing.utils.DeepLinkFeatureToggles
 import com.tangem.tap.routing.utils.DeeplinkSource
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -154,6 +155,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     internal lateinit var deeplinkFactory: DeepLinkFactory
+
+    @Inject
+    internal lateinit var deepLinkFeatureToggles: DeepLinkFeatureToggles
 
     @Inject
     internal lateinit var testerMenuLauncher: TesterMenuLauncher
@@ -478,8 +482,11 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
                 launchDeepLink(externalDeepLink, isFromOnNewIntent, DeeplinkSource.External)
             // A deep link reconstructed from a notification payload must pass the push policy. If it is
             // present but blocked, stop — there is deliberately no second chance for the same payload.
+            // With the handler registry the policy is applied by the handlers themselves.
             extrasDeepLink != null ->
-                if (PushDeeplinkPolicy.isOpenableFromPush(scheme = extrasDeepLink.scheme, host = extrasDeepLink.host)) {
+                if (deepLinkFeatureToggles.isHandlerRegistryEnabled ||
+                    PushDeeplinkPolicy.isOpenableFromPush(scheme = extrasDeepLink.scheme, host = extrasDeepLink.host)
+                ) {
                     launchDeepLink(extrasDeepLink, isFromOnNewIntent, DeeplinkSource.Push)
                 }
         }
