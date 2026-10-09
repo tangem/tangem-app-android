@@ -47,6 +47,7 @@ import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.withIndex
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.SerializationStrategy
@@ -206,7 +207,9 @@ internal class DefaultSocketChannel(
                     when (event) {
                         TransportEvent.Opened -> {
                             synchronized(sendLock) { isOnOpenRunning = true }
-                            val openError = runAttemptCatching { spec.onOpen(ConnectionSession(opened)) }
+                            val openError = runAttemptCatching {
+                                withTimeout(ON_OPEN_TIMEOUT) { spec.onOpen(ConnectionSession(opened)) }
+                            }
                                 .exceptionOrNull()
                             if (openError != null) {
                                 closed = SocketClose(SocketCloseCode.ABNORMAL, "onOpen failed: ${openError.message}")
@@ -329,5 +332,6 @@ internal class DefaultSocketChannel(
         const val COLLECTOR_BUFFER_CAPACITY = 256
         val HEALTHY_CONNECTION_AGE = 30.seconds
         val LOOP_RESTART_DELAY = 5.seconds
+        val ON_OPEN_TIMEOUT = 5.seconds
     }
 }
