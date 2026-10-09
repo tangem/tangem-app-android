@@ -480,6 +480,20 @@ internal class PolymarketOnboardingModelTest {
     }
 
     @Test
+    fun `GIVEN entry is Reconnect WHEN model created THEN the story content is not prefetched`() = runTest {
+        // Arrange
+        gateResolves(PolymarketEntry.Reconnect)
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { getStoryContentUseCase.invokeSync(id = any(), refresh = any()) }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN entry is Onboarded WHEN model created THEN the story content is not prefetched`() = runTest {
         // Arrange
         gateResolves(PolymarketEntry.Onboarded)
