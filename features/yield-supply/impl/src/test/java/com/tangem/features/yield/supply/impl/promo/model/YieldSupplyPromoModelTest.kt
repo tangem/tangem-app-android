@@ -38,6 +38,32 @@ internal class YieldSupplyPromoModelTest {
         assertThat(opened).containsExactly(YieldSupplyPromoConfig.Action)
     }
 
+    @Test
+    fun `GIVEN a personal token WHEN onVariableRateInfoClick THEN the variable rate sheet opens`() {
+        // Arrange
+        val model = createModel(currency = personal)
+        val opened = model.openedBottomSheets()
+
+        // Act
+        model.onVariableRateInfoClick()
+
+        // Assert
+        assertThat(opened).containsExactly(YieldSupplyPromoConfig.VariableRate)
+    }
+
+    @Test
+    fun `GIVEN a personal token WHEN onIncentiveRateInfoClick THEN the incentive rate sheet opens`() {
+        // Arrange
+        val model = createModel(currency = personal)
+        val opened = model.openedBottomSheets()
+
+        // Act
+        model.onIncentiveRateInfoClick()
+
+        // Assert
+        assertThat(opened).containsExactly(YieldSupplyPromoConfig.IncentiveRate)
+    }
+
     private fun YieldSupplyPromoModel.openedBottomSheets(): List<YieldSupplyPromoConfig?> {
         val opened = mutableListOf<YieldSupplyPromoConfig?>()
         bottomSheetNavigation.subscribe { event -> opened += event.transformer(null) }
