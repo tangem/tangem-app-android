@@ -24,11 +24,7 @@ import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.text.applyBladeBrush
-import com.tangem.core.ui.ds2.row.TangemRow
-import com.tangem.core.ui.ds2.row.TangemRowContentLead
-import com.tangem.core.ui.ds2.row.TangemRowText
-import com.tangem.core.ui.ds2.row.TangemRowTextRole
-import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
+import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -89,14 +85,18 @@ private fun MoneyAccountRow(
                 role = TangemRowTextRole.Title,
             )
         },
-        subtitleSlot = {
-            Text(
-                text = subtitle.resolveReference(),
-                color = subtitleColor,
-                style = TangemTheme.typography3.caption.medium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+        subtitleSlot = if (!subtitle.isNullOrEmpty()) {
+            {
+                Text(
+                    text = subtitle.resolveReference(),
+                    color = subtitleColor,
+                    style = TangemTheme.typography3.caption.medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        } else {
+            null
         },
         valueSlot = balance?.let {
             {
@@ -239,6 +239,11 @@ private class MoneyAccountMainBlockContentPreviewParameterProvider :
             MoneyAccountMainUM.Content(
                 subtitle = TextReference.Str("Polygon network"),
                 balance = previewBalance.copy(isFlickering = true, isFromCache = true),
+                onClick = {},
+            ),
+            MoneyAccountMainUM.Content(
+                subtitle = TextReference.EMPTY,
+                balance = null,
                 onClick = {},
             ),
         ),
