@@ -40,7 +40,6 @@ internal class DefaultYieldSupplyPromoComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val incentiveState by incentiveModel.uiState.collectAsStateWithLifecycle()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
 
         // The boost promo multiplies a rate the wallet has earned, and says so with its own title, card and terms.
@@ -52,6 +51,7 @@ internal class DefaultYieldSupplyPromoComponent @AssistedInject constructor(
                 modifier = modifier,
             )
         } else {
+            val incentiveState by incentiveModel.uiState.collectAsStateWithLifecycle()
             YieldSupplyPromoV2Content(
                 state = incentiveState,
                 clickIntents = model,
@@ -66,11 +66,23 @@ internal class DefaultYieldSupplyPromoComponent @AssistedInject constructor(
         appComponentContext = childByContext(componentContext),
         params = YieldSupplyApyComponent.Params(
             cryptoCurrency = params.currency,
-            apy = params.apy,
+            apy = openingRate(isPlainRate),
             isPlainRate = isPlainRate,
             onBackClick = { model.bottomSheetNavigation.dismiss() },
         ),
     )
+
+    /**
+     * The rate the screen was opened with is the plain market one only for a boosted wallet; anywhere else it is the
+     * incentivised total. Each sheet therefore opens on the rate it plots — the redesigned screen has the plain one
+     * from its own market request — and a sheet with nothing to put there waits for the market instead of
+     * headlining its neighbour's number.
+     */
+    private fun openingRate(isPlainRate: Boolean): String? = when {
+        params.isPromoEnabled -> params.apy.takeIf { isPlainRate }
+        isPlainRate -> incentiveModel.plainApy.value
+        else -> params.apy
+    }
 
     private fun bottomSheetChild(
         config: YieldSupplyPromoConfig,
