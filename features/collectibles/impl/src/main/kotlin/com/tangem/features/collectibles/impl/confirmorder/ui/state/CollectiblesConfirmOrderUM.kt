@@ -19,10 +19,16 @@ internal sealed interface CollectiblesConfirmOrderUM {
         val isReloading: Boolean = false,
     ) : CollectiblesConfirmOrderUM
 
+    /**
+     * @property isPackOpened the card is known, so the pack is thrown
+     * @property isBackVisible false while a purchase runs; a failure brings it back
+     */
     data class Content(
         override val onBackClick: () -> Unit,
         val order: OrderUM,
         val onApproveClick: () -> Unit,
+        val isPackOpened: Boolean,
+        val isBackVisible: Boolean,
     ) : CollectiblesConfirmOrderUM
 
     /** @property packImageUrl null renders the placeholder */
