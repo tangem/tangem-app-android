@@ -10,6 +10,7 @@ import com.tangem.domain.yield.supply.models.incentives.YieldReward
 import com.tangem.domain.yield.supply.models.incentives.YieldRewardDestination
 import com.tangem.domain.yield.supply.models.incentives.YieldRewardsSummary
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.mock.yield.MockYieldSupply
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -202,16 +203,14 @@ internal class GetYieldRewardsSummaryUseCaseTest {
         pending: String = "0",
         netUsd: String = "0.00",
         destination: YieldRewardDestination = YieldRewardDestination.Owner,
-    ) = YieldReward(
+    ) = MockYieldSupply.reward(
         rewardToken = "0x$symbol",
         symbol = symbol,
-        tokenDecimals = 18,
         claimableAmount = BigInteger(claimable),
         pendingAmount = BigInteger(pending),
         usdValue = BigDecimal(netUsd),
         estimatedNetValueUsd = BigDecimal(netUsd),
         estimatedServiceFeeUsd = BigDecimal.ZERO,
-        serviceFeeRateBps = SERVICE_FEE_BPS,
         finalDestination = destination,
     )
 
@@ -219,6 +218,5 @@ internal class GetYieldRewardsSummaryUseCaseTest {
         const val CHAIN_ID = 1
         const val USER_ADDRESS = "0xuser"
         const val MODULE_ADDRESS = "0xmodule"
-        const val SERVICE_FEE_BPS = 1500
     }
 }
