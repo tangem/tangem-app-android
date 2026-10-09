@@ -19,7 +19,7 @@ private const val ACCOUNT_TOP_UP_ABSTRACT_SYMBOL = "USD"
  * assembled anywhere still gets the same treatment. The main button is deliberately left alone: it keeps
  * its dynamic Transfer/Swap label in account flows too.
  *
- * @param predictionCollateralBalance the prediction account balance, shown on the receive card of a prediction top-up
+ * @param predictionCollateralBalance the prediction account balance for top-up or withdrawal
  */
 internal fun SwapStateHolder.withAccountFlowPresentation(
     accountFlow: AccountFlow?,
@@ -37,7 +37,7 @@ internal fun SwapStateHolder.withAccountFlowPresentation(
     val titledState = reversedState.copy(titleId = flow.titleId())
 
     return when (flow) {
-        is AccountFlow.PredictionWithdraw -> titledState.withPredictionWithdrawCards()
+        is AccountFlow.PredictionWithdraw -> titledState.withPredictionWithdrawCards(predictionCollateralBalance)
         is AccountFlow.PredictionTopUp -> titledState.withPredictionTopUpReceiveCard(predictionCollateralBalance)
         is AccountFlow.CollectiblesTopUp -> titledState.withLockedReceiveCard()
         is AccountFlow.TopUp -> titledState.withAccountTopUpReceiveCard()
@@ -53,9 +53,18 @@ private fun AccountFlow.titleId(): Int = when (this) {
     is AccountFlow.CollectiblesTopUp -> R.string.common_add_funds
 }
 
-private fun SwapStateHolder.withPredictionWithdrawCards(): SwapStateHolder = copy(
+private fun SwapStateHolder.withPredictionWithdrawCards(collateralBalance: BigDecimal?): SwapStateHolder = copy(
     swapButton = swapButton.asWithdrawButton(),
-    sendCardData = sendCardData.withSelectionLocked(),
+    sendCardData = when (val sendCard = sendCardData) {
+        is SwapCardState.SwapCardData -> sendCard.copy(
+            currencyIconState = CurrencyIconState.PredictionAccount(),
+            fiatSymbolOverride = AppCurrency.Default.code,
+            amountCurrencyOverride = AppCurrency.Default,
+            balance = collateralBalance.formatUsdBalance(),
+            isSelectionLocked = true,
+        )
+        else -> sendCard.withSelectionLocked()
+    },
 )
 
 private fun SwapStateHolder.withLockedReceiveCard(): SwapStateHolder = copy(
@@ -85,7 +94,7 @@ private fun SwapStateHolder.withPredictionTopUpReceiveCard(collateralBalance: Bi
     )
 }
 
-private fun BigDecimal.formatUsdBalance(): TextReference = resourceReference(
+private fun BigDecimal?.formatUsdBalance(): TextReference = resourceReference(
     id = R.string.common_balance,
     formatArgs = wrappedList(
         format {
