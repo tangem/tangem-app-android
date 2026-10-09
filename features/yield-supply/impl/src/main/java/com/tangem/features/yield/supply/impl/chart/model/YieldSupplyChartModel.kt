@@ -3,20 +3,36 @@ package com.tangem.features.yield.supply.impl.chart.model
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.domain.yield.supply.models.YieldSupplyMarketChartData
+import com.tangem.core.ui.ds.tabs.TangemSegmentUM
+import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.yield.supply.models.YieldMarketToken
+import com.tangem.domain.yield.supply.models.incentives.YieldAprHistory
+import com.tangem.domain.yield.supply.usecase.GetYieldAprHistoryUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetChartUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
+import com.tangem.features.yield.supply.impl.common.formatter.formatApy
 import com.tangem.features.yield.supply.impl.chart.DefaultYieldSupplyChartComponent
+import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartIncentiveUM
+import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartPeriod
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartUM
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyMarketChartDataUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.text.SimpleDateFormat
+import java.time.Month
+import java.time.format.TextStyle
 import java.util.Calendar
 import java.util.Locale
+import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 
 @ModelScoped
@@ -24,6 +40,8 @@ internal class YieldSupplyChartModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val yieldSupplyGetChartUseCase: YieldSupplyGetChartUseCase,
+    private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
+    private val getYieldAprHistoryUseCase: GetYieldAprHistoryUseCase,
 ) : Model() {
 
     private val params: DefaultYieldSupplyChartComponent.Params = paramsContainer.require()
@@ -31,22 +49,72 @@ internal class YieldSupplyChartModel @Inject constructor(
     val uiState: StateFlow<YieldSupplyChartUM>
         field = MutableStateFlow<YieldSupplyChartUM>(YieldSupplyChartUM.Loading)
 
+    private var selectedPeriod = params.initialPeriod
+
+    /** A period switch supersedes the request in flight: a late answer for the old window is no longer an answer. */
+    private var loadJob: Job? = null
+
+    /**
+     * Cancellation is cooperative, so it cannot be the only guard: a coroutine that has passed its last suspension
+     * point before the cancel lands runs its whole publishing block regardless, and every write to the screen is
+     * therefore checked against this as well. That interleaving needs two real threads, which is why only the
+     * ordinary period switch is covered by a test. Written from the picker, read from the worker the request runs
+     * on, hence atomic rather than plain.
+     */
+    private val latestRequest = AtomicInteger()
+
     init {
-        loadChart()
+        load()
     }
 
-    private fun loadChart() {
-        modelScope.launch(dispatchers.default) {
+    private fun load() {
+        // The window is read once here and carried down, so an answer can only ever describe the window it was
+        // asked for, whatever the picker has moved on to since.
+        val period = selectedPeriod
+        val request = latestRequest.incrementAndGet()
+
+        loadJob?.cancel()
+        loadJob = modelScope.launch(dispatchers.default) {
             params.callback?.onStartLoading()
-            yieldSupplyGetChartUseCase(params.cryptoCurrency).onRight { chartData ->
+            // A sheet asked for the incentivised chart wears its own copy from the first frame. Waiting for the
+            // market to say so would render the plain sheet first and swap it out once the campaign is known.
+            if (!params.isPlainRate) {
+                params.callback?.onIncentiveChanged(incentive(averageApy = null, period = period))
+            }
+
+            val market = yieldSupplyGetTokenStatusUseCase(params.cryptoCurrency).getOrNull()
+
+            if (isSuperseded(request)) return@launch
+
+            if (market == null) {
+                // A market that could not be read is not a token whose campaign is over. Falling back to the Aave
+                // history here would plot the base rate under an incentivised headline; only the plain chart, which
+                // plots that history anyway and wanted the market for its headline alone, carries on without it.
+                if (params.isPlainRate) loadSupplyChart(request = request) else showError()
+                return@launch
+            }
+
+            // The plain sheet plots the Aave history, so it must not headline the rate the campaign adds to it.
+            val headlineApy = if (params.isPlainRate) market.apy else market.effectiveApy
+            params.callback?.onRateResolved(headlineApy.formatApy())
+
+            val campaign = market.campaign?.takeIf { it.hasActiveCampaign }
+
+            if (campaign == null || params.isPlainRate) {
+                loadSupplyChart(request = request)
+            } else {
+                loadIncentiveChart(market = market, period = period, request = request)
+            }
+        }
+    }
+
+    private suspend fun loadSupplyChart(request: Int) {
+        yieldSupplyGetChartUseCase(params.cryptoCurrency)
+            .onRight { chartData ->
+                if (isSuperseded(request)) return@onRight
+
                 if (chartData.y.isEmpty()) {
-                    uiState.update {
-                        YieldSupplyChartUM.Error({
-                            uiState.update { YieldSupplyChartUM.Loading }
-                            loadChart()
-                        })
-                    }
-                    params.callback?.onLoadFail()
+                    showError()
                 } else {
                     uiState.update {
                         YieldSupplyChartUM.Data(
@@ -54,33 +122,143 @@ internal class YieldSupplyChartModel @Inject constructor(
                                 y = chartData.y.toImmutableList(),
                                 x = chartData.x.toImmutableList(),
                                 avr = chartData.avr,
-                                percentFormat = getPercentFormatPattern(chartData),
+                                percentFormat = getPercentFormatPattern(chartData.y),
                             ),
                             monthLables = lastMonthLabels().toImmutableList(),
                         )
                     }
+                    params.callback?.onIncentiveChanged(null)
                     params.callback?.onSuccessLoad()
                 }
-            }.onLeft {
-                uiState.update {
-                    YieldSupplyChartUM.Error({
-                        uiState.update { YieldSupplyChartUM.Loading }
-                        loadChart()
-                    })
+            }
+            .onLeft { if (!isSuperseded(request)) showError() }
+    }
+
+    private suspend fun loadIncentiveChart(market: YieldMarketToken, period: YieldSupplyChartPeriod, request: Int) {
+        getYieldAprHistoryUseCase(
+            chainId = market.chainId,
+            tokenAddress = market.tokenAddress,
+            days = period.days,
+        )
+            .onRight { history ->
+                if (isSuperseded(request)) return@onRight
+
+                if (history.points.isEmpty()) {
+                    showError()
+                } else {
+                    val state = toIncentiveState(history = history, period = period)
+                    uiState.update { state }
+                    params.callback?.onIncentiveChanged(state.incentive)
+                    params.callback?.onSuccessLoad()
                 }
-                params.callback?.onLoadFail()
+            }
+            .onLeft { if (!isSuperseded(request)) showError() }
+    }
+
+    private fun isSuperseded(request: Int): Boolean = request != latestRequest.get()
+
+    private fun toIncentiveState(history: YieldAprHistory, period: YieldSupplyChartPeriod): YieldSupplyChartUM.Data {
+        val totals = history.points.map { it.totalApyEst.toDouble() }
+        // The bar is the backend total: a reward cap is only what the total leaves above the base, and the
+        // reported rewards APR is not a third opinion to compose the rate from.
+        val caps = history.points.map { (it.totalApyEst - it.baseApy).coerceAtLeast(BigDecimal.ZERO) }
+        val bases = history.points.mapIndexed { index, point -> (point.totalApyEst - caps[index]).toDouble() }
+        val average = history.points
+            .map(YieldAprHistory.Point::totalApyEst)
+            .reduce(BigDecimal::add)
+            .divide(history.points.size.toBigDecimal(), AVERAGE_GUARD_SCALE, RoundingMode.HALF_UP)
+
+        return YieldSupplyChartUM.Data(
+            chartData = YieldSupplyMarketChartDataUM(
+                y = bases.toImmutableList(),
+                x = bases.indices.map(Int::toDouble).toImmutableList(),
+                avr = average.toDouble(),
+                percentFormat = getPercentFormatPattern(totals),
+                rewardCaps = caps.map(BigDecimal::toDouble).toImmutableList(),
+                xLabels = axisLabels(points = history.points, period = period).toImmutableList(),
+            ),
+            monthLables = persistentListOf(),
+            incentive = incentive(averageApy = average, period = period),
+        )
+    }
+
+    private fun incentive(averageApy: BigDecimal?, period: YieldSupplyChartPeriod) = YieldSupplyChartIncentiveUM(
+        period = period,
+        picker = periodPicker(period),
+        averageApy = averageApy.formatApy(),
+        onPeriodSelected = ::onPeriodSelected,
+    )
+
+    /**
+     * A week is short enough to label every bar with its weekday; over three months only the first bar of each
+     * month is labelled, the rest stay blank so the axis does not collapse into noise.
+     */
+    private fun axisLabels(points: List<YieldAprHistory.Point>, period: YieldSupplyChartPeriod): List<String> {
+        val locale = Locale.getDefault()
+
+        return when (period) {
+            YieldSupplyChartPeriod.Week -> points.map {
+                it.date.dayOfWeek.getDisplayName(TextStyle.NARROW, locale)
+            }
+            YieldSupplyChartPeriod.ThreeMonths -> {
+                var previousMonth: Month? = null
+
+                points.map { point ->
+                    val month = point.date.month
+                    if (month == previousMonth) {
+                        ""
+                    } else {
+                        previousMonth = month
+                        month.getDisplayName(TextStyle.SHORT, locale)
+                    }
+                }
             }
         }
     }
 
+    private fun periodPicker(period: YieldSupplyChartPeriod): TangemSegmentedPickerUM {
+        val items = YieldSupplyChartPeriod.entries.map { entry ->
+            TangemSegmentUM(id = entry.name, title = resourceReference(entry.titleRes))
+        }
+
+        return TangemSegmentedPickerUM(
+            items = items.toImmutableList(),
+            initialSelectedItem = items.first { it.id == period.name },
+            isFixed = true,
+        )
+    }
+
+    private fun onPeriodSelected(periodName: String) {
+        val period = YieldSupplyChartPeriod.entries.firstOrNull { it.name == periodName } ?: return
+        if (period == selectedPeriod) return
+
+        selectedPeriod = period
+        uiState.update { YieldSupplyChartUM.Loading }
+        load()
+    }
+
+    private fun showError() {
+        uiState.update {
+            YieldSupplyChartUM.Error(
+                onRetry = {
+                    uiState.update { YieldSupplyChartUM.Loading }
+                    load()
+                },
+            )
+        }
+        params.callback?.onLoadFail()
+    }
+
+    /** Narrowest range first: every value under a tenth of a percent is also under a whole one. */
     @Suppress("MagicNumber")
-    private fun getPercentFormatPattern(chartData: YieldSupplyMarketChartData): String {
+    private fun getPercentFormatPattern(values: List<Double>): String {
         return when {
-            chartData.y.all { it < 1.0 } -> "%.1f"
-            chartData.y.all { it < 0.1 } -> "%.2f"
+            values.all { it < 0.1 } -> "%.2f"
+            values.all { it < 1.0 } -> "%.1f"
             else -> "%.0f"
         }
     }
+
     private fun lastMonthLabels(n: Int = MONTH_LABELS_COUNT, locale: Locale = Locale.getDefault()): List<String> {
         val calendar = Calendar.getInstance()
         val formatter = SimpleDateFormat("MMM", locale)
@@ -93,5 +271,11 @@ internal class YieldSupplyChartModel @Inject constructor(
 
     companion object {
         private const val MONTH_LABELS_COUNT = 5
+        /**
+         * Guard digits, not display digits. Rounding the mean to the two decimals the header shows would turn a
+         * rate like 0.004% into a flat zero, taking the reference line down to the axis with it; the formatter
+         * rounds for the screen and says `<0.01%` where the mean is too small to write out.
+         */
+        private const val AVERAGE_GUARD_SCALE = 8
     }
 }
