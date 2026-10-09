@@ -1,8 +1,8 @@
 package com.tangem.grow.datasource.collectibles.models.response.model
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
-import java.math.BigDecimal
+import com.tangem.domain.models.serialization.SerializedBigDecimal
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * A collectible sitting in a machine's prize pool, as served by GET /api/v1/machine/{externalId}/nfts.
@@ -10,24 +10,24 @@ import java.math.BigDecimal
  * @property insuredValue appraised value **in cents** — 240 means $2.40.
  * @property gradingCompany grader that slabbed the card (e.g. `PSA`); absent for an ungraded collectible.
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class MachineNftDTO(
-    @Json(name = "id")
+    @SerialName("id")
     val id: String,
-    @Json(name = "nft_address")
+    @SerialName("nft_address")
     val nftAddress: String,
-    @Json(name = "name")
+    @SerialName("name")
     val name: String,
-    @Json(name = "description")
+    @SerialName("description")
     val description: String?,
-    @Json(name = "rarity")
+    @SerialName("rarity")
     val rarity: String?,
-    @Json(name = "gradingCompany")
+    @SerialName("gradingCompany")
     val gradingCompany: String?,
-    @Json(name = "gradeNum")
+    @SerialName("gradeNum")
     val gradeNum: String?,
-    @Json(name = "image")
+    @SerialName("image")
     val image: String?,
-    @Json(name = "insured_value")
-    val insuredValue: BigDecimal?,
+    @SerialName("insured_value")
+    val insuredValue: SerializedBigDecimal?,
 )

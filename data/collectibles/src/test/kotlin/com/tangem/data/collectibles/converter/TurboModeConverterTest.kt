@@ -2,7 +2,7 @@ package com.tangem.data.collectibles.converter
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.collectibles.models.CollectibleTurboMode
-import com.tangem.grow.datasource.collectibles.models.request.GenerateTxRequestBody.TurboModeDTO
+import com.tangem.grow.datasource.collectibles.models.request.GeneratePurchaseTxRequestBody.TurboModeDTO
 import org.junit.jupiter.api.Test
 
 internal class TurboModeConverterTest {
