@@ -12,7 +12,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
  * @property shouldUpdateCardIdDisplayFormat       resets the card ID display format before the scan and sets it
  * for the scanned card after
  * @property shouldTrackScanFails                  counts failed scans to offer help with scanning
- * @property shouldHandleOnboarding                opens onboarding for a card without a wallet (or twins welcome)
+ * @property shouldLaunchOnboarding                launches onboarding (or the twins welcome) when the scanned card needs it
  */
 data class ScanConfig(
     val analyticsSource: AnalyticsParam.ScreensSources,
@@ -20,7 +20,7 @@ data class ScanConfig(
     val canRequestAccessCodeFromRepository: Boolean,
     val shouldUpdateCardIdDisplayFormat: Boolean,
     val shouldTrackScanFails: Boolean,
-    val shouldHandleOnboarding: Boolean,
+    val shouldLaunchOnboarding: Boolean,
 ) {
 
     companion object {
@@ -32,7 +32,7 @@ data class ScanConfig(
             canRequestAccessCodeFromRepository = false,
             shouldUpdateCardIdDisplayFormat = true,
             shouldTrackScanFails = true,
-            shouldHandleOnboarding = true,
+            shouldLaunchOnboarding = true,
         )
 
         /** Re-scan the card of a wallet already saved in the app, e.g. on the card settings screen */
@@ -42,7 +42,7 @@ data class ScanConfig(
             canRequestAccessCodeFromRepository = true,
             shouldUpdateCardIdDisplayFormat = false,
             shouldTrackScanFails = false,
-            shouldHandleOnboarding = false,
+            shouldLaunchOnboarding = false,
         )
     }
 }
