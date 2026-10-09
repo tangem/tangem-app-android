@@ -85,6 +85,7 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
             actualCardLimit = actualCardLimit?.parseCardLimit(),
             adminCardLimit = adminCardLimit?.parseCardLimit(),
             specificationDataType = specificationDataType.toDomain(),
+            paymentAccountType = ProductInstance.PaymentAccountType.fromString(paymentAccountType),
         )
     }
 
