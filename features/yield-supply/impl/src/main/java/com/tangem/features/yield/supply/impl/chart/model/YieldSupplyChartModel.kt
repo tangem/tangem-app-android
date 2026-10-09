@@ -76,18 +76,29 @@ internal class YieldSupplyChartModel @Inject constructor(
         loadJob?.cancel()
         loadJob = modelScope.launch(dispatchers.default) {
             params.callback?.onStartLoading()
+            // A sheet asked for the incentivised chart wears its own copy from the first frame. Waiting for the
+            // market to say so would render the plain sheet first and swap it out once the campaign is known.
+            if (!params.isPlainRate) {
+                params.callback?.onIncentiveChanged(incentive(averageApy = null, period = period))
+            }
 
             val market = yieldSupplyGetTokenStatusUseCase(params.cryptoCurrency).getOrNull()
-            val campaign = market?.campaign?.takeIf { it.hasActiveCampaign }
 
             if (isSuperseded(request)) return@launch
 
-            if (market != null) {
-                // The plain sheet plots the Aave history, so it must not headline the rate the campaign adds to it.
-                // Without a market the sheet keeps whatever it opened with, which may be nothing at all.
-                val headlineApy = if (params.isPlainRate) market.apy else market.effectiveApy
-                params.callback?.onRateResolved(headlineApy.formatApy())
+            if (market == null) {
+                // A market that could not be read is not a token whose campaign is over. Falling back to the Aave
+                // history here would plot the base rate under an incentivised headline; only the plain chart, which
+                // plots that history anyway and wanted the market for its headline alone, carries on without it.
+                if (params.isPlainRate) loadSupplyChart(request = request) else showError()
+                return@launch
             }
+
+            // The plain sheet plots the Aave history, so it must not headline the rate the campaign adds to it.
+            val headlineApy = if (params.isPlainRate) market.apy else market.effectiveApy
+            params.callback?.onRateResolved(headlineApy.formatApy())
+
+            val campaign = market.campaign?.takeIf { it.hasActiveCampaign }
 
             if (campaign == null || params.isPlainRate) {
                 loadSupplyChart(request = request)
@@ -124,8 +135,6 @@ internal class YieldSupplyChartModel @Inject constructor(
     }
 
     private suspend fun loadIncentiveChart(market: YieldMarketToken, period: YieldSupplyChartPeriod, request: Int) {
-        params.callback?.onIncentiveChanged(incentive(averageApy = null, period = period))
-
         getYieldAprHistoryUseCase(
             chainId = market.chainId,
             tokenAddress = market.tokenAddress,
