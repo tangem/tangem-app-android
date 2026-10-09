@@ -25,7 +25,6 @@ dependencies {
     implementation(deps.androidx.datastore.core)
     implementation(deps.arrow.core)
     implementation(deps.kotlin.serialization)
-    ksp(deps.moshi.kotlin.codegen)
     // endregion
 
     // region DI
