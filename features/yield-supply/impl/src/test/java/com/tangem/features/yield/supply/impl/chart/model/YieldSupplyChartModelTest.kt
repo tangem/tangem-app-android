@@ -490,18 +490,58 @@ internal class YieldSupplyChartModelTest {
     }
 
     @Test
-    fun `GIVEN the market cannot be read WHEN the chart loads THEN the sheet keeps the rate it opened with`() =
+    fun `GIVEN the market cannot be read WHEN the incentivised chart loads THEN the Aave history does not stand in`() =
         runTest {
-            // Arrange - a dash in the header would be worse than the rate the caller already handed over
+            // Arrange - a market that could not be read is not a token whose campaign is over, and the base history
+            // would be read as the incentivised rate the sheet was opened on
+            coEvery { getTokenStatusUseCase(any()) } returns IllegalStateException("no market").left()
+
+            // Act
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value).isInstanceOf(YieldSupplyChartUM.Error::class.java)
+            coVerify(exactly = 0) { getChartUseCase(any()) }
+            verify(exactly = 0) { callback.onRateResolved(any()) }
+        }
+
+    @Test
+    fun `GIVEN the market cannot be read WHEN the plain chart loads THEN it keeps the rate it opened with`() =
+        runTest {
+            // Arrange - this chart plots the Aave history whatever the market says, and it wanted the market for
+            // its headline alone: a dash there would be worse than the rate the caller already handed over
             coEvery { getTokenStatusUseCase(any()) } returns IllegalStateException("no market").left()
             coEvery { getChartUseCase(any()) } returns chartData(y = listOf(2.0, 5.0)).right()
 
             // Act
-            createModel()
+            val model = createModel(isPlainRate = true)
             advanceUntilIdle()
 
             // Assert
+            assertThat(model.uiState.value).isInstanceOf(YieldSupplyChartUM.Data::class.java)
             verify(exactly = 0) { callback.onRateResolved(any()) }
+        }
+
+    @Test
+    fun `GIVEN the incentivised chart WHEN the market is still in flight THEN the sheet already wears its copy`() =
+        runTest {
+            // Arrange - the sheet takes its title, its picker and the Merkl block off this, so a null first would
+            // show the plain rate copy and swap it out once the campaign is known
+            coEvery { getTokenStatusUseCase(any()) } coAnswers {
+                delay(timeMillis = 1_000)
+                market(hasCampaign = true).right()
+            }
+            coEvery { getAprHistoryUseCase(any(), any(), any()) } returns aprHistory("4.0", "5.0").right()
+            val incentive = slot<YieldSupplyChartIncentiveUM?>()
+            every { callback.onIncentiveChanged(captureNullable(incentive)) } returns Unit
+
+            // Act - the market is deliberately left in flight
+            createModel(dispatchers = createTestingCoroutineDispatcherProvider())
+            runCurrent()
+
+            // Assert
+            assertThat(incentive.captured?.period).isEqualTo(YieldSupplyChartPeriod.Week)
         }
 
     @Test
