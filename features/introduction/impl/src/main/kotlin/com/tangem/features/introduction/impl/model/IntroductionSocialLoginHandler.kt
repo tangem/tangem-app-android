@@ -176,13 +176,11 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
 
     private suspend fun onSuccess(outcome: SocialLoginOutcome, source: AnalyticsParam.ScreensSources) {
         // Before the selection: the wallet is saved either way, and a retry would come back as a restore.
-        when (outcome) {
-            is SocialLoginOutcome.WalletCreated ->
-                sendWalletCreated(source, AnalyticsParam.WalletCreationType.NewSocialLogin)
-            is SocialLoginOutcome.WalletRestored -> if (outcome.isNewOnDevice) {
-                sendWalletCreated(source, AnalyticsParam.WalletCreationType.SocialLoginImport)
-            }
+        val creationType = when (outcome) {
+            is SocialLoginOutcome.WalletCreated -> AnalyticsParam.WalletCreationType.NewSocialLogin
+            is SocialLoginOutcome.WalletRestored -> AnalyticsParam.WalletCreationType.SocialLoginImport
         }
+        sendWalletCreated(source, creationType)
 
         // Leaving the previous wallet selected would open its portfolio, as if the sign-in went elsewhere.
         userWalletsListRepository.select(outcome.userWalletId).onLeft { error ->
@@ -250,6 +248,9 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
                     formatArgs = wrappedList(provider.cloudName()),
                 ),
                 attemptId = attemptId,
+            )
+            SocialLoginError.WalletAlreadySaved -> uiMessageSender.send(
+                DialogMessage(message = resourceReference(CoreResR.string.user_wallet_list_error_wallet_already_saved)),
             )
             else -> uiMessageSender.send(SnackbarMessage(error.toMessage(provider)))
         }
@@ -330,6 +331,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         SocialLoginError.BindingConflict -> "Account is already linked to another wallet"
         SocialLoginError.NoProviderAccount -> "No account on the device"
         SocialLoginError.ProviderUnavailable -> "Sign-in is not available on this device"
+        SocialLoginError.WalletAlreadySaved -> "This wallet has already been saved"
         else -> "Something went wrong"
     }
 
