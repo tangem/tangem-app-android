@@ -156,13 +156,19 @@ internal class JointSendDelegate @Inject constructor(
         coinSafeTx: SafeTx,
         nativeFee: TransactionFee,
     ): TransactionFeeExtended? {
-        return account.cryptoCurrencies
+        val tokens = account.cryptoCurrencies
             .filter { it is CryptoCurrency.Token && it.network == network && it.id.rawCurrencyId != null }
-            .mapNotNull { token ->
-                getAccountCurrencyStatusUseCase.invokeSync(userWalletId = userWalletId, currency = token)
-                    .getOrNull()
-                    ?.status
-            }
+        if (tokens.isEmpty()) return null
+
+        val statusesByAccount = getAccountCurrencyStatusUseCase
+            .invokeSync(userWalletId = userWalletId, currencies = tokens)
+            .getOrNull()
+            .orEmpty()
+
+        return statusesByAccount.entries
+            .firstOrNull { (portfolio, _) -> portfolio.accountId == account.accountId }
+            ?.value
+            .orEmpty()
             .filter { it.value.amount.orZero() > BigDecimal.ZERO }
             .sortedByDescending { it.value.amount.orZero() }
             .firstNotNullOfOrNull { tokenStatus ->
