@@ -112,11 +112,11 @@ closes `idleTimeout` (5 s) after the last collector leaves.
 | `headers` | none | handshake headers, resolved before **every** connect attempt (auth) |
 | `transport` | the factory's OkHttp client | your own `OkHttpSocketTransport(client)`: interceptors, pinning, proxy, timeouts |
 | `lifecycle` | always | an extra condition: credentials present, a screen is visible (`SocketLifecycle`, `and`) |
-| `reconnectOn` | none | a flow whose every new value reconnects at once without backoff (account switch, token rotation) |
+| `reconnectOn` | none | a `StateFlow` whose every new value reconnects at once without backoff (account switch, token rotation) |
 | `keepAlive` | none | `ClientSends("PING", 10.seconds)` — first ping a full interval after `onOpen`; `ServerSends(text, reply)` for text pings. Protocol-level ping frames need nothing |
 | `backoff` | 1 s → 30 s, ×2, jitter 50% | `Backoff.exponential(…)` or your own |
 | `closePolicy` | always retry | `SocketClose` → `Retry`, `RetryAfter(delay)` or `Stop` |
-| `onOpen` | nothing | the first frames of every connection: auth message, the full subscription set. It must only send: incoming frames wait until it returns. Until then the state stays `Connecting` and frames sent from outside are queued to go out right after it, or dropped if it fails |
+| `onOpen` | nothing | the first frames of every connection: auth message, the full subscription set. It must only send: incoming frames wait until it returns, and after 5 s the attempt fails, so the OkHttp reader never stalls past a `pingInterval` above that. Until then the state stays `Connecting` and frames sent from outside are queued to go out right after it, or dropped if it fails |
 | `isSplitArrayFrames` | false | a JSON-array frame is delivered element by element |
 | `idleTimeout` | 5 s | how long the connection outlives its last collector |
 
@@ -148,7 +148,8 @@ connection (`SocketCloseCode.ABNORMAL`), so the close policy and backoff apply; 
 For servers where you subscribe per key (asset id, chat id) use `KeyedSubscriptions` instead of sending
 subscribe frames by hand. It reference-counts keys across collectors, batches changes into one frame
 (`batchWindow`), unsubscribes after `unsubscribeDelay`, restores the whole set on reconnect via
-`openKeys()` in `onOpen`, and opens another service instance when `maxKeysPerService` is reached.
+`openKeys()` in `onOpen`, and at `maxKeysPerService` first replaces a released key still waiting to unsubscribe,
+opening another service instance only when every key is observed.
 Broadcast sockets do not need it.
 
 ## Tests
