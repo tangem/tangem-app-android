@@ -20,7 +20,8 @@ import kotlin.time.Duration.Companion.seconds
  * shard's full key set and marks it as subscribed, so a reconnect restores every subscription in one frame
  * @param subscribe sends a subscribe frame for keys added since the last frame; false keeps them pending
  * @param unsubscribe sends an unsubscribe frame for keys released longer than [unsubscribeDelay] ago
- * @param maxKeysPerService the server's per-connection limit; a key beyond it goes to a new shard
+ * @param maxKeysPerService the server's per-connection limit; a key beyond it replaces the oldest key still waiting for
+ * [unsubscribeDelay], or goes to a new shard when every key is observed
  * @param batchWindow changes within this window go out as one frame
  * @param unsubscribeDelay keeps a released key subscribed for a while, so scrolling back does not resubscribe
  */
@@ -79,7 +80,15 @@ class KeyedSubscriptions<Key : Any, Service : Any>(
     }
 
     private fun shardWithRoom(): Shard = shards.firstOrNull { it.refCounts.size < maxKeysPerService }
+        ?: shards.firstOrNull { it.removals.isNotEmpty() }?.also(::evictOldestReleasedKey)
         ?: Shard(index = shards.size).also(shards::add)
+
+    private fun evictOldestReleasedKey(shard: Shard) {
+        val key = shard.removals.keys.first()
+        shard.removals.remove(key)?.cancel()
+        shard.refCounts.remove(key)
+        scheduleFlush(shard)
+    }
 
     private fun scheduleRemoval(shard: Shard, key: Key) {
         shard.removals.remove(key)?.cancel()
