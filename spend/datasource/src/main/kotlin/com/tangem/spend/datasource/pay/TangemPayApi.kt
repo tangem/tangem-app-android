@@ -95,8 +95,8 @@ interface TangemPayApi {
     @GET("v1/eligibility/check")
     suspend fun checkEligibilityForCountry(
         @Query("product") product: String,
-        @Query("country") country: String,
-        @Query("region") region: String?,
+        @Query("country_code") country: String,
+        @Query("region_code") region: String?,
     ): ApiResponse<EligibilityCheckResponse>
 
     @GET("v1/eligibility/check")
@@ -133,13 +133,14 @@ interface TangemPayApi {
     @POST("v1/order")
     suspend fun createOrder(
         @Header("Authorization") authHeader: String,
+        @Header("X-Idempotency-Key") idempotencyKey: String,
         @Body body: OrderRequest,
     ): ApiResponse<OrderResponse>
 
     @POST("v1/order")
     suspend fun createBankOfframpOrder(
         @Header("Authorization") authHeader: String,
-        @Header("Idempotency-Key") idempotencyKey: String,
+        @Header("X-Idempotency-Key") idempotencyKey: String,
         @Body body: BankOfframpPlaceOrderRequest,
     ): ApiResponse<OrderResponse>
 
@@ -147,7 +148,7 @@ interface TangemPayApi {
     @POST("v1/order/{order_id}/bank-offramp/signature")
     suspend fun submitBankOfframpSignature(
         @Header("Authorization") authHeader: String,
-        @Header("Idempotency-Key") idempotencyKey: String,
+        @Header("X-Idempotency-Key") idempotencyKey: String,
         @Path("order_id") orderId: String,
         @Body body: BankOfframpSignatureRequest,
     ): ApiResponse<Unit>

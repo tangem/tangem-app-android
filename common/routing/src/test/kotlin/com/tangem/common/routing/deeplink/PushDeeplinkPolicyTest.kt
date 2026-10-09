@@ -40,6 +40,7 @@ internal class PushDeeplinkPolicyTest {
         Model(scheme = "tangem", host = "onboard-visa", expected = true),
         Model(scheme = "tangem", host = "survey", expected = true),
         Model(scheme = "tangem", host = "pay-app-main", expected = true),
+        Model(scheme = "tangem", host = "intent", expected = true),
         Model(scheme = "https", host = "tangem.com", expected = true),
         // Allowed — this policy only denies the sensitive routes above. An unknown host is not harmless on its
         // own any more: for a push it now reaches DeepLinkFactory's web fallback, where the host allowlist

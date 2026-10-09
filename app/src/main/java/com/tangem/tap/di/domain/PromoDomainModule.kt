@@ -4,6 +4,7 @@ import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.promo.usecase.EnrollPromoCampaignUseCase
 import com.tangem.domain.promo.usecase.GetPromoCampaignStateUseCase
 import com.tangem.domain.promo.usecase.GetPromoCampaignsUseCase
+import com.tangem.domain.promo.usecase.RegisterPromoCampaignUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -30,5 +31,11 @@ internal object PromoDomainModule {
     @Singleton
     fun provideGetPromoCampaignsUseCase(repository: PromoRepository): GetPromoCampaignsUseCase {
         return GetPromoCampaignsUseCase(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRegisterPromoCampaignUseCase(repository: PromoRepository): RegisterPromoCampaignUseCase {
+        return RegisterPromoCampaignUseCase(repository)
     }
 }

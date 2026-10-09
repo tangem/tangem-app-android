@@ -21,7 +21,7 @@ internal class TxHistoryTitleConverterTest {
     private val coin = MockCryptoCurrencyFactory().createCoin(Blockchain.Ethereum)
 
     private val converter = TxHistoryTitleConverter(coin)
-    private val refundCapWei = BigDecimal("500000000000000")
+    private val refundCap = SdkAmount(currencySymbol = "ETH", value = BigDecimal("500000000000000").movePointLeft(18), decimals = 18)
 
     @ParameterizedTest
     @ProvideTestModels
@@ -35,43 +35,18 @@ internal class TxHistoryTitleConverterTest {
 
     @Suppress("LongMethod")
     private fun provideTestModels() = listOf(
-        // A joint account's executed operation reads like the transfer it is, its token fee like a fee, the rest as a call
+        // A joint account's executed token operation reads like the transfer it is
         TitleModel(
             tx = txInfo(
                 type = TransactionType.Joint.Transfer(
                     recipient = "0xrecipient",
                     amount = BigDecimal.ONE,
-                    refundCapWei = refundCapWei,
+                    refundCap = refundCap,
                     signaturesCount = 2,
                 ),
                 isOutgoing = true,
             ),
             expected = resRef(R.string.common_sent),
-        ),
-        TitleModel(
-            tx = txInfo(
-                type = TransactionType.Joint.TokenFee(
-                    tokenContract = "0xtoken",
-                    tokenAmount = null,
-                    recipient = "0xrecipient",
-                    refundCapWei = refundCapWei,
-                    signaturesCount = 2,
-                ),
-                isOutgoing = true,
-            ),
-            expected = resRef(R.string.common_network_fee_title),
-        ),
-        TitleModel(
-            tx = txInfo(
-                type = TransactionType.Joint.Call(
-                    contract = "0xcontract",
-                    value = BigDecimal.ZERO,
-                    refundCapWei = refundCapWei,
-                    signaturesCount = 2,
-                ),
-                isOutgoing = true,
-            ),
-            expected = resRef(R.string.transaction_history_operation),
         ),
         // Pills resolve to the status-aware label text (no amount)
         TitleModel(

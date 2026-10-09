@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
+import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
@@ -20,8 +21,14 @@ internal class SetQuoteResultTransformer(
     override fun transform(prevState: PlacePredictionUM): PlacePredictionUM {
         if (prevState.submit !is SubmitUM.Idle) return prevState
 
+        val quote = result.fold(ifLeft = ::toError, ifRight = ::toQuote)
         val updatedState = prevState.copy(
-            quote = result.fold(ifLeft = ::toError, ifRight = ::toQuote),
+            quote = quote,
+            market = if (quote is QuoteUM.Error && prevState.order is OrderSideUM.Sell) {
+                prevState.market.copy(isPriceUnavailable = true)
+            } else {
+                prevState.market
+            },
             minAmount = result.fold(ifLeft = { prevState.minAmount }, ifRight = { it.minAmount }),
         )
         val pricedQuote = result.getOrNull()?.takeIf { it.isPlaceable }
@@ -40,15 +47,13 @@ internal class SetQuoteResultTransformer(
         },
     )
 
-    /**
-     * A quote whose status forbids placing becomes [QuoteUM.Unavailable] rather than content the screen would
-     * render as prices — the status decides that, not the figures, which are only zeroes when the exchange
-     * itself refused.
-     */
+    /** Unavailable quotes may provide proceeds for display but never a signable order. */
     private fun toQuote(quote: PredictionOrderQuote): QuoteUM = when (quote.status) {
-        PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY,
-        PredictionQuoteStatus.MARKET_CLOSED,
-        -> QuoteUM.Unavailable(status = quote.status)
+        PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY -> QuoteUM.Unavailable(
+            status = quote.status,
+            expected = quote.expectedExecutionAmount,
+        )
+        PredictionQuoteStatus.MARKET_CLOSED -> QuoteUM.Unavailable(status = quote.status)
         PredictionQuoteStatus.FULL,
         PredictionQuoteStatus.PARTIAL,
         PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE,

@@ -8,17 +8,24 @@ internal object BankWithdrawAmountValidator {
     sealed interface Result {
         data object Empty : Result
         data object Valid : Result
-        data object BelowMinimum : Result
+        data object OutOfRange : Result
         data object NotEnoughFunds : Result
     }
 
-    fun validate(amount: BigDecimal?, minAmount: BigDecimal, balance: BigDecimal, fee: BigDecimal): Result = when {
+    fun validate(
+        amount: BigDecimal?,
+        minAmount: BigDecimal,
+        maxAmount: BigDecimal,
+        balance: BigDecimal,
+        fee: BigDecimal,
+    ): Result = when {
         amount == null || amount.isZero() -> Result.Empty
-        amount < minAmount -> Result.BelowMinimum
+        amount < minAmount || amount > maxAmount -> Result.OutOfRange
         amount + fee > balance -> Result.NotEnoughFunds
         else -> Result.Valid
     }
 
-    /** The most the user can send: the selected token's balance minus the rail fee, never negative. */
-    fun maxAmount(balance: BigDecimal, fee: BigDecimal): BigDecimal = (balance - fee).max(BigDecimal.ZERO)
+    /** The most the user can send: balance minus the rail fee, capped by [maxAmount], never negative. */
+    fun sendableAmount(maxAmount: BigDecimal, balance: BigDecimal, fee: BigDecimal): BigDecimal =
+        (balance - fee).min(maxAmount).max(BigDecimal.ZERO)
 }

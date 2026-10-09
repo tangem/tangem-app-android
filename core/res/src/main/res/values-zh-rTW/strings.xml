@@ -522,7 +522,7 @@
   <string name="tangempay_cashback_accruals_calc_title">我們如何計算現金回饋？</string>
   <string name="tangempay_cashback_accruals_exceptions_description">暫不支援歐盟實體店消費回饋。提款、類現金交易、話費加值、政府服務等部分類別亦不適用回饋。</string>
   <string name="tangempay_cashback_accruals_exceptions_title">例外情況</string>
-  <string name="tangempay_cashback_accruals_pay_description">下月 2 日至 5 日</string>
+  <string name="tangempay_cashback_accruals_pay_description">交易經核查符合回饋計畫規則後,於下月10日前發放</string>
   <string name="tangempay_cashback_accruals_pay_title">我們如何支付現金回饋？</string>
   <string name="tangempay_cashback_accruals_subtitle">限額與例外情況</string>
   <string name="tangempay_cashback_accruals_title">累計</string>
@@ -531,7 +531,7 @@
   <string name="tangempay_cashback_additional_until">至 %1$s</string>
   <string name="tangempay_cashback_deactivated_description">由於偵測到可疑行為，我們已停用此功能。請聯絡客服了解詳情</string>
   <string name="tangempay_cashback_deactivated_title">現金回饋已停用</string>
-  <string name="tangempay_cashback_deposit_banner">%2$s 的現金回饋 %1$s 將於 %3$s 前存入</string>
+  <string name="tangempay_cashback_deposit_banner">%2$s 的 %1$s 回饋將在審核後於 %3$s 前入帳</string>
   <string name="tangempay_cashback_deposited_on">將於 %1$s 存入</string>
   <string name="tangempay_cashback_details_cap">每月最高 %1$s</string>
   <string name="tangempay_cashback_details_eu_excluded">暫不支援歐盟實體店消費回饋</string>
@@ -630,7 +630,7 @@
   <string name="tangempay_kyc_rejected_description">抱歉，我們無法驗證</string>
   <string name="tangempay_kyc_rejected_description_span">您的身份</string>
   <string name="tangempay_main_select_plan">選擇方案</string>
-  <string name="tangempay_maximum_cards_issued_description">您最多可以持有 3 張卡片。刪除一張即可新增卡片。</string>
+  <string name="tangempay_maximum_cards_issued_description">刪除一張即可新增卡片</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">升級方案以取得更多卡片</string>
   <string name="tangempay_maximum_cards_issued_for_plan_title">該方案的卡片數量已達上限</string>
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">升級方案</string>

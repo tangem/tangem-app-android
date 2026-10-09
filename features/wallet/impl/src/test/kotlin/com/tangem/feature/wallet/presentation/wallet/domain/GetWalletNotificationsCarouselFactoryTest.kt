@@ -14,7 +14,6 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.yield.supply.promo.usecase.ShouldShowYieldBoostMainBannerUseCase
@@ -44,7 +43,6 @@ internal class GetWalletNotificationsCarouselFactoryTest {
 
     private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase = mockk()
     private val getWalletsUseCase: GetWalletsUseCase = mockk()
-    private val notificationsRepository: NotificationsRepository = mockk()
     private val shouldShowYieldBoostMainBannerUseCase: ShouldShowYieldBoostMainBannerUseCase = mockk()
     private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase = mockk()
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk(relaxed = true)
@@ -54,7 +52,6 @@ internal class GetWalletNotificationsCarouselFactoryTest {
     private val factory = GetWalletNotificationsCarouselFactory(
         isReadyToShowRateAppUseCase = isReadyToShowRateAppUseCase,
         getWalletsUseCase = getWalletsUseCase,
-        notificationsRepository = notificationsRepository,
         shouldShowYieldBoostMainBannerUseCase = shouldShowYieldBoostMainBannerUseCase,
         yieldSupplyGetShouldShowMainPromoUseCase = yieldSupplyGetShouldShowMainPromoUseCase,
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
@@ -65,7 +62,6 @@ internal class GetWalletNotificationsCarouselFactoryTest {
         clearMocks(
             isReadyToShowRateAppUseCase,
             getWalletsUseCase,
-            notificationsRepository,
             shouldShowYieldBoostMainBannerUseCase,
             yieldSupplyGetShouldShowMainPromoUseCase,
             singleAccountStatusListSupplier,
@@ -74,8 +70,6 @@ internal class GetWalletNotificationsCarouselFactoryTest {
         )
         // Defaults: only the yield boost banner can appear; every other notification is suppressed.
         every { userWallet.walletId } returns WALLET_ID
-        every { notificationsRepository.getShouldShowNotification(any()) } returns flowOf(false)
-        coEvery { notificationsRepository.isUserAllowToSubscribeOnPushNotifications() } returns true
         every { isReadyToShowRateAppUseCase() } returns flowOf(false)
         every { getWalletsUseCase() } returns flowOf(emptyList())
         every { yieldSupplyGetShouldShowMainPromoUseCase() } returns flowOf(true)

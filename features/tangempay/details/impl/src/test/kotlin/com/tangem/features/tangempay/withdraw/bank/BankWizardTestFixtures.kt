@@ -110,11 +110,13 @@ internal fun bankWithdrawSource(
     token: CryptoCurrency.Token = paymentToken(),
     chainId: Long = POLYGON_CHAIN_ID,
     fiatBalance: BigDecimal = BigDecimal("2325.55"),
+    isAvailable: Boolean = true,
 ): BankWithdrawSource = BankWithdrawSource(
     network = token.network,
     chainId = chainId,
     token = token,
     fiatBalance = fiatBalance,
+    isAvailable = isAvailable,
 )
 
 internal fun bankWithdrawOptions(
@@ -124,10 +126,12 @@ internal fun bankWithdrawOptions(
         offrampDestination(rail = BankRail.WIRE, fee = BigDecimal("11.00"), minDays = 0, maxDays = 0),
     ),
     minAmount: BigDecimal = BigDecimal("1.00"),
+    maxAmount: BigDecimal = BigDecimal("10000.00"),
     currency: Currency = Currency.getInstance("USD"),
 ): BankWithdrawOptions = BankWithdrawOptions(
     sources = sources.toImmutableList(),
     destinations = destinations.toImmutableList(),
     minAmount = minAmount,
+    maxAmount = maxAmount,
     currency = currency,
 )

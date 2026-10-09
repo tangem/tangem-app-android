@@ -20,6 +20,7 @@ import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
 import com.tangem.domain.pay.usecase.GetOnrampFeesUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.features.tangempay.OUTCOME_UNKNOWN_ERRORS
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.Called
 import io.mockk.clearMocks
@@ -34,6 +35,8 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.util.Locale
 
@@ -193,7 +196,7 @@ internal class TangemPayVirtualAccountDepositModelTest {
 
         // Assert
         verify(exactly = 1) { onShowDetails(credentials) }
-        coVerify(exactly = 0) { createVirtualAccountOrderUseCase(any(), any()) }
+        coVerify(exactly = 0) { createVirtualAccountOrderUseCase(any(), any(), any()) }
         verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaConditionsPopupShowed>()) }
         verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaShowDetailsClicked>()) }
     }
@@ -213,13 +216,13 @@ internal class TangemPayVirtualAccountDepositModelTest {
         // Assert
         verify(exactly = 1) { onShowBankingDetailsError(productInstanceId) }
         verify(exactly = 0) { onShowDetails(any()) }
-        coVerify(exactly = 0) { createVirtualAccountOrderUseCase(any(), any()) }
+        coVerify(exactly = 0) { createVirtualAccountOrderUseCase(any(), any(), any()) }
     }
 
     @Test
     fun `GIVEN eligible and create succeeds WHEN show details THEN order created and loading reset`() = runTest {
         // Arrange
-        coEvery { createVirtualAccountOrderUseCase(userWalletId, paymentAccountAddress) } returns Unit.right()
+        coEvery { createVirtualAccountOrderUseCase(userWalletId, paymentAccountAddress, any()) } returns Unit.right()
         val model = createModel(VirtualAccountOnramp.Eligible)
 
         // Act
@@ -227,7 +230,7 @@ internal class TangemPayVirtualAccountDepositModelTest {
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 1) { createVirtualAccountOrderUseCase(userWalletId, paymentAccountAddress) }
+        coVerify(exactly = 1) { createVirtualAccountOrderUseCase(userWalletId, paymentAccountAddress, any()) }
         verify(exactly = 1) { onOrderCreated() }
         assertThat(model.uiState.value.isLoading).isFalse()
         verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaConditionsPopupShowedFirstTime>()) }
@@ -238,7 +241,7 @@ internal class TangemPayVirtualAccountDepositModelTest {
     fun `GIVEN eligible and create fails WHEN show details THEN toast shown and loading reset`() = runTest {
         // Arrange
         coEvery {
-            createVirtualAccountOrderUseCase(userWalletId, paymentAccountAddress)
+            createVirtualAccountOrderUseCase(userWalletId, paymentAccountAddress, any())
         } returns VisaApiError.Unspecified.left()
         val model = createModel(VirtualAccountOnramp.Eligible)
 
@@ -252,11 +255,56 @@ internal class TangemPayVirtualAccountDepositModelTest {
         assertThat(model.uiState.value.isLoading).isFalse()
     }
 
+    @ParameterizedTest
+    @MethodSource(OUTCOME_UNKNOWN_ERRORS)
+    fun `GIVEN outcome unknown WHEN show details again THEN the same idempotency key is reused`(
+        error: VisaApiError,
+    ) = runTest {
+        // Arrange
+        val idempotencyKeys = mutableListOf<String>()
+        coEvery {
+            createVirtualAccountOrderUseCase(userWalletId, paymentAccountAddress, capture(idempotencyKeys))
+        } returns error.left()
+        val model = createModel(VirtualAccountOnramp.Eligible)
+        model.uiState.value.onShowDetailsClick()
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.onShowDetailsClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(idempotencyKeys).hasSize(2)
+        assertThat(idempotencyKeys.toSet()).hasSize(1)
+    }
+
+    @Test
+    fun `GIVEN server rejected the request WHEN show details again THEN a new idempotency key is used`() = runTest {
+        // Arrange
+        val idempotencyKeys = mutableListOf<String>()
+        coEvery {
+            createVirtualAccountOrderUseCase(userWalletId, paymentAccountAddress, capture(idempotencyKeys))
+        } returns VisaApiError.Unspecified.left()
+        val model = createModel(VirtualAccountOnramp.Eligible)
+        model.uiState.value.onShowDetailsClick()
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.onShowDetailsClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(idempotencyKeys).hasSize(2)
+        assertThat(idempotencyKeys.toSet()).hasSize(2)
+    }
+
     @Test
     fun `GIVEN already loading WHEN show details twice THEN use case invoked once`() = runTest {
         // Arrange
         val pending = CompletableDeferred<Either<VisaApiError, Unit>>()
-        coEvery { createVirtualAccountOrderUseCase(userWalletId, paymentAccountAddress) } coAnswers { pending.await() }
+        coEvery {
+            createVirtualAccountOrderUseCase(userWalletId, paymentAccountAddress, any())
+        } coAnswers { pending.await() }
         val model = createModel(VirtualAccountOnramp.Eligible)
 
         // Act
@@ -267,7 +315,7 @@ internal class TangemPayVirtualAccountDepositModelTest {
 
         // Assert
         assertThat(model.uiState.value.isLoading).isTrue()
-        coVerify(exactly = 1) { createVirtualAccountOrderUseCase(userWalletId, paymentAccountAddress) }
+        coVerify(exactly = 1) { createVirtualAccountOrderUseCase(userWalletId, paymentAccountAddress, any()) }
 
         pending.complete(Unit.right()) // let the in-flight call finish cleanly
         advanceUntilIdle()

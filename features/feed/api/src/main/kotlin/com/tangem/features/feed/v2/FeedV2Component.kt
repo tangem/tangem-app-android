@@ -59,14 +59,14 @@ interface FeedV2Component {
 
     companion object {
 
-        /** Height of the top blocks row (a column of two 86dp small blocks / one large block). */
-        val TopBlocksHeight: Dp = 180.dp
+        /** Height of the top blocks row (a column of two 92dp small blocks / one large block). */
+        val TopBlocksHeight: Dp = 192.dp
 
         /** Height of the tab row, including its vertical insets. */
         val TabRowHeight: Dp = 60.dp
 
         /** Gap above the tab row while the top blocks are shown; it closes as they collapse away. */
-        val TabRowTopGap: Dp = 16.dp
+        val TabRowTopGap: Dp = 32.dp
 
         /**
          * Exact height of the semi-open layout below the host's sheet header: the top blocks and

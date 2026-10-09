@@ -237,6 +237,8 @@
   <string name="bitcoin_promo_no_address">Se requiere una dirección de Bitcoin para recibir el bono. Añade una a tu billetera y vuelve a intentar la activación.</string>
   <string name="bitcoin_promo_no_address_title">Se requiere una dirección de Bitcoin</string>
   <string name="button_start_backup_process">Iniciar proceso de backup</string>
+  <string name="buy_swap_region_restriction_description_region">Actualmente, la compra y el intercambio no están disponibles en su región: %s</string>
+  <string name="buy_swap_region_restriction_title">Restricciones regionales</string>
   <string name="buy_token_description">Utilice una tarjeta bancaria u otros métodos de pago</string>
   <plurals name="card_label_card_count">
     <item quantity="one">%d tarjeta</item>
@@ -348,6 +350,7 @@
     <item quantity="one">hace %d dia</item>
     <item quantity="other">hace %d días</item>
   </plurals>
+  <string name="common_decline">Rechazar</string>
   <string name="common_delete">Suprimir</string>
   <string name="common_disable">Desactivar</string>
   <string name="common_disabled">Desactivado</string>
@@ -635,6 +638,7 @@
   <string name="dynamic_addresses_notification_funds_found_title">Fondos encontrados en direcciones adicionales</string>
   <string name="dynamic_addresses_receive_badge">Dirección dinámica</string>
   <string name="dynamic_addresses_unavailability_reason_pending_transaction_send">La gestión dinámica de direcciones estará disponible una vez que se completen las transacciones pendientes en la red. %@ está completo</string>
+  <string name="earn_assets">Ganar activos</string>
   <string name="earn_best_opportunities">Las mejores oportunidades</string>
   <string name="earn_clear_filter">Limpiar filtro</string>
   <string name="earn_empty">La lista está temporalmente vacía porque se está actualizando. Vuelva a consultarla en un momento.</string>
@@ -748,6 +752,9 @@
   <string name="feed_promo_tangem_pay_title">Paga con cripto</string>
   <string name="feed_search_show_all_user_assets">Mostrar todo</string>
   <string name="feed_search_show_less_user_assets">Mostrar menos</string>
+  <string name="feed_tab_crypto">Cripto</string>
+  <string name="feed_tab_earn">Ganar</string>
+  <string name="feed_tab_rwa">Activos reales</string>
   <string name="feed_trending_now">De actualidad</string>
   <string name="feedback_data_collection_message">La siguiente información es opcional. Puede borrarla si no quiere compartirla.</string>
   <string name="feedback_preface_rate_negative">Cuéntenos qué funciones echa de menos y trataremos de ayudarle.</string>
@@ -1026,6 +1033,7 @@
   <string name="joint_account_invite_load_failed_subtitle">No se pudo cargar la página de invitación.\nPulse para refrescar.</string>
   <string name="joint_account_invite_members_creator">Creador</string>
   <string name="joint_account_invite_members_invite">Invitar</string>
+  <string name="joint_account_invite_members_invited">Invitado</string>
   <string name="joint_account_invite_members_member">Miembro</string>
   <string name="joint_account_invite_members_member_info">Información del miembro</string>
   <string name="joint_account_invite_members_new_member">Nuevo miembro</string>
@@ -1044,6 +1052,7 @@
   <string name="joint_account_invite_members_title">Invitar miembros</string>
   <string name="joint_account_invite_members_to_join">Invite a los miembros a unirse</string>
   <string name="joint_account_invite_members_waiting_title">Esperando miembros</string>
+  <string name="joint_account_invite_share_title">Invitar a %s</string>
   <string name="joint_account_join_confirm_sheet_subtitle">Todos los titulares de esta cuenta comparten un mismo saldo. Los demás miembros pueden transferir los fondos sin su autorización una vez que se hayan reunido las firmas suficientes.</string>
   <string name="joint_account_join_confirm_sheet_title">Se está uniendo a una cuenta compartida.</string>
   <string name="joint_account_join_invalid_link_subtitle">Compruebe que ha abierto el enlace correcto o pídale al creador de la cuenta que se lo envíe de nuevo.</string>
@@ -1055,7 +1064,7 @@
   <string name="joint_account_join_title">Ha sido invitado a %1$s</string>
   <string name="joint_account_join_to_account_btn_text">Cuenta conjunta</string>
   <plurals name="joint_account_members_count">
-    <item quantity="one"></item>
+    <item quantity="one">%d miembro</item>
     <item quantity="other">%d miembros</item>
   </plurals>
   <string name="joint_account_members_progress">%1$s de %2$s miembros</string>
@@ -1099,6 +1108,10 @@
   <string name="joint_account_send_sends_automatically_setup_fee">Se envía automáticamente una vez recibido el pago. El primer envío incluye una tarifa de configuración única.</string>
   <string name="joint_account_send_setup_fee_note">Primera transacción en %1$s. La comisión incluye un pago único de %2$s para configurar la cuenta conjunta en la cadena de bloques.</string>
   <string name="joint_account_send_signatures_required">%1$s de las %2$s firmas necesarias</string>
+  <plurals name="joint_account_send_signatures_required_banner">
+    <item quantity="one">%1$d firma requerida</item>
+    <item quantity="other">%1$d firmas requeridas</item>
+  </plurals>
   <string name="joint_account_send_slot_busy_subtitle">Esta red ya tiene una operación de recolección de firmas. Espere a que termine antes de crear una nueva.</string>
   <string name="joint_account_send_slot_busy_title">Operación ya en curso</string>
   <string name="joint_account_settings_networks_info">Esta cuenta solo funciona en las redes compatibles.</string>
@@ -1114,7 +1127,7 @@
   <string name="joint_operation_decline_alert_title">¿Rechazar esta transacción?</string>
   <string name="joint_operation_declined">Rechazada</string>
   <string name="joint_operation_declined_at">Rechazado en %s</string>
-  <string name="joint_operation_declined_footer">Rechazó. Otros aún pueden llegar a %1$s de %2$s</string>
+  <string name="joint_operation_declined_footer">Rechazó. Otros aún pueden llegar a %1$s de %2$s</string>
   <string name="joint_operation_delete_alert_message">La transacción se cancelará para todos los miembros. Las firmas recogidas se descartarán.</string>
   <string name="joint_operation_delete_alert_title">¿Eliminar esta transacción?</string>
   <string name="joint_operation_deleted_snackbar">Transacción eliminada</string>
@@ -1173,6 +1186,7 @@
   <string name="manage_tokens_unavailable_description">El token seleccionado no está disponible actualmente para acciones dentro de la billetera cripto. Pero no se preocupa, puede expresar su interés votando a favor.</string>
   <string name="manage_tokens_unavailable_vote">Votar a favor</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">La billetera no admite más de una red</string>
+  <string name="market_categories">Categorías</string>
   <string name="market_chart_ai_total">Total de IA:</string>
   <string name="market_chart_ask_for_ai_summary_button">Solicitar resumen de IA</string>
   <string name="market_chart_bubble_no_amount">Sin tokens \n/ valor de activos</string>
@@ -1218,6 +1232,7 @@
   <string name="markets_real_assets_interval_day">Día</string>
   <string name="markets_real_assets_interval_month">Mes</string>
   <string name="markets_real_assets_interval_week">Semana</string>
+  <string name="markets_real_assets_region_restriction_description">Acciones, ETF, bonos: no están disponibles en su región</string>
   <string name="markets_real_assets_region_restriction_description_region">Las acciones, los ETF y los bonos no están disponibles en %1$s</string>
   <string name="markets_real_assets_region_restriction_title">No disponible en su región</string>
   <string name="markets_real_assets_sector_xstocks_communication">Servicios de Comunicación</string>
@@ -2261,7 +2276,7 @@
   <string name="tangempay_cashback_accruals_calc_title">¿Cómo calculamos el cashback?</string>
   <string name="tangempay_cashback_accruals_exceptions_description">Actualmente no se aplica cashback en pagos presenciales por terminal (TPV) en tiendas físicas de la UE. Tampoco aplica para retiros de efectivo, operaciones de casi-efectivo, recargas de móvil, trámites públicos ni ciertas categorías adicionales.</string>
   <string name="tangempay_cashback_accruals_exceptions_title">Excepciones</string>
-  <string name="tangempay_cashback_accruals_pay_description">Del 2 al 5 del mes siguiente</string>
+  <string name="tangempay_cashback_accruals_pay_description">Antes del día 10 del mes siguiente, tras comprobar que las transacciones cumplen las reglas del programa de cashback</string>
   <string name="tangempay_cashback_accruals_pay_title">¿Cómo pagamos el cashback?</string>
   <string name="tangempay_cashback_accruals_subtitle">Límites y excepciones</string>
   <string name="tangempay_cashback_accruals_title">Acumulaciones</string>
@@ -2270,7 +2285,7 @@
   <string name="tangempay_cashback_additional_until">Hasta %1$s</string>
   <string name="tangempay_cashback_deactivated_description">Debido a actividad sospechosa. Contacte con soporte</string>
   <string name="tangempay_cashback_deactivated_title">Cashback desactivado</string>
-  <string name="tangempay_cashback_deposit_banner">Cashback %1$s por %2$s se depositará antes del %3$s</string>
+  <string name="tangempay_cashback_deposit_banner">Cashback %1$s por %2$s se depositará antes del %3$s tras la verificación</string>
   <string name="tangempay_cashback_deposited_on">Se deposita el %1$s</string>
   <string name="tangempay_cashback_details_cap">%1$s máx/mes</string>
   <string name="tangempay_cashback_details_eu_excluded">Actualmente, sin cashback por compras presenciales en la UE</string>
@@ -2369,7 +2384,7 @@
   <string name="tangempay_kyc_rejected_description">Lo sentimos, no pudimos verificar</string>
   <string name="tangempay_kyc_rejected_description_span">u identidad.</string>
   <string name="tangempay_main_select_plan">Seleccionar plan</string>
-  <string name="tangempay_maximum_cards_issued_description">Puedes tener hasta 3 tarjetas. Elimine una para añadir una nueva.</string>
+  <string name="tangempay_maximum_cards_issued_description">Elimine una para añadir una nueva</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">Mejore su plan para tener más tarjetas</string>
   <string name="tangempay_maximum_cards_issued_for_plan_title">Límite de tarjetas alcanzado para este plan</string>
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">Mejorar plan</string>

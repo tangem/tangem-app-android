@@ -44,6 +44,8 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
@@ -71,7 +73,7 @@ internal fun RwaFeedTabContent(
         state = listState,
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(
-            top = contentPadding.calculateTopPadding() + 16.dp,
+            top = contentPadding.calculateTopPadding(),
             bottom = bottomPadding,
         ),
     ) {
@@ -206,7 +208,9 @@ private fun FeaturedAssetCard(asset: RwaFeaturedAssetUM, modifier: Modifier = Mo
             .padding(all = 12.dp),
     ) {
         TangemTokenIcon(
-            state = TangemTokenIcon.UiState.Token(TangemTokenIcon.State(url = asset.iconUrl)),
+            state = TangemTokenIcon.UiState.Token(
+                TangemTokenIcon.State(url = asset.iconUrl, indicator = asset.indicator),
+            ),
             size = TangemTokenIcon.Size.X40,
         )
         SpacerH(22.dp)
@@ -312,6 +316,7 @@ private fun ListFilters(state: RwaFeedTabUM, modifier: Modifier = Modifier) {
             state = state.categoriesFilter,
             variant = TangemFilterItem.Variant.Transparent,
             modifier = Modifier.weight(weight = 1f, fill = false),
+            clearContentDescription = stringResourceSafe(R.string.common_reset),
         )
         SpacerW(8.dp)
         IntervalFilter(interval = state.interval)
@@ -324,17 +329,23 @@ private fun IntervalFilter(interval: RwaIntervalUM, modifier: Modifier = Modifie
     val hapticManager = LocalHapticManager.current
 
     Box(modifier = modifier) {
+        val onClick = {
+            hapticManager.perform(TangemHapticEffect.View.ContextClick)
+            isMenuExpanded = true
+        }
         TangemFilterItem(
             variant = TangemFilterItem.Variant.Transparent,
-            // always Inactive: the chip shows the current value with a chevron, never a clear cross
-            state = TangemFilterItemUM.Inactive(
-                id = "interval",
-                label = interval.selected.title,
-                onClick = {
-                    hapticManager.perform(TangemHapticEffect.View.ContextClick)
-                    isMenuExpanded = true
-                },
-            ),
+            state = if (interval.selected == interval.default) {
+                TangemFilterItemUM.Inactive(id = INTERVAL_FILTER_ID, label = interval.selected.title, onClick = onClick)
+            } else {
+                TangemFilterItemUM.Active(
+                    id = INTERVAL_FILTER_ID,
+                    value = interval.selected.title,
+                    onClick = onClick,
+                    onClearClick = { interval.onOptionClick(interval.default) },
+                )
+            },
+            clearContentDescription = stringResourceSafe(R.string.common_reset),
         )
         RwaIntervalMenu(
             um = interval,
@@ -372,6 +383,8 @@ private fun ListError(onRetry: () -> Unit, modifier: Modifier = Modifier) {
 
 private const val LOAD_NEXT_PAGE_ON_END_INDEX = 50
 private const val SKELETON_CARD_COUNT = 3
+
+private const val INTERVAL_FILTER_ID = "interval"
 
 // region Preview
 @Composable
@@ -418,7 +431,7 @@ private fun previewRwaFeedTabUM(): RwaFeedTabUM {
             onClick = {},
             onClearClick = {},
         ),
-        interval = RwaIntervalUM(selected = RwaInterval.H24, onOptionClick = {}),
+        interval = RwaIntervalUM(selected = RwaInterval.H24, default = RwaInterval.H24, onOptionClick = {}),
         sortTabs = persistentListOf(
             TangemTabItemUM.Content(
                 id = "market_cap",
@@ -458,7 +471,10 @@ private fun previewRwaFeedTabUM(): RwaFeedTabUM {
         ),
         regionRestriction = TangemMessageBanner.State(
             title = resourceReference(R.string.markets_real_assets_region_restriction_title),
-            description = resourceReference(R.string.markets_real_assets_region_restriction_description),
+            description = resourceReference(
+                id = R.string.markets_real_assets_region_restriction_description_region,
+                formatArgs = wrappedList("United States"),
+            ),
             variant = TangemMessageBanner.Variant.Warning,
             iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_info_20),
         ),
@@ -469,6 +485,7 @@ private fun previewFeaturedAsset(id: String, name: String, ticker: String, price
     return RwaFeaturedAssetUM(
         id = id,
         iconUrl = "",
+        indicator = null,
         name = stringReference(name),
         ticker = stringReference(ticker),
         price = stringReference(price),

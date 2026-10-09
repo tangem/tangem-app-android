@@ -44,6 +44,8 @@ internal class DefaultBankOfframpOrderRepositoryTest {
         requestPerformer = requestPerformer,
     )
 
+    private val savedRecipientRequest = orderRequest(BankOfframpRecipient.Saved(bankAccountId = "acc-1"))
+
     @BeforeEach
     fun setUp() {
         clearMocks(tangemPayApi, requestPerformer)
@@ -72,7 +74,6 @@ internal class DefaultBankOfframpOrderRepositoryTest {
 
         // Assert
         assertThat(actual).isEqualTo(BankOfframpOrderResult(orderId = ORDER_ID, bankAccountId = "acc-1").right())
-        assertThat(body.captured.idempotencyKey).isEqualTo(KEY)
         assertThat(body.captured.data.bankAccountId).isEqualTo("acc-1")
         assertThat(body.captured.data.bankAccount).isNull()
         coVerify(exactly = 1) { tangemPayApi.createBankOfframpOrder(AUTH_HEADER, KEY, any()) }
@@ -146,7 +147,7 @@ internal class DefaultBankOfframpOrderRepositoryTest {
             )
 
             // Act
-            val actual = repository.getOrderState(WALLET_ID, ORDER_ID)
+            val actual = repository.getOrderState(WALLET_ID, ORDER_ID, savedRecipientRequest)
 
             // Assert
             assertThat(actual).isEqualTo(BankOfframpOrderState.AwaitingSignature(consistentHash()).right())
@@ -160,7 +161,7 @@ internal class DefaultBankOfframpOrderRepositoryTest {
         )
 
         // Act
-        val actual = repository.getOrderState(WALLET_ID, ORDER_ID)
+        val actual = repository.getOrderState(WALLET_ID, ORDER_ID, savedRecipientRequest)
 
         // Assert
         assertThat(actual.getOrNull()).isInstanceOf(BankOfframpOrderState.Failed::class.java)
@@ -174,7 +175,7 @@ internal class DefaultBankOfframpOrderRepositoryTest {
         )
 
         // Act
-        val actual = repository.getOrderState(WALLET_ID, ORDER_ID)
+        val actual = repository.getOrderState(WALLET_ID, ORDER_ID, savedRecipientRequest)
 
         // Assert
         assertThat(actual.getOrNull()).isInstanceOf(BankOfframpOrderState.Failed::class.java)
@@ -188,7 +189,7 @@ internal class DefaultBankOfframpOrderRepositoryTest {
         )
 
         // Act
-        val actual = repository.getOrderState(WALLET_ID, ORDER_ID)
+        val actual = repository.getOrderState(WALLET_ID, ORDER_ID, savedRecipientRequest)
 
         // Assert
         assertThat(actual).isEqualTo(BankOfframpOrderState.Processing(OrderStep.AWAITING_DEPOSIT).right())
@@ -202,7 +203,7 @@ internal class DefaultBankOfframpOrderRepositoryTest {
         )
 
         // Act
-        val actual = repository.getOrderState(WALLET_ID, ORDER_ID)
+        val actual = repository.getOrderState(WALLET_ID, ORDER_ID, savedRecipientRequest)
 
         // Assert
         assertThat(actual).isEqualTo(BankOfframpOrderState.Completed.right())
@@ -282,6 +283,7 @@ internal class DefaultBankOfframpOrderRepositoryTest {
         amountInCents = 10_000L,
         chainId = 137L,
         tokenContractAddress = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
+        tokenDecimals = 6,
         rail = BankRail.WIRE,
         recipient = recipient,
     )
@@ -323,7 +325,6 @@ internal class DefaultBankOfframpOrderRepositoryTest {
                 ),
             ),
         ),
-        idempotencyKey = KEY,
     )
 
     private fun expectedAddress() = BankOfframpPlaceOrderRequest.Address(
@@ -357,15 +358,17 @@ internal class DefaultBankOfframpOrderRepositoryTest {
                   {"name": "chainId", "type": "uint256"}
                 ],
                 "Withdraw": [
-                  {"name": "sender", "type": "address"},
+                  {"name": "asset", "type": "address"},
+                  {"name": "recipient", "type": "address"},
                   {"name": "amount", "type": "uint256"}
                 ]
               },
               "primaryType": "Withdraw",
-              "domain": {"name": "Rain", "chainId": 137},
+              "domain": {"name": "Collateral", "chainId": 137},
               "message": {
-                "sender": "0x059dbd5f24a000d28f83268db1c85c9c3ab6a123",
-                "amount": "10000000"
+                "asset": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
+                "recipient": "0x059dbd5f24a000d28f83268db1c85c9c3ab6a123",
+                "amount": "100000000"
               }
             }
         """.trimIndent()

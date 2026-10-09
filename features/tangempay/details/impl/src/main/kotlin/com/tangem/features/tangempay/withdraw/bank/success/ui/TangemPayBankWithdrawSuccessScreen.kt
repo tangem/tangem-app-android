@@ -31,13 +31,14 @@ import kotlinx.collections.immutable.persistentListOf
 internal fun TangemPayBankWithdrawSuccessScreen(state: TangemPayBankWithdrawSuccessUM, modifier: Modifier = Modifier) {
     TangemStatusScreen(
         modifier = modifier,
-        variant = TangemStatusScreen.Variant.Success,
+        variant = TangemStatusScreen.Variant.Info,
         title = state.title,
         description = state.subtitle,
         asset = {
             TangemStatusIcon(
                 kind = TangemStatusIcon.Kind.Checkmark,
                 modifier = Modifier.size(StatusIconSize),
+                tint = TangemTheme.colors3.icon.status.info,
             )
         },
         details = if (state.rows.isEmpty()) {

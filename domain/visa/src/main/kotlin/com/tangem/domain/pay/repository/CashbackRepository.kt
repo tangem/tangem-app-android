@@ -8,14 +8,21 @@ import com.tangem.domain.pay.model.CashbackPromotions
 import com.tangem.domain.pay.model.CashbackSummary
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Repository for the cashback endpoints (`GET /v1/customer/cashback/...`).
  */
 interface CashbackRepository {
 
-    /** Loads the cashback summary for the customer of [userWalletId]. */
+    /**
+     * Loads the cashback summary for the customer of [userWalletId] and caches it for [observeCashbackSummary]: a summary
+     * worth showing replaces the cached one, a disabled or unrecognized one clears it, a failed request leaves it as is.
+     */
     suspend fun getCashbackSummary(userWalletId: UserWalletId): Either<VisaApiError, CashbackSummary>
+
+    /** Cached cashback summary of the customer of [userWalletId]; `null` while nothing is cached. */
+    fun observeCashbackSummary(userWalletId: UserWalletId): Flow<CashbackSummary?>
 
     suspend fun getCashbackPromotions(userWalletId: UserWalletId): Either<VisaApiError, CashbackPromotions>
 

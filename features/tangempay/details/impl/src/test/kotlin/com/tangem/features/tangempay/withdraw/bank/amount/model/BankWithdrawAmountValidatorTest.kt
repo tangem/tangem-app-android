@@ -12,6 +12,7 @@ import java.math.BigDecimal
 internal class BankWithdrawAmountValidatorTest {
 
     private val minAmount = BigDecimal("1.00")
+    private val maxAmount = BigDecimal("10000.00")
 
     @ParameterizedTest
     @ProvideTestModels
@@ -20,6 +21,7 @@ internal class BankWithdrawAmountValidatorTest {
         val actual = BankWithdrawAmountValidator.validate(
             amount = model.amount,
             minAmount = minAmount,
+            maxAmount = maxAmount,
             balance = model.balance,
             fee = model.fee,
         )
@@ -29,30 +31,42 @@ internal class BankWithdrawAmountValidatorTest {
     }
 
     @Test
-    fun `GIVEN balance below fee WHEN maxAmount THEN zero`() {
+    fun `GIVEN balance below fee WHEN sendableAmount THEN zero`() {
         // Act
-        val actual = BankWithdrawAmountValidator.maxAmount(balance = BigDecimal("0.50"), fee = BigDecimal("1"))
+        val actual = BankWithdrawAmountValidator.sendableAmount(
+            maxAmount = maxAmount,
+            balance = BigDecimal("0.50"),
+            fee = BigDecimal("1"),
+        )
 
         // Assert
         assertThat(actual).isEqualTo(BigDecimal.ZERO)
     }
 
     @Test
-    fun `GIVEN balance above fee WHEN maxAmount THEN balance minus fee`() {
+    fun `GIVEN balance minus fee within limit WHEN sendableAmount THEN balance minus fee`() {
         // Act
-        val actual = BankWithdrawAmountValidator.maxAmount(balance = BigDecimal("2325.55"), fee = BigDecimal("1"))
+        val actual = BankWithdrawAmountValidator.sendableAmount(
+            maxAmount = maxAmount,
+            balance = BigDecimal("2325.55"),
+            fee = BigDecimal("1"),
+        )
 
         // Assert
         assertThat(actual).isEqualTo(BigDecimal("2324.55"))
     }
 
     @Test
-    fun `GIVEN a balance far above any limit WHEN maxAmount THEN the whole balance minus fee is spendable`() {
+    fun `GIVEN balance minus fee above limit WHEN sendableAmount THEN limit`() {
         // Act
-        val actual = BankWithdrawAmountValidator.maxAmount(balance = BigDecimal("20000"), fee = BigDecimal("1"))
+        val actual = BankWithdrawAmountValidator.sendableAmount(
+            maxAmount = maxAmount,
+            balance = BigDecimal("20000"),
+            fee = BigDecimal("1"),
+        )
 
         // Assert
-        assertThat(actual).isEqualTo(BigDecimal("19999"))
+        assertThat(actual).isEqualTo(maxAmount)
     }
 
     data class ValidateModel(
@@ -65,13 +79,16 @@ internal class BankWithdrawAmountValidatorTest {
     private fun provideTestModels() = listOf(
         ValidateModel(amount = null, expected = Result.Empty),
         ValidateModel(amount = BigDecimal("0"), expected = Result.Empty),
-        ValidateModel(amount = BigDecimal("0.5"), expected = Result.BelowMinimum),
+        ValidateModel(amount = BigDecimal("0.5"), expected = Result.OutOfRange),
+        ValidateModel(amount = BigDecimal("0.5"), balance = BigDecimal("0.3"), expected = Result.OutOfRange),
         ValidateModel(amount = BigDecimal("1"), expected = Result.Valid),
-        ValidateModel(amount = BigDecimal("10000"), balance = BigDecimal("20000"), expected = Result.Valid),
-        ValidateModel(amount = BigDecimal("19999"), balance = BigDecimal("20000"), expected = Result.Valid),
-        ValidateModel(amount = BigDecimal("19999.01"), balance = BigDecimal("20000"), expected = Result.NotEnoughFunds),
-        ValidateModel(amount = BigDecimal("2325"), expected = Result.NotEnoughFunds),
         ValidateModel(amount = BigDecimal("2324.55"), expected = Result.Valid),
+        ValidateModel(amount = BigDecimal("2325"), expected = Result.NotEnoughFunds),
         ValidateModel(amount = BigDecimal("500"), balance = BigDecimal("100"), expected = Result.NotEnoughFunds),
+        ValidateModel(amount = BigDecimal("10000"), balance = BigDecimal("20000"), expected = Result.Valid),
+        ValidateModel(amount = BigDecimal("10000"), balance = BigDecimal("10000"), expected = Result.NotEnoughFunds),
+        ValidateModel(amount = BigDecimal("10000.01"), balance = BigDecimal("20000"), expected = Result.OutOfRange),
+        ValidateModel(amount = BigDecimal("10001"), expected = Result.OutOfRange),
+        ValidateModel(amount = BigDecimal("100015"), expected = Result.OutOfRange),
     )
 }

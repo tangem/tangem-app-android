@@ -43,7 +43,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_search_24
+import com.tangem.core.ui.res.generated.icons.ic_binoculars_24
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.recipients.state.TangemPayBankWithdrawRecipientsUM
 import com.tangem.features.tangempay.withdraw.bank.recipients.state.TangemPayBankWithdrawRecipientsUM.ContentUM
@@ -178,7 +178,7 @@ private fun NoResultsContent(contentPadding: PaddingValues, modifier: Modifier =
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                imageVector = Icons.ic_search_24,
+                imageVector = Icons.ic_binoculars_24,
                 contentDescription = null,
                 tint = TangemTheme.colors3.icon.secondary,
                 modifier = Modifier.size(24.dp),
@@ -186,7 +186,7 @@ private fun NoResultsContent(contentPadding: PaddingValues, modifier: Modifier =
         }
         Text(
             modifier = Modifier.padding(top = 32.dp),
-            text = stringResourceSafe(R.string.common_no_results),
+            text = stringResourceSafe(R.string.tangempay_withdraw_bank_recipients_search_empty),
             textAlign = TextAlign.Center,
             color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography3.caption.medium,

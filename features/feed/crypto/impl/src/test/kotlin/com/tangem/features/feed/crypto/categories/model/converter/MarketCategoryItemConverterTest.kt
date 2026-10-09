@@ -7,7 +7,6 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.MarketCategory
-import com.tangem.features.feed.crypto.categories.ALL_ROW_ID
 import com.tangem.features.feed.crypto.categories.MarketCategorySelection
 import com.tangem.features.feed.crypto.categories.createCategory
 import com.tangem.features.feed.crypto.categories.selectionOf
@@ -15,8 +14,8 @@ import com.tangem.features.feed.crypto.categories.ui.state.MarketCategoryItemUM
 import org.junit.jupiter.api.Test
 
 /**
- * The rows are a radio group over "no filter" plus every category, so the invariants worth pinning are
- * that exactly one row is checked and that clearing has a single route — the "All" row.
+ * The rows are a radio group over the categories alone — there is no "no filter" row, so an unfiltered
+ * list checks nothing and clearing lives on the tab chip.
  *
  * A tap on the already-selected row deliberately republishes the same selection instead of clearing it;
  * the featured badge does the opposite. See [FeaturedCategoryConverterTest] for the other half.
@@ -29,31 +28,30 @@ internal class MarketCategoryItemConverterTest {
     private val defi = createCategory(id = "defi", name = "DeFi", tokensCount = 7)
 
     @Test
-    fun `GIVEN categories WHEN converted THEN the All row leads and the categories keep their order`() {
+    fun `GIVEN nothing selected WHEN converted THEN only the categories are built`() {
         // Act
         val actual = convert(ai, defi)
 
         // Assert
-        assertThat(actual.map(MarketCategoryItemUM::id)).containsExactly(ALL_ROW_ID, "ai", "defi").inOrder()
+        assertThat(actual.map(MarketCategoryItemUM::id)).containsExactly("ai", "defi").inOrder()
     }
 
     @Test
-    fun `GIVEN no categories WHEN converted THEN only the All row is built`() {
+    fun `GIVEN no categories WHEN converted THEN no rows are built`() {
         // Act
         val actual = convert()
 
         // Assert
-        assertThat(actual.map(MarketCategoryItemUM::id)).containsExactly(ALL_ROW_ID)
+        assertThat(actual).isEmpty()
     }
 
     @Test
-    fun `GIVEN nothing selected WHEN converted THEN the All row is the checked one`() {
+    fun `GIVEN nothing selected WHEN converted THEN no row is checked`() {
         // Act
         val actual = convert(ai, defi)
 
         // Assert
-        assertThat(actual.filter(MarketCategoryItemUM::isSelected).map(MarketCategoryItemUM::id))
-            .containsExactly(ALL_ROW_ID)
+        assertThat(actual.none(MarketCategoryItemUM::isSelected)).isTrue()
     }
 
     @Test
@@ -91,20 +89,8 @@ internal class MarketCategoryItemConverterTest {
     }
 
     @Test
-    fun `GIVEN a filter applied WHEN the All row is tapped THEN the empty selection is published`() {
-        // Arrange
-        val rows = convert(ai, defi, selection = selectionOf(ai))
-
-        // Act
-        rows.rowFor(ALL_ROW_ID).onItemClick()
-
-        // Assert
-        assertThat(emitted).isEqualTo(MarketCategorySelection())
-    }
-
-    @Test
     fun `GIVEN the selected row WHEN tapped again THEN the selection is republished unchanged`() {
-        // Arrange — clearing belongs to the All row; a row that also deselects reads as a broken radio group
+        // Arrange — a row that also deselects reads as a broken radio group; clearing is the chip's job
         val selection = selectionOf(ai)
         val rows = convert(ai, defi, selection = selection)
 
@@ -141,53 +127,13 @@ internal class MarketCategoryItemConverterTest {
             .isEqualTo(TextReference.Str(BigDecimalFormatConstants.EMPTY_BALANCE_SIGN))
     }
 
-    @Test
-    fun `GIVEN the All row WHEN converted THEN it carries no market data`() {
-        // Act
-        val actual = convert(ai).rowFor(ALL_ROW_ID)
-
-        // Assert
-        assertThat(actual.title).isEqualTo(TextReference.Res(R.string.common_all))
-        assertThat(actual.subtitle).isNull()
-        assertThat(actual.caption).isNull()
-    }
-
-    @Test
-    fun `GIVEN a search narrows the list WHEN converted THEN the All row is left out`() {
-        // Act — the list is then a result set, and "no filter" is not one of the results
-        val actual = convert(ai, defi, shouldIncludeAllRow = false)
-
-        // Assert
-        assertThat(actual.map(MarketCategoryItemUM::id)).containsExactly("ai", "defi").inOrder()
-    }
-
-    @Test
-    fun `GIVEN a search matched nothing WHEN converted THEN no rows are built`() {
-        // Act
-        val actual = convert(shouldIncludeAllRow = false)
-
-        // Assert
-        assertThat(actual).isEmpty()
-    }
-
-    @Test
-    fun `GIVEN a search and a selection outside it WHEN converted THEN nothing is checked`() {
-        // Act — without the All row there is no fallback check for "no filter"
-        val actual = convert(ai, shouldIncludeAllRow = false, selection = selectionOf(defi))
-
-        // Assert
-        assertThat(actual.filter(MarketCategoryItemUM::isSelected)).isEmpty()
-    }
-
     private fun convert(
         vararg categories: MarketCategory,
         selection: MarketCategorySelection = MarketCategorySelection(),
         appCurrency: AppCurrency = AppCurrency.Default,
-        shouldIncludeAllRow: Boolean = true,
     ): List<MarketCategoryItemUM> = MarketCategoryItemConverter(
         selection = selection,
         appCurrency = appCurrency,
-        shouldIncludeAllRow = shouldIncludeAllRow,
         onSelectionChange = { emitted = it },
     ).convert(categories.toList())
 

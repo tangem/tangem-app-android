@@ -51,7 +51,11 @@ internal class ContactCandidateTest : TxDetailsConverterTestBase() {
                 type = TransactionType.Joint.Transfer(
                     recipient = USER_ADDRESS,
                     amount = BigDecimal.ONE,
-                    refundCapWei = BigDecimal("500000000000000"),
+                    refundCap = SdkAmount(
+                        currencySymbol = "ETH",
+                        value = BigDecimal("500000000000000").movePointLeft(18),
+                        decimals = 18,
+                    ),
                     signaturesCount = 2,
                 ),
                 isOutgoing = true,

@@ -17,6 +17,7 @@ internal object BankOfframpErrorConverter : Converter<BankOfframpErrorConverter.
         VisaApiError.BankOfframpUnsupportedConfiguration -> BankOfframpError.UnsupportedConfiguration
         else -> BankOfframpError.Unknown(
             cause = IllegalStateException("Bank off-ramp ${value.operation} failed: ${value.error}"),
+            isOutcomeUnknown = value.error.isOutcomeUnknown(),
         )
     }
 }

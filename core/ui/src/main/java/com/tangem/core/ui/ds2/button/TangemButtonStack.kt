@@ -1,7 +1,5 @@
 package com.tangem.core.ui.ds2.button
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,13 +11,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.DsVersion
-import com.tangem.core.ui.ds2.animation.TangemTransition
-import com.tangem.core.ui.ds2.animation.WithoutMaterialWhileAnimating
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
@@ -52,29 +49,18 @@ fun TangemButtonStack(
     variant: TangemButtonStack.Variant = TangemButtonStack.Variant.Material,
     content: @Composable RowScope.() -> Unit,
 ) {
-    val entries: @Composable (Modifier) -> Unit = { rowModifier ->
+    TangemSurface(
+        modifier = modifier,
+        color = Color.Transparent,
+        isMaterial = variant == TangemButtonStack.Variant.Material,
+        shape = CircleShape,
+    ) {
         Row(
-            modifier = rowModifier,
+            modifier = Modifier.padding(all = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(space = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
             content = content,
         )
-    }
-
-    AnimatedContent(
-        modifier = modifier,
-        targetState = variant,
-        transitionSpec = { TangemTransition.FadeEnter togetherWith TangemTransition.FadeExit },
-        label = "TangemButtonStack.variant",
-    ) { currentVariant ->
-        WithoutMaterialWhileAnimating {
-            when (currentVariant) {
-                TangemButtonStack.Variant.Material -> TangemSurface(isMaterial = true, shape = CircleShape) {
-                    entries(Modifier.padding(all = 4.dp))
-                }
-                TangemButtonStack.Variant.Ghost -> entries(Modifier.padding(4.dp))
-            }
-        }
     }
 }
 

@@ -105,7 +105,6 @@ internal fun PlacePredictionSummaryContent(
             PredictionPaymentBlock(
                 amountValue = state.amountValue,
                 payout = state.quote.payout(),
-                collateral = state.collateral,
                 order = state.order,
             )
             PredictionMarketBlock(state = state.market)

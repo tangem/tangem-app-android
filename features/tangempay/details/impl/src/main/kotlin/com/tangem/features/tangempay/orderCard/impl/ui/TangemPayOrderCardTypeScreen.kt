@@ -120,7 +120,8 @@ private fun OrderTypeContent(
                 contentScale = ContentScale.FillWidth,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .testTag(state.backgroundTestTag()),
             )
         }
         Column(modifier = Modifier.fillMaxSize()) {
@@ -601,6 +602,12 @@ private fun TangemPayOrderCardTypeUM.backgroundRes(): Int = if (isBasicPlan) {
     R.drawable.ill_tangempay_order_card_bg_basic
 } else {
     R.drawable.ill_tangempay_order_card_bg_plus
+}
+
+private fun TangemPayOrderCardTypeUM.backgroundTestTag(): String = if (isBasicPlan) {
+    TangemPayTestTags.ORDER_CARD_TYPE_BACKGROUND_BASIC
+} else {
+    TangemPayTestTags.ORDER_CARD_TYPE_BACKGROUND_PLUS
 }
 
 private fun OrderCardType.titleRes(): Int = when (this) {

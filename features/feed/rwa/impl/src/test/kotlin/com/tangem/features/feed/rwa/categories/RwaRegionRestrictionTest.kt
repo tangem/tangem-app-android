@@ -1,12 +1,16 @@
 package com.tangem.features.feed.rwa.categories
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.domain.markets.CoinCategory
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import com.tangem.test.core.ProvideTestModels
+import java.util.Locale
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class RwaRegionRestrictionTest {
@@ -44,10 +48,63 @@ internal class RwaRegionRestrictionTest {
         val actual = RwaRegionRestriction.banner(
             restrictedIds = setOf("1"),
             selection = CategorySelection(CategorySelection.Entry(id = "1", displayName = "xStocks", code = "xstocks")),
+            country = "US",
         )
 
         // Assert
         assertThat(actual?.variant).isEqualTo(TangemMessageBanner.Variant.Warning)
+    }
+
+    @Test
+    fun `GIVEN a resolvable country WHEN banner THEN the notice names it`() {
+        // Arrange — the code is what the app sends, the name is what a user can read
+        val originalLocale = Locale.getDefault()
+        Locale.setDefault(Locale.ENGLISH)
+
+        try {
+            // Act
+            val actual = banner(country = "GB")
+
+            // Assert
+            assertThat(actual?.description).isEqualTo(
+                resourceReference(
+                    R.string.markets_real_assets_region_restriction_description_region,
+                    wrappedList("United Kingdom"),
+                ),
+            )
+        } finally {
+            Locale.setDefault(originalLocale)
+        }
+    }
+
+    @Test
+    fun `GIVEN no resolved country WHEN banner THEN the notice drops the region`() {
+        // Act — the restriction is real either way, only its wording degrades
+        val actual = banner(country = null)
+
+        // Assert
+        assertThat(actual?.description)
+            .isEqualTo(resourceReference(R.string.markets_real_assets_region_restriction_description))
+    }
+
+    @Test
+    fun `GIVEN an unassigned country code WHEN banner THEN the notice drops the region`() {
+        // Act — a bare code reads worse than saying nothing
+        val actual = banner(country = "QQ")
+
+        // Assert
+        assertThat(actual?.description)
+            .isEqualTo(resourceReference(R.string.markets_real_assets_region_restriction_description))
+    }
+
+    @Test
+    fun `GIVEN a region the platform names but is not a country WHEN banner THEN the region is dropped`() {
+        // Act — CLDR calls XA "Pseudo-Accents", which must not reach the copy as a region
+        val actual = banner(country = "XA")
+
+        // Assert
+        assertThat(actual?.description)
+            .isEqualTo(resourceReference(R.string.markets_real_assets_region_restriction_description))
     }
 
     @Test
@@ -56,6 +113,7 @@ internal class RwaRegionRestrictionTest {
         val actual = RwaRegionRestriction.banner(
             restrictedIds = setOf("1"),
             selection = CategorySelection(CategorySelection.Entry(id = "2", displayName = "Bonds", code = "bonds")),
+            country = "US",
         )
 
         // Assert
@@ -123,5 +181,11 @@ internal class RwaRegionRestrictionTest {
         isRestricted = isRestricted,
         sectors = emptyList(),
         isVisible = isVisible,
+    )
+
+    private fun banner(country: String?) = RwaRegionRestriction.banner(
+        restrictedIds = setOf("1"),
+        selection = CategorySelection(CategorySelection.Entry(id = "1", displayName = "xStocks", code = "xstocks")),
+        country = country,
     )
 }
