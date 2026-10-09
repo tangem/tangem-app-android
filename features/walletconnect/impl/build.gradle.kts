@@ -33,6 +33,7 @@ dependencies {
     implementation(projects.domain.account.status)
     implementation(projects.domain.blockaid.models)
     implementation(projects.domain.mcp)
+    implementation(projects.domain.mcp.models)
     implementation(projects.domain.models)
     implementation(projects.domain.qrScanning.models)
     implementation(projects.domain.tokens.models)
