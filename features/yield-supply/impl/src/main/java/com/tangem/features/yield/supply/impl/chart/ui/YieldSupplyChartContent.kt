@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,12 +12,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +32,7 @@ import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottomAxis
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberCustomStartAxis
 import com.patrykandpatrick.vico.compose.cartesian.decoration.rememberHorizontalLine
 import com.patrykandpatrick.vico.compose.cartesian.layer.grouped
+import com.patrykandpatrick.vico.compose.cartesian.layer.stacked
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
@@ -57,18 +58,34 @@ import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.yield.supply.impl.common.formatter.formatApy
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartUM
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyMarketChartDataUM
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import java.util.Locale
+
+/** Height the chart host is laid out at; the average label and the column gap both measure against it. */
+private val CHART_HEIGHT = 105.dp
+
+/** Design keeps the reward cap a separate segment rather than a flush stack. */
+private val COLUMN_GAP = 2.dp
+
+/** Bar width in the design, held constant across every period — see [columnSpacing]. */
+private val COLUMN_THICKNESS = 4.dp
+
+/** Floor for [columnSpacing]: past it the bars would touch, and a dense period has to stay readable. */
+private val MIN_COLUMN_SPACING = 1.dp
 
 @Composable
 internal fun YieldSupplyChartContent(state: YieldSupplyChartUM, modifier: Modifier = Modifier) {
     val itemModifier = modifier
-        .height(105.dp)
+        .height(CHART_HEIGHT)
         .fillMaxWidth()
     when (state) {
         is YieldSupplyChartUM.Loading -> YieldSupplyChartLoading(modifier = itemModifier)
@@ -140,38 +157,47 @@ private fun YieldSupplyChartLoading(modifier: Modifier = Modifier) {
 @Suppress("MagicNumber")
 @Composable
 private fun YieldSupplyChartData(state: YieldSupplyChartUM.Data, modifier: Modifier = Modifier) {
-    val model = rememberChartModel(state.chartData)
+    BoxWithConstraints(modifier = modifier) {
+        val model = rememberChartModel(state.chartData)
 
-    val columnsLayer = rememberColumnsLayer(accentColor = TangemTheme.colors.text.accent)
+        val columnsLayer = rememberColumnsLayer(
+            accentColor = TangemTheme.colors.text.accent,
+            isStacked = state.chartData.rewardCaps.isNotEmpty(),
+            columnSpacing = columnSpacing(plotWidth = maxWidth, columnCount = state.chartData.y.size),
+        )
 
-    val startAxis: VerticalAxis<AxisPosition.Vertical.Start> = rememberStartAxis(
-        labelColor = TangemTheme.colors.text.tertiary,
-        percentFormat = state.chartData.percentFormat,
-    )
+        val startAxis: VerticalAxis<AxisPosition.Vertical.Start> = rememberStartAxis(
+            labelColor = TangemTheme.colors.text.tertiary,
+            guidelineColor = TangemTheme.colors.stroke.primary,
+            percentFormat = state.chartData.percentFormat,
+        )
 
-    val bottomAxis: HorizontalAxis<AxisPosition.Horizontal.Bottom> = rememberBottomAxis(
-        labelColor = TangemTheme.colors.text.tertiary,
-    )
+        val bottomAxis: HorizontalAxis<AxisPosition.Horizontal.Bottom> = rememberBottomAxis(
+            labelColor = TangemTheme.colors.text.tertiary,
+        )
 
-    val referenceLineThickness = 2.dp
-    val referenceLine = rememberReferenceLine(
-        average = state.chartData.avr,
-        color = TangemTheme.colors.icon.primary1,
-        thickness = referenceLineThickness,
-    )
+        val referenceLineThickness = 2.dp
+        val referenceLine = rememberReferenceLine(
+            average = state.chartData.avr,
+            color = TangemTheme.colors.icon.primary1,
+            thickness = referenceLineThickness,
+        )
 
-    val chart = rememberCartesianChart(
-        columnsLayer,
-        startAxis = startAxis,
-        bottomAxis = bottomAxis,
-        decorations = listOf(referenceLine),
-        horizontalLayout = HorizontalLayout.segmented(),
-    )
+        val chart = rememberCartesianChart(
+            columnsLayer,
+            startAxis = startAxis,
+            bottomAxis = bottomAxis,
+            decorations = listOf(referenceLine),
+            horizontalLayout = HorizontalLayout.segmented(),
+        )
 
-    val averageLabelTopPadding by rememberAverageLabelTopPadding(state.chartData)
+        val averageLabelTopPadding = rememberAverageLabelTopPadding(state.chartData)
 
-    Box(modifier = modifier) {
-        MonthLabelsRow(labels = state.monthLables, modifier = Modifier.align(Alignment.BottomEnd))
+        if (state.chartData.xLabels.isEmpty()) {
+            MonthLabelsRow(labels = state.monthLables, modifier = Modifier.align(Alignment.BottomEnd))
+        } else {
+            ColumnLabelsRow(labels = state.chartData.xLabels, modifier = Modifier.align(Alignment.BottomEnd))
+        }
         CartesianChartHost(
             modifier = Modifier.padding(bottom = 4.dp),
             chart = chart,
@@ -183,46 +209,98 @@ private fun YieldSupplyChartData(state: YieldSupplyChartUM.Data, modifier: Modif
             modifier = Modifier
                 .padding(start = 36.dp, top = averageLabelTopPadding)
                 .height(24.dp),
-            avr = state.chartData.avr.toString(),
+            avr = state.chartData.avr.toBigDecimal().formatApy(),
         )
     }
 }
 
+/**
+ * Vico multiplies the column thickness by the zoom factor it needs to fit every point, so seven days of history
+ * would be drawn as blobs the width of a finger. Spacing the columns out so that they fill the plot exactly holds
+ * that factor at 1, and the bars stay [COLUMN_THICKNESS] wide whatever the period. The 38.dp taken off
+ * the width is the room the vertical axis labels occupy.
+ */
+private fun columnSpacing(plotWidth: Dp, columnCount: Int): Dp {
+    if (columnCount <= 0) return MIN_COLUMN_SPACING
+
+    val perColumn = (plotWidth - 38.dp).coerceAtLeast(0.dp) / columnCount
+
+    return (perColumn - COLUMN_THICKNESS).coerceAtLeast(MIN_COLUMN_SPACING)
+}
+
 @Composable
 private fun rememberChartModel(data: YieldSupplyMarketChartDataUM): CartesianChartModel {
-    return remember(data.y) {
+    return remember(data.y, data.rewardCaps) {
         CartesianChartModel(
             ColumnCartesianLayerModel.build {
-                series(data.y)
+                if (data.rewardCaps.isEmpty()) {
+                    series(data.y)
+                } else {
+                    // The gap is carved out of the base rather than stacked on top, so the column still ends at the
+                    // APY the backend reported and keeps meeting the average line.
+                    val gap = data.gapSeries()
+                    series(data.y.mapIndexed { index, base -> (base - gap[index]).coerceAtLeast(0.0) })
+                    series(gap)
+                    series(data.rewardCaps)
+                }
             },
         )
     }
 }
 
+/**
+ * A transparent spacer series, as tall in data units as [COLUMN_GAP] is on screen, so the cap reads as its own
+ * segment. It is sized off the tallest column, which is what the vertical axis scales to, and the base series gives
+ * the room up rather than the column growing by it.
+ */
+private fun YieldSupplyMarketChartDataUM.gapSeries(): List<Double> {
+    val top = y.zip(rewardCaps) { base, cap -> base + cap }.maxOrNull() ?: return emptyList()
+    // Every column gives up the same room, so the gap can be no deeper than the shallowest base: taking more than
+    // a base holds would leave that column standing on the gap and top out above the APY the backend reported.
+    val gap = (top * (COLUMN_GAP.value / CHART_HEIGHT.value)).coerceAtMost(y.minOrNull() ?: 0.0)
+
+    return List(y.size) { gap }
+}
+
 @Suppress("MagicNumber")
 @Composable
-private fun rememberColumnsLayer(accentColor: Color): ColumnCartesianLayer {
+private fun rememberColumnsLayer(accentColor: Color, isStacked: Boolean, columnSpacing: Dp): ColumnCartesianLayer {
     val column = rememberLineComponent(
         color = accentColor,
-        thickness = 6.dp,
+        thickness = COLUMN_THICKNESS,
         shape = Shape.rounded(40),
     )
+    val gapColumn = rememberLineComponent(
+        color = Color.Transparent,
+        thickness = COLUMN_THICKNESS,
+    )
+    val rewardsColumn = rememberLineComponent(
+        color = accentColor.copy(alpha = 0.3f),
+        thickness = COLUMN_THICKNESS,
+        shape = Shape.rounded(40),
+    )
+    val columns = if (isStacked) listOf(column, gapColumn, rewardsColumn) else listOf(column)
+
     return rememberColumnCartesianLayer(
-        columnProvider = ColumnCartesianLayer.ColumnProvider.series(column),
-        columnCollectionSpacing = 3.dp,
-        mergeMode = { MergeMode.grouped() },
+        columnProvider = ColumnCartesianLayer.ColumnProvider.series(columns),
+        columnCollectionSpacing = columnSpacing,
+        mergeMode = { if (isStacked) MergeMode.stacked() else MergeMode.grouped() },
     )
 }
 
 @Composable
-private fun rememberStartAxis(labelColor: Color, percentFormat: String): VerticalAxis<AxisPosition.Vertical.Start> {
+private fun rememberStartAxis(
+    labelColor: Color,
+    guidelineColor: Color,
+    percentFormat: String,
+): VerticalAxis<AxisPosition.Vertical.Start> {
     return rememberCustomStartAxis(
         label = rememberAxisLabelComponent(color = labelColor),
         valueFormatter = CartesianValueFormatter { value, _, _ ->
             val pct = String.format(Locale.getDefault(), percentFormat, value)
             "$pct%"
         },
-        guideline = null,
+        guideline = rememberLineComponent(color = guidelineColor, thickness = 1.dp),
         tick = null,
         line = null,
     )
@@ -254,27 +332,58 @@ private fun rememberReferenceLine(average: Double, color: Color, thickness: Dp):
 }
 
 @Composable
-private fun rememberAverageLabelTopPadding(data: YieldSupplyMarketChartDataUM): State<Dp> {
-    return remember(data.y, data.avr) {
-        derivedStateOf {
-            val chartHeight = 105.dp
-            val labelHeight = 24.dp
-            val referenceLineThickness = 2.dp
-            val desiredGap = 3.dp
-            val opticalNudge = 1.dp
-            val extraPaddingAboveLine = 2.dp
-            val gapAboveLine = desiredGap + referenceLineThickness / 2 + opticalNudge + extraPaddingAboveLine
-            val chartContentBottomInset = 10.dp
+private fun rememberAverageLabelTopPadding(data: YieldSupplyMarketChartDataUM): Dp {
+    return remember(data.y, data.rewardCaps, data.avr) {
+        val chartHeight = CHART_HEIGHT
+        val labelHeight = 24.dp
+        val referenceLineThickness = 2.dp
+        val desiredGap = 3.dp
+        val opticalNudge = 1.dp
+        val extraPaddingAboveLine = 2.dp
+        val gapAboveLine = desiredGap + referenceLineThickness / 2 + opticalNudge + extraPaddingAboveLine
+        val chartContentBottomInset = 10.dp
 
-            val maxValueInSeries = (data.y.maxOrNull() ?: 0.0).coerceAtLeast(data.avr)
-            val averageRatio = if (maxValueInSeries == 0.0) {
-                0f
-            } else {
-                (data.avr / maxValueInSeries).coerceIn(0.0, 1.0).toFloat()
+        // The axis scales to the tallest column, and a column is its base plus the reward stacked on it.
+        // Measuring against the bases alone would place the label above a line drawn against the real top.
+        val tallestColumn = if (data.rewardCaps.isEmpty()) {
+            data.y.maxOrNull()
+        } else {
+            data.y.zip(data.rewardCaps) { base, cap -> base + cap }.maxOrNull()
+        }
+        val maxValueInSeries = (tallestColumn ?: 0.0).coerceAtLeast(data.avr)
+        val averageRatio = if (maxValueInSeries == 0.0) {
+            0f
+        } else {
+            (data.avr / maxValueInSeries).coerceIn(0.0, 1.0).toFloat()
+        }
+        val computedTopPadding = (chartHeight - chartContentBottomInset) * (1f - averageRatio) -
+            labelHeight - gapAboveLine
+        if (computedTopPadding < 2.dp) 2.dp else computedTopPadding
+    }
+}
+
+/** One cell per column so a label sits under the bar it belongs to; blank entries keep their slot. */
+@Composable
+private fun ColumnLabelsRow(labels: ImmutableList<String>, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .padding(start = 38.dp, top = 4.dp)
+            .fillMaxWidth(),
+    ) {
+        labels.forEach { label ->
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 16.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = label,
+                    modifier = Modifier.wrapContentWidth(unbounded = true),
+                    style = TangemTheme.typography.caption2,
+                    color = TangemTheme.colors.text.tertiary,
+                )
             }
-            val computedTopPadding = (chartHeight - chartContentBottomInset) * (1f - averageRatio)
-            -labelHeight - gapAboveLine
-            if (computedTopPadding < 2.dp) 2.dp else computedTopPadding
         }
     }
 }
@@ -301,17 +410,17 @@ private fun MonthLabelsRow(labels: kotlinx.collections.immutable.ImmutableList<S
 }
 
 @Composable
-private fun AverageLabel(avr: String, modifier: Modifier = Modifier) {
+private fun AverageLabel(avr: TextReference, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.background(
-            color = TangemTheme.colors.icon.primary1,
+            color = TangemTheme.colors.button.secondary,
             shape = TangemTheme.shapes.roundedCornersSmall2,
         ),
     ) {
         Text(
-            text = stringResourceSafe(R.string.yield_module_rate_info_sheet_chart_average, avr),
+            text = stringResourceSafe(R.string.yield_module_rate_info_sheet_chart_average, avr.resolveReference()),
             style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.primary2,
+            color = TangemTheme.colors.text.primary1,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
         )
     }
@@ -336,6 +445,10 @@ private class YieldSupplyChartPreviewProvider : PreviewParameterProvider<YieldSu
             YieldSupplyChartUM.Error(onRetry = {}),
             YieldSupplyChartUM.Data(
                 chartData = YieldSupplyMarketChartDataUM.mock(),
+                monthLables = persistentListOf("Jul", "Sep", "Nov", "Feb", "May"),
+            ),
+            YieldSupplyChartUM.Data(
+                chartData = YieldSupplyMarketChartDataUM.mockIncentivised(),
                 monthLables = persistentListOf("Jul", "Sep", "Nov", "Feb", "May"),
             ),
         )

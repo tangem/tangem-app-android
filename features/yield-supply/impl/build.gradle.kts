@@ -87,6 +87,7 @@ dependencies {
 
     /** Tests */
     testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
     testImplementation(deps.arrow.core)
     testImplementation(deps.kotlin.coroutines)
     api(deps.kotlin.coroutines)
