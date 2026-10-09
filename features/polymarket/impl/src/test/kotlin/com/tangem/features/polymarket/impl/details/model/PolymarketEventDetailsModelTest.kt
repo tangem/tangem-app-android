@@ -190,6 +190,7 @@ internal class PolymarketEventDetailsModelTest {
         liquidity = null,
         totalMarketsCount = 1,
         isNegRisk = false,
+        isLive = false,
         displayMode = PolymarketDisplayMode.PLAIN_MARKETS,
         markets = listOf(
             PolymarketMarket(
