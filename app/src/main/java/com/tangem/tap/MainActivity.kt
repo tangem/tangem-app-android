@@ -95,10 +95,6 @@ private val coroutineContext: CoroutineContext
     get() = SupervisorJob() + Dispatchers.IO + FeatureCoroutineExceptionHandler.create("scope")
 val scope = CoroutineScope(coroutineContext)
 
-private val mainCoroutineContext: CoroutineContext
-    get() = SupervisorJob() + Dispatchers.Main + FeatureCoroutineExceptionHandler.create("mainScope")
-val mainScope = CoroutineScope(mainCoroutineContext)
-
 @Suppress("LargeClass")
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
@@ -305,7 +301,10 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         lockUserWalletsTimer = LockUserWalletsTimer(
             context = this,
             settingsRepository = settingsRepository,
-            coroutineScope = mainScope,
+            // Rethrows like the former global main scope: a failure must not leave the wallets unlocked
+            coroutineScope = appScope +
+                dispatchers.main +
+                FeatureCoroutineExceptionHandler.create(from = "lockUserWalletsTimer"),
             userWalletsListRepository = userWalletsListRepository,
             clearAllHotWalletContextualUnlockUseCase = clearAllHotWalletContextualUnlockUseCase,
             passwordRequester = passwordRequester,
