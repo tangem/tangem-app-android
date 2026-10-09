@@ -54,8 +54,6 @@ internal fun MoneyAccountMainBlockContent(
         is MoneyAccountMainUM.ActionRequired -> MoneyAccountRow(
             subtitle = resourceReference(R.string.money_account_main_status_action_required),
             subtitleColor = TangemTheme.colors3.text.status.warning,
-            balance = state.balance,
-            isBalanceHidden = isBalanceHidden,
             modifier = modifier,
             onClick = state.onClick,
         )
@@ -237,7 +235,7 @@ private class MoneyAccountMainBlockContentPreviewParameterProvider :
             MoneyAccountMainUM.Unavailable,
             MoneyAccountMainUM.Onboarding(subtitle = TextReference.Str("Activating…"), onClick = {}),
             MoneyAccountMainUM.Onboarding(subtitle = TextReference.Str("Verification in progress…"), onClick = {}),
-            MoneyAccountMainUM.ActionRequired(balance = previewBalance, onClick = {}),
+            MoneyAccountMainUM.ActionRequired(onClick = {}),
             MoneyAccountMainUM.Content(
                 subtitle = TextReference.Str("Polygon network"),
                 balance = previewBalance.copy(isFlickering = true, isFromCache = true),

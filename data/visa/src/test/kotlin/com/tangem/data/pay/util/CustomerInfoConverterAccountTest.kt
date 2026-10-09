@@ -110,10 +110,11 @@ internal class CustomerInfoConverterAccountTest {
                 adminCardLimit = null,
                 status = CustomerInfo.ProductInstance.Status.UNKNOWN,
                 specificationDataType = CustomerInfo.ProductInstance.SpecificationDataType.UNKNOWN,
+                paymentAccountType = CustomerInfo.ProductInstance.PaymentAccountType.UNKNOWN,
             ),
         )
         assertThat(info.cardProductInstances).isEmpty()
-        assertThat(info.accountProductInstance).isNull()
+        assertThat(info.moneyAccountProductInstance).isNull()
     }
 
     @Test
@@ -182,6 +183,7 @@ internal class CustomerInfoConverterAccountTest {
             displayName = null,
             actualCardLimit = null,
             adminCardLimit = null,
+            paymentAccountType = null,
             specificationDataType = specificationDataType,
         )
 

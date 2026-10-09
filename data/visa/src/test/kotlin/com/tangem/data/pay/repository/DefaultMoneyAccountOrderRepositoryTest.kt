@@ -104,7 +104,7 @@ internal class DefaultMoneyAccountOrderRepositoryTest {
     fun `GIVEN a stored order WHEN clearOrder THEN it is no longer returned`() {
         // Arrange
         val order = TangemPayOrderInfo(orderId = ORDER_ID, orderStatus = OrderStatus.PROCESSING)
-        repository.storeOrder(USER_WALLET_ID, order)
+        repository.storeOrder(USER_WALLET_ID, order.right())
 
         // Act
         repository.clearOrder(USER_WALLET_ID)
@@ -119,10 +119,10 @@ internal class DefaultMoneyAccountOrderRepositoryTest {
         val order = TangemPayOrderInfo(orderId = ORDER_ID, orderStatus = OrderStatus.PROCESSING)
 
         // Act
-        repository.storeOrder(USER_WALLET_ID, order)
+        repository.storeOrder(USER_WALLET_ID, order.right())
 
         // Assert
-        assertThat(repository.getOrder(USER_WALLET_ID)).isEqualTo(order)
+        assertThat(repository.getOrder(USER_WALLET_ID)).isEqualTo(order.right())
         assertThat(repository.getOrder(OTHER_USER_WALLET_ID)).isNull()
     }
 
