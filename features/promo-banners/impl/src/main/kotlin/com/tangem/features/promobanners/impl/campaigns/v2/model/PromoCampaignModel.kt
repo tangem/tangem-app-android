@@ -3,6 +3,7 @@ package com.tangem.features.promobanners.impl.campaigns.v2.model
 import com.tangem.common.ui.account.AccountIconItemStateConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.tokens.TokenItemStateConverter
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -36,6 +37,9 @@ import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
 import com.tangem.features.commonfeatures.api.choosetoken.ChooserBlock
 import com.tangem.features.commonfeatures.api.choosetoken.PaymentAccountTokens
 import com.tangem.features.promobanners.impl.R
+import com.tangem.features.promobanners.impl.campaigns.analytics.PromoCampaignsAnalyticsEvent
+import com.tangem.features.promobanners.impl.campaigns.analytics.PromoCampaignsAnalyticsEvent.PayoutToken
+import com.tangem.features.promobanners.impl.campaigns.analytics.PromoEnrollAnalyticsResolver
 import com.tangem.features.promobanners.impl.campaigns.model.PredefinedTokenResolver
 import com.tangem.features.promobanners.impl.campaigns.v2.component.PromoCampaignBottomSheetComponent
 import com.tangem.features.promobanners.impl.campaigns.v2.component.PromoCampaignRoute
@@ -68,6 +72,7 @@ internal class PromoCampaignModel @Inject constructor(
     private val userWalletsFetcherFactory: UserWalletsFetcher.Factory,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     @GlobalUiMessageSender private val messageSender: UiMessageSender,
 ) : Model() {
 
@@ -96,12 +101,15 @@ internal class PromoCampaignModel @Inject constructor(
                 MutableStateFlow(predefinedTokenResolver.resolve(params.campaign.payout.tokens)),
             ),
             paymentAccountTokens = PaymentAccountTokens.Hidden,
+            isJointAccountsShown = false, // Temporarily restrict selecting joint accounts
             isShowSingleCurrencyWallets = true,
             isAppBarShown = false,
         ),
     )
 
     init {
+        analyticsEventHandler.send(PromoCampaignsAnalyticsEvent.PromotionScreenOpened(params.campaign))
+
         bridge.onCurrencyChosen.receiveAsFlow()
             .onEach(::onTokenChosen)
             .launchIn(modelScope)
@@ -132,6 +140,14 @@ internal class PromoCampaignModel @Inject constructor(
                 wallets = wallets,
                 payout = chosenPayout?.target,
             )
+            val payoutToken = chosenPayout?.token.takeIf { params.campaign.payout.isNeeded }
+            analyticsEventHandler.send(
+                PromoCampaignsAnalyticsEvent.EnrollButtonClicked(
+                    campaign = params.campaign,
+                    payoutToken = payoutToken,
+                    walletsCount = enrollments.size,
+                ),
+            )
             val result = registerPromoCampaignUseCase(promotionId = params.campaign.id, enrollments = enrollments)
                 .onLeft { error ->
                     TangemLogger.e(
@@ -142,10 +158,17 @@ internal class PromoCampaignModel @Inject constructor(
                 .onRight { refreshCampaigns(enrollments, wallets) }
             setEnrolling(isEnrolling = false)
 
-            showOutcome(
-                outcome = PromoRegistrationOutcome.resolve(params.userWalletId, enrollments, result),
-                wallets = wallets,
+            val outcome = PromoRegistrationOutcome.resolve(params.userWalletId, enrollments, result)
+            analyticsEventHandler.send(
+                PromoEnrollAnalyticsResolver.resolve(
+                    campaign = params.campaign,
+                    payoutToken = payoutToken,
+                    result = result,
+                    outcome = outcome,
+                    walletsRequested = enrollments.size,
+                ),
             )
+            showOutcome(outcome = outcome, wallets = wallets)
         }
     }
 
@@ -275,7 +298,12 @@ internal class PromoCampaignModel @Inject constructor(
             TangemLogger.e("Chosen payout token ${result.currency.currency.id} has no payout address")
             return
         }
-        chosenPayout = ChosenPayout(target = target, walletName = result.wallet.name)
+        val token = result.currency.currency
+        chosenPayout = ChosenPayout(
+            target = target,
+            walletName = result.wallet.name,
+            token = PayoutToken(symbol = token.symbol, blockchain = token.network.name),
+        )
         modelScope.launch {
             val selectedAccount = if (hasMultipleCryptoPortfolioAccounts()) {
                 (result.account.account as? Account.CryptoPortfolio)?.let { account ->
@@ -319,5 +347,9 @@ internal class PromoCampaignModel @Inject constructor(
             .any { accountList -> accountList.accounts.filterIsInstance<Account.CryptoPortfolio>().size > 1 }
     }
 
-    private data class ChosenPayout(val target: PromoEnrollment.PromoPayoutTarget, val walletName: String)
+    private data class ChosenPayout(
+        val target: PromoEnrollment.PromoPayoutTarget,
+        val walletName: String,
+        val token: PayoutToken,
+    )
 }
