@@ -216,7 +216,10 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
     private suspend fun saveSocialWallet(
         userWallet: UserWallet.Hot,
         save: suspend (UserWallet.Hot) -> Either<*, Unit>,
-    ): Either<SocialLoginError, Unit> = save(userWallet.copy(isSocialBackupCompleted = true))
+    ): Either<SocialLoginError, Unit> = withContext(NonCancellable) {
+        // the record reaches storage before the in-memory list, which isListedWithItsKeys reads
+        save(userWallet.copy(isSocialBackupCompleted = true))
+    }
         .onLeft { error -> TangemLogger.e("Failed to save the social login wallet: $error") }
         .mapLeft {
             if (!isListedWithItsKeys(userWallet)) discardFromSdk(userWallet)
