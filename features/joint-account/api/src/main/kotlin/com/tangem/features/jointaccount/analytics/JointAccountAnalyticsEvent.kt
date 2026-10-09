@@ -32,6 +32,16 @@ sealed class JointAccountAnalyticsEvent(
         ),
     )
 
+    class InviteLinkOpened : JointAccountAnalyticsEvent(event = "Invite Link Opened")
+
+    class AccountJoined(membersCount: Int, threshold: Int) : JointAccountAnalyticsEvent(
+        event = "Account Joined",
+        params = mapOf(
+            MEMBERS_COUNT to membersCount.toString(),
+            THRESHOLD to threshold.toString(),
+        ),
+    )
+
     @Suppress("LongParameterList")
     class OperationSigned(
         signaturesCollected: Int,

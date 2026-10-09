@@ -1,6 +1,7 @@
 package com.tangem.features.jointaccount.join.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -14,6 +15,10 @@ import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.model.JointAccountJoinError
 import com.tangem.domain.jointaccount.usecase.JoinJointAccountUseCase
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.LimitSource
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
@@ -26,6 +31,7 @@ internal class JointAccountJoinModel @Inject constructor(
     private val joinJointAccountUseCase: JoinJointAccountUseCase,
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val uiMessageSender: UiMessageSender,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     val draftHolder = JointAccountJoinDraftHolder()
@@ -39,11 +45,12 @@ internal class JointAccountJoinModel @Inject constructor(
 
         if (walletId == null || config == null) {
             TangemLogger.e("Joint account join failed: the draft has no wallet or config from the preview step")
-            showGenericError()
+            showGenericError(JointAccountError(source = ErrorSource.Join, errorMessage = "Incomplete draft"))
             return JoinResultAction.None
         }
 
         if (isJointLimitReached(walletId = walletId)) {
+            analyticsEventHandler.send(JointAccountAnalyticsEvent.NoticeAccountsLimitReached(LimitSource.Join))
             showJointLimitReached()
             return JoinResultAction.None
         }
@@ -56,6 +63,12 @@ internal class JointAccountJoinModel @Inject constructor(
         ).fold(
             ifLeft = ::handleErrorAction,
             ifRight = { account ->
+                analyticsEventHandler.send(
+                    JointAccountAnalyticsEvent.AccountJoined(
+                        membersCount = account.membersCount,
+                        threshold = account.threshold,
+                    ),
+                )
                 showAccountAdded()
                 JoinResultAction.OpenMembers(userWalletId = walletId, cryptoAccountId = account.cryptoAccountId)
             },
@@ -93,23 +106,24 @@ internal class JointAccountJoinModel @Inject constructor(
 
     private fun handleErrorAction(error: JointAccountJoinError): JoinResultAction = when (error) {
         JointAccountFlowError.UserCancelled -> JoinResultAction.None
-        JointAccountJoinError.InvalidInvite -> {
-            showInvalidInvite()
+        is JointAccountJoinError.InvalidInvite -> {
+            showInvalidInvite(cause = error.cause)
             JoinResultAction.CloseFlow
         }
         is JointAccountFlowError.InvalidDerivationIndex -> {
             TangemLogger.e("Joint account join failed: $error")
-            showGenericError()
+            showGenericError(JointAccountError(source = ErrorSource.Join, errorMessage = error.toString()))
             JoinResultAction.None
         }
         is JointAccountFlowError.Failed -> {
             TangemLogger.e("Joint account join failed", error.cause)
-            showGenericError()
+            showGenericError(JointAccountError(source = ErrorSource.Join, cause = error.cause))
             JoinResultAction.None
         }
     }
 
-    private fun showInvalidInvite() {
+    private fun showInvalidInvite(cause: Throwable) {
+        analyticsEventHandler.send(JointAccountError(source = ErrorSource.Join, cause = cause))
         uiMessageSender.send(
             DialogMessage(
                 title = resourceReference(CoreUiR.string.joint_account_join_invalid_link_title),
@@ -118,7 +132,8 @@ internal class JointAccountJoinModel @Inject constructor(
         )
     }
 
-    private fun showGenericError() {
+    private fun showGenericError(analyticsEvent: JointAccountError) {
+        analyticsEventHandler.send(analyticsEvent)
         uiMessageSender.send(
             DialogMessage(
                 title = resourceReference(CoreUiR.string.common_error),
