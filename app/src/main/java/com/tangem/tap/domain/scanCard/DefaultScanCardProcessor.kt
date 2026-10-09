@@ -20,18 +20,19 @@ import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.ScanFailsCounter
 import com.tangem.domain.card.common.util.twinsIsTwinned
-import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
+import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.extensions.localizedDescriptionRes
 import com.tangem.tap.features.onboarding.OnboardingHelper
-import com.tangem.tap.mainScope
-import com.tangem.tap.tangemSdkManager
+import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -46,6 +47,9 @@ internal class DefaultScanCardProcessor @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val wasTwinsOnboardingShownUseCase: WasTwinsOnboardingShownUseCase,
     private val onboardingHelper: OnboardingHelper,
+    private val tangemSdkManager: TangemSdkManager,
+    private val appCoroutineScope: AppCoroutineScope,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : ScanCardProcessor {
 
     override suspend fun scan(
@@ -76,7 +80,7 @@ internal class DefaultScanCardProcessor @Inject constructor(
         onFailure: suspend (error: TangemError) -> Unit,
         onSuccess: suspend (scanResponse: ScanResponse) -> Unit,
     ) {
-        withMainContext {
+        withContext(dispatchers.main) {
             onProgressStateChange(true)
 
             tangemSdkManager.changeDisplayedCardIdNumbersCount(null)
@@ -98,7 +102,7 @@ internal class DefaultScanCardProcessor @Inject constructor(
                         error = error,
                         onFailure = onFailure,
                         onCancel = {
-                            mainScope.launch {
+                            appCoroutineScope.launch(dispatchers.main) {
                                 onProgressStateChange.invoke(false)
                                 onCancel()
                             }
@@ -119,11 +123,11 @@ internal class DefaultScanCardProcessor @Inject constructor(
         }
     }
 
-    private suspend inline fun onScanFailure(
+    private suspend fun onScanFailure(
         analyticsSource: AnalyticsParam.ScreensSources,
         error: TangemError,
-        crossinline onFailure: suspend (TangemError) -> Unit,
-        crossinline onCancel: () -> Unit,
+        onFailure: suspend (TangemError) -> Unit,
+        onCancel: () -> Unit,
     ) {
         if (error is TangemSdkError.CardVerificationFailed) {
             analyticsEventHandler.send(
@@ -140,7 +144,7 @@ internal class DefaultScanCardProcessor @Inject constructor(
                 message = Dialogs.cardVerificationFailed(
                     errorDescription = resourceReference(id = resId, resArgs.toWrappedList()),
                     onRequestSupport = {
-                        mainScope.launch {
+                        appCoroutineScope.launch(dispatchers.main) {
                             onCancel()
 
                             sendFeedbackEmailUseCase.invoke(
@@ -156,11 +160,11 @@ internal class DefaultScanCardProcessor @Inject constructor(
         }
     }
 
-    private suspend inline fun onScanSuccess(
+    private suspend fun onScanSuccess(
         scanResponse: ScanResponse,
-        crossinline onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
-        crossinline onWalletNotCreated: suspend () -> Unit,
-        crossinline onSuccess: suspend (ScanResponse) -> Unit,
+        onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
+        onWalletNotCreated: suspend () -> Unit,
+        onSuccess: suspend (ScanResponse) -> Unit,
     ) {
         if (onboardingHelper.isOnboardingCase(scanResponse)) {
             trackingContextProxy.addContext(scanResponse)
@@ -170,7 +174,8 @@ internal class DefaultScanCardProcessor @Inject constructor(
                     scanResponse = scanResponse,
                     mode = AppRoute.Onboarding.Mode.Onboarding,
                 ),
-            ) { onProgressStateChange(it) }
+                onProgressStateChange = onProgressStateChange,
+            )
         } else {
             trackingContextProxy.setContext(scanResponse)
 
@@ -183,7 +188,8 @@ internal class DefaultScanCardProcessor @Inject constructor(
                         scanResponse = scanResponse,
                         mode = AppRoute.Onboarding.Mode.WelcomeOnlyTwin,
                     ),
-                ) { onProgressStateChange(it) }
+                    onProgressStateChange = onProgressStateChange,
+                )
             } else {
                 delay(DELAY_SDK_DIALOG_CLOSE)
                 onSuccess(scanResponse)
@@ -191,7 +197,7 @@ internal class DefaultScanCardProcessor @Inject constructor(
         }
     }
 
-    private suspend inline fun navigateTo(route: AppRoute, onProgressStateChange: (showProgress: Boolean) -> Unit) {
+    private suspend fun navigateTo(route: AppRoute, onProgressStateChange: suspend (showProgress: Boolean) -> Unit) {
         delay(DELAY_SDK_DIALOG_CLOSE)
         appRouter.push(route)
         onProgressStateChange(false)
