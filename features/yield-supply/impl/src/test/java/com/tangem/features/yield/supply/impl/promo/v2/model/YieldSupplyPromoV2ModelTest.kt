@@ -4,6 +4,10 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.features.yield.supply.impl.R
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
@@ -71,8 +75,13 @@ internal class YieldSupplyPromoV2ModelTest {
         val model = createModel()
         advanceUntilIdle()
 
-        // Assert
-        assertThat(model.uiState.value.incentiveChip).isNotNull()
+        // Assert - the chip carries the same percent formatting as every other rate on these screens
+        assertThat(model.uiState.value.incentiveChip).isEqualTo(
+            resourceReference(
+                id = R.string.yield_module_promo_screen_incentivised_chip,
+                formatArgs = wrappedList(stringReference("1.40%")),
+            ),
+        )
     }
 
     @Test
