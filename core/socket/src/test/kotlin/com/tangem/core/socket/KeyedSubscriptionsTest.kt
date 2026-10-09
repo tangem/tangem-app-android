@@ -201,6 +201,51 @@ internal class KeyedSubscriptionsTest {
         }
 
     @Test
+    fun `GIVEN full shard with a key waiting to unsubscribe WHEN a new key arrives THEN it replaces that key`() =
+        runTest {
+            // Arrange
+            val subscriptions = createSubscriptions(maxKeysPerService = 2)
+            val first = observe(subscriptions, setOf("a"))
+            observe(subscriptions, setOf("b"))
+            advanceTimeBy(BATCH + 1.milliseconds)
+
+            // Act
+            first.cancel()
+            runCurrent()
+            observe(subscriptions, setOf("c"))
+            advanceTimeBy(BATCH + 1.milliseconds)
+
+            // Assert
+            assertThat(services.single().frames)
+                .containsExactly(
+                    Frame.Subscribe(setOf("a", "b")),
+                    Frame.Unsubscribe(setOf("a")),
+                    Frame.Subscribe(setOf("c")),
+                )
+                .inOrder()
+        }
+
+    @Test
+    fun `GIVEN evicted key WHEN its unsubscribe delay would have passed THEN nothing else is sent`() = runTest {
+        // Arrange
+        val subscriptions = createSubscriptions(maxKeysPerService = 2)
+        val first = observe(subscriptions, setOf("a"))
+        observe(subscriptions, setOf("b"))
+        advanceTimeBy(BATCH + 1.milliseconds)
+        first.cancel()
+        runCurrent()
+        observe(subscriptions, setOf("c"))
+        advanceTimeBy(BATCH + 1.milliseconds)
+        val framesAfterEviction = services.single().frames.toList()
+
+        // Act
+        advanceTimeBy(UNSUBSCRIBE_DELAY + BATCH)
+
+        // Assert
+        assertThat(services.single().frames).isEqualTo(framesAfterEviction)
+    }
+
+    @Test
     fun `GIVEN scope running jobs inline and zero windows WHEN keys change repeatedly THEN every change is sent`() =
         runTest {
             // Arrange
