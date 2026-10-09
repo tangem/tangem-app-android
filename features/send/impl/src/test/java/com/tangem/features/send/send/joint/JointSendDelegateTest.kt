@@ -8,6 +8,8 @@ import arrow.core.right
 import arrow.core.some
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
@@ -278,6 +280,34 @@ internal class JointSendDelegateTest {
         }
 
     @Test
+    fun `GIVEN several tokens WHEN the extended fee is loaded THEN the largest balance smart gas token that covers it pays`() =
+        runTest {
+            // Arrange
+            val dai = createTestToken(id = "dai", contractAddress = "0x6b175474e89094c44da98b954eedeac495271d0f")
+            val usdt = createTestToken(id = "tether", contractAddress = "0xdac17f958d2ee523a2c4ec7cd6994597ae4a7c55")
+            coEvery { gasBuilder.build(userWalletId, fixtureUsdc.network, any(), SafeGasToken.Coin) } returns
+                createSafeTx(gasPrice = BigInteger.valueOf(20_000_000_000)).right()
+            coEvery { gasTokenResolver.resolve(any(), dai.contractAddress, any()) } returns null.right()
+            coEvery { gasTokenResolver.resolve(any(), fixtureUsdc.contractAddress, any()) } returns
+                USDC_GAS_TOKEN.right()
+            coEvery { gasTokenResolver.resolve(any(), usdt.contractAddress, any()) } returns
+                USDC_GAS_TOKEN.copy(address = usdt.contractAddress).right()
+            stubAccountStatus(tokenStatus(token = dai, balance = BigDecimal("1000")))
+            stubAccountStatus(usdcStatus(balance = BigDecimal("100")))
+            stubAccountStatus(tokenStatus(token = usdt, balance = BigDecimal("50")))
+
+            // Act
+            val actual = loadFeeExtended(
+                feeCurrencyStatus = null,
+                coinBalance = BigDecimal.ZERO,
+                account = jointAccountWith(fixtureCoin, usdt, dai, fixtureUsdc),
+            )
+
+            // Assert
+            assertThat(actual.getOrNull()?.feeTokenId).isEqualTo(fixtureUsdc.id)
+        }
+
+    @Test
     fun `GIVEN the coin picked and too little coin WHEN the extended fee is loaded THEN the coin stays`() = runTest {
         // Arrange
         coEvery { gasBuilder.build(userWalletId, fixtureUsdc.network, any(), SafeGasToken.Coin) } returns
@@ -294,9 +324,10 @@ internal class JointSendDelegateTest {
     private suspend fun loadFeeExtended(
         feeCurrencyStatus: CryptoCurrencyStatus?,
         coinBalance: BigDecimal = BigDecimal("1000"),
+        account: Account.Joint = jointAccountWith(fixtureCoin, fixtureUsdc),
     ) = delegate.loadFeeExtended(
         userWalletId = userWalletId,
-        account = jointAccount,
+        account = account,
         currency = fixtureUsdc,
         feeCoinStatus = coinStatus(coinBalance),
         feeCurrencyStatus = feeCurrencyStatus,
@@ -304,8 +335,22 @@ internal class JointSendDelegateTest {
         destinationUM = createDestinationContent(),
     )
 
-    private val jointAccount: Account.Joint = mockk {
-        every { cryptoCurrencies } returns listOf(fixtureCoin, fixtureUsdc)
+    private fun jointAccountWith(vararg currencies: CryptoCurrency): Account.Joint = mockk {
+        every { cryptoCurrencies } returns currencies.toList()
+    }
+
+    private fun createTestToken(id: String, contractAddress: String): CryptoCurrency.Token =
+        MockCryptoCurrencyFactory().createToken(
+            blockchain = Blockchain.Ethereum,
+            id = id,
+            contractAddress = contractAddress,
+            symbol = id.uppercase(),
+            decimals = 6,
+        )
+
+    private fun tokenStatus(token: CryptoCurrency.Token, balance: BigDecimal): CryptoCurrencyStatus = mockk {
+        every { currency } returns token
+        every { value } returns mockk<CryptoCurrencyStatus.Loaded> { every { amount } returns balance }
     }
 
     private fun stubAccountStatus(tokenStatus: CryptoCurrencyStatus) {
