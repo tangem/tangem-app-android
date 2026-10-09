@@ -1096,12 +1096,14 @@
   <string name="hw_upgrade_funds_access_description">Seus fundos permanecem seguros e totalmente acessíveis durante todo o processo.</string>
   <string name="hw_upgrade_funds_access_title">Acesso a fundos</string>
   <string name="hw_upgrade_general_security_description">Após a atualização, sua carteira móvel é removida do aplicativo e armazenada em sua carteira de hardware Tangem. Sua frase de recuperação permanece com você.</string>
+  <string name="hw_upgrade_general_security_description_social">Após a atualização, sua carteira será transferida para sua carteira de hardware Tangem. Fazer login com %1$s não permitirá mais restaurá-la. Sua frase de recuperação permanece com você.</string>
   <string name="hw_upgrade_general_security_description_v2">Após a atualização, sua carteira móvel e o backup no %1$s serão removidos. Sua frase de recuperação será armazenada na sua carteira de hardware Tangem.</string>
   <string name="hw_upgrade_general_security_title">Segurança geral</string>
   <string name="hw_upgrade_key_migration_description">As chaves privadas serão transferidas do aplicativo para sua carteira de hardware Tangem.</string>
   <string name="hw_upgrade_key_migration_title">Migração chave</string>
   <string name="hw_upgrade_save_seed_action">Salvar frase de recuperação</string>
   <string name="hw_upgrade_save_seed_description">Após a atualização, você não poderá visualizá-la novamente. Sua carteira no celular e o backup na nuvem serão excluídos, portanto, anote sua frase de recuperação agora como método alternativo de recuperação.</string>
+  <string name="hw_upgrade_save_seed_description_social">Após a atualização, esta carteira será armazenada na sua carteira de hardware Tangem e removida deste telefone. Fazer login com %1$s não permitirá mais restaurá-la. Em vez disso, use sua carteira de hardware Tangem ou sua frase de recuperação.</string>
   <string name="hw_upgrade_save_seed_title">Salve sua frase de recuperação antes de fazer a atualização</string>
   <string name="hw_upgrade_scan_device">Dispositivo de digitalização</string>
   <string name="hw_upgrade_start_action">Iniciar atualização</string>
@@ -1155,7 +1157,7 @@
   <string name="introduction_stories_two_title">Uma carteira, vários cartões</string>
   <string name="introduction_subtitle">Um único lugar seguro para tudo o que é seu</string>
   <string name="introduction_terms_of_service">Termos de serviço</string>
-  <string name="introduction_terms_of_service_consent">Ao continuar, você concorda com %s</string>
+  <string name="introduction_terms_of_service_consent">Ao continuar, você concorda com os termos %s</string>
   <string name="introduction_title">Armazene todos os seus ativos</string>
   <string name="joint_account_activated_snackbar">Conta ativada</string>
   <string name="joint_account_activation_account_button_title">Ativar conta</string>
@@ -1816,9 +1818,11 @@
   <string name="prediction_add_funds_notification_limits_title">Limites de depósito</string>
   <string name="prediction_add_funds_receive_body">Enviar %1$s de outra carteira, mínimo de %2$s</string>
   <string name="prediction_add_funds_receive_subtitle">Envie USDC pela rede Polygon para sua conta da Polymarket</string>
+  <string name="prediction_add_funds_receive_title">De outra carteira ou exchange</string>
   <string name="prediction_add_funds_subtitle">%1$s em %2$s</string>
   <string name="prediction_add_funds_swap_body">Trocar um token que você já possui</string>
   <string name="prediction_add_funds_swap_subtitle">Use criptomoedas da sua carteira Tangem para adicionar fundos à sua conta da Polymarket</string>
+  <string name="prediction_add_funds_swap_title">Da sua carteira Tangem</string>
   <string name="prediction_balance_total">Saldo total</string>
   <string name="prediction_balance_withdraw">Sacar</string>
   <string name="prediction_claim_error_failed">O resgate não foi concluído. Nenhum valor saiu da conta, e você pode tentar novamente.</string>
@@ -2316,13 +2320,17 @@
   <string name="social_login_toast_wallet_added">Carteira adicionada</string>
   <string name="social_login_toast_wallet_created">Carteira criada</string>
   <string name="social_wallet_delete_anyway">Excluir mesmo assim</string>
+  <string name="social_wallet_delete_attention_acknowledge">Entendo que, se eu não tiver feito backup da minha frase de recuperação, perderei o acesso a esta carteira para sempre.</string>
   <string name="social_wallet_delete_attention_description">Esta carteira será removida permanentemente do seu dispositivo e da conta %s</string>
+  <string name="social_wallet_delete_confirmation_title">Excluir esta carteira e desvinculá-la da sua conta %1$s?</string>
   <string name="social_wallet_delete_description">Esta carteira será removida permanentemente do aplicativo, e sua conta %s deixará de estar vinculada a ela. Faça primeiro o backup da sua frase-semente; caso contrário, você perderá permanentemente o acesso a quaisquer criptomoedas que ela contenha.</string>
   <string name="social_wallet_delete_error_description">Não foi possível excluir esta carteira. Por favor, tente novamente</string>
   <string name="social_wallet_delete_title">Excluir carteira?</string>
   <string name="social_wallet_log_out_description">Você sempre poderá fazer login novamente a qualquer momento.</string>
+  <string name="social_wallet_log_out_description_v2">Isso remove apenas a carteira deste dispositivo. Ela continua vinculada à sua conta %1$s, e você pode restaurá-la fazendo login com %1$s.</string>
   <string name="social_wallet_log_out_title">Tem certeza de que deseja sair?</string>
   <string name="social_wallet_settings_delete_wallet">Excluir carteira</string>
+  <string name="social_wallet_settings_delete_wallet_footer">A exclusão da carteira é irreversível. Sem um backup, não será possível restaurar nem usar a carteira novamente.</string>
   <string name="social_wallet_settings_log_out">Sair</string>
   <string name="stake_token_description">Coloque seu token para trabalhar.</string>
   <string name="staking_account_initialization_footer">Uma taxa de rede é um pequeno pagamento necessário para processar e confirmar sua transação na blockchain.</string>
@@ -2882,9 +2890,10 @@
   <string name="tangempay_newonboard_Q4_title">Quem armazena meus dados pessoais e como eles são protegidos?</string>
   <string name="tangempay_newonboard_body">Gaste cripto em qualquer lugar — sem bancos, sem intermediários, sem exchanges. A força da autocustódia nos pagamentos do dia a dia.</string>
   <string name="tangempay_newonboard_bottomleft_body">Compre online e com Apple Pay</string>
+  <string name="tangempay_newonboard_bottomleft_body_android">Compre online e pelo Google Pay</string>
   <string name="tangempay_newonboard_bottomleft_title">No mundo todo</string>
-  <string name="tangempay_newonboard_bottomright_body">USD→USDC 1:1; taxa US$ 1</string>
-  <string name="tangempay_newonboard_bottomright_title">Receba transferências ACH</string>
+  <string name="tangempay_newonboard_bottomright_body">Transferências ACH/Wire</string>
+  <string name="tangempay_newonboard_bottomright_title">Receber e enviar</string>
   <string name="tangempay_newonboard_title">Peça seu cartão Tangem Pay</string>
   <string name="tangempay_newonboard_topleft_body">Pague o que vê</string>
   <string name="tangempay_newonboard_topleft_title">Sem taxa de compra\n1 USDC = 1 USD</string>
@@ -3101,7 +3110,7 @@
   <string name="tangempay_withdraw_hub_title">Sacar</string>
   <string name="tangempay_withdraw_hub_to_business_account">Para conta empresarial</string>
   <string name="tangempay_withdraw_hub_to_personal_account">Para conta pessoal</string>
-  <string name="tangempay_withdraw_hub_within_portfolio">Na sua carteira</string>
+  <string name="tangempay_withdraw_hub_within_portfolio">Na sua Tangem Wallet</string>
   <string name="tangempay_your_pin_code">Seu código PIN</string>
   <string name="this_is_my_wallet_title">Esta é a minha carteira.</string>
   <string name="toast_balances_hidden">Saldos ocultos</string>
@@ -3169,6 +3178,7 @@
   <string name="transaction_history_approve_high_risk_subtitle">Você está conectado. Seus fundos podem estar em risco. Considere revogar o acesso.</string>
   <string name="transaction_history_approve_high_risk_title">Alto Risco</string>
   <string name="transaction_history_approved_amount">Valor Aprovado</string>
+  <string name="transaction_history_claiming_incentive_rewards">Reivindicando recompensas de incentivo</string>
   <string name="transaction_history_claiming_reward">Reivindicar recompensa</string>
   <string name="transaction_history_contract_address">contrato: %s</string>
   <string name="transaction_history_detail_page_amount_signed_value" formatted="false">%1s %2s %3s</string>
@@ -3189,6 +3199,7 @@
   <string name="transaction_history_fee_for_yield_mode_top_up">Para o reforço do modo de rendimento</string>
   <string name="transaction_history_fee_sending_asset">Enviar %%image%%%s</string>
   <string name="transaction_history_from_inline_address">de: %%image%% %s</string>
+  <string name="transaction_history_incentive_rewards_claimed">Recompensas de incentivo reivindicadas</string>
   <string name="transaction_history_multiple_addresses">Vários endereços</string>
   <string name="transaction_history_not_supported_description">O histórico de transações ainda não é suportado nesta blockchain. Mas não se preocupe, estamos trabalhando nisso! Enquanto isso, você pode conferir no explorador.</string>
   <string name="transaction_history_operation">Operação</string>
@@ -3200,6 +3211,7 @@
   <string name="transaction_history_status_claiming_rewards">Resgatando as recompensas</string>
   <string name="transaction_history_status_disabling_yield_mode_failed">Não foi possível desativar o modo de rendimento</string>
   <string name="transaction_history_status_enabling_yield_mode_failed">Não foi possível ativar o modo de rendimento</string>
+  <string name="transaction_history_status_incentive_rewards_claim_failed">Não foi possível reivindicar as recompensas de incentivo</string>
   <string name="transaction_history_status_receive_failed">Falha ao receber</string>
   <string name="transaction_history_status_restaking_rewards">Recompensas de restaking</string>
   <string name="transaction_history_status_rewards_claim_failed">Falha ao resgatar as recompensas</string>
@@ -3789,6 +3801,7 @@
   <string name="yield_module_incentive_chart_powered_by_description">O patrocinador da campanha fornece tokens de recompensa adicionais, distribuídos pelo Merkl.\nOs incentivos podem terminar, e os preços dos tokens de recompensa podem variar.\nO APY exibido inclui as recompensas de incentivo após a dedução da taxa de serviço da Tangem.</string>
   <string name="yield_module_incentive_chart_powered_by_title">Desenvolvido por Merkl</string>
   <string name="yield_module_incentive_chart_sheet_title">Rendimento incentivado</string>
+  <string name="yield_module_incentives_provider">Merkl</string>
   <string name="yield_module_main_screen_promo_banner_message">Habilitar %1$s%% APY sobre o seu saldo</string>
   <string name="yield_module_main_view_approve_notification_description">A aprovação do seu token no Modo Yield foi revogada. Abra o token para conceder permissão novamente.</string>
   <string name="yield_module_main_view_approve_notification_title">É necessária a aprovação do token.</string>
