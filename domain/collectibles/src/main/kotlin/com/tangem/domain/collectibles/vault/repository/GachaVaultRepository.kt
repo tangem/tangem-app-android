@@ -59,4 +59,23 @@ interface GachaVaultRepository {
      * the caller's job.
      */
     suspend fun closeVault(userWallet: UserWallet): Either<CollectiblesAccountError, Unit>
+
+    /** `PDA(["vault", owner])`, derived locally: the player the gacha sees, as the spin is paid from it. */
+    suspend fun getVaultAddress(userWallet: UserWallet): Either<CollectiblesAccountError, String>
+
+    /**
+     * Pays for one spin with `purchase_pack`, signed by [hotDelegate] without a prompt. Not idempotent: never call
+     * again for the same [memo] while the outcome is unknown.
+     *
+     * @param amount the pack price in base units of USDC, as the backend issued it
+     * @param feeAmount Tangem's fee in base units of USDC, charged on top of [amount]
+     * @return the transaction signature
+     */
+    suspend fun sendPurchasePack(
+        userWallet: UserWallet,
+        hotDelegate: HotDelegatePublicKey,
+        amount: Long,
+        feeAmount: Long,
+        memo: String,
+    ): Either<CollectiblesAccountError, String>
 }
