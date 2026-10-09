@@ -38,9 +38,12 @@ import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -276,10 +279,33 @@ private fun Rows(state: JointAccountInvitePreviewUM.Content, modifier: Modifier 
             .fillMaxWidth()
             .padding(horizontal = 8.dp),
     ) {
-        CreatorRow(
-            creatorName = state.creatorName,
+        InfoRow(
+            title = resourceReference(R.string.joint_account_members_title),
+            value = pluralReference(
+                id = R.plurals.account_details_joint_members_count,
+                count = state.totalMembers,
+                formatArgs = wrappedList(state.totalMembers),
+            ),
+            hasDivider = true,
+        )
+
+        InfoRow(
+            title = resourceReference(R.string.joint_account_join_to_approve),
+            value = pluralReference(
+                id = R.plurals.joint_account_join_signatures_count,
+                count = state.requiredToSign,
+                formatArgs = wrappedList(state.requiredToSign),
+            ),
+            hasDivider = true,
+            hasInfoIcon = true,
+        )
+
+        InfoRow(
+            title = resourceReference(R.string.joint_account_invite_members_creator),
+            value = stringReference(value = state.creatorName),
             hasDivider = state.wallet != null,
-            onInfoClick = state.onCreatorInfoClick,
+            hasInfoIcon = true,
+            onClick = state.onCreatorInfoClick,
         )
 
         state.wallet?.let { wallet -> WalletRow(wallet = wallet) }
@@ -287,31 +313,36 @@ private fun Rows(state: JointAccountInvitePreviewUM.Content, modifier: Modifier 
 }
 
 @Composable
-private fun CreatorRow(creatorName: String, hasDivider: Boolean, onInfoClick: () -> Unit) {
+private fun InfoRow(
+    title: TextReference,
+    value: TextReference,
+    hasDivider: Boolean,
+    hasInfoIcon: Boolean = false,
+    onClick: (() -> Unit)? = null,
+) {
     TangemRow(
         divider = hasDivider,
-        onClick = onInfoClick,
+        onClick = onClick,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         titleSlot = {
-            TangemRowText(
-                text = resourceReference(R.string.joint_account_invite_members_creator),
-                role = TangemRowTextRole.Title,
-            )
+            TangemRowText(text = title, role = TangemRowTextRole.Title)
         },
         valueSlot = {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 TangemRowText(
                     modifier = Modifier.weight(weight = 1f, fill = false),
-                    text = stringReference(value = creatorName),
+                    text = value,
                     role = TangemRowTextRole.Value,
                 )
 
-                Icon(
-                    modifier = Modifier.size(20.dp),
-                    imageVector = Icons.ic_info_20,
-                    tint = TangemTheme.colors3.icon.secondary,
-                    contentDescription = null,
-                )
+                if (hasInfoIcon) {
+                    Icon(
+                        modifier = Modifier.size(20.dp),
+                        imageVector = Icons.ic_info_20,
+                        tint = TangemTheme.colors3.icon.secondary,
+                        contentDescription = null,
+                    )
+                }
             }
         },
     )
