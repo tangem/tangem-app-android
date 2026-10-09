@@ -663,6 +663,11 @@ sealed class AppRoute(val path: String) : Route {
     }
 
     @Serializable
+    data class MoneyAccountMain(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/money_account_main/${userWalletId.stringValue}")
+
+    @Serializable
     data class Survey(val token: String, val displayId: String? = null) : AppRoute(path = "/survey")
 
     @Serializable

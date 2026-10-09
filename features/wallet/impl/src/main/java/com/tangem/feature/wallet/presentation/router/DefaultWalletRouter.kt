@@ -171,6 +171,10 @@ internal class DefaultWalletRouter @Inject constructor(
         router.push(route = AppRoute.TangemPayEligibility(product = product, userWalletId = userWalletId))
     }
 
+    override fun openMoneyAccountMain(userWalletId: UserWalletId) {
+        router.push(route = AppRoute.MoneyAccountMain(userWalletId = userWalletId))
+    }
+
     override fun openTangemPayDetails(status: AccountStatus.Payment) {
         router.push(AppRoute.TangemPayDetails(status = status))
     }

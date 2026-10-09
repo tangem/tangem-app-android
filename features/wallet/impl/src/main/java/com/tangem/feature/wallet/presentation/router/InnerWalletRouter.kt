@@ -85,6 +85,8 @@ internal interface InnerWalletRouter {
 
     fun openTangemPayEligibility(product: TangemPayProduct, userWalletId: UserWalletId)
 
+    fun openMoneyAccountMain(userWalletId: UserWalletId)
+
     fun openTangemPayDetails(status: AccountStatus.Payment)
 
     fun openTangemPaySelectPlan(status: AccountStatus.Payment)
