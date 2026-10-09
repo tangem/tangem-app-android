@@ -2,6 +2,7 @@ package com.tangem.domain.card.repository
 
 import com.tangem.TangemSdk
 import com.tangem.blockchain.common.TransactionSigner
+import com.tangem.common.core.CardIdDisplayFormat
 import com.tangem.common.core.CardSession
 import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.models.wallet.UserWalletId
@@ -20,6 +21,9 @@ interface CardSdkConfigRepository {
     /** Allow requesting access codes from biometrically protected storage */
     var isBiometricsRequestPolicy: Boolean
 
+    /** Format of the card ID shown in the CardSDK UI */
+    val cardIdDisplayFormat: CardIdDisplayFormat
+
     /** Set access code request policy by [isBiometricsRequestPolicy] */
     fun setAccessCodeRequestPolicy(isBiometricsRequestPolicy: Boolean)
 
@@ -30,6 +34,13 @@ interface CardSdkConfigRepository {
      * activity is being destroyed, where asking for the instance re-registers against a dead one and throws.
      */
     fun restoreAccessCodeRequestPolicy(isBiometricsRequestPolicy: Boolean)
+
+    /**
+     * Restore the card ID display [format] when a screen that changed it goes away.
+     *
+     * Like [restoreAccessCodeRequestPolicy], does nothing without a registered SDK.
+     */
+    fun restoreCardIdDisplayFormat(format: CardIdDisplayFormat)
 
     /**
      * Get common signer by [cardId].
