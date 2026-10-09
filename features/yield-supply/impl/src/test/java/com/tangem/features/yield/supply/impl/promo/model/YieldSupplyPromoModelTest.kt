@@ -9,7 +9,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.promo.usecase.GetBoostedApyUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyPromoComponent
 import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
 import com.tangem.features.yield.supply.impl.promo.YieldSupplyPromoConfig
@@ -23,7 +22,6 @@ internal class YieldSupplyPromoModelTest {
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val appRouter: AppRouter = mockk(relaxed = true)
     private val boostStoryPreloader: YieldBoostStoryPreloader = mockk(relaxed = true)
-    private val getTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase = mockk(relaxed = true)
 
     private val personal: CryptoCurrency = coin(derivationPath = Network.DerivationPath.None)
 
@@ -38,6 +36,32 @@ internal class YieldSupplyPromoModelTest {
 
         // Assert
         assertThat(opened).containsExactly(YieldSupplyPromoConfig.Action)
+    }
+
+    @Test
+    fun `GIVEN a personal token WHEN onVariableRateInfoClick THEN the variable rate sheet opens`() {
+        // Arrange
+        val model = createModel(currency = personal)
+        val opened = model.openedBottomSheets()
+
+        // Act
+        model.onVariableRateInfoClick()
+
+        // Assert
+        assertThat(opened).containsExactly(YieldSupplyPromoConfig.VariableRate)
+    }
+
+    @Test
+    fun `GIVEN a personal token WHEN onIncentiveRateInfoClick THEN the incentive rate sheet opens`() {
+        // Arrange
+        val model = createModel(currency = personal)
+        val opened = model.openedBottomSheets()
+
+        // Act
+        model.onIncentiveRateInfoClick()
+
+        // Assert
+        assertThat(opened).containsExactly(YieldSupplyPromoConfig.IncentiveRate)
     }
 
     private fun YieldSupplyPromoModel.openedBottomSheets(): List<YieldSupplyPromoConfig?> {
