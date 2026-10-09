@@ -33,20 +33,30 @@ internal class YieldSupplyPromoV2Model @Inject constructor(
     val uiState: StateFlow<YieldSupplyPromoV2UM>
         field = MutableStateFlow(buildUiState())
 
+    /**
+     * The plain market rate, which this screen never shows: here [YieldSupplyPromoComponent.Params.apy] is the
+     * incentivised total, so the variable-rate sheet takes its own rate from the market the chip came from.
+     */
+    val plainApy: StateFlow<String?>
+        field = MutableStateFlow<String?>(null)
+
     init {
-        load()
+        // A boosted wallet is shown the previous screen instead, and nothing here reaches it.
+        if (!params.isPromoEnabled) load()
     }
 
     private fun load() {
         val token = params.currency as? CryptoCurrency.Token ?: return
 
         modelScope.launch(dispatchers.io) {
-            val rewardsApr = yieldSupplyGetTokenStatusUseCase(token).getOrNull()
+            val market = yieldSupplyGetTokenStatusUseCase(token).getOrNull()
+            val rewardsApr = market
                 ?.campaign
                 ?.takeIf { it.hasActiveCampaign }
                 ?.rewardsApr
                 ?.takeIf { it > BigDecimal.ZERO }
 
+            plainApy.update { market?.apy?.toPlainString() }
             uiState.update { it.copy(incentiveChip = incentiveChipOf(rewardsApr)) }
         }
     }
