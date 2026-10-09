@@ -33,6 +33,9 @@ internal class TangemPayBankWithdrawFormUMFactory(
         val values = state.values(fields, draft)
         val displayNames = state.displayNames(fields, draft)
         val suggestions = createSuggestions(values = values, state = state, accounts = accounts)
+        val isFilled = fields.all { field -> !values[field].isNullOrBlank() }
+        // A saved account's address may have changed, so Continue next to its suggestion opens the fields to fill.
+        val isRevealingFields = !isFilled && suggestions.isNotEmpty()
         return TangemPayBankWithdrawFormUM(
             header = BankWithdrawHeaderFactory.create(
                 draft = draft,
@@ -51,9 +54,9 @@ internal class TangemPayBankWithdrawFormUMFactory(
                 }
                 .toImmutableList(),
             suggestions = suggestions,
-            isContinueEnabled = suggestions.isNotEmpty() || fields.all { field -> !values[field].isNullOrBlank() },
+            isContinueEnabled = isFilled || isRevealingFields,
             onBackClick = callbacks.onBackClick,
-            onContinueClick = callbacks.onContinueClick,
+            onContinueClick = if (isRevealingFields) callbacks.onRevealFieldsClick else callbacks.onContinueClick,
         )
     }
 
@@ -126,5 +129,6 @@ internal class TangemPayBankWithdrawFormUMFactory(
         val onSelectorClick: (field: BankWithdrawFormField) -> Unit,
         val onSuggestionClick: (account: BankAccount) -> Unit,
         val onContinueClick: () -> Unit,
+        val onRevealFieldsClick: () -> Unit,
     )
 }
