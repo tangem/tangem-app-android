@@ -30,6 +30,8 @@ internal object CollectiblesConfirmOrderPreviewData {
             ),
         ),
         onApproveClick = {},
+        isPackOpened = false,
+        isBackVisible = true,
     )
 
     val notEnoughFunds = content.copy(
