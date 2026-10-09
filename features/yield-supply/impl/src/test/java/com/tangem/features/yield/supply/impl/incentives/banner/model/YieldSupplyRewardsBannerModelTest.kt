@@ -9,19 +9,16 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
-import com.tangem.domain.yield.supply.models.YieldMarketToken
-import com.tangem.domain.yield.supply.models.incentives.YieldIncentiveCampaign
 import com.tangem.domain.yield.supply.models.incentives.YieldIncentivesError
-import com.tangem.domain.yield.supply.models.incentives.YieldReward
-import com.tangem.domain.yield.supply.models.incentives.YieldRewardDestination
 import com.tangem.domain.yield.supply.models.incentives.YieldRewardsSummary
 import com.tangem.domain.yield.supply.usecase.GetYieldRewardsSummaryUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyMarketFlowUseCase
 import com.tangem.features.yield.supply.impl.incentives.banner.DefaultYieldSupplyRewardsBannerComponent
 import com.tangem.features.yield.supply.impl.incentives.banner.entity.YieldSupplyRewardsBannerUM
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
+import com.tangem.test.mock.yield.MockYieldSupply
+import com.tangem.utils.StringsSigns.NON_BREAKING_SPACE
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -62,7 +59,7 @@ internal class YieldSupplyRewardsBannerModelTest {
     }
 
     @Test
-    fun `GIVEN recommended rewards WHEN model created THEN banner offers claim`() = runTest {
+    fun `GIVEN recommended rewards WHEN model created THEN banner shows them with the claim CTA inert`() = runTest {
         // Arrange
         coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returns
             YieldRewardsSummary.Claimable(
@@ -81,7 +78,7 @@ internal class YieldSupplyRewardsBannerModelTest {
             YieldSupplyRewardsBannerUM(
                 title = resourceReference(R.string.yield_module_rewards_banner_title, wrappedList("\$30.00")),
                 description = resourceReference(R.string.yield_module_rewards_banner_subtitle),
-                claim = YieldSupplyRewardsBannerUM.Claim.Enabled,
+                claim = YieldSupplyRewardsBannerUM.Claim.Disabled,
             ),
         )
 
@@ -136,7 +133,32 @@ internal class YieldSupplyRewardsBannerModelTest {
                 title = resourceReference(R.string.yield_module_rewards_banner_pending_title),
                 description = resourceReference(
                     id = R.string.yield_module_rewards_banner_pending_subtitle,
-                    formatArgs = wrappedList("WETH${NBSP}1.50, AAVE${NBSP}2.25"),
+                    formatArgs = wrappedList("WETH${NON_BREAKING_SPACE}1.50, AAVE${NON_BREAKING_SPACE}2.25"),
+                ),
+                claim = YieldSupplyRewardsBannerUM.Claim.Hidden,
+            ),
+        )
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN pending reward below the display cap WHEN model created THEN amount keeps its lower sign`() = runTest {
+        // Arrange
+        coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returns
+            YieldRewardsSummary.PendingOnly(pending = listOf(reward(symbol = "WETH", pending = "1"))).right()
+
+        // Act
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value).isEqualTo(
+            YieldSupplyRewardsBannerUM(
+                title = resourceReference(R.string.yield_module_rewards_banner_pending_title),
+                description = resourceReference(
+                    id = R.string.yield_module_rewards_banner_pending_subtitle,
+                    formatArgs = wrappedList("<${NON_BREAKING_SPACE}WETH${NON_BREAKING_SPACE}0.00000001"),
                 ),
                 claim = YieldSupplyRewardsBannerUM.Claim.Hidden,
             ),
@@ -228,7 +250,7 @@ internal class YieldSupplyRewardsBannerModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value?.claim).isEqualTo(YieldSupplyRewardsBannerUM.Claim.Enabled)
+        assertThat(model.uiState.value?.claim).isEqualTo(YieldSupplyRewardsBannerUM.Claim.Disabled)
 
         model.onDestroy()
     }
@@ -288,74 +310,33 @@ internal class YieldSupplyRewardsBannerModelTest {
         ),
     )
 
-    private fun market(hasCampaign: Boolean) = YieldMarketToken(
+    private fun market(hasCampaign: Boolean) = MockYieldSupply.market(
         tokenAddress = TOKEN_ADDRESS,
         chainId = CHAIN_ID,
         apy = BigDecimal("4.0"),
-        isActive = true,
-        maxFeeNative = BigDecimal.ZERO,
-        maxFeeUSD = BigDecimal.ZERO,
-        campaign = YieldIncentiveCampaign(
-            hasActiveCampaign = hasCampaign,
-            rewardsApr = BigDecimal("1.5"),
-            totalApyEst = BigDecimal("5.5"),
-        ),
+        campaign = MockYieldSupply.campaign(hasActiveCampaign = hasCampaign),
     )
 
     private fun reward(
         symbol: String = "WETH",
         claimable: String = "0",
         pending: String = "0",
-    ) = YieldReward(
+    ) = MockYieldSupply.reward(
         rewardToken = "0x$symbol",
         symbol = symbol,
-        tokenDecimals = TOKEN_DECIMALS,
         claimableAmount = BigInteger(claimable),
         pendingAmount = BigInteger(pending),
         usdValue = BigDecimal.ZERO,
         estimatedNetValueUsd = BigDecimal.ZERO,
         estimatedServiceFeeUsd = BigDecimal.ZERO,
-        serviceFeeRateBps = SERVICE_FEE_BPS,
-        finalDestination = YieldRewardDestination.Owner,
     )
 
-    private fun createToken(): CryptoCurrency.Token {
-        val derivationPath = Network.DerivationPath.None
-        val network = Network(
-            id = Network.ID(value = "ethereum", derivationPath = derivationPath),
-            name = "Ethereum",
-            currencySymbol = "ETH",
-            derivationPath = derivationPath,
-            isTestnet = false,
-            standardType = Network.StandardType.Unspecified("UNSPECIFIED"),
-            hasFiatFeeRate = true,
-            canHandleTokens = true,
-            transactionExtrasType = Network.TransactionExtrasType.NONE,
-            nameResolvingType = Network.NameResolvingType.NONE,
-        )
-        return CryptoCurrency.Token(
-            id = CryptoCurrency.ID(
-                prefix = CryptoCurrency.ID.Prefix.TOKEN_PREFIX,
-                body = CryptoCurrency.ID.Body.NetworkId("ethereum"),
-                suffix = CryptoCurrency.ID.Suffix.RawID("ethereum"),
-            ),
-            network = network,
-            name = "TEST_TOKEN",
-            symbol = "TTK",
-            decimals = 6,
-            iconUrl = null,
-            isCustom = false,
-            contractAddress = TOKEN_ADDRESS,
-        )
-    }
+    private fun createToken(): CryptoCurrency.Token = MockYieldSupply.token(contractAddress = TOKEN_ADDRESS)
 
     private companion object {
         const val CHAIN_ID = 1
         const val TOKEN_ADDRESS = "0xToken"
         const val USER_ADDRESS = "0xUser"
         const val MODULE_ADDRESS = "0xModule"
-        const val TOKEN_DECIMALS = 18
-        const val SERVICE_FEE_BPS = 1500
-        const val NBSP = '\u00A0'
     }
 }
