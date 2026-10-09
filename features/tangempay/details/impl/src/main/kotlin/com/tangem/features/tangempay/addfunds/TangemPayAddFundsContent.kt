@@ -23,6 +23,7 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.extensions.TextReference.Res
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -125,6 +126,9 @@ private fun TangemPayTopUpItem(state: TangemPayAddFundsItemUM, modifier: Modifie
                 style = TangemTheme.typography3.caption.medium,
                 color = TangemTheme.colors3.text.secondary,
             )
+        }
+        if (state.isLoading) {
+            TangemLoader(modifier = Modifier.align(Alignment.CenterVertically))
         }
     }
 }
