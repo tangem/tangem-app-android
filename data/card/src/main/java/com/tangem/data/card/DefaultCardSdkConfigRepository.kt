@@ -28,13 +28,13 @@ internal class DefaultCardSdkConfigRepository(
         get() = cardSdkProvider.sdk
 
     override var isBiometricsRequestPolicy: Boolean
-        get() = sdk.config.userCodeRequestPolicy is UserCodeRequestPolicy.AlwaysWithBiometrics
+        get() = cardSdkProvider.sdk.config.userCodeRequestPolicy is UserCodeRequestPolicy.AlwaysWithBiometrics
         set(value) {
-            sdk.config.userCodeRequestPolicy = value.toUserCodeRequestPolicy()
+            cardSdkProvider.sdk.config.userCodeRequestPolicy = value.toUserCodeRequestPolicy()
         }
 
     override val cardIdDisplayFormat: CardIdDisplayFormat
-        get() = sdk.config.cardIdDisplayFormat
+        get() = cardSdkProvider.sdk.config.cardIdDisplayFormat
 
     override fun restoreAccessCodeRequestPolicy(isBiometricsRequestPolicy: Boolean) {
         val config = cardSdkProvider.sdkOrNull?.config ?: return
@@ -47,7 +47,7 @@ internal class DefaultCardSdkConfigRepository(
     }
 
     override fun setAccessCodeRequestPolicy(isBiometricsRequestPolicy: Boolean) {
-        sdk.config.userCodeRequestPolicy = isBiometricsRequestPolicy.toUserCodeRequestPolicy()
+        cardSdkProvider.sdk.config.userCodeRequestPolicy = isBiometricsRequestPolicy.toUserCodeRequestPolicy()
     }
 
     private fun Boolean.toUserCodeRequestPolicy(): UserCodeRequestPolicy = if (this) {
@@ -64,16 +64,16 @@ internal class DefaultCardSdkConfigRepository(
     ): TransactionSigner {
         return transactionSignerFactory.createTransactionSigner(
             cardId = cardId,
-            sdk = sdk,
+            sdk = cardSdkProvider.sdk,
             twinKey = twinKey,
             userWalletId = userWalletId,
             session = session,
         )
     }
 
-    override fun isLinkedTerminal() = sdk.config.linkedTerminal
+    override fun isLinkedTerminal() = cardSdkProvider.sdk.config.linkedTerminal
 
     override fun setLinkedTerminal(isLinked: Boolean?) {
-        sdk.config.linkedTerminal = isLinked
+        cardSdkProvider.sdk.config.linkedTerminal = isLinked
     }
 }
