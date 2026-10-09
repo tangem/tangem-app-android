@@ -15,7 +15,9 @@ import com.tangem.features.yield.supply.impl.chart.DefaultYieldSupplyChartCompon
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartIncentiveUM
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartPeriod
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartUM
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.yield.MockYieldSupply
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -531,10 +533,51 @@ internal class YieldSupplyChartModelTest {
             verify(exactly = 0) { callback.onRateResolved(any()) }
         }
 
+    @Test
+    fun `GIVEN a superseded window answers late WHEN it returns THEN it never reaches the screen`() = runTest {
+        // Arrange - the three-month answer comes back after the week has been asked for and already drawn
+        coEvery { getTokenStatusUseCase(any()) } returns market(hasCampaign = true).right()
+        coEvery {
+            getAprHistoryUseCase(chainId = any(), tokenAddress = any(), days = YieldSupplyChartPeriod.ThreeMonths.days)
+        } coAnswers {
+            delay(timeMillis = 1_000)
+            aprHistory("4.0", "5.0", "6.0").right()
+        }
+        coEvery {
+            getAprHistoryUseCase(chainId = any(), tokenAddress = any(), days = YieldSupplyChartPeriod.Week.days)
+        } returns aprHistory("7.0", "8.0").right()
+        val incentive = slot<YieldSupplyChartIncentiveUM?>()
+        every { callback.onIncentiveChanged(captureNullable(incentive)) } returns Unit
+        // The default provider hands out Unconfined, whose delay runs on the real clock and so escapes the test
+        // scheduler entirely; the slow window has to be on the scope's own dispatcher to be slow in virtual time.
+        val model = createModel(
+            initialPeriod = YieldSupplyChartPeriod.ThreeMonths,
+            dispatchers = createTestingCoroutineDispatcherProvider(),
+        )
+        runCurrent()
+
+        // Act
+        incentive.captured?.onPeriodSelected(YieldSupplyChartPeriod.Week.name)
+        advanceUntilIdle()
+
+        // Assert - the slow window was really in flight, and the screen still ends on the week
+        coVerify(exactly = 1) {
+            getAprHistoryUseCase(
+                chainId = any(),
+                tokenAddress = any(),
+                days = YieldSupplyChartPeriod.ThreeMonths.days,
+            )
+        }
+        val data = model.uiState.value as YieldSupplyChartUM.Data
+        assertThat(data.incentive?.period).isEqualTo(YieldSupplyChartPeriod.Week)
+        assertThat(data.chartData.y).hasSize(2)
+    }
+
     private fun createModel(
         callback: DefaultYieldSupplyChartComponent.ModelCallback? = this.callback,
         isPlainRate: Boolean = false,
         initialPeriod: YieldSupplyChartPeriod = YieldSupplyChartPeriod.Week,
+        dispatchers: CoroutineDispatcherProvider = TestingCoroutineDispatcherProvider(),
     ): YieldSupplyChartModel = YieldSupplyChartModel(
         paramsContainer = MutableParamsContainer(
             DefaultYieldSupplyChartComponent.Params(
@@ -544,7 +587,7 @@ internal class YieldSupplyChartModelTest {
                 callback = callback,
             ),
         ),
-        dispatchers = TestingCoroutineDispatcherProvider(),
+        dispatchers = dispatchers,
         yieldSupplyGetChartUseCase = getChartUseCase,
         yieldSupplyGetTokenStatusUseCase = getTokenStatusUseCase,
         getYieldAprHistoryUseCase = getAprHistoryUseCase,

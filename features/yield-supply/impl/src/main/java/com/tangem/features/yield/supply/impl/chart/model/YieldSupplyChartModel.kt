@@ -53,6 +53,12 @@ internal class YieldSupplyChartModel @Inject constructor(
     /** A period switch supersedes the request in flight: a late answer for the old window is no longer an answer. */
     private var loadJob: Job? = null
 
+    /**
+     * Cancelling the previous request is not enough on its own: a coroutine already past its last suspension point
+     * runs the whole publishing block regardless, so every write to the screen is checked against this instead.
+     */
+    private var latestRequest = 0
+
     init {
         load()
     }
@@ -61,6 +67,7 @@ internal class YieldSupplyChartModel @Inject constructor(
         // The window is read once here and carried down, so an answer can only ever describe the window it was
         // asked for, whatever the picker has moved on to since.
         val period = selectedPeriod
+        val request = ++latestRequest
 
         loadJob?.cancel()
         loadJob = modelScope.launch(dispatchers.default) {
@@ -68,6 +75,8 @@ internal class YieldSupplyChartModel @Inject constructor(
 
             val market = yieldSupplyGetTokenStatusUseCase(params.cryptoCurrency).getOrNull()
             val campaign = market?.campaign?.takeIf { it.hasActiveCampaign }
+
+            if (isSuperseded(request)) return@launch
 
             if (market != null) {
                 // The plain sheet plots the Aave history, so it must not headline the rate the campaign adds to it.
@@ -77,16 +86,18 @@ internal class YieldSupplyChartModel @Inject constructor(
             }
 
             if (campaign == null || params.isPlainRate) {
-                loadSupplyChart()
+                loadSupplyChart(request = request)
             } else {
-                loadIncentiveChart(market = market, period = period)
+                loadIncentiveChart(market = market, period = period, request = request)
             }
         }
     }
 
-    private suspend fun loadSupplyChart() {
+    private suspend fun loadSupplyChart(request: Int) {
         yieldSupplyGetChartUseCase(params.cryptoCurrency)
             .onRight { chartData ->
+                if (isSuperseded(request)) return@onRight
+
                 if (chartData.y.isEmpty()) {
                     showError()
                 } else {
@@ -105,10 +116,10 @@ internal class YieldSupplyChartModel @Inject constructor(
                     params.callback?.onSuccessLoad()
                 }
             }
-            .onLeft { showError() }
+            .onLeft { if (!isSuperseded(request)) showError() }
     }
 
-    private suspend fun loadIncentiveChart(market: YieldMarketToken, period: YieldSupplyChartPeriod) {
+    private suspend fun loadIncentiveChart(market: YieldMarketToken, period: YieldSupplyChartPeriod, request: Int) {
         params.callback?.onIncentiveChanged(incentive(averageApy = null, period = period))
 
         getYieldAprHistoryUseCase(
@@ -117,6 +128,8 @@ internal class YieldSupplyChartModel @Inject constructor(
             days = period.days,
         )
             .onRight { history ->
+                if (isSuperseded(request)) return@onRight
+
                 if (history.points.isEmpty()) {
                     showError()
                 } else {
@@ -126,8 +139,10 @@ internal class YieldSupplyChartModel @Inject constructor(
                     params.callback?.onSuccessLoad()
                 }
             }
-            .onLeft { showError() }
+            .onLeft { if (!isSuperseded(request)) showError() }
     }
+
+    private fun isSuperseded(request: Int): Boolean = request != latestRequest
 
     private fun toIncentiveState(history: YieldAprHistory, period: YieldSupplyChartPeriod): YieldSupplyChartUM.Data {
         val totals = history.points.map { it.totalApyEst.toDouble() }
