@@ -15,7 +15,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 interface CardSdkConfigRepository {
 
     /** Tangem SDK instance */
-    @Deprecated("Use CardSdkConfigRepository's methods instead of this property")
     val sdk: TangemSdk
 
     /** Allow requesting access codes from biometrically protected storage */
