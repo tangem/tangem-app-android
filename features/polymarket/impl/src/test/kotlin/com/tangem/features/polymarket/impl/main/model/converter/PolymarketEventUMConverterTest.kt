@@ -372,6 +372,7 @@ internal class PolymarketEventUMConverterTest {
         liquidity = null,
         totalMarketsCount = totalMarketsCount,
         isNegRisk = displayMode == PolymarketDisplayMode.GROUPED_OUTCOMES,
+        isLive = false,
         displayMode = displayMode,
         markets = markets,
     )

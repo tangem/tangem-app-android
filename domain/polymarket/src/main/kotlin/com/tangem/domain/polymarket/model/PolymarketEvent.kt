@@ -1,6 +1,7 @@
 package com.tangem.domain.polymarket.model
 
 import java.math.BigDecimal
+import java.time.Instant
 
 /**
  * A prediction event — the primary Discovery feed entity (BFF `Event`).
@@ -23,6 +24,12 @@ import java.math.BigDecimal
  * @property isNegRisk whether the event's markets are mutually exclusive
  * @property displayMode how the event and its [markets] are rendered
  * @property markets nested markets (top active ones for the feed, all for event details)
+ * @property gameId upstream game identifier, absent for non-sports events
+ * @property score raw provider score, which may include several sets
+ * @property period raw provider period or game status, e.g. `S2` or `FT`
+ * @property isEnded whether the game has finished; absent when not reported
+ * @property dataFetchedAt when the backend fetched the event, used to determine sports data freshness
+ * @property teams teams or players in the order supplied by the provider
  */
 data class PolymarketEvent(
     val id: String,
@@ -40,6 +47,13 @@ data class PolymarketEvent(
     val liquidity: BigDecimal?,
     val totalMarketsCount: Int,
     val isNegRisk: Boolean,
+    val isLive: Boolean,
     val displayMode: PolymarketDisplayMode,
     val markets: List<PolymarketMarket>,
+    val gameId: String? = null,
+    val score: String? = null,
+    val period: String? = null,
+    val isEnded: Boolean? = null,
+    val dataFetchedAt: Instant? = null,
+    val teams: List<PolymarketTeam>? = null,
 )
