@@ -346,6 +346,36 @@ internal class DefaultSocketChannelTest {
     }
 
     @Test
+    fun `GIVEN onOpen never returns WHEN 5 seconds pass THEN the attempt fails and the policy retries`() = runTest {
+        // Arrange
+        var onOpenCalls = 0
+        val channel = createChannel(
+            SocketSpec(
+                url = URL,
+                backoff = Backoff { 3.seconds },
+                onOpen = {
+                    onOpenCalls++
+                    if (onOpenCalls == 1) awaitCancellation()
+                },
+            ),
+        )
+        collect(channel)
+        transport.connections.single().serverOpens()
+        runCurrent()
+
+        // Act
+        advanceTimeBy(5.seconds - 1.milliseconds)
+        val stateBeforeTimeout = channel.state.value
+        advanceTimeBy(2.milliseconds)
+        val stateAfterTimeout = channel.state.value
+
+        // Assert
+        assertThat(stateBeforeTimeout).isEqualTo(SocketState.Connecting(attempt = 0))
+        assertThat(stateAfterTimeout).isEqualTo(SocketState.WaitingToRetry(attempt = 1, delay = 3.seconds))
+        assertThat(transport.connections.single().closedByClient).isTrue()
+    }
+
+    @Test
     fun `GIVEN spec transport WHEN connecting THEN it replaces the factory transport`() = runTest {
         // Arrange
         val ownTransport = FakeSocketTransport()
