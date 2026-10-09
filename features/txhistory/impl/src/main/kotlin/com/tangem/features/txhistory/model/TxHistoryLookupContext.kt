@@ -6,6 +6,7 @@ import com.tangem.domain.addressbook.model.ContactAddressLookup
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 
@@ -39,25 +40,40 @@ internal data class WalletInfo(val name: String, val deviceIconUM: DeviceIconUM)
  * Crypto-portfolio accounts contribute each currency's address; a Payment (Tangem Pay) account contributes the address
  * of every network it is issued on, so a transfer to the user's own Tangem Pay account resolves as own — not as an
  * external address.
+ *
+ * A currency contributes **every** address it is watched under, not just the selected one: its other address types
+ * (a BTC wallet holds both a legacy and a SegWit address) plus, through [usedDynamicAddresses], the XPUB-derived
+ * addresses of a dynamic-addresses network. The latter live in the wallet manager alone and never reach
+ * [com.tangem.domain.models.network.NetworkAddress], yet a transfer landing on one of them is still a transfer within
+ * the user's own portfolios.
  */
-internal fun buildOwnAccountAddressMapAllNetworks(
+internal suspend fun buildOwnAccountAddressMapAllNetworks(
     lists: List<AccountStatusList>,
+    usedDynamicAddresses: suspend (UserWalletId, Network) -> List<String>,
 ): Map<Network.RawID, Map<String, Account>> {
     val map = mutableMapOf<Network.RawID, MutableMap<String, Account>>()
+
+    suspend fun register(account: Account, userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {
+        val network = currencyStatus.currency.network
+        val walletAddresses = currencyStatus.value.networkAddress?.availableAddresses.orEmpty()
+        val addresses = walletAddresses.map { it.value } + usedDynamicAddresses(userWalletId, network)
+
+        if (addresses.isEmpty()) return
+
+        val networkAddresses = map.getOrPut(network.id.rawId) { mutableMapOf() }
+        addresses.forEach { address -> networkAddresses[address] = account }
+    }
+
     lists.forEach { accountList ->
         accountList.accountStatuses.forEach { status ->
             when (status) {
                 is AccountStatus.CryptoPortfolio -> status.flattenCurrencies().forEach { currencyStatus ->
-                    val address = currencyStatus.value.networkAddress?.defaultAddress?.value ?: return@forEach
-                    val rawId = currencyStatus.currency.network.id.rawId
-                    map.getOrPut(rawId) { mutableMapOf() }[address] = status.account
+                    register(status.account, accountList.userWalletId, currencyStatus)
                 }
                 is AccountStatus.Payment -> {
                     val statuses = (status.value as? PaymentAccountStatusValue.Loaded)?.cryptoCurrencyStatuses
                     statuses.orEmpty().forEach { currencyStatus ->
-                        val address = currencyStatus.value.networkAddress?.defaultAddress?.value ?: return@forEach
-                        val rawId = currencyStatus.currency.network.id.rawId
-                        map.getOrPut(rawId) { mutableMapOf() }[address] = status.account
+                        register(status.account, accountList.userWalletId, currencyStatus)
                     }
                 }
                 is AccountStatus.Money -> Unit
