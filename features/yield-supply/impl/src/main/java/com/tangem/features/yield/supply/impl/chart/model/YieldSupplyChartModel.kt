@@ -32,6 +32,7 @@ import java.time.Month
 import java.time.format.TextStyle
 import java.util.Calendar
 import java.util.Locale
+import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 
 @ModelScoped
@@ -54,10 +55,13 @@ internal class YieldSupplyChartModel @Inject constructor(
     private var loadJob: Job? = null
 
     /**
-     * Cancelling the previous request is not enough on its own: a coroutine already past its last suspension point
-     * runs the whole publishing block regardless, so every write to the screen is checked against this instead.
+     * Cancellation is cooperative, so it cannot be the only guard: a coroutine that has passed its last suspension
+     * point before the cancel lands runs its whole publishing block regardless, and every write to the screen is
+     * therefore checked against this as well. That interleaving needs two real threads, which is why only the
+     * ordinary period switch is covered by a test. Written from the picker, read from the worker the request runs
+     * on, hence atomic rather than plain.
      */
-    private var latestRequest = 0
+    private val latestRequest = AtomicInteger()
 
     init {
         load()
@@ -67,7 +71,7 @@ internal class YieldSupplyChartModel @Inject constructor(
         // The window is read once here and carried down, so an answer can only ever describe the window it was
         // asked for, whatever the picker has moved on to since.
         val period = selectedPeriod
-        val request = ++latestRequest
+        val request = latestRequest.incrementAndGet()
 
         loadJob?.cancel()
         loadJob = modelScope.launch(dispatchers.default) {
@@ -80,7 +84,7 @@ internal class YieldSupplyChartModel @Inject constructor(
 
             if (market != null) {
                 // The plain sheet plots the Aave history, so it must not headline the rate the campaign adds to it.
-                // Without a market there is nothing better to say than the rate the sheet was opened with.
+                // Without a market the sheet keeps whatever it opened with, which may be nothing at all.
                 val headlineApy = if (params.isPlainRate) market.apy else market.effectiveApy
                 params.callback?.onRateResolved(headlineApy.formatApy())
             }
@@ -142,7 +146,7 @@ internal class YieldSupplyChartModel @Inject constructor(
             .onLeft { if (!isSuperseded(request)) showError() }
     }
 
-    private fun isSuperseded(request: Int): Boolean = request != latestRequest
+    private fun isSuperseded(request: Int): Boolean = request != latestRequest.get()
 
     private fun toIncentiveState(history: YieldAprHistory, period: YieldSupplyChartPeriod): YieldSupplyChartUM.Data {
         val totals = history.points.map { it.totalApyEst.toDouble() }

@@ -1,8 +1,8 @@
 package com.tangem.features.yield.supply.impl.apy
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
@@ -27,8 +27,8 @@ internal class YieldSupplyApyComponent(
     private val incentiveState: StateFlow<YieldSupplyChartIncentiveUM?>
         field = MutableStateFlow<YieldSupplyChartIncentiveUM?>(null)
 
-    private val apyState: StateFlow<TextReference>
-        field = MutableStateFlow(params.apy.formatApy())
+    private val apyState: StateFlow<TextReference?>
+        field = MutableStateFlow(params.apy?.formatApy())
 
     private val chartComponent = DefaultYieldSupplyChartComponent(
         appComponentContext = child("chartComponent"),
@@ -65,9 +65,9 @@ internal class YieldSupplyApyComponent(
 
     @Composable
     override fun BottomSheet() {
-        val isLoadingState by loadingState.collectAsState()
-        val incentive by incentiveState.collectAsState()
-        val apy by apyState.collectAsState()
+        val isLoadingState by loadingState.collectAsStateWithLifecycle()
+        val incentive by incentiveState.collectAsStateWithLifecycle()
+        val apy by apyState.collectAsStateWithLifecycle()
         YieldSupplyApyContent(
             apy = apy,
             isLoading = isLoadingState,
@@ -77,11 +77,15 @@ internal class YieldSupplyApyComponent(
         )
     }
 
-    /** @property isPlainRate true for the variable-rate sheet, which stays on the Aave history even on a
-     * token whose campaign would otherwise take the chart over */
+    /**
+     * @property apy the rate to open on, null where only the market can say what it is — the sheet then waits for
+     * the market rather than showing a rate it does not plot
+     * @property isPlainRate true for the variable-rate sheet, which stays on the Aave history even on a
+     * token whose campaign would otherwise take the chart over
+     */
     data class Params(
         val cryptoCurrency: CryptoCurrency,
-        val apy: String,
+        val apy: String?,
         val isPlainRate: Boolean,
         val onBackClick: () -> Unit,
     )

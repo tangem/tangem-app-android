@@ -16,6 +16,7 @@ import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.yield.MockYieldSupply
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
@@ -114,13 +115,44 @@ internal class YieldSupplyPromoV2ModelTest {
         assertThat(model.uiState.value.incentiveChip).isNull()
     }
 
-    private fun TestScope.createModel(currency: CryptoCurrency = token): YieldSupplyPromoV2Model =
+    @Test
+    fun `GIVEN a market WHEN the promo opens THEN its plain rate is kept for the variable rate sheet`() = runTest {
+        // Arrange - the screen is opened with the incentivised total, so the plain sheet needs the base rate
+        coEvery { getTokenStatusUseCase(any()) } returns MockYieldSupply.market(
+            apy = BigDecimal("4.07"),
+            campaign = MockYieldSupply.campaign(totalApyEst = BigDecimal("9.50")),
+        ).right()
+
+        // Act
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.plainApy.value).isEqualTo("4.07")
+    }
+
+    @Test
+    fun `GIVEN a boosted wallet WHEN the promo opens THEN the market is never asked for`() = runTest {
+        // Act - a boosted wallet is shown the previous screen, and nothing on it comes from here
+        val model = createModel(isPromoEnabled = true)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { getTokenStatusUseCase(any()) }
+        assertThat(model.plainApy.value).isNull()
+    }
+
+    private fun TestScope.createModel(
+        currency: CryptoCurrency = token,
+        isPromoEnabled: Boolean = false,
+    ): YieldSupplyPromoV2Model =
         YieldSupplyPromoV2Model(
             paramsContainer = MutableParamsContainer(
                 YieldSupplyPromoComponent.Params(
                     userWalletId = UserWalletId("011"),
                     currency = currency,
                     apy = "5.98",
+                    isPromoEnabled = isPromoEnabled,
                 ),
             ),
             dispatchers = createTestingCoroutineDispatcherProvider(),
