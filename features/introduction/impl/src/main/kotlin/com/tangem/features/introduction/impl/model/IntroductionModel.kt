@@ -284,6 +284,7 @@ internal class IntroductionModel @Inject constructor(
     )
 
     private fun onCreateWalletSheetDismissRequested() {
+        if (isSigningInSocially) return
         reportCreateWalletSheetDismissed(IntroductionProcess.SheetDismissed.DismissReason.Dismissed)
     }
 
