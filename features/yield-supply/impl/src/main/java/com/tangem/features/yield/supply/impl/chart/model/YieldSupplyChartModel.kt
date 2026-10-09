@@ -58,6 +58,10 @@ internal class YieldSupplyChartModel @Inject constructor(
     }
 
     private fun load() {
+        // The window is read once here and carried down, so an answer can only ever describe the window it was
+        // asked for, whatever the picker has moved on to since.
+        val period = selectedPeriod
+
         loadJob?.cancel()
         loadJob = modelScope.launch(dispatchers.default) {
             params.callback?.onStartLoading()
@@ -65,14 +69,17 @@ internal class YieldSupplyChartModel @Inject constructor(
             val market = yieldSupplyGetTokenStatusUseCase(params.cryptoCurrency).getOrNull()
             val campaign = market?.campaign?.takeIf { it.hasActiveCampaign }
 
-            // The plain sheet plots the Aave history, so it must not headline the rate the campaign adds to it.
-            val headlineApy = if (params.isPlainRate) market?.apy else market?.effectiveApy
-            params.callback?.onRateResolved(headlineApy.formatApy())
+            if (market != null) {
+                // The plain sheet plots the Aave history, so it must not headline the rate the campaign adds to it.
+                // Without a market there is nothing better to say than the rate the sheet was opened with.
+                val headlineApy = if (params.isPlainRate) market.apy else market.effectiveApy
+                params.callback?.onRateResolved(headlineApy.formatApy())
+            }
 
             if (campaign == null || params.isPlainRate) {
                 loadSupplyChart()
             } else {
-                loadIncentiveChart(market)
+                loadIncentiveChart(market = market, period = period)
             }
         }
     }
@@ -101,19 +108,19 @@ internal class YieldSupplyChartModel @Inject constructor(
             .onLeft { showError() }
     }
 
-    private suspend fun loadIncentiveChart(market: YieldMarketToken) {
-        params.callback?.onIncentiveChanged(incentive(averageApy = null))
+    private suspend fun loadIncentiveChart(market: YieldMarketToken, period: YieldSupplyChartPeriod) {
+        params.callback?.onIncentiveChanged(incentive(averageApy = null, period = period))
 
         getYieldAprHistoryUseCase(
             chainId = market.chainId,
             tokenAddress = market.tokenAddress,
-            days = selectedPeriod.days,
+            days = period.days,
         )
             .onRight { history ->
                 if (history.points.isEmpty()) {
                     showError()
                 } else {
-                    val state = toIncentiveState(history)
+                    val state = toIncentiveState(history = history, period = period)
                     uiState.update { state }
                     params.callback?.onIncentiveChanged(state.incentive)
                     params.callback?.onSuccessLoad()
@@ -122,7 +129,7 @@ internal class YieldSupplyChartModel @Inject constructor(
             .onLeft { showError() }
     }
 
-    private fun toIncentiveState(history: YieldAprHistory): YieldSupplyChartUM.Data {
+    private fun toIncentiveState(history: YieldAprHistory, period: YieldSupplyChartPeriod): YieldSupplyChartUM.Data {
         val totals = history.points.map { it.totalApyEst.toDouble() }
         // The bar is the backend total: a reward cap is only what the total leaves above the base, and the
         // reported rewards APR is not a third opinion to compose the rate from.
@@ -140,16 +147,16 @@ internal class YieldSupplyChartModel @Inject constructor(
                 avr = average.toDouble(),
                 percentFormat = getPercentFormatPattern(totals),
                 rewardCaps = caps.map(BigDecimal::toDouble).toImmutableList(),
-                xLabels = axisLabels(history.points).toImmutableList(),
+                xLabels = axisLabels(points = history.points, period = period).toImmutableList(),
             ),
             monthLables = persistentListOf(),
-            incentive = incentive(averageApy = average),
+            incentive = incentive(averageApy = average, period = period),
         )
     }
 
-    private fun incentive(averageApy: BigDecimal?) = YieldSupplyChartIncentiveUM(
-        period = selectedPeriod,
-        picker = periodPicker(),
+    private fun incentive(averageApy: BigDecimal?, period: YieldSupplyChartPeriod) = YieldSupplyChartIncentiveUM(
+        period = period,
+        picker = periodPicker(period),
         averageApy = averageApy.formatApy(),
         onPeriodSelected = ::onPeriodSelected,
     )
@@ -158,10 +165,10 @@ internal class YieldSupplyChartModel @Inject constructor(
      * A week is short enough to label every bar with its weekday; over three months only the first bar of each
      * month is labelled, the rest stay blank so the axis does not collapse into noise.
      */
-    private fun axisLabels(points: List<YieldAprHistory.Point>): List<String> {
+    private fun axisLabels(points: List<YieldAprHistory.Point>, period: YieldSupplyChartPeriod): List<String> {
         val locale = Locale.getDefault()
 
-        return when (selectedPeriod) {
+        return when (period) {
             YieldSupplyChartPeriod.Week -> points.map {
                 it.date.dayOfWeek.getDisplayName(TextStyle.NARROW, locale)
             }
@@ -181,14 +188,14 @@ internal class YieldSupplyChartModel @Inject constructor(
         }
     }
 
-    private fun periodPicker(): TangemSegmentedPickerUM {
-        val items = YieldSupplyChartPeriod.entries.map { period ->
-            TangemSegmentUM(id = period.name, title = resourceReference(period.titleRes))
+    private fun periodPicker(period: YieldSupplyChartPeriod): TangemSegmentedPickerUM {
+        val items = YieldSupplyChartPeriod.entries.map { entry ->
+            TangemSegmentUM(id = entry.name, title = resourceReference(entry.titleRes))
         }
 
         return TangemSegmentedPickerUM(
             items = items.toImmutableList(),
-            initialSelectedItem = items.first { it.id == selectedPeriod.name },
+            initialSelectedItem = items.first { it.id == period.name },
             isFixed = true,
         )
     }
