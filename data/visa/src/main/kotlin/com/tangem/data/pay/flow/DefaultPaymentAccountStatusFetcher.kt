@@ -15,8 +15,6 @@ import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.CustomerInfo
-import com.tangem.domain.pay.model.CustomerInfo.ProductInstance.SpecificationDataType
-import com.tangem.domain.pay.model.CustomerInfo.ProductInstance.Status
 import com.tangem.domain.pay.model.OrderData
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderType
@@ -429,7 +427,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         )?.value as? QuoteStatus.Data
 
         val customerId = customerId
-        val isDeactivated = productInstance?.status == CustomerInfo.ProductInstance.Status.DEACTIVATED
+        val isDeactivated = paymentAccountProductInstance?.status == CustomerInfo.ProductInstance.Status.DEACTIVATED
         val isFormer = state == CustomerInfo.State.FORMER
         val multichainNetworkStatuses by lazy {
             tangemPayCurrencyFactory.createNetworkStatuses(userWalletId, networks, quotesData?.fiatRate)
@@ -646,9 +644,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         userWalletId: UserWalletId,
         channels: List<TangemPayEligibilityType>?,
     ): VirtualAccountOnramp? {
-        val accountInstance = productInstances.firstOrNull {
-            it.specificationDataType == SpecificationDataType.ACCOUNT
-        }
+        val accountInstance = virtualAccountProductInstance
         if (accountInstance != null) {
             if (accountInstance.isProvisioning()) return VirtualAccountOnramp.Processing
             onboardingRepository.clearVirtualAccountOrderId(userWalletId)
@@ -692,19 +688,19 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     }
 
     private fun CustomerInfo.ProductInstance.isProvisioning(): Boolean = when (status) {
-        Status.NEW,
-        Status.READY_FOR_MANUFACTURING,
-        Status.MANUFACTURING,
-        Status.SENT_TO_DELIVERY,
-        Status.DELIVERED,
-        Status.ACTIVATING,
+        CustomerInfo.ProductInstance.Status.NEW,
+        CustomerInfo.ProductInstance.Status.READY_FOR_MANUFACTURING,
+        CustomerInfo.ProductInstance.Status.MANUFACTURING,
+        CustomerInfo.ProductInstance.Status.SENT_TO_DELIVERY,
+        CustomerInfo.ProductInstance.Status.DELIVERED,
+        CustomerInfo.ProductInstance.Status.ACTIVATING,
         -> true
-        Status.ACTIVE,
-        Status.BLOCKED,
-        Status.DEACTIVATING,
-        Status.DEACTIVATED,
-        Status.CANCELED,
-        Status.UNKNOWN,
+        CustomerInfo.ProductInstance.Status.ACTIVE,
+        CustomerInfo.ProductInstance.Status.BLOCKED,
+        CustomerInfo.ProductInstance.Status.DEACTIVATING,
+        CustomerInfo.ProductInstance.Status.DEACTIVATED,
+        CustomerInfo.ProductInstance.Status.CANCELED,
+        CustomerInfo.ProductInstance.Status.UNKNOWN,
         -> false
     }
 
