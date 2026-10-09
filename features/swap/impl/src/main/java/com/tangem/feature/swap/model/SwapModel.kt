@@ -16,13 +16,13 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.MarketingDeeplink
-import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.routing.deeplink.toContextualRoute
-import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.backup.BackupErrorWarningSender
+import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.common.ui.tokens.getUnavailabilityReasonTitle
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
@@ -31,7 +31,6 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.ScreensSources
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.event.JointAccountFakedoorAnalyticsEvent
-import com.tangem.core.analytics.models.event.SwapAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -47,7 +46,6 @@ import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.core.ui.utils.parseToBigDecimal
-import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.producer.SingleAccountStatusProducer
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
@@ -57,9 +55,9 @@ import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSy
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.express.models.ExpressOperationType
-import com.tangem.domain.express.models.ProviderFilterType
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -113,13 +111,14 @@ import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.analytics.SwapQuotePerformanceTracker
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
+import com.tangem.feature.swap.component.slippage.SwapSlippageComponent
 import com.tangem.feature.swap.converters.SwapProviderResolver
 import com.tangem.feature.swap.converters.SwapTransactionErrorStateConverter
 import com.tangem.feature.swap.domain.AllowPermissionsHandler
-import com.tangem.feature.swap.domain.account.AccountUnderlyingCurrencies
 import com.tangem.feature.swap.domain.GetSwapUiModeUseCase
 import com.tangem.feature.swap.domain.SetSwapUiModeUseCase
 import com.tangem.feature.swap.domain.SwapInteractor
+import com.tangem.feature.swap.domain.account.AccountUnderlyingCurrencies
 import com.tangem.feature.swap.domain.fee.TransactionFeeResult
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
@@ -127,24 +126,19 @@ import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.domain.transfer.SwapTransferInteractor
 import com.tangem.feature.swap.models.*
+import com.tangem.feature.swap.models.states.ChooseProviderSheetSource
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.router.SwapRoute
 import com.tangem.feature.swap.ui.StateBuilder
 import com.tangem.feature.swap.ui.transfer.SwapTransferStateBuilder
 import com.tangem.feature.swap.utils.getContractAddress
 import com.tangem.features.approval.api.GiveApprovalComponent
-import com.tangem.features.approval.api.GiveApprovalEntryComponent
 import com.tangem.features.approval.api.SelectApprovalTypeComponent
-import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenAnalyticsPayload
-import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
-import com.tangem.features.commonfeatures.api.choosetoken.ChooserBlock
-import com.tangem.features.commonfeatures.api.choosetoken.PaymentAccountTokens
-import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
-import com.tangem.features.commonfeatures.api.choosetoken.PredefinedTokenToAdd
+import com.tangem.features.commonfeatures.api.choosetoken.*
 import com.tangem.features.marketing.api.MarketingBannerRequest
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
-import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.send.impl.R
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.swap.SwapFeatureToggles
@@ -152,6 +146,7 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.filterIf
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
@@ -310,6 +305,7 @@ internal class SwapModel @Inject constructor(
         isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
         appRouter = appRouter,
         isChooseTokenPulseEnabled = swapFeatureToggles.isChooseTokenPulseEnabled,
+        isCustomSlippageEnabled = swapFeatureToggles.isCustomSlippageEnabled,
         predictionTopUpLimitsProvider = Provider { predictionTopUpLimits },
     )
 
@@ -391,6 +387,7 @@ internal class SwapModel @Inject constructor(
     private var isAmountChangedByUser: Boolean = false
     private var lastPermissionNotificationTokens: Pair<String, String>? = null
     private var lastGeoRestrictionTokens: Pair<String, String>? = null
+    private val lowSlippageNoticeAnalytics = LowSlippageNoticeAnalytics(analyticsEventHandler)
 
     private var preselectedFromCurrency: CryptoCurrency? = null
     private var preselectedToCurrency: CryptoCurrency? = null
@@ -404,7 +401,18 @@ internal class SwapModel @Inject constructor(
                 permissionState is PermissionDataState.PermissionSettings
         }
 
-    val approvalSlotNavigation = SlotNavigation<GiveApprovalEntryComponent.Mode>()
+    val flatSheetSlotNavigation = SlotNavigation<SwapBottomSheetRoute>()
+    val glassSheetSlotNavigation = SlotNavigation<SwapBottomSheetRoute>()
+
+    internal val providersSheetSource: StateFlow<ChooseProviderSheetSource>
+        field = MutableStateFlow(
+            ChooseProviderSheetSource(
+                selectedProviderId = "",
+                allProviders = persistentListOf(),
+                notification = null,
+                availableFilters = persistentListOf(),
+            ),
+        )
 
     internal val approvalFullCallback = object : GiveApprovalComponent.Callback {
         override fun onApproveClick() {}
@@ -418,19 +426,19 @@ internal class SwapModel @Inject constructor(
                     approvedAmount = dataState.amount?.parseBigDecimalOrNull(),
                 )
             }
-            approvalSlotNavigation.dismiss()
+            closeGlassSheet()
             updateWalletBalance()
             uiState = stateBuilder.loadingPermissionState(uiState)
             startLoadingQuotesFromLastState(isSilent = true)
         }
 
         override fun onApproveFailed() {
-            approvalSlotNavigation.dismiss()
+            closeGlassSheet()
             showAlert()
         }
 
         override fun onCancelClick() {
-            approvalSlotNavigation.dismiss()
+            closeGlassSheet()
             startLoadingQuotesFromLastState(isSilent = true)
         }
     }
@@ -440,7 +448,7 @@ internal class SwapModel @Inject constructor(
             dataState = dataState.copy(
                 selectedApproveTypes = dataState.selectedApproveTypes + (spenderAddress to approveType),
             )
-            approvalSlotNavigation.dismiss()
+            closeGlassSheet()
 
             val (swapState, permission) = dataState.lastLoadedSwapStates.firstNotNullOfOrNull { (_, state) ->
                 if (state !is SwapState.QuotesLoadedState) return@firstNotNullOfOrNull null
@@ -473,7 +481,7 @@ internal class SwapModel @Inject constructor(
         }
 
         override fun onCancelClick() {
-            approvalSlotNavigation.dismiss()
+            closeGlassSheet()
         }
     }
 
@@ -1135,6 +1143,7 @@ internal class SwapModel @Inject constructor(
         isSilent: Boolean = false,
         updateFeeBlock: Boolean = true,
     ) {
+        resetCustomSlippageIfQuoteChanged(SlippageQuoteKey(fromSwapCurrencyStatus, toSwapCurrencyStatus, amount))
         dataState = dataState.copy(
             amount = amount,
             reduceBalanceBy = reduceBalanceBy,
@@ -1259,6 +1268,8 @@ internal class SwapModel @Inject constructor(
                         providers = toProvidersList,
                         amountToSwap = amount,
                         reduceBalanceBy = reduceBalanceBy,
+                        customSlippage = dataState.slippage.customOrNull,
+                        intentId = params.intentId,
                     )
                 }
             },
@@ -1307,12 +1318,14 @@ internal class SwapModel @Inject constructor(
 
                         val successStates = dataState.getLastLoadedSuccessStates()
                         val pricesLowerBest = getPricesLowerBest(provider.providerId, successStates)
-                        uiState = stateBuilder.updateProvidersBottomSheetContent(
-                            uiState = uiState,
-                            pricesLowerBest = pricesLowerBest,
-                            tokenSwapInfoForProviders = successStates.entries
-                                .associate { it.key.providerId to it.value.toTokenInfo },
-                        )
+                        providersSheetSource.update { source ->
+                            stateBuilder.updateProvidersSheetSource(
+                                source = source,
+                                pricesLowerBest = pricesLowerBest,
+                                tokenSwapInfoForProviders = successStates.entries
+                                    .associate { it.key.providerId to it.value.toTokenInfo },
+                            )
+                        }
                         if (shouldUpdateFeeBlock && isPermissionNotNeeded) {
                             modelScope.launch { feeSelectorReloadTrigger.triggerUpdate() }
                         } else {
@@ -1344,6 +1357,7 @@ internal class SwapModel @Inject constructor(
         feeSelectorRepository.state.value = FeeSelectorUM.Error(GetFeeError.UnknownError, isHidden = true)
         uiState = stateBuilder.addNotification(uiState, null) { startLoadingQuotesFromLastState() }
         lastGeoRestrictionTokens = null
+        lowSlippageNoticeAnalytics.reset()
     }
 
     private suspend fun setupLoadedState(
@@ -1354,21 +1368,29 @@ internal class SwapModel @Inject constructor(
     ) {
         when (state) {
             is SwapState.QuotesLoadedState -> {
+                resetCustomSlippageIfNotApplied(state.slippage)
                 setupQuotesLoadedUiState(provider, state)
                 sendAnalyticsForNotifications(provider, fromSwapCurrencyStatus.status, toSwapCurrencyStatus.status)
                 updatePermissionNotificationState(state)
                 updateGeoRestrictionNotificationState(state)
+                lowSlippageNoticeAnalytics.onQuotesLoaded(
+                    state = state,
+                    notifications = uiState.notifications,
+                    customSlippage = dataState.slippage.customOrNull,
+                )
             }
             is SwapState.Transfer -> Unit
             is SwapState.EmptyAmountState -> {
                 setupEmptyAmountUiState(state, fromSwapCurrencyStatus)
                 lastPermissionNotificationTokens = null
                 lastGeoRestrictionTokens = null
+                lowSlippageNoticeAnalytics.reset()
             }
             is SwapState.SwapError -> {
                 setupErrorUiState(provider, state)
                 lastPermissionNotificationTokens = null
                 lastGeoRestrictionTokens = null
+                lowSlippageNoticeAnalytics.reset()
             }
         }
     }
@@ -1391,6 +1413,7 @@ internal class SwapModel @Inject constructor(
             swapFee = swapFee,
             feeError = feeSelectorRepository.state.value as? FeeSelectorUM.Error,
             isHighNetworkFee = isHighNetworkFee(swapFee),
+            slippage = dataState.slippage,
         )
     }
 
@@ -1709,6 +1732,8 @@ internal class SwapModel @Inject constructor(
                     expressOperationType = ExpressOperationType.SWAP,
                     isTangemPayWithdrawal = isTangemPayWithdrawal,
                     integratedApproval = lastLoadedQuotesState.integratedApprovalData,
+                    customSlippage = dataState.slippage.customOrNull,
+                    intentId = params.intentId,
                 )
             }.onSuccess { swapTransactionState ->
                 when (swapTransactionState) {
@@ -2482,9 +2507,43 @@ internal class SwapModel @Inject constructor(
         return combinedReference(messages.toWrappedList())
     }
 
-    private fun dismissProviderBottomSheet() {
-        uiState = stateBuilder.dismissBottomSheet(uiState)
-        singleTaskScheduler.resumeLastTask(modelScope)
+    /**
+     * Opens [route] in the slot of its card material. Ignored while that slot already shows a sheet, so queued
+     * taps never replace an open sheet; [onOpened] runs only when this call actually opened it.
+     */
+    @VisibleForTesting
+    internal fun openBottomSheet(route: SwapBottomSheetRoute, onOpened: () -> Unit = {}) {
+        slotFor(route).activate(route) { onOpened() }
+    }
+
+    private fun slotFor(route: SwapBottomSheetRoute): SlotNavigation<SwapBottomSheetRoute> =
+        if (route.isMaterial) glassSheetSlotNavigation else flatSheetSlotNavigation
+
+    /** Closes the glass (approval) sheet; a provider sheet underneath stays open. */
+    private fun closeGlassSheet() {
+        glassSheetSlotNavigation.dismiss()
+    }
+
+    internal fun dismissFlatSheet() {
+        flatSheetSlotNavigation.navigate(
+            transformer = { null },
+            onComplete = { _, old ->
+                if (old is SwapBottomSheetRoute.ChooseProvider) singleTaskScheduler.resumeLastTask(modelScope)
+            },
+        )
+    }
+
+    internal fun dismissGlassSheet() {
+        glassSheetSlotNavigation.navigate(
+            transformer = { null },
+            onComplete = { _, old ->
+                when (old) {
+                    is SwapBottomSheetRoute.GiveApproval -> startLoadingQuotesFromLastState(isSilent = true)
+                    is SwapBottomSheetRoute.Slippage -> singleTaskScheduler.resumeLastTask(modelScope)
+                    else -> Unit
+                }
+            },
+        )
     }
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -2494,14 +2553,15 @@ internal class SwapModel @Inject constructor(
             onCurrencyChange = { onCurrencyChange(it) },
             onSwapClick = {
                 onSwapClick()
-                val sendTokenSymbol = dataState.fromSwapCurrencyStatus?.currency?.symbol
-                val receiveTokenSymbol = dataState.toSwapCurrencyStatus?.currency?.symbol
-                if (sendTokenSymbol != null && receiveTokenSymbol != null) {
+                val fromCurrency = dataState.fromSwapCurrencyStatus?.currency
+                val toCurrency = dataState.toSwapCurrencyStatus?.currency
+                if (fromCurrency != null && toCurrency != null) {
                     analyticsEventHandler.send(
                         SwapEvents.ButtonSwapClicked(
-                            sendToken = sendTokenSymbol,
-                            receiveToken = receiveTokenSymbol,
+                            fromCurrency = fromCurrency,
+                            toCurrency = toCurrency,
                             swapUIMode = uiState.swapUIMode,
+                            slippage = appliedSlippagePercent(),
                         ),
                     )
                 }
@@ -2513,49 +2573,39 @@ internal class SwapModel @Inject constructor(
                 onChangeCardsClicked()
                 analyticsEventHandler.send(SwapEvents.ButtonSwipeClicked())
             },
-            onBackClicked = {
-                val bottomSheet = uiState.bottomSheetConfig
-                if (bottomSheet != null && bottomSheet.isShown) {
-                    dismissProviderBottomSheet()
-                } else {
-                    router.pop()
-                }
-            },
+            onBackClicked = { router.pop() },
             onMaxAmountSelected = ::onMaxAmountClicked,
             onPredefinedPercentSelected = ::onPredefinedPercentSelected,
             onReduceToAmount = ::onReduceAmountClicked,
             onReduceByAmount = ::onReduceAmountClicked,
             onApproveClick = {
-                singleTaskScheduler.cancelTask()
-                sendGivePermissionClickedEvent()
                 val approval = getApprovalParams()
                 if (approval != null) {
-                    approvalSlotNavigation.activate(
-                        GiveApprovalEntryComponent.Mode.FullApproval(approval),
-                    )
+                    openBottomSheet(SwapBottomSheetRoute.GiveApproval(approval)) {
+                        singleTaskScheduler.cancelTask()
+                        sendGivePermissionClickedEvent()
+                    }
                 }
             },
             onApproveTypeSelect = { provider ->
                 val approval = getSelectApprovalTypeParams(provider)
                 if (approval != null) {
-                    approvalSlotNavigation.activate(
-                        GiveApprovalEntryComponent.Mode.SelectOnly(approval),
-                    )
+                    openBottomSheet(SwapBottomSheetRoute.SelectApprovalType(approval))
                 }
             },
             onAmountSelected = { onAmountSelected(it) },
             onProviderClick = { providerId ->
-                singleTaskScheduler.cancelTask()
-                analyticsEventHandler.send(SwapEvents.ProviderClicked())
-                val states = dataState.getLastLoadedSuccessStates()
-                val pricesLowerBest = getPricesLowerBest(providerId, states)
-                uiState = stateBuilder.showSelectProviderBottomSheet(
-                    uiState = uiState,
-                    selectedProviderId = providerId,
-                    pricesLowerBest = pricesLowerBest,
-                    providersStates = dataState.lastLoadedSwapStates,
-                    needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
-                ) { dismissProviderBottomSheet() }
+                openBottomSheet(SwapBottomSheetRoute.ChooseProvider) {
+                    singleTaskScheduler.cancelTask()
+                    analyticsEventHandler.send(SwapEvents.ProviderClicked())
+                    val states = dataState.getLastLoadedSuccessStates()
+                    providersSheetSource.value = stateBuilder.buildProvidersSheetSource(
+                        selectedProviderId = providerId,
+                        pricesLowerBest = getPricesLowerBest(providerId, states),
+                        providersStates = dataState.lastLoadedSwapStates,
+                        needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
+                    )
+                }
             },
             onProviderSelect = { providerId ->
                 val provider = findAndSelectProvider(providerId)
@@ -2570,7 +2620,7 @@ internal class SwapModel @Inject constructor(
                         feeSelectorReloadTrigger.triggerUpdate()
                     }
                     analyticsEventHandler.send(SwapEvents.ProviderChosen(provider))
-                    dismissProviderBottomSheet()
+                    dismissFlatSheet()
                     modelScope.launch {
                         setupLoadedState(
                             provider = provider,
@@ -2580,18 +2630,6 @@ internal class SwapModel @Inject constructor(
                         )
                     }
                 }
-            },
-            onProviderFilterSelect = { filterType ->
-                analyticsEventHandler.send(
-                    SwapAnalyticsEvent.FilterProvider(
-                        filterType = when (filterType) {
-                            ProviderFilterType.ALL -> "All"
-                            ProviderFilterType.CEX -> "CEX"
-                            ProviderFilterType.DEX -> "DEX"
-                        },
-                    ),
-                )
-                uiState = stateBuilder.updateProviderFilterType(uiState, filterType)
             },
             openTokenDetailsScreen = { cryptoCurrency ->
                 val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus ?: return@UiActions
@@ -2624,6 +2662,95 @@ internal class SwapModel @Inject constructor(
             onSwapUIModeChange = ::onSwapUIModeChange,
             onSwapTypeMenuOpened = ::onSwapTypeMenuOpened,
             onTronBannerShown = ::incrementTronTokenFeeShowCount,
+            onSlippageClick = ::onSlippageClick,
+        )
+    }
+
+    @VisibleForTesting
+    internal fun onSlippageClick() {
+        val provider = dataState.selectedProvider ?: return
+        val defaultPercent = provider.defaultSlippage ?: return
+        val params = SwapSlippageComponent.Params(
+            provider = provider,
+            defaultPercent = defaultPercent,
+            customSlippage = dataState.slippage.customOrNull,
+            onConfirm = ::onSlippageConfirm,
+            onCloseClick = ::dismissGlassSheet,
+        )
+        openBottomSheet(SwapBottomSheetRoute.Slippage(params)) {
+            singleTaskScheduler.cancelTask()
+            sendSlippageEvent(SwapEvents::ButtonSlippage)
+            if (dataState.slippage.isResetHighlighted) {
+                dataState = dataState.copy(slippage = SwapSlippageState.Default())
+            }
+            refreshSlippageUM()
+        }
+    }
+
+    @VisibleForTesting
+    internal fun onSlippageConfirm(customSlippage: BigDecimal?) {
+        (customSlippage ?: dataState.selectedProvider?.defaultSlippage)?.let { confirmedSlippage ->
+            sendSlippageEvent { from, to -> SwapEvents.ButtonSlippageConfirm(from, to, confirmedSlippage) }
+        }
+        val isChanged = customSlippage != dataState.slippage.customOrNull
+        dataState = dataState.copy(
+            slippage = customSlippage
+                ?.let { SwapSlippageState.Custom(value = it, quoteKey = currentSlippageQuoteKey()) }
+                ?: SwapSlippageState.Default(),
+        )
+        refreshSlippageUM()
+        if (isChanged) startLoadingQuotesFromLastState(isSilent = true)
+        dismissGlassSheet()
+    }
+
+    private fun sendSlippageEvent(createEvent: (from: CryptoCurrency, to: CryptoCurrency) -> SwapEvents) {
+        val fromCurrency = dataState.fromSwapCurrencyStatus?.currency ?: return
+        val toCurrency = dataState.toSwapCurrencyStatus?.currency ?: return
+        analyticsEventHandler.send(createEvent(fromCurrency, toCurrency))
+    }
+
+    /** The provider's quote carries the slippage it actually applied, which may differ from the one requested. */
+    private fun appliedSlippagePercent(): BigDecimal? {
+        val provider = dataState.selectedProvider ?: return null
+        return dataState.getCurrentLoadedSwapState()?.slippage
+            ?: provider.acceptedSlippageOrNull(dataState.slippage.customOrNull)
+            ?: provider.defaultSlippage
+    }
+
+    private fun currentSlippageQuoteKey(): SlippageQuoteKey? {
+        val from = dataState.fromSwapCurrencyStatus ?: return null
+        val to = dataState.toSwapCurrencyStatus ?: return null
+        val amount = dataState.amount ?: return null
+        return SlippageQuoteKey(from, to, amount)
+    }
+
+    @VisibleForTesting
+    internal fun resetCustomSlippageIfQuoteChanged(quoteKey: SlippageQuoteKey) {
+        val slippage = dataState.slippage as? SwapSlippageState.Custom ?: return
+        if (slippage.quoteKey != quoteKey) resetCustomSlippage()
+    }
+
+    /**
+     * The provider applies a custom slippage only if it supports it and the value is in its range, otherwise it
+     * falls back to its default for the pair and amount. Null comes from responses without slippage.
+     */
+    @VisibleForTesting
+    internal fun resetCustomSlippageIfNotApplied(appliedSlippage: BigDecimal?) {
+        val customSlippage = dataState.slippage.customOrNull ?: return
+        if (appliedSlippage != null && appliedSlippage.compareTo(customSlippage) != 0) resetCustomSlippage()
+    }
+
+    private fun resetCustomSlippage() {
+        dataState = dataState.copy(slippage = SwapSlippageState.Default(isResetHighlighted = true))
+        refreshSlippageUM()
+    }
+
+    private fun refreshSlippageUM() {
+        val provider = dataState.selectedProvider ?: return
+        uiState = stateBuilder.updateSlippage(
+            uiState = uiState,
+            swapProvider = provider,
+            slippage = dataState.slippage,
         )
     }
 
@@ -3505,17 +3632,13 @@ internal class SwapModel @Inject constructor(
         val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus ?: return null
         val swapState = dataState.lastLoadedSwapStates[provider] as? SwapState.QuotesLoadedState ?: return null
         val permissionState = swapState.permissionState as? PermissionDataState.PermissionSettings ?: return null
-        val providerName = swapState.swapProvider.name
         val approvalType = permissionState.type
 
         return SelectApprovalTypeComponent.Params(
             userWalletId = params.userWalletId,
             cryptoCurrencyStatus = fromSwapCurrencyStatus.status,
             initialApproveType = approvalType,
-            amountFooter = resourceReference(
-                id = R.string.give_permission_swap_subtitle,
-                formatArgs = wrappedList(providerName, fromSwapCurrencyStatus.currency.symbol),
-            ),
+            amountFooter = dexApprovalSubtitle(),
             spenderAddress = permissionState.spenderAddress,
             callback = approvalSelectorCallback,
         )
@@ -3525,7 +3648,6 @@ internal class SwapModel @Inject constructor(
         val permissionState = uiState.permissionUM as? SwapPermissionUM.PermissionRequired ?: return null
         val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus ?: return null
         val feeCryptoCurrency = dataState.feePaidCryptoCurrency ?: return null
-        val providerName = dataState.selectedProvider?.name.orEmpty()
         val isHoldToConfirm = fromSwapCurrencyStatus.userWallet.isHotWallet
 
         return GiveApprovalComponent.Params(
@@ -3537,10 +3659,7 @@ internal class SwapModel @Inject constructor(
             amountFooter = if (permissionState.isResetApproval) {
                 resourceReference(R.string.update_approval_permission_subtitle)
             } else {
-                resourceReference(
-                    id = R.string.give_permission_swap_subtitle,
-                    formatArgs = wrappedList(providerName, fromSwapCurrencyStatus.currency.symbol),
-                )
+                dexApprovalSubtitle()
             },
             feeFooter = resourceReference(R.string.swap_give_permission_fee_footer),
             isResetApproval = permissionState.isResetApproval,
@@ -3548,6 +3667,12 @@ internal class SwapModel @Inject constructor(
             callback = approvalFullCallback,
         )
     }
+
+    // The approval sheet appends its own "Learn more" link, so the string's link placeholder stays empty.
+    private fun dexApprovalSubtitle() = resourceReference(
+        id = R.string.give_permission_swap_subtitle_v2,
+        formatArgs = wrappedList(""),
+    )
 
     private companion object {
         const val INITIAL_AMOUNT = ""

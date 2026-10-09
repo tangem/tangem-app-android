@@ -130,6 +130,17 @@ interface TangemSdkManager {
         registerColdWallet: Boolean,
     ): CompletionResult<T>
 
+    /**
+     * Wraps [runnable] so that, once it succeeds, the cold wallet is registered with the backend on the same NFC tap,
+     * for a card session that isn't started through this manager (e.g. a backup step). Returns [runnable] unchanged
+     * when backend authentication is disabled. [shouldForceRegistration] registers a wallet that is already registered
+     * again, so the backend gets its up-to-date state.
+     */
+    fun <T> withColdWalletRegistration(
+        runnable: CardSessionRunnable<T>,
+        shouldForceRegistration: Boolean,
+    ): CardSessionRunnable<T>
+
     @Suppress("MagicNumber")
     fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse?)
 

@@ -7,9 +7,8 @@ import com.tangem.domain.pay.repository.CashbackRepository
 import com.tangem.domain.visa.error.VisaApiError
 
 /**
- * Loads the cashback summary from `GET /v1/customer/cashback/summary`.
- *
- * Used by the Payment account cashback widget and the Cashback screen header.
+ * Loads the cashback summary from `GET /v1/customer/cashback/summary` and refreshes the cache read by
+ * [ObserveCashbackSummaryUseCase].
  */
 class GetCashbackSummaryUseCase(
     private val cashbackRepository: CashbackRepository,

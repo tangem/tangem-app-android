@@ -21,9 +21,11 @@ interface BankOfframpOrderRepository {
         idempotencyKey: String,
     ): Either<BankOfframpError, BankOfframpOrderResult>
 
+    /** An order asking for a signature on anything but [request] is reported as [BankOfframpOrderState.Failed]. */
     suspend fun getOrderState(
         userWalletId: UserWalletId,
         orderId: String,
+        request: BankOfframpOrderRequest,
     ): Either<BankOfframpError, BankOfframpOrderState>
 
     /** [idempotencyKey] is the one the order was created with, so a resubmitted signature settles the same order. */

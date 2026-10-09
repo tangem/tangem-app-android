@@ -48,9 +48,9 @@ internal class TangemPayReissueCardModel @Inject constructor(
         field = MutableStateFlow(
             TangemPayReissueCardUM(
                 feeAmount = "",
-                isFeeLoading = true,
                 error = null,
-                isReissuingInProgress = false,
+                isConfirmButtonLoading = false,
+                isConfirmButtonEnabled = false,
                 onConfirmClick = ::onConfirm,
                 onRetryFee = ::loadData,
                 onAddFundsClick = { params.listener.onClickAddFunds() },
@@ -71,7 +71,7 @@ internal class TangemPayReissueCardModel @Inject constructor(
 
     private fun onConfirm() {
         analytics.send(TangemPayAnalyticsEvents.ReplaceCardConfirmed())
-        state.update { it.copy(isReissuingInProgress = true) }
+        state.update { it.copy(isConfirmButtonLoading = true, isConfirmButtonEnabled = false) }
         modelScope.launch {
             reissueTangemPayCardUseCase(
                 userWalletId = params.userWalletId,
@@ -84,7 +84,7 @@ internal class TangemPayReissueCardModel @Inject constructor(
     }
 
     private fun loadData() {
-        state.update { it.copy(isFeeLoading = true, error = null) }
+        state.update { it.copy(isConfirmButtonEnabled = false, error = null) }
 
         modelScope.launch {
             val (cardBalance, fee) = coroutineScope {
@@ -109,7 +109,7 @@ internal class TangemPayReissueCardModel @Inject constructor(
                             fiat(fee.currencyCode, symbol)
                         }
                     }.orEmpty(),
-                    isFeeLoading = false,
+                    isConfirmButtonEnabled = error != TangemPayReissueCardError.InsufficientFunds,
                     error = error,
                     cardBalance = cardBalance?.let {
                         cardBalance.fiatBalance.format {

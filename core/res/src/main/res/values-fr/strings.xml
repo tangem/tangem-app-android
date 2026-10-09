@@ -2150,7 +2150,7 @@
   <string name="tangempay_cashback_accruals_calc_title">Comment calculons-nous le cashback ?</string>
   <string name="tangempay_cashback_accruals_exceptions_description">Temporairement, le cashback n’est pas disponible pour les paiements sans contact en magasin dans l’UE. Il ne s’applique pas non plus aux retraits, au quasi-cash, aux recharges mobiles, aux services publics et à certaines autres catégories.</string>
   <string name="tangempay_cashback_accruals_exceptions_title">Exceptions</string>
-  <string name="tangempay_cashback_accruals_pay_description">Du 2 au 5 du mois suivant</string>
+  <string name="tangempay_cashback_accruals_pay_description">Avant le 10 du mois suivant, après vérification de la conformité des transactions aux règles du programme de cashback</string>
   <string name="tangempay_cashback_accruals_pay_title">Comment versons-nous le cashback ?</string>
   <string name="tangempay_cashback_accruals_subtitle">Limites et exceptions</string>
   <string name="tangempay_cashback_accruals_title">Cumuls</string>
@@ -2159,7 +2159,7 @@
   <string name="tangempay_cashback_additional_until">Jusqu\'au %1$s</string>
   <string name="tangempay_cashback_deactivated_description">Suite à une activité suspecte. Contactez le support</string>
   <string name="tangempay_cashback_deactivated_title">Cashback désactivé</string>
-  <string name="tangempay_cashback_deposit_banner">Cashback %1$s pour %2$s versé avant le %3$s</string>
+  <string name="tangempay_cashback_deposit_banner">Cashback %1$s pour %2$s versé avant le %3$s, après vérification</string>
   <string name="tangempay_cashback_deposited_on">Versé le %1$s</string>
   <string name="tangempay_cashback_details_cap">%1$s max/mois</string>
   <string name="tangempay_cashback_details_eu_excluded">Temporairement, le cashback n’est pas disponible pour les paiements sans contact en magasin dans l’UE</string>
@@ -2258,7 +2258,7 @@
   <string name="tangempay_kyc_rejected_description">Désolé, nous n\'avons pas pu vérifier</string>
   <string name="tangempay_kyc_rejected_description_span">votre identité.</string>
   <string name="tangempay_main_select_plan">Sélectionner un forfait</string>
-  <string name="tangempay_maximum_cards_issued_description">Vous pouvez avoir jusqu\'à 3 cartes. Supprimez une carte pour pouvoir en ajouter une nouvelle.</string>
+  <string name="tangempay_maximum_cards_issued_description">Supprimez une carte pour pouvoir en ajouter une nouvelle</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">Passez à un forfait supérieur pour plus de cartes</string>
   <string name="tangempay_maximum_cards_issued_for_plan_title">Limite de cartes atteinte pour ce forfait</string>
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">Forfait supérieur</string>

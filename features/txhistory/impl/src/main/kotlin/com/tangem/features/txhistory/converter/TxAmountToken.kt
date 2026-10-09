@@ -19,11 +19,7 @@ internal fun SdkAmount?.resolveToken(networkTokens: Set<CryptoCurrency.Token>): 
 
 /** The tracked token a fee-only row paid for */
 internal fun TxInfo.feeForToken(networkTokens: Set<CryptoCurrency.Token>): CryptoCurrency.Token? {
-    return when (val type = type) {
-        is TxInfo.TransactionType.NetworkFee -> type.amount.resolveToken(networkTokens)
-        is TxInfo.TransactionType.Joint.TokenFee -> networkTokens.findByContract(type.tokenContract)
-        else -> null
-    }
+    return (type as? TxInfo.TransactionType.NetworkFee)?.amount.resolveToken(networkTokens)
 }
 
 private fun Set<CryptoCurrency.Token>.findByContract(contractAddress: String): CryptoCurrency.Token? =

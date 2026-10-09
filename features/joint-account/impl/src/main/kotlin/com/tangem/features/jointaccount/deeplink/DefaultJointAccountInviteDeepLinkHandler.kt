@@ -60,6 +60,11 @@ internal class DefaultJointAccountInviteDeepLinkHandler @AssistedInject construc
     interface Factory : JointAccountInviteDeepLinkHandler.Factory {
         override fun create(coroutineScope: CoroutineScope, deeplinkUri: Uri): DefaultJointAccountInviteDeepLinkHandler
     }
+
+    companion object {
+        const val DEEPLINK_KEY =
+            "https://tangem.com/$PATH_SEGMENT_JOINT_ACCOUNT/$PATH_SEGMENT_JOIN"
+    }
 }
 
 /** Parses `https://tangem.com/joint-account/join/{inviteId}` into the invite id. */

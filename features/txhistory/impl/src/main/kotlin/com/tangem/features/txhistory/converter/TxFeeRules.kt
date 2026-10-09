@@ -44,8 +44,7 @@ internal fun TxInfo.isFeeOnly(currency: CryptoCurrency): Boolean =
  * the network fee, so the row and the details card show that fee under the plain "Network fee" title. Unlike a
  * decoded [TransactionType.NetworkFee] there is nothing to say the fee was paid *for* — the call was never
  * recognized. An **incoming** one is somebody else's call, a zero-value spam call to the wallet's address being the
- * usual case, and the fee on it is the sender's — so it stays an ordinary operation. A joint account's Safe call
- * that moved no coin is the same case: the Safe paid the fee and nothing else.
+ * usual case, and the fee on it is the sender's — so it stays an ordinary operation.
  */
 internal fun TxInfo.isFeeOnlyOperation(currency: CryptoCurrency): Boolean = isOutgoing &&
     currency is CryptoCurrency.Coin &&
@@ -53,17 +52,13 @@ internal fun TxInfo.isFeeOnlyOperation(currency: CryptoCurrency): Boolean = isOu
     type.isUndecodedCall()
 
 private fun TransactionType.isUndecodedCall(): Boolean =
-    this is TransactionType.Operation || this is TransactionType.UnknownOperation || this is TransactionType.Joint.Call
+    this is TransactionType.Operation || this is TransactionType.UnknownOperation
 
 /** Moved no coin of its own, only paid for a token transfer */
-internal fun TxInfo.isTokenFee(): Boolean = type is TransactionType.NetworkFee || type is TransactionType.Joint.TokenFee
+internal fun TxInfo.isTokenFee(): Boolean = type is TransactionType.NetworkFee
 
 /** The tokens a fee-only row paid for, when it names them */
-internal fun TxInfo.feeForAmount(): SdkAmount? = when (val type = type) {
-    is TransactionType.NetworkFee -> type.amount
-    is TransactionType.Joint.TokenFee -> type.tokenAmount
-    else -> null
-}
+internal fun TxInfo.feeForAmount(): SdkAmount? = (type as? TransactionType.NetworkFee)?.amount
 
 /**
  * Whether the matched on-chain leg is the one the user paid for. Only a swap viewed from its `from` token qualifies:
@@ -77,7 +72,10 @@ internal val ExpressTx.isPayInLeg: Boolean
 
 // region The fee row
 
-/** The network-fee row of a details card, absent while the transaction carries no fee we can name. */
+/**
+ * The network-fee row of a details card, absent while the transaction carries no fee we can name — including a fee
+ * that resolves to zero, which no network charges and which the card must not state ([REDACTED_TASK_KEY]).
+ */
 internal fun TxInfo.feeRows(currency: CryptoCurrency): ImmutableList<TxHistoryDetailsUM.InfoRowUM> =
     listOfNotNull(feeRow(currency)).toImmutableList()
 
@@ -97,12 +95,13 @@ private fun TxInfo.feeRow(currency: CryptoCurrency): TxHistoryDetailsUM.InfoRowU
  */
 private fun TxInfo.gaslessFeeText(currency: CryptoCurrency): String? {
     val gaslessFee = (this as? TxInfo.MultiTransfer)?.gaslessFee ?: return null
-    return gaslessFee.amount.format { crypto(cryptoCurrency = currency, ignoreSymbolPosition = true) }
+    val value = gaslessFee.amount.takeIf { !it.isZero() } ?: return null
+    return value.format { crypto(cryptoCurrency = currency, ignoreSymbolPosition = true) }
 }
 
 private fun TxInfo.nativeFeeText(): String? {
     val fee = fee ?: return null
-    val value = fee.value ?: return null
+    val value = fee.value?.takeIf { !it.isZero() } ?: return null
     return value.format { crypto(symbol = fee.currencySymbol, decimals = fee.decimals, ignoreSymbolPosition = true) }
 }
 
