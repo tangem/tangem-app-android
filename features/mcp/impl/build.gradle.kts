@@ -37,6 +37,7 @@ dependencies {
     implementation(projects.core.utils)
 
     /** Compose */
+    implementation(deps.compose.coil)
     implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
