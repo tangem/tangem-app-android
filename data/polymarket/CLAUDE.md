@@ -24,6 +24,10 @@ in the same PR as the code.
 Activity history (`/activity`, `/activity/deposits/reconcile`) was checked against an OpenAPI export on
 28.09.2026.
 
+Discovery and open-position sports metadata was checked against `tangem-09.10.2026-api-docs.json` on
+09.10.2026. Sports fields are optional and nullable; `live` is required. Keep scores and periods as raw
+provider strings and teams in provider order. `dataFetchedAt` dates the backend's snapshot, not game end.
+
 ## Wire-format traps (each one cost a device session)
 
 - **The CLOB answers `400 "Could not derive api key!"`, not `404`, for an address with no key yet.** That
