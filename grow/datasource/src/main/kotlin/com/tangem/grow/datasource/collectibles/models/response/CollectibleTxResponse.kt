@@ -30,7 +30,7 @@ data class CollectibleTxResponse(
         @SerialName("theGrade")
         val grade: String?,
         @SerialName("gradingID")
-        val gradingId: String,
+        val gradingId: String?,
         @SerialName("imageFront")
         val imageFront: String?,
         @SerialName("imageBack")
