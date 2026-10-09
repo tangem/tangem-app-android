@@ -57,6 +57,19 @@ internal object TangemPayMessagesFactory {
                     onClick { closeBs() }
                 }
             }
+            TangemPayDetailsErrorType.ServiceUnavailable -> bottomSheetMessage {
+                infoBlock {
+                    icon(R.drawable.img_attention_20) {
+                        backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Attention
+                    }
+                    title = TextReference.Res(R.string.tangempay_service_unavailable_title)
+                    body = TextReference.Res(R.string.tangempay_card_details_receive_error_description)
+                }
+                primaryButton {
+                    text = resourceReference(R.string.common_got_it)
+                    onClick { closeBs() }
+                }
+            }
         }
     }
 
