@@ -93,6 +93,7 @@ internal class TangemPayAddFundsUMConverterTest {
             .isEqualTo(TangemIconUM.Icon(imageVector = model.expectedIcon))
         assertThat(row.description).isEqualTo(model.expectedDescription)
         if (model.isClickable) assertThat(row.onClick).isNotNull() else assertThat(row.onClick).isNull()
+        assertThat(row.isLoading).isEqualTo(model.isBankTransferLoading)
         assertThat(row.accent).isEqualTo(model.expectedAccent)
     }
 
@@ -141,10 +142,10 @@ internal class TangemPayAddFundsUMConverterTest {
             isV2Enabled = true,
             onramp = VirtualAccountOnramp.Available(productInstanceId = "pi_account"),
             isBankTransferLoading = true,
-            expectedIcon = Icons.ic_clock_20,
-            expectedDescription = resourceReference(R.string.tangempay_topup_bank_transfer_pending_body),
+            expectedIcon = Icons.ic_government_20,
+            expectedDescription = resourceReference(R.string.tangempay_topup_bank_transfer_body),
             isClickable = false,
-            expectedAccent = TangemPayAddFundsItemUM.Accent.Warning,
+            expectedAccent = TangemPayAddFundsItemUM.Accent.Info,
         ),
     )
 
