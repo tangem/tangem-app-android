@@ -556,6 +556,7 @@ internal class PolymarketPositionDetailsModelTest {
         liquidity = null,
         totalMarketsCount = 0,
         isNegRisk = false,
+        isLive = false,
         displayMode = PolymarketDisplayMode.PLAIN_MARKETS,
         markets = markets,
     )
