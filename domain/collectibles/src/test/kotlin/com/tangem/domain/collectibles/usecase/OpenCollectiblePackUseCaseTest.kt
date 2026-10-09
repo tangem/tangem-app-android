@@ -20,6 +20,7 @@ import com.tangem.domain.collectibles.repository.CollectiblesRepository
 import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -29,9 +30,10 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EnumSource
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class OpenCollectiblePackUseCaseTest {
 
     private val collectiblesRepository: CollectiblesRepository = mockk()
@@ -169,10 +171,23 @@ internal class OpenCollectiblePackUseCaseTest {
     }
 
     @Test
-    fun `GIVEN the send fails WHEN invoked THEN the purchase fails`() = runTest {
+    fun `GIVEN the send fails WHEN invoked THEN the pack is left unopened`() = runTest {
         // Arrange
         coEvery { gachaVaultRepository.sendPurchasePack(any(), any(), any(), any(), any()) } returns
             CollectiblesAccountError.DelegateNotProvisioned.left()
+
+        // Act
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+
+        // Assert
+        assertThat(actual).isEqualTo(OpenPackStep.Failed.PackUnopened(TX_ID))
+    }
+
+    @Test
+    fun `GIVEN the hot delegate fails to sign WHEN invoked THEN the purchase fails as unpaid`() = runTest {
+        // Arrange
+        coEvery { gachaVaultRepository.sendPurchasePack(any(), any(), any(), any(), any()) } returns
+            CollectiblesAccountError.DelegateSigningFailed(IllegalStateException()).left()
 
         // Act
         val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
@@ -225,6 +240,20 @@ internal class OpenCollectiblePackUseCaseTest {
     }
 
     @Test
+    fun `GIVEN an unknown status WHEN invoked THEN polling stops and the opening is tried`() = runTest {
+        // Arrange
+        coEvery { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any()) } returns
+            state(CollectibleTxStatus.UNKNOWN)
+
+        // Act
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+
+        // Assert
+        assertThat(actual).isEqualTo(OpenPackStep.Opened(PACK))
+        coVerify(exactly = 1) { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any()) }
+    }
+
+    @Test
     fun `GIVEN the payment never lands WHEN invoked THEN the pack is left unopened`() = runTest {
         // Arrange
         coEvery { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any()) } returns
@@ -238,19 +267,42 @@ internal class OpenCollectiblePackUseCaseTest {
     }
 
     @ParameterizedTest
-    @EnumSource(names = ["REFUNDED", "EXPIRED", "AUTO_BUYBACKED", "PAUSED"])
-    fun `GIVEN the purchase ends unpaid WHEN invoked THEN the pack is left unopened`(status: CollectibleTxStatus) =
-        runTest {
-            // Arrange
-            coEvery { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any()) } returns state(status)
+    @ProvideTestModels
+    fun `GIVEN the purchase is closed WHEN invoked THEN it fails by its status without opening`(
+        model: ClosedStatusModel,
+    ) = runTest {
+        // Arrange
+        coEvery { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any()) } returns state(model.status)
 
-            // Act
-            val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+        // Act
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
 
-            // Assert
-            assertThat(actual).isEqualTo(OpenPackStep.Failed.PackUnopened(TX_ID))
-            coVerify(exactly = 0) { collectiblesRepository.openPack(any(), any()) }
-        }
+        // Assert
+        assertThat(actual).isEqualTo(model.expected)
+        coVerify(exactly = 0) { collectiblesRepository.openPack(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN the opening answers refunded WHEN invoked THEN it fails as refunded`() = runTest {
+        // Arrange
+        coEvery { collectiblesRepository.openPack(WALLET_ID, TX_ID) } returns state(CollectibleTxStatus.REFUNDED)
+
+        // Act
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+
+        // Assert
+        assertThat(actual).isEqualTo(OpenPackStep.Failed.Refunded)
+    }
+
+    internal data class ClosedStatusModel(val status: CollectibleTxStatus, val expected: OpenPackStep.Failed)
+
+    private fun provideTestModels() = listOf(
+        ClosedStatusModel(CollectibleTxStatus.EXPIRED, OpenPackStep.Failed.Expired),
+        ClosedStatusModel(CollectibleTxStatus.REFUNDED, OpenPackStep.Failed.Refunded),
+        ClosedStatusModel(CollectibleTxStatus.PAUSED, OpenPackStep.Failed.PackUnopened(TX_ID)),
+        ClosedStatusModel(CollectibleTxStatus.AUTO_BUYBACKED, OpenPackStep.Failed.Unexpected),
+        ClosedStatusModel(CollectibleTxStatus.MANUALLY_BUYBACKED, OpenPackStep.Failed.Unexpected),
+    )
 
     @Test
     fun `GIVEN opening fails WHEN invoked THEN it is not retried and the pack is left unopened`() = runTest {
