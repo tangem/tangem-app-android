@@ -15,6 +15,7 @@ import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.jointaccount.model.SafeGasToken
+import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.safe.JointTransferPayloadCodec
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
@@ -98,14 +99,17 @@ internal class JointSendDelegate @Inject constructor(
     }
 
     /**
-     * The coin when [feeCurrencyStatus] is null or the coin itself, otherwise the Smart Gas token it names. The coin
-     * figure is always kept as the native fee, which the fee-token list compares with the coin balance.
+     * The Smart Gas token [feeCurrencyStatus] names, or the coin when it names the coin. With nothing picked the coin
+     * pays unless the Safe's coin balance falls short of the fee; then the account's Smart Gas token with the largest
+     * balance that covers it does. The coin figure is always kept as the native fee, which the fee-token list
+     * compares with the coin balance.
      */
     @Suppress("LongParameterList")
     suspend fun loadFeeExtended(
         userWalletId: UserWalletId,
+        account: Account.Joint,
         currency: CryptoCurrency,
-        feeCoin: CryptoCurrency,
+        feeCoinStatus: CryptoCurrencyStatus,
         feeCurrencyStatus: CryptoCurrencyStatus?,
         amountUM: AmountState,
         destinationUM: DestinationUM,
@@ -121,15 +125,59 @@ internal class JointSendDelegate @Inject constructor(
             .mapLeft(GetFeeError::DataError)
             .bind()
         val nativeFee = JointSendFeeConverter(network = currency.network).convert(coinSafeTx)
+        val coinFee = TransactionFeeExtended(
+            transactionFee = nativeFee,
+            feeTokenId = feeCoinStatus.currency.id,
+            nativeFee = nativeFee,
+        )
 
-        val feeToken = feeCurrencyStatus?.currency as? CryptoCurrency.Token
-            ?: return@either TransactionFeeExtended(
-                transactionFee = nativeFee,
-                feeTokenId = feeCoin.id,
-                nativeFee = nativeFee,
-            )
+        if (feeCurrencyStatus != null) {
+            if (feeCurrencyStatus.currency !is CryptoCurrency.Token) return@either coinFee
+            return@either quoteInToken(coinSafeTx = coinSafeTx, tokenStatus = feeCurrencyStatus, nativeFee = nativeFee)
+                .bind()
+        }
 
-        val gasToken = resolveGasToken(network = currency.network, feeToken = feeToken)
+        val coinBalance = feeCoinStatus.value.amount.orZero()
+        if (coinBalance >= nativeFee.normal.amount.value.orZero()) return@either coinFee
+
+        findSmartGasTokenFee(
+            userWalletId = userWalletId,
+            account = account,
+            network = currency.network,
+            coinSafeTx = coinSafeTx,
+            nativeFee = nativeFee,
+        ) ?: coinFee
+    }
+
+    private suspend fun findSmartGasTokenFee(
+        userWalletId: UserWalletId,
+        account: Account.Joint,
+        network: Network,
+        coinSafeTx: SafeTx,
+        nativeFee: TransactionFee,
+    ): TransactionFeeExtended? {
+        return account.cryptoCurrencies
+            .filter { it is CryptoCurrency.Token && it.network == network && it.id.rawCurrencyId != null }
+            .mapNotNull { token ->
+                getAccountCurrencyStatusUseCase.invokeSync(userWalletId = userWalletId, currency = token)
+                    .getOrNull()
+                    ?.status
+            }
+            .filter { it.value.amount.orZero() > BigDecimal.ZERO }
+            .sortedByDescending { it.value.amount.orZero() }
+            .firstNotNullOfOrNull { tokenStatus ->
+                quoteInToken(coinSafeTx = coinSafeTx, tokenStatus = tokenStatus, nativeFee = nativeFee).getOrNull()
+            }
+    }
+
+    private suspend fun quoteInToken(
+        coinSafeTx: SafeTx,
+        tokenStatus: CryptoCurrencyStatus,
+        nativeFee: TransactionFee,
+    ): Either<GetFeeError, TransactionFeeExtended> = either {
+        val feeToken = tokenStatus.currency as CryptoCurrency.Token
+        val network = feeToken.network
+        val gasToken = resolveGasToken(network = network, feeToken = feeToken)
             .onLeft { TangemLogger.e("Unable to price the joint fee in ${feeToken.symbol}", it) }
             .mapLeft(GetFeeError.GaslessError::DataError)
             .bind()
@@ -139,10 +187,10 @@ internal class JointSendDelegate @Inject constructor(
             gasPrice = gasToken.gasPriceInTokenCurrency(coinGasPrice = coinSafeTx.gasPrice),
             gasToken = gasToken.address,
         )
-        val tokenFee = JointSendFeeConverter(network = currency.network, feeToken = feeToken, gasToken = gasToken)
+        val tokenFee = JointSendFeeConverter(network = network, feeToken = feeToken, gasToken = gasToken)
             .convert(tokenSafeTx)
 
-        val feeTokenBalance = feeCurrencyStatus.value.amount ?: BigDecimal.ZERO
+        val feeTokenBalance = tokenStatus.value.amount.orZero()
         ensure(feeTokenBalance >= tokenFee.normal.amount.value.orZero()) { GetFeeError.GaslessError.NotEnoughFunds }
 
         TransactionFeeExtended(transactionFee = tokenFee, feeTokenId = feeToken.id, nativeFee = nativeFee)
