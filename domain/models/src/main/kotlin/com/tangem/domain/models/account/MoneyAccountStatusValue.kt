@@ -16,14 +16,12 @@ sealed class MoneyAccountStatusValue {
 
     abstract val source: StatusSource
 
-    // TODO v_rodionov: #[REDACTED_TASK_KEY] check if it possible to make balance not nullable
-    abstract val balance: Balance?
-
     val totalFiatBalance: TotalFiatBalance
         get() {
             if (this is Loading) return TotalFiatBalance.Loading
 
-            val balance = balance ?: return TotalFiatBalance.Loaded(amount = SerializedBigDecimal.ZERO, source = source)
+            val balance = (this as? Account)?.balance
+                ?: return TotalFiatBalance.Loaded(amount = SerializedBigDecimal.ZERO, source = source)
             val fiatRate = balance.fiatRate ?: return TotalFiatBalance.Failed
 
             return TotalFiatBalance.Loaded(
@@ -32,66 +30,42 @@ sealed class MoneyAccountStatusValue {
             )
         }
 
-    fun copySealed(source: StatusSource): MoneyAccountStatusValue {
-        return when (this) {
-            is Onboarding.Issuing -> copy(source = source)
-            is Onboarding.KycRequired -> copy(source = source)
-            is Onboarding.UnderReview -> copy(source = source)
-            is Onboarding.VerificationDeclined -> copy(source = source)
-            is Onboarding.Activating -> copy(source = source)
-            is Account.Active -> copy(source = source)
-            is Account.Deactivated -> copy(source = source)
-            is Loading,
-            is Empty,
-            is NotCreated,
-            is Onboarding.CountryNotSupported,
-            is Error,
-            -> this
-        }
-    }
-
     @Serializable
     data object Empty : MoneyAccountStatusValue() {
         override val source: StatusSource = StatusSource.ACTUAL
-        override val balance: Balance? = null
     }
 
     @Serializable
     data object Loading : MoneyAccountStatusValue() {
         override val source: StatusSource = StatusSource.ACTUAL
-        override val balance: Balance? = null
     }
 
     @Serializable
     data object NotCreated : MoneyAccountStatusValue() {
         override val source: StatusSource = StatusSource.ACTUAL
-        override val balance: Balance? = null
     }
 
     @Serializable
     sealed class Onboarding : MoneyAccountStatusValue() {
 
-        abstract val customerId: String?
+        abstract val customerId: String
 
         @Serializable
         data class Issuing(
             @SerialName("source") override val source: StatusSource,
-            @SerialName("balance") override val balance: Balance?,
-            @SerialName("customer_id") override val customerId: String?,
+            @SerialName("customer_id") override val customerId: String,
             @SerialName("step") val step: IssuingStep,
         ) : Onboarding()
 
         @Serializable
         data class KycRequired(
             @SerialName("source") override val source: StatusSource,
-            @SerialName("balance") override val balance: Balance?,
-            @SerialName("customer_id") override val customerId: String?,
+            @SerialName("customer_id") override val customerId: String,
         ) : Onboarding()
 
         @Serializable
         data class UnderReview(
             @SerialName("source") override val source: StatusSource,
-            @SerialName("balance") override val balance: Balance?,
             @SerialName("customer_id") override val customerId: String,
             @SerialName("kyc_status") val kycStatus: KycStatus,
         ) : Onboarding()
@@ -99,24 +73,20 @@ sealed class MoneyAccountStatusValue {
         @Serializable
         data class VerificationDeclined(
             @SerialName("source") override val source: StatusSource,
-            @SerialName("balance") override val balance: Balance?,
             @SerialName("customer_id") override val customerId: String,
         ) : Onboarding()
 
         @Serializable
         data class CountryNotSupported(
-            val countryCode: String?,
-        ) : Onboarding() {
-            override val source: StatusSource = StatusSource.ACTUAL
-            override val balance: Balance? = null
-            override val customerId: String? = null
-        }
+            @SerialName("source") override val source: StatusSource,
+            @SerialName("customer_id") override val customerId: String,
+            @SerialName("countryCode") val countryCode: String?,
+        ) : Onboarding()
 
         @Serializable
         data class Activating(
             @SerialName("source") override val source: StatusSource,
-            @SerialName("balance") override val balance: Balance?,
-            @SerialName("customer_id") override val customerId: String?,
+            @SerialName("customer_id") override val customerId: String,
         ) : Onboarding()
     }
 
@@ -125,6 +95,7 @@ sealed class MoneyAccountStatusValue {
 
         abstract val customerId: String
         abstract val productInstanceId: String
+        abstract val balance: Balance?
 
         @Serializable
         data class Active(
@@ -149,19 +120,16 @@ sealed class MoneyAccountStatusValue {
         @Serializable
         data object ExposedDevice : Error() {
             override val source: StatusSource = StatusSource.ACTUAL
-            override val balance: Balance? = null
         }
 
         @Serializable
         data object Unavailable : Error() {
             override val source: StatusSource = StatusSource.ACTUAL
-            override val balance: Balance? = null
         }
 
         @Serializable
         data object NotSynced : Error() {
             override val source: StatusSource = StatusSource.ACTUAL
-            override val balance: Balance? = null
         }
     }
 
