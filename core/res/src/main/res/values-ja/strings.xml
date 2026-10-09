@@ -987,6 +987,7 @@
   <string name="initial_wallet_sync_banner_description">ウォレットは同期され、準備ができています。\n一部のトークンが見つかりませんか？</string>
   <string name="initial_wallet_sync_banner_title">ウォレットのインポートが完了しました</string>
   <string name="initial_wallet_sync_restore_progress">%d%%を復元中</string>
+  <string name="introduction_button_buy_tangem">Tangemを購入</string>
   <string name="introduction_button_create_wallet">ウォレットを作成</string>
   <string name="introduction_button_i_have_a_wallet">ウォレットを持っている</string>
   <string name="introduction_create_wallet_hardware_description">Tangemウォレットをお持ちの場合</string>
