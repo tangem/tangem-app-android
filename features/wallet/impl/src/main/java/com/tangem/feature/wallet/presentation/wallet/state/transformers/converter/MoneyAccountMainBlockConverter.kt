@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
 import com.tangem.common.ui.R
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -63,13 +64,14 @@ internal class MoneyAccountMainBlockConverter(
     }
 
     private fun MoneyAccountStatusValue.Account.toUM(userWalletId: UserWalletId): MoneyAccountMainUM {
-        val balance = balance ?: return MoneyAccountMainUM.Loading
         return MoneyAccountMainUM.Content(
-            subtitle = resourceReference(
-                id = R.string.money_account_main_status_active,
-                formatArgs = wrappedList(balance.cryptoCurrency.network.name),
-            ),
-            balance = balance.toUM(source),
+            subtitle = balance?.let {
+                resourceReference(
+                    id = R.string.money_account_main_status_active,
+                    formatArgs = wrappedList(it.cryptoCurrency.network.name),
+                )
+            } ?: TextReference.EMPTY,
+            balance = balance?.toUM(source),
             onClick = { moneyAccountIntents.onMoneyAccountClicked(userWalletId) },
         )
     }
