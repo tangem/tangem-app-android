@@ -28,7 +28,7 @@ internal data class MarketCategorySelectorUM(
             val categories: MarketCategoryListUM,
         ) : ContentUM
 
-        /** A search matched nothing. Unreachable without a query: an unfiltered list always has the "All" row. */
+        /** A search matched nothing. An unfiltered listing keeps the list body even when it is empty. */
         data object Empty : ContentUM
 
         @Immutable

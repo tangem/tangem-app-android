@@ -937,6 +937,78 @@ internal class TangemPayBankWithdrawFormModelTest {
     }
 
     @Test
+    fun `GIVEN saved account number typed and other fields blank WHEN suggestions shown THEN continue enabled`() {
+        // Arrange
+        savedAccounts.value = listOf(didenko)
+        val model = createModel()
+
+        // Act
+        focus(model, BankWithdrawFormField.AccountNumber)
+        fill(model, BankWithdrawFormField.AccountNumber, "4830019271")
+
+        // Assert
+        assertThat(suggestions(model)).isNotEmpty()
+        assertThat(model.uiState.value.isContinueEnabled).isTrue()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN suggestions shown and blank fields WHEN continue clicked THEN suggestions hidden and blanks required`() {
+        // Arrange
+        savedAccounts.value = listOf(didenko)
+        val model = createModel()
+        focus(model, BankWithdrawFormField.AccountNumber)
+        fill(model, BankWithdrawFormField.AccountNumber, "4830019271")
+
+        // Act
+        model.uiState.value.onContinueClick()
+
+        // Assert
+        assertThat(suggestions(model)).isEmpty()
+        assertThat(model.uiState.value.fields.map { it.error }).containsExactly(
+            null,
+            resourceReference(R.string.tangempay_order_data_field_required),
+            resourceReference(R.string.tangempay_order_data_field_required),
+        ).inOrder()
+        verify(exactly = 0) { onContinue(any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN suggestions shown and every field filled WHEN continue clicked THEN typed recipient reported`() {
+        // Arrange
+        savedAccounts.value = listOf(didenko)
+        val model = createModel()
+        fill(model, BankWithdrawFormField.RoutingNumber, "021000021")
+        fill(model, BankWithdrawFormField.FirstName, "Basit")
+        focus(model, BankWithdrawFormField.AccountNumber)
+        fill(model, BankWithdrawFormField.AccountNumber, "4830019271")
+
+        // Act
+        model.uiState.value.onContinueClick()
+
+        // Assert
+        verify(exactly = 1) {
+            onContinue(
+                BankWithdrawFormResult(
+                    values = mapOf(
+                        BankWithdrawFormField.AccountNumber to "4830019271",
+                        BankWithdrawFormField.RoutingNumber to "021000021",
+                        BankWithdrawFormField.FirstName to "Basit",
+                    ),
+                    displayNames = mapOf(
+                        BankWithdrawFormField.AccountNumber to "",
+                        BankWithdrawFormField.RoutingNumber to "",
+                        BankWithdrawFormField.FirstName to "",
+                    ),
+                ),
+            )
+        }
+        verify(exactly = 0) { onSavedRecipientSelected(any()) }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN suggestions shown WHEN focus leaves the field THEN suggestions hidden`() {
         // Arrange
         savedAccounts.value = listOf(didenko, arasakaCorp)

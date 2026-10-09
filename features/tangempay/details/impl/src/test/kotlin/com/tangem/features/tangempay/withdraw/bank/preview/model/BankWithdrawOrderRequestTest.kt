@@ -46,6 +46,7 @@ internal class BankWithdrawOrderRequestTest {
                 amountInCents = 50_050L,
                 chainId = POLYGON_CHAIN_ID,
                 tokenContractAddress = USDC_POLYGON,
+                tokenDecimals = 6,
                 rail = BankRail.ACH,
                 recipient = BankOfframpRecipient.Saved(bankAccountId = "acc-1"),
             ),
@@ -66,6 +67,7 @@ internal class BankWithdrawOrderRequestTest {
                 amountInCents = 50_000L,
                 chainId = POLYGON_CHAIN_ID,
                 tokenContractAddress = USDC_POLYGON,
+                tokenDecimals = 6,
                 rail = BankRail.WIRE,
                 recipient = BankOfframpRecipient.New(
                     BankAccountDetails(

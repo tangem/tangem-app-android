@@ -8,6 +8,9 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
+import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_20
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.cloudbackup.usecase.ResolveCloudRestoreBackupsUseCase
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
@@ -57,7 +60,7 @@ internal class HaveWalletSheetController(
     // Every row is gated, not just its own: the others would start a scan on top of a flow about to navigate away.
     private fun optionsStep() = HaveWalletUM.Step.Options(
         cardOrRing = WalletOptionUM(
-            iconRes = CoreUiR.drawable.ic_tangem_24,
+            icon = WalletOptionUM.Icon.Tinted(Icons.ic_logo_tangem_20),
             title = resourceReference(CoreResR.string.introduction_create_wallet_hardware_title),
             description = resourceReference(CoreResR.string.introduction_i_have_wallet_hardware_description),
             isEnabled = !isSigningInSocially(),
@@ -65,8 +68,7 @@ internal class HaveWalletSheetController(
         ),
         socialLogin = socialLoginProvider()?.let { provider ->
             WalletOptionUM(
-                iconRes = CoreUiR.drawable.img_google_32,
-                isIconTinted = false,
+                icon = WalletOptionUM.Icon.Image(CoreUiR.drawable.img_google_32),
                 title = resourceReference(
                     id = CoreResR.string.introduction_i_have_wallet_social_title,
                     formatArgs = wrappedList(provider.displayName()),
@@ -81,7 +83,7 @@ internal class HaveWalletSheetController(
             )
         },
         importWallet = WalletOptionUM(
-            iconRes = CoreUiR.drawable.ic_arrow_down_24,
+            icon = WalletOptionUM.Icon.Tinted(Icons.ic_arrow_down_20),
             title = resourceReference(CoreResR.string.hw_import_existing_wallet),
             // The sheet's own wording: the hw_ description belongs to the mobile-wallet screens and reads
             // differently there.
@@ -115,7 +117,7 @@ internal class HaveWalletSheetController(
     private fun onImportWalletClick() {
         if (!isShown || isSigningInSocially()) return
         if (currentStep() is HaveWalletUM.Step.Import) return
-        analyticsEventHandler.send(OnboardingAnalyticsEvent.SeedPhrase.ButtonImportWallet())
+        analyticsEventHandler.send(IntroductionProcess.ButtonImportExistingWallet())
         analyticsEventHandler.send(
             OnboardingAnalyticsEvent.Backup.ImportWalletRequest(cloudBackup = cloudBackupAvailability()),
         )
