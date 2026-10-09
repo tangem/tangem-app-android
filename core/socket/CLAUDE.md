@@ -148,7 +148,8 @@ connection (`SocketCloseCode.ABNORMAL`), so the close policy and backoff apply; 
 For servers where you subscribe per key (asset id, chat id) use `KeyedSubscriptions` instead of sending
 subscribe frames by hand. It reference-counts keys across collectors, batches changes into one frame
 (`batchWindow`), unsubscribes after `unsubscribeDelay`, restores the whole set on reconnect via
-`openKeys()` in `onOpen`, and opens another service instance when `maxKeysPerService` is reached.
+`openKeys()` in `onOpen`, and at `maxKeysPerService` first replaces a released key still waiting to unsubscribe,
+opening another service instance only when every key is observed.
 Broadcast sockets do not need it.
 
 ## Tests
