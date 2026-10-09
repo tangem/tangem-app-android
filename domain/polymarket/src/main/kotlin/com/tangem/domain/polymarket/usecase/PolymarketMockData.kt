@@ -232,6 +232,7 @@ internal object PolymarketMockData {
         liquidity = liquidity,
         totalMarketsCount = totalMarketsCount,
         isNegRisk = isNegRisk,
+        isLive = false,
         displayMode = displayMode,
         markets = markets,
     )
