@@ -10,10 +10,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.tangem.common.ui.account.PortfolioSelectRowV3
 import com.tangem.common.ui.account.PortfolioSelectUM
 import com.tangem.core.ui.ds2.avatar.TangemAvatar
@@ -32,6 +34,7 @@ import com.tangem.features.mcp.impl.R
 import com.tangem.features.mcp.impl.pair.model.*
 
 private val CardShape = RoundedCornerShape(24.dp)
+private val AvatarSize = 40.dp
 
 @Composable
 internal fun McpAgentInfoContent(state: McpPairUM, modifier: Modifier = Modifier) {
@@ -60,7 +63,7 @@ private fun AgentCard(agent: McpAgentUM, modifier: Modifier = Modifier) {
             divider = true,
             contentLead = TangemRowContentLead.Start,
             verticalAlignment = TangemRowVerticalAlignment.Center,
-            startSlot = { AgentAvatar() },
+            startSlot = { AgentAvatar(iconUrl = agent.iconUrl) },
             titleSlot = { TangemRowText(text = agent.name, role = TangemRowTextRole.Title) },
             subtitleSlot = {
                 agent.origin?.let { TangemRowText(text = it, role = TangemRowTextRole.Subtitle) }
@@ -71,16 +74,25 @@ private fun AgentCard(agent: McpAgentUM, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun AgentAvatar(modifier: Modifier = Modifier) {
-    TangemAvatar(
-        modifier = modifier,
-        // The verification response carries no logo, so the agent is shown with the MCP glyph.
-        state = TangemAvatar.UiState.Icon(
-            imageVector = Icons.ic_grid_plus_20,
-            appearance = TangemAvatar.Appearance.Neutral,
-        ),
-        size = TangemAvatar.Size.X40,
-    )
+private fun AgentAvatar(iconUrl: String?, modifier: Modifier = Modifier) {
+    if (iconUrl == null) {
+        TangemAvatar(
+            modifier = modifier,
+            state = TangemAvatar.UiState.Icon(
+                imageVector = Icons.ic_grid_plus_20,
+                appearance = TangemAvatar.Appearance.Neutral,
+            ),
+            size = TangemAvatar.Size.X40,
+        )
+    } else {
+        AsyncImage(
+            modifier = modifier
+                .size(AvatarSize)
+                .clip(RoundedCornerShape(12.dp)),
+            model = iconUrl,
+            contentDescription = null,
+        )
+    }
 }
 
 @Composable
@@ -287,7 +299,11 @@ private fun PreviewContainer(content: @Composable () -> Unit) {
 private object McpAgentInfoPreviewData {
 
     val content = McpPairUM.AgentInfo(
-        agent = McpAgentUM(name = stringReference("Claude Agent"), origin = stringReference("mcp.claude.com")),
+        agent = McpAgentUM(
+            name = stringReference("Claude Agent"),
+            origin = stringReference("mcp.claude.com"),
+            iconUrl = null,
+        ),
         wallet = PortfolioSelectUM(
             icon = null,
             name = stringReference("My wallet"),
