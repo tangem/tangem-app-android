@@ -993,6 +993,7 @@
   <string name="initial_wallet_sync_banner_description">Su billetera está sincronizada y lista. \n Faltan algunos tokens?</string>
   <string name="initial_wallet_sync_banner_title">Billetera importada correctamente</string>
   <string name="initial_wallet_sync_restore_progress">Restaurando %d%%</string>
+  <string name="introduction_button_buy_tangem">Comprar Tangem</string>
   <string name="introduction_button_create_wallet">Crear wallet</string>
   <string name="introduction_button_i_have_a_wallet">Ya tengo una wallet</string>
   <string name="introduction_create_wallet_hardware_description">Si ya tienes una Tangem Wallet</string>
