@@ -420,6 +420,9 @@ sealed class AnalyticsParam {
         const val BACKUP_TYPE = "Backup Type"
         const val BACKUP_COUNT = "Backup Count"
         const val MEMO = "Memo"
+        const val CAMPAIGN = "Campaign"
+        const val SCREEN = "Screen"
+        const val REASON = "Reason"
         const val VALUE = "Value"
     }
 }
