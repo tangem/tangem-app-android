@@ -63,6 +63,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.tangem.domain.sociallogin.usecase.DeleteSocialBackupAfterUpgradeUseCase
+import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
@@ -91,6 +92,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     private val derivationsHelper: DerivationsHelper,
     private val walletCardsBackupReporter: WalletCardsBackupReporter,
     private val deleteSocialBackupAfterUpgradeUseCase: DeleteSocialBackupAfterUpgradeUseCase,
+    private val isSocialBackupCompletedUseCase: IsSocialBackupCompletedUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<MultiWalletChildParams>()
@@ -362,6 +364,8 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                     userWallet
                 }
                 is OnboardingMultiWalletComponent.Mode.UpgradeHotWallet -> {
+                    // the mark lives in the hot wallet's record, which the update below replaces with a cold one
+                    val hasSocialBackup = isSocialBackupCompletedUseCase(userWalletCreated.walletId)
                     updateWalletUseCase.invoke(
                         userWalletId = userWalletCreated.walletId,
                         update = { hotUserWallet ->
@@ -378,16 +382,15 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                             runSuspendCatching { walletsRepository.upgradeWallet(userWalletCreated.walletId) }
                                 .onFailure { TangemLogger.e("Failed to mark the wallet as upgraded", it) }
                                 .onSuccess {
+                                    if (!hasSocialBackup) return@onSuccess
                                     deleteSocialBackupAfterUpgradeUseCase(userWalletCreated.walletId)
                                         .onLeft { error ->
                                             TangemLogger.e("Failed to delete the social backup after upgrade: $error")
                                         }
-                                        .onRight { isDeleted ->
-                                            if (isDeleted) {
-                                                analyticsEventHandler.send(
-                                                    WalletSettingsAnalyticEvents.SocialRecoveryDeleted(),
-                                                )
-                                            }
+                                        .onRight {
+                                            analyticsEventHandler.send(
+                                                WalletSettingsAnalyticEvents.SocialRecoveryDeleted(),
+                                            )
                                         }
                                 }
                         }

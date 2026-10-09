@@ -44,9 +44,10 @@ internal sealed interface HotWalletImportError {
  * Extracted verbatim from the seed-import flow so the recovery-phrase import and the cloud-backup
  * restore converge on the exact same save/sync/analytics sequence: import via the Hot SDK, build the
  * wallet, persist it, kick off the remote sync + assets discovery, and send the onboarding analytics
- * ([AnalyticsParam.WalletCreationType.SeedImport] unless the caller passes another type, or `null` to
- * report it later). Callers own only their progress UI, the navigation callback and the seed-phrase
- * backup state they import with.
+ * ([AnalyticsParam.WalletCreationType.SeedImport] unless the caller passes another type). Callers own only
+ * their progress UI, the navigation callback and the seed-phrase backup state they import with. A caller
+ * that must keep the wallet out of the list until something else succeeds runs [materialize] and [save]
+ * on its own and reports the creation itself.
  */
 @Suppress("LongParameterList")
 internal class HotWalletImporter @Inject constructor(
@@ -64,7 +65,6 @@ internal class HotWalletImporter @Inject constructor(
      * @param scope outlives this call: the remote sync it starts must survive the caller's screen
      * @param isSeedPhraseBackedUp whether the user already holds the recovery phrase. True when they typed
      * it in themselves, false when the phrase came from a backup they never saw (e.g. a cloud restore).
-
      */
     suspend fun import(
         scope: CoroutineScope,
@@ -72,9 +72,22 @@ internal class HotWalletImporter @Inject constructor(
         passphrase: CharArray?,
         name: String? = null,
         isSeedPhraseBackedUp: Boolean,
-        creationType: AnalyticsParam.WalletCreationType? = AnalyticsParam.WalletCreationType.SeedImport,
+        creationType: AnalyticsParam.WalletCreationType = AnalyticsParam.WalletCreationType.SeedImport,
     ): Either<HotWalletImportError, UserWalletId> = either {
-        val userWallet = runSuspendCatching {
+        val userWallet = materialize(mnemonic, passphrase, name).bind()
+        save(scope, userWallet, isSeedPhraseBackedUp).bind()
+        sendWalletCreatedEvents(mnemonic, passphrase, creationType)
+
+        userWallet.walletId
+    }
+
+    /** Puts the wallet into the Hot SDK storage only; the wallets list does not see it yet */
+    suspend fun materialize(
+        mnemonic: Mnemonic,
+        passphrase: CharArray?,
+        name: String? = null,
+    ): Either<HotWalletImportError, UserWallet.Hot> = either {
+        runSuspendCatching {
             val hotWalletId = tangemHotSdk.importWallet(mnemonic, passphrase, HotAuth.NoAuth)
             hotUserWalletBuilderFactory.create(hotWalletId).build(name = name)
         }.getOrElse { error ->
@@ -86,15 +99,19 @@ internal class HotWalletImporter @Inject constructor(
                 else -> raise(HotWalletImportError.Unknown(error))
             }
         }
-
-        save(userWallet, isSeedPhraseBackedUp).bind()
-        startRemoteSync(scope, userWallet.walletId)
-        if (creationType != null) sendWalletCreatedEvents(mnemonic, passphrase, creationType)
-
-        userWallet.walletId
     }
 
-    private suspend fun save(
+    /** Adds a [materialize]d wallet to the wallets list and starts its remote sync */
+    suspend fun save(
+        scope: CoroutineScope,
+        userWallet: UserWallet.Hot,
+        isSeedPhraseBackedUp: Boolean,
+    ): Either<HotWalletImportError, Unit> = either {
+        persist(userWallet, isSeedPhraseBackedUp).bind()
+        startRemoteSync(scope, userWallet.walletId)
+    }
+
+    private suspend fun persist(
         userWallet: UserWallet.Hot,
         isSeedPhraseBackedUp: Boolean,
     ): Either<HotWalletImportError, Unit> =
