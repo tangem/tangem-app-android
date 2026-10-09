@@ -270,6 +270,8 @@ private fun TermsDisclaimer(tosLink: String, policyLink: String, onClick: (Strin
             ) {
                 withStyle(linkStyle) { append(fullString.substring(policyIndex, policyIndex + policyTitle.length)) }
             }
+            // Several locales carry prose or punctuation past the last link, and dropping it truncates the sentence.
+            append(fullString.substring(policyIndex + policyTitle.length))
         },
         textAlign = TextAlign.Center,
         style = TangemTheme.typography.caption2,
