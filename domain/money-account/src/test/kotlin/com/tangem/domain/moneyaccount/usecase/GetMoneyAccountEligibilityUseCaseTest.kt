@@ -195,7 +195,7 @@ internal class GetMoneyAccountEligibilityUseCaseTest {
         MoneyAccountStatusValue.Empty,
         MoneyAccountStatusValue.Loading,
         MoneyAccountStatusValue.Error.Unavailable,
-        MoneyAccountStatusValue.Onboarding.CountryNotSupported,
+        MoneyAccountStatusValue.Onboarding.CountryNotSupported(countryCode = null),
         MoneyAccountStatusValue.Account.Deactivated(
             source = StatusSource.ACTUAL,
             balance = null,

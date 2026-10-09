@@ -41,7 +41,7 @@ internal fun PromoTextBlock(block: PromoBlockUM.Text, modifier: Modifier = Modif
             )
         }
         Text(
-            text = textWithLink(text = block.text, link = block.learnMore),
+            text = textWithLink(text = block.text, link = block.link),
             style = TangemTheme.typography3.subheading.medium,
             color = TangemTheme.colors3.text.secondary,
             modifier = Modifier

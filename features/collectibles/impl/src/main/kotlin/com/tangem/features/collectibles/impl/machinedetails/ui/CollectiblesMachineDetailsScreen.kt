@@ -13,6 +13,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.ds2.loader.TangemLoader
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.*
@@ -22,6 +23,7 @@ import com.tangem.features.collectibles.impl.common.ui.CollectiblesLoadMoreEffec
 import com.tangem.features.collectibles.impl.common.ui.CollectiblesPackImage
 import com.tangem.features.collectibles.impl.common.ui.CollectiblesPackImageErrorCard
 import com.tangem.features.collectibles.impl.common.ui.CollectiblesStatus
+import com.tangem.features.collectibles.impl.common.ui.PACK_IMAGE_CARD_RADIUS
 import com.tangem.features.collectibles.impl.machinedetails.ui.components.*
 import com.tangem.features.collectibles.impl.machinedetails.ui.state.CollectiblesMachineDetailsUM
 import kotlinx.collections.immutable.ImmutableList
@@ -113,12 +115,7 @@ private fun MachineDetailsInfoList(
                     .padding(vertical = 48.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                CollectiblesPackImage(
-                    imageUrl = state.imageUrl,
-                    glowRadius = 48.dp,
-                    modifier = Modifier.size(width = 204.dp, height = 294.dp),
-                    errorContent = { CollectiblesPackImageErrorCard() },
-                )
+                HeroPackImage(imageUrl = state.imageUrl)
             }
         }
         item(key = PackDetailsKeys.TIERS) {
@@ -247,6 +244,24 @@ private fun PoweredBy(modifier: Modifier = Modifier) {
         color = TangemTheme.colors3.text.secondary,
         modifier = modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 8.dp),
     )
+}
+
+@Composable
+private fun HeroPackImage(imageUrl: String?) {
+    var isImageLoading by remember(imageUrl) { mutableStateOf(true) }
+
+    Box(modifier = Modifier.size(width = 204.dp, height = 294.dp)) {
+        CollectiblesPackImage(
+            imageUrl = imageUrl,
+            glowRadius = 48.dp,
+            onLoadingChange = { isImageLoading = it },
+            modifier = Modifier.matchParentSize(),
+            errorContent = { CollectiblesPackImageErrorCard() },
+        )
+        if (isImageLoading) {
+            TangemShimmer(modifier = Modifier.matchParentSize(), radius = PACK_IMAGE_CARD_RADIUS)
+        }
+    }
 }
 
 private const val PROVIDER_NAME = "Collector Crypt"

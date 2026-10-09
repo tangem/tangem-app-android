@@ -44,6 +44,11 @@ crypto portfolio — resolved by `InitialCurrenciesResolver` (matched by token i
 preferring the FROM account's instance). If the token isn't in the wallet, the TO slot stays empty. Used by
 Send-with-Swap's "Swap token" notice when a pair is available only in the regular Swap flow.
 
+`intentId` (set only by the MCP intent flow, `AppRoute.Swap.intentId`) binds a swap session to an agent's exchange
+intent. It is read from the immutable `params` and sent as `intentId` with every V1 `exchange-data` request: the DEX
+quote-time prefetch (`findBestQuote`, repeated every `UPDATE_DELAY`) and the CEX call at confirm (`onSwap`). It is
+never kept in `SwapProcessDataState`, and Send-with-Swap (`swap-v2`) does not send it.
+
 `SwapModel` state worth knowing: `dataStateStateFlow` (reactive domain data) and
 `uiState: SwapStateHolder` (Compose state); the inner `FeeSelectorRepository` wires the
 send-v2 fee selector to `SwapInteractor.loadSwapFee`/`applySwapFee`.
@@ -56,16 +61,37 @@ AppRoute.Swap → DefaultSwapComponent
   │    ├─ Main        → SwapScreen
   │    ├─ Success     → SwapSuccessScreen
   │    └─ SelectToken → ChooseTokenComponent (FROM or TO bridge)
-  ├─ SlotNavigation<Unit>             → GiveApprovalComponent (bottom sheet)
-  └─ SlotNavigation<FeeSelectorConfig> → SwapFeeSelectorBlockComponent (inline)
+  ├─ flat  SlotNavigation<SwapBottomSheetRoute> → SwapBottomSheetComponent: ChooseProvider
+  ├─ glass SlotNavigation<SwapBottomSheetRoute> → SwapBottomSheetComponent: GiveApproval | SelectApprovalType
+  └─ SlotNavigation<FeeSelectorConfig>    → SwapFeeSelectorBlockComponent (inline)
 ```
 
+Swap sheets are split into two slots by card material (`SwapBottomSheetRoute.isMaterial`): the flat provider
+sheet and the glass approval sheets. Switching the card material inside one animating modal janks, so a glass sheet
+is its own `TangemModal` above the flat one; the approve-type selector opens over the still-open provider list, and
+closing it (`closeGlassSheet`) reveals the list again. Each slot holds one route, no inner stack. State is
+Decompose-only: `SwapModel.openBottomSheet(route) { onOpened }` is a slot transformer (`current ?: route`), so a tap
+on an already open slot changes nothing and skips its side effects; `dismissFlatSheet` resumes polling,
+`dismissGlassSheet` reloads quotes after a dismissed GiveApproval. Each sheet renders its
+`ComposableModularContentComponent` in `ui/SwapBottomSheet.kt`.
+The fee selector is NOT part of this sheet: the fee block stays legacy and opens its own sheet, also from
+inside GiveApproval.
+
+`TangemModal` sizes its card from `minIntrinsicHeight`: route contents must not contain a `SubcomposeLayout`
+(lazy lists, `BoxWithConstraints`, scaffolds, `EllipsisText`). GiveApproval's legacy fee row (it uses
+`EllipsisText`) is wrapped in `intrinsicsFromLastMeasure()` in `ApprovalModalContent.kt` for that reason.
+
+Sheet contents are DS3 (`colors3`/`typography3`): the provider list (`ui/ChooseProviderBottomSheet.kt`,
+`ProviderSheetItem` — the main screen keeps the old `ProviderItem`) and both approval sheets
+(`ApprovalModalContent.kt` in features/approval, used only by the modular `Content`/`Footer` path; staking's
+`BottomSheet()` keeps the legacy content).
+
 Injected factories on `DefaultSwapComponent`: `SwapFeeSelectorBlockComponent.Factory`,
-`GiveApprovalComponent.Factory`, `ChooseTokenComponent.Factory`.
+`SwapBottomSheetComponent.Factory`, `ChooseTokenComponent.Factory`.
 
 Token selection: tapping FROM/TO pushes `SwapRoute.SelectToken(isFromDirection)`; the
 `ChooseTokenComponent` returns its result over a `ChooseTokenBridge` Channel
-(`onCurrencyChosen` → `onTokenSelect`). Swap execution: `onSwapClick()` → (approval slot if
+(`onCurrencyChosen` → `onTokenSelect`). Swap execution: `onSwapClick()` → (approval sheet if
 needed) → on success `SwapRoute.Success`.
 
 ## Token selection subfeature (`impl/choosetoken/`)

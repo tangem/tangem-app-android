@@ -19,6 +19,6 @@ internal class ClearMembersAccountTransformer : Transformer<JointAccountMembersU
         joined = persistentListOf(),
         freeSlots = persistentListOf(),
         otherMembersLabel = null,
-        onActivateClick = null,
+        activateButton = null,
     )
 }

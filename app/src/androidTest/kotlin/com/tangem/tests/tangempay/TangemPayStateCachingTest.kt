@@ -2,11 +2,15 @@ package com.tangem.tests.tangempay
 
 import androidx.test.InstrumentationRegistry.getTargetContext
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
+import com.tangem.common.constants.TestConstants.TANGEM_PAY_ACCESS_CODE
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
+import com.tangem.common.constants.TestConstants.TANGEM_PAY_KYC_STATUS_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.getQuantityString
 import com.tangem.common.extensions.restartApp
+import com.tangem.common.utils.getWireMockRequestCount
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
 import com.tangem.scenarios.assertTangemPayConnectionIssuesBanner
@@ -14,6 +18,8 @@ import com.tangem.scenarios.assertTangemPaySessionExpiredBanner
 import com.tangem.scenarios.assertTangemPayStaleState
 import com.tangem.scenarios.assertTangemPayTileShowsCachedData
 import com.tangem.scenarios.assertTangemPayTransactionRowDisplayed
+import com.tangem.scenarios.openAndCloseTangemPayKycInProgressSheet
+import com.tangem.scenarios.openMainScreenWithExistingHotWallet
 import com.tangem.scenarios.openMainScreenWithTangemPayTile
 import com.tangem.scenarios.openTangemPay
 import com.tangem.screens.tangempay.onTangemPayMainScreen
@@ -21,6 +27,7 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
+import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -182,6 +189,54 @@ class TangemPayStateCachingTest : BaseTestCase() {
                 onTangemPayMainScreen { tileBalance.assertDoesNotExist() }
             }
             step("Assert session expired banner is displayed") { assertTangemPaySessionExpiredBanner() }
+        }
+    }
+
+    @Ignore("[REDACTED_JIRA]")
+    @AllureId("9586")
+    @DisplayName("Tangem Pay: Main keeps the cached KYC in progress status when customer/me fails")
+    @Test
+    fun mainScreenKeepsCachedKycInProgressWhenCustomerRequestFailsTest() {
+        val kycInProgressState = "InProgress"
+        val kycInProgressText = getResourceString(CoreResR.string.tangempay_kyc_in_progress)
+        val issuingCardText = getResourceString(CoreResR.string.tangempay_issuing_your_card)
+        val customerInfoEndpoint = "/bff-v2/v1/customer/me"
+
+        setupHooks(
+            additionalBeforeSection = {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
+                setWireMockScenarioState(TANGEM_PAY_KYC_STATUS_SCENARIO, kycInProgressState)
+            }
+        ).run {
+            step("Open 'Main' screen with existing hot wallet") {
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
+            }
+            step("Assert Tangem Pay tile with '$kycInProgressText' is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onTangemPayMainScreen { tileWithSubtitle(kycInProgressText).assertIsDisplayed() }
+                }
+            }
+            step("Open and close the KYC in progress sheet") { openAndCloseTangemPayKycInProgressSheet() }
+            step("Set WireMock scenario '$sessionScenario' to '$serviceUnavailableState'") {
+                setWireMockScenarioState(sessionScenario, serviceUnavailableState)
+            }
+            val customerInfoBefore = getWireMockRequestCount("GET", customerInfoEndpoint)
+            step("Force-close and re-launch the app") { restartApp(packageName) }
+            step("Assert the relaunch requested customer info") {
+                awaitSuccess {
+                    if (getWireMockRequestCount("GET", customerInfoEndpoint) <= customerInfoBefore) {
+                        throw AssertionError("The relaunch should request $customerInfoEndpoint")
+                    }
+                }
+            }
+            step("Assert Tangem Pay tile with '$kycInProgressText' is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onTangemPayMainScreen { tileWithSubtitle(kycInProgressText).assertIsDisplayed() }
+                }
+            }
+            step("Assert Tangem Pay tile with '$issuingCardText' is not displayed") {
+                onTangemPayMainScreen { tileWithSubtitle(issuingCardText).assertDoesNotExist() }
+            }
         }
     }
 }

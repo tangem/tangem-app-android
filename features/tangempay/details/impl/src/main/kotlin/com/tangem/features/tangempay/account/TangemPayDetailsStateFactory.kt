@@ -11,6 +11,7 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_up_24
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayTariffPlanState
+import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.account.feeCurrencyOrDefault
 import com.tangem.domain.models.account.isPlanTransitioningState
 import com.tangem.domain.models.pay.TangemPayCard
@@ -36,6 +37,7 @@ internal class TangemPayDetailsStateFactory(
     private val onBack: () -> Unit,
     private val onOpenMenu: () -> Unit,
     private val intents: TangemPayDetailIntents,
+    private val isVisaOnrampV2Enabled: () -> Boolean,
 ) {
     private val notificationFactory = TangemPayDetailsNotificationFactory(intents = intents)
 
@@ -125,7 +127,25 @@ internal class TangemPayDetailsStateFactory(
             isBalanceHidden = false,
             messageBanner = (errorNotification ?: tiersNotification)?.let(::MessageBannerUM),
             cashbackBlockState = null,
+            bankTransferOnrampBanner = createBankTransferOnrampBanner(status.virtualAccount),
         )
+    }
+
+    private fun createBankTransferOnrampBanner(virtualAccount: VirtualAccountOnramp?): MessageBannerUM? {
+        if (!isVisaOnrampV2Enabled()) return null
+        return when (virtualAccount) {
+            VirtualAccountOnramp.Processing -> MessageBannerUM(
+                state = notificationFactory.createBankTransferOnrampCreatingBannerState(),
+            )
+            VirtualAccountOnramp.Failed -> MessageBannerUM(
+                state = notificationFactory.createBankTransferOnrampFailedBannerState(),
+                onClose = intents::onBankTransferOnrampFailedBannerDismissed,
+            )
+            VirtualAccountOnramp.Eligible,
+            is VirtualAccountOnramp.Available,
+            null,
+            -> null
+        }
     }
 
     /**

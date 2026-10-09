@@ -54,8 +54,10 @@ internal class DefaultOnrampDeepLinkHandler @AssistedInject constructor(
         ): DefaultOnrampDeepLinkHandler
     }
 
-    private companion object {
-        const val TX_ID_KEY = "tx_id"
-        const val RESULT_KEY = "result"
+    companion object {
+        const val DEEPLINK_KEY = "tangem://onramp"
+
+        private const val TX_ID_KEY = "tx_id"
+        private const val RESULT_KEY = "result"
     }
 }

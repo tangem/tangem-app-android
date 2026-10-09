@@ -19,6 +19,7 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -30,20 +31,19 @@ class SwapTokenScreenTest : BaseTestCase() {
     // The mocked ETH -> POL (Ethereum) pair carries 1inch alongside the CEX providers, so the ALL/CEX/DEX
     // filter the case asks for is always there.
     @AllureId("9456")
-    @DisplayName("Swap: provider modal shows ALL/CEX/DEX filter and the picked provider appears in the tab")
+    @DisplayName("Swap: provider type filters (All / CEX / DEX) narrow the provider list")
     @Test
     fun checkProviderTypeFilterTest() {
-        val fromTokenSymbol = "ETH"
+        val tokenTitle = "Ethereum"
         val receiveTokenName = "POL (ex-MATIC)"
         // The wallet holds POL on two networks and only the Ethereum one has a DEX provider (1inch) next to
-        // Picking by name alone lands on the Polygon one about half the time, whose pair is CEX-only, and
-        // then no type filter can ever appear — no amount of reopening the sheet helps.
         val receiveTokenNetwork = "Ethereum network"
         val inputAmount = "0.1"
         val allFilter = getResourceString(R.string.common_all)
         val cexFilter = "CEX"
         val dexFilter = "DEX"
-        val dexProviderName = "1Inch"
+        val cexType = "CEX"
+        val dexType = "DEX"
 
         setupHooks().run {
             step("Open 'Main Screen'") {
@@ -52,19 +52,21 @@ class SwapTokenScreenTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            step("Open 'Swap' from the main screen") {
-                openSwapScreen(from = SwapEntryPoint.MainScreen)
+            step("Click on token with name: '$tokenTitle'") {
+                openTokenDetailsFromTokenList(tokenTitle)
             }
-            step("Assert the most funded token '$fromTokenSymbol' is pre-filled in the 'From' block") {
-                onSwapTokenScreen {
-                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { swapTokenSymbol(fromTokenSymbol).assertIsDisplayed() }
-                }
+            step("Open 'Swap' screen") {
+                openSwapScreen(from = SwapEntryPoint.TokenDetails)
             }
             step("Choose receive token '$receiveTokenName'") {
                 chooseReceiveToken(receiveTokenName, receiveTokenNetwork)
             }
+            step("Assert 'Swap tokens on screen' button is enabled") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { replaceTokensButton.assertIsEnabled() }
+                }
+            }
             step("Input swap amount '$inputAmount'") {
-                waitForIdle()
                 onSwapTokenScreen {
                     textInput.clickWithAssertion()
                     textInput.performTextReplacement(inputAmount)
@@ -78,27 +80,52 @@ class SwapTokenScreenTest : BaseTestCase() {
             step("Open the providers bottom sheet with the type filter displayed") {
                 openProviderSheetWithTypeFilter(allFilter)
             }
-            step("Assert the 'CEX' filter is displayed") {
-                onChooseProviderBottomSheet { filterButton(cexFilter).assertIsDisplayed() }
+            step("Assert the '$allFilter' filter is selected by default") {
+                onChooseProviderBottomSheet { filterSegment(allFilter).assertIsSelected() }
             }
-            step("Assert the 'DEX' filter is displayed") {
-                onChooseProviderBottomSheet { filterButton(dexFilter).assertIsDisplayed() }
+            step("Assert the '$cexFilter' filter is displayed") {
+                onChooseProviderBottomSheet { filterSegment(cexFilter).assertIsDisplayed() }
             }
-            step("Select the 'DEX' filter") {
-                onChooseProviderBottomSheet { filterButton(dexFilter).performClick() }
+            step("Assert the '$dexFilter' filter is displayed") {
+                onChooseProviderBottomSheet { filterSegment(dexFilter).assertIsDisplayed() }
             }
-            step("Assert the DEX provider '$dexProviderName' is displayed under the filter") {
+            step("Assert a '$cexType' provider is listed") {
+                onChooseProviderBottomSheet { providerTypeLabel(cexType).assertIsDisplayed() }
+            }
+            step("Assert a '$dexType' provider is listed") {
+                onChooseProviderBottomSheet { providerTypeLabel(dexType).assertIsDisplayed() }
+            }
+            step("Click on '$cexFilter' filter") {
+                onChooseProviderBottomSheet { filterSegment(cexFilter).performClick() }
+            }
+            step("Assert the '$cexFilter' filter is selected") {
                 onChooseProviderBottomSheet {
-                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { providerItem(dexProviderName).assertIsDisplayed() }
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { filterSegment(cexFilter).assertIsSelected() }
                 }
             }
-            step("Select the '$dexProviderName' provider") {
-                onChooseProviderBottomSheet { providerItem(dexProviderName).clickWithAssertion() }
+            step("Assert a '$cexType' provider is listed") {
+                onChooseProviderBottomSheet { providerTypeLabel(cexType).assertIsDisplayed() }
             }
-            step("Assert the selected provider '$dexProviderName' is shown in the providers tab") {
-                onSwapTokenScreen {
-                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { providerWithName(dexProviderName).assertIsDisplayed() }
+            step("Assert no '$dexType' provider is listed") {
+                onChooseProviderBottomSheet {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { providerTypeLabel(dexType).assertDoesNotExist() }
                 }
+            }
+            step("Click on '$dexFilter' filter") {
+                onChooseProviderBottomSheet { filterSegment(dexFilter).performClick() }
+            }
+            step("Assert the '$dexFilter' filter is selected") {
+                onChooseProviderBottomSheet {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { filterSegment(dexFilter).assertIsSelected() }
+                }
+            }
+            step("Assert a '$dexType' provider is listed") {
+                onChooseProviderBottomSheet {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { providerTypeLabel(dexType).assertIsDisplayed() }
+                }
+            }
+            step("Assert no '$cexType' provider is listed") {
+                onChooseProviderBottomSheet { providerTypeLabel(cexType).assertDoesNotExist() }
             }
         }
     }
@@ -1046,6 +1073,125 @@ class SwapTokenScreenTest : BaseTestCase() {
             step("Assert 'Swap' button is enabled") {
                 waitForIdle()
                 onSwapTokenScreen { swapButton.assertIsEnabled() }
+            }
+        }
+    }
+
+    @AllureId("11517")
+    @DisplayName("Swap: the send amount can be entered in the token and in fiat")
+    @Test
+    fun enterSendAmountInTokenAndFiatTest() {
+        val tokenTitle = "Polygon"
+        val fromTokenSymbol = "POL"
+        val receiveTokenName = "Ethereum"
+        val tokenAmount = "1"
+        val fiatAmount = "5"
+        val fiatSign = "$"
+        var fiatEquivalent = ""
+        var receiveAmountInToken = ""
+        var tokenEquivalent = ""
+        var rateForTokenAmount = ""
+        var feeForTokenAmount = ""
+        val quoteScenarioName = "exchange_quote_polygon"
+        // Mock: quote has a fixed offset and gas is higher for exactly 1 POL, so rate and fee change.
+        val nonProportionalRateState = "NonProportionalRate"
+
+        setupHooks().run {
+            step("Set WireMock scenario '$quoteScenarioName' to '$nonProportionalRateState'") {
+                setWireMockScenarioState(scenarioName = quoteScenarioName, state = nonProportionalRateState)
+            }
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Click on token with name: '$tokenTitle'") {
+                openTokenDetailsFromTokenList(tokenTitle)
+            }
+            step("Open 'Swap' screen") {
+                openSwapScreen(from = SwapEntryPoint.TokenDetails)
+            }
+            step("Choose receive token '$receiveTokenName'") {
+                chooseReceiveToken(receiveTokenName)
+            }
+            step("Input swap amount '$tokenAmount' in the token") {
+                inputAmount(tokenAmount)
+            }
+            step("Assert the fiat equivalent of the entered amount is displayed") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { swapFiatAmount.assertTextContains(fiatSign, substring = true) }
+                    fiatEquivalent = swapFiatAmount.extractText()
+                }
+            }
+            step("Assert the provider rate is displayed") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { providerRateText.assertIsDisplayed() }
+                    rateForTokenAmount = providerRateText.extractText()
+                }
+            }
+            step("Assert the network fee is displayed") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { feeAmount.assertIsDisplayed() }
+                    feeForTokenAmount = feeAmount.extractText()
+                }
+            }
+            step("Assert the receive amount is calculated") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { receiveAmount.assertIsDisplayed() }
+                    receiveAmountInToken = receiveAmount.extractText()
+                }
+            }
+            step("Click on the fiat equivalent to switch the input to fiat") {
+                onSwapTokenScreen { swapFiatAmount.performClick() }
+            }
+            step("Assert the send field shows the fiat equivalent '$fiatEquivalent'") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) {
+                        textInput.assertTextContains(fiatEquivalent.removePrefix(fiatSign), substring = true)
+                    }
+                }
+            }
+            step("Assert the token equivalent in '$fromTokenSymbol' is displayed under the send field") {
+                onSwapTokenScreen {
+                    swapFiatAmount.assertTextContains(fromTokenSymbol, substring = true)
+                    tokenEquivalent = swapFiatAmount.extractText()
+                }
+            }
+            step("Assert the receive amount '$receiveAmountInToken' is not changed by the switch") {
+                onSwapTokenScreen { receiveAmount.assertTextEquals(receiveAmountInToken) }
+            }
+            step("Input swap amount '$fiatAmount' in fiat") {
+                inputAmount(fiatAmount)
+            }
+            step("Assert the token equivalent of the entered fiat amount is recalculated") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) {
+                        swapFiatAmount.assertTextContains(fromTokenSymbol, substring = true)
+                        assertNotEquals(tokenEquivalent, swapFiatAmount.extractText())
+                    }
+                }
+            }
+            step("Assert the receive amount is recalculated") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                        assertNotEquals(receiveAmountInToken, receiveAmount.extractText())
+                    }
+                }
+            }
+            step("Assert the provider rate is recalculated") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                        assertNotEquals(rateForTokenAmount, providerRateText.extractText())
+                    }
+                }
+            }
+            step("Assert the network fee is recalculated") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                        assertNotEquals(feeForTokenAmount, feeAmount.extractText())
+                    }
+                }
             }
         }
     }

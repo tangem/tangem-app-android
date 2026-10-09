@@ -22,5 +22,6 @@ fun ExchangeProvider.toEntity(): ExpressProviderEntity {
         slippage = slippage?.toPlainString(),
         isExchangeOnlyWithinSingleAddress = isExchangeOnlyWithinSingleAddress,
         isExtraIdSupported = isExtraIdSupported,
+        isCustomSlippageSupported = isCustomSlippageSupported,
     )
 }

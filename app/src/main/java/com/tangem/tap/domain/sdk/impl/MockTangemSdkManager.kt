@@ -186,6 +186,11 @@ class MockTangemSdkManager(
         derivedKeys = emptyMap(),
     )
 
+    override fun <T> withColdWalletRegistration(
+        runnable: CardSessionRunnable<T>,
+        shouldForceRegistration: Boolean,
+    ): CardSessionRunnable<T> = runnable
+
     override fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse?) {
         // intentionally do nothing
     }

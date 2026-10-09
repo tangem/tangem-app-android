@@ -11,6 +11,7 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
 import com.tangem.domain.polymarket.model.PolymarketCategory
@@ -22,6 +23,7 @@ import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
+import com.tangem.domain.polymarket.usecase.ObservePolymarketCredentialsPresenceUseCase
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
@@ -57,6 +59,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
@@ -92,6 +95,8 @@ internal class PolymarketMainModel @Inject constructor(
     private val predictionPositionsValueFetcher: PredictionPositionsValueFetcher,
     private val predictionBalancePoller: PredictionBalancePoller,
     private val predictionFundingWindow: PredictionFundingWindow,
+    private val observePolymarketCredentialsPresenceUseCase: ObservePolymarketCredentialsPresenceUseCase,
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
 ) : Model(), PolymarketAddFundsComponent.ModelCallback {
 
     private val params = paramsContainer.require<PolymarketMainParams>()
@@ -185,6 +190,12 @@ internal class PolymarketMainModel @Inject constructor(
             .take(count = 1)
             .onEach { fundingRequisites.prefetchOnce() }
             .launchIn(modelScope)
+
+        observePolymarketCredentialsPresenceUseCase(userWalletId = params.userWalletId)
+            .filter { hasCredentials -> !hasCredentials }
+            .take(count = 1)
+            .onEach { returnToGate() }
+            .launchIn(modelScope)
     }
 
     // Kept for as long as the screen lives: coming back to a tab must not cost a reload.
@@ -216,6 +227,21 @@ internal class PolymarketMainModel @Inject constructor(
 
     fun onHistoryClick() {
         router.push(PolymarketRoute.History(userWalletId = params.userWalletId))
+    }
+
+    fun onSupportChatClick() {
+        modelScope.launch {
+            getWalletMetaInfoUseCase(params.userWalletId)
+                .onRight { metaInfo ->
+                    router.push(
+                        AppRoute.Usedesk(
+                            walletMetaInfo = metaInfo,
+                            source = AnalyticsParam.ScreensSources.Predictions,
+                        ),
+                    )
+                }
+                .onLeft { TangemLogger.e("Failed to open the support chat from Predictions", it) }
+        }
     }
 
     fun onLoadMore() {
@@ -255,6 +281,11 @@ internal class PolymarketMainModel @Inject constructor(
         predictionBalancePoller.subscribe(userWalletId = params.userWalletId)
             .launchIn(modelScope)
             .saveIn(balancePollJobHolder)
+    }
+
+    private fun returnToGate() {
+        TangemLogger.i("Main: no credentials to sign with, returning to the gate")
+        router.replaceAll(PolymarketRoute.Onboarding(userWalletId = params.userWalletId))
     }
 
     fun onPause() {
@@ -474,7 +505,7 @@ internal class PolymarketMainModel @Inject constructor(
 
     private fun onOutcomeClick(eventId: String, marketId: String, assetId: String) {
         router.push(
-            PolymarketRoute.EventDetails(
+            PolymarketRoute.PlacePrediction(
                 eventId = eventId,
                 userWalletId = params.userWalletId,
                 marketId = marketId,

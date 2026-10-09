@@ -1,6 +1,8 @@
 package com.tangem.screens
 
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.hasAnyDescendant
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.*
 import com.tangem.features.tokendetails.impl.R
@@ -11,6 +13,7 @@ import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import com.tangem.features.staking.impl.R as StakingImplR
 import androidx.compose.ui.test.hasTestTag as withTestTag
+import androidx.compose.ui.test.hasText as withText
 
 class StakingDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<StakingDetailsPageObject>(semanticsProvider = semanticsProvider) {
@@ -111,6 +114,23 @@ class StakingDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
         useUnmergedTree = true
     }
 
+    fun activeStakingBlockOfValidator(validatorName: String): KNode = child {
+        addSemanticsMatcher(activeStakingRowMatcher(validatorName))
+        useUnmergedTree = true
+    }
+
+    fun activeStakingAmountOfValidator(validatorName: String, amount: String): KNode = child {
+        hasText(amount, substring = true)
+        hasAnyAncestor(activeStakingRowMatcher(validatorName))
+        useUnmergedTree = true
+    }
+
+    fun activeStakingPendingIconOfValidator(validatorName: String): KNode = child {
+        hasTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_PENDING_ICON)
+        hasAnyAncestor(activeStakingRowMatcher(validatorName))
+        useUnmergedTree = true
+    }
+
     val toSText: KNode = child {
         hasTestTag(StakingDetailsScreenTestTags.TOS_TEXT)
         useUnmergedTree = true
@@ -153,6 +173,10 @@ class StakingDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
     }
 
 }
+
+private fun activeStakingRowMatcher(validatorName: String): SemanticsMatcher =
+    withTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_BLOCK) and
+        hasAnyDescendant(withTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_TITLE) and withText(validatorName))
 
 internal fun BaseTestCase.onStakingDetailsScreen(function: StakingDetailsPageObject.() -> Unit) =
     onComposeScreen(composeTestRule, function)

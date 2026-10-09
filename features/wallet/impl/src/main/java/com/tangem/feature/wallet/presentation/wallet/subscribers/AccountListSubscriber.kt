@@ -9,6 +9,7 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.moneyaccount.repository.MoneyAccountRepository
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
@@ -44,6 +45,7 @@ internal class AccountListSubscriber @AssistedInject constructor(
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
     private val jointAccountInvitesStore: JointAccountInvitesStore,
     private val getPendingJointOperationsUseCase: GetPendingJointOperationsUseCase,
+    private val moneyAccountRepository: MoneyAccountRepository,
 ) : BasicAccountListSubscriber() {
 
     override fun create(coroutineScope: CoroutineScope): Flow<*> {
@@ -51,40 +53,28 @@ internal class AccountListSubscriber @AssistedInject constructor(
         TangemLogger.i("$TAG[$walletId]: create() called, building combine10")
         return combine10(
             flow1 = getAccountStatusListFlow()
-                .onStart { TangemLogger.i("$TAG[$walletId]: flow1 accountStatusList subscribed") }
-                .onEach { list ->
-                    val count = list.flattenCurrencies().size
-                    TangemLogger.i("$TAG[$walletId]: flow1 accountStatusList emitted (currencies=$count)")
-                },
+                .combine(moneyAccountHiddenFlow(), ::Pair)
+                .log("flow1 accountStatusList") { (list) -> "(currencies=${list.flattenCurrencies().size})" },
             flow2 = getAppCurrencyFlow()
-                .onStart { TangemLogger.i("$TAG[$walletId]: flow2 appCurrency subscribed") }
-                .onEach { TangemLogger.i("$TAG[$walletId]: flow2 appCurrency emitted=${it.code}") },
+                .log("flow2 appCurrency") { "=${it.code}" },
             flow3 = accountDependencies.expandedAccountsHolder.expandedAccounts(userWallet)
-                .onStart { TangemLogger.i("$TAG[$walletId]: flow3 expandedAccounts subscribed") }
-                .onEach { TangemLogger.i("$TAG[$walletId]: flow3 expandedAccounts emitted (size=${it.size})") },
+                .log("flow3 expandedAccounts") { "(size=${it.size})" },
             flow4 = accountDependencies.isAccountsModeEnabledUseCase()
-                .onStart { TangemLogger.i("$TAG[$walletId]: flow4 isAccountsModeEnabled subscribed") }
-                .onEach { TangemLogger.i("$TAG[$walletId]: flow4 isAccountsModeEnabled emitted=$it") },
+                .log("flow4 isAccountsModeEnabled") { "=$it" },
             flow5 = yieldSupplyApyFlow()
-                .onStart { TangemLogger.i("$TAG[$walletId]: flow5 yieldSupplyApy subscribed") }
-                .onEach { TangemLogger.i("$TAG[$walletId]: flow5 yieldSupplyApy emitted (size=${it.size})") },
+                .log("flow5 yieldSupplyApy") { "(size=${it.size})" },
             flow6 = yieldSupplyGetShouldShowMainPromoFlow()
-                .onStart { TangemLogger.i("$TAG[$walletId]: flow6 shouldShowMainPromo subscribed") }
-                .onEach { TangemLogger.i("$TAG[$walletId]: flow6 shouldShowMainPromo emitted=$it") },
+                .log("flow6 shouldShowMainPromo") { "=$it" },
             flow7 = stakingAvailabilityFlow()
-                .onStart { TangemLogger.i("$TAG[$walletId]: flow7 stakingAvailability subscribed") }
-                .onEach { TangemLogger.i("$TAG[$walletId]: flow7 stakingAvailability emitted (size=${it.size})") },
+                .log("flow7 stakingAvailability") { "(size=${it.size})" },
             flow8 = isWalletBackedUpUseCase.flow(userWallet).distinctUntilChanged()
-                .onStart { TangemLogger.i("$TAG[$walletId]: flow8 isBackedUp subscribed") }
-                .onEach { TangemLogger.i("$TAG[$walletId]: flow8 isBackedUp emitted=$it") },
+                .log("flow8 isBackedUp") { "=$it" },
             flow9 = jointInvitesFlow()
-                .onStart { TangemLogger.i("$TAG[$walletId]: flow9 jointInvites subscribed") }
-                .onEach { TangemLogger.i("$TAG[$walletId]: flow9 jointInvites emitted (size=${it.size})") },
+                .log("flow9 jointInvites") { "(size=${it.size})" },
             flow10 = jointPendingOperationsFlow()
-                .onStart { TangemLogger.i("$TAG[$walletId]: flow10 jointPendingOperations subscribed") }
-                .onEach { TangemLogger.i("$TAG[$walletId]: flow10 jointPendingOperations emitted (size=${it.size})") },
+                .log("flow10 jointPendingOperations") { "(size=${it.size})" },
         ) {
-                accountList, appCurrency, expandedAccounts, isAccountMode,
+                (accountList, isMoneyAccountHidden), appCurrency, expandedAccounts, isAccountMode,
                 yieldSupplyApyMap, shouldShowMainPromo, stakingAvailabilityMap, isHotBackedUp,
                 accountIdsWithInvites, jointPendingOperations,
             ->
@@ -98,7 +88,8 @@ internal class AccountListSubscriber @AssistedInject constructor(
                     "promo=$shouldShowMainPromo, " +
                     "stakingMap=${stakingAvailabilityMap.size}, " +
                     "isBackedUp=$isHotBackedUp, " +
-                    "pendingOperations=${jointPendingOperations.size}",
+                    "pendingOperations=${jointPendingOperations.size}, " +
+                    "isMoneyAccountHidden=$isMoneyAccountHidden",
             )
             updateState2(
                 accountList = accountList,
@@ -111,8 +102,19 @@ internal class AccountListSubscriber @AssistedInject constructor(
                 isHotBackedUp = isHotBackedUp,
                 accountIdsWithInvites = accountIdsWithInvites,
                 jointPendingOperations = jointPendingOperations,
+                isMoneyAccountHidden = isMoneyAccountHidden,
             )
         }
+    }
+
+    private fun <T> Flow<T>.log(name: String, describeEmission: (T) -> String): Flow<T> {
+        val walletId = userWallet.walletId.stringValue
+        return onStart { TangemLogger.i("$TAG[$walletId]: $name subscribed") }
+            .onEach { TangemLogger.i("$TAG[$walletId]: $name emitted${describeEmission(it)}") }
+    }
+
+    private fun moneyAccountHiddenFlow(): Flow<Boolean> {
+        return moneyAccountRepository.isMainBlockHidden(userWallet.walletId).distinctUntilChanged()
     }
 
     /** The ids of the joint accounts whose unused invites live on this device - only the creator ever holds them */

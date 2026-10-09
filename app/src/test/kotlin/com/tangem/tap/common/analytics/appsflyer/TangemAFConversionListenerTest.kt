@@ -16,13 +16,15 @@ import org.junit.jupiter.params.ParameterizedTest
 class TangemAFConversionListenerTest {
 
     private val referralParamsHandler: AppsFlyerReferralParamsHandler = mockk(relaxUnitFun = true)
+    private val googleAdsConversionDataReporter: GoogleAdsConversionDataReporter = mockk(relaxUnitFun = true)
     private val listener = TangemAFConversionListener(
         referralParamsHandler = referralParamsHandler,
+        googleAdsConversionDataReporter = googleAdsConversionDataReporter,
     )
 
     @AfterEach
     fun tearDown() {
-        clearMocks(referralParamsHandler)
+        clearMocks(referralParamsHandler, googleAdsConversionDataReporter)
     }
 
     @ParameterizedTest
@@ -32,8 +34,10 @@ class TangemAFConversionListenerTest {
 
         if (model.shouldHandle) {
             coVerify { referralParamsHandler.handle(params = model.params!!) }
+            coVerify { googleAdsConversionDataReporter.report(conversionData = model.params!!) }
         } else {
             coVerify(inverse = true) { referralParamsHandler.handle(params = any()) }
+            coVerify(inverse = true) { googleAdsConversionDataReporter.report(conversionData = any()) }
         }
     }
 

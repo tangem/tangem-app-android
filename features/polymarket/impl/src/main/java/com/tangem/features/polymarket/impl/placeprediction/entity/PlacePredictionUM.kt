@@ -2,7 +2,6 @@ package com.tangem.features.polymarket.impl.placeprediction.entity
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -46,7 +45,7 @@ internal data class PlacePredictionUM(
                 outcomePrice = null,
                 resolutionDateMillis = null,
             ),
-            collateral = CollateralUM(tokenSymbol = "", iconState = null),
+            collateral = CollateralUM(tokenSymbol = ""),
             order = when (side) {
                 PredictionOrderSide.BUY -> OrderSideUM.Buy(balance = null, hasSufficientBalance = false)
                 PredictionOrderSide.SELL -> OrderSideUM.Sell(
@@ -150,7 +149,7 @@ internal enum class PaymentAmountErrorUM(val text: TextReference) {
 }
 
 @Immutable
-internal data class CollateralUM(val tokenSymbol: String, val iconState: CurrencyIconState?)
+internal data class CollateralUM(val tokenSymbol: String)
 
 @Immutable
 internal sealed interface OrderSideUM {
@@ -241,7 +240,7 @@ internal sealed interface QuoteUM {
         val signable: SignableQuoteUM,
     ) : QuoteUM
 
-    data class Unavailable(val status: PredictionQuoteStatus) : QuoteUM
+    data class Unavailable(val status: PredictionQuoteStatus, val expected: BigDecimal? = null) : QuoteUM
 
     data class Error(val reason: QuoteErrorUM) : QuoteUM
 }

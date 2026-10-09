@@ -34,7 +34,6 @@ import com.tangem.operations.files.ReadFilesTask
 import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
 import com.tangem.tap.domain.TapSdkError
 import com.tangem.tap.domain.visa.VisaCardScanHandler
-import com.tangem.tap.mainScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -47,7 +46,9 @@ internal class ScanProductTask(
     private val shouldCheckIsAlreadyActivated: Boolean,
     private val cardRepository: CardRepository,
     override val allowsRequestAccessCodeFromRepository: Boolean = false,
-) : CardSessionRunnable<ScanResponse> {
+) : CardSessionRunnable<ScanResponse>, ColdWalletRegistrationHost {
+
+    override var coldWalletRegistration: InSessionColdWalletRegistration? = null
 
     override fun run(session: CardSession, callback: (result: CompletionResult<ScanResponse>) -> Unit) {
         val card = this.card ?: session.environment.card.guard {
@@ -89,22 +90,36 @@ internal class ScanProductTask(
         }
         commandProcessor.proceed(cardDto, session) { processorResult ->
             when (processorResult) {
-                is CompletionResult.Success -> ScanTask().run(session) { scanTaskResult ->
-                    when (scanTaskResult) {
-                        is CompletionResult.Success -> {
-                            // It's needed because processorResult.data.card doesn't contain the attestation
-                            // result or the existing CardWallet.derivedKeys read from the card.
-                            val processorScanResponseWithNewCard = processorResult.data.copy(
-                                card = CardDTO(scanTaskResult.data),
-                            )
-                            // Cold wallet registration is applied centrally by RegisterColdWalletRunnable
-                            // in DefaultTangemSdkManager, so the scan itself just completes here.
-                            callback(CompletionResult.Success(processorScanResponseWithNewCard))
-                        }
-                        is CompletionResult.Failure -> callback(CompletionResult.Failure(scanTaskResult.error))
-                    }
+                is CompletionResult.Success -> registerColdWalletThen(session) {
+                    runScanTask(session, processorResult.data, callback)
                 }
                 is CompletionResult.Failure -> callback(CompletionResult.Failure(processorResult.error))
+            }
+        }
+    }
+
+    // ScanTask's card attestation pauses the NFC session, so the registration has to sign on the card before it.
+    private fun registerColdWalletThen(session: CardSession, next: () -> Unit) {
+        val registration = coldWalletRegistration ?: return next()
+        registration.register(session, next)
+    }
+
+    private fun runScanTask(
+        session: CardSession,
+        processorScanResponse: ScanResponse,
+        callback: (result: CompletionResult<ScanResponse>) -> Unit,
+    ) {
+        ScanTask().run(session) { scanTaskResult ->
+            when (scanTaskResult) {
+                is CompletionResult.Success -> {
+                    // It's needed because processorScanResponse.card doesn't contain the attestation
+                    // result or the existing CardWallet.derivedKeys read from the card.
+                    val processorScanResponseWithNewCard = processorScanResponse.copy(
+                        card = CardDTO(scanTaskResult.data),
+                    )
+                    callback(CompletionResult.Success(processorScanResponseWithNewCard))
+                }
+                is CompletionResult.Failure -> callback(CompletionResult.Failure(scanTaskResult.error))
             }
         }
     }
@@ -265,7 +280,7 @@ private class ScanWalletProcessor(
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
-        mainScope.launch {
+        session.scope.launch {
             val isActivationInProgress = cardRepository.isActivationInProgress(card.cardId)
 
             @Suppress("ComplexCondition")

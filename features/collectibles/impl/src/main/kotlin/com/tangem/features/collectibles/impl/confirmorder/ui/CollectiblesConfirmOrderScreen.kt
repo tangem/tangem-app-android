@@ -19,11 +19,13 @@ import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.collectibles.impl.common.ui.CollectiblesPackImage
 import com.tangem.features.collectibles.impl.common.ui.CollectiblesPackImageErrorCard
 import com.tangem.features.collectibles.impl.common.ui.CollectiblesStatus
+import com.tangem.features.collectibles.impl.common.ui.PACK_IMAGE_CARD_RADIUS
 import com.tangem.features.collectibles.impl.confirmorder.ui.state.CollectiblesConfirmOrderUM
 import com.tangem.features.collectibles.impl.confirmorder.ui.state.CollectiblesConfirmOrderUM.OrderUM
 import com.tangem.features.collectibles.impl.confirmorder.ui.state.CollectiblesConfirmOrderUM.PriceRowUM
@@ -155,9 +157,9 @@ private fun Modifier.dropAway(exit: Float, isDelayed: Boolean): Modifier = graph
 
 @Composable
 private fun PackImage(imageUrl: String?, progress: ConfirmProgress, modifier: Modifier = Modifier) {
-    CollectiblesPackImage(
-        imageUrl = imageUrl,
-        glowRadius = PACK_GLOW_RADIUS,
+    var isImageLoading by remember(imageUrl) { mutableStateOf(true) }
+
+    Box(
         modifier = modifier
             .offset(x = PackLaunch.offsetX(progress), y = PackLaunch.offsetY(progress))
             .graphicsLayer {
@@ -167,8 +169,19 @@ private fun PackImage(imageUrl: String?, progress: ConfirmProgress, modifier: Mo
                 rotationZ = PackLaunch.rotation(progress)
                 alpha = PackLaunch.alpha(progress)
             },
-        errorContent = { CollectiblesPackImageErrorCard() },
-    )
+    ) {
+        CollectiblesPackImage(
+            imageUrl = imageUrl,
+            glowRadius = PACK_GLOW_RADIUS,
+            onLoadingChange = { isImageLoading = it },
+            modifier = Modifier.matchParentSize(),
+            errorContent = { CollectiblesPackImageErrorCard() },
+        )
+
+        if (isImageLoading) {
+            TangemShimmer(modifier = Modifier.matchParentSize(), radius = PACK_IMAGE_CARD_RADIUS)
+        }
+    }
 }
 
 @Composable

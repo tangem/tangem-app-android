@@ -172,7 +172,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
             PolymarketOnboardingProgress.AwaitingSignature,
             is PolymarketOnboardingProgress.Working,
             -> updateAction { it.copyInProgress(isInProgress = true) }
-            PolymarketOnboardingProgress.Ready -> completeOnboarding()
+            is PolymarketOnboardingProgress.Ready -> completeOnboarding(isNewAccount = progress.isNewAccount)
             is PolymarketOnboardingProgress.Failed -> {
                 stopStarting()
                 reportFailure()
@@ -230,9 +230,9 @@ internal class PolymarketOnboardingModel @Inject constructor(
         router.replaceAll(PolymarketRoute.Main(userWalletId = userWalletId))
     }
 
-    private fun completeOnboarding() {
+    private fun completeOnboarding(isNewAccount: Boolean) {
         modelScope.launch {
-            if (isStoryAvailable()) {
+            if (isNewAccount && isStoryAvailable()) {
                 router.push(AppRoute.Stories(storyId = STORY_ID, screenSource = STORY_SOURCE))
             }
 

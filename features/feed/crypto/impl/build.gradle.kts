@@ -34,6 +34,7 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.decompose)
+    implementation(projects.core.navigation)
     implementation(projects.core.pagination)
     implementation(projects.core.remote)
     implementation(projects.core.ui)

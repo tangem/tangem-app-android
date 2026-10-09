@@ -13,6 +13,8 @@ fun openAppByDeepLink(deepLinkUri: String?) {
     val finalUri = Uri.parse(deepLinkUri)
     val context = ApplicationProvider.getApplicationContext<android.content.Context>()
     val intent = Intent(ACTION_VIEW, finalUri).apply {
+        // An unverified App Link (https://tangem.com/…) would otherwise resolve to the browser.
+        setPackage(context.packageName)
         addFlags(FLAG_ACTIVITY_NEW_TASK)
     }
 

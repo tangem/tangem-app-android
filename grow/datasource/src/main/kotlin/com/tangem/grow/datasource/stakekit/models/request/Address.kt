@@ -2,7 +2,9 @@ package com.tangem.grow.datasource.stakekit.models.request
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
 
+@Serializable
 @JsonClass(generateAdapter = true)
 data class Address(
     @Json(name = "address")
@@ -13,6 +15,7 @@ data class Address(
     val explorerUrl: String? = null,
 ) {
 
+    @Serializable
     @JsonClass(generateAdapter = true)
     data class AdditionalAddresses(
         // cosmos-specific

@@ -17,29 +17,25 @@ import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.SpacerW4
-import com.tangem.core.ui.components.account.AccountCharIcon
-import com.tangem.core.ui.components.account.AccountIconSize
-import com.tangem.core.ui.components.account.AccountResIcon
-import com.tangem.core.ui.components.account.PaymentAccountIcon
-import com.tangem.core.ui.components.account.PredictionAccountResIcon
+import com.tangem.core.ui.components.account.*
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.TokenItem
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.footer.TangemFooter
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.promobanners.impl.R
@@ -270,13 +266,28 @@ internal fun PromoCampaignFooter(state: PromoCampaignFooterUM, modifier: Modifie
         extraTop = if (hasTerms) {
             {
                 Text(
-                    text = state.terms.text.resolveReference(),
+                    text = buildAnnotatedString {
+                        appendColored(
+                            text = stringResourceSafe(R.string.promo_campaign_terms_agreement_android),
+                            color = TangemTheme.colors3.text.secondary,
+                        )
+                        appendSpace()
+                        withLink(
+                            link = LinkAnnotation.Clickable(
+                                tag = "CAMPAIGN_LINK",
+                                linkInteractionListener = { state.terms.onClick() },
+                            ),
+                            block = {
+                                appendColored(
+                                    text = state.terms.text.resolveReference(),
+                                    color = TangemTheme.colors3.text.primary,
+                                )
+                            },
+                        )
+                    },
                     style = TangemTheme.typography3.caption.medium,
-                    color = TangemTheme.colors3.text.primary,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(role = Role.Button, onClick = state.terms.onClick),
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         } else {
@@ -289,6 +300,7 @@ internal fun PromoCampaignFooter(state: PromoCampaignFooterUM, modifier: Modifie
             size = TangemButton.Size.X12,
             text = state.buttonText,
             onClick = state.onButtonClick,
+            isLoading = state.isLoading,
         )
     }
 }

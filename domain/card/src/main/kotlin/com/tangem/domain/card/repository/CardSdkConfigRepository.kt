@@ -4,7 +4,6 @@ import com.tangem.TangemSdk
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.common.core.CardSession
 import com.tangem.domain.card.models.TwinKey
-import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.wallet.UserWalletId
 
 /**
@@ -31,12 +30,6 @@ interface CardSdkConfigRepository {
      * activity is being destroyed, where asking for the instance re-registers against a dead one and throws.
      */
     fun restoreAccessCodeRequestPolicy(isBiometricsRequestPolicy: Boolean)
-
-    /** Reset the card ID display format to start value */
-    fun resetCardIdDisplayFormat()
-
-    /** Update the card ID display format according to the [productType] of the scanned card */
-    fun updateCardIdDisplayFormat(productType: ProductType)
 
     /**
      * Get common signer by [cardId].

@@ -77,7 +77,11 @@ internal class RwaFeaturedAssetsManager(
             initialValue = RwaFeaturedUM.Loading,
         )
 
-    fun load(categoryId: String) {
+    /**
+     * @param country the restriction flags are evaluated for; without it the curated assets come back
+     *                unrestricted and the rail hands the token screen a token that passes its region gate
+     */
+    fun load(categoryId: String, country: String?) {
         modelScope.launch {
             actionsFlow.emit(
                 BatchAction.Reload(
@@ -87,6 +91,7 @@ internal class RwaFeaturedAssetsManager(
                         priceChangeInterval = interval.value.toBatchRequestInterval(),
                         order = TokenMarketListConfig.Order.ByCategory,
                         categoryId = categoryId,
+                        country = country,
                     ),
                 ),
             )
@@ -107,6 +112,7 @@ internal class RwaFeaturedAssetsManager(
         return RwaFeaturedAssetUM(
             id = token.id.value,
             iconUrl = token.imageUrlLarge,
+            indicator = token.restrictionIndicator(),
             name = stringReference(token.name),
             ticker = stringReference(token.symbol),
             price = stringReference(token.formatPrice(appCurrency.value)),

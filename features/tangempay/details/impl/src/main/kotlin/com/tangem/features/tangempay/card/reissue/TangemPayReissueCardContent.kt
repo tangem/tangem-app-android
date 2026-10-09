@@ -213,8 +213,8 @@ private fun BottomButtonsBlock(
                 .testTag(TangemPayTestTags.REISSUE_SHEET_CONFIRM_BUTTON),
             size = TangemButton.Size.X12,
             onClick = appearance.primaryAction(state),
-            isEnabled = !state.isFeeLoading && !state.isReissuingInProgress,
-            isLoading = state.isReissuingInProgress,
+            isEnabled = state.isConfirmButtonEnabled,
+            isLoading = state.isConfirmButtonLoading,
             text = resourceReference(appearance.primaryButtonTextRes),
         )
     }
@@ -303,6 +303,7 @@ private class TangemPayReissueCardUMPreviewProvider : CollectionPreviewParameter
         TangemPayReissueCardUM.stub(error = null, feeAmount = ""),
         TangemPayReissueCardUM.stub(
             error = TangemPayReissueCardError.InsufficientFunds,
+            isConfirmButtonEnabled = false,
             cardBalance = "$0.05",
             feeAmount = "$4.25",
         ),

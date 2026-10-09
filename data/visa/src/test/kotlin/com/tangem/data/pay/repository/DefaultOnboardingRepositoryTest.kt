@@ -5,6 +5,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.data.pay.store.CashbackSummaryStore
 import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.AccountFee
@@ -33,6 +34,7 @@ internal class DefaultOnboardingRepositoryTest {
     private val tangemPayApi: TangemPayApi = mockk()
     private val requestHelper: TangemPayRequestPerformer = mockk()
     private val tangemPayStorage: TangemPayStorage = mockk(relaxed = true)
+    private val cashbackSummaryStore: CashbackSummaryStore = mockk(relaxed = true)
 
     private val repository = DefaultOnboardingRepository(
         analytics = mockk(relaxed = true),
@@ -45,12 +47,13 @@ internal class DefaultOnboardingRepositoryTest {
         userWalletsListRepository = mockk(relaxed = true),
         paymentAccountStatusStore = mockk(relaxed = true),
         txHistoryItemsStore = mockk(relaxed = true),
+        cashbackSummaryStore = cashbackSummaryStore,
         customerInfoStore = mockk(relaxed = true),
     )
 
     @BeforeEach
     fun setUp() {
-        clearMocks(tangemPayApi, requestHelper, tangemPayStorage)
+        clearMocks(tangemPayApi, requestHelper, tangemPayStorage, cashbackSummaryStore)
 
         coEvery {
             requestHelper.performRequest<Any>(userWalletId = any(), requestBlock = any())
@@ -64,22 +67,33 @@ internal class DefaultOnboardingRepositoryTest {
         coEvery { requestHelper.getCustomerWalletAddress(USER_WALLET_ID) } returns WALLET_ADDRESS
         coEvery { tangemPayStorage.getOrderId(WALLET_ADDRESS) } returns null
         coEvery { tangemPayStorage.isCampaignOrder(WALLET_ADDRESS) } returns false
-        coEvery { tangemPayApi.createOrder(any(), any()) } returns ApiResponse.Success(orderResponse(NEW_ORDER_ID))
+        coEvery { tangemPayApi.createOrder(any(), any(), any()) } returns
+            ApiResponse.Success(orderResponse(NEW_ORDER_ID))
     }
 
     @Nested
     inner class CreateOrderBody {
 
         @Test
+        fun `GIVEN no reusable order WHEN createOrder THEN the caller's idempotency key is passed to the header`() =
+            runTest {
+                // Act
+                repository.createOrder(USER_WALLET_ID, REGULAR_REQUEST, IDEMPOTENCY_KEY)
+
+                // Assert
+                coVerify(exactly = 1) { tangemPayApi.createOrder(AUTH_HEADER, IDEMPOTENCY_KEY, any()) }
+            }
+
+        @Test
         fun `GIVEN campaign params WHEN createOrder THEN body carries deeplink value, specification and type`() =
             runTest {
                 // Arrange
                 val body = slot<OrderRequest>()
-                coEvery { tangemPayApi.createOrder(any(), capture(body)) } returns
+                coEvery { tangemPayApi.createOrder(any(), any(), capture(body)) } returns
                     ApiResponse.Success(orderResponse(NEW_ORDER_ID))
 
                 // Act
-                val actual = repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST)
+                val actual = repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST, IDEMPOTENCY_KEY)
 
                 // Assert
                 assertThat(actual).isEqualTo(NEW_ORDER_ID.right())
@@ -98,11 +112,11 @@ internal class DefaultOnboardingRepositoryTest {
             runTest {
                 // Arrange
                 val body = slot<OrderRequest>()
-                coEvery { tangemPayApi.createOrder(any(), capture(body)) } returns
+                coEvery { tangemPayApi.createOrder(any(), any(), capture(body)) } returns
                     ApiResponse.Success(orderResponse(NEW_ORDER_ID))
 
                 // Act
-                val actual = repository.createOrder(USER_WALLET_ID, REGULAR_REQUEST)
+                val actual = repository.createOrder(USER_WALLET_ID, REGULAR_REQUEST, IDEMPOTENCY_KEY)
 
                 // Assert
                 assertThat(actual).isEqualTo(NEW_ORDER_ID.right())
@@ -119,11 +133,11 @@ internal class DefaultOnboardingRepositoryTest {
         @Test
         fun `GIVEN backend error WHEN createOrder THEN error returned AND nothing stored`() = runTest {
             // Arrange
-            coEvery { tangemPayApi.createOrder(any(), any()) } returns
+            coEvery { tangemPayApi.createOrder(any(), any(), any()) } returns
                 ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<OrderResponse>
 
             // Act
-            val actual = repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST)
+            val actual = repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST, IDEMPOTENCY_KEY)
 
             // Assert
             assertThat(actual).isEqualTo(VisaApiError.Unspecified.left())
@@ -133,10 +147,11 @@ internal class DefaultOnboardingRepositoryTest {
         @Test
         fun `GIVEN response without result WHEN createOrder THEN error returned AND nothing stored`() = runTest {
             // Arrange
-            coEvery { tangemPayApi.createOrder(any(), any()) } returns ApiResponse.Success(OrderResponse(result = null))
+            coEvery { tangemPayApi.createOrder(any(), any(), any()) } returns
+                ApiResponse.Success(OrderResponse(result = null))
 
             // Act
-            val actual = repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST)
+            val actual = repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST, IDEMPOTENCY_KEY)
 
             // Assert
             assertThat(actual).isEqualTo(VisaApiError.UnknownWithoutCode.left())
@@ -157,10 +172,20 @@ internal class DefaultOnboardingRepositoryTest {
         }
 
         @Test
+        fun `GIVEN an idempotency key WHEN createVirtualAccountOrder THEN it is passed to the idempotency header`() =
+            runTest {
+                // Act
+                createVirtualAccountOrder()
+
+                // Assert
+                coVerify(exactly = 1) { tangemPayApi.createOrder(AUTH_HEADER, IDEMPOTENCY_KEY, any()) }
+            }
+
+        @Test
         fun `GIVEN response without result WHEN createVirtualAccountOrder THEN error returned instead of a crash`() =
             runTest {
                 // Arrange
-                coEvery { tangemPayApi.createOrder(any(), any()) } returns
+                coEvery { tangemPayApi.createOrder(any(), any(), any()) } returns
                     ApiResponse.Success(OrderResponse(result = null))
 
                 // Act
@@ -189,11 +214,11 @@ internal class DefaultOnboardingRepositoryTest {
                 ApiResponse.Success(orderResponse(STORED_ORDER_ID, OrderResponse.Result.Status.PROCESSING))
 
             // Act
-            val actual = repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST)
+            val actual = repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST, IDEMPOTENCY_KEY)
 
             // Assert
             assertThat(actual).isEqualTo(STORED_ORDER_ID.right())
-            coVerify(exactly = 0) { tangemPayApi.createOrder(any(), any()) }
+            coVerify(exactly = 0) { tangemPayApi.createOrder(any(), any(), any()) }
         }
 
         @Test
@@ -204,12 +229,12 @@ internal class DefaultOnboardingRepositoryTest {
                 coEvery { tangemPayStorage.isCampaignOrder(WALLET_ADDRESS) } returns false
 
                 // Act
-                val actual = repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST)
+                val actual = repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST, IDEMPOTENCY_KEY)
 
                 // Assert
                 assertThat(actual).isEqualTo(NEW_ORDER_ID.right())
                 coVerify(exactly = 0) { tangemPayApi.getOrder(any(), any()) }
-                coVerify(exactly = 1) { tangemPayApi.createOrder(any(), any()) }
+                coVerify(exactly = 1) { tangemPayApi.createOrder(any(), any(), any()) }
                 coVerify(exactly = 1) { tangemPayStorage.storeOrderId(WALLET_ADDRESS, NEW_ORDER_ID, true) }
             }
 
@@ -221,11 +246,11 @@ internal class DefaultOnboardingRepositoryTest {
                 ApiResponse.Success(orderResponse(STORED_ORDER_ID, OrderResponse.Result.Status.NEW))
 
             // Act
-            val actual = repository.createOrder(USER_WALLET_ID, REGULAR_REQUEST)
+            val actual = repository.createOrder(USER_WALLET_ID, REGULAR_REQUEST, IDEMPOTENCY_KEY)
 
             // Assert
             assertThat(actual).isEqualTo(STORED_ORDER_ID.right())
-            coVerify(exactly = 0) { tangemPayApi.createOrder(any(), any()) }
+            coVerify(exactly = 0) { tangemPayApi.createOrder(any(), any(), any()) }
         }
 
         @Test
@@ -238,12 +263,41 @@ internal class DefaultOnboardingRepositoryTest {
                     ApiResponse.Success(orderResponse(STORED_ORDER_ID, OrderResponse.Result.Status.COMPLETED))
 
                 // Act
-                val actual = repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST)
+                val actual = repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST, IDEMPOTENCY_KEY)
 
                 // Assert
                 assertThat(actual).isEqualTo(NEW_ORDER_ID.right())
-                coVerify(exactly = 1) { tangemPayApi.createOrder(any(), any()) }
+                coVerify(exactly = 1) { tangemPayApi.createOrder(any(), any(), any()) }
             }
+    }
+
+    @Nested
+    inner class DisableTangemPay {
+
+        @Test
+        fun `GIVEN backend accepts WHEN disableTangemPay THEN cached cashback summary removed`() = runTest {
+            // Arrange
+            coEvery { tangemPayApi.setTangemPayEnabledStatus(any(), any()) } returns ApiResponse.Success(Unit)
+
+            // Act
+            repository.disableTangemPay(USER_WALLET_ID)
+
+            // Assert
+            coVerify(exactly = 1) { cashbackSummaryStore.remove(listOf(USER_WALLET_ID)) }
+        }
+
+        @Test
+        fun `GIVEN backend error WHEN disableTangemPay THEN cached cashback summary kept`() = runTest {
+            // Arrange
+            coEvery { tangemPayApi.setTangemPayEnabledStatus(any(), any()) } returns
+                ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<Unit>
+
+            // Act
+            repository.disableTangemPay(USER_WALLET_ID)
+
+            // Assert
+            coVerify(exactly = 0) { cashbackSummaryStore.remove(any()) }
+        }
     }
 
     @Nested

@@ -63,7 +63,7 @@ internal class IssueAdditionalCardUseCaseTest {
             coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns customerOffers().right()
 
             // Act
-            val result = useCase(USER_WALLET_ID)
+            val result = useCase(USER_WALLET_ID, IDEMPOTENCY_KEY)
 
             // Assert
             assertThat(result.leftOrNull()).isEqualTo(IssueAdditionalCardError.Other(VisaApiError.Unspecified))
@@ -78,7 +78,7 @@ internal class IssueAdditionalCardUseCaseTest {
                 customerOffers(VIRTUAL_OFFER.copy(data = VIRTUAL_OFFER.data.copy(specificationName = null))).right()
 
             // Act
-            val result = useCase(USER_WALLET_ID)
+            val result = useCase(USER_WALLET_ID, IDEMPOTENCY_KEY)
 
             // Assert
             assertThat(result.leftOrNull()).isEqualTo(IssueAdditionalCardError.Other(VisaApiError.Unspecified))
@@ -99,7 +99,7 @@ internal class IssueAdditionalCardUseCaseTest {
             } returns listOf(existing).right()
 
             // Act
-            val result = useCase(USER_WALLET_ID)
+            val result = useCase(USER_WALLET_ID, IDEMPOTENCY_KEY)
 
             // Assert
             assertThat(result.getOrNull()).isEqualTo(IssueAdditionalCardResult.Resumed(existing))
@@ -120,7 +120,7 @@ internal class IssueAdditionalCardUseCaseTest {
                 created.right()
 
             // Act
-            val result = useCase(USER_WALLET_ID)
+            val result = useCase(USER_WALLET_ID, IDEMPOTENCY_KEY)
 
             // Assert
             assertThat(result.getOrNull()).isEqualTo(IssueAdditionalCardResult.Created(created))
@@ -138,12 +138,12 @@ internal class IssueAdditionalCardUseCaseTest {
                         specificationName = SPEC,
                         deeplinkValue = null,
                     ),
-                    idempotencyKey = any(),
+                    idempotencyKey = IDEMPOTENCY_KEY,
                 )
             } returns VisaApiError.CardIssueInsufficientBalance.left()
 
             // Act
-            val result = useCase(USER_WALLET_ID)
+            val result = useCase(USER_WALLET_ID, IDEMPOTENCY_KEY)
 
             // Assert
             assertThat(result.leftOrNull())
@@ -163,12 +163,12 @@ internal class IssueAdditionalCardUseCaseTest {
                         specificationName = SPEC,
                         deeplinkValue = null,
                     ),
-                    idempotencyKey = any(),
+                    idempotencyKey = IDEMPOTENCY_KEY,
                 )
             } returns created.right()
 
             // Act
-            val result = useCase(USER_WALLET_ID)
+            val result = useCase(USER_WALLET_ID, IDEMPOTENCY_KEY)
 
             // Assert
             assertThat(result.getOrNull()).isEqualTo(IssueAdditionalCardResult.Created(created))
@@ -195,12 +195,12 @@ internal class IssueAdditionalCardUseCaseTest {
                             specificationName = CAMPAIGN_SPEC,
                             deeplinkValue = DEEPLINK_VALUE,
                         ),
-                        idempotencyKey = any(),
+                        idempotencyKey = IDEMPOTENCY_KEY,
                     )
                 } returns created.right()
 
                 // Act
-                val result = useCase(USER_WALLET_ID, deeplinkValue = DEEPLINK_VALUE)
+                val result = useCase(USER_WALLET_ID, IDEMPOTENCY_KEY, deeplinkValue = DEEPLINK_VALUE)
 
                 // Assert
                 assertThat(result.getOrNull()).isEqualTo(IssueAdditionalCardResult.Created(created))
@@ -213,7 +213,7 @@ internal class IssueAdditionalCardUseCaseTest {
             coEvery { offersRepository.getOffers(USER_WALLET_ID, DEEPLINK_VALUE) } returns customerOffers(VIRTUAL_OFFER).right()
 
             // Act
-            val result = useCase(USER_WALLET_ID, deeplinkValue = DEEPLINK_VALUE)
+            val result = useCase(USER_WALLET_ID, IDEMPOTENCY_KEY, deeplinkValue = DEEPLINK_VALUE)
 
             // Assert
             assertThat(result.leftOrNull()).isEqualTo(IssueAdditionalCardError.NoCampaignOffer)
@@ -228,7 +228,7 @@ internal class IssueAdditionalCardUseCaseTest {
                 VisaApiError.CardIssueOfferNotAvailable.left()
 
             // Act
-            val result = useCase(USER_WALLET_ID, deeplinkValue = DEEPLINK_VALUE)
+            val result = useCase(USER_WALLET_ID, IDEMPOTENCY_KEY, deeplinkValue = DEEPLINK_VALUE)
 
             // Assert
             assertThat(result.leftOrNull()).isEqualTo(IssueAdditionalCardError.OfferNotAvailable)
@@ -241,7 +241,7 @@ internal class IssueAdditionalCardUseCaseTest {
                 VisaApiError.ServerUnavailable.left()
 
             // Act
-            val result = useCase(USER_WALLET_ID, deeplinkValue = DEEPLINK_VALUE)
+            val result = useCase(USER_WALLET_ID, IDEMPOTENCY_KEY, deeplinkValue = DEEPLINK_VALUE)
 
             // Assert
             assertThat(result.leftOrNull()).isEqualTo(IssueAdditionalCardError.Other(VisaApiError.ServerUnavailable))
@@ -261,7 +261,7 @@ internal class IssueAdditionalCardUseCaseTest {
             } returns listOf(existing).right()
 
             // Act
-            val result = useCase(USER_WALLET_ID, deeplinkValue = DEEPLINK_VALUE)
+            val result = useCase(USER_WALLET_ID, IDEMPOTENCY_KEY, deeplinkValue = DEEPLINK_VALUE)
 
             // Assert
             assertThat(result.getOrNull()).isEqualTo(IssueAdditionalCardResult.Resumed(existing))
@@ -283,7 +283,7 @@ internal class IssueAdditionalCardUseCaseTest {
                 created.right()
 
             // Act
-            val result = useCase(USER_WALLET_ID, deeplinkValue = DEEPLINK_VALUE)
+            val result = useCase(USER_WALLET_ID, IDEMPOTENCY_KEY, deeplinkValue = DEEPLINK_VALUE)
 
             // Assert
             assertThat(result.getOrNull()).isEqualTo(IssueAdditionalCardResult.Created(created))
@@ -313,6 +313,7 @@ internal class IssueAdditionalCardUseCaseTest {
     private companion object {
         val USER_WALLET_ID = UserWalletId("1234567890ABCDEF")
         const val SPEC = "SP_000004"
+        const val IDEMPOTENCY_KEY = "caller-owned-key"
         const val CAMPAIGN_SPEC = "SP_000009"
         const val DEEPLINK_VALUE = "tpay_for_oxford"
 

@@ -6,8 +6,6 @@ import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.common.ui.charts.state.converter.PriceAndTimePointValuesConverter
 import com.tangem.common.ui.charts.state.sorted
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
-import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.extensions.ColorReference2
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRowMarket
 import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.stringReference
@@ -60,17 +58,6 @@ internal class RwaListItemConverter(
             chartData = ifChanged(prev.tokenCharts, new.tokenCharts, prevUI.chartData) { new.getChartData() },
             chartType = new.getTrendDirection().toChartType(),
         )
-    }
-
-    /** Marks an asset blocked in the user's region — the row still renders, the dot is the only signal. */
-    private fun TokenMarket.restrictionIndicator(): TangemTokenIcon.State.Indicator? {
-        return if (isRestrictedForCountry) {
-            TangemTokenIcon.State.Indicator(
-                colorReference2 = ColorReference2 { TangemTheme.colors3.icon.status.warning },
-            )
-        } else {
-            null
-        }
     }
 
     private fun TokenMarket.toRowState(

@@ -49,7 +49,7 @@ internal class JointAccountJoinModelTest {
     }
 
     @Test
-    fun `GIVEN complete draft WHEN join THEN the flow closes with the account added snackbar`() = runTest {
+    fun `GIVEN complete draft WHEN join THEN the members screen opens with the account added snackbar`() = runTest {
         // Arrange
         val model = createModelWithDraft()
         coEvery {
@@ -60,7 +60,7 @@ internal class JointAccountJoinModelTest {
         val action = model.join(inviteId = INVITE_ID, memberName = NAME)
 
         // Assert
-        assertThat(action).isEqualTo(JoinResultAction.CloseFlow)
+        assertThat(action).isEqualTo(openJoinedMembers)
         assertThat(model.draftHolder.draft.value.displayName).isEqualTo(NAME)
         val message = slot<SnackbarMessage>()
         verify(exactly = 1) { uiMessageSender.send(capture(message)) }
@@ -107,7 +107,7 @@ internal class JointAccountJoinModelTest {
         val action = model.join(inviteId = INVITE_ID, memberName = NAME)
 
         // Assert
-        assertThat(action).isEqualTo(JoinResultAction.CloseFlow)
+        assertThat(action).isEqualTo(openJoinedMembers)
         coVerify(exactly = 1) { joinUseCase(any(), any(), any(), any()) }
     }
 
@@ -213,6 +213,8 @@ internal class JointAccountJoinModelTest {
             membersCount = 3,
             threshold = 2,
         )
+
+        val openJoinedMembers = JoinResultAction.OpenMembers(userWalletId = USER_WALLET_ID, cryptoAccountId = ACCOUNT_ID)
 
         val joinedAccount = JointAccount(
             cryptoAccountId = ACCOUNT_ID,

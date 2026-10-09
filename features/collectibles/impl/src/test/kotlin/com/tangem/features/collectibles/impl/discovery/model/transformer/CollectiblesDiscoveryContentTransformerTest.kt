@@ -23,6 +23,7 @@ import org.junit.jupiter.params.ParameterizedTest
 internal class CollectiblesDiscoveryContentTransformerTest {
 
     private var reloadClickCount = 0
+    private var nextPageRetryClickCount = 0
 
     private val packConverter = CollectiblesDiscoveryPackConverter(onPackClick = {})
 
@@ -30,6 +31,7 @@ internal class CollectiblesDiscoveryContentTransformerTest {
     @BeforeEach
     fun resetRecordedClicks() {
         reloadClickCount = 0
+        nextPageRetryClickCount = 0
     }
 
     @ParameterizedTest
@@ -83,13 +85,13 @@ internal class CollectiblesDiscoveryContentTransformerTest {
             description = "GIVEN packs on screen WHEN status is None THEN they stay and are marked reloading",
             status = PaginationStatus.None,
             prevContent = previousContent(),
-            expected = Expectation.Content(isLoadingNextPage = false, isReloading = true),
+            expected = Expectation.Content(nextPage = Expectation.NextPage.Idle, isReloading = true),
         ),
         TransformModel(
             description = "GIVEN packs on screen WHEN first page reloads THEN they stay and are marked reloading",
             status = PaginationStatus.InitialLoading,
             prevContent = previousContent(),
-            expected = Expectation.Content(isLoadingNextPage = false, isReloading = true),
+            expected = Expectation.Content(nextPage = Expectation.NextPage.Idle, isReloading = true),
         ),
         TransformModel(
             description = "GIVEN the first page failed WHEN transform THEN content is an error",
@@ -101,7 +103,7 @@ internal class CollectiblesDiscoveryContentTransformerTest {
             description = "GIVEN a next page on its way WHEN transform THEN the footer loader is shown",
             status = PaginationStatus.NextBatchLoading,
             prevContent = CollectiblesDiscoveryUM.ContentUM.Loading,
-            expected = Expectation.Content(isLoadingNextPage = true, isReloading = false),
+            expected = Expectation.Content(nextPage = Expectation.NextPage.Loading, isReloading = false),
         ),
         TransformModel(
             description = "GIVEN a page settled WHEN transform THEN no loader is shown",
@@ -109,13 +111,21 @@ internal class CollectiblesDiscoveryContentTransformerTest {
                 lastResult = BatchFetchResult.Success(data = emptyBatch(), empty = false, last = false),
             ),
             prevContent = CollectiblesDiscoveryUM.ContentUM.Loading,
-            expected = Expectation.Content(isLoadingNextPage = false, isReloading = false),
+            expected = Expectation.Content(nextPage = Expectation.NextPage.Idle, isReloading = false),
+        ),
+        TransformModel(
+            description = "GIVEN a next page failed WHEN transform THEN the footer error is shown",
+            status = PaginationStatus.Paginating(
+                lastResult = BatchFetchResult.Error(throwable = IllegalStateException("boom")),
+            ),
+            prevContent = CollectiblesDiscoveryUM.ContentUM.Loading,
+            expected = Expectation.Content(nextPage = Expectation.NextPage.Error, isReloading = false),
         ),
         TransformModel(
             description = "GIVEN the catalogue ended WHEN transform THEN no loader is shown",
             status = PaginationStatus.EndOfPagination,
             prevContent = CollectiblesDiscoveryUM.ContentUM.Loading,
-            expected = Expectation.Content(isLoadingNextPage = false, isReloading = false),
+            expected = Expectation.Content(nextPage = Expectation.NextPage.Idle, isReloading = false),
         ),
     )
 
@@ -154,6 +164,28 @@ internal class CollectiblesDiscoveryContentTransformerTest {
 
         // Assert
         assertThat(reloadClickCount).isEqualTo(1)
+    }
+
+    @Test
+    fun `GIVEN a next page failed WHEN retry is clicked THEN the retry is delegated`() {
+        // Arrange
+        val transformer = createTransformer(
+            batchListState = createBatchListState(
+                batches = listOf(listOf(createMachine(id = "a"))),
+                status = PaginationStatus.Paginating(
+                    lastResult = BatchFetchResult.Error(throwable = IllegalStateException("boom")),
+                ),
+            ),
+        )
+
+        // Act
+        val content = transformer.transform(prevState = createPrevState()).content
+            as CollectiblesDiscoveryUM.ContentUM.Content
+        (content.nextPage as CollectiblesDiscoveryUM.NextPageUM.Error).onRetryClick()
+
+        // Assert
+        assertThat(nextPageRetryClickCount).isEqualTo(1)
+        assertThat(reloadClickCount).isEqualTo(0)
     }
 
     @Test
@@ -290,6 +322,7 @@ internal class CollectiblesDiscoveryContentTransformerTest {
         batchListState = batchListState,
         packConverter = packConverter,
         onReloadClick = { reloadClickCount++ },
+        onNextPageRetryClick = { nextPageRetryClickCount++ },
     )
 
     private fun createPrevState(
@@ -320,7 +353,7 @@ internal class CollectiblesDiscoveryContentTransformerTest {
         )
         return CollectiblesDiscoveryUM.ContentUM.Content(
             rows = persistentListOf(CollectiblesDiscoveryUM.PackRowUM(id = pack.id, packs = persistentListOf(pack))),
-            isLoadingNextPage = false,
+            nextPage = CollectiblesDiscoveryUM.NextPageUM.Idle,
             isReloading = false,
         )
     }
@@ -336,7 +369,11 @@ internal class CollectiblesDiscoveryContentTransformerTest {
         is CollectiblesDiscoveryUM.ContentUM.Error -> Expectation.Error
         is CollectiblesDiscoveryUM.ContentUM.Empty -> Expectation.Empty
         is CollectiblesDiscoveryUM.ContentUM.Content -> Expectation.Content(
-            isLoadingNextPage = isLoadingNextPage,
+            nextPage = when (nextPage) {
+                is CollectiblesDiscoveryUM.NextPageUM.Idle -> Expectation.NextPage.Idle
+                is CollectiblesDiscoveryUM.NextPageUM.Loading -> Expectation.NextPage.Loading
+                is CollectiblesDiscoveryUM.NextPageUM.Error -> Expectation.NextPage.Error
+            },
             isReloading = isReloading,
         )
     }
@@ -350,7 +387,9 @@ internal class CollectiblesDiscoveryContentTransformerTest {
 
         data object Empty : Expectation
 
-        data class Content(val isLoadingNextPage: Boolean, val isReloading: Boolean) : Expectation
+        data class Content(val nextPage: NextPage, val isReloading: Boolean) : Expectation
+
+        enum class NextPage { Idle, Loading, Error }
     }
 
     internal data class TransformModel(

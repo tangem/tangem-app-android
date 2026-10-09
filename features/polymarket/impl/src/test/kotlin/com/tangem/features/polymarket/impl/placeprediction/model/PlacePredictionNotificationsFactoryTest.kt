@@ -382,6 +382,24 @@ internal class PlacePredictionNotificationsFactoryTest {
             ),
             SellGateModel(
                 amountValue = "12.80",
+                quote = QuoteUM.Unavailable(
+                    status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY,
+                    expected = BigDecimal("23.8"),
+                ),
+                expectedProceeds = SharesProceedsUM.Content(expected = BigDecimal("23.8")),
+                expectedButtonEnabled = false,
+            ),
+            SellGateModel(
+                amountValue = "12.80",
+                quote = QuoteUM.Unavailable(
+                    status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY,
+                    expected = BigDecimal.ZERO,
+                ),
+                expectedProceeds = SharesProceedsUM.Content(expected = BigDecimal.ZERO),
+                expectedButtonEnabled = false,
+            ),
+            SellGateModel(
+                amountValue = "12.80",
                 quote = createQuote(status = PredictionQuoteStatus.PARTIAL),
                 expectedProceeds = SharesProceedsUM.Content(expected = BigDecimal("23.8")),
                 expectedButtonEnabled = true,
@@ -464,7 +482,7 @@ internal class PlacePredictionNotificationsFactoryTest {
             outcomePrice = "42¢",
             resolutionDateMillis = null,
         ),
-        collateral = CollateralUM(tokenSymbol = "USDC", iconState = null),
+        collateral = CollateralUM(tokenSymbol = "USDC"),
         order = order ?: OrderSideUM.Buy(balance = balance, hasSufficientBalance = false),
         amountValue = amountValue,
         slippage = SlippageUM(percent = BigDecimal("3"), isDefault = true),

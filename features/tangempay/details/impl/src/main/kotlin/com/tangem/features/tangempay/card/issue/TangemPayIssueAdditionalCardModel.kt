@@ -6,18 +6,22 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.pay.model.IssueAdditionalCardError
 import com.tangem.domain.pay.usecase.IssueAdditionalCardUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
+import com.tangem.features.tangempay.details.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 @Stable
@@ -31,6 +35,8 @@ internal class TangemPayIssueAdditionalCardModel @Inject constructor(
 ) : Model() {
 
     private val params: TangemPayIssueAdditionalCardComponent.Params = paramsContainer.require()
+
+    private var issueIdempotencyKey: String? = null
 
     val uiState: StateFlow<TangemPayIssueAdditionalCardUM>
         field = MutableStateFlow(buildInitialState())
@@ -51,10 +57,12 @@ internal class TangemPayIssueAdditionalCardModel @Inject constructor(
     }
 
     private fun onIssueClick() {
+        if (uiState.value.isLoading) return
         analytics.send(TangemPayAnalyticsEvents.IssueAdditionalCardConfirmed())
         uiState.update { it.copy(isLoading = true) }
+        val idempotencyKey = issueIdempotencyKey ?: UUID.randomUUID().toString().also { issueIdempotencyKey = it }
         modelScope.launch {
-            issueAdditionalCard(userWalletId = params.userWalletId).fold(
+            issueAdditionalCard(userWalletId = params.userWalletId, idempotencyKey = idempotencyKey).fold(
                 ifLeft = ::handleIssueError,
                 ifRight = {
                     uiState.update { uiState -> uiState.copy(isLoading = false) }
@@ -65,8 +73,15 @@ internal class TangemPayIssueAdditionalCardModel @Inject constructor(
     }
 
     private fun handleIssueError(error: IssueAdditionalCardError) {
+        val isOutcomeUnknown = error.isOutcomeUnknown()
+        if (!isOutcomeUnknown) issueIdempotencyKey = null
         if (error is IssueAdditionalCardError.Other && error.cause == VisaApiError.CardIssueInsufficientBalance) {
-            uiState.update { it.copy(isBalanceInsufficient = true) }
+            uiState.update { it.copy(isLoading = false, isBalanceInsufficient = true) }
+            return
+        }
+        uiState.update { it.copy(isLoading = false) }
+        if (isOutcomeUnknown) {
+            uiMessageSender.send(ToastMessage(resourceReference(R.string.common_unknown_error)))
         } else {
             uiMessageSender.send(message = TangemPayMessagesFactory.createGenericError())
             onDismiss()

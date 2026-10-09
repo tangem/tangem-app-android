@@ -4,6 +4,7 @@ import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -39,8 +40,26 @@ private const val STARS_COUNT = 5
  * [Figma](https://www.figma.com/design/Qqm0dNTOnqtxLYEcmgc32C/Store?node-id=5648-171645)
  */
 @Composable
-@Suppress("MagicNumber")
 internal fun RatingBlockRedesign(state: RatingUM, modifier: Modifier = Modifier) {
+    // A rating is final, so once it is given the card has nothing left to offer and leaves the screen — including on
+    // every later visit, the stored rating being read back as AlreadyRated. The feedback sheet stays composed through
+    // it: the same state change dismisses the sheet, which has to outlive the card to animate away.
+    when (val ratingState = state.state) {
+        is RatingUM.RatingState.Loading -> RatingCard(modifier) { RatingLoadingState() }
+        is RatingUM.RatingState.Unrated -> RatingCard(modifier) {
+            TitleAndStars(
+                selectedRating = ratingState.selectedRating,
+                onRatingSelect = state.onRatingSelected,
+            )
+        }
+        is RatingUM.RatingState.AlreadyRated -> Unit
+    }
+    RatingFeedbackBottomSheetRedesign(config = state.feedbackBottomSheet)
+}
+
+@Composable
+@Suppress("MagicNumber")
+private fun RatingCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -50,22 +69,8 @@ internal fun RatingBlockRedesign(state: RatingUM, modifier: Modifier = Modifier)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        when (val ratingState = state.state) {
-            is RatingUM.RatingState.Loading -> RatingLoadingState()
-            is RatingUM.RatingState.Unrated -> RatedTitleAndStars(
-                selectedRating = ratingState.selectedRating,
-                isEnabled = true,
-                onRatingSelect = state.onRatingSelected,
-            )
-            is RatingUM.RatingState.AlreadyRated -> RatedTitleAndStars(
-                selectedRating = ratingState.rating,
-                isEnabled = false,
-                onRatingSelect = {},
-            )
-        }
-    }
-    RatingFeedbackBottomSheetRedesign(config = state.feedbackBottomSheet)
+        content = content,
+    )
 }
 
 @Composable
@@ -78,7 +83,7 @@ private fun RatingLoadingState() {
 }
 
 @Composable
-private fun RatedTitleAndStars(selectedRating: Int?, isEnabled: Boolean, onRatingSelect: (Int) -> Unit) {
+private fun TitleAndStars(selectedRating: Int?, onRatingSelect: (Int) -> Unit) {
     Text(
         text = stringResourceSafe(R.string.swapping_rate_experience_title),
         style = TangemTheme.typography3.body.medium,
@@ -87,7 +92,7 @@ private fun RatedTitleAndStars(selectedRating: Int?, isEnabled: Boolean, onRatin
     )
     RedesignStarRow(
         selectedRating = selectedRating,
-        isEnabled = isEnabled,
+        isEnabled = true,
         onRatingSelect = onRatingSelect,
     )
 }
@@ -146,7 +151,6 @@ private fun RatingBlockRedesignPreview() {
         ) {
             RatingBlockRedesign(state = previewState(RatingUM.RatingState.Loading))
             RatingBlockRedesign(state = previewState(RatingUM.RatingState.Unrated(selectedRating = null)))
-            RatingBlockRedesign(state = previewState(RatingUM.RatingState.AlreadyRated(rating = 4)))
         }
     }
 }

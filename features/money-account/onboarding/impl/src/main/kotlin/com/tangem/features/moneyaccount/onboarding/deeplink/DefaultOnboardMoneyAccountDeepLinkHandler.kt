@@ -28,4 +28,8 @@ internal class DefaultOnboardMoneyAccountDeepLinkHandler @AssistedInject constru
     interface Factory : OnboardMoneyAccountDeepLinkHandler.Factory {
         override fun create(uri: Uri): DefaultOnboardMoneyAccountDeepLinkHandler
     }
+
+    companion object {
+        const val DEEPLINK_KEY = "tangem://onboard-virtual-account"
+    }
 }

@@ -18,6 +18,7 @@ import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.extensions.combinedReference
+import com.tangem.core.ui.extensions.formatAnnotatedWithUrls
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -40,7 +41,11 @@ internal data class MarketIndexInfoBottomSheetContent(
  * shtorka instead of opening a competing dialog window.
  */
 @Composable
-internal fun MarketIndexInfoBottomSheet(state: MarketIndexInfoBottomSheetContent, onDismiss: () -> Unit) {
+internal fun MarketIndexInfoBottomSheet(
+    state: MarketIndexInfoBottomSheetContent,
+    onLinkClick: (url: String) -> Unit,
+    onDismiss: () -> Unit,
+) {
     TangemModal<MarketIndexInfoBottomSheetContent>(
         config = TangemBottomSheetConfig(
             isShown = true,
@@ -52,12 +57,12 @@ internal fun MarketIndexInfoBottomSheet(state: MarketIndexInfoBottomSheetContent
                 endButton = { TangemButton.Close(onClick = onDismiss) },
             )
         },
-        content = { content -> Content(index = content.index) },
+        content = { content -> Content(index = content.index, onLinkClick = onLinkClick) },
     )
 }
 
 @Composable
-private fun Content(index: MarketIndexUM, modifier: Modifier = Modifier) {
+private fun Content(index: MarketIndexUM, onLinkClick: (url: String) -> Unit, modifier: Modifier = Modifier) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
@@ -88,7 +93,11 @@ private fun Content(index: MarketIndexUM, modifier: Modifier = Modifier) {
                 .padding(vertical = 40.dp, horizontal = 12.dp),
         )
         Text(
-            text = index.description.resolveReference(),
+            text = formatAnnotatedWithUrls(
+                text = index.description.resolveReference(),
+                linkColor = TangemTheme.colors3.text.accent.blue,
+                onLinkClick = onLinkClick,
+            ),
             style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.primary,
         )
@@ -101,7 +110,7 @@ private fun Content(index: MarketIndexUM, modifier: Modifier = Modifier) {
 @Composable
 private fun MarketIndexInfoBottomSheetFearGreedPreview() {
     TangemThemePreviewRedesign {
-        MarketIndexInfoBottomSheet(state = previewConfig(index = previewFearGreed), onDismiss = {})
+        MarketIndexInfoBottomSheet(state = previewConfig(index = previewFearGreed), onLinkClick = {}, onDismiss = {})
     }
 }
 
@@ -110,7 +119,7 @@ private fun MarketIndexInfoBottomSheetFearGreedPreview() {
 @Composable
 private fun MarketIndexInfoBottomSheetAltcoinIndexPreview() {
     TangemThemePreviewRedesign {
-        MarketIndexInfoBottomSheet(state = previewConfig(index = previewAltcoinIndex), onDismiss = {})
+        MarketIndexInfoBottomSheet(state = previewConfig(index = previewAltcoinIndex), onLinkClick = {}, onDismiss = {})
     }
 }
 

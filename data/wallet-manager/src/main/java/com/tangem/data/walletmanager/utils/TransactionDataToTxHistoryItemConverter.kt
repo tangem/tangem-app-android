@@ -91,7 +91,10 @@ internal class TransactionDataToTxHistoryItemConverter(
     /**
      * A protocol call describes what the token did. In the coin's own history the wallet moved no coin and paid
      * nothing but the fee, so the row reads as a plain operation — the same fallback the confirmed row takes in
-     * [SdkTransactionTypeConverter], so the row does not change shape once the explorer reports it.
+     * [SdkTransactionTypeConverter], so the row does not change shape once the explorer reports it. The call itself
+     * rides along as [TxInfo.TransactionType.Operation.recognized]: the fee row names what it paid for, and names it
+     * the same before and after the explorer reports the transaction. The method name stays empty — here the call is
+     * decoded from its call data, which carries the selector and not the name the explorer would give it.
      */
     private fun TxInfo.TransactionType.orCoinFeeOnly(isOutgoing: Boolean, moved: BigDecimal?): TxInfo.TransactionType {
         val isCoinFeeOnly = currency is CryptoCurrency.Coin &&
@@ -99,7 +102,7 @@ internal class TransactionDataToTxHistoryItemConverter(
             moved?.isZero() == true &&
             this is TxInfo.TransactionType.YieldSupply
 
-        return if (isCoinFeeOnly) TxInfo.TransactionType.UnknownOperation else this
+        return if (isCoinFeeOnly) TxInfo.TransactionType.Operation(name = "", recognized = this) else this
     }
 
     private fun getTransactionType(transactionData: TransactionData.Uncompiled?): TxInfo.TransactionType {

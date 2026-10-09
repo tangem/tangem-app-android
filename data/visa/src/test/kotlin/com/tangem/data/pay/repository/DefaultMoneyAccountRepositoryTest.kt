@@ -5,10 +5,12 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.moneyaccount.model.MoneyAccountPaymentMethod
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.response.PaymentMethodsResponse
+import com.tangem.spend.datasource.preferences.SpendPreferencesKeys
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -22,10 +24,13 @@ internal class DefaultMoneyAccountRepositoryTest {
 
     private val tangemPayApi: TangemPayApi = mockk()
     private val requestPerformer: TangemPayRequestPerformer = mockk()
+    private val appPreferencesStore: AppPreferencesStore = mockk()
 
     private val repository = DefaultMoneyAccountRepository(
         tangemPayApi = tangemPayApi,
         requestPerformer = requestPerformer,
+        appPreferencesStore = appPreferencesStore,
+        spendPreferencesKeys = SpendPreferencesKeys(),
     )
 
     @BeforeEach

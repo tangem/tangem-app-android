@@ -7,6 +7,7 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.getQuantityString
+import com.tangem.common.utils.getWireMockRequestCount
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
 import com.tangem.scenarios.*
@@ -14,6 +15,8 @@ import com.tangem.screens.tangempay.*
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 @HiltAndroidTest
@@ -31,11 +34,14 @@ class TangemPayMultipleCardsTest : BaseTestCase() {
     private val issueOrderStartedState = "Started"
     private val issueOrdersScenario = "tangem_pay_card_issue_orders"
     private val issueOrdersEmptyState = "Empty"
+    private val issueOrdersActiveOrderState = "ActiveOrder"
     private val historyScenario = "tangem_pay_transaction_history"
     private val historyInitialEmptyState = "InitialEmpty"
     private val historyAfterIssueFeeState = "AfterCardIssueFee"
 
     private val issueFee = "$1.00"
+    private val orderEndpoint = "/bff-v2/v1/order"
+    private val issuingCardIndex = 1
 
     @AllureId("9731")
     @DisplayName("Tangem Pay: 'Issue an additional card?' popup offers the issue when the balance covers the fee")
@@ -186,8 +192,6 @@ class TangemPayMultipleCardsTest : BaseTestCase() {
     @DisplayName("Tangem Pay: the card being issued shows the in-progress screen after the order is created")
     @Test
     fun issuingCardShowsProgressScreenTest() {
-        val issuingCardIndex = 1
-
         setupHooks(
             additionalBeforeSection = {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
@@ -243,6 +247,98 @@ class TangemPayMultipleCardsTest : BaseTestCase() {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     onTangemPayMainScreen { tileWithSubtitle(threeCardsSubtitle).assertIsDisplayed() }
                 }
+            }
+        }
+    }
+
+    @AllureId("10014")
+    @DisplayName("Tangem Pay: an active card order found at launch shows the in-progress screen")
+    @Test
+    fun activeOrderAtLaunchShowsProgressScreenTest() {
+        setupHooks(
+            additionalBeforeSection = {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
+                setWireMockScenarioState(balanceScenario, balanceInitialState)
+                setWireMockScenarioState(issueOrderScenario, issueOrderStartedState)
+                setWireMockScenarioState(issueOrdersScenario, issueOrdersActiveOrderState)
+            }
+        ).run {
+            val orderLookupCountBefore = getWireMockRequestCount("GET", orderEndpoint)
+
+            step("Open Tangem Pay") { openTangemPay() }
+            step("Assert 'Issuing a new digital card' banner is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onTangemPayMainScreen { issuingCardBanner.assertIsDisplayed() }
+                }
+            }
+            step("Assert 'Add card' button is disabled") {
+                onTangemPayMainScreen { addCardButton.assertIsNotEnabled() }
+            }
+            step("Assert active orders were looked up at launch") {
+                val orderLookupCountAfter = getWireMockRequestCount("GET", orderEndpoint)
+                assertTrue(
+                    "The app should look up active orders via GET $orderEndpoint",
+                    orderLookupCountAfter > orderLookupCountBefore,
+                )
+            }
+            step("Click on the card being issued") {
+                onTangemPayMainScreen { cardButtonAt(issuingCardIndex).performClick() }
+            }
+            step("Assert 'Card page' screen is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) { onTangemPayCardPageScreen { moreButton.assertIsDisplayed() } }
+            }
+            step("Assert the card page shows the issuing progress state") {
+                onTangemPayCardPageScreen { issuingInProgressBlock.assertIsDisplayed() }
+            }
+        }
+    }
+
+    @AllureId("10008")
+    @DisplayName("Tangem Pay: confirming a card issue with an active order reuses it instead of placing a new one")
+    @Test
+    fun issueCardWithActiveOrderDoesNotPlaceNewOrderTest() {
+        setupHooks(
+            additionalBeforeSection = {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
+                setWireMockScenarioState(balanceScenario, balanceInitialState)
+                setWireMockScenarioState(issueOrderScenario, issueOrderStartedState)
+                setWireMockScenarioState(issueOrdersScenario, issueOrdersEmptyState)
+            }
+        ).run {
+            step("Open Tangem Pay") { openTangemPay() }
+            step("Open the 'Issue an additional card?' sheet") { openTangemPayIssueCardSheet() }
+            step("Assert issue sheet content with the '$issueFee' fee") {
+                assertTangemPayIssueCardSheetContent(issueFee)
+            }
+            step("Switch WireMock scenario '$issueOrdersScenario' to '$issueOrdersActiveOrderState'") {
+                setWireMockScenarioState(issueOrdersScenario, issueOrdersActiveOrderState)
+            }
+            val placeOrderCountBefore = getWireMockRequestCount("POST", orderEndpoint)
+            val orderLookupCountBefore = getWireMockRequestCount("GET", orderEndpoint)
+            step("Confirm the card issue") { confirmTangemPayCardIssue() }
+            step("Assert active orders were looked up on confirm") {
+                val orderLookupCountAfter = getWireMockRequestCount("GET", orderEndpoint)
+                assertTrue(
+                    "Confirming the issue should look up active orders via GET $orderEndpoint",
+                    orderLookupCountAfter > orderLookupCountBefore,
+                )
+            }
+            step("Assert no new order was placed") {
+                val placeOrderCountAfter = getWireMockRequestCount("POST", orderEndpoint)
+                assertEquals(
+                    "Confirming the issue with an active order should not send POST $orderEndpoint",
+                    placeOrderCountBefore,
+                    placeOrderCountAfter,
+                )
+            }
+            step("Click on the card being issued") {
+                onTangemPayMainScreen { cardButtonAt(issuingCardIndex).performClick() }
+            }
+            step("Assert 'Card page' screen is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) { onTangemPayCardPageScreen { moreButton.assertIsDisplayed() } }
+            }
+            step("Assert the card page shows the issuing progress state") {
+                onTangemPayCardPageScreen { issuingInProgressBlock.assertIsDisplayed() }
             }
         }
     }

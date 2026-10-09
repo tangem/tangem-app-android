@@ -1,6 +1,7 @@
 package com.tangem.features.pushnotifications.impl.presentation.ui
 
 import android.content.res.Configuration
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -18,6 +19,7 @@ import com.tangem.core.ui.components.showcase.Showcase
 import com.tangem.core.ui.components.showcase.model.ShowcaseButtonModel
 import com.tangem.core.ui.components.showcase.model.ShowcaseItemModel
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.requestPermission
 import com.tangem.feature.pushnotifications.impl.R
@@ -83,7 +85,9 @@ internal fun PushNotificationsScreen(
             buttonText = resourceReference(R.string.common_later),
             onClick = onLaterClick,
         ),
-        modifier = Modifier.systemBarsPadding(),
+        modifier = Modifier
+            .background(TangemTheme.colors.background.secondary)
+            .systemBarsPadding(),
     )
 
     if (state.doubleAskSheet.isShown) {

@@ -28,4 +28,11 @@ internal class DefaultBuyDeepLinkHandler @AssistedInject constructor(
     interface Factory : BuyDeepLinkHandler.Factory {
         override fun create(): DefaultBuyDeepLinkHandler
     }
+
+    companion object {
+        const val DEEPLINK_KEY = "tangem://buy"
+
+        /** Return link of the onramp provider after a purchase: it only brings the app back, nothing to open. */
+        const val REDIRECT_DEEPLINK_KEY = "tangem://redirect"
+    }
 }

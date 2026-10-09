@@ -1,21 +1,30 @@
 package com.tangem.tap.domain.walletregistration
 
+import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.card.Card
 import com.tangem.common.core.CardSession
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.hot.HotWalletAccessor
+import com.tangem.hot.sdk.exception.RecentBiometryUnavailableException
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.auth.AuthFeatureToggles
+import com.tangem.lib.auth.session.AuthError
+import com.tangem.lib.auth.session.PreparedWalletRegistration
 import com.tangem.lib.auth.session.WalletNonce
 import com.tangem.lib.auth.session.WalletRegistrar
+import com.tangem.lib.auth.session.WalletRegistrationError
 import com.tangem.lib.auth.session.WalletSigner
-import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.tap.domain.walletregistration.BackendAuthAnalyticsEvent.WalletRegistrationFailed
+import com.tangem.tap.domain.walletregistration.BackendAuthAnalyticsEvent.WalletRegistrationFailed.Stage
+import com.tangem.tap.domain.walletregistration.BackendAuthAnalyticsEvent.WalletRegistrationFailed.WalletType
+import com.tangem.test.core.TestAppCoroutineScope
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -27,6 +36,7 @@ import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mockk.verify
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -41,7 +51,7 @@ internal class WalletRegistrationLauncherTest {
     private val coldSigner: ColdWalletRegistrationSigner = mockk()
     private val authFeatureToggles: AuthFeatureToggles = mockk()
     private val hotWalletAccessor: HotWalletAccessor = mockk(relaxed = true)
-    private val appCoroutineScope: AppCoroutineScope = mockk(relaxed = true)
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
 
     private val launcher = WalletRegistrationLauncher(
         walletRegistrar = walletRegistrar,
@@ -49,12 +59,13 @@ internal class WalletRegistrationLauncherTest {
         coldSigner = coldSigner,
         authFeatureToggles = authFeatureToggles,
         hotWalletAccessor = hotWalletAccessor,
-        appCoroutineScope = appCoroutineScope,
+        appCoroutineScope = TestAppCoroutineScope(),
+        analyticsEventHandler = analyticsEventHandler,
     )
 
     @BeforeEach
     fun setup() {
-        clearMocks(walletRegistrar, mobileSigner, authFeatureToggles, hotWalletAccessor)
+        clearMocks(walletRegistrar, mobileSigner, authFeatureToggles, hotWalletAccessor, analyticsEventHandler)
         mockkStatic(android.util.Base64::class)
         every { android.util.Base64.encodeToString(any(), any()) } answers {
             java.util.Base64.getEncoder().encodeToString(firstArg())
@@ -105,18 +116,64 @@ internal class WalletRegistrationLauncherTest {
     }
 
     @Test
-    fun `registerUnlockedMobileWallet establishes a context, registers, then clears the context`() = runTest {
+    fun `GIVEN NoPassword wallet WHEN registerUnlockedMobileWallet THEN opens it without auth and registers`() =
+        runTest {
+            // Arrange
+            every { authFeatureToggles.isBackendAuthenticationEnabled } returns true
+            val wallet = hotWallet(authType = HotWalletId.AuthType.NoPassword)
+            val hotWalletId = wallet.hotWalletId
+            coEvery { walletRegistrar.isRegistered(any()) } returns false
+            every { hotWalletAccessor.getContextualUnlock(hotWalletId) } returns null
+            coEvery { hotWalletAccessor.unlockContextual(hotWalletId) } returns mockk()
+
+            // Act
+            launcher.registerUnlockedMobileWallet(wallet)
+
+            // Assert
+            coVerify(exactly = 1) { hotWalletAccessor.unlockContextual(hotWalletId) }
+            coVerify(exactly = 0) { hotWalletAccessor.unlockContextualWithRecentBiometry(any()) }
+            coVerify(exactly = 1) { walletRegistrar.register(any(), any()) }
+            verify(exactly = 1) { hotWalletAccessor.clearContextualUnlock(hotWalletId) }
+        }
+
+    @Test
+    fun `GIVEN biometric unlock WHEN registerUnlockedMobileWallet THEN reuses it without a prompt and clears context`() =
+        runTest {
+            // Arrange
+            every { authFeatureToggles.isBackendAuthenticationEnabled } returns true
+            val wallet = hotWallet(authType = HotWalletId.AuthType.Biometry)
+            val hotWalletId = wallet.hotWalletId
+            coEvery { walletRegistrar.isRegistered(any()) } returns false
+            every { hotWalletAccessor.getContextualUnlock(hotWalletId) } returns null
+            coEvery { hotWalletAccessor.unlockContextualWithRecentBiometry(hotWalletId) } returns mockk()
+
+            // Act
+            launcher.registerUnlockedMobileWallet(wallet)
+
+            // Assert
+            coVerify(exactly = 1) { hotWalletAccessor.unlockContextualWithRecentBiometry(hotWalletId) }
+            coVerify(exactly = 0) { hotWalletAccessor.unlockContextual(any()) }
+            coVerify(exactly = 1) { walletRegistrar.register(any(), any()) }
+            verify(exactly = 1) { hotWalletAccessor.clearContextualUnlock(hotWalletId) }
+        }
+
+    @Test
+    fun `GIVEN unlock auth not reusable WHEN registerUnlockedMobileWallet THEN defers without a prompt`() = runTest {
+        // Arrange
         every { authFeatureToggles.isBackendAuthenticationEnabled } returns true
-        val wallet = hotWallet(authType = HotWalletId.AuthType.Biometry)
+        val wallet = hotWallet(authType = HotWalletId.AuthType.Password)
         val hotWalletId = wallet.hotWalletId
         coEvery { walletRegistrar.isRegistered(any()) } returns false
         every { hotWalletAccessor.getContextualUnlock(hotWalletId) } returns null
-        coEvery { hotWalletAccessor.unlockContextual(hotWalletId) } returns mockk()
+        coEvery { hotWalletAccessor.unlockContextualWithRecentBiometry(hotWalletId) } throws
+            RecentBiometryUnavailableException("Wallet is not biometry-protected")
 
+        // Act
         launcher.registerUnlockedMobileWallet(wallet)
 
-        coVerify(exactly = 1) { hotWalletAccessor.unlockContextual(hotWalletId) }
-        coVerify(exactly = 1) { walletRegistrar.register(any(), any()) }
+        // Assert
+        coVerify(exactly = 0) { hotWalletAccessor.unlockContextual(any()) }
+        coVerify(exactly = 0) { walletRegistrar.register(any(), any()) }
         verify(exactly = 1) { hotWalletAccessor.clearContextualUnlock(hotWalletId) }
     }
 
@@ -283,6 +340,141 @@ internal class WalletRegistrationLauncherTest {
         launcher.unregister(UserWalletId(value = walletIdBytes))
 
         assertThat(slot.captured).isEqualTo(java.util.Base64.getEncoder().encodeToString(walletIdBytes))
+    }
+
+    @Test
+    fun `GIVEN register fails WHEN registerMobile THEN failure is reported to analytics`() = runTest {
+        // Arrange
+        every { authFeatureToggles.isBackendAuthenticationEnabled } returns true
+        val error = WalletRegistrationError.Api(AuthError.NetworkError)
+        coEvery { walletRegistrar.register(any(), any()) } returns error.left()
+
+        // Act
+        launcher.registerMobile(hotWallet())
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(WalletRegistrationFailed(WalletType.Mobile, Stage.Register, error.toString()))
+        }
+    }
+
+    @Test
+    fun `GIVEN register throws WHEN registerMobile THEN failure is reported to analytics`() = runTest {
+        // Arrange
+        every { authFeatureToggles.isBackendAuthenticationEnabled } returns true
+        val exception = IllegalStateException("boom")
+        coEvery { walletRegistrar.register(any(), any()) } throws exception
+
+        // Act
+        launcher.registerMobile(hotWallet())
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(
+                WalletRegistrationFailed(WalletType.Mobile, Stage.Register, exception.toString()),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN registrar disabled WHEN registerMobile THEN nothing is reported to analytics`() = runTest {
+        // Arrange
+        every { authFeatureToggles.isBackendAuthenticationEnabled } returns true
+        coEvery { walletRegistrar.register(any(), any()) } returns WalletRegistrationError.Disabled.left()
+
+        // Act
+        launcher.registerMobile(hotWallet())
+
+        // Assert
+        verify(exactly = 0) { analyticsEventHandler.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN nonce request fails WHEN prefetchColdNonce THEN failure is reported to analytics`() = runTest {
+        // Arrange
+        every { authFeatureToggles.isBackendAuthenticationEnabled } returns true
+        val error = WalletRegistrationError.NoActiveSession
+        coEvery { walletRegistrar.requestNonce() } returns error.left()
+
+        // Act
+        launcher.prefetchColdNonce()
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(WalletRegistrationFailed(WalletType.Cold, Stage.Nonce, error.toString()))
+        }
+    }
+
+    @Test
+    fun `GIVEN nonce slower than the budget WHEN prefetchColdNonce THEN timeout is reported to analytics`() = runTest {
+        // Arrange
+        every { authFeatureToggles.isBackendAuthenticationEnabled } returns true
+        coEvery { walletRegistrar.requestNonce() } coAnswers {
+            delay(timeMillis = 30_000)
+            mockk<WalletNonce>().right()
+        }
+
+        // Act
+        val nonce = launcher.prefetchColdNonce()
+
+        // Assert
+        assertThat(nonce).isNull()
+        verify(exactly = 1) {
+            analyticsEventHandler.send(WalletRegistrationFailed(WalletType.Cold, Stage.Nonce, "Timeout"))
+        }
+    }
+
+    @Test
+    fun `GIVEN prepare fails WHEN registerColdInSession THEN failure is reported to analytics`() = runTest {
+        // Arrange
+        every { authFeatureToggles.isBackendAuthenticationEnabled } returns true
+        stubColdCard()
+        val error = WalletRegistrationError.SigningFailed(IllegalStateException("tag lost"))
+        coEvery { walletRegistrar.prepare(any(), any(), any(), any()) } returns error.left()
+
+        // Act
+        launcher.registerColdInSession(mockk<CardSession>(), mockk<Card>(relaxed = true), mockk<WalletNonce>())
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(WalletRegistrationFailed(WalletType.Cold, Stage.Prepare, error.toString()))
+        }
+    }
+
+    @Test
+    fun `GIVEN submit fails WHEN registerColdInSession THEN failure is reported to analytics`() = runTest {
+        // Arrange
+        every { authFeatureToggles.isBackendAuthenticationEnabled } returns true
+        stubColdCard()
+        val prepared = mockk<PreparedWalletRegistration>()
+        val error = WalletRegistrationError.Api(AuthError.NetworkError)
+        coEvery { walletRegistrar.prepare(any(), any(), any(), any()) } returns prepared.right()
+        coEvery { walletRegistrar.submit(prepared) } returns error.left()
+
+        // Act
+        launcher.registerColdInSession(mockk<CardSession>(), mockk<Card>(relaxed = true), mockk<WalletNonce>())
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(WalletRegistrationFailed(WalletType.Cold, Stage.Submit, error.toString()))
+        }
+    }
+
+    @Test
+    fun `GIVEN submit succeeds WHEN registerColdInSession THEN nothing is reported to analytics`() = runTest {
+        // Arrange
+        every { authFeatureToggles.isBackendAuthenticationEnabled } returns true
+        stubColdCard()
+        val prepared = mockk<PreparedWalletRegistration>()
+        coEvery { walletRegistrar.prepare(any(), any(), any(), any()) } returns prepared.right()
+        coEvery { walletRegistrar.submit(prepared) } returns Unit.right()
+
+        // Act
+        launcher.registerColdInSession(mockk<CardSession>(), mockk<Card>(relaxed = true), mockk<WalletNonce>())
+
+        // Assert
+        coVerify(exactly = 1) { walletRegistrar.submit(prepared) }
+        verify(exactly = 0) { analyticsEventHandler.send(any()) }
     }
 
     private fun hotWallet(

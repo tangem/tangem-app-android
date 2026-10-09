@@ -24,6 +24,7 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.domain.card.analytics.IntroductionProcess.LegalOpened
 import com.tangem.domain.card.analytics.IntroductionProcess.SheetDismissed
 import com.tangem.domain.card.analytics.IntroductionProcess.WelcomeMediaError
+import com.tangem.domain.card.analytics.Shop
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupInfo
@@ -44,6 +45,8 @@ import com.tangem.features.introduction.impl.ui.state.HaveWalletUM
 import com.tangem.features.introduction.impl.ui.state.WalletOptionUM
 import com.tangem.features.introduction.impl.ui.state.IntroductionUM
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.Called
 import io.mockk.clearMocks
@@ -61,6 +64,7 @@ import io.mockk.verifyOrder
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -917,7 +921,7 @@ internal class IntroductionModelTest {
             assertThat(sentEvents).containsExactly(
                 SCREEN_OPENED,
                 IntroductionProcess.ButtonIHaveWallet(),
-                OnboardingAnalyticsEvent.SeedPhrase.ButtonImportWallet(),
+                IntroductionProcess.ButtonImportExistingWallet(),
                 OnboardingAnalyticsEvent.Backup.ImportWalletRequest(AnalyticsParam.CloudBackupAvailability.Available),
             ).inOrder()
         }
@@ -1418,6 +1422,7 @@ internal class IntroductionModelTest {
                 generateBuyTangemCardLinkUseCase(GenerateBuyTangemCardLinkUseCase.Source.Creation)
             } returns BUY_LINK
             val action = pendingAction(actionId = "learn_more")
+            sentEvents.clear()
 
             // Act
             model.onStoryAction(action)
@@ -1426,8 +1431,10 @@ internal class IntroductionModelTest {
             verify(exactly = 1) { urlOpener.openUrl(BUY_LINK) }
             verify(exactly = 0) { action.end() }
             verify(exactly = 0) { action.resume() }
-            assertThat(sentEvents.last())
-                .isEqualTo(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.Stories))
+            assertThat(sentEvents).containsExactly(
+                Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.Stories),
+                Shop.ScreenOpened(),
+            ).inOrder()
         }
 
         @Test
@@ -1870,9 +1877,69 @@ internal class IntroductionModelTest {
             assertThat(sentEvents).containsExactly(
                 SCREEN_OPENED,
                 IntroductionProcess.ButtonIHaveWallet(),
-                OnboardingAnalyticsEvent.SeedPhrase.ButtonImportWallet(),
+                IntroductionProcess.ButtonImportExistingWallet(),
                 OnboardingAnalyticsEvent.Backup.ImportWalletRequest(AnalyticsParam.CloudBackupAvailability.Available),
                 SheetDismissed(SheetDismissed.Sheet.ImportExisting, SheetDismissed.DismissReason.BackButton),
+            ).inOrder()
+        }
+
+        @Test
+        fun `GIVEN the options step WHEN import picked THEN the import event carries the mobile wallet product type`() {
+            // Arrange
+            val model = createModel()
+            model.uiState.value.onIHaveWalletClick()
+
+            // Act
+            (model.haveWalletStep() as HaveWalletUM.Step.Options).importWallet.onClick()
+
+            // Assert
+            assertThat(
+                sentEvents.filterIsInstance<IntroductionProcess.ButtonImportExistingWallet>().map { it.id to it.params },
+            ).containsExactly(
+                "[Introduction Process] Button - Import Existing Wallet" to mapOf("Product Type" to "Mobile Wallet"),
+            )
+        }
+
+        @Test
+        fun `GIVEN the import step left by back WHEN import picked again THEN the import is reported again`() {
+            // Arrange
+            val model = createModel()
+            model.uiState.value.onIHaveWalletClick()
+            (model.haveWalletStep() as HaveWalletUM.Step.Options).importWallet.onClick()
+            model.currentImportStep().onBack()
+
+            // Act
+            (model.haveWalletStep() as HaveWalletUM.Step.Options).importWallet.onClick()
+
+            // Assert
+            assertThat(sentEvents).containsExactly(
+                SCREEN_OPENED,
+                IntroductionProcess.ButtonIHaveWallet(),
+                IntroductionProcess.ButtonImportExistingWallet(),
+                OnboardingAnalyticsEvent.Backup.ImportWalletRequest(AnalyticsParam.CloudBackupAvailability.Available),
+                SheetDismissed(SheetDismissed.Sheet.ImportExisting, SheetDismissed.DismissReason.BackButton),
+                IntroductionProcess.ButtonImportExistingWallet(),
+                OnboardingAnalyticsEvent.Backup.ImportWalletRequest(AnalyticsParam.CloudBackupAvailability.Available),
+            ).inOrder()
+        }
+
+        @Test
+        fun `GIVEN an unsupported device WHEN import picked THEN the import is still reported`() {
+            // Arrange
+            every { isHotWalletCreationSupported() } returns false
+            every { isHotWalletCreationSupported.getLeastVersionName() } returns LEAST_OS_VERSION
+            val model = createModel()
+            model.uiState.value.onIHaveWalletClick()
+
+            // Act
+            (model.haveWalletStep() as HaveWalletUM.Step.Options).importWallet.onClick()
+
+            // Assert
+            assertThat(sentEvents).containsExactly(
+                SCREEN_OPENED,
+                IntroductionProcess.ButtonIHaveWallet(),
+                IntroductionProcess.ButtonImportExistingWallet(),
+                OnboardingAnalyticsEvent.Backup.ImportWalletRequest(AnalyticsParam.CloudBackupAvailability.Available),
             ).inOrder()
         }
 
@@ -1946,6 +2013,210 @@ internal class IntroductionModelTest {
         }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class BuyTangem {
+
+        @BeforeEach
+        fun stubWelcomeLink() {
+            coEvery {
+                generateBuyTangemCardLinkUseCase(GenerateBuyTangemCardLinkUseCase.Source.Welcome)
+            } returns BUY_LINK
+        }
+
+        @Test
+        fun `GIVEN the idle welcome screen WHEN buy tangem clicked THEN the welcome store opens with its events`() {
+            // Arrange
+            val model = createModel()
+
+            // Act
+            model.uiState.value.onBuyTangemClick()
+
+            // Assert
+            verify(exactly = 1) { urlOpener.openUrl(BUY_LINK) }
+            assertThat(sentEvents).containsExactly(
+                SCREEN_OPENED,
+                IntroductionProcess.ButtonBuyTangem(),
+                Shop.ScreenOpened(),
+            ).inOrder()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the store open WHEN buy tangem clicked again THEN it opens once`() {
+            // Arrange
+            val model = createModel()
+            model.uiState.value.onBuyTangemClick()
+
+            // Act
+            model.uiState.value.onBuyTangemClick()
+
+            // Assert
+            verify(exactly = 1) { urlOpener.openUrl(BUY_LINK) }
+            assertThat(sentEvents).containsExactly(
+                SCREEN_OPENED,
+                IntroductionProcess.ButtonBuyTangem(),
+                Shop.ScreenOpened(),
+            ).inOrder()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the link still being built WHEN buy tangem clicked again THEN it opens once`() {
+            // Arrange
+            val link = CompletableDeferred<String>()
+            coEvery {
+                generateBuyTangemCardLinkUseCase(GenerateBuyTangemCardLinkUseCase.Source.Welcome)
+            } coAnswers { link.await() }
+            val model = createModel()
+            model.uiState.value.onBuyTangemClick()
+
+            // Act
+            model.uiState.value.onBuyTangemClick()
+            link.complete(BUY_LINK)
+
+            // Assert
+            verify(exactly = 1) { urlOpener.openUrl(BUY_LINK) }
+            assertThat(sentEvents).containsExactly(
+                SCREEN_OPENED,
+                IntroductionProcess.ButtonBuyTangem(),
+                Shop.ScreenOpened(),
+            ).inOrder()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the store closed WHEN buy tangem clicked again THEN it opens again`() {
+            // Arrange
+            val model = createModel()
+            model.uiState.value.onBuyTangemClick()
+            model.setVideoRunning(isRunning = false)
+            model.setVideoRunning(isRunning = true)
+
+            // Act
+            model.uiState.value.onBuyTangemClick()
+
+            // Assert
+            verify(exactly = 2) { urlOpener.openUrl(BUY_LINK) }
+            assertThat(sentEvents).containsExactly(
+                SCREEN_OPENED,
+                IntroductionProcess.ButtonBuyTangem(),
+                Shop.ScreenOpened(),
+                IntroductionProcess.ButtonBuyTangem(),
+                Shop.ScreenOpened(),
+            ).inOrder()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN no pause after the tap WHEN the cover timeout passes THEN it opens again`() = runTest {
+            // Arrange
+            val model = createModel(dispatchers = createTestingCoroutineDispatcherProvider())
+            runCurrent()
+            model.uiState.value.onBuyTangemClick()
+            runCurrent()
+            advanceTimeBy(IntroductionStore.BROWSER_COVER_TIMEOUT)
+            runCurrent()
+
+            // Act
+            model.uiState.value.onBuyTangemClick()
+            runCurrent()
+
+            // Assert
+            verify(exactly = 2) { urlOpener.openUrl(BUY_LINK) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the link failing to build WHEN buy tangem clicked again THEN it tries again`() {
+            // Arrange
+            coEvery {
+                generateBuyTangemCardLinkUseCase(GenerateBuyTangemCardLinkUseCase.Source.Welcome)
+            } throws IllegalStateException("corrupted referral") andThen BUY_LINK
+            val model = createModel()
+            model.uiState.value.onBuyTangemClick()
+
+            // Act
+            model.uiState.value.onBuyTangemClick()
+
+            // Assert
+            verify(exactly = 1) { urlOpener.openUrl(BUY_LINK) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a card scan ended WHEN buy tangem clicked THEN the store opens`() {
+            // Arrange
+            val scan = CompletableDeferred<Unit>()
+            coEvery { cardScanner.scanAndOpenWallet(any(), any(), any()) } coAnswers { scan.await() }
+            val model = createModel(launchMode = InitScreenLaunchMode.WithCardScan)
+            scan.complete(Unit)
+
+            // Act
+            model.uiState.value.onBuyTangemClick()
+
+            // Assert
+            verify(exactly = 1) { urlOpener.openUrl(BUY_LINK) }
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN the screen busy WHEN buy tangem clicked THEN nothing opens and nothing is sent`(
+            model: BusyScreenModel,
+        ) {
+            // Arrange
+            val introductionModel = model.arrange()
+            sentEvents.clear()
+
+            // Act
+            introductionModel.uiState.value.onBuyTangemClick()
+
+            // Assert
+            verify(exactly = 0) { urlOpener.openUrl(any()) }
+            assertThat(sentEvents).isEmpty()
+            introductionModel.onDestroy()
+        }
+
+        private fun provideTestModels() = listOf(
+            BusyScreenModel(name = "create wallet sheet open") {
+                createModel().apply { uiState.value.onCreateWalletClick() }
+            },
+            BusyScreenModel(name = "have wallet sheet open") {
+                createModel().apply { uiState.value.onIHaveWalletClick() }
+            },
+            BusyScreenModel(name = "story opening") {
+                createModel().apply {
+                    uiState.value.onCreateWalletClick()
+                    cardOrRingRow().onClick()
+                }
+            },
+            BusyScreenModel(name = "story shown") {
+                createModel().apply {
+                    uiState.value.onCreateWalletClick()
+                    cardOrRingRow().onClick()
+                    uiState.value.onCreateWalletSheetCollapsed()
+                }
+            },
+            BusyScreenModel(name = "mobile wallet being created") {
+                coEvery { mobileWalletCreator.createAndOpen(any(), any(), any()) } coAnswers { awaitCancellation() }
+                createModel().apply {
+                    uiState.value.onCreateWalletClick()
+                    seedPhraseRow().onClick()
+                    closeCreateWalletSheet()
+                }
+            },
+            BusyScreenModel(name = "card being scanned") {
+                coEvery { cardScanner.scanAndOpenWallet(any(), any(), any()) } coAnswers { awaitCancellation() }
+                createModel(launchMode = InitScreenLaunchMode.WithCardScan)
+            },
+        )
+    }
+
+    internal data class BusyScreenModel(val name: String, val arrange: () -> IntroductionModel) {
+        override fun toString(): String = name
+    }
+
     /** Callbacks of the latest scan: a fallback scan can follow the one a story action started. */
     private fun IntroductionModel.capturedScanCallbacks(): ScanCallbacks {
         val onNavigatedAway = mutableListOf<() -> Unit>()
@@ -1997,8 +2268,9 @@ internal class IntroductionModelTest {
     private fun createModel(
         launchMode: InitScreenLaunchMode = InitScreenLaunchMode.Standard,
         entryReason: AppRoute.Home.EntryReason = AppRoute.Home.EntryReason.Launch,
+        dispatchers: CoroutineDispatcherProvider = TestingCoroutineDispatcherProvider(),
     ) = IntroductionModel(
-        dispatchers = TestingCoroutineDispatcherProvider(),
+        dispatchers = dispatchers,
         paramsContainer = MutableParamsContainer(IntroductionComponent.Params(launchMode, entryReason)),
         videoPlayerFactory = videoPlayerFactory,
         urlOpener = urlOpener,
@@ -2020,8 +2292,7 @@ internal class IntroductionModelTest {
 
     private fun createWalletSocialOption(isEnabled: Boolean, onPicked: (SocialLoginProvider) -> Unit) =
         WalletOptionUM(
-            iconRes = CoreUiR.drawable.img_google_32,
-            isIconTinted = false,
+            icon = WalletOptionUM.Icon.Image(CoreUiR.drawable.img_google_32),
             title = resourceReference(
                 id = CoreResR.string.introduction_create_wallet_social_title,
                 formatArgs = wrappedList("Google"),

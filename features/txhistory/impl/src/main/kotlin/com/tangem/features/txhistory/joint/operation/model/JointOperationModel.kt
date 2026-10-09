@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.runningReduce
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -65,8 +66,12 @@ internal class JointOperationModel @Inject constructor(
             currency = params.currency,
             operationId = params.operationId,
         )
+        // The backend drops an executed operation before its transaction shows up in the history, so the sheet keeps
+        // the sending state on screen instead of vanishing with nothing to replace it. Shared eagerly: restarting on
+        // resume would lose the kept state and close the sheet after all
+        .runningReduce { previous, current -> current ?: previous?.takeIf(JointOperationState::isSending) }
         .flowOn(dispatchers.io)
-        .shareIn(modelScope, SharingStarted.WhileSubscribed(), replay = 1)
+        .shareIn(modelScope, SharingStarted.Eagerly, replay = 1)
 
     /** What the sheet shows right now; the actions act on it, not on a cache of their own */
     private val currentState: JointOperationState?

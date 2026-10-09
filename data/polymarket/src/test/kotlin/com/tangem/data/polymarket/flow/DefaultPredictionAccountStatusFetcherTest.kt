@@ -323,6 +323,25 @@ internal class DefaultPredictionAccountStatusFetcherTest {
     }
 
     @Test
+    fun `GIVEN the exchange rejects the credentials WHEN invoke THEN the account is reported as onboarded`() =
+        runTest {
+            // Arrange
+            val store = createStore(testScope = this)
+            store.store(userWalletId = WALLET, value = ACTIVE)
+            coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
+            coEvery { getWalletStatus.invoke(ADDRESSES) } returns
+                walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
+            coEvery { getBalance.invoke(ADDRESSES) } returns PolymarketAuthError.InvalidSignature.left()
+
+            // Act
+            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
+
+            // Assert
+            assertThat(store.getSyncOrNull(WALLET))
+                .isEqualTo(PredictionAccountStatusValue.Onboarded(source = StatusSource.ACTUAL))
+        }
+
+    @Test
     fun `GIVEN an unreadable collateral WHEN invoke THEN the wallet total is not blanked`() = runTest {
         // Arrange — the resolver answers KeyNotFound for any 404, so this is not only the missing-key case
         coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES

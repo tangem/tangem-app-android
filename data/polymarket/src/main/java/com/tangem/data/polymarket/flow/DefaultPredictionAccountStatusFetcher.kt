@@ -124,15 +124,17 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
     }
 
     /**
-     * A missing key is not an unfinished setup: the backend has just called the wallet ready, so what is unknown is
-     * the collateral, not the account. The resolver also answers `KeyNotFound` for any `404` from the CLOB — all the
-     * more reason to withhold the wallet total here rather than contribute a zero to it.
+     * A missing or rejected key is not an unfinished setup: the backend has just called the wallet ready, so what is
+     * unknown is the collateral, not the account. The resolver also answers `KeyNotFound` for any `404` from the CLOB
+     * — all the more reason to withhold the wallet total here rather than contribute a zero to it.
      */
     private suspend fun active(addresses: PolymarketAddresses): PredictionAccountStatusMerge? =
         getPolymarketBalanceInteractor(addresses = addresses).fold(
             ifLeft = { error ->
                 when (error) {
-                    is PolymarketAuthError.KeyNotFound -> constant(
+                    is PolymarketAuthError.KeyNotFound,
+                    is PolymarketAuthError.InvalidSignature,
+                    -> constant(
                         PredictionAccountStatusValue.Onboarded(source = StatusSource.ACTUAL),
                     )
                     // Throttled, offline or rejected: the balance is unknown, not zero
