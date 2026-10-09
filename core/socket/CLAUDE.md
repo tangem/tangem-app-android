@@ -112,7 +112,7 @@ closes `idleTimeout` (5 s) after the last collector leaves.
 | `headers` | none | handshake headers, resolved before **every** connect attempt (auth) |
 | `transport` | the factory's OkHttp client | your own `OkHttpSocketTransport(client)`: interceptors, pinning, proxy, timeouts |
 | `lifecycle` | always | an extra condition: credentials present, a screen is visible (`SocketLifecycle`, `and`) |
-| `reconnectOn` | none | a flow whose every new value reconnects at once without backoff (account switch, token rotation) |
+| `reconnectOn` | none | a `StateFlow` whose every new value reconnects at once without backoff (account switch, token rotation) |
 | `keepAlive` | none | `ClientSends("PING", 10.seconds)` — first ping a full interval after `onOpen`; `ServerSends(text, reply)` for text pings. Protocol-level ping frames need nothing |
 | `backoff` | 1 s → 30 s, ×2, jitter 50% | `Backoff.exponential(…)` or your own |
 | `closePolicy` | always retry | `SocketClose` → `Retry`, `RetryAfter(delay)` or `Stop` |
