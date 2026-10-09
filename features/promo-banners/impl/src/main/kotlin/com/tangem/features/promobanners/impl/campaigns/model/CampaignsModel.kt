@@ -18,7 +18,8 @@ import com.tangem.domain.promo.usecase.GetPromoCampaignsUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.promobanners.api.PromoBannersFeatureToggles
 import com.tangem.features.promobanners.impl.R
-import com.tangem.features.promobanners.impl.campaigns.analytics.PromoCampaignsAnalyticsEvent
+import com.tangem.features.promobanners.impl.campaigns.analytics.PromoCampaignsAnalyticsEvent.AlreadyEnrolledScreenOpened
+import com.tangem.features.promobanners.impl.campaigns.analytics.analyticsName
 import com.tangem.features.promobanners.impl.campaigns.converters.CampaignIdConverter
 import com.tangem.features.promobanners.impl.campaigns.entity.CampaignsBottomSheetConfig
 import com.tangem.features.promobanners.impl.campaigns.entity.CampaignType
@@ -82,7 +83,12 @@ internal class CampaignsModel @Inject constructor(
                     val config = when {
                         campaign == null -> CampaignsBottomSheetConfig.V2.NotFound
                         campaign.isAlreadyEnrolled -> {
-                            analyticsEventHandler.send(PromoCampaignsAnalyticsEvent.AlreadyEnrolledScreenOpened())
+                            analyticsEventHandler.send(
+                                AlreadyEnrolledScreenOpened(
+                                    campaign = campaign.name,
+                                    source = AlreadyEnrolledScreenOpened.Source.Entry,
+                                ),
+                            )
                             CampaignsBottomSheetConfig.V2.AlreadyEnrolled(campaign)
                         }
                         else -> CampaignsBottomSheetConfig.V2.Campaign(campaign, userWalletId)
@@ -145,7 +151,12 @@ internal class CampaignsModel @Inject constructor(
     }
 
     fun onAlreadyActivated(campaignType: CampaignType) {
-        analyticsEventHandler.send(PromoCampaignsAnalyticsEvent.AlreadyEnrolledScreenOpened())
+        analyticsEventHandler.send(
+            AlreadyEnrolledScreenOpened(
+                campaign = campaignType.analyticsName,
+                source = AlreadyEnrolledScreenOpened.Source.EnrollResponse,
+            ),
+        )
         bottomSheetNavigation.activate(CampaignsBottomSheetConfig.V1.AlreadyActivated(campaignType = campaignType))
     }
 }
