@@ -16,8 +16,5 @@ object BigDecimalFormatConstants {
 
     val CRYPTO_FEE_FORMAT_THRESHOLD = BigDecimal("0.000001")
 
-    /** Past this many decimals an amount stops being readable; a token carrying more is cut here. */
-    const val CRYPTO_REWARD_MAX_DECIMALS = 8
-
     val usdCurrency: Currency by lazy { Currency.getInstance(Locale.US) }
 }

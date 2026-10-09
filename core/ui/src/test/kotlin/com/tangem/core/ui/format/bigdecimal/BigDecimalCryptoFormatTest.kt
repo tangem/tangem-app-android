@@ -8,6 +8,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.util.Locale
@@ -339,42 +340,8 @@ internal class BigDecimalCryptoFormatTest {
             .isEqualTo("50.000,12".addSymbolWithSpaceRight(symbol))
     }
 
-    // === reward() ===
-
     @Test
-    fun `reward amount is capped at eight decimals`() {
-        val testValue = BigDecimal("50000.123456789123456789")
-
-        val formatted = testValue.format {
-            crypto(
-                symbol = symbol,
-                decimals = 18,
-                locale = testLocale,
-            ).reward()
-        }
-
-        Truth.assertThat(formatted)
-            .isEqualTo("50,000.12345678".addSymbolWithSpaceLeft(symbol))
-    }
-
-    @Test
-    fun `reward amount is capped at eight decimals diff locale`() {
-        val testValue = BigDecimal("50000.123456789123456789")
-
-        val formatted = testValue.format {
-            crypto(
-                symbol = symbol,
-                decimals = 18,
-                locale = testLocale2,
-            ).reward()
-        }
-
-        Truth.assertThat(formatted)
-            .isEqualTo("50.000,12345678".addSymbolWithSpaceRight(symbol))
-    }
-
-    @Test
-    fun `reward amount rounds down`() {
+    fun `any decimals amount rounds down`() {
         val testValue = BigDecimal("1.999999999")
 
         val formatted = testValue.format {
@@ -382,7 +349,7 @@ internal class BigDecimalCryptoFormatTest {
                 symbol = symbol,
                 decimals = 18,
                 locale = testLocale,
-            ).reward()
+            ).anyDecimals(maxDecimals = 8, minDecimals = 2, roundingMode = RoundingMode.DOWN)
         }
 
         Truth.assertThat(formatted)
@@ -390,7 +357,7 @@ internal class BigDecimalCryptoFormatTest {
     }
 
     @Test
-    fun `reward amount below the cap keeps its lower sign`() {
+    fun `any decimals amount below the cap keeps its lower sign`() {
         val testValue = BigDecimal("0.000000001")
 
         val formatted = testValue.format {
@@ -398,7 +365,7 @@ internal class BigDecimalCryptoFormatTest {
                 symbol = symbol,
                 decimals = 18,
                 locale = testLocale,
-            ).reward()
+            ).anyDecimals(maxDecimals = 8, minDecimals = 2, canBeLower = true)
         }
 
         Truth.assertThat(formatted)
@@ -406,35 +373,19 @@ internal class BigDecimalCryptoFormatTest {
     }
 
     @Test
-    fun `reward amount of zero reads as zero`() {
-        val testValue = BigDecimal.ZERO
+    fun `any decimals amount below the cap reads as zero without the lower sign`() {
+        val testValue = BigDecimal("0.000000001")
 
         val formatted = testValue.format {
             crypto(
                 symbol = symbol,
                 decimals = 18,
                 locale = testLocale,
-            ).reward()
+            ).anyDecimals(maxDecimals = 8, minDecimals = 2)
         }
 
         Truth.assertThat(formatted)
             .isEqualTo("0.00".addSymbolWithSpaceLeft(symbol))
-    }
-
-    @Test
-    fun `reward amount of a token with fewer decimals keeps them all`() {
-        val testValue = BigDecimal("12.3456")
-
-        val formatted = testValue.format {
-            crypto(
-                symbol = symbol,
-                decimals = 2,
-                locale = testLocale,
-            ).reward()
-        }
-
-        Truth.assertThat(formatted)
-            .isEqualTo("12.34".addSymbolWithSpaceLeft(symbol))
     }
 
     // === fee ===

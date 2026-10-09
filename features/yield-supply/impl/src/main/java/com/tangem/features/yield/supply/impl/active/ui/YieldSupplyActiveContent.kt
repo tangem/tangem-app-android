@@ -49,6 +49,7 @@ import kotlinx.collections.immutable.persistentListOf
 /** The 16dp glyph from the design, grown to a tappable size without letting it widen the row. */
 private val INFO_ICON_SIZE = 16.dp
 private val INFO_TOUCH_TARGET = 40.dp
+private val INFO_TOUCH_PADDING = 12.dp
 
 @Suppress("LongMethod", "LongParameterList")
 @Composable
@@ -175,11 +176,9 @@ private fun CurrentApy(
                 color = TangemTheme.colors.text.primary1,
             )
             if (hasBreakdown) {
-                // A bare 16dp icon is a third of the minimum touch target, so the icon claims 40dp to be tapped on
-                // while the box around it still measures 16dp — otherwise the target pushes the label away.
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier.size(INFO_ICON_SIZE),
                 ) {
                     Icon(
                         painter = painterResource(com.tangem.core.ui.R.drawable.ic_information_24),
@@ -191,7 +190,7 @@ private fun CurrentApy(
                             .requiredSize(INFO_TOUCH_TARGET)
                             .clip(CircleShape)
                             .clickable(onClick = onInfoClick)
-                            .padding((INFO_TOUCH_TARGET - INFO_ICON_SIZE) / 2),
+                            .padding(INFO_TOUCH_PADDING),
                     )
                 }
             }
