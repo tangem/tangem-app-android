@@ -20,6 +20,7 @@ dependencies {
 
     // region Other libraries
     implementation(deps.androidx.datastore)
+    implementation(deps.arrow.core)
     // endregion
 
     // region Tangem SDK
@@ -45,6 +46,7 @@ dependencies {
     // region Domain modules
     api(projects.domain.offramp)
     implementation(projects.domain.card)
+    implementation(projects.domain.core)
     implementation(projects.domain.wallets)
     implementation(projects.domain.legacy)
     // endregion
