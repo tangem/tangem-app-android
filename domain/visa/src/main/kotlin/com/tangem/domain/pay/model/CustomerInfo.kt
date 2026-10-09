@@ -39,12 +39,19 @@ data class CustomerInfo(
     val email: String? = null,
     val embossName: String? = null,
 ) {
-
-    /** Transitional single-card accessor — returns the first product instance, or null if none. */
-    val productInstance: ProductInstance? get() = productInstances.firstOrNull()
-
     /** Transitional single-card accessor — returns the first card, or null if none. */
     val cardInfo: CardInfo? get() = cards.firstOrNull()
+
+    val paymentAccountProductInstance: ProductInstance?
+        get() = productInstances.firstOrNull { product ->
+            product.specificationDataType == ProductInstance.SpecificationDataType.CARD
+        }
+
+    val virtualAccountProductInstance: ProductInstance?
+        get() = productInstances.firstOrNull { product ->
+            product.specificationDataType == ProductInstance.SpecificationDataType.ACCOUNT &&
+                product.paymentAccountType == ProductInstance.PaymentAccountType.COLLATERAL_VIRTUAL_ACCOUNT
+        }
 
     val moneyAccountProductInstance: ProductInstance?
         get() = productInstances.firstOrNull { product ->
@@ -144,6 +151,7 @@ data class CustomerInfo(
         enum class PaymentAccountType {
             COLLATERAL_CARD,
             COLLATERAL_BANKING_ACCOUNT,
+            COLLATERAL_VIRTUAL_ACCOUNT,
             UNKNOWN,
             ;
 
@@ -151,6 +159,7 @@ data class CustomerInfo(
                 fun fromString(value: String?) = when (value?.uppercase(Locale.US)) {
                     "COLLATERAL_CARD" -> COLLATERAL_CARD
                     "COLLATERAL_BANKING_ACCOUNT" -> COLLATERAL_BANKING_ACCOUNT
+                    "COLLATERAL_VIRTUAL_ACCOUNT" -> COLLATERAL_VIRTUAL_ACCOUNT
                     else -> UNKNOWN
                 }
             }
