@@ -26,6 +26,7 @@ dependencies {
     /** Project - Domain */
     implementation(projects.domain.account)
     implementation(projects.domain.mcp)
+    implementation(projects.domain.mcp.models)
     implementation(projects.domain.models)
 
     /** Core */
@@ -36,7 +37,6 @@ dependencies {
     implementation(projects.core.utils)
 
     /** Compose */
-    implementation(deps.compose.coil)
     implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
@@ -44,8 +44,8 @@ dependencies {
     implementation(deps.lifecycle.compose)
 
     /** Other libraries */
+    implementation(deps.arrow.core)
     implementation(deps.kotlin.coroutines)
-    implementation(deps.kotlin.immutable.collections)
     implementation(deps.kotlin.serialization.core)
 
     /** DI */
