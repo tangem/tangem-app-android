@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
 import com.tangem.common.ui.R
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -28,7 +29,10 @@ internal class MoneyAccountMainBlockConverter(
             -> MoneyAccountMainUM.Empty
             is MoneyAccountStatusValue.Loading -> MoneyAccountMainUM.Loading
             is MoneyAccountStatusValue.Onboarding -> statusValue.toUM(userWalletId)
-            is MoneyAccountStatusValue.Account -> statusValue.toUM()
+            is MoneyAccountStatusValue.Account -> when (statusValue) {
+                is MoneyAccountStatusValue.Account.Active -> statusValue.toUM(userWalletId)
+                is MoneyAccountStatusValue.Account.Deactivated -> MoneyAccountMainUM.Empty
+            }
             is MoneyAccountStatusValue.Error.Unavailable,
             is MoneyAccountStatusValue.Error.NotSynced,
             -> MoneyAccountMainUM.Unavailable
@@ -59,16 +63,16 @@ internal class MoneyAccountMainBlockConverter(
         }
     }
 
-    private fun MoneyAccountStatusValue.Account.toUM(): MoneyAccountMainUM {
-        val balance = balance ?: return MoneyAccountMainUM.Loading
-
+    private fun MoneyAccountStatusValue.Account.toUM(userWalletId: UserWalletId): MoneyAccountMainUM {
         return MoneyAccountMainUM.Content(
-            subtitle = resourceReference(
-                id = R.string.money_account_main_status_active,
-                formatArgs = wrappedList(balance.cryptoCurrency.network.name),
-            ),
-            balance = balance.toUM(source),
-            onClick = ::onAccountClick,
+            subtitle = balance?.let { balance ->
+                resourceReference(
+                    id = R.string.money_account_main_status_active,
+                    formatArgs = wrappedList(balance.cryptoCurrency.network.name),
+                )
+            } ?: TextReference.EMPTY,
+            balance = balance?.toUM(source),
+            onClick = { moneyAccountIntents.onMoneyAccountClicked(userWalletId) },
         )
     }
 
@@ -87,9 +91,5 @@ internal class MoneyAccountMainBlockConverter(
             isFlickering = source == StatusSource.CACHE,
             isFromCache = source == StatusSource.ONLY_CACHE,
         )
-    }
-
-    private fun onAccountClick() {
-        // TODO v_rodionov: #[REDACTED_TASK_KEY] navigate to MA screen
     }
 }
