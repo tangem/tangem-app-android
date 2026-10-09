@@ -33,6 +33,7 @@ internal val UserWallet.publicInformation: UserWalletPublicInformation
             hasBackupError = hasBackupError,
             hotWalletId = null,
             backedUp = null,
+            isSocialBackupCompleted = null,
         )
         is UserWallet.Hot -> UserWalletPublicInformation(
             name = name,
@@ -42,6 +43,8 @@ internal val UserWallet.publicInformation: UserWalletPublicInformation
             scanResponse = null,
             hotWalletId = hotWalletId,
             backedUp = backedUp,
+            // left out unless set, so a wallet without social login keeps its stored record as it was
+            isSocialBackupCompleted = isSocialBackupCompleted.takeIf { it },
         )
     }
 
@@ -53,6 +56,7 @@ internal fun UserWalletPublicInformation.toUserWallet(): UserWallet {
             hotWalletId = hotWalletId,
             wallets = null,
             backedUp = requireNotNull(backedUp),
+            isSocialBackupCompleted = isSocialBackupCompleted == true,
         )
     } else {
         UserWallet.Cold(
