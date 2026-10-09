@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.domain
 
+import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.account.models.AccountStatusList
@@ -31,6 +32,7 @@ import arrow.core.right
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
@@ -49,8 +51,12 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
+import io.mockk.verify
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -79,6 +85,7 @@ internal class GetWalletNotificationsFactoryTest {
     private val shouldShowUpgradeHotWalletBannerUseCase: ShouldShowUpgradeHotWalletBannerUseCase = mockk()
     private val getUpgradeBannerClosureTimestampUseCase: GetUpgradeBannerClosureTimestampUseCase = mockk()
     private val checkHotWalletUpgradeBannerUseCase: CheckHotWalletUpgradeBannerUseCase = mockk()
+    private val isSocialBackupCompletedUseCase: IsSocialBackupCompletedUseCase = mockk()
     private val clickIntents: WalletClickIntents = mockk(relaxed = true)
 
     private val currencyFactory = MockCryptoCurrencyFactory()
@@ -103,6 +110,7 @@ internal class GetWalletNotificationsFactoryTest {
         shouldShowUpgradeHotWalletBannerUseCase = shouldShowUpgradeHotWalletBannerUseCase,
         getUpgradeBannerClosureTimestampUseCase = getUpgradeBannerClosureTimestampUseCase,
         checkHotWalletUpgradeBannerUseCase = checkHotWalletUpgradeBannerUseCase,
+        isSocialBackupCompletedUseCase = isSocialBackupCompletedUseCase,
     )
 
     @BeforeEach
@@ -124,6 +132,7 @@ internal class GetWalletNotificationsFactoryTest {
             shouldShowUpgradeHotWalletBannerUseCase,
             getUpgradeBannerClosureTimestampUseCase,
             checkHotWalletUpgradeBannerUseCase,
+            isSocialBackupCompletedUseCase,
             clickIntents,
             coldResolver,
             coldWallet,
@@ -148,6 +157,7 @@ internal class GetWalletNotificationsFactoryTest {
         every { shouldShowUpgradeHotWalletBannerUseCase(any()) } returns flowOf(false)
         every { getUpgradeBannerClosureTimestampUseCase(any()) } returns flowOf(null)
         coEvery { checkHotWalletUpgradeBannerUseCase(any(), any(), any(), any()) } returns false.right()
+        every { isSocialBackupCompletedUseCase.flow(any()) } returns flowOf(false)
         // Balance is loaded and non-zero, so both the outdated-data and add-funds banners stay hidden.
         stubAccountStatusList(balance = LOADED_NON_ZERO)
 
@@ -611,6 +621,7 @@ internal class GetWalletNotificationsFactoryTest {
         every { hotWallet.backedUp } returns model.backedUp
         every { isWalletBackedUpUseCase.flow(hotWallet) } returns flowOf(model.backedUp)
         every { getAccessCodeSkippedUseCase(WALLET_ID) } returns flowOf(model.accessCodeSkipped)
+        every { isSocialBackupCompletedUseCase.flow(WALLET_ID) } returns flowOf(model.hasSocialBackup)
         stubAccountStatusList(balance = model.balance)
 
         // Act
@@ -626,6 +637,7 @@ internal class GetWalletNotificationsFactoryTest {
         val accessCodeSkipped: Boolean,
         val balance: TotalFiatBalance,
         val expectedShown: Boolean,
+        val hasSocialBackup: Boolean = false,
     )
 
     private fun provideFinishActivationModels() = listOf(
@@ -677,7 +689,83 @@ internal class GetWalletNotificationsFactoryTest {
             balance = TotalFiatBalance.Loaded(BigDecimal.ZERO, StatusSource.ACTUAL),
             expectedShown = false,
         ),
+        FinishActivationModel(
+            backedUp = true,
+            authType = HotWalletId.AuthType.NoPassword,
+            accessCodeSkipped = false,
+            balance = LOADED_NON_ZERO,
+            expectedShown = true,
+            hasSocialBackup = true,
+        ),
+        // Social login wallets must set a real access code, so a stored skip is ignored.
+        FinishActivationModel(
+            backedUp = true,
+            authType = HotWalletId.AuthType.NoPassword,
+            accessCodeSkipped = true,
+            balance = LOADED_NON_ZERO,
+            expectedShown = true,
+            hasSocialBackup = true,
+        ),
+        FinishActivationModel(
+            backedUp = true,
+            authType = HotWalletId.AuthType.Password,
+            accessCodeSkipped = false,
+            balance = LOADED_NON_ZERO,
+            expectedShown = false,
+            hasSocialBackup = true,
+        ),
+        FinishActivationModel(
+            backedUp = true,
+            authType = HotWalletId.AuthType.Password,
+            accessCodeSkipped = true,
+            balance = LOADED_NON_ZERO,
+            expectedShown = false,
+            hasSocialBackup = true,
+        ),
     )
+
+    @Test
+    fun `GIVEN social backup without access code WHEN banner clicked THEN access code setup opens`() =
+        runTest {
+            // Arrange
+            val hotWalletId = mockk<HotWalletId> { every { authType } returns HotWalletId.AuthType.NoPassword }
+            every { hotWallet.hotWalletId } returns hotWalletId
+            every { getAccessCodeSkippedUseCase(WALLET_ID) } returns flowOf(true)
+            every { isSocialBackupCompletedUseCase.flow(WALLET_ID) } returns flowOf(true)
+            val banner = factory.create(hotWallet, clickIntents).first()
+                .filterIsInstance<WalletNotificationUM.FinishWalletActivation>()
+                .single()
+
+            // Act
+            banner.onClick()
+
+            // Assert
+            verify(exactly = 1) { clickIntents.onFinishWalletActivationClick(true) }
+        }
+
+    @Test
+    fun `GIVEN skipped access code WHEN social backup completes THEN finish-activation banner appears`() = runTest {
+        // Arrange
+        val hasSocialBackup = MutableStateFlow(false)
+        val hotWalletId = mockk<HotWalletId> { every { authType } returns HotWalletId.AuthType.NoPassword }
+        every { hotWallet.hotWalletId } returns hotWalletId
+        every { getAccessCodeSkippedUseCase(WALLET_ID) } returns flowOf(true)
+        every { isSocialBackupCompletedUseCase.flow(WALLET_ID) } returns hasSocialBackup
+
+        factory.create(hotWallet, clickIntents)
+            .map { notifications -> notifications.any { it is WalletNotificationUM.FinishWalletActivation } }
+            .distinctUntilChanged()
+            .test {
+                assertThat(awaitItem()).isFalse()
+
+                // Act
+                hasSocialBackup.value = true
+
+                // Assert
+                assertThat(awaitItem()).isTrue()
+                cancelAndIgnoreRemainingEvents()
+            }
+    }
 
     @Test
     fun `GIVEN cloud backup only WHEN create THEN finish-activation banner is hidden`() = runTest {
