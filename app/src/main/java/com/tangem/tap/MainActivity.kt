@@ -65,11 +65,13 @@ import com.tangem.tap.common.ActivityResultCallbackHolder
 import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.analytics.events.Push
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
+import com.tangem.tap.domain.walletregistration.withBackupColdWalletRegistration
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
 import com.tangem.tap.features.main.MainViewModel
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.utils.DeepLinkFactory
+import com.tangem.tap.routing.utils.DeepLinkFeatureToggles
 import com.tangem.tap.routing.utils.DeeplinkSource
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -92,10 +94,6 @@ internal var lockUserWalletsTimer: LockUserWalletsTimer? = null
 private val coroutineContext: CoroutineContext
     get() = SupervisorJob() + Dispatchers.IO + FeatureCoroutineExceptionHandler.create("scope")
 val scope = CoroutineScope(coroutineContext)
-
-private val mainCoroutineContext: CoroutineContext
-    get() = SupervisorJob() + Dispatchers.Main + FeatureCoroutineExceptionHandler.create("mainScope")
-val mainScope = CoroutineScope(mainCoroutineContext)
 
 @Suppress("LargeClass")
 @AndroidEntryPoint
@@ -153,6 +151,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     internal lateinit var deeplinkFactory: DeepLinkFactory
+
+    @Inject
+    internal lateinit var deepLinkFeatureToggles: DeepLinkFeatureToggles
 
     @Inject
     internal lateinit var testerMenuLauncher: TesterMenuLauncher
@@ -288,13 +289,22 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         cardSdkOwner.register(activity = this)
         tangemSdkManager = injectedTangemSdkManager
 
-        backupServiceHolder.createAndSetService(cardSdkConfigRepository.sdk, this)
+        backupServiceHolder.createAndSetService(
+            tangemSdk = cardSdkConfigRepository.sdk,
+            activity = this,
+            primaryCardRunnableDecorator = { primaryCard, finalization ->
+                tangemSdkManager.withBackupColdWalletRegistration(primaryCard, finalization)
+            },
+        )
         backupService = requireNotNull(backupServiceHolder.backupService.get()) // will be deleted eventually
 
         lockUserWalletsTimer = LockUserWalletsTimer(
             context = this,
             settingsRepository = settingsRepository,
-            coroutineScope = mainScope,
+            // Rethrows like the former global main scope: a failure must not leave the wallets unlocked
+            coroutineScope = appScope +
+                dispatchers.main +
+                FeatureCoroutineExceptionHandler.create(from = "lockUserWalletsTimer"),
             userWalletsListRepository = userWalletsListRepository,
             clearAllHotWalletContextualUnlockUseCase = clearAllHotWalletContextualUnlockUseCase,
             passwordRequester = passwordRequester,
@@ -471,8 +481,11 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
                 launchDeepLink(externalDeepLink, isFromOnNewIntent, DeeplinkSource.External)
             // A deep link reconstructed from a notification payload must pass the push policy. If it is
             // present but blocked, stop — there is deliberately no second chance for the same payload.
+            // With the handler registry the policy is applied by the handlers themselves.
             extrasDeepLink != null ->
-                if (PushDeeplinkPolicy.isOpenableFromPush(scheme = extrasDeepLink.scheme, host = extrasDeepLink.host)) {
+                if (deepLinkFeatureToggles.isHandlerRegistryEnabled ||
+                    PushDeeplinkPolicy.isOpenableFromPush(scheme = extrasDeepLink.scheme, host = extrasDeepLink.host)
+                ) {
                     launchDeepLink(extrasDeepLink, isFromOnNewIntent, DeeplinkSource.Push)
                 }
         }

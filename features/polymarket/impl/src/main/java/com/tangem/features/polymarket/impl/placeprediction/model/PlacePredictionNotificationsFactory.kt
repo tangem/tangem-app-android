@@ -136,6 +136,7 @@ private fun PlacePredictionUM.pricedSell(order: OrderSideUM.Sell): PlacePredicti
 private fun PlacePredictionUM.sharesProceeds(): SharesProceedsUM = when (quote) {
     is QuoteUM.Loading -> SharesProceedsUM.Loading
     is QuoteUM.Content -> SharesProceedsUM.Content(expected = quote.expected)
+    is QuoteUM.Unavailable -> quote.expected?.let(SharesProceedsUM::Content) ?: SharesProceedsUM.Unavailable
     else -> SharesProceedsUM.Unavailable
 }
 

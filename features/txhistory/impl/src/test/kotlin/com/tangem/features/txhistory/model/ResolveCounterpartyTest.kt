@@ -15,8 +15,8 @@ import org.junit.jupiter.params.ParameterizedTest
 
 /**
  * Unit tests for [resolveCounterparty]: the address-book layer on top of [resolveOwner]. Pins that an own portfolio
- * still wins over a saved contact, that contacts are matched for outgoing transfers only, and that the wallet the
- * transaction was made in takes priority over another wallet's address book.
+ * still wins over a saved contact, that an address is matched whichever side of the transfer it is on, and that the
+ * wallet the transaction was made in takes priority over another wallet's address book.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class ResolveCounterpartyTest {
@@ -28,7 +28,6 @@ internal class ResolveCounterpartyTest {
         val result = model.lookup.resolveCounterparty(
             address = model.address,
             networkRawId = model.networkRawId,
-            isOutgoing = model.isOutgoing,
         )
 
         // Assert
@@ -46,45 +45,44 @@ internal class ResolveCounterpartyTest {
             expected = ResolvedOwner.OwnAccount(CRYPTO_ACCOUNT),
         ),
         Model(
-            name = "outgoing to an address saved in the viewed wallet -> SavedContact",
+            name = "address saved in the viewed wallet -> SavedContact",
             lookup = lookup(contacts = listOf(CONTACT_OF_VIEWED_WALLET)),
             address = EXTERNAL_ADDRESS,
             expected = ResolvedOwner.SavedContact(CONTACT_OF_VIEWED_WALLET, EXTERNAL_ADDRESS),
         ),
         Model(
-            name = "outgoing to an address saved only in another wallet -> SavedContact",
+            name = "address saved only in another wallet -> SavedContact",
             lookup = lookup(contacts = listOf(CONTACT_OF_OTHER_WALLET)),
             address = EXTERNAL_ADDRESS,
             expected = ResolvedOwner.SavedContact(CONTACT_OF_OTHER_WALLET, EXTERNAL_ADDRESS),
         ),
         Model(
-            name = "outgoing to an address saved in both wallets -> contact of the viewed wallet",
+            name = "address saved in both wallets -> contact of the viewed wallet",
             lookup = lookup(contacts = listOf(CONTACT_OF_OTHER_WALLET, CONTACT_OF_VIEWED_WALLET)),
             address = EXTERNAL_ADDRESS,
             expected = ResolvedOwner.SavedContact(CONTACT_OF_VIEWED_WALLET, EXTERNAL_ADDRESS),
         ),
         Model(
-            name = "incoming from a saved address -> External",
+            name = "incoming from a saved address -> SavedContact",
             lookup = lookup(contacts = listOf(CONTACT_OF_VIEWED_WALLET)),
             address = EXTERNAL_ADDRESS,
-            isOutgoing = false,
-            expected = ResolvedOwner.External(EXTERNAL_ADDRESS),
+            expected = ResolvedOwner.SavedContact(CONTACT_OF_VIEWED_WALLET, EXTERNAL_ADDRESS),
         ),
         Model(
-            name = "outgoing to an address in no address book -> External",
+            name = "address in no address book -> External",
             lookup = lookup(contacts = listOf(CONTACT_OF_VIEWED_WALLET)),
             address = UNSAVED_ADDRESS,
             expected = ResolvedOwner.External(UNSAVED_ADDRESS),
         ),
         Model(
-            name = "outgoing with an unresolved network -> External",
+            name = "unresolved network -> External",
             lookup = lookup(contacts = listOf(CONTACT_OF_VIEWED_WALLET)),
             address = EXTERNAL_ADDRESS,
             networkRawId = null,
             expected = ResolvedOwner.External(EXTERNAL_ADDRESS),
         ),
         Model(
-            name = "outgoing to a saved address on another network -> External",
+            name = "address saved on another network -> External",
             lookup = lookup(contacts = listOf(CONTACT_OF_VIEWED_WALLET)),
             address = EXTERNAL_ADDRESS,
             networkRawId = POLYGON,
@@ -109,7 +107,6 @@ internal class ResolveCounterpartyTest {
         val address: String,
         val expected: ResolvedOwner,
         val networkRawId: Network.RawID? = ETH,
-        val isOutgoing: Boolean = true,
     ) {
         override fun toString(): String = name
     }

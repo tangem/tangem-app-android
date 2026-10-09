@@ -6,6 +6,7 @@ import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
+import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRowMarket
 import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.TextReference
@@ -42,6 +43,7 @@ internal data class RwaFeedTabUM(
 @Immutable
 internal data class RwaIntervalUM(
     val selected: RwaInterval,
+    val default: RwaInterval,
     val onOptionClick: (RwaInterval) -> Unit,
 )
 
@@ -61,6 +63,7 @@ internal sealed interface RwaFeaturedUM {
 internal data class RwaFeaturedAssetUM(
     val id: String,
     val iconUrl: String,
+    val indicator: TangemTokenIcon.State.Indicator?,
     val name: TextReference,
     val ticker: TextReference,
     val price: TextReference,

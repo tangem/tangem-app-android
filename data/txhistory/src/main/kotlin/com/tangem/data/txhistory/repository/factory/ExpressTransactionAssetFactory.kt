@@ -4,10 +4,12 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.store.datasource.txhistory.db.entity.express.ExpressExchangeEntity
 import com.tangem.store.datasource.txhistory.db.entity.express.ExpressOnrampEntity
-import com.tangem.domain.account.supplier.MultiAccountListSupplier
+import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.repository.TokenInfoRepository
@@ -15,11 +17,23 @@ import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 /**
- * Resolves a [CryptoCurrency] for every express asset (network id + contract address) referenced by a batch of
- * exchange/onramp entities.
+ * Identifies one leg of an express deal: the asset it moved plus the user's own address on that side.
+ *
+ * The asset alone does not identify the portfolio currency behind the leg — two accounts of one wallet can hold the
+ * same asset on different derivations (a custom-derivation copy next to the regular one), and they are separate
+ * [CryptoCurrency] instances differing in derivation path, icon and custom flag. The address is what tells them apart.
+ *
+ * @property address the user's own address of that leg — the pay-in source, the payout destination or the refund
+ * destination. `null` when the deal carries none (no refund address); an address outside the user's portfolios (a
+ * send-and-swap payout) simply matches nothing.
+ */
+internal data class ExpressLegKey(val assetId: ExpressAsset.ID, val address: String?)
+
+/**
+ * Resolves a [CryptoCurrency] for every leg ([ExpressLegKey]) referenced by a batch of exchange/onramp entities.
  */
 internal class ExpressTransactionAssetFactory @Inject constructor(
-    private val multiAccountListSupplier: MultiAccountListSupplier,
+    private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val tokenInfoRepository: TokenInfoRepository,
     excludedBlockchains: ExcludedBlockchains,
@@ -28,12 +42,12 @@ internal class ExpressTransactionAssetFactory @Inject constructor(
     private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
 
     /**
-     * Builds a `assetId -> resolved currency` map covering both legs of every swap and the to-leg of every onramp.
+     * Builds a `legKey -> resolved currency` map covering both legs of every swap and the to-leg of every onramp.
      * Entries whose currency could not be resolved at all are omitted.
      *
-     * [historyCurrency] is the currency whose history the records belong to and resolves its own asset first: a
-     * joint account currency shares the network and contract with the personal one yet is not among the portfolio
-     * candidates.
+     * [historyCurrency] is the currency whose history the records belong to and resolves its own asset right after an
+     * exact address match: a joint account currency shares the network and contract with the personal one yet is not
+     * among the portfolio candidates.
      */
     suspend fun create(
         userWalletId: UserWalletId,
@@ -41,30 +55,33 @@ internal class ExpressTransactionAssetFactory @Inject constructor(
         outgoingSwaps: List<ExpressExchangeEntity>,
         incomingSwaps: List<ExpressExchangeEntity>,
         onramps: List<ExpressOnrampEntity>,
-    ): Map<ExpressAsset.ID, CryptoCurrency> {
-        val assetIds = buildSet {
+    ): Map<ExpressLegKey, CryptoCurrency> {
+        val legKeys = buildSet {
             (outgoingSwaps + incomingSwaps).forEach { entity ->
-                add(entity.from.toAssetId())
-                add(entity.to.toAssetId())
-                entity.toRefundAssetId()?.let { add(it) }
+                add(entity.fromLegKey())
+                add(entity.toLegKey())
+                entity.refundLegKey()?.let(::add)
             }
-            onramps.forEach { entity -> add(entity.to.toAssetId()) }
+            onramps.forEach { entity -> add(entity.toLegKey()) }
         }
-        if (assetIds.isEmpty()) return emptyMap()
+        if (legKeys.isEmpty()) return emptyMap()
 
-        val candidates = listOf(historyCurrency) + multiAccountListSupplier.invoke()
+        val portfolioStatuses = multiAccountStatusListSupplier()
             .first()
-            .flatMap { accountList -> accountList.flattenCurrencies() }
+            .flatMap { accountStatusList -> accountStatusList.flattenPersonalCurrencies() }
 
         val userWallet = userWalletsListRepository.userWalletsSync()
             .firstOrNull { it.walletId == userWalletId }
 
-        val cachedTokens = loadCachedTokens(userWalletId, assetIds)
+        val cachedTokens = loadCachedTokens(userWalletId, legKeys.mapTo(mutableSetOf(), ExpressLegKey::assetId))
 
         return buildMap {
-            assetIds.forEach { id ->
-                val currency = candidates.findMatching(id) ?: resolveUnmatched(id, cachedTokens, userWallet)
-                if (currency != null) put(id, currency)
+            legKeys.forEach { key ->
+                val currency = portfolioStatuses.findHolding(key)
+                    ?: historyCurrency.takeIf { it.matches(key.assetId) }
+                    ?: portfolioStatuses.findMatching(key.assetId)
+                    ?: resolveUnmatched(key.assetId, cachedTokens, userWallet)
+                if (currency != null) put(key, currency)
             }
         }
     }
@@ -86,18 +103,40 @@ internal class ExpressTransactionAssetFactory @Inject constructor(
         assetIds: Set<ExpressAsset.ID>,
     ): Map<ExpressAsset.ID, CryptoCurrency.Token> = tokenInfoRepository.getCachedTokens(userWalletId, assetIds)
 
-    private fun List<CryptoCurrency>.findMatching(id: ExpressAsset.ID): CryptoCurrency? {
-        val isCoin = id.contractAddress == ExpressAsset.EMPTY_CONTRACT_ADDRESS_VALUE
-        return firstOrNull { currency ->
-            currency.network.rawId == id.networkId &&
-                if (isCoin) {
-                    currency is CryptoCurrency.Coin
-                } else {
-                    currency is CryptoCurrency.Token &&
-                        currency.contractAddress.equals(id.contractAddress, ignoreCase = true)
-                }
+    /**
+     * The portfolio currency the leg actually sat on: the asset matches **and** the account holds it at the leg's
+     * address. This is what separates two same-asset copies living on different derivations.
+     */
+    private fun List<CryptoCurrencyStatus>.findHolding(key: ExpressLegKey): CryptoCurrency? {
+        val address = key.address ?: return null
+        return firstOrNull { status ->
+            status.currency.matches(key.assetId) && status.value.networkAddress.holds(address)
+        }?.currency
+    }
+
+    /**
+     * Fallback for a leg whose address resolves to no portfolio: an address the user does not own (a send-and-swap
+     * payout) or one not loaded yet. Any copy of the asset then carries the name, symbol and icon to show.
+     */
+    private fun List<CryptoCurrencyStatus>.findMatching(id: ExpressAsset.ID): CryptoCurrency? =
+        firstOrNull { status -> status.currency.matches(id) }?.currency
+
+    private fun CryptoCurrency.matches(id: ExpressAsset.ID): Boolean {
+        if (network.rawId != id.networkId) return false
+        return if (id.contractAddress == ExpressAsset.EMPTY_CONTRACT_ADDRESS_VALUE) {
+            this is CryptoCurrency.Coin
+        } else {
+            this is CryptoCurrency.Token && contractAddress.equals(id.contractAddress, ignoreCase = true)
         }
     }
+
+    /**
+     * Every address of the network, not just the default one — a chain with several address formats (Bitcoin legacy /
+     * segwit, Cardano) reports whichever one the deal used. Compared case-insensitively: the wallet derives EVM
+     * addresses ERC-55 checksummed while the express backend keeps whatever casing the provider reported.
+     */
+    private fun NetworkAddress?.holds(address: String): Boolean =
+        this?.availableAddresses.orEmpty().any { it.value.equals(address, ignoreCase = true) }
 
     private fun createCoin(id: ExpressAsset.ID, userWallet: UserWallet?): CryptoCurrency.Coin? {
         userWallet ?: return null
@@ -112,6 +151,20 @@ internal class ExpressTransactionAssetFactory @Inject constructor(
 internal fun ExpressExchangeEntity.AssetEmbedded.toAssetId(): ExpressAsset.ID =
     ExpressAsset.ID(networkId = network, contractAddress = contractAddress)
 
+/** Pay-in leg: the assets left the user's own [ExpressExchangeEntity.fromAddress]. */
+internal fun ExpressExchangeEntity.fromLegKey(): ExpressLegKey =
+    ExpressLegKey(assetId = from.toAssetId(), address = fromAddress)
+
+/**
+ * Payout leg: the user's own address for a regular swap, an external one for a send-and-swap — which then holds no
+ * portfolio currency and falls back to any copy of the asset.
+ */
+internal fun ExpressExchangeEntity.toLegKey(): ExpressLegKey =
+    ExpressLegKey(assetId = to.toAssetId(), address = payoutAddress)
+
+internal fun ExpressExchangeEntity.refundLegKey(): ExpressLegKey? =
+    toRefundAssetId()?.let { ExpressLegKey(assetId = it, address = refundAddress) }
+
 internal fun ExpressExchangeEntity.toRefundAssetId(): ExpressAsset.ID? {
     val refundNetwork = refundNetwork
     val refundContractAddress = refundContractAddress
@@ -124,3 +177,6 @@ internal fun ExpressExchangeEntity.toRefundAssetId(): ExpressAsset.ID? {
 
 internal fun ExpressOnrampEntity.AssetEmbedded.toAssetId(): ExpressAsset.ID =
     ExpressAsset.ID(networkId = network, contractAddress = contractAddress)
+
+internal fun ExpressOnrampEntity.toLegKey(): ExpressLegKey =
+    ExpressLegKey(assetId = to.toAssetId(), address = payoutAddress)

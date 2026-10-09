@@ -214,6 +214,7 @@ internal abstract class SwapModelTestBase {
         fromAmount: java.math.BigDecimal? = null,
         providerId: String? = null,
         accountFlow: AccountFlow? = null,
+        intentId: String? = null,
     ): SwapComponent.Params = SwapComponent.Params(
         userWalletId = userWalletId,
         fromCryptoCurrency = fromCryptoCurrency,
@@ -223,6 +224,7 @@ internal abstract class SwapModelTestBase {
         toCryptoCurrency = toCryptoCurrency,
         fromAmount = fromAmount,
         providerId = providerId,
+        intentId = intentId,
     )
 
     @Suppress("LongMethod")
@@ -297,6 +299,8 @@ internal abstract class SwapModelTestBase {
         id: String = "provider-1",
         name: String = "1inch",
         type: ExchangeProviderType = ExchangeProviderType.DEX,
+        slippage: java.math.BigDecimal? = null,
+        isCustomSlippageSupported: Boolean = false,
     ): SwapProvider = SwapProvider(
         providerId = id,
         name = name,
@@ -304,7 +308,8 @@ internal abstract class SwapModelTestBase {
         imageLarge = "",
         termsOfUse = null,
         privacyPolicy = null,
-        slippage = null,
+        slippage = slippage,
+        isCustomSlippageSupported = isCustomSlippageSupported,
     )
 
     protected fun permissionSettings(

@@ -4,6 +4,8 @@ import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.marketing.models.MarketingCampaignsResponse
 import com.tangem.datasource.api.promotion.models.CreatePromotionRegistrationBody
 import com.tangem.datasource.api.promotion.models.PromotionRegistrationResponse
+import com.tangem.datasource.api.promotion.models.PromotionRegistrationsBody
+import com.tangem.datasource.api.promotion.models.PromotionRegistrationsResponse
 import com.tangem.datasource.api.promotion.models.PromotionsResponse
 import com.tangem.datasource.api.promotion.models.PromotionWalletType
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response
@@ -140,7 +142,7 @@ interface TangemTechApi {
     ): ApiResponse<PromotionsResponse>
 
     @RequiresSessionAuth
-    @GET("/v3/promotion")
+    @GET("/api/referral/v1/promotion")
     suspend fun getPromotionsV3(
         @Query("walletId") walletId: String,
         @Query("walletType") walletType: PromotionWalletType,
@@ -156,6 +158,13 @@ interface TangemTechApi {
     suspend fun createPromotionRegistration(
         @Body body: CreatePromotionRegistrationBody,
     ): ApiResponse<PromotionRegistrationResponse>
+
+    @RequiresSessionAuth
+    @POST("/api/referral/v1/promotion/{id}/registrations")
+    suspend fun createPromotionRegistrations(
+        @Path("id") promotionId: Int,
+        @Body body: PromotionRegistrationsBody,
+    ): ApiResponse<PromotionRegistrationsResponse>
     // endregion
 
     // region push notifications

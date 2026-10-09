@@ -30,6 +30,7 @@ import com.tangem.domain.pay.usecase.IssuePlasticCardUseCase
 import com.tangem.domain.pay.usecase.ReissuePlasticCardUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.features.tangempay.OUTCOME_UNKNOWN_ERRORS
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardIntent
 import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardDataComponent
@@ -258,7 +259,7 @@ internal class TangemPayOrderCardDataModelTest {
     fun `GIVEN typographic quotes and a no-break space WHEN order clicked THEN plain ones submitted`() = runTest {
         // Arrange
         val model = createLoadedModel()
-        model.fillValidForm(embossName = "JOHNNY\u00A0SILVERHAND", lastName = "O‘Brien", line1 = "Crescent\u00A0st. 24")
+        model.fillValidForm(embossName = "JOHNNY\u00A0SILVERHAND", line1 = "O‘Brien\u00A0st. 24")
 
         // Act
         model.form.onOrderClick()
@@ -270,10 +271,10 @@ internal class TangemPayOrderCardDataModelTest {
                 embossName = "JOHNNY SILVERHAND",
                 shippingAddress = ShippingAddress(
                     firstName = "Johnny",
-                    lastName = "O'Brien",
+                    lastName = "Silverhand",
                     region = "California",
                     city = "Night City",
-                    line1 = "Crescent st. 24",
+                    line1 = "O'Brien st. 24",
                     line2 = "Apt. 56",
                     postalCode = "0000",
                     phone = "+12345678901",
@@ -292,6 +293,52 @@ internal class TangemPayOrderCardDataModelTest {
 
         // Assert
         assertThat(model.form.embossName.value).isEqualTo("JOHNNY SILVERHAND OF NIGHT")
+    }
+
+    @ParameterizedTest
+    @EnumSource(OrderFormField::class)
+    fun `GIVEN a value longer than the field limit WHEN typed THEN it is cut to the limit`(
+        field: OrderFormField,
+    ) = runTest {
+        // Arrange
+        val model = createLoadedModel()
+        val input = "A".repeat(field.maxLength + 1)
+
+        // Act
+        field.read(model.form).onValueChange(input)
+
+        // Assert
+        assertThat(field.read(model.form).value).isEqualTo(input.take(field.maxLength))
+    }
+
+    @Test
+    fun `GIVEN a last name with an apostrophe WHEN typed THEN invalid text shown and order disabled`() = runTest {
+        // Arrange
+        val model = createLoadedModel()
+
+        // Act
+        model.fillValidForm(lastName = "O'Brien")
+
+        // Assert
+        assertThat(model.form.lastName.error).isEqualTo(OrderFieldError.Invalid)
+        assertThat(model.form.isOrderEnabled).isFalse()
+    }
+
+    @ParameterizedTest
+    @EnumSource(OrderFormField::class)
+    fun `GIVEN a valid form WHEN a disallowed symbol is typed THEN invalid text shown at once`(
+        field: OrderFormField,
+    ) = runTest {
+        // Arrange
+        val model = createLoadedModel()
+        model.fillValidForm()
+
+        // Act
+        field.read(model.form).onValueChange("A@B")
+
+        // Assert
+        assertThat(field.read(model.form).error).isEqualTo(OrderFieldError.Invalid)
+        assertThat(model.form.isOrderEnabled).isFalse()
     }
 
     @ParameterizedTest
@@ -853,6 +900,99 @@ internal class TangemPayOrderCardDataModelTest {
         assertThat(submittedKeys[1]).isEqualTo(submittedKeys[0])
         assertThat(submitted).isEqualTo(firstOrder)
     }
+
+    @ParameterizedTest
+    @MethodSource(OUTCOME_UNKNOWN_ERRORS)
+    fun `GIVEN outcome unknown WHEN the same order is clicked again THEN the same key is reused`(
+        error: VisaApiError,
+    ) = runTest {
+        // Arrange
+        coEvery { issuePlasticCard(userWalletId, any(), any()) } coAnswers {
+            submittedKeys += thirdArg<String>()
+            error.left()
+        }
+        val model = createLoadedModel()
+        model.fillValidForm()
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Act
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(submittedKeys).hasSize(2)
+        assertThat(submittedKeys[1]).isEqualTo(submittedKeys[0])
+    }
+
+    @Test
+    fun `GIVEN a definitive error WHEN the order is clicked again THEN a new key is used`() = runTest {
+        // Arrange
+        coEvery { issuePlasticCard(userWalletId, any(), any()) } coAnswers {
+            submittedKeys += thirdArg<String>()
+            VisaApiError.Unspecified.left()
+        }
+        val model = createLoadedModel()
+        model.fillValidForm()
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Act
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(submittedKeys).hasSize(2)
+        assertThat(submittedKeys[1]).isNotEqualTo(submittedKeys[0])
+    }
+
+    @Test
+    fun `GIVEN outcome unknown WHEN the form changes before the next click THEN a new key is used`() = runTest {
+        // Arrange
+        coEvery { issuePlasticCard(userWalletId, any(), any()) } coAnswers {
+            submittedKeys += thirdArg<String>()
+            VisaApiError.ServerUnavailable.left()
+        }
+        val model = createLoadedModel()
+        model.fillValidForm()
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Act
+        model.form.city.onValueChange("Pacifica")
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(submittedKeys).hasSize(2)
+        assertThat(submittedKeys[1]).isNotEqualTo(submittedKeys[0])
+    }
+
+    @Test
+    fun `GIVEN outcome unknown for an edited form WHEN the original form is restored THEN its key is reused`() =
+        runTest {
+            // Arrange
+            coEvery { issuePlasticCard(userWalletId, any(), any()) } coAnswers {
+                submittedKeys += thirdArg<String>()
+                VisaApiError.ServerUnavailable.left()
+            }
+            val model = createLoadedModel()
+            model.fillValidForm()
+            model.form.onOrderClick()
+            advanceUntilIdle()
+            model.form.city.onValueChange("Pacifica")
+            model.form.onOrderClick()
+            advanceUntilIdle()
+
+            // Act
+            model.form.city.onValueChange("Night City")
+            model.form.onOrderClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(submittedKeys).hasSize(3)
+            assertThat(submittedKeys[2]).isEqualTo(submittedKeys[0])
+        }
 
     @Test
     fun `GIVEN a non-retryable rejection WHEN order clicked THEN the sheet offers no retry`() = runTest {

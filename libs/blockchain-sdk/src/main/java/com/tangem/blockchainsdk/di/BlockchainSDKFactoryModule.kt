@@ -24,17 +24,19 @@ import com.tangem.blockchainsdk.providers.DefaultBlockchainProvidersStorage
 import com.tangem.blockchainsdk.providers.DevBlockchainProvidersTypesManager
 import com.tangem.blockchainsdk.providers.ProdBlockchainProvidersTypesManager
 import com.tangem.blockchainsdk.providers.dev.BlockchainProvidersResponseSerializer
+import com.tangem.blockchainsdk.providers.dev.ProviderModelSerializer
 import com.tangem.blockchainsdk.providers.models.ProviderModel
-import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.core.local.assets.AssetLoader
-import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.core.remote.RetrofitApiSpec
 import com.tangem.core.remote.RetrofitFactory
 import com.tangem.core.remote.build
+import com.tangem.core.remote.config.TangemGatewayApiConfig
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
-import com.tangem.core.remote.config.TangemGatewayApiConfig
+import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.libs.blockchain_sdk.BuildConfig
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -45,6 +47,9 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
 import javax.inject.Singleton
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -139,7 +144,16 @@ internal object BlockchainSDKFactoryModule {
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         appScope: AppCoroutineScope,
+        dataStoreFactory: AppDataStoreFactory,
     ): DataStore<BlockchainProvidersResponse> {
+        if (dataStoreFactory.isKotlinxDataStoreEnabled) {
+            return dataStoreFactory.create(
+                defaultValue = emptyMap(),
+                serializer = MapSerializer(String.serializer(), ListSerializer(ProviderModelSerializer)),
+                fileName = "changed_providers",
+            )
+        }
+
         return DataStoreFactory.create(
             serializer = BlockchainProvidersResponseSerializer(moshi),
             produceFile = { context.dataStoreFile("changed_providers") },

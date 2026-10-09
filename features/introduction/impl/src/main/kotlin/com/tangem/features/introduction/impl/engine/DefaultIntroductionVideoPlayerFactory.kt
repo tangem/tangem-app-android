@@ -42,6 +42,7 @@ internal class DefaultIntroductionVideoPlayerFactory @Inject constructor(
             volume = 0f
             // Resizing a SurfaceView instead is one of the few things that still flashes black.
             videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
+            addAnalyticsListener(IntroductionVideoDiagnostics())
         }
 
     private fun isMotionEnabled(): Boolean = Settings.Global

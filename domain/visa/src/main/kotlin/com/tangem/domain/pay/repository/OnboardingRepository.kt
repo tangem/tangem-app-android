@@ -40,6 +40,7 @@ interface OnboardingRepository {
     suspend fun createOrder(
         userWalletId: UserWalletId,
         request: CustomerOrderRequest.CardIssue,
+        idempotencyKey: String,
     ): Either<VisaApiError, String>
 
     suspend fun clearOrderId(userWalletId: UserWalletId)
@@ -58,6 +59,10 @@ interface OnboardingRepository {
     suspend fun storeVirtualAccountOrderId(userWalletId: UserWalletId, vaOrderId: String)
 
     suspend fun clearVirtualAccountOrderId(userWalletId: UserWalletId)
+
+    suspend fun hasVirtualAccountOrderFailed(userWalletId: UserWalletId): Boolean
+
+    suspend fun storeVirtualAccountOrderFailed(userWalletId: UserWalletId, isFailed: Boolean)
 
     suspend fun hasTangemPayInWallet(userWalletId: UserWalletId): Either<VisaApiError, Boolean>
 

@@ -67,6 +67,7 @@ internal data class TangemPayBankWithdrawAmountUM(
         val icon: CurrencyIconState,
         val symbol: String,
         val subtitle: TextReference,
+        val isAvailable: Boolean,
         val isSelected: Boolean,
         val onClick: () -> Unit,
     )

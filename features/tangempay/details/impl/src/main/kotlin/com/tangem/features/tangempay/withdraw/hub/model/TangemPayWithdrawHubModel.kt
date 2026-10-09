@@ -16,7 +16,6 @@ import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.pay.usecase.bankofframp.GetBankOfframpOptionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetRecentBankAccountsUseCase
-import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
 import com.tangem.domain.pay.usecase.recents.GetRecentTokenTransfersUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
@@ -57,7 +56,6 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val getRecentBankAccountsUseCase: GetRecentBankAccountsUseCase,
     private val getRecentTokenTransfersUseCase: GetRecentTokenTransfersUseCase,
-    private val markBankAccountUsedUseCase: MarkBankAccountUsedUseCase,
     private val getBankOfframpOptionsUseCase: GetBankOfframpOptionsUseCase,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val analytics: AnalyticsEventHandler,
@@ -86,7 +84,6 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
                 openBankWithdraw(entry = BankWithdrawEntry.SeeAll)
             },
             onRetryRecentsClick = ::loadRecents,
-            onRetryBankSectionClick = ::onRetryBankSection,
         ),
     )
 
@@ -113,7 +110,7 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
         modelScope.launch {
             val recents = getRecentBankAccountsUseCase(params.userWalletId).fold(
                 ifLeft = { RecentsState.Failed },
-                ifRight = { RecentsState.Loaded(accounts = it.recents, hasSavedAccounts = it.hasSavedAccounts) },
+                ifRight = { RecentsState.Loaded(accounts = it.recents, hasMoreAccounts = it.hasMoreAccounts) },
             )
             state.update { it.copy(recents = recents) }
         }.saveIn(recentsJobHolder)
@@ -163,11 +160,6 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
         }
     }
 
-    private fun onRetryBankSection() {
-        loadOptions()
-        loadRecents()
-    }
-
     private fun onBackClick() {
         router.pop()
     }
@@ -191,7 +183,6 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
                     ),
                 )
             } else {
-                router.pop()
                 router.push(
                     buildWithdrawSwapRoute(
                         userWalletId = params.userWalletId,
@@ -205,10 +196,7 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
 
     private fun onRecentRecipientClick(bankAccountId: String) {
         analytics.send(TangemPayAnalyticsEvents.Offramp.SavedContactClicked())
-        modelScope.launch {
-            markBankAccountUsedUseCase(userWalletId = params.userWalletId, bankAccountId = bankAccountId)
-            openBankWithdraw(entry = BankWithdrawEntry.Saved(bankAccountId = bankAccountId))
-        }
+        openBankWithdraw(entry = BankWithdrawEntry.Saved(bankAccountId = bankAccountId))
     }
 
     /**

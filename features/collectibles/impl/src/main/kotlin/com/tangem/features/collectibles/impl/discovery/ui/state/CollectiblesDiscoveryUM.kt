@@ -38,18 +38,28 @@ internal data class CollectiblesDiscoveryUM(
 
         /**
          * @property rows packs laid out two per row; a row is one item of the host's lazy list
-         * @property isLoadingNextPage whether the footer loader of the next page is shown
+         * @property nextPage footer of the list: the next page on its way, or the one that failed to load
          * @property isReloading the catalogue is being refetched
          */
         data class Content(
             val rows: ImmutableList<PackRowUM>,
-            val isLoadingNextPage: Boolean,
+            val nextPage: NextPageUM,
             val isReloading: Boolean,
         ) : ContentUM
 
         data class Error(val message: TextReference, val onReloadClick: () -> Unit) : ContentUM
 
         data class Empty(val message: TextReference) : ContentUM
+    }
+
+    @Immutable
+    sealed interface NextPageUM {
+
+        data object Idle : NextPageUM
+
+        data object Loading : NextPageUM
+
+        data class Error(val message: TextReference, val onRetryClick: () -> Unit) : NextPageUM
     }
 
     /** @property id id of the first pack in the row — the row's stable identity as a list item */

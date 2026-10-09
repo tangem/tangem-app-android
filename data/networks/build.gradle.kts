@@ -1,6 +1,7 @@
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.serialization)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.ksp)
     id("configuration")

@@ -88,13 +88,13 @@ private fun PredictionSlippageRowPreview() {
             }
             PreviewSurface {
                 PredictionSlippageRow(
-                    slippage = SlippageUM(percent = BigDecimal("0.25"), isDefault = false),
+                    slippage = SlippageUM(percent = BigDecimal("5"), isDefault = false),
                     onClick = {},
                 )
             }
             PreviewSurface {
                 PredictionSlippageRow(
-                    slippage = SlippageUM(percent = BigDecimal("0.25"), isDefault = false),
+                    slippage = SlippageUM(percent = BigDecimal("5"), isDefault = false),
                 )
             }
         }

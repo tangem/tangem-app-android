@@ -16,6 +16,7 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -164,6 +165,10 @@ internal class DefaultWalletRouter @Inject constructor(
 
     override fun openTangemPayOnboarding(mode: AppRoute.TangemPayOnboarding.Mode) {
         router.push(route = AppRoute.TangemPayOnboarding(mode = mode))
+    }
+
+    override fun openTangemPayEligibility(product: TangemPayProduct, userWalletId: UserWalletId) {
+        router.push(route = AppRoute.TangemPayEligibility(product = product, userWalletId = userWalletId))
     }
 
     override fun openTangemPayDetails(status: AccountStatus.Payment) {

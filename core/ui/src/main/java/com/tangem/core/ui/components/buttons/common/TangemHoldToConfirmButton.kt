@@ -48,6 +48,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -147,6 +149,7 @@ internal fun TangemHoldToConfirmButton(
         modifier = modifier
             .heightIn(min = buttonHeight)
             .testTag(BaseButtonTestTags.BUTTON)
+            .semantics { if (!enabled) disabled() }
             .graphicsLayer {
                 scaleX = state.scaleProgress.value
                 scaleY = state.scaleProgress.value

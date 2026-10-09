@@ -21,6 +21,7 @@ import io.mockk.mockk
 internal object SafeTestFixtures {
 
     const val SAFE_ADDRESS = "0x5afe000000000000000000000000000000000001"
+    const val REFUND_RECEIVER = "0x5f2c435df8d00d0cf842a52dd166b1dcd69734c2"
     const val OWNER_PATH = "m/44'/60'/888888'/0/2"
 
     val userWalletId = UserWalletId("011")

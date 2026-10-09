@@ -70,8 +70,8 @@ internal class DefaultTangemSdkManager(
     private val resources: Resources,
     private val visaCardScanHandler: VisaCardScanHandler,
     private val visaCardActivationTaskFactory: VisaCardActivationTask.Factory,
-    private val tangemPayChallengeTaskFactory: TangemPayGenerateAddressAndSignChallengeTask.Factory,
-    private val tangemPayMoneyAccountTaskFactory: TangemPayGenerateMoneyAccountAddressTask.Factory,
+    private val tangemPayChallengeTask: TangemPayGenerateAddressAndSignChallengeTask,
+    private val tangemPayMoneyAccountTask: TangemPayGenerateMoneyAccountAddressTask,
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
     private val analyticsErrorHandler: AnalyticsErrorHandler,
     private val cardRepository: CardRepository,
@@ -418,7 +418,7 @@ internal class DefaultTangemSdkManager(
         registerColdWallet: Boolean,
         shouldForceColdRegistration: Boolean,
     ): CompletionResult<T> = coroutineScope {
-        val actualRunnable = if (registerColdWallet && authFeatureToggles.isBackendAuthenticationEnabled) {
+        val actualRunnable = if (registerColdWallet) {
             withColdWalletRegistration(runnable, shouldForceColdRegistration)
         } else {
             runnable
@@ -457,21 +457,27 @@ internal class DefaultTangemSdkManager(
     }
 
     /**
-     * Wraps [runnable] so that, on success, the card is bound to the device via cold wallet
-     * registration on the same NFC tap. Applied only when the call site opts in via
+     * Wraps [runnable] so that the card is bound to the device via cold wallet registration on the
+     * same NFC tap — after [runnable] succeeds, or mid-scan before the card attestation (see
+     * [ColdWalletRegistrationHost]). Applied only when the call site opts in via
      * `registerColdWallet = true` (and the backend-auth toggle is on) — currently scan / wallet
-     * creation / key derivation; signing opts in separately in `TangemSigner`. Twin / Visa /
+     * creation / key derivation; signing opts in separately in `TangemSigner`, and the primary
+     * card's backup finalization calls this directly. Twin / Visa /
      * walletless cards are skipped inside [WalletRegistrationLauncher]. The registration is launched
      * on the card session's own scope (see [RegisterColdWalletRunnable]), so it can't outlive the tap.
      */
-    private fun <T> withColdWalletRegistration(
+    override fun <T> withColdWalletRegistration(
         runnable: CardSessionRunnable<T>,
         shouldForceRegistration: Boolean,
-    ): CardSessionRunnable<T> = RegisterColdWalletRunnable(
-        inner = runnable,
-        launcher = walletRegistrationLauncher.get(),
-        shouldForceRegistration = shouldForceRegistration,
-    )
+    ): CardSessionRunnable<T> {
+        if (!authFeatureToggles.isBackendAuthenticationEnabled) return runnable
+
+        return RegisterColdWalletRunnable(
+            inner = runnable,
+            launcher = walletRegistrationLauncher.get(),
+            shouldForceRegistration = shouldForceRegistration,
+        )
+    }
 
     @Suppress("MagicNumber")
     override fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse?) {
@@ -603,38 +609,34 @@ internal class DefaultTangemSdkManager(
     override suspend fun tangemPayProduceInitialCredentials(
         preflightReadFilter: PreflightReadFilter,
     ): Either<Throwable, TangemPayInitialCredentials> {
-        return coroutineScope {
-            val result = runTaskAsyncReturnOnMain(
-                runnable = tangemPayChallengeTaskFactory.create(coroutineScope = this),
-                cardId = null,
-                initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
-                preflightReadFilter = preflightReadFilter,
-                registerColdWallet = false, // Visa — not a cold wallet registration target
-            )
+        val result = runTaskAsyncReturnOnMain(
+            runnable = tangemPayChallengeTask,
+            cardId = null,
+            initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
+            preflightReadFilter = preflightReadFilter,
+            registerColdWallet = false, // Visa — not a cold wallet registration target
+        )
 
-            return@coroutineScope when (result) {
-                is CompletionResult.Failure<*> -> result.error.left()
-                is CompletionResult.Success<TangemPayInitialCredentials> -> result.data.right()
-            }
+        return when (result) {
+            is CompletionResult.Failure<*> -> result.error.left()
+            is CompletionResult.Success<TangemPayInitialCredentials> -> result.data.right()
         }
     }
 
     override suspend fun tangemPayProduceMoneyAccountData(
         preflightReadFilter: PreflightReadFilter,
     ): Either<Throwable, MoneyAccountActivationData> {
-        return coroutineScope {
-            val result = runTaskAsyncReturnOnMain(
-                runnable = tangemPayMoneyAccountTaskFactory.create(coroutineScope = this),
-                cardId = null,
-                initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
-                preflightReadFilter = preflightReadFilter,
-                registerColdWallet = false, // Visa — not a cold wallet registration target
-            )
+        val result = runTaskAsyncReturnOnMain(
+            runnable = tangemPayMoneyAccountTask,
+            cardId = null,
+            initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
+            preflightReadFilter = preflightReadFilter,
+            registerColdWallet = false, // Visa — not a cold wallet registration target
+        )
 
-            return@coroutineScope when (result) {
-                is CompletionResult.Failure<*> -> result.error.left()
-                is CompletionResult.Success<MoneyAccountActivationData> -> result.data.right()
-            }
+        return when (result) {
+            is CompletionResult.Failure<*> -> result.error.left()
+            is CompletionResult.Success<MoneyAccountActivationData> -> result.data.right()
         }
     }
 
