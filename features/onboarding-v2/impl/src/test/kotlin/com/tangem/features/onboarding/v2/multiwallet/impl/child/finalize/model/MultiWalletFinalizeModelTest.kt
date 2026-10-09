@@ -28,6 +28,7 @@ import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.domain.wallets.usecase.SyncWalletWithRemoteUseCase
 import com.tangem.domain.wallets.usecase.UpdateWalletUseCase
 import com.tangem.domain.sociallogin.usecase.DeleteSocialBackupAfterUpgradeUseCase
+import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
 import io.mockk.verify
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.features.onboarding.v2.common.ui.CantLeaveBackupDialog
@@ -78,6 +79,7 @@ internal class MultiWalletFinalizeModelTest {
     private val walletCardsBackupReporter: WalletCardsBackupReporter = mockk(relaxUnitFun = true)
     private val derivationsHelper: DerivationsHelper = mockk(relaxUnitFun = true)
     private val deleteSocialBackupAfterUpgradeUseCase: DeleteSocialBackupAfterUpgradeUseCase = mockk(relaxed = true)
+    private val isSocialBackupCompletedUseCase: IsSocialBackupCompletedUseCase = mockk()
     private val paramsContainer: ParamsContainer = mockk()
 
     private val coldUserWallet: UserWallet.Cold = mockk(relaxed = true) {
@@ -654,19 +656,38 @@ internal class MultiWalletFinalizeModelTest {
             // Act
             finishBackupAsUpgrade()
 
-            // Assert — only once the wallet is recorded as upgraded
+            // Assert — the mark is read while the record is still hot, the file deleted once it is upgraded
             coVerifyOrder {
+                isSocialBackupCompletedUseCase(UPGRADED_WALLET_ID)
+                updateWalletUseCase.invoke(eq(UPGRADED_WALLET_ID), any())
                 walletsRepository.upgradeWallet(UPGRADED_WALLET_ID)
                 deleteSocialBackupAfterUpgradeUseCase(UPGRADED_WALLET_ID)
             }
         }
 
     @Test
+    fun `GIVEN no social backup WHEN backup finishes as upgrade THEN social backup is not touched`() = runTest {
+        // Arrange — also the answer with the social login toggle off
+        arrangeHotWalletUpgrade()
+        coEvery { isSocialBackupCompletedUseCase(UPGRADED_WALLET_ID) } returns false
+        coEvery { walletsRepository.upgradeWallet(UPGRADED_WALLET_ID) } just Runs
+
+        // Act
+        finishBackupAsUpgrade()
+
+        // Assert
+        coVerify(exactly = 0) { deleteSocialBackupAfterUpgradeUseCase(any()) }
+        verify(exactly = 0) {
+            analyticsEventHandler.send(ofType<WalletSettingsAnalyticEvents.SocialRecoveryDeleted>())
+        }
+    }
+
+    @Test
     fun `GIVEN the social backup file deleted WHEN backup finishes THEN the deletion is reported`() = runTest {
         // Arrange
         arrangeHotWalletUpgrade()
         coEvery { walletsRepository.upgradeWallet(UPGRADED_WALLET_ID) } just Runs
-        coEvery { deleteSocialBackupAfterUpgradeUseCase(UPGRADED_WALLET_ID) } returns true.right()
+        coEvery { deleteSocialBackupAfterUpgradeUseCase(UPGRADED_WALLET_ID) } returns Unit.right()
 
         // Act
         finishBackupAsUpgrade()
@@ -698,6 +719,7 @@ internal class MultiWalletFinalizeModelTest {
         every { backupValidator.isValidFull(any()) } returns true
         every { backupService.currentState } returns BackupService.State.Finished
         every { coldUserWalletBuilderFactory.create(any()) } returns coldUserWalletBuilder
+        coEvery { isSocialBackupCompletedUseCase(UPGRADED_WALLET_ID) } returns true
         coEvery { updateWalletUseCase.invoke(eq(UPGRADED_WALLET_ID), any()) } returns coldUserWallet.right()
         coEvery { syncWalletWithRemoteUseCase(any()) } returns mockk(relaxed = true)
         coEvery { cardRepository.finishCardActivation(any(), any()) } just Runs
@@ -754,6 +776,7 @@ internal class MultiWalletFinalizeModelTest {
             walletCardsBackupReporter = walletCardsBackupReporter,
             derivationsHelper = derivationsHelper,
             deleteSocialBackupAfterUpgradeUseCase = deleteSocialBackupAfterUpgradeUseCase,
+            isSocialBackupCompletedUseCase = isSocialBackupCompletedUseCase,
         )
     }
 
