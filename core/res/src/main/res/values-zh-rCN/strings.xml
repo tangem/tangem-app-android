@@ -988,6 +988,7 @@
   <string name="initial_wallet_sync_banner_description">您的钱包已同步并准备就绪。\n缺少某些代币？</string>
   <string name="initial_wallet_sync_banner_title">钱包已成功导入</string>
   <string name="initial_wallet_sync_restore_progress">恢复 %d%%</string>
+  <string name="introduction_button_buy_tangem">购买 Tangem</string>
   <string name="introduction_button_create_wallet">创建钱包</string>
   <string name="introduction_button_i_have_a_wallet">我已有钱包</string>
   <string name="introduction_create_wallet_hardware_description">如果您已拥有 Tangem钱包</string>
