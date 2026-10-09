@@ -2,17 +2,14 @@ package com.tangem.domain.moneyaccount.usecase
 
 import arrow.core.left
 import arrow.core.right
-import com.tangem.domain.models.kyc.KycStatus
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.repository.MoneyAccountOrderRepository
-import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.TangemPayOrderInfo
-import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.FindMoneyAccountCreationOrderUseCase
 import com.tangem.domain.visa.error.VisaApiError
 import io.mockk.clearMocks
@@ -32,89 +29,28 @@ import org.junit.jupiter.api.TestInstance
 internal class RestoreMoneyAccountOrderUseCaseTest {
 
     private val orderRepository: MoneyAccountOrderRepository = mockk()
-    private val onboardingRepository: OnboardingRepository = mockk()
     private val trackOrder: TrackMoneyAccountOrderUseCase = mockk()
     private val findMoneyAccountCreationOrderUseCase: FindMoneyAccountCreationOrderUseCase = mockk()
+    private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher = mockk(relaxed = true)
 
     private val useCase = RestoreMoneyAccountOrderUseCase(
-        orderRepository = orderRepository,
-        onboardingRepository = onboardingRepository,
         trackOrder = trackOrder,
         findMoneyAccountCreationOrderUseCase = findMoneyAccountCreationOrderUseCase,
+        moneyAccountOrderRepository = orderRepository,
+        moneyAccountStatusFetcher = moneyAccountStatusFetcher,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(orderRepository, onboardingRepository, trackOrder, findMoneyAccountCreationOrderUseCase)
-        every { orderRepository.clearOrder(USER_WALLET_ID) } just runs
+        clearMocks(orderRepository, trackOrder, findMoneyAccountCreationOrderUseCase, moneyAccountStatusFetcher)
+        every { orderRepository.storeOrder(any(), any()) } just runs
+        every { orderRepository.getOrder(USER_WALLET_ID) } returns null
         every { trackOrder(any(), any()) } just runs
-        coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo().right()
         coEvery { findMoneyAccountCreationOrderUseCase(USER_WALLET_ID) } returns null.right()
     }
 
     @Test
-    fun `GIVEN customer info is unavailable WHEN invoke THEN nothing is tracked or cleared`() = runTest {
-        // Arrange
-        coEvery {
-            onboardingRepository.getCustomerInfo(USER_WALLET_ID)
-        } returns VisaApiError.ServerUnavailable.left()
-
-        // Act
-        useCase(USER_WALLET_ID)
-
-        // Assert
-        verify(exactly = 0) { trackOrder(any(), any()) }
-        verify(exactly = 0) { orderRepository.clearOrder(any()) }
-        coVerify(exactly = 0) { findMoneyAccountCreationOrderUseCase(any()) }
-    }
-
-    @Test
-    fun `GIVEN account is active WHEN invoke THEN order is cleared and nothing is tracked`() = runTest {
-        // Arrange
-        coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo(
-            accountStatus = CustomerInfo.ProductInstance.Status.ACTIVE,
-        ).right()
-
-        // Act
-        useCase(USER_WALLET_ID)
-
-        // Assert
-        verify(exactly = 1) { orderRepository.clearOrder(USER_WALLET_ID) }
-        verify(exactly = 0) { trackOrder(any(), any()) }
-    }
-
-    @Test
-    fun `GIVEN account is deactivated WHEN invoke THEN order is cleared`() = runTest {
-        // Arrange
-        coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo(
-            accountStatus = CustomerInfo.ProductInstance.Status.DEACTIVATED,
-        ).right()
-
-        // Act
-        useCase(USER_WALLET_ID)
-
-        // Assert
-        verify(exactly = 1) { orderRepository.clearOrder(USER_WALLET_ID) }
-        verify(exactly = 0) { trackOrder(any(), any()) }
-    }
-
-    @Test
-    fun `GIVEN customer is former WHEN invoke THEN order is cleared`() = runTest {
-        // Arrange
-        coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo(
-            state = CustomerInfo.State.FORMER,
-        ).right()
-
-        // Act
-        useCase(USER_WALLET_ID)
-
-        // Assert
-        verify(exactly = 1) { orderRepository.clearOrder(USER_WALLET_ID) }
-        verify(exactly = 0) { trackOrder(any(), any()) }
-    }
-
-    @Test
-    fun `GIVEN an active order WHEN invoke THEN tracking is started`() = runTest {
+    fun `GIVEN an active order WHEN invoke THEN tracking is started once`() = runTest {
         // Arrange
         val order = createOrder()
         coEvery { findMoneyAccountCreationOrderUseCase(USER_WALLET_ID) } returns order.right()
@@ -124,16 +60,54 @@ internal class RestoreMoneyAccountOrderUseCaseTest {
 
         // Assert
         verify(exactly = 1) { trackOrder(USER_WALLET_ID, TangemPayOrderInfo.fromOrder(order)) }
-        verify(exactly = 0) { orderRepository.clearOrder(any()) }
+        coVerify(exactly = 1) { findMoneyAccountCreationOrderUseCase(USER_WALLET_ID) }
     }
 
     @Test
-    fun `GIVEN no active order WHEN invoke THEN nothing is tracked`() = runTest {
+    fun `GIVEN no order WHEN invoke THEN empty order is stored and status is fetched once`() = runTest {
         // Act
         useCase(USER_WALLET_ID)
 
         // Assert
+        verify(exactly = 1) { orderRepository.storeOrder(USER_WALLET_ID, null.right()) }
+        coVerify(exactly = 1) { moneyAccountStatusFetcher.invoke(USER_WALLET_ID) }
+        coVerify(exactly = 1) { findMoneyAccountCreationOrderUseCase(USER_WALLET_ID) }
         verify(exactly = 0) { trackOrder(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN find fails once WHEN invoke THEN error is stored and request is retried`() = runTest {
+        // Arrange
+        val order = createOrder()
+        coEvery { findMoneyAccountCreationOrderUseCase(USER_WALLET_ID) } returnsMany listOf(
+            VisaApiError.ServerUnavailable.left(),
+            order.right(),
+        )
+
+        // Act
+        useCase(USER_WALLET_ID)
+
+        // Assert
+        verify(exactly = 1) { orderRepository.storeOrder(USER_WALLET_ID, VisaApiError.ServerUnavailable.left()) }
+        coVerify(exactly = 2) { findMoneyAccountCreationOrderUseCase(USER_WALLET_ID) }
+        verify(exactly = 1) { trackOrder(USER_WALLET_ID, TangemPayOrderInfo.fromOrder(order)) }
+    }
+
+    @Test
+    fun `GIVEN order is already known WHEN find fails THEN known order is not overwritten`() = runTest {
+        // Arrange
+        val order = createOrder()
+        every { orderRepository.getOrder(USER_WALLET_ID) } returns TangemPayOrderInfo.fromOrder(order).right()
+        coEvery { findMoneyAccountCreationOrderUseCase(USER_WALLET_ID) } returnsMany listOf(
+            VisaApiError.ServerUnavailable.left(),
+            order.right(),
+        )
+
+        // Act
+        useCase(USER_WALLET_ID)
+
+        // Assert
+        verify(exactly = 0) { orderRepository.storeOrder(USER_WALLET_ID, VisaApiError.ServerUnavailable.left()) }
     }
 
     private fun createOrder() = Order(
@@ -152,35 +126,8 @@ internal class RestoreMoneyAccountOrderUseCaseTest {
         updatedAt = null,
     )
 
-    private fun createCustomerInfo(
-        state: CustomerInfo.State = CustomerInfo.State.ACTIVE,
-        accountStatus: CustomerInfo.ProductInstance.Status? = null,
-    ) = CustomerInfo(
-        customerId = CUSTOMER_ID,
-        paymentAccount = null,
-        productInstances = listOfNotNull(accountStatus?.let(::createAccountInstance)),
-        cards = emptyList(),
-        kycStatus = KycStatus.APPROVED,
-        state = state,
-        fiatBalance = null,
-        tariffPlan = null,
-    )
-
-    private fun createAccountInstance(status: CustomerInfo.ProductInstance.Status) = CustomerInfo.ProductInstance(
-        id = PRODUCT_INSTANCE_ID,
-        cardId = "",
-        frozenState = TangemPayCardFrozenState.Unfrozen,
-        displayName = null,
-        actualCardLimit = null,
-        adminCardLimit = null,
-        status = status,
-        specificationDataType = CustomerInfo.ProductInstance.SpecificationDataType.ACCOUNT,
-    )
-
     private companion object {
         val USER_WALLET_ID = UserWalletId("011")
         const val ORDER_ID = "order-1"
-        const val CUSTOMER_ID = "customer-1"
-        const val PRODUCT_INSTANCE_ID = "pi-1"
     }
 }

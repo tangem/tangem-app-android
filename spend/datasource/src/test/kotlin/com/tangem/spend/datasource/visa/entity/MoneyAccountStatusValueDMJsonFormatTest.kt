@@ -56,18 +56,6 @@ internal class MoneyAccountStatusValueDMJsonFormatTest {
     }
 
     @Test
-    fun `GIVEN country not supported stored without country code WHEN decode THEN country code is null`() {
-        // Act
-        val actual = json.decodeFromString(
-            MoneyAccountStatusValueDM.serializer(),
-            """{"__type":"country_not_supported"}""",
-        )
-
-        // Assert
-        assertThat(actual).isEqualTo(MoneyAccountStatusValueDM.CountryNotSupported(countryCode = null))
-    }
-
-    @Test
     fun `GIVEN status in the previous Moshi format WHEN decode THEN it fails`() {
         // Act
         val error = runCatching {
@@ -82,46 +70,31 @@ internal class MoneyAccountStatusValueDMJsonFormatTest {
         FormatModel(status = MoneyAccountStatusValueDM.Empty, json = """{"__type":"empty"}"""),
         FormatModel(status = MoneyAccountStatusValueDM.NotCreated, json = """{"__type":"not_created"}"""),
         FormatModel(
-            status = MoneyAccountStatusValueDM.CountryNotSupported(countryCode = null),
-            json = """{"__type":"country_not_supported","country_code":null}""",
+            status = MoneyAccountStatusValueDM.CountryNotSupported(countryCode = null, customerId = "cust-1"),
+            json = """{"__type":"country_not_supported","country_code":null,"customer_id":"cust-1"}""",
         ),
         FormatModel(
-            status = MoneyAccountStatusValueDM.CountryNotSupported(countryCode = "US"),
-            json = """{"__type":"country_not_supported","country_code":"US"}""",
+            status = MoneyAccountStatusValueDM.CountryNotSupported(countryCode = "US", customerId = "cust-1"),
+            json = """{"__type":"country_not_supported","country_code":"US","customer_id":"cust-1"}""",
         ),
         FormatModel(
             status = MoneyAccountStatusValueDM.Issuing(
                 step = MoneyAccountStatusValue.IssuingStep.RAIN_APPROVAL,
-                customerId = null,
-                balance = null,
-            ),
-            json = """{"__type":"issuing","step":"RAIN_APPROVAL","customer_id":null,"balance":null}""",
-        ),
-        FormatModel(
-            status = MoneyAccountStatusValueDM.Issuing(
-                step = MoneyAccountStatusValue.IssuingStep.ELIGIBILITY_CHECK,
                 customerId = "cust-1",
-                balance = BALANCE,
             ),
-            json = """{"__type":"issuing","step":"ELIGIBILITY_CHECK","customer_id":"cust-1",""" +
-                """"balance":$BALANCE_JSON}""",
+            json = """{"__type":"issuing","step":"RAIN_APPROVAL","customer_id":"cust-1"}""",
         ),
         FormatModel(
-            status = MoneyAccountStatusValueDM.UnderReview(
-                kycStatus = KycStatus.REJECTED,
-                customerId = "cust-2",
-                balance = BALANCE,
-            ),
-            json = """{"__type":"kyc_status","kyc_status":"declined","customer_id":"cust-2",""" +
-                """"balance":$BALANCE_JSON}""",
+            status = MoneyAccountStatusValueDM.UnderReview(kycStatus = KycStatus.REJECTED, customerId = "cust-2"),
+            json = """{"__type":"kyc_status","kyc_status":"declined","customer_id":"cust-2"}""",
         ),
         FormatModel(
-            status = MoneyAccountStatusValueDM.VerificationDeclined(customerId = "cust-2", balance = null),
-            json = """{"__type":"verification_declined","customer_id":"cust-2","balance":null}""",
+            status = MoneyAccountStatusValueDM.VerificationDeclined(customerId = "cust-2"),
+            json = """{"__type":"verification_declined","customer_id":"cust-2"}""",
         ),
         FormatModel(
-            status = MoneyAccountStatusValueDM.Activating(customerId = "cust-2", balance = BALANCE),
-            json = """{"__type":"activating","customer_id":"cust-2","balance":$BALANCE_JSON}""",
+            status = MoneyAccountStatusValueDM.Activating(customerId = "cust-2"),
+            json = """{"__type":"activating","customer_id":"cust-2"}""",
         ),
         FormatModel(
             status = MoneyAccountStatusValueDM.ActiveAccount(
