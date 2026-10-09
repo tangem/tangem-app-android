@@ -11,6 +11,7 @@ import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.utils.StringsSigns
+import com.tangem.utils.extensions.isZero
 import com.tangem.utils.extensions.orZero
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -56,8 +57,8 @@ internal object SwapAmountQuoteUtils {
         val fromTokenFiatValue = fromRate?.let { fromAmount.multiply(fromRate).orZero() }
         val toTokenFiatValue = toRate?.let { toAmount.multiply(toRate) }
 
-        val isFromNotZero = fromTokenFiatValue != null && fromTokenFiatValue != BigDecimal.ZERO
-        val isToNotZero = toTokenFiatValue != null && toTokenFiatValue != BigDecimal.ZERO
+        val isFromNotZero = fromTokenFiatValue != null && !fromTokenFiatValue.isZero()
+        val isToNotZero = toTokenFiatValue != null && !toTokenFiatValue.isZero()
 
         val value = if (isFromNotZero && isToNotZero) {
             BigDecimal.ONE - toTokenFiatValue.divide(fromTokenFiatValue, 2, RoundingMode.HALF_UP)
