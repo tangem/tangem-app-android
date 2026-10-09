@@ -335,7 +335,7 @@ private fun rememberReferenceLine(average: Double, color: Color, thickness: Dp):
 
 @Composable
 private fun rememberAverageLabelTopPadding(data: YieldSupplyMarketChartDataUM): State<Dp> {
-    return remember(data.y, data.avr) {
+    return remember(data.y, data.rewardCaps, data.avr) {
         derivedStateOf {
             val chartHeight = CHART_HEIGHT
             val labelHeight = 24.dp
@@ -346,7 +346,14 @@ private fun rememberAverageLabelTopPadding(data: YieldSupplyMarketChartDataUM): 
             val gapAboveLine = desiredGap + referenceLineThickness / 2 + opticalNudge + extraPaddingAboveLine
             val chartContentBottomInset = 10.dp
 
-            val maxValueInSeries = (data.y.maxOrNull() ?: 0.0).coerceAtLeast(data.avr)
+            // The axis scales to the tallest column, and a column is its base plus the reward stacked on it.
+            // Measuring against the bases alone would place the label above a line drawn against the real top.
+            val tallestColumn = if (data.rewardCaps.isEmpty()) {
+                data.y.maxOrNull()
+            } else {
+                data.y.zip(data.rewardCaps) { base, cap -> base + cap }.maxOrNull()
+            }
+            val maxValueInSeries = (tallestColumn ?: 0.0).coerceAtLeast(data.avr)
             val averageRatio = if (maxValueInSeries == 0.0) {
                 0f
             } else {

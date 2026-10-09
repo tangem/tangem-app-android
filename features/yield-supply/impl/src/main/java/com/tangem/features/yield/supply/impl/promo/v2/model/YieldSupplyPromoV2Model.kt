@@ -8,6 +8,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyPromoComponent
+import com.tangem.features.yield.supply.impl.common.formatter.formatApy
 import com.tangem.features.yield.supply.impl.common.formatter.formatApyValue
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.promo.v2.entity.YieldSupplyPromoV2UM
@@ -65,7 +66,7 @@ internal class YieldSupplyPromoV2Model @Inject constructor(
     private fun incentiveChipOf(rewardsApr: BigDecimal?) = rewardsApr?.let { apr ->
         resourceReference(
             id = R.string.yield_module_promo_screen_incentivised_chip,
-            formatArgs = wrappedList("${apr.stripTrailingZeros().toPlainString()}%"),
+            formatArgs = wrappedList(apr.formatApy()),
         )
     }
 
