@@ -62,12 +62,13 @@ import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartIncent
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartPeriod
 import kotlinx.collections.immutable.persistentListOf
 
-private const val AVERAGE_PLACEHOLDER = "0.00%"
+/** Never rendered as text: it only gives a shimmer the width a rate would take, so the row keeps its height. */
+private const val RATE_PLACEHOLDER = "0.00%"
 
 @Suppress("LongMethod")
 @Composable
 internal fun YieldSupplyApyContent(
-    apy: TextReference,
+    apy: TextReference?,
     isLoading: Boolean,
     incentive: YieldSupplyChartIncentiveUM?,
     onBackClick: () -> Unit,
@@ -204,7 +205,7 @@ private fun PoweredByMerkl(modifier: Modifier = Modifier) {
 
 @Composable
 private fun ApyChart(
-    apy: TextReference,
+    apy: TextReference?,
     incentive: YieldSupplyChartIncentiveUM?,
     isChartLoading: Boolean,
     chartComponent: ComposableContentComponent,
@@ -229,7 +230,7 @@ private fun ApyChart(
 
 @Composable
 private fun PlainApyChart(
-    apy: TextReference,
+    apy: TextReference?,
     isChartLoading: Boolean,
     chartComponent: ComposableContentComponent,
     modifier: Modifier = Modifier,
@@ -264,35 +265,43 @@ private fun PlainApyChart(
         }
         SpacerH12()
         chartComponent.Content(Modifier)
-        SpacerH12()
-        Box(
-            modifier = Modifier
-                .background(TangemTheme.colors.stroke.primary)
-                .fillMaxWidth()
-                .height(1.dp),
-        )
-        SpacerH12()
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                modifier = Modifier.weight(1.0f),
-                text = stringResourceSafe(R.string.yield_module_earn_sheet_current_apy_title),
-                style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.primary1,
-            )
-            SpacerW12()
-            Icon(
-                painter = painterResource(R.drawable.ic_arrow_up_8),
-                tint = TangemTheme.colors.text.accent,
-                contentDescription = null,
+        // The rate is the market's, not the history's below it. Where the market could not be read there is no
+        // number for this row and the sheet drops it, rather than borrowing the rate of the sheet next door.
+        if (apy != null || isChartLoading) {
+            SpacerH12()
+            Box(
                 modifier = Modifier
-                    .padding(end = 6.dp)
-                    .size(8.dp),
+                    .background(TangemTheme.colors.stroke.primary)
+                    .fillMaxWidth()
+                    .height(1.dp),
             )
-            Text(
-                text = apy.resolveReference(),
-                style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.accent,
-            )
+            SpacerH12()
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    modifier = Modifier.weight(1.0f),
+                    text = stringResourceSafe(R.string.yield_module_earn_sheet_current_apy_title),
+                    style = TangemTheme.typography.body1,
+                    color = TangemTheme.colors.text.primary1,
+                )
+                SpacerW12()
+                if (apy == null) {
+                    TextShimmer(text = RATE_PLACEHOLDER, style = TangemTheme.typography.body1)
+                } else {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_arrow_up_8),
+                        tint = TangemTheme.colors.text.accent,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .padding(end = 6.dp)
+                            .size(8.dp),
+                    )
+                    Text(
+                        text = apy.resolveReference(),
+                        style = TangemTheme.typography.body1,
+                        color = TangemTheme.colors.text.accent,
+                    )
+                }
+            }
         }
     }
 }
@@ -300,7 +309,7 @@ private fun PlainApyChart(
 /** The current APY comes from the market, not the history request, so it stays put while the chart reloads. */
 @Composable
 private fun IncentiveApyHeader(
-    apy: TextReference,
+    apy: TextReference?,
     averageApy: TextReference,
     isLoading: Boolean,
     modifier: Modifier = Modifier,
@@ -316,17 +325,21 @@ private fun IncentiveApyHeader(
                 title = stringResourceSafe(R.string.yield_module_earn_sheet_current_apy_title),
                 modifier = Modifier.weight(1f),
             ) {
-                Icon(
-                    imageVector = Icons.ic_triangle_up_12,
-                    contentDescription = null,
-                    tint = TangemTheme.colors3.icon.brand,
-                    modifier = Modifier.size(12.dp),
-                )
-                Text(
-                    text = apy.resolveReference(),
-                    style = TangemTheme.typography3.heading.medium,
-                    color = TangemTheme.colors3.text.brand,
-                )
+                if (apy == null) {
+                    TextShimmer(text = RATE_PLACEHOLDER, style = TangemTheme.typography3.heading.medium)
+                } else {
+                    Icon(
+                        imageVector = Icons.ic_triangle_up_12,
+                        contentDescription = null,
+                        tint = TangemTheme.colors3.icon.brand,
+                        modifier = Modifier.size(12.dp),
+                    )
+                    Text(
+                        text = apy.resolveReference(),
+                        style = TangemTheme.typography3.heading.medium,
+                        color = TangemTheme.colors3.text.brand,
+                    )
+                }
             }
             ApyColumn(
                 title = stringResourceSafe(R.string.yield_module_incentive_chart_average_apy),
@@ -341,7 +354,7 @@ private fun IncentiveApyHeader(
                 )
                 // The shimmer stands in for the value at its own size, so the row keeps its height while it loads
                 if (isLoading) {
-                    TextShimmer(text = AVERAGE_PLACEHOLDER, style = TangemTheme.typography3.heading.medium)
+                    TextShimmer(text = RATE_PLACEHOLDER, style = TangemTheme.typography3.heading.medium)
                 } else {
                     Text(
                         text = averageApy.resolveReference(),

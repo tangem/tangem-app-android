@@ -17,9 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -85,12 +82,10 @@ private val COLUMN_THICKNESS = 4.dp
 /** Floor for [columnSpacing]: past it the bars would touch, and a dense period has to stay readable. */
 private val MIN_COLUMN_SPACING = 1.dp
 
-/** What the value axis takes before the plot starts; the labels row below the chart is inset by the same amount. */
-
 @Composable
 internal fun YieldSupplyChartContent(state: YieldSupplyChartUM, modifier: Modifier = Modifier) {
     val itemModifier = modifier
-        .height(105.dp)
+        .height(CHART_HEIGHT)
         .fillMaxWidth()
     when (state) {
         is YieldSupplyChartUM.Loading -> YieldSupplyChartLoading(modifier = itemModifier)
@@ -196,7 +191,7 @@ private fun YieldSupplyChartData(state: YieldSupplyChartUM.Data, modifier: Modif
             horizontalLayout = HorizontalLayout.segmented(),
         )
 
-        val averageLabelTopPadding by rememberAverageLabelTopPadding(state.chartData)
+        val averageLabelTopPadding = rememberAverageLabelTopPadding(state.chartData)
 
         if (state.chartData.xLabels.isEmpty()) {
             MonthLabelsRow(labels = state.monthLables, modifier = Modifier.align(Alignment.BottomEnd))
@@ -260,8 +255,11 @@ private fun rememberChartModel(data: YieldSupplyMarketChartDataUM): CartesianCha
  */
 private fun YieldSupplyMarketChartDataUM.gapSeries(): List<Double> {
     val top = y.zip(rewardCaps) { base, cap -> base + cap }.maxOrNull() ?: return emptyList()
+    // Every column gives up the same room, so the gap can be no deeper than the shallowest base: taking more than
+    // a base holds would leave that column standing on the gap and top out above the APY the backend reported.
+    val gap = (top * (COLUMN_GAP.value / CHART_HEIGHT.value)).coerceAtMost(y.minOrNull() ?: 0.0)
 
-    return List(y.size) { top * (COLUMN_GAP.value / CHART_HEIGHT.value) }
+    return List(y.size) { gap }
 }
 
 @Suppress("MagicNumber")
@@ -334,35 +332,33 @@ private fun rememberReferenceLine(average: Double, color: Color, thickness: Dp):
 }
 
 @Composable
-private fun rememberAverageLabelTopPadding(data: YieldSupplyMarketChartDataUM): State<Dp> {
+private fun rememberAverageLabelTopPadding(data: YieldSupplyMarketChartDataUM): Dp {
     return remember(data.y, data.rewardCaps, data.avr) {
-        derivedStateOf {
-            val chartHeight = CHART_HEIGHT
-            val labelHeight = 24.dp
-            val referenceLineThickness = 2.dp
-            val desiredGap = 3.dp
-            val opticalNudge = 1.dp
-            val extraPaddingAboveLine = 2.dp
-            val gapAboveLine = desiredGap + referenceLineThickness / 2 + opticalNudge + extraPaddingAboveLine
-            val chartContentBottomInset = 10.dp
+        val chartHeight = CHART_HEIGHT
+        val labelHeight = 24.dp
+        val referenceLineThickness = 2.dp
+        val desiredGap = 3.dp
+        val opticalNudge = 1.dp
+        val extraPaddingAboveLine = 2.dp
+        val gapAboveLine = desiredGap + referenceLineThickness / 2 + opticalNudge + extraPaddingAboveLine
+        val chartContentBottomInset = 10.dp
 
-            // The axis scales to the tallest column, and a column is its base plus the reward stacked on it.
-            // Measuring against the bases alone would place the label above a line drawn against the real top.
-            val tallestColumn = if (data.rewardCaps.isEmpty()) {
-                data.y.maxOrNull()
-            } else {
-                data.y.zip(data.rewardCaps) { base, cap -> base + cap }.maxOrNull()
-            }
-            val maxValueInSeries = (tallestColumn ?: 0.0).coerceAtLeast(data.avr)
-            val averageRatio = if (maxValueInSeries == 0.0) {
-                0f
-            } else {
-                (data.avr / maxValueInSeries).coerceIn(0.0, 1.0).toFloat()
-            }
-            val computedTopPadding = (chartHeight - chartContentBottomInset) * (1f - averageRatio)
-            -labelHeight - gapAboveLine
-            if (computedTopPadding < 2.dp) 2.dp else computedTopPadding
+        // The axis scales to the tallest column, and a column is its base plus the reward stacked on it.
+        // Measuring against the bases alone would place the label above a line drawn against the real top.
+        val tallestColumn = if (data.rewardCaps.isEmpty()) {
+            data.y.maxOrNull()
+        } else {
+            data.y.zip(data.rewardCaps) { base, cap -> base + cap }.maxOrNull()
         }
+        val maxValueInSeries = (tallestColumn ?: 0.0).coerceAtLeast(data.avr)
+        val averageRatio = if (maxValueInSeries == 0.0) {
+            0f
+        } else {
+            (data.avr / maxValueInSeries).coerceIn(0.0, 1.0).toFloat()
+        }
+        val computedTopPadding = (chartHeight - chartContentBottomInset) * (1f - averageRatio) -
+            labelHeight - gapAboveLine
+        if (computedTopPadding < 2.dp) 2.dp else computedTopPadding
     }
 }
 
