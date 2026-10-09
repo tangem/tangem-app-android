@@ -253,6 +253,7 @@ sealed class AppRoute(val path: String) : Route {
         val toCryptoCurrency: CryptoCurrency? = null,
         val fromAmount: SerializedBigDecimal? = null,
         val providerId: String? = null,
+        val intentId: String? = null,
     ) : AppRoute(
         path = "/swap" +
             "/${fromCryptoCurrency?.id?.value}" +

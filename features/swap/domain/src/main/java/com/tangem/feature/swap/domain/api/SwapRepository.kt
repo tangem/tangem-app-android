@@ -57,6 +57,7 @@ interface SwapRepository {
         refundExtraId: String? = null, // for cex only
         toExtraId: String? = null, // for networks with memo only
         customSlippage: BigDecimal? = null,
+        intentId: String? = null, // MCP exchange intent the transaction fulfils
     ): Either<ExpressDataError, SwapDataModel>
 
     // TODO: Add target error handling, remove either ([REDACTED_JIRA])

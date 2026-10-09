@@ -229,6 +229,7 @@ internal class DefaultSwapRepository(
         refundExtraId: String?, // for cex only
         toExtraId: String?, // for networks with memo only
         customSlippage: BigDecimal?,
+        intentId: String?, // MCP exchange intent the transaction fulfils
     ): Either<ExpressDataError, SwapDataModel> {
         return withContext(coroutineDispatcher.io) {
             try {
@@ -254,6 +255,7 @@ internal class DefaultSwapRepository(
                     toExtraId = toExtraId?.ifEmpty { null },
                     quoteId = null, // TODO add when implementing fixed rate in swap
                     slippage = ExpressSlippageConverter.toApi(customSlippage),
+                    intentId = intentId,
                 ).getOrThrow()
                 if (dataSignatureVerifier.verifySignature(response.signature, response.txDetailsJson)) {
                     val txDetails = parseTxDetails(response.txDetailsJson)

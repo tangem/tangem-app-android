@@ -9,6 +9,10 @@ import java.math.BigDecimal
 
 interface SwapComponent : ComposableContentComponent {
 
+    /**
+     * @property intentId the MCP exchange intent this swap fulfils. Sent with the swap's exchange-data requests, so
+     *   Express links the resulting transaction to the intent, for as long as this swap screen stays open.
+     */
     data class Params(
         val userWalletId: UserWalletId,
         val fromCryptoCurrency: CryptoCurrency? = null,
@@ -18,6 +22,7 @@ interface SwapComponent : ComposableContentComponent {
         val toCryptoCurrency: CryptoCurrency? = null,
         val fromAmount: BigDecimal? = null,
         val providerId: String? = null,
+        val intentId: String? = null,
     ) {
         /** Preferred position of the pre-selected currency on the swap screen. */
         enum class CurrencyPosition {
