@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+  <string name="tangempay_withdraw_bank_source_subtitle">%1$s · %2$s</string>
+</resources>
