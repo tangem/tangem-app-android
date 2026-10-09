@@ -37,7 +37,6 @@ import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationResult
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
 import com.tangem.domain.jointaccount.model.JointAccountJoinPayload
-import com.tangem.domain.jointaccount.model.JointAccountJoinResult
 import com.tangem.domain.jointaccount.model.JointAccountParticipant
 import com.tangem.domain.jointaccount.store.JointAccountInvitesStore
 import com.tangem.domain.models.StatusSource
@@ -214,7 +213,7 @@ internal class DefaultJointAccountRepositoryTest {
         val actual = repository.join(userWalletId = WALLET_ID, payload = joinPayload(), signature = SIGNATURE)
 
         // Assert
-        val expected = JointAccountJoinResult.Joined(account = createJointAccount(source = StatusSource.ACTUAL))
+        val expected = createJointAccount(source = StatusSource.ACTUAL).right()
         assertThat(actual).isEqualTo(expected)
         // The signature covers the canonical form of exactly these values — trimming any of them breaks it
         val body = bodySlot.captured
@@ -230,15 +229,14 @@ internal class DefaultJointAccountRepositoryTest {
     @Test
     fun `GIVEN conflict WHEN join THEN Conflict result`() = runTest {
         // Arrange — a spent invite and an already-registered address are the same 409; the domain resolves it
-        coEvery { jointAccountApi.joinJointAccount(any(), any()) } returns errorResponse(
-            code = ApiResponseError.HttpException.Code.CONFLICT,
-        )
+        val response = errorResponse<JointAccountDto>(code = ApiResponseError.HttpException.Code.CONFLICT)
+        coEvery { jointAccountApi.joinJointAccount(any(), any()) } returns response
 
         // Act
         val actual = repository.join(userWalletId = WALLET_ID, payload = joinPayload(), signature = SIGNATURE)
 
         // Assert
-        assertThat(actual).isEqualTo(JointAccountJoinResult.Conflict)
+        assertThat(actual).isEqualTo((response as ApiResponse.Error).cause.left())
     }
 
     @Test
@@ -343,14 +341,15 @@ internal class DefaultJointAccountRepositoryTest {
     @Test
     fun `GIVEN conflict response WHEN getInvitePreview THEN InvalidLink`() = runTest {
         // Arrange
-        coEvery { jointAccountApi.getJointAccountInvite(any(), any()) } returns
-            invitePreviewErrorResponse(code = ApiResponseError.HttpException.Code.CONFLICT)
+        val response = invitePreviewErrorResponse(code = ApiResponseError.HttpException.Code.CONFLICT)
+        coEvery { jointAccountApi.getJointAccountInvite(any(), any()) } returns response
 
         // Act
         val actual = repository.getInvitePreview(walletId = WALLET_ID, inviteId = INVITE_A)
 
         // Assert
-        assertThat(actual).isEqualTo(Either.Left(JointAccountInvitePreviewError.InvalidLink))
+        val cause = (response as ApiResponse.Error).cause
+        assertThat(actual).isEqualTo(Either.Left(JointAccountInvitePreviewError.InvalidLink(cause = cause)))
     }
 
     /** A link the backend does not know is as dead as one it refuses — retrying it can only fail again */
@@ -364,7 +363,8 @@ internal class DefaultJointAccountRepositoryTest {
         val actual = repository.getInvitePreview(walletId = WALLET_ID, inviteId = INVITE_A)
 
         // Assert
-        assertThat(actual).isEqualTo(Either.Left(JointAccountInvitePreviewError.InvalidLink))
+        val cause = (response as ApiResponse.Error).cause
+        assertThat(actual).isEqualTo(Either.Left(JointAccountInvitePreviewError.InvalidLink(cause = cause)))
     }
 
     /** A link opened right after a Quick Share transfer finds the phone still reconnecting: worth a retry, not a dead end */
