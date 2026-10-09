@@ -28,9 +28,7 @@ internal class DefaultBankOfframpOrderRepository @Inject constructor(
         request: BankOfframpOrderRequest,
         idempotencyKey: String,
     ): Either<BankOfframpError, BankOfframpOrderResult> = either {
-        val body = BankOfframpOrderRequestConverter.convert(
-            BankOfframpOrderRequestConverter.Input(request = request, idempotencyKey = idempotencyKey),
-        ).bind()
+        val body = BankOfframpOrderRequestConverter.convert(request).bind()
         val response = requestPerformer.performRequest(userWalletId) { authHeader ->
             tangemPayApi.createBankOfframpOrder(
                 authHeader = authHeader,
@@ -46,13 +44,14 @@ internal class DefaultBankOfframpOrderRepository @Inject constructor(
     override suspend fun getOrderState(
         userWalletId: UserWalletId,
         orderId: String,
+        request: BankOfframpOrderRequest,
     ): Either<BankOfframpError, BankOfframpOrderState> = either {
         val response = requestPerformer.performRequest(userWalletId) { authHeader ->
             tangemPayApi.getOrder(authHeader = authHeader, orderId = orderId)
         }.mapLeft { error -> error.toBankOfframpError(operation = "getOrderState") }.bind()
 
         val result = ensureNotNull(response.result) { emptyResult(operation = "getOrderState") }
-        BankOfframpOrderStateConverter.convert(result)
+        BankOfframpOrderStateConverter.convert(BankOfframpOrderStateConverter.Input(result = result, request = request))
     }
 
     override suspend fun submitSignature(

@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -25,6 +26,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayAdditionalCashbackUM
 import kotlinx.collections.immutable.persistentListOf
 
@@ -41,6 +43,7 @@ internal fun TangemPayAdditionalCashback(state: TangemPayAdditionalCashbackUM, m
                 text = resourceReference(R.string.tangempay_cashback_additional_title).resolveReference(),
                 style = TangemTheme.typography3.heading.small,
                 color = TangemTheme.colors3.text.primary,
+                modifier = Modifier.testTag(TangemPayTestTags.CASHBACK_ADDITIONAL_TITLE),
             )
         }
         Column(
