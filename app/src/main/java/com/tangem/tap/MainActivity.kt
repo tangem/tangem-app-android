@@ -301,7 +301,10 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         lockUserWalletsTimer = LockUserWalletsTimer(
             context = this,
             settingsRepository = settingsRepository,
-            coroutineScope = appScope + dispatchers.main,
+            // Rethrows like the former global main scope: a failure must not leave the wallets unlocked
+            coroutineScope = appScope +
+                dispatchers.main +
+                FeatureCoroutineExceptionHandler.create(from = "lockUserWalletsTimer"),
             userWalletsListRepository = userWalletsListRepository,
             clearAllHotWalletContextualUnlockUseCase = clearAllHotWalletContextualUnlockUseCase,
             passwordRequester = passwordRequester,
