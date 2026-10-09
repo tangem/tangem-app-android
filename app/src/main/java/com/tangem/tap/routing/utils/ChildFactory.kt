@@ -51,6 +51,7 @@ import com.tangem.features.tangempay.components.TangemPayHotWalletOnboardingComp
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.*
 import com.tangem.features.tokendetails.TokenDetailsComponent
+import com.tangem.features.moneyaccount.details.component.MoneyAccountMainComponent
 import com.tangem.features.moneyaccount.onboarding.component.MoneyAccountOnboardingComponent
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
@@ -131,6 +132,7 @@ internal class ChildFactory @Inject constructor(
     private val tangemPayWalletOnboardingComponentFactory: TangemPayHotWalletOnboardingComponent.Factory,
     private val tangemPayCampaignComponentFactory: TangemPayCampaignComponent.Factory,
     private val moneyAccountOnboardingComponentFactory: MoneyAccountOnboardingComponent.Factory,
+    private val moneyAccountMainComponentFactory: MoneyAccountMainComponent.Factory,
     private val jointAccountCreationComponentFactory: JointAccountCreationComponent.Factory,
     private val jointAccountJoinComponentFactory: JointAccountJoinComponent.Factory,
     private val jointAccountMembersComponentFactory: JointAccountMembersComponent.Factory,
@@ -815,6 +817,15 @@ internal class ChildFactory @Inject constructor(
                             MoneyAccountOnboardingComponent.Params.FromDetailsScreen
                     },
                     componentFactory = moneyAccountOnboardingComponentFactory,
+                )
+            }
+            is AppRoute.MoneyAccountMain -> {
+                createComponentChild(
+                    context = context,
+                    params = MoneyAccountMainComponent.Params(
+                        userWalletId = route.userWalletId,
+                    ),
+                    componentFactory = moneyAccountMainComponentFactory,
                 )
             }
             is AppRoute.Kyc -> {
