@@ -8,6 +8,7 @@ import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -15,6 +16,8 @@ import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetc
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.collectibles.usecase.CloseCollectiblesVaultUseCase
 import com.tangem.domain.collectibles.CollectiblesAccountError
+import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
+import com.tangem.domain.collectibles.delegate.HotDelegatePublicKey
 import com.tangem.domain.collectibles.vault.GachaVaultError
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.StatusSource
@@ -57,6 +60,8 @@ internal class CollectiblesMainModelTest {
     private val accountStatusSupplier: CollectiblesAccountStatusSupplier = mockk()
     private val accountStatusFetcher: CollectiblesAccountStatusFetcher = mockk()
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
+    private val hotDelegate: CollectiblesHotDelegate = mockk()
+    private val clipboardManager: ClipboardManager = mockk(relaxed = true)
 
     private val coldWallet = MockUserWalletFactory.create()
 
@@ -76,6 +81,8 @@ internal class CollectiblesMainModelTest {
             accountStatusSupplier,
             accountStatusFetcher,
             getSelectedAppCurrencyUseCase,
+            hotDelegate,
+            clipboardManager,
         )
         walletsFlow = MutableStateFlow(listOf(coldWallet, selectedWallet))
         statusFlow = MutableStateFlow(CollectiblesAccountStatusValue.Loading)
@@ -83,6 +90,7 @@ internal class CollectiblesMainModelTest {
         every { accountStatusSupplier(coldWallet.walletId) } returns statusFlow
         every { getSelectedAppCurrencyUseCase.invokeOrDefault() } returns MutableStateFlow(AppCurrency.Default)
         coEvery { accountStatusFetcher(any()) } returns Unit.right()
+        coEvery { hotDelegate.getPublicKeyOrNull(any()) } returns HotDelegatePublicKey(HOT_DELEGATE)
     }
 
     @Nested
@@ -249,6 +257,40 @@ internal class CollectiblesMainModelTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class HotDelegate {
+
+        @Test
+        fun `GIVEN a hot delegate WHEN its menu item clicked THEN the full address is copied`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.menu.items.single { it.id == "hot_delegate" }.onClick()
+
+            // Assert
+            verify(exactly = 1) { clipboardManager.setText(text = HOT_DELEGATE, isSensitive = false) }
+            assertThat(model.uiState.value.menu.isShown).isFalse()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN no hot delegate WHEN menu built THEN the item is absent`() = runTest {
+            // Arrange
+            coEvery { hotDelegate.getPublicKeyOrNull(any()) } returns null
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.menu.items.none { it.id == "hot_delegate" }).isTrue()
+            model.onDestroy()
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class CloseAccount {
 
         @Test
@@ -334,6 +376,8 @@ internal class CollectiblesMainModelTest {
             collectiblesAccountStatusSupplier = accountStatusSupplier,
             collectiblesAccountStatusFetcher = accountStatusFetcher,
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
+            hotDelegate = hotDelegate,
+            clipboardManager = clipboardManager,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
         )
     }
@@ -357,6 +401,8 @@ internal class CollectiblesMainModelTest {
     }
 
     private companion object {
+
+        const val HOT_DELEGATE = "3hTCy6rJu8iXNWnFMB741HrVnbS5bViyfguEAMF5iT2P"
 
         val PRICED_VAULT = CollectiblesAccountStatusValue.Onboarded(
             source = StatusSource.ACTUAL,
