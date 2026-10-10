@@ -28,7 +28,6 @@ dependencies {
     implementation(projects.domain.promo.models)
     implementation(projects.domain.feedback)
     implementation(projects.domain.feedback.models)
-    implementation(projects.domain.settings)
     implementation(projects.domain.markets.models)
 
     /** Data */
@@ -78,6 +77,6 @@ dependencies {
     testImplementation(projects.test.core)
     testImplementation(projects.common.test)
     testImplementation(deps.arrow.core)
-    testImplementation(deps.kotlin.datetime)
     testImplementation(tangemDeps.blockchain)
+    testImplementation(tangemDeps.hot.core)
 }

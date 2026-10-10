@@ -13,6 +13,7 @@ dependencies {
 
     // region Kotlin
     implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.serialization.core)
     // endregion
 
     // region Other libraries

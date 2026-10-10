@@ -100,6 +100,7 @@ dependencies {
     api(projects.domain.qrScanning)
     api(projects.domain.quotes)
     api(projects.domain.settings)
+    api(projects.domain.socialLogin)
     api(projects.domain.staking)
     api(projects.domain.stories)
     api(projects.domain.tokens)

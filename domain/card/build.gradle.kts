@@ -30,7 +30,6 @@ dependencies {
     // endregion
 
     // region Domain
-    implementation(projects.domain.core)
     implementation(projects.domain.demo.models)
     // endregion
 
