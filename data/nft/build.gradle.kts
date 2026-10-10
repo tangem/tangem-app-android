@@ -16,6 +16,8 @@ dependencies {
 
     // region Kotlin
     implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.serialization)
+    implementation(deps.kotlin.serialization.core)
     // endregion
 
     // region Other libraries
@@ -60,6 +62,7 @@ dependencies {
     // endregion
 
     // region Tests
+    testImplementation(deps.moshi.adapters)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)

@@ -26,6 +26,7 @@ dependencies {
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
     api(deps.jodatime)
     api(deps.kotlin.coroutines)
+    api(deps.kotlin.serialization.core)
 
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
