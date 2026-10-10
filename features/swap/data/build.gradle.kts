@@ -61,5 +61,6 @@ dependencies {
     /** Test */
     testImplementation(projects.test.core)
     testImplementation(projects.common.test)
+    testImplementation(projects.domain.card)
     testRuntimeOnly(deps.orgJson)
 }

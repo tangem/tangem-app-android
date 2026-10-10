@@ -30,6 +30,7 @@ dependencies {
     implementation(deps.kotlin.datetime)
     implementation(deps.okHttp)
     implementation(deps.retrofit)
+    implementation(tangemDeps.hot.core)
 
     testImplementation(projects.test.core)
     testImplementation(deps.okio)

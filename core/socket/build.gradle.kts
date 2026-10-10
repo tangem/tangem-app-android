@@ -9,6 +9,7 @@ dependencies {
     api(deps.kotlin.serialization)
     api(deps.okHttp)
     implementation(projects.core.utils)
+    implementation(deps.okio)
 
     testImplementation(projects.core.remote)
     testImplementation(deps.test.junit5)
