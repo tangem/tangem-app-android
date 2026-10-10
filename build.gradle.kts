@@ -370,6 +370,13 @@ dependencyAnalysis {
                 exclude(":core:error")
             }
         }
+        // The processor tests compile source snippets that import com.tangem.core.socket with kctfork's
+        // inheritClassPath, so :core:socket is needed on the test classpath without any bytecode reference.
+        project(":core:socket:processor") {
+            onUnusedDependencies {
+                exclude(":core:socket")
+            }
+        }
     }
 }
 
