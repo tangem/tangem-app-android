@@ -22,6 +22,8 @@ dependencies {
 
     // region Kotlin
     api(deps.kotlin.coroutines)
+    implementation(deps.kotlin.serialization)
+    implementation(deps.kotlin.serialization.core)
     // endregion
 
     // region AndroidX
