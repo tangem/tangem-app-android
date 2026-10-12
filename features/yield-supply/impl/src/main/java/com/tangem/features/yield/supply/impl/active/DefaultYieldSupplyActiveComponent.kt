@@ -32,8 +32,10 @@ import com.tangem.features.yield.supply.impl.active.ui.YieldSupplyActiveContent
 import com.tangem.features.yield.supply.impl.active.ui.YieldSupplyActiveTitle
 import com.tangem.features.yield.supply.impl.apy.about.YieldSupplyAboutApyComponent
 import com.tangem.features.yield.supply.impl.chart.DefaultYieldSupplyChartComponent
+import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartPeriod
 import com.tangem.features.yield.supply.impl.incentives.banner.DefaultYieldSupplyRewardsBannerComponent
 import com.tangem.features.yield.supply.impl.incentives.claim.YieldSupplyClaimComponent
+import com.tangem.features.yield.supply.impl.incentives.claim.result.YieldSupplyClaimResultComponent
 import com.tangem.features.yield.supply.impl.subcomponents.approve.YieldSupplyApproveComponent
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.YieldSupplyStopEarningComponent
 import dagger.assisted.Assisted
@@ -53,6 +55,8 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
         appComponentContext = child("chartComponent"),
         params = DefaultYieldSupplyChartComponent.Params(
             cryptoCurrency = model.cryptoCurrencyStatusFlow.value.currency as CryptoCurrency.Token,
+            // The inline chart carries no period picker, and the design draws it over months, not days.
+            initialPeriod = YieldSupplyChartPeriod.ThreeMonths,
         ),
     )
 
@@ -94,45 +98,48 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
         val isBalanceHidden by model.balanceHiddenFlow.collectAsStateWithLifecycle()
         val slotState by bottomSheetSlot.subscribeAsState()
 
-        Column(
-            modifier = Modifier
-                .background(TangemTheme.colors.background.tertiary)
-                .fillMaxSize()
-                .systemBarsPadding(),
-        ) {
-            YieldSupplyActiveTitle(onCloseClick = appRouter::pop)
+        // The claim result draws itself full-bleed over the screen, so the slot is stacked rather than placed after.
+        Box(modifier = modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .background(TangemTheme.colors.background.tertiary)
+                    .fillMaxSize()
+                    .systemBarsPadding(),
+            ) {
+                YieldSupplyActiveTitle(onCloseClick = appRouter::pop)
 
-            Box(modifier = Modifier.weight(1f)) {
-                YieldSupplyActiveContent(
-                    state = state,
-                    isBalanceHidden = isBalanceHidden,
-                    chartComponent = chartComponent,
-                    marketingBannerComponent = marketingBannerComponent,
-                    rewardsBannerComponent = rewardsBannerComponent,
-                    onReadMoreClick = model::onReadMoreClick,
-                )
+                Box(modifier = Modifier.weight(1f)) {
+                    YieldSupplyActiveContent(
+                        state = state,
+                        isBalanceHidden = isBalanceHidden,
+                        chartComponent = chartComponent,
+                        marketingBannerComponent = marketingBannerComponent,
+                        rewardsBannerComponent = rewardsBannerComponent,
+                        onReadMoreClick = model::onReadMoreClick,
+                    )
 
-                Fade(
-                    backgroundColor = TangemTheme.colors.background.tertiary,
-                    modifier = Modifier.align(Alignment.BottomCenter),
+                    Fade(
+                        backgroundColor = TangemTheme.colors.background.tertiary,
+                        modifier = Modifier.align(Alignment.BottomCenter),
+                    )
+                }
+
+                SecondaryButton(
+                    text = stringResourceSafe(R.string.yield_module_stop_earning),
+                    onClick = model::onStopEarning,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            start = 16.dp,
+                            end = 16.dp,
+                            bottom = 16.dp,
+                        )
+                        .testTag(YieldSupplyTestTags.STOP_EARNING_BUTTON),
                 )
             }
 
-            SecondaryButton(
-                text = stringResourceSafe(R.string.yield_module_stop_earning),
-                onClick = model::onStopEarning,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        start = 16.dp,
-                        end = 16.dp,
-                        bottom = 16.dp,
-                    )
-                    .testTag(YieldSupplyTestTags.STOP_EARNING_BUTTON),
-            )
+            slotState.child?.instance?.BottomSheet()
         }
-
-        slotState.child?.instance?.BottomSheet()
     }
 
     private fun createChild(
@@ -160,7 +167,17 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
             params = YieldSupplyClaimComponent.Params(
                 userWallet = model.userWallet,
                 cryptoCurrencyStatusFlow = model.cryptoCurrencyStatusFlow,
+                onSubmitted = model::onClaimSubmitted,
                 onDismiss = model::onClaimDismiss,
+            ),
+        )
+        YieldSupplyActiveRoute.ClaimResult -> YieldSupplyClaimResultComponent(
+            appComponentContext = factoryContext,
+            params = YieldSupplyClaimResultComponent.Params(
+                state = model.claimResultFlow,
+                onGoToTokenClick = model::onGoToTokenClick,
+                onGoToYieldClick = model::onGoToYieldClick,
+                onDismiss = model::onClaimResultDismiss,
             ),
         )
         YieldSupplyActiveRoute.Approve -> YieldSupplyApproveComponent(

@@ -30,6 +30,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.incentives.claim.model.YieldSupplyClaimModel
+import com.tangem.features.yield.supply.impl.incentives.claim.result.entity.YieldSupplyClaimResultUM
 import com.tangem.features.yield.supply.impl.incentives.claim.ui.YieldSupplyClaimContent
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsComponent
 import kotlinx.coroutines.flow.StateFlow
@@ -123,6 +124,7 @@ internal class YieldSupplyClaimComponent(
     data class Params(
         val userWallet: UserWallet,
         val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
+        val onSubmitted: (YieldSupplyClaimResultUM) -> Unit,
         val onDismiss: () -> Unit,
     )
 }

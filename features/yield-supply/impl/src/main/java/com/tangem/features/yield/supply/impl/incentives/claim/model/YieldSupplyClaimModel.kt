@@ -31,6 +31,7 @@ import com.tangem.features.yield.supply.impl.common.formatter.YieldSupplyAmountF
 import com.tangem.features.yield.supply.impl.common.formatter.formatUsd
 import com.tangem.features.yield.supply.impl.incentives.claim.YieldSupplyClaimComponent
 import com.tangem.features.yield.supply.impl.incentives.claim.entity.YieldSupplyClaimUM
+import com.tangem.features.yield.supply.impl.incentives.claim.result.entity.YieldSupplyClaimResultUM
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsComponent
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsUpdateTrigger
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.entity.YieldSupplyNotificationData
@@ -204,25 +205,35 @@ internal class YieldSupplyClaimModel @Inject constructor(
                     },
                 )
             },
+            // No dismissal here: the result sheet takes this sheet's place in the same slot, and dismissing
+            // afterwards would close it again before it was ever drawn.
             ifRight = { transactionHash -> onClaimSubmitted(transactionHash) },
         )
     }
 
     /**
-     * Hands the claim over to the tracker: the transaction is still pending, and neither this model nor this sheet
-     * is alive long enough to see what becomes of it.
+     * Hands the claim over to the tracker and the screen behind the sheet: the transaction is still pending, and
+     * neither this model nor this sheet is alive long enough to see what becomes of it.
      */
     private fun onClaimSubmitted(transactionHash: String) {
-        claimContext?.let { context ->
-            yieldSupplyClaimTracker.track(
-                userWalletId = params.userWallet.walletId,
-                cryptoCurrency = context.token,
-                chainId = context.chainId,
-                userAddress = context.userAddress,
-                transactionHash = transactionHash,
-            )
-        }
-        params.onDismiss()
+        val context = claimContext ?: return
+        val state = uiState.value
+
+        yieldSupplyClaimTracker.track(
+            userWalletId = params.userWallet.walletId,
+            cryptoCurrency = context.token,
+            chainId = context.chainId,
+            userAddress = context.userAddress,
+            transactionHash = transactionHash,
+        )
+        params.onSubmitted(
+            YieldSupplyClaimResultUM(
+                status = YieldSupplyClaimResultUM.Status.Submitted,
+                total = state.total,
+                serviceFee = state.serviceFee,
+                networkFee = state.networkFee,
+            ),
+        )
     }
 
     /**

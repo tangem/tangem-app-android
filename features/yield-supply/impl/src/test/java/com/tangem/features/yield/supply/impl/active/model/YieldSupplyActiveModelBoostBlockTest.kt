@@ -25,11 +25,13 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyMinAmountUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyActiveComponent
 import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
@@ -106,7 +108,12 @@ class YieldSupplyActiveModelBoostBlockTest {
         yieldSupplyGetDustMinAmountUseCase = yieldSupplyGetDustMinAmountUseCase,
         getYieldBoostStatusUseCase = getYieldBoostStatusUseCase,
         boostStoryPreloader = boostStoryPreloader,
+        yieldSupplyClaimTracker = claimTracker,
     )
+
+    private val claimTracker: YieldSupplyClaimTracker = mockk {
+        every { outcomes } returns MutableSharedFlow()
+    }
 
     @Test
     fun `GIVEN cached status NotStarted WHEN model created THEN force refreshes and shows boost text`() = runTest {
