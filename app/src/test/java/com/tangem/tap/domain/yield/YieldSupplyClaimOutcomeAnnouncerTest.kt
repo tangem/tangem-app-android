@@ -43,21 +43,6 @@ internal class YieldSupplyClaimOutcomeAnnouncerTest {
     }
 
     @Test
-    fun `GIVEN a claim that reverted WHEN it is reported THEN the failure is shown wherever the user is`() = runTest {
-        // Arrange
-        val message = slot<UiMessage>()
-        startAnnouncer()
-
-        // Act
-        outcomes.emit(outcome(YieldSupplyTransactionOutcome.Reverted))
-        runCurrent()
-
-        // Assert
-        verify(exactly = 1) { uiMessageSender.send(capture(message)) }
-        assertThat(message.captured).isInstanceOf(DialogMessage::class.java)
-    }
-
-    @Test
     fun `GIVEN a claim that reverted WHEN it is reported THEN the dialog names it and offers support`() = runTest {
         // Arrange
         val message = slot<UiMessage>()

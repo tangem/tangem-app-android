@@ -6,6 +6,7 @@ import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.domain.yield.supply.incentives.YieldIncentivesRepository
 import com.tangem.domain.yield.supply.models.YieldSupplyClaimOutcome
 import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.mock.yield.MockYieldSupply
 import io.mockk.clearMocks
@@ -14,16 +15,19 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class YieldSupplyClaimTrackerTest {
 
     private val transactionRepository: YieldSupplyTransactionRepository = mockk()
@@ -79,7 +83,15 @@ internal class YieldSupplyClaimTrackerTest {
         runCurrent()
 
         // Assert
-        assertThat(outcomes.single().outcome).isEqualTo(YieldSupplyTransactionOutcome.Reverted)
+        assertThat(outcomes).containsExactly(
+            YieldSupplyClaimOutcome(
+                userWalletId = USER_WALLET_ID,
+                cryptoCurrencyId = TOKEN.id,
+                chainId = CHAIN_ID,
+                userAddress = USER_ADDRESS,
+                outcome = YieldSupplyTransactionOutcome.Reverted,
+            ),
+        )
         coVerify(exactly = 0) { incentivesRepository.invalidateUserCache(any(), any()) }
     }
 
@@ -132,36 +144,22 @@ internal class YieldSupplyClaimTrackerTest {
         coVerify(exactly = 1) { transactionRepository.getTransactionOutcome(USER_WALLET_ID, TOKEN, TX_HASH) }
     }
 
-    @Test
-    fun `GIVEN a claim on one module WHEN another module is asked about THEN it does not read as in flight`() =
-        runTest {
-            // Arrange
-            coEvery { transactionRepository.getTransactionOutcome(USER_WALLET_ID, TOKEN, TX_HASH) } returns null
-            val tracker = createTracker(testScope = this)
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN a claim in flight WHEN a module is asked about THEN only that module reads as in flight`(
+        model: InFlightModel,
+    ) = runTest {
+        // Arrange
+        coEvery { transactionRepository.getTransactionOutcome(USER_WALLET_ID, TOKEN, TX_HASH) } returns null
+        val tracker = createTracker(testScope = this)
+        tracker.track()
 
-            // Act
-            tracker.track()
+        // Act
+        val actual = tracker.isClaimInFlight(model.chainId, model.userAddress).first()
 
-            // Assert
-            assertThat(tracker.isClaimInFlight(OTHER_CHAIN_ID, USER_ADDRESS).first()).isFalse()
-            assertThat(tracker.isClaimInFlight(CHAIN_ID, OTHER_USER_ADDRESS).first()).isFalse()
-            assertThat(tracker.isClaimInFlight(CHAIN_ID, USER_ADDRESS).first()).isTrue()
-        }
-
-    /** One claim takes every reward of the module, so a second token on the same chain must not offer another. */
-    @Test
-    fun `GIVEN a claim in flight WHEN the same module is asked about by address case THEN it reads as in flight`() =
-        runTest {
-            // Arrange
-            coEvery { transactionRepository.getTransactionOutcome(USER_WALLET_ID, TOKEN, TX_HASH) } returns null
-            val tracker = createTracker(testScope = this)
-
-            // Act
-            tracker.track()
-
-            // Assert
-            assertThat(tracker.isClaimInFlight(CHAIN_ID, USER_ADDRESS.uppercase()).first()).isTrue()
-        }
+        // Assert
+        assertThat(actual).isEqualTo(model.isInFlight)
+    }
 
     @Test
     fun `GIVEN a claim of one token WHEN the same module is claimed from another token THEN it is not followed twice`() =
@@ -192,6 +190,13 @@ internal class YieldSupplyClaimTrackerTest {
             }
         }
 
+    private fun provideTestModels() = listOf(
+        InFlightModel(chainId = CHAIN_ID, userAddress = USER_ADDRESS, isInFlight = true),
+        InFlightModel(chainId = CHAIN_ID, userAddress = USER_ADDRESS.uppercase(), isInFlight = true),
+        InFlightModel(chainId = OTHER_CHAIN_ID, userAddress = USER_ADDRESS, isInFlight = false),
+        InFlightModel(chainId = CHAIN_ID, userAddress = OTHER_USER_ADDRESS, isInFlight = false),
+    )
+
     private fun createTracker(testScope: TestScope) = YieldSupplyClaimTracker(
         yieldSupplyTransactionRepository = transactionRepository,
         yieldIncentivesRepository = incentivesRepository,
@@ -217,6 +222,8 @@ internal class YieldSupplyClaimTrackerTest {
 
         return collected
     }
+
+    data class InFlightModel(val chainId: Int, val userAddress: String, val isInFlight: Boolean)
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("00")
