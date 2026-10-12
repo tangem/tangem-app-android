@@ -282,15 +282,15 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
     private suspend fun onFailure(provider: SocialLoginProvider, error: SocialLoginError, attemptId: String) {
         socialLoginUseCase.signOut(provider)
 
-        // an abandoned backup was already reported when its retry was offered
-        if (error != SocialLoginError.ConsentDeclined && error != SocialLoginError.BackupAbandoned) {
-            analyticsEventHandler.send(SocialLoginAnalyticsEvents.ErrorShown(errorMessage = error.toAnalyticsMessage()))
-        }
+        // the viewer backed out on purpose, and an abandoned backup was already reported when its retry was offered
+        val isSilent = error == SocialLoginError.SignInCanceled ||
+            error == SocialLoginError.ConsentDeclined ||
+            error == SocialLoginError.BackupAbandoned
+        if (isSilent) return
+
+        analyticsEventHandler.send(SocialLoginAnalyticsEvents.ErrorShown(errorMessage = error.toAnalyticsMessage()))
 
         when (error) {
-            SocialLoginError.ConsentDeclined,
-            SocialLoginError.BackupAbandoned,
-            -> Unit
             SocialLoginError.BackupNotFound,
             SocialLoginError.InvalidBackupFile,
             is SocialLoginError.UnsupportedBackupVersion,
