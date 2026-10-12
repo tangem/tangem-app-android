@@ -45,7 +45,6 @@ import com.tangem.features.yield.supply.impl.subcomponents.notifications.entity.
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.YieldSupplyStopEarningComponent
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.model.transformer.YieldSupplyStopEarningFeeContentTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
@@ -156,11 +155,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
 
         modelScope.launch(dispatchers.default) {
             val withdrawalTransaction = yieldSupplyFeeUM.transactionDataList.first()
-            // Guarded as a whole: the claim is optional work, and anything thrown on its way would either take the
-            // process down or leave the sheet stuck sending, for a withdrawal that is still perfectly able to go out.
-            runSuspendCatching {
-                claimRewardsBeforeWithdraw(withdrawalFee = withdrawalTransaction.fee?.amount?.value.orZero())
-            }.onFailure { TangemLogger.e("Claim before withdrawal failed", it) }
+            claimRewardsBeforeWithdraw(withdrawalFee = withdrawalTransaction.fee?.amount?.value.orZero())
 
             sendTransactionUseCase(
                 txData = withdrawalTransaction,
@@ -205,8 +200,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
      * This is the fallback for a withdrawal the claim sheet was never offered for; once the owner has been asked,
      * their answer stands and nothing is claimed behind it. It is an attempt and nothing more: a claim that cannot
      * be prepared, is declined at the card, or is rejected by the node leaves a log line and the withdrawal
-     * untouched. The two signatures are sequential and separate on purpose — there is no combined calldata for
-     * them, so presenting them as one transaction would be a lie.
+     * untouched.
      */
     private suspend fun claimRewardsBeforeWithdraw(withdrawalFee: BigDecimal) {
         if (params.wasClaimOffered) {
