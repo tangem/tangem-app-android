@@ -833,6 +833,8 @@
   <string name="express_legal_one_placeholder">By using swap functionality, you agree to the provider’s %s</string>
   <string name="express_legal_two_placeholders">By using swap functionality, you agree to the provider’s %1$s and %2$s.</string>
   <string name="express_more_providers_soon">More providers will be available soon</string>
+  <string name="express_onramp_id">Onramp ID</string>
+  <string name="express_onramp_id_copied">Onramp ID copied</string>
   <string name="express_onramp_restrictions_amount_error">You can’t buy tokens due to regional restrictions</string>
   <string name="express_onramp_restrictions_text">Some of the providers might be unavailable</string>
   <string name="express_onramp_restrictions_title">Regional purchase restrictions</string>
@@ -859,6 +861,8 @@
   <string name="express_status_hide_button_text">Hide this transaction</string>
   <string name="express_status_hide_dialog_text">If you hide this transaction, it won’t appear in the status screen anymore. If you just want to close the status screen and return later, simply swipe it away instead.</string>
   <string name="express_status_hide_dialog_title">Hide Transaction Status?</string>
+  <string name="express_swap_id">Swap ID</string>
+  <string name="express_swap_id_copied">Swap ID copied</string>
   <string name="express_swap_not_supported_text">This token is not supported. Please choose a different token to swap.</string>
   <string name="express_swap_not_supported_title">%s is not supported</string>
   <string name="express_swap_restrictions_text">Swap provider is restricted</string>
