@@ -27,6 +27,10 @@ data class CollectibleGachaMachine(
     val categoryId: String,
 ) {
 
+    /** What one spin costs: the backend sends the price and the fee, not their sum. */
+    val total: BigDecimal
+        get() = price + feeAmount
+
     /** Drop chance per rarity tier, in percent. */
     data class Odds(
         val common: Int,

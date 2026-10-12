@@ -14,7 +14,7 @@ import com.tangem.utils.transformer.Transformer
 
 internal class CollectiblesUpdateMachineDetailsTransformer(
     val machine: CollectibleGachaMachine,
-    val onBackClick: () -> Unit,
+    val onCloseClick: () -> Unit,
     val onBuyClick: () -> Unit,
     val onTurboCheckedChange: (Boolean) -> Unit,
     val onTurboInfoClick: () -> Unit,
@@ -23,7 +23,7 @@ internal class CollectiblesUpdateMachineDetailsTransformer(
         val previousContent = prevState as? CollectiblesMachineDetailsUM.Content
 
         return CollectiblesMachineDetailsUM.Content(
-            onBackClick = onBackClick,
+            onCloseClick = onCloseClick,
             title = stringReference(machine.shortName.ifBlank { machine.name }),
             imageUrl = machine.imageUrl,
             tiers = CollectiblesMachineTiersConverter.convert(machine),

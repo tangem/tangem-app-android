@@ -18,7 +18,7 @@ import org.junit.jupiter.params.ParameterizedTest
 internal class CollectiblesPrizePoolTransformerTest {
 
     private val content = CollectiblesMachineDetailsUM.Content(
-        onBackClick = {},
+        onCloseClick = {},
         title = stringReference("Elite pack"),
         imageUrl = null,
         tiers = persistentListOf(),
@@ -115,7 +115,7 @@ internal class CollectiblesPrizePoolTransformerTest {
     @Test
     fun `GIVEN the machine has not arrived WHEN transform THEN the state is untouched`() {
         // Arrange
-        val loading = CollectiblesMachineDetailsUM.Loading(onBackClick = {})
+        val loading = CollectiblesMachineDetailsUM.Loading(onCloseClick = {})
 
         // Act
         val actual = CollectiblesPrizePoolTransformer(createNftsBatchListState(), onReloadClick = {})
