@@ -78,7 +78,7 @@ internal class YieldSupplyClaimComponent(
                     title = resourceReference(CoreResR.string.yield_module_claim_sheet_title),
                     subtitle = resourceReference(CoreResR.string.yield_module_claim_sheet_subtitle),
                     endIconRes = R.drawable.ic_close_24,
-                    onEndClick = params.onDismiss,
+                    onEndClick = model::onCloseClick,
                 )
             },
             footer = {
