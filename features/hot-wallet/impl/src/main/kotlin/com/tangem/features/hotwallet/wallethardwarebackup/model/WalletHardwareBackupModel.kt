@@ -20,10 +20,13 @@ import com.tangem.core.ui.components.bottomsheets.message.primaryButton
 import com.tangem.core.ui.components.label.entity.LabelStyle
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.cloudbackup.usecase.GetCloudBackupStatusUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
+import com.tangem.domain.sociallogin.models.SocialLoginProvider
+import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.analytics.toAnalyticsState
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
@@ -60,6 +63,7 @@ internal class WalletHardwareBackupModel @Inject constructor(
     private val getCloudBackupStatusUseCase: GetCloudBackupStatusUseCase,
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
     private val socialLoginFeatureToggles: SocialLoginFeatureToggles,
+    private val isSocialBackupCompletedUseCase: IsSocialBackupCompletedUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<WalletHardwareBackupComponent.Params>()
@@ -99,14 +103,17 @@ internal class WalletHardwareBackupModel @Inject constructor(
         super.onDestroy()
     }
 
-    private fun saveSeedPhraseBeforeUpgradeBS(cloudBackupState: AnalyticsParam.CloudBackupState?) = run {
+    private fun saveSeedPhraseBeforeUpgradeBS(
+        cloudBackupState: AnalyticsParam.CloudBackupState?,
+        isSocialBackedUp: Boolean,
+    ) = run {
         analyticsEventHandler.send(
             WalletSettingsAnalyticEvents.NoticeBackupFirst(
                 source = AnalyticsParam.ScreensSources.HardwareWallet.value,
                 action = WalletSettingsAnalyticEvents.NoticeBackupFirst.Action.Upgrade,
                 cloudBackupState = cloudBackupState,
                 isBackedUp = false.takeIf { hotWalletFeatureToggles.isGoogleDriveBackupEnabled },
-                isSocialBackedUp = false.takeIf { socialLoginFeatureToggles.isSocialLoginEnabled },
+                isSocialBackedUp = isSocialBackedUp.takeIf { socialLoginFeatureToggles.isSocialLoginEnabled },
             ),
         )
         bottomSheetMessage {
@@ -116,7 +123,14 @@ internal class WalletHardwareBackupModel @Inject constructor(
                     backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
                 }
                 title = resourceReference(R.string.hw_upgrade_save_seed_title)
-                body = resourceReference(R.string.hw_upgrade_save_seed_description)
+                body = if (isSocialBackedUp) {
+                    resourceReference(
+                        R.string.hw_upgrade_save_seed_description_social,
+                        wrappedList(SocialLoginProvider.Google.displayName),
+                    )
+                } else {
+                    resourceReference(R.string.hw_upgrade_save_seed_description)
+                }
             }
             primaryButton {
                 text = resourceReference(R.string.hw_upgrade_save_seed_action)
@@ -146,10 +160,16 @@ internal class WalletHardwareBackupModel @Inject constructor(
         if (userWallet is UserWallet.Hot) {
             analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonUpgradeCurrent())
             modelScope.launch {
-                // Any backup will do, not the seed phrase alone: a wallet kept by a cloud backup or by
-                // social recovery is just as restorable after the upgrade.
-                if (!isWalletBackedUpUseCase(userWallet)) {
-                    messageSender.send(saveSeedPhraseBeforeUpgradeBS(resolveCloudBackupState()))
+                // Social recovery does not survive the upgrade: the account is released for a new wallet, and
+                // signing in no longer restores this one. So for a social wallet only the seed phrase counts.
+                val isSocialBackedUp = isSocialBackupCompletedUseCase(userWallet.walletId)
+                val isNoticeNeeded = if (isSocialBackedUp) {
+                    !userWallet.backedUp
+                } else {
+                    !isWalletBackedUpUseCase(userWallet)
+                }
+                if (isNoticeNeeded) {
+                    messageSender.send(saveSeedPhraseBeforeUpgradeBS(resolveCloudBackupState(), isSocialBackedUp))
                 } else {
                     val hotWalletId = userWallet.hotWalletId
                     when (hotWalletId.authType) {

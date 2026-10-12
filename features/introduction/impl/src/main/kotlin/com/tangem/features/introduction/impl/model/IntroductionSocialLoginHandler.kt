@@ -78,7 +78,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
             icon = WalletOptionUM.Icon.Image(CoreUiR.drawable.img_google_32),
             title = resourceReference(
                 id = CoreResR.string.introduction_create_wallet_social_title,
-                formatArgs = wrappedList(provider.displayName()),
+                formatArgs = wrappedList(provider.displayName),
             ),
             description = resourceReference(CoreResR.string.introduction_create_wallet_social_description),
             isEnabled = isEnabled,
@@ -151,11 +151,11 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
     ): SocialLoginConsentPrompt = SocialLoginConsentPrompt(
         title = resourceReference(
             id = CoreResR.string.social_login_consent_title,
-            formatArgs = wrappedList(provider.displayName()),
+            formatArgs = wrappedList(provider.displayName),
         ),
         description = resourceReference(
             id = CoreResR.string.social_login_consent_description,
-            formatArgs = wrappedList(provider.displayName()),
+            formatArgs = wrappedList(provider.displayName),
         ) + stringReference(" ") + styledResourceReference(
             id = CoreResR.string.social_login_consent_learn_more,
             spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.primary) },
@@ -305,7 +305,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
                 title = resourceReference(CoreResR.string.social_login_error_cloud_access_title),
                 message = resourceReference(
                     id = CoreResR.string.social_login_error_cloud_access_description,
-                    formatArgs = wrappedList(provider.cloudName()),
+                    formatArgs = wrappedList(provider.cloudName),
                 ),
                 attemptId = attemptId,
             )
@@ -375,7 +375,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
     }
 
     private fun providerReference(@StringRes id: Int, provider: SocialLoginProvider): TextReference =
-        resourceReference(id = id, formatArgs = wrappedList(provider.displayName()))
+        resourceReference(id = id, formatArgs = wrappedList(provider.displayName))
 
     private fun SocialLoginError.toAnalyticsMessage(): String = when (this) {
         SocialLoginError.BackupNotFound,
