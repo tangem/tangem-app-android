@@ -9,18 +9,18 @@ internal class MerklClaimCallDataTest {
     @Test
     fun `GIVEN prefixed payload WHEN decoded THEN method id is its selector`() {
         // Act
-        val actual = MerklClaimCallData.fromHex("0xc65e6dcfdeadbeef")
+        val actual = MerklClaimCallData.fromHex("0xb4701e3edeadbeef")
 
         // Assert
-        assertThat(actual.methodId).isEqualTo("0xc65e6dcf")
-        assertThat(actual.data).isEqualTo(byteArrayOf(-58, 94, 109, -49, -34, -83, -66, -17))
+        assertThat(actual.methodId).isEqualTo("0xb4701e3e")
+        assertThat(actual.data).isEqualTo(byteArrayOf(-76, 112, 30, 62, -34, -83, -66, -17))
     }
 
     @Test
     fun `GIVEN unprefixed payload WHEN decoded THEN it is the same call data`() {
         // Act
-        val prefixed = MerklClaimCallData.fromHex("0xc65e6dcf")
-        val bare = MerklClaimCallData.fromHex("c65e6dcf")
+        val prefixed = MerklClaimCallData.fromHex("0xb4701e3e")
+        val bare = MerklClaimCallData.fromHex("b4701e3e")
 
         // Assert
         assertThat(bare).isEqualTo(prefixed)
@@ -31,16 +31,16 @@ internal class MerklClaimCallDataTest {
     @Test
     fun `GIVEN different payloads WHEN compared THEN they are not equal`() {
         // Act
-        val actual = MerklClaimCallData.fromHex("0xc65e6dcf")
+        val actual = MerklClaimCallData.fromHex("0xb4701e3e")
 
         // Assert
-        assertThat(actual).isNotEqualTo(MerklClaimCallData.fromHex("0xc65e6dce"))
+        assertThat(actual).isNotEqualTo(MerklClaimCallData.fromHex("0xbebc896c"))
     }
 
     @Test
     fun `GIVEN evm blockchain WHEN validated THEN only evm is accepted`() {
         // Arrange
-        val callData = MerklClaimCallData.fromHex("0xc65e6dcf")
+        val callData = MerklClaimCallData.fromHex("0xb4701e3e")
 
         // Act / Assert
         assertThat(callData.validate(Blockchain.Ethereum)).isTrue()
