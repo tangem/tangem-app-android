@@ -162,6 +162,26 @@ internal class YieldSupplyActiveModelClaimOutcomeTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN a sheet opened over the result WHEN the claim reverts THEN that sheet is left alone`() = runTest {
+        // Arrange
+        val model = createModel()
+        val slot = FakeSlotHost(model.slotNavigation)
+        advanceUntilIdle()
+        model.onClaimSubmitted(submittedResult())
+        model.onApprove()
+
+        // Act
+        outcomes.emit(outcome(YieldSupplyTransactionOutcome.Reverted))
+        runCurrent()
+
+        // Assert
+        assertThat(slot.configuration).isEqualTo(YieldSupplyActiveRoute.Approve)
+        assertThat(model.claimResultFlow.value).isNull()
+
+        model.onDestroy()
+    }
+
     private class FakeSlotHost(navigation: SlotNavigation<YieldSupplyActiveRoute>) {
 
         var configuration: YieldSupplyActiveRoute? = null
