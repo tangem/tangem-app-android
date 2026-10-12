@@ -1536,21 +1536,27 @@ internal class SwapTransferInteractorImplTest {
 
     @Test
     fun `GIVEN EVM tokens with the same contract in another case WHEN shouldTransferInsteadOfSwap THEN return true`() {
-        val result = sut.shouldTransferInsteadOfSwap(
-            fromSwapCurrency = buildToken(networkRawId = ETHEREUM, contractAddress = USDT_CONTRACT),
-            toSwapCurrency = buildToken(networkRawId = ETHEREUM, contractAddress = USDT_CONTRACT.lowercase()),
-        )
+        // Arrange
+        val checksummed = buildToken(networkRawId = ETHEREUM, contractAddress = USDT_CONTRACT)
+        val lowerCased = buildToken(networkRawId = ETHEREUM, contractAddress = USDT_CONTRACT.lowercase())
 
+        // Act
+        val result = sut.shouldTransferInsteadOfSwap(fromSwapCurrency = checksummed, toSwapCurrency = lowerCased)
+
+        // Assert
         assertThat(result).isTrue()
     }
 
     @Test
     fun `GIVEN Solana tokens whose mints differ only in case WHEN shouldTransferInsteadOfSwap THEN return false`() {
-        val result = sut.shouldTransferInsteadOfSwap(
-            fromSwapCurrency = buildToken(networkRawId = SOLANA, contractAddress = SOLANA_USDC_MINT),
-            toSwapCurrency = buildToken(networkRawId = SOLANA, contractAddress = SOLANA_USDC_MINT.lowercase()),
-        )
+        // Arrange
+        val mint = buildToken(networkRawId = SOLANA, contractAddress = SOLANA_USDC_MINT)
+        val lowerCasedMint = buildToken(networkRawId = SOLANA, contractAddress = SOLANA_USDC_MINT.lowercase())
 
+        // Act
+        val result = sut.shouldTransferInsteadOfSwap(fromSwapCurrency = mint, toSwapCurrency = lowerCasedMint)
+
+        // Assert
         assertThat(result).isFalse()
     }
 
