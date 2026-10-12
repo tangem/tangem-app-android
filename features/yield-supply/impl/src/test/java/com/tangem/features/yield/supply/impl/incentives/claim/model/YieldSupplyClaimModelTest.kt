@@ -1,17 +1,13 @@
 package com.tangem.features.yield.supply.impl.incentives.claim.model
 
 import arrow.core.left
-import arrow.core.right
-import com.google.common.truth.Truth.assertThat
-import com.tangem.test.mock.MockAccounts
-import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
-import com.tangem.common.ui.account.toUM
-import com.tangem.common.ui.account.CryptoPortfolioIconConverter
-import arrow.core.some
-import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
-import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import arrow.core.none
+import arrow.core.right
+import arrow.core.some
+import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
+import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.extensions.iconResId
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
@@ -19,11 +15,12 @@ import com.tangem.core.ui.extensions.getTintForTokenIcon
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.tryGetBackgroundForTokenIcon
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
+import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
-import com.tangem.domain.yield.supply.models.YieldMarketToken
-import com.tangem.domain.yield.supply.models.incentives.YieldIncentiveCampaign
+import com.tangem.domain.yield.supply.YieldModuleAddressProvider
 import com.tangem.domain.yield.supply.models.incentives.YieldIncentivesError
 import com.tangem.domain.yield.supply.models.incentives.YieldReward
 import com.tangem.domain.yield.supply.models.incentives.YieldRewardDestination
@@ -31,14 +28,14 @@ import com.tangem.domain.yield.supply.models.incentives.YieldRewardsSummary
 import com.tangem.domain.yield.supply.usecase.BuildYieldClaimTransactionUseCase
 import com.tangem.domain.yield.supply.usecase.GetFreshYieldClaimCalldataUseCase
 import com.tangem.domain.yield.supply.usecase.GetYieldRewardsSummaryUseCase
-import com.tangem.domain.yield.supply.YieldModuleAddressProvider
 import com.tangem.domain.yield.supply.usecase.ValidateYieldClaimCalldataUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyMarketFlowUseCase
 import com.tangem.features.yield.supply.impl.incentives.claim.YieldSupplyClaimComponent
 import com.tangem.features.yield.supply.impl.incentives.claim.entity.YieldSupplyClaimUM
 import com.tangem.features.yield.supply.impl.subcomponents.YieldSupplyActionModelTestBase
-import com.tangem.test.mock.yield.MockYieldSupply
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
+import com.tangem.test.mock.MockAccounts
+import com.tangem.test.mock.yield.MockYieldSupply
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -58,10 +55,10 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import com.tangem.core.res.R as CoreResR
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.Locale
+import com.tangem.core.res.R as CoreResR
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
@@ -71,6 +68,12 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
     private val getFreshClaimCalldataUseCase: GetFreshYieldClaimCalldataUseCase = mockk()
     private val buildClaimTransactionUseCase: BuildYieldClaimTransactionUseCase = mockk()
     private val moduleAddressProvider: YieldModuleAddressProvider = mockk()
+    private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase = mockk {
+        coEvery { invokeSync(userWalletId = any(), currency = any()) } returns none()
+    }
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase = mockk {
+        coEvery { invokeSync() } returns false
+    }
 
     private var originalLocale: Locale = Locale.getDefault()
     private var isSheetDismissed = false
@@ -99,7 +102,7 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
     }
 
     @Test
-    fun `GIVEN every destination WHEN sheet opens THEN groups are ordered and unsupported is excluded`() = runTest {
+    fun `GIVEN every destination WHEN sheet opens THEN groups are ordered and unsupported rewards are listed gross`() = runTest {
         // Arrange
         coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = SOURCE_ADDRESS) } returns
             YieldRewardsSummary.Claimable(
@@ -203,26 +206,6 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
     }
 
     @Test
-    fun `GIVEN the balance cannot cover the fee WHEN notified THEN claim is disabled`() = runTest {
-        // Arrange
-        val hasError = MutableStateFlow(false)
-        every { notificationsUpdateTrigger.hasErrorFlow } returns hasError
-
-        // Act
-        val model = createModel()
-        advanceUntilIdle()
-        val enabledBefore = model.uiState.value.isClaimEnabled
-        hasError.value = true
-        advanceUntilIdle()
-
-        // Assert
-        assertThat(enabledBefore).isTrue()
-        assertThat(model.uiState.value.isClaimEnabled).isFalse()
-
-        model.onDestroy()
-    }
-
-    @Test
     fun `GIVEN the balance cannot cover the fee WHEN notified THEN the service fee row goes away`() = runTest {
         // Arrange
         val cannotCoverFee = MutableStateFlow(false)
@@ -243,7 +226,7 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
     }
 
     @Test
-    fun `GIVEN any other error WHEN notified THEN the service fee row stays`() = runTest {
+    fun `GIVEN a notification error WHEN notified THEN claim is disabled and the service fee row stays`() = runTest {
         // Arrange - a fee that merely failed to load leaves the service fee a known number, so the design keeps it
         val hasError = MutableStateFlow(false)
         every { notificationsUpdateTrigger.hasErrorFlow } returns hasError
@@ -517,6 +500,33 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN accounts mode WHEN the sheet loads THEN only the owner group names the account`() = runTest {
+        // Arrange - the other destinations do not land in an account of the user's, so they stay unnamed
+        val account = MockAccounts.createAccount(derivationIndex = 0, name = "Main Account")
+        coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns true
+        coEvery { getAccountCurrencyStatusUseCase.invokeSync(userWalletId = any(), currency = any()) } returns
+            mockk<AccountCryptoCurrencyStatus> { every { this@mockk.account } returns account }.some()
+        coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = SOURCE_ADDRESS) } returns
+            summaryOf(owner(), aave()).right()
+
+        // Act
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Assert
+        val groups = model.uiState.value.groups
+        assertThat(groups.first().storage).isEqualTo(
+            YieldSupplyClaimUM.StorageUM(
+                name = account.accountName.toUM().value,
+                icon = CryptoPortfolioIconConverter.convert(account.icon),
+            ),
+        )
+        assertThat(groups.last().storage).isNull()
+
+        model.onDestroy()
+    }
+
     private fun TestScope.createModel() = YieldSupplyClaimModel(
         paramsContainer = MutableParamsContainer(
             YieldSupplyClaimComponent.Params(
@@ -540,45 +550,6 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
         getAccountCurrencyStatusUseCase = getAccountCurrencyStatusUseCase,
         isAccountsModeEnabledUseCase = isAccountsModeEnabledUseCase,
     )
-    @Test
-    fun `GIVEN accounts mode WHEN the sheet loads THEN only the owner group names the account`() = runTest {
-        // Arrange - the other destinations do not land in an account of the user's, so they stay unnamed
-        val account = MockAccounts.createAccount(derivationIndex = 0, name = "Main Account")
-        coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns true
-        coEvery { getAccountCurrencyStatusUseCase.invokeSync(userWalletId = any(), currency = any()) } returns
-            mockk<AccountCryptoCurrencyStatus> { every { this@mockk.account } returns account }.some()
-        coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = SOURCE_ADDRESS) } returns
-            YieldRewardsSummary.Claimable(
-                moduleAddress = MODULE_ADDRESS,
-                claimable = listOf(owner(), aave()),
-                pending = emptyList(),
-                unsupported = emptyList(),
-                supportedRewardTokens = SUPPORTED_REWARD_TOKENS,
-                totalNetUsd = BigDecimal("30.00"),
-            ).right()
-
-        // Act
-        val model = createModel()
-        advanceUntilIdle()
-
-        // Assert
-        val groups = model.uiState.value.groups
-        assertThat(groups.first().storage).isEqualTo(
-            YieldSupplyClaimUM.StorageUM(
-                name = account.accountName.toUM().value,
-                icon = CryptoPortfolioIconConverter.convert(account.icon),
-            ),
-        )
-        assertThat(groups.last().storage).isNull()
-    }
-
-    private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase = mockk {
-        coEvery { invokeSync(userWalletId = any(), currency = any()) } returns none()
-    }
-    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase = mockk {
-        coEvery { invokeSync() } returns false
-    }
-
     private fun summaryOf(vararg claimable: YieldReward) = YieldRewardsSummary.Claimable(
         moduleAddress = MODULE_ADDRESS,
         claimable = claimable.toList(),
