@@ -18,6 +18,13 @@ interface DynamicAddressesRepository {
     // for explorer url
     suspend fun getLastUsedReceiveAddress(userWalletId: UserWalletId, network: Network): String?
 
+    /**
+     * Every XPUB-derived address already used on [network], empty when dynamic addresses are off there or the network
+     * does not support them. These addresses live in the wallet manager only and never reach `NetworkAddress`, so a
+     * caller that has to recognize the wallet's own addresses must ask for them here.
+     */
+    suspend fun getUsedAddresses(userWalletId: UserWalletId, network: Network): List<String>
+
     suspend fun hasNonBaseBalances(userWalletId: UserWalletId, network: Network): Boolean
 
     /** Returns true if there are custom tokens with change/index ≠ 0 that conflict with dynamic addresses */
