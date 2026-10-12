@@ -10,6 +10,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.GaslessYieldRepository
 import com.tangem.domain.yield.supply.models.YieldSupplyEnterOutcome
+import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import java.math.BigDecimal
 
 interface YieldSupplyTransactionRepository : GaslessYieldRepository {
@@ -52,6 +53,18 @@ interface YieldSupplyTransactionRepository : GaslessYieldRepository {
 
     /** Returns the on-chain version status of the user's yield module for [network]. */
     suspend fun getYieldModuleVersionStatus(userWalletId: UserWalletId, network: Network): YieldModuleVersionStatus
+
+    /**
+     * Resolve what the chain says about the broadcast transaction [transactionHash], whatever it did.
+     *
+     * @return null while the transaction has not been mined yet, so an ambiguous submission stays ambiguous
+     * instead of being reported as a failure.
+     */
+    suspend fun getTransactionOutcome(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency.Token,
+        transactionHash: String,
+    ): YieldSupplyTransactionOutcome?
 
     /**
      * Resolve what happened to the broadcast "enter" transaction [transactionHash].
