@@ -83,6 +83,7 @@ internal class DefaultScanCardProcessor @Inject constructor(
     ) {
         val config = ScanConfig(
             analyticsSource = analyticsSource,
+            cardId = cardId,
             shouldConfirmWalletOwnership = shouldCheckIsAlreadyActivated,
             canRequestAccessCodeFromRepository = false,
             shouldUpdateCardIdDisplayFormat = true,
@@ -97,14 +98,10 @@ internal class DefaultScanCardProcessor @Inject constructor(
             },
         )
 
-        scan(config = config, cardId = cardId)
+        scan(config)
     }
 
     override suspend fun scan(config: ScanConfig) {
-        scan(config = config, cardId = null)
-    }
-
-    private suspend fun scan(config: ScanConfig, cardId: String?) {
         val callback = config.callback
 
         withContext(dispatchers.main) {
@@ -115,7 +112,7 @@ internal class DefaultScanCardProcessor @Inject constructor(
             }
 
             val result = tangemSdkManager.scanProduct(
-                cardId = cardId,
+                cardId = config.cardId,
                 allowsRequestAccessCodeFromRepository = config.canRequestAccessCodeFromRepository,
                 shouldCheckIsAlreadyActivated = config.shouldConfirmWalletOwnership,
                 source = config.analyticsSource,
