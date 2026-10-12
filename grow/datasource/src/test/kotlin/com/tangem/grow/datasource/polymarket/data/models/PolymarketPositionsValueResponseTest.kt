@@ -46,8 +46,8 @@ internal class PolymarketPositionsValueResponseTest {
         ),
     )
 
-    private fun createResponse(proxyWallet: String? = "0xdw", value: BigDecimal) = PolymarketPositionsValueResponse(
-        data = PolymarketPositionsValueResponse.Data(proxyWallet = proxyWallet, value = value),
+    private fun createResponse(value: BigDecimal) = PolymarketPositionsValueResponse(
+        data = PolymarketPositionsValueResponse.Data(value = value),
     )
 
     internal data class DecodeModel(val json: String, val expected: PolymarketPositionsValueResponse)
