@@ -30,6 +30,7 @@ import com.tangem.domain.yield.supply.usecase.GetFreshYieldClaimCalldataUseCase
 import com.tangem.domain.yield.supply.usecase.GetYieldRewardsSummaryUseCase
 import com.tangem.domain.yield.supply.usecase.ValidateYieldClaimCalldataUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyMarketFlowUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
 import com.tangem.features.yield.supply.impl.incentives.claim.YieldSupplyClaimComponent
 import com.tangem.features.yield.supply.impl.incentives.claim.entity.YieldSupplyClaimUM
 import com.tangem.features.yield.supply.impl.subcomponents.YieldSupplyActionModelTestBase
@@ -37,6 +38,8 @@ import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.MockAccounts
 import com.tangem.test.mock.yield.MockYieldSupply
 import com.tangem.utils.StringsSigns.DASH_SIGN
+import io.mockk.called
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -77,12 +80,14 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
 
     private var originalLocale: Locale = Locale.getDefault()
     private var isSheetDismissed = false
+    private val claimTracker: YieldSupplyClaimTracker = mockk(relaxed = true)
 
     @BeforeEach
     fun setUp() {
         originalLocale = Locale.getDefault()
         Locale.setDefault(Locale.US)
         isSheetDismissed = false
+        clearMocks(claimTracker)
 
         every { marketFlowUseCase(any()) } returns flowOf(market())
         coEvery { moduleAddressProvider.getOrFetch(any(), any()) } returns MODULE_ADDRESS
@@ -375,6 +380,49 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
         }
 
     @Test
+    fun `GIVEN a sent claim WHEN confirmed THEN the claim is followed and the sheet closes`() = runTest {
+        // Arrange
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Act
+        model.onClaimClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            claimTracker.track(
+                userWalletId = userWalletId,
+                cryptoCurrency = token,
+                chainId = CHAIN_ID,
+                userAddress = SOURCE_ADDRESS,
+                transactionHash = TX_HASH,
+            )
+        }
+        assertThat(isSheetDismissed).isTrue()
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN sending fails WHEN confirmed THEN no claim is followed`() = runTest {
+        // Arrange
+        coEvery { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) } returns
+            SendTransactionError.UnknownError().left()
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Act
+        model.onClaimClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify { claimTracker wasNot called }
+
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN the claim gate rejects the newest calldata WHEN confirmed THEN nothing is signed`() = runTest {
         // Arrange
         coEvery { getFreshClaimCalldataUseCase(chainId = CHAIN_ID, userAddress = SOURCE_ADDRESS) } returns
@@ -547,6 +595,7 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
         sendTransactionUseCase = sendTransactionUseCase,
         yieldSupplyNotificationsUpdateTrigger = notificationsUpdateTrigger,
         yieldSupplyAlertFactory = alertFactory,
+        yieldSupplyClaimTracker = claimTracker,
         getAccountCurrencyStatusUseCase = getAccountCurrencyStatusUseCase,
         isAccountsModeEnabledUseCase = isAccountsModeEnabledUseCase,
     )
