@@ -2,6 +2,8 @@ package com.tangem.features.yield.supply.impl.subcomponents.startearning.model
 
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.TransactionSender
+import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -64,7 +66,6 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val yieldSupplyNotificationsUpdateTrigger: YieldSupplyNotificationsUpdateTrigger,
     private val yieldSupplyAlertFactory: YieldSupplyAlertFactory,
-    private val yieldSupplyActivateUseCase: YieldSupplyActivateUseCase,
     private val yieldSupplyMinAmountUseCase: YieldSupplyMinAmountUseCase,
     private val yieldSupplyGetMaxFeeUseCase: YieldSupplyGetMaxFeeUseCase,
     private val yieldSupplyGetCurrentFeeUseCase: YieldSupplyGetCurrentFeeUseCase,
@@ -299,12 +300,15 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
             )
         }
 
+        // Auto top-up enrolment is deliberately NOT sent here. It dispatches the relayer, which performs the
+        // same deposit as our own enter transaction, so announcing it before ours has settled makes the two
+        // race and the loser reverts with ZeroAmount(). The tracker sends it once the outcome is known — or
+        // straight away when this batch carries no deposit, since then there is nothing to race.
         val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
-        if (address != null) {
-            yieldSupplyActivateUseCase(
-                userWalletId = userWalletId,
-                cryptoCurrency = cryptoCurrency,
-                address = address,
+        val depositContext = address?.let { ownerAddress ->
+            YieldSupplyPendingTracker.DepositContext(
+                ownerAddress = ownerAddress,
+                enterTransactionHash = enterTransactionHash(yieldSupplyFeeUM, txsData),
             )
         }
 
@@ -313,9 +317,18 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                 userWalletId = userWalletId,
                 cryptoCurrency = cryptoCurrency,
                 txIds = txsData,
+                depositContext = depositContext,
             )
             params.callback.onTransactionSent()
         }
+    }
+
+    private fun enterTransactionHash(yieldSupplyFeeUM: YieldSupplyFeeUM.Content, txHashes: List<String>): String? {
+        val index = yieldSupplyFeeUM.transactionDataList.indexOfFirst {
+            (it.extras as? EthereumTransactionExtras)?.callData is EthereumYieldSupplyEnterCallData
+        }
+
+        return txHashes.getOrNull(index)
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {

@@ -14,8 +14,10 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.notifications.SystemNotificationsStateProvider
 import com.tangem.core.ui.utils.parseBigDecimal
+import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.status.polling.WalletAccountsPollingCoordinator
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
@@ -27,8 +29,13 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.assetsdiscovery.usecase.StartAssetsDiscoveryUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
+import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.marketing.WarmUpMarketingCampaignsUseCase
+import com.tangem.domain.mcp.McpRequestService
+import com.tangem.domain.mcp.models.McpRequest
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.wallet.*
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
@@ -70,6 +77,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSend
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedCallbacks
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.biometry.AskBiometryComponent
+import com.tangem.features.mcp.api.McpFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
 import com.tangem.utils.Provider
@@ -79,6 +87,8 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration.Companion.milliseconds
 
 private const val TANGEM_PAY_UPDATE_INTERVAL = 60_000L
 
@@ -123,6 +133,8 @@ internal class WalletModel @Inject constructor(
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
     private val jointAccountPollingCoordinator: JointAccountPollingCoordinator,
+    private val jointAccountListSupplier: SingleJointAccountListSupplier,
+    private val walletAccountsPollingCoordinator: WalletAccountsPollingCoordinator,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val bindRefcodeWithWalletUseCase: BindRefcodeWithWalletUseCase,
     private val appsFlyerRepository: AppsFlyerRepository,
@@ -130,6 +142,8 @@ internal class WalletModel @Inject constructor(
     private val getWalletIconUseCase: GetWalletIconUseCase,
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val wcPairService: WcPairService,
+    private val mcpRequestService: McpRequestService,
+    private val mcpFeatureToggles: McpFeatureToggles,
     private val resolveQrSendTargetsUseCase: ResolveQrSendTargetsUseCase,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val uiMessageSender: UiMessageSender,
@@ -275,21 +289,20 @@ internal class WalletModel @Inject constructor(
                     val hasMobileWallet = userWalletsListRepository.userWalletsSync()
                         .any { it is UserWallet.Hot }
 
-                    val accountsCount = if (isAccountsModeEnabledUseCase.invokeSync()) {
-                        singleAccountListSupplier(selectedWallet.walletId)
-                            .first()
-                            .accounts
-                            .size
+                    val accountList = if (isAccountsModeEnabledUseCase.invokeSync()) {
+                        singleAccountListSupplier(selectedWallet.walletId).first()
                     } else {
                         null
                     }
+                    val jointAccountsCounts = if (accountList != null) loadJointAccountsCounts(accountList) else null
                     val result = getAppThemeModeUseCase().firstOrNull()
                     val theme = result?.getOrElse { AppThemeMode.FOLLOW_SYSTEM } ?: AppThemeMode.FOLLOW_SYSTEM
                     val appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }.code
                     analyticsEventsHandler.send(
                         WalletScreenAnalyticsEvent.MainScreen.ScreenOpened(
                             hasMobileWallet = hasMobileWallet,
-                            accountsCount = accountsCount,
+                            accountsCount = accountList?.accounts?.size,
+                            jointAccountsCounts = jointAccountsCounts,
                             isBackedUp = isWalletBackedUpUseCase(selectedWallet),
                             completedBackups = getCompletedBackupsUseCase(selectedWallet),
                             theme = theme.value,
@@ -300,6 +313,28 @@ internal class WalletModel @Inject constructor(
                     )
                 }
         }
+    }
+
+    /**
+     * The joint list can replay a cache older than [accountList] while its refresh runs, so it is awaited until it
+     * holds every listed joint account; without any there is nothing to wait for
+     */
+    private suspend fun loadJointAccountsCounts(
+        accountList: AccountList,
+    ): WalletScreenAnalyticsEvent.MainScreen.ScreenOpened.JointAccountsCounts? {
+        val listedIds = accountList.listedJointAccountIds()
+        val jointAccounts = if (listedIds.isEmpty()) {
+            emptyList()
+        } else {
+            withTimeoutOrNull(JOINT_ACCOUNTS_WAIT_MILLIS.milliseconds) {
+                jointAccountListSupplier(accountList.userWalletId).first { jointAccounts ->
+                    val loadedIds = jointAccounts.mapTo(mutableSetOf()) { it.cryptoAccountId.lowercase() }
+                    loadedIds.containsAll(listedIds)
+                }
+            } ?: return null
+        }
+
+        return jointAccountsCounts(accountList = accountList, jointAccounts = jointAccounts)
     }
 
     private suspend fun shouldShowAskBiometryBottomSheet(): Boolean {
@@ -427,10 +462,11 @@ internal class WalletModel @Inject constructor(
 
     /**
      * The backend won't silent-push joint-account state changes (a slot filling, activation, an operation awaiting
-     * a co-signature), so while the main screen is in the foreground, the selected wallet's joint account gets a
-     * 60-second poll to keep it fresh — the current status can't tell us whether it's stale, so it isn't used to
-     * gate this. Only the selected wallet is polled, since it's the only one actually visible in the pager. The
-     * coordinator paces itself — this only decides which wallet (if any) to collect for.
+     * a co-signature, a token another member added), so while the main screen is in the foreground, the selected
+     * wallet's joint state gets a 5-second poll and its accounts document a 10-second one — the current status can't
+     * tell us whether it's stale, so it isn't used to gate this. Only the selected wallet is polled, since it's the
+     * only one actually visible in the pager. The coordinators pace themselves — this only decides which wallet (if
+     * any) to collect for.
      */
     private fun subscribeJointAccountPolling() {
         combine(
@@ -443,7 +479,10 @@ internal class WalletModel @Inject constructor(
             .distinctUntilChanged()
             .flatMapLatest { walletId ->
                 if (walletId != null) {
-                    jointAccountPollingCoordinator.poll(walletId)
+                    merge(
+                        jointAccountPollingCoordinator.poll(walletId),
+                        walletAccountsPollingCoordinator.poll(walletId),
+                    )
                 } else {
                     emptyFlow()
                 }
@@ -864,6 +903,11 @@ internal class WalletModel @Inject constructor(
                     ),
                 )
             }
+            is QrSendTarget.McpAuthorization -> {
+                if (mcpFeatureToggles.isMcpEnabled) {
+                    mcpRequestService.request(McpRequest.Pair(userCode = target.userCode))
+                }
+            }
             is QrSendTarget.Single -> {
                 innerWalletRouter.openSend(
                     userWalletId = target.userWalletId,
@@ -982,7 +1026,28 @@ internal class WalletModel @Inject constructor(
     private companion object {
         const val REFRESH_WALLET_BACKGROUND_TIMER_MILLIS = 10000L
         const val EXPRESS_STATUS_UPDATE_DELAY = 10000L
+        const val JOINT_ACCOUNTS_WAIT_MILLIS = 3000L
     }
+}
+
+private fun AccountList.listedJointAccountIds(): Set<String> = accounts
+    .filterIsInstance<Account.Joint>()
+    .mapTo(mutableSetOf()) { it.accountId.value.lowercase() }
+
+/** Archived joint accounts are not in [accountList], so only the statuses of the accounts it holds are counted */
+internal fun jointAccountsCounts(
+    accountList: AccountList,
+    jointAccounts: List<JointAccount>,
+): WalletScreenAnalyticsEvent.MainScreen.ScreenOpened.JointAccountsCounts {
+    val listedIds = accountList.listedJointAccountIds()
+    val statuses = jointAccounts
+        .filter { it.cryptoAccountId.lowercase() in listedIds }
+        .map(JointAccount::status)
+
+    return WalletScreenAnalyticsEvent.MainScreen.ScreenOpened.JointAccountsCounts(
+        active = statuses.count { it == JointAccount.Status.ACTIVE },
+        pending = statuses.count { it == JointAccount.Status.PENDING || it == JointAccount.Status.CONFIRMING },
+    )
 }
 
 /**

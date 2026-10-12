@@ -70,8 +70,8 @@ internal class DefaultTangemSdkManager(
     private val resources: Resources,
     private val visaCardScanHandler: VisaCardScanHandler,
     private val visaCardActivationTaskFactory: VisaCardActivationTask.Factory,
-    private val tangemPayChallengeTaskFactory: TangemPayGenerateAddressAndSignChallengeTask.Factory,
-    private val tangemPayMoneyAccountTaskFactory: TangemPayGenerateMoneyAccountAddressTask.Factory,
+    private val tangemPayChallengeTask: TangemPayGenerateAddressAndSignChallengeTask,
+    private val tangemPayMoneyAccountTask: TangemPayGenerateMoneyAccountAddressTask,
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
     private val analyticsErrorHandler: AnalyticsErrorHandler,
     private val cardRepository: CardRepository,
@@ -609,38 +609,34 @@ internal class DefaultTangemSdkManager(
     override suspend fun tangemPayProduceInitialCredentials(
         preflightReadFilter: PreflightReadFilter,
     ): Either<Throwable, TangemPayInitialCredentials> {
-        return coroutineScope {
-            val result = runTaskAsyncReturnOnMain(
-                runnable = tangemPayChallengeTaskFactory.create(coroutineScope = this),
-                cardId = null,
-                initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
-                preflightReadFilter = preflightReadFilter,
-                registerColdWallet = false, // Visa — not a cold wallet registration target
-            )
+        val result = runTaskAsyncReturnOnMain(
+            runnable = tangemPayChallengeTask,
+            cardId = null,
+            initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
+            preflightReadFilter = preflightReadFilter,
+            registerColdWallet = false, // Visa — not a cold wallet registration target
+        )
 
-            return@coroutineScope when (result) {
-                is CompletionResult.Failure<*> -> result.error.left()
-                is CompletionResult.Success<TangemPayInitialCredentials> -> result.data.right()
-            }
+        return when (result) {
+            is CompletionResult.Failure<*> -> result.error.left()
+            is CompletionResult.Success<TangemPayInitialCredentials> -> result.data.right()
         }
     }
 
     override suspend fun tangemPayProduceMoneyAccountData(
         preflightReadFilter: PreflightReadFilter,
     ): Either<Throwable, MoneyAccountActivationData> {
-        return coroutineScope {
-            val result = runTaskAsyncReturnOnMain(
-                runnable = tangemPayMoneyAccountTaskFactory.create(coroutineScope = this),
-                cardId = null,
-                initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
-                preflightReadFilter = preflightReadFilter,
-                registerColdWallet = false, // Visa — not a cold wallet registration target
-            )
+        val result = runTaskAsyncReturnOnMain(
+            runnable = tangemPayMoneyAccountTask,
+            cardId = null,
+            initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
+            preflightReadFilter = preflightReadFilter,
+            registerColdWallet = false, // Visa — not a cold wallet registration target
+        )
 
-            return@coroutineScope when (result) {
-                is CompletionResult.Failure<*> -> result.error.left()
-                is CompletionResult.Success<MoneyAccountActivationData> -> result.data.right()
-            }
+        return when (result) {
+            is CompletionResult.Failure<*> -> result.error.left()
+            is CompletionResult.Success<MoneyAccountActivationData> -> result.data.right()
         }
     }
 

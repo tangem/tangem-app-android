@@ -29,6 +29,7 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.usecase.ClearHotWalletContextualUnlockUseCase
@@ -67,6 +68,7 @@ internal class UpgradeWalletModel @Inject constructor(
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val isSocialBackupCompletedUseCase: IsSocialBackupCompletedUseCase,
 ) : Model() {
     private val params = paramsContainer.require<UpgradeWalletComponent.Params>()
 
@@ -86,6 +88,11 @@ internal class UpgradeWalletModel @Inject constructor(
     init {
         trackingContextProxy.addHotWalletContext()
         analyticsEventHandler.send(WalletSettingsAnalyticEvents.HardwareUpgradeScreenOpened())
+        modelScope.launch {
+            if (isSocialBackupCompletedUseCase(params.userWalletId)) {
+                uiState.update { it.copy(isCloudBackupRemovalShown = true) }
+            }
+        }
     }
 
     override fun onDestroy() {

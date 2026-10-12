@@ -30,7 +30,6 @@ internal class PredictionAccountStatusValueDTOSerializationTest {
         val original = mapOf(
             "wallet-active" to PredictionAccountStatusValueDTO.Active(
                 balance = BigDecimal("12.50"),
-                positionsValue = BigDecimal("3.25"),
             ),
             "wallet-onboarding" to PredictionAccountStatusValueDTO.Onboarding(
                 stage = PredictionAccountStatusValueDTO.Stage.APPROVING,
@@ -67,7 +66,6 @@ internal class PredictionAccountStatusValueDTOSerializationTest {
         assertThat(encoded).contains("\"__type\":\"onboarding\"")
         assertThat(encoded).contains("\"__type\":\"not_onboarded\"")
         assertThat(encoded).contains("\"deposit_address\":null")
-        assertThat(encoded).contains("\"positions_value\":null")
         assertThat(encoded).contains("\"stage\":\"deploying\"")
         assertThat(encoded).doesNotContain("com.tangem")
     }
@@ -90,9 +88,10 @@ internal class PredictionAccountStatusValueDTOSerializationTest {
     }
 
     @Test
-    fun `GIVEN a file written before the positions value WHEN decoded THEN the value is unknown`() {
+    fun `GIVEN a file with the dropped positions value WHEN decoded THEN the entry survives`() {
         // Arrange
-        val encoded = """{"wallet-1":{"__type":"active","balance":"40","deposit_address":"0xbridge"}}"""
+        val encoded =
+            """{"wallet-1":{"__type":"active","balance":"40","deposit_address":"0xbridge","positions_value":"3.25"}}"""
 
         // Act
         val restored = json.decodeFromString(serializer, encoded)
@@ -102,7 +101,6 @@ internal class PredictionAccountStatusValueDTOSerializationTest {
             "wallet-1",
             PredictionAccountStatusValueDTO.Active(balance = BigDecimal("40"), depositAddress = "0xbridge"),
         )
-        assertThat((restored.getValue("wallet-1") as PredictionAccountStatusValueDTO.Active).positionsValue).isNull()
     }
 
     @Test

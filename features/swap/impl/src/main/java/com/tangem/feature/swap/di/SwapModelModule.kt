@@ -2,6 +2,8 @@ package com.tangem.feature.swap.di
 
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
+import com.tangem.feature.swap.component.chooseprovider.model.ChooseProviderModel
+import com.tangem.feature.swap.component.slippage.model.SwapSlippageModel
 import com.tangem.feature.swap.model.SwapModel
 import dagger.Binds
 import dagger.Module
@@ -17,4 +19,14 @@ internal interface SwapModelModule {
     @IntoMap
     @ClassKey(SwapModel::class)
     fun provideSwapModel(model: SwapModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(ChooseProviderModel::class)
+    fun provideChooseProviderModel(model: ChooseProviderModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(SwapSlippageModel::class)
+    fun provideSwapSlippageModel(model: SwapSlippageModel): Model
 }

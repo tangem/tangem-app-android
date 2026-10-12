@@ -30,6 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.surface.TangemSurface
@@ -48,7 +49,7 @@ import com.tangem.core.ui.test.NotificationTestTags
  * Design-system v2 (DS3) **Message Banner** — low-level slot API: a [content] block above an
  * optional action-button row. For the common title/description layout, prefer the `title` overload.
  *
- * Version: 1.2
+ * Version: 1.2.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=5475-7680&m=dev)
  *
@@ -113,7 +114,7 @@ fun TangemMessageBanner(
  * Design-system v2 (DS3) **Message Banner** — title/description header with optional slots and an
  * action-button row.
  *
- * Version: 1.2
+ * Version: 1.2.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=5475-7680&m=dev)
  *
@@ -329,6 +330,8 @@ private fun MessageBannerButtons(
 
 /** Public API surface of [TangemMessageBanner]. */
 object TangemMessageBanner {
+
+    val version = DsVersion(major = 1, minor = 2, patch = 0)
 
     /** Visual appearance — background color + glow ring color. */
     enum class Variant {

@@ -6,6 +6,7 @@ data class BankOfframpOrderRequest(
     val amountInCents: Long,
     val chainId: Long,
     val tokenContractAddress: String,
+    val tokenDecimals: Int,
     val rail: BankRail,
     val recipient: BankOfframpRecipient,
 )

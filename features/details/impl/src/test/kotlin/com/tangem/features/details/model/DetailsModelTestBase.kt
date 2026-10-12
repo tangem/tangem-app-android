@@ -85,7 +85,7 @@ internal abstract class DetailsModelTestBase {
         coEvery { tangemPayEligibilityManager.getEligibleWallets(any(), any()) } returns emptyList()
         coEvery { tangemPayEligibilityManager.getCompatibleWalletsIds(any()) } returns emptyList()
         every { tangemPayFeatureToggles.isResidencyStepEnabled } returns false
-        coEvery { getMoneyAccountEligibilityUseCase(any()) } returns MoneyAccountEligibility.NotAvailable
+        coEvery { getMoneyAccountEligibilityUseCase() } returns MoneyAccountEligibility.NotAvailable
         every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
 
         every {

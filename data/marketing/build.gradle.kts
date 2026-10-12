@@ -11,6 +11,7 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.remote)
     implementation(deps.androidx.datastore)
 
     implementation(deps.hilt.android)

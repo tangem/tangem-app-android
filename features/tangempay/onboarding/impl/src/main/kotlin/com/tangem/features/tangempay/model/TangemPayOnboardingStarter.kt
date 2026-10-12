@@ -14,6 +14,7 @@ import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
@@ -23,6 +24,7 @@ import com.tangem.features.tangempay.common.TangemPayCampaignMessages
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.MnemonicType
 import com.tangem.utils.logging.TangemLogger
+import java.util.UUID
 import javax.inject.Inject
 
 @ModelScoped
@@ -46,6 +48,8 @@ internal class TangemPayOnboardingStarter @Inject constructor(
         val onWalletSelectorRequested: (List<UserWalletId>) -> Unit = {},
         val onCustomerAlreadyApproved: (suspend (UserWalletId) -> Unit)? = null,
     )
+
+    private val campaignOrderKeys = mutableMapOf<CampaignOrderIntent, String>()
 
     suspend fun proceedWithWallets(
         walletsIds: List<UserWalletId>,
@@ -188,13 +192,18 @@ internal class TangemPayOnboardingStarter @Inject constructor(
             return false
         }
 
-        return repository.createOrder(
-            userWalletId = userWalletId,
-            deeplinkValue = campaignKey,
-            specificationName = specificationName,
+        val request = CustomerOrderRequest.CardIssue(
             type = offer.data.orderType,
+            specificationName = specificationName,
+            deeplinkValue = campaignKey,
         )
+        val intent = CampaignOrderIntent(userWalletId = userWalletId, request = request)
+        val idempotencyKey = campaignOrderKeys.getOrPut(intent) { UUID.randomUUID().toString() }
+
+        return repository.createOrder(userWalletId = userWalletId, request = request, idempotencyKey = idempotencyKey)
+            .onRight { campaignOrderKeys.remove(intent) }
             .onLeft { error ->
+                if (!error.isOutcomeUnknown()) campaignOrderKeys.remove(intent)
                 TangemLogger.e("[TangemPay][Campaign] Failed to create campaign order: $error")
                 showRetryableError(callbacks)
             }
@@ -205,4 +214,9 @@ internal class TangemPayOnboardingStarter @Inject constructor(
         callbacks.onLoadingChange(false)
         uiMessageSender.send(TangemPayCampaignMessages.retryableErrorSnackbar())
     }
+
+    private data class CampaignOrderIntent(
+        val userWalletId: UserWalletId,
+        val request: CustomerOrderRequest.CardIssue,
+    )
 }

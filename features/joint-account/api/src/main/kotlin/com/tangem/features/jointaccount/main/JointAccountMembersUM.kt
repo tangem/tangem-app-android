@@ -20,10 +20,9 @@ import kotlinx.collections.immutable.ImmutableList
  * @property joined          members who have already joined, in display order.
  * @property freeSlots       slots still waiting to be filled, in display order.
  * @property otherMembersLabel section label shown above [freeSlots]; `null` hides it (no free slots).
- * @property onActivateClick the "Activate account" call to action pinned to the bottom of the screen —
+ * @property activateButton the "Activate account" call to action pinned to the bottom of the screen —
  * creator only, shown when every slot is filled; `null` hides it (not the creator, the composition is not
- * full yet, or the account is already active). The confirmation sheet it opens is hosted as its own child
- * slot, not part of this state — see `JointAccountMembersModel.activationConfirmationNavigation`.
+ * full yet, or the account is already active) — see [ActivateButtonUM].
  */
 @Immutable
 data class JointAccountMembersUM(
@@ -33,7 +32,7 @@ data class JointAccountMembersUM(
     val joined: ImmutableList<MemberUM.Joined>,
     val freeSlots: ImmutableList<MemberUM.FreeSlot>,
     val otherMembersLabel: TextReference?,
-    val onActivateClick: (() -> Unit)?,
+    val activateButton: ActivateButtonUM?,
 ) {
 
     /**
@@ -79,6 +78,20 @@ data class JointAccountMembersUM(
     data class HeaderUM(
         val title: TextReference,
         val progress: TextReference,
+    )
+
+    /**
+     * "Activate account" button.
+     *
+     * @property walletIconRes wallet-interaction icon at the end of the button — a card for a cold wallet, which
+     * signs the activation with a tap; `null` for a hot wallet.
+     * @property isLoading     the activation is being signed and sent.
+     * @property onClick       sign and activate the account.
+     */
+    data class ActivateButtonUM(
+        val walletIconRes: Int?,
+        val isLoading: Boolean,
+        val onClick: () -> Unit,
     )
 
     /**

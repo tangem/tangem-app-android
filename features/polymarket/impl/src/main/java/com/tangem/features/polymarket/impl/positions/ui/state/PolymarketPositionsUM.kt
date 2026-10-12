@@ -1,6 +1,7 @@
 package com.tangem.features.polymarket.impl.positions.ui.state
 
 import androidx.compose.runtime.Immutable
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.domain.polymarket.model.PolymarketPositionsFilter
 import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketFinishedPositionUM
 import kotlinx.collections.immutable.ImmutableList
@@ -15,6 +16,8 @@ internal data class PolymarketPositionsUM(
     val onFilterSelect: (PolymarketPositionsFilter) -> Unit = {},
     val finishedPosition: PolymarketFinishedPositionUM? = null,
     val onFinishedPositionDismiss: () -> Unit = {},
+    val pullToRefreshConfig: PullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
+    val onRefreshRetry: (() -> Unit)? = null,
 ) {
 
     enum class Tab { Active, Finished }
@@ -23,6 +26,8 @@ internal data class PolymarketPositionsUM(
     data class FilteredContent(
         val filter: PolymarketPositionsFilter = PolymarketPositionsFilter.ALL,
         val content: Content = Content.Loading,
+        val isRefreshing: Boolean = false,
+        val onRefreshRetry: (() -> Unit)? = null,
     )
 
     @Immutable
