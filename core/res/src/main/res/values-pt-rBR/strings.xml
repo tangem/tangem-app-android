@@ -13,10 +13,10 @@
   <string name="access_code_check_warining_wait">Código de acesso incorreto.\nPor favor, aguarde %s segundos e tente novamente.</string>
   <string name="access_code_confirm_description">Confirme seu código de acesso para continuar.</string>
   <string name="access_code_confirm_title">Digite novamente o código de acesso.</string>
-  <string name="access_code_create_description">Defina um %sCódigo de acesso de -dígitos para desbloquear sua carteira.</string>
+  <string name="access_code_create_description">Defina um código de acesso de %s dígitos para desbloquear sua carteira.</string>
   <string name="access_code_create_title">Criar código de acesso</string>
   <string name="access_code_navtitle">Código de acesso</string>
-  <string name="account_add_limit_dialog_description">Você não pode criar mais do que %1$s Contas. Arquive uma para adicionar uma nova.</string>
+  <string name="account_add_limit_dialog_description">Você não pode criar mais do que %1$s contas. Arquive uma para adicionar uma nova.</string>
   <string name="account_add_limit_dialog_title">Não é possível adicionar uma nova conta.</string>
   <string name="account_archive_success_message">Conta arquivada</string>
   <string name="account_archived_accounts">Contas arquivadas</string>
@@ -69,7 +69,7 @@
   <string name="account_unsaved_dialog_message_create">Tem certeza de que deseja descartar a nova conta?</string>
   <string name="account_unsaved_dialog_message_edit">Tem certeza de que deseja descartar as edições?</string>
   <string name="account_unsaved_dialog_title">Alterações não salvas</string>
-  <string name="accounts_migration_alert_message">Alguns tokens personalizados serão movidos automaticamente de “%1$s\" para \"%2$s\"pois sua derivação pertence a essa explicação.\"</string>
+  <string name="accounts_migration_alert_message">Alguns tokens personalizados serão movidos automaticamente de “%1$s” para “%2$s”, pois sua derivação pertence a essa conta.</string>
   <string name="accounts_migration_alert_title">Alguns tokens personalizados serão movidos automaticamente.</string>
   <string name="action_buttons_buy_empty_search_message">Não consegue encontrar o seu token? Vá até a seção Mercado na página principal e adicione-o ao seu portfólio para compra.</string>
   <string name="action_buttons_sell_empty_search_message">Não consegue encontrar o seu token? Vá para a seção Mercado na página principal e adicione-o ao seu portfólio para venda.</string>
@@ -164,11 +164,11 @@
   <string name="alert_failed_to_send_transaction_title">Não foi possível enviar uma transação.</string>
   <string name="alert_manage_tokens_unsupported_blockchain_by_card_message">A opção selecionada não é compatível com %1$s rede</string>
   <string name="alert_manage_tokens_unsupported_curve_message">Para ativar o %1$s Devido à criptografia do blockchain, você precisará redefinir a carteira para as configurações de fábrica. Por favor, retire seus fundos antes de fazer isso para garantir que não os perca e, em seguida, conclua o processo de redefinição. O acesso à carteira atual não será possível após a redefinição.</string>
-  <string name="alert_manage_tokens_unsupported_message">Tokens em %1$s Esta placa ou anel não são suportados em nenhuma rede devido a limitações de firmware.</string>
+  <string name="alert_manage_tokens_unsupported_message">Os tokens da rede %1$s não são suportados por este cartão ou anel devido a limitações de firmware.</string>
   <string name="alert_troubleshooting_scan_card_title">Você está com dificuldades para escanear seu cartão ou anel?</string>
   <string name="alert_unsupported_card">Este cartão não foi projetado para funcionar com este aplicativo.</string>
   <string name="app_settings_access_code_warning">Defina um código de acesso para ativar a biometria.</string>
-  <string name="app_settings_biometrics_footer">Usar %1$s Para desbloquear sua carteira e aprovar ações sensíveis, como assinar transações. No caso de carteiras de hardware, ainda é necessário um cartão ou anel para assinar.</string>
+  <string name="app_settings_biometrics_footer">Usar %1$s para desbloquear sua carteira e aprovar ações sensíveis, como assinar transações. No caso de carteiras de hardware, ainda é necessário um cartão ou anel para assinar.</string>
   <string name="app_settings_default_fee">Taxa padrão</string>
   <string name="app_settings_default_fee_footer">Ative a opção Taxa Padrão para definir as taxas de transação automaticamente e ignorar a página de taxas ao enviar fundos. Você sempre poderá retornar a esta página, se necessário.</string>
   <string name="app_settings_enable_biometrics_description">Acesse as configurações para ativar a autenticação biométrica no aplicativo Tangem.</string>
@@ -193,21 +193,21 @@
   <string name="auth_info_subtitle">Selecione uma carteira para fazer login.</string>
   <string name="auth_info_title">Bem vindo de volta!</string>
   <plurals name="auth_wallet_hardware_description">
-    <item quantity="one">UM</item>
-    <item quantity="other">OUTRO</item>
+    <item quantity="one">%d cartão</item>
+    <item quantity="other">%d cartões</item>
   </plurals>
   <string name="auth_wallet_mobile_description">Carteira móvel</string>
   <string name="backup_complete_description">Você fez o backup da sua carteira com sucesso.</string>
   <string name="backup_complete_seed_description">Essas palavras não poderão ser recuperadas caso sejam perdidas. Guarde-as em local seguro.</string>
   <string name="backup_complete_title">Backup concluído</string>
-  <string name="backup_info_description">Sua frase secreta de recuperação é um conjunto de %s Palavras aleatórias para acessar e recuperar sua carteira.</string>
+  <string name="backup_info_description">Sua frase secreta de recuperação é um conjunto de %s palavras aleatórias para acessar e recuperar sua carteira.</string>
   <string name="backup_info_keep_description">Se você perder esta frase, ela não poderá ser recuperada. Guarde-a em local absolutamente seguro.</string>
   <string name="backup_info_keep_title">Mantenha-o em segurança.</string>
   <string name="backup_info_save_description">Salve essas %s palavras em um local seguro que somente você possa acessar e nunca as compartilhe com ninguém.</string>
   <string name="backup_info_save_title">Não há possibilidade de recuperação</string>
   <string name="backup_info_title">Frase de recuperação</string>
-  <string name="backup_seed_caution">O %s As palavras abaixo são a frase de recuperação da sua carteira. Nunca compartilhe essas palavras com ninguém. A Tangem nunca as solicitará. Use-as para restaurar sua carteira caso perca seu dispositivo.</string>
-  <string name="backup_seed_description">Anote isso %s Organize as palavras em ordem numérica e mantenha-as em segurança e privacidade.</string>
+  <string name="backup_seed_caution">As %s palavras abaixo são a frase de recuperação da sua carteira. Nunca compartilhe essas palavras com ninguém. A Tangem nunca as solicitará. Use-as para restaurar sua carteira caso perca seu dispositivo.</string>
+  <string name="backup_seed_description">Anote estas %s palavras em ordem numérica e mantenha-as em segurança e privacidade.</string>
   <string name="backup_seed_responsibility">Você é totalmente responsável por proteger sua carteira e fazer backup da sua frase de recuperação.</string>
   <string name="backup_seed_title">Frase de recuperação</string>
   <string name="balance_hidden_description">Para ocultar ou exibir seus saldos, basta virar a tela do seu dispositivo para baixo ou desligá-la nas Configurações.</string>
@@ -275,7 +275,7 @@
   <string name="card_settings_title">Configurações do dispositivo</string>
   <string name="cardano_coin_will_be_send_with_token_description">Além da taxa de rede, a rede Cardano cobra %1$s ADA ao realizar transações com o %2$s token</string>
   <string name="cardano_coin_will_be_send_with_token_title">Requisitos de transação Cardano</string>
-  <string name="cardano_insufficient_balance_to_send_token_description">Para fazer um %1$s Para realizar a transação, você precisa depositar alguns ADA para cobrir a taxa de rede e o valor mínimo de ADA (recomenda-se 5 ADA).</string>
+  <string name="cardano_insufficient_balance_to_send_token_description">Para fazer uma transação de %1$s, você precisa depositar alguns ADA para cobrir a taxa de rede e o valor mínimo de ADA (recomenda-se 5 ADA).</string>
   <string name="cardano_insufficient_balance_to_send_token_title">ADA insuficiente para transferência de tokens.</string>
   <string name="cardano_low_ada">O valor enviado e o troco não podem ser inferiores a 1 ADA.</string>
   <string name="cardano_max_amount_has_token_description">Você precisa manter alguns ADA porque possui tokens na blockchain Cardano.</string>
@@ -289,12 +289,19 @@
   <string name="collectibles_account_collection_row_subtitle">Minha coleção</string>
   <string name="collectibles_account_withdraw">Saque</string>
   <string name="collectibles_confirm_order_approve_button">Aprovar</string>
+  <string name="collectibles_confirm_order_confirming_transaction_button">Confirmando a transação...</string>
+  <string name="collectibles_confirm_order_generating_pack_button">Gerando o pacote...</string>
   <string name="collectibles_confirm_order_not_enough_funds_button">Saldo insuficiente</string>
+  <string name="collectibles_confirm_order_opening_pack_button">Abrindo o pacote...</string>
   <string name="collectibles_confirm_order_platform_fee">Taxa da plataforma</string>
   <string name="collectibles_confirm_order_screen_title">Confirmar pedido</string>
   <string name="collectibles_confirm_order_total">Total</string>
   <string name="collectibles_entrance_card_subtitle">Abra pacotes de cartões colecionáveis certificados</string>
   <string name="collectibles_entrance_card_title">Explore coleções</string>
+  <string name="collectibles_low_inventory_enable_turbo_mode">Ativar o modo Turbo</string>
+  <string name="collectibles_low_inventory_explore_packs">Explorar pacotes</string>
+  <string name="collectibles_low_inventory_subtitle">Este pacote está com poucas cartas comuns disponíveis. Você ainda pode usá-lo ativando o modo Turbo ou selecionar outro pacote.</string>
+  <string name="collectibles_low_inventory_title">Estoque baixo</string>
   <string name="collectibles_machine_buyback_value">%s do valor</string>
   <string name="collectibles_machine_detail_contains">O pacote contém</string>
   <string name="collectibles_machine_detail_instant_buyback">Recompra instantânea</string>
@@ -323,6 +330,9 @@
   <string name="collectibles_main_search_empty">Nenhum resultado. Tente alterar os termos da busca\nou explore a partir da lista</string>
   <string name="collectibles_main_search_load_error">Não foi possível carregar a lista de cartões.</string>
   <string name="collectibles_main_title">Conta de pacotes</string>
+  <string name="collectibles_pack_unopened_open_pack">Abrir pacote</string>
+  <string name="collectibles_pack_unopened_subtitle">Seu pagamento foi concluído, mas você ainda não terminou de abrir o pacote. Receba sua carta para continuar abrindo pacotes.</string>
+  <string name="collectibles_pack_unopened_title">Você tem um pacote fechado</string>
   <string name="collectibles_region_restrictions_subtitle">O Tangem Packs não é compatível com sua região. Você ainda pode visualizar os eventos</string>
   <string name="collectibles_region_restrictions_title">Restrições regionais</string>
   <string name="collectibles_stories_browse_packs_button">Explorar pacotes</string>
@@ -398,7 +408,7 @@
   <string name="common_available_networks">Redes disponíveis</string>
   <string name="common_backup">Backup</string>
   <string name="common_backup_error">Erro de backup</string>
-  <string name="common_balance">Saldo%s</string>
+  <string name="common_balance">Saldo: %s</string>
   <string name="common_balance_title">Saldo</string>
   <string name="common_biometric_authentication">autenticação biométrica</string>
   <string name="common_biometrics">biometria</string>
@@ -424,7 +434,7 @@
   <string name="common_contact_visa_support">Entre em contato com o Suporte Visa</string>
   <string name="common_continue">Continuar</string>
   <string name="common_convert">Converter</string>
-  <string name="common_copy">Cópia</string>
+  <string name="common_copy">Copiar</string>
   <string name="common_copy_address">Copiar endereço</string>
   <string name="common_create">Criar</string>
   <string name="common_create_account">Criar conta</string>
@@ -433,16 +443,16 @@
   <string name="common_custom">Personalizado</string>
   <string name="common_day">dia</string>
   <plurals name="common_days">
-    <item quantity="one">dia</item>
-    <item quantity="other">dias</item>
+    <item quantity="one">%d dia</item>
+    <item quantity="other">%d dias</item>
   </plurals>
   <plurals name="common_days_no_param">
     <item quantity="one">Dia</item>
     <item quantity="other">Dias</item>
   </plurals>
   <plurals name="common_days_time_ago">
-    <item quantity="one">%d dia atrás</item>
-    <item quantity="other">há%d dias</item>
+    <item quantity="one">há %d dia</item>
+    <item quantity="other">há %d dias</item>
   </plurals>
   <string name="common_decline">Recusar</string>
   <string name="common_default">Padrão</string>
@@ -491,12 +501,12 @@
   <string name="common_hold_to">Mantenha-se em %s</string>
   <string name="common_hour">hora</string>
   <plurals name="common_hours">
-    <item quantity="one">%d  hora</item>
+    <item quantity="one">%d hora</item>
     <item quantity="other">%d horas</item>
   </plurals>
   <plurals name="common_hours_time_ago">
-    <item quantity="one">UM</item>
-    <item quantity="other">OUTRO</item>
+    <item quantity="one">há %dh</item>
+    <item quantity="other">há %dh</item>
   </plurals>
   <string name="common_import">Importar</string>
   <string name="common_in">em</string>
@@ -512,8 +522,8 @@
   <string name="common_locked_wallets">Carteiras bloqueadas</string>
   <string name="common_main_network">Rede principal</string>
   <plurals name="common_minutes_time_ago">
-    <item quantity="one">UM</item>
-    <item quantity="other">OUTRO</item>
+    <item quantity="one">há %d minuto</item>
+    <item quantity="other">há %d minutos</item>
   </plurals>
   <string name="common_month">mês</string>
   <string-array name="common_month_in">
@@ -537,8 +547,8 @@
   <string name="common_network_fee_title">Taxa de rede</string>
   <string name="common_network_fee_warning_content">O valor enviado será reduzido em %1$s (%2$s) para cobrir o nível de taxa selecionado</string>
   <plurals name="common_networks_count">
-    <item quantity="one">UM</item>
-    <item quantity="other">OUTRO</item>
+    <item quantity="one">%d rede</item>
+    <item quantity="other">%d redes</item>
   </plurals>
   <string name="common_neutral">Neutro</string>
   <string name="common_new_address">Novo endereço</string>
@@ -581,7 +591,7 @@
   <string name="common_save">Salvar</string>
   <string name="common_save_changes">Salvar alterações</string>
   <string name="common_search">Procurar</string>
-  <string name="common_search_tokens">Tokens de pesquisa</string>
+  <string name="common_search_tokens">Pesquisar tokens</string>
   <string name="common_second_no_param">segundos</string>
   <string name="common_see_all">Veja tudo</string>
   <string name="common_seed_phrase">Frase-semente</string>
@@ -628,8 +638,8 @@
   <string name="common_token">Token</string>
   <string name="common_token_send">Token a ser enviado</string>
   <plurals name="common_tokens_count">
-    <item quantity="one">token</item>
-    <item quantity="other">tokens</item>
+    <item quantity="one">%d token</item>
+    <item quantity="other">%d tokens</item>
   </plurals>
   <string name="common_transaction_failed">Transação falhou</string>
   <string name="common_transaction_id">ID da transação</string>
@@ -646,7 +656,7 @@
   <string name="common_unlock">Desbloquear</string>
   <string name="common_unreachable">Inalcançável</string>
   <string name="common_unstake">Unstake</string>
-  <string name="common_utxo_validate_withdrawal_message_warning">Devido a %1$s limitações apenas %2$d Os UTXOs podem caber em uma única transação. Isso significa que você só pode enviar %3$s ou menos. Você precisa reduzir a quantidade.</string>
+  <string name="common_utxo_validate_withdrawal_message_warning">Devido às limitações de %1$s, apenas %2$d UTXOs podem caber em uma única transação. Isso significa que você só pode enviar %3$s ou menos. Você precisa reduzir a quantidade.</string>
   <string name="common_value_copied">Valor copiado</string>
   <string name="common_view_all">Ver tudo</string>
   <string name="common_voting">Votação</string>
@@ -662,7 +672,7 @@
   <string name="common_yield_mode_inline">Modo de rendimento</string>
   <string name="contract_address_copied_message">Endereço do contrato copiado!</string>
   <string name="currency_subtitle_expanded">Redes disponíveis</string>
-  <string name="custom_token_another_account_dialog_description">A derivação do seu token corresponde à derivação de %1$sSeu token será adicionado a esta conta.</string>
+  <string name="custom_token_another_account_dialog_description">A derivação do seu token corresponde à derivação de %1$s. Seu token será adicionado a esta conta.</string>
   <string name="custom_token_another_account_dialog_title">A derivação pertence a outra conta.</string>
   <string name="custom_token_another_account_snackbar_text">Token adicionado a %1$s conta</string>
   <string name="custom_token_contract_address_input_title">Endereço do contrato</string>
@@ -721,7 +731,7 @@
   <string name="disclaimer_error_loading">Verifique sua conexão com a internet ou mude para uma rede diferente.</string>
   <string name="disclaimer_title">Termos de serviço</string>
   <string name="domain_receive_assets_default_address">Endereço padrão</string>
-  <string name="domain_receive_assets_legacy_address">Legado %s Endereço</string>
+  <string name="domain_receive_assets_legacy_address">Endereço %s legado</string>
   <string name="domain_receive_assets_navigation_title">Receber ativos</string>
   <string name="domain_receive_assets_network_name_address">%s endereço</string>
   <string name="domain_receive_assets_onboarding_description">O envio de ativos por outras redes resultará em perda permanente.</string>
@@ -778,7 +788,7 @@
   <string name="express_choose_providers_subtitle">Os provedores facilitam as transações.</string>
   <string name="express_choose_providers_title">Fornecedor</string>
   <string name="express_error_code">Ocorreu um erro. Código: %s</string>
-  <string name="express_error_provider_amount_roundup">Erro %1$sO provedor selecionado não pode processar a transação especificada. Arredonde o valor para cima. %2$s ou alterá-lo</string>
+  <string name="express_error_provider_amount_roundup">Erro %1$s. O provedor selecionado não pode processar a transação especificada. Arredonde o valor para cima até %2$s ou altere-o</string>
   <string name="express_error_swap_pair_unavailable">O provedor selecionado está indisponível no momento. Tente novamente mais tarde. (Código: %s)</string>
   <string name="express_error_swap_unavailable">Trocas não estão disponíveis no momento. Tente novamente mais tarde. (Código: %s)</string>
   <string name="express_estimated_amount">Valor estimado</string>
@@ -789,7 +799,7 @@
   <string name="express_exchange_notification_long_transaction_time_title">Tempo de transação longo</string>
   <string name="express_exchange_notification_refund_text">O valor da transação foi reembolsado em %1$s para sua carteira devido às regras do OKX ou da ponte. %2$s</string>
   <string name="express_exchange_notification_refund_title">O valor foi reembolsado em %1$s (%2$s rede)</string>
-  <string name="express_exchange_notification_refunded_in_text">Seus fundos foram reembolsados em %1$s  para sua carteira na rede %2$s, de acordo com as regras da corretora OKX.</string>
+  <string name="express_exchange_notification_refunded_in_text">Seus fundos foram reembolsados em %1$s para sua carteira na rede %2$s, de acordo com as regras da corretora OKX.</string>
   <string name="express_exchange_notification_refunded_in_title">Reembolsado em %s</string>
   <string name="express_exchange_notification_verification_text">Visite o site do fornecedor para verificação.</string>
   <string name="express_exchange_notification_verification_title">Verificação KYC exigida pelo fornecedor</string>
@@ -811,7 +821,7 @@
   <string name="express_exchange_status_refunded">Reembolso concluído</string>
   <string name="express_exchange_status_refunding">Aguardando reembolso</string>
   <string name="express_exchange_status_sending">Enviando para você</string>
-  <string name="express_exchange_status_sending_active">Enviando de fundos...</string>
+  <string name="express_exchange_status_sending_active">Enviando fundos...</string>
   <string name="express_exchange_status_sent">Fundos enviados</string>
   <string name="express_exchange_status_subtitle">Dados fornecidos pelo fornecedor. O valor estimado está sujeito a alterações devido às condições de mercado.</string>
   <string name="express_exchange_status_title">Status da troca</string>
@@ -929,8 +939,8 @@
   <string name="give_permission_rows_amount">Quantia %s</string>
   <string name="give_permission_staking_footer">A função Aprovar é necessária para conceder permissão a outro endereço para usar uma quantidade específica de seus tokens. Por definição, os contratos inteligentes não podem acessar seus tokens a menos que você aprove. Ao \"desbloquear\" seus tokens, você autoriza o contrato inteligente StakeKit a usá-los. Os mineradores da rede recebem uma taxa de gás (paga por você) para registrar essa ação no blockchain. Você pode fazer staking de seus tokens após conceder a aprovação.</string>
   <string name="give_permission_staking_subtitle">Para continuar, você precisa permitir que o contrato inteligente da Polygon use seus dados. %s</string>
-  <string name="give_permission_swap_subtitle" formatted="false">Para continuar, conceda %1s permissão de contratos inteligentes para usar seu %2s</string>
-  <string name="give_permission_swap_subtitle_v2">As corretoras descentralizadas exigem permissão para interagir com sua carteira. %1s</string>
+  <string name="give_permission_swap_subtitle">Para continuar, conceda aos contratos inteligentes de %1$s permissão para usar seu %2$s</string>
+  <string name="give_permission_swap_subtitle_v2">As corretoras descentralizadas exigem permissão para interagir com sua carteira. %1$s</string>
   <string name="give_permission_title">Conceder permissão</string>
   <string name="give_permission_unlimited">Ilimitado</string>
   <string name="hardware_wallet_backup_feature_description">Os endereços são gerados diretamente na sua carteira de hardware Tangem — prontos para usar e totalmente protegidos.</string>
@@ -948,7 +958,7 @@
   <string name="home_button_scan">Escanear Tangem</string>
   <string name="hot_access_code_set_biometric_ask">Deseja permitir que a \"Tangem\" utilize autenticação biométrica para confirmar sua identidade e abrir o aplicativo?</string>
   <string name="hot_crypto_add_token_subtitle">para %s</string>
-  <string name="hot_crypto_token_network">em %s rede</string>
+  <string name="hot_crypto_token_network">Na rede %s</string>
   <string name="hw_access_code_create_alert_title">Tem certeza de que deseja cancelar a configuração do código de acesso?</string>
   <string name="hw_activation_need_backup">Faça backup agora</string>
   <string name="hw_activation_need_description">Para concluir a configuração, faça backup da sua carteira e proteja o aplicativo com um código de acesso.</string>
@@ -1096,12 +1106,14 @@
   <string name="hw_upgrade_funds_access_description">Seus fundos permanecem seguros e totalmente acessíveis durante todo o processo.</string>
   <string name="hw_upgrade_funds_access_title">Acesso a fundos</string>
   <string name="hw_upgrade_general_security_description">Após a atualização, sua carteira móvel é removida do aplicativo e armazenada em sua carteira de hardware Tangem. Sua frase de recuperação permanece com você.</string>
+  <string name="hw_upgrade_general_security_description_social">Após a atualização, sua carteira será transferida para sua carteira de hardware Tangem. Fazer login com %1$s não permitirá mais restaurá-la. Sua frase de recuperação permanece com você.</string>
   <string name="hw_upgrade_general_security_description_v2">Após a atualização, sua carteira móvel e o backup no %1$s serão removidos. Sua frase de recuperação será armazenada na sua carteira de hardware Tangem.</string>
   <string name="hw_upgrade_general_security_title">Segurança geral</string>
   <string name="hw_upgrade_key_migration_description">As chaves privadas serão transferidas do aplicativo para sua carteira de hardware Tangem.</string>
   <string name="hw_upgrade_key_migration_title">Migração chave</string>
   <string name="hw_upgrade_save_seed_action">Salvar frase de recuperação</string>
   <string name="hw_upgrade_save_seed_description">Após a atualização, você não poderá visualizá-la novamente. Sua carteira no celular e o backup na nuvem serão excluídos, portanto, anote sua frase de recuperação agora como método alternativo de recuperação.</string>
+  <string name="hw_upgrade_save_seed_description_social">Após a atualização, esta carteira será armazenada na sua carteira de hardware Tangem e removida deste telefone. Fazer login com %1$s não permitirá mais restaurá-la. Em vez disso, use sua carteira de hardware Tangem ou sua frase de recuperação.</string>
   <string name="hw_upgrade_save_seed_title">Salve sua frase de recuperação antes de fazer a atualização</string>
   <string name="hw_upgrade_scan_device">Dispositivo de digitalização</string>
   <string name="hw_upgrade_start_action">Iniciar atualização</string>
@@ -1111,7 +1123,7 @@
   <string name="hw_upgrade_to_cold_banner_description">Proteja suas criptomoedas com a carteira de hardware de alta qualidade da Tangem.</string>
   <string name="hw_upgrade_to_cold_banner_title">Atualize a segurança da sua carteira para hardware.</string>
   <string name="information_generated_with_ai">Esta informação foi gerada com IA.\nToque aqui se encontrar algum erro.</string>
-  <string name="initial_message_change_access_code_body">Para alterar o código de acesso, aproxime o cartão ou toque-o conforme mostrado acima e não o remova até o final da operação.</string>
+  <string name="initial_message_change_access_code_body">Para alterar o código de acesso, aproxime o cartão ou anel conforme mostrado acima e não o remova até o final da operação.</string>
   <string name="initial_message_change_passcode_body">Para alterar a senha, aproxime o cartão conforme mostrado acima e não o remova até o final da operação.</string>
   <string name="initial_message_create_wallet_body">Para criar a carteira, aproxime o cartão conforme mostrado acima e não o remova até o final da operação.</string>
   <string name="initial_message_create_wallet_body_ring">Para criar a carteira, toque no anel conforme mostrado acima e não o remova até o final da operação.</string>
@@ -1119,7 +1131,7 @@
   <string name="initial_message_scan_header">Toque para digitalizar</string>
   <string name="initial_message_sign_header">Toque para assinar</string>
   <string name="initial_message_tap_header">Toque no Cartão ou no Anel</string>
-  <string name="initial_wallet_sync_banner_description">Sua carteira está sincronizada e pronta. \n Faltam alguns tokens?</string>
+  <string name="initial_wallet_sync_banner_description">Sua carteira está sincronizada e pronta.\nFaltam alguns tokens?</string>
   <string name="initial_wallet_sync_banner_title">Carteira importada com sucesso.</string>
   <string name="initial_wallet_sync_restore_progress">Restaurando %d%%</string>
   <string name="introduction_button_buy_tangem">Comprar Tangem</string>
@@ -1193,11 +1205,16 @@
   <string name="joint_account_join_invalid_link_subtitle">Verifique se você abriu o link correto ou peça ao criador da conta para enviá-lo novamente</string>
   <string name="joint_account_join_invalid_link_title">O link de convite não é válido</string>
   <string name="joint_account_join_load_failed">Não foi possível carregar a página de convite. Toque para recarregar</string>
+  <plurals name="joint_account_join_signatures_count">
+    <item quantity="one">%d assinatura</item>
+    <item quantity="other">%d assinaturas</item>
+  </plurals>
   <string name="joint_account_join_subtitle">Esta é uma conta conjunta. Todas as transações desta conta exigirão a assinatura de %1$s</string>
   <string name="joint_account_join_subtitle_value">%1$s de %2$s membros</string>
   <string name="joint_account_join_success_message">Conta adicionada</string>
   <string name="joint_account_join_title">Você foi convidado a participar de %1$s</string>
   <string name="joint_account_join_to_account_btn_text">Entrar na conta</string>
+  <string name="joint_account_join_to_approve">Para aprovação</string>
   <plurals name="joint_account_members_count">
     <item quantity="one">%d Membro</item>
     <item quantity="other">%d Membros</item>
@@ -1280,7 +1297,7 @@
   <string name="joint_operation_threshold_reached_subtitle">A operação está sendo executada. Sua assinatura não é necessária</string>
   <string name="joint_operation_threshold_reached_title">Assinaturas necessárias coletadas</string>
   <string name="joint_operation_waiting_to_sign">Aguardando assinatura</string>
-  <string name="key_invalidated_warning_description">Você atualizou seus dados biométricos. Escaneie seu cartão ou toque a campainha para entrar.</string>
+  <string name="key_invalidated_warning_description">Você atualizou seus dados biométricos. Escaneie seu cartão ou anel para entrar.</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Seu saldo deve ser superior ao valor da taxa para efetuar uma transferência.</string>
   <string name="koinos_insufficient_balance_to_send_koin_title">Saldo insuficiente</string>
   <string name="koinos_insufficient_mana_to_send_koin_description">Você não possui Mana suficiente para esta transação. Aguarde até que sua Mana seja recarregada. Seu saldo de Mana é %1$s/%2$s</string>
@@ -1296,8 +1313,8 @@
   <string name="main_manage_tokens">Gerenciar tokens</string>
   <string name="main_qr_scan_hint">Leia o código QR para enviar fundos ou conectar-se a um aplicativo</string>
   <string name="main_scan_card_warning_view_subtitle">Para acessar todas as redes, você precisa escanear o cartão.</string>
-  <string name="main_scan_card_warning_view_title">Escaneie seu cartão ou toque</string>
-  <string name="main_swap_changelly_promotion_message">Aproveitar %1$s Taxas de serviço em swaps via Changelly a partir de fevereiro %2$s-%3$s</string>
+  <string name="main_scan_card_warning_view_title">Escaneie seu cartão ou anel</string>
+  <string name="main_swap_changelly_promotion_message">Aproveite taxas de serviço de %1$s em swaps via Changelly de %2$s a %3$s de fevereiro</string>
   <string name="main_swap_changelly_promotion_title">Trocar com Changelly, %s tarifas</string>
   <string name="main_tokens">Tokens</string>
   <string name="manage_tokens_add">Adicionar</string>
@@ -1312,8 +1329,8 @@
   <string name="manage_tokens_network_selector_wallet">Carteira</string>
   <string name="manage_tokens_nothing_found">Não foi possível encontrar este token. Você pode adicioná-lo manualmente.</string>
   <plurals name="manage_tokens_number_of_wallets_android">
-    <item quantity="one">de carteira</item>
-    <item quantity="other">de carteiras</item>
+    <item quantity="one">%1$d de %2$d carteira</item>
+    <item quantity="other">%1$d de %2$d carteiras</item>
   </plurals>
   <string name="manage_tokens_remove">Remover</string>
   <string name="manage_tokens_search_placeholder">Por exemplo, Bitcoin</string>
@@ -1423,12 +1440,12 @@
   <string name="markets_token_added">Token adicionado</string>
   <string name="markets_token_details_about_token_title">Sobre %s</string>
   <plurals name="markets_token_details_amount_exchanges">
-    <item quantity="one">exchange</item>
-    <item quantity="other">exchanges</item>
+    <item quantity="one">%d exchange</item>
+    <item quantity="other">%d exchanges</item>
   </plurals>
   <plurals name="markets_token_details_based_on_ratings">
-    <item quantity="one">Com base em avaliação</item>
-    <item quantity="other">Com base em avaliações</item>
+    <item quantity="one">Com base em %d avaliação</item>
+    <item quantity="other">Com base em %d avaliações</item>
   </plurals>
   <string name="markets_token_details_blockchain_site">Site</string>
   <string name="markets_token_details_buy_pressure">Pressão de compra</string>
@@ -1507,7 +1524,7 @@
   <string name="mcp_session_revoke_access">Revogar acesso</string>
   <string name="mcp_session_revoke_failed">Não foi possível revogar o acesso</string>
   <string name="mcp_session_title">MCP conectado</string>
-  <string name="mobile_wallet_requires_min_os_warning_body">Você precisa atualizar para %1$s  antes de criar uma carteira móvel</string>
+  <string name="mobile_wallet_requires_min_os_warning_body">Você precisa atualizar para %1$s antes de criar uma carteira móvel</string>
   <string name="mobile_wallet_requires_min_os_warning_title">A carteira digital requer %1$s ou mais tarde</string>
   <string name="money_account_main_name">Money account</string>
   <string name="money_account_main_status_action_required">Ação necessária</string>
@@ -1543,12 +1560,12 @@
   <string name="news_all_news">Todas as notícias</string>
   <string name="news_like">Gosto</string>
   <plurals name="news_published_hours_ago">
-    <item quantity="one">UM</item>
-    <item quantity="other">OUTRO</item>
+    <item quantity="one">há %dh</item>
+    <item quantity="other">há %dh</item>
   </plurals>
   <plurals name="news_published_minutes_ago">
-    <item quantity="one">UM</item>
-    <item quantity="other">OUTRO</item>
+    <item quantity="one">há %d minuto</item>
+    <item quantity="other">há %d minutos</item>
   </plurals>
   <string name="news_quick_recap">Resumo rápido</string>
   <string name="news_related_news">Notícias</string>
@@ -1560,8 +1577,8 @@
   <string name="nft_about_title">Sobre NFTs</string>
   <string name="nft_asset">Ativo NFT</string>
   <plurals name="nft_collections_count">
-    <item quantity="one">Artigo</item>
-    <item quantity="other">Artigos</item>
+    <item quantity="one">%d item</item>
+    <item quantity="other">%d itens</item>
   </plurals>
   <string name="nft_collections_empty_description">Os NFTs enviados para o endereço da sua carteira aparecerão aqui.</string>
   <string name="nft_collections_empty_title">Ainda não há coleções.</string>
@@ -1600,8 +1617,8 @@
   <string name="nft_untitled_collection">Coleção sem título</string>
   <string name="nft_wallet_count">%1$d NFTs em %2$d coleções</string>
   <plurals name="nft_wallet_count_android">
-    <item quantity="one">NFT em</item>
-    <item quantity="other">NFTs em</item>
+    <item quantity="one">%1$d NFT em %2$d coleção</item>
+    <item quantity="other">%1$d NFTs em %2$d coleções</item>
   </plurals>
   <string name="nft_wallet_receive_nft">Toque aqui para receber o primeiro NFT</string>
   <string name="nft_wallet_title">coleções NFT</string>
@@ -1614,7 +1631,7 @@
   <string name="notification_black_friday_title">Black Friday: até 30% DESLIGADO</string>
   <string name="notification_one_plus_one_button">Vamos lá</string>
   <string name="notification_one_plus_one_text">Tempo limitado!</string>
-  <string name="notification_one_plus_one_title">1+1: Compre uma carteira e ganhe 50% DESLIGADO</string>
+  <string name="notification_one_plus_one_title">1+1: Compre uma carteira e ganhe 50% OFF</string>
   <string name="notification_referral_promo_button">Cadastre-se agora</string>
   <string name="notification_referral_promo_text">Compartilhe seu código e ganhe 5 USDT por venda. Seu amigo ganha 10.% DESLIGADO.</string>
   <string name="notification_referral_promo_title">Ganhe RECOMPENSAS por cada amigo!</string>
@@ -1628,7 +1645,7 @@
   <string name="notification_yield_promo_title">Participe da campanha Yield Mode!</string>
   <string name="onboarding_access_code_feature_1_description">Configure um código de acesso único para proteger todos os seus dispositivos.</string>
   <string name="onboarding_access_code_feature_1_title">Proteger</string>
-  <string name="onboarding_access_code_feature_2_description">Defina um código de acesso individual para cada cartão ou toque mais tarde.</string>
+  <string name="onboarding_access_code_feature_2_description">Defina um código de acesso individual para cada cartão ou anel mais tarde.</string>
   <string name="onboarding_access_code_feature_2_title">Personalizar</string>
   <string name="onboarding_access_code_feature_3_description">Recupere o código de acesso com um cartão ou anel vinculado. Não guarde todos os seus dispositivos no mesmo lugar.</string>
   <string name="onboarding_access_code_feature_3_title">Restaurar</string>
@@ -1727,7 +1744,7 @@
   <string name="onboarding_twins_interrupt_warning">Se o processo de criação da carteira for interrompido de alguma forma, você terá que começar tudo de novo.</string>
   <string name="onboarding_wallet_info_subtitle_first">Você pode fazer backup das suas chaves em até dois outros cartões ou anéis em branco da Tangem Wallet.</string>
   <string name="onboarding_wallet_info_subtitle_fourth">O código de acesso pode ser restaurado com um dos cartões de backup.</string>
-  <string name="onboarding_wallet_info_subtitle_second">Todos os cartões de backup podem ser usados ​​com todas as suas funções, utilizando as mesmas chaves.</string>
+  <string name="onboarding_wallet_info_subtitle_second">Todos os cartões de backup podem ser usados com todas as suas funções, utilizando as mesmas chaves.</string>
   <string name="onboarding_wallet_info_subtitle_third">Você poderá definir um código de acesso para proteger suas carteiras.</string>
   <string name="onboarding_wallet_info_title_first">Carteira de backup</string>
   <string name="onboarding_wallet_info_title_fourth">Restaurar código de acesso</string>
@@ -1749,7 +1766,7 @@
   <string name="onramp_kyc_verification_bullet_privacy">A Tangem não terá acesso às suas informações de identidade; você compartilha os dados diretamente com o provedor regulamentado.</string>
   <string name="onramp_kyc_verification_bullet_unlocks">A verificação desbloqueia o acesso total a transações futuras com este fornecedor.</string>
   <string name="onramp_kyc_verification_choose_another">Escolha outro método</string>
-  <string name="onramp_kyc_verification_subtitle">Para cumprir os requisitos regulamentares locais %@ Requer verificação de identidade.</string>
+  <string name="onramp_kyc_verification_subtitle">Para cumprir os requisitos regulamentares locais, %@ requer verificação de identidade.</string>
   <string name="onramp_kyc_verification_title">Verificação de identidade exigida pelo provedor de pagamento</string>
   <string name="onramp_kyc_verification_verify_button">Verificar</string>
   <string name="onramp_kyc_verification_whats_important">O que é importante</string>
@@ -1757,21 +1774,21 @@
   <string name="onramp_legal_text">O serviço é fornecido por um provedor externo. A Tangem não se responsabiliza por ele.</string>
   <string name="onramp_max_amount_restriction">O valor da compra não deve ser superior a %s</string>
   <string name="onramp_min_amount_restriction">O valor da compra deve ser de pelo menos %s</string>
-  <string name="onramp_native_payment_cumulative_limit" formatted="false">Valor total acumulado das transações acima de %1s pode exigir verificação de identidade com %2s</string>
-  <string name="onramp_native_payment_cumulative_limit_equivalent" formatted="false">Valor total acumulado das transações acima do equivalente a %1s pode exigir verificação de identidade com %2s</string>
-  <string name="onramp_native_payment_identity_verification">As transações com Apple Pay podem exigir verificação de identidade com %1s</string>
-  <string name="onramp_native_payment_legal_notice" formatted="false">Ao clicar em Pagar, você concorda com %1s\'s %2s e %3s.</string>
+  <string name="onramp_native_payment_cumulative_limit">Valor total acumulado das transações acima de %1$s pode exigir verificação de identidade com %2$s</string>
+  <string name="onramp_native_payment_cumulative_limit_equivalent">Valor total acumulado das transações acima do equivalente a %1$s pode exigir verificação de identidade com %2$s</string>
+  <string name="onramp_native_payment_identity_verification">As transações com Apple Pay podem exigir verificação de identidade com %1$s</string>
+  <string name="onramp_native_payment_legal_notice">Ao clicar em Pagar, você concorda com %1$s\'s %2$s e %3$s.</string>
   <string name="onramp_no_available_providers">Não há fornecedores disponíveis para esta moeda.</string>
   <string name="onramp_offer_type_fastet">Processamento mais rápido</string>
   <string name="onramp_pay_with">Pagar com</string>
   <string name="onramp_payment_method_subtitle">Método de pagamento</string>
   <string name="onramp_provider_max_amount">Disponível até %s</string>
   <string name="onramp_provider_min_amount">Disponível em %s</string>
-  <string name="onramp_provider_requirements_body">Cartões emitidos nos EUA e no Reino Unido não podem ser processados ​​por este método. O provedor pode exigir verificação de identidade adicional.</string>
+  <string name="onramp_provider_requirements_body">Cartões emitidos nos EUA e no Reino Unido não podem ser processados por este método. O provedor pode exigir verificação de identidade adicional.</string>
   <string name="onramp_provider_requirements_title">Requisitos do fornecedor</string>
   <plurals name="onramp_providers_count">
-    <item quantity="one">UM</item>
-    <item quantity="other">OUTRO</item>
+    <item quantity="one">%d provedor</item>
+    <item quantity="other">%d provedores</item>
   </plurals>
   <string name="onramp_providers_subtitle">Fornecedores</string>
   <string name="onramp_recently_used_title">Usado recentemente</string>
@@ -1785,8 +1802,8 @@
   <string name="onramp_settings_title">Configurações</string>
   <string name="onramp_statuses_view_footer">Você pode fechar esta tela e verificar o status da transação na tela de detalhes do token.</string>
   <plurals name="onramp_timing_days">
-    <item quantity="one">até</item>
-    <item quantity="other">até</item>
+    <item quantity="one">até %d dia</item>
+    <item quantity="other">até %d dias</item>
   </plurals>
   <string name="onramp_timing_minutes">%s min</string>
   <string name="onramp_title_available_from">Disponível em</string>
@@ -1803,7 +1820,7 @@
   <string name="organize_tokens_group">Grupo</string>
   <string name="organize_tokens_menu_group_by_networks">Agrupar por redes</string>
   <string name="organize_tokens_menu_sort_by_balance">Ordenar por saldo</string>
-  <string name="organize_tokens_sort_by_balance">Por equilíbrio</string>
+  <string name="organize_tokens_sort_by_balance">Por saldo</string>
   <string name="organize_tokens_title">Organizar tokens</string>
   <string name="organize_tokens_ungroup">Desagrupar</string>
   <string name="prediction_account_open_detailed_view">Abrir visão detalhada</string>
@@ -1846,8 +1863,8 @@
   <string name="prediction_details_resolution_date">Data de resolução</string>
   <string name="prediction_details_total_volume">Volume total</string>
   <plurals name="prediction_event_more_outcomes">
-    <item quantity="one">Resultado</item>
-    <item quantity="other">Resultados</item>
+    <item quantity="one">+%d Resultado</item>
+    <item quantity="other">+%d Resultados</item>
   </plurals>
   <string name="prediction_event_probability">Probabilidade</string>
   <string name="prediction_event_total_volume">Volume total:</string>
@@ -1898,7 +1915,7 @@
   <string name="prediction_onboarding_reconnect_button">Continuar prevendo</string>
   <string name="prediction_onboarding_reconnect_faq_answer">As chaves de acesso são armazenadas apenas no seu dispositivo. Elas são excluídas quando você reinstala o aplicativo, muda para um novo telefone ou quando uma sessão se torna inválida. Sua conta em si permanece na Polymarket e não é afetada.</string>
   <string name="prediction_onboarding_reconnect_faq_question">Por que estou vendo isso?</string>
-  <string name="prediction_onboarding_reconnect_legal">Não há novos termos a serem aceitos  — seu acordo com %1$s e %2$s continua válido</string>
+  <string name="prediction_onboarding_reconnect_legal">Não há novos termos a serem aceitos — seu acordo com %1$s e %2$s continua válido</string>
   <string name="prediction_onboarding_reconnect_subtitle">Sua conta de depósito, saldo e posições em aberto estão seguros. Este dispositivo só precisa ser vinculado novamente — aproxime seu cartão uma vez para restaurar o acesso.</string>
   <string name="prediction_onboarding_reconnect_title">Reconecte sua conta da Polymarket</string>
   <string name="prediction_onboarding_start_button">Começar a prever</string>
@@ -2023,7 +2040,10 @@
   <string name="prediction_withdraw_in_progress_message">Seu saque anterior ainda está sendo processado. Aguarde a conclusão antes de iniciar um novo saque.</string>
   <string name="prediction_withdraw_min_amount">O saque mínimo é de %@. Adicione fundos para atingir esse valor.</string>
   <string name="prediction_withdraw_status_failed_description">Algo deu errado ao processar seu saque. Tente novamente ou entre em contato com o suporte.</string>
+  <string name="prediction_withdraw_status_failed_notice">Falha no saque. Nenhum valor foi sacado.</string>
   <string name="prediction_withdraw_status_failed_title">Falha no saque</string>
+  <string name="prediction_withdraw_status_in_progress_description">Isso geralmente leva alguns segundos. Você pode fechar esta tela.</string>
+  <string name="prediction_withdraw_status_in_progress_title">Saque em andamento</string>
   <string name="prediction_withdraw_status_sent_description">O envio pode levar até %1$d minutos</string>
   <string name="prediction_withdraw_status_sent_title">Saque enviado</string>
   <string name="promo_campaign_all_wallets_enrolled">Todas as suas carteiras estão inscritas</string>
@@ -2078,7 +2098,7 @@
   <string name="qr_scanner_error_unrecognized_title">Código QR não reconhecido</string>
   <string name="qr_scanner_error_unsupported_network_message">Esta rede não é compatível com nenhum dos tokens adicionados. Adicione um token compatível para enviar criptomoedas.</string>
   <string name="qr_scanner_error_unsupported_network_title">Nenhum token compatível encontrado</string>
-  <string name="qr_scanner_warning_unknown_parameters_message">Este código QR contém parâmetros que não são reconhecidos: %sAlgumas informações de pagamento podem ser perdidas se você continuar.</string>
+  <string name="qr_scanner_warning_unknown_parameters_message">Este código QR contém parâmetros que não são reconhecidos: %s. Algumas informações de pagamento podem ser perdidas se você continuar.</string>
   <string name="qr_scanner_warning_unknown_parameters_title">Parâmetros desconhecidos</string>
   <string name="quick_action_buy_description">Cartão de crédito ou conta bancária</string>
   <string name="quick_action_receive_description">Compartilhe seu endereço ou código QR.</string>
@@ -2098,15 +2118,15 @@
   <string name="referral_address_for_rewards">Endereço para recebimento de recompensas</string>
   <string name="referral_button_participate">Participar</string>
   <string name="referral_error_failed_to_load_info">Não foi possível carregar as informações sobre o programa de indicações. Tente novamente mais tarde.</string>
-  <string name="referral_error_failed_to_load_info_with_reason">Falha ao carregar as informações sobre o programa de indicações. Código de erro: %sPor favor, tente novamente mais tarde.</string>
+  <string name="referral_error_failed_to_load_info_with_reason">Falha ao carregar as informações sobre o programa de indicações. Código de erro: %s. Por favor, tente novamente mais tarde.</string>
   <string name="referral_expected_awards">Pagamentos futuros</string>
   <string name="referral_friends_bought_title">Seus amigos compraram</string>
   <string name="referral_less">Menos</string>
   <string name="referral_more">Mais</string>
   <string name="referral_no_expected_awards">Não há pagamentos futuros</string>
   <plurals name="referral_number_of_wallets">
-    <item quantity="one">para carteira</item>
-    <item quantity="other">para carteiras</item>
+    <item quantity="one">para %d carteira</item>
+    <item quantity="other">para %d carteiras</item>
   </plurals>
   <string name="referral_point_currencies_description">Vou receber ^^%1$s^^ para cada carteira comprada pelo seu amigo no seu %2$s endereço de rede %3$s ^^30 dias depois^^ disso</string>
   <string name="referral_point_currencies_title">Você</string>
@@ -2122,8 +2142,8 @@
   <string name="referral_tos_not_enroled_prefix">Ao tocar neste botão, você aceita.</string>
   <string name="referral_tos_suffix">do programa de indicação</string>
   <plurals name="referral_wallets_purchased_count">
-    <item quantity="one">carteira</item>
-    <item quantity="other">carteiras</item>
+    <item quantity="one">%d carteira</item>
+    <item quantity="other">%d carteiras</item>
   </plurals>
   <string name="reset_card_to_factory_button_title">Reinicie o cartão</string>
   <string name="reset_card_to_factory_condition_1">Entendo que, após realizar esta ação, não terei mais acesso à carteira atual.</string>
@@ -2162,7 +2182,7 @@
   <string name="send_additional_field_already_included">Já incluído no endereço inserido</string>
   <string name="send_alert_fee_too_high_text">O valor da sua comissão é %s vezes superior à quantidade recomendada. Por favor, revise e ajuste suas configurações personalizadas.</string>
   <string name="send_alert_fee_too_low_text">Você especificou uma comissão abaixo do valor recomendado, o que pode causar atraso na sua transação. Deseja continuar?</string>
-  <string name="send_alert_transaction_failed_text">Razão: %1$sCódigo: %2$s</string>
+  <string name="send_alert_transaction_failed_text">Razão: %1$s\nCódigo: %2$s</string>
   <string name="send_alert_transaction_failed_title">A transação não foi concluída.</string>
   <string name="send_amount_convert_to_another_token">Trocar para outro token ou rede</string>
   <string name="send_amount_label">Quantia</string>
@@ -2205,8 +2225,8 @@
   <string name="send_memo_destination_tag_error">Memorando inválido</string>
   <string name="send_network_fee_warning_title">Cobertura da taxa de rede</string>
   <plurals name="send_network_selection_hidden_tokens">
-    <item quantity="one">%d O token não é compatível com este endereço.</item>
-    <item quantity="other">%d Os tokens não são compatíveis com este endereço.</item>
+    <item quantity="one">%d token não é compatível com este endereço.</item>
+    <item quantity="other">%d tokens não são compatíveis com este endereço.</item>
   </plurals>
   <string name="send_nonce">Nonce</string>
   <string name="send_nonce_footer">Número único para cada transação. Use-o para reenviar ou cancelar uma transação pendente.</string>
@@ -2217,13 +2237,13 @@
   <string name="send_notification_existential_deposit_title">Depósito existencial</string>
   <string name="send_notification_fee_too_high_text">O valor da sua comissão é %s vezes maior que a quantidade recomendada. Por favor, revise e ajuste suas configurações personalizadas.</string>
   <string name="send_notification_fee_too_high_title">A taxa personalizada é alta</string>
-  <string name="send_notification_high_fee_text">Devido às peculiaridades do %1$s Na rede, a taxa para transferir o saldo total é mais alta. Para reduzir a comissão, você pode sair %2$s.</string>
+  <string name="send_notification_high_fee_text">Devido às peculiaridades da rede %1$s, a taxa para transferir o saldo total é mais alta. Para reduzir a comissão, você pode deixar %2$s.</string>
   <string name="send_notification_high_fee_title">A taxa é mais alta</string>
   <string name="send_notification_invalid_amount_rent_destination">A conta do destinatário não está ativada. O valor mínimo da transferência deve ser igual ou superior ao saldo isento de aluguel. %1$s.</string>
   <string name="send_notification_invalid_amount_rent_fee">O saldo da sua conta não pode ser inferior ao valor do aluguel. Por favor, mantenha um saldo mínimo de pelo menos [valor omitido]. %1$s em sua conta ou retire todos os fundos.</string>
   <string name="send_notification_invalid_amount_text">A comissão incluída excede o valor da transferência, resultando em um valor negativo.</string>
   <string name="send_notification_invalid_amount_title">Valor inválido</string>
-  <string name="send_notification_invalid_minimum_amount_text">O valor mínimo para envio é %1$sCertifique-se de que o saldo restante após o envio não seja inferior a %2$s.</string>
+  <string name="send_notification_invalid_minimum_amount_text">O valor mínimo para envio é %1$s. Certifique-se de que o saldo restante após o envio não seja inferior a %2$s.</string>
   <string name="send_notification_invalid_reserve_amount_text">A conta de destino não foi criada. Por favor, altere o valor a ser enviado.</string>
   <string name="send_notification_invalid_reserve_amount_title">O valor a ser enviado deve ser de pelo menos %s</string>
   <string name="send_notification_leave_button">Deixar %s</string>
@@ -2231,7 +2251,7 @@
   <string name="send_notification_reduce_to">Reduzir para %s</string>
   <string name="send_notification_transaction_delay_text">Informamos que a sua transação poderá sofrer atrasos devido a determinadas taxas.</string>
   <string name="send_notification_transaction_delay_title">Atrasos na transação são possíveis.</string>
-  <string name="send_notification_transaction_limit_text">Devido a %1$s limitações apenas %2$s Os UTXOs podem caber em uma única transação. Isso significa que você só pode enviar %3$s ou menos. Você precisa reduzir a quantidade.</string>
+  <string name="send_notification_transaction_limit_text">Devido às limitações de %1$s, apenas %2$s UTXOs podem caber em uma única transação. Isso significa que você só pode enviar %3$s ou menos. Você precisa reduzir a quantidade.</string>
   <string name="send_notification_transaction_limit_title">Limitação de transação</string>
   <string name="send_optional_field">Opcional</string>
   <string name="send_qrcode_scan_info">Alinhe o seu código QR com o quadrado para escaneá-lo. Certifique-se de escanear corretamente. %s endereço de rede.</string>
@@ -2262,7 +2282,7 @@
   <string name="send_summary_transaction_description_suffix_including">incluindo uma taxa de rede de %1$s</string>
   <string name="send_to_address">Para endereço</string>
   <string name="send_transaction_success">A transação foi assinada e enviada com sucesso para o nó da blockchain. O saldo da carteira será atualizado em breve.</string>
-  <string name="send_tron_account_activation_error">%1$s Tron é um ativo na rede Tron. Para calcular a taxa e realizar uma transação, você precisa depositar alguns Tron (TRX) em sua conta.</string>
+  <string name="send_tron_account_activation_error">%1$s é um ativo na rede Tron. Para calcular a taxa e realizar uma transação, você precisa depositar alguns Tron (TRX) em sua conta.</string>
   <string name="send_validation_amount_exceeds_balance">O valor excede o saldo.</string>
   <string name="send_validation_destination_tag_required_description">É necessário um marcador de destino (memorando) para concluir esta transação para o endereço especificado.</string>
   <string name="send_validation_destination_tag_required_title">Etiqueta de destino obrigatória</string>
@@ -2318,13 +2338,17 @@
   <string name="social_login_toast_wallet_added">Carteira adicionada</string>
   <string name="social_login_toast_wallet_created">Carteira criada</string>
   <string name="social_wallet_delete_anyway">Excluir mesmo assim</string>
+  <string name="social_wallet_delete_attention_acknowledge">Entendo que, se eu não tiver feito backup da minha frase de recuperação, perderei o acesso a esta carteira para sempre.</string>
   <string name="social_wallet_delete_attention_description">Esta carteira será removida permanentemente do seu dispositivo e da conta %s</string>
+  <string name="social_wallet_delete_confirmation_title">Excluir esta carteira e desvinculá-la da sua conta %1$s?</string>
   <string name="social_wallet_delete_description">Esta carteira será removida permanentemente do aplicativo, e sua conta %s deixará de estar vinculada a ela. Faça primeiro o backup da sua frase-semente; caso contrário, você perderá permanentemente o acesso a quaisquer criptomoedas que ela contenha.</string>
   <string name="social_wallet_delete_error_description">Não foi possível excluir esta carteira. Por favor, tente novamente</string>
   <string name="social_wallet_delete_title">Excluir carteira?</string>
   <string name="social_wallet_log_out_description">Você sempre poderá fazer login novamente a qualquer momento.</string>
+  <string name="social_wallet_log_out_description_v2">Isso remove apenas a carteira deste dispositivo. Ela continua vinculada à sua conta %1$s, e você pode restaurá-la fazendo login com %1$s.</string>
   <string name="social_wallet_log_out_title">Tem certeza de que deseja sair?</string>
   <string name="social_wallet_settings_delete_wallet">Excluir carteira</string>
+  <string name="social_wallet_settings_delete_wallet_footer">A exclusão da carteira é irreversível. Sem um backup, não será possível restaurar nem usar a carteira novamente.</string>
   <string name="social_wallet_settings_log_out">Sair</string>
   <string name="stake_token_description">Coloque seu token para trabalhar.</string>
   <string name="staking_account_initialization_footer">Uma taxa de rede é um pequeno pagamento necessário para processar e confirmar sua transação na blockchain.</string>
@@ -2356,7 +2380,7 @@
   <string name="staking_details_estimated_profit">%s lucro estimado</string>
   <string name="staking_details_market_rating">Posição no mercado</string>
   <string name="staking_details_metrics_block_header">Métricas</string>
-  <string name="staking_details_min_rewards_notification">De acordo com %1$s regras de rede, reivindicações são possíveis de %2$sOs valores abaixo serão creditados em sua conta após o resgate dos ativos.</string>
+  <string name="staking_details_min_rewards_notification">De acordo com as regras da rede %1$s, reivindicações são possíveis a partir de %2$s. Os valores abaixo serão creditados em sua conta após o resgate dos ativos.</string>
   <string name="staking_details_minimum_requirement">Requisito mínimo</string>
   <string name="staking_details_no_rewards_to_claim">Nenhuma recompensa disponível</string>
   <string name="staking_details_reward_claiming">Reivindicação de recompensa</string>
@@ -2388,22 +2412,22 @@
   <string name="staking_notification_earn_rewards_text_daily">A Tangem permite que os usuários façam staking de suas criptomoedas.</string>
   <string name="staking_notification_earn_rewards_text_hourly">A Tangem permite que os usuários façam staking de suas criptomoedas.</string>
   <string name="staking_notification_earn_rewards_text_monthly">A Tangem permite que os usuários façam staking de suas criptomoedas.</string>
-  <string name="staking_notification_earn_rewards_text_period_day">O staking permite que você receba %1$sSuas recompensas de staking chegam todos os dias.</string>
-  <string name="staking_notification_earn_rewards_text_period_hour">O staking permite que você receba %1$sSuas recompensas de staking chegam a cada hora.</string>
-  <string name="staking_notification_earn_rewards_text_period_month">O staking permite que você receba %1$sSuas recompensas de staking chegam todo mês.</string>
-  <string name="staking_notification_earn_rewards_text_period_week">O staking permite que você receba %1$sSuas recompensas de staking chegam toda semana.</string>
+  <string name="staking_notification_earn_rewards_text_period_day">O staking permite que você receba %1$s. Suas recompensas de staking chegam todos os dias.</string>
+  <string name="staking_notification_earn_rewards_text_period_hour">O staking permite que você receba %1$s. Suas recompensas de staking chegam a cada hora.</string>
+  <string name="staking_notification_earn_rewards_text_period_month">O staking permite que você receba %1$s. Suas recompensas de staking chegam todo mês.</string>
+  <string name="staking_notification_earn_rewards_text_period_week">O staking permite que você receba %1$s. Suas recompensas de staking chegam toda semana.</string>
   <string name="staking_notification_earn_rewards_text_weekly">A Tangem permite que os usuários façam staking de suas criptomoedas.</string>
   <string name="staking_notification_earn_rewards_title">Ganhe recompensas com staking</string>
   <string name="staking_notification_low_staked_balance_text">Seu saldo em staking restante será muito baixo para ser retirado. Você precisará fazer staking de mais fundos para atingir o valor mínimo necessário para a retirada.</string>
   <string name="staking_notification_low_staked_balance_title">Saldo baixo em staking</string>
-  <string name="staking_notification_minimum_balance_error_text">No mínimo, %1$s %2$s É necessário refazer o cadastro. Por favor, recarregue seu saldo.</string>
+  <string name="staking_notification_minimum_balance_error_text">É necessário no mínimo %1$s %2$s para fazer restaking. Por favor, recarregue seu saldo.</string>
   <string name="staking_notification_minimum_balance_error_title">Não é suficiente %s</string>
   <string name="staking_notification_minimum_balance_title">Saldo insuficiente para staking</string>
   <string name="staking_notification_minimum_restake_ada_text">É necessário um mínimo de 3 ADA para refazer a reserva. Por favor, recarregue seu saldo.</string>
   <string name="staking_notification_minimum_restake_ada_title">Não há ADA suficiente</string>
   <string name="staking_notification_minimum_stake_ada_text">O valor mínimo para staking deve ser superior a 5 ADA. Por favor, adicione fundos ao seu saldo para começar a fazer staking.</string>
   <string name="staking_notification_network_error_text">O staking está indisponível no momento devido a condições da rede. Tente novamente mais tarde.</string>
-  <string name="staking_notification_new_validator_funds_transfer">Staking no %1$s Uma rede com um novo validador transferirá automaticamente todos os fundos previamente alocados para esse validador.</string>
+  <string name="staking_notification_new_validator_funds_transfer">Fazer staking na rede %1$s com um novo validador transferirá automaticamente todos os fundos previamente alocados para esse validador.</string>
   <string name="staking_notification_restake_rewards_text">Reinveste as recompensas ganhas no valor apostado, aumentando os ganhos potenciais.</string>
   <string name="staking_notification_restake_text">O Restake permite que você transfira seus fundos de um validador para outro sem precisar remover seus fundos do staking.</string>
   <string name="staking_notification_stake_entire_balance_text">Se você fizer staking de todo o seu saldo, precisará pagar uma taxa de rede ao retirar os fundos. Recomendamos deixar um pequeno valor em sua carteira para cobrir essas taxas.</string>
@@ -2415,7 +2439,7 @@
   <string name="staking_notification_ton_extra_reserve_title">Reserva GRAM necessária</string>
   <string name="staking_notification_ton_have_to_unstake_all_text">Essa ação encerrará outras posições ou as converterá para o status de saque, de acordo com as regras da rede.</string>
   <string name="staking_notification_ton_have_to_unstake_all_title">Status das posições</string>
-  <string name="staking_notification_unlock_text">Desbloqueie seu dinheiro para retirá-lo do processo de staking. O desbloqueio leva... %s.</string>
+  <string name="staking_notification_unlock_text">Desbloqueie seu dinheiro para retirá-lo do processo de staking. O desbloqueio leva %s.</string>
   <string name="staking_notification_unstake_cosmos_text">Seus fundos estarão disponíveis para uso após o período de desbloqueio de 21 dias. A recompensa será retirada juntamente com os fundos que você retirou do staking.</string>
   <string name="staking_notification_unstake_text">Seus fundos estarão disponíveis para uso após o %s período de desvinculação.</string>
   <string name="staking_notification_withdraw_text">Você já pode sacar seus fundos, eles estarão disponíveis para uso imediatamente.</string>
@@ -2444,7 +2468,7 @@
   <string name="staking_solana_details_auto_claiming_rewards_daily_text">As recompensas na Solana são adicionadas automaticamente ao seu saldo de staking e não podem ser exibidas separadamente.</string>
   <string name="staking_stake_locked">Stake bloqueada</string>
   <string name="staking_stake_more">Aposte mais</string>
-  <string name="staking_stake_more_button_unavailability_reason">Ao fazer apostas %1$s, todo o seu %2$s O saldo é colocado em staking. Qualquer valor adicional %2$s Os depósitos que você fizer em sua carteira Tangem também serão automaticamente contabilizados em staking.</string>
+  <string name="staking_stake_more_button_unavailability_reason">Ao fazer staking de %1$s, todo o seu saldo de %2$s fica em staking. Qualquer valor adicional de %2$s que você depositar na sua carteira Tangem também será automaticamente colocado em staking.</string>
   <string name="staking_staked_amount">valor de staking</string>
   <string name="staking_summary_description_text">Você aposta %1$s e receberá sua recompensa. %2$s</string>
   <string name="staking_tap_to_unlock">Toque para desbloquear</string>
@@ -2476,7 +2500,7 @@
   <string name="story_backup_title">Backup ultrasseguro</string>
   <string name="story_currencies_description">Uma carteira de hardware para seus Bitcoins, Ethereums e muitas outras criptomoedas simultaneamente — tudo em um único cartão ou anel.</string>
   <string name="story_currencies_title">Milhares de moedas</string>
-  <string name="story_finish_description">Use em qualquer lugar, a qualquer hora. Sem fios nem baterias. Basta encostar o cartão ou ligar o telefone quando precisar das suas criptomoedas.</string>
+  <string name="story_finish_description">Use em qualquer lugar, a qualquer hora. Sem fios nem baterias. Basta encostar o cartão ou anel no telefone quando precisar das suas criptomoedas.</string>
   <string name="story_finish_title">A carteira para todos</string>
   <string name="story_meet_title">Conheça Tangem</string>
   <string name="story_web3_description">Mais de 100 integrações de serviços descentralizados estão disponíveis.</string>
@@ -2498,7 +2522,7 @@
   <string name="swap_in_progress">Troca em andamento</string>
   <string name="swap_promo_text">Troque mais tokens com melhores taxas diretamente na sua carteira.</string>
   <string name="swap_promo_title">Novo provedor de swaps disponível!</string>
-  <string name="swap_search_suggestion_hint">Procurando algo diferente?\n Experimente pesquisar ou explore outra criptomoeda!</string>
+  <string name="swap_search_suggestion_hint">Procurando algo diferente?\nExperimente pesquisar ou explore outra criptomoeda!</string>
   <string name="swap_search_tooltip_description">Pesquise qualquer token, mesmo que ele ainda não esteja na sua lista.</string>
   <string name="swap_search_tooltip_title">Use a busca para encontrar o que você precisa.</string>
   <string name="swap_simple_mode">Modo simples</string>
@@ -2508,7 +2532,7 @@
   <string name="swap_slippage_warning_title">Slippage definido como %s</string>
   <string name="swap_story_fifth_subtitle">Sinta-se seguro com o suporte disponível 24 horas por dia, 7 dias por semana, para ajudá-lo com qualquer problema.</string>
   <string name="swap_story_fifth_title">Sempre aqui</string>
-  <string name="swap_story_first_subtitle">Diversos provedores confiáveis ​​em um só lugar — troque qualquer ativo facilmente em sua carteira.</string>
+  <string name="swap_story_first_subtitle">Diversos provedores confiáveis em um só lugar — troque qualquer ativo facilmente em sua carteira.</string>
   <string name="swap_story_first_subtitle_v2">Troque criptomoedas diretamente na Tangem\nSem transferências adicionais\nSem movimentação de fundos para corretoras</string>
   <string name="swap_story_first_title">Troque conosco</string>
   <string name="swap_story_first_title_v2">Troque dentro de sua carteira</string>
@@ -2550,15 +2574,15 @@
   <string name="swapping_rate_feedback_submit">Enviar feedback</string>
   <string name="swapping_rate_feedback_title">O que afetou sua experiência?</string>
   <string name="swapping_swap_action">Trocar</string>
-  <string name="swapping_swap_action_in_progress">Trocar...</string>
+  <string name="swapping_swap_action_in_progress">Trocando...</string>
   <string name="swapping_to_account_title">Você recebe para</string>
   <string name="swapping_to_title">Você recebe</string>
   <string name="swapping_token_list_title">Escolha o token</string>
   <string name="swapping_token_not_available">não disponível</string>
-  <string name="swapping_trade_too_large_text">Liquidez insuficiente para esta transação. \n o valor ou escolha outro provedor.</string>
+  <string name="swapping_trade_too_large_text">Liquidez insuficiente para esta transação.\nReduza o valor ou escolha outro provedor.</string>
   <string name="swapping_trade_too_large_title">Negociação em grande escala</string>
   <string name="swapping_transfer_action">Transferir</string>
-  <string name="swapping_transfer_action_in_progress">Transferir...</string>
+  <string name="swapping_transfer_action_in_progress">Transferindo...</string>
   <string name="tangem_pay_beta_notification_subtitle">Teremos todo o prazer em receber seu feedback.</string>
   <string name="tangem_pay_beta_notification_title">O Tangem Pay agora está em versão beta.</string>
   <string name="tangem_pay_card_details_unable_to_rename_card_title">Não foi possível renomear o cartão.</string>
@@ -2856,7 +2880,7 @@
   <string name="tangempay_kyc_confirm_cancellation_alert_title">Confirmar cancelamento</string>
   <string name="tangempay_kyc_confirm_cancellation_description">Tem certeza de que deseja interromper a verificação? Você pode retomá-la a qualquer momento.</string>
   <string name="tangempay_kyc_failed_description">Não foi possível verificar seu perfil. Caso tenha alguma dúvida, entre em contato com o suporte.</string>
-  <string name="tangempay_kyc_failed_title">Infelizmente, não foi possível verificar sua identidade. </string>
+  <string name="tangempay_kyc_failed_title">Infelizmente, não foi possível verificar sua identidade.</string>
   <string name="tangempay_kyc_has_failed">Verificação rejeitado</string>
   <string name="tangempay_kyc_in_progress">Verificação em andamento</string>
   <string name="tangempay_kyc_in_progress_notification_button">Ver status</string>
@@ -2884,6 +2908,7 @@
   <string name="tangempay_newonboard_Q4_title">Quem armazena meus dados pessoais e como eles são protegidos?</string>
   <string name="tangempay_newonboard_body">Gaste cripto em qualquer lugar — sem bancos, sem intermediários, sem exchanges. A força da autocustódia nos pagamentos do dia a dia.</string>
   <string name="tangempay_newonboard_bottomleft_body">Compre online e com Apple Pay</string>
+  <string name="tangempay_newonboard_bottomleft_body_android">Compre online e pelo Google Pay</string>
   <string name="tangempay_newonboard_bottomleft_title">No mundo todo</string>
   <string name="tangempay_newonboard_bottomright_body">Transferências ACH/Wire</string>
   <string name="tangempay_newonboard_bottomright_title">Receber e enviar</string>
@@ -2983,7 +3008,7 @@
   <string name="tangempay_residency_all_country">Alterar país</string>
   <string name="tangempay_residency_all_state">Selecionar outro estado</string>
   <string name="tangempay_residency_suggested_country">País sugerido</string>
-  <string name="tangempay_residency_suggested_state"> Estado sugerido</string>
+  <string name="tangempay_residency_suggested_state">Estado sugerido</string>
   <string name="tangempay_residency_title_country">País de residência</string>
   <string name="tangempay_residency_title_state">Selecionar estado</string>
   <string name="tangempay_select_plan_btn_cancel">Cancelar</string>
@@ -3038,7 +3063,7 @@
   <string name="tangempay_waitlist_email_placeholder">satoshi.nakamoto@tangem.com</string>
   <string name="tangempay_waitlist_joined_message">Entrou na lista de espera</string>
   <string name="tangempay_waitlist_marketing_consent">Também gostaria de receber comunicações de marketing da Tangem. Você pode retirar esse consentimento a qualquer momento — consulte nossos %s</string>
-  <string name="tangempay_waitlist_title"> Entrar na lista de espera</string>
+  <string name="tangempay_waitlist_title">Entrar na lista de espera</string>
   <string name="tangempay_withdraw_bank_account_type_checking">Conta corrente</string>
   <string name="tangempay_withdraw_bank_account_type_saving">Poupança</string>
   <string name="tangempay_withdraw_bank_account_type_screen_title">Selecionar tipo de conta</string>
@@ -3052,8 +3077,8 @@
   <string name="tangempay_withdraw_bank_error_region_title">As transferências não estão disponíveis</string>
   <string name="tangempay_withdraw_bank_error_sender_region">As transferências da sua região não estão disponíveis no momento</string>
   <plurals name="tangempay_withdraw_bank_eta_business_days">
-    <item quantity="one">dia útil</item>
-    <item quantity="other">dias úteis</item>
+    <item quantity="one">%d dia útil</item>
+    <item quantity="other">%d dias úteis</item>
   </plurals>
   <string name="tangempay_withdraw_bank_eta_same_business_day">No mesmo dia útil</string>
   <string name="tangempay_withdraw_bank_field_account_number">Número da conta</string>
@@ -3110,16 +3135,16 @@
   <string name="toast_balances_shown">Saldos apresentados</string>
   <string name="toast_undo">Desfazer</string>
   <string name="token_button_unavailability_generic_description">Esta operação está indisponível no momento. Tente novamente mais tarde.</string>
-  <string name="token_button_unavailability_reason_buy_unavailable">Comprando %s Não é suportado pelos fornecedores atuais, mas estamos trabalhando para adicionar mais opções.</string>
+  <string name="token_button_unavailability_reason_buy_unavailable">A compra de %s não é suportada pelos fornecedores atuais, mas estamos trabalhando para adicionar mais opções.</string>
   <string name="token_button_unavailability_reason_custom_token">A ação não está disponível para tokens personalizados.</string>
   <string name="token_button_unavailability_reason_empty_balance_sell">Você não tem fundos para vender. Adicione fundos à sua conta para poder vender seus ativos.</string>
   <string name="token_button_unavailability_reason_empty_balance_send">Você não tem fundos para enviar. Recarregue sua conta para poder enviar fundos.</string>
   <string name="token_button_unavailability_reason_loading">Os dados estão sendo carregados. Isso pode levar alguns segundos. Tente novamente mais tarde.</string>
-  <string name="token_button_unavailability_reason_not_exchangeable">Troca %s Não é suportado pelos fornecedores atuais, mas estamos trabalhando para adicionar mais opções.</string>
+  <string name="token_button_unavailability_reason_not_exchangeable">A troca de %s não é suportada pelos fornecedores atuais, mas estamos trabalhando para adicionar mais opções.</string>
   <string name="token_button_unavailability_reason_out_of_date_balance">O saldo exibido pode estar desatualizado devido ao armazenamento em cache.</string>
   <string name="token_button_unavailability_reason_pending_transaction_sell">Os fundos para venda estarão disponíveis assim que a(s) transação(ões) pendente(s) na plataforma forem concluídas. %s A rede está completa.</string>
   <string name="token_button_unavailability_reason_pending_transaction_send">O envio de fundos estará disponível assim que a(s) transação(ões) pendente(s) estiver(em) na rede. %s está completo</string>
-  <string name="token_button_unavailability_reason_sell_unavailable">Vendendo %s Não é suportado pelos fornecedores atuais, mas estamos trabalhando para adicionar mais opções.</string>
+  <string name="token_button_unavailability_reason_sell_unavailable">A venda de %s não é suportada pelos fornecedores atuais, mas estamos trabalhando para adicionar mais opções.</string>
   <string name="token_button_unavailability_reason_staking_unavailable">O Staking %s não é suportado pelos provedores atuais, mas estamos trabalhando para adicionar mais opções.</string>
   <string name="token_button_unavailability_reason_yield_supply_approval">A aprovação foi revogada. Seus fundos permanecem no modo Yield. Para realizar ações, acesse o modo Yield e conceda a permissão novamente.</string>
   <string name="token_details_balance_available">Saldo disponível</string>
@@ -3139,7 +3164,7 @@
   <string name="token_details_toolbar_subtitle_standard">%1$s em %2$s rede</string>
   <string name="token_details_toolbar_title_token_in_account">%1$s em %%image%% %2$s</string>
   <string name="token_details_toolbar_title_token_in_wallet">%1$s em %2$s %%image%%</string>
-  <string name="token_details_unable_hide_alert_message">O %1$s (%2$sO token ) é a principal moeda da plataforma. %3$s rede e não pode ser ocultada enquanto você tiver outros tokens dessa rede na lista</string>
+  <string name="token_details_unable_hide_alert_message">O token %1$s (%2$s) é a principal moeda da rede %3$s e não pode ser ocultado enquanto você tiver outros tokens dessa rede na lista</string>
   <string name="token_details_unable_hide_alert_title">Não foi possível ocultar %s</string>
   <string name="token_market_metrics_no_data">N/A</string>
   <string name="token_receive_show_qr_code_title">Mostrar código QR</string>
@@ -3174,13 +3199,13 @@
   <string name="transaction_history_claiming_incentive_rewards">Reivindicando recompensas de incentivo</string>
   <string name="transaction_history_claiming_reward">Reivindicar recompensa</string>
   <string name="transaction_history_contract_address">contrato: %s</string>
-  <string name="transaction_history_detail_page_amount_signed_value" formatted="false">%1s %2s %3s</string>
-  <string name="transaction_history_detail_page_amount_value" formatted="false">%1s %2s</string>
+  <string name="transaction_history_detail_page_amount_signed_value">%1$s %2$s %3$s</string>
+  <string name="transaction_history_detail_page_amount_value">%1$s %2$s</string>
   <string name="transaction_history_disabling_yield_mode">Desativar o modo Yield</string>
   <string name="transaction_history_earned_from_stake">Ganhos com participação</string>
   <string name="transaction_history_empty_transactions">Você ainda não possui nenhuma transação.</string>
   <string name="transaction_history_enabling_yield_mode">Ativando o modo de rendimento</string>
-  <string name="transaction_history_error_failed_to_load">Falha ao carregar o histórico de transações. Clique no botão \n para atualizar as informações.</string>
+  <string name="transaction_history_error_failed_to_load">Falha ao carregar o histórico de transações.\nClique no botão de recarregar para atualizar as informações.</string>
   <string name="transaction_history_fee_for_operation">Para a operação</string>
   <string name="transaction_history_fee_for_operation_name">Para %s</string>
   <string name="transaction_history_fee_for_sending">Para envio</string>
@@ -3239,7 +3264,7 @@
   <string name="try_to_load_data_again_button_title">Tente novamente</string>
   <string name="twin_error_same_card">Você escaneou o mesmo cartão. Para criar uma carteira gêmea, você precisa escanear o cartão com o número %d</string>
   <string name="twin_error_wrong_twin">Você escaneou o cartão errado. Por favor, tente outro.</string>
-  <string name="twins_onboarding_description_format">Esta que você está segurando em suas mãos e a outra com o número %scartões podem ser usados ​​para retirar fundos desta carteira.</string>
+  <string name="twins_onboarding_description_format">Esta que você está segurando em suas mãos e a outra com o número %s.\n\nAmbos os cartões podem ser usados para retirar fundos desta carteira.</string>
   <string name="twins_onboarding_subtitle">Uma carteira. Dois cartões.</string>
   <string name="twins_recreate_button_format">Escanear Cartão #%s</string>
   <string name="twins_recreate_title_creating_wallet">Criando carteira</string>
@@ -3260,7 +3285,7 @@
   <string name="tx_history_you_paid">Você pagou</string>
   <string name="unexpected_error_description">Por favor, tente novamente mais tarde. Se o problema persistir, entre em contato com o suporte.</string>
   <string name="unexpected_error_title">Algo deu errado!</string>
-  <string name="universal_error">Ocorreu um erro. Código do erro: %sPor favor, entre em contato com nosso suporte.</string>
+  <string name="universal_error">Ocorreu um erro. Código do erro: %s. Por favor, entre em contato com nosso suporte.</string>
   <string name="unlock_wallet_description_full">Usar %s ou escaneie um cartão/anel para acessar sua carteira.</string>
   <string name="unsupported_wc_version">Falha na conexão: Este aplicativo descentralizado (dApp) usa a versão 1.0 do Wallet Connect, que não é compatível. Certifique-se de que o dApp seja compatível com a versão 2.0 do Wallet Connect para que a conexão seja estabelecida com sucesso.</string>
   <string name="update_approval_permission_fee_note">A permissão anterior será revogada e uma nova será emitida. A rede cobrará uma taxa de aprovação de tokens para cada uma dessas ações. Você verá uma transação de valor zero no histórico como comprovante de revogação.</string>
@@ -3312,8 +3337,8 @@
   <string name="visa_balance_limits_details_single_transaction">Transação única</string>
   <string name="visa_balance_limits_details_total">Total</string>
   <plurals name="visa_limits_available_for_days_title">
-    <item quantity="one">disponiver para</item>
-    <item quantity="other">disponivel para</item>
+    <item quantity="one">disponível por %d dia</item>
+    <item quantity="other">disponível por %d dias</item>
   </plurals>
   <string name="visa_main_available_balance_alert_message">O saldo disponível representa os fundos efetivamente disponíveis, considerando as transações pendentes, os valores bloqueados e o saldo devedor para evitar descobertos.</string>
   <string name="visa_main_available_till_date">Disponível até %1$s</string>
@@ -3406,7 +3431,7 @@
   <string name="wallet_connect_paste_from_clipboard">Colar da área de transferência</string>
   <string name="wallet_connect_personal_sign_message">Mensagem para %1$s:\n%2$s</string>
   <string name="wallet_connect_request_session_start">Solicitação para iniciar uma sessão para\n%1$s\n\nREDE: %2$s\n\nURL: %3$s</string>
-  <string name="wallet_connect_same_wcuri">A operação não pôde ser concluída. \n \n Você já estabeleceu uma sessão WalletConnect com esses parâmetros.</string>
+  <string name="wallet_connect_same_wcuri">A operação não pôde ser concluída.\n\nVocê já estabeleceu uma sessão WalletConnect com esses parâmetros.</string>
   <string name="wallet_connect_scan_new_code">Escaneie o novo código</string>
   <string name="wallet_connect_scanner_error_not_valid_card">Este cartão não pode ser usado para estabelecer uma sessão WalletConnect.</string>
   <string name="wallet_connect_scanner_error_unsupported_network">Esta rede não é compatível. Selecione outra rede.</string>
@@ -3441,13 +3466,13 @@
   <string name="wallet_import_success_navtitle">Importar carteira</string>
   <string name="wallet_import_success_title">Importação concluída</string>
   <string name="wallet_import_title">Importar carteira</string>
-  <string name="wallet_marketplace_block_title">%s Preço de mercado</string>
+  <string name="wallet_marketplace_block_title">Preço de mercado de %s</string>
   <string name="wallet_marketprice_block_update_time">últimas 24 horas</string>
   <string name="wallet_network_group_title">%s rede</string>
   <string name="wallet_notification_address_copied">O endereço foi copiado para a área de transferência.</string>
   <string name="wallet_notification_no_internet">Sem conexão com a internet</string>
   <string name="wallet_promo_banner_button_title">Adquira já com 10% desligado</string>
-  <string name="wallet_promo_banner_description">Acesse mais de 13.000 criptomoedas. Compre, venda, troque e faça staking com um único toque. \n Vincule até três cartões para backup.</string>
+  <string name="wallet_promo_banner_description">Acesse mais de 13.000 criptomoedas. Compre, venda, troque e faça staking com um único toque.\nVincule até três cartões para backup.</string>
   <string name="wallet_promo_banner_title">Descubra a carteira Tangem</string>
   <string name="wallet_settings_access_code_description">Este código de acesso protege sua carteira e é usado para fazer login e assinar transações.</string>
   <string name="wallet_settings_access_code_title">Definir/Alterar código de acesso</string>
@@ -3479,13 +3504,13 @@
   <string name="warning_button_really_cool">Muito legal!</string>
   <string name="warning_button_refresh">Atualizar</string>
   <string name="warning_clore_migration_button">Iniciar migração</string>
-  <string name="warning_clore_migration_copy_button">Cópia</string>
+  <string name="warning_clore_migration_copy_button">Copiar</string>
   <string name="warning_clore_migration_description">Para manter o acesso aos seus fundos, inicie a migração de acordo com as diretrizes oficiais da Clore.</string>
   <string name="warning_clore_migration_error_signing_not_supported">A assinatura de mensagens não é suportada nesta rede.</string>
   <string name="warning_clore_migration_error_wallet_manager_not_found">Não foi possível assinar a mensagem. Tente novamente.</string>
   <string name="warning_clore_migration_message">De acordo com a documentação oficial da Clore, todas as moedas recebidas antes de 21 de dezembro serão migradas para a Clore (token ERC-20); as moedas recebidas após essa data não serão. Uma solução para a transferência está a caminho — fique atento.</string>
   <string name="warning_clore_migration_message_label">Mensagem</string>
-  <string name="warning_clore_migration_open_portal_button">Portal de Reclamações Aberto</string>
+  <string name="warning_clore_migration_open_portal_button">Abrir Portal de Reivindicações</string>
   <string name="warning_clore_migration_sheet_description">Para continuar usando seus tokens Clore, você deve concluir a migração de tokens de acordo com as informações no Portal de Reivindicações.</string>
   <string name="warning_clore_migration_sheet_title">Migração de Rede Clore</string>
   <string name="warning_clore_migration_sign_button">Assinar</string>
@@ -3501,8 +3526,8 @@
   <string name="warning_express_active_transaction_title">Você tem uma transação ativa.</string>
   <string name="warning_express_approval_in_progress_message">A aprovação da troca está em andamento e será concluída em breve.</string>
   <string name="warning_express_approval_in_progress_title">Aprovação em andamento</string>
-  <string name="warning_express_dust_message">O valor mínimo de troca é %1$sCertifique-se de que o saldo restante após a troca não seja inferior a %2$s.</string>
-  <string name="warning_express_no_exchangeable_coins_description">Você não possui nenhum token em seu portfólio que %s Pode ser trocado. Adicione outro token para habilitar a troca.</string>
+  <string name="warning_express_dust_message">O valor mínimo de troca é %1$s. Certifique-se de que o saldo restante após a troca não seja inferior a %2$s.</string>
+  <string name="warning_express_no_exchangeable_coins_description">Você não possui nenhum token em seu portfólio pelo qual %s possa ser trocado. Adicione outro token para habilitar a troca.</string>
   <string name="warning_express_no_exchangeable_coins_title">Nenhum token compatível adicionado</string>
   <string name="warning_express_not_enough_fee_for_token_tx_description">Para efetuar uma transação, você precisa depositar algum valor. %1$s %2$s</string>
   <string name="warning_express_not_enough_fee_for_token_tx_title">Não foi possível cobrir %s taxa</string>
@@ -3523,25 +3548,25 @@
   <string name="warning_hedera_missing_token_association_message">Este token precisa ser associado à sua conta Hedera antes que você possa recebê-lo. Taxa de associação ~%1$s %2$s</string>
   <string name="warning_hedera_missing_token_association_message_brief">Este token precisa ser associado à sua conta Hedera antes que você possa recebê-lo.</string>
   <string name="warning_hedera_missing_token_association_title">Associe seu token</string>
-  <string name="warning_hedera_token_association_not_enough_hbar_message">Não é suficiente %sRecarregue sua conta Hedera para associar este token.</string>
+  <string name="warning_hedera_token_association_not_enough_hbar_message">Não há %s suficiente. Recarregue sua conta Hedera para associar este token.</string>
   <string name="warning_incomplete_backup_notification_message">Identificamos que o processo de ativação do cartão não foi concluído corretamente devido a problemas com o módulo NFC do seu dispositivo ou à forma incorreta de aproximar o cartão do telefone. Entre em contato com nossa equipe de suporte para obter mais informações.</string>
   <string name="warning_incomplete_backup_notification_title">É necessário realizar uma ação. Não use sua carteira!</string>
   <string name="warning_kaspa_unfinished_token_transaction_discard_message">Tem certeza de que deseja cancelar a transação? Você não poderá tentar realizá-la novamente.</string>
-  <string name="warning_kaspa_unfinished_token_transaction_message">Sua transação com um valor de %1$s %2$s Não foi concluído. Você pode tentar novamente para concluí-lo.</string>
+  <string name="warning_kaspa_unfinished_token_transaction_message">Sua transação com um valor de %1$s %2$s não foi concluída. Você pode tentar novamente para concluí-la.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">Você tem uma transação pendente.</string>
   <string name="warning_last_balance_updated_time">A última atualização foi %s</string>
-  <string name="warning_low_signatures_message">Apenas %s Assinaturas são deixadas neste cartão. Você deve sacar todos os seus fundos.</string>
+  <string name="warning_low_signatures_message">Restam apenas %s assinaturas neste cartão. Você deve sacar todos os seus fundos.</string>
   <string name="warning_low_signatures_title">Baixa contagem de assinaturas</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Tokens em redes diferentes podem ter endereços diferentes. Verifique se o seu endereço corresponde à rede ao transferir fundos.</string>
   <string name="warning_matic_migration_message">O MATIC está sendo migrado para o POL. No entanto, não há prazo definido e o MATIC ainda não foi descontinuado. Você pode continuar usando o token MATIC com segurança ou trocá-lo pelo POL.</string>
   <string name="warning_matic_migration_title">Migração de MATIC para POL</string>
   <plurals name="warning_missing_derivation_message">
-    <item quantity="one">Use seu Cartão ou Anel para obter o endereço de uma rede %d.</item>
-    <item quantity="other">Use seu Cartão ou Anel para obter endereços de redes %d.</item>
+    <item quantity="one">Use seu cartão ou anel para obter o endereço de %d rede.</item>
+    <item quantity="other">Use seu cartão ou anel para obter endereços de %d redes.</item>
   </plurals>
   <plurals name="warning_missing_derivation_no_nfc_message">
     <item quantity="one">Sincronizar endereços para obter um endereço de %d rede</item>
-    <item quantity="other">Sincronizar endereços para obter endereços para %d rede</item>
+    <item quantity="other">Sincronizar endereços para obter endereços para %d redes</item>
   </plurals>
   <string name="warning_missing_derivation_title">Alguns endereços estão faltando.</string>
   <string name="warning_mobile_access_denied_message">Usar %s ou o código de acesso para desbloquear o acesso à sua carteira</string>
@@ -3565,7 +3590,7 @@
   <string name="warning_seedphrase_issue_answer_yes">Você será redirecionado para o site oficial da Tangem. Leia e siga as instruções ali presentes.</string>
   <string name="warning_seedphrase_issue_message">Você já entrou em contato diretamente com a equipe de suporte da Tangem por meio deste aplicativo?</string>
   <string name="warning_seedphrase_issue_title">Atualização de segurança obrigatória</string>
-  <string name="warning_send_blocked_funds_for_fee_message">%1$s é uma vantagem no %2$s rede. Para criar uma %3$s Para realizar a transação, você precisa depositar algum valor. %4$s (%5$s) para cobrir a taxa de rede.</string>
+  <string name="warning_send_blocked_funds_for_fee_message">%1$s é um ativo na rede %2$s. Para fazer uma transação de %3$s, você precisa depositar um pouco de %4$s (%5$s) para cobrir a taxa de rede.</string>
   <string name="warning_send_blocked_funds_for_fee_title">Insuficiente %1$s para cobrir a taxa de rede</string>
   <string name="warning_solana_fee_message">A rede Solana está congestionada. Se a sua transação não for processada em 2 minutos, por favor, repita-a.</string>
   <string name="warning_solana_fee_title">Alerta da Rede Solana</string>
@@ -3577,11 +3602,11 @@
   <string name="warning_testnet_card_message">Este é um cartão de teste (Testnet). Ele não pode processar transações e deve ser usado apenas para fins de teste e desenvolvimento.</string>
   <string name="warning_testnet_card_title">Apenas para fins de teste</string>
   <string name="warning_token_balance_not_updated">O saldo pode estar desatualizado. Atualize a página.</string>
-  <string name="warning_token_required_min_coin_reserve">Não é suficiente %1$sRecarregue seu %2$s conta para associar este token</string>
+  <string name="warning_token_required_min_coin_reserve">Não há %1$s suficiente. Recarregue sua conta %2$s para associar este token</string>
   <string name="warning_token_trustline_button_title">Ativar Trustline</string>
   <string name="warning_token_trustline_subtitle">É necessário habilitar uma Trustline para receber este token. A rede requer um %1$s %2$s reserva.</string>
   <string name="warning_token_trustline_title">Linha de confiança obrigatória</string>
-  <string name="wc_alert_add_network_to_portfolio_description">A rede necessária %s Não foi adicionado ao seu portfólio. Adicione-o primeiro e depois prossiga com a conexão.</string>
+  <string name="wc_alert_add_network_to_portfolio_description">A rede necessária %s não foi adicionada ao seu portfólio. Adicione-a primeiro e depois prossiga com a conexão.</string>
   <string name="wc_alert_add_network_to_portfolio_title">Adicionar rede ao portfólio</string>
   <string name="wc_alert_audit_malicious_domain">Domínio malicioso</string>
   <string name="wc_alert_audit_unknown_domain">Domínio desconhecido</string>
@@ -3596,16 +3621,16 @@
   <string name="wc_alert_session_disconnected_description">Por favor, volte ao seu navegador e reconecte-se através do WalletConnect.</string>
   <string name="wc_alert_session_disconnected_title">A sessão Wallet Connect foi desconectada.</string>
   <string name="wc_alert_sign_anyway">Assine mesmo assim</string>
-  <string name="wc_alert_unknown_error_description">Código de erro: %sSe o problema persistir, entre em contato com nosso suporte.</string>
+  <string name="wc_alert_unknown_error_description">Código de erro: %s. Se o problema persistir, entre em contato com nosso suporte.</string>
   <string name="wc_alert_unknown_error_description_no_error_code">Se o problema persistir, entre em contato com nosso suporte.</string>
   <string name="wc_alert_unknown_error_title">Ocorreu um erro desconhecido.</string>
-  <string name="wc_alert_unsupported_dapps_description">A carteira Tangem atualmente não oferece suporte. %s.</string>
+  <string name="wc_alert_unsupported_dapps_description">A carteira Tangem atualmente não oferece suporte a %s.</string>
   <string name="wc_alert_unsupported_dapps_title">dApp não suportado</string>
   <string name="wc_alert_unsupported_method_description">Código de erro: 8005. Se o problema persistir, entre em contato com nosso suporte.</string>
   <string name="wc_alert_unsupported_method_title">Ocorreu um erro desconhecido.</string>
-  <string name="wc_alert_unsupported_network_description">Esta rede %s Não é compatível com a Tangem Wallet e não pode ser conectado.</string>
+  <string name="wc_alert_unsupported_network_description">Esta rede %s não é compatível com a Tangem Wallet e não pode ser conectada.</string>
   <string name="wc_alert_unsupported_network_title">Rede não suportada</string>
-  <string name="wc_alert_unsupported_networks_description">Atualmente, a Tangem não oferece suporte a uma rede necessária. %s.</string>
+  <string name="wc_alert_unsupported_networks_description">Atualmente, a Tangem não oferece suporte a uma rede exigida por %s.</string>
   <string name="wc_alert_unsupported_networks_title">Redes não suportadas</string>
   <string name="wc_alert_verified_domain_description">Este domínio passou por verificações e é considerado seguro, confiável e livre de ameaças conhecidas ou atividades suspeitas.</string>
   <string name="wc_alert_verified_domain_title">Domínio verificado</string>
@@ -3637,14 +3662,14 @@
   <string name="wc_connections_subtitle">Conecte-se a dApps ou MCP</string>
   <string name="wc_contents">Conteúdo</string>
   <string name="wc_copy_data_button_text">Copiar dados</string>
-  <string name="wc_custom_allowance_title">alfândega</string>
+  <string name="wc_custom_allowance_title">Permissão personalizada</string>
   <string name="wc_dapp_disconnected">dApp desconectado</string>
   <string name="wc_disconnect_all">Desconecte tudo</string>
   <string name="wc_disconnect_all_alert_desc">Todas as sessões de dApps serão desconectadas. Sua carteira não estará mais vinculada a nenhum dApp.</string>
   <string name="wc_disconnect_all_alert_title">Desconectar todos os dApps</string>
   <string name="wc_errors_invalid_domain_subtitle">Tente emparelhar novamente com um novo URI.</string>
   <string name="wc_errors_invalid_domain_title">Domínio dApp inválido</string>
-  <string name="wc_errors_no_blockchains_subtitle">%s Não especifica nenhuma blockchain — nem obrigatória nem opcional. \n Certifique-se de ter usado o URI correto.</string>
+  <string name="wc_errors_no_blockchains_subtitle">%s não especifica nenhuma blockchain — nem obrigatória nem opcional.\nCertifique-se de ter usado o URI correto.</string>
   <string name="wc_errors_no_blockchains_title">Sem redes</string>
   <string name="wc_errors_proposal_expired_subtitle">Por favor, gere um novo URI e tente conectar novamente.</string>
   <string name="wc_errors_proposal_expired_title">A proposta de conexão expirou.</string>
@@ -3655,7 +3680,7 @@
   <string name="wc_insufficient_warning_subtitle">Recarregue seu saldo para cobrir a taxa de rede.</string>
   <string name="wc_insufficient_warning_title">Insuficiente %1$s</string>
   <string name="wc_malicious_transaction">Transação maliciosa</string>
-  <string name="wc_missing_required_network_description">Adicione o %s Conecte sua carteira à sua rede para esta carteira.</string>
+  <string name="wc_missing_required_network_description">Adicione a rede %s ao seu portfólio para esta carteira.</string>
   <string name="wc_missing_required_network_title">A carteira não requer redes.</string>
   <string name="wc_new_connection">Nova conexão</string>
   <string name="wc_no_sessions_desc">Conecte sua carteira a diferentes dApps</string>
@@ -3715,7 +3740,7 @@
   <string name="yield_apy_boost_promo_activate_bonus">Ative seu bônus</string>
   <string name="yield_apy_boost_promo_bonus_paid_out_subtitle">Consulte o histórico de transações para obter detalhes.</string>
   <string name="yield_apy_boost_promo_bonus_paid_out_title">Bônus do modo Yield pago</string>
-  <string name="yield_apy_boost_promo_days_left_to_unlock">%1$s Faltam poucos dias para desbloquear seu bônus.</string>
+  <string name="yield_apy_boost_promo_days_left_to_unlock">Faltam %1$s dias para desbloquear seu bônus.</string>
   <string name="yield_apy_boost_promo_eligibility_text">Você tem direito a uma oferta por tempo limitado para novos usuários.</string>
   <string name="yield_apy_boost_promo_terms_and_conditions">Aplicam-se os Termos e Condições.</string>
   <string name="yield_apy_boost_story_first_subtitle">Ative o Modo de Rendimento pela primeira vez e obtenha até 3 vezes mais rendimento nos seus primeiros 30 dias.</string>
@@ -3769,14 +3794,14 @@
   <string name="yield_module_earn_sheet_fee_description">Ao recarregar para empréstimo, será cobrada uma taxa de rede não superior a %1$s será deduzido do saldo.</string>
   <string name="yield_module_earn_sheet_high_fee_description">A taxa de rede está atualmente muito alta para efetuar empréstimos. Os fundos serão disponibilizados assim que a taxa cair para %1$s ou abaixo.</string>
   <string name="yield_module_earn_sheet_my_funds_title">Meus fundos</string>
-  <string name="yield_module_earn_sheet_provider_description">Seu %1$s já foi implantado no Aave e está gerando rendimento. Você detém %2$s Os tokens representam seu saldo e acumulam rendimento automaticamente. Ao adicionar fundos, eles são enviados para a Aave para gerar mais rendimento, após a dedução das taxas.</string>
+  <string name="yield_module_earn_sheet_provider_description">Seu %1$s já foi implantado no Aave e está gerando rendimento. Você detém tokens %2$s, que representam seu saldo e acumulam rendimento automaticamente. Ao adicionar fundos, eles são enviados para a Aave para gerar mais rendimento, após a dedução das taxas.</string>
   <string name="yield_module_earn_sheet_title">Modo de rendimento</string>
   <string name="yield_module_earn_sheet_total_earnings_title">Rendimento total</string>
   <string name="yield_module_earn_sheet_transfers_title">Transferências para Aave</string>
   <string name="yield_module_explore_sheet_explore_aave_button_title">Explore Aave</string>
-  <string name="yield_module_fee_policy_sheet_current_fee_note">Esta é a taxa de fornecimento atual em %sO custo real será exibido na aba de ativação.</string>
+  <string name="yield_module_fee_policy_sheet_current_fee_note">Esta é a taxa de fornecimento atual em %s. O custo real será exibido na aba de ativação.</string>
   <string name="yield_module_fee_policy_sheet_current_fee_title">Taxa atual</string>
-  <string name="yield_module_fee_policy_sheet_description">Todo o futuro %s Os créditos serão fornecidos automaticamente à Aave, após a dedução da taxa de transação.</string>
+  <string name="yield_module_fee_policy_sheet_description">Todas as futuras recargas de %s serão fornecidas automaticamente à Aave, após a dedução da taxa de transação.</string>
   <string name="yield_module_fee_policy_sheet_fee_note">Uma taxa de rede aproximada de %1$s (%2$s) será deduzido de cada recarga futura e não excederá o seu %3$s (%4$s) limite.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_note">Se as taxas de rede ultrapassarem a taxa máxima, a transação não será concluída até que elas diminuam. Você poderá alterar esse limite posteriormente.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_title">Taxa máxima</string>
@@ -3801,7 +3826,7 @@
   <string name="yield_module_network_fee_unreachable_notification_description">Verifique sua conexão de rede.</string>
   <string name="yield_module_network_fee_unreachable_notification_title">Informações sobre tarifas de rede indisponíveis</string>
   <string name="yield_module_promo_screen_auto_balance_subtitle">Cada recarga será fornecida automaticamente à Aave.</string>
-  <string name="yield_module_promo_screen_auto_balance_subtitle_v2">Todos %1$s Os dados da sua conta serão fornecidos automaticamente à Aave.</string>
+  <string name="yield_module_promo_screen_auto_balance_subtitle_v2">Todos os %1$s da sua conta serão fornecidos automaticamente à Aave.</string>
   <string name="yield_module_promo_screen_auto_balance_title">Fornecimento automático para Aave</string>
   <string name="yield_module_promo_screen_cash_out_subtitle">Envie, troque ou venda seus fundos instantaneamente, quando quiser.</string>
   <string name="yield_module_promo_screen_cash_out_title">Sem bloqueios</string>
@@ -3820,21 +3845,21 @@
   <string name="yield_module_rate_info_sheet_description">A taxa de juros atual é sempre variável e calculada automaticamente pelo contrato inteligente on-chain da Aave, com base na oferta e demanda em tempo real.</string>
   <string name="yield_module_rate_info_sheet_powered_by">Desenvolvido por</string>
   <string name="yield_module_rate_info_sheet_title">A taxa de juros é variável.</string>
-  <string name="yield_module_receive_sheet_description">Ao fazer um depósito, seus fundos serão automaticamente enviados para a Aave para começar a gerar rendimento. %s Será deduzido o valor para cobrir a taxa de transação.</string>
+  <string name="yield_module_receive_sheet_description">Ao fazer um depósito, seus fundos serão automaticamente enviados para a Aave para começar a gerar rendimento. %s será deduzido para cobrir a taxa de transação.</string>
   <string name="yield_module_rewards_banner_below_threshold_subtitle">O resgate fica disponível quando suas recompensas atingirem o valor recomendado</string>
   <string name="yield_module_rewards_banner_pending_subtitle">%1$s estará disponível para resgate posteriormente</string>
   <string name="yield_module_rewards_banner_pending_title">Você tem recompensas a caminho</string>
   <string name="yield_module_rewards_banner_subtitle">Este total inclui recompensas de todos os tokens com incentivos</string>
   <string name="yield_module_rewards_banner_title">Você tem %1$s em recompensas</string>
   <string name="yield_module_start_earning">Ativos de fornecimento</string>
-  <string name="yield_module_start_earning_sheet_description">Seu %s Serão fornecidos à Aave sem fechaduras e permanecerão totalmente acessíveis.</string>
+  <string name="yield_module_start_earning_sheet_description">Seu %s será fornecido à Aave sem períodos de bloqueio e permanecerá totalmente acessível.</string>
   <string name="yield_module_start_earning_sheet_fee_policy">Consulte a política de taxas de recarga.</string>
   <string name="yield_module_start_earning_sheet_next_deposits">Suas próximas recargas serão enviadas automaticamente para a Aave.</string>
-  <string name="yield_module_start_earning_sheet_next_deposits_v2">Todas as suas futuras chegadas %1$s Os depósitos serão enviados automaticamente para a Aave.</string>
+  <string name="yield_module_start_earning_sheet_next_deposits_v2">Todos os seus futuros depósitos de %1$s serão enviados automaticamente para a Aave.</string>
   <string name="yield_module_status_active">Ativo</string>
   <string name="yield_module_status_paused">Em pausa</string>
   <string name="yield_module_stop_earning">Desativação do modo Yield</string>
-  <string name="yield_module_stop_earning_sheet_description">Desativar esta opção fará com que seus ativos sejam retirados da Aave e convertidos de volta para... %s na sua carteira e interrompa o acúmulo de rendimento.</string>
+  <string name="yield_module_stop_earning_sheet_description">Desativar esta opção retirará seus ativos da Aave, os converterá de volta para %s na sua carteira e interromperá o acúmulo de rendimento.</string>
   <string name="yield_module_stop_earning_sheet_fee_note">Uma taxa de rede é cobrada pela blockchain quando você sai do Modo Yield.</string>
   <string name="yield_module_stop_earning_sheet_title">Desativar o modo Yield</string>
   <string name="yield_module_supply">Fornecimento</string>
