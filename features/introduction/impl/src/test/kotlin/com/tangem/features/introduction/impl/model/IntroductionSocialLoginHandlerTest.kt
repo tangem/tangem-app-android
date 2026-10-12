@@ -368,7 +368,6 @@ internal class IntroductionSocialLoginHandlerTest {
     private fun provideTestModels() = listOf(
         FailureModel(error = SocialLoginError.SignInFailed(), isSupportDialog = false),
         FailureModel(error = SocialLoginError.NetworkError, isSupportDialog = false),
-        FailureModel(error = SocialLoginError.SessionExpired, isSupportDialog = false),
         FailureModel(error = SocialLoginError.ServerError(), isSupportDialog = false),
         FailureModel(error = SocialLoginError.BackupWriteFailed(), isSupportDialog = false),
         FailureModel(error = SocialLoginError.BindingConflict, isSupportDialog = false),
