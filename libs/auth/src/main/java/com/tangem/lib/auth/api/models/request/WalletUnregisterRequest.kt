@@ -14,4 +14,5 @@ import com.squareup.moshi.JsonClass
 data class WalletUnregisterRequest(
     /** Base64-encoded wallet identifier to unbind. */
     @Json(name = "walletId") val walletId: String,
+    @Json(name = "eraseData") val shouldDeleteSocialRecovery: Boolean? = null,
 )

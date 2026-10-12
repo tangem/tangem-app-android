@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_clock_20
 import com.tangem.core.ui.res.generated.icons.ic_error_20
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
@@ -35,6 +36,24 @@ internal class TangemPayDetailsNotificationFactory(
             imageVector = Icons.ic_error_20,
             tintReference = { TangemTheme.colors3.icon.primary },
         ),
+    )
+
+    fun createBankTransferOnrampCreatingBannerState() = TangemMessageBanner.State(
+        title = resourceReference(R.string.tangempay_bank_transfer_creating_title),
+        shouldShowGlowRing = false,
+        description = resourceReference(R.string.tangempay_bank_transfer_creating_description),
+        iconEnd = TangemIconUM.Icon(
+            imageVector = Icons.ic_clock_20,
+            tintReference = { TangemTheme.colors3.icon.primary },
+        ),
+    )
+
+    fun createBankTransferOnrampFailedBannerState() = TangemMessageBanner.State(
+        title = resourceReference(R.string.tangempay_va_banner_failed_title),
+        variant = TangemMessageBanner.Variant.Error,
+        shouldShowGlowRing = false,
+        description = resourceReference(R.string.tangempay_va_banner_failed_description),
+        iconStart = alertIcon(),
     )
 
     fun createAccountDeactivatedBannerState() = TangemMessageBanner.State(

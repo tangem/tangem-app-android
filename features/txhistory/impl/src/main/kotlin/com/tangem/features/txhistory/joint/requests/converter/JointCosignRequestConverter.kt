@@ -50,7 +50,6 @@ internal class JointCosignRequestConverter(
                 rawAddress = recipient,
             ),
             timestamp = startedAt ?: 0L,
-            isPendingSignature = isPendingSignature,
             onClick = { onClick(operationId) },
         )
     }

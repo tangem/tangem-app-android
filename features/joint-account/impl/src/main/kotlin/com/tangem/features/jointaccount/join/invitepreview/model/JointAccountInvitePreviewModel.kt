@@ -1,9 +1,11 @@
 package com.tangem.features.jointaccount.join.invitepreview.model
 
 import androidx.compose.runtime.Stable
+import arrow.core.Either
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -13,6 +15,7 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitePreviewUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -22,6 +25,8 @@ import com.tangem.domain.models.wallet.isLocked
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
 import com.tangem.features.jointaccount.join.confirmation.ui.state.JointAccountJoinConfirmationUM
 import com.tangem.features.jointaccount.join.invitepreview.state.JointAccountInvitePreviewStateController
 import com.tangem.features.jointaccount.join.invitepreview.state.transformers.SetContentTransformer
@@ -36,18 +41,24 @@ import com.tangem.features.jointaccount.main.JointAccountMembersUM
 import com.tangem.features.jointaccount.main.entity.MemberCardConfig
 import com.tangem.features.jointaccount.join.navigation.JointAccountJoinRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 import com.tangem.core.ui.R as CoreUiR
 
 @Suppress("LongParameterList")
@@ -64,6 +75,7 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     portfolioFetcherFactory: PortfolioFetcher.Factory,
     private val clipboardManager: ClipboardManager,
     private val uiMessageSender: UiMessageSender,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<JointAccountJoinChildParams>()
@@ -92,6 +104,13 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     private val unlockedWallets: StateFlow<List<UserWallet>> = userWalletsListRepository.userWallets
         .map { wallets -> wallets.orEmpty().filterNot(UserWallet::isLocked) }
         .stateIn(modelScope, SharingStarted.Eagerly, emptyList())
+
+    /** Once the selector has every unlocked wallet it stays ready: a later balance refresh must not hide the content */
+    private val isSelectorReady: StateFlow<Boolean> = combine(portfolioFetcher.data, unlockedWallets) { data, wallets ->
+        wallets.isNotEmpty() && wallets.all { wallet -> wallet.walletId in data.balances }
+    }
+        .filter { isReady -> isReady }
+        .stateIn(modelScope, SharingStarted.Eagerly, false)
 
     /**
      * The wallet that joins the account. A pick in the selector always wins; with no pick yet it defaults to
@@ -136,23 +155,31 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
             stateController.update(SetLoadingTransformer(onCloseClick = ::onCloseClick))
 
             if (walletId == null) {
+                // On a cold start the wallets load before the selection derived from them: wait for it to catch up
+                val hasUnlockedWallet = userWalletsListRepository.userWallets.value.orEmpty().any { !it.isLocked }
+                if (hasUnlockedWallet) return@launch
+
+                analyticsEventHandler.send(JointAccountError(source = ErrorSource.Join, errorMessage = "No wallet"))
                 stateController.update(SetFailedTransformer(onRetryClick = ::retry, onCloseClick = ::onCloseClick))
                 return@launch
             }
 
-            getJointAccountInvitePreviewUseCase(walletId = walletId, inviteId = params.inviteId).fold(
+            loadPreview(walletId).fold(
                 ifLeft = { error ->
+                    analyticsEventHandler.send(error.toAnalyticsEvent())
                     when (error) {
                         is JointAccountInvitePreviewError.InvalidLink ->
                             stateController.update(SetInvalidLinkTransformer(onGotItClick = ::onCloseClick))
-                        is JointAccountInvitePreviewError.LoadFailed ->
-                            stateController.update(
-                                SetFailedTransformer(onRetryClick = ::retry, onCloseClick = ::onCloseClick),
-                            )
+                        is JointAccountInvitePreviewError.Unreachable,
+                        is JointAccountInvitePreviewError.LoadFailed,
+                        -> stateController.update(
+                            SetFailedTransformer(onRetryClick = ::retry, onCloseClick = ::onCloseClick),
+                        )
                     }
                 },
                 ifRight = { preview ->
                     params.draftHolder.setConfig(config = preview.config)
+                    awaitSelectorReady()
                     stateController.update(
                         SetContentTransformer(
                             preview = preview,
@@ -166,6 +193,33 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
                     )
                 },
             )
+        }
+    }
+
+    private fun JointAccountInvitePreviewError.toAnalyticsEvent(): JointAccountError = when (this) {
+        is JointAccountInvitePreviewError.InvalidLink -> JointAccountError(source = ErrorSource.Join, cause = cause)
+        is JointAccountInvitePreviewError.Unreachable -> JointAccountError(source = ErrorSource.Join, cause = cause)
+        is JointAccountInvitePreviewError.LoadFailed -> JointAccountError(source = ErrorSource.Join, cause = cause)
+    }
+
+    private suspend fun loadPreview(
+        walletId: UserWalletId,
+    ): Either<JointAccountInvitePreviewError, JointAccountInvitePreview> {
+        UNREACHABLE_RETRY_DELAYS.forEach { retryDelay ->
+            val result = getJointAccountInvitePreviewUseCase(walletId = walletId, inviteId = params.inviteId)
+            if (result.leftOrNull() !is JointAccountInvitePreviewError.Unreachable) return result
+
+            delay(retryDelay)
+        }
+
+        return getJointAccountInvitePreviewUseCase(walletId = walletId, inviteId = params.inviteId)
+    }
+
+    private suspend fun awaitSelectorReady() {
+        val isReady = withTimeoutOrNull(SELECTOR_READY_TIMEOUT) { isSelectorReady.first { it } }
+
+        if (isReady == null) {
+            TangemLogger.i("Joint account invite: the wallet selector data is not ready in time, showing the content")
         }
     }
 
@@ -223,6 +277,11 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     }
 
     private fun onContinueClick() {
+        if (!IS_JOIN_CONFIRMATION_SHOWN) {
+            onConfirmationContinue()
+            return
+        }
+
         stateController.update(
             SetJoinConfirmationTransformer(
                 confirmation = JointAccountJoinConfirmationUM(
@@ -249,5 +308,13 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     /** The close icon does not join: the slot stays free and the invitation is not consumed */
     private fun onCloseClick() {
         router.pop()
+    }
+
+    private companion object {
+        val UNREACHABLE_RETRY_DELAYS = listOf(1.seconds, 2.seconds, 3.seconds)
+        val SELECTOR_READY_TIMEOUT = 10.seconds
+
+        /** The shared-balance sheet is left out of the join for now; the step comes back by flipping this */
+        const val IS_JOIN_CONFIRMATION_SHOWN = false
     }
 }

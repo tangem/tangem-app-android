@@ -52,7 +52,7 @@ internal fun createMembersUM(
     joined: ImmutableList<JointAccountMembersUM.MemberUM.Joined> = persistentListOf(),
     freeSlots: ImmutableList<JointAccountMembersUM.MemberUM.FreeSlot> = persistentListOf(),
     otherMembersLabel: TextReference? = null,
-    onActivateClick: (() -> Unit)? = null,
+    activateButton: JointAccountMembersUM.ActivateButtonUM? = null,
 ): JointAccountMembersUM = JointAccountMembersUM(
     topBar = topBar,
     header = header,
@@ -60,5 +60,5 @@ internal fun createMembersUM(
     joined = joined,
     freeSlots = freeSlots,
     otherMembersLabel = otherMembersLabel,
-    onActivateClick = onActivateClick,
+    activateButton = activateButton,
 )

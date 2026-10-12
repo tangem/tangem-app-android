@@ -78,7 +78,7 @@ internal object CollectiblesMachineTiersConverter :
         return "${start.toFiat()}${StringsSigns.MINUS}${end.toFiat()}"
     }
 
-    private fun Int.toFiat(): String = BigDecimal(this).format {
+    private fun BigDecimal.toFiat(): String = format {
         fiat(
             fiatCurrencyCode = AppCurrency.Default.code,
             fiatCurrencySymbol = AppCurrency.Default.symbol,

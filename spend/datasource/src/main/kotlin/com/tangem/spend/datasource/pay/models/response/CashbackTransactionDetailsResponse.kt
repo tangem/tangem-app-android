@@ -1,17 +1,17 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * Response from `GET /v1/customer/cashback/{transaction_id}/details`
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class CashbackTransactionDetailsResponse(
-    @Json(name = "result") val result: Result?,
+    @SerialName("result") val result: Result?,
 ) {
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Result(
-        @Json(name = "cashback") val cashback: TransactionCashbackResponse?,
+        @SerialName("cashback") val cashback: TransactionCashbackResponse?,
     )
 }

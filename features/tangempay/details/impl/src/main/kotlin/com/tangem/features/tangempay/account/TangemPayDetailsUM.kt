@@ -1,8 +1,8 @@
 package com.tangem.features.tangempay.account
 
 import androidx.compose.runtime.Immutable
-import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.pay.TangemPayCardState
@@ -16,6 +16,7 @@ internal data class TangemPayDetailsUM(
     val isBalanceHidden: Boolean,
     val messageBanner: MessageBannerUM?,
     val cashbackBlockState: CashbackBlockUM? = null,
+    val bankTransferOnrampBanner: MessageBannerUM? = null,
 )
 
 @Immutable
@@ -48,7 +49,10 @@ internal enum class TangemPayAction { AddFunds, Withdraw }
 @Immutable
 internal data class TangemPayActionButtonUM(
     val action: TangemPayAction,
-    val config: ActionButtonConfig,
+    val text: TextReference,
+    val icon: TangemIconUM,
+    val onClick: () -> Unit,
+    val isEnabled: Boolean,
 )
 
 @Immutable

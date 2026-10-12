@@ -52,7 +52,10 @@ internal class DefaultWalletConnectDeepLinkHandler @AssistedInject constructor(
         override fun create(uri: Uri): DefaultWalletConnectDeepLinkHandler
     }
 
-    private companion object {
-        const val DEFAULT_CHARSET_NAME = "UTF-8"
+    companion object {
+        const val WC_DEEPLINK_KEY = "wc:"
+        const val TANGEM_DEEPLINK_KEY = "tangem://wc"
+
+        private const val DEFAULT_CHARSET_NAME = "UTF-8"
     }
 }

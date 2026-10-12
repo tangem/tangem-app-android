@@ -27,7 +27,7 @@ object PasswordStrengthEvaluator {
 
     /**
      * Same as [evaluate], but `null` while [password] is still too short to rate — the strength meter is
-     * only shown from [SHORT_MAX_LENGTH] + 1 characters on (FR-09).
+     * only shown from [SHORT_MAX_LENGTH] + 1 characters on.
      */
     fun evaluateRated(password: CharArray): PasswordStrength? = evaluateRated(CharBuffer.wrap(password))
 

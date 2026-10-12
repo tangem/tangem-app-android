@@ -17,8 +17,6 @@ internal object ScanResponseAsStringSerializer : KSerializer<ScanResponse> {
         .add(TangemSdkAdapter.DateAdapter())
         .add(TangemSdkAdapter.DerivationNodeAdapter())
         .add(TangemSdkAdapter.FirmwareVersionAdapter()) // For PrimaryCard model
-        // .add(VisaActivationRemoteState.jsonAdapter)
-        // .add(VisaCardActivationStatus.jsonAdapter)
         .addLast(KotlinJsonAdapterFactory())
         .build()
 

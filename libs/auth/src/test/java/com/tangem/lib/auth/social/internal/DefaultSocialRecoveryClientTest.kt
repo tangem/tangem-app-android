@@ -186,7 +186,9 @@ internal class DefaultSocialRecoveryClientTest {
         // Arrange
         coEvery { api.recoverWallet(any()) } returns httpError(
             code = ApiResponseError.HttpException.Code.NOT_FOUND,
-            message = "no binding for this identity",
+            message = "Not Found",
+            errorBody = """{"status":404,"detail":"No recovery key is stored for this identity",""" +
+                """"code":"RECOVERY_BINDING_NOT_FOUND"}""",
         )
 
         // Act
@@ -195,6 +197,40 @@ internal class DefaultSocialRecoveryClientTest {
         // Assert
         assertThat(result.leftOrNull()).isEqualTo(SocialRecoveryError.BindingNotFound)
     }
+
+    @Test
+    fun `GIVEN a 404 without the binding code WHEN recoverKey THEN it is an error rather than BindingNotFound`() =
+        runTest {
+            // Arrange
+            coEvery { api.recoverWallet(any()) } returns httpError(
+                code = ApiResponseError.HttpException.Code.NOT_FOUND,
+                message = "Not Found",
+                errorBody = """{"status":404,"detail":"Something else"}""",
+            )
+
+            // Act
+            val result = client.recoverKey(nonce = NONCE, providerIdToken = ID_TOKEN)
+
+            // Assert
+            assertThat(result.leftOrNull()).isInstanceOf(SocialRecoveryError.Api::class.java)
+        }
+
+    @Test
+    fun `GIVEN the nonce expired WHEN recoverKey THEN NonceExpired is returned rather than BindingNotFound`() =
+        runTest {
+            // Arrange
+            coEvery { api.recoverWallet(any()) } returns httpError(
+                code = ApiResponseError.HttpException.Code.NOT_FOUND,
+                message = "Not Found",
+                errorBody = """{"detail":"Nonce not found","status":404,"title":"Not Found","instance":"/recover"}""",
+            )
+
+            // Act
+            val result = client.recoverKey(nonce = NONCE, providerIdToken = ID_TOKEN)
+
+            // Assert
+            assertThat(result.leftOrNull()).isEqualTo(SocialRecoveryError.NonceExpired)
+        }
 
     @Test
     fun `GIVEN the identity points at another wallet WHEN recoverKey THEN BindingConflict is returned`() = runTest {
@@ -363,16 +399,74 @@ internal class DefaultSocialRecoveryClientTest {
     }
 
     @Test
+    fun `GIVEN the registrar succeeds WHEN registerWallet THEN the wallet is registered`() = runTest {
+        // Arrange
+        coEvery { walletRegistrar.register(WALLET_ID, signer) } returns Either.Right(Unit)
+
+        // Act
+        val result = client.registerWallet(walletId = WALLET_ID, signer = signer)
+
+        // Assert
+        assertThat(result).isEqualTo(Either.Right(Unit))
+    }
+
+    @Test
+    fun `GIVEN no session WHEN registerWallet THEN NoActiveSession is returned`() = runTest {
+        // Arrange
+        coEvery { walletRegistrar.register(WALLET_ID, signer) } returns
+            Either.Left(WalletRegistrationError.NoActiveSession)
+
+        // Act
+        val result = client.registerWallet(walletId = WALLET_ID, signer = signer)
+
+        // Assert
+        assertThat(result.leftOrNull()).isEqualTo(SocialRecoveryError.NoActiveSession)
+    }
+
+    @Test
     fun `GIVEN authentication is toggled off WHEN unbindWallet THEN the teardown is not reported as done`() =
         runTest {
             // Arrange
-            coEvery { walletRegistrar.unregister(WALLET_ID) } returns Either.Left(WalletRegistrationError.Disabled)
+            coEvery {
+                walletRegistrar.unregister(walletId = WALLET_ID, shouldDeleteSocialRecovery = true)
+            } returns Either.Left(WalletRegistrationError.Disabled)
 
             // Act
             val result = client.unbindWallet(WALLET_ID)
 
             // Assert — a binding made before the toggle flipped is still on the server
             assertThat(result.leftOrNull()).isEqualTo(SocialRecoveryError.NoActiveSession)
+        }
+
+    @Test
+    fun `GIVEN a bound wallet WHEN unbindWallet THEN it is unregistered together with its social recovery`() =
+        runTest {
+            // Arrange
+            coEvery {
+                walletRegistrar.unregister(walletId = WALLET_ID, shouldDeleteSocialRecovery = true)
+            } returns Either.Right(Unit)
+
+            // Act
+            val result = client.unbindWallet(WALLET_ID)
+
+            // Assert
+            assertThat(result).isEqualTo(Either.Right(Unit))
+            coVerify(exactly = 1) { walletRegistrar.unregister(walletId = WALLET_ID, shouldDeleteSocialRecovery = true) }
+        }
+
+    @Test
+    fun `GIVEN the server unbound but the local state was not saved WHEN unbindWallet THEN it is reported as done`() =
+        runTest {
+            // Arrange
+            coEvery {
+                walletRegistrar.unregister(walletId = WALLET_ID, shouldDeleteSocialRecovery = true)
+            } returns Either.Left(WalletRegistrationError.PersistenceFailed(IllegalStateException()))
+
+            // Act
+            val result = client.unbindWallet(WALLET_ID)
+
+            // Assert
+            assertThat(result).isEqualTo(Either.Right(Unit))
         }
 
     /** Answers the recover call the way the backend would: sealing [storedKey] to the request's own key */
@@ -432,10 +526,13 @@ internal class DefaultSocialRecoveryClientTest {
     )
 
     @Suppress("UNCHECKED_CAST")
-    private fun <T : Any> httpError(code: ApiResponseError.HttpException.Code, message: String): ApiResponse<T> =
-        ApiResponse.Error(
-            cause = ApiResponseError.HttpException(code = code, message = message, errorBody = null),
-        ) as ApiResponse<T>
+    private fun <T : Any> httpError(
+        code: ApiResponseError.HttpException.Code,
+        message: String,
+        errorBody: String? = null,
+    ): ApiResponse<T> = ApiResponse.Error(
+        cause = ApiResponseError.HttpException(code = code, message = message, errorBody = errorBody),
+    ) as ApiResponse<T>
 
     private fun nonceSuccess() = ApiResponse.Success(
         data = NonceApiResponse(cipheredNonce = CIPHERED_NONCE, expiresAt = "2024-01-01T00:00:00Z"),

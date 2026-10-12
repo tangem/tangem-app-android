@@ -5,7 +5,6 @@ import com.tangem.domain.collectibles.delegate.HotDelegatePublicKey
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.vault.GachaVaultLimits
 import com.tangem.domain.models.account.CollectiblesVaultBalance
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 
 /**
@@ -46,20 +45,13 @@ interface GachaVaultRepository {
 
      * with the vault.
      *
-     * @param cachedToken the token a previous read answered with. Working it out costs a request for the
-     * program config, and the mint cannot change while the program is deployed.
+     * @param cached what a previous read answered with. Its token and token account spare a request for the
+     * program config: neither can change while the program is deployed.
      */
     suspend fun getVaultBalance(
         userWallet: UserWallet,
-        cachedToken: CryptoCurrency.Token? = null,
+        cached: CollectiblesVaultBalance? = null,
     ): Either<CollectiblesAccountError, CollectiblesVaultBalance>
-
-    /**
-     * The address a top-up of the vault is sent to — its associated token account, not the vault itself: the
-     * vault is a PDA owned by the gacha program, and a transfer addressed to it is refused as an unknown
-     * destination.
-     */
-    suspend fun getVaultTopUpAddress(userWallet: UserWallet): Either<CollectiblesAccountError, String>
 
     /**
      * Closes the vault and returns its rent. Refused only while a buyback delegate is live (6014 `VaultNotClean`);
@@ -67,4 +59,23 @@ interface GachaVaultRepository {
      * the caller's job.
      */
     suspend fun closeVault(userWallet: UserWallet): Either<CollectiblesAccountError, Unit>
+
+    /** `PDA(["vault", owner])`, derived locally: the player the gacha sees, as the spin is paid from it. */
+    suspend fun getVaultAddress(userWallet: UserWallet): Either<CollectiblesAccountError, String>
+
+    /**
+     * Pays for one spin with `purchase_pack`, signed by [hotDelegate] without a prompt. Not idempotent: never call
+     * again for the same [memo] while the outcome is unknown.
+     *
+     * @param amount the pack price in base units of USDC, as the backend issued it
+     * @param feeAmount Tangem's fee in base units of USDC, charged on top of [amount]
+     * @return the transaction signature
+     */
+    suspend fun sendPurchasePack(
+        userWallet: UserWallet,
+        hotDelegate: HotDelegatePublicKey,
+        amount: Long,
+        feeAmount: Long,
+        memo: String,
+    ): Either<CollectiblesAccountError, String>
 }

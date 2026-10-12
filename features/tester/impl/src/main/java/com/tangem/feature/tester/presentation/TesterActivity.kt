@@ -45,6 +45,8 @@ import com.tangem.feature.tester.presentation.storybook.ui.StoryBookScreen
 import com.tangem.feature.tester.presentation.storybook.viewmodel.StoryBookViewModel
 import com.tangem.feature.tester.presentation.testpush.ui.TestPushScreen
 import com.tangem.feature.tester.presentation.testpush.viewmodel.TestPushViewModel
+import com.tangem.feature.tester.presentation.sociallogin.ui.SocialLoginTesterScreen
+import com.tangem.feature.tester.presentation.sociallogin.viewmodels.SocialLoginTesterViewModel
 import com.tangem.features.survey.SurveyLaunchData
 import com.tangem.features.survey.SurveySparrowLauncher
 import dagger.hilt.android.AndroidEntryPoint
@@ -110,6 +112,7 @@ internal class TesterActivity : ComposeActivity() {
                             ButtonUM.SURVEY_SPARROW,
                             ButtonUM.BACKEND_AUTH_STATUS,
                             ButtonUM.SELL_REDIRECT_GENERATOR,
+                            ButtonUM.SOCIAL_LOGIN,
                         ),
                         onButtonClick = { buttonUM ->
                             val route = when (buttonUM) {
@@ -125,6 +128,7 @@ internal class TesterActivity : ComposeActivity() {
                                 ButtonUM.SURVEY_SPARROW -> TesterScreen.SURVEY_SPARROW
                                 ButtonUM.BACKEND_AUTH_STATUS -> TesterScreen.BACKEND_AUTH_STATUS
                                 ButtonUM.SELL_REDIRECT_GENERATOR -> TesterScreen.SELL_REDIRECT_GENERATOR
+                                ButtonUM.SOCIAL_LOGIN -> TesterScreen.SOCIAL_LOGIN
                             }
 
                             innerTesterRouter.open(route)
@@ -242,6 +246,15 @@ internal class TesterActivity : ComposeActivity() {
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
 
                 SellRedirectGeneratorScreen(state)
+            }
+
+            composable(route = TesterScreen.SOCIAL_LOGIN.name) {
+                val viewModel = hiltViewModel<SocialLoginTesterViewModel>().apply {
+                    setupNavigation(innerTesterRouter)
+                }
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+                SocialLoginTesterScreen(state)
             }
         }
     }

@@ -2,21 +2,28 @@ package com.tangem.data.collectibles
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.core.remote.json.NetworkJsonFactory
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchAction
+import com.tangem.data.collectibles.error.CollectiblesErrorResolver
 import com.tangem.data.collectibles.store.CollectiblesMachineStore
-import com.tangem.domain.collectibles.models.CollectibleTransaction
+import com.tangem.domain.collectibles.models.CollectibleException
+import com.tangem.domain.collectibles.models.CollectiblePurchaseTx
+import com.tangem.domain.collectibles.models.CollectibleRarity
 import com.tangem.domain.collectibles.models.CollectibleTurboMode
-import com.tangem.domain.collectibles.models.GenerateTxParams
-import com.tangem.domain.collectibles.models.SubmittedCollectibleTransaction
+import com.tangem.domain.collectibles.models.CollectibleTxState
+import com.tangem.domain.collectibles.models.CollectibleTxStatus
+import com.tangem.domain.collectibles.models.GeneratePurchaseTxParams
+import com.tangem.domain.collectibles.models.OpenedCollectiblePack
 import com.tangem.grow.datasource.collectibles.CollectiblesApi
-import com.tangem.grow.datasource.collectibles.models.request.GenerateTxRequestBody
-import com.tangem.grow.datasource.collectibles.models.request.SubmitTxRequestBody
-import com.tangem.grow.datasource.collectibles.models.response.GenerateTxResponse
+import com.tangem.grow.datasource.collectibles.models.request.CollectibleTxRequestBody
+import com.tangem.grow.datasource.collectibles.models.request.GeneratePurchaseTxRequestBody
+import com.tangem.grow.datasource.collectibles.models.request.PurchaseTxSentRequestBody
+import com.tangem.grow.datasource.collectibles.models.response.CollectibleTxResponse
+import com.tangem.grow.datasource.collectibles.models.response.GeneratePurchaseTxResponse
 import com.tangem.grow.datasource.collectibles.models.response.MachineCategoriesResponse
 import com.tangem.grow.datasource.collectibles.models.response.MachinesResponse
-import com.tangem.grow.datasource.collectibles.models.response.SubmitTxResponse
 import com.tangem.grow.datasource.collectibles.models.response.model.MachineDTO
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchingContext
@@ -52,6 +59,7 @@ internal class DefaultCollectiblesRepositoryTest {
         repository = DefaultCollectiblesRepository(
             collectiblesApi = collectiblesApi,
             machineStore = CollectiblesMachineStore(store = RuntimeSharedStore()),
+            errorResolver = CollectiblesErrorResolver(json = NetworkJsonFactory.create()),
             dispatchers = TestingCoroutineDispatcherProvider(),
         )
         clearMocks(collectiblesApi)
@@ -197,125 +205,224 @@ internal class DefaultCollectiblesRepositoryTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class GenerateTx {
+    inner class GeneratePurchaseTx {
 
         @Test
-        fun `GIVEN turbo mode WHEN generateTx THEN body carries turbo params`() = runTest {
-            // Arrange
-            coEvery { collectiblesApi.generateTx(any(), any()) } returns ApiResponse.Success(
-                GenerateTxResponse(id = "tx-id", txData = "base64"),
-            )
+        fun `GIVEN turbo mode WHEN generatePurchaseTx THEN body carries turbo params and memo becomes the join key`() =
+            runTest {
+                // Arrange
+                coEvery { collectiblesApi.generatePurchaseTx(any(), any()) } returns
+                    ApiResponse.Success(purchaseTxResponse())
 
-            // Act
-            val actual = repository.generateTx(
-                userWalletId = userWalletId,
-                params = GenerateTxParams(
-                    fromAddress = "from",
-                    collectibleType = "pokemon_50",
-                    toAddress = "to",
-                    collectibleTurboMode = CollectibleTurboMode(isEnabled = true, buybackAddress = "buyback"),
-                ),
-            )
-
-            // Assert
-            assertThat(actual).isEqualTo(CollectibleTransaction(id = "tx-id", txData = "base64"))
-            coVerify(exactly = 1) {
-                collectiblesApi.generateTx(
-                    userWalletId = userWalletId.stringValue,
-                    body = GenerateTxRequestBody(
+                // Act
+                val actual = repository.generatePurchaseTx(
+                    userWalletId = userWalletId,
+                    params = GeneratePurchaseTxParams(
                         fromAddress = "from",
-                        collectibleType = "pokemon_50",
+                        machineId = "pokemon_50",
                         toAddress = "to",
-                        turboMode = GenerateTxRequestBody.TurboModeDTO(
-                            isEnabled = true,
-                            buybackAddress = "buyback",
+                        collectibleTurboMode = CollectibleTurboMode(isEnabled = true, buybackAddress = "buyback"),
+                    ),
+                )
+
+                // Assert
+                assertThat(actual).isEqualTo(
+                    CollectiblePurchaseTx(
+                        txId = "tx-id",
+                        memo = "cc-uuid",
+                        amount = 50_000_000L,
+                        feeAmount = 1_000_000L,
+                    ),
+                )
+                coVerify(exactly = 1) {
+                    collectiblesApi.generatePurchaseTx(
+                        userWalletId = userWalletId.stringValue,
+                        body = GeneratePurchaseTxRequestBody(
+                            fromAddress = "from",
+                            machineId = "pokemon_50",
+                            toAddress = "to",
+                            turboMode = GeneratePurchaseTxRequestBody.TurboModeDTO(
+                                isEnabled = true,
+                                buybackAddress = "buyback",
+                            ),
                         ),
-                    ),
-                )
+                    )
+                }
             }
-        }
 
         @Test
-        fun `GIVEN no turbo mode WHEN generateTx THEN body omits it`() = runTest {
+        fun `GIVEN api fails WHEN generatePurchaseTx THEN the api error is thrown`() = runTest {
             // Arrange
-            coEvery { collectiblesApi.generateTx(any(), any()) } returns ApiResponse.Success(
-                GenerateTxResponse(id = "tx-id", txData = "base64"),
-            )
-
-            // Act
-            repository.generateTx(
-                userWalletId = userWalletId,
-                params = GenerateTxParams(fromAddress = "from", collectibleType = "pokemon_50", toAddress = "to"),
-            )
-
-            // Assert
-            coVerify(exactly = 1) {
-                collectiblesApi.generateTx(
-                    userWalletId = userWalletId.stringValue,
-                    body = GenerateTxRequestBody(
-                        fromAddress = "from",
-                        collectibleType = "pokemon_50",
-                        toAddress = "to",
-                        turboMode = null,
-                    ),
-                )
-            }
-        }
-
-        @Test
-        fun `GIVEN api fails WHEN generateTx THEN the api error is thrown`() = runTest {
-            // Arrange
-            coEvery { collectiblesApi.generateTx(any(), any()) } returns timeoutError<GenerateTxResponse>()
+            coEvery { collectiblesApi.generatePurchaseTx(any(), any()) } returns
+                timeoutError<GeneratePurchaseTxResponse>()
 
             // Act
             val actual = runCatching {
-                repository.generateTx(
+                repository.generatePurchaseTx(
                     userWalletId = userWalletId,
-                    params = GenerateTxParams(fromAddress = "from", collectibleType = "pokemon_50", toAddress = "to"),
+                    params = GeneratePurchaseTxParams(fromAddress = "from", machineId = "pokemon_50", toAddress = "to"),
                 )
             }.exceptionOrNull()
 
             // Assert
             assertThat(actual).isInstanceOf(ApiResponseError.TimeoutException::class.java)
         }
+
+        @Test
+        fun `GIVEN low inventory code WHEN generatePurchaseTx THEN low inventory is thrown`() = runTest {
+            // Arrange
+            coEvery { collectiblesApi.generatePurchaseTx(any(), any()) } returns httpError(
+                code = ApiResponseError.HttpException.Code.SERVICE_UNAVAILABLE,
+                body = """{"status":503,"detail":"Low inventory","code":3016}""",
+            )
+
+            // Act
+            val actual = runCatching { generate() }.exceptionOrNull()
+
+            // Assert
+            assertThat(actual).isInstanceOf(CollectibleException.LowInventory::class.java)
+        }
+
+        @Test
+        fun `GIVEN another backend code WHEN generatePurchaseTx THEN the http error is thrown as is`() = runTest {
+            // Arrange
+            coEvery { collectiblesApi.generatePurchaseTx(any(), any()) } returns httpError(
+                code = ApiResponseError.HttpException.Code.FORBIDDEN,
+                body = """{"status":403,"detail":"Purchase address is blocked","code":3012}""",
+            )
+
+            // Act
+            val actual = runCatching { generate() }.exceptionOrNull()
+
+            // Assert
+            assertThat(actual).isInstanceOf(ApiResponseError.HttpException::class.java)
+        }
+
+        private suspend fun generate() = repository.generatePurchaseTx(
+            userWalletId = userWalletId,
+            params = GeneratePurchaseTxParams(fromAddress = "from", machineId = "pokemon_50", toAddress = "to"),
+        )
+
+        private fun purchaseTxResponse() = GeneratePurchaseTxResponse(
+            txId = "tx-id",
+            txData = GeneratePurchaseTxResponse.TxDataDTO(
+                memo = "cc-uuid",
+                fromNetwork = "solana-dev",
+                fromContractAddress = "mint",
+                fromDecimals = 6,
+                fromAmount = "50000000",
+                feeAmount = "1000000",
+            ),
+        )
     }
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class SubmitTx {
+    inner class TxStatus {
 
         @Test
-        fun `GIVEN signed tx WHEN submitTx THEN returns submitted id`() = runTest {
-            // Arrange
-            coEvery {
-                collectiblesApi.submitTx(any(), any())
-            } returns ApiResponse.Success(SubmitTxResponse(id = "tx-id"))
+        fun `GIVEN a hash WHEN reportPurchaseTxSent THEN it is sent with the tx id and the status is parsed`() =
+            runTest {
+                // Arrange
+                coEvery { collectiblesApi.purchaseTxSent(any(), any()) } returns
+                    ApiResponse.Success(CollectibleTxResponse(txId = "tx-id", status = "purchase-tx-hash"))
 
-            // Act
-            val actual = repository.submitTx(userWalletId = userWalletId, signedTxData = "signed")
+                // Act
+                val actual = repository.reportPurchaseTxSent(userWalletId, txId = "tx-id", txHash = "hash")
 
-            // Assert
-            assertThat(actual).isEqualTo(SubmittedCollectibleTransaction(id = "tx-id"))
-            coVerify(exactly = 1) {
-                collectiblesApi.submitTx(
-                    userWalletId = userWalletId.stringValue,
-                    body = SubmitTxRequestBody(signedTxData = "signed"),
-                )
+                // Assert
+                assertThat(actual).isEqualTo(CollectibleTxStatus.PURCHASE_TX_HASH)
+                coVerify(exactly = 1) {
+                    collectiblesApi.purchaseTxSent(
+                        userWalletId = userWalletId.stringValue,
+                        body = PurchaseTxSentRequestBody(txId = "tx-id", txHash = "hash"),
+                    )
+                }
             }
-        }
 
         @Test
-        fun `GIVEN api fails WHEN submitTx THEN the api error is thrown`() = runTest {
+        fun `GIVEN api fails WHEN getTxState THEN the api error is thrown`() = runTest {
             // Arrange
-            coEvery { collectiblesApi.submitTx(any(), any()) } returns networkError<SubmitTxResponse>()
+            coEvery { collectiblesApi.getTxStatus(userWalletId.stringValue, txId = "tx-id", includeNftWon = false) } returns
+                networkError<CollectibleTxResponse>()
 
             // Act
-            val actual = runCatching {
-                repository.submitTx(userWalletId = userWalletId, signedTxData = "signed")
-            }.exceptionOrNull()
+            val actual = runCatching { repository.getTxState(userWalletId, txId = "tx-id") }.exceptionOrNull()
 
             // Assert
             assertThat(actual).isInstanceOf(ApiResponseError.NetworkException::class.java)
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class OpenPack {
+
+        @Test
+        fun `GIVEN the card in the answer WHEN openPack THEN status and card are returned`() = runTest {
+            // Arrange
+            coEvery {
+                collectiblesApi.openPack(
+                    userWalletId = userWalletId.stringValue,
+                    body = CollectibleTxRequestBody(txId = "tx-id"),
+                    includeNftWon = true,
+                )
+            } returns ApiResponse.Success(
+                CollectibleTxResponse(
+                    txId = "tx-id",
+                    status = "pack-opened",
+                    nftWon = CollectibleTxResponse.NftWonDTO(
+                        nftAddress = "nft",
+                        gradingCompany = "PSA",
+                        grade = "GEM-MT 10",
+                        gradingId = "123",
+                        imageFront = "https://front",
+                        imageBack = "https://back",
+                        rarity = "common",
+                        year = "2024",
+                        set = "Temporal Forces",
+                        serialNumber = "218",
+                        insuredValue = 3500L,
+                    ),
+                ),
+            )
+
+            // Act
+            val actual = repository.openPack(userWalletId, txId = "tx-id")
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                CollectibleTxState(
+                    status = CollectibleTxStatus.PACK_OPENED,
+                    pack = OpenedCollectiblePack(
+                        txId = "tx-id",
+                        nftAddress = "nft",
+                        imageFrontUrl = "https://front",
+                        imageBackUrl = "https://back",
+                        rarity = CollectibleRarity.COMMON,
+                        gradingCompany = "PSA",
+                        grade = "GEM-MT 10",
+                        gradingId = "123",
+                        year = "2024",
+                        set = "Temporal Forces",
+                        serialNumber = "218",
+                        insuredValue = 3500L,
+                    ),
+                ),
+            )
+        }
+
+        @Test
+        fun `GIVEN no card in the answer WHEN openPack THEN only the status is returned`() = runTest {
+            // Arrange
+            coEvery { collectiblesApi.openPack(any(), any(), any()) } returns
+                ApiResponse.Success(CollectibleTxResponse(txId = "tx-id", status = "pack-opened"))
+
+            // Act
+            val actual = repository.openPack(userWalletId, txId = "tx-id")
+
+            // Assert
+            assertThat(actual).isEqualTo(CollectibleTxState(status = CollectibleTxStatus.PACK_OPENED, pack = null))
         }
     }
 
@@ -463,6 +570,12 @@ internal class DefaultCollectiblesRepositoryTest {
     @Suppress("UNCHECKED_CAST")
     private fun <T : Any> networkError(): ApiResponse<T> =
         ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<T>
+
+    @Suppress("UNCHECKED_CAST")
+    private fun <T : Any> httpError(code: ApiResponseError.HttpException.Code, body: String?): ApiResponse<T> =
+        ApiResponse.Error(
+            ApiResponseError.HttpException(code = code, message = null, errorBody = body),
+        ) as ApiResponse<T>
 
     private companion object {
         val userWalletId = MachineFactory.userWalletId

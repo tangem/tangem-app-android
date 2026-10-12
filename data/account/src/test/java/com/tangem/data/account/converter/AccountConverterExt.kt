@@ -48,6 +48,7 @@ internal fun createGetWalletAccountsResponse(
     derivationIndex: Int? = null,
     tokens: List<UserTokensResponse.Token>? = emptyList(),
     unassignedTokens: List<UserTokensResponse.Token> = emptyList(),
+    totalJointAccounts: Int? = null,
 ): GetWalletAccountsResponse {
     return GetWalletAccountsResponse(
         wallet = GetWalletAccountsResponse.Wallet(
@@ -56,6 +57,7 @@ internal fun createGetWalletAccountsResponse(
             sort = sortType,
             totalAccounts = 1,
             totalArchivedAccounts = 0,
+            totalJointAccounts = totalJointAccounts,
         ),
         accounts = buildList {
             createWalletAccountDTO(
@@ -77,12 +79,14 @@ internal fun createAccountList(
     userWalletId: UserWalletId,
     sortType: TokensSortType = TokensSortType.BALANCE,
     groupType: TokensGroupType = TokensGroupType.NETWORK,
+    totalJointAccounts: Int = 0,
 ): AccountList {
     return AccountList(
         userWalletId = userWalletId,
         accounts = listOf(createCryptoPortfolio(userWalletId)),
         totalAccounts = 1,
         totalArchivedAccounts = 0,
+        totalJointAccounts = totalJointAccounts,
         sortType = sortType,
         groupType = groupType,
     )

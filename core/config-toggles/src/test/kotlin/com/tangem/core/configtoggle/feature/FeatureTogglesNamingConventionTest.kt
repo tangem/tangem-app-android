@@ -20,7 +20,7 @@ internal class FeatureTogglesNamingConventionTest {
 
         Truth.assertWithMessage(
             """New feature toggles must match pattern ${VALID_NAME_PATTERN.pattern} — AND_<ticket_id> (Android ticket, e.g. AND_15312_PUSH_NOTIFICATION_SETTINGS_ENABLED) or TWI_<ticket_id> (idea ticket, e.g. TWI_1403_PUSH_NOTIFICATION_SETTINGS_ENABLED).
-              |Either rename these or, only if you have an explicit reason, add them to LEGACY_EXCLUDED.""".trimMargin(),
+              |Either rename these or, only if you have an explicit reason, add them to EXCLUDED_TOGGLES_LIST.""".trimMargin(),
         ).that(invalid).isEmpty()
     }
 
@@ -39,7 +39,6 @@ internal class FeatureTogglesNamingConventionTest {
         /** Toggles created before the AND_/TWI_ naming convention. Do NOT add new entries. */
         val EXCLUDED_TOGGLES_LIST = setOf(
             "ADDRESS_SYNC_ENABLED",
-            "NEW_CARD_SCANNING_ENABLED",
             "VISA_ONBOARDING_ENABLED",
             "WALLET_CONNECT_BITCOIN_ENABLED",
         )

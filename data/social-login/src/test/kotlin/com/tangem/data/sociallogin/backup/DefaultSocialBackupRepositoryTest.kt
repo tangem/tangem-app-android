@@ -1,12 +1,16 @@
 package com.tangem.data.sociallogin.backup
 
 import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.data.sociallogin.SocialBackupJson
 import com.tangem.data.sociallogin.crypto.SocialBackupCipher
 import com.tangem.data.sociallogin.crypto.SocialBackupFileData
 import com.tangem.data.sociallogin.crypto.SocialBackupPayload
-import com.tangem.data.sociallogin.store.SocialBackupStore
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.error.SaveWalletError
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.sociallogin.models.RecoveryKey
 import com.tangem.domain.sociallogin.models.SocialBackupSecret
@@ -21,9 +25,10 @@ import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody
@@ -40,13 +45,13 @@ internal class DefaultSocialBackupRepositoryTest {
 
     private val api: GoogleDriveApi = mockk()
     private val tokenProvider: GoogleDriveTokenProvider = mockk(relaxUnitFun = true)
-    private val store: SocialBackupStore = mockk(relaxUnitFun = true)
+    private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val cipher = SocialBackupCipher()
 
     private val repository = DefaultSocialBackupRepository(
         api = api,
         tokenProvider = tokenProvider,
-        store = store,
+        userWalletsListRepository = { userWalletsListRepository },
         cipher = cipher,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
@@ -55,7 +60,11 @@ internal class DefaultSocialBackupRepositoryTest {
 
     @BeforeEach
     fun setup() {
-        clearMocks(api, tokenProvider, store)
+        clearMocks(api, tokenProvider, userWalletsListRepository)
+        val wallets = listOf(MARKED_WALLET, UNMARKED_WALLET, COLD_WALLET)
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(wallets)
+        coEvery { userWalletsListRepository.userWalletsSync() } returns wallets
+        coEvery { userWalletsListRepository.saveWithoutLock(any(), any()) } answers { firstArg<UserWallet>().right() }
         coEvery { tokenProvider.getAccessToken(any()) } returns Either.Right(ACCESS_TOKEN)
         coEvery { api.deleteFile(any(), any()) } returns Response.success(Unit)
     }
@@ -370,31 +379,71 @@ internal class DefaultSocialBackupRepositoryTest {
     }
 
     @Test
-    fun `GIVEN the flag cannot be stored WHEN setSocialBackupCompleted THEN PersistenceFailed is returned`() =
-        runTest {
-            // Arrange
-            coEvery { store.setCompleted(any(), any()) } throws IllegalStateException("no space left")
-
-            // Act
-            val result = repository.setSocialBackupCompleted(
-                walletId = UserWalletId(stringValue = WALLET_ID),
-                isCompleted = true,
-            )
-
-            // Assert
-            assertThat(result.leftOrNull()).isInstanceOf(SocialLoginError.PersistenceFailed::class.java)
-        }
-
-    @Test
-    fun `GIVEN the wallet is in the completed set WHEN isSocialBackupCompleted THEN it reads as true`() = runTest {
-        // Arrange
-        coEvery { store.getCompletedWalletIds() } returns flowOf(setOf(WALLET_ID))
-
+    fun `GIVEN a marked hot wallet WHEN isSocialBackupCompleted THEN it reads as true`() = runTest {
         // Act
-        val isCompleted = repository.isSocialBackupCompleted(UserWalletId(stringValue = WALLET_ID))
+        val actual = repository.isSocialBackupCompleted(MARKED_WALLET.walletId)
 
         // Assert
-        assertThat(isCompleted).isTrue()
+        assertThat(actual).isTrue()
+    }
+
+    @Test
+    fun `GIVEN an unmarked or cold wallet WHEN isSocialBackupCompleted THEN it reads as false`() = runTest {
+        // Act
+        val actual = listOf(UNMARKED_WALLET.walletId, COLD_WALLET.walletId).map {
+            repository.isSocialBackupCompleted(it)
+        }
+
+        // Assert
+        assertThat(actual).containsExactly(false, false)
+    }
+
+    @Test
+    fun `GIVEN a listed wallet WHEN setSocialBackupCompleted THEN its record is saved with the mark`() = runTest {
+        // Act
+        val actual = repository.setSocialBackupCompleted(walletId = UNMARKED_WALLET.walletId, isCompleted = true)
+
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+        coVerify(exactly = 1) {
+            userWalletsListRepository.saveWithoutLock(UNMARKED_WALLET.copy(isSocialBackupCompleted = true), true)
+        }
+    }
+
+    @Test
+    fun `GIVEN a wallet not on the device WHEN setSocialBackupCompleted THEN nothing is saved`() = runTest {
+        // Act
+        val actual = repository.setSocialBackupCompleted(
+            walletId = UserWalletId(stringValue = "0000"),
+            isCompleted = false,
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+        coVerify(exactly = 0) { userWalletsListRepository.saveWithoutLock(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN the mark already matches WHEN setSocialBackupCompleted THEN nothing is saved`() = runTest {
+        // Act
+        val actual = repository.setSocialBackupCompleted(walletId = MARKED_WALLET.walletId, isCompleted = true)
+
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+        coVerify(exactly = 0) { userWalletsListRepository.saveWithoutLock(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN saving fails WHEN setSocialBackupCompleted THEN PersistenceFailed is returned`() = runTest {
+        // Arrange
+        coEvery { userWalletsListRepository.saveWithoutLock(any(), any()) } returns
+            SaveWalletError.DataError(messageId = null).left()
+
+        // Act
+        val actual = repository.setSocialBackupCompleted(walletId = MARKED_WALLET.walletId, isCompleted = false)
+
+        // Assert
+        assertThat(actual).isEqualTo(SocialLoginError.PersistenceFailed().left())
     }
 
     private fun stubList(vararg files: DriveFile) {
@@ -433,6 +482,21 @@ internal class DefaultSocialBackupRepositoryTest {
     private fun RequestBody.asString(): String = Buffer().also { writeTo(it) }.readUtf8()
 
     private companion object {
+        val MARKED_WALLET = hotWallet(id = "0A0A", isSocialBackupCompleted = true)
+        val UNMARKED_WALLET = hotWallet(id = "0B0B", isSocialBackupCompleted = false)
+        val COLD_WALLET: UserWallet.Cold = mockk {
+            every { walletId } returns UserWalletId(stringValue = "0C0C")
+        }
+
+        fun hotWallet(id: String, isSocialBackupCompleted: Boolean) = UserWallet.Hot(
+            name = "Wallet $id",
+            walletId = UserWalletId(stringValue = id),
+            hotWalletId = mockk(),
+            wallets = null,
+            backedUp = false,
+            isSocialBackupCompleted = isSocialBackupCompleted,
+        )
+
         const val ACCESS_TOKEN = "token"
         const val BACKUP_FILE_NAME = "social-backup.json"
         const val MIME_TYPE_JSON = "application/json"

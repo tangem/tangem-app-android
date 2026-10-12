@@ -78,6 +78,11 @@ internal class AmplitudeABTestsManager(
         return client.variant(key).value ?: defaultValue
     }
 
+    override fun peekValue(key: String): String? {
+        if (!::client.isInitialized) return null
+        return client.all()[key]?.value
+    }
+
     private suspend fun awaitVariantsFetched() {
         if (variantsFetched.isCompleted) return
         val completed = withTimeoutOrNull(FETCH_AWAIT_TIMEOUT_MILLIS) {

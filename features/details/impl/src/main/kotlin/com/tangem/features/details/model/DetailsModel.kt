@@ -22,7 +22,6 @@ import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.moneyaccount.model.MoneyAccountEligibility
-import com.tangem.domain.moneyaccount.model.MoneyAccountEntryPoint
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountEligibilityUseCase
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
@@ -338,7 +337,7 @@ internal class DetailsModel @Inject constructor(
     private fun addMoneyAccountItemIfEligible() {
         modelScope.launch {
             val isMoneyAccountEnabled = moneyAccountFeatureToggles.isMoneyAccountsEnabled
-            val eligibility = getMoneyAccountEligibilityUseCase(MoneyAccountEntryPoint.DETAILS)
+            val eligibility = getMoneyAccountEligibilityUseCase()
             if (eligibility is MoneyAccountEligibility.Available && isMoneyAccountEnabled) {
                 items.update { items ->
                     itemsBuilder.addMoneyAccountItem(
@@ -352,11 +351,9 @@ internal class DetailsModel @Inject constructor(
 
     private fun onMoneyAccountItemClicked() {
         modelScope.launch {
-            when (val eligibility = getMoneyAccountEligibilityUseCase(MoneyAccountEntryPoint.DETAILS)) {
+            when (getMoneyAccountEligibilityUseCase()) {
                 is MoneyAccountEligibility.Available -> router.push(
-                    AppRoute.MoneyAccountOnboarding(
-                        AppRoute.MoneyAccountOnboarding.Mode.FromDetailsScreen(eligibility.wallets.first().walletId),
-                    ),
+                    AppRoute.MoneyAccountOnboarding(AppRoute.MoneyAccountOnboarding.Mode.FromDetailsScreen),
                 )
                 MoneyAccountEligibility.NotAvailable -> items.update { itemsBuilder.removeMoneyAccountItem(it) }
             }

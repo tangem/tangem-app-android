@@ -56,6 +56,7 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
     private val params = paramsContainer.require<TangemPayOrderCardDataComponent.Params>()
     private val loadDataJobHolder = JobHolder()
     private val submitJobHolder = JobHolder()
+    private val orderIdempotencyKeys = mutableMapOf<PlasticCardOrder, String>()
 
     val state: StateFlow<TangemPayOrderCardDataScreenUM>
         field = MutableStateFlow<TangemPayOrderCardDataScreenUM>(createLoadingState())
@@ -168,10 +169,11 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
         if (!form.isOrderEnabled || form.isSubmitting) return
 
         analytics.send(TangemPayAnalyticsEvents.Plastic.OrderCardClicked())
+        val order = form.toPlasticCardOrder()
         submitOrder(
-            order = form.toPlasticCardOrder(),
+            order = order,
             email = form.email,
-            idempotencyKey = UUID.randomUUID().toString(),
+            idempotencyKey = orderIdempotencyKeys.getOrPut(order) { UUID.randomUUID().toString() },
         )
     }
 
@@ -180,6 +182,7 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
         modelScope.launch {
             submit(order = order, idempotencyKey = idempotencyKey).fold(
                 ifLeft = { error ->
+                    if (!error.isOutcomeUnknown()) orderIdempotencyKeys.remove(order)
                     setSubmitting(isSubmitting = false)
                     TangemLogger.withTag(TAG).e("Plastic card order was not accepted: $error")
                     uiMessageSender.send(
@@ -187,6 +190,7 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
                     )
                 },
                 ifRight = {
+                    orderIdempotencyKeys.remove(order)
                     setSubmitting(isSubmitting = false)
                     params.onOrderAccepted(email)
                 },

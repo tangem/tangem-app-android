@@ -49,6 +49,7 @@ class SwapPairInfoConverter : Converter<SwapPairsWithProviders, PairsWithProvide
             isRecommended = exchangeProvider.isRecommended,
             slippage = exchangeProvider.slippage,
             isExtraIdSupported = exchangeProvider.isExtraIdSupported,
+            isCustomSlippageSupported = exchangeProvider.isCustomSlippageSupported,
         )
     }
 
@@ -69,6 +70,7 @@ class SwapPairInfoConverter : Converter<SwapPairsWithProviders, PairsWithProvide
             isRecommended = additionalProvider.isRecommended,
             slippage = additionalProvider.slippage,
             isExtraIdSupported = additionalProvider.isExtraIdSupported,
+            isCustomSlippageSupported = additionalProvider.isCustomSlippageSupported,
         )
     }
 

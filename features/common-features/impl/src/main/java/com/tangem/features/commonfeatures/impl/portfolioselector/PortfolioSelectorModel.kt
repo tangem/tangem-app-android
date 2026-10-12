@@ -30,6 +30,7 @@ import com.tangem.features.commonfeatures.impl.portfolioselector.entity.Portfoli
 import com.tangem.features.wallet.utils.UserWalletImageFetcher
 import com.tangem.operations.attestation.ArtworkSize
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
@@ -57,6 +58,7 @@ internal class PortfolioSelectorModel @Inject constructor(
     private val innerSelectedAccounts = MutableStateFlow(selectorController.selectedAccountsSync)
 
     init {
+        TangemLogger.i("PortfolioSelector: model created, settings=${params.settings}")
         combine(
             flow = isAccountsModeEnabledUseCase(),
             flow2 = balanceFetcher.data,
@@ -87,6 +89,10 @@ internal class PortfolioSelectorModel @Inject constructor(
                     items = groupPositionsConverter.convert(uiList).toImmutableList(),
                     button = button.takeIf { params.settings.isMultiChoice },
                     isMultiChoiceEnabled = params.settings.isMultiChoice,
+                )
+                TangemLogger.i(
+                    "PortfolioSelector: state built, items=${uiList.size}, wallets=${portfolioData.balances.size}, " +
+                        "accountsMode=$isAccountsModeEffective",
                 )
             },
         )

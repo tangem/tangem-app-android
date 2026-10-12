@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotificationUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import kotlinx.collections.immutable.toImmutableList
@@ -25,6 +26,15 @@ internal class TangemPayRefreshShowProgressTransformer(
     }
 
     override fun transform(walletUM: WalletUM): WalletUM {
-        return walletUM // todo redesign main
+        val content = walletUM as? WalletUM.Content ?: return walletUM
+        val newNotifications = content.notifications.map { notification ->
+            if (notification is WalletNotificationUM.TangemPayRefreshNeeded) {
+                notification.copy(shouldShowProgress = shouldShowProgress)
+            } else {
+                notification
+            }
+        }
+
+        return content.copy(notifications = newNotifications.toImmutableList())
     }
 }

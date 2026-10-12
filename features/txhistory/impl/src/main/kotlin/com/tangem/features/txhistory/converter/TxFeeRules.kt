@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.domain.txhistory.model.ExpressTx
@@ -36,7 +37,7 @@ internal fun TxInfo.hasForeignFee(): Boolean = !isOutgoing && (
 
 /** The amount of a fee-only transaction already shows the fee, so the card does not repeat it as an info row. */
 internal fun TxInfo.isFeeOnly(currency: CryptoCurrency): Boolean =
-    type is TransactionType.NetworkFee || type is TransactionType.GaslessFee || isFeeOnlyOperation(currency)
+    type is TransactionType.GaslessFee || isTokenFee() || isFeeOnlyOperation(currency)
 
 /**
  * An unrecognized contract call the wallet made itself, in a coin's own history, that moved no coin: all it cost is
@@ -48,7 +49,16 @@ internal fun TxInfo.isFeeOnly(currency: CryptoCurrency): Boolean =
 internal fun TxInfo.isFeeOnlyOperation(currency: CryptoCurrency): Boolean = isOutgoing &&
     currency is CryptoCurrency.Coin &&
     amount.isZero() &&
-    (type is TransactionType.Operation || type is TransactionType.UnknownOperation)
+    type.isUndecodedCall()
+
+private fun TransactionType.isUndecodedCall(): Boolean =
+    this is TransactionType.Operation || this is TransactionType.UnknownOperation
+
+/** Moved no coin of its own, only paid for a token transfer */
+internal fun TxInfo.isTokenFee(): Boolean = type is TransactionType.NetworkFee
+
+/** The tokens a fee-only row paid for, when it names them */
+internal fun TxInfo.feeForAmount(): SdkAmount? = (type as? TransactionType.NetworkFee)?.amount
 
 /**
  * Whether the matched on-chain leg is the one the user paid for. Only a swap viewed from its `from` token qualifies:
@@ -70,7 +80,8 @@ internal fun TxInfo.feeRows(currency: CryptoCurrency): ImmutableList<TxHistoryDe
     listOfNotNull(feeRow(currency)).toImmutableList()
 
 private fun TxInfo.feeRow(currency: CryptoCurrency): TxHistoryDetailsUM.InfoRowUM? {
-    val value = gaslessFeeText(currency) ?: nativeFeeText() ?: return null
+    val text = gaslessFeeText(currency) ?: nativeFeeText() ?: return null
+    val value = approximateMark() + text
     return TxHistoryDetailsUM.InfoRowUM(
         label = resourceReference(R.string.common_network_fee_title),
         value = stringReference(value),
@@ -108,10 +119,12 @@ internal fun TxInfo.feeAmountText(currency: CryptoCurrency): TextReference? {
     val feeValue = fee?.value ?: return null
     val formatted = feeValue.format { crypto(cryptoCurrency = currency, ignoreSymbolPosition = true) }
     val prefix = if (status is TxInfo.TransactionStatus.Failed) "" else "${StringsSigns.MINUS} "
-    return stringReference((prefix + formatted).trim())
+    return stringReference((prefix + approximateMark() + formatted).trim())
 }
 
-private fun TxInfo.showsFeeAsAmount(currency: CryptoCurrency): Boolean =
-    type is TransactionType.NetworkFee || isFeeOnlyOperation(currency)
+internal fun TxInfo.showsFeeAsAmount(currency: CryptoCurrency): Boolean = isTokenFee() || isFeeOnlyOperation(currency)
+
+/** A joint account's fee is the refund cap the operation was signed with, not what was paid */
+internal fun TxInfo.approximateMark(): String = if (type is TransactionType.Joint) StringsSigns.TILDE_SIGN else ""
 
 // endregion

@@ -17,6 +17,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.account.AccountCharIcon
 import com.tangem.core.ui.components.account.AccountResIcon
 import com.tangem.core.ui.components.account.PaymentAccountIcon
+import com.tangem.core.ui.components.account.PredictionAccountResIcon
 import com.tangem.core.ui.components.currency.DefaultCurrencyIcon
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -68,6 +69,7 @@ internal fun ContentIcon(
             alpha = alpha,
         )
         is CurrencyIconState.PaymentAccount -> PaymentAccountIcon(modifier = modifier, size = icon.size)
+        is CurrencyIconState.PredictionAccount -> PredictionAccountResIcon(modifier = modifier, size = icon.size)
         is CurrencyIconState.CryptoPortfolio.Icon -> AccountResIcon(
             modifier = modifier,
             imageVector = icon.imageVector(),

@@ -50,6 +50,7 @@ dependencies {
     implementation(projects.domain.addressBook)
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.dynamicAddresses)
     implementation(projects.domain.jointAccount)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.express.models)

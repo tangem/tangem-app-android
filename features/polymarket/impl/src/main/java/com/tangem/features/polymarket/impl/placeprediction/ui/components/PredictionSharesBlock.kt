@@ -7,7 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -117,7 +117,7 @@ private fun ProceedsFigure(proceeds: SharesProceedsUM) {
             is SharesProceedsUM.Content -> Text(
                 text = state.expected.formatPolymarketMoney(),
                 style = figureStyle,
-                color = TangemTheme.colors3.text.status.success,
+                color = TangemTheme.colors3.text.primary,
                 textAlign = TextAlign.Center,
             )
             is SharesProceedsUM.Unavailable -> Text(
@@ -133,24 +133,23 @@ private fun ProceedsFigure(proceeds: SharesProceedsUM) {
 @Composable
 private fun CalculatorRow(selected: BigDecimal, position: SellPositionUM, onAmountChange: (String) -> Unit) {
     val available = position.availableOrZero
-    val hasShares = position is SellPositionUM.Held && available > BigDecimal.ZERO
-    val isSteppable = SharesCalculator.isSteppable(available)
+    val isSteppable = position is SellPositionUM.Held && SharesCalculator.isSteppable(available)
 
-    Row(
+    FlowRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .padding(top = 24.dp, bottom = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(BUTTON_GAP),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalArrangement = Arrangement.spacedBy(BUTTON_GAP),
+        itemVerticalAlignment = Alignment.CenterVertically,
     ) {
         SharesFraction.entries.forEach { fraction ->
             TangemButton(
-                modifier = Modifier.weight(1f),
                 variant = TangemButton.Variant.Secondary,
                 size = TangemButton.Size.X8,
                 text = fraction.label(),
-                isEnabled = hasShares,
+                isEnabled = isSteppable,
                 onClick = {
                     onAmountChange(SharesCalculator.fraction(available, fraction.percent).toPlainString())
                 },

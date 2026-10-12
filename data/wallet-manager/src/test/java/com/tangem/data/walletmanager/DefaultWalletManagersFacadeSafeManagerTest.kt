@@ -48,6 +48,7 @@ internal class DefaultWalletManagersFacadeSafeManagerTest {
         jointAccountSafeAddressResolver = { safeAddressResolver },
         getCachedTokenInfoUseCase = mockk(),
         txHistoryFeatureToggles = mockk(relaxed = true),
+        jointRefundReceiverProvider = { SafeTestFixtures.REFUND_RECEIVER },
         blockchainSDKFactory = blockchainSDKFactory,
     )
 

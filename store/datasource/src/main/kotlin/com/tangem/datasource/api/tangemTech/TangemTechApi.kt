@@ -4,7 +4,11 @@ import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.marketing.models.MarketingCampaignsResponse
 import com.tangem.datasource.api.promotion.models.CreatePromotionRegistrationBody
 import com.tangem.datasource.api.promotion.models.PromotionRegistrationResponse
+import com.tangem.datasource.api.promotion.models.PromotionRegistrationsBody
+import com.tangem.datasource.api.promotion.models.PromotionRegistrationsResponse
 import com.tangem.datasource.api.promotion.models.PromotionsResponse
+import com.tangem.datasource.api.promotion.models.PromotionWalletType
+import com.tangem.datasource.api.promotion.models.PromotionsV3Response
 import com.tangem.datasource.api.promotion.models.YieldBoostStatusResponse
 import com.tangem.datasource.api.stories.models.StoryContentResponse
 import com.tangem.datasource.api.tangemTech.models.*
@@ -16,6 +20,8 @@ import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsV1R
 import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerRequest
 import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerResponse
 import com.tangem.datasource.api.tangemTech.models.promobanners.PromoBannerDisplaysResponse
+import com.tangem.datasource.api.tangemTech.models.storiesv2.StoriesV2Response
+import com.tangem.lib.auth.api.RequiresSessionAuth
 import retrofit2.http.*
 
 /**
@@ -122,12 +128,27 @@ interface TangemTechApi {
     @GET("v1/stories/{story_id}")
     suspend fun getStoryById(@Path("story_id") storyId: String): ApiResponse<StoryContentResponse>
 
+    @GET("api/v2/stories")
+    suspend fun getStoriesV2(
+        @Query("slugs") slugs: List<String>,
+        @Query("language") language: String,
+    ): ApiResponse<StoriesV2Response>
+
     // region promotions
     @GET("/v2/promotion")
     suspend fun getPromotions(
         @Query("walletId") walletId: String,
         @Header("Cache-Control") cacheControl: String = "max-age=600",
     ): ApiResponse<PromotionsResponse>
+
+    @RequiresSessionAuth
+    @GET("/api/referral/v1/promotion")
+    suspend fun getPromotionsV3(
+        @Query("walletId") walletId: String,
+        @Query("walletType") walletType: PromotionWalletType,
+        @Query("batchId") batchId: String?,
+        @Query("language") languageISOCode: String,
+    ): ApiResponse<PromotionsV3Response>
 
     @Suppress("FunctionSignature", "TrailingCommaOnDeclarationSite")
     @GET("/v2/promotion/yield-apr-boost/status")
@@ -137,6 +158,13 @@ interface TangemTechApi {
     suspend fun createPromotionRegistration(
         @Body body: CreatePromotionRegistrationBody,
     ): ApiResponse<PromotionRegistrationResponse>
+
+    @RequiresSessionAuth
+    @POST("/api/referral/v1/promotion/{id}/registrations")
+    suspend fun createPromotionRegistrations(
+        @Path("id") promotionId: Int,
+        @Body body: PromotionRegistrationsBody,
+    ): ApiResponse<PromotionRegistrationsResponse>
     // endregion
 
     // region push notifications

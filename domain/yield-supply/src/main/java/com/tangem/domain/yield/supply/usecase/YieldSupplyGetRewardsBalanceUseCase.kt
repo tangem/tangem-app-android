@@ -38,6 +38,8 @@ class YieldSupplyGetRewardsBalanceUseCase(
         if (cryptoAmount == null) return@flow
 
         val tokenAddress = (status.currency as? CryptoCurrency.Token)?.contractAddress ?: return@flow
+        // The base rate, not the incentivised one: Merkl rewards accrue as separate reward tokens and never
+        // compound into the supplied position this ticker extrapolates.
         val apy = try {
             val markets = yieldSupplyRepository.getCachedMarkets() ?: yieldSupplyRepository.updateMarkets()
             markets.firstOrNull { it.tokenAddress.equals(tokenAddress, ignoreCase = true) }?.apy ?: BigDecimal.ZERO

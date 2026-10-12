@@ -6,7 +6,7 @@ import com.domain.blockaid.models.transaction.simultation.AmountInfo
 import com.domain.blockaid.models.transaction.simultation.ApproveInfo
 import com.domain.blockaid.models.transaction.simultation.SimulationData
 import com.domain.blockaid.models.transaction.simultation.TokenInfo
-import com.tangem.blockchain.extensions.hexToBigDecimal
+import com.tangem.blockchain.extensions.hexToBigInteger
 import com.tangem.store.datasource.blockaid.models.request.EvmTransactionScanRequest
 import com.tangem.store.datasource.blockaid.models.request.RpcData
 import com.tangem.store.datasource.blockaid.models.request.SolanaTransactionScanRequest
@@ -14,6 +14,7 @@ import com.tangem.store.datasource.blockaid.models.response.*
 import org.json.JSONArray
 import org.json.JSONObject
 import org.json.JSONTokener
+import java.math.BigInteger
 
 private const val SUCCESS_STATUS = "Success"
 private const val DOMAIN_CHECKED_STATUS = "hit"
@@ -22,6 +23,8 @@ private const val VALIDATION_WARNING_STATUS = "Warning"
 private const val VALIDATION_MALICIOUS_STATUS = "Malicious"
 
 private const val SOL_ASSET_SYMBOL = "SOL"
+
+private val UINT256_MAX = BigInteger.valueOf(2).pow(256) - BigInteger.ONE
 
 internal object BlockAidMapper {
 
@@ -117,11 +120,18 @@ internal object BlockAidMapper {
     }
 
     private fun mapSimulationSuccessResult(from: AccountSummaryResponse): SimulationResult {
-        return when {
-            !from.exposures.isNullOrEmpty() -> mapApproveTransaction(from.exposures)
-            !from.assetsDiffs.isNullOrEmpty() -> mapSendReceiveTransaction(from.assetsDiffs)
-            else -> SimulationResult.Success(data = SimulationData.NoWalletChangesDetected)
+        val approvals = mapApprovals(from.exposures.orEmpty())
+        val transfers = mapTransfers(from.assetsDiffs.orEmpty())
+        val data = when {
+            approvals.isNotEmpty() -> SimulationData.Approve(
+                items = approvals,
+                send = transfers.send,
+                receive = transfers.receive,
+            )
+            transfers.send.isNotEmpty() || transfers.receive.isNotEmpty() -> transfers
+            else -> SimulationData.NoWalletChangesDetected
         }
+        return SimulationResult.Success(data)
     }
 
     private fun mapToSolanaAssetsDiffs(assetsDiffs: List<SolanaTransactionAssetDiff>): SimulationResult {
@@ -167,18 +177,13 @@ internal object BlockAidMapper {
         }
     }
 
-    private fun mapApproveTransaction(exposures: List<Exposure>?): SimulationResult {
-        val amounts: List<ApproveInfo>? = exposures?.flatMap { exposure ->
+    private fun mapApprovals(exposures: List<Exposure>): List<ApproveInfo> {
+        return exposures.flatMap { exposure ->
             if (exposure.assetType.isNFT()) {
                 listOf(mapApproveNftTransaction(exposure))
             } else {
                 mapTransaction(exposure)
             }
-        }
-        return if (!amounts.isNullOrEmpty()) {
-            SimulationResult.Success(SimulationData.Approve(amounts))
-        } else {
-            SimulationResult.Success(SimulationData.NoWalletChangesDetected)
         }
     }
 
@@ -190,11 +195,13 @@ internal object BlockAidMapper {
             decimals = exposure.asset.decimals ?: 0,
         )
         return exposure.spenders.flatMap { (_, spender) ->
-            val isUnlimited = spender.isApprovedForAll == true
-            val approval = spender.approval?.hexToBigDecimal()
+            val rawApproval = spender.approval?.hexToBigInteger()
+            val isUnlimited = spender.isApprovedForAll == true || rawApproval == UINT256_MAX
+            // Exposure is the balance currently at risk, not the allowance, so it's only a fallback
+            val approval = rawApproval?.toBigDecimal()?.movePointLeft(tokenInfo.decimals)
             spender.exposure.map { detail ->
                 ApproveInfo.Amount(
-                    approvedAmount = detail.value?.toBigDecimalOrNull() ?: approval ?: 1.toBigDecimal(),
+                    approvedAmount = approval ?: detail.value?.toBigDecimalOrNull() ?: 1.toBigDecimal(),
                     isUnlimited = isUnlimited,
                     tokenInfo = tokenInfo,
                 )
@@ -210,11 +217,11 @@ internal object BlockAidMapper {
         )
     }
 
-    private fun mapSendReceiveTransaction(assetDiffs: List<AssetDiff>?): SimulationResult {
+    private fun mapTransfers(assetDiffs: List<AssetDiff>): SimulationData.SendAndReceive {
         val sendInfo = arrayListOf<AmountInfo>()
         val receiveInfo = arrayListOf<AmountInfo>()
 
-        assetDiffs?.forEach { diff ->
+        assetDiffs.forEach { diff ->
             val token = TokenInfo(
                 chainId = diff.asset.chainId,
                 logoUrl = diff.asset.logoUrl,
@@ -251,11 +258,7 @@ internal object BlockAidMapper {
             }
         }
 
-        return if (sendInfo.isNotEmpty() || receiveInfo.isNotEmpty()) {
-            SimulationResult.Success(SimulationData.SendAndReceive(send = sendInfo, receive = receiveInfo))
-        } else {
-            SimulationResult.Success(SimulationData.NoWalletChangesDetected)
-        }
+        return SimulationData.SendAndReceive(send = sendInfo, receive = receiveInfo)
     }
 
     private fun String.isNFT(): Boolean {

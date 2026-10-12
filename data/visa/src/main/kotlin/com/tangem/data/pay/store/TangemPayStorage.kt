@@ -29,6 +29,10 @@ interface TangemPayStorage {
 
     suspend fun clearVirtualAccountOrderId(customerWalletAddress: String)
 
+    suspend fun getVirtualAccountOrderFailed(customerWalletAddress: String): Boolean
+
+    suspend fun storeVirtualAccountOrderFailed(customerWalletAddress: String, isFailed: Boolean)
+
     suspend fun getAddToWalletDone(customerWalletAddress: String): Boolean
 
     suspend fun storeAddToWalletDone(customerWalletAddress: String, isDone: Boolean)

@@ -136,7 +136,7 @@ class TangemPayDeeplinkOnboardingTest : BaseTestCase() {
                 onTangemPayOnboardingScreen { title.assertIsNotDisplayed() }
             }
             step("Assert Tangem Pay mobile onboarding screen is not displayed") {
-                onTangemPayHotWalletOnboardingScreen { setupWalletBlockTitle.assertIsNotDisplayed() }
+                onTangemPayHotWalletOnboardingScreen { legalCaption.assertIsNotDisplayed() }
             }
             step("Assert '$validateEndpoint' is not requested") {
                 val validateRequestsAfter = getWireMockRequestCount("POST", validateEndpoint)
@@ -183,8 +183,8 @@ class TangemPayDeeplinkOnboardingTest : BaseTestCase() {
                     }
                 }
             }
-            step("Assert Tangem Pay mobile onboarding 'Set up wallet' block is not displayed") {
-                onTangemPayHotWalletOnboardingScreen { setupWalletBlockTitle.assertIsNotDisplayed() }
+            step("Assert Tangem Pay mobile onboarding legal caption is not displayed") {
+                onTangemPayHotWalletOnboardingScreen { legalCaption.assertIsNotDisplayed() }
             }
             step("Assert '$validateEndpoint' is requested once") {
                 val validateRequestsAfter = getWireMockRequestCount("POST", validateEndpoint)

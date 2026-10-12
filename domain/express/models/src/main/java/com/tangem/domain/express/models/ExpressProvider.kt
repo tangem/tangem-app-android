@@ -46,4 +46,6 @@ data class ExpressProvider(
     val isExchangeOnlyWithinSingleAddress: Boolean = false,
     @Json(name = "isExtraIdSupported")
     val isExtraIdSupported: Boolean = false,
+    @Json(name = "isCustomSlippageSupported")
+    val isCustomSlippageSupported: Boolean = false,
 )

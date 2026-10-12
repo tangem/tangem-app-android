@@ -1,7 +1,6 @@
 package com.tangem.domain.polymarket.flow
 
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher.Mode
 import com.tangem.domain.polymarket.model.PredictionBalancePollingConfig
 import com.tangem.utils.coroutines.AppCoroutineScope
 import kotlinx.coroutines.Job
@@ -16,7 +15,8 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class PredictionBalancePoller(
-    private val fetcher: PredictionAccountStatusFetcher,
+    private val statusFetcher: PredictionAccountStatusFetcher,
+    private val positionsValueFetcher: PredictionPositionsValueFetcher,
     private val fundingWindow: PredictionFundingWindow,
     private val config: PredictionBalancePollingConfig,
     private val appScope: AppCoroutineScope,
@@ -60,12 +60,19 @@ class PredictionBalancePoller(
 
         fundingWindow.isOpen(userWalletId = userWalletId).collectLatest { isOpen ->
             val interval = if (isOpen) config.fundingInterval else config.baseInterval
-            val mode = if (isOpen) Mode.AVAILABLE_ONLY else Mode.FULL
 
             while (currentCoroutineContext().isActive) {
-                fetcher(PredictionAccountStatusFetcher.Params(userWalletId = userWalletId, mode = mode))
+                refresh(userWalletId = userWalletId, isFundingWindowOpen = isOpen)
                 delay(interval)
             }
+        }
+    }
+
+    private suspend fun refresh(userWalletId: UserWalletId, isFundingWindowOpen: Boolean) = coroutineScope {
+        launch { statusFetcher(PredictionAccountStatusFetcher.Params(userWalletId = userWalletId)) }
+
+        if (!isFundingWindowOpen) {
+            launch { positionsValueFetcher(PredictionPositionsValueFetcher.Params(userWalletId = userWalletId)) }
         }
     }
 

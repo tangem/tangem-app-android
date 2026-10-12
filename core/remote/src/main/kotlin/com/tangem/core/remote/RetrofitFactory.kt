@@ -31,6 +31,7 @@ inline fun <reified T : Any> RetrofitFactory.build(spec: RetrofitApiSpec): T = c
  *   (Chucker, logcat). `false` keeps them off for this API even when its [ApiConfig] allows logging —
  *   for bodies that must not be readable anywhere, such as identity tokens. Note that
  *   [shouldSaveLogs] only governs the exportable log file, not these loggers.
+ * @property serialization                 JSON library used for request and response bodies
  */
 data class RetrofitApiSpec(
     val apiConfigId: ApiConfig.ID,
@@ -39,7 +40,13 @@ data class RetrofitApiSpec(
     val timeouts: Timeouts? = null,
     val shouldSaveLogs: Boolean = true,
     val isLoggable: Boolean = true,
+    val serialization: ApiSerialization = ApiSerialization.MOSHI,
 )
+
+enum class ApiSerialization {
+    MOSHI,
+    KOTLINX,
+}
 
 /** Optional client-level timeouts (seconds); `null` fields keep the client defaults. */
 data class Timeouts(

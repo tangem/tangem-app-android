@@ -15,6 +15,7 @@ dependencies {
 
     // region Kotlin
     api(deps.kotlin.coroutines)
+    implementation(deps.kotlin.serialization.core)
     // endregion
 
     // region Other libraries
@@ -28,12 +29,8 @@ dependencies {
     // endregion
 
     // region Reown - WalletConnect
-    api(deps.reownWeb3) {
-        exclude(group = "app.cash.sqldelight", module = "android-driver")
-    }
-    implementation(deps.reownCore) {
-        exclude(group = "app.cash.sqldelight", module = "android-driver")
-    }
+    api(deps.reownWeb3)
+    implementation(deps.reownCore)
     // endregion
 
     // region Tangem libraries

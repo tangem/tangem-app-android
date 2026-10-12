@@ -16,7 +16,6 @@ import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.extensions.annotatedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.ForceDarkTheme
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.WalletNotificationTestTags
@@ -50,14 +49,6 @@ internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotificati
                         config = item.config,
                         modifier = modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
                     )
-                }
-                is WalletNotification.UpgradeHotWalletPromo -> {
-                    ForceDarkTheme {
-                        Notification(
-                            config = item.config,
-                            modifier = modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
-                        )
-                    }
                 }
                 is WalletNotification.YieldBoostPromo -> {
                     Notification(
