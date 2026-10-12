@@ -11,7 +11,6 @@ data class PolymarketPositionsValueResponse(
 
     @JsonClass(generateAdapter = true)
     data class Data(
-        @Json(name = "proxy_wallet") val proxyWallet: String?,
         @Json(name = "value") val value: BigDecimal,
     )
 }
