@@ -7,6 +7,7 @@ import com.tangem.grow.datasource.polymarket.models.PolymarketOutcomeDto
 import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
+import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.test.core.ProvideTestModels
@@ -32,8 +33,14 @@ internal class PolymarketEventConverterTest {
                 markets = listOf(
                     createMarketDto(
                         outcomes = listOf(
-                            PolymarketOutcomeDto(assetId = "asset-yes", label = "Yes", probability = 0.18),
+                            PolymarketOutcomeDto(
+                                assetId = "asset-yes",
+                                label = "Yes",
+                                probability = 0.18,
+                                legacyAssetId = "legacy-yes",
+                            ),
                         ),
+                        version = "v2",
                     ),
                 ),
             )
@@ -83,8 +90,14 @@ internal class PolymarketEventConverterTest {
                         liquidity = BigDecimal("8.5"),
                         orderIndex = 1,
                         outcomes = listOf(
-                            PolymarketOutcome(assetId = "asset-yes", title = "Yes", probability = BigDecimal("0.18")),
+                            PolymarketOutcome(
+                                assetId = "asset-yes",
+                                title = "Yes",
+                                probability = BigDecimal("0.18"),
+                                legacyAssetId = "legacy-yes",
+                            ),
                         ),
+                        version = PolymarketMarketVersion.V2,
                     ),
                 ),
             )
@@ -180,6 +193,58 @@ internal class PolymarketEventConverterTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ConvertVersion {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun convertVersion(model: VersionModel) {
+            // Arrange
+            val dto = createEventDto(markets = listOf(createMarketDto(version = model.wireVersion)))
+
+            // Act
+            val actual = converter.convert(value = dto)
+
+            // Assert
+            Truth.assertThat(actual.markets.single().version).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels(): List<VersionModel> = listOf(
+            VersionModel(wireVersion = "v1", expected = PolymarketMarketVersion.V1),
+            VersionModel(wireVersion = "v2", expected = PolymarketMarketVersion.V2),
+            VersionModel(wireVersion = "unknown", expected = PolymarketMarketVersion.UNKNOWN),
+            VersionModel(wireVersion = "v3", expected = PolymarketMarketVersion.UNKNOWN),
+            VersionModel(wireVersion = null, expected = PolymarketMarketVersion.UNKNOWN),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ConvertLegacyAssetId {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun convertLegacyAssetId(legacyAssetId: String?) {
+            // Arrange
+            val outcome = PolymarketOutcomeDto(
+                assetId = "asset-yes",
+                label = "Yes",
+                probability = null,
+                legacyAssetId = legacyAssetId,
+            )
+            val dto = createEventDto(markets = listOf(createMarketDto(outcomes = listOf(outcome))))
+
+            // Act
+            val actual = converter.convert(value = dto)
+
+            // Assert
+            Truth.assertThat(actual.markets.single().outcomes.single().legacyAssetId).isEqualTo(legacyAssetId)
+        }
+
+        private fun provideTestModels(): List<String?> = listOf(null, "106229", "")
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class ConvertStatus {
 
         @ParameterizedTest
@@ -253,6 +318,8 @@ internal class PolymarketEventConverterTest {
 
     internal data class StatusModel(val status: String, val expected: PolymarketStatus)
 
+    internal data class VersionModel(val wireVersion: String?, val expected: PolymarketMarketVersion)
+
     internal data class DisplayModeModel(
         val displayMode: String,
         val isNegRisk: Boolean,
@@ -296,6 +363,7 @@ internal class PolymarketEventConverterTest {
         outcomes: List<PolymarketOutcomeDto> = emptyList(),
         isAcceptingOrders: Boolean? = true,
         conditionId: String? = "0xcondition",
+        version: String? = "v1",
     ): PolymarketMarketDto =
         PolymarketMarketDto(
             id = "market-id",
@@ -319,5 +387,6 @@ internal class PolymarketEventConverterTest {
             liquidity = 8.5,
             orderIndex = 1,
             outcomes = outcomes,
+            version = version,
         )
 }
