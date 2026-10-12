@@ -230,6 +230,10 @@ internal class TangemPayDetailsModel @Inject constructor(
             modelScope.launch { openWithdrawHubUnlessOrderInFlight() }
             return
         }
+        if (currentStatus.value.networksOrNull().orEmpty().firstDepositAddress() == null) {
+            showBottomSheetError(TangemPayDetailsErrorType.ServiceUnavailable)
+            return
+        }
         modelScope.launch {
             val hasActiveWithdrawal = tangemPayWithdrawRepository.hasWithdrawOrder(userWalletId)
             if (hasActiveWithdrawal) {
