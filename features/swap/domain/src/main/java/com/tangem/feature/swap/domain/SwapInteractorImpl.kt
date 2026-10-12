@@ -1697,8 +1697,8 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     /**
-     * The shown fee was estimated against a placeholder address; a fresh deposit address can need about twice
-     * the energy, and a transaction whose TRX cannot cover the burn runs out of energy on-chain.
+     * The shown fee was quoted earlier against a placeholder address; by now the account's energy or TRX may have
+     * been spent, and a transaction whose TRX cannot cover the burn runs out of energy on-chain.
      */
     private suspend fun checkTronNativeFeeAtDeposit(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
