@@ -10,6 +10,7 @@ import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.yield.supply.models.YieldSupplyClaimOrigin
 import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -23,10 +24,9 @@ import javax.inject.Singleton
 /**
  * Reports a Merkl rewards claim that reverted on chain, wherever the user happens to be by then.
  *
- * A claim is signed on the Yield Mode screen but settles minutes later, and the result sheet's own "Go to token"
- * button leaves that screen — so a listener tied to it would drop exactly the outcome the user cannot work out on
- * their own: the rewards are still there, the fee was spent, and nothing says why. A confirmed claim needs no such
- * announcement, since the rewards banner and the transaction history already show it.
+ * A claim settles minutes after it is signed, long after the sheet that sent it is gone, so a listener tied to that
+ * sheet would drop the one outcome the user cannot work out alone. Only a claim started from the claim sheet is
+ * announced: one signed on the way out of Yield Mode was never put to the user as a transaction of its own.
  */
 @Singleton
 class YieldSupplyClaimOutcomeAnnouncer @Inject constructor(
@@ -39,7 +39,10 @@ class YieldSupplyClaimOutcomeAnnouncer @Inject constructor(
 
     fun start() {
         yieldSupplyClaimTracker.outcomes
-            .filter { claimOutcome -> claimOutcome.outcome == YieldSupplyTransactionOutcome.Reverted }
+            .filter { claimOutcome ->
+                claimOutcome.outcome == YieldSupplyTransactionOutcome.Reverted &&
+                    claimOutcome.origin == YieldSupplyClaimOrigin.ClaimSheet
+            }
             .onEach { claimOutcome ->
                 uiMessageSender.send(
                     DialogMessage(
