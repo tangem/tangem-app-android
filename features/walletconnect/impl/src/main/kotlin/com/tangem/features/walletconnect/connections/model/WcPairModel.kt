@@ -10,6 +10,7 @@ import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.PortfolioSelectUM
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.event.JointAccountFakedoorAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -321,6 +322,12 @@ internal class WcPairModel @Inject constructor(
     }
 
     private fun declineJointAccount() {
+        analytics.send(
+            JointAccountFakedoorAnalyticsEvent(
+                source = JointAccountFakedoorAnalyticsEvent.Source.WalletConnect,
+                action = JointAccountFakedoorAnalyticsEvent.Action.Connect,
+            ),
+        )
         messageSender.send(
             DialogMessage(
                 title = resourceReference(R.string.common_coming_soon),
