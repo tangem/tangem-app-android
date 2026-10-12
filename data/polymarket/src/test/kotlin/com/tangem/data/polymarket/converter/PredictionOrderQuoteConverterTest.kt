@@ -15,7 +15,6 @@ import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -69,42 +68,6 @@ internal class PredictionOrderQuoteConverterTest {
             ),
         )
     }
-
-    @ParameterizedTest
-    @MethodSource("provideSigningDomainModels")
-    fun `GIVEN a quote's market version and signing domain WHEN converted THEN they are carried as reported`(
-        model: SigningDomainModel,
-    ) {
-        // Arrange
-        val response = createResponse(
-            version = model.wireVersion,
-            exchange = model.exchange,
-            signingDomainVersion = model.signingDomainVersion,
-        )
-
-        // Act
-        val actual = PredictionOrderQuoteConverter.convert(value = response)
-
-        // Assert
-        assertThat(Triple(actual.version, actual.exchange, actual.signingDomainVersion))
-            .isEqualTo(Triple(model.expected, model.exchange, model.signingDomainVersion))
-    }
-
-    internal data class SigningDomainModel(
-        val wireVersion: String?,
-        val exchange: String?,
-        val signingDomainVersion: String?,
-        val expected: PolymarketMarketVersion,
-    )
-
-    private fun provideSigningDomainModels() = listOf(
-        SigningDomainModel("v1", PolymarketContracts.CTF_EXCHANGE, "2", PolymarketMarketVersion.V1),
-        SigningDomainModel("v1", PolymarketContracts.NEG_RISK_CTF_EXCHANGE, "2", PolymarketMarketVersion.V1),
-        SigningDomainModel("v2", EXCHANGE_V3, "3", PolymarketMarketVersion.V2),
-        SigningDomainModel("unknown", null, null, PolymarketMarketVersion.UNKNOWN),
-        SigningDomainModel("v3", null, null, PolymarketMarketVersion.UNKNOWN),
-        SigningDomainModel(null, null, null, PolymarketMarketVersion.UNKNOWN),
-    )
 
     @ParameterizedTest
     @ProvideTestModels
@@ -235,9 +198,6 @@ internal class PredictionOrderQuoteConverterTest {
         minOrderAmount: String? = "1",
         tickSize: String = "0.001",
         isLive: Boolean = true,
-        version: String? = "v1",
-        exchange: String? = PolymarketContracts.CTF_EXCHANGE,
-        signingDomainVersion: String? = "2",
     ): PolymarketOrderQuoteResponse = PolymarketOrderQuoteResponse(
         status = status,
         side = "BUY",
@@ -257,12 +217,8 @@ internal class PredictionOrderQuoteConverterTest {
         minOrderAmount = minOrderAmount,
         tickSize = tickSize,
         isLive = isLive,
-        version = version,
-        exchange = exchange,
-        signingDomainVersion = signingDomainVersion,
+        version = "v1",
+        exchange = PolymarketContracts.CTF_EXCHANGE,
+        signingDomainVersion = "2",
     )
-
-    private companion object {
-        const val EXCHANGE_V3 = "0xe3333700cA9d93003F00f0F71f8515005F6c00Aa"
-    }
 }

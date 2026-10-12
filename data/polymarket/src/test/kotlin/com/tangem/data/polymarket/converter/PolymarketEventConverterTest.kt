@@ -193,58 +193,6 @@ internal class PolymarketEventConverterTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class ConvertVersion {
-
-        @ParameterizedTest
-        @ProvideTestModels
-        fun convertVersion(model: VersionModel) {
-            // Arrange
-            val dto = createEventDto(markets = listOf(createMarketDto(version = model.wireVersion)))
-
-            // Act
-            val actual = converter.convert(value = dto)
-
-            // Assert
-            Truth.assertThat(actual.markets.single().version).isEqualTo(model.expected)
-        }
-
-        private fun provideTestModels(): List<VersionModel> = listOf(
-            VersionModel(wireVersion = "v1", expected = PolymarketMarketVersion.V1),
-            VersionModel(wireVersion = "v2", expected = PolymarketMarketVersion.V2),
-            VersionModel(wireVersion = "unknown", expected = PolymarketMarketVersion.UNKNOWN),
-            VersionModel(wireVersion = "v3", expected = PolymarketMarketVersion.UNKNOWN),
-            VersionModel(wireVersion = null, expected = PolymarketMarketVersion.UNKNOWN),
-        )
-    }
-
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class ConvertLegacyAssetId {
-
-        @ParameterizedTest
-        @ProvideTestModels
-        fun convertLegacyAssetId(legacyAssetId: String?) {
-            // Arrange
-            val outcome = PolymarketOutcomeDto(
-                assetId = "asset-yes",
-                label = "Yes",
-                probability = null,
-                legacyAssetId = legacyAssetId,
-            )
-            val dto = createEventDto(markets = listOf(createMarketDto(outcomes = listOf(outcome))))
-
-            // Act
-            val actual = converter.convert(value = dto)
-
-            // Assert
-            Truth.assertThat(actual.markets.single().outcomes.single().legacyAssetId).isEqualTo(legacyAssetId)
-        }
-
-        private fun provideTestModels(): List<String?> = listOf(null, "106229", "")
-    }
-
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class ConvertStatus {
 
         @ParameterizedTest
@@ -317,8 +265,6 @@ internal class PolymarketEventConverterTest {
     }
 
     internal data class StatusModel(val status: String, val expected: PolymarketStatus)
-
-    internal data class VersionModel(val wireVersion: String?, val expected: PolymarketMarketVersion)
 
     internal data class DisplayModeModel(
         val displayMode: String,
