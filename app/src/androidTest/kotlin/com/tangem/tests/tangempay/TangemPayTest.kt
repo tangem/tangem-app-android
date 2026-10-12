@@ -15,7 +15,6 @@ import com.tangem.screens.tangempay.*
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
-import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -210,7 +209,6 @@ class TangemPayTest : BaseTestCase() {
         }
     }
 
-    @Ignore("[REDACTED_JIRA]")
     @AllureId("9557")
     @DisplayName("Tangem Pay: without a deposit address Add funds is disabled and Withdraw shows the service error")
     @Test

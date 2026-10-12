@@ -11,6 +11,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig.ShowRefreshState
 import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.core.ui.extensions.TextReference
@@ -68,6 +69,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -88,6 +90,7 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.util.Currency
+import com.tangem.core.ui.R as CoreUiR
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class TangemPayDetailsModelTest {
@@ -773,6 +776,36 @@ internal class TangemPayDetailsModelTest {
             model.onDestroy()
         }
 
+    @Test
+    fun `GIVEN no deposit address WHEN withdraw clicked THEN service unavailable sheet shown and nothing pushed`() =
+        runTest {
+            // Arrange
+            every { tangemPayFeatureToggles.isBankOfframpEnabled } returns false
+            val model = createModel(testScope = this, statusValue = loadedStatus(statusNetworks = emptyList()))
+            advanceUntilIdle()
+
+            // Act
+            model.onClickWithdraw()
+            advanceUntilIdle()
+
+            // Assert
+            val infoBlock = sentMessageInfoBlock()
+            assertThat(infoBlock.title).isEqualTo(resourceReference(CoreUiR.string.tangempay_service_unavailable_title))
+            assertThat(infoBlock.body)
+                .isEqualTo(resourceReference(CoreUiR.string.tangempay_card_details_receive_error_description))
+            verify(exactly = 0) { router.push(any()) }
+            coVerify(exactly = 0) { tangemPayWithdrawRepository.hasWithdrawOrder(any()) }
+            model.onDestroy()
+        }
+
+    private fun sentMessageInfoBlock(): MessageBottomSheetUM.InfoBlock {
+        val message = slot<BottomSheetMessage>()
+        verify(exactly = 1) { uiMessageSender.send(capture(message)) }
+        return message.captured.messageBottomSheetUM.elements
+            .filterIsInstance<MessageBottomSheetUM.InfoBlock>()
+            .single()
+    }
+
     private fun SlotNavigation<TangemPayDetailsNavigation>.trackSlot(): List<TangemPayDetailsNavigation?> {
         val tracked = mutableListOf<TangemPayDetailsNavigation?>()
         subscribe { event -> tracked.add(event.transformer(tracked.lastOrNull())) }
@@ -1040,13 +1073,14 @@ internal class TangemPayDetailsModelTest {
         isBankOfframpAvailable: Boolean? = true,
         cardState: TangemPayCardState = TangemPayCardState.Active,
         planState: TangemPayTariffPlanState? = null,
+        statusNetworks: List<PaymentNetworkStatus> = listOf(availableNetwork()),
     ): PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
         if (planState != null) every { tariffPlan } returns planState
         every { source } returns statusSource
         every { error } returns accountError
         every { customerId } returns "customer-id"
         every { paymentAccountAddress } returns "address"
-        every { networks } returns listOf(availableNetwork())
+        every { networks } returns statusNetworks
         every { this@mockk.availableForWithdrawal } returns availableForWithdrawal
         every { this@mockk.virtualAccount } returns virtualAccount
         every { this@mockk.isBankOfframpAvailable } returns isBankOfframpAvailable
