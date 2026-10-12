@@ -5,6 +5,7 @@ import com.tangem.core.ui.extensions.TextReference
 internal data class ForgetWalletUM(
     val onBackClick: () -> Unit,
     val description: TextReference,
+    val checkboxText: TextReference,
     val buttonText: TextReference,
     val isCheckboxChecked: Boolean,
     val onCheckboxClick: () -> Unit,
