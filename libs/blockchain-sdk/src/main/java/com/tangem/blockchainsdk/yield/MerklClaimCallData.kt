@@ -4,13 +4,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.common.extensions.hexToBytes
 
-/**
- * Backend-built payload of a Merkl rewards claim, carried as its own type.
- *
- * The bytes are opaque — the app never parses or rebuilds them. A plain `CompiledSmartContractCallData` would carry
- * them just as well, but it is also what every other pre-compiled transaction uses, so a locally submitted claim
- * could not be told apart from them in the transaction history.
- */
+/** Backend-built payload of a Merkl rewards claim; the bytes are opaque and are never parsed or rebuilt. */
 data class MerklClaimCallData(override val data: ByteArray) : SmartContractCallData {
 
     override val methodId: String = data.take(METHOD_ID_LENGTH)
