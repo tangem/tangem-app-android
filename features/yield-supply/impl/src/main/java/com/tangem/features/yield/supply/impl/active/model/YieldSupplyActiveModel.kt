@@ -43,7 +43,9 @@ import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.core.res.R as CoreResR
 import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
+import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import com.tangem.features.yield.supply.impl.active.entity.YieldSupplyActiveContentUM
+import com.tangem.features.yield.supply.impl.incentives.claim.result.entity.YieldSupplyClaimResultUM
 import com.tangem.features.yield.supply.impl.common.formatter.formatApy
 import com.tangem.features.yield.supply.impl.active.model.transformers.YieldSupplyActiveFeeContentTransformer
 import com.tangem.features.yield.supply.impl.active.model.transformers.YieldSupplyActiveMinAmountTransformer
@@ -79,6 +81,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private val yieldSupplyGetDustMinAmountUseCase: YieldSupplyGetDustMinAmountUseCase,
     private val getYieldBoostStatusUseCase: GetYieldBoostStatusUseCase,
     private val boostStoryPreloader: YieldBoostStoryPreloader,
+    private val yieldSupplyClaimTracker: YieldSupplyClaimTracker,
 ) : Model(), YieldSupplyStopEarningComponent.ModelCallback,
     YieldSupplyApproveComponent.ModelCallback {
 
@@ -94,6 +97,9 @@ internal class YieldSupplyActiveModel @Inject constructor(
             currency = params.cryptoCurrency,
         ),
     )
+
+    val claimResultFlow: StateFlow<YieldSupplyClaimResultUM?>
+        field = MutableStateFlow<YieldSupplyClaimResultUM?>(null)
 
     val balanceHiddenFlow = MutableStateFlow(false)
     val transactionInProgressFlow: StateFlow<Boolean>
@@ -141,6 +147,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
             ),
         )
         subscribeOnCurrencyStatusUpdates()
+        subscribeOnClaimOutcome()
         loadBoostBlock()
         modelScope.launch(dispatchers.io) { boostStoryPreloader.preload() }
 
@@ -212,6 +219,47 @@ internal class YieldSupplyActiveModel @Inject constructor(
 
     fun onClaimRewardsClick(chainId: Int, userAddress: String) {
         slotNavigation.activate(YieldSupplyActiveRoute.Claim(chainId = chainId, userAddress = userAddress))
+    }
+
+    fun onClaimSubmitted(result: YieldSupplyClaimResultUM) {
+        slotNavigation.dismiss()
+        claimResultFlow.update { result }
+    }
+
+    fun onClaimResultDismiss() {
+        claimResultFlow.update { null }
+    }
+
+    fun onGoToTokenClick() {
+        onClaimResultDismiss()
+        appRouter.pop()
+    }
+
+    private fun subscribeOnClaimOutcome() {
+        yieldSupplyClaimTracker.outcomes
+            .filter { it.userWalletId == userWalletId && it.cryptoCurrencyId == cryptoCurrency.id }
+            .onEach { claimOutcome ->
+                when (claimOutcome.outcome) {
+                    YieldSupplyTransactionOutcome.Confirmed -> claimResultFlow.update { result ->
+                        result?.copy(
+                            status = YieldSupplyClaimResultUM.Status.Confirmed(
+                                timestamp = Clock.System.now().toEpochMilliseconds(),
+                            ),
+                        )
+                    }
+                    // Shown even when the result was already closed: the user would not learn about it otherwise
+                    YieldSupplyTransactionOutcome.Reverted -> claimResultFlow.update { result ->
+                        result?.copy(status = YieldSupplyClaimResultUM.Status.Failed)
+                            ?: YieldSupplyClaimResultUM(
+                                status = YieldSupplyClaimResultUM.Status.Failed,
+                                total = TextReference.EMPTY,
+                                serviceFee = null,
+                                networkFee = null,
+                            )
+                    }
+                }
+            }
+            .launchIn(modelScope)
     }
 
     private fun onApyInfoClick() {
