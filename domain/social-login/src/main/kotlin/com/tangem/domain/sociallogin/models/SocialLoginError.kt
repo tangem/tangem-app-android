@@ -55,6 +55,9 @@ sealed interface SocialLoginError {
     /** The backup needs a passphrase a social restore cannot ask for; the seed alone builds another wallet */
     data object PassphraseNotSupported : SocialLoginError
 
+    /** The viewer gave up on writing the backup file after it failed, so the new wallet was dropped */
+    data object BackupAbandoned : SocialLoginError
+
     /** Failed to write the backup file, so social recovery must not be marked as set up */
     data class BackupWriteFailed(val cause: Throwable? = null) : SocialLoginError
 

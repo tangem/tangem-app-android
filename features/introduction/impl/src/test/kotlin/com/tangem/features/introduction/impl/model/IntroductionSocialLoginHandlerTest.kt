@@ -42,7 +42,10 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import io.mockk.verifyOrder
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.yield
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -101,7 +104,7 @@ internal class IntroductionSocialLoginHandlerTest {
     fun `GIVEN wallet created WHEN signIn THEN wallet is selected and the main screen is opened`() = runTest {
         // Arrange
         coEvery {
-            socialLoginUseCase.signIn(PROVIDER, any(), any())
+            socialLoginUseCase.signIn(PROVIDER, any(), any(), any())
         } returns SocialLoginOutcome.WalletCreated(WALLET_ID).right()
 
         // Act
@@ -118,7 +121,7 @@ internal class IntroductionSocialLoginHandlerTest {
     fun `GIVEN the wallet cannot be selected WHEN signIn THEN the main screen stays closed`() = runTest {
         // Arrange — opening the portfolio of whichever wallet was selected before would read as success
         coEvery {
-            socialLoginUseCase.signIn(PROVIDER, any(), any())
+            socialLoginUseCase.signIn(PROVIDER, any(), any(), any())
         } returns SocialLoginOutcome.WalletCreated(WALLET_ID).right()
         coEvery { userWalletsListRepository.select(WALLET_ID) } returns SELECT_ERROR.left()
 
@@ -133,7 +136,7 @@ internal class IntroductionSocialLoginHandlerTest {
     @Test
     fun `GIVEN the consent declined WHEN signIn THEN provider is signed out and no message is shown`() = runTest {
         // Arrange
-        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any()) } returns SocialLoginError.ConsentDeclined.left()
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns SocialLoginError.ConsentDeclined.left()
 
         // Act
         handler.signIn(PROVIDER, SOURCE, host)
@@ -149,7 +152,7 @@ internal class IntroductionSocialLoginHandlerTest {
     fun `GIVEN sign-in failed WHEN signIn THEN the entry points reopen only after the sign-out`() = runTest {
         // Arrange — a retry entering signIn while the sign-out still runs would read a half-cleared account
         val order = mutableListOf<String>()
-        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any()) } returns SocialLoginError.NetworkError.left()
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns SocialLoginError.NetworkError.left()
         coEvery { socialLoginUseCase.signOut(PROVIDER) } answers { order += "signOut" }
         host.onFinishedCallback = { order += "finished" }
 
@@ -164,7 +167,7 @@ internal class IntroductionSocialLoginHandlerTest {
     @ProvideTestModels
     fun `GIVEN a failure WHEN signIn THEN it is shown the way the spec puts it`(model: FailureModel) = runTest {
         // Arrange
-        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any()) } returns model.error.left()
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns model.error.left()
 
         // Act
         handler.signIn(PROVIDER, SOURCE, host)
@@ -183,7 +186,7 @@ internal class IntroductionSocialLoginHandlerTest {
     @Test
     fun `GIVEN two failed attempts WHEN support is contacted THEN each opens the chat under its own id`() = runTest {
         // Arrange
-        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any()) } returns SocialLoginError.BackupNotFound.left()
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns SocialLoginError.BackupNotFound.left()
         val dialogs = mutableListOf<DialogMessage>()
         val routes = mutableListOf<AppRoute>()
         every { uiMessageSender.send(capture(dialogs)) } just Runs
@@ -207,7 +210,7 @@ internal class IntroductionSocialLoginHandlerTest {
     @Test
     fun `GIVEN a newer attempt WHEN the older dialog contacts support THEN the chat keeps the older id`() = runTest {
         // Arrange
-        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any()) } returns SocialLoginError.BackupNotFound.left()
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns SocialLoginError.BackupNotFound.left()
         val dialogs = mutableListOf<DialogMessage>()
         val routes = mutableListOf<AppRoute>()
         every { uiMessageSender.send(capture(dialogs)) } just Runs
@@ -228,7 +231,7 @@ internal class IntroductionSocialLoginHandlerTest {
     @Test
     fun `GIVEN a failure WHEN signIn THEN it is reported as shown`() = runTest {
         // Arrange
-        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any()) } returns SocialLoginError.NetworkError.left()
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns SocialLoginError.NetworkError.left()
 
         // Act
         handler.signIn(PROVIDER, SOURCE, host)
@@ -240,7 +243,7 @@ internal class IntroductionSocialLoginHandlerTest {
     @Test
     fun `GIVEN the consent declined WHEN signIn THEN no error is reported`() = runTest {
         // Arrange
-        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any()) } returns SocialLoginError.ConsentDeclined.left()
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns SocialLoginError.ConsentDeclined.left()
 
         // Act
         handler.signIn(PROVIDER, SOURCE, host)
@@ -252,7 +255,7 @@ internal class IntroductionSocialLoginHandlerTest {
     @Test
     fun `GIVEN a wallet created WHEN signIn THEN its creation is reported as a social login one`() = runTest {
         // Arrange
-        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any()) } returns
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns
             SocialLoginOutcome.WalletCreated(WALLET_ID).right()
         val events = mutableListOf<AnalyticsEvent>()
         every { analyticsEventHandler.send(capture(events)) } just Runs
@@ -269,7 +272,7 @@ internal class IntroductionSocialLoginHandlerTest {
     @Test
     fun `GIVEN the selection fails WHEN a wallet is created THEN its creation is still reported`() = runTest {
         // Arrange
-        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any()) } returns
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns
             SocialLoginOutcome.WalletCreated(WALLET_ID).right()
         coEvery { userWalletsListRepository.select(WALLET_ID) } returns SELECT_ERROR.left()
 
@@ -285,7 +288,7 @@ internal class IntroductionSocialLoginHandlerTest {
     @Test
     fun `GIVEN a wallet restored WHEN signIn THEN it is reported as a social login import`() = runTest {
         // Arrange
-        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any()) } returns
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns
             SocialLoginOutcome.WalletRestored(WALLET_ID).right()
         val events = mutableListOf<AnalyticsEvent>()
         every { analyticsEventHandler.send(capture(events)) } just Runs
@@ -299,9 +302,49 @@ internal class IntroductionSocialLoginHandlerTest {
     }
 
     @Test
+    fun `GIVEN the backup write fails WHEN retry is picked THEN the flow is told to retry`() = runTest {
+        // Arrange
+        val requestBackupRetry = slot<suspend () -> Boolean>()
+        var answer: Boolean? = null
+        val dialog = slot<DialogMessage>()
+        every { uiMessageSender.send(capture(dialog)) } just Runs
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), capture(requestBackupRetry), any()) } coAnswers {
+            answer = coroutineScope {
+                val asked = async { requestBackupRetry.captured() }
+                yield()
+                dialog.captured.firstAction.onClick()
+                asked.await()
+            }
+            SocialLoginError.ConsentDeclined.left()
+        }
+
+        // Act
+        handler.signIn(PROVIDER, SOURCE, host)
+
+        // Assert
+        assertThat(answer).isTrue()
+        assertThat(dialog.captured.message)
+            .isEqualTo(resourceReference(CoreResR.string.social_login_error_backup_not_saved))
+    }
+
+    @Test
+    fun `GIVEN the backup was abandoned WHEN signIn THEN nothing else is shown`() = runTest {
+        // Arrange
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns
+            SocialLoginError.BackupAbandoned.left()
+
+        // Act
+        handler.signIn(PROVIDER, SOURCE, host)
+
+        // Assert
+        verify(exactly = 0) { uiMessageSender.send(any()) }
+        verify(exactly = 0) { analyticsEventHandler.send(ofType<SocialLoginAnalyticsEvents.ErrorShown>()) }
+    }
+
+    @Test
     fun `GIVEN the wallet is already on the device WHEN signIn THEN the already saved dialog is shown`() = runTest {
         // Arrange
-        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any()) } returns
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns
             SocialLoginError.WalletAlreadySaved.left()
         val message = slot<DialogMessage>()
         every { uiMessageSender.send(capture(message)) } just Runs
@@ -335,7 +378,7 @@ internal class IntroductionSocialLoginHandlerTest {
     fun `GIVEN sign-in failed WHEN signIn THEN the progress stays up until the sign-out finishes`() = runTest {
         // Arrange
         val onStageChanged = slot<(SocialLoginStage) -> Unit>()
-        coEvery { socialLoginUseCase.signIn(PROVIDER, capture(onStageChanged), any()) } answers {
+        coEvery { socialLoginUseCase.signIn(PROVIDER, capture(onStageChanged), any(), any()) } answers {
             onStageChanged.captured(SocialLoginStage.VerifyingAccount)
             SocialLoginError.NetworkError.left()
         }
@@ -354,7 +397,7 @@ internal class IntroductionSocialLoginHandlerTest {
     fun `GIVEN stages reported WHEN signIn THEN progress is shown and then cleared`() = runTest {
         // Arrange
         val onStageChanged = slot<(SocialLoginStage) -> Unit>()
-        coEvery { socialLoginUseCase.signIn(PROVIDER, capture(onStageChanged), any()) } answers {
+        coEvery { socialLoginUseCase.signIn(PROVIDER, capture(onStageChanged), any(), any()) } answers {
             onStageChanged.captured(SocialLoginStage.SigningIn)
             onStageChanged.captured(SocialLoginStage.VerifyingAccount)
             onStageChanged.captured(SocialLoginStage.RestoringWallet)
@@ -376,7 +419,7 @@ internal class IntroductionSocialLoginHandlerTest {
     fun `GIVEN the consent is confirmed WHEN signIn THEN the choice reaches the flow`() = runTest {
         // Arrange
         val requestConsent = slot<suspend () -> SocialLoginConsent?>()
-        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), capture(requestConsent)) } coAnswers {
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), capture(requestConsent)) } coAnswers {
             host.onConsentShown = { consent ->
                 consent.onAcknowledgedChange(true)
                 host.consent!!.onEmailSharingChange(true)
@@ -400,7 +443,7 @@ internal class IntroductionSocialLoginHandlerTest {
         val onStageChanged = slot<(SocialLoginStage) -> Unit>()
         val requestConsent = slot<suspend () -> SocialLoginConsent?>()
         coEvery {
-            socialLoginUseCase.signIn(PROVIDER, capture(onStageChanged), capture(requestConsent))
+            socialLoginUseCase.signIn(PROVIDER, capture(onStageChanged), any(), capture(requestConsent))
         } coAnswers {
             onStageChanged.captured(SocialLoginStage.VerifyingAccount)
             host.onConsentShown = { consent ->
@@ -472,7 +515,7 @@ internal class IntroductionSocialLoginHandlerTest {
         runTest {
             // Arrange
             val requestConsent = slot<suspend () -> SocialLoginConsent?>()
-            coEvery { socialLoginUseCase.signIn(PROVIDER, any(), capture(requestConsent)) } coAnswers {
+            coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), capture(requestConsent)) } coAnswers {
                 host.onConsentShown = { consent ->
                     consent.onAcknowledgedChange(true)
                     host.consent!!.onConfirmClick(CONSENT_TEXT)
@@ -556,7 +599,7 @@ internal class IntroductionSocialLoginHandlerTest {
 
     private fun stubSignIn(consentAction: ConsentAction, result: Either<SocialLoginError, SocialLoginOutcome>) {
         val requestConsent = slot<suspend () -> SocialLoginConsent?>()
-        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), capture(requestConsent)) } coAnswers {
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), capture(requestConsent)) } coAnswers {
             host.onConsentShown = { consent ->
                 when (consentAction) {
                     is ConsentAction.Confirm -> {
