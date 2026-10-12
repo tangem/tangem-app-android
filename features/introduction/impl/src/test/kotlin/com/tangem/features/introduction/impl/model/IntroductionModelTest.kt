@@ -1,6 +1,7 @@
 package com.tangem.features.introduction.impl.model
 
 import android.view.SurfaceView
+import androidx.compose.ui.unit.IntSize
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.entity.InitScreenLaunchMode
@@ -72,6 +73,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R as CoreUiR
 
@@ -171,34 +173,42 @@ internal class IntroductionModelTest {
     }
 
     @Test
-    fun `GIVEN the frame geometry is unknown WHEN a frame is rendered THEN the shutter stays down`() {
-        // Arrange
-        val model = createModel()
-        surfaceAttached(isAttached = true)
-        model.attachSurface(surfaceView)
-
+    fun `GIVEN nothing decoded yet WHEN model created THEN the surface already has the size of the video`() {
         // Act
-        model.onFirstFrameRendered()
+        val model = createModel()
 
         // Assert
-        assertThat(model.uiState.value.isVideoReady).isFalse()
-        assertThat(model.uiState.value.videoAspectRatio).isNull()
+        assertThat(model.uiState.value.videoSize).isEqualTo(VIDEO_SIZE)
+        assertThat(model.uiState.value.videoSurfaceKey).isEqualTo(0)
     }
 
     @Test
-    fun `GIVEN a frame is rendered WHEN the geometry arrives THEN the shutter lifts on the shaped surface`() {
+    fun `GIVEN the declared size WHEN the decoder confirms it THEN the surface keeps its size`() {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        model.onVideoSizeChanged(width = VIDEO_SIZE.width, height = VIDEO_SIZE.height)
+
+        // Assert
+        assertThat(model.uiState.value.videoSize).isEqualTo(VIDEO_SIZE)
+    }
+
+    @Test
+    fun `GIVEN a file of another size WHEN the decoder reports it THEN the surface keeps the declared size`() {
         // Arrange
         val model = createModel()
         surfaceAttached(isAttached = true)
         model.attachSurface(surfaceView)
-        model.onFirstFrameRendered()
+        model.renderFrame()
 
         // Act
-        model.onAspectRatioChanged(VIDEO_ASPECT_RATIO)
+        model.onVideoSizeChanged(width = 720, height = 1280)
 
         // Assert
+        assertThat(model.uiState.value.videoSize).isEqualTo(VIDEO_SIZE)
+        assertThat(model.uiState.value.videoSurfaceKey).isEqualTo(0)
         assertThat(model.uiState.value.isVideoReady).isTrue()
-        assertThat(model.uiState.value.videoAspectRatio).isEqualTo(VIDEO_ASPECT_RATIO)
     }
 
     @Test
@@ -330,21 +340,18 @@ internal class IntroductionModelTest {
     }
 
     @Test
-    fun `GIVEN introduction screen WHEN legal links clicked THEN each opens its own document`() {
+    fun `GIVEN introduction screen WHEN terms of service clicked THEN opens terms of service`() {
         // Arrange
         val model = createModel()
 
         // Act
         model.uiState.value.onTermsOfServiceClick()
-        model.uiState.value.onPrivacyPolicyClick()
 
         // Assert
         verify(exactly = 1) { urlOpener.openUrl("https://tangem.com/tangem_tos.html") }
-        verify(exactly = 1) { urlOpener.openUrl("https://tangem.com/privacy-policy.html") }
         assertThat(sentEvents).containsExactly(
             SCREEN_OPENED,
             LegalOpened(LegalOpened.Document.TermsOfService),
-            LegalOpened(LegalOpened.Document.PrivacyPolicy),
         ).inOrder()
     }
 
@@ -526,6 +533,72 @@ internal class IntroductionModelTest {
             RunningModel(isRunning = true),
             RunningModel(isRunning = false),
         )
+    }
+
+    @Test
+    fun `GIVEN no frames coming out while playing WHEN the stall is noticed THEN a covered surface replaces it`() =
+        runTest {
+            // Arrange
+            val model = createModel(dispatchers = createTestingCoroutineDispatcherProvider())
+            surfaceAttached(isAttached = true)
+            model.attachSurface(surfaceView)
+            model.renderFrame()
+            every { videoPlayer.outputFrameCount } returns 28L
+
+            // Act
+            model.onPlayingChanged(isPlaying = true)
+            advanceTimeBy(STALL_DETECTED_AFTER_MS)
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.videoSurfaceKey).isEqualTo(1)
+            assertThat(model.uiState.value.isVideoReady).isFalse()
+            model.attachSurface(otherSurfaceView)
+            model.renderFrame()
+            assertThat(model.uiState.value.isVideoReady).isTrue()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a stall new surfaces do not cure WHEN the watchdog gives up THEN the video is treated as failed`() =
+        runTest {
+            // Arrange
+            val model = createModel(dispatchers = createTestingCoroutineDispatcherProvider())
+            surfaceAttached(isAttached = true)
+            model.attachSurface(surfaceView)
+            model.renderFrame()
+            every { videoPlayer.outputFrameCount } returns 28L
+
+            // Act
+            model.onPlayingChanged(isPlaying = true)
+            advanceTimeBy(STALL_DETECTED_AFTER_MS * 4)
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.videoSurfaceKey).isEqualTo(3)
+            assertThat(model.uiState.value.isVideoReady).isFalse()
+            assertThat(model.uiState.value.isVideoFailed).isTrue()
+            assertThat(model.uiState.value.isVideoRunning).isFalse()
+            verify { videoPlayer.setRunning(isRunning = false) }
+            assertThat(sentEvents.last()).isEqualTo(WelcomeMediaError(WelcomeMediaError.Stage.Playback))
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN the video failed WHEN the screen resumes THEN playback stays stopped`() {
+        // Arrange
+        val model = createModel()
+        surfaceAttached(isAttached = true)
+        model.attachSurface(surfaceView)
+        model.renderFrame()
+        model.onError(PLAYBACK_ERROR)
+
+        // Act
+        model.setVideoRunning(isRunning = true)
+
+        // Assert
+        verify(exactly = 0) { videoPlayer.setRunning(isRunning = true) }
+        assertThat(model.uiState.value.isVideoRunning).isFalse()
     }
 
     @Nested
@@ -894,7 +967,7 @@ internal class IntroductionModelTest {
     inner class HaveWalletSheet {
 
         @Test
-        fun `GIVEN no sheet WHEN i have a wallet clicked THEN the options open and the tap is reported`() {
+        fun `GIVEN no sheet WHEN i have a wallet clicked THEN the options open and the tap and opening are reported`() {
             // Arrange
             val model = createModel()
 
@@ -903,11 +976,15 @@ internal class IntroductionModelTest {
 
             // Assert
             assertThat(model.haveWalletStep()).isInstanceOf(HaveWalletUM.Step.Options::class.java)
-            assertThat(sentEvents).containsExactly(SCREEN_OPENED, IntroductionProcess.ButtonIHaveWallet()).inOrder()
+            assertThat(sentEvents).containsExactly(
+                SCREEN_OPENED,
+                IntroductionProcess.ButtonIHaveWallet(),
+                IntroductionProcess.IHaveWalletIntroScreenOpened(),
+            ).inOrder()
         }
 
         @Test
-        fun `GIVEN an open sheet WHEN i have a wallet clicked again THEN it stays the same sheet`() {
+        fun `GIVEN an open sheet WHEN i have a wallet clicked again THEN it stays the same sheet reported once`() {
             // Arrange
             val model = createModel()
             model.uiState.value.onIHaveWalletClick()
@@ -918,6 +995,11 @@ internal class IntroductionModelTest {
 
             // Assert
             assertThat(model.uiState.value.haveWalletBottomSheetConfig).isSameInstanceAs(opened)
+            assertThat(sentEvents).containsExactly(
+                SCREEN_OPENED,
+                IntroductionProcess.ButtonIHaveWallet(),
+                IntroductionProcess.IHaveWalletIntroScreenOpened(),
+            ).inOrder()
         }
 
         @Test
@@ -934,6 +1016,7 @@ internal class IntroductionModelTest {
             assertThat(sentEvents).containsExactly(
                 SCREEN_OPENED,
                 IntroductionProcess.ButtonIHaveWallet(),
+                IntroductionProcess.IHaveWalletIntroScreenOpened(),
                 IntroductionProcess.ButtonImportExistingWallet(),
                 OnboardingAnalyticsEvent.Backup.ImportWalletRequest(AnalyticsParam.CloudBackupAvailability.Available),
             ).inOrder()
@@ -1017,7 +1100,7 @@ internal class IntroductionModelTest {
         }
 
         @Test
-        fun `GIVEN the scan started from the sheet WHEN it fails THEN the viewer stays on the welcome screen`() {
+        fun `GIVEN the scan started from the sheet WHEN it fails THEN no sheet returns and no opening is reported`() {
             // Arrange
             val model = createModel()
             model.openHaveWallet().cardOrRing.onClick()
@@ -1028,6 +1111,12 @@ internal class IntroductionModelTest {
             // Assert
             assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
             assertThat(model.uiState.value.bottomSheetConfig).isNull()
+            assertThat(sentEvents).containsExactly(
+                SCREEN_OPENED,
+                IntroductionProcess.ButtonIHaveWallet(),
+                IntroductionProcess.IHaveWalletIntroScreenOpened(),
+                IntroductionProcess.ButtonSignInWithCard(),
+            ).inOrder()
         }
 
         @Test
@@ -1077,7 +1166,12 @@ internal class IntroductionModelTest {
             // Assert
             assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
             verify(exactly = 1) {
-                router.push(AppRoute.AddExistingWallet(mode = AppRoute.AddExistingWallet.Mode.RecoveryPhrase))
+                router.push(
+                    AppRoute.AddExistingWallet(
+                        mode = AppRoute.AddExistingWallet.Mode.RecoveryPhrase,
+                        shouldSendOnboardingStarted = true,
+                    ),
+                )
             }
             // The import flow owns the hot wallet analytics context; a second push here would overwrite its parent.
             verify(exactly = 0) { trackingContextProxy.addHotWalletContext() }
@@ -1096,7 +1190,12 @@ internal class IntroductionModelTest {
             // Assert
             assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
             verify(exactly = 1) {
-                router.push(AppRoute.AddExistingWallet(mode = AppRoute.AddExistingWallet.Mode.CloudRestore))
+                router.push(
+                    AppRoute.AddExistingWallet(
+                        mode = AppRoute.AddExistingWallet.Mode.CloudRestore,
+                        shouldSendOnboardingStarted = true,
+                    ),
+                )
             }
         }
 
@@ -1721,7 +1820,12 @@ internal class IntroductionModelTest {
             // Assert
             verify(exactly = 1) { videoPlayer.restart() }
             verify(exactly = 1) {
-                router.push(AppRoute.AddExistingWallet(mode = AppRoute.AddExistingWallet.Mode.RecoveryPhrase))
+                router.push(
+                    AppRoute.AddExistingWallet(
+                        mode = AppRoute.AddExistingWallet.Mode.RecoveryPhrase,
+                        shouldSendOnboardingStarted = true,
+                    ),
+                )
             }
         }
 
@@ -1759,6 +1863,22 @@ internal class IntroductionModelTest {
             // Assert
             assertThat(sentEvents.last()).isEqualTo(
                 IntroductionProcess.CreateWalletIntroScreenOpened(screenType = null, referralId = "ref-42"),
+            )
+        }
+
+        @Test
+        fun `GIVEN a referral WHEN i have a wallet clicked THEN the sheet opening is sent without params`() {
+            // Arrange
+            coEvery { appsFlyerRepository.getConversionData() } returns AppsFlyerConversionData("ref-42", null)
+            val model = createModel()
+
+            // Act
+            model.uiState.value.onIHaveWalletClick()
+
+            // Assert
+            val openings = sentEvents.filterIsInstance<IntroductionProcess.IHaveWalletIntroScreenOpened>()
+            assertThat(openings.map { it.id to it.params }).containsExactly(
+                "[Introduction Process] I Have Wallet Intro Screen Opened" to emptyMap<String, String>(),
             )
         }
 
@@ -1815,7 +1935,33 @@ internal class IntroductionModelTest {
             assertThat(sentEvents).containsExactly(
                 SCREEN_OPENED,
                 IntroductionProcess.ButtonIHaveWallet(),
+                IntroductionProcess.IHaveWalletIntroScreenOpened(),
                 SheetDismissed(SheetDismissed.Sheet.IHaveWallet, SheetDismissed.DismissReason.CloseButton),
+            ).inOrder()
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideHaveWalletDismissModels")
+        fun `GIVEN the have wallet options left WHEN i have a wallet clicked again THEN the opening is reported again`(
+            model: DismissModel,
+        ) {
+            // Arrange
+            val introductionModel = createModel()
+            introductionModel.uiState.value.onIHaveWalletClick()
+            model.leave(introductionModel)
+
+            // Act
+            introductionModel.uiState.value.onIHaveWalletClick()
+
+            // Assert
+            assertThat(introductionModel.uiState.value.haveWalletBottomSheetConfig?.isShown).isTrue()
+            assertThat(sentEvents).containsExactly(
+                SCREEN_OPENED,
+                IntroductionProcess.ButtonIHaveWallet(),
+                IntroductionProcess.IHaveWalletIntroScreenOpened(),
+                SheetDismissed(SheetDismissed.Sheet.IHaveWallet, model.reason),
+                IntroductionProcess.ButtonIHaveWallet(),
+                IntroductionProcess.IHaveWalletIntroScreenOpened(),
             ).inOrder()
         }
 
@@ -1889,7 +2035,7 @@ internal class IntroductionModelTest {
         }
 
         @Test
-        fun `GIVEN the import step WHEN back pressed THEN the back is reported and the options return`() {
+        fun `GIVEN the import step WHEN back pressed THEN only the back is reported and the options return`() {
             // Arrange
             val model = createModel()
             model.uiState.value.onIHaveWalletClick()
@@ -1903,6 +2049,7 @@ internal class IntroductionModelTest {
             assertThat(sentEvents).containsExactly(
                 SCREEN_OPENED,
                 IntroductionProcess.ButtonIHaveWallet(),
+                IntroductionProcess.IHaveWalletIntroScreenOpened(),
                 IntroductionProcess.ButtonImportExistingWallet(),
                 OnboardingAnalyticsEvent.Backup.ImportWalletRequest(AnalyticsParam.CloudBackupAvailability.Available),
                 SheetDismissed(SheetDismissed.Sheet.ImportExisting, SheetDismissed.DismissReason.BackButton),
@@ -1941,6 +2088,7 @@ internal class IntroductionModelTest {
             assertThat(sentEvents).containsExactly(
                 SCREEN_OPENED,
                 IntroductionProcess.ButtonIHaveWallet(),
+                IntroductionProcess.IHaveWalletIntroScreenOpened(),
                 IntroductionProcess.ButtonImportExistingWallet(),
                 OnboardingAnalyticsEvent.Backup.ImportWalletRequest(AnalyticsParam.CloudBackupAvailability.Available),
                 SheetDismissed(SheetDismissed.Sheet.ImportExisting, SheetDismissed.DismissReason.BackButton),
@@ -1964,6 +2112,7 @@ internal class IntroductionModelTest {
             assertThat(sentEvents).containsExactly(
                 SCREEN_OPENED,
                 IntroductionProcess.ButtonIHaveWallet(),
+                IntroductionProcess.IHaveWalletIntroScreenOpened(),
                 IntroductionProcess.ButtonImportExistingWallet(),
                 OnboardingAnalyticsEvent.Backup.ImportWalletRequest(AnalyticsParam.CloudBackupAvailability.Available),
             ).inOrder()
@@ -1992,6 +2141,11 @@ internal class IntroductionModelTest {
         private fun provideTestModels() = listOf(
             DismissModel(reason = SheetDismissed.DismissReason.CloseButton) { it.createSheet().onCloseClick() },
             DismissModel(reason = SheetDismissed.DismissReason.Dismissed) { it.closeCreateWalletSheet() },
+        )
+
+        private fun provideHaveWalletDismissModels() = listOf(
+            DismissModel(reason = SheetDismissed.DismissReason.CloseButton) { it.haveWalletContent().onCloseClick() },
+            DismissModel(reason = SheetDismissed.DismissReason.Dismissed) { it.closeHaveWalletSheet() },
         )
     }
 
@@ -2022,6 +2176,7 @@ internal class IntroductionModelTest {
 
             // Assert
             assertThat(model.uiState.value.haveWalletBottomSheetConfig).isNull()
+            assertThat(sentEvents.filterIsInstance<IntroductionProcess.IHaveWalletIntroScreenOpened>()).isEmpty()
         }
 
         @Test
@@ -2279,9 +2434,7 @@ internal class IntroductionModelTest {
 
     internal data class RunningModel(val isRunning: Boolean)
 
-    /** The decoder reports the frame geometry before it renders anything, and the shutter waits for both. */
     private fun IntroductionModel.renderFrame() {
-        onAspectRatioChanged(VIDEO_ASPECT_RATIO)
         onFirstFrameRendered()
     }
 
@@ -2330,9 +2483,12 @@ internal class IntroductionModelTest {
 
     private companion object {
         val PLAYBACK_ERROR = IllegalStateException("decoder failed")
-        const val VIDEO_ASPECT_RATIO = 1080f / 1920f
+        val VIDEO_SIZE = IntSize(width = 1080, height = 1920)
 
         val SCREEN_OPENED = IntroductionProcess.ScreenOpened(IntroductionProcess.ScreenOpened.EntryReason.NoWallets)
+
+        /** The first check only takes the baseline, then four more checks 250 ms apart see the count stand still. */
+        const val STALL_DETECTED_AFTER_MS = 1_251L
         val SHUTTER_DOWN = false to true
         const val BUY_LINK = "https://buy.tangem.com/en?utm_source=tangem-app"
         const val LEAST_OS_VERSION = "Android 10"

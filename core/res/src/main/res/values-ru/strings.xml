@@ -1028,6 +1028,7 @@
   <string name="initial_wallet_sync_banner_description">Кошелёк синхронизирован и готов к использованию.\nНе нашли какие-то токены?</string>
   <string name="initial_wallet_sync_banner_title">Кошелёк успешно импортирован</string>
   <string name="initial_wallet_sync_restore_progress">Восстановление %d%%</string>
+  <string name="introduction_button_buy_tangem">Купить Tangem</string>
   <string name="introduction_button_create_wallet">Создайте кошелёк</string>
   <string name="introduction_button_i_have_a_wallet">У меня есть кошелёк</string>
   <string name="introduction_create_wallet_hardware_description">Если у вас уже есть кошелёк Tangem</string>
