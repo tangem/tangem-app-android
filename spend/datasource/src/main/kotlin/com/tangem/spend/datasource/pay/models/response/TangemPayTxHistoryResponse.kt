@@ -134,6 +134,7 @@ data class TangemPayTxHistoryResponse(
         @SerialName("wallet_address") val walletAddress: String,
         @SerialName("transaction_hash") val transactionHash: String,
         @SerialName("posted_at") val postedAt: SerializedIsoDateTime?,
+        @SerialName("kind") val kind: String? = null,
     )
 
     @Serializable

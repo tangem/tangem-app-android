@@ -15,7 +15,6 @@ import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.account.feeCurrencyOrDefault
 import com.tangem.domain.models.account.isPlanTransitioningState
 import com.tangem.domain.models.pay.TangemPayCard
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.domain.models.pay.isAwaitingActivation
@@ -71,10 +70,8 @@ internal class TangemPayDetailsStateFactory(
 
     fun getLoadedState(status: PaymentAccountStatusValue.Loaded): TangemPayDetailsUM {
         val isFresh = status.isFresh
-        val hasUnfrozenCard = status.cards.any { it.frozenState == TangemPayCardFrozenState.Unfrozen }
         val hasIssuingCard = status.cards.any { it.state == TangemPayCardState.Issuing }
         val isAddCardEnabled = isFresh && !hasIssuingCard
-        val areActionButtonsEnabled = isFresh && hasUnfrozenCard
         val balance = status.balance
         val hasWithdrawableBalance = status.hasWithdrawableAmount
         val canAddFunds = status.canAddFunds
@@ -121,8 +118,8 @@ internal class TangemPayDetailsStateFactory(
                 fiatBalance = balance?.fiatBalance,
                 cardsBlockState = cardsBlockState,
                 isMuted = !isFresh,
-                isAddFundsEnabled = areActionButtonsEnabled && canAddFunds,
-                isWithdrawEnabled = areActionButtonsEnabled && hasWithdrawableBalance,
+                isAddFundsEnabled = isFresh && canAddFunds,
+                isWithdrawEnabled = isFresh && hasWithdrawableBalance,
             ),
             isBalanceHidden = false,
             messageBanner = (errorNotification ?: tiersNotification)?.let(::MessageBannerUM),
