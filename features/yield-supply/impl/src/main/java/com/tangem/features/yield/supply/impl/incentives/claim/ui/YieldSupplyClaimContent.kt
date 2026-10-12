@@ -19,15 +19,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.account.AccountLabel
-import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.SpacerWMax
+import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -35,7 +36,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.yield.supply.impl.R
-import com.tangem.features.yield.supply.impl.common.ui.YieldSupplyFeesCard
+import com.tangem.features.yield.supply.impl.common.ui.YieldSupplyFeeRow
 import com.tangem.features.yield.supply.impl.incentives.claim.entity.YieldSupplyClaimUM
 import kotlinx.collections.immutable.persistentListOf
 
@@ -78,7 +79,7 @@ internal fun YieldSupplyClaimContent(
 
             notificationsComponent.Content(Modifier)
 
-            YieldSupplyFeesCard(
+            FeesCard(
                 serviceFee = state.serviceFee,
                 networkFee = state.networkFee,
                 networkFeeCurrency = state.networkFeeCurrency,
@@ -93,6 +94,49 @@ internal fun YieldSupplyClaimContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 14.dp),
+            )
+        }
+    }
+}
+
+/**
+ * @param isServiceFeeVisible false while the owner cannot pay the network fee at all: what Tangem would take out of
+ * the rewards is noise next to a transaction that cannot be sent.
+ */
+@Composable
+private fun FeesCard(
+    serviceFee: TextReference?,
+    networkFee: TextReference?,
+    networkFeeCurrency: TextReference?,
+    isServiceFeeVisible: Boolean,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(TangemTheme.colors.background.action)
+            .padding(vertical = 4.dp),
+    ) {
+        YieldSupplyFeeRow(
+            title = resourceReference(R.string.common_network_fee_title),
+            value = networkFee,
+            badge = networkFeeCurrency,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+        )
+        if (isServiceFeeVisible) {
+            HorizontalDivider(
+                thickness = 0.5.dp,
+                color = TangemTheme.colors.stroke.primary,
+                modifier = Modifier.padding(horizontal = 12.dp),
+            )
+            YieldSupplyFeeRow(
+                title = resourceReference(R.string.yield_module_claim_service_fee_title),
+                value = serviceFee,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
             )
         }
     }
