@@ -247,14 +247,6 @@ internal class YieldSupplyActiveModel @Inject constructor(
     }
 
     /**
-     * The result sheet opens over the Yield Mode screen it was started from, so going back to yield is the same as
-     * closing it.
-     */
-    fun onGoToYieldClick() {
-        onClaimResultDismiss()
-    }
-
-    /**
      * A claim is signed on one screen and settles on another, so the outcome arrives here rather than in the sheet
      * that sent it. A reverted claim has no screen of its own: the result sheet goes away and the failure is
      * reported the same way a rejected submission is.

@@ -25,7 +25,7 @@ internal data class YieldSupplyClaimResultUM(
 
         /**
          * Mined successfully. Merkl still has to process the claim, so the rewards banner lags behind this by a
-         * few minutes — which is what the screen says.
+         * few minutes.
          *
          * @property timestamp when the confirmation was observed, in epoch milliseconds
          */

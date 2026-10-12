@@ -47,6 +47,7 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.Locale
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class YieldSupplyRewardsBannerModelTest {
@@ -343,7 +344,7 @@ internal class YieldSupplyRewardsBannerModelTest {
             // Act
             claimOutcomes.emit(confirmedOutcome(chainId = OTHER_CHAIN_ID))
             runCurrent()
-            advanceTimeBy(delayTimeMillis = 31_000)
+            advanceTimeBy(PAST_CACHE_WINDOW)
             runCurrent()
 
             // Assert
@@ -367,14 +368,11 @@ internal class YieldSupplyRewardsBannerModelTest {
             // Act
             claimOutcomes.emit(confirmedOutcome())
             runCurrent()
-            val readsBeforeWindow = 2
+            advanceTimeBy(PAST_CACHE_WINDOW)
+            runCurrent()
 
             // Assert
-            coVerify(exactly = readsBeforeWindow) { getRewardsSummaryUseCase(any(), any()) }
-
-            advanceTimeBy(delayTimeMillis = 31_000)
-            runCurrent()
-            coVerify(exactly = readsBeforeWindow + 1) { getRewardsSummaryUseCase(any(), any()) }
+            coVerify(exactly = 3) { getRewardsSummaryUseCase(any(), any()) }
             coVerify(exactly = 1) {
                 incentivesRepository.invalidateUserCache(chainId = CHAIN_ID, userAddress = USER_ADDRESS)
             }
@@ -386,12 +384,8 @@ internal class YieldSupplyRewardsBannerModelTest {
     fun `GIVEN a confirmed claim WHEN the rewards cannot be read THEN the banner stays and is read again later`() =
         runTest {
             // Arrange
-            val claimable = YieldRewardsSummary.Claimable(
-                moduleAddress = MODULE_ADDRESS,
+            val claimable = MockYieldSupply.claimableSummary(
                 claimable = listOf(reward(claimable = "1000")),
-                pending = emptyList(),
-                unsupported = emptyList(),
-                supportedRewardTokens = emptySet(),
                 totalNetUsd = BigDecimal("12.34"),
             )
             coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returnsMany listOf(
@@ -407,7 +401,7 @@ internal class YieldSupplyRewardsBannerModelTest {
             claimOutcomes.emit(confirmedOutcome())
             runCurrent()
             val afterFailedRead = model.uiState.value
-            advanceTimeBy(delayTimeMillis = 31_000)
+            advanceTimeBy(PAST_CACHE_WINDOW)
             runCurrent()
 
             // Assert
@@ -441,7 +435,7 @@ internal class YieldSupplyRewardsBannerModelTest {
             claimInFlight.value = false
             advanceTimeBy(delayTimeMillis = 200)
             runCurrent()
-            advanceTimeBy(delayTimeMillis = 31_000)
+            advanceTimeBy(PAST_CACHE_WINDOW)
             runCurrent()
 
             // Assert
@@ -468,7 +462,7 @@ internal class YieldSupplyRewardsBannerModelTest {
         // Act
         claimOutcomes.emit(confirmedOutcome())
         runCurrent()
-        advanceTimeBy(delayTimeMillis = 31_000)
+        advanceTimeBy(PAST_CACHE_WINDOW)
         runCurrent()
 
         // Assert
@@ -546,6 +540,7 @@ internal class YieldSupplyRewardsBannerModelTest {
     private fun createToken(): CryptoCurrency.Token = MockYieldSupply.token(contractAddress = TOKEN_ADDRESS)
 
     private companion object {
+        val PAST_CACHE_WINDOW = (YieldIncentivesRepository.INCENTIVES_CACHE_SECONDS + 1).seconds
         const val CHAIN_ID = 1
         const val OTHER_CHAIN_ID = 137
         const val TOKEN_ADDRESS = "0xToken"

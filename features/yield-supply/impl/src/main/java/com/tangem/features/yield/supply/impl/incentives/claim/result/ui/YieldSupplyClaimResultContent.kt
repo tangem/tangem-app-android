@@ -32,10 +32,8 @@ import com.tangem.utils.StringsSigns.WHITE_SPACE
 import com.tangem.core.res.R as CoreResR
 
 /**
- * What became of a signed claim, on the design-system status template: the outcome colours the ambient light and the
- * status asset, the fees sit above the footer, and the two actions share one row.
- *
- * The screen runs on the redesigned palette the template is built from, so it provides it for the legacy fee rows too.
+ * The screen runs on the redesigned palette the template is built from, so it provides it for the legacy fee rows
+ * too.
  */
 @Composable
 internal fun YieldSupplyClaimResultContent(
@@ -56,7 +54,14 @@ internal fun YieldSupplyClaimResultContent(
             title = title(status = status, total = state.total),
             description = description(status = status),
             asset = {
-                TangemStatusIcon(kind = TangemStatusIcon.Kind.Checkmark, modifier = Modifier.size(ASSET_SIZE))
+                TangemStatusIcon(
+                    kind = TangemStatusIcon.Kind.Checkmark,
+                    tint = when (status) {
+                        is YieldSupplyClaimResultUM.Status.Submitted -> TangemTheme.colors3.icon.status.info
+                        is YieldSupplyClaimResultUM.Status.Confirmed -> TangemTheme.colors3.icon.status.success
+                    },
+                    modifier = Modifier.size(ASSET_SIZE),
+                )
             },
             details = { Fees(state = state) },
             footer = { Footer(onGoToTokenClick = onGoToTokenClick, onGoToYieldClick = onGoToYieldClick) },
