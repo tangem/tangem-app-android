@@ -24,6 +24,7 @@ import com.tangem.domain.yield.supply.usecase.GetFreshYieldClaimCalldataUseCase
 import com.tangem.domain.yield.supply.usecase.GetYieldRewardsSummaryUseCase
 import com.tangem.domain.yield.supply.usecase.ValidateYieldClaimCalldataUseCase
 import com.tangem.domain.yield.supply.usecase.YieldClaimValidationContext
+import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
 import com.tangem.domain.yield.supply.usecase.YieldSupplyMarketFlowUseCase
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
 import com.tangem.features.yield.supply.impl.common.formatter.YieldSupplyAmountFormatter
@@ -71,6 +72,7 @@ internal class YieldSupplyClaimModel @Inject constructor(
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
+    private val yieldSupplyClaimTracker: YieldSupplyClaimTracker,
     private val yieldSupplyNotificationsUpdateTrigger: YieldSupplyNotificationsUpdateTrigger,
     private val yieldSupplyAlertFactory: YieldSupplyAlertFactory,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
@@ -111,6 +113,9 @@ internal class YieldSupplyClaimModel @Inject constructor(
 
     /** One claim in flight: every further confirmation is dropped, and nothing is retried on its behalf. */
     private var claimJob: Job? = null
+
+    /** Resolved once: both sources are per-screen constants, and the claim has to name them again after signing. */
+    private var claimContext: ClaimContext? = null
 
     init {
         modelScope.launch {
@@ -199,8 +204,25 @@ internal class YieldSupplyClaimModel @Inject constructor(
                     },
                 )
             },
-            ifRight = { _ -> params.onDismiss() },
+            ifRight = { transactionHash -> onClaimSubmitted(transactionHash) },
         )
+    }
+
+    /**
+     * Hands the claim over to the tracker: the transaction is still pending, and neither this model nor this sheet
+     * is alive long enough to see what becomes of it.
+     */
+    private fun onClaimSubmitted(transactionHash: String) {
+        claimContext?.let { context ->
+            yieldSupplyClaimTracker.track(
+                userWalletId = params.userWallet.walletId,
+                cryptoCurrency = context.token,
+                chainId = context.chainId,
+                userAddress = context.userAddress,
+                transactionHash = transactionHash,
+            )
+        }
+        params.onDismiss()
     }
 
     /**
@@ -270,6 +292,7 @@ internal class YieldSupplyClaimModel @Inject constructor(
      * so waiting on them is bounded: a sheet that never resolves would shimmer forever with nothing to retry from.
      */
     private suspend fun resolveContext(): ClaimContext? {
+        claimContext?.let { return it }
         val token = cryptoCurrency as? CryptoCurrency.Token ?: return null
 
         return withTimeoutOrNull(RESOLVE_TIMEOUT_MILLIS) {
@@ -279,11 +302,11 @@ internal class YieldSupplyClaimModel @Inject constructor(
                 .firstOrNull()
 
             if (chainId != null && userAddress != null) {
-                ClaimContext(chainId = chainId, userAddress = userAddress)
+                ClaimContext(chainId = chainId, userAddress = userAddress, token = token)
             } else {
                 null
             }
-        }
+        }?.also { claimContext = it }
     }
 
     /** Clears what the sheet can no longer vouch for, including fee notifications left by an earlier run. */
@@ -405,7 +428,7 @@ internal class YieldSupplyClaimModel @Inject constructor(
         appCurrency = appCurrency,
     ).invoke(feeValue = this, fiatRate = feeCryptoCurrencyStatusFlow.value.value.fiatRate, showCrypto = false)
 
-    private data class ClaimContext(val chainId: Int, val userAddress: String)
+    private data class ClaimContext(val chainId: Int, val userAddress: String, val token: CryptoCurrency.Token)
 
     private companion object {
         const val RESOLVE_TIMEOUT_MILLIS = 10_000L
