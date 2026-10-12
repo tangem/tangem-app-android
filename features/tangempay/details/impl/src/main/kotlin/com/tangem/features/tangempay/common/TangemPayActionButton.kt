@@ -4,11 +4,11 @@ import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
@@ -46,11 +46,8 @@ internal fun TangemPayActionButton(
             text = title.resolveAnnotatedReference(),
             style = TangemTheme.typography3.subheading.medium,
             color = if (isEnabled) TangemTheme.colors3.text.primary else TangemTheme.colors3.text.tertiary,
-            autoSize = TextAutoSize.StepBased(
-                minFontSize = TangemTheme.typography3.caption.medium.fontSize,
-                maxFontSize = TangemTheme.typography3.subheading.medium.fontSize,
-            ),
             maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
