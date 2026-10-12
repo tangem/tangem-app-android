@@ -381,7 +381,7 @@ internal class DefaultScanCardProcessorTest {
         }
 
         @Test
-        fun `GIVEN card without wallet WHEN scan THEN wallet not created and onboarding launched`() = runTest {
+        fun `GIVEN card without wallet WHEN scan THEN onboarding required and launched`() = runTest {
             // Arrange
             val processor = createProcessor()
             stubScanResult(CompletionResult.Success(scanResponse))
@@ -394,7 +394,7 @@ internal class DefaultScanCardProcessorTest {
             // Assert
             coVerifyOrder {
                 callback.onProgressStateChange(showProgress = true)
-                callback.onWalletNotCreated()
+                callback.onOnboardingRequired()
                 callback.onProgressStateChange(showProgress = false)
             }
             coVerify(exactly = 0) { callback.onSuccess(any()) }
@@ -423,7 +423,7 @@ internal class DefaultScanCardProcessorTest {
         }
 
         @Test
-        fun `GIVEN attestation dialog WHEN cancel clicked THEN progress hidden and cancel delivered`() = runTest {
+        fun `GIVEN attestation dialog WHEN cancel clicked THEN progress hidden and failure reported`() = runTest {
             // Arrange
             val processor = createProcessor()
             val dialog = captureDialog()
@@ -439,7 +439,7 @@ internal class DefaultScanCardProcessorTest {
             coVerifyOrder {
                 callback.onProgressStateChange(showProgress = true)
                 callback.onProgressStateChange(showProgress = false)
-                callback.onCancel()
+                callback.onCardVerificationFailed()
             }
             coVerify(exactly = 0) { callback.onFailure(any()) }
         }
