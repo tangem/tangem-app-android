@@ -24,7 +24,11 @@ import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.yield.supply.INCREASE_GAS_LIMIT_FOR_SUPPLY
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.increaseGasLimitBy
+import com.tangem.domain.yield.supply.models.YieldSupplyClaimOrigin
 import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
+import com.tangem.domain.yield.supply.usecase.PrepareClaimBeforeWithdrawUseCase
+import com.tangem.domain.yield.supply.usecase.YieldPreClaim
+import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
 import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyPendingTracker
 import com.tangem.domain.yield.supply.usecase.YieldSupplyStopEarningUseCase
@@ -41,11 +45,14 @@ import com.tangem.features.yield.supply.impl.subcomponents.notifications.entity.
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.YieldSupplyStopEarningComponent
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.model.transformer.YieldSupplyStopEarningFeeContentTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+import java.math.BigDecimal
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -66,6 +73,8 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     private val yieldSupplyRepository: YieldSupplyRepository,
     private val yieldSupplyPendingTracker: YieldSupplyPendingTracker,
     private val appsFlyerRepository: AppsFlyerRepository,
+    private val prepareClaimBeforeWithdrawUseCase: PrepareClaimBeforeWithdrawUseCase,
+    private val yieldSupplyClaimTracker: YieldSupplyClaimTracker,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStopEarningComponent.Params = paramsContainer.require()
@@ -146,8 +155,15 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
         uiState.update(YieldSupplyTransactionInProgressTransformer)
 
         modelScope.launch(dispatchers.default) {
+            val withdrawalTransaction = yieldSupplyFeeUM.transactionDataList.first()
+            // Guarded as a whole: the claim is optional work, and anything thrown on its way would either take the
+            // process down or leave the sheet stuck sending, for a withdrawal that is still perfectly able to go out.
+            runSuspendCatching {
+                claimRewardsBeforeWithdraw(withdrawalFee = withdrawalTransaction.fee?.amount?.value.orZero())
+            }.onFailure { TangemLogger.e("Claim before withdrawal failed", it) }
+
             sendTransactionUseCase(
-                txData = yieldSupplyFeeUM.transactionDataList.first(),
+                txData = withdrawalTransaction,
                 userWallet = userWallet,
                 network = cryptoCurrency.network,
             ).fold(
@@ -180,6 +196,58 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                 },
             )
         }
+    }
+
+    /**
+     * Claims the Merkl rewards the module still holds, as its own owner-signed transaction ahead of the
+     * withdrawal, because the withdrawal deactivates the module they belong to.
+     *
+     * This is the fallback for a withdrawal the claim sheet was never offered for; once the owner has been asked,
+     * their answer stands and nothing is claimed behind it. It is an attempt and nothing more: a claim that cannot
+     * be prepared, is declined at the card, or is rejected by the node leaves a log line and the withdrawal
+     * untouched. The two signatures are sequential and separate on purpose — there is no combined calldata for
+     * them, so presenting them as one transaction would be a lie.
+     */
+    private suspend fun claimRewardsBeforeWithdraw(withdrawalFee: BigDecimal) {
+        if (params.wasClaimOffered) {
+            TangemLogger.i("Claim before withdrawal skipped: the owner was already offered the claim sheet")
+            return
+        }
+
+        // Bounded because everything up to the signature is optional work the withdrawal waits on: a stalled
+        // incentives backend must cost the user a moment, not their exit. The signature itself is not bounded —
+        // that is the user reaching for their card.
+        val preparedClaim = withTimeoutOrNull(PREPARE_CLAIM_TIMEOUT_MILLIS) {
+            prepareClaimBeforeWithdrawUseCase(
+                userWallet = userWallet,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
+                withdrawalFee = withdrawalFee,
+            )
+        }
+        if (preparedClaim == null) {
+            TangemLogger.i("Claim before withdrawal skipped: it was not prepared in time")
+            return
+        }
+        val claim = preparedClaim as? YieldPreClaim.Ready ?: return
+
+        sendTransactionUseCase(
+            txData = claim.transactionData,
+            userWallet = userWallet,
+            network = cryptoCurrency.network,
+        ).fold(
+            ifLeft = { error -> TangemLogger.e("Claim before withdrawal was not submitted: $error") },
+            ifRight = { transactionHash ->
+                yieldSupplyClaimTracker.track(
+                    userWalletId = userWallet.walletId,
+                    cryptoCurrency = claim.token,
+                    chainId = claim.chainId,
+                    userAddress = claim.userAddress,
+                    transactionHash = transactionHash,
+                    origin = YieldSupplyClaimOrigin.Withdrawal,
+                )
+            },
+        )
     }
 
     private suspend fun onStopEarningTransactionSuccess(txId: String) {
@@ -302,5 +370,9 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                     it.copy(isPrimaryButtonEnabled = !hasError)
                 }
             }.launchIn(modelScope)
+    }
+
+    private companion object {
+        const val PREPARE_CLAIM_TIMEOUT_MILLIS = 15_000L
     }
 }
