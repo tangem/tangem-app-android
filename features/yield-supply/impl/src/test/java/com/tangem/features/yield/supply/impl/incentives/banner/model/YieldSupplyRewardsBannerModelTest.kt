@@ -14,6 +14,7 @@ import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.yield.supply.models.incentives.YieldIncentivesError
 import com.tangem.domain.yield.supply.models.incentives.YieldRewardsSummary
 import com.tangem.domain.yield.supply.usecase.GetYieldRewardsSummaryUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
 import com.tangem.domain.yield.supply.usecase.YieldSupplyMarketFlowUseCase
 import com.tangem.features.yield.supply.impl.incentives.banner.DefaultYieldSupplyRewardsBannerComponent
 import com.tangem.features.yield.supply.impl.incentives.banner.entity.YieldSupplyRewardsBannerUM
@@ -25,11 +26,13 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -43,6 +46,8 @@ internal class YieldSupplyRewardsBannerModelTest {
 
     private val marketFlowUseCase: YieldSupplyMarketFlowUseCase = mockk()
     private val getRewardsSummaryUseCase: GetYieldRewardsSummaryUseCase = mockk()
+    private val claimTracker: YieldSupplyClaimTracker = mockk()
+    private val claimInFlight = MutableStateFlow(false)
 
     private var originalLocale: Locale = Locale.getDefault()
     private val claimClicks = mutableListOf<Pair<Int, String>>()
@@ -54,6 +59,8 @@ internal class YieldSupplyRewardsBannerModelTest {
         claimClicks.clear()
         clearMocks(marketFlowUseCase, getRewardsSummaryUseCase)
         every { marketFlowUseCase(any()) } returns flowOf(market(hasCampaign = true))
+        claimInFlight.value = false
+        every { claimTracker.isClaimInFlight(any(), any()) } returns claimInFlight
     }
 
     @AfterEach
@@ -103,6 +110,24 @@ internal class YieldSupplyRewardsBannerModelTest {
 
             model.onDestroy()
         }
+
+    @Test
+    fun `GIVEN a claim in flight WHEN claim clicked THEN no sheet is opened`() = runTest {
+        // Arrange
+        coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returns
+            MockYieldSupply.claimableSummary(claimable = listOf(reward(claimable = "1000"))).right()
+        claimInFlight.value = true
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Act
+        model.onClaimClick()
+
+        // Assert
+        assertThat(claimClicks).isEmpty()
+
+        model.onDestroy()
+    }
 
     @Test
     fun `GIVEN rewards below threshold WHEN model created THEN claim is disabled`() = runTest {
@@ -291,6 +316,111 @@ internal class YieldSupplyRewardsBannerModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN a claim in flight WHEN the banner is shown THEN its claim button is disabled`() = runTest {
+        // Arrange
+        coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returns
+            MockYieldSupply.claimableSummary(
+                claimable = listOf(reward(claimable = "1000")),
+                totalNetUsd = BigDecimal("12.34"),
+            ).right()
+        claimInFlight.value = true
+
+        // Act
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value?.claim).isEqualTo(YieldSupplyRewardsBannerUM.Claim.Disabled)
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a banner WHEN it reads the claim state THEN it asks about the module of its market`() = runTest {
+        // Arrange
+        coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returns
+            MockYieldSupply.claimableSummary(
+                claimable = listOf(reward(claimable = "1000")),
+                totalNetUsd = BigDecimal("12.34"),
+            ).right()
+
+        // Act
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Assert
+        verify { claimTracker.isClaimInFlight(chainId = CHAIN_ID, userAddress = USER_ADDRESS) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a shown banner WHEN a claim goes in flight THEN the button is disabled without reading the rewards`() =
+        runTest {
+            // Arrange
+            coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returns
+                MockYieldSupply.claimableSummary(claimable = listOf(reward(claimable = "1000"))).right()
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Act
+            claimInFlight.value = true
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value?.claim).isEqualTo(YieldSupplyRewardsBannerUM.Claim.Disabled)
+            coVerify(exactly = 1) { getRewardsSummaryUseCase(any(), any()) }
+
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a claim in flight WHEN it settles THEN the rewards are read again`() = runTest {
+        // Arrange
+        coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returnsMany listOf(
+            MockYieldSupply.claimableSummary(claimable = listOf(reward(claimable = "1000"))).right(),
+            YieldRewardsSummary.None.right(),
+        )
+        claimInFlight.value = true
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Act
+        claimInFlight.value = false
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value).isNull()
+        coVerify(exactly = 2) { getRewardsSummaryUseCase(any(), any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a claim in flight WHEN it settles and the rewards cannot be read THEN the banner stays`() = runTest {
+        // Arrange
+        coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returnsMany listOf(
+            MockYieldSupply.claimableSummary(claimable = listOf(reward(claimable = "1000"))).right(),
+            YieldIncentivesError.Unavailable.left(),
+        )
+        val model = createModel()
+        advanceUntilIdle()
+        val shown = model.uiState.value
+        claimInFlight.value = true
+        runCurrent()
+
+        // Act
+        claimInFlight.value = false
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(shown).isNotNull()
+        assertThat(model.uiState.value).isEqualTo(shown)
+
+        model.onDestroy()
+    }
+
     private fun TestScope.createModel(
         cryptoCurrencyStatusFlow: MutableStateFlow<CryptoCurrencyStatus> = MutableStateFlow(loadedStatus()),
     ) = YieldSupplyRewardsBannerModel(
@@ -304,6 +434,7 @@ internal class YieldSupplyRewardsBannerModelTest {
         dispatchers = createTestingCoroutineDispatcherProvider(),
         yieldSupplyMarketFlowUseCase = marketFlowUseCase,
         getYieldRewardsSummaryUseCase = getRewardsSummaryUseCase,
+        yieldSupplyClaimTracker = claimTracker,
     )
 
     private fun loadedStatus() = CryptoCurrencyStatus(
