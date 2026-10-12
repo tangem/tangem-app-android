@@ -360,7 +360,6 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
 
     private fun SocialLoginError.toMessage(provider: SocialLoginProvider): TextReference = when (this) {
         SocialLoginError.NetworkError -> resourceReference(CoreResR.string.hw_cloud_backup_error_network)
-        SocialLoginError.SessionExpired -> resourceReference(CoreResR.string.social_login_error_session_expired)
         is SocialLoginError.BackupWriteFailed -> resourceReference(CoreResR.string.social_login_error_backup_not_saved)
         SocialLoginError.BindingConflict -> providerReference(
             CoreResR.string.social_login_error_account_linked,
@@ -386,7 +385,6 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         -> "We couldn't restore the wallet for this account"
         SocialLoginError.CloudUnavailable -> "No access to the cloud storage"
         SocialLoginError.NetworkError -> "No internet connection"
-        SocialLoginError.SessionExpired -> "Session expired"
         is SocialLoginError.BackupWriteFailed -> "Couldn't save backup"
         SocialLoginError.BindingConflict -> "Account is already linked to another wallet"
         SocialLoginError.NoProviderAccount -> "No account on the device"
