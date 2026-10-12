@@ -8,6 +8,10 @@ import kotlinx.serialization.Serializable
 internal data class McpSessionResponse(
     /** Authorization id — pass to `DELETE api/authentication/v1/mcp/sessions/{id}` to revoke. */
     @SerialName("id") val id: String,
+    /** Wallet the authorization was granted for, as hex — the form [com.tangem.domain.models.wallet.UserWalletId] holds. */
+    @SerialName("walletId") val walletId: String,
+    /** When the authorization was issued, ISO-8601 in UTC. */
+    @SerialName("createdAt") val createdAt: String,
     /** OAuth `client_id` of the MCP client. */
     @SerialName("clientId") val clientId: String,
     /**
