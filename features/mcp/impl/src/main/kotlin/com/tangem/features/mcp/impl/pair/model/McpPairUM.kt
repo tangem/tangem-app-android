@@ -21,7 +21,7 @@ internal sealed interface McpPairUM {
 }
 
 @Immutable
-internal data class McpAgentUM(val name: TextReference, val origin: TextReference?)
+internal data class McpAgentUM(val name: TextReference, val origin: TextReference?, val iconUrl: String?)
 
 @Immutable
 internal data class McpNotificationsWarningUM(val onOpenSettingsClick: () -> Unit)

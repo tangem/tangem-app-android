@@ -8,7 +8,6 @@ import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.mcp.models.McpDeviceVerification
 import com.tangem.domain.mcp.models.McpDeviceVerificationResult
 import com.tangem.domain.mcp.models.McpSession
-import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.data.mcp.api.McpApi
 import com.tangem.data.mcp.api.models.request.McpDeviceVerificationConsent
@@ -34,6 +33,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.time.Instant
 import java.util.Base64 as JavaBase64
 import com.tangem.data.mcp.api.models.response.McpDeviceVerificationResult as McpDeviceVerificationResultResponse
 
@@ -41,23 +41,18 @@ import com.tangem.data.mcp.api.models.response.McpDeviceVerificationResult as Mc
 internal class DefaultMcpRepositoryTest {
 
     private val mcpApi: McpApi = mockk()
-    private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val testScope = TestScope(UnconfinedTestDispatcher())
     private val appScope = object : AppCoroutineScope, CoroutineScope by testScope {}
 
     private val repository = DefaultMcpRepository(
         mcpApi = mcpApi,
-        userWalletsListRepository = userWalletsListRepository,
         appScope = appScope,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
     @BeforeEach
     fun setUp() {
-        clearMocks(mcpApi, userWalletsListRepository)
-        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(
-            mockk { every { walletId } returns WALLET_ID },
-        )
+        clearMocks(mcpApi)
         mockkStatic(Base64::class)
         every { Base64.encodeToString(any(), any()) } answers { JavaBase64.getEncoder().encodeToString(firstArg()) }
     }
@@ -198,22 +193,21 @@ internal class DefaultMcpRepositoryTest {
             val actual = repository.getSessions().first()
 
             // Assert
-            assertThat(actual.map { it.copy(createdAtMillis = 0) }).containsExactly(SESSION)
+            assertThat(actual).containsExactly(SESSION)
         }
 
         @Test
-        fun `GIVEN no wallets WHEN getSessions THEN the stubbed wallet cannot be picked and nothing is mapped`() =
-            runTest {
-                // Arrange
-                coEvery { mcpApi.getSessions() } returns ApiResponse.Success(listOf(SESSION_RESPONSE))
-                coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+        fun `GIVEN an unparseable creation time WHEN getSessions THEN the session is still mapped`() = runTest {
+            // Arrange
+            val response = SESSION_RESPONSE.copy(createdAt = "not-a-date")
+            coEvery { mcpApi.getSessions() } returns ApiResponse.Success(listOf(response))
 
-                // Act
-                val actual = repository.getSessions().first()
+            // Act
+            val actual = repository.getSessions().first()
 
-                // Assert
-                assertThat(actual).isEmpty()
-            }
+            // Assert
+            assertThat(actual).containsExactly(SESSION.copy(createdAtMillis = 0L))
+        }
 
         @Test
         fun `GIVEN a read in flight WHEN getSessions collected again THEN the read is not duplicated`() = runTest {
@@ -304,7 +298,10 @@ internal class DefaultMcpRepositoryTest {
         const val STATE = "state-token"
         const val SESSION_ID = "b3f1c0d2"
 
-        val WALLET_ID = UserWalletId(stringValue = "011")
+        const val CREATED_AT = "2026-10-01T14:26:30.551455Z"
+        val CREATED_AT_MILLIS: Long = Instant.parse(CREATED_AT).toEpochMilli()
+
+        val WALLET_ID = UserWalletId(stringValue = "0A1B")
         val BASE64_WALLET_ID: String = JavaBase64.getEncoder().encodeToString(WALLET_ID.value)
 
         val NETWORK_ERROR = ApiResponseError.NetworkException()
@@ -318,7 +315,7 @@ internal class DefaultMcpRepositoryTest {
             clientId = CLIENT_ID,
             clientOrigin = ORIGIN,
             clientName = CLIENT_NAME,
-            isClientNameVerified = true,
+            clientIconUrl = ICON_URL,
             scope = SCOPE,
             state = STATE,
             userCode = USER_CODE,
@@ -328,7 +325,7 @@ internal class DefaultMcpRepositoryTest {
             clientId = CLIENT_ID,
             clientOrigin = ORIGIN,
             clientName = CLIENT_NAME,
-            isClientNameVerified = true,
+            clientIconUrl = ICON_URL,
             scope = SCOPE,
             state = STATE,
             userCode = USER_CODE,
@@ -336,6 +333,8 @@ internal class DefaultMcpRepositoryTest {
 
         val SESSION_RESPONSE = McpSessionResponse(
             id = SESSION_ID,
+            walletId = WALLET_ID.stringValue,
+            createdAt = CREATED_AT,
             clientId = CLIENT_ID,
             clientOrigin = ORIGIN,
             clientName = CLIENT_NAME,
@@ -349,7 +348,7 @@ internal class DefaultMcpRepositoryTest {
         val SESSION = McpSession(
             id = SESSION_ID,
             walletId = WALLET_ID,
-            createdAtMillis = 0,
+            createdAtMillis = CREATED_AT_MILLIS,
             clientId = CLIENT_ID,
             clientOrigin = ORIGIN,
             clientName = CLIENT_NAME,
