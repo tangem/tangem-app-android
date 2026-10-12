@@ -36,11 +36,11 @@ data class ScanConfig(
         /** Called to show the progress when the scan starts and to hide it when the app leaves the scan flow */
         suspend fun onProgressStateChange(showProgress: Boolean) {}
 
-        /** The card has no wallet (or the twins welcome wasn't shown); onboarding is launched right after */
-        suspend fun onWalletNotCreated() {}
+        /** The scanned card needs onboarding (or the twins welcome); it is launched right after this call */
+        suspend fun onOnboardingRequired() {}
 
-        /** The card attestation warning dialog was closed */
-        suspend fun onCancel() {}
+        /** The card failed attestation; called after the user has closed the warning dialog */
+        suspend fun onCardVerificationFailed() {}
 
         /** Any card SDK error except a card attestation failure, including user cancellation */
         suspend fun onFailure(error: TangemError) {}
