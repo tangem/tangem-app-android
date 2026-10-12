@@ -1174,7 +1174,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     fun `GIVEN a prediction top-up with a $10 minimum and a 0_5 USDC rate WHEN the transfer is built THEN the builder gets the limits in USDC`() =
         runTest {
             // Arrange
-            coEvery { getPredictionTopUpMinimumUseCase(userWalletId) } returns BigDecimal("10")
+            coEvery { getPredictionTopUpMinimumUseCase(userWalletId, any()) } returns BigDecimal("10")
             coEvery { getCurrencyUSDQuoteUseCase(CryptoCurrency.RawID("usd-coin")) } returns BigDecimal("0.5")
 
             // Act
@@ -1189,31 +1189,31 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         }
 
     @Test
-    fun `GIVEN a prediction top-up without a USD quote WHEN the transfer is built THEN no limits reach the builder`() =
+    fun `GIVEN a prediction top-up without a USD quote WHEN the transfer is built THEN the limits are converted one to one`() =
         runTest {
             // Arrange
-            coEvery { getPredictionTopUpMinimumUseCase(userWalletId) } returns BigDecimal("10")
+            coEvery { getPredictionTopUpMinimumUseCase(userWalletId, any()) } returns BigDecimal("10")
             coEvery { getCurrencyUSDQuoteUseCase(any()) } returns null
 
             // Act
             val model = createTopUpTransferModel(accountFlow = AccountFlow.PredictionTopUp)
 
             // Assert
-            assertThat(capturedTopUpLimits().toSet()).containsExactly(null)
+            assertThat(capturedTopUpLimits().last()?.minimum).isEqualTo(BigDecimal("10.000000"))
             model.onDestroy()
         }
 
     @Test
     fun `GIVEN no account flow WHEN the transfer is built THEN the prediction limits are not resolved`() = runTest {
         // Arrange
-        coEvery { getPredictionTopUpMinimumUseCase(userWalletId) } returns BigDecimal("10")
+        coEvery { getPredictionTopUpMinimumUseCase(userWalletId, any()) } returns BigDecimal("10")
 
         // Act
         val model = createTopUpTransferModel(accountFlow = null)
 
         // Assert
         assertThat(capturedTopUpLimits().toSet()).containsExactly(null)
-        coVerify(exactly = 0) { getPredictionTopUpMinimumUseCase(any()) }
+        coVerify(exactly = 0) { getPredictionTopUpMinimumUseCase(any(), any()) }
         model.onDestroy()
     }
 
