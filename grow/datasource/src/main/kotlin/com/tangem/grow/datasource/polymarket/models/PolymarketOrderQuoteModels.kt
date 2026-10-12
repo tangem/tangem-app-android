@@ -40,6 +40,9 @@ data class PolymarketOrderQuoteResponse(
     @Json(name = "minOrderAmount") val minOrderAmount: String?,
     @Json(name = "tickSize") val tickSize: String,
     @Json(name = "live") val isLive: Boolean,
+    @Json(name = "version") val version: String? = null,
+    @Json(name = "exchange") val exchange: String? = null,
+    @Json(name = "signingDomainVersion") val signingDomainVersion: String? = null,
 )
 
 /** Fee breakdown of an order quote (BFF `OrderQuoteFees`). */
