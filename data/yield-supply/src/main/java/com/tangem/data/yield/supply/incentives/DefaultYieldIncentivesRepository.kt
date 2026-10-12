@@ -105,14 +105,26 @@ internal class DefaultYieldIncentivesRepository(
     }
 
     /**
-     * [convert] states its own failures, so a payload it refuses is an answer rather than an accident. The catch
-     * stays for what a converter cannot foresee — a parser throwing deep inside a field it is reading.
+     * [call] is guarded as well as [convert]. Not because the request itself is expected to throw — a malformed
+     * argument or a transport failure comes back as an [ApiResponse.Error] — but because a service method that
+     * cannot be wired at all (a bad annotation, a missing converter) throws straight out of the interface call.
+     * The callers collect inside model scopes that carry no exception handler, so that throw would take the active
+     * Yield Mode screen down over an overlay the screen works perfectly well without. It is logged at error level
+     * instead, and the incentives read as unavailable.
+     *
+     * [convert] states its own failures, so a payload it refuses is an answer rather than an accident; the catch
+     * around it stays for what a converter cannot foresee.
      */
     private suspend fun <D : Any, T : Any> request(
         call: suspend () -> ApiResponse<D>,
         convert: (D) -> Either<YieldIncentivesError, T>,
     ): Either<YieldIncentivesError, T> = withContext(dispatchers.io) {
-        when (val response = call()) {
+        val response = runSuspendCatching { call() }.getOrElse { error ->
+            TangemLogger.e("Yield incentives request could not be made", error)
+            return@withContext YieldIncentivesError.Unavailable.left()
+        }
+
+        when (response) {
             is ApiResponse.Success -> runSuspendCatching { convert(response.data) }
                 .fold(
                     onSuccess = { converted ->

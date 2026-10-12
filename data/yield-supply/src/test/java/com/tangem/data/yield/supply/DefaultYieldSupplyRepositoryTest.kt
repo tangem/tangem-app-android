@@ -31,6 +31,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkStatic
@@ -122,21 +123,100 @@ internal class DefaultYieldSupplyRepositoryTest {
     }
 
     @Test
-    fun `GIVEN incentives enabled WHEN updateMarkets THEN incentivised markets are stored`() = runTest {
-        // Arrange
-        val dto = marketDto(chainId = 1, hasActiveCampaign = true)
+    fun `GIVEN incentives enabled WHEN updateMarkets THEN the campaign overlays the plain markets`() = runTest {
+        // Arrange — the same token in both lists; the incentivised row carries the campaign fields on top
+        val plain = marketDto(chainId = 1)
+        val incentivised = marketDto(chainId = 1, hasActiveCampaign = true)
         coEvery { yieldIncentivesApi.getIncentiveMarkets(chainId = any(), isForEarn = null) } returns
-            success(YieldMarketsResponse(marketDtos = listOf(dto), lastUpdated = "now"))
+            success(YieldMarketsResponse(marketDtos = listOf(incentivised), lastUpdated = "now"))
+        coEvery { yieldSupplyApi.getYieldMarkets(any()) } returns ApiResponse.Success(
+            YieldMarketsResponse(marketDtos = listOf(plain), lastUpdated = "now"),
+        )
 
         // Act
         val result = incentivisedRepository.updateMarkets()
 
         // Assert
-        assertThat(result).containsExactly(YieldMarketTokenConverter.convert(dto))
-        coVerify(exactly = 1) { store.store(listOf(dto)) }
-        coVerify(exactly = 0) { yieldSupplyApi.getYieldMarkets(any()) }
+        assertThat(result).containsExactly(YieldMarketTokenConverter.convert(incentivised))
+        coVerify(exactly = 1) { store.store(listOf(incentivised)) }
+        coVerify(exactly = 1) { yieldSupplyApi.getYieldMarkets(supportedChains()) }
         coVerify(exactly = 1) { yieldIncentivesApi.getIncentiveMarkets(chainId = supportedChains(), isForEarn = null) }
     }
+
+    @Test
+    fun `GIVEN a supported testnet WHEN updateMarkets THEN its chain is left out of both requests`() = runTest {
+        // Arrange — the service rejects the whole list over one unsupported chain, so a testnet must never reach it
+        val testnetChainIds = Blockchain.yieldSupplySupportedBlockchains()
+            .filter { it.isTestnet() }
+            .mapNotNull { it.getChainId() }
+        assertThat(testnetChainIds).isNotEmpty()
+        val plainChains = slot<String>()
+        val incentivisedChains = slot<String>()
+        coEvery { yieldSupplyApi.getYieldMarkets(capture(plainChains)) } returns ApiResponse.Success(
+            YieldMarketsResponse(marketDtos = listOf(marketDto(chainId = 1)), lastUpdated = "now"),
+        )
+        coEvery {
+            yieldIncentivesApi.getIncentiveMarkets(chainId = capture(incentivisedChains), isForEarn = null)
+        } returns success(YieldMarketsResponse(marketDtos = emptyList(), lastUpdated = "now"))
+
+        // Act
+        incentivisedRepository.updateMarkets()
+
+        // Assert
+        val sent = listOf(plainChains.captured, incentivisedChains.captured)
+        sent.forEach { chains ->
+            val ids = chains.split(",")
+            testnetChainIds.forEach { testnet -> assertThat(ids).doesNotContain(testnet.toString()) }
+            assertThat(ids).isNotEmpty()
+        }
+    }
+
+    @Test
+    fun `GIVEN the incentivised markets miss a chain WHEN updateMarkets THEN the legacy tokens survive`() =
+        runTest {
+            // Arrange — the incentives service knows one chain; the tokens of the others must survive it
+            val incentivised = marketDto(chainId = 1, hasActiveCampaign = true)
+            val legacyOnSameChain = marketDto(chainId = 1)
+            val legacyElsewhere = marketDto(chainId = 137)
+            coEvery { yieldIncentivesApi.getIncentiveMarkets(chainId = any(), isForEarn = null) } returns
+                success(YieldMarketsResponse(marketDtos = listOf(incentivised), lastUpdated = "now"))
+            coEvery { yieldSupplyApi.getYieldMarkets(any()) } returns ApiResponse.Success(
+                YieldMarketsResponse(
+                    marketDtos = listOf(legacyOnSameChain, legacyElsewhere),
+                    lastUpdated = "now",
+                ),
+            )
+
+            // Act
+            val result = incentivisedRepository.updateMarkets()
+
+            // Assert — the incentivised row wins where the two overlap
+            assertThat(result).containsExactly(
+                YieldMarketTokenConverter.convert(incentivised),
+                YieldMarketTokenConverter.convert(legacyElsewhere),
+            )
+            coVerify(exactly = 1) { store.store(listOf(incentivised, legacyElsewhere)) }
+        }
+
+    @Test
+    fun `GIVEN the legacy markets fail WHEN the incentivised ones are partial THEN the store is untouched`() =
+        runTest {
+            // Arrange — storing the short incentivised list would erase Yield Mode from every chain it leaves out
+            val incentivised = marketDto(chainId = 1, hasActiveCampaign = true)
+            coEvery { yieldIncentivesApi.getIncentiveMarkets(chainId = any(), isForEarn = null) } returns
+                success(YieldMarketsResponse(marketDtos = listOf(incentivised), lastUpdated = "now"))
+            @Suppress("UNCHECKED_CAST")
+            coEvery { yieldSupplyApi.getYieldMarkets(any()) } returns
+                ApiResponse.Error(ApiResponseError.NetworkException())
+                    as ApiResponse<YieldMarketsResponse>
+
+            // Act
+            val error = runCatching { incentivisedRepository.updateMarkets() }.exceptionOrNull()
+
+            // Assert
+            assertThat(error).isNotNull()
+            coVerify(exactly = 0) { store.store(any()) }
+        }
 
     @Test
     fun `GIVEN incentivised markets are empty WHEN updateMarkets THEN legacy markets are used`() = runTest {
@@ -164,6 +244,24 @@ internal class DefaultYieldSupplyRepositoryTest {
         coEvery { yieldIncentivesApi.getIncentiveMarkets(chainId = any(), isForEarn = null) } returns
             ApiResponse.Error(ApiResponseError.NetworkException())
                 as ApiResponse<YieldMarketsResponse>
+        coEvery { yieldSupplyApi.getYieldMarkets(any()) } returns ApiResponse.Success(
+            YieldMarketsResponse(marketDtos = listOf(dto), lastUpdated = "now"),
+        )
+
+        // Act
+        val result = incentivisedRepository.updateMarkets()
+
+        // Assert
+        assertThat(result).containsExactly(YieldMarketTokenConverter.convert(dto))
+        coVerify(exactly = 1) { store.store(listOf(dto)) }
+    }
+
+    @Test
+    fun `GIVEN the incentivised markets call throws WHEN updateMarkets THEN legacy markets are used`() = runTest {
+        // Arrange
+        val dto = marketDto(chainId = 1)
+        coEvery { yieldIncentivesApi.getIncentiveMarkets(chainId = any(), isForEarn = null) } throws
+            IllegalArgumentException("malformed url")
         coEvery { yieldSupplyApi.getYieldMarkets(any()) } returns ApiResponse.Success(
             YieldMarketsResponse(marketDtos = listOf(dto), lastUpdated = "now"),
         )
@@ -528,8 +626,12 @@ internal class DefaultYieldSupplyRepositoryTest {
         every { this@mockk.hash } returns hash
     }
 
-    private fun marketDto(chainId: Int, hasActiveCampaign: Boolean? = null) = YieldSupplyMarketTokenDto(
-        tokenAddress = "0xToken",
+    private fun marketDto(
+        chainId: Int,
+        hasActiveCampaign: Boolean? = null,
+        tokenAddress: String = "0xToken",
+    ) = YieldSupplyMarketTokenDto(
+        tokenAddress = tokenAddress,
         tokenSymbol = "USDT",
         tokenName = "Tether",
         apy = BigDecimal("5.5"),
@@ -543,8 +645,10 @@ internal class DefaultYieldSupplyRepositoryTest {
         totalApyEst = hasActiveCampaign?.let { BigDecimal("7") },
     )
 
-    private fun supportedChains() =
-        Blockchain.yieldSupplySupportedBlockchains().joinToString(",") { it.getChainId().toString() }
+    private fun supportedChains() = Blockchain.yieldSupplySupportedBlockchains()
+        .filterNot { it.isTestnet() }
+        .mapNotNull { it.getChainId() }
+        .joinToString(",")
 
     private fun createRepository(isMerklIncentivesEnabled: Boolean) = DefaultYieldSupplyRepository(
         yieldSupplyApi = yieldSupplyApi,

@@ -30,6 +30,7 @@ import com.tangem.domain.yield.supply.models.YieldMarketToken
 import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
 import com.tangem.domain.yield.supply.models.YieldSupplyMarketChartData
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -58,37 +59,70 @@ internal class DefaultYieldSupplyRepository(
         domain.enrichNetworkIds()
     }
 
+    /**
+     * The plain markets say which tokens offer Yield Mode at all; the incentives are an overlay on top of them. The
+     * incentives service answers only for the chains and tokens it knows, and [YieldMarketsStore.store] replaces its
+     * contents wholesale, so a short payload driving the list would drop Yield Mode from everything it left out.
+     *
+     * The plain call is therefore unconditional and unguarded: its failure aborts the refresh without touching the
+     * store, exactly as it did before incentives existed.
+     */
     override suspend fun updateMarkets(): List<YieldMarketToken> = withContext(dispatchers.io) {
+        // The service validates the whole list and answers 400 when one chain is off it, so a testnet the SDK still
+        // reports as supported would cost every other chain its markets.
         val chains = Blockchain.yieldSupplySupportedBlockchains()
+            .filterNot { it.isTestnet() }
             .filter(::isBlockchainEnabled)
-            .map { it.getChainId() }
+            .mapNotNull { it.getChainId() }
             .joinToString(",")
-        val marketDtos = getIncentivisedMarkets(chains)
-            ?: yieldSupplyApi.getYieldMarkets(chainId = chains).getOrThrow().marketDtos
+
+        val plain = yieldSupplyApi.getYieldMarkets(chainId = chains).getOrThrow().marketDtos
+        val marketDtos = plain.overlaidWith(getIncentivisedMarkets(chains))
+
         store.store(marketDtos)
         marketDtos.map(YieldMarketTokenConverter::convert)
     }
 
     /**
-     * The incentivised markets payload is a strict superset of the plain one, so the whole incentive overlay is a URL
-     * switch. Null → fall back to the plain markets.
-     *
-     * An empty payload is treated as an absence too: the incentives service may not know a chain the plain markets
-     * still serve, and overwriting the cache with it would hide Yield Mode entirely.
+     * Where both lists describe the same token the incentivised row wins, since it is the same row plus the campaign
+     * fields. Tokens the incentives service does not know keep their plain row, and the plain ordering is preserved.
      */
-    private suspend fun getIncentivisedMarkets(chains: String): List<YieldSupplyMarketTokenDto>? {
-        if (!isMerklIncentivesEnabled) return null
+    private fun List<YieldSupplyMarketTokenDto>.overlaidWith(
+        incentivised: List<YieldSupplyMarketTokenDto>,
+    ): List<YieldSupplyMarketTokenDto> {
+        if (incentivised.isEmpty()) return this
 
-        return when (val response = yieldIncentivesApi.getIncentiveMarkets(chainId = chains)) {
-            is ApiResponse.Success ->
-                response.data.marketDtos.takeIf(List<YieldSupplyMarketTokenDto>::isNotEmpty)
+        val merged = linkedMapOf<Pair<Int?, String?>, YieldSupplyMarketTokenDto>()
+        (this + incentivised).forEach { dto ->
+            merged[dto.chainId to dto.tokenAddress?.lowercase()] = dto
+        }
+
+        return merged.values.toList()
+    }
+
+    /**
+     * The call is guarded for the one failure an [ApiResponse] cannot carry — a service method that cannot be wired at
+     * all throws out of the interface call. Routing it into an empty overlay keeps [updateMarkets] on the plain
+     * markets instead of aborting the whole refresh over an incentive-only failure.
+     */
+    private suspend fun getIncentivisedMarkets(chains: String): List<YieldSupplyMarketTokenDto> {
+        if (!isMerklIncentivesEnabled) return emptyList()
+
+        val response = runSuspendCatching { yieldIncentivesApi.getIncentiveMarkets(chainId = chains) }
+            .getOrElse { error ->
+                TangemLogger.e("Incentivised yield markets request failed, using the plain markets", error)
+                return emptyList()
+            }
+
+        return when (response) {
+            is ApiResponse.Success -> response.data.marketDtos
             is ApiResponse.Error -> {
                 // A 400 means the chain is not configured for incentives yet — an expected answer, not a failure.
                 val code = (response.cause as? ApiResponseError.HttpException)?.code
                 if (code != ApiResponseError.HttpException.Code.BAD_REQUEST) {
                     TangemLogger.e("Incentivised yield markets unavailable, using the plain markets", response.cause)
                 }
-                null
+                emptyList()
             }
         }
     }
