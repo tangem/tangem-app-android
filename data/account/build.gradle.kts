@@ -35,7 +35,7 @@ dependencies {
 
     // region Project - Core
     implementation(projects.core.local)
-    api(projects.core.datasource)
+    implementation(projects.store.datasource)
     api(projects.core.utils)
     implementation(projects.core.res)
     // endregion
@@ -47,6 +47,8 @@ dependencies {
     api(projects.domain.models)
     api(projects.domain.tokens)
     implementation(projects.domain.card)
+    implementation(projects.domain.jointAccount)
+    implementation(projects.domain.collectibles)
     implementation(projects.domain.polymarket)
     runtimeOnly(projects.domain.visa)
     runtimeOnly(projects.domain.wallets)
@@ -57,7 +59,8 @@ dependencies {
     // endregion
 
     // region Project - Features
-    api(projects.features.virtualAccounts.details.api) // VIRTUAL_ACCOUNTS_ENABLED
+    api(projects.features.moneyAccount.details.api) // AND_15325_MONEY_ACCOUNTS_ENABLED
+    implementation(projects.features.collectibles.api) // TWI_1640_COLLECTIBLES_PHASE_ONE_ENABLED
     implementation(projects.features.polymarket.api) // POLYMARKET_ENABLED
     implementation(projects.features.jointAccount.api) // JOINT_ACCOUNT_ENABLED
     // endregion

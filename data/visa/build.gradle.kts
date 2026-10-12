@@ -57,7 +57,7 @@ dependencies {
     // region Project - Core
     api(projects.core.analytics)
     implementation(projects.core.local)
-    api(projects.core.datasource)
+    implementation(projects.store.datasource)
     api(projects.spend.datasource)
     api(projects.core.security)
     api(projects.core.utils)
@@ -75,9 +75,8 @@ dependencies {
     // region Project - Domain
     api(projects.domain.common)
     api(projects.domain.core)
-    api(projects.domain.networks)
+    api(projects.domain.account)
     api(projects.domain.quotes)
-    api(projects.domain.virtualAccount)
     api(projects.domain.visa)
     api(projects.domain.wallets)
     implementation(projects.domain.card)
@@ -92,7 +91,6 @@ dependencies {
 
     // region Project - Features
     api(projects.features.swap.domain)
-    api(projects.features.tangempay.details.api)
     // endregion
 
     // region Project - Libs
@@ -105,5 +103,6 @@ dependencies {
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
     testImplementation(deps.moshi.kotlin)
+    testImplementation(deps.web3j.core)
     // endregion
 }

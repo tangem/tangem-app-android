@@ -1,6 +1,5 @@
 package com.tangem.domain.account.status.producer
 
-import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
@@ -8,30 +7,30 @@ import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.StatusSource
+import com.tangem.test.mock.collectibles.MockCollectibles
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.PredictionAccountStatusValue
-import com.tangem.domain.models.account.VirtualAccountStatusValue
+import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
-import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.quotes.multi.MultiQuoteStatusSupplier
-import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier
-import com.tangem.domain.tokens.TokensFeatureToggles
-import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusSupplier
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
+import com.tangem.domain.models.account.CollectiblesAccountStatusValue
+import com.tangem.domain.models.TotalFiatBalance
 import io.mockk.verify
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,8 +40,12 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
+import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 
-/** Special accounts — payment, virtual, prediction — joined into the producer's `combine` from their suppliers. */
+/**
+ * Special accounts — payment, money, prediction, collectibles — joined into the producer's `combine` from their
+ * suppliers.
+ */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class SingleAccountStatusListProducerSpecialAccountsTest {
 
@@ -57,8 +60,10 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
             val value = PredictionAccountStatusValue.Active(
                 source = StatusSource.ACTUAL,
                 balance = BigDecimal.TEN,
+                positionsValue = null,
                 fiatRate = BigDecimal.ONE,
-                isTradingAllowed = true,
+                depositCurrency = mockk(relaxed = true),
+                depositAddress = "0xbridge0000000000000000000000000000000001",
             )
             val producer = createProducer(predictionStatus = flowOf(value))
 
@@ -84,7 +89,7 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
         // Assert
         assertThat(statuses.filterIsInstance<AccountStatus.CryptoPortfolio>()).hasSize(1)
         assertThat(statuses.filterIsInstance<AccountStatus.Payment>()).hasSize(1)
-        assertThat(statuses.filterIsInstance<AccountStatus.Virtual>()).hasSize(1)
+        assertThat(statuses.filterIsInstance<AccountStatus.Money>()).hasSize(1)
     }
 
     @Test
@@ -152,6 +157,55 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
         assertThat(statuses.filterIsInstance<AccountStatus.CryptoPortfolio>()).hasSize(1)
     }
 
+    @Test
+    fun `GIVEN collectibles are enabled WHEN produced THEN the list carries the vault as a collectibles account`() =
+        runTest {
+            // Arrange
+            val value = CollectiblesAccountStatusValue.Onboarded(
+                source = StatusSource.ACTUAL,
+                vaultBalance = MockCollectibles.vaultBalance(amount = BigDecimal.TEN, fiatRate = BigDecimal.ONE),
+            )
+            val producer = createProducer(
+                accounts = accountListWithSpecialAccounts().plus(Account.Collectibles(walletId)).getOrNull()!!,
+                isCollectiblesEnabled = true,
+                collectiblesStatus = flowOf(value),
+            )
+
+            // Act
+            val statuses = getEmittedValues(producer.produce()).last().accountStatuses
+
+            // Assert
+            val collectibles = statuses.filterIsInstance<AccountStatus.Collectibles>().single()
+            assertThat(collectibles.value).isEqualTo(value)
+            assertThat(collectibles.account).isEqualTo(Account.Collectibles(walletId))
+            // the vault's own contribution to the wallet total, which the list sums with the other accounts'
+            assertThat(collectibles.value.totalFiatBalance).isEqualTo(
+                TotalFiatBalance.Loaded(amount = BigDecimal.TEN, source = StatusSource.ACTUAL),
+            )
+        }
+
+    @Test
+    fun `GIVEN collectibles are disabled WHEN produced THEN the supplier is never subscribed`() = runTest {
+        // Arrange
+        val supplier = mockk<CollectiblesAccountStatusSupplier>()
+        val producer = createProducer(
+            accounts = accountListWithSpecialAccounts().plus(Account.Collectibles(walletId)).getOrNull()!!,
+            isCollectiblesEnabled = false,
+            collectiblesAccountStatusSupplier = supplier,
+        )
+
+        // Act
+        getEmittedValues(producer.produce())
+
+        // Assert
+        verify(inverse = true) { supplier.invoke(userWalletId = any()) }
+    }
+
+    private fun collectiblesSupplier(status: Flow<CollectiblesAccountStatusValue>) =
+        mockk<CollectiblesAccountStatusSupplier> {
+            every { this@mockk.invoke(userWalletId = walletId) } returns status
+        }
+
     private fun predictionSupplier(status: Flow<PredictionAccountStatusValue>) =
         mockk<PredictionAccountStatusSupplier> {
             every { this@mockk.invoke(userWalletId = walletId) } returns status
@@ -163,6 +217,9 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
         accounts: AccountList = accountListWithSpecialAccounts(),
         isPolymarketEnabled: Boolean = true,
         predictionAccountStatusSupplier: PredictionAccountStatusSupplier = predictionSupplier(predictionStatus),
+        isCollectiblesEnabled: Boolean = false,
+        collectiblesStatus: Flow<CollectiblesAccountStatusValue> = flowOf(CollectiblesAccountStatusValue.NotOnboarded),
+        collectiblesAccountStatusSupplier: CollectiblesAccountStatusSupplier = collectiblesSupplier(collectiblesStatus),
         wallet: UserWallet = userWallet,
     ): DefaultSingleAccountStatusListProducer {
         return DefaultSingleAccountStatusListProducer(
@@ -170,6 +227,9 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
             flowProducerTools = mockk(),
             userWalletsListRepository = mockk<UserWalletsListRepository> {
                 every { userWallets } returns MutableStateFlow(listOf(wallet))
+            },
+            singleJointAccountListSupplier = mockk<SingleJointAccountListSupplier> {
+                every { this@mockk.invoke(userWalletId = any()) } returns flowOf(emptyList())
             },
             singleAccountListSupplier = mockk<SingleAccountListSupplier> {
                 every { this@mockk.invoke(walletId) } returns flowOf(accounts)
@@ -182,17 +242,21 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
                     ),
                 )
             },
-            virtualAccountStatusSupplier = mockk<VirtualAccountStatusSupplier> {
+            moneyAccountStatusSupplier = mockk<MoneyAccountStatusSupplier> {
                 every { this@mockk.invoke(userWalletId = walletId) } returns flowOf(
-                    AccountStatus.Virtual(
-                        account = Account.Virtual(walletId),
-                        value = VirtualAccountStatusValue.NotCreated,
+                    AccountStatus.Money(
+                        account = Account.Money(walletId),
+                        value = MoneyAccountStatusValue.NotCreated,
                     ),
                 )
             },
             predictionAccountStatusSupplier = predictionAccountStatusSupplier,
             polymarketFeatureToggles = mockk {
                 every { this@mockk.isPolymarketEnabled } returns isPolymarketEnabled
+            },
+            collectiblesAccountStatusSupplier = collectiblesAccountStatusSupplier,
+            collectiblesFeatureToggles = mockk {
+                every { this@mockk.isCollectiblesEnabled } returns isCollectiblesEnabled
             },
             networksRepository = mockk<NetworksRepository> {
                 coEvery { hasCachedStatuses(walletId) } returns true
@@ -203,17 +267,6 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
             },
             quoteStatusSupplier = mockk<MultiQuoteStatusSupplier> {
                 every { this@mockk.invoke(Unit) } returns flowOf(emptyMap())
-            },
-            stakingBalanceSupplier = mockk<MultiStakingBalanceSupplier> {
-                every { this@mockk.invoke(any()) } returns flowOf(emptySet())
-            },
-            stakingIdFactory = mockk {
-                every { create(currencyId = any(), defaultAddress = any()) } returns
-                    StakingID(integrationId = "integration", address = "0x1").right()
-            },
-            analyticsExceptionHandler = mockk(relaxed = true),
-            tokensFeatureToggles = mockk<TokensFeatureToggles> {
-                every { isBalanceContributionsEnabled } returns false
             },
             balanceContributionProviders = emptySet(),
         )
@@ -243,6 +296,6 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
 
     private fun accountListWithSpecialAccounts(): AccountList = accountList()
         .plus(Account.Payment(walletId)).getOrNull()!!
-        .plus(Account.Virtual(walletId)).getOrNull()!!
+        .plus(Account.Money(walletId)).getOrNull()!!
         .plus(Account.Prediction(walletId)).getOrNull()!!
 }

@@ -11,12 +11,12 @@ import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.CreateHotWalletUseCase
+import com.tangem.features.tangempay.model.TangemPayOnboardingStarter
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.MnemonicType
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -125,21 +125,17 @@ internal class TangemPayHotWalletOnboardingModelTest {
     private fun createModel(testScope: TestScope): TangemPayHotWalletOnboardingModel {
         return TangemPayHotWalletOnboardingModel(
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
-            createHotWalletUseCase = createHotWalletUseCase,
-            isHotWalletCreationSupported = isHotWalletCreationSupported,
             router = router,
-            uiMessageSender = uiMessageSender,
-        )
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
+            onboardingStarter = TangemPayOnboardingStarter(
+                router = router,
+                uiMessageSender = uiMessageSender,
+                repository = mockk(relaxed = true),
+                produceInitialDataUseCase = mockk(relaxed = true),
+                getCustomerOffersUseCase = mockk(relaxed = true),
+                createHotWalletUseCase = createHotWalletUseCase,
+                isHotWalletCreationSupported = isHotWalletCreationSupported,
+                tangemPayFeatureToggles = mockk(relaxed = true),
+            ),
         )
     }
 }

@@ -40,7 +40,7 @@ internal class WalletManagerFactoryCreator @Inject constructor(
                 isYieldModeSwapEnabled = featureToggleValues.isYieldModeSwapEnabled,
                 isPendingTransactionsEnabled = true,
                 isSolanaTxHistoryEnabled = true,
-                isXrpTxHistoryEnabled = featureToggleValues.isXrpTxHistoryEnabled,
+                isXrpTxHistoryEnabled = true,
                 isSolanaScaledUiAmountEnabled = true,
                 isHederaErc20Enabled = true,
                 isStateOverrideGasEstimateEnabled = true,
@@ -52,6 +52,5 @@ internal class WalletManagerFactoryCreator @Inject constructor(
 
     data class FeatureToggleValues(
         val isYieldModeSwapEnabled: Boolean,
-        val isXrpTxHistoryEnabled: Boolean,
     )
 }

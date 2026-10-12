@@ -18,6 +18,7 @@ import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalLayoutDirection
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.ChangeRootBackgroundColorEffect
 
 private enum class ScaffoldSlot { TopBar, Content, Overlay }
 
@@ -46,6 +47,8 @@ fun TangemTopBarScaffold(
 ) {
     val systemBars = WindowInsets.systemBars.asPaddingValues()
     val layoutDirection = LocalLayoutDirection.current
+
+    ChangeRootBackgroundColorEffect(color = containerColor)
 
     SubcomposeLayout(modifier = modifier) { constraints ->
         val topBarPlaceables = subcompose(ScaffoldSlot.TopBar) {

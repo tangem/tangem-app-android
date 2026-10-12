@@ -371,7 +371,7 @@ class AppTransfersTest : BaseTestCase() {
             step("Open 'Main' screen") { openMainScreen() }
             step("Synchronize addresses") { synchronizeAddresses() }
             step("Click on token with name: '$sourceToken'") {
-                onMainScreen { tokenWithTitleAndAddress(sourceToken).clickWithAssertion() }
+                openTokenDetailsFromTokenList(sourceToken)
             }
             step("Open 'Swap' screen") { openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = false) }
             step("Open receive token selector") {

@@ -1,6 +1,6 @@
 package com.tangem.data.tokens.repository
 
-import com.tangem.datasource.local.token.TokenReceiveWarningActionStore
+import com.tangem.data.tokens.store.TokenReceiveWarningActionStore
 import com.tangem.domain.tokens.repository.TokenReceiveWarningsViewedRepository
 
 internal class DefaultTokenReceiveWarningsViewedRepository(

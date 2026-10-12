@@ -17,13 +17,18 @@ import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.attestation.getAttestationTokenOrNull
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
+import com.tangem.lib.auth.performance.NonceRequestTracker
+import com.tangem.lib.auth.performance.NonceRequestType
 import com.tangem.lib.auth.session.AuthError
 import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.lib.auth.session.DeviceRegistrationError
+import com.tangem.lib.auth.session.SessionTokenRefresher
 import com.tangem.lib.auth.session.SessionTokensStore
+import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
+import dagger.Lazy
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -38,6 +43,11 @@ internal class DefaultDeviceRegistrar(
     private val attestationProvider: AttestationProvider,
     private val errorConverter: AuthErrorConverter,
     private val appPreferencesStore: AppPreferencesStore,
+    private val nonceRequestTracker: NonceRequestTracker,
+    // Lazy to break the DeviceRegistrar ↔ SessionTokenRefresher DI cycle (the refresher depends on
+    // Lazy<DeviceRegistrar> for its "device not found" re-registration path).
+    private val sessionTokenRefresher: Lazy<SessionTokenRefresher>,
+    private val walletRegistrar: WalletRegistrar,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : DeviceRegistrar {
 
@@ -47,14 +57,32 @@ internal class DefaultDeviceRegistrar(
         // `Mutex` guards against the unlikely case of two concurrent callers passing the
         // already-registered check together and consuming the same device nonce twice.
         mutex.withLock { runRegister() }
+            // Establish a session OUTSIDE the mutex: a 409 (or a flag set on an earlier launch) leaves
+            // the device registered without tokens, and nothing else would recover it. Must run
+            // unlocked — ensureSession → refresh → (on "device not found") reregister re-takes this
+            // same non-reentrant mutex, which would deadlock if called from within runRegister.
+            .onRight {
+                sessionTokenRefresher.get().ensureSession()
+                    .onLeft { error -> TangemLogger.e("Failed to ensure a session after device registration: $error") }
+            }
     }
 
     override suspend fun reregister(): Either<DeviceRegistrationError, Unit> = withContext(dispatchers.io) {
         mutex.withLock {
             either {
-                // The local flag is stale (backend lost the device record). Clear it up front so
-                // runRegister doesn't short-circuit, and so a failed attempt self-heals on the next
-                // launch's register() call.
+                // The old device record — and every wallet binding on it — is gone server-side, so the
+                // local wallet-registration markers are stale. Drop them FIRST, as a required step: bail on
+                // failure BEFORE resetting the device flag, so the device stays marked registered and this
+                // reregister (with the clear) is re-attempted on the next "device not found" refresh —
+                // instead of a later register() recovering the device while these markers stay stale and
+                // keep the wallets skipped as "already registered".
+                runSuspendCatching { walletRegistrar.clearRegistrations() }
+                    .onFailure { e ->
+                        TangemLogger.e("Failed to clear wallet registrations on re-register", e)
+                        raise(DeviceRegistrationError.PersistenceFailed(e))
+                    }
+                // The local flag is stale (backend lost the device record). Clear it so runRegister
+                // doesn't short-circuit and re-runs the actual device registration.
                 runSuspendCatching {
                     appPreferencesStore.store(key = AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY, value = false)
                 }.onFailure { e ->
@@ -83,7 +111,9 @@ internal class DefaultDeviceRegistrar(
 
         val devicePublicKeyBase64 = devicePublicKey.toBase64NoWrap()
 
-        val nonceResponse = authApi.requestDeviceNonce(NonceApiRequest(devicePublicKey = devicePublicKeyBase64))
+        val nonceResponse = nonceRequestTracker.track(NonceRequestType.DEVICE) {
+            authApi.requestDeviceNonce(NonceApiRequest(devicePublicKey = devicePublicKeyBase64))
+        }
         val cipheredNonce = when (nonceResponse) {
             is ApiResponse.Success -> nonceResponse.data.cipheredNonce
             is ApiResponse.Error -> {
@@ -138,9 +168,9 @@ internal class DefaultDeviceRegistrar(
             is ApiResponse.Error -> {
                 val authError = errorConverter.convert(response.cause)
                 if (authError is AuthError.Conflict) {
-                    // Device is already registered server-side (e.g. the local flag was lost on
-                    // reinstall). Persist the flag to stop retrying; session tokens will be minted
-                    // on demand via /authenticate.
+                    // Device is already registered server-side, but a 409 returns no tokens. Persist
+                    // the flag to stop retrying; the session is then minted by register()'s
+                    // ensureSession step (which runs unlocked — see register()).
                     TangemLogger.i("Device already registered server-side (409) — marking as registered")
                     markRegistered(onFailureLog = "Failed to persist device-registration flag after 409")
                     return

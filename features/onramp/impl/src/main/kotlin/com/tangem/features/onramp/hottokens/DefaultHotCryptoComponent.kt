@@ -59,6 +59,7 @@ internal class DefaultHotCryptoComponent @AssistedInject constructor(
             params = PortfolioSelectorComponent.Params(
                 portfolioFetcher = model.portfolioFetcher,
                 controller = model.portfolioSelectorController,
+                settings = PortfolioSelectorComponent.Settings(isJointAccountsIncluded = true),
             ),
         )
     }

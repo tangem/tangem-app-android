@@ -3,6 +3,7 @@ package com.tangem.features.txhistory.converter
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.features.txhistory.impl.R
@@ -13,19 +14,30 @@ import com.tangem.features.txhistory.impl.R
  * Shared by the history list (row content title and status-pill label) and the transaction-details header, so the two
  * never drift apart. Pill types (Approve / Staking.* / YieldSupply Enter|Exit) resolve to the status-aware pill label
  * text only — the same wording shown in the list pill, without its trailing amount (e.g. "Staking", "Restaking",
- * "Yield mode"). Content types reproduce the per-type row titles.
+ * "Yield mode"); Approve is the exception, see its branch. Content types reproduce the per-type row titles.
  */
-internal class TxHistoryTitleConverter {
+internal class TxHistoryTitleConverter(private val currency: CryptoCurrency) {
 
     /**
      * @param tx            transaction whose title to resolve.
-     * @param isOwnTransfer for a [TransactionType.Transfer] only — whether the counterparty is one of the user's own
+     * @param isOwnTransfer for a plain transfer only ([TransactionType.Transfer] and the non-withdraw
+     *                      [TransactionType.YieldSupply.Send]) — whether the counterparty is one of the user's own
      *                      accounts/wallets, which selects the "Transfer" title over "Send" / "Receive".
      */
+    fun convert(tx: TxInfo, isOwnTransfer: Boolean = false): TextReference {
+        // An unrecognized call that moved no coin is titled by what it really was — the fee it cost.
+        if (tx.isFeeOnlyOperation(currency)) return resourceReference(R.string.common_network_fee_title)
+        return convertByType(tx, isOwnTransfer)
+    }
+
     @Suppress("CyclomaticComplexMethod", "LongMethod")
-    fun convert(tx: TxInfo, isOwnTransfer: Boolean = false): TextReference = when (val type = tx.type) {
+    private fun convertByType(tx: TxInfo, isOwnTransfer: Boolean): TextReference = when (val type = tx.type) {
         // region Pills — the label text only (no amount), matching what the list pill shows
-        is TransactionType.Approve -> tx.pillTitle(ApproveSpec)
+        is TransactionType.Approve -> tx.statusAwareTitle(
+            pending = R.string.common_approving,
+            confirmed = R.string.common_approved,
+            failed = R.string.transaction_history_status_approve_failed,
+        )
         is TransactionType.Staking.Stake -> tx.pillTitle(StakeSpec)
         is TransactionType.Staking.Unstake -> tx.pillTitle(UnstakeSpec)
         is TransactionType.Staking.Restake -> tx.pillTitle(RestakeSpec)
@@ -48,13 +60,24 @@ internal class TxHistoryTitleConverter {
             confirmed = R.string.transaction_history_status_rewards_claimed,
             failed = R.string.transaction_history_status_rewards_claim_failed,
         )
-        is TransactionType.YieldSupply.Topup -> resourceReference(R.string.yield_module_transaction_topup)
-        // Send routes through the yield provider (never the user's own account), so "Transfer" is impossible:
-        // a withdraw (funds out of Aave) → Withdrawn, everything else → Receive/Send by direction.
+        // A topup is the mirror of a withdraw — funds into the Aave position — and reads as the same kind of
+        // status-aware verb.
+        is TransactionType.YieldSupply.Topup -> tx.statusAwareTitle(
+            pending = R.string.common_supplying,
+            confirmed = R.string.transaction_history_supplied,
+            failed = R.string.transaction_history_status_supply_failed,
+        )
+        // A withdraw takes the funds out of Aave → Withdrawn. Any other Send is a plain transfer the yield module
+        // made from the user's own address, so its counterparty can be another portfolio of theirs — it reads exactly
+        // like Transfer.
         is TransactionType.YieldSupply.Send -> if (type.isYieldSupplyWithdraw) {
-            tx.statusAwareTitle(R.string.common_withdrawing, R.string.transaction_history_withdrawn)
+            tx.statusAwareTitle(
+                pending = R.string.common_withdrawing,
+                confirmed = R.string.transaction_history_withdrawn,
+                failed = R.string.transaction_history_status_withdraw_failed,
+            )
         } else {
-            tx.sendReceiveTitle()
+            tx.transferTitle(isOwnTransfer)
         }
         is TransactionType.YieldSupply.DeployContract ->
             resourceReference(R.string.yield_module_transaction_deploy_contract)
@@ -63,7 +86,9 @@ internal class TxHistoryTitleConverter {
         is TransactionType.YieldSupply.ReactivateToken ->
             resourceReference(R.string.yield_module_transaction_reactivate)
         is TransactionType.UnknownOperation -> resourceReference(R.string.transaction_history_operation)
-        is TransactionType.GaslessFee -> resourceReference(R.string.gasless_transaction_fee)
+        is TransactionType.GaslessFee,
+        is TransactionType.NetworkFee,
+        -> resourceReference(R.string.common_network_fee_title)
         // endregion
     }
 

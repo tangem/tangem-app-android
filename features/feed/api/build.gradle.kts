@@ -18,9 +18,12 @@ dependencies {
     api(deps.kotlin.serialization.core)
 
     /* Compose */
+    api(deps.decompose)
     api(deps.compose.foundation)
+    implementation(deps.compose.material3)
 
     /* Project - Core */
+    api(projects.core.analytics.models)
     api(projects.core.decompose)
     api(projects.core.ui)
 

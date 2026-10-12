@@ -17,12 +17,14 @@ import kotlinx.collections.immutable.ImmutableList
  * @property faq always-expanded question-and-answer blocks, in display order.
  * @property collectiblesTitle link title of the service's terms, spliced into the legal line above the CTA.
  * @property tangemTitle link title of the Tangem terms, spliced into the same legal line.
+ * @property privacyTitle link title of the privacy notice, the third link of the legal line.
  * @property createAccountButtonText label of the CTA, hidden while [isCreatingAccount] is true.
  * @property isCreatingAccount drives the CTA's loader; while `true` the button ignores further taps.
  * @property onCloseClick dismisses the screen from the top navigation.
  * @property onCreateAccountClick starts account creation.
  * @property onCollectiblesTermsClick opens the service's terms.
  * @property onTangemTermsClick opens the Tangem terms.
+ * @property onPrivacyNoticeClick opens the privacy notice.
  */
 @Immutable
 internal data class CollectiblesOnboardingUM(
@@ -32,12 +34,14 @@ internal data class CollectiblesOnboardingUM(
     val faq: ImmutableList<FaqEntry>,
     val collectiblesTitle: TextReference,
     val tangemTitle: TextReference,
+    val privacyTitle: TextReference,
     val createAccountButtonText: TextReference,
     val isCreatingAccount: Boolean,
     val onCloseClick: () -> Unit,
     val onCreateAccountClick: () -> Unit,
     val onCollectiblesTermsClick: () -> Unit,
     val onTangemTermsClick: () -> Unit,
+    val onPrivacyNoticeClick: () -> Unit,
 ) {
 
     data class Benefit(val icon: ImageVector, val title: TextReference, val subtitle: TextReference)

@@ -27,6 +27,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSendUseCase
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
@@ -47,7 +48,6 @@ import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCa
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.api.SendComponent
-import com.tangem.features.send.api.SendFeatureToggles
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.entity.PredefinedValues
 import com.tangem.features.send.api.subcomponents.amount.SendAmountReduceTrigger
@@ -65,6 +65,7 @@ import com.tangem.features.send.common.ui.state.ConfirmUM
 import com.tangem.features.send.send.analytics.SendAnalyticHelper
 import com.tangem.features.send.send.confirm.SendConfirmComponent
 import com.tangem.features.send.send.confirm.model.SendConfirmModel
+import com.tangem.features.send.send.joint.JointSendDelegate
 import com.tangem.features.send.send.model.SendModel
 import com.tangem.features.send.send.model.TronDefaultFeeLoader
 import com.tangem.features.send.send.ui.state.SendUM
@@ -110,10 +111,10 @@ internal abstract class SendModelTestBase {
     protected val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase = mockk(relaxed = true)
     protected val sendAmountUpdateTrigger: SendAmountUpdateTrigger = mockk(relaxed = true)
     protected val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
+    protected val jointSendDelegate: JointSendDelegate = mockk(relaxed = true)
     protected val sendTransactionUseCase: SendTransactionUseCase = mockk(relaxed = true)
     protected val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase = mockk(relaxed = true)
     protected val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase = mockk(relaxed = true)
-    protected val sendFeatureToggles: SendFeatureToggles = mockk(relaxed = true)
 
     // SendConfirmModel-specific dependencies
     protected val isSendTapHelpEnabledUseCase: IsSendTapHelpEnabledUseCase = mockk(relaxed = true)
@@ -135,6 +136,7 @@ internal abstract class SendModelTestBase {
         mockk(relaxed = true)
     protected val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase = mockk(relaxed = true)
     protected val sendAnalyticHelper: SendAnalyticHelper = mockk(relaxed = true)
+    protected val recordTokenTransferFromSendUseCase: RecordTokenTransferFromSendUseCase = mockk(relaxed = true)
     protected val sendBalanceUpdaterFactory: SendBalanceUpdater.Factory = mockk(relaxed = true)
 
     @BeforeEach
@@ -209,11 +211,11 @@ internal abstract class SendModelTestBase {
             isAccountsModeEnabledUseCase = isAccountsModeEnabledUseCase,
             sendAmountUpdateTrigger = sendAmountUpdateTrigger,
             analyticsEventHandler = analyticsEventHandler,
+            jointSendDelegate = jointSendDelegate,
             getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
             tronDefaultFeeLoader = TronDefaultFeeLoader(
                 getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
                 isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
-                sendFeatureToggles = sendFeatureToggles,
             ),
         )
     }
@@ -254,6 +256,8 @@ internal abstract class SendModelTestBase {
             createAndSendGaslessTransactionUseCase = createAndSendGaslessTransactionUseCase,
             createAndSendTronGaslessTransactionUseCase = createAndSendTronGaslessTransactionUseCase,
             isHighNetworkFeeUseCase = isHighNetworkFeeUseCase,
+            jointSendDelegate = jointSendDelegate,
+            recordTokenTransferFromSendUseCase = recordTokenTransferFromSendUseCase,
             sendBalanceUpdaterFactory = sendBalanceUpdaterFactory,
         )
     }

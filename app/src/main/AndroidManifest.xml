@@ -206,6 +206,17 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
+                    android:host="joint_account"
+                    android:scheme="tangem" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
                     android:host="staking"
                     android:scheme="tangem" />
             </intent-filter>
@@ -354,6 +365,16 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
+                    android:host="discover"
+                    android:scheme="tangem" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
                     android:host="campaigns"
                     android:scheme="tangem" />
             </intent-filter>
@@ -414,6 +435,18 @@
                     android:scheme="https"
                     android:host="tangem.com"
                     android:pathPrefix="/news/" />
+            </intent-filter>
+
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="https"
+                    android:host="tangem.com"
+                    android:pathPrefix="/joint-account/join/" />
             </intent-filter>
         </activity>
 

@@ -1,7 +1,6 @@
 package com.tangem.tests.swap
 
 import com.tangem.common.BaseTestCase
-import com.tangem.core.res.R as CommonR
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
@@ -213,10 +212,9 @@ class GaslessSwapTest : BaseTestCase() {
     fun checkSignSwapWithStablecoinFeeTest() {
         val hotWalletTokensState = "PolygonUSDCHotWallet"
         val receiveTokenName = "Polygon"
-        val providerName = "Changelly"
         val exchangeStatusScenario = "exchange_status_provider"
         val changellyStatusState = "Changelly"
-        val expressStatusItemTitle = getResourceString(CommonR.string.express_exchange_by, providerName)
+        val swapHistoryTitle = getResourceString(R.string.common_swapping)
 
         setupHooks().run {
             step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$hotWalletTokensState'") {
@@ -261,9 +259,11 @@ class GaslessSwapTest : BaseTestCase() {
             step("Click on 'Close' button") {
                 onSwapSuccessScreen { closeButton.performClick() }
             }
-            step("Assert 'Express status' item with title '$expressStatusItemTitle' is displayed") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onTokenDetailsScreen { expressStatusItem(expressStatusItemTitle).assertIsDisplayed() }
+            // The history only re-reads on a refresh, so pull it until the swap row lands.
+            step("Assert '$swapHistoryTitle' transaction is displayed in the history") {
+                awaitAssert(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+                    pullToRefreshTokenDetails()
+                    onTxHistoryScreen { transactionItem(swapHistoryTitle).assertIsDisplayed() }
                 }
             }
         }
@@ -275,12 +275,11 @@ class GaslessSwapTest : BaseTestCase() {
     fun checkCexGaslessSwapWithZeroNativeBalanceTest() {
         val hotWalletTokensState = "PolygonUSDCHotWallet"
         val receiveTokenName = "Polygon"
-        val providerName = "Changelly"
         val nativeBalanceScenario = "polygon_coin_balance"
         val zeroBalanceState = "ZeroBalance"
         val exchangeStatusScenario = "exchange_status_provider"
         val changellyStatusState = "Changelly"
-        val expressStatusItemTitle = getResourceString(CommonR.string.express_exchange_by, providerName)
+        val swapHistoryTitle = getResourceString(R.string.common_swapping)
 
         setupHooks().run {
             step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$hotWalletTokensState'") {
@@ -328,9 +327,11 @@ class GaslessSwapTest : BaseTestCase() {
             step("Click on 'Close' button") {
                 onSwapSuccessScreen { closeButton.performClick() }
             }
-            step("Assert 'Express status' item with title '$expressStatusItemTitle' is displayed") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onTokenDetailsScreen { expressStatusItem(expressStatusItemTitle).assertIsDisplayed() }
+            // The history only re-reads on a refresh, so pull it until the swap row lands.
+            step("Assert '$swapHistoryTitle' transaction is displayed in the history") {
+                awaitAssert(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+                    pullToRefreshTokenDetails()
+                    onTxHistoryScreen { transactionItem(swapHistoryTitle).assertIsDisplayed() }
                 }
             }
         }

@@ -51,9 +51,9 @@ internal class OnrampAddTokenUiBuilder @Inject constructor(
                 accountIcon = when (accountStatus) {
                     is AccountStatus.CryptoPortfolio -> CryptoPortfolioIconConverter.convert(accountStatus.account.icon)
                     is AccountStatus.Payment -> AccountIconUM.Payment
-                    is AccountStatus.Virtual -> AccountIconUM.Virtual
+                    is AccountStatus.Money -> AccountIconUM.Money
                     is AccountStatus.Prediction -> AccountIconUM.Prediction
-                    is AccountStatus.Joint -> CryptoPortfolioIconConverter.convert(accountStatus.account.icon)
+                    is AccountStatus.Collectibles -> AccountIconUM.Collectibles
                 }
             }
         }

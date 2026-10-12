@@ -1,6 +1,6 @@
 package com.tangem.tap.data
 
-import com.tangem.datasource.api.common.config.TangemTech
+import com.tangem.core.remote.config.TangemGatewayApiConfig
 
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.DefaultLifecycleObserver
@@ -22,7 +22,7 @@ import com.tangem.core.remote.header.RequestHeader
 import com.tangem.core.remote.header.TangemApiKeyHeaderProvider
 import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.core.remote.config.managers.MutableApiConfigsManager
-import com.tangem.datasource.utils.AddHeadersInterceptor
+import com.tangem.datasource.remote.interceptors.AddHeadersInterceptor
 import com.tangem.operations.attestation.api.TangemApiServiceSettings
 import com.tangem.sdk.DefaultSessionViewDelegate
 import com.tangem.sdk.extensions.*
@@ -61,11 +61,14 @@ internal class DefaultCardSdkProvider @Inject constructor(
     override val sdk: TangemSdk
         get() = holder?.sdk ?: tryToRegisterWithForegroundActivity()
 
+    override val sdkOrNull: TangemSdk?
+        get() = holder?.sdk
+
     init {
         val mutableManager = apiConfigsManager as? MutableApiConfigsManager
 
         mutableManager?.addListener(
-            object : MutableApiConfigsManager.ApiConfigEnvChangeListener(id = TangemTech.ID) {
+            object : MutableApiConfigsManager.ApiConfigEnvChangeListener(id = TangemGatewayApiConfig.TANGEM_TECH_ID) {
                 override fun onChange(environmentConfig: ApiEnvironmentConfig) {
                     holder?.sdk?.config?.tangemApiBaseUrl = environmentConfig.baseUrl
                 }
@@ -73,7 +76,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
         )
 
         val apiEnvironment = Provider {
-            apiConfigsManager.getEnvironmentConfig(TangemTech.ID).environment
+            apiConfigsManager.getEnvironmentConfig(TangemGatewayApiConfig.TANGEM_TECH_ID).environment
         }
         val platformHeaders = RequestHeader.AppVersionPlatformHeaders(appInfoProvider)
         val apiKeyHeader = tangemApiKeyHeaderProvider.forEnvironment(apiEnvironment)
@@ -169,7 +172,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
             keystoreManager = keystoreManager,
             wordlist = Wordlist.getWordlist(),
             config = config.apply {
-                val apiConfig = apiConfigsManager.getEnvironmentConfig(id = TangemTech.ID)
+                val apiConfig = apiConfigsManager.getEnvironmentConfig(id = TangemGatewayApiConfig.TANGEM_TECH_ID)
                 tangemApiBaseUrl = apiConfig.baseUrl
             },
         )

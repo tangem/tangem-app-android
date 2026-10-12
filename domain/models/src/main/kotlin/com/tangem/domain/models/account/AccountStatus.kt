@@ -22,22 +22,58 @@ sealed interface AccountStatus {
         get() = account.accountId
 
     /**
-     * Represents the status of a crypto portfolio account
+     * Represents the status of an account that holds a portfolio of crypto currencies — a [Personal] one of the wallet
+     * or a [Joint] one, mirroring [Account.CryptoPortfolio]. Both carry a token list; the flows that spend from the
+     * wallet's own keys (swap, send via swap, staking, yield) take [Personal] only
      *
      * @property account        the crypto portfolio account
      * @property tokenList      the list of tokens associated with the account
      * @property priceChangeLce the price change information wrapped in a Lce (Loading, Content, Error) state
      */
     @Serializable
-    data class CryptoPortfolio(
-        override val account: Account.CryptoPortfolio,
-        val tokenList: TokenList,
-        val priceChangeLce: Lce<Unit, PriceChange>,
-    ) : AccountStatus {
+    sealed interface CryptoPortfolio : AccountStatus {
+
+        override val account: Account.CryptoPortfolio
+        val tokenList: TokenList
+        val priceChangeLce: Lce<Unit, PriceChange>
+
         fun flattenCurrencies(): List<CryptoCurrencyStatus> {
             return tokenList.flattenCurrencies()
         }
+
+        /** Returns a copy of the status with the given fields replaced, whichever kind it is */
+        fun copySealed(
+            tokenList: TokenList = this.tokenList,
+            priceChangeLce: Lce<Unit, PriceChange> = this.priceChangeLce,
+        ): CryptoPortfolio {
+            return when (this) {
+                is Personal -> copy(tokenList = tokenList, priceChangeLce = priceChangeLce)
+                is Joint -> copy(tokenList = tokenList, priceChangeLce = priceChangeLce)
+            }
+        }
     }
+
+    /** The status of a crypto portfolio account of the wallet itself */
+    @Serializable
+    data class Personal(
+        override val account: Account.Personal,
+        override val tokenList: TokenList,
+        override val priceChangeLce: Lce<Unit, PriceChange>,
+    ) : CryptoPortfolio
+
+    /**
+     * The status of a joint account: its currencies belong to a Safe contract, read by the Safe address
+     *
+     * @property value     the lifecycle state of the account
+     * @property tokenList the tokens read by the Safe address; [TokenList.Empty] until the account is active
+     */
+    @Serializable
+    data class Joint(
+        override val account: Account.Joint,
+        val value: JointAccountStatusValue,
+        override val tokenList: TokenList,
+        override val priceChangeLce: Lce<Unit, PriceChange>,
+    ) : CryptoPortfolio
 
     @Serializable
     data class Payment(
@@ -46,9 +82,9 @@ sealed interface AccountStatus {
     ) : AccountStatus
 
     @Serializable
-    data class Virtual(
-        override val account: Account.Virtual,
-        val value: VirtualAccountStatusValue,
+    data class Money(
+        override val account: Account.Money,
+        val value: MoneyAccountStatusValue,
     ) : AccountStatus
 
     @Serializable
@@ -58,9 +94,9 @@ sealed interface AccountStatus {
     ) : AccountStatus
 
     @Serializable
-    data class Joint(
-        override val account: Account.Joint,
-        val value: JointAccountStatusValue,
+    data class Collectibles(
+        override val account: Account.Collectibles,
+        val value: CollectiblesAccountStatusValue,
     ) : AccountStatus
 }
 

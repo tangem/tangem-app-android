@@ -37,6 +37,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_cross_20
+import com.tangem.core.ui.security.DisableAutofillEffect
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 import kotlinx.coroutines.delay
@@ -47,6 +48,8 @@ internal fun TangemPayChangePinScreen(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    DisableAutofillEffect()
+
     Column(
         modifier = modifier
             .fillMaxSize()

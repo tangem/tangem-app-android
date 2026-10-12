@@ -45,11 +45,17 @@ Tab **order** is controlled in one place: add your `FeedTabId` constant (compani
 to `FeedTabsOrder` in `:features:feed:impl`. A contributed tab missing from that list is skipped
 with an error log.
 
+A tab that a deeplink can pre-filter also collects `FeedEntryController.pendingFilter`, applies the
+slice addressed to its own `FeedTabId`, and calls `consumeFilter()` — including when it rejects the
+value as unknown, so an unresolvable filter is not retried. The host owns `pendingEntry` (selecting
+the tab and raising the sheet); a tab never touches it.
+
 ## Current limitations (build out with the first consumer)
 
 - Cross-module sheets over the feed — no route support; feature-internal bottom sheets keep using
   their own `childSlot`, as everywhere in the app.
-- Deep-link entry (`FeedEntryRoute` → initial feed stack mappers) — not wired; v2 currently opens
-  only inside the wallet shtorka.
+- Deep-link entry to an arbitrary `FeedRoute` — not wired. `tangem://discover` opens the hub on a
+  *section*, optionally pre-filtered, through `FeedEntryController` (`com.tangem.features.feed.v2`);
+  there is still no route → initial feed stack mapper, so a deeplink cannot land on a pushed screen.
 - Remote tab ordering/availability — contributors are static; `FeedTabContributor.isAvailable` is
   read once, synchronously.

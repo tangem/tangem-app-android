@@ -17,10 +17,10 @@ import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.visa.model.TangemPayInitialCredentials
-import com.tangem.domain.visa.model.VirtualAccountActivationData
+import com.tangem.domain.visa.model.MoneyAccountActivationData
 import com.tangem.domain.visa.model.VisaActivationInput
 import com.tangem.domain.visa.model.VisaDataForApprove
 import com.tangem.domain.visa.model.VisaSignedDataByCustomerWallet
@@ -68,11 +68,16 @@ interface TangemSdkManager {
     ): CompletionResult<CreateProductWalletTaskResponse>
 
     // Wallet2 specific
+    /**
+     * [shouldForceColdRegistration] re-registers the card with the backend even if its walletId is
+     * already marked registered — set when the card takes over an existing mobile wallet (upgrade).
+     */
     suspend fun importWallet(
         scanResponse: ScanResponse,
         mnemonic: String,
         passphrase: String?,
         shouldReset: Boolean,
+        shouldForceColdRegistration: Boolean = false,
     ): CompletionResult<CreateProductWalletTaskResponse>
 
     suspend fun derivePublicKeys(
@@ -92,7 +97,7 @@ interface TangemSdkManager {
         allowsRequestAccessCodeFromRepository: Boolean,
     ): CompletionResult<Boolean>
 
-    suspend fun resetBackupCard(cardNumber: Int, userWalletId: UserWalletId): CompletionResult<Boolean>
+    suspend fun resetBackupCard(cardNumber: Int, userWallet: UserWallet.Cold): CompletionResult<Boolean>
 
     suspend fun deleteSavedUserCodes(cardsIds: Set<String>): CompletionResult<Unit>
 
@@ -122,8 +127,19 @@ interface TangemSdkManager {
         initialMessage: Message? = null,
         accessCode: String? = null,
         @DrawableRes iconScanRes: Int? = null,
-        registerColdWallet: Boolean = true,
+        registerColdWallet: Boolean,
     ): CompletionResult<T>
+
+    /**
+     * Wraps [runnable] so that, once it succeeds, the cold wallet is registered with the backend on the same NFC tap,
+     * for a card session that isn't started through this manager (e.g. a backup step). Returns [runnable] unchanged
+     * when backend authentication is disabled. [shouldForceRegistration] registers a wallet that is already registered
+     * again, so the backend gets its up-to-date state.
+     */
+    fun <T> withColdWalletRegistration(
+        runnable: CardSessionRunnable<T>,
+        shouldForceRegistration: Boolean,
+    ): CardSessionRunnable<T>
 
     @Suppress("MagicNumber")
     fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse?)
@@ -175,9 +191,9 @@ interface TangemSdkManager {
         preflightReadFilter: PreflightReadFilter,
     ): Either<Throwable, TangemPayInitialCredentials>
 
-    suspend fun tangemPayProduceVirtualAccountData(
+    suspend fun tangemPayProduceMoneyAccountData(
         preflightReadFilter: PreflightReadFilter,
-    ): Either<Throwable, VirtualAccountActivationData>
+    ): Either<Throwable, MoneyAccountActivationData>
 
     suspend fun getWithdrawalSignature(
         hash: String,

@@ -1,5 +1,7 @@
 package com.tangem.features.feed.components.v2
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -9,7 +11,6 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -17,9 +18,9 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
-import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.Back
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.stringReference
@@ -33,7 +34,8 @@ import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDet
 import com.tangem.features.feed.components.market.details.portfolioblock.PortfolioBlockComponent
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedScreenComponent
-import com.tangem.features.foryou.ForYouFeatureToggles
+import com.tangem.features.feed.nav.expandingSheetClick
+import com.tangem.features.feed.ui.v2.FeedNavActionButton
 import com.tangem.features.foryou.TokenSummaryBlockComponent
 import com.tangem.features.foryou.TokenSummaryComponent
 import com.tangem.features.marketing.api.MarketingBannerComponent
@@ -57,11 +59,9 @@ internal class FeedMarketsTokenDetailsComponent @AssistedInject constructor(
     manageFundsComponentFactory: ManageFundsComponent.Factory,
     marketingBannerComponentFactory: MarketingBannerComponent.Factory,
     tokenSummaryBlockComponentFactory: TokenSummaryBlockComponent.Factory,
-    forYouFeatureToggles: ForYouFeatureToggles,
 ) : FeedScreenComponent, AppComponentContext by context {
 
     private val title = stringReference(params.token.name)
-    private val subtitle = stringReference(params.token.symbol)
 
     private val legacyComponent = DefaultMarketsTokenDetailsComponent(
         appComponentContext = context.child(key = "legacy"),
@@ -71,7 +71,7 @@ internal class FeedMarketsTokenDetailsComponent @AssistedInject constructor(
             token = params.token,
             appCurrency = params.appCurrency,
             shouldShowPortfolio = params.shouldShowPortfolio,
-            isTokenSummaryEnabled = forYouFeatureToggles.isForYouEnabled,
+            isTokenSummaryEnabled = true,
             analyticsParams = params.analyticsParams?.let { analyticsParams ->
                 DefaultMarketsTokenDetailsComponent.AnalyticsParams(
                     blockchain = analyticsParams.blockchain,
@@ -91,29 +91,31 @@ internal class FeedMarketsTokenDetailsComponent @AssistedInject constructor(
     )
 
     @Composable
-    override fun Header(bottomSheetState: State<BottomSheetState>, onExpandSheet: () -> Unit, modifier: Modifier) {
+    override fun Header(sheetExpansion: State<ShtorkaExpansion>, onExpandSheet: () -> Unit, modifier: Modifier) {
         val state by legacyComponent.state.collectAsStateWithLifecycle()
+        val isPriceShown = state.shouldShowPriceSubtitle || sheetExpansion.value == ShtorkaExpansion.PILL
 
         TangemTopNavigation(
             contentAlign = TangemTopNavigation.ContentAlign.Center,
-            // rendered inside the shtorka's fixed-height sheet header: no system insets and no
-            // vertical padding, the host centers the bar vertically
             windowInsets = WindowInsets(0.dp),
             contentPadding = PaddingValues(horizontal = 16.dp),
-            // the sheet header is an opaque capsule (the search bar draws no fade either), and the
-            // haze blur re-renders every frame of the header animation — both stay off
             fadeEnabled = false,
             blurBackground = false,
             isEndButtonsGroupBackgroundShown = false,
-            startButton = { TangemButton.Back(onClick = { router.pop() }) },
+            startButton = {
+                TangemButton.Back(onClick = expandingSheetClick(sheetExpansion, onExpandSheet) { router.pop() })
+            },
             endButtonsGroup = {
-                NavActionButton(icon = Icons.ic_share_android_20, onClick = state.onShareClick)
+                FeedNavActionButton(
+                    icon = Icons.ic_share_android_20,
+                    onClick = expandingSheetClick(sheetExpansion, onExpandSheet, state.onShareClick),
+                )
             },
             endButton = if (state.isAddToPortfolioButtonVisible) {
                 {
-                    NavActionButton(
+                    FeedNavActionButton(
                         icon = Icons.ic_sign_plus_20,
-                        onClick = state.onAddToPortfolioClick,
+                        onClick = expandingSheetClick(sheetExpansion, onExpandSheet, state.onAddToPortfolioClick),
                         // added to every account: the tap explains that instead of doing nothing
                         isDimmed = !state.isAddToPortfolioButtonEnabled,
                     )
@@ -123,8 +125,15 @@ internal class FeedMarketsTokenDetailsComponent @AssistedInject constructor(
             },
             contentColumn = {
                 TangemNavigationText(text = title, role = TangemNavigationText.Role.Title)
-                Spacer(Modifier.height(4.dp))
-                TangemNavigationText(text = subtitle, role = TangemNavigationText.Role.Subtitle)
+                AnimatedVisibility(visible = isPriceShown) {
+                    Column {
+                        Spacer(Modifier.height(4.dp))
+                        TangemNavigationText(
+                            text = stringReference(state.priceText),
+                            role = TangemNavigationText.Role.Subtitle,
+                        )
+                    }
+                }
             },
             modifier = modifier,
         )
@@ -183,17 +192,6 @@ internal class FeedMarketsTokenDetailsComponent @AssistedInject constructor(
             params: FeedRoute.MarketsTokenDetails,
         ): FeedMarketsTokenDetailsComponent
     }
-}
-
-@Composable
-private fun NavActionButton(icon: ImageVector, onClick: () -> Unit, isDimmed: Boolean = false) {
-    TangemButton(
-        variant = TangemButton.Variant.Material,
-        size = TangemButton.Size.X11,
-        isDimmed = isDimmed,
-        iconStart = TangemIconUM.Icon(icon),
-        onClick = onClick,
-    )
 }
 
 private fun TokenSummaryComponent.Token.toRouteToken(): FeedRoute.TokenSummary.Token {

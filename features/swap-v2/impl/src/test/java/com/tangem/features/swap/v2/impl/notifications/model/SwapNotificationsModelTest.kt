@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.express.models.ExpressError
@@ -11,21 +12,23 @@ import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.features.swap.v2.impl.notifications.DefaultSwapNotificationsUpdateTrigger
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent
+import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent.Params.SwapNotificationData
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsUpdateListener
 import com.tangem.features.swap.v2.impl.notifications.entity.SwapNotificationUM
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import io.mockk.Called
+import com.tangem.features.swap.v2.impl.sendviaswap.analytics.SendWithSwapAnalyticEvents
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
+import io.mockk.Runs
 import io.mockk.clearMocks
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -41,8 +44,9 @@ import java.math.BigDecimal
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class SwapNotificationsModelTest {
 
+    private val notificationDataFlow = MutableSharedFlow<SwapNotificationData>(extraBufferCapacity = 8)
     private val updateListener: SwapNotificationsUpdateListener = mockk {
-        every { updateTriggerFlow } returns emptyFlow()
+        every { updateTriggerFlow } returns notificationDataFlow
     }
     private val updateTrigger: DefaultSwapNotificationsUpdateTrigger = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
@@ -51,9 +55,13 @@ internal class SwapNotificationsModelTest {
     private val fromCurrency = currencyFactory.createCoin(Blockchain.Ethereum)
     private val toCurrency = currencyFactory.createCoin(Blockchain.Bitcoin)
 
+    private val sentEvents = mutableListOf<AnalyticsEvent>()
+
     @BeforeEach
     fun resetMocks() {
         clearMocks(updateTrigger, analyticsEventHandler)
+        sentEvents.clear()
+        every { analyticsEventHandler.send(capture(sentEvents)) } just Runs
     }
 
     @Test
@@ -129,32 +137,138 @@ internal class SwapNotificationsModelTest {
     }
 
     @Test
-    fun `GIVEN restricted quote WHEN model created THEN no analytics event sent`() = runTest {
+    fun `GIVEN restricted quote WHEN model created THEN geo restriction analytics sent`() = runTest {
         // Arrange
         val model = createModel(testScope = this, quote = contentQuote(isRestricted = true))
 
         // Act
         advanceUntilIdle()
 
-        // Assert — sendErrorAnalyticsIfNeeded has no branch for RegionRestriction, unlike sibling errors
-        verify { analyticsEventHandler wasNot Called }
+        // Assert
+        assertThat(sentEvents).containsExactly(geoRestrictionEvent(direction = "From"))
         model.onDestroy()
     }
+
+    @Test
+    fun `GIVEN receive amount entered WHEN restriction shown THEN direction reported as To`() = runTest {
+        // Arrange
+        val model = createModel(
+            testScope = this,
+            quote = contentQuote(isRestricted = true),
+            amountType = SwapAmountType.To,
+        )
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(sentEvents).containsExactly(geoRestrictionEvent(direction = "To"))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN purchasable quote WHEN model created THEN no geo restriction analytics sent`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this, quote = contentQuote(isRestricted = false))
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(sentEvents).isEmpty()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN restriction reported WHEN quote polled again THEN analytics not repeated`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this, quote = contentQuote(isRestricted = true))
+        advanceUntilIdle()
+
+        // Act
+        notificationDataFlow.emit(notificationData(quote = contentQuote(isRestricted = true)))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(sentEvents).containsExactly(geoRestrictionEvent(direction = "From"))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN restriction cleared WHEN it appears again THEN analytics sent again`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this, quote = contentQuote(isRestricted = true))
+        advanceUntilIdle()
+
+        // Act
+        notificationDataFlow.emit(notificationData(quote = contentQuote(isRestricted = false)))
+        advanceUntilIdle()
+        notificationDataFlow.emit(notificationData(quote = contentQuote(isRestricted = true)))
+        advanceUntilIdle()
+
+        // Assert
+        val event = geoRestrictionEvent(direction = "From")
+        assertThat(sentEvents).containsExactly(event, event)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN restriction event sent WHEN inspected THEN it carries the agreed params`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this, quote = contentQuote(isRestricted = true))
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        val event = sentEvents.single()
+        assertThat(event.id).isEqualTo("[Token / Send] Notice - Geo Restriction")
+        assertThat(event.params).containsExactlyEntriesIn(
+            mapOf(
+                "Direction" to "From",
+                "Send Token" to fromCurrency.symbol,
+                "Receive Token" to toCurrency.symbol,
+                "Send Blockchain" to fromCurrency.network.name,
+                "Receive Blockchain" to toCurrency.network.name,
+            ),
+        )
+        model.onDestroy()
+    }
+
+    private fun notificationData(
+        quote: SwapQuoteUM?,
+        toCryptoCurrency: CryptoCurrency? = toCurrency,
+        amountType: SwapAmountType? = null,
+    ) = SwapNotificationData(
+        quote = quote,
+        fromCryptoCurrency = fromCurrency,
+        // Empty address keeps the memo notification out of the way
+        destinationAddress = "",
+        toCryptoCurrencyStatus = toCryptoCurrency?.let {
+            CryptoCurrencyStatus(currency = it, value = mockk(relaxed = true))
+        },
+        amountType = amountType,
+    )
+
+    private fun geoRestrictionEvent(direction: String) = SendWithSwapAnalyticEvents.NoticeGeoRestriction(
+        direction = direction,
+        sendToken = fromCurrency.symbol,
+        receiveToken = toCurrency.symbol,
+        sendBlockchain = fromCurrency.network.name,
+        receiveBlockchain = toCurrency.network.name,
+    )
 
     private fun createModel(
         testScope: TestScope,
         quote: SwapQuoteUM?,
         toCryptoCurrency: CryptoCurrency? = toCurrency,
+        amountType: SwapAmountType? = null,
     ): SwapNotificationsModel {
         val params = SwapNotificationsComponent.Params(
-            swapNotificationData = SwapNotificationsComponent.Params.SwapNotificationData(
+            swapNotificationData = notificationData(
                 quote = quote,
-                fromCryptoCurrency = fromCurrency,
-                // Empty address keeps the memo notification out of the way
-                destinationAddress = "",
-                toCryptoCurrencyStatus = toCryptoCurrency?.let {
-                    CryptoCurrencyStatus(currency = it, value = mockk(relaxed = true))
-                },
+                toCryptoCurrency = toCryptoCurrency,
+                amountType = amountType,
             ),
         )
         return SwapNotificationsModel(
@@ -163,9 +277,6 @@ internal class SwapNotificationsModelTest {
             swapNotificationsUpdateTrigger = updateTrigger,
             swapAmountUpdateTrigger = mockk(relaxed = true),
             isMemoRequiredUseCase = mockk(relaxed = true),
-            getBackupProblematicWalletForAddressUseCase = mockk(relaxed = true),
-            sendBackupProblemEmailUseCase = mockk(relaxed = true),
-            backupErrorFeatureToggles = mockk { every { isTopUpWarningEnabled } returns true },
             analyticsEventHandler = analyticsEventHandler,
             paramsContainer = MutableParamsContainer(value = params),
         )
@@ -183,17 +294,6 @@ internal class SwapNotificationsModelTest {
         quoteId = null,
         isRestricted = isRestricted,
     )
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
-    }
 
     private companion object {
         val provider = ExpressProvider(

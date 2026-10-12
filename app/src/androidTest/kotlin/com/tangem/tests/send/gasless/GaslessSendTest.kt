@@ -5,6 +5,7 @@ import com.tangem.common.constants.TestConstants.ETHEREUM_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
@@ -123,8 +124,8 @@ class GaslessSendTest : BaseTestCase() {
     fun checkGaslessTransactionInHistoryTest() {
         val operationAmount = "1.00"
         val gaslessFeeAmount = "0.10"
-        val operationTitle = getResourceString(R.string.transaction_history_operation)
-        val gaslessFeeTitle = getResourceString(R.string.gasless_transaction_fee)
+        val sentTitle = getResourceString(R.string.common_sent)
+        val gaslessFeeTitle = getResourceString(R.string.common_network_fee_title)
 
         setupHooks().run {
             step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$scenarioState'") {
@@ -140,33 +141,37 @@ class GaslessSendTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenName)
             }
             step("Assert 'Token details' screen is displayed") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
             }
-            step("Wait for gasless '$gaslessFeeTitle' transaction in history") {
+            step("Wait for the gasless transaction in history") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onTxHistoryScreen { transactionItem(gaslessFeeTitle).assertIsDisplayed() }
+                    onTxHistoryScreen { transactionItem(sentTitle).assertIsDisplayed() }
                 }
             }
-            step("Assert '$operationTitle' transaction is displayed") {
-                onTxHistoryScreen { transactionItem(operationTitle).assertIsDisplayed() }
-            }
-            step("Assert '$operationTitle' amount '$operationAmount' is displayed in '$currencySymbol'") {
+            step("Assert the sent amount '$operationAmount' is displayed in '$currencySymbol'") {
                 onTxHistoryScreen {
-                    transactionAmount(operationTitle).assertTextContains(operationAmount, substring = true)
-                    transactionCurrency(operationTitle).assertTextEquals(currencySymbol)
+                    transactionAmount(sentTitle).assertTextContains(operationAmount, substring = true)
+                    transactionCurrency(sentTitle).assertTextEquals(currencySymbol)
                 }
             }
-            step("Assert gasless '$gaslessFeeTitle' amount '$gaslessFeeAmount' is displayed in '$currencySymbol'") {
-                onTxHistoryScreen {
-                    transactionAmount(gaslessFeeTitle).assertTextContains(gaslessFeeAmount, substring = true)
-                    transactionCurrency(gaslessFeeTitle).assertTextEquals(currencySymbol)
-                }
+            step("Assert the transaction status is confirmed") {
+                onTxHistoryScreen { transactionConfirmedStatus(sentTitle).assertIsDisplayed() }
             }
-            step("Assert gasless '$gaslessFeeTitle' status is confirmed") {
-                onTxHistoryScreen { transactionConfirmedStatus(gaslessFeeTitle).assertIsDisplayed() }
+            // The gasless fee is no longer its own row: same-hash transfers merge into one, and the fee
+            // is carried inside it, so it is only visible in the transaction details.
+            step("Open the transaction details") {
+                onTxHistoryScreen { transactionItem(sentTitle).clickWithAssertion() }
+            }
+            step("Assert the gasless '$gaslessFeeTitle' of '$gaslessFeeAmount' is displayed in the details") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    onTxHistoryDetailsBottomSheet {
+                        rowLabel(gaslessFeeTitle).assertIsDisplayed()
+                        rowValueContaining(gaslessFeeAmount).assertIsDisplayed()
+                    }
+                }
             }
         }
     }
