@@ -8,8 +8,9 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.collectibles.models.CollectibleGachaMachine
 import com.tangem.domain.collectibles.models.OpenPackStep
-import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.ButtonUM
 import com.tangem.features.collectibles.impl.createMachine
+import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.ButtonUM
+import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.RevealUM
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.collectibles.MockCollectibles
 import org.junit.jupiter.api.Test
@@ -144,7 +145,16 @@ internal class CollectiblesPackOpeningConverterTest {
         ButtonModel(usdcBalance = BigDecimal.ZERO, step = FAILED_BEFORE_PAYMENT, expected = NOT_ENOUGH_FUNDS),
     )
 
-    private val converter = CollectiblesPackOpeningConverter(onBackClick = {}, onCloseClick = {}, onApproveClick = {})
+    private val converter = CollectiblesPackOpeningConverter(
+        onBackClick = {},
+        onCloseClick = {},
+        onApproveClick = {},
+        reveal = RevealUM(
+            card = null,
+            onKeepCardClick = {},
+            onSellBackClick = {},
+        ),
+    )
 
     private fun convert(input: CollectiblesPackOpeningConverter.Input) = converter.convert(input).order
 
