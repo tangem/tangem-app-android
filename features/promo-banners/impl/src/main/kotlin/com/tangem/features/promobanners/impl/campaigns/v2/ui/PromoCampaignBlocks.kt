@@ -121,7 +121,7 @@ internal fun PromoTableBlock(block: PromoBlockUM.Table, modifier: Modifier = Mod
             )
         }
         if (block.headers.isNotEmpty()) {
-            PromoTableRow(cells = block.headers, isHeader = true, hasDivider = false)
+            PromoTableRow(cells = block.headers, isHeader = true, hasDivider = true)
         }
         block.rows.forEachIndexed { index, cells ->
             PromoTableRow(cells = cells, isHeader = false, hasDivider = index < block.rows.lastIndex)
@@ -132,19 +132,42 @@ internal fun PromoTableBlock(block: PromoBlockUM.Table, modifier: Modifier = Mod
 @Composable
 private fun PromoTableRow(cells: ImmutableList<TextReference>, isHeader: Boolean, hasDivider: Boolean) {
     val label = cells.firstOrNull() ?: return
-    val labelRole = if (isHeader) TangemRowTextRole.Subtitle else TangemRowTextRole.Title
-    val valueRole = if (isHeader) TangemRowTextRole.Subvalue else TangemRowTextRole.Value
 
-    TangemRow(
-        divider = hasDivider,
-        contentLead = TangemRowContentLead.End,
-        titleSlot = { TangemRowText(text = label, role = labelRole) },
-        valueSlot = {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                cells.drop(1).forEach { value -> TangemRowText(text = value, role = valueRole) }
-            }
-        },
-    )
+    if (isHeader) {
+        TangemRow(
+            divider = hasDivider,
+            contentLead = TangemRowContentLead.End,
+            titleSlot = {
+                Text(
+                    text = label.resolveReference(),
+                    style = TangemTheme.typography3.body.medium,
+                    color = TangemTheme.colors3.text.secondary,
+                )
+            },
+            valueSlot = {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    cells.drop(1).forEach { value ->
+                        Text(
+                            text = value.resolveReference(),
+                            style = TangemTheme.typography3.body.medium,
+                            color = TangemTheme.colors3.text.secondary,
+                        )
+                    }
+                }
+            },
+        )
+    } else {
+        TangemRow(
+            divider = hasDivider,
+            contentLead = TangemRowContentLead.End,
+            titleSlot = { TangemRowText(text = label, role = TangemRowTextRole.Title) },
+            valueSlot = {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    cells.drop(1).forEach { value -> TangemRowText(text = value, role = TangemRowTextRole.Value) }
+                }
+            },
+        )
+    }
 }
 
 @Composable
