@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.common
 
 import com.tangem.domain.models.account.*
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.utils.extensions.orZero
 import java.math.BigDecimal
 
 internal val AccountStatus.Payment.userWalletId: UserWalletId
@@ -81,7 +82,10 @@ internal val PaymentAccountStatusValue.availableForWithdrawalOrZero: BigDecimal
     }
 
 internal val PaymentAccountStatusValue.hasWithdrawableAmount: Boolean
-    get() = availableForWithdrawalOrZero.signum() > 0
+    get() {
+        val amount = if (canAddFunds) availableForWithdrawalOrZero else balanceOrNull?.fiatBalance?.availableBalance
+        return amount.orZero().signum() > 0
+    }
 
 internal fun List<PaymentNetworkStatus>.firstDepositAddress(): String? =
     filterIsInstance<PaymentNetworkStatus.Available>().firstOrNull()?.depositAddress
