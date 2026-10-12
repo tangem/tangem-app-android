@@ -11,7 +11,7 @@ import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
-import com.tangem.features.polymarket.impl.common.PolymarketConst
+import com.tangem.features.polymarket.impl.common.formatPolymarketPrice
 import com.tangem.features.polymarket.impl.common.formatPolymarketVolume
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketDetailsMarketUM
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketDetailsOutcomeUM
@@ -22,7 +22,6 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 import java.math.MathContext
-import java.math.RoundingMode
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -110,16 +109,9 @@ internal class PolymarketEventDetailsContentTransformer(
         return PolymarketDetailsOutcomeUM(
             assetId = outcome.assetId,
             title = stringReference(outcome.title),
-            price = stringReference(outcome.probability.formatCents()),
+            price = stringReference(outcome.probability.formatPolymarketPrice()),
             onClick = { onOutcomeClick(market.id, outcome.assetId) },
         )
-    }
-
-    /** An implied probability doubles as the outcome share price: 0.25 → "25¢". */
-    private fun BigDecimal?.formatCents(): String {
-        this ?: return DASH_SIGN
-        val cents = multiply(CENTS_IN_DOLLAR).setScale(0, RoundingMode.HALF_UP)
-        return "$cents${PolymarketConst.CENT_SIGN}"
     }
 
     private fun transformChange24h(volume: BigDecimal?, volume24h: BigDecimal?): PriceChangeState {
@@ -147,7 +139,6 @@ internal class PolymarketEventDetailsContentTransformer(
     }
 
     companion object {
-        private val CENTS_IN_DOLLAR = BigDecimal(100)
         private const val EASTERN_TIME_ZONE = "America/New_York"
         private const val RESOLUTION_DATE_PATTERN = "MMM d, yyyy, h:mm a"
 

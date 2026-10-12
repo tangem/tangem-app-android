@@ -17,13 +17,11 @@ import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimated
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 
 private const val DECIMALS_AMOUNT = 2
 
-@Suppress("CyclomaticComplexMethod", "LongMethod")
 internal class WcSendAndReceiveBlockAidUiConverter :
     Converter<WcSendAndReceiveBlockAidUiConverter.Input, WcSendReceiveTransactionCheckResultsUM> {
 
@@ -55,66 +53,8 @@ internal class WcSendAndReceiveBlockAidUiConverter :
                     null
                 }
             },
-            estimatedWalletChanges = (simulation as? SimulationResult.Success)?.data?.let { data ->
-                when (data) {
-                    is SimulationData.NoWalletChangesDetected -> null
-                    is SimulationData.Approve -> {
-                        val nftItems = data.items.mapNotNull { item ->
-                            if (item !is ApproveInfo.NonFungibleToken) return@mapNotNull null
-
-                            WcEstimatedWalletChangeUM(
-                                iconRes = R.drawable.img_approvale_new_24,
-                                title = TextReference.Res(R.string.common_approve),
-                                description = item.name,
-                                tokenIconUrl = item.logoUrl,
-                            )
-                        }
-                        WcEstimatedWalletChangesUM(nftItems.toImmutableList()).takeIf { nftItems.isNotEmpty() }
-                    }
-                    is SimulationData.SendAndReceive -> {
-                        val items: ImmutableList<WcEstimatedWalletChangeUM> = (
-                            data.send.map {
-                                when (it) {
-                                    is AmountInfo.FungibleTokens -> estimatedWalletChangeUMConverter.convert(
-                                        WcEstimatedWalletChangeUMConverter.Input(
-                                            amountInfo = it,
-                                            iconRes = R.drawable.ic_send_new_24,
-                                            titleRes = R.string.common_send,
-                                            sign = StringsSigns.MINUS,
-                                        ),
-                                    )
-                                    is AmountInfo.NonFungibleTokens -> estimatedWalletChangeUMConverter.convert(
-                                        WcEstimatedWalletChangeUMConverter.Input(
-                                            amountInfo = it,
-                                            iconRes = R.drawable.ic_send_new_24,
-                                            titleRes = R.string.common_send,
-                                        ),
-                                    )
-                                }
-                            } + data.receive.map {
-                                when (it) {
-                                    is AmountInfo.FungibleTokens -> estimatedWalletChangeUMConverter.convert(
-                                        WcEstimatedWalletChangeUMConverter.Input(
-                                            amountInfo = it,
-                                            iconRes = R.drawable.ic_receive_new_24,
-                                            titleRes = R.string.common_receive,
-                                            sign = StringsSigns.PLUS,
-                                        ),
-                                    )
-                                    is AmountInfo.NonFungibleTokens -> estimatedWalletChangeUMConverter.convert(
-                                        WcEstimatedWalletChangeUMConverter.Input(
-                                            amountInfo = it,
-                                            iconRes = R.drawable.ic_receive_new_24,
-                                            titleRes = R.string.common_receive,
-                                        ),
-                                    )
-                                }
-                            }
-                            ).toImmutableList()
-                        WcEstimatedWalletChangesUM(items)
-                    }
-                }
-            },
+            estimatedWalletChanges = (simulation as? SimulationResult.Success)?.data
+                ?.let(::convertEstimatedWalletChanges),
             spendAllowance = (value.result.simulation as? SimulationResult.Success)?.data?.let { data ->
                 when (data) {
                     is SimulationData.SendAndReceive, SimulationData.NoWalletChangesDetected -> null
@@ -128,6 +68,64 @@ internal class WcSendAndReceiveBlockAidUiConverter :
                     }
                 }
             },
+        )
+    }
+
+    private fun convertEstimatedWalletChanges(data: SimulationData): WcEstimatedWalletChangesUM? {
+        val items = when (data) {
+            is SimulationData.NoWalletChangesDetected -> emptyList()
+            is SimulationData.Approve -> data.items.mapNotNull(::convertNftApprove) +
+                convertSendAndReceive(send = data.send, receive = data.receive)
+            is SimulationData.SendAndReceive -> convertSendAndReceive(send = data.send, receive = data.receive)
+        }
+        return WcEstimatedWalletChangesUM(items.toImmutableList()).takeIf { items.isNotEmpty() }
+    }
+
+    private fun convertNftApprove(item: ApproveInfo): WcEstimatedWalletChangeUM? {
+        if (item !is ApproveInfo.NonFungibleToken) return null
+
+        return WcEstimatedWalletChangeUM(
+            iconRes = R.drawable.img_approvale_new_24,
+            title = TextReference.Res(R.string.common_approve),
+            description = item.name,
+            tokenIconUrl = item.logoUrl,
+        )
+    }
+
+    private fun convertSendAndReceive(
+        send: List<AmountInfo>,
+        receive: List<AmountInfo>,
+    ): List<WcEstimatedWalletChangeUM> {
+        return send.map { amountInfo ->
+            convertAmountInfo(
+                amountInfo = amountInfo,
+                iconRes = R.drawable.ic_send_new_24,
+                titleRes = R.string.common_send,
+                sign = StringsSigns.MINUS,
+            )
+        } + receive.map { amountInfo ->
+            convertAmountInfo(
+                amountInfo = amountInfo,
+                iconRes = R.drawable.ic_receive_new_24,
+                titleRes = R.string.common_receive,
+                sign = StringsSigns.PLUS,
+            )
+        }
+    }
+
+    private fun convertAmountInfo(
+        amountInfo: AmountInfo,
+        iconRes: Int,
+        titleRes: Int,
+        sign: String,
+    ): WcEstimatedWalletChangeUM {
+        return estimatedWalletChangeUMConverter.convert(
+            WcEstimatedWalletChangeUMConverter.Input(
+                amountInfo = amountInfo,
+                iconRes = iconRes,
+                titleRes = titleRes,
+                sign = sign,
+            ),
         )
     }
 

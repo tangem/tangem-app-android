@@ -1,20 +1,20 @@
 package com.tangem.data.pay.entity
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = false)
+@Serializable
 data class WithdrawStoreData(
-    @Json(name = "orderId") val orderId: String,
-    @Json(name = "exchangeData") val exchangeData: ExchangeStoreData?,
-    @Json(name = "txHash") val txHash: String?,
+    @SerialName("orderId") val orderId: String,
+    @SerialName("exchangeData") val exchangeData: ExchangeStoreData?,
+    @SerialName("txHash") val txHash: String?,
 )
 
-@JsonClass(generateAdapter = false)
+@Serializable
 data class ExchangeStoreData(
-    @Json(name = "txId") val txId: String,
-    @Json(name = "fromNetwork") val fromNetwork: String,
-    @Json(name = "fromAddress") val fromAddress: String,
-    @Json(name = "payInAddress") val payInAddress: String,
-    @Json(name = "payInExtraId") val payInExtraId: String?,
+    @SerialName("txId") val txId: String,
+    @SerialName("fromNetwork") val fromNetwork: String,
+    @SerialName("fromAddress") val fromAddress: String,
+    @SerialName("payInAddress") val payInAddress: String,
+    @SerialName("payInExtraId") val payInExtraId: String?,
 )

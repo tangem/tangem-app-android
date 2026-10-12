@@ -1,14 +1,12 @@
 package com.tangem.data.collectibles.converter
 
+import com.tangem.data.collectibles.CollectiblesConst.CENTS_SCALE
 import com.tangem.domain.collectibles.models.CollectibleGachaMachineNft
 import com.tangem.domain.collectibles.models.CollectibleRarity
 import com.tangem.grow.datasource.collectibles.models.response.model.MachineNftDTO
 import com.tangem.utils.converter.Converter
 
 internal object MachineNftConverter : Converter<MachineNftDTO, CollectibleGachaMachineNft> {
-
-    /** The backend sends the appraised value in cents, the domain carries whole currency units. */
-    private const val CENTS_SCALE = 2
 
     override fun convert(value: MachineNftDTO): CollectibleGachaMachineNft = CollectibleGachaMachineNft(
         id = value.id,

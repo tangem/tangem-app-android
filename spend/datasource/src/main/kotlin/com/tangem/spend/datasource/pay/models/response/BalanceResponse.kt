@@ -1,39 +1,39 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
-import java.math.BigDecimal
+import com.tangem.domain.models.serialization.SerializedBigDecimal
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class BalanceResponse(
-    @Json(name = "fiat") val fiat: FiatBalance?,
-    @Json(name = "networks") val networks: List<NetworkResponse>? = null,
+    @SerialName("fiat") val fiat: FiatBalance?,
+    @SerialName("networks") val networks: List<NetworkResponse>? = null,
 ) {
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class NetworkResponse(
-        @Json(name = "name") val name: String,
-        @Json(name = "is_testnet") val isTestnet: Boolean,
-        @Json(name = "chain_id") val chainId: Long,
-        @Json(name = "status") val status: String,
-        @Json(name = "deposit_address") val depositAddress: String? = null,
-        @Json(name = "tokens") val tokens: List<NetworkTokenResponse>,
+        @SerialName("name") val name: String,
+        @SerialName("is_testnet") val isTestnet: Boolean,
+        @SerialName("chain_id") val chainId: Long,
+        @SerialName("status") val status: String,
+        @SerialName("deposit_address") val depositAddress: String? = null,
+        @SerialName("tokens") val tokens: List<NetworkTokenResponse>,
     )
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class NetworkTokenResponse(
-        @Json(name = "token") val token: String,
-        @Json(name = "token_contract_address") val tokenContractAddress: String? = null,
-        @Json(name = "available_for_withdrawal") val availableForWithdrawal: BigDecimal? = null,
+        @SerialName("token") val token: String,
+        @SerialName("token_contract_address") val tokenContractAddress: String? = null,
+        @SerialName("available_for_withdrawal") val availableForWithdrawal: SerializedBigDecimal? = null,
     )
 }
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class FiatBalance(
-    @Json(name = "currency") val currency: String,
-    @Json(name = "available_balance") val availableBalance: BigDecimal,
-    @Json(name = "credit_limit") val creditLimit: BigDecimal,
-    @Json(name = "pending_charges") val pendingCharges: BigDecimal,
-    @Json(name = "posted_charges") val postedCharges: BigDecimal,
-    @Json(name = "balance_due") val balanceDue: BigDecimal,
+    @SerialName("currency") val currency: String,
+    @SerialName("available_balance") val availableBalance: SerializedBigDecimal,
+    @SerialName("credit_limit") val creditLimit: SerializedBigDecimal,
+    @SerialName("pending_charges") val pendingCharges: SerializedBigDecimal,
+    @SerialName("posted_charges") val postedCharges: SerializedBigDecimal,
+    @SerialName("balance_due") val balanceDue: SerializedBigDecimal,
 )

@@ -12,37 +12,31 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetType
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
-import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
+import com.tangem.core.ui.ds2.modal.TangemModal
+import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_shield_checkmark_28
-import com.tangem.features.jointaccount.join.confirmation.ui.state.JointAccountJoinConfirmationUM
 import com.tangem.features.jointaccount.impl.R
+import com.tangem.features.jointaccount.join.confirmation.ui.state.JointAccountJoinConfirmationUM
 
 @Composable
 internal fun JointAccountJoinConfirmationBS(state: JointAccountJoinConfirmationUM, modifier: Modifier = Modifier) {
-    TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
+    TangemModal<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
             isShown = true,
             onDismissRequest = state.onCancelClick,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        type = TangemBottomSheetType.Modal,
-        containerColor = TangemTheme.colors3.bg.secondary,
         title = {
-            TangemTopNavigation(
-                blurBackground = false,
-                endButton = { TangemButton.Close(onClick = state.onCancelClick) },
-            )
+            TangemModal.TopNavigation(endButton = { TangemButton.Close(onClick = state.onCancelClick) })
         },
         content = {
             Content(

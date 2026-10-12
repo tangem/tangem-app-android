@@ -10,9 +10,12 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.model.TangemPayEntryPoint
@@ -48,6 +51,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
     private val onboardingStarter: TangemPayOnboardingStarter,
     private val featureToggles: TangemPayFeatureToggles,
     private val userWalletsListRepository: UserWalletsListRepository,
+    private val uiMessageSender: UiMessageSender,
 ) : Model(), TangemPayWalletSelectorComponent.Listener {
 
     private val params = paramsContainer.require<TangemPayOnboardingComponent.Params>()
@@ -143,6 +147,15 @@ internal class TangemPayOnboardingModel @Inject constructor(
         }
     }
 
+    private fun showError() {
+        uiMessageSender.send(
+            DialogMessage(
+                title = resourceReference(R.string.common_something_went_wrong),
+                message = resourceReference(R.string.common_try_again_later),
+            ),
+        )
+    }
+
     private fun onTermsClick() {
         analytics.send(TangemPayAnalyticsEvents.ViewTermsClicked())
         urlOpener.openUrl(TangemPayConstants.termsAndLimitsLink())
@@ -150,43 +163,24 @@ internal class TangemPayOnboardingModel @Inject constructor(
 
     private fun onGetCardClick() {
         analytics.send(TangemPayAnalyticsEvents.GetCardClicked())
-        if (featureToggles.isResidencyStepEnabled) {
-            router.push(
-                AppRoute.TangemPayEligibility(
-                    product = TangemPayProduct.PAYMENT_ACCOUNT,
-                    userWalletId = null,
-                ),
-            )
-        } else if (params is TangemPayOnboardingComponent.Params.Deeplink ||
-            params is TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink
-        ) {
-            modelScope.launch {
-                proceedWithWallets(
-                    walletsIds = eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true),
-                )
-            }
-        } else {
-            // if user came from banner in settings and already is a paera customer -> exclude this wallet
-            val shouldExcludePaeraCustomers = params is TangemPayOnboardingComponent.Params.FromBannerInSettings
-            modelScope.launch {
-                val eligibleWalletsIds = eligibilityManager
+        val shouldExcludePaeraCustomers = params is TangemPayOnboardingComponent.Params.FromBannerInSettings
+        modelScope.launch {
+            val isDeeplink = params is TangemPayOnboardingComponent.Params.Deeplink ||
+                params is TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink
+            val walletsIds = if (isDeeplink || featureToggles.isResidencyStepEnabled) {
+                eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = shouldExcludePaeraCustomers)
+            } else {
+                eligibilityManager
                     .getEligibleWallets(
                         shouldExcludePaeraCustomers = shouldExcludePaeraCustomers,
                         entryPoint = params.toEntryPointOrNull(),
                     )
                     .map { it.walletId }
-                if (eligibleWalletsIds.isEmpty()) {
-                    back()
-                    return@launch
-                }
-                when (params) {
-                    is TangemPayOnboardingComponent.Params.ContinueOnboarding -> {
-                        checkCustomerInfo(params.userWalletId)
-                    }
-                    else -> {
-                        proceedWithWallets(eligibleWalletsIds)
-                    }
-                }
+            }
+            if (walletsIds.isEmpty()) {
+                showError()
+            } else {
+                proceedWithWallets(walletsIds)
             }
         }
     }

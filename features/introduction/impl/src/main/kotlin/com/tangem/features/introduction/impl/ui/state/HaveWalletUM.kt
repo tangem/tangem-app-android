@@ -14,6 +14,14 @@ internal data class HaveWalletUM(
     val onCloseClick: () -> Unit,
 ) : TangemBottomSheetConfigContent {
 
+    /** Dismissing the sheet does not cancel what the tapped row started, so it stays locked until then */
+    val isBusy: Boolean
+        get() = when (val step = step) {
+            is Step.Options -> step.socialLogin?.isLoading == true
+            is Step.Import -> step.isCloudLoading
+            is Step.Error -> false
+        }
+
     sealed interface Step {
 
         data class Options(

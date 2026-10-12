@@ -7,6 +7,7 @@ import com.tangem.blockchain.blockchains.tron.TronTransactionExtras
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.blockchain.extensions.Result.*
 import com.tangem.blockchain.yieldsupply.YieldSupplyContractCallDataProviderFactory
 import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionStatus
 import com.tangem.blockchainsdk.utils.toBlockchain
@@ -18,6 +19,7 @@ import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
+import com.tangem.domain.yield.supply.models.YieldSupplyEnterOutcome
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.extensions.orZero
@@ -271,6 +273,38 @@ internal class DefaultYieldSupplyTransactionRepository(
         val versionStatus = walletManager.checkModuleVersionStatus()
         YieldSupplyContractCallDataProviderFactory.wrapWithUpgradeIfNeeded(versionStatus, withdrawCallData)
     }
+
+    override suspend fun getEnterTransactionOutcome(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency.Token,
+        transactionHash: String,
+    ): YieldSupplyEnterOutcome? = withContext(dispatchers.io) {
+        runSuspendCatching {
+            val walletManager = walletManagersFacade.getOrCreateWalletManager(
+                userWalletId = userWalletId,
+                blockchain = cryptoCurrency.network.toBlockchain(),
+                derivationPath = cryptoCurrency.network.derivationPath.value,
+            ) ?: error("Wallet manager not found")
+
+            val receiptProvider = walletManager as? TransactionReceiptProvider
+                ?: error("Wallet manager does not provide transaction receipts")
+
+            val result = when (val receiptResult = receiptProvider.getTransactionReceipt(transactionHash)) {
+                is Failure -> return@runSuspendCatching null
+                is Success -> receiptResult.data
+            } ?: return@runSuspendCatching null
+
+            when {
+                result.isSuccess -> YieldSupplyEnterOutcome.Deposited
+                // A revert is only a real failure while the funds are still on the owner address.
+                hasFundsInProtocol(walletManager, cryptoCurrency) -> YieldSupplyEnterOutcome.DepositedByRelayer
+                else -> YieldSupplyEnterOutcome.Failed
+            }
+        }.logErrorUnlessCancellation().getOrNull()
+    }
+
+    private suspend fun hasFundsInProtocol(walletManager: WalletManager, cryptoCurrency: CryptoCurrency.Token) =
+        getYieldTokenStatus(walletManager, cryptoCurrency)?.effectiveProtocolBalance.orZero() > BigDecimal.ZERO
 
     private suspend fun getYieldTokenStatus(
         walletManager: WalletManager,

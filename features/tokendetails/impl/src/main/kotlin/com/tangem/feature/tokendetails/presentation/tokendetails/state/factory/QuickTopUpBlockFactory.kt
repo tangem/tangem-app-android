@@ -6,7 +6,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.currency.isJoint
 import com.tangem.domain.onramp.model.OnrampAvailability
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.error.OnrampError
@@ -28,7 +28,7 @@ internal class QuickTopUpBlockFactory @Inject constructor() {
         onPresetClick: (BigDecimal, String) -> Unit,
         onOtherClick: () -> Unit,
     ): QuickTopUpBlockUM? {
-        if (currencyStatus.currency.network.derivationPath is Network.DerivationPath.Joint) return null
+        if (currencyStatus.currency.isJoint) return null
 
         val amount = currencyStatus.value.amount
         if (amount == null || !amount.isZero()) return null

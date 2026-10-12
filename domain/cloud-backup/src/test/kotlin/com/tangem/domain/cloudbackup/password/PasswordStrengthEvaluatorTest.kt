@@ -63,7 +63,7 @@ internal class PasswordStrengthEvaluatorTest {
         }
 
         private fun provideTestModels() = listOf(
-            // 0-3 chars are not rated at all, so the meter stays hidden (FR-09)
+            // 0-3 chars are not rated at all, so the meter stays hidden
             EvaluateRatedModel(password = "", expected = null),
             EvaluateRatedModel(password = "A", expected = null),
             EvaluateRatedModel(password = "Aa1", expected = null),

@@ -17,6 +17,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.models.account.AccountId
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.tangempay.addfunds.TangemPayAddFundsComponent
 import com.tangem.features.tangempay.addfunds.va.bank.TangemPayVaBankingDetailsErrorComponent
@@ -32,14 +33,18 @@ import com.tangem.features.tangempay.multichain.othernetworks.PaymentOtherNetwor
 import com.tangem.features.tangempay.multichain.receive.PaymentReceiveComponent
 import com.tangem.features.tangempay.txhistory.DefaultTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.txhistory.details.TangemPayTxHistoryDetailsComponent
+import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.moneyaccount.details.component.MoneyAccountAddFundsBottomSheetComponent
 import com.tangem.features.moneyaccount.details.component.MoneyAccountAddFundsListener
+
+private const val MAX_DISPLAYED_SWAPS_COUNT = 2
 
 internal class TangemPayDetailsComponent(
     private val appComponentContext: AppComponentContext,
     private val params: TangemPayDetailsContainerComponent.Params,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
+    expressTransactionsComponentFactory: ExpressTransactionsComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
     private val moneyAccountAddFundsComponentFactory: MoneyAccountAddFundsBottomSheetComponent.Factory,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
@@ -66,6 +71,17 @@ internal class TangemPayDetailsComponent(
         params = DefaultTangemPayTxHistoryComponent.Params(
             userWalletId = params.initialStatus.userWalletId,
             uiActions = model,
+        ),
+    )
+    private val expressTransactionsComponent = expressTransactionsComponentFactory.create(
+        context = child("expressTransactionsComponent"),
+        params = ExpressTransactionsComponent.Params(
+            userWalletId = params.initialStatus.userWalletId,
+            currency = model.cryptoCurrency,
+            scope = ExpressTransactionsComponent.Scope.Account(
+                accountId = AccountId.forPaymentAccount(params.initialStatus.userWalletId),
+                maxCount = MAX_DISPLAYED_SWAPS_COUNT,
+            ),
         ),
     )
 
@@ -96,6 +112,7 @@ internal class TangemPayDetailsComponent(
         TangemPayDetailsScreen(
             state = state,
             txHistoryComponent = txHistoryComponent,
+            expressTransactionsComponent = expressTransactionsComponent,
             promoBannersBlockComponent = promoBannersBlock,
             modifier = modifier,
         )

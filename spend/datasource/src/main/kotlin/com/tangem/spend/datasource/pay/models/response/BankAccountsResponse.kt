@@ -1,57 +1,57 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * Response of `bff-v2/v1/account/bank-accounts` — the recipients saved for bank off-ramp withdrawals.
  *
- * Everything below the account id is optional: the converter keeps every recipient it can identify — a name and
- * an account number — and drops only the ones it cannot tell apart.
+ * Everything below the account id is optional: a recipient whose details the backend cannot fill is still
+ * listed, and the converter drops it rather than showing a half-built recipient.
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class BankAccountsResponse(
-    @Json(name = "result") val result: List<BankAccount>?,
+    @SerialName("result") val result: List<BankAccount>?,
 ) {
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class BankAccount(
-        @Json(name = "id") val id: String,
-        @Json(name = "display_name") val displayName: String?,
-        @Json(name = "details") val details: Details?,
-        @Json(name = "created_at") val createdAt: String?,
+        @SerialName("id") val id: String,
+        @SerialName("display_name") val displayName: String?,
+        @SerialName("details") val details: Details?,
+        @SerialName("created_at") val createdAt: String?,
     )
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Details(
-        @Json(name = "currency") val currency: String?,
-        @Json(name = "rail") val rail: String?,
-        @Json(name = "third_party") val isThirdParty: Boolean?,
-        @Json(name = "beneficiary") val beneficiary: Beneficiary?,
-        @Json(name = "beneficiary_address") val beneficiaryAddress: Address?,
-        @Json(name = "bank_name") val bankName: String?,
-        @Json(name = "bank_address") val bankAddress: Address?,
-        @Json(name = "account_number") val accountNumber: String?,
-        @Json(name = "routing_number") val routingNumber: String?,
-        @Json(name = "bank_account_type") val bankAccountType: String?,
+        @SerialName("currency") val currency: String?,
+        @SerialName("rail") val rail: String?,
+        @SerialName("third_party") val isThirdParty: Boolean?,
+        @SerialName("beneficiary") val beneficiary: Beneficiary?,
+        @SerialName("beneficiary_address") val beneficiaryAddress: Address?,
+        @SerialName("bank_name") val bankName: String?,
+        @SerialName("bank_address") val bankAddress: Address?,
+        @SerialName("account_number") val accountNumber: String?,
+        @SerialName("routing_number") val routingNumber: String?,
+        @SerialName("bank_account_type") val bankAccountType: String?,
     )
 
     /** [businessName] carries the company for a business beneficiary; [firstName] and [lastName] an individual. */
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Beneficiary(
-        @Json(name = "type") val type: String?,
-        @Json(name = "first_name") val firstName: String?,
-        @Json(name = "last_name") val lastName: String?,
-        @Json(name = "business_name") val businessName: String?,
+        @SerialName("type") val type: String?,
+        @SerialName("first_name") val firstName: String?,
+        @SerialName("last_name") val lastName: String?,
+        @SerialName("business_name") val businessName: String?,
     )
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Address(
-        @Json(name = "line1") val line1: String?,
-        @Json(name = "line2") val line2: String?,
-        @Json(name = "city") val city: String?,
-        @Json(name = "region") val region: String?,
-        @Json(name = "postal_code") val postalCode: String?,
-        @Json(name = "country_code") val countryCode: String?,
+        @SerialName("line1") val line1: String?,
+        @SerialName("line2") val line2: String?,
+        @SerialName("city") val city: String?,
+        @SerialName("region") val region: String?,
+        @SerialName("postal_code") val postalCode: String?,
+        @SerialName("country_code") val countryCode: String?,
     )
 }

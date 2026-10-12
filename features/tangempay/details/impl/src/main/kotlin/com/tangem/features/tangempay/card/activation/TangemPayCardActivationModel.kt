@@ -48,8 +48,9 @@ internal class TangemPayCardActivationModel @Inject constructor(
     private val submitJobHolder = JobHolder()
 
     /**
-     * Kept across retries of the same digits so a lost response cannot create a second activation order, and
-     * reset as soon as the entered digits change — a different input is a different intent.
+     * Kept across retries of the same digits while the outcome is unknown, so a lost response cannot create a second
+     * activation order, and reset as soon as the digits change or the backend answers definitively — either way the
+     * next submit is a new intent.
      */
     private var submitIdempotencyKey: String? = null
 
@@ -125,6 +126,7 @@ internal class TangemPayCardActivationModel @Inject constructor(
     }
 
     private suspend fun onSubmitFailed(error: VisaApiError) {
+        if (!error.isOutcomeUnknown()) submitIdempotencyKey = null
         when (error) {
             VisaApiError.CardActivationInvalidCardData -> showInlineError(
                 message = resourceReference(R.string.tangempay_card_activation_error),

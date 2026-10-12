@@ -11,6 +11,7 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.remote)
 
     // region Kotlin
     implementation(deps.kotlin.coroutines)
@@ -53,4 +54,6 @@ dependencies {
     // region Libs
     api(projects.libs.blockchainSdk)
     // endregion
+
+    testImplementation(projects.test.core)
 }

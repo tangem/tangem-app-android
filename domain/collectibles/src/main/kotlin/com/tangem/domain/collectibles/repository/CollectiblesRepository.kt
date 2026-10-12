@@ -24,7 +24,14 @@ interface CollectiblesRepository {
         userWalletId: UserWalletId,
     ): CollectibleGachaMachineNftsBatchFlow
 
-    suspend fun generateTx(userWalletId: UserWalletId, params: GenerateTxParams): CollectibleTransaction
+    suspend fun generatePurchaseTx(userWalletId: UserWalletId, params: GeneratePurchaseTxParams): CollectiblePurchaseTx
 
-    suspend fun submitTx(userWalletId: UserWalletId, signedTxData: String): SubmittedCollectibleTransaction
+    /** Reports the hash of the spin sent on chain; the backend then starts watching the payment. */
+    suspend fun reportPurchaseTxSent(userWalletId: UserWalletId, txId: String, txHash: String): CollectibleTxStatus
+
+    /** @param includeNftWon asks for the card won, which the backend leaves out otherwise */
+    suspend fun getTxState(userWalletId: UserWalletId, txId: String, includeNftWon: Boolean = false): CollectibleTxState
+
+    /** The card may come later than the opening: the answer can be `pack-opened` without it. */
+    suspend fun openPack(userWalletId: UserWalletId, txId: String): CollectibleTxState
 }
