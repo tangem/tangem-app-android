@@ -11,6 +11,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
+import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
@@ -40,6 +41,7 @@ internal class WalletHardwareBackupModelTest {
     private val hotWalletFeatureToggles: HotWalletFeatureToggles = mockk()
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase = mockk()
     private val socialLoginFeatureToggles: SocialLoginFeatureToggles = mockk()
+    private val isSocialBackupCompletedUseCase: IsSocialBackupCompletedUseCase = mockk()
     private val paramsContainer: ParamsContainer = mockk {
         every { require<WalletHardwareBackupComponent.Params>() } returns
             WalletHardwareBackupComponent.Params(userWalletId = WALLET_ID)
@@ -58,6 +60,8 @@ internal class WalletHardwareBackupModelTest {
         every { getUserWalletUseCase.invoke(WALLET_ID) } returns hotWallet.right()
         every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns false
         every { socialLoginFeatureToggles.isSocialLoginEnabled } returns true
+        every { hotWallet.backedUp } returns false
+        coEvery { isSocialBackupCompletedUseCase(WALLET_ID) } returns false
     }
 
     @ParameterizedTest
@@ -102,6 +106,49 @@ internal class WalletHardwareBackupModelTest {
         verify(exactly = 0) { analyticsEventHandler.send(ofType<WalletSettingsAnalyticEvents.NoticeBackupFirst>()) }
     }
 
+    @Test
+    fun `GIVEN a social wallet without a seed backup WHEN upgrading THEN the notice is shown`() = runTest {
+        // Arrange
+        coEvery { isSocialBackupCompletedUseCase(WALLET_ID) } returns true
+        coEvery { isWalletBackedUpUseCase(hotWallet) } returns true
+        val model = createModel(this)
+
+        // Act
+        model.uiState.value.blocks[UPGRADE_BLOCK].onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(
+                WalletSettingsAnalyticEvents.NoticeBackupFirst(
+                    source = AnalyticsParam.ScreensSources.HardwareWallet.value,
+                    action = WalletSettingsAnalyticEvents.NoticeBackupFirst.Action.Upgrade,
+                    isSocialBackedUp = true,
+                ),
+            )
+        }
+        verify(exactly = 0) { router.push(ofType<AppRoute.UpgradeWallet>(), any()) }
+    }
+
+    @Test
+    fun `GIVEN a social wallet with a seed backup WHEN upgrading THEN the upgrade opens without the notice`() =
+        runTest {
+            // Arrange
+            coEvery { isSocialBackupCompletedUseCase(WALLET_ID) } returns true
+            every { hotWallet.backedUp } returns true
+            val model = createModel(this)
+
+            // Act
+            model.uiState.value.blocks[UPGRADE_BLOCK].onClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { router.push(AppRoute.UpgradeWallet(userWalletId = WALLET_ID), any()) }
+            verify(exactly = 0) {
+                analyticsEventHandler.send(ofType<WalletSettingsAnalyticEvents.NoticeBackupFirst>())
+            }
+        }
+
     private fun createModel(testScope: TestScope) = WalletHardwareBackupModel(
         paramsContainer = paramsContainer,
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
@@ -117,6 +164,7 @@ internal class WalletHardwareBackupModelTest {
         getCloudBackupStatusUseCase = mockk(),
         isWalletBackedUpUseCase = isWalletBackedUpUseCase,
         socialLoginFeatureToggles = socialLoginFeatureToggles,
+        isSocialBackupCompletedUseCase = isSocialBackupCompletedUseCase,
     )
 
     private companion object {
