@@ -113,13 +113,13 @@ internal class CollectiblesConfirmOrderConverterTest {
     }
 
     @Test
-    fun `GIVEN a purchase in progress WHEN convert THEN back is hidden until it fails`() {
+    fun `GIVEN a purchase in progress WHEN convert THEN back and close are hidden until it fails`() {
         // Arrange
         val machine = createMachine()
 
         // Act
         val visibility = listOf(OpenPackStep.NotStarted, OpenPackStep.Generating, OpenPackStep.Opening, FAILED_BEFORE_PAYMENT).map {
-            converter.convert(input(machine = machine, step = it)).isBackVisible
+            converter.convert(input(machine = machine, step = it)).isNavigationVisible
         }
 
         // Assert
@@ -144,7 +144,7 @@ internal class CollectiblesConfirmOrderConverterTest {
         ButtonModel(usdcBalance = BigDecimal.ZERO, step = FAILED_BEFORE_PAYMENT, expected = NOT_ENOUGH_FUNDS),
     )
 
-    private val converter = CollectiblesConfirmOrderConverter(onBackClick = {}, onApproveClick = {})
+    private val converter = CollectiblesConfirmOrderConverter(onBackClick = {}, onCloseClick = {}, onApproveClick = {})
 
     private fun convert(input: CollectiblesConfirmOrderConverter.Input) = converter.convert(input).order
 
