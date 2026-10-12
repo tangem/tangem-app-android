@@ -53,6 +53,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import com.tangem.core.res.R as CoreResR
+import com.tangem.core.ui.R as CoreUiR
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class IntroductionSocialLoginHandlerTest {
@@ -116,6 +117,42 @@ internal class IntroductionSocialLoginHandlerTest {
         verify(exactly = 1) { uiMessageSender.send(any<SnackbarMessage>()) }
         assertThat(host.finishedCount).isEqualTo(1)
     }
+
+    @ParameterizedTest
+    @MethodSource("provideSuccessToastModels")
+    fun `GIVEN a wallet signed in WHEN signIn THEN the success toast is shown with its status icon`(
+        model: SuccessToastModel,
+    ) = runTest {
+        // Arrange
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns model.outcome.right()
+        val message = slot<SnackbarMessage>()
+        every { uiMessageSender.send(capture(message)) } just Runs
+
+        // Act
+        handler.signIn(PROVIDER, SOURCE, host)
+
+        // Assert
+        assertThat(message.captured).isEqualTo(
+            SnackbarMessage(
+                message = resourceReference(model.messageId),
+                startIconId = CoreUiR.drawable.ic_success_20,
+                isIconTinted = false,
+            ),
+        )
+    }
+
+    private fun provideSuccessToastModels() = listOf(
+        SuccessToastModel(
+            outcome = SocialLoginOutcome.WalletCreated(WALLET_ID),
+            messageId = CoreResR.string.social_login_toast_wallet_created,
+        ),
+        SuccessToastModel(
+            outcome = SocialLoginOutcome.WalletRestored(WALLET_ID),
+            messageId = CoreResR.string.social_login_toast_wallet_added,
+        ),
+    )
+
+    data class SuccessToastModel(val outcome: SocialLoginOutcome, val messageId: Int)
 
     @Test
     fun `GIVEN the wallet cannot be selected WHEN signIn THEN the main screen stays closed`() = runTest {
