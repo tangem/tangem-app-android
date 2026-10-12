@@ -92,6 +92,7 @@ internal class YieldSupplyClaimTrackerTest {
                 chainId = CHAIN_ID,
                 userAddress = USER_ADDRESS,
                 outcome = YieldSupplyTransactionOutcome.Reverted,
+                origin = YieldSupplyClaimOrigin.ClaimSheet,
             ),
         )
         coVerify(exactly = 0) { incentivesRepository.invalidateUserCache(any(), any()) }
