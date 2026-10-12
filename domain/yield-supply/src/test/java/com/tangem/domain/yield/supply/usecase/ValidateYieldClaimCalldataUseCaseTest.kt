@@ -10,14 +10,19 @@ import com.tangem.domain.yield.supply.YieldModuleAddressProvider
 import com.tangem.domain.yield.supply.models.incentives.YieldClaimCalldata
 import com.tangem.domain.yield.supply.models.incentives.YieldClaimValidationError
 import com.tangem.test.core.ProvideTestModels
-import com.tangem.test.mock.yield.MockYieldSupply
+import com.tangem.test.mock.yield.MockYieldSupply.CHAIN_ID
+import com.tangem.test.mock.yield.MockYieldSupply.MODULE_ADDRESS
+import com.tangem.test.mock.yield.MockYieldSupply.REWARD_TOKEN
+import com.tangem.test.mock.yield.MockYieldSupply.USER_ADDRESS
+import com.tangem.test.mock.yield.MockYieldSupply.calldata
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class ValidateYieldClaimCalldataUseCaseTest {
@@ -28,6 +33,11 @@ internal class ValidateYieldClaimCalldataUseCaseTest {
     private val useCase = ValidateYieldClaimCalldataUseCase(
         yieldModuleAddressProvider = yieldModuleAddressProvider,
     )
+
+    @BeforeEach
+    fun resetMocks() {
+        clearMocks(yieldModuleAddressProvider)
+    }
 
     @ParameterizedTest
     @ProvideTestModels
@@ -52,7 +62,7 @@ internal class ValidateYieldClaimCalldataUseCaseTest {
         } throws IllegalStateException("Wallet manager not found")
 
         // Act
-        val actual = useCase(calldata = calldata(), context = context(setOf(REWARD_TOKEN, SECOND_REWARD_TOKEN)))
+        val actual = useCase(calldata = calldata(), context = context(SUPPORTED_REWARD_TOKENS))
 
         // Assert
         assertThat(actual).isEqualTo(YieldClaimValidationError.ModuleAddressUnavailable.left())
@@ -60,7 +70,7 @@ internal class ValidateYieldClaimCalldataUseCaseTest {
 
     internal data class ValidationModel(
         val calldata: YieldClaimCalldata,
-        val supportedRewardTokens: Set<String> = setOf(REWARD_TOKEN, SECOND_REWARD_TOKEN),
+        val supportedRewardTokens: Set<String> = SUPPORTED_REWARD_TOKENS,
         val derivedModuleAddress: String? = MODULE_ADDRESS,
         val expected: Either<YieldClaimValidationError, YieldClaimCalldata>,
     )
@@ -164,7 +174,7 @@ internal class ValidateYieldClaimCalldataUseCaseTest {
             expected = YieldClaimValidationError.MalformedProof.left(),
         ),
         ValidationModel(
-            calldata = calldata(cumulativeAmounts = listOf("1")),
+            calldata = calldata(cumulativeAmounts = listOf("1", "2")),
             expected = YieldClaimValidationError.MalformedProof.left(),
         ),
         // The reward the service reports as unroutable is absent from the admitted set.
@@ -175,7 +185,7 @@ internal class ValidateYieldClaimCalldataUseCaseTest {
         ),
         // The wrapped-reward case: the payload pays out a token the incentives response says nothing about.
         ValidationModel(
-            calldata = calldata(rewardTokens = listOf(REWARD_TOKEN, "0xwrapped")),
+            calldata = calldata(rewardTokens = listOf(REWARD_TOKEN, "0xwrapped"), cumulativeAmounts = listOf("1", "2")),
             expected = YieldClaimValidationError.UnsupportedRewardToken.left(),
         ),
         ValidationModel(
@@ -193,7 +203,7 @@ internal class ValidateYieldClaimCalldataUseCaseTest {
         // A token that has nothing claimable right now is still admitted: the cumulative proof keeps listing it.
         ValidationModel(
             calldata = calldata(),
-            supportedRewardTokens = setOf(REWARD_TOKEN, SECOND_REWARD_TOKEN, "0xdrained"),
+            supportedRewardTokens = SUPPORTED_REWARD_TOKENS + "0xdrained",
             expected = calldata().right(),
         ),
     )
@@ -207,37 +217,10 @@ internal class ValidateYieldClaimCalldataUseCaseTest {
         supportedRewardTokens = supportedRewardTokens,
     )
 
-    @Suppress("LongParameterList")
-    private fun calldata(
-        chainId: Int = CHAIN_ID,
-        userAddress: String = USER_ADDRESS,
-        moduleAddress: String? = MODULE_ADDRESS,
-        hasClaimable: Boolean = true,
-        to: String? = MODULE_ADDRESS,
-        data: String? = "0xdeadbeef",
-        rewardTokens: List<String> = listOf(REWARD_TOKEN, SECOND_REWARD_TOKEN),
-        cumulativeAmounts: List<String> = listOf("100", "200"),
-        isClaimRecommended: Boolean = true,
-    ) = MockYieldSupply.calldata(
-        chainId = chainId,
-        userAddress = userAddress,
-        moduleAddress = moduleAddress,
-        hasClaimable = hasClaimable,
-        to = to,
-        data = data,
-        rewardTokens = rewardTokens,
-        cumulativeAmounts = cumulativeAmounts,
-        totalEstimatedServiceFeeUsd = BigDecimal("0.15"),
-        isClaimRecommended = isClaimRecommended,
-    )
-
     private companion object {
-        const val CHAIN_ID = MockYieldSupply.CHAIN_ID
-        const val USER_ADDRESS = "0xuser"
-        const val MODULE_ADDRESS = "0xmodule"
         const val OTHER_MODULE = "0xothermodule"
-        const val REWARD_TOKEN = "0xreward"
         const val SECOND_REWARD_TOKEN = "0xreward2"
+        val SUPPORTED_REWARD_TOKENS = setOf(REWARD_TOKEN.lowercase(), SECOND_REWARD_TOKEN)
         val USER_WALLET_ID = UserWalletId("0011")
     }
 }
