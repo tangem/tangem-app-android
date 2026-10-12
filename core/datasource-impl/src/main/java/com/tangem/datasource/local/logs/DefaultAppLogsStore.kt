@@ -42,6 +42,20 @@ internal class DefaultAppLogsStore @Inject constructor(
         File(applicationContext.filesDir, PERMITTED_FILE_NAME_ZIP)
     }
 
+    // Separate from logFileZip: the archive with info carries wallet data, and a later logs-only request
+    // (e.g. the support email) must not overwrite it while its consumer is still reading it
+    private val infoLogsDir by lazy {
+        File(applicationContext.filesDir, INFO_LOGS_DIR_NAME)
+    }
+
+    private val infoLogsFile by lazy {
+        File(infoLogsDir, INFO_LOGS_FILE_NAME)
+    }
+
+    private val logWithInfoFileZip by lazy {
+        File(infoLogsDir, PERMITTED_FILE_NAME_ZIP)
+    }
+
     private val formatter = DateTimeFormatterBuilder()
         .appendDayOfMonth(2)
         .appendLiteral('.')
@@ -59,14 +73,29 @@ internal class DefaultAppLogsStore @Inject constructor(
     /** Get log file */
     override fun getFile(): File? = if (logFile.exists()) logFile else null
 
-    override suspend fun getZipFile(): File? {
+    override suspend fun getZipFile(infoLogs: String?): File? {
         return zipMutex.withLock {
-            if (logFile.exists()) {
-                zip(filesToCompress = listOf(logFile), outputZipFile = logFileZip)
-            } else {
-                null
+            withContext(dispatchers.io) {
+                if (!logFile.exists() && infoLogs == null) return@withContext null
+
+                try {
+                    val filesToCompress = buildList {
+                        if (logFile.exists()) add(logFile)
+                        if (infoLogs != null) add(writeInfoLogsFile(infoLogs))
+                    }
+                    val outputZipFile = if (infoLogs != null) logWithInfoFileZip else logFileZip
+
+                    zip(filesToCompress = filesToCompress, outputZipFile = outputZipFile)
+                } finally {
+                    infoLogsFile.delete()
+                }
             }
         }
+    }
+
+    private fun writeInfoLogsFile(infoLogs: String): File {
+        infoLogsDir.mkdirs()
+        return infoLogsFile.apply { writeText(infoLogs) }
     }
 
     /**
@@ -171,5 +200,7 @@ internal class DefaultAppLogsStore @Inject constructor(
         // the only name that we allow to send as email to company addresses
         const val PERMITTED_FILE_NAME = "log.txt"
         const val PERMITTED_FILE_NAME_ZIP = "log.zip"
+        const val INFO_LOGS_DIR_NAME = "info_logs"
+        const val INFO_LOGS_FILE_NAME = "infoLogs.txt"
     }
 }

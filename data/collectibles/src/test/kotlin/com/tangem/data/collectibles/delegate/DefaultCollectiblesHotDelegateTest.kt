@@ -193,6 +193,45 @@ internal class DefaultCollectiblesHotDelegateTest {
     }
 
     @Test
+    fun `GIVEN nothing stored WHEN getPublicKeyOrNull THEN returns null and generates nothing`() = runTest {
+        // Arrange
+        coEvery { accountStore.getDelegate(WALLET_ID) } returns null
+
+        // Act
+        val actual = delegate.getPublicKeyOrNull(ACCOUNT_ID)
+
+        // Assert
+        assertThat(actual).isNull()
+        coVerify(exactly = 0) { tangemHotSdk.generateWallet(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN key stored WHEN getPublicKeyOrNull THEN it is re-derived`() = runTest {
+        // Arrange
+        coEvery { accountStore.getDelegate(WALLET_ID) } returns RECORD
+        coEvery { tangemHotSdk.derivePublicKey(any(), any()) } returns derivedResponse()
+
+        // Act
+        val actual = delegate.getPublicKeyOrNull(ACCOUNT_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(HotDelegatePublicKey(PUBLIC_KEY.encodeBase58()))
+    }
+
+    @Test
+    fun `GIVEN the key cannot be derived WHEN getPublicKeyOrNull THEN returns null`() = runTest {
+        // Arrange
+        coEvery { accountStore.getDelegate(WALLET_ID) } returns RECORD
+        coEvery { tangemHotSdk.derivePublicKey(any(), any()) } throws IllegalStateException()
+
+        // Act
+        val actual = delegate.getPublicKeyOrNull(ACCOUNT_ID)
+
+        // Assert
+        assertThat(actual).isNull()
+    }
+
+    @Test
     fun `GIVEN nothing stored WHEN sign THEN reports not provisioned without calling the sdk`() = runTest {
         // Arrange
         coEvery { accountStore.getDelegate(WALLET_ID) } returns null

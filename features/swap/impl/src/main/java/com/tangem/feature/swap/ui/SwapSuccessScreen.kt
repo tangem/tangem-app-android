@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.account.AccountTitle
@@ -27,6 +28,7 @@ import com.tangem.core.ui.components.transactions.TransactionDoneTitle
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TransactionSuccessScreenTestTags
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.feature.swap.models.SwapSuccessStateHolder
@@ -121,14 +123,17 @@ private fun SwapSuccessScreenContent(
         }
 
         if (feeSelectorUM != null) {
-            FeeBlockSuccess(feeSelectorUM)
+            Box(modifier = Modifier.testTag(TransactionSuccessScreenTestTags.FEE_BLOCK)) {
+                FeeBlockSuccess(feeSelectorUM)
+            }
         } else if (state.fee != null && state.fee != TextReference.EMPTY) {
             InputRowDefault(
                 title = TextReference.Res(R.string.common_network_fee_title),
                 text = state.fee,
                 modifier = Modifier
                     .clip(TangemTheme.shapes.roundedCornersXMedium)
-                    .background(TangemTheme.colors.background.action),
+                    .background(TangemTheme.colors.background.action)
+                    .testTag(TransactionSuccessScreenTestTags.FEE_BLOCK),
             )
         }
         SpacerH(16.dp)
@@ -148,7 +153,8 @@ private fun SwapAmountBlock(
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
             .fillMaxWidth()
-            .padding(12.dp),
+            .padding(12.dp)
+            .testTag(TransactionSuccessScreenTestTags.AMOUNT_BLOCK),
     ) {
         AccountTitle(title)
         Row(

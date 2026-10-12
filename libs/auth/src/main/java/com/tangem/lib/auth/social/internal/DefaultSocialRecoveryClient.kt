@@ -107,8 +107,8 @@ internal class DefaultSocialRecoveryClient(
                     )
                     is ApiResponse.Error -> {
                         val error = response.cause.toDomainError()
-                        // 404 is the documented "this identity has no wallet yet" answer, not a failure
-                        raise(if (error.isNotFound()) SocialRecoveryError.BindingNotFound else error)
+                        // only this code means "no wallet yet": any other 404 must not start a second wallet
+                        raise(if (error.isBindingNotFound()) SocialRecoveryError.BindingNotFound else error)
                     }
                 }
 
@@ -200,6 +200,23 @@ internal class DefaultSocialRecoveryClient(
         }
     }
 
+    override suspend fun registerWallet(walletId: String, signer: WalletSigner): Either<SocialRecoveryError, Unit> =
+        withContext(dispatchers.io) {
+            walletRegistrar.register(walletId = walletId, signer = signer).mapLeft { error ->
+                when (error) {
+                    WalletRegistrationError.Disabled,
+                    WalletRegistrationError.NoActiveSession,
+                    -> SocialRecoveryError.NoActiveSession
+                    is WalletRegistrationError.Api -> SocialRecoveryError.Api(error.cause)
+                    WalletRegistrationError.DeviceKeyUnavailable -> SocialRecoveryError.DeviceKeyUnavailable
+                    is WalletRegistrationError.SigningFailed -> SocialRecoveryError.SigningFailed(error.cause)
+                    is WalletRegistrationError.PersistenceFailed -> SocialRecoveryError.Unknown(error.cause)
+                    is WalletRegistrationError.NonceDecodingFailed -> SocialRecoveryError.Unknown(error.cause)
+                    is WalletRegistrationError.NonceDecryptionFailed -> SocialRecoveryError.Unknown(error.cause)
+                }
+            }
+        }
+
     /**
      * Delegated rather than calling the endpoint here: unregistering also clears the local
      * registered-wallet marker under the per-wallet lock, and a wallet the server has forgotten while
@@ -207,7 +224,7 @@ internal class DefaultSocialRecoveryClient(
      */
     override suspend fun unbindWallet(walletId: String): Either<SocialRecoveryError, Unit> =
         withContext(dispatchers.io) {
-            walletRegistrar.unregister(walletId).fold(
+            walletRegistrar.unregister(walletId = walletId, shouldDeleteSocialRecovery = true).fold(
                 ifRight = { Either.Right(Unit) },
                 ifLeft = { error ->
                     when (error) {
@@ -221,8 +238,11 @@ internal class DefaultSocialRecoveryClient(
                         WalletRegistrationError.NoActiveSession -> Either.Left(SocialRecoveryError.NoActiveSession)
                         is WalletRegistrationError.SigningFailed ->
                             Either.Left(SocialRecoveryError.SigningFailed(error.cause))
-                        is WalletRegistrationError.PersistenceFailed ->
-                            Either.Left(SocialRecoveryError.Unknown(error.cause))
+                        // only raised once the server has already dropped the wallet and its recovery key
+                        is WalletRegistrationError.PersistenceFailed -> {
+                            TangemLogger.e("Unbound on the server, but the local state was not saved", error.cause)
+                            Either.Right(Unit)
+                        }
                         is WalletRegistrationError.NonceDecodingFailed ->
                             Either.Left(SocialRecoveryError.Unknown(error.cause))
                         is WalletRegistrationError.NonceDecryptionFailed ->
@@ -308,17 +328,27 @@ internal class DefaultSocialRecoveryClient(
     }
 
     /** A 409 can only mean the one-to-one rule was broken — re-binding the same pair is allowed */
-    private fun Throwable.toDomainError(): SocialRecoveryError = when (val authError = errorConverter.convert(this)) {
-        is AuthError.Conflict -> SocialRecoveryError.BindingConflict
-        else -> SocialRecoveryError.Api(authError)
+    private fun Throwable.toDomainError(): SocialRecoveryError {
+        val authError = errorConverter.convert(this)
+        return when {
+            authError is AuthError.Conflict -> SocialRecoveryError.BindingConflict
+            authError is AuthError.NotFound && authError.problem?.detail == NONCE_NOT_FOUND_DETAIL ->
+                SocialRecoveryError.NonceExpired
+            else -> SocialRecoveryError.Api(authError)
+        }
     }
 
-    private fun SocialRecoveryError.isNotFound(): Boolean =
-        this is SocialRecoveryError.Api && error is AuthError.NotFound
+    private fun SocialRecoveryError.isBindingNotFound(): Boolean =
+        this is SocialRecoveryError.Api && error is AuthError.NotFound && error.problem?.code == BINDING_NOT_FOUND_CODE
 
     private fun Raise<SocialRecoveryError>.decodeBase64(value: String): ByteArray = try {
         Base64.decode(value, Base64.NO_WRAP)
     } catch (e: IllegalArgumentException) {
         raise(SocialRecoveryError.DecryptionFailed(e))
+    }
+
+    private companion object {
+        const val NONCE_NOT_FOUND_DETAIL = "Nonce not found"
+        const val BINDING_NOT_FOUND_CODE = "RECOVERY_BINDING_NOT_FOUND"
     }
 }

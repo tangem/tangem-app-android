@@ -71,6 +71,10 @@ internal class PolymarketPositionsLoader @Inject constructor(
             session.pause()
         }
 
+        fun refresh() {
+            session.refresh()
+        }
+
         fun selectFilter(filter: PolymarketPositionsFilter) {
             if (filter == selectedFilter.value) return
             selectedFilter.value = filter
@@ -83,6 +87,7 @@ internal class PolymarketPositionsLoader @Inject constructor(
         }
 
         private suspend fun showState(value: PolymarketPositionsState, filter: PolymarketPositionsFilter) {
+            value.refreshError?.let { TangemLogger.e("Failed to refresh Polymarket positions: $it") }
             val content = if (value.filter != filter) {
                 Content.Loading
             } else {
@@ -95,7 +100,14 @@ internal class PolymarketPositionsLoader @Inject constructor(
                     else -> convertData(value)
                 }
             }
-            if (filter == selectedFilter.value) state.value = FilteredContent(filter, content)
+            if (filter == selectedFilter.value) {
+                state.value = FilteredContent(
+                    filter = filter,
+                    content = content,
+                    isRefreshing = value.isRefreshing,
+                    onRefreshRetry = if (value.refreshError != null) session::refresh else null,
+                )
+            }
         }
 
         private suspend fun convertData(value: PolymarketPositionsState): Content {
@@ -115,6 +127,7 @@ internal class PolymarketPositionsLoader @Inject constructor(
                     value.positions.map(converter::convert).toImmutableList()
                 },
                 nextPage = when {
+                    value.isRefreshing || value.refreshError != null -> NextPage.End
                     pageError != null -> NextPage.Error(session::retry)
                     value.status is PaginationStatus.NextBatchLoading -> NextPage.Loading
                     value.status is PaginationStatus.EndOfPagination -> NextPage.End

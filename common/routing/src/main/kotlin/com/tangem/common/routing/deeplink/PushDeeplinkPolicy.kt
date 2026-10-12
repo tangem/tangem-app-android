@@ -8,8 +8,9 @@ import com.tangem.common.routing.DeepLinkScheme
  *
  * A push payload can carry a ready-made deep link that is routed verbatim when the notification is tapped. Applied at
  * the push boundary (not inside the converter), it blocks the critical routes a notification must never reach:
- * WalletConnect pairing (both the raw `wc:` scheme and `tangem://wc`, which pairs with an attacker-controlled session)
- * and the sell redirect (which prefills the Send screen with a payload-supplied address). Every other route is allowed.
+ * WalletConnect pairing (both the raw `wc:` scheme and `tangem://wc`, which pairs with an attacker-controlled session),
+ * MCP agent authorization (`tangem://mcp.authorization`, which pairs with a payload-supplied agent user code) and the
+ * sell redirect (which prefills the Send screen with a payload-supplied address). Every other route is allowed.
  */
 object PushDeeplinkPolicy {
 
@@ -17,6 +18,7 @@ object PushDeeplinkPolicy {
         // A raw "wc:" link is paired straight from the scheme, without a host.
         scheme?.lowercase() == DeepLinkScheme.WalletConnect.scheme -> false
         host == DeepLinkRoute.WalletConnect.host -> false
+        host == DeepLinkRoute.McpAuthorization.host -> false
         host == DeepLinkRoute.SellRedirect.host -> false
         else -> true
     }

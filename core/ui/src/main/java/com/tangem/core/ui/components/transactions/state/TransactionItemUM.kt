@@ -29,7 +29,6 @@ sealed interface TransactionItemUM {
      * @property amount             signed numeric value, e.g. "+0.500913" / "-350.31"; no currency symbol embedded.
      *                              `null` hides the numeric value while [currencySymbol] still shows.
      * @property currencySymbol     currency symbol shown alongside [amount], e.g. "BTC", "USDT"
-     * @property isPendingSignature awaiting other co-signers (Joint account); shows a clock badge + "Pending" pill
      */
     data class Content(
         override val txHash: String,
@@ -44,7 +43,6 @@ sealed interface TransactionItemUM {
         val subtitle: ContentSubtitle,
         val timestamp: Long,
         val warning: TextReference? = null,
-        val isPendingSignature: Boolean = false,
     ) : TransactionItemUM {
 
         @Immutable

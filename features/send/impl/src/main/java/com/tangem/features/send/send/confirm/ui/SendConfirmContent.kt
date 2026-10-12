@@ -94,6 +94,9 @@ private fun LazyListScope.blocks(
                     .clip(TangemTheme.shapes.roundedCornersXMedium)
                     .background(TangemTheme.colors.background.action),
             )
+            if (signaturesUM != null) {
+                SignaturesBanner(signaturesUM = signaturesUM)
+            }
             if (setupFeeNote != null) {
                 Text(
                     text = setupFeeNote.resolveReference(),
@@ -101,9 +104,6 @@ private fun LazyListScope.blocks(
                     color = TangemTheme.colors.text.tertiary,
                     modifier = Modifier.padding(horizontal = 12.dp),
                 )
-            }
-            if (signaturesUM != null) {
-                SignaturesBanner(signaturesUM = signaturesUM)
             }
         }
     }

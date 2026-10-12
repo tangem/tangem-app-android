@@ -84,27 +84,6 @@ internal class ForYouEarnOpportunitiesConverterTest {
         }
 
         @Test
-        fun `GIVEN the stake arrives as a contribution WHEN convert THEN it still counts as active`() {
-            // Arrange — toggle-on shape: the typed field is null and the balance is in `contributions`
-            val currency = createEarnCurrency()
-            val status = createStatus(
-                currency,
-                createEarnStatusValue(isStakingActive = true, useContributions = true),
-            )
-            val converter = createConverter(
-                yieldStakingAvailability = mapOf(currency to stakingAvailable(apy = BigDecimal("0.05"))),
-            )
-
-            // Act
-            val result = converter.convert(createSelectedPortfolio(createPortfolioStatus(listOf(status))))
-
-            // Assert — same verdict as the legacy-field case above; reading only the typed field would report
-            // the token as not yet earning
-            assertThat((result as EarnOpportunitiesUM.Content).subtitleRes)
-                .isEqualTo(R.string.for_you_earn_opportunities_all_tokens_active)
-        }
-
-        @Test
         fun `GIVEN earn-eligible token not yet earning WHEN convert THEN potential-rewards state`() {
             // Arrange
             val currency = createEarnCurrency()

@@ -15,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -45,6 +46,7 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_sign_minus_24
 import com.tangem.core.ui.res.generated.icons.ic_sign_plus_24
 import com.tangem.core.ui.res.generated.icons.ic_user_24
+import com.tangem.core.ui.test.accounts.JointAccountCreationTestTags
 import com.tangem.core.ui.utils.dashedBorder
 import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.features.jointaccount.creation.composition.ui.state.JointAccountCompositionUM
@@ -334,6 +336,7 @@ private fun Footer(onContinueClick: () -> Unit, modifier: Modifier = Modifier) {
 
         TangemButton(
             modifier = Modifier
+                .testTag(JointAccountCreationTestTags.COMPOSITION_CONTINUE_BUTTON)
                 .fillMaxWidth()
                 .padding(top = 16.dp)
                 .padding(horizontal = 16.dp, vertical = 12.dp),

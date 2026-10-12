@@ -1,6 +1,7 @@
 package com.tangem.features.send.send.confirm.model
 
 import android.os.SystemClock
+import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.tangem.blockchain.common.Amount
@@ -13,9 +14,12 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -540,7 +544,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             val onSendTransaction: () -> Unit = mockk(relaxed = true)
             coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
             coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
-            coEvery { jointSendDelegate.createOperation(jointAccount, any(), any(), any()) } returns Unit.right()
+            coEvery { jointSendDelegate.createOperation(jointAccount, any(), any(), any(), any()) } returns Unit.right()
             val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction))
             advanceUntilIdle()
 
@@ -559,12 +563,57 @@ internal class SendConfirmModelTest : SendModelTestBase() {
         }
 
         @Test
+        fun `GIVEN the whole balance entered WHEN onSendClick THEN the operation sends the balance minus the fee`() =
+            runTest {
+                // Arrange — the Safe pays the fee from the same balance, so the entered maximum has to shrink by it
+                coEvery { isAmountSubtractAvailableUseCase(any(), any(), any()) } returns true.right()
+                coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+                coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
+                val amountSlot = slot<BigDecimal>()
+                coEvery {
+                    jointSendDelegate.createOperation(jointAccount, any(), capture(amountSlot), any(), any())
+                } returns Unit.right()
+                val params = jointConfirmParams(onSendTransaction = mockk(relaxed = true), enteredAmount = BigDecimal.ONE)
+                val sut = createSendConfirmModel(this, params)
+                advanceUntilIdle()
+
+                // Act
+                sut.onSendClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(amountSlot.captured).isEqualTo(BigDecimal.ONE - BigDecimal("0.001"))
+            }
+
+        @Test
+        fun `GIVEN an amount the balance covers with the fee WHEN onSendClick THEN it is sent as entered`() = runTest {
+            // Arrange
+            coEvery { isAmountSubtractAvailableUseCase(any(), any(), any()) } returns true.right()
+            coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+            coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
+            val amountSlot = slot<BigDecimal>()
+            coEvery {
+                jointSendDelegate.createOperation(jointAccount, any(), capture(amountSlot), any(), any())
+            } returns Unit.right()
+            val params = jointConfirmParams(onSendTransaction = mockk(relaxed = true), enteredAmount = BigDecimal("0.5"))
+            val sut = createSendConfirmModel(this, params)
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(amountSlot.captured).isEqualTo(BigDecimal("0.5"))
+        }
+
+        @Test
         fun `GIVEN busy slot WHEN onSendClick THEN the slot alert is shown and the step stays editable`() = runTest {
             // Arrange
             coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
             coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
             coEvery {
-                jointSendDelegate.createOperation(jointAccount, any(), any(), any())
+                jointSendDelegate.createOperation(jointAccount, any(), any(), any(), any())
             } returns JointOperationCreateError.SlotBusy.left()
             val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
             advanceUntilIdle()
@@ -584,7 +633,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             // Arrange
             coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
             coEvery {
-                jointSendDelegate.createOperation(jointAccount, any(), any(), any())
+                jointSendDelegate.createOperation(jointAccount, any(), any(), any(), any())
             } returns JointOperationCreateError.AccountNotReady.left()
             val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
             advanceUntilIdle()
@@ -602,7 +651,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             // Arrange
             coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
             coEvery {
-                jointSendDelegate.createOperation(jointAccount, any(), any(), any())
+                jointSendDelegate.createOperation(jointAccount, any(), any(), any(), any())
             } returns JointOperationCreateError.NetworkStateMoved.left()
             val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
             advanceUntilIdle()
@@ -620,7 +669,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             // Arrange
             coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
             coEvery {
-                jointSendDelegate.createOperation(jointAccount, any(), any(), any())
+                jointSendDelegate.createOperation(jointAccount, any(), any(), any(), any())
             } returns JointOperationCreateError.CompositionMismatch.left()
             val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
             advanceUntilIdle()
@@ -633,12 +682,200 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             verify(exactly = 1) { sendConfirmAlertFactory.getJointSendBlockedState(onSupportClick = any()) }
         }
 
+        @Test
+        fun `GIVEN a Smart Gas token fee WHEN onSendClick THEN the operation is created with that token`() = runTest {
+            // Arrange
+            val feeTokens = mutableListOf<CryptoCurrency.Token?>()
+            stubJointCreation(feeTokens)
+            val params = jointConfirmParams(
+                onSendTransaction = mockk(relaxed = true),
+                transactionFeeExtended = TransactionFeeExtended(
+                    transactionFee = TransactionFee.Single(normal = tokenFee()),
+                    feeTokenId = ethereumUsdc.id,
+                ),
+                feeCryptoCurrencyStatus = com.tangem.features.send.loadedStatus(ethereumUsdc),
+            )
+            val sut = createSendConfirmModel(this, params)
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(feeTokens).containsExactly(ethereumUsdc)
+        }
+
+        @Test
+        fun `GIVEN a coin fee WHEN onSendClick THEN the operation is created without a fee token`() = runTest {
+            // Arrange
+            val feeTokens = mutableListOf<CryptoCurrency.Token?>()
+            stubJointCreation(feeTokens)
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(feeTokens).containsExactly(null)
+        }
+
+        @Test
+        fun `GIVEN a coin fee and the sent token as the fee status WHEN onSendClick THEN no fee token is passed`() =
+            runTest {
+                // Arrange
+                val feeTokens = mutableListOf<CryptoCurrency.Token?>()
+                stubJointCreation(feeTokens)
+                val params = jointConfirmParams(
+                    onSendTransaction = mockk(relaxed = true),
+                    paramsFeeCryptoCurrencyStatus = com.tangem.features.send.loadedStatus(ethereumUsdc),
+                )
+                val sut = createSendConfirmModel(this, params)
+                advanceUntilIdle()
+
+                // Act
+                sut.onSendClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(feeTokens).containsExactly(null)
+            }
+
+        private fun stubJointCreation(feeTokens: MutableList<CryptoCurrency.Token?>) {
+            coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+            coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
+            coEvery {
+                jointSendDelegate.createOperation(jointAccount, any(), any(), any(), captureNullable(feeTokens))
+            } returns Unit.right()
+        }
+
+        @Test
+        fun `GIVEN the operation is created WHEN onSendClick THEN send success analytics carry the composition`() =
+            runTest {
+                // Arrange
+                stubCreateOperation(result = Unit.right())
+                val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+                advanceUntilIdle()
+
+                // Act
+                sut.onSendClick()
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 1) {
+                    sendAnalyticHelper.sendSuccessAnalytics(
+                        cryptoCurrency = any(),
+                        sendUM = any(),
+                        feeToken = any(),
+                        account = jointAccount,
+                        jointComposition = AnalyticsParam.JointComposition(membersCount = 3, threshold = 2),
+                    )
+                }
+            }
+
+        @Test
+        fun `GIVEN the account leaves the store after confirm WHEN created THEN success analytics are still sent`() =
+            runTest {
+                // Arrange
+                stubCreateOperation(result = Unit.right())
+                coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returnsMany
+                    listOf(storedJointAccount, null)
+                val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+                advanceUntilIdle()
+
+                // Act
+                sut.onSendClick()
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 1) {
+                    sendAnalyticHelper.sendSuccessAnalytics(
+                        cryptoCurrency = any(),
+                        sendUM = any(),
+                        feeToken = any(),
+                        account = jointAccount,
+                        jointComposition = AnalyticsParam.JointComposition(membersCount = 3, threshold = 2),
+                    )
+                }
+            }
+
+        @Test
+        fun `GIVEN the request fails WHEN onSendClick THEN Joint Account Error carries the cause`() = runTest {
+            // Arrange
+            val cause = IllegalStateException("Request failed")
+            stubCreateOperation(result = JointOperationCreateError.Failed(cause = cause).left())
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(JointAccountError(source = ErrorSource.CreateOperation, cause = cause))
+            }
+        }
+
+        @Test
+        fun `GIVEN busy slot WHEN onSendClick THEN Joint Account Error names the error`() = runTest {
+            // Arrange
+            stubCreateOperation(result = JointOperationCreateError.SlotBusy.left())
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    JointAccountError(source = ErrorSource.CreateOperation, errorMessage = "SlotBusy"),
+                )
+            }
+        }
+
+        @Test
+        fun `GIVEN signing dismissed WHEN onSendClick THEN no Joint Account Error is sent`() = runTest {
+            // Arrange
+            stubCreateOperation(result = JointOperationCreateError.UserCancelled.left())
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<JointAccountError>()) }
+        }
+
+        private fun stubCreateOperation(result: Either<JointOperationCreateError, Unit>) {
+            coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+            coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
+            coEvery { jointSendDelegate.createOperation(jointAccount, any(), any(), any(), any()) } returns result
+        }
+
         /** Confirm starts empty so the model builds the real Content with the signatures itself */
-        private fun jointConfirmParams(onSendTransaction: () -> Unit) = MutableParamsContainer(
+        private fun jointConfirmParams(
+            onSendTransaction: () -> Unit,
+            enteredAmount: BigDecimal = BigDecimal.ONE,
+            transactionFeeExtended: TransactionFeeExtended? = null,
+            feeCryptoCurrencyStatus: CryptoCurrencyStatus = loadedFeeStatus,
+            paramsFeeCryptoCurrencyStatus: CryptoCurrencyStatus = loadedFeeStatus,
+        ) = MutableParamsContainer(
             defaultSendConfirmParams(
-                state = normalFeeState().copy(confirmUM = ConfirmUM.Empty),
+                state = contentState(
+                    fee = realFee(),
+                    transactionFeeExtended = transactionFeeExtended,
+                    enteredAmount = enteredAmount,
+                    feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
+                ).copy(confirmUM = ConfirmUM.Empty),
                 cryptoCurrencyStatus = loadedFeeStatus,
-                feeCryptoCurrencyStatus = loadedFeeStatus,
+                feeCryptoCurrencyStatus = paramsFeeCryptoCurrencyStatus,
             ).copy(
                 accountFlow = MutableStateFlow(jointAccount),
                 onSendTransaction = onSendTransaction,

@@ -34,5 +34,13 @@
     {
         "name": "arc",
         "version": "6.3"
+    },
+    {
+        "name": "onyx",
+        "version": "undefined"
+    },
+    {
+        "name": "public-masterpiece",
+        "version": "undefined"
     }
 ]

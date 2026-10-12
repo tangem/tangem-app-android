@@ -3,7 +3,9 @@ package com.tangem.features.tangempay.withdraw.bank.model
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.features.tangempay.withdraw.bank.BASE_CHAIN_ID
+import com.tangem.features.tangempay.withdraw.bank.BSC_CHAIN_ID
 import com.tangem.features.tangempay.withdraw.bank.USDC_BASE
+import com.tangem.features.tangempay.withdraw.bank.USDC_BSC
 import com.tangem.features.tangempay.withdraw.bank.availableNetwork
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawSource
 import com.tangem.features.tangempay.withdraw.bank.currencyStatus
@@ -20,6 +22,7 @@ internal class BankWithdrawOptionsFactoryTest {
 
     private val usdcPolygon = paymentToken()
     private val usdcBase = paymentToken(networkId = "base", networkName = "Base", contractAddress = USDC_BASE)
+    private val usdcBsc = paymentToken(networkId = "bsc", networkName = "BNB Smart Chain", contractAddress = USDC_BSC)
     private val usdtPolygon = paymentToken(contractAddress = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F", symbol = "USDT")
     private val usdtBase = paymentToken(
         networkId = "base",
@@ -76,7 +79,7 @@ internal class BankWithdrawOptionsFactoryTest {
     }
 
     @Test
-    fun `GIVEN tokens not accepted with balance WHEN create THEN listed unavailable inside their symbol group`() {
+    fun `GIVEN tokens not accepted with balance WHEN create THEN listed unavailable with USDC first among them`() {
         // Arrange
         val networks = listOf(
             availableNetwork(
@@ -100,6 +103,55 @@ internal class BankWithdrawOptionsFactoryTest {
                 isAvailable = false,
             ),
             bankWithdrawSource(token = usdtPolygon, fiatBalance = BigDecimal("5"), isAvailable = false),
+        ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN unavailable token between available ones WHEN create THEN listed after them`() {
+        // Arrange
+        val networks = listOf(
+            availableNetwork(token = usdcPolygon, fiatBalance = BigDecimal("25.94")),
+            availableNetwork(token = usdcBsc, chainId = BSC_CHAIN_ID, fiatBalance = BigDecimal("15")),
+            availableNetwork(token = usdcBase, chainId = BASE_CHAIN_ID, fiatBalance = BigDecimal("9.80")),
+        )
+
+        // Act
+        val actual = BankWithdrawOptionsFactory.create(bothSources, networks, balanceCurrencyCode = "USD")
+
+        // Assert
+        assertThat(actual?.sources).containsExactly(
+            bankWithdrawSource(token = usdcPolygon, fiatBalance = BigDecimal("25.94")),
+            bankWithdrawSource(token = usdcBase, chainId = BASE_CHAIN_ID, fiatBalance = BigDecimal("9.80")),
+            bankWithdrawSource(
+                token = usdcBsc,
+                chainId = BSC_CHAIN_ID,
+                fiatBalance = BigDecimal("15"),
+                isAvailable = false,
+            ),
+        ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN unavailable USDC and available USDT WHEN create THEN available USDT comes first`() {
+        // Arrange
+        val networks = listOf(
+            availableNetwork(token = usdcBase, chainId = BASE_CHAIN_ID, fiatBalance = BigDecimal("40")),
+            availableNetwork(token = usdtPolygon, fiatBalance = BigDecimal("5")),
+        )
+        val options = offrampOptions(sources = listOf(offrampSource(contractAddress = usdtPolygon.contractAddress)))
+
+        // Act
+        val actual = BankWithdrawOptionsFactory.create(options, networks, balanceCurrencyCode = "USD")
+
+        // Assert
+        assertThat(actual?.sources).containsExactly(
+            bankWithdrawSource(token = usdtPolygon, fiatBalance = BigDecimal("5")),
+            bankWithdrawSource(
+                token = usdcBase,
+                chainId = BASE_CHAIN_ID,
+                fiatBalance = BigDecimal("40"),
+                isAvailable = false,
+            ),
         ).inOrder()
     }
 
