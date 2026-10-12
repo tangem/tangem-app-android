@@ -56,6 +56,8 @@ import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -147,15 +149,24 @@ private fun Content(state: SocialLoginConsentUM, contentPadding: PaddingValues, 
                 .fillMaxWidth()
                 .padding(horizontal = TangemTheme.dimens2.x4, vertical = TangemTheme.dimens2.x3),
         ) {
-            val emailSharingText = stringResourceSafe(CoreResR.string.social_login_consent_email_sharing)
-            TangemButton(
-                modifier = Modifier.fillMaxWidth(),
-                size = TangemButton.Size.X12,
-                text = resourceReference(CoreResR.string.social_agreement_action_create),
-                onClick = { state.onConfirmClick(emailSharingText) },
-            )
+            ConfirmButton(state = state)
         }
     }
+}
+
+@Composable
+private fun ConfirmButton(state: SocialLoginConsentUM) {
+    val emailSharingText = stringResourceSafe(CoreResR.string.social_login_consent_email_sharing)
+    val hapticManager = LocalHapticManager.current
+    TangemButton(
+        modifier = Modifier.fillMaxWidth(),
+        size = TangemButton.Size.X12,
+        text = resourceReference(CoreResR.string.social_agreement_action_create),
+        onClick = {
+            if (!state.isAcknowledged) hapticManager.perform(TangemHapticEffect.View.Reject)
+            state.onConfirmClick(emailSharingText)
+        },
+    )
 }
 
 @Composable
