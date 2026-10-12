@@ -85,6 +85,7 @@ internal open class TxDetailsConverterTestBase {
         lookup: TxHistoryLookupContext = lookupOf(),
         isBalanceHidden: Boolean = false,
         networkTokens: Set<CryptoCurrency.Token> = emptySet(),
+        fiatConversion: FiatConversion = FiatConversion.NONE,
     ) = OnChainTxToDetailsUMConverter(
         currency = currency,
         onCopyAddress = copiedAddresses::add,
@@ -97,6 +98,7 @@ internal open class TxDetailsConverterTestBase {
         lookup = lookup,
         isBalanceHidden = isBalanceHidden,
         networkTokens = networkTokens,
+        fiatConversion = fiatConversion,
     )
 
     protected fun expressConverter(
