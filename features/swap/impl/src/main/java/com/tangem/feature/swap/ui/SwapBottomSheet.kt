@@ -1,9 +1,10 @@
 package com.tangem.feature.swap.ui
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -59,10 +60,10 @@ internal fun SwapBottomSheet(
 }
 
 /**
- * Fills the card down to the keyboard once a focused field expands it, pinning the footer above the keyboard. Only
- * the content reports its measured height: that report is measured unbounded, so wrapping the spacer would publish
- * the expanded height as the card's natural one. The weighted spacer adds nothing to the intrinsic height, so the
- * resting card keeps its size.
+ * Pins the footer to the bottom of the card — right above the keyboard once a focused field expands it — while the
+ * content scrolls in the space left above it, so the footer stays reachable on short screens. The scroller is the
+ * weighted child: a weight inside a scroll container would get no space at all. Only the content reports its
+ * measured height, and at rest the card is exactly content plus footer tall, so the scroller takes no extra room.
  */
 @Composable
 private fun PinnedFooterContent(content: ComposableModularContentComponent) {
@@ -74,11 +75,17 @@ private fun PinnedFooterContent(content: ComposableModularContentComponent) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .reportMeasuredHeight(),
+                .weight(1f)
+                .verticalScroll(rememberScrollState()),
         ) {
-            content.Content(modifier = Modifier.fillMaxWidth())
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .reportMeasuredHeight(),
+            ) {
+                content.Content(modifier = Modifier.fillMaxWidth())
+            }
         }
-        Spacer(modifier = Modifier.weight(1f))
         content.Footer()
     }
 }
