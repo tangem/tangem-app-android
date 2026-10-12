@@ -1,6 +1,7 @@
 package com.tangem.features.collectibles.impl.stories.ui.preview
 
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.collectibles.impl.stories.ui.state.CollectiblesStoriesUM
 import com.tangem.features.collectibles.impl.stories.ui.state.CollectiblesStorySlideUM
 import kotlinx.collections.immutable.persistentListOf
@@ -13,27 +14,17 @@ internal object CollectiblesStoriesPreviewData {
     val state: CollectiblesStoriesUM = CollectiblesStoriesUM(
         slides = persistentListOf(
             CollectiblesStorySlideUM(
-                title = stringReference("Digital packs.\nPhysical collectibles."),
-                subtitle = stringReference(
-                    "Every card is professionally graded, so authenticity is guaranteed — and each one is " +
-                        "backed 1:1 by the physical slab in an insured physical vault",
-                ),
-                continueButtonText = stringReference("Next"),
+                title = TextReference.Res(R.string.collectibles_stories_graded_title),
+                subtitle = TextReference.Res(R.string.collectibles_stories_graded_subtitle),
+                continueButtonText = TextReference.Res(R.string.common_next),
             ),
             CollectiblesStorySlideUM(
-                title = stringReference("The card is yours, either way"),
-                subtitle = stringReference(
-                    "Leave it in the physical vault, have it delivered to your address, or send it to a " +
-                        "friend as a gift — the slab is redeemable whenever you want it",
-                ),
-                continueButtonText = stringReference("Browse packs"),
+                title = TextReference.Res(R.string.collectibles_stories_ownership_title),
+                subtitle = TextReference.Res(R.string.collectibles_stories_ownership_subtitle),
+                continueButtonText = TextReference.Res(R.string.collectibles_stories_browse_packs_button),
             ),
         ),
         currentIndex = 0,
-        legal = stringReference(
-            "Gacha is provided by Collector Crypt under its own T&Cs. Tangem is the interface provider. " +
-                "Card values change over time.",
-        ),
         onNextSlideClick = {},
         onPreviousSlideClick = {},
         onContinueClick = {},

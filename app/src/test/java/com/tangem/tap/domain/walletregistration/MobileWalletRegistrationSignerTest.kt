@@ -38,7 +38,7 @@ internal class MobileWalletRegistrationSignerTest {
     fun `signer produces 65-byte RSV over the wallet nonce with null card fields`() = runTest {
         val userWallet = hotWallet()
         // The hot SDK signs the provided hash directly (no re-hash), like the real signHashes.
-        coEvery { hotWalletAccessor.signHashes(any(), any()) } answers {
+        coEvery { hotWalletAccessor.signHashesReusingContextualUnlock(any(), any()) } answers {
             val hash = secondArg<List<DataToSign>>().first().hashes.first()
             listOf(SignedData(curve = curve, signatures = listOf(Secp256k1.ecdsaSignDigest(hash, walletPrivateKey))))
         }

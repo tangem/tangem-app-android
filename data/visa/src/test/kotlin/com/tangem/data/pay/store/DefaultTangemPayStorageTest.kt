@@ -6,10 +6,10 @@ import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayWithdrawExchangeState
 import com.tangem.domain.pay.TangemPayWithdrawState
+import com.tangem.spend.datasource.preferences.SpendPreferencesKeys
 import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -38,6 +38,7 @@ internal class DefaultTangemPayStorageTest {
         dispatchers = TestingCoroutineDispatcherProvider(),
         preferencesDataStore = dataStore,
     )
+    private val spendPreferencesKeys = SpendPreferencesKeys()
 
     private val storage = DefaultTangemPayStorage(
         applicationContext = mockk<Context>(relaxed = true),
@@ -45,6 +46,7 @@ internal class DefaultTangemPayStorageTest {
         sdkMoshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build(),
         dispatcherProvider = TestingCoroutineDispatcherProvider(),
         appPreferencesStore = prefs,
+        spendPreferencesKeys = spendPreferencesKeys,
     )
 
     @BeforeEach
@@ -63,7 +65,7 @@ internal class DefaultTangemPayStorageTest {
 
             // Assert — null means "ask the server again"; false would keep the Tangem Pay block hidden
             assertThat(storage.checkCustomerWalletResult(WALLET)).isNull()
-            assertThat(prefs.data.first()[PreferencesKeys.getTangemPayCheckCustomerByWalletId(WALLET)]).isNull()
+            assertThat(prefs.data.first()[spendPreferencesKeys.getCheckCustomerByWalletId(WALLET)]).isNull()
         }
 
     @Test
@@ -76,7 +78,7 @@ internal class DefaultTangemPayStorageTest {
 
         // Assert
         assertThat(storage.getCustomerWalletAddress(WALLET)).isNull()
-        assertThat(prefs.data.first()[PreferencesKeys.getTangemPayCustomerWalletAddressKey(WALLET)]).isNull()
+        assertThat(prefs.data.first()[spendPreferencesKeys.getCustomerWalletAddressKey(WALLET)]).isNull()
     }
 
     @Test
@@ -89,7 +91,22 @@ internal class DefaultTangemPayStorageTest {
 
         // Assert
         assertThat(storage.getHideMainOnboardingBanner(WALLET)).isFalse()
-        assertThat(prefs.data.first()[PreferencesKeys.getTangemPayHideOnboardingKey(WALLET)]).isNull()
+        assertThat(prefs.data.first()[spendPreferencesKeys.getHideOnboardingKey(WALLET)]).isNull()
+    }
+
+    @Test
+    fun `GIVEN payment account recents WHEN clearAll THEN the recents key is removed`() = runTest {
+        // Arrange
+        val key = spendPreferencesKeys.paymentAccountRecents(WALLET)
+        prefs.editData { preferences ->
+            preferences[key] = """{"coin⟨ethereum⟩ethereum":{"accountId":"aa","usedAtMillis":1}}"""
+        }
+
+        // Act
+        storage.clearAll(userWalletId = WALLET, customerWalletAddress = null)
+
+        // Assert
+        assertThat(prefs.data.first()[key]).isNull()
     }
 
     @Test
@@ -146,7 +163,7 @@ internal class DefaultTangemPayStorageTest {
 
         // Assert
         assertThat(storage.isTangemPayDeactivated(WALLET)).isFalse()
-        assertThat(prefs.data.first()[PreferencesKeys.getTangemPayDeactivatedKey(WALLET)]).isNull()
+        assertThat(prefs.data.first()[spendPreferencesKeys.getDeactivatedKey(WALLET)]).isNull()
     }
 
     @Test

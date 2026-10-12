@@ -27,6 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.security.DisableAutofillEffect
 import com.tangem.utils.StringsSigns.PASSWORD_VISUAL_CHAR
 import kotlinx.coroutines.delay
 import kotlin.random.Random
@@ -41,16 +42,23 @@ fun PinTextField(
     modifier: Modifier = Modifier,
     focusRequester: FocusRequester = remember { FocusRequester() },
 ) {
-    val textFieldValue = remember(value) {
-        TextFieldValue(value, selection = TextRange(value.length))
+    DisableAutofillEffect()
+
+    var fieldValueState by remember { mutableStateOf(TextFieldValue(value, TextRange(value.length))) }
+    val textFieldValue = if (fieldValueState.text == value) {
+        fieldValueState
+    } else {
+        TextFieldValue(value, TextRange(value.length))
     }
+    SideEffect { fieldValueState = textFieldValue }
 
     BasicTextField(
         value = textFieldValue,
-        onValueChange = { value ->
-            if (value.text.length <= length) {
-                onValueChange(value.text)
-            }
+        onValueChange = { newValue ->
+            val accepted = acceptedPin(raw = newValue.text, length = length, current = value)
+            // [value] does not change when the input is rejected, so the field has to be reset by hand
+            fieldValueState = TextFieldValue(accepted, TextRange(accepted.length))
+            if (accepted != value) onValueChange(accepted)
         },
         modifier = modifier
             .clickable {
@@ -82,6 +90,16 @@ fun PinTextField(
         delay(timeMillis = 200)
         focusRequester.requestFocus()
     }
+}
+
+/**
+ * [KeyboardType.NumberPassword] is only a hint to the keyboard: a vendor IME may show letters anyway,
+ * and it says nothing about pasted or hardware-typed text. ASCII digits only — [Char.isDigit] would also
+ * accept digits of other scripts.
+ */
+internal fun acceptedPin(raw: String, length: Int, current: String): String {
+    val digits = raw.filter { it in '0'..'9' }
+    return if (digits.length <= length) digits else current
 }
 
 enum class PinTextColor {

@@ -18,6 +18,7 @@ import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelecto
 import com.tangem.features.jointaccount.join.confirmation.ui.JointAccountJoinConfirmationBS
 import com.tangem.features.jointaccount.join.invitepreview.model.JointAccountInvitePreviewModel
 import com.tangem.features.jointaccount.join.invitepreview.ui.JointAccountInvitePreviewScreen
+import com.tangem.features.jointaccount.join.invitepreview.ui.state.JointAccountInvitePreviewUM
 import com.tangem.features.jointaccount.join.model.JointAccountJoinChildParams
 import com.tangem.features.jointaccount.main.component.MemberCardComponent
 import com.tangem.features.jointaccount.main.entity.MemberCardConfig
@@ -68,7 +69,7 @@ internal class JointAccountInvitePreviewComponent(
         selectorSlot.child?.instance?.BottomSheet()
         memberCard.child?.instance?.BottomSheet()
 
-        state.confirmation?.let { confirmation ->
+        (state as? JointAccountInvitePreviewUM.Content)?.confirmation?.let { confirmation ->
             JointAccountJoinConfirmationBS(state = confirmation)
         }
     }

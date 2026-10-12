@@ -6,16 +6,17 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountCreationError
+import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.usecase.CreateJointAccountUseCase
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
-import com.tangem.core.ui.R as CoreUiR
 
 @Stable
 @ModelScoped
@@ -50,7 +51,7 @@ internal class JointAccountCreationModel @Inject constructor(
         createJointAccount(
             userWalletId = config.walletId,
             config = JointAccountConfig(
-                name = config.name,
+                name = config.name.trim(),
                 icon = config.icon.name,
                 iconColor = config.color.name,
                 membersCount = composition.totalMembers,
@@ -59,35 +60,46 @@ internal class JointAccountCreationModel @Inject constructor(
             creatorName = displayName,
         ).fold(
             ifLeft = ::onCreationError,
-            ifRight = { openMembers(userWalletId = config.walletId) },
+            ifRight = { account -> openMembers(
+                userWalletId = config.walletId,
+                cryptoAccountId = account.cryptoAccountId,
+            ) },
         )
     }
 
-    // TODO: a separate task will handle the cases apart — no network, a signature the backend rejected (400)
-    //  and "the account exists but is not in the list" all show the same generic dialog for now; the texts and
-    //  the per-case behaviour (retry, contact support) come with it.
+    // TODO: a separate task will split the cases apart — "the account exists but is not in the list" deserves
+    //  a contact-support wording rather than the generic dialog.
     private fun onCreationError(error: JointAccountCreationError) {
         when (error) {
             // Dismissing the card session is not a failure: the form stays as it was
-            JointAccountCreationError.UserCancelled -> Unit
-            // The cause is already logged by safeApiCall in the data layer
+            JointAccountFlowError.UserCancelled -> Unit
             JointAccountCreationError.ExistingAccountNotFound,
-            is JointAccountCreationError.InvalidDerivationIndex,
-            is JointAccountCreationError.Failed,
-            -> showError()
+            is JointAccountFlowError.InvalidDerivationIndex,
+            -> {
+                logger.e(messageString = "Joint account creation failed: $error")
+                showError()
+            }
+            is JointAccountFlowError.Failed -> {
+                logger.e(messageString = "Joint account creation failed", throwable = error.cause)
+                showError()
+            }
         }
     }
 
-    private fun openMembers(userWalletId: UserWalletId) {
-        router.replaceAll(AppRoute.JointAccountMembers(userWalletId = userWalletId))
+    /** The wallet stays under the members screen, so closing it lands on the wallet instead of leaving the app */
+    private fun openMembers(userWalletId: UserWalletId, cryptoAccountId: String) {
+        router.replaceAll(
+            AppRoute.Wallet,
+            AppRoute.JointAccountMembers(userWalletId = userWalletId, cryptoAccountId = cryptoAccountId),
+        )
     }
 
     private fun showError() {
         uiMessageSender.send(
             DialogMessage(
-                title = resourceReference(CoreUiR.string.common_error),
-                message = resourceReference(CoreUiR.string.common_something_went_wrong),
-            ), // TODO change error description when criteria will be ready
+                title = resourceReference(CoreUiR.string.common_something_went_wrong),
+                message = resourceReference(CoreUiR.string.account_could_not_create),
+            ),
         )
     }
 }

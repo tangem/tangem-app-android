@@ -33,7 +33,6 @@ class EstimateFeeForTokenUseCase(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
-    private val isYieldWithdrawEnabled: Boolean,
 ) {
 
     private val tokenFeeCalculator = TokenFeeCalculator(
@@ -77,8 +76,7 @@ class EstimateFeeForTokenUseCase(
 
                     val walletManager = prepareWalletManager(userWallet, token.network)
 
-                    val isYieldActive = isYieldWithdrawEnabled &&
-                        feeTokenCurrencyStatus.value.yieldSupplyStatus?.isActive == true
+                    val isYieldActive = feeTokenCurrencyStatus.value.yieldSupplyStatus?.isActive == true
 
                     val tokenFeeExtended = tokenFeeCalculator.calculateTokenFee(
                         walletManager = walletManager,

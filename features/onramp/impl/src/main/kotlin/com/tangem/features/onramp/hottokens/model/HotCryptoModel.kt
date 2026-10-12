@@ -18,7 +18,8 @@ import com.tangem.data.common.currency.isCustomCoin
 import com.tangem.data.common.currency.isCustomToken
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.derivationIndex
+import com.tangem.domain.jointaccount.derivation.toNetworkDerivationPath
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -127,10 +128,11 @@ internal class HotCryptoModel @Inject constructor(
         fun closeNavigationFlow() = bottomSheetNavigationV2.replaceAll(OnrampAddTokenRoute.Empty)
         channelFlow<Unit> {
             val userWallet = hotCryptoPortfolioData.wallet.userWallet
-            val isSingleAccount = hotCryptoPortfolioData.wallet.accounts.size == 1
+            val targetAccounts = hotCryptoPortfolioData.accountsFor(currency.cryptoCurrency)
+            val isSingleAccount = targetAccounts.size == 1
 
             if (isSingleAccount) {
-                val account = hotCryptoPortfolioData.wallet.accounts.first().account
+                val account = targetAccounts.first().account
                 val cryptoCurrency = updateCryptoCurrency(
                     cryptoCurrency = currency.cryptoCurrency,
                     userWallet = userWallet,
@@ -197,8 +199,9 @@ internal class HotCryptoModel @Inject constructor(
 
     private fun setupPortfolioSelector(hotCrypto: HotCryptoCurrency, hotCryptoPortfolioData: HotCryptoPortfolioData) {
         portfolioSelectorController.selectAccount(null)
+        val targetAccounts = hotCryptoPortfolioData.accountsFor(hotCrypto.cryptoCurrency)
         portfolioSelectorController.isEnabled.value = isEnabled@{ _, accountStatus ->
-            val isNotAddedHotCrypto = hotCryptoPortfolioData.wallet.accounts
+            val isNotAddedHotCrypto = targetAccounts
                 .find { it.account.accountId == accountStatus.accountId }
                 ?.addedHotCrypto
                 ?.none { it.currency.id.rawCurrencyId == hotCrypto.cryptoCurrency.id.rawCurrencyId } == true
@@ -213,15 +216,21 @@ internal class HotCryptoModel @Inject constructor(
         userWallet: UserWallet,
         account: AccountStatus.CryptoPortfolio,
     ): CryptoCurrency? {
-        val derivationIndex = account.account.derivationIndex
         val blockchain = cryptoCurrency.network.toBlockchain()
 
-        val network = networkFactory.create(
-            blockchain = blockchain,
-            extraDerivationPath = null,
-            accountIndex = derivationIndex,
-            userWallet = userWallet,
-        ) ?: return null
+        val network = when (val portfolio = account.account) {
+            is Account.Personal -> networkFactory.create(
+                blockchain = blockchain,
+                extraDerivationPath = null,
+                accountIndex = portfolio.derivationIndex,
+                userWallet = userWallet,
+            )
+            is Account.Joint -> networkFactory.create(
+                blockchain = blockchain,
+                derivationPath = portfolio.ownerKeyIndex.toNetworkDerivationPath(),
+                userWallet = userWallet,
+            )
+        } ?: return null
 
         return when (cryptoCurrency) {
             is CryptoCurrency.Coin -> {

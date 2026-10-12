@@ -40,6 +40,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.test.ChooseNetworkBottomSheetTestTags
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -78,11 +79,14 @@ internal fun PaymentChooseNetworkContent(state: PaymentChooseNetworkUM) {
                 PaymentNetworkSection(
                     title = resourceReference(R.string.tangempay_choose_network_fast_way),
                     items = state.fastWay,
+                    modifier = Modifier.testTag(TangemPayTestTags.CHOOSE_NETWORK_FAST_SECTION),
                 )
                 PaymentNetworkSection(
                     title = resourceReference(R.string.tangempay_choose_network_other_ways),
                     items = state.otherWays,
-                    modifier = Modifier.padding(top = 20.dp),
+                    modifier = Modifier
+                        .testTag(TangemPayTestTags.CHOOSE_NETWORK_OTHER_SECTION)
+                        .padding(top = 20.dp),
                 )
             }
         },

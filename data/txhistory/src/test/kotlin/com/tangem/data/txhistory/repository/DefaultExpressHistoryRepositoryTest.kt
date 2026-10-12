@@ -4,7 +4,6 @@ import androidx.room.withTransaction
 import com.google.common.truth.Truth.assertThat
 import com.tangem.data.txhistory.repository.converter.toHistoryIndexEntities
 import com.tangem.data.txhistory.repository.converter.toHistoryIndexEntity
-import com.tangem.data.txhistory.repository.factory.TokenInfoRepository
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.grow.datasource.express.TangemExpressApi
@@ -18,15 +17,15 @@ import com.tangem.grow.datasource.onramp.models.response.OnrampHistoryDeltaRespo
 import com.tangem.grow.datasource.onramp.models.response.OnrampHistoryResponse
 import com.tangem.grow.datasource.onramp.models.response.OnrampItemResponse
 import com.tangem.datasource.local.converter.toEntity
-import com.tangem.datasource.local.txhistory.db.TxHistoryDatabase
-import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
-import com.tangem.datasource.local.txhistory.db.dao.ExpressSyncStateDao
-import com.tangem.datasource.local.txhistory.db.dao.HistoryIndexDao
-import com.tangem.datasource.local.txhistory.db.entity.HistoryIndexEntity
-import com.tangem.datasource.local.txhistory.db.entity.express.ExpressSyncStateEntity
+import com.tangem.store.datasource.txhistory.db.TxHistoryDatabase
+import com.tangem.store.datasource.txhistory.db.dao.ExpressHistoryDao
+import com.tangem.store.datasource.txhistory.db.dao.ExpressSyncStateDao
+import com.tangem.store.datasource.txhistory.db.dao.HistoryIndexDao
+import com.tangem.store.datasource.txhistory.db.entity.HistoryIndexEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressSyncStateEntity
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.test.core.TestAppCoroutineScope
+import com.tangem.domain.txhistory.repository.TokenInfoRepository
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -61,7 +60,6 @@ internal class DefaultExpressHistoryRepositoryTest {
         expressSyncStateDao = expressSyncStateDao,
         tokenInfoRepository = tokenInfoRepository,
         database = database,
-        appScope = TestAppCoroutineScope(),
     )
 
     @BeforeEach

@@ -20,4 +20,5 @@ dependencies {
     testImplementation(projects.test.core)
     testImplementation(deps.arrow.core)
     testImplementation(deps.kotlin.coroutines)
+    testImplementation(tangemDeps.blockchain)
 }

@@ -213,7 +213,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert title: '$tokenTitle' is displayed") {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
@@ -306,7 +306,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert title: '$tokenTitle' is displayed") {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
@@ -364,7 +364,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert title: '$tokenTitle' is displayed") {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
@@ -466,7 +466,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert title: '$tokenTitle' is displayed") {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
@@ -522,7 +522,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert title: '$tokenTitle' is displayed") {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
@@ -615,7 +615,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert title: '$tokenTitle' is displayed") {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
@@ -671,7 +671,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$polygon'") {
-                onMainScreen { tokenWithTitleAndAddress(polygon).clickWithAssertion() }
+                openTokenDetailsFromTokenList(polygon)
             }
             step("Assert 'Swap' button is not dimmed. Swap available") {
                 onTokenDetailsScreen { swapButton.assertIsEnabled() }
@@ -723,7 +723,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenName)
             }
             step("Open 'Swap' screen") {
                 openSwapScreen(from = SwapEntryPoint.TokenDetails)
@@ -799,7 +799,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 swipeVertical(SwipeDirection.UP)
             }
             step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenName)
             }
             step("Open 'Swap' screen") {
                 openSwapScreen(from = SwapEntryPoint.TokenDetails)
@@ -879,7 +879,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 swipeVertical(SwipeDirection.UP)
             }
             step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenName)
             }
             step("Open 'Swap' screen") {
                 openSwapScreen(from = SwapEntryPoint.TokenDetails)

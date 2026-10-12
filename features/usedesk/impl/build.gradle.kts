@@ -13,7 +13,8 @@ android {
 dependencies {
     /** Core */
     api(projects.core.analytics)
-    api(projects.core.datasource)
+    implementation(projects.core.local)
+    implementation(projects.store.datasource)
     api(projects.core.decompose)
     api(projects.core.utils)
     implementation(projects.core.analytics.models)

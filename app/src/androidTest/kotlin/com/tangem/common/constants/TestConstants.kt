@@ -38,6 +38,10 @@ object TestConstants {
     const val WAIT_UNTIL_TIMEOUT = 20_000L
     const val WAIT_UNTIL_TIMEOUT_LONG = 30_000L
     const val WAIT_UNTIL_TIMEOUT_VERY_LONG = 60_000L
+
+    // Hot-wallet creation derives keys for every supported network while the first balance scan is already
+    // in flight; on a cold emulator that regularly runs past a minute, so it gets its own ceiling.
+    const val WAIT_UNTIL_TIMEOUT_WALLET_CREATION = 180_000L
     const val HOLD_DURATION_MS = 2_000L
 
     const val MARKETS_MAIN_NETWORK_SUFFIX = "MAIN"
@@ -52,6 +56,7 @@ object TestConstants {
     const val CREATE_USER_WALLET_API_SCENARIO = "create_user_wallet_api"
     const val WALLET_TOKENS_API_SCENARIO = "wallet_tokens_api"
     const val MORALIS_EVM_TOKEN_BALANCES_API_SCENARIO = "moralis_evm_token_balances_api"
+    const val MORALIS_EVM_NFT_API_SCENARIO = "moralis_evm_nft_api"
     const val PROVIDERS_API_SCENARIO = "networks_providers"
 
     const val SEED_PHRASE_12 = "they cram join fantasy unfair observe true theory buffalo bus exchange walk"
@@ -71,5 +76,6 @@ object TestConstants {
     const val TANGEM_PAY_ELIGIBILITY_SCENARIO = "tangem_pay_eligibility"
     const val TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO = "tangem_pay_eligibility_channels"
     const val TANGEM_PAY_KYC_STATUS_SCENARIO = "tangem_pay_kyc_status"
+    const val TANGEM_PAY_DEEPLINK_VALIDATE_SCENARIO = "tangem_pay_deeplink_validate"
     const val TANGEM_PAY_ACCESS_CODE = "517384"
 }

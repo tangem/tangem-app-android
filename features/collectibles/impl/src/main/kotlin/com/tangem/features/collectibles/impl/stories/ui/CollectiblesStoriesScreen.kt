@@ -112,13 +112,6 @@ private fun SlideFooter(state: CollectiblesStoriesUM, slide: CollectiblesStorySl
         modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(
-            modifier = Modifier.fillMaxWidth(),
-            text = state.legal.resolveReference(),
-            style = TangemTheme.typography3.caption.medium,
-            color = TangemTheme.colors3.text.tertiary,
-            textAlign = TextAlign.Center,
-        )
         TangemButton(
             modifier = Modifier.fillMaxWidth(),
             variant = TangemButton.Variant.Primary,

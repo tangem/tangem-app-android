@@ -69,9 +69,17 @@ sealed class Basic(
     }
 
     /**
-     * Tracks transaction submission from various screens (Send, Swap, WalletConnect, Sell, Approve, Staking).
+     * Tracks transaction submission from various screens (Send, Swap, Transfer, WalletConnect, Sell, Approve, Staking).
+     *
+     * [isCustomToken]/[isCustomFeeToken] mark user-defined tokens whose free-form symbols must not
+     * become OTel attribute values — the mirrored metric gets [OtelIncludedEvent.CUSTOM_TOKEN] instead.
      */
-    class TransactionSent(sentFrom: AnalyticsParam.TxSentFrom, memoType: MemoType) :
+    class TransactionSent(
+        sentFrom: AnalyticsParam.TxSentFrom,
+        memoType: MemoType,
+        isCustomToken: Boolean,
+        isCustomFeeToken: Boolean,
+    ) :
         Basic(
             event = "Transaction sent",
             params = buildMap {
@@ -88,7 +96,23 @@ sealed class Basic(
                 }
                 put(AnalyticsParam.MEMO, memoType.name)
             },
-        ), AppsFlyerIncludedEvent, CriticalEvent {
+        ), AppsFlyerIncludedEvent, CriticalEvent, OtelIncludedEvent {
+
+        override val otelMetric = OtelMetric.Counter(
+            allowedParams = setOf(
+                AnalyticsParam.SOURCE,
+                AnalyticsParam.TOKEN_PARAM,
+                AnalyticsParam.FEE_TYPE,
+                AnalyticsParam.FEE_TOKEN,
+                AnalyticsParam.FEE_ASSET_TYPE,
+            ),
+        )
+
+        override val otelParamOverrides = buildMap {
+            if (isCustomToken) put(AnalyticsParam.TOKEN_PARAM, OtelIncludedEvent.CUSTOM_TOKEN)
+            if (isCustomFeeToken) put(AnalyticsParam.FEE_TOKEN, OtelIncludedEvent.CUSTOM_TOKEN)
+        }
+
         enum class MemoType {
             Empty, Full, Null
         }

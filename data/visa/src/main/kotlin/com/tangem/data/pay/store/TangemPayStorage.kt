@@ -3,6 +3,7 @@ package com.tangem.data.pay.store
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayWithdrawState
 import com.tangem.domain.visa.model.TangemPayAuthTokens
+import kotlinx.coroutines.flow.Flow
 
 @Suppress("TooManyFunctions")
 interface TangemPayStorage {
@@ -14,9 +15,11 @@ interface TangemPayStorage {
 
     suspend fun getAuthTokens(customerWalletAddress: String): TangemPayAuthTokens?
 
-    suspend fun storeOrderId(customerWalletAddress: String, orderId: String)
+    suspend fun storeOrderId(customerWalletAddress: String, orderId: String, isCampaignOrder: Boolean = false)
 
     suspend fun getOrderId(customerWalletAddress: String): String?
+
+    suspend fun isCampaignOrder(customerWalletAddress: String): Boolean
 
     suspend fun clearOrderId(customerWalletAddress: String)
 
@@ -58,9 +61,11 @@ interface TangemPayStorage {
 
     suspend fun getHideMainOnboardingBanner(userWalletId: UserWalletId): Boolean
 
+    fun isMainOnboardingBannerHidden(userWalletId: UserWalletId): Flow<Boolean>
+
     suspend fun storeHideOnboardingBanner(userWalletId: UserWalletId, hide: Boolean)
     suspend fun storeTangemPayEligibility(eligibility: Set<String>)
-    suspend fun getTangemPayEligibility(): Set<String>
+    suspend fun getTangemPayEligibility(): Set<String>?
 
     /**
      * Drops every entry this storage keeps for the wallet, including the auth tokens and the

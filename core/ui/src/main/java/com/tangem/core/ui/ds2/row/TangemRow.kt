@@ -36,6 +36,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -44,6 +45,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.atoms.text.EllipsisText
+import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.extensions.resolveReference
@@ -164,7 +167,7 @@ fun TangemRow(
                 SideSlot(slot = endSlot, position = SideSlotPosition.End)
             }
             if (extraBottomSlot != null) {
-                SpacerH(8.dp)
+                SpacerH(12.dp)
                 extraBottomSlot()
             }
         }
@@ -363,6 +366,34 @@ fun TangemRowText(
  * @param overflow Overflow behavior. Defaults to ellipsis.
  */
 @Composable
+fun TangemRowText(
+    text: AnnotatedString,
+    role: TangemRowTextRole,
+    modifier: Modifier = Modifier,
+    maxLines: Int = 1,
+    overflow: TextOverflow = TextOverflow.Ellipsis,
+) {
+    Text(
+        text = text,
+        modifier = modifier,
+        color = rowTextColor(role),
+        style = rowTextStyle(role),
+        textAlign = rowTextAlign(role),
+        maxLines = maxLines,
+        overflow = overflow,
+    )
+}
+
+/**
+ * Default text styling for [TangemRow] label slots.
+ *
+ * @param text Label text.
+ * @param role Semantic role. See [TangemRowTextRole].
+ * @param modifier Modifier applied to the underlying [Text].
+ * @param maxLines Maximum number of visible lines before truncation.
+ * @param overflow Overflow behavior. Defaults to ellipsis.
+ */
+@Composable
 @NonRestartableComposable
 fun TangemRowText(
     text: TextReference,
@@ -377,6 +408,30 @@ fun TangemRowText(
         modifier = modifier,
         maxLines = maxLines,
         overflow = overflow,
+    )
+}
+
+/**
+ * [TangemRowText] whose value is a blockchain [address]: instead of being cut at its end, it keeps as much of itself
+ * as the slot's width allows and drops characters from its middle — see [EllipsisText].
+ *
+ * The length follows the measured width, so give it a bounded slot (`Modifier.weight()` inside the row scope);
+ * unbounded, the address renders in full.
+ *
+ * @param address Raw address — never pass a pre-shortened one.
+ * @param role Semantic role, styled as in [TangemRowText]. See [TangemRowTextRole].
+ * @param modifier Modifier applied to the underlying text.
+ */
+@Composable
+@NonRestartableComposable
+fun TangemRowAddressText(address: String, role: TangemRowTextRole, modifier: Modifier = Modifier) {
+    EllipsisText(
+        text = address,
+        modifier = modifier,
+        color = rowTextColor(role),
+        style = rowTextStyle(role),
+        textAlign = rowTextAlign(role),
+        ellipsis = TextEllipsis.Middle,
     )
 }
 

@@ -10,6 +10,8 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.RESIDENCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
+import com.tangem.core.analytics.models.OtelIncludedEvent
+import com.tangem.core.analytics.models.OtelMetric
 import com.tangem.domain.onramp.model.OnrampSource
 
 sealed class OnrampAnalyticsEvent(
@@ -135,7 +137,10 @@ sealed class OnrampAnalyticsEvent(
             "Currency Type" to currency,
             PAYMENT_METHOD to paymentMethod,
         ),
-    ), AppsFlyerIncludedEvent
+    ), AppsFlyerIncludedEvent, OtelIncludedEvent {
+
+        override val otelMetric = OtelMetric.Counter(allowedParams = setOf(PROVIDER, PAYMENT_METHOD))
+    }
 
     class MinAmountError : OnrampAnalyticsEvent(event = "Error - Min Amount")
     class MaxAmountError : OnrampAnalyticsEvent(event = "Error - Max Amount")
@@ -153,7 +158,12 @@ sealed class OnrampAnalyticsEvent(
             paymentMethod?.let { put(PAYMENT_METHOD, paymentMethod) }
             put(ERROR_CODE, errorCode)
         },
-    )
+    ), OtelIncludedEvent {
+
+        override val otelMetric = OtelMetric.Counter(
+            allowedParams = setOf(ERROR_CODE, TOKEN_PARAM, PROVIDER, PAYMENT_METHOD),
+        )
+    }
 
     data class AppErrors(
         private val tokenSymbol: String,
@@ -208,6 +218,17 @@ sealed class OnrampAnalyticsEvent(
     class AllOffersClicked : OnrampAnalyticsEvent(
         event = "Button - All Offers",
         params = emptyMap(),
+    )
+
+    data class NoticeGeoRestriction(
+        private val tokenSymbol: String,
+        private val providerName: String,
+    ) : OnrampAnalyticsEvent(
+        event = "Notice - Geo Restriction",
+        params = mapOf(
+            TOKEN_PARAM to tokenSymbol,
+            PROVIDER to providerName,
+        ),
     )
 
     data class NoticeBuyNotSupported(

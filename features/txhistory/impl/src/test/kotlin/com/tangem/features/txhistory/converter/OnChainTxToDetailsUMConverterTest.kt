@@ -2,6 +2,10 @@ package com.tangem.features.txhistory.converter
 
 import androidx.compose.ui.graphics.Color
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
+import com.tangem.common.ui.account.AccountIconUM
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.common.ui.account.getResId
 import com.tangem.common.ui.account.getUiColor
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
@@ -10,17 +14,27 @@ import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
+import com.tangem.core.ui.res.generated.icons.ic_copy_24
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
+import com.tangem.core.ui.res.generated.icons.ic_chart_line_vertical_20
 import com.tangem.core.ui.res.generated.icons.ic_document_20
+import com.tangem.core.ui.res.generated.icons.ic_globe_24
 import com.tangem.core.ui.res.generated.icons.ic_lightning_20
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.network.SdkAmount
+import com.tangem.domain.models.network.SdkAmountType
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
+import com.tangem.features.txhistory.model.TestContacts
+import com.tangem.test.mock.MockAccounts
 import com.tangem.test.core.ProvideTestModels
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Test
@@ -195,12 +209,150 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
             action = TxHistoryDetailsUM.MenuItemUM.Action.Direct {},
         )
 
-        // Act
+        // Act — a tx with no counterparty card, so no "Copy address" row is prepended to the given menu.
         val header = onChainConverter(menu = persistentListOf(item))
             .convert(txInfo(type = TransactionType.Transfer)).header
 
         // Assert
         assertThat(header.menu).containsExactly(item)
+    }
+
+    @Test
+    fun `GIVEN external counterparty WHEN convert THEN Copy address leads the header menu`() {
+        // Arrange — the counterparty is none of the user's portfolios, so its address is copyable.
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val menu = converter.convert(tx).header.menu
+
+        // Assert
+        assertThat(menu).hasSize(1)
+        assertThat(menu[0].icon).isEqualTo(Icons.ic_copy_24)
+        assertThat(menu[0].title).isEqualTo(resourceReference(R.string.common_copy_address))
+
+        (menu[0].action as TxHistoryDetailsUM.MenuItemUM.Action.Direct).onClick()
+        assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
+    }
+
+    @Test
+    fun `GIVEN own account counterparty WHEN convert THEN Copy address is still offered`() {
+        // Arrange — the card reads "to <my account>", but the menu row copies that account's address all the same.
+        val ownConverter = onChainConverter(
+            lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
+        )
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val menu = ownConverter.convert(tx).header.menu
+
+        // Assert
+        assertThat(menu).hasSize(1)
+
+        (menu[0].action as TxHistoryDetailsUM.MenuItemUM.Action.Direct).onClick()
+        assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
+    }
+
+    @Test
+    fun `GIVEN staking tx WHEN convert THEN neither counterparty card nor Copy address row`() {
+        // Arrange — a protocol interaction has no counterparty, so both entry points are dropped together.
+        val tx = txInfo(
+            type = TransactionType.Staking.Stake,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.Validator(VALIDATOR_ADDRESS),
+        )
+
+        // Act
+        val details = converter.convert(tx)
+
+        // Assert
+        assertThat(details.counterparty).isNull()
+        assertThat(details.header.menu).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN no counterparty address WHEN convert THEN neither counterparty card nor Copy address row`() {
+        // Arrange — an outgoing tx that reports no interaction address names no counterparty at all.
+        val tx = txInfo(type = TransactionType.Transfer, isOutgoing = true)
+
+        // Act
+        val details = converter.convert(tx)
+
+        // Assert
+        assertThat(details.counterparty).isNull()
+        assertThat(details.header.menu).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN GaslessFee WHEN convert THEN neither counterparty card nor Copy address row`() {
+        // Arrange — the fee collector is not a recipient the user chose, so the card names nobody
+        val tx = txInfo(
+            type = TransactionType.GaslessFee,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val details = converter.convert(tx)
+
+        // Assert
+        assertThat(details.counterparty).isNull()
+        assertThat(details.header.menu).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN NetworkFee WHEN convert THEN counterparty names the asset the fee was paid for`() {
+        // Arrange
+        val tx = txInfo(
+            type = TransactionType.NetworkFee(
+                amount = SdkAmount(
+                    currencySymbol = "USDT",
+                    value = BigDecimal("5"),
+                    decimals = 6,
+                    type = SdkAmountType.Token(contractAddress = USER_ADDRESS),
+                ),
+                address = USER_ADDRESS,
+            ),
+            amount = BigDecimal.ZERO,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val details = converter.convert(tx)
+
+        // Assert
+        assertThat(details.counterparty?.label).isEqualTo(resourceReference(R.string.common_send))
+        assertThat(details.counterparty?.avatar).isEqualTo(
+            TxHistoryDetailsUM.CounterpartyAvatar.Glyph(icon = TxIcon.Vector(Icons.ic_arrow_up_20)),
+        )
+        assertThat(details.counterparty?.title).isEqualTo(TxHistoryDetailsUM.CounterpartyTitle.Name(stringReference("5.00\u00A0USDT")))
+        assertThat(details.header.menu).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN NetworkFee for an untracked token WHEN convert THEN no counterparty card`() {
+        // Arrange — the asset cannot be named, and the recipient must not stand in for it
+        val tx = txInfo(
+            type = TransactionType.NetworkFee(amount = null, address = USER_ADDRESS),
+            amount = BigDecimal.ZERO,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val details = converter.convert(tx)
+
+        // Assert
+        assertThat(details.counterparty).isNull()
+        assertThat(details.header.menu).isEmpty()
     }
 
     // endregion
@@ -414,6 +566,60 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
+    fun `GIVEN Approve of a tracked token WHEN convert THEN amount icon is the approved token, not the viewed coin`() {
+        // Arrange — an approval in the coin's history: the allowance is granted in USDC, the open history is Ethereum's.
+        val usdc = mockCurrencyFactory.createToken(
+            blockchain = Blockchain.Ethereum,
+            contractAddress = USDC_CONTRACT,
+            symbol = "USDC",
+            decimals = 6,
+        )
+        val tx = txInfo(
+            type = TransactionType.Approve(
+                amount = SdkAmount(
+                    currencySymbol = "USDC",
+                    value = null,
+                    decimals = 6,
+                    type = SdkAmountType.Token(contractAddress = USDC_CONTRACT),
+                ),
+                address = USER_ADDRESS,
+            ),
+        )
+
+        // Act
+        val icon = onChainConverter(networkTokens = setOf(usdc)).convert(tx).amountBlock.icon
+
+        // Assert
+        assertThat(icon).isEqualTo(
+            TxHistoryDetailsUM.AmountIconUM.Single(CryptoCurrencyToIconStateConverter().convert(usdc)),
+        )
+    }
+
+    @Test
+    fun `GIVEN Approve of an untracked token WHEN convert THEN amount icon falls back to the viewed currency`() {
+        // Arrange — the wallet does not track the approved token, so its contract matches nothing.
+        val tx = txInfo(
+            type = TransactionType.Approve(
+                amount = SdkAmount(
+                    currencySymbol = "USDC",
+                    value = null,
+                    decimals = 6,
+                    type = SdkAmountType.Token(contractAddress = USDC_CONTRACT),
+                ),
+                address = USER_ADDRESS,
+            ),
+        )
+
+        // Act
+        val icon = converter.convert(tx).amountBlock.icon
+
+        // Assert
+        assertThat(icon).isEqualTo(
+            TxHistoryDetailsUM.AmountIconUM.Single(CryptoCurrencyToIconStateConverter().convert(currency)),
+        )
+    }
+
+    @Test
     fun `GIVEN Approve with no allowance limit but Failed WHEN convert THEN no risk banner`() {
         // Arrange — an approval that never went through granted no real allowance, so there is nothing to warn about.
         val tx = txInfo(
@@ -521,8 +727,103 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.send_recipient))
     }
 
+    private fun savedContact() = TestContacts.create(
+        name = "Binance",
+        address = USER_ADDRESS,
+        walletId = MockAccounts.userWalletId,
+        networkId = currency.network.id.rawId,
+    )
+
     @Test
-    fun `GIVEN Transfer to own Payment account WHEN convert THEN payment counterparty card without copy`() {
+    fun `GIVEN outgoing Transfer to a saved contact WHEN convert THEN contact card named after it`() {
+        // Arrange
+        val contactConverter = onChainConverter(lookup = lookupOf(contacts = listOf(savedContact())))
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val counterparty = contactConverter.convert(tx).counterparty
+
+        // Assert — the name replaces the address, but the underlying address stays copyable.
+        assertThat(counterparty?.title).isEqualTo(TxHistoryDetailsUM.CounterpartyTitle.Name(stringReference("Binance")))
+        assertThat(counterparty?.avatar).isEqualTo(
+            TxHistoryDetailsUM.CounterpartyAvatar.Contact(
+                name = "Binance",
+                icon = AccountIconUM.CryptoPortfolio(
+                    value = CryptoPortfolioIcon.Icon.Letter,
+                    color = CryptoPortfolioIcon.Color.Azure,
+                ),
+            ),
+        )
+        assertThat(counterparty?.onCopyClick).isNotNull()
+        assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.send_recipient))
+    }
+
+    @Test
+    fun `GIVEN incoming Transfer from a saved contact WHEN convert THEN contact card named after it`() {
+        // Arrange
+        val contactConverter = onChainConverter(lookup = lookupOf(contacts = listOf(savedContact())))
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = false,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val counterparty = contactConverter.convert(tx).counterparty
+
+        // Assert — the sender is named after the contact, same as a recipient.
+        assertThat(counterparty?.title).isEqualTo(TxHistoryDetailsUM.CounterpartyTitle.Name(stringReference("Binance")))
+        assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.common_from_address))
+    }
+
+    @Test
+    fun `GIVEN outgoing Operation to a saved address WHEN convert THEN contact card named after it`() {
+        // Arrange
+        val contactConverter = onChainConverter(lookup = lookupOf(contacts = listOf(savedContact())))
+        val tx = txInfo(
+            type = TransactionType.Operation(name = "Mint NFT"),
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val counterparty = contactConverter.convert(tx).counterparty
+
+        // Assert — the address book is consulted whatever the transaction type (as in the history list).
+        assertThat(counterparty?.title).isEqualTo(TxHistoryDetailsUM.CounterpartyTitle.Name(stringReference("Binance")))
+    }
+
+    @Test
+    fun `GIVEN outgoing Transfer to own address also saved as a contact WHEN convert THEN own account card`() {
+        // Arrange
+        val ownConverter = onChainConverter(
+            lookup = lookupOf(
+                currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount),
+                contacts = listOf(savedContact()),
+            ),
+        )
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val counterparty = ownConverter.convert(tx).counterparty
+
+        // Assert — an own portfolio outranks the address book.
+        assertThat(counterparty?.avatar).isInstanceOf(TxHistoryDetailsUM.CounterpartyAvatar.Account::class.java)
+
+        counterparty?.onCopyClick?.invoke()
+        assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
+    }
+
+    @Test
+    fun `GIVEN Transfer to own Payment account WHEN convert THEN payment counterparty card copies its address`() {
         // Arrange — the recipient address belongs to the user's own Tangem Pay (Payment) account.
         val ownConverter = onChainConverter(
             lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownPaymentAccount)),
@@ -536,10 +837,12 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Act
         val counterparty = ownConverter.convert(tx).counterparty
 
-        // Assert — resolved as own Payment account (not an external address): Visa avatar, name, no copy button.
+        // Assert — resolved as own Payment account (not an external address): Visa avatar and name, address still copied.
         assertThat(counterparty?.avatar).isEqualTo(TxHistoryDetailsUM.CounterpartyAvatar.PaymentAccount)
-        assertThat(counterparty?.onCopyClick).isNull()
         assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.send_recipient))
+
+        counterparty?.onCopyClick?.invoke()
+        assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
     }
 
     @Test
@@ -581,7 +884,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
-    fun `GIVEN Transfer to own account WHEN convert THEN account counterparty card without copy`() {
+    fun `GIVEN Transfer to own account WHEN convert THEN account counterparty card copies its address`() {
         // Arrange — the counterparty resolves to the user's own account, so the card shows its name and avatar.
         val ownConverter = onChainConverter(
             lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
@@ -596,17 +899,17 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val counterparty = ownConverter.convert(tx).counterparty
 
         // Assert
-        assertThat(counterparty).isEqualTo(
-            TxHistoryDetailsUM.CounterpartyUM(
-                label = resourceReference(R.string.send_recipient),
-                title = stringReference("Family"),
-                avatar = TxHistoryDetailsUM.CounterpartyAvatar.Account(
-                    iconResId = ownAccount.icon.value.getResId(),
-                    backgroundColor = ownAccount.icon.color.getUiColor(),
-                ),
-                onCopyClick = null,
+        assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.send_recipient))
+        assertThat(counterparty?.title).isEqualTo(TxHistoryDetailsUM.CounterpartyTitle.Name(stringReference("Family")))
+        assertThat(counterparty?.avatar).isEqualTo(
+            TxHistoryDetailsUM.CounterpartyAvatar.Account(
+                name = stringReference("Family"),
+                icon = CryptoPortfolioIconConverter.convert(ownAccount.icon),
             ),
         )
+
+        counterparty?.onCopyClick?.invoke()
+        assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
     }
 
     @Test
@@ -628,16 +931,16 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val counterparty = ownConverter.convert(tx).counterparty
 
         // Assert
-        assertThat(counterparty).isEqualTo(
-            TxHistoryDetailsUM.CounterpartyUM(
-                label = resourceReference(R.string.send_recipient),
-                title = stringReference("My Wallet"),
-                avatar = TxHistoryDetailsUM.CounterpartyAvatar.Wallet(
-                    deviceIconUM = DeviceIconUM.Card(mainColor = Color(0xFF1E1E1E), secondColor = null),
-                ),
-                onCopyClick = null,
+        assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.send_recipient))
+        assertThat(counterparty?.title).isEqualTo(TxHistoryDetailsUM.CounterpartyTitle.Name(stringReference("My Wallet")))
+        assertThat(counterparty?.avatar).isEqualTo(
+            TxHistoryDetailsUM.CounterpartyAvatar.Wallet(
+                deviceIconUM = DeviceIconUM.Card(mainColor = Color(0xFF1E1E1E), secondColor = null),
             ),
         )
+
+        counterparty?.onCopyClick?.invoke()
+        assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
     }
 
     @Test
@@ -657,7 +960,9 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
         // Assert
         assertThat(counterparty?.avatar).isEqualTo(TxHistoryDetailsUM.CounterpartyAvatar.Address(USER_ADDRESS))
-        assertThat(counterparty?.onCopyClick).isNotNull()
+
+        counterparty?.onCopyClick?.invoke()
+        assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
     }
 
     // endregion
@@ -678,15 +983,12 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Assert
         assertThat(result.header.title).isEqualTo(resourceReference(R.string.common_transferred))
         assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_down_20))
-        assertThat(result.counterparty).isEqualTo(
-            TxHistoryDetailsUM.CounterpartyUM(
-                label = resourceReference(R.string.common_from_account),
-                title = stringReference("Family"),
-                avatar = TxHistoryDetailsUM.CounterpartyAvatar.Account(
-                    iconResId = ownAccount.icon.value.getResId(),
-                    backgroundColor = ownAccount.icon.color.getUiColor(),
-                ),
-                onCopyClick = null,
+        assertThat(result.counterparty?.label).isEqualTo(resourceReference(R.string.common_from_account))
+        assertThat(result.counterparty?.title).isEqualTo(TxHistoryDetailsUM.CounterpartyTitle.Name(stringReference("Family")))
+        assertThat(result.counterparty?.avatar).isEqualTo(
+            TxHistoryDetailsUM.CounterpartyAvatar.Account(
+                name = stringReference("Family"),
+                icon = CryptoPortfolioIconConverter.convert(ownAccount.icon),
             ),
         )
     }
@@ -732,6 +1034,29 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(rows.first().label).isEqualTo(resourceReference(R.string.common_network_fee_title))
         assertThat(rows.first().value.resolveString()).contains("ETH")
         assertThat(rows.first().isValueHideable).isTrue()
+    }
+
+    @Test
+    fun `GIVEN outgoing Transfer paid for in another token WHEN convert THEN fee row names that token`() {
+        // A gaslessly sent transfer: the relayer paid the native gas, the wallet paid the service in USDT
+        // Arrange
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            fee = SdkAmount(
+                currencySymbol = "USDT",
+                value = BigDecimal("0.065869"),
+                decimals = 6,
+                type = SdkAmountType.Token(contractAddress = "0xdac17f958d2ee523a2206206994597c13d831ec7"),
+            ),
+        )
+
+        // Act
+        val rows = converter.convert(tx).rows
+
+        // Assert
+        assertThat(rows.single().label).isEqualTo(resourceReference(R.string.common_network_fee_title))
+        assertThat(rows.single().value.resolveString()).isEqualTo("0.065869\u00A0USDT")
     }
 
     @Test
@@ -798,25 +1123,41 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(rows).isEmpty()
     }
 
+    @Test
+    fun `GIVEN tx with zero fee WHEN convert THEN no rows`() {
+        // Arrange — a gaslessly sent transfer pays its native fee through the relayer, leaving a zero fee here.
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            fee = SdkAmount(currencySymbol = "TRX", value = BigDecimal.ZERO, decimals = 6),
+        )
+
+        // Act
+        val rows = converter.convert(tx).rows
+
+        // Assert
+        assertThat(rows).isEmpty()
+    }
+
     // endregion
 
     // region Validator row
 
     @Test
-    fun `GIVEN Vote tx with resolved validator having website WHEN convert THEN validator row links to the website`() {
+    fun `GIVEN Vote tx with resolved validator having website WHEN convert THEN validator row is plain text`() {
         // Arrange — the Vote type carries the validator address; the yield resolves it to name + website.
         val tx = txInfo(type = TransactionType.Staking.Vote(validatorAddress = VALIDATOR_ADDRESS))
 
         // Act
         val rows = onChainConverter(validators = listOf(validator())).convert(tx).rows
 
-        // Assert
-        val validatorRow = rows.single()
-        assertThat(validatorRow.label).isEqualTo(resourceReference(R.string.staking_validator))
-        assertThat(validatorRow.value.resolveString()).isEqualTo("Lido Finance")
-        assertThat(validatorRow.trailingIconRes).isEqualTo(R.drawable.ic_arrow_top_right_24)
-        validatorRow.onClick?.invoke()
-        assertThat(openedUrls).containsExactly(VALIDATOR_URL)
+        // Assert — the website is never surfaced: no trailing link icon, no tap.
+        assertThat(rows.single()).isEqualTo(
+            TxHistoryDetailsUM.InfoRowUM(
+                label = resourceReference(R.string.staking_validator),
+                value = stringReference("Lido Finance"),
+            ),
+        )
     }
 
     @Test
@@ -849,21 +1190,6 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
         // Assert
         assertThat(rows.single().value.resolveString()).isEqualTo("Lido Finance")
-    }
-
-    @Test
-    fun `GIVEN resolved validator without website WHEN convert THEN validator row has no link`() {
-        // Arrange
-        val tx = txInfo(type = TransactionType.Staking.Vote(validatorAddress = VALIDATOR_ADDRESS))
-
-        // Act
-        val rows = onChainConverter(validators = listOf(validator(website = null))).convert(tx).rows
-
-        // Assert
-        val validatorRow = rows.single()
-        assertThat(validatorRow.value.resolveString()).isEqualTo("Lido Finance")
-        assertThat(validatorRow.trailingIconRes).isNull()
-        assertThat(validatorRow.onClick).isNull()
     }
 
     @Test
@@ -979,9 +1305,63 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
-    fun `GIVEN staking tx with address absent from yield WHEN convert THEN no validator row`() {
+    fun `GIVEN Vote tx with address absent from yield WHEN convert THEN row shows the raw address`() {
         // Arrange — the tx carries a validator address, but the current yield does not list it.
-        val tx = txInfo(type = TransactionType.Staking.Vote(validatorAddress = "0xunknown"))
+        val tx = txInfo(type = TransactionType.Staking.Vote(validatorAddress = UNKNOWN_VALIDATOR_ADDRESS))
+
+        // Act
+        val rows = onChainConverter(validators = listOf(validator())).convert(tx).rows
+
+        // Assert
+        assertThat(rows.single()).isEqualTo(
+            TxHistoryDetailsUM.InfoRowUM(
+                label = resourceReference(R.string.staking_validator),
+                value = stringReference(UNKNOWN_VALIDATOR_ADDRESS),
+                isValueAddress = true,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN Stake tx with validator address absent from yield WHEN convert THEN row shows the raw address`() {
+        // Arrange — a validator dropped from the StakeKit yield must not make the row of an old tx disappear.
+        val tx = txInfo(
+            type = TransactionType.Staking.Stake,
+            interactionAddressType = TxInfo.InteractionAddressType.Validator(UNKNOWN_VALIDATOR_ADDRESS),
+        )
+
+        // Act
+        val rows = onChainConverter(validators = listOf(validator())).convert(tx).rows
+
+        // Assert
+        assertThat(rows.single().value.resolveString()).isEqualTo(UNKNOWN_VALIDATOR_ADDRESS)
+    }
+
+    @Test
+    fun `GIVEN staking tx with validator destination absent from yield WHEN convert THEN raw address shown`() {
+        // Arrange — the validator can also arrive as the destination address type.
+        val tx = txInfo(
+            type = TransactionType.Staking.Stake,
+            destinationType = TxInfo.DestinationType.Single(
+                addressType = TxInfo.AddressType.Validator(UNKNOWN_VALIDATOR_ADDRESS),
+            ),
+        )
+
+        // Act
+        val rows = onChainConverter(validators = listOf(validator())).convert(tx).rows
+
+        // Assert
+        assertThat(rows.single().value.resolveString()).isEqualTo(UNKNOWN_VALIDATOR_ADDRESS)
+    }
+
+    @Test
+    fun `GIVEN staking tx with unknown contract address WHEN convert THEN no validator row`() {
+        // Arrange — a Contract address is a target only when the lookup confirms it; falling back to it would label
+        // an arbitrary counterparty "Validator".
+        val tx = txInfo(
+            type = TransactionType.Staking.Stake,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(UNKNOWN_VALIDATOR_ADDRESS),
+        )
 
         // Act
         val rows = onChainConverter(validators = listOf(validator())).convert(tx).rows
@@ -1019,26 +1399,98 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
     // endregion
 
-    // region Protocol row (yield-supply)
+    // region Yield-supply rows
 
-    @Test
-    fun `GIVEN yield-supply tx WHEN convert THEN protocol row shows the hard-wired Aave protocol with its link`() {
-        // Arrange — yield-supply is a single hard-wired integration (Aave), so the value and link are constant.
-        val tx = txInfo(type = TransactionType.YieldSupply.Enter(address = USER_ADDRESS))
-
+    @ParameterizedTest
+    @MethodSource("provideYieldSupplyTypes")
+    fun `GIVEN yield-supply tx WHEN convert THEN no validator row`(type: TransactionType.YieldSupply) {
         // Act
-        val row = converter.convert(tx).rows.single()
+        val rows = converter.convert(txInfo(type = type)).rows
+
+        // Assert — the Validator field belongs to staking; a yield-supply card names no protocol at all.
+        assertThat(rows.map { it.label }).doesNotContain(resourceReference(R.string.staking_validator))
+    }
+
+    private fun provideYieldSupplyTypes() = listOf(
+        TransactionType.YieldSupply.Enter(address = USER_ADDRESS),
+        TransactionType.YieldSupply.Exit(address = USER_ADDRESS),
+        TransactionType.YieldSupply.Topup,
+        TransactionType.YieldSupply.DeployContract(address = USER_ADDRESS),
+        TransactionType.YieldSupply.InitializeToken(address = USER_ADDRESS),
+        TransactionType.YieldSupply.ReactivateToken(address = USER_ADDRESS),
+        TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = true),
+    )
+
+    @ParameterizedTest
+    @MethodSource("provideYieldSupplyTypes")
+    fun `GIVEN yield-supply tx WHEN convert THEN Explore Aave closes the header menu`(
+        type: TransactionType.YieldSupply,
+    ) {
+        // Act
+        val menu = converter.convert(txInfo(type = type)).header.menu
 
         // Assert
-        assertThat(row.label).isEqualTo(resourceReference(R.string.staking_validator))
-        assertThat(row.value).isEqualTo(resourceReference(R.string.yield_module_provider))
-        assertThat(row.trailingIconRes).isEqualTo(R.drawable.ic_arrow_top_right_24)
-        row.onClick?.invoke()
+        val exploreAave = menu.last()
+        assertThat(exploreAave.icon).isEqualTo(Icons.ic_globe_24)
+        assertThat(exploreAave.title)
+            .isEqualTo(resourceReference(R.string.yield_module_explore_sheet_explore_aave_button_title))
+        (exploreAave.action as TxHistoryDetailsUM.MenuItemUM.Action.Direct).onClick()
         assertThat(openedUrls).containsExactly("https://aave.com/")
     }
 
+    @ParameterizedTest
+    @MethodSource("provideYieldModeTypes")
+    fun `GIVEN yield mode enabled or disabled WHEN convert THEN header shows the bars glyph`(
+        type: TransactionType.YieldSupply,
+    ) {
+        // Act
+        val icon = converter.convert(txInfo(type = type)).header.icon
+
+        // Assert
+        assertThat(icon).isEqualTo(TxIcon.Vector(Icons.ic_chart_line_vertical_20))
+    }
+
+    private fun provideYieldModeTypes() = listOf(
+        TransactionType.YieldSupply.Enter(address = USER_ADDRESS),
+        TransactionType.YieldSupply.Exit(address = USER_ADDRESS),
+    )
+
     @Test
-    fun `GIVEN yield-supply tx with network fee WHEN convert THEN protocol row precedes the fee row`() {
+    fun `GIVEN yield-supply topup WHEN convert THEN header keeps the lightning glyph`() {
+        // Act
+        val icon = converter.convert(txInfo(type = TransactionType.YieldSupply.Topup)).header.icon
+
+        // Assert
+        assertThat(icon).isEqualTo(TxIcon.Vector(Icons.ic_lightning_20))
+    }
+
+    @Test
+    fun `GIVEN yield-supply topup WHEN convert THEN asset-leading Aave pair and no label`() {
+        // Act
+        val amountBlock = converter.convert(txInfo(type = TransactionType.YieldSupply.Topup)).amountBlock
+
+        // Assert — a topup mirrors a withdraw: the pair without the "Supplied"/"Returned" caption of enter/exit.
+        val pair = amountBlock.icon as TxHistoryDetailsUM.AmountIconUM.OverlappingPair
+        assertThat(pair.leading).isInstanceOf(TxHistoryDetailsUM.AmountIconUM.Item.Currency::class.java)
+        assertThat(pair.trailing).isEqualTo(TxHistoryDetailsUM.AmountIconUM.Item.Resource(R.drawable.img_aave_22))
+        assertThat(amountBlock.label).isNull()
+    }
+
+    @Test
+    fun `GIVEN non yield-supply tx WHEN convert THEN no Explore Aave row`() {
+        // Arrange
+        val tx = txInfo(type = TransactionType.Transfer)
+
+        // Act
+        val menu = converter.convert(tx).header.menu
+
+        // Assert
+        assertThat(menu.map { it.title })
+            .doesNotContain(resourceReference(R.string.yield_module_explore_sheet_explore_aave_button_title))
+    }
+
+    @Test
+    fun `GIVEN yield-supply tx with network fee WHEN convert THEN the fee row is the only one`() {
         // Arrange
         val tx = txInfo(
             type = TransactionType.YieldSupply.Topup,
@@ -1049,11 +1501,73 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val rows = converter.convert(tx).rows
 
         // Assert
-        assertThat(rows.map { it.label }).containsExactly(
-            resourceReference(R.string.staking_validator),
-            resourceReference(R.string.common_network_fee_title),
-        ).inOrder()
+        assertThat(rows.map { it.label }).containsExactly(resourceReference(R.string.common_network_fee_title))
     }
+
+    // endregion
+
+    // region Fiat line under the amount
+
+    @Test
+    fun `GIVEN network fee tx and known rate WHEN convert THEN fiat prices the fee`() {
+        // Arrange
+        val tx = txInfo(
+            type = TransactionType.NetworkFee(amount = null, address = USER_ADDRESS),
+            isOutgoing = true,
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.000015"), decimals = 18),
+        )
+
+        // Act
+        val result = onChainConverter(fiatConversion = usdRate("2000")).convert(tx)
+
+        // Assert
+        assertThat(result.amountBlock.fiatAmount).isEqualTo(expectedUsd("0.030000"))
+    }
+
+    @Test
+    fun `GIVEN transfer and known rate WHEN convert THEN fiat prices the amount unsigned`() {
+        // Arrange
+        val tx = txInfo(type = TransactionType.Transfer, isOutgoing = true, amount = BigDecimal("2"))
+
+        // Act
+        val result = onChainConverter(fiatConversion = usdRate("1500")).convert(tx)
+
+        // Assert
+        assertThat(result.amountBlock.fiatAmount).isEqualTo(expectedUsd("3000"))
+    }
+
+    @Test
+    fun `GIVEN no known rate WHEN convert THEN no fiat line`() {
+        // Act
+        val result = converter.convert(txInfo(type = TransactionType.Transfer, isOutgoing = true))
+
+        // Assert
+        assertThat(result.amountBlock.fiatAmount).isNull()
+    }
+
+    @Test
+    fun `GIVEN approve and known rate WHEN convert THEN no fiat line`() {
+        // Arrange — the allowance is denominated in the approved token, which the viewed currency's rate cannot price.
+        val tx = txInfo(
+            type = TransactionType.Approve(
+                amount = SdkAmount(currencySymbol = "USDT", value = BigDecimal("100"), decimals = 6),
+                address = USER_ADDRESS,
+            ),
+            isOutgoing = true,
+        )
+
+        // Act
+        val result = onChainConverter(fiatConversion = usdRate("2000")).convert(tx)
+
+        // Assert
+        assertThat(result.amountBlock.fiatAmount).isNull()
+    }
+
+    private fun usdRate(rate: String) = FiatConversion(rate = BigDecimal(rate), appCurrency = AppCurrency.Default)
+
+    private fun expectedUsd(value: String) = stringReference(
+        BigDecimal(value).format { fiat(fiatCurrencyCode = "USD", fiatCurrencySymbol = "$") },
+    )
 
     // endregion
 
@@ -1105,8 +1619,8 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
-    fun `GIVEN yield Send withdraw WHEN convert THEN withdrawn title, yield lightning icon, no counterparty, no validator row`() {
-        // Arrange — a withdraw stays a yield operation in details: lightning glyph, no counterparty card, no validator row.
+    fun `GIVEN yield Send withdraw WHEN convert THEN withdrawn title, lightning icon, asset-leading Aave pair, no counterparty`() {
+        // Arrange — a withdraw stays a yield operation in details: lightning glyph, Aave-paired icon, no counterparty.
         val tx = txInfo(
             type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = true),
             isOutgoing = false,
@@ -1121,7 +1635,9 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_lightning_20))
         assertThat(result.amountBlock.amount.resolveString()).startsWith("+ ")
         assertThat(result.amountBlock.label).isNull()
-        assertThat(result.amountBlock.icon).isInstanceOf(TxHistoryDetailsUM.AmountIconUM.Single::class.java)
+        val pair = result.amountBlock.icon as TxHistoryDetailsUM.AmountIconUM.OverlappingPair
+        assertThat(pair.leading).isInstanceOf(TxHistoryDetailsUM.AmountIconUM.Item.Currency::class.java)
+        assertThat(pair.trailing).isEqualTo(TxHistoryDetailsUM.AmountIconUM.Item.Resource(R.drawable.img_aave_22))
         assertThat(result.counterparty).isNull()
         assertThat(result.rows.map { it.label })
             .doesNotContain(resourceReference(R.string.staking_validator))
@@ -1147,5 +1663,29 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(result.rows).isEmpty()
     }
 
+    @Test
+    fun `GIVEN non-withdraw yield Send to own account WHEN convert THEN transferred title`() {
+        // Arrange
+        val ownConverter = onChainConverter(
+            lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
+        )
+        val tx = txInfo(
+            type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = false),
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val result = ownConverter.convert(tx)
+
+        // Assert
+        assertThat(result.header.title).isEqualTo(resourceReference(R.string.common_transferred))
+    }
+
     // endregion
+
+    private companion object {
+        const val USDC_CONTRACT = "0xA0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+        const val UNKNOWN_VALIDATOR_ADDRESS = "BbM5kJgrwEj3tYFfBPnjcARB54wDUHkXmLUTkazUmt2x"
+    }
 }

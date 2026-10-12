@@ -18,8 +18,7 @@ internal class UpdateWalletManagerResultFactory {
     fun getResult(walletManager: WalletManager): UpdateWalletManagerResult.Verified {
         val wallet = walletManager.wallet
         val addresses = getAvailableAddresses(wallet.addresses)
-        val feePaidCurrency = wallet.blockchain.feePaidCurrency()
-        val txHistoryItemConverter = TransactionDataToTxHistoryItemConverter(addresses, feePaidCurrency)
+        val txHistoryItemConverter = TransactionDataToTxHistoryItemConverter(addresses)
 
         return UpdateWalletManagerResult.Verified(
             selectedAddress = wallet.address,
@@ -38,8 +37,7 @@ internal class UpdateWalletManagerResultFactory {
     fun getDemoResult(walletManager: WalletManager, demoAmount: Amount): UpdateWalletManagerResult.Verified {
         val wallet = walletManager.wallet
         val addresses = getAvailableAddresses(wallet.addresses)
-        val feePaidCurrency = wallet.blockchain.feePaidCurrency()
-        val txHistoryItemConverter = TransactionDataToTxHistoryItemConverter(addresses, feePaidCurrency)
+        val txHistoryItemConverter = TransactionDataToTxHistoryItemConverter(addresses)
 
         return UpdateWalletManagerResult.Verified(
             selectedAddress = wallet.address,

@@ -7,31 +7,24 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.children.ChildNavState
-import com.arkivanov.decompose.router.pages.ChildPages
-import com.arkivanov.decompose.router.pages.Pages
-import com.arkivanov.decompose.router.pages.PagesNavigation
-import com.arkivanov.decompose.router.pages.childPages
-import com.arkivanov.decompose.router.pages.select
+import com.arkivanov.decompose.router.pages.*
 import com.arkivanov.decompose.value.Value
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
-import com.tangem.features.feed.nav.FeedRoute
-import com.tangem.features.feed.nav.FeedTabComponent
-import com.tangem.features.feed.nav.FeedTabContributor
-import com.tangem.features.feed.nav.FeedTabId
-import com.tangem.features.feed.nav.FeedTabSet
+import com.tangem.features.feed.nav.*
 import com.tangem.features.feed.search.FeedSearchComponent
 import com.tangem.features.feed.search.model.FeedSearchModel
 import com.tangem.features.feed.search.ui.FeedSearchPlaceholder
 import com.tangem.features.feed.search.ui.FeedSearchTabsContent
 import com.tangem.features.feed.ui.FeedTabUM
+import com.tangem.features.feed.v2.FeedV2Component
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -52,8 +45,10 @@ internal class DefaultFeedSearchComponent @AssistedInject constructor(
     private val contributorsById: Map<FeedTabId, FeedTabContributor> = contributors.associateBy { it.id }
 
     private val tabs: ImmutableList<FeedTabUM> = contributors
-        .map { FeedTabUM(id = it.id.value, title = it.title) }
+        .map { FeedTabUM(id = it.id.value, title = it.title, icon = it.icon) }
         .toImmutableList()
+
+    private val emptySearchPage: FeedEmptySearchComponent? = buildEmptySearchPage()
 
     private val pagesNavigation = PagesNavigation<FeedTabId>()
 
@@ -80,7 +75,13 @@ internal class DefaultFeedSearchComponent @AssistedInject constructor(
         val state by model.uiState.collectAsStateWithLifecycle()
 
         if (state.query.isBlank()) {
-            FeedSearchPlaceholder(recent = state.recent, contentPadding = contentPadding, modifier = modifier)
+            FeedSearchPlaceholder(
+                recentQueries = state.recentQueries,
+                marketList = emptySearchPage,
+                bottomSheetState = bottomSheetState,
+                contentPadding = contentPadding,
+                modifier = modifier,
+            )
             return
         }
 
@@ -98,11 +99,18 @@ internal class DefaultFeedSearchComponent @AssistedInject constructor(
         ) { tabModifier ->
             pagesState.items.getOrNull(pagesState.selectedIndex)?.instance?.Content(
                 bottomSheetState = bottomSheetState,
-                // the tab row is laid out above, not overlaid
-                contentPadding = PaddingValues(0.dp),
+                contentPadding = PaddingValues(
+                    top = contentPadding.calculateTopPadding() + FeedV2Component.TabRowHeight,
+                ),
                 modifier = tabModifier.fillMaxSize(),
             )
         }
+    }
+
+    private fun buildEmptySearchPage(): FeedEmptySearchComponent? {
+        val childContext = child(key = "emptySearchPage")
+
+        return contributors.firstNotNullOfOrNull { it.createEmptySearchPage(context = childContext) }
     }
 
     private fun createSearchTab(id: FeedTabId, componentContext: ComponentContext): FeedTabComponent {

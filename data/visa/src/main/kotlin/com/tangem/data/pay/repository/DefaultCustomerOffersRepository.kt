@@ -14,9 +14,12 @@ internal class DefaultCustomerOffersRepository @Inject constructor(
     private val requestHelper: TangemPayRequestPerformer,
 ) : CustomerOffersRepository {
 
-    override suspend fun getOffers(userWalletId: UserWalletId): Either<VisaApiError, CustomerOffers> {
+    override suspend fun getOffers(
+        userWalletId: UserWalletId,
+        deeplinkValue: String?,
+    ): Either<VisaApiError, CustomerOffers> {
         return requestHelper.performRequest(userWalletId) { authHeader ->
-            tangemPayApi.getCustomerOffers(authHeader = authHeader)
+            tangemPayApi.getCustomerOffers(authHeader = authHeader, deeplinkValue = deeplinkValue)
         }.map(CustomerOffersConverter::convert)
     }
 

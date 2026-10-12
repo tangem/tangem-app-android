@@ -97,6 +97,7 @@ import com.tangem.features.commonfeatures.impl.choosetoken.predefined.state.Pred
 import com.tangem.features.commonfeatures.impl.choosetoken.predefined.state.PredefinedTokensUM
 import com.tangem.features.commonfeatures.impl.choosetoken.ui.state.ChooserBlockUM
 import com.tangem.utils.StringsSigns.DOT
+import com.tangem.utils.StringsSigns.THREE_STARS
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -538,7 +539,7 @@ private fun AccountRow(
     isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val tokenRowUM = accountTokenRowUM(portfolio)
+    val tokenRowUM = accountTokenRowUM(portfolio, isBalanceHidden)
     val subtitle = (tokenRowUM.subtitleUM as? TangemTokenRowUM.SubtitleUM.Content)?.text
     Row(
         modifier = modifier,
@@ -711,11 +712,15 @@ private class AccountRowComposables(
     val icon: @Composable (Modifier) -> Unit,
 )
 
-private fun accountTokenRowUM(portfolio: TokensListItemUM.Portfolio): TangemTokenRowUM.Content {
+private fun accountTokenRowUM(
+    portfolio: TokensListItemUM.Portfolio,
+    isBalanceHidden: Boolean,
+): TangemTokenRowUM.Content {
     val account = portfolio.tokenItemUM
     val name = (account.titleState as? TokenItemState.TitleState.Content)?.text ?: TextReference.EMPTY
     val tokensCount = (account.subtitleState as? TokenItemState.SubtitleState.TextContent)?.value
     val balance = (account.fiatAmountState as? TokenItemState.FiatAmountState.Content)?.text
+        ?.let { if (isBalanceHidden) THREE_STARS else it }
     return TangemTokenRowUM.Content(
         id = portfolio.id,
         headIconUM = TangemIconUM.Currency(currencyIconState = account.iconState),
