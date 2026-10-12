@@ -55,7 +55,6 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
         appComponentContext = child("chartComponent"),
         params = DefaultYieldSupplyChartComponent.Params(
             cryptoCurrency = model.cryptoCurrencyStatusFlow.value.currency as CryptoCurrency.Token,
-            // The inline chart carries no period picker, and the design draws it over months, not days.
             initialPeriod = YieldSupplyChartPeriod.ThreeMonths,
         ),
     )
@@ -176,7 +175,7 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
             params = YieldSupplyClaimResultComponent.Params(
                 state = model.claimResultFlow,
                 onGoToTokenClick = model::onGoToTokenClick,
-                onGoToYieldClick = model::onGoToYieldClick,
+                onGoToYieldClick = model::onClaimResultDismiss,
                 onDismiss = model::onClaimResultDismiss,
             ),
         )
