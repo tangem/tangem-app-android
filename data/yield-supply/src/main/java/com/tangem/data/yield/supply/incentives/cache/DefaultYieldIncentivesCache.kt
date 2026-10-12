@@ -14,6 +14,7 @@ internal class DefaultYieldIncentivesCache(
     private val guard = Mutex()
     private val entries = mutableMapOf<String, Entry>()
     private val keyLocks = mutableMapOf<String, Mutex>()
+    private val generations = mutableMapOf<String, Long>()
 
     override suspend fun <T : Any> getOrFetch(
         key: String,
@@ -27,14 +28,26 @@ internal class DefaultYieldIncentivesCache(
         return keyLock.withLock {
             peek<T>(key = key, window = window)?.let { return@withLock it.right() }
 
+            val generation = guard.withLock { generations.getOrDefault(key, 0L) }
             fetch().onRight { value ->
-                guard.withLock { entries[key] = Entry(value = value, storedAtMillis = currentTimeMillis()) }
+                guard.withLock {
+                    // A fetch that left before an invalidation answers for the state it discarded, so it is not kept.
+                    if (generations.getOrDefault(key, 0L) == generation) {
+                        entries[key] = Entry(value = value, storedAtMillis = currentTimeMillis())
+                    }
+                }
             }
         }
     }
 
     override suspend fun invalidate(key: String) {
-        guard.withLock { entries.remove(key) }
+        guard.withLock {
+            entries.remove(key)
+            generations[key] = generations.getOrDefault(key, 0L) + 1
+            // The fetch in flight keeps its own lock; a read after the invalidation starts a fresh one instead of
+            // queueing behind a request that already answers for the past.
+            keyLocks.remove(key)
+        }
     }
 
     private suspend fun <T : Any> peek(key: String, window: Duration): T? = guard.withLock {
