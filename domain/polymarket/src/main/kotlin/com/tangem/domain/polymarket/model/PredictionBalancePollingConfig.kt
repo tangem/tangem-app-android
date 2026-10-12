@@ -13,6 +13,6 @@ import kotlin.time.Duration.Companion.seconds
 data class PredictionBalancePollingConfig(
     val baseInterval: Duration = 30.seconds,
     val fundingInterval: Duration = 5.seconds,
-    val fundingWindow: Duration = 2.minutes,
+    val fundingWindow: Duration = 90.seconds,
     val fundingWindowMaxAge: Duration = 10.minutes,
 )
