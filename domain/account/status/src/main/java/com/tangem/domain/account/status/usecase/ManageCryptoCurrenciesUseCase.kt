@@ -18,6 +18,7 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.isJoint
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -298,7 +299,7 @@ class ManageCryptoCurrenciesUseCase(
     }
 
     private fun List<CryptoCurrency>.withoutJointNetworks(): List<CryptoCurrency> {
-        return filterNot { it.network.derivationPath is Network.DerivationPath.Joint }
+        return filterNot { it.isJoint }
     }
 
     private suspend fun Raise<Throwable>.saveAccount(account: Account.CryptoPortfolio) {

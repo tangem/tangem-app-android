@@ -5,11 +5,18 @@ import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapter
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
+import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.core.local.datastore.DeleteObsoleteFileMigration
+import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
+import com.tangem.core.remote.json.NetworkJsonFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.create
 import com.tangem.datasource.utils.listTypes
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.AppCoroutineScope
 import io.mockk.every
 import io.mockk.mockk
@@ -22,7 +29,10 @@ import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.junit.jupiter.api.io.TempDir
+import java.io.ByteArrayOutputStream
 import java.io.File
 
 @JsonClass(generateAdapter = true)
@@ -30,6 +40,10 @@ data class SampleDto(val id: String)
 
 @Serializable
 data class SampleSerializable(val id: String)
+
+/** Readable by both libraries: Moshi via reflection (no generated adapter), kotlinx via the plugin. */
+@Serializable
+data class SampleNullableDto(val id: String, val note: String?)
 
 @OptIn(ExperimentalStdlibApi::class)
 internal class DefaultAppDataStoreFactoryTest {
@@ -49,10 +63,13 @@ internal class DefaultAppDataStoreFactoryTest {
         }
     }
     private val context: Context = mockk()
+    private val featureTogglesManager: FeatureTogglesManager = mockk()
     private val factory = DefaultAppDataStoreFactory(
         context = context,
         analyticsExceptionHandler = analyticsExceptionHandler,
         appScope = scope,
+        json = NetworkJsonFactory.create(),
+        featureTogglesManager = featureTogglesManager,
     )
 
     @BeforeEach
@@ -60,6 +77,7 @@ internal class DefaultAppDataStoreFactoryTest {
         // context.dataStoreFile(name) resolves File(applicationContext.filesDir, "datastore/name").
         every { context.applicationContext } returns context
         every { context.filesDir } returns tempDir
+        every { featureTogglesManager.isFeatureEnabled(KOTLINX_DATASTORE_TOGGLE) } returns true
     }
 
     @AfterEach
@@ -126,6 +144,25 @@ internal class DefaultAppDataStoreFactoryTest {
     }
 
     @Test
+    fun `GIVEN obsolete file migration WHEN store is read THEN the obsolete file is deleted`() = runBlocking {
+        // Arrange
+        val obsolete = File(tempDir, "obsolete_list").apply { writeText("[]") }
+        val store = factory.create(
+            serializer = MoshiDataStoreSerializer(moshi, listTypes<String>(), defaultValue = emptyList<String>()),
+            scope = scope,
+            produceFile = { File(tempDir, "migrated_list") },
+            migrations = listOf(DeleteObsoleteFileMigration { obsolete }),
+        )
+
+        // Act
+        val value = store.data.first()
+
+        // Assert
+        assertThat(value).isEmpty()
+        assertThat(obsolete.exists()).isFalse()
+    }
+
+    @Test
     fun `GIVEN kotlinx serializer and fileName WHEN store is written THEN persists and reads back`() = runBlocking {
         // Arrange
         val store = factory.create(
@@ -153,5 +190,108 @@ internal class DefaultAppDataStoreFactoryTest {
 
         // Assert
         assertThat(value).isEqualTo(SampleSerializable(id = "world"))
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN file in legacy format WHEN read via fileName overload THEN value is kept`(model: LegacyFileModel) =
+        runBlocking {
+            // Arrange
+            val fileName = "legacy_${model.format.name.lowercase()}"
+            dataStoreFile(fileName).writeText(model.format.encode(model.value))
+            val store = factory.create(defaultValue = DEFAULT_SAMPLE, fileName = fileName)
+
+            // Act
+            val value = store.data.first()
+
+            // Assert
+            assertThat(value).isEqualTo(model.value)
+            assertThat(reported).isEmpty()
+        }
+
+    @Test
+    fun `GIVEN value with null field WHEN written via fileName overload THEN file matches Moshi output`() =
+        runBlocking {
+            // Arrange
+            val value = SampleNullableDto(id = "a", note = null)
+            val store = factory.create(defaultValue = DEFAULT_SAMPLE, fileName = "written")
+
+            // Act
+            store.updateData { value }
+
+            // Assert
+            assertThat(dataStoreFile("written").readText()).isEqualTo(LegacyFormat.MOSHI.encode(value))
+        }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN kotlinx DataStore toggle WHEN isKotlinxDataStoreEnabled THEN reflects the toggle`(isEnabled: Boolean) {
+        // Arrange
+        every { featureTogglesManager.isFeatureEnabled(KOTLINX_DATASTORE_TOGGLE) } returns isEnabled
+
+        // Act
+        val actual = factory.isKotlinxDataStoreEnabled
+
+        // Assert
+        assertThat(actual).isEqualTo(isEnabled)
+    }
+
+    @Test
+    fun `GIVEN toggle disabled WHEN value with null field written via fileName overload THEN null is written`() =
+        runBlocking {
+            // Arrange
+            every { featureTogglesManager.isFeatureEnabled(KOTLINX_DATASTORE_TOGGLE) } returns false
+            val store = factory.create(defaultValue = DEFAULT_SAMPLE, fileName = "written_toggle_off")
+
+            // Act
+            store.updateData { SampleNullableDto(id = "a", note = null) }
+
+            // Assert
+            assertThat(dataStoreFile("written_toggle_off").readText()).isEqualTo("""{"id":"a","note":null}""")
+        }
+
+    /** Mirrors `Context.dataStoreFile`, which the production factory resolves the file name with. */
+    private fun dataStoreFile(fileName: String): File {
+        return File(tempDir, "datastore/$fileName").apply { parentFile.mkdirs() }
+    }
+
+    data class LegacyFileModel(val format: LegacyFormat, val value: SampleNullableDto)
+
+    /** Formats files may already be stored in on devices. */
+    enum class LegacyFormat {
+        /** Moshi DataStore serializer: `null` fields are not written. */
+        MOSHI {
+            override fun encode(value: SampleNullableDto): String {
+                return legacyMoshi.adapter<SampleNullableDto>().toJson(value)
+            }
+        },
+
+        /** Kotlinx DataStore serializer with its default config: `null` fields are written explicitly. */
+        KOTLINX_EXPLICIT_NULLS {
+            override fun encode(value: SampleNullableDto): String = runBlocking {
+                val output = ByteArrayOutputStream()
+                KotlinxDataStoreSerializer(defaultValue = value, serializer = SampleNullableDto.serializer())
+                    .writeTo(value, output)
+                output.toString(Charsets.UTF_8.name())
+            }
+        },
+        ;
+
+        abstract fun encode(value: SampleNullableDto): String
+    }
+
+    companion object {
+
+        val KOTLINX_DATASTORE_TOGGLE = FeatureToggles.AND_18288_KOTLINX_DATASTORE_ENABLED
+        val DEFAULT_SAMPLE = SampleNullableDto(id = "default", note = null)
+        val legacyMoshi: Moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build()
+
+        @JvmStatic
+        fun provideTestModels() = LegacyFormat.entries.flatMap { format ->
+            listOf(
+                LegacyFileModel(format = format, value = SampleNullableDto(id = "a", note = "n")),
+                LegacyFileModel(format = format, value = SampleNullableDto(id = "a", note = null)),
+            )
+        }
     }
 }

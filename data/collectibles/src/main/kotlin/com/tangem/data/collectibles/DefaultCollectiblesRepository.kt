@@ -3,7 +3,10 @@ package com.tangem.data.collectibles
 import com.tangem.data.collectibles.converter.MachineCategoriesConverter
 import com.tangem.data.collectibles.converter.MachineConverter
 import com.tangem.data.collectibles.converter.MachineNftConverter
+import com.tangem.data.collectibles.converter.CollectibleTxStatusConverter
+import com.tangem.data.collectibles.converter.OpenedPackConverter
 import com.tangem.data.collectibles.converter.TurboModeConverter
+import com.tangem.data.collectibles.error.CollectiblesErrorResolver
 import com.tangem.data.collectibles.pagination.CollectibleGachaMachineNftsBatchFetcher
 import com.tangem.data.collectibles.pagination.CollectibleGachaMachinesBatchFetcher
 import com.tangem.data.collectibles.store.CollectiblesMachineStore
@@ -16,8 +19,10 @@ import com.tangem.domain.collectibles.models.*
 import com.tangem.domain.collectibles.repository.CollectiblesRepository
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.grow.datasource.collectibles.CollectiblesApi
-import com.tangem.grow.datasource.collectibles.models.request.GenerateTxRequestBody
-import com.tangem.grow.datasource.collectibles.models.request.SubmitTxRequestBody
+import com.tangem.grow.datasource.collectibles.models.request.CollectibleTxRequestBody
+import com.tangem.grow.datasource.collectibles.models.request.GeneratePurchaseTxRequestBody
+import com.tangem.grow.datasource.collectibles.models.request.PurchaseTxSentRequestBody
+import com.tangem.grow.datasource.collectibles.models.response.CollectibleTxResponse
 import com.tangem.pagination.BatchListSource
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -27,6 +32,7 @@ import javax.inject.Inject
 internal class DefaultCollectiblesRepository @Inject constructor(
     private val collectiblesApi: CollectiblesApi,
     private val machineStore: CollectiblesMachineStore,
+    private val errorResolver: CollectiblesErrorResolver,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : CollectiblesRepository {
 
@@ -76,30 +82,70 @@ internal class DefaultCollectiblesRepository @Inject constructor(
         ).toBatchFlow()
     }
 
-    override suspend fun generateTx(userWalletId: UserWalletId, params: GenerateTxParams): CollectibleTransaction =
-        withContext(dispatchers.io) {
-            val response = collectiblesApi.generateTx(
+    override suspend fun generatePurchaseTx(
+        userWalletId: UserWalletId,
+        params: GeneratePurchaseTxParams,
+    ): CollectiblePurchaseTx = withContext(dispatchers.io) {
+        val response = errorResolver.getOrThrow(
+            collectiblesApi.generatePurchaseTx(
                 userWalletId = userWalletId.stringValue,
-                body = GenerateTxRequestBody(
+                body = GeneratePurchaseTxRequestBody(
                     fromAddress = params.fromAddress,
-                    collectibleType = params.collectibleType,
+                    machineId = params.machineId,
                     toAddress = params.toAddress,
                     turboMode = params.collectibleTurboMode?.let(TurboModeConverter::convertBack),
                 ),
-            ).getOrThrow()
+            ),
+        )
 
-            CollectibleTransaction(id = response.id, txData = response.txData)
-        }
+        CollectiblePurchaseTx(
+            txId = response.txId,
+            memo = response.txData.memo,
+            amount = response.txData.fromAmount.toLong(),
+            feeAmount = response.txData.feeAmount.toLong(),
+        )
+    }
 
-    override suspend fun submitTx(userWalletId: UserWalletId, signedTxData: String): SubmittedCollectibleTransaction =
+    override suspend fun reportPurchaseTxSent(
+        userWalletId: UserWalletId,
+        txId: String,
+        txHash: String,
+    ): CollectibleTxStatus = withContext(dispatchers.io) {
+        val response = collectiblesApi.purchaseTxSent(
+            userWalletId = userWalletId.stringValue,
+            body = PurchaseTxSentRequestBody(txId = txId, txHash = txHash),
+        ).getOrThrow()
+
+        CollectibleTxStatusConverter.convert(response.status)
+    }
+
+    override suspend fun getTxState(
+        userWalletId: UserWalletId,
+        txId: String,
+        includeNftWon: Boolean,
+    ): CollectibleTxState = withContext(dispatchers.io) {
+        collectiblesApi.getTxStatus(
+            userWalletId = userWalletId.stringValue,
+            txId = txId,
+            includeNftWon = includeNftWon,
+        )
+            .getOrThrow()
+            .toState()
+    }
+
+    override suspend fun openPack(userWalletId: UserWalletId, txId: String): CollectibleTxState =
         withContext(dispatchers.io) {
-            val response = collectiblesApi.submitTx(
+            collectiblesApi.openPack(
                 userWalletId = userWalletId.stringValue,
-                body = SubmitTxRequestBody(signedTxData = signedTxData),
-            ).getOrThrow()
-
-            SubmittedCollectibleTransaction(id = response.id)
+                body = CollectibleTxRequestBody(txId = txId),
+                includeNftWon = true,
+            ).getOrThrow().toState()
         }
+
+    private fun CollectibleTxResponse.toState() = CollectibleTxState(
+        status = CollectibleTxStatusConverter.convert(status),
+        pack = nftWon?.let { nft -> OpenedPackConverter.convert(OpenedPackConverter.Input(txId = txId, nft = nft)) },
+    )
 
     private suspend fun fetchMachinesPage(
         config: CollectibleGachaMachinesListConfig,

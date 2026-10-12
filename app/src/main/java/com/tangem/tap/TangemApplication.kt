@@ -215,9 +215,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
 
         tangemLoggingInitializer.initSdkLogging(this)
 
-        wcInitializeUseCase.init(
-            projectId = environmentConfig.walletConnectProjectId,
-        )
+        wcInitializeUseCase()
     }
 
     override fun newImageLoader(): ImageLoader = createCoilImageLoader(context = this)

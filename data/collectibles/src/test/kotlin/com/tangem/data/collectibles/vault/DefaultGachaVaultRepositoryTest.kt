@@ -440,7 +440,11 @@ internal class DefaultGachaVaultRepositoryTest {
 
             // Assert
             assertThat(actual).isEqualTo(
-                MockCollectibles.vaultBalance(amount = BigDecimal("12.5"), currency = expectedCurrency()).right(),
+                MockCollectibles.vaultBalance(
+                    amount = BigDecimal("12.5"),
+                    currency = expectedCurrency(),
+                    ataAddress = VAULT_USDC_ADDRESS,
+                ).right(),
             )
         }
 
@@ -476,19 +480,22 @@ internal class DefaultGachaVaultRepositoryTest {
             }
         }
 
-        /** Working the token out costs a request, and nothing about it can change while the program is deployed. */
         @Test
-        fun `GIVEN the token is already known WHEN getVaultBalance THEN the program is not asked for it again`() =
+        fun `GIVEN the vault is already known WHEN getVaultBalance THEN the program is not asked for it again`() =
             runTest {
                 // Arrange
-                val known = MockCollectibles.usdc(mint = MINT)
+                val known = MockCollectibles.vaultBalance(
+                    amount = BigDecimal.ZERO,
+                    currency = MockCollectibles.usdc(mint = MINT),
+                )
                 stubTokenBalances(tokenBalance(mint = MINT, amount = BigDecimal.ONE))
 
                 // Act
-                val actual = repository.getVaultBalance(userWallet, cachedToken = known)
+                val actual = repository.getVaultBalance(userWallet, cached = known)
 
                 // Assert
-                assertThat(actual.getOrNull()?.usdcToken).isEqualTo(known)
+                assertThat(actual.getOrNull()?.usdcToken).isEqualTo(known.usdcToken)
+                assertThat(actual.getOrNull()?.ataAddress).isEqualTo(known.ataAddress)
                 coVerify(exactly = 0) { walletManager.getCollectiblesVaultUsdc() }
             }
 

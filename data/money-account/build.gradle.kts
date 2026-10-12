@@ -16,7 +16,7 @@ dependencies {
     // endregion
 
     // region Other libraries
-    implementation(deps.moshi)
+    implementation(deps.kotlin.serialization)
     implementation(deps.androidx.datastore)
     implementation(deps.arrow.core)
     // endregion
@@ -32,7 +32,6 @@ dependencies {
 
     // region Project - Core
     implementation(projects.core.local)
-    implementation(projects.core.remote)
     implementation(projects.core.security)
     implementation(projects.core.utils)
     // endregion
@@ -43,6 +42,7 @@ dependencies {
 
     // region Project - Domain
     api(projects.domain.moneyAccount)
+    implementation(projects.domain.account)
     implementation(projects.domain.common)
     implementation(projects.domain.core)
     implementation(projects.domain.models)

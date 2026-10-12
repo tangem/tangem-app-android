@@ -1,41 +1,64 @@
 package com.tangem.data.visa.utils
 
-import com.squareup.moshi.Moshi
-import com.tangem.spend.datasource.pay.models.response.TangemPayTxHistoryResponse
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.remote.json.NetworkJson
 import com.tangem.domain.pay.utils.TangemPayTxHistoryItemStatusConverter
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.spend.datasource.pay.models.response.TangemPayTxHistoryResponse
+import com.tangem.spend.datasource.pay.models.response.TangemPayTxHistoryResponse.Transaction
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.isZero
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.serialization.json.Json
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import java.math.BigDecimal
 import java.util.Currency
+import java.util.concurrent.ConcurrentHashMap
+import javax.inject.Inject
 
-internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
-    Converter<TangemPayTxHistoryResponse.Transaction, TangemPayTxHistoryItem?> {
+internal class TangemPayTxHistoryItemConverter @Inject constructor(
+    @NetworkJson private val json: Json,
+    private val analytics: AnalyticsEventHandler,
+) : Converter<Transaction, TangemPayTxHistoryItem?> {
 
-    private val spendAdapter by lazy { moshi.adapter(TangemPayTxHistoryResponse.Spend::class.java) }
-    private val refundAdapter by lazy { moshi.adapter(TangemPayTxHistoryResponse.Refund::class.java) }
-    private val paymentAdapter by lazy { moshi.adapter(TangemPayTxHistoryResponse.Payment::class.java) }
-    private val feeAdapter by lazy { moshi.adapter(TangemPayTxHistoryResponse.Fee::class.java) }
-    private val collateralAdapter by lazy { moshi.adapter(TangemPayTxHistoryResponse.Collateral::class.java) }
+    private val reportedUnknownTypes = ConcurrentHashMap.newKeySet<String>()
 
-    override fun convert(value: TangemPayTxHistoryResponse.Transaction): TangemPayTxHistoryItem? {
-        return value.spend?.let { convertSpend(id = value.id, spend = it) }
-            ?: value.refund?.let { convertRefund(id = value.id, refund = it) }
-            ?: value.payment?.let { convertPayment(id = value.id, payment = it) }
-            ?: value.fee?.let { convertFee(id = value.id, fee = it) }
-            ?: value.collateral?.let { convertCollateral(id = value.id, collateral = it) }
-            ?: run {
-                TangemLogger.e("unknown type of transaction: $value")
+    override fun convert(value: Transaction): TangemPayTxHistoryItem? {
+        val item = when (value) {
+            is Transaction.Spend -> value.spend?.let { convertSpend(id = value.id, spend = it) }
+            is Transaction.Refund -> value.refund?.let { convertRefund(id = value.id, refund = it) }
+            is Transaction.Payment -> value.payment?.let { convertPayment(id = value.id, payment = it) }
+            is Transaction.Fee -> value.fee?.let { convertFee(id = value.id, fee = it) }
+            is Transaction.Collateral -> value.collateral?.let { convertCollateral(id = value.id, collateral = it) }
+            is Transaction.Unknown -> {
+                reportUnknownType(value)
                 null
             }
+        }
+
+        if (item == null) {
+            TangemLogger.e("Transaction ${value.id} is skipped: ${value.skipReason()}")
+        }
+
+        return item
     }
 
-    private fun convertSpend(id: String, spend: TangemPayTxHistoryResponse.Spend): TangemPayTxHistoryItem.Spend {
+    private fun reportUnknownType(transaction: Transaction.Unknown) {
+        if (reportedUnknownTypes.add(transaction.type.orEmpty())) {
+            analytics.send(TangemPayAnalyticsEvents.UnknownTransactionType(type = transaction.type))
+        }
+    }
+
+    private fun Transaction.skipReason(): String = when (this) {
+        is Transaction.Unknown -> "unknown type '$type'"
+        else -> "no payload"
+    }
+
+    private fun convertSpend(id: String, spend: TangemPayTxHistoryResponse.SpendData): TangemPayTxHistoryItem.Spend {
         val rawDate = if (spend.amount.signum() < 0) {
             spend.postedAt ?: spend.authorizedAt
         } else {
@@ -43,13 +66,13 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
         }
         return TangemPayTxHistoryItem.Spend(
             id = id,
-            jsonRepresentation = spendAdapter.toJson(spend),
+            jsonRepresentation = json.encodeToString(TangemPayTxHistoryResponse.SpendData.serializer(), spend),
             date = rawDate.withLocalZone(),
             amount = spend.amount,
-            currency = Currency.getInstance(spend.currency),
+            currency = getJavaCurrencyByCode(spend.currency),
             authorizedAmount = spend.authorizedAmount.orZero(),
             localAmount = spend.localAmount,
-            localCurrency = spend.localCurrency?.let(Currency::getInstance),
+            localCurrency = spend.localCurrency?.let(::getJavaCurrencyOrNull),
             enrichedMerchantName = spend.enrichedMerchantName,
             merchantName = spend.merchantName,
             enrichedMerchantCategory = spend.enrichedMerchantCategory,
@@ -73,16 +96,19 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
      * a negative sign (the convention of refund push notifications and the spend UI), so the signs
      * are forced to negative regardless of what the backend sends.
      */
-    private fun convertRefund(id: String, refund: TangemPayTxHistoryResponse.Refund): TangemPayTxHistoryItem.Spend {
+    private fun convertRefund(
+        id: String,
+        refund: TangemPayTxHistoryResponse.RefundData,
+    ): TangemPayTxHistoryItem.Spend {
         return TangemPayTxHistoryItem.Spend(
             id = id,
-            jsonRepresentation = refundAdapter.toJson(refund),
+            jsonRepresentation = json.encodeToString(TangemPayTxHistoryResponse.RefundData.serializer(), refund),
             date = (refund.postedAt ?: refund.authorizedAt).withLocalZone(),
             amount = refund.amount.abs().negate(),
-            currency = Currency.getInstance(refund.currency),
+            currency = getJavaCurrencyByCode(refund.currency),
             authorizedAmount = BigDecimal.ZERO,
             localAmount = refund.localAmount?.abs()?.negate(),
-            localCurrency = refund.localCurrency?.let(Currency::getInstance),
+            localCurrency = refund.localCurrency?.let(::getJavaCurrencyOrNull),
             enrichedMerchantName = refund.enrichedMerchantName,
             merchantName = refund.merchantName,
             enrichedMerchantCategory = refund.enrichedMerchantCategory,
@@ -103,24 +129,24 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
 
     private fun convertPayment(
         id: String,
-        payment: TangemPayTxHistoryResponse.Payment,
+        payment: TangemPayTxHistoryResponse.PaymentData,
     ): TangemPayTxHistoryItem.Payment {
         return TangemPayTxHistoryItem.Payment(
             id = id,
-            jsonRepresentation = paymentAdapter.toJson(payment),
+            jsonRepresentation = json.encodeToString(TangemPayTxHistoryResponse.PaymentData.serializer(), payment),
             date = payment.postedAt.withLocalZone(),
-            currency = Currency.getInstance(payment.currency),
+            currency = getJavaCurrencyByCode(payment.currency),
             amount = payment.amount,
             transactionHash = payment.transactionHash,
         )
     }
 
-    private fun convertFee(id: String, fee: TangemPayTxHistoryResponse.Fee): TangemPayTxHistoryItem.Fee {
+    private fun convertFee(id: String, fee: TangemPayTxHistoryResponse.FeeData): TangemPayTxHistoryItem.Fee {
         return TangemPayTxHistoryItem.Fee(
             id = id,
-            jsonRepresentation = feeAdapter.toJson(fee),
+            jsonRepresentation = json.encodeToString(TangemPayTxHistoryResponse.FeeData.serializer(), fee),
             date = fee.postedAt.withLocalZone(),
-            currency = Currency.getInstance(fee.currency),
+            currency = getJavaCurrencyByCode(fee.currency),
             amount = fee.amount,
             description = fee.description,
         )
@@ -128,7 +154,7 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
 
     private fun convertCollateral(
         id: String,
-        collateral: TangemPayTxHistoryResponse.Collateral,
+        collateral: TangemPayTxHistoryResponse.CollateralData,
     ): TangemPayTxHistoryItem.Collateral? {
         val date = collateral.postedAt ?: return run {
             TangemLogger.e("Collateral transaction postedAt is null: $collateral")
@@ -136,7 +162,10 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
         }
         return TangemPayTxHistoryItem.Collateral(
             id = id,
-            jsonRepresentation = collateralAdapter.toJson(collateral),
+            jsonRepresentation = json.encodeToString(
+                TangemPayTxHistoryResponse.CollateralData.serializer(),
+                collateral,
+            ),
             date = date.withLocalZone(),
             currency = Currency.getInstance("usd"),
             amount = collateral.amount,

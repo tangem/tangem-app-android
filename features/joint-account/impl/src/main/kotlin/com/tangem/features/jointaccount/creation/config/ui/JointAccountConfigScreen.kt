@@ -17,6 +17,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -47,6 +48,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chevron_down_16
+import com.tangem.core.ui.test.accounts.JointAccountCreationTestTags
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.jointaccount.creation.config.ui.state.JointAccountConfigUM
 import com.tangem.features.jointaccount.impl.R
@@ -176,7 +178,9 @@ private fun NameCard(state: JointAccountConfigUM, modifier: Modifier = Modifier)
             )
 
             SimpleTextField(
-                modifier = Modifier.focusRequester(focusRequester),
+                modifier = Modifier
+                    .testTag(JointAccountCreationTestTags.CONFIG_NAME_FIELD)
+                    .focusRequester(focusRequester),
                 centered = true,
                 textStyle = TangemTheme.typography3.heading.medium,
                 placeholder = state.namePlaceholder,
@@ -234,6 +238,7 @@ private fun Footer(isEnabled: Boolean, onContinueClick: () -> Unit, modifier: Mo
 
         TangemButton(
             modifier = Modifier
+                .testTag(JointAccountCreationTestTags.CONFIG_CONTINUE_BUTTON)
                 .fillMaxWidth()
                 .padding(top = 16.dp)
                 .padding(horizontal = 16.dp, vertical = 12.dp),

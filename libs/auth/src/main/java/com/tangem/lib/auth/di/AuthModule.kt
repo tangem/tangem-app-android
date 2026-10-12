@@ -92,6 +92,8 @@ internal object AuthModule {
                 // skips it on 401 — no recursion into the refresher's mutex. Future session-protected
                 // endpoints (e.g. /wallet) will carry `@RequiresSessionAuth` and benefit from refresh-on-401.
                 shouldUseSessionAuth = true,
+                shouldSaveLogs = false,
+                isLoggable = false,
             ),
         )
     }

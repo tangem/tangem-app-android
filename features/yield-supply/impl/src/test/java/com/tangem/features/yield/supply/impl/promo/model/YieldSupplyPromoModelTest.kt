@@ -11,48 +11,19 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.promo.usecase.GetBoostedApyUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyPromoComponent
 import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
-import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
 import com.tangem.features.yield.supply.impl.promo.YieldSupplyPromoConfig
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import io.mockk.clearMocks
 import io.mockk.mockk
-import io.mockk.verify
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-/**
- * The promo screen opens for a joint token like for any other; only the start action differs, because the Safe
- * behind the account makes no sends of its own yet.
- */
 internal class YieldSupplyPromoModelTest {
 
-    private val alertFactory: YieldSupplyAlertFactory = mockk(relaxUnitFun = true)
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val appRouter: AppRouter = mockk(relaxed = true)
     private val boostStoryPreloader: YieldBoostStoryPreloader = mockk(relaxed = true)
 
     private val personal: CryptoCurrency = coin(derivationPath = Network.DerivationPath.None)
-    private val joint: CryptoCurrency = coin(derivationPath = Network.DerivationPath.Joint(value = "m/44'/60'/888888'/0/0"))
-
-    @BeforeEach
-    fun resetMocks() {
-        clearMocks(alertFactory)
-    }
-
-    @Test
-    fun `GIVEN a joint account token WHEN onStartEarningClick THEN coming soon and no action sheet`() {
-        // Arrange
-        val model = createModel(currency = joint)
-        val opened = model.openedBottomSheets()
-
-        // Act
-        model.onStartEarningClick()
-
-        // Assert
-        verify(exactly = 1) { alertFactory.showJointAccountComingSoon() }
-        assertThat(opened).isEmpty()
-    }
 
     @Test
     fun `GIVEN a personal token WHEN onStartEarningClick THEN the action sheet opens`() {
@@ -64,8 +35,33 @@ internal class YieldSupplyPromoModelTest {
         model.onStartEarningClick()
 
         // Assert
-        verify(exactly = 0) { alertFactory.showJointAccountComingSoon() }
         assertThat(opened).containsExactly(YieldSupplyPromoConfig.Action)
+    }
+
+    @Test
+    fun `GIVEN a personal token WHEN onVariableRateInfoClick THEN the variable rate sheet opens`() {
+        // Arrange
+        val model = createModel(currency = personal)
+        val opened = model.openedBottomSheets()
+
+        // Act
+        model.onVariableRateInfoClick()
+
+        // Assert
+        assertThat(opened).containsExactly(YieldSupplyPromoConfig.VariableRate)
+    }
+
+    @Test
+    fun `GIVEN a personal token WHEN onIncentiveRateInfoClick THEN the incentive rate sheet opens`() {
+        // Arrange
+        val model = createModel(currency = personal)
+        val opened = model.openedBottomSheets()
+
+        // Act
+        model.onIncentiveRateInfoClick()
+
+        // Assert
+        assertThat(opened).containsExactly(YieldSupplyPromoConfig.IncentiveRate)
     }
 
     private fun YieldSupplyPromoModel.openedBottomSheets(): List<YieldSupplyPromoConfig?> {
@@ -89,7 +85,6 @@ internal class YieldSupplyPromoModelTest {
         appRouter = appRouter,
         getBoostedApyUseCase = GetBoostedApyUseCase(),
         boostStoryPreloader = boostStoryPreloader,
-        alertFactory = alertFactory,
     )
 
     private fun coin(derivationPath: Network.DerivationPath): CryptoCurrency.Coin {

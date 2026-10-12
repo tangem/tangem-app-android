@@ -35,6 +35,13 @@ class Express(
         createStage3Environment(),
         createMockedEnvironment(),
         createProdEnvironment(),
+        createNewEnvironment(ApiEnvironment.DEV_NEW, host = "express-dev1.tests-d.com"),
+        createNewEnvironment(ApiEnvironment.DEV_2_NEW, host = "express-dev2.tests-d.com"),
+        createNewEnvironment(ApiEnvironment.DEV_3_NEW, host = "express-dev3.tests-d.com"),
+        createNewEnvironment(ApiEnvironment.DEV_4_NEW, host = "express-dev4.tests-d.com"),
+        createNewEnvironment(ApiEnvironment.DEV_5_NEW, host = "express-dev5.tests-d.com"),
+        createNewEnvironment(ApiEnvironment.DEV_6_NEW, host = "express-dev6.tests-d.com"),
+        createNewEnvironment(ApiEnvironment.PROD_NEW, host = "express-new.tangem.com", isProd = true),
     )
 
     private fun getInitialEnvironment(): ApiEnvironment {
@@ -98,6 +105,16 @@ class Express(
         environment = ApiEnvironment.PROD,
         baseUrl = "https://express.tangem.com/v1/",
         headers = createHeaders(isProd = true),
+    )
+
+    private fun createNewEnvironment(
+        environment: ApiEnvironment,
+        host: String,
+        isProd: Boolean = false,
+    ): ApiEnvironmentConfig = ApiEnvironmentConfig(
+        environment = environment,
+        baseUrl = "https://$host/v1/",
+        headers = createHeaders(isProd = isProd),
     )
 
     private fun createHeaders(isProd: Boolean) = buildMap {

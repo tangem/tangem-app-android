@@ -53,6 +53,7 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
             onSelectorClick = ::onSelectorClick,
             onSuggestionClick = form.onSavedRecipientSelected,
             onContinueClick = ::onContinueClick,
+            onRevealFieldsClick = ::onRevealFieldsClick,
         ),
     )
 
@@ -147,9 +148,7 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
         // A blur can arrive after the next field has already reported focus, so only its own field is cleared.
         state.update { if (it.focusedField == field) it.copy(focusedField = null) else it }
         reportFieldFilled(field)
-        val error = BankWithdrawFormValidator.validate(field = field, values = currentValues())
-        // An empty field is only reported on Continue, so tabbing through the form stays quiet.
-        if (error == null || error == BankWithdrawFieldError.Required) return
+        val error = BankWithdrawFormValidator.validate(field = field, values = currentValues()) ?: return
         state.update { it.copy(errors = it.errors + (field to error)) }
     }
 
@@ -190,6 +189,10 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
             form.onContinue(result())
             state.update { it.copy(edits = emptyMap(), displayNameEdits = emptyMap(), errors = emptyMap()) }
         }
+    }
+
+    private fun onRevealFieldsClick() {
+        state.update { it.copy(focusedField = null) }
     }
 
     /** This screen's fields, the user's local edits layered over the draft's current values. */

@@ -47,6 +47,6 @@ class YieldSupplyEnterStatusUseCase(
     }
 
     private companion object {
-        const val STATUS_EXPIRATION_MS = 20_000L
+        const val STATUS_EXPIRATION_MS = 150_000L
     }
 }

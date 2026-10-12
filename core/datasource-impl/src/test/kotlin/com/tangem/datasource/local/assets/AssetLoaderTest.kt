@@ -15,6 +15,8 @@ import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalStdlibApi::class)
@@ -26,6 +28,7 @@ class AssetLoaderTest {
     private val assetLoader = DefaultAssetLoader(
         assetReader = assetReader,
         moshi = moshi,
+        json = Json,
         analyticsExceptionHandler = analyticsExceptionHandler,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
@@ -44,6 +47,15 @@ class AssetLoaderTest {
             assetReader.read("$JSON_FILE_NAME.json")
             jsonAdapter.fromJson(assetObjectJson)
         }
+
+        Truth.assertThat(actual).isEqualTo(assetObject)
+    }
+
+    @Test
+    fun `GIVEN kotlinx deserializer WHEN load THEN asset is decoded without moshi`() = runTest {
+        everyReadingJson() returns assetObjectJson
+
+        val actual = assetLoader.load(fileName = JSON_FILE_NAME, deserializer = Asset.serializer())
 
         Truth.assertThat(actual).isEqualTo(assetObject)
     }
@@ -125,6 +137,7 @@ class AssetLoaderTest {
         """.trimIndent()
     }
 
+    @Serializable
     private data class Asset(
         val contractAddress: String,
         val network: String,

@@ -4,6 +4,7 @@ import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.yield.supply.impl.promo.DefaultYieldSupplyPromoComponent
 import com.tangem.features.yield.supply.impl.promo.model.YieldSupplyPromoModel
+import com.tangem.features.yield.supply.impl.promo.v2.model.YieldSupplyPromoV2Model
 import com.tangem.features.yield.supply.api.YieldSupplyPromoComponent
 import dagger.Binds
 import dagger.Module
@@ -31,4 +32,9 @@ internal interface YieldSupplyPromoModelModule {
     @IntoMap
     @ClassKey(YieldSupplyPromoModel::class)
     fun provideYieldSupplyPromoModel(impl: YieldSupplyPromoModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(YieldSupplyPromoV2Model::class)
+    fun provideYieldSupplyPromoV2Model(impl: YieldSupplyPromoV2Model): Model
 }

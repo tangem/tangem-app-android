@@ -317,6 +317,8 @@ fun HoldToConfirmButton(
     hintText: String = stringResourceSafe(R.string.common_tap_and_hold_hint),
     enabled: Boolean = true,
     isLoading: Boolean = false,
+    colors: ButtonColors = TangemButtonsDefaults.primaryButtonColors,
+    textStyle: TextStyle = TangemTheme.typography.button,
 ) {
     TangemHoldToConfirmButton(
         text = text,
@@ -325,6 +327,8 @@ fun HoldToConfirmButton(
         modifier = modifier,
         enabled = enabled,
         isLoading = isLoading,
+        colors = colors,
+        textStyle = textStyle,
     )
 }
 // endregion Other

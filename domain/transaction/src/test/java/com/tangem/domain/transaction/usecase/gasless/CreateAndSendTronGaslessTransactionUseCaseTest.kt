@@ -68,6 +68,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
     private val quote = TronGaslessQuote(
         quoteId = "q_1",
         quotedAmountRaw = BigInteger("50000000"),
+        quotedToAddress = "TTo",
         feeRecipient = "TFee",
         compensationToken = usdtContract,
         compensationAmountRaw = BigInteger("2750000"),
@@ -231,6 +232,34 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
             }
             coVerify { tronGaslessTransactionRepository.submit(userWallet.walletId, "q_2", "signedComp", "signedOrig") }
         }
+
+    @Test
+    fun `GIVEN quote taken for another destination WHEN invoke THEN re-quotes for the actual destination`() = runTest {
+        // Arrange
+        val estimationFee = fee.copy(tronGaslessQuote = quote.copy(quotedToAddress = "TEstimation"))
+        coEvery { tronGaslessTransactionRepository.estimate(any()) } returns quote.copy(quoteId = "q_2")
+        coEvery {
+            tronGaslessTransactionRepository.submit(userWallet.walletId, "q_2", "signedComp", "signedOrig")
+        } returns TronGaslessSubmitResult(compensationTxHash = "hComp", originalTxHash = "hOrig2", status = "BROADCAST")
+
+        // Act
+        val result = useCase(userWallet, usdtCurrency.network, originalTx, estimationFee)
+
+        // Assert
+        assertThat(result.getOrNull()).isEqualTo("hOrig2")
+        coVerify(exactly = 1) {
+            tronGaslessTransactionRepository.estimate(
+                TronGaslessEstimateParams(
+                    userWalletId = userWallet.walletId,
+                    fromAddress = "TFrom",
+                    toAddress = "TTo",
+                    tokenContract = usdtContract,
+                    amount = BigInteger("50000000"),
+                    feeTokenContract = usdtContract,
+                ),
+            )
+        }
+    }
 
     @Test
     fun `GIVEN refreshed compensation exceeds the confirmed one WHEN invoke THEN error and nothing is signed`() =

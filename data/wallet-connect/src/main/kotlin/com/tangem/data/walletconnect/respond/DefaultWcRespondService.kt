@@ -4,20 +4,20 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.reown.walletkit.client.Wallet
-import com.reown.walletkit.client.WalletKit
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.toHexString
+import com.tangem.data.walletconnect.sdk.WcSdk
 import com.tangem.domain.walletconnect.WC_TAG
 import com.tangem.domain.walletconnect.model.WcRequestError
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.suspendCancellableCoroutine
 import org.joda.time.Duration
-import kotlin.coroutines.resume
 
-internal class DefaultWcRespondService : WcRespondService {
+internal class DefaultWcRespondService(
+    private val wcSdk: WcSdk,
+) : WcRespondService {
 
     internal val expireDuration = Duration.standardSeconds(120)
     internal val cachedRequest = MutableStateFlow<Set<Pair<Long, String>>>(emptySet())
@@ -26,45 +26,42 @@ internal class DefaultWcRespondService : WcRespondService {
         return request.request.params.calculateSha256().toHexString()
     }
 
-    override suspend fun respond(request: WcSdkSessionRequest, response: String): Either<WcRequestError, String> =
-        suspendCancellableCoroutine { continuation ->
-            WalletKit.respondSessionRequest(
-                params = Wallet.Params.SessionRequestResponse(
-                    sessionTopic = request.topic,
-                    jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(
-                        id = request.request.id,
-                        result = response,
-                    ),
-                ),
-                onSuccess = { requestResponse ->
-                    if (continuation.isCompleted) return@respondSessionRequest
-                    val result = when (val response = requestResponse.jsonRpcResponse) {
-                        is Wallet.Model.JsonRpcResponse.JsonRpcError -> {
-                            TangemLogger.withTag(WC_TAG).e("Failed respond $response for request $request")
-                            WcRequestError.WcRespondError(
-                                code = response.code,
-                                message = response.message,
-                            ).left()
-                        }
-                        is Wallet.Model.JsonRpcResponse.JsonRpcResult -> {
-                            TangemLogger.withTag(WC_TAG).i("Successful respond $response for request $request")
-                            if (response.result == null) {
-                                TangemLogger.withTag(WC_TAG).e(
-                                    "Response result is null, but requestResponse should be String. Casted to empty",
-                                )
-                            }
-                            (response.result ?: "").right()
-                        }
+    override suspend fun respond(request: WcSdkSessionRequest, response: String): Either<WcRequestError, String> {
+        val params = Wallet.Params.SessionRequestResponse(
+            sessionTopic = request.topic,
+            jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(
+                id = request.request.id,
+                result = response,
+            ),
+        )
+
+        return wcSdk.respondSessionRequest(params).fold(
+            ifLeft = { error ->
+                TangemLogger.withTag(WC_TAG).e("Failed respond for request $request", error)
+                WcRequestError.UnknownError(error).left()
+            },
+            ifRight = { requestResponse ->
+                when (val jsonRpcResponse = requestResponse.jsonRpcResponse) {
+                    is Wallet.Model.JsonRpcResponse.JsonRpcError -> {
+                        TangemLogger.withTag(WC_TAG).e("Failed respond $jsonRpcResponse for request $request")
+                        WcRequestError.WcRespondError(
+                            code = jsonRpcResponse.code,
+                            message = jsonRpcResponse.message,
+                        ).left()
                     }
-                    continuation.resume(result)
-                },
-                onError = { error ->
-                    if (continuation.isCompleted) return@respondSessionRequest
-                    TangemLogger.withTag(WC_TAG).e("Failed respond for request $request", error.throwable)
-                    continuation.resume(WcRequestError.UnknownError(error.throwable).left())
-                },
-            )
-        }
+                    is Wallet.Model.JsonRpcResponse.JsonRpcResult -> {
+                        TangemLogger.withTag(WC_TAG).i("Successful respond $jsonRpcResponse for request $request")
+                        if (jsonRpcResponse.result == null) {
+                            TangemLogger.withTag(WC_TAG).e(
+                                "Response result is null, but requestResponse should be String. Casted to empty",
+                            )
+                        }
+                        jsonRpcResponse.result.orEmpty().right()
+                    }
+                }
+            },
+        )
+    }
 
     override fun isRequestActual(request: WcSdkSessionRequest): Boolean {
         val requestId = request.request.id
@@ -72,14 +69,14 @@ internal class DefaultWcRespondService : WcRespondService {
         // SDK read failures are intentionally NOT caught here: they propagate so the sign flow surfaces
         // a retriable error instead of definitively rejecting a request that may still be valid. Only a
         // successfully-read state showing no session / no pending request means "not actual".
-        if (WalletKit.getActiveSessionByTopic(request.topic) == null) {
+        if (wcSdk.getActiveSessionByTopic(request.topic) == null) {
             TangemLogger.withTag(WC_TAG).i(
                 "Request is not actual, no active session: topic=${request.topic} id=$requestId",
             )
             return false
         }
 
-        val isStillPending = WalletKit.getPendingListOfSessionRequests(request.topic)
+        val isStillPending = wcSdk.getPendingSessionRequests(request.topic)
             .any { pending -> pending.request.id == requestId }
         if (!isStillPending) {
             TangemLogger.withTag(WC_TAG).i(
@@ -92,7 +89,7 @@ internal class DefaultWcRespondService : WcRespondService {
     override fun rejectRequestNonBlock(request: WcSdkSessionRequest, message: String) {
         TangemLogger.withTag(WC_TAG).i("reject request $request")
         removeCachedRequest(request)
-        WalletKit.respondSessionRequest(
+        wcSdk.respondSessionRequestNonBlocking(
             params = Wallet.Params.SessionRequestResponse(
                 sessionTopic = request.topic,
                 jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcError(

@@ -21,6 +21,8 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -63,7 +65,7 @@ internal fun ForgetWalletContent(state: ForgetWalletUM, modifier: Modifier = Mod
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = stringResourceSafe(R.string.hw_remove_wallet_attention_description),
+                text = state.description.resolveReference(),
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.secondary,
                 textAlign = TextAlign.Center,
@@ -82,9 +84,10 @@ internal fun ForgetWalletContent(state: ForgetWalletUM, modifier: Modifier = Mod
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            text = stringResourceSafe(R.string.hw_remove_wallet_action_forget_title),
+            text = state.buttonText.resolveReference(),
             onClick = state.onForgetWalletClick,
             enabled = state.isForgetButtonEnabled,
+            showProgress = state.isInProgress,
         )
     }
 }
@@ -144,6 +147,8 @@ private fun PreviewForgetWalletContent() {
         ForgetWalletContent(
             state = ForgetWalletUM(
                 onBackClick = {},
+                description = resourceReference(R.string.hw_remove_wallet_attention_description),
+                buttonText = resourceReference(R.string.hw_remove_wallet_action_forget_title),
                 isCheckboxChecked = false,
                 onCheckboxClick = {},
                 onForgetWalletClick = {},

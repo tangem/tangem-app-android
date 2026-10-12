@@ -3,6 +3,7 @@ package com.tangem.features.polymarket.impl.placeprediction.entity
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.test.core.ProvideTestModels
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -78,4 +79,46 @@ internal class PlacePredictionUMTest {
         assertThat(canQuote).isTrue()
         assertThat(canPollPrice).isTrue()
     }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class EnteredAmount {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN an amount WHEN enteredAmount THEN below a cent only the whole position is quotable`(
+            model: EnteredAmountModel,
+        ) {
+            // Arrange
+            val initial = PlacePredictionUM.initial(side = model.side)
+            val order = when (val order = initial.order) {
+                is OrderSideUM.Buy -> order
+                is OrderSideUM.Sell -> order.copy(position = SellPositionUM.Held(available = BigDecimal(model.held)))
+            }
+            val state = initial.copy(order = order, amountValue = model.amountValue)
+
+            // Act
+            val actual = state.enteredAmount()
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected?.let(::BigDecimal))
+        }
+
+        private fun provideTestModels(): List<EnteredAmountModel> = listOf(
+            EnteredAmountModel(side = PredictionOrderSide.SELL, held = "15.1663", amountValue = "15.1663", expected = "15.1663"),
+            EnteredAmountModel(side = PredictionOrderSide.SELL, held = "0.0063", amountValue = "0.0063", expected = "0.0063"),
+            EnteredAmountModel(side = PredictionOrderSide.SELL, held = "0.0063", amountValue = "0.005", expected = null),
+            EnteredAmountModel(side = PredictionOrderSide.SELL, held = "15.1663", amountValue = "0.0063", expected = null),
+            EnteredAmountModel(side = PredictionOrderSide.SELL, held = "15.1663", amountValue = "0.01", expected = "0.01"),
+            EnteredAmountModel(side = PredictionOrderSide.BUY, held = "0", amountValue = "0.0063", expected = null),
+            EnteredAmountModel(side = PredictionOrderSide.BUY, held = "0", amountValue = "", expected = null),
+        )
+    }
+
+    internal data class EnteredAmountModel(
+        val side: PredictionOrderSide,
+        val held: String,
+        val amountValue: String,
+        val expected: String?,
+    )
 }

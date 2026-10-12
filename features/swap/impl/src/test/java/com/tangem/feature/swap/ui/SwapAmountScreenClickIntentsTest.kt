@@ -29,7 +29,6 @@ internal class SwapAmountScreenClickIntentsTest {
         onRetryClick = {},
         onProviderClick = {},
         onProviderSelect = {},
-        onProviderFilterSelect = {},
         openTokenDetailsScreen = {},
         onSelectTokenClick = {},
         onSuccess = {},
@@ -38,6 +37,7 @@ internal class SwapAmountScreenClickIntentsTest {
         onSwapUIModeChange = {},
         onSwapTypeMenuOpened = {},
         onTronBannerShown = {},
+        onSlippageClick = {},
     )
 
     private val sut = SwapAmountScreenClickIntents(actions)

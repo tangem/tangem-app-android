@@ -33,6 +33,6 @@ internal class DefaultSurveySparrowLauncher @Inject constructor() : SurveySparro
 
     private companion object {
         const val TAG = "SurveySparrowPresenter"
-        const val SURVEY_REQUEST_CODE = 1001
+        const val SURVEY_REQUEST_CODE = 2001
     }
 }

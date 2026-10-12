@@ -134,7 +134,7 @@ internal class WalletBackupModelTest {
 
     @Test
     fun `GIVEN social backup WHEN model created THEN the google drive option is hidden`() = runTest {
-        // Arrange — a social-login wallet already keeps its seed in the cloud under its own key (FR-10)
+        // Arrange — a social-login wallet already keeps its seed in the cloud under its own key
         every { getUserWalletUseCase.invokeFlow(walletId) } returns flowOf(hotWalletNotBackedUp.right())
         every { isSocialBackupCompletedUseCase.flow(walletId) } returns flowOf(true)
 

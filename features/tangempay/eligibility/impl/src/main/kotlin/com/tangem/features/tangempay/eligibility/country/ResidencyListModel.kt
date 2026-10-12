@@ -1,9 +1,7 @@
 package com.tangem.features.tangempay.eligibility.country
 
 import androidx.compose.runtime.Stable
-import com.arkivanov.decompose.router.slot.SlotNavigation
-import com.arkivanov.decompose.router.slot.activate
-import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -15,19 +13,17 @@ import com.tangem.core.ui.ds2.search.TangemSearch
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayCountry
 import com.tangem.domain.models.pay.TangemPayEligibility
 import com.tangem.domain.models.pay.TangemPayRegion
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.CheckTangemPayEligibilityUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayCountriesUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayRegionsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.eligibility.EligibilityInnerRoute
 import com.tangem.features.tangempay.eligibility.TangemPayEligibilityComponent
-import com.tangem.features.tangempay.eligibility.onboarding.PaymentAccountOnboardingLauncher
-import com.tangem.features.tangempay.eligibility.TangemPayWalletSelectorComponent
-import com.tangem.features.tangempay.eligibility.country.ResidencyListUM.Content
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -44,15 +40,13 @@ internal class ResidencyListModel @Inject constructor(
     private val getCountriesUseCase: GetTangemPayCountriesUseCase,
     private val getRegionsUseCase: GetTangemPayRegionsUseCase,
     private val checkEligibilityUseCase: CheckTangemPayEligibilityUseCase,
-    private val onboardingLauncher: PaymentAccountOnboardingLauncher,
+    private val onboardingRepository: OnboardingRepository,
     private val uiMessageSender: UiMessageSender,
     private val analytics: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
-) : Model(), TangemPayWalletSelectorComponent.Listener {
+) : Model() {
 
     private val params = paramsContainer.require<TangemPayEligibilityComponent.Params>()
-
-    val bottomSheetNavigation: SlotNavigation<ResidencyBottomSheetConfig> = SlotNavigation()
 
     val uiState: StateFlow<ResidencyListUM>
         field = MutableStateFlow(getInitialState())
@@ -186,12 +180,7 @@ internal class ResidencyListModel @Inject constructor(
 
             result.fold(
                 ifLeft = {
-                    uiMessageSender.send(
-                        DialogMessage(
-                            title = resourceReference(R.string.common_something_went_wrong),
-                            message = resourceReference(R.string.common_try_again_later),
-                        ),
-                    )
+                    showError()
                     updateContent()
                 },
                 ifRight = { eligibility -> onChecked(eligibility) },
@@ -202,31 +191,28 @@ internal class ResidencyListModel @Inject constructor(
     private suspend fun continueOnboarding(itemId: String) {
         continuingItemId = itemId
         updateContent()
-        val userWalletId = params.userWalletId
-        if (userWalletId != null) {
-            onboardingLauncher.openKyc(userWalletId)
-        } else {
-            onboardingLauncher.start(
-                onWalletSelectionRequired = ::openWalletSelector,
-                onFailed = ::releaseContinuing,
-            )
-        }
+        onboardingRepository.getCustomerInfo(params.userWalletId).fold(
+            ifLeft = {
+                releaseContinuing()
+                showError()
+            },
+            ifRight = { customerInfo ->
+                if (customerInfo.kycStatus == KycStatus.APPROVED) {
+                    router.replaceAll(AppRoute.Wallet)
+                } else {
+                    router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(userWalletId = params.userWalletId))
+                }
+            },
+        )
     }
 
-    private fun openWalletSelector(walletsIds: List<UserWalletId>) {
-        bottomSheetNavigation.activate(ResidencyBottomSheetConfig.WalletSelector(walletsIds = walletsIds))
-    }
-
-    override fun onWalletSelected(userWalletId: UserWalletId) {
-        bottomSheetNavigation.dismiss()
-        modelScope.launch {
-            onboardingLauncher.continueWith(userWalletId = userWalletId, onFailed = ::releaseContinuing)
-        }
-    }
-
-    override fun onWalletSelectorDismiss() {
-        bottomSheetNavigation.dismiss()
-        releaseContinuing()
+    private fun showError() {
+        uiMessageSender.send(
+            DialogMessage(
+                title = resourceReference(R.string.common_something_went_wrong),
+                message = resourceReference(R.string.common_try_again_later),
+            ),
+        )
     }
 
     private fun releaseContinuing() {

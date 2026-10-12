@@ -19,6 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import kotlin.math.cos
@@ -26,6 +27,8 @@ import kotlin.math.sin
 
 /**
  * Design-system v2 shimmer placeholder — a rounded rectangle with a sweeping highlight.
+ *
+ * Version: 1.0.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=3398-625&p=f&m=dev)
  *
@@ -105,6 +108,8 @@ fun TangemShimmer(style: TextStyle, modifier: Modifier = Modifier, textAlign: Te
 
 /** Public API namespace for [TangemShimmer]. */
 object TangemShimmer {
+
+    val version = DsVersion(major = 1, minor = 0, patch = 0)
 
     /** Default corner radius of the rectangle shimmer. */
     val DefaultRadius: Dp = 6.dp

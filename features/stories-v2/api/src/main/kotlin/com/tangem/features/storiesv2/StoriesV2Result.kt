@@ -17,8 +17,8 @@ sealed interface StoriesV2Result {
     data class ActionInvoked(val actionId: String, val target: StoryV2ActionTarget) : StoriesV2Result
 
     /**
-     * Nothing showable was available, so no frame was ever drawn. Delivered before the first composition rather
-     * than after a placeholder, and the host must continue its flow immediately.
+     * Nothing showable was available, so no story frame was ever drawn — at most the loading screen while a remote
+     * story was being fetched. The host must continue its flow immediately.
      */
     data class Unavailable(val reason: Reason) : StoriesV2Result {
 
@@ -29,6 +29,9 @@ sealed interface StoriesV2Result {
 
             /** A composition exists, but neither an asset nor a poster could produce a first frame. */
             NO_USABLE_FRAME,
+
+            /** The story exists, but its request or the download of its files failed. */
+            DELIVERY_FAILED,
         }
     }
 }

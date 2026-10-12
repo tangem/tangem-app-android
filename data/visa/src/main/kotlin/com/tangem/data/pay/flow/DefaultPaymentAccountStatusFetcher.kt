@@ -15,13 +15,12 @@ import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.CustomerInfo
-import com.tangem.domain.pay.model.CustomerInfo.ProductInstance.SpecificationDataType
-import com.tangem.domain.pay.model.CustomerInfo.ProductInstance.Status
 import com.tangem.domain.pay.model.OrderData
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.pay.repository.*
+import com.tangem.domain.pay.usecase.FindMoneyAccountCreationOrderUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
@@ -66,6 +65,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val issueCardRepository: TangemPayIssueCardRepository,
     private val getTangemPayTariffPlanStateUseCase: GetTangemPayTariffPlanStateUseCase,
+    private val findMoneyAccountCreationOrderUseCase: FindMoneyAccountCreationOrderUseCase,
 ) : PaymentAccountStatusFetcher {
 
     private val logger = TangemLogger.withTag(TAG)
@@ -116,6 +116,10 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
 
     override suspend fun markVirtualAccountProcessing(userWalletId: UserWalletId) {
         paymentAccountStatusesStore.markVirtualAccountProcessing(userWalletId)
+    }
+
+    override suspend fun markVirtualAccountEligible(userWalletId: UserWalletId) {
+        paymentAccountStatusesStore.markVirtualAccountEligible(userWalletId)
     }
 
     override suspend fun markCardActivating(userWalletId: UserWalletId, productInstanceId: String) {
@@ -170,16 +174,9 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private suspend fun proceedWithoutOrder(account: Account.Payment): PaymentAccountStatusValue {
         return onboardingRepository.getCustomerInfo(account.userWalletId).fold(
             ifLeft = { error ->
-                val cache = paymentAccountStatusesStore.getSyncOrNull(account.userWalletId)
-                if (cache != null && cache.value.hasAccountData()) {
-                    cache.value.copySealed(
-                        source = StatusSource.ONLY_CACHE,
-                        error = error.toErrorValue(),
-                    )
-                } else {
-                    logger.e("proceedWithoutOrder ${account.userWalletId} error: $error")
-                    error.toStatusValueWhenHasTangemPay(account.userWalletId)
-                }
+                logger.e("proceedWithoutOrder ${account.userWalletId} error: $error")
+                error.toCachedStatusOrNull(account.userWalletId)
+                    ?: error.toStatusValueWhenHasTangemPay(account.userWalletId)
             },
             ifRight = { customerInfo ->
                 logger.i("proceedWithoutOrder data customerInfo ${account.userWalletId}")
@@ -312,7 +309,8 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         val customerInfo = onboardingRepository.getCustomerInfo(account.userWalletId).fold(
             ifLeft = { error ->
                 logger.e("proceedWithOrderId KYC check ${account.userWalletId} error: $error")
-                return error.toStatusValueWhenHasTangemPay(account.userWalletId)
+                return error.toCachedStatusOrNull(account.userWalletId)
+                    ?: error.toStatusValueWhenHasTangemPay(account.userWalletId)
             },
             ifRight = { it },
         )
@@ -320,6 +318,8 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         logger.i("proceedWithOrderId ${account.userWalletId} kycStatus: ${customerInfo.kycStatus}")
 
         when (customerInfo.kycStatus) {
+            KycStatus.UNKNOWN,
+            KycStatus.REQUIRED,
             KycStatus.PENDING,
             KycStatus.INIT,
             KycStatus.REJECTED,
@@ -421,15 +421,24 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         )?.value as? QuoteStatus.Data
 
         val customerId = customerId
-        val isDeactivated = productInstance?.status == CustomerInfo.ProductInstance.Status.DEACTIVATED
+        val isDeactivated = paymentAccountProductInstance?.status == CustomerInfo.ProductInstance.Status.DEACTIVATED
         val isFormer = state == CustomerInfo.State.FORMER
         val multichainNetworkStatuses by lazy {
             tangemPayCurrencyFactory.createNetworkStatuses(userWalletId, networks, quotesData?.fiatRate)
         }
+
         return when {
-            customerId.isNullOrEmpty() -> PaymentAccountStatusValue.IssuingCard(
-                source = StatusSource.ACTUAL,
-            )
+            kycStatus == KycStatus.REQUIRED -> {
+                // TODO v_rodionov: #[REDACTED_TASK_KEY] find another way to check if payment account creating is not started
+                val moneyAccountOrder = findMoneyAccountCreationOrderUseCase.invoke(userWalletId).getOrElse {
+                    return PaymentAccountStatusValue.Error.Unavailable
+                }
+                if (moneyAccountOrder != null) {
+                    PaymentAccountStatusValue.NotCreated
+                } else {
+                    PaymentAccountStatusValue.KycRequired(source = StatusSource.ACTUAL, customerId = customerId)
+                }
+            }
             kycStatus != KycStatus.APPROVED -> PaymentAccountStatusValue.UnderReview(
                 source = StatusSource.ACTUAL,
                 kycStatus = kycStatus,
@@ -585,6 +594,12 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             if (cardlessAccountStatus != null) return cardlessAccountStatus
         }
 
+        val tariffPlanState = tariffPlan?.let { tariff ->
+            getTangemPayTariffPlanStateUseCase(
+                userWalletId = userWalletId,
+                tariff = tariff,
+            )
+        }
         val channels = fetchEligibilityChannels(userWalletId)
         val virtualAccount = resolveVirtualAccountOnramp(userWalletId = userWalletId, channels = channels)
 
@@ -600,12 +615,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             error = null,
             virtualAccount = virtualAccount,
             isBankOfframpAvailable = channels?.contains(TangemPayEligibilityType.BANK_OFFRAMP),
-            tariffPlan = tariffPlan?.let { tariff ->
-                getTangemPayTariffPlanStateUseCase(
-                    userWalletId = userWalletId,
-                    tariff = tariff,
-                )
-            },
+            tariffPlan = tariffPlanState,
         )
     }
 
@@ -614,26 +624,27 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
      *
      * Resolution order:
      * 1. An activated product instance with [SpecificationDataType.ACCOUNT] exists — clears any stale persisted
-     *    VA order id and surfaces [VirtualAccountOnramp.Available] carrying only its id; bank credentials are
-     *    fetched on demand by the deposit screen, not here. A still provisioning one (see [isProvisioning])
-     *    surfaces [VirtualAccountOnramp.Processing].
+     *    VA order id and failure marker and surfaces [VirtualAccountOnramp.Available] carrying only its id; bank
+     *    credentials are fetched on demand by the deposit screen, not here. A still provisioning one (see
+     *    [isProvisioning]) surfaces [VirtualAccountOnramp.Processing].
      * 2. Otherwise, a VA order id is persisted locally — checks its status via `getOrderData`:
      *    NEW/PROCESSING/COMPLETED (or a transient lookup failure) surface [VirtualAccountOnramp.Processing]; CANCELED
-     *    or a [VisaApiError.OrderNotFound] (the persisted id went stale) clears the persisted id and falls through
-     *    to eligibility.
-     * 3. Otherwise (or after a CANCELED order) — surfaces [VirtualAccountOnramp.Eligible] when the wallet has
-     *    the `VISA_VIRTUAL_ACCOUNT` eligibility channel (fetched fresh via the user token), else `null`.
+     *    clears the persisted id, persists the failure marker and falls through to eligibility; a
+     *    [VisaApiError.OrderNotFound] (the persisted id went stale) clears the persisted id and falls through.
+     * 3. Otherwise — when the wallet has the `VISA_VIRTUAL_ACCOUNT` eligibility channel (fetched fresh via the
+     *    user token), surfaces [VirtualAccountOnramp.Failed] while the failure marker is persisted (until the
+
+     *    without the channel.
      */
     private suspend fun CustomerInfo.resolveVirtualAccountOnramp(
         userWalletId: UserWalletId,
         channels: List<TangemPayEligibilityType>?,
     ): VirtualAccountOnramp? {
-        val accountInstance = productInstances.firstOrNull {
-            it.specificationDataType == SpecificationDataType.ACCOUNT
-        }
+        val accountInstance = virtualAccountProductInstance
         if (accountInstance != null) {
             if (accountInstance.isProvisioning()) return VirtualAccountOnramp.Processing
             onboardingRepository.clearVirtualAccountOrderId(userWalletId)
+            onboardingRepository.storeVirtualAccountOrderFailed(userWalletId = userWalletId, isFailed = false)
             return VirtualAccountOnramp.Available(productInstanceId = accountInstance.id)
         }
 
@@ -644,7 +655,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     logger.e("getOrderData(va) failed for $vaOrderId: $error")
                     if (error is VisaApiError.OrderNotFound) {
                         onboardingRepository.clearVirtualAccountOrderId(userWalletId)
-                        channels.toVirtualAccountOnramp()
+                        channels.toVirtualAccountOnramp(isOrderFailed = false)
                     } else {
                         VirtualAccountOnramp.Processing
                     }
@@ -653,7 +664,11 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     when (orderData.status) {
                         OrderStatus.CANCELED -> {
                             onboardingRepository.clearVirtualAccountOrderId(userWalletId)
-                            channels.toVirtualAccountOnramp()
+                            onboardingRepository.storeVirtualAccountOrderFailed(
+                                userWalletId = userWalletId,
+                                isFailed = true,
+                            )
+                            channels.toVirtualAccountOnramp(isOrderFailed = true)
                         }
                         OrderStatus.NEW,
                         OrderStatus.PROCESSING,
@@ -664,23 +679,24 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             )
         }
 
-        return channels.toVirtualAccountOnramp()
+        val isOrderFailed = onboardingRepository.hasVirtualAccountOrderFailed(userWalletId)
+        return channels.toVirtualAccountOnramp(isOrderFailed = isOrderFailed)
     }
 
     private fun CustomerInfo.ProductInstance.isProvisioning(): Boolean = when (status) {
-        Status.NEW,
-        Status.READY_FOR_MANUFACTURING,
-        Status.MANUFACTURING,
-        Status.SENT_TO_DELIVERY,
-        Status.DELIVERED,
-        Status.ACTIVATING,
+        CustomerInfo.ProductInstance.Status.NEW,
+        CustomerInfo.ProductInstance.Status.READY_FOR_MANUFACTURING,
+        CustomerInfo.ProductInstance.Status.MANUFACTURING,
+        CustomerInfo.ProductInstance.Status.SENT_TO_DELIVERY,
+        CustomerInfo.ProductInstance.Status.DELIVERED,
+        CustomerInfo.ProductInstance.Status.ACTIVATING,
         -> true
-        Status.ACTIVE,
-        Status.BLOCKED,
-        Status.DEACTIVATING,
-        Status.DEACTIVATED,
-        Status.CANCELED,
-        Status.UNKNOWN,
+        CustomerInfo.ProductInstance.Status.ACTIVE,
+        CustomerInfo.ProductInstance.Status.BLOCKED,
+        CustomerInfo.ProductInstance.Status.DEACTIVATING,
+        CustomerInfo.ProductInstance.Status.DEACTIVATED,
+        CustomerInfo.ProductInstance.Status.CANCELED,
+        CustomerInfo.ProductInstance.Status.UNKNOWN,
         -> false
     }
 
@@ -696,10 +712,10 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         }
     }
 
-    private fun List<TangemPayEligibilityType>?.toVirtualAccountOnramp(): VirtualAccountOnramp? =
-        VirtualAccountOnramp.Eligible.takeIf {
-            this?.contains(TangemPayEligibilityType.VISA_VIRTUAL_ACCOUNT) == true
-        }
+    private fun List<TangemPayEligibilityType>?.toVirtualAccountOnramp(isOrderFailed: Boolean): VirtualAccountOnramp? {
+        if (this?.contains(TangemPayEligibilityType.VISA_VIRTUAL_ACCOUNT) != true) return null
+        return if (isOrderFailed) VirtualAccountOnramp.Failed else VirtualAccountOnramp.Eligible
+    }
 
     /**
      * Order of real (product-instance-backed) cards from the previously stored status, used as the stable
@@ -902,18 +918,18 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     ): PaymentAccountStatusValue {
         return when (this) {
             is VisaApiError.NotFound -> constructNotCreatedOrEmptyStatus(userWalletId)
-            else -> {
-                val previousValue = paymentAccountStatusesStore.getSyncOrNull(userWalletId)?.value
-                if (previousValue != null && previousValue.hasAccountData()) {
-                    previousValue.copySealed(
-                        source = StatusSource.ONLY_CACHE,
-                        error = toErrorValue(),
-                    )
-                } else {
-                    constructNotCreatedOrEmptyStatus(userWalletId)
-                }
-            }
+            else -> toCachedStatusOrNull(userWalletId) ?: constructNotCreatedOrEmptyStatus(userWalletId)
         }
+    }
+
+    private suspend fun VisaApiError.toCachedStatusOrNull(userWalletId: UserWalletId): PaymentAccountStatusValue? {
+        val cached = paymentAccountStatusesStore.getSyncOrNull(userWalletId)?.value ?: return null
+        val isKeptOnFailure = when (cached) {
+            is PaymentAccountStatusValue.UnderReview -> this !is VisaApiError.RefreshTokenExpired
+            else -> cached.hasAccountData()
+        }
+        if (!isKeptOnFailure) return null
+        return cached.copySealed(source = StatusSource.ONLY_CACHE, error = toErrorValue())
     }
 
     private fun VisaApiError.toErrorValue(): PaymentAccountStatusValue.Error = when (this) {

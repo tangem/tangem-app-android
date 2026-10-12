@@ -85,8 +85,7 @@ internal class RewardsValidatorStateConverterTest {
                 currency = mockk(relaxed = true),
                 value = mockk(relaxed = true) {
                     every { this@mockk.fiatRate } returns null
-                    every { this@mockk.stakingBalance } returns stakingBalance
-                    every { this@mockk.contributions } returns emptyList()
+                    every { this@mockk.contributions } returns listOf(stakingBalance)
                 },
             ),
             appCurrencyProvider = Provider { AppCurrency.Default },

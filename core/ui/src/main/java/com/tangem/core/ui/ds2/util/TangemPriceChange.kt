@@ -19,6 +19,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.text.applyBladeBrush
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
@@ -34,6 +35,8 @@ import com.tangem.core.ui.res.generated.icons.ic_triangle_up_12
  * triangle (or a dot for [TangemPriceChange.Direction.Neutral]) and a percent label colored by
  * [direction]. A "util" building block, not a complete component — embed it next to quotes and
  * balances (e.g. inside the token row).
+ *
+ * Version: 1.0.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=5724-3922&m=dev)
  *
@@ -111,6 +114,8 @@ fun TangemPriceChange(state: TangemPriceChange.State, modifier: Modifier = Modif
 
 /** Public API surface of [TangemPriceChange]. */
 object TangemPriceChange {
+
+    val version = DsVersion(major = 1, minor = 0, patch = 0)
 
     /** Direction of the price change, driving the leading icon and its color. */
     enum class Direction {

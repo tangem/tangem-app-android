@@ -1,15 +1,15 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class KycAccessInfoResponse(
-    @Json(name = "result") val result: Result,
+    @SerialName("result") val result: Result,
 ) {
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Result(
-        @Json(name = "token") val token: String,
-        @Json(name = "locale") val locale: String,
+        @SerialName("token") val token: String,
+        @SerialName("locale") val locale: String,
     )
 }

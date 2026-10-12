@@ -22,6 +22,8 @@ import java.math.BigDecimal
 internal object PlacePredictionNotificationsFactory {
 
     fun build(state: PlacePredictionUM): ImmutableList<PredictionNotificationUM> = buildList {
+        if (state.isAwaitingFunds) add(PredictionNotificationUM.AwaitingFunds)
+
         if (!state.isMarketAcceptingOrders) add(PredictionNotificationUM.MarketClosed)
 
         addAll(state.quote.notifications())
@@ -134,6 +136,7 @@ private fun PlacePredictionUM.pricedSell(order: OrderSideUM.Sell): PlacePredicti
 private fun PlacePredictionUM.sharesProceeds(): SharesProceedsUM = when (quote) {
     is QuoteUM.Loading -> SharesProceedsUM.Loading
     is QuoteUM.Content -> SharesProceedsUM.Content(expected = quote.expected)
+    is QuoteUM.Unavailable -> quote.expected?.let(SharesProceedsUM::Content) ?: SharesProceedsUM.Unavailable
     else -> SharesProceedsUM.Unavailable
 }
 

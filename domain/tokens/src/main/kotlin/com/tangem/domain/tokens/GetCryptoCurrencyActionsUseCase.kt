@@ -4,7 +4,7 @@ import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.currency.isJoint
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.stories.StoriesRepository
@@ -67,7 +67,7 @@ class GetCryptoCurrencyActionsUseCase(
         yieldSupplyAvailability: YieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
     ): Flow<TokenActionsState> {
         return when {
-            cryptoCurrencyStatus.currency.network.derivationPath is Network.DerivationPath.Joint -> {
+            cryptoCurrencyStatus.currency.isJoint -> {
                 getStakingAvailabilityFlow(
                     userWalletId = userWallet.walletId,
                     currency = cryptoCurrencyStatus.currency,
@@ -77,7 +77,6 @@ class GetCryptoCurrencyActionsUseCase(
                             userWallet = userWallet,
                             cryptoCurrencyStatus = cryptoCurrencyStatus,
                             stakingAvailability = stakingAvailability,
-                            yieldSupplyAvailability = yieldSupplyAvailability,
                         )
                     }
             }

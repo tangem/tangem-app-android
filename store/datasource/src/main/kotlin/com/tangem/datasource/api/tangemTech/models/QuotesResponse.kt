@@ -2,7 +2,8 @@ package com.tangem.datasource.api.tangemTech.models
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
-import java.math.BigDecimal
+import com.tangem.domain.models.serialization.SerializedBigDecimal
+import kotlinx.serialization.Serializable
 
 @JsonClass(generateAdapter = true)
 data class QuotesResponse(
@@ -10,18 +11,19 @@ data class QuotesResponse(
     val quotes: Map<String, Quote>,
 ) {
 
+    @Serializable
     @JsonClass(generateAdapter = true)
     data class Quote(
         @Json(name = "price")
-        val price: BigDecimal?,
+        val price: SerializedBigDecimal?,
         @Json(name = "priceChange24h")
-        val priceChange24h: BigDecimal?,
+        val priceChange24h: SerializedBigDecimal?,
         @Json(name = "priceChange1w")
-        val priceChange1w: BigDecimal?,
+        val priceChange1w: SerializedBigDecimal?,
         @Json(name = "priceChange30d")
-        val priceChange30d: BigDecimal?,
+        val priceChange30d: SerializedBigDecimal?,
         @Json(name = "priceUsd")
-        val priceUsd: BigDecimal?,
+        val priceUsd: SerializedBigDecimal?,
     ) {
 
         companion object {

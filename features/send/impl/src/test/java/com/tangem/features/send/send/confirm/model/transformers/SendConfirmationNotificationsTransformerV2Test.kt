@@ -210,27 +210,42 @@ class SendConfirmationNotificationsTransformerV2Test {
     }
 
     @Test
-    fun `GIVEN joint signatures and total over balance WHEN transform THEN there is no footer`() = runTest {
+    fun `GIVEN joint signatures and a balance below the fee WHEN transform THEN there is no footer`() = runTest {
         // Arrange
-        val feeSelectorUM = createFiatConvertibleFeeSelectorUM(feeValue = BigDecimal("0.001"))
-        val transformer = SendConfirmationNotificationsTransformerV2(
-            feeSelectorUM = feeSelectorUM,
+        val initialState = createTestConfirmUM().copy(signaturesUM = SendSignaturesUM(threshold = 2, membersCount = 3))
+
+        // Act
+        val actual = jointTransformer(isFeeSubtractedFromAmount = true, isFeeExceedingBalance = true)
+            .transform(initialState) as ConfirmUM.Content
+
+        // Assert
+        Truth.assertThat(actual.sendingFooter).isEqualTo(TextReference.EMPTY)
+    }
+
+    @Test
+    fun `GIVEN joint signatures and max amount WHEN transform THEN the footer stays`() = runTest {
+        // Arrange — the fee is taken out of the amount, the balance still covers it
+        val initialState = createTestConfirmUM().copy(signaturesUM = SendSignaturesUM(threshold = 2, membersCount = 3))
+
+        // Act
+        val actual = jointTransformer(isFeeSubtractedFromAmount = true, isFeeExceedingBalance = false)
+            .transform(initialState) as ConfirmUM.Content
+
+        // Assert
+        Truth.assertThat(actual.sendingFooter).isNotEqualTo(TextReference.EMPTY)
+    }
+
+    private fun jointTransformer(isFeeSubtractedFromAmount: Boolean, isFeeExceedingBalance: Boolean) =
+        SendConfirmationNotificationsTransformerV2(
+            feeSelectorUM = createFiatConvertibleFeeSelectorUM(feeValue = BigDecimal("0.001")),
             amountUM = createTestAmountUM(),
             analyticsEventHandler = analyticsEventHandler,
             cryptoCurrency = cryptoCurrency,
             appCurrency = appCurrency,
             analyticsCategoryName = analyticsCategoryName,
-            isFeeSubtractedFromAmount = true,
-            isFeeExceedingBalance = false,
+            isFeeSubtractedFromAmount = isFeeSubtractedFromAmount,
+            isFeeExceedingBalance = isFeeExceedingBalance,
         )
-        val initialState = createTestConfirmUM().copy(signaturesUM = SendSignaturesUM(threshold = 2, membersCount = 3))
-
-        // Act
-        val actual = transformer.transform(initialState) as ConfirmUM.Content
-
-        // Assert
-        Truth.assertThat(actual.sendingFooter).isEqualTo(TextReference.EMPTY)
-    }
 
     @Test
     fun `GIVEN the first joint operation WHEN transform THEN the note names the deployment share of the fee`() = runTest {

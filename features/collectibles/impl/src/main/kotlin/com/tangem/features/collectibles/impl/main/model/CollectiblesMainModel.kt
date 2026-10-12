@@ -10,7 +10,6 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
-import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -20,15 +19,15 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.collectibles.usecase.CloseCollectiblesVaultUseCase
-import com.tangem.domain.collectibles.usecase.GetCollectiblesVaultTopUpAddressUseCase
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
-import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.account.CollectiblesVaultBalance
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.features.collectibles.impl.CollectiblesRoute
 import com.tangem.features.collectibles.impl.main.CollectiblesMainBottomSheetConfig
 import com.tangem.features.collectibles.impl.main.CollectiblesMainComponent
+import com.tangem.features.collectibles.impl.addfunds.CollectiblesReceiveConfigFactory
 import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesActionsConverter
 import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesBalanceConverter
 import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesMenuItem
@@ -57,8 +56,6 @@ internal class CollectiblesMainModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val closeCollectiblesVaultUseCase: CloseCollectiblesVaultUseCase,
-    private val getCollectiblesVaultTopUpAddressUseCase: GetCollectiblesVaultTopUpAddressUseCase,
-    private val clipboardManager: ClipboardManager,
     private val collectiblesAccountStatusSupplier: CollectiblesAccountStatusSupplier,
     private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
@@ -83,7 +80,7 @@ internal class CollectiblesMainModel @Inject constructor(
     val uiState: StateFlow<CollectiblesMainUM>
         field = MutableStateFlow(buildInitialState())
 
-    private var vaultCurrency: CryptoCurrency.Token? = null
+    private var vaultStatus: CollectiblesVaultBalance? = null
 
     init {
         observeBalance()
@@ -94,7 +91,7 @@ internal class CollectiblesMainModel @Inject constructor(
             flow = collectiblesAccountStatusSupplier(params.userWalletId),
             flow2 = getSelectedAppCurrencyUseCase.invokeOrDefault(),
         ) { status, appCurrency ->
-            vaultCurrency = status.balance?.usdcToken
+            vaultStatus = status.balance
 
             val balance = balanceConverter.convert(
                 CollectiblesBalanceConverter.Input(status = status, appCurrency = appCurrency),
@@ -159,7 +156,6 @@ internal class CollectiblesMainModel @Inject constructor(
             CollectiblesMenuItem.DELIVERIES -> onDeliveriesClick()
             CollectiblesMenuItem.HOW_IT_WORKS -> onHowItWorksClick()
             CollectiblesMenuItem.GET_ASSISTANCE -> onGetAssistanceClick()
-            CollectiblesMenuItem.COPY_TOP_UP_ADDRESS -> onCopyTopUpAddressClick()
             CollectiblesMenuItem.CLOSE_ACCOUNT -> onCloseAccountClick()
         }
     }
@@ -177,18 +173,18 @@ internal class CollectiblesMainModel @Inject constructor(
         bottomSheetNavigation.activate(CollectiblesMainBottomSheetConfig.TopUp)
     }
 
-    fun onDismissAddFunds() {
+    fun onDismissBottomSheet() {
         bottomSheetNavigation.dismiss()
     }
 
     fun onFromTangemWalletClick() {
-        val currency = vaultCurrency ?: return sendUnknownErrorMessage()
+        val vault = vaultStatus ?: return sendUnknownErrorMessage()
 
         bottomSheetNavigation.dismiss()
         router.push(
             AppRoute.Swap(
                 userWalletId = params.userWalletId,
-                fromCryptoCurrency = currency,
+                fromCryptoCurrency = vault.usdcToken,
                 fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.TO,
                 // TODO AnalyticsParam.ScreensSources.Collectibles.value ?
                 screenSource = "Collectibles",
@@ -201,11 +197,17 @@ internal class CollectiblesMainModel @Inject constructor(
         messageSender.send(SnackbarMessage(message = resourceReference(R.string.common_unknown_error)))
     }
 
-    @Suppress("EmptyFunctionBlock")
     fun onFromAnotherWalletClick() {
-        // TODO([REDACTED_TASK_KEY]): which address to show is unresolved. Exchanges require a withdrawal address owned by the
-        // System Program with no data, which neither the vault's ATA nor its PDA is, and a sender that derives an
-        // ATA from the ATA creates a nested account whose funds cannot be moved.
+        val vault = vaultStatus ?: return sendUnknownErrorMessage()
+
+        bottomSheetNavigation.activate(
+            CollectiblesMainBottomSheetConfig.Receive(
+                config = CollectiblesReceiveConfigFactory.create(
+                    vault = vault,
+                    userWalletId = params.userWalletId,
+                ),
+            ),
+        )
     }
 
     @Suppress("EmptyFunctionBlock")
@@ -231,27 +233,6 @@ internal class CollectiblesMainModel @Inject constructor(
     @Suppress("EmptyFunctionBlock")
     private fun onGetAssistanceClick() {
         // TODO([REDACTED_TASK_KEY]): support entry point is not wired yet.
-    }
-
-    private fun onCopyTopUpAddressClick() {
-        onMenuDismiss()
-
-        modelScope.launch {
-            val userWallet = userWalletsListRepository.getSyncOrNull(params.userWalletId) ?: return@launch
-
-            getCollectiblesVaultTopUpAddressUseCase(userWallet).fold(
-                ifLeft = { error ->
-                    TangemLogger.e("Unable to read the collectibles top-up address: $error")
-                    messageSender.send(SnackbarMessage(message = resourceReference(R.string.common_unknown_error)))
-                },
-                ifRight = { address ->
-                    clipboardManager.setText(text = address, isSensitive = false)
-                    messageSender.send(
-                        SnackbarMessage(message = resourceReference(R.string.address_book_address_copied)),
-                    )
-                },
-            )
-        }
     }
 
     private fun onCloseAccountClick() {

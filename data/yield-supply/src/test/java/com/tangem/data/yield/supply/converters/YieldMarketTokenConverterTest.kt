@@ -92,9 +92,30 @@ internal class YieldMarketTokenConverterTest {
     }
 
     @Test
-    fun `GIVEN campaign flag without apr values WHEN convert THEN overlay falls back to zero`() {
+    fun `GIVEN a running campaign without a total apy WHEN convert THEN there is no campaign to show`() {
         // Arrange
-        val dto = YieldSupplyMarketTokenDto(hasActiveCampaign = false)
+        val dto = YieldSupplyMarketTokenDto(
+            apy = BigDecimal("4.12"),
+            hasActiveCampaign = true,
+            rewardsApr = BigDecimal("2.08"),
+        )
+
+        // Act
+        val result = YieldMarketTokenConverter.convert(dto)
+
+        // Assert — the asset keeps its base rate instead of advertising a boost of zero
+        assertThat(result.campaign).isNull()
+        assertThat(result.effectiveApy).isEqualTo(BigDecimal("4.12"))
+    }
+
+    @Test
+    fun `GIVEN a running campaign without a rewards apr WHEN convert THEN the total apy survives`() {
+        // Arrange
+        val dto = YieldSupplyMarketTokenDto(
+            apy = BigDecimal("4.12"),
+            hasActiveCampaign = true,
+            totalApyEst = BigDecimal("6.2"),
+        )
 
         // Act
         val result = YieldMarketTokenConverter.convert(dto)
@@ -102,10 +123,23 @@ internal class YieldMarketTokenConverterTest {
         // Assert
         assertThat(result.campaign).isEqualTo(
             YieldIncentiveCampaign(
-                hasActiveCampaign = false,
+                hasActiveCampaign = true,
                 rewardsApr = BigDecimal.ZERO,
-                totalApyEst = BigDecimal.ZERO,
+                totalApyEst = BigDecimal("6.2"),
             ),
         )
+        assertThat(result.effectiveApy).isEqualTo(BigDecimal("6.2"))
+    }
+
+    @Test
+    fun `GIVEN campaign flag without apr values WHEN convert THEN there is no campaign to show`() {
+        // Arrange
+        val dto = YieldSupplyMarketTokenDto(hasActiveCampaign = false)
+
+        // Act
+        val result = YieldMarketTokenConverter.convert(dto)
+
+        // Assert
+        assertThat(result.campaign).isNull()
     }
 }

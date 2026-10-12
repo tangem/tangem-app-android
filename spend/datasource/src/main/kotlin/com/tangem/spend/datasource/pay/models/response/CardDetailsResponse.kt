@@ -1,27 +1,28 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class CardDetailsResponse(
-    @Json(name = "result") val result: Result?,
+    @SerialName("result") val result: Result?,
 ) {
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Result(
-        @Json(name = "token") val token: String,
-        @Json(name = "expiration_month") val expirationMonth: String,
-        @Json(name = "expiration_year") val expirationYear: String,
-        @Json(name = "emboss_name") val embossName: String?,
-        @Json(name = "card_type") val cardType: String,
-        @Json(name = "card_status") val cardStatus: String,
-        @Json(name = "card_number_end") val cardNumberEnd: String,
-        @Json(name = "pan") val pan: Secret,
-        @Json(name = "cvv") val cvv: Secret,
+        @SerialName("token") val token: String,
+        @SerialName("expiration_month") val expirationMonth: String,
+        @SerialName("expiration_year") val expirationYear: String,
+        @SerialName("emboss_name") val embossName: String?,
+        @SerialName("card_type") val cardType: String,
+        @SerialName("card_status") val cardStatus: String,
+        @SerialName("card_number_end") val cardNumberEnd: String,
+        @SerialName("pan") val pan: Secret,
+        @SerialName("cvv") val cvv: Secret,
     )
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Secret(
-        @Json(name = "secret") val secret: String,
-        @Json(name = "iv") val iv: String,
+        @SerialName("secret") val secret: String,
+        @SerialName("iv") val iv: String,
     )
 }

@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
@@ -45,7 +46,12 @@ import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.active.entity.YieldSupplyActiveContentUM
 import kotlinx.collections.immutable.persistentListOf
 
-@Suppress("LongMethod")
+/** The 16dp glyph from the design, grown to a tappable size without letting it widen the row. */
+private val INFO_ICON_SIZE = 16.dp
+private val INFO_TOUCH_TARGET = 40.dp
+private val INFO_TOUCH_PADDING = 12.dp
+
+@Suppress("LongMethod", "LongParameterList")
 @Composable
 internal fun YieldSupplyActiveContent(
     state: YieldSupplyActiveContentUM,
@@ -53,6 +59,7 @@ internal fun YieldSupplyActiveContent(
     onReadMoreClick: () -> Unit,
     chartComponent: ComposableContentComponent,
     marketingBannerComponent: ComposableContentComponent,
+    rewardsBannerComponent: ComposableContentComponent,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -74,7 +81,11 @@ internal fun YieldSupplyActiveContent(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier.padding(12.dp),
             ) {
-                CurrentApy(state.apy)
+                CurrentApy(
+                    apy = state.apy,
+                    hasBreakdown = state.apyBreakdown != null,
+                    onInfoClick = state.onApyInfoClick,
+                )
                 chartComponent.Content(Modifier)
             }
             AnimatedVisibility(state.boostText != null) {
@@ -92,6 +103,10 @@ internal fun YieldSupplyActiveContent(
 
         TangemThemeRedesign {
             marketingBannerComponent.Content(Modifier.fillMaxWidth())
+        }
+
+        TangemThemeRedesign {
+            rewardsBannerComponent.Content(Modifier.fillMaxWidth())
         }
 
         AnimatedVisibility(state.notifications.isNotEmpty()) {
@@ -144,14 +159,42 @@ internal fun YieldSupplyActiveContent(
 }
 
 @Composable
-private fun CurrentApy(apy: TextReference?, modifier: Modifier = Modifier) {
+private fun CurrentApy(
+    apy: TextReference?,
+    hasBreakdown: Boolean,
+    onInfoClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(modifier = modifier) {
-        Text(
-            modifier = Modifier,
-            text = stringResourceSafe(R.string.yield_module_earn_sheet_current_apy_title),
-            style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.tertiary,
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                text = stringResourceSafe(R.string.yield_module_earn_sheet_current_apy_title),
+                style = TangemTheme.typography.subtitle1,
+                color = TangemTheme.colors.text.primary1,
+            )
+            if (hasBreakdown) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.size(INFO_ICON_SIZE),
+                ) {
+                    Icon(
+                        painter = painterResource(com.tangem.core.ui.R.drawable.ic_information_24),
+                        tint = TangemTheme.colors.icon.informative,
+                        contentDescription = stringResourceSafe(
+                            com.tangem.core.res.R.string.yield_module_about_apy_sheet_title,
+                        ),
+                        modifier = Modifier
+                            .requiredSize(INFO_TOUCH_TARGET)
+                            .clip(CircleShape)
+                            .clickable(onClick = onInfoClick)
+                            .padding(INFO_TOUCH_PADDING),
+                    )
+                }
+            }
+        }
         AnimatedContent(
             modifier = Modifier.height(32.dp),
             targetState = apy?.resolveReference(),
@@ -425,6 +468,7 @@ private fun YieldSupplyActiveBottomSheet_Preview(
             isBalanceHidden = true,
             chartComponent = ComposableContentComponent.EMPTY,
             marketingBannerComponent = ComposableContentComponent.EMPTY,
+            rewardsBannerComponent = ComposableContentComponent.EMPTY,
             onReadMoreClick = {},
         )
     }

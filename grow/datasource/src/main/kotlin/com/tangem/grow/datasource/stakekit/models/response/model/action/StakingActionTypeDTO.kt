@@ -2,7 +2,9 @@ package com.tangem.grow.datasource.stakekit.models.response.model.action
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
 
+@Serializable
 @JsonClass(generateAdapter = false)
 enum class StakingActionTypeDTO {
     @Json(name = "STAKE")
