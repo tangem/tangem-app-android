@@ -34,14 +34,21 @@ import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.BaseDialogTestTags
 import com.tangem.core.ui.test.HotWalletAccessCodeTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.screens.*
 import com.tangem.screens.tangempay.*
 import com.tangem.tap.domain.sdk.mocks.content.WalletMockContent
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.Allure.step
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.Assert
+import kotlin.reflect.KClass
 
 /** A fiat balance rendered with a currency symbol and two decimals, e.g. `$1,234.00`. */
 private val FIAT_BALANCE_REGEX = """^\D\d[\d,]*\.\d{2}$""".toRegex()
@@ -58,6 +65,8 @@ private const val PAY_ENABLED_ENDPOINT = "/bff-v2/v1/customer/pay-enabled"
 private const val ACCESS_TOKEN_EXPIRES_AT_KEY = "uitest.tangempay.access_token_expires_at"
 
 private const val PER_WALLET_CUSTOMER_KEY = "uitest.tangempay.per_wallet_customer"
+
+private const val PAYMENT_STATUS_READ_TIMEOUT_MILLIS = 1_000L
 
 fun expireTangemPayAccessToken() {
     val expiredAt = System.currentTimeMillis() / 1000 - 1
@@ -1324,5 +1333,19 @@ fun BaseTestCase.returnToMainFromTangemPay() {
     step("Click on 'Back' button") { device.uiDevice.pressBack() }
     step("Assert 'Main' screen is displayed") {
         awaitSuccess { onMainScreenTopBar { moreButton.assertIsDisplayed() } }
+    }
+}
+
+fun BaseTestCase.awaitTangemPayStatusOfSelectedWallet(
+    userWalletsListRepository: UserWalletsListRepository,
+    paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+    expectedStatus: KClass<out PaymentAccountStatusValue>,
+) {
+    awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+        val userWalletId = checkNotNull(userWalletsListRepository.selectedUserWallet.value).walletId
+        val status = runBlocking {
+            withTimeoutOrNull(PAYMENT_STATUS_READ_TIMEOUT_MILLIS) { paymentAccountStatusSupplier(userWalletId).first() }
+        }
+        check(expectedStatus.isInstance(status?.value)) { "Tangem Pay status is ${status?.value}" }
     }
 }
