@@ -69,6 +69,8 @@ dependencies {
 
     /** Tests */
     testImplementation(projects.common.test)
+    testImplementation(projects.core.remote)
+    testImplementation(projects.domain.appCurrency.models)
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
 }

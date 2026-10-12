@@ -9,6 +9,7 @@ android {
     namespace = "com.tangem.data.news"
 }
 dependencies {
+    implementation(projects.core.remote)
 
     // region Kotlin
     implementation(deps.kotlin.coroutines)
