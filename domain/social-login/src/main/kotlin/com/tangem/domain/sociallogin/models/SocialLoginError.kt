@@ -8,8 +8,6 @@ sealed interface SocialLoginError {
 
     data object ConsentDeclined : SocialLoginError
 
-    data object SessionExpired : SocialLoginError
-
     /** Provider sign-in finished without an id token */
     data class SignInFailed(val cause: Throwable? = null) : SocialLoginError
 
