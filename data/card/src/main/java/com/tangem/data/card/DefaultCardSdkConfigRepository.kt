@@ -3,6 +3,7 @@ package com.tangem.data.card
 import com.tangem.TangemSdk
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.common.UserCodeType
+import com.tangem.common.core.CardIdDisplayFormat
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.UserCodeRequestPolicy
 import com.tangem.data.card.sdk.CardSdkProvider
@@ -22,7 +23,6 @@ internal class DefaultCardSdkConfigRepository(
     private val transactionSignerFactory: TransactionSignerFactory,
 ) : CardSdkConfigRepository {
 
-    @Deprecated("Use CardSdkConfigRepository's methods instead of this property")
     override val sdk: TangemSdk
         get() = cardSdkProvider.sdk
 
@@ -32,9 +32,17 @@ internal class DefaultCardSdkConfigRepository(
             sdk.config.userCodeRequestPolicy = value.toUserCodeRequestPolicy()
         }
 
+    override val cardIdDisplayFormat: CardIdDisplayFormat
+        get() = sdk.config.cardIdDisplayFormat
+
     override fun restoreAccessCodeRequestPolicy(isBiometricsRequestPolicy: Boolean) {
         val config = cardSdkProvider.sdkOrNull?.config ?: return
         config.userCodeRequestPolicy = isBiometricsRequestPolicy.toUserCodeRequestPolicy()
+    }
+
+    override fun restoreCardIdDisplayFormat(format: CardIdDisplayFormat) {
+        val config = cardSdkProvider.sdkOrNull?.config ?: return
+        config.cardIdDisplayFormat = format
     }
 
     override fun setAccessCodeRequestPolicy(isBiometricsRequestPolicy: Boolean) {
