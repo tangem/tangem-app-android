@@ -1,4 +1,4 @@
-package com.tangem.features.collectibles.impl.confirmorder.ui
+package com.tangem.features.collectibles.impl.packopening.ui
 
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
