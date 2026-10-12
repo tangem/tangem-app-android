@@ -129,10 +129,11 @@ internal class ModalMorphGeometry {
 
 /**
  * Caches the content's intrinsic height across morph animation frames: while one of the morph
- * springs is running, the extra layout passes are caused by the animated values — the content
- * itself has not changed — so the last probed height is reused instead of traversing the content
- * tree on every frame. The trade-off: content that resizes itself mid-morph keeps the previous
- * height until the spring settles, and the settling pass re-probes it.
+ * springs (fullness, focus or content height) is running, the extra layout passes are caused by
+ * the animated values — the content itself has not changed — so the last probed height is reused
+ * instead of traversing the content tree on every frame. The trade-off: content that resizes
+ * itself mid-morph keeps the previous height until the spring settles, and the settling pass
+ * re-probes it.
  */
 @PublishedApi
 internal class ModalContentHeightCache {
@@ -165,6 +166,9 @@ internal class ModalContentHeightAnimation {
 
     /** Whether the first height has been adopted; until then — and in previews — the measured height renders as is. */
     private var isAnimationDriven: Boolean by mutableStateOf(false)
+
+    val isRunning: Boolean
+        get() = animatedHeight.isRunning
 
     fun heightOf(measuredHeight: Int): Int {
         return if (isAnimationDriven) animatedHeight.value.roundToInt() else measuredHeight
@@ -296,7 +300,9 @@ internal fun Modifier.modalCardLayout(geometry: ModalMorphGeometry, windowInsets
         val maxHeight = (constraints.maxHeight - windowInsets.getTop(this)).coerceAtLeast(0)
 
         val probeWidth = (maxWidth - 2 * ModalInsetMedium.roundToPx()).coerceAtLeast(0)
-        val isMorphing = geometry.animatedFullness.isRunning || geometry.focusExpansion.isRunning
+        val isMorphing = geometry.animatedFullness.isRunning ||
+            geometry.focusExpansion.isRunning ||
+            geometry.contentHeight.isRunning
         val intrinsicHeight = geometry.contentHeightCache
             .heightOf(measurable = measurable, width = probeWidth, isMorphing = isMorphing)
             .coerceAtMost(maxHeight)
