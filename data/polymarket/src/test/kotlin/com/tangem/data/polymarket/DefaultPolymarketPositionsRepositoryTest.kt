@@ -271,7 +271,7 @@ internal class DefaultPolymarketPositionsRepositoryTest {
         )!!
 
     private fun createPositionsValueResponse(value: BigDecimal) = PolymarketPositionsValueResponse(
-        data = PolymarketPositionsValueResponse.Data(proxyWallet = "0xdw", value = value),
+        data = PolymarketPositionsValueResponse.Data(value = value),
     )
 
     data class ApiErrorTestModel(val apiError: ApiResponseError, val expected: PolymarketPositionsError)
